@@ -1,124 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:42584 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759160AbaCTWu3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 18:50:29 -0400
-Received: by mail-ie0-f177.google.com with SMTP id rl12so1679556iec.36
-        for <linux-pci@vger.kernel.org>; Thu, 20 Mar 2014 15:50:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140320124143.GA10751@localhost>
-References: <20140320124143.GA10751@localhost>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 20 Mar 2014 16:50:08 -0600
-Message-ID: <CAErSpo7i1sD=mNd1MZ+yWrPrPJDpZx2w-L3Dj=2N+gJBqVdSzA@mail.gmail.com>
-Subject: Re: [pci] WARNING: CPU: 0 PID: 1 at drivers/gpu/drm/drm_crtc.c:94 drm_warn_on_modeset_not_all_locked()
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51693 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755924AbaCELtx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 06:49:53 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v6 0/3] [RFC] Add support for PCI in AArch64
+Date: Wed,  5 Mar 2014 11:49:07 +0000
+Message-Id: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 20, 2014 at 6:41 AM, Fengguang Wu <fengguang.wu@intel.com> wrote:
-> Greetings,
->
-> I got the below dmesg and the first bad commit is
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/resource
->
-> commit aa11fc58dc71c27701b1f9a529a36a38d4337722
-> Author:     Bjorn Helgaas <bhelgaas@google.com>
-> AuthorDate: Fri Mar 7 13:39:01 2014 -0700
-> Commit:     Bjorn Helgaas <bhelgaas@google.com>
-> CommitDate: Wed Mar 19 15:00:16 2014 -0600
->
->     PCI: Check all IORESOURCE_TYPE_BITS in pci_bus_alloc_from_region()
->
->     When allocating space from a bus resource, i.e., from apertures leading to
->     this bus, make sure the entire resource type matches.  The previous code
->     assumed the IORESOURCE_TYPE_BITS field was a bitmask with only a single bit
->     set, but this is not true.  IORESOURCE_TYPE_BITS is really an enumeration,
->     and we have to check all the bits.
->
->     See 72dcb1197228 ("resources: Add register address resource type").
->
->     No functional change.  If we used this path for allocating IRQs, DMA
->     channels, or bus numbers, this would fix a bug because those types are
->     indistinguishable when masked by IORESOURCE_IO | IORESOURCE_MEM.  But we
->     don't, so this shouldn't make any difference.
->
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Hi,
 
-Thanks (I think).  I'm afraid I'm going to need some more help to
-debug this.  I built aa11fc58dc with the config you supplied and
-booted it on qemu with no real issues (it didn't boot all the way
-because the config doesn't include a driver for my root disk, but
-that's to be expected).
+This patch adds support for PCI to AArch64. It is based on my v6 patch
+that adds support for creating generic host bridge structure from
+device tree. With that in place, I was able to boot a platform that
+has PCIe host bridge support and use a PCIe network card.
 
-The dmesg you supplied is for some other commit 2d18516 that I don't
-have, so I'm confused about why it's not from aa11fc58dc.
+Changes from v5:
+  - Removed pcibios_fixup_bridge_ranges() as the week default version is fine.
+  - Removed the ALIGN() call in pcibios_align_resource()
+  - Stopped exporting pcibios_align_resource()
 
-I did reproduce what appears to be basically the same problem with
-a654dc797f3e, which is the 20140320 linux-next tree.  I backed up to
-93ecdc077282, which is where pci/next was merged (this includes
-aa11fc58dc), but I could not reproduce the problem there.
+Changes from v4:
+  - Fixed the pci_domain_nr() implementation for arm64. Now we use
+    find_pci_host_bride() to find the host bridge before we retrieve
+    the domain number.
 
-So bottom line, I'm confused because your bisection doesn't match what
-I'm seeing, and I don't want to spend more time flailing around.
+Changes from v3:
+  - Added Acks accumulated so far ;)
+  - Still carrying Catalin's patch for moving the PCI_IO_BASE until it
+    lands in linux-next or mainline, in order to ease applying the series
 
-Bjorn
+Changes from v2:
+  - Implement an arch specific version of pci_register_io_range() and
+    pci_address_to_pio().
+  - Return 1 from pci_proc_domain().
+
+Changes from v1:
+  - Added Catalin's patch for moving the PCI_IO_BASE location and extend
+    its size to 16MB
+  - Integrated Arnd's version of pci_ioremap_io that uses a bitmap for
+    keeping track of assigned IO space and returns an io_offset. At the
+    moment the code is added in arch/arm64 but it can be moved in drivers/pci.
+  - Added a fix for the generic ioport_map() function when !CONFIG_GENERIC_IOMAP
+    as suggested by Arnd.
+
+v5 thread here: https://lkml.org/lkml/2014/3/4/307
+v4 thread here: https://lkml.org/lkml/2014/3/3/298
+v3 thread here: https://lkml.org/lkml/2014/2/28/211
+v2 thread here: https://lkml.org/lkml/2014/2/27/255
+v1 thread here: https://lkml.org/lkml/2014/2/3/389
 
 
-> +------------------------------------------------------------------------------------------------+------------+------------+
-> |                                                                                                | aa11fc58dc | 2d18516523 |
-> +------------------------------------------------------------------------------------------------+------------+------------+
-> | boot_successes                                                                                 | 19         | 0          |
-> | boot_failures                                                                                  | 1          | 19         |
-> | BUG:unable_to_handle_kernel_NULL_pointer_dereference                                           | 1          | 1          |
-> | Oops                                                                                           | 1          | 1          |
-> | EIP_is_at_rapl_pmu_init                                                                        | 1          | 1          |
-> | Kernel_panic-not_syncing:Attempted_to_kill_init_exitcode=                                      | 1          | 1          |
-> | backtrace:rapl_pmu_init                                                                        | 1          | 1          |
-> | backtrace:kernel_init_freeable                                                                 | 1          | 19         |
-> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_crtc.c:drm_warn_on_modeset_not_all_locked()             | 0          | 18         |
-> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_crtc_helper.c:drm_helper_encoder_in_use()               | 0          | 18         |
-> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_crtc_helper.c:drm_helper_crtc_in_use()                  | 0          | 18         |
-> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_crtc_helper.c:drm_helper_probe_single_connector_modes() | 0          | 18         |
-> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_modes.c:drm_mode_probed_add()                           | 0          | 18         |
-> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_modes.c:drm_mode_connector_list_update()                | 0          | 18         |
-> | backtrace:drm_helper_disable_unused_functions                                                  | 0          | 18         |
-> | backtrace:cirrus_fbdev_init                                                                    | 0          | 18         |
-> | backtrace:cirrus_modeset_init                                                                  | 0          | 18         |
-> | backtrace:__pci_register_driver                                                                | 0          | 18         |
-> | backtrace:drm_pci_init                                                                         | 0          | 18         |
-> | backtrace:cirrus_init                                                                          | 0          | 18         |
-> | backtrace:drm_fb_helper_initial_config                                                         | 0          | 18         |
-> +------------------------------------------------------------------------------------------------+------------+------------+
->
-> [    1.624247] [TTM] Initializing pool allocator
-> [    1.625248] ------------[ cut here ]------------
-> [    1.625248] ------------[ cut here ]------------
-> [    1.626136] WARNING: CPU: 0 PID: 1 at drivers/gpu/drm/drm_crtc.c:94 drm_warn_on_modeset_not_all_locked+0x61/0xc6()
->
-> git bisect start 2d1851652373730f6b8c7fa7f45eaa854f23da8f dcb99fd9b08cfe1afe426af4d8d3cbc429190f15 --
-> git bisect  bad 82202f95148065d7a0f5d86d4d6e39f31dbd7937  # 12:19      0-     10  Merge 'asoc/fix/cs42l51' into devel-hourly-2014032007
-> git bisect good 9115e0b3218bd6b97e830bc36e6e80c4890f6fe4  # 12:45     20+      0  Merge 'scsi/misc' into devel-hourly-2014032007
-> git bisect good 4fb88b0dc2d9b229d03a9e6555d9056888c90137  # 14:42     20+      0  Merge 'target/for-next' into devel-hourly-2014032007
-> git bisect  bad c5011f998a8e94c052c5aa71cf19510f2d0bf5fd  # 15:06      0-      1  Merge 'pci/pci/resource' into devel-hourly-2014032007
-> git bisect good daec480a6e6be6e9716a56029aafcbfb79e6b47b  # 15:41     20+      0  Merge 'netdev-next/master' into devel-hourly-2014032007
-> git bisect good 937441ae220fd3fae143ef394227337c969ad155  # 15:57     20+      0  Merge 'kvm/queue' into devel-hourly-2014032007
-> git bisect good 3cedcc3621289d41bd21c5dbe0b886d57c83a1ea  # 16:27     20+      0  PCI: Don't enable decoding if BAR hasn't been assigned an address
-> git bisect good d75332325389a95c4ddbfa0f0cd7e5e08a54aa43  # 16:54     20+      0  s390/PCI: Use generic pci_enable_resources()
-> git bisect  bad aa11fc58dc71c27701b1f9a529a36a38d4337722  # 17:11      0-      1  PCI: Check all IORESOURCE_TYPE_BITS in pci_bus_alloc_from_region()
-> git bisect good 6404e88e8385638123f4b18b104430480870601a  # 17:23     20+      0  resources: Set type in __request_region()
-> # first bad commit: [aa11fc58dc71c27701b1f9a529a36a38d4337722] PCI: Check all IORESOURCE_TYPE_BITS in pci_bus_alloc_from_region()
-> git bisect good 6404e88e8385638123f4b18b104430480870601a  # 17:27     60+      0  resources: Set type in __request_region()
-> git bisect  bad 2d1851652373730f6b8c7fa7f45eaa854f23da8f  # 17:27      0-     19  0day head guard for 'devel-hourly-2014032007'
-> git bisect good 887843961c4b4681ee993c36d4997bf4b4aa8253  # 19:24     60+      0  mm: fix bad rss-counter if remap_file_pages raced migration
-> git bisect  bad a654dc797f3ea1cb5719a71a17af35f57fddb2d8  # 20:10      0-      1  Add linux-next specific files for 20140320
->
-> Thanks,
-> Fengguang
+The API used is different from the one used by ARM architecture. There is
+no pci_common_init_dev() function and no hw_pci structure, as that is no
+longer needed. Once the last signature is added to the legal agreement, I
+will post the host bridge driver code that I am using. Meanwhile, here
+is an example of what the probe function looks like, posted as an example:
+
+static int myhostbridge_probe(struct platform_device *pdev)
+{
+	int err;
+	struct device_node *dev;
+	struct pci_host_bridge *bridge;
+	struct myhostbridge_port *pp;
+	resource_size_t lastbus;
+
+	dev = pdev->dev.of_node;
+
+	if (!of_device_is_available(dev)) {
+		pr_warn("%s: disabled\n", dev->full_name);
+		return -ENODEV;
+	}
+
+	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
+	if (!pp)
+		return -ENOMEM;
+
+	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
+	if (IS_ERR(bridge)) {
+		err = PTR_ERR(bridge);
+		goto bridge_create_fail;
+	}
+
+	err = myhostbridge_setup(bridge->bus);
+	if (err)
+		goto bridge_setup_fail;
+
+	/* We always enable PCI domains and we keep domain 0 backward
+	 * compatible in /proc for video cards
+	 */
+	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
+	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+
+	lastbus = pci_scan_child_bus(bridge->bus);
+	pci_bus_update_busn_res_end(bridge->bus, lastbus);
+
+	pci_assign_unassigned_bus_resources(bridge->bus);
+
+	pci_bus_add_devices(bridge->bus);
+
+	return 0;
+
+bridge_setup_fail:
+	put_device(&bridge->dev);
+	device_unregister(&bridge->dev);
+bridge_create_fail:
+	kfree(pp);
+	return err;
+}
+
+Best regards,
+Liviu
+
+
+
+Catalin Marinas (1):
+  arm64: Extend the PCI I/O space to 16MB
+
+Liviu Dudau (2):
+  Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+  arm64: Add architecture support for PCI
+
+ Documentation/arm64/memory.txt |  16 ++--
+ arch/arm64/Kconfig             |  19 ++++-
+ arch/arm64/include/asm/Kbuild  |   1 +
+ arch/arm64/include/asm/io.h    |   5 +-
+ arch/arm64/include/asm/pci.h   |  49 ++++++++++++
+ arch/arm64/kernel/Makefile     |   1 +
+ arch/arm64/kernel/pci.c        | 173 +++++++++++++++++++++++++++++++++++++++++
+ include/asm-generic/io.h       |   2 +-
+ 8 files changed, 256 insertions(+), 10 deletions(-)
+ create mode 100644 arch/arm64/include/asm/pci.h
+ create mode 100644 arch/arm64/kernel/pci.c
+
+-- 
+1.9.0
+
