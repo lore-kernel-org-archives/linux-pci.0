@@ -1,45 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:62905 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960AbaCTM0T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 08:26:19 -0400
-From: Arnd Bergmann <arnd@arndb.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1393948204-11555-6-git-send-email-Liviu.Dudau@arm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+	<1393948204-11555-6-git-send-email-Liviu.Dudau@arm.com>
+Date: Tue, 4 Mar 2014 17:49:13 -0800
+Message-ID: <CACoXjcmKKObSFignRWZAuOmmvfFtLf5O04Y5romJ=c6a9Jriqg@mail.gmail.com>
+Subject: Re: [PATCH v5 5/7] pci: Use parent domain number when allocating
+ child busses.
+From: Tanmay Inamdar <tinamdar@apm.com>
 To: Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Date: Thu, 20 Mar 2014 13:26:02 +0100
-Cc: Catalin Marinas <Catalin.Marinas@arm.com>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
+Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
 	LKML <linux-kernel@vger.kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com> <201403201217.22339.arnd@arndb.de> <20140320113820.GH6457@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140320113820.GH6457@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201403201326.02377.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 20 March 2014, Liviu Dudau wrote:
-> > I don't even understand why you want to create a generic pci_address_to_pio
-> > implementation, when we don't need that for arm64 at all. Unless I'm
-> > missing something important, that function is only called in case of
-> > PCI_PROBE_DEVTREE with pci_of_scan on PowerPC. I don't expect any
-> > architecture to do the same thing, and the only other architecture that
-> > needs something like it (sparc) has a different implementation.
-> 
-> Because in my [v7 2/6]* patch for the generic host bridge support I start
-> using pci_address_to_pio to fix the conversion of PCI ranges to resources.
-> That requires an arm64 (or more correctly, an arch with memory mapped IO
-> specific) version of pci_address_to_pio().
+Hello,
 
-Yes, but why do you use it there?
+On Tue, Mar 4, 2014 at 7:50 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> pci_alloc_child_bus() uses the newly allocated child bus to figure
+> out the domain number that is going to use for setting the device
+> name. A better option is to use the parent bus domain number.
+>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 26237a0..a12cda5 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -677,7 +677,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>          * now as the parent is not properly set up yet.
+>          */
+>         child->dev.class = &pcibus_class;
+> -       dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
+> +       dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(parent), busnr);
+>
+>         /*
+>          * Set up the primary, secondary and subordinate
+> --
+> 1.9.0
+>
 
-	Arnd
+This patch is not required after the fix in pci_domain_nr for arm64.
