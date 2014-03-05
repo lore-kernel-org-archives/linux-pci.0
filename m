@@ -1,51 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:33540 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754572AbaCEN0g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 08:26:36 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
 To: linux-arm-kernel@lists.infradead.org
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>, Liviu Dudau <liviu@dudau.co.uk>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v6 6/6] pci: Add support for creating a generic host_bridge from device tree
-Date: Tue, 11 Mar 2014 11:43:39 +0100
-Message-ID: <2664356.LLPHGvlG5M@wuerfel>
-In-Reply-To: <20140311094641.GA27064@e106497-lin.cambridge.arm.com>
-References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com> <4254618.BlpDUOctDb@wuerfel> <20140311094641.GA27064@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
+Subject: [PATCH v2 6/6] PCI: designware: use new OF interrupt mapping when possible
+Date: Wed,  5 Mar 2014 14:25:51 +0100
+Message-Id: <1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 11 March 2014 09:46:41 Liviu Dudau wrote:
-> On Tue, Mar 11, 2014 at 06:50:24AM +0000, Arnd Bergmann wrote:
-> > On Monday 10 March 2014 21:56:00 Liviu Dudau wrote:
-> > > 
-> > > PCI_IOBASE is always defined. See the discussion with Russell on this subject.
-> > > 
-> > > include/asm-generic/io.h has at line 118:
-> > > 
-> > > #ifndef PCI_IOBASE
-> > > #define PCI_IOBASE ((void __iomem *) 0)
-> > > #endif
-> > 
-> > That is only defined for those that use asm-generic/pci.h, which most architectures
-> > don't.
-> 
-> I think it is defined for anyone that #includes <asm-generic/io.h>. There is no other
-> #ifdef around that.
-> 
+This is the recommended method of doing the IRQ
+mapping. For old devicetrees we fall back to the
+previous practice.
 
-My mistake, I meant to write asm-generic/io.h.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+---
+v2: pass in parent dev to relevant functions, to make DT parsing
+    work (spotted by Tim Harvey <tharvey@gateworks.com>)
+---
+ drivers/pci/host/pcie-designware.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-On a related note, I would actually prefer to get rid of this PCI_IOBASE
-default and move it into the architectures that really want it like this.
-The default when PCI_IOBASE is not set IMHO should be to also not provide
-inb/outb and ioport_map() helpers, but we need a little more infrastructure
-to actually make the kernel build in all valid configuration when we remove them.
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 17ce88f79d2b..98c118e04dba 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -17,6 +17,7 @@
+ #include <linux/module.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
++#include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/pci_regs.h>
+ #include <linux/types.h>
+@@ -492,7 +493,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	dw_pci.nr_controllers = 1;
+ 	dw_pci.private_data = (void **)&pp;
+ 
+-	pci_common_init(&dw_pci);
++	pci_common_init_dev(pp->dev, &dw_pci);
+ 	pci_assign_unassigned_resources();
+ #ifdef CONFIG_PCI_DOMAINS
+ 	dw_pci.domain++;
+@@ -725,7 +726,7 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 
+ 	if (pp) {
+ 		pp->root_bus_nr = sys->busnr;
+-		bus = pci_scan_root_bus(NULL, sys->busnr, &dw_pcie_ops,
++		bus = pci_scan_root_bus(pp->dev, sys->busnr, &dw_pcie_ops,
+ 					sys, &sys->resources);
+ 	} else {
+ 		bus = NULL;
+@@ -738,8 +739,13 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
++	int irq;
+ 
+-	return pp->irq;
++	irq = of_irq_parse_and_map_pci(dev, slot, pin);
++	if (!irq)
++		irq = pp->irq;
++
++	return irq;
+ }
+ 
+ static void dw_pcie_add_bus(struct pci_bus *bus)
+-- 
+1.9.0
 
-	Arnd
