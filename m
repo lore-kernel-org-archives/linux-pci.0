@@ -1,109 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:45417 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753686AbaCJOoR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 10:44:17 -0400
-Date: Mon, 10 Mar 2014 14:44:14 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH v6 6/6] pci: Add support for creating a generic
- host_bridge from device tree
-Message-ID: <20140310144414.GT6457@e106497-lin.cambridge.arm.com>
-References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com>
- <1394020137-1830-7-git-send-email-Liviu.Dudau@arm.com>
- <201403081815.08829.arnd@arndb.de>
-MIME-Version: 1.0
-In-Reply-To: <201403081815.08829.arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from mailout1.samsung.com ([203.254.224.24]:48229 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756675AbaCEEli (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 23:41:38 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Yijing Wang' <wangyijing@huawei.com>,
+	'Liviu Dudau' <Liviu.Dudau@arm.com>
+Cc: 'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Catalin Marinas' <Catalin.Marinas@arm.com>,
+	'Will Deacon' <Will.Deacon@arm.com>,
+	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
+	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
+	'LKML' <linux-kernel@vger.kernel.org>,
+	devicetree@vger.kernel.org,
+	'LAKML' <linux-arm-kernel@lists.infradead.org>,
+	'Tanmay Inamdar' <tinamdar@apm.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+ <1393948204-11555-4-git-send-email-Liviu.Dudau@arm.com>
+ <53169E86.1090609@huawei.com>
+In-reply-to: <53169E86.1090609@huawei.com>
+Subject: Re: [PATCH v5 3/7] pci: Create pci_host_bridge before its associated
+ bus in pci_create_root_bus.
+Date: Wed, 05 Mar 2014 13:41:35 +0900
+Message-id: <002401cf382d$3062aa50$9127fef0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 08, 2014 at 05:15:08PM +0000, Arnd Bergmann wrote:
-> On Wednesday 05 March 2014, Liviu Dudau wrote:
+On Wednesday, March 05, 2014 12:48 PM, Yijing Wang wrote:
+> On 2014/3/4 23:50, Liviu Dudau wrote:
+> > Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+> > As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+> > the creation order has been changed for no good reason. Revert the order of
+> > creation as we are going to depend on the pci_host_bridge structure to retrieve the
+> > domain number of the root bus.
+> >
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> >
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 6e34498..78ccba0 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+> >  	kfree(bridge);
+> >  }
+> >
+> > -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> > +static struct pci_host_bridge *pci_alloc_host_bridge(void)
+> >  {
+> >  	struct pci_host_bridge *bridge;
+> >
+> > @@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> >  		return NULL;
+> >
+> >  	INIT_LIST_HEAD(&bridge->windows);
+> > -	bridge->bus = b;
+> >  	return bridge;
+> >  }
+> >
+> > @@ -1727,9 +1726,21 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> >  	char bus_addr[64];
+> >  	char *fmt;
+> >
+> > +	bridge = pci_alloc_host_bridge();
+> > +	if (!bridge)
+> > +		return NULL;
 > > +
-> > +	pr_debug("Parsing ranges property...\n");
-> > +	for_each_of_pci_range(&parser, &range) {
-> > +		/* Read next ranges element */
-> > +		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
-> > +				range.pci_space, range.pci_addr);
-> > +		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
-> > +					range.cpu_addr, range.size);
-> > +
-> > +		/*
-> > +		 * If we failed translation or got a zero-sized region
-> > +		 * then skip this range
-> > +		 */
-> > +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-> > +			continue;
-> > +
-> > +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-> > +		if (!res)
-> > +			return -ENOMEM;
-> > +
-> > +		of_pci_range_to_resource(&range, dev, res);
-> > +
-> > +		if (resource_type(res) == IORESOURCE_IO)
-> > +			*io_base = range.cpu_addr;
-> > +
-> > +		pci_add_resource_offset(resources, res,
-> > +				res->start - range.pci_addr);
-> > +	}
+> > +	bridge->dev.parent = parent;
+> > +	bridge->dev.release = pci_release_host_bridge_dev;
+> > +	error = pcibios_root_bridge_prepare(bridge);
+> > +	if (error) {
+> > +		kfree(bridge);
+> > +		return NULL;
 > 
-> As mentioned regarding the pci_register_io_range() helper, x86
-> would not enter the 'resource_type(res) == IORESOURCE_IO' code path,
-> which on the one hand is fine so we can return an error from
-> pci_register_io_range() there, but I think it will lead to
-> io_base getting an uninitialized content.
-> 
-> There could also be other reasons why pci_register_io_range() fails,
-> e.g. because the space is exhausted, and I think we should try to
-> catch that here and skip the pci_add_resource_offset() and io_base
-> assignment then.
+> What about use goto err_out?
 
-Hi Arnd,
++1
 
-I will try to improve the error handling in the next patchset version.
-However I am still confused about the earlier discussion on
-pci_register_io_range(). Your suggestion initially was to return an
-error in the default weak implementation, but in your last email you
-are talking about returning 'port'. My idea when I've introduced the
-helper function was that it would return an error if it fails to
-register the IO range and zero otherwise. I agree that we can treat
-the default 'do nothing with the IO range' case as an error, with
-the caveat that will force architectures that use this code to
-provide their own implementation of pci_register_io_range() in order
-to avoid failure, even for the cases where the architecture has a 1:1
-mapping between IO and CPU addresses.
-
-I've just noticed that my home server has silently dropped my reply
-to you from the 7th of March, so I'm going to resend it using ARM's
-setup.
+I agree with your opinion.
+It makes the code simpler.
 
 Best regards,
-Liviu
-
+Jingoo Han
 
 > 
-> 	Arnd
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+> > +	}
+> > +
+> >  	b = pci_alloc_bus();
+> >  	if (!b)
+> > -		return NULL;
+> > +		goto err_out;
+> >
+> >  	b->sysdata = sysdata;
+> >  	b->ops = ops;
+> > @@ -1738,26 +1749,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> >  	if (b2) {
+> >  		/* If we already got to this bus through a different bridge, ignore it */
+> >  		dev_dbg(&b2->dev, "bus already known\n");
+> > -		goto err_out;
+> > +		goto err_bus_out;
+> >  	}
+> >
+> > -	bridge = pci_alloc_host_bridge(b);
+> > -	if (!bridge)
+> > -		goto err_out;
+> > -
+> > -	bridge->dev.parent = parent;
+> > -	bridge->dev.release = pci_release_host_bridge_dev;
+> > +	bridge->bus = b;
+> >  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> > -	error = pcibios_root_bridge_prepare(bridge);
+> > -	if (error) {
+> > -		kfree(bridge);
+> > -		goto err_out;
+> > -	}
+> > -
+> >  	error = device_register(&bridge->dev);
+> >  	if (error) {
+> >  		put_device(&bridge->dev);
+> > -		goto err_out;
+> > +		goto err_bus_out;
+> >  	}
+> >  	b->bridge = get_device(&bridge->dev);
+> >  	device_enable_async_suspend(b->bridge);
+> > @@ -1814,8 +1814,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> >  class_dev_reg_err:
+> >  	put_device(&bridge->dev);
+> >  	device_unregister(&bridge->dev);
+> > -err_out:
+> > +err_bus_out:
+> >  	kfree(b);
+> > +err_out:
+> > +	kfree(bridge);
+> >  	return NULL;
+> >  }
+> >
+> >
 
