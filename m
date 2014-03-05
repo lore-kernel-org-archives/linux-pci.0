@@ -1,73 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13987 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755264AbaBRKK4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 05:10:56 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 24/35] forcedeth: Cleanup MSI-X to MSI to INTx fallback code
-Date: Tue, 18 Feb 2014 11:11:53 +0100
-Message-Id: <717634ee6d507e7c868a898778d7fcd4300f9196.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51640 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756039AbaCELtt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 06:49:49 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v6 2/3] arm64: Extend the PCI I/O space to 16MB
+Date: Wed,  5 Mar 2014 11:49:09 +0000
+Message-Id: <1394020150-1875-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Patrick McHardy <kaber@trash.net>
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/net/ethernet/nvidia/forcedeth.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+From: Catalin Marinas <catalin.marinas@arm.com>
 
-diff --git a/drivers/net/ethernet/nvidia/forcedeth.c b/drivers/net/ethernet/nvidia/forcedeth.c
-index f4270b8..74da489 100644
---- a/drivers/net/ethernet/nvidia/forcedeth.c
-+++ b/drivers/net/ethernet/nvidia/forcedeth.c
-@@ -3930,7 +3930,7 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
+The patch moves the PCI I/O space (currently at 64K) before the
+earlyprintk mapping and extends it to 16MB.
+
+Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
+---
+ Documentation/arm64/memory.txt | 16 ++++++++++------
+ arch/arm64/include/asm/io.h    |  2 +-
+ 2 files changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/Documentation/arm64/memory.txt b/Documentation/arm64/memory.txt
+index 5e054bf..85e24c4 100644
+--- a/Documentation/arm64/memory.txt
++++ b/Documentation/arm64/memory.txt
+@@ -35,11 +35,13 @@ ffffffbc00000000	ffffffbdffffffff	   8GB		vmemmap
+ 
+ ffffffbe00000000	ffffffbffbbfffff	  ~8GB		[guard, future vmmemap]
+ 
+-ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
++ffffffbffa000000	ffffffbffaffffff	  16MB		PCI I/O space
++
++ffffffbffb000000	ffffffbffbbfffff	  12MB		[guard]
+ 
+-ffffffbffbe00000	ffffffbffbe0ffff	  64KB		PCI I/O space
++ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
+ 
+-ffffffbffbe10000	ffffffbcffffffff	  ~2MB		[guard]
++ffffffbffbe00000	ffffffbffbffffff	   2MB		[guard]
+ 
+ ffffffbffc000000	ffffffbfffffffff	  64MB		modules
+ 
+@@ -60,11 +62,13 @@ fffffdfc00000000	fffffdfdffffffff	   8GB		vmemmap
+ 
+ fffffdfe00000000	fffffdfffbbfffff	  ~8GB		[guard, future vmmemap]
+ 
+-fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
++fffffdfffa000000	fffffdfffaffffff	  16MB		PCI I/O space
++
++fffffdfffb000000	fffffdfffbbfffff	  12MB		[guard]
+ 
+-fffffdfffbe00000	fffffdfffbe0ffff	  64KB		PCI I/O space
++fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
+ 
+-fffffdfffbe10000	fffffdfffbffffff	  ~2MB		[guard]
++fffffdfffbe00000	fffffdfffbffffff	   2MB		[guard]
+ 
+ fffffdfffc000000	fffffdffffffffff	  64MB		modules
+ 
+diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+index 4cc813e..7846a6b 100644
+--- a/arch/arm64/include/asm/io.h
++++ b/arch/arm64/include/asm/io.h
+@@ -121,7 +121,7 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+  *  I/O port access primitives.
+  */
+ #define IO_SPACE_LIMIT		0xffff
+-#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_2M))
++#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
+ 
+ static inline u8 inb(unsigned long addr)
  {
- 	struct fe_priv *np = get_nvpriv(dev);
- 	u8 __iomem *base = get_hwbase(dev);
--	int ret = 1;
-+	int ret;
- 	int i;
- 	irqreturn_t (*handler)(int foo, void *data);
- 
-@@ -4010,9 +4010,10 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 				writel(0, base + NvRegMSIXMap1);
- 			}
- 			netdev_info(dev, "MSI-X enabled\n");
-+			return 0;
- 		}
- 	}
--	if (ret != 0 && np->msi_flags & NV_MSI_CAPABLE) {
-+	if (np->msi_flags & NV_MSI_CAPABLE) {
- 		ret = pci_enable_msi(np->pci_dev);
- 		if (ret == 0) {
- 			np->msi_flags |= NV_MSI_ENABLED;
-@@ -4031,13 +4032,12 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 			/* enable msi vector 0 */
- 			writel(NVREG_MSI_VECTOR_0_ENABLED, base + NvRegMSIIrqMask);
- 			netdev_info(dev, "MSI enabled\n");
-+			return 0;
- 		}
- 	}
--	if (ret != 0) {
--		if (request_irq(np->pci_dev->irq, handler, IRQF_SHARED, dev->name, dev) != 0)
--			goto out_err;
- 
--	}
-+	if (request_irq(np->pci_dev->irq, handler, IRQF_SHARED, dev->name, dev) != 0)
-+		goto out_err;
- 
- 	return 0;
- out_free_tx:
 -- 
-1.7.7.6
+1.9.0
 
