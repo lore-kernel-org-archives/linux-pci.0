@@ -9,12 +9,13 @@ Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	LKML <linux-kernel@vger.kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v4 3/3] arm64: Add architecture support for PCI
-Date: Mon,  3 Mar 2014 17:33:33 +0000
-Message-Id: <1393868013-32345-4-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1393868013-32345-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1393868013-32345-1-git-send-email-Liviu.Dudau@arm.com>
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v6 3/3] arm64: Add architecture support for PCI
+Date: Wed,  5 Mar 2014 11:49:10 +0000
+Message-Id: <1394020150-1875-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
@@ -22,7 +23,15 @@ Use the generic host bridge functions to provide support for
 PCI Express on arm64. There is no support for ISA memory.
 
 Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ arch/arm64/Kconfig            |  19 +++-
+ arch/arm64/include/asm/Kbuild |   1 +
+ arch/arm64/include/asm/io.h   |   3 +-
+ arch/arm64/include/asm/pci.h  |  49 +++++++++
+ arch/arm64/kernel/Makefile    |   1 +
+ arch/arm64/kernel/pci.c       | 173 ++++++++++++++++++++++++++++++++
+ 6 files changed, 244 insertions(+), 2 deletions(-)
  create mode 100644 arch/arm64/include/asm/pci.h
  create mode 100644 arch/arm64/kernel/pci.c
 
@@ -91,10 +100,10 @@ index 7846a6b..67463a5 100644
  static inline u8 inb(unsigned long addr)
 diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
 new file mode 100644
-index 0000000..6ed4092
+index 0000000..6f1fb3d
 --- /dev/null
 +++ b/arch/arm64/include/asm/pci.h
-@@ -0,0 +1,47 @@
+@@ -0,0 +1,49 @@
 +#ifndef __ASM_PCI_H
 +#define __ASM_PCI_H
 +#ifdef __KERNEL__
@@ -109,6 +118,8 @@ index 0000000..6ed4092
 +
 +#define PCIBIOS_MIN_IO		0x1000
 +#define PCIBIOS_MIN_MEM		0
++
++struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
 +
 +/*
 + * Set to 1 if the kernel should re-assign all PCI bus numbers
@@ -125,7 +136,7 @@ index 0000000..6ed4092
 +
 +static inline int pci_domain_nr(struct pci_bus *bus)
 +{
-+	struct pci_host_bridge *bridge = to_pci_host_bridge(bus->bridge);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
 +
 +	if (bridge)
 +		return bridge->domain_nr;
@@ -156,10 +167,10 @@ index 2d4554b..64fc479 100644
  obj-m					+= $(arm64-obj-m)
 diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
 new file mode 100644
-index 0000000..f00471d
+index 0000000..9f29c9a
 --- /dev/null
 +++ b/arch/arm64/kernel/pci.c
-@@ -0,0 +1,178 @@
+@@ -0,0 +1,173 @@
 +/*
 + * Code borrowed from powerpc/kernel/pci-common.c
 + *
@@ -284,17 +295,12 @@ index 0000000..f00471d
 +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
 +				resource_size_t size, resource_size_t align)
 +{
-+	return ALIGN(res->start, align);
++	return res->start;
 +}
-+EXPORT_SYMBOL(pcibios_align_resource);
 +
 +int pcibios_enable_device(struct pci_dev *dev, int mask)
 +{
 +	return pci_enable_resources(dev, mask);
-+}
-+
-+void pcibios_fixup_bridge_ranges(struct list_head *resources)
-+{
 +}
 +
 +#define IO_SPACE_PAGES	((IO_SPACE_LIMIT + 1) / PAGE_SIZE)
