@@ -1,88 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.131]:51517 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbaCTLSF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 07:18:05 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Date: Thu, 20 Mar 2014 12:17:22 +0100
-Cc: Catalin Marinas <Catalin.Marinas@arm.com>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:33536 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754569AbaCEN0f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 08:26:35 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: linux-sh@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com> <8312584.jdZZuHGAjg@wuerfel> <20140320094654.GZ6457@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140320094654.GZ6457@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201403201217.22339.arnd@arndb.de>
+	Simon Horman <horms@verge.net.au>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
+Subject: [PATCH v2 1/6] ARM: dts: tegra: add PCIe interrupt mapping properties
+Date: Wed,  5 Mar 2014 14:25:46 +0100
+Message-Id: <1394025951-32438-2-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 20 March 2014, Liviu Dudau wrote:
-> On Wed, Mar 19, 2014 at 06:37:51PM +0000, Arnd Bergmann wrote:
-> > On Wednesday 19 March 2014 17:21:41 Liviu Dudau wrote:
-> > > 
-> > > My ultimate point is that no matter how long we argue about the shape of the functions that
-> > > I've added into arch/arm64/kernel/pci.c I don't think we can get away without having that
-> > > file, or at least not in the first phase if we want speedy integration into mainline.
-> > 
-> > Let me simplify the discussion here:
-> > 
-> > NAK to adding yet another architecture specific implementation.
-> 
-> So what would be your approach for handling pci_address_to_pio() in a non-arch specific way?
-> 
-> unsigned long __weak pci_address_to_pio(phys_addr_t address)
-> {
-> #ifdef ARCH_HAS_IOSPACE
->         if (address > IO_SPACE_LIMIT)
->                 return (unsigned long)-1;
-> 
->         return (unsigned long) address;
-> #else
->         struct ioresource *res;
-> 
->         list_for_each_entry(res, &io_list, list) {
->                 if (address >= res->start &&
->                         address < res->start + res->size) {
->                         return res->start - address;
->                 }
->         }
-> 
->         return (unsigned long)-1;
-> #endif
-> }
-> 
-> 
-> Either that, or you have more magic rabbits than me.
+Those are defined by the common PCI binding.
 
-I don't even understand why you want to create a generic pci_address_to_pio
-implementation, when we don't need that for arm64 at all. Unless I'm
-missing something important, that function is only called in case of
-PCI_PROBE_DEVTREE with pci_of_scan on PowerPC. I don't expect any
-architecture to do the same thing, and the only other architecture that
-needs something like it (sparc) has a different implementation.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+---
+ Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt | 8 ++++++++
+ arch/arm/boot/dts/tegra20.dtsi                                | 4 ++++
+ arch/arm/boot/dts/tegra30.dtsi                                | 4 ++++
+ 3 files changed, 16 insertions(+)
 
-The regular (non-DEVTREE) PCI bus scan should just be able to translate
-the BUS I/O addresses into Linux I/O port numbers using io_offset,
-without going through an intermediate step of translating into a CPU
-physical address first, so the entire lookup method won't get used.
+diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+index 24cee06915c9..c300391e8d3e 100644
+--- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+@@ -42,6 +42,10 @@ Required properties:
+     - 0xc2000000: prefetchable memory region
+   Please refer to the standard PCI bus binding document for a more detailed
+   explanation.
++- #interrupt-cells: Size representation for interrupts (must be 1)
++- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
++  Please refer to the standard PCI bus binding document for a more detailed
++  explanation.
+ - clocks: Must contain an entry for each entry in clock-names.
+   See ../clocks/clock-bindings.txt for details.
+ - clock-names: Must include the following entries:
+@@ -86,6 +90,10 @@ SoC DTSI:
+ 		              0 99 0x04>; /* MSI interrupt */
+ 		interrupt-names = "intr", "msi";
+ 
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &intc GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
++
+ 		bus-range = <0x00 0xff>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+diff --git a/arch/arm/boot/dts/tegra20.dtsi b/arch/arm/boot/dts/tegra20.dtsi
+index 480ecda3416b..52ef2cf0b142 100644
+--- a/arch/arm/boot/dts/tegra20.dtsi
++++ b/arch/arm/boot/dts/tegra20.dtsi
+@@ -552,6 +552,10 @@
+ 			      GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
+ 		interrupt-names = "intr", "msi";
+ 
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &intc GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
++
+ 		bus-range = <0x00 0xff>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
+index ed8e7700b46d..e5ab7adbc28a 100644
+--- a/arch/arm/boot/dts/tegra30.dtsi
++++ b/arch/arm/boot/dts/tegra30.dtsi
+@@ -28,6 +28,10 @@
+ 			      GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
+ 		interrupt-names = "intr", "msi";
+ 
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &intc GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
++
+ 		bus-range = <0x00 0xff>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+-- 
+1.9.0
 
-The reason why PowerPC needs it is that they traditionally don't
-use PCI config space access to assign or look at resources, but
-instead rely on the firmware to have set it up in advance and then
-put matching information into DT and the BARs. For Solaris and AIX,
-it's probably easier to use the information from DT, but in Linux,
-we already need to implement the manual bus scan, e.g. to do
-PCI device hotplugging if nothing else.
-
-	Arnd
