@@ -1,55 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:45560 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756679AbaC0QBi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 12:01:38 -0400
-Received: by mail-ig0-f177.google.com with SMTP id ur14so1764123igb.10
-        for <linux-pci@vger.kernel.org>; Thu, 27 Mar 2014 09:01:37 -0700 (PDT)
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:35603 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753299AbaCEEMT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 23:12:19 -0500
+Subject: Re: sblk->status_tag on drivers/net/ethernet/broadcom/tg3.c
+From: Michael Chan <mchan@broadcom.com>
+To: Jagan Teki <jagannadh.teki@gmail.com>
+CC: <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Nithin Nayak Sujir <nsujir@broadcom.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+In-Reply-To: <CAD6G_RTVVb2qdU43PqKm3BAD2-pvVcs_O=Wck2SCBhRRV-d+Lw@mail.gmail.com>
+References: <CAD6G_RQVD7=v7b6S-muiZBYV7PEykTHOTM23i-BL=wcA5z=4Qg@mail.gmail.com>
+	 <CAD6G_RQ130TunwZDL+8vwx__8NsfzE0AfcfnS7z5OXtZF5T8xQ@mail.gmail.com>
+	 <1393975344.4632.10.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+	 <CAD6G_RTVVb2qdU43PqKm3BAD2-pvVcs_O=Wck2SCBhRRV-d+Lw@mail.gmail.com>
+Content-Type: text/plain; charset="cp1252"
+Date: Tue, 4 Mar 2014 20:12:18 -0800
+Message-ID: <1393992738.4632.15.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHH3p5+aJfJ_vdkpVbOvi8OgDsv-UgbRg+keE-YSUwrF8c93tA@mail.gmail.com>
-References: <CAHH3p5+aJfJ_vdkpVbOvi8OgDsv-UgbRg+keE-YSUwrF8c93tA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 27 Mar 2014 10:01:17 -0600
-Message-ID: <CAErSpo4FXCKCyXzz+pj4O4hX6vGeZuDdG0YpShU9NhovCSYk7g@mail.gmail.com>
-Subject: Re: Test MSI without device driver
-To: shiv prakash Agarwal <chhotu.shiv@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 27, 2014 at 4:54 AM, shiv prakash Agarwal
-<chhotu.shiv@gmail.com> wrote:
-> Hi All,
->
-> Could we test MSI functionality of Root Complex without having Endpoint driver?
-> If not, could we use some test code just to simulate endpoint driver
-> for MSI functionality?
+On Wed, 2014-03-05 at 09:33 +0530, Jagan Teki wrote:
+> The driver is not seeing the status block mean - tg3.c driver?
 
-An Endpoint signals an MSI by issuing a DMA write.  The OS configures
-the target of that write when it enables MSI on the device.  The
-target of the write may be something in the Root Complex, a local APIC
-in a CPU, or something else.
+Yes, tg3 driver.  All IRQ events (link change, rx, tx) are in status
+block.  If tg3 does not see the correct bits and indexes in the status
+block, it won't know what to do.  In this case, it doesn't see the link
+change bit in status block (I suspect), so it is not acknowledging and
+clearing the link change event.  Status block is DMA'ed from the NIC to
+memory.
 
-I don't think the PCIe spec says anything about how this should be
-implemented, so from a PCIe spec point of view, the PCI/PCIe fabric
-and the Root Complex route the DMA write but otherwise don't do
-anything special with it.
+> Does it relates to ISR or addressing of PCIe RC driver, I'm doing
+> nothing on my PCIe RC driver just read the legacy INT# status and
+> return.
 
-You should be able to test some MSI functionality if you can generate
-a write similar to what the Endpoint would generate.  On x86, MSI DMA
-writes typically target a CPU Local APIC, and you could write to those
-by ioremapping the LAPIC physical address.  Of course, this wouldn't
-test the whole path because the transaction would not traverse any of
-the PCIe fabric.
+RC stands for what?  Root Complex?  I don't know what an RC driver does.
 
-If the MSI target is in the Root Complex, you'd have to know more
-details about the topology and routing details, but you could probably
-do the same thing.
 
-But it's probably a lot easier to just put an Endpoint in the system
-and test it that way :)
-
-Bjorn
