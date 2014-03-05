@@ -1,74 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:33559 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750974AbaC1Psk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 11:48:40 -0400
-Message-ID: <1396021656.4563.3.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH v2 0/6] PCI irq mapping fixes and cleanups
-From: Lucas Stach <l.stach@pengutronix.de>
-To: linux-arm-kernel@lists.infradead.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-sh@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
+Received: from quartz.orcorp.ca ([184.70.90.242]:51987 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752791AbaCESmo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Mar 2014 13:42:44 -0500
+Date: Wed, 5 Mar 2014 11:42:19 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Simon Horman <horms@verge.net.au>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ben Dooks <ben-linux@fluff.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
 	Thierry Reding <thierry.reding@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
-Date: Fri, 28 Mar 2014 16:47:36 +0100
-In-Reply-To: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+	Ben Dooks <ben-linux@fluff.org>, linux-tegra@vger.kernel.org,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>, kernel@pengutronix.de
+Subject: Re: [PATCH v2 6/6] PCI: designware: use new OF interrupt mapping
+ when possible
+Message-ID: <20140305184219.GA29903@obsidianresearch.com>
 References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+ <1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Friendly ping.
+On Wed, Mar 05, 2014 at 02:25:51PM +0100, Lucas Stach wrote:
+> -	return pp->irq;
+> +	irq = of_irq_parse_and_map_pci(dev, slot, pin);
+> +	if (!irq)
+> +		irq = pp->irq;
 
-Bjorn could you please pick the patches labeled "PCI: ..." up? Both the
-Tegra and i.MX dts changes are already queued up for 3.15 and I think
-all patches gathered enough acks and tested-bys for this to be low risk.
+In light of the two bugs that Tim found, it might be wise to throw a
+'dev_warn(FW_BUG "Missing DT interrupt mapping")' in the fall back
+path, so it doesn't continue to silently cover up errors on the OF/DT
+side..
 
 Regards,
-Lucas
-
-Am Mittwoch, den 05.03.2014, 14:25 +0100 schrieb Lucas Stach:
-> This series cleans up the PCI irq mapping for all
-> the ARM PCI host drivers, so they handle it in the
-> way defined in the common PCI bindings.
-> 
-> I've worked in all the feedback I received on the first
-> round of this series and left out the i.MX pcie driver
-> changes, as these need more work includig breaking
-> of the existing binding, which I'll send as a separate
-> series.
-> 
-> Lucas Stach (6):
->   ARM: dts: tegra: add PCIe interrupt mapping properties
->   PCI: tegra: use new OF interrupt mapping when possible
->   PCI: rcar: use new OF interrupt mapping when possible
->   ARM: dts: exynos5440: fix PCIe interrupt mapping
->   ARM: dts: imx6: add PCIe interrupt mapping properties
->   PCI: designware: use new OF interrupt mapping when possible
-> 
->  .../devicetree/bindings/pci/nvidia,tegra20-pcie.txt          |  8 ++++++++
->  arch/arm/boot/dts/exynos5440.dtsi                            |  6 ++++--
->  arch/arm/boot/dts/imx6qdl.dtsi                               |  8 ++++++++
->  arch/arm/boot/dts/tegra20.dtsi                               |  4 ++++
->  arch/arm/boot/dts/tegra30.dtsi                               |  4 ++++
->  drivers/pci/host/pci-rcar-gen2.c                             | 12 +++++++++---
->  drivers/pci/host/pci-tegra.c                                 |  7 ++++++-
->  drivers/pci/host/pcie-designware.c                           | 12 +++++++++---
->  8 files changed, 52 insertions(+), 9 deletions(-)
-> 
-
--- 
-Pengutronix e.K.                           | Lucas Stach                 |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
-
+Jason
