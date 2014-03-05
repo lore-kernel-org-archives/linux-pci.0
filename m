@@ -1,112 +1,614 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [207.46.163.237] ([207.46.163.237]:31798 "EHLO
-	na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756970AbaCSVBX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Mar 2014 17:01:23 -0400
-Date: Wed, 19 Mar 2014 16:00:41 -0500
-From: Scott Wood <scottwood@freescale.com>
-To: Dongsheng Wang <dongsheng.wang@freescale.com>
-CC: <bhelgaas@google.com>, <rjw@rjwysocki.net>,
-	<roy.zang@freescale.com>, <galak@codeaurora.org>,
-	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [2/2] fsl/pci: The new pci suspend/resume implementation
-Message-ID: <20140319210041.GA14019@home.buserror.net>
-References: <1389081848-26506-2-git-send-email-dongsheng.wang@freescale.com>
+Received: from service87.mimecast.com ([91.220.42.44]:58189 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751983AbaCESLB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 13:11:01 -0500
+Date: Wed, 5 Mar 2014 18:10:57 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v5] PCI: ARM: add support for generic PCI host controller
+Message-ID: <20140305181057.GC2214@e106497-lin.cambridge.arm.com>
+References: <1393872400-7262-1-git-send-email-will.deacon@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1389081848-26506-2-git-send-email-dongsheng.wang@freescale.com>
+In-Reply-To: <1393872400-7262-1-git-send-email-will.deacon@arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 07, 2014 at 04:04:08PM +0800, Dongsheng Wang wrote:
-> From: Wang Dongsheng <dongsheng.wang@freescale.com>
+On Mon, Mar 03, 2014 at 06:46:40PM +0000, Will Deacon wrote:
+> This patch adds support for a generic PCI host controller, such as a
+> firmware-initialised device with static windows or an emulation by
+> something such as kvmtool.
 > 
-> The new suspend/resume implementation, send pme turnoff message
-> in suspend, and send pme exit message in resume.
+> The controller itself has no configuration registers and has its address
+> spaces described entirely by the device-tree (using the bindings from
+> ePAPR). Both CAM and ECAM are supported for Config Space accesses.
 > 
-> Add a PME handler, to response PME & message interrupt.
+> Corresponding documentation is added for the DT binding.
 > 
-> Change platform_driver->suspend/resume to syscore->suspend/resume.
-> pci-driver will call back EP device, to save EP state in
-> pci_pm_suspend_noirq, so we need to keep the link, until
-> pci_pm_suspend_noirq finish.
+> Signed-off-by: Will Deacon <will.deacon@arm.com>
+> ---
 > 
-> Signed-off-by: Wang Dongsheng <dongsheng.wang@freescale.com>
-
-Is this patch OK to go in without patch 1/2?  It's not clear whether that
-was deemed incorrect (as in new patch coming) or unnecessary.
-
-It would also be good if you submit with the explanation from
-http://www.spinics.net/lists/linux-pci/msg27844.html in the commit
-message.
-
-> -static int fsl_pci_probe(struct platform_device *pdev)
-> +#ifdef CONFIG_PM
-> +static irqreturn_t fsl_pci_pme_handle(int irq, void *dev_id)
->  {
-> -	int ret;
-> -	struct device_node *node;
-> +	struct pci_controller *hose = dev_id;
-> +	struct ccsr_pci __iomem *pci = hose->private_data;
-> +	u32 dr;
->  
-> -	node = pdev->dev.of_node;
-> -	ret = fsl_add_bridge(pdev, fsl_pci_primary == node);
-> +	dr = in_be32(&pci->pex_pme_mes_dr);
-> +	if (dr)
-> +		out_be32(&pci->pex_pme_mes_dr, dr);
-> +	else
-> +		return IRQ_NONE;
->  
-> -	mpc85xx_pci_err_probe(pdev);
-> +	return IRQ_HANDLED;
+> Hi,
+> 
+> This is version 5 of the patches previously posted here:
+> 
+>   v1: http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/229679.html
+>   v2: http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/232213.html
+>   v3: http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/233491.html
+>   v4: http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/235468.html
+> 
+> Changes since v4 include:
+> 
+>   - Changed binding example to use I/O bus address 0x0
+> 
+>   - Fixed and simplified rounding code for I/O ranges so that we don't
+>     mess around with the registered resource
+> 
+>   - Finally fixed I/O offset handling
+> 
+> Note that I didn't use of_property_read_bool for parsing "linux,pci-probe-only"
+> since that would interfere with "pci=firmware" being passed on the command
+> line (meaning we have a tri-state). I also didn't move the resource
+> registration into gen_pci_calc_*_offset, since that duplicates code and
+> complicates the freeing paths.
+> 
+> As per usual, all feedback welcome. The next step is probably to work out
+> a set of library functions that can be extracted from this driver.
+> 
+> Will
+> 
+>  .../devicetree/bindings/pci/host-generic-pci.txt   | 100 ++++++
+>  drivers/pci/host/Kconfig                           |   7 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pci-host-generic.c                | 369 +++++++++++++++++++++
+>  4 files changed, 477 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>  create mode 100644 drivers/pci/host/pci-host-generic.c
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> new file mode 100644
+> index 000000000000..98788c153302
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> @@ -0,0 +1,100 @@
+> +* Generic PCI host controller
+> +
+> +Firmware-initialised PCI host controllers and PCI emulations, such as the
+> +virtio-pci implementations found in kvmtool and other para-virtualised
+> +systems, do not require driver support for complexities such as regulator
+> +and clock management. In fact, the controller may not even require the
+> +configuration of a control interface by the operating system, instead
+> +presenting a set of fixed windows describing a subset of IO, Memory and
+> +Configuration Spaces.
+> +
+> +Such a controller can be described purely in terms of the standardized device
+> +tree bindings communicated in pci.txt:
+> +
+> +
+> +Properties of the host controller node:
+> +
+> +- compatible     : Must be "pci-host-cam-generic" or "pci-host-ecam-generic"
+> +                   depending on the layout of configuration space (CAM vs
+> +                   ECAM respectively).
+> +
+> +- device_type    : Must be "pci".
+> +
+> +- ranges         : As described in IEEE Std 1275-1994, but must provide
+> +                   at least a definition of non-prefetchable memory. One
+> +                   or both of prefetchable Memory and IO Space may also
+> +                   be provided.
+> +
+> +- bus-range      : Optional property (also described in IEEE Std 1275-1994)
+> +                   to indicate the range of bus numbers for this controller.
+> +                   If absent, defaults to <0 255> (i.e. all buses).
+> +
+> +- #address-cells : Must be 3.
+> +
+> +- #size-cells    : Must be 2.
+> +
+> +- reg            : The Configuration Space base address and size, as accessed
+> +                   from the parent bus.
+> +
+> +
+> +Properties of the /chosen node:
+> +
+> +- linux,pci-probe-only
+> +                 : Optional property which takes a single-cell argument.
+> +                   If '0', then Linux will assign devices in its usual manner,
+> +                   otherwise it will not try to assign devices and instead use
+> +                   them as they are configured already.
+> +
+> +Configuration Space is assumed to be memory-mapped (as opposed to being
+> +accessed via an ioport) and laid out with a direct correspondence to the
+> +geography of a PCI bus address by concatenating the various components to
+> +form an offset.
+> +
+> +For CAM, this 24-bit offset is:
+> +
+> +        cfg_offset(bus, device, function, register) =
+> +                   bus << 16 | device << 11 | function << 8 | register
+> +
+> +Whilst ECAM extends this by 4 bits to accomodate 4k of function space:
+> +
+> +        cfg_offset(bus, device, function, register) =
+> +                   bus << 20 | device << 15 | function << 12 | register
+> +
+> +Interrupt mapping is exactly as described in `Open Firmware Recommended
+> +Practice: Interrupt Mapping' and requires the following properties:
+> +
+> +- #interrupt-cells   : Must be 1
+> +
+> +- interrupt-map      : <see aforementioned specification>
+> +
+> +- interrupt-map-mask : <see aforementioned specification>
+> +
+> +
+> +Example:
+> +
+> +pci {
+> +    compatible = "pci-host-cam-generic"
+> +    device_type = "pci";
+> +    #address-cells = <3>;
+> +    #size-cells = <2>;
+> +    bus-range = <0x0 0x1>;
+> +
+> +    // CPU_PHYSICAL(2)  SIZE(2)
+> +    reg = <0x0 0x40000000  0x0 0x1000000>;
+> +
+> +    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
+> +    ranges = <0x0000000 0x0 0x01000000  0x0 0x01000000  0x0 0x00010000>,
+> +             <0x1000000 0x0 0x41000000  0x0 0x41000000  0x0 0x3f000000>;
+> +
+> +
+> +    #interrupt-cells = <0x1>;
+> +
+> +    // PCI_DEVICE(3)  INT#(1)  CONTROLLER(PHANDLE)  CONTROLLER_DATA(3)
+> +    interrupt-map = <  0x0 0x0 0x0  0x1  &gic  0x0 0x4 0x1
+> +                     0x800 0x0 0x0  0x1  &gic  0x0 0x5 0x1
+> +                    0x1000 0x0 0x0  0x1  &gic  0x0 0x6 0x1
+> +                    0x1800 0x0 0x0  0x1  &gic  0x0 0x7 0x1>;
+> +
+> +    // PCI_DEVICE(3)  INT#(1)
+> +    interrupt-map-mask = <0xf800 0x0 0x0  0x7>;
 > +}
-
-Why do you put some of the HANDLED path in the if statement, and some
-outside?
-
-Just do:
-
-if (!dr)
-	return IRQ_NONE;
-
-out_be32(...);
-return IRQ_HANDLED;
-
-> +static int fsl_pci_pme_probe(struct pci_controller *hose)
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 47d46c6d8468..f91637d47065 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -33,4 +33,11 @@ config PCI_RCAR_GEN2
+>           There are 3 internal PCI controllers available with a single
+>           built-in EHCI/OHCI host controller present on each one.
+> 
+> +config PCI_HOST_GENERIC
+> +       bool "Generic PCI host controller"
+> +       depends on ARM && OF
+> +       help
+> +         Say Y here if you want to support a simple generic PCI host
+> +         controller, such as the one emulated by kvmtool.
+> +
+>  endmenu
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index 13fb3333aa05..bd1bf1ab4ac8 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+>  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+>  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+>  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+> +obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> new file mode 100644
+> index 000000000000..b761f3e64a6a
+> --- /dev/null
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -0,0 +1,369 @@
+> +/*
+> + * Simple, generic PCI host controller driver targetting firmware-initialised
+> + * systems and virtual machines (e.g. the PCI emulation provided by kvmtool).
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+> + *
+> + * Copyright (C) 2014 ARM Limited
+> + *
+> + * Author: Will Deacon <will.deacon@arm.com>
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/of_address.h>
+> +#include <linux/of_pci.h>
+> +#include <linux/platform_device.h>
+> +
+> +struct gen_pci_cfg_bus_ops {
+> +       u32 bus_shift;
+> +       void __iomem *(*map_bus)(struct pci_bus *, unsigned int, int);
+> +};
+> +
+> +struct gen_pci_cfg_windows {
+> +       struct resource                         res;
+> +       struct resource                         bus_range;
+> +       void __iomem                            **win;
+> +
+> +       const struct gen_pci_cfg_bus_ops        *ops;
+> +};
+> +
+> +struct gen_pci {
+> +       struct pci_host_bridge                  host;
+> +       struct gen_pci_cfg_windows              cfg;
+> +};
+> +
+> +static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+> +                                            unsigned int devfn,
+> +                                            int where)
 > +{
-> +	struct ccsr_pci __iomem *pci;
-> +	struct pci_dev *dev = hose->bus->self;
-> +	u16 pms;
-> +	int pme_irq;
-> +	int res;
+> +       struct pci_sys_data *sys = bus->sysdata;
+> +       struct gen_pci *pci = sys->private_data;
+> +       resource_size_t idx = bus->number - pci->cfg.bus_range.start;
 > +
-> +	/* PME Disable */
-> +	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pms);
-> +	pms &= ~PCI_PM_CTRL_PME_ENABLE;
-> +	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pms);
+> +       return pci->cfg.win[idx] + ((devfn << 8) | where);
+> +}
 > +
-> +	pme_irq = irq_of_parse_and_map(hose->dn, 0);
-> +	if (!pme_irq) {
-> +		pr_warn("Failed to map PME interrupt.\n");
-
-dev_err()
-
+> +static struct gen_pci_cfg_bus_ops gen_pci_cfg_cam_bus_ops = {
+> +       .bus_shift      = 16,
+> +       .map_bus        = gen_pci_map_cfg_bus_cam,
+> +};
 > +
-> +		return -ENXIO;
-> +	}
+> +static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
+> +                                             unsigned int devfn,
+> +                                             int where)
+> +{
+> +       struct pci_sys_data *sys = bus->sysdata;
+> +       struct gen_pci *pci = sys->private_data;
+> +       resource_size_t idx = bus->number - pci->cfg.bus_range.start;
 > +
-> +	res = devm_request_irq(hose->parent, pme_irq,
-> +			fsl_pci_pme_handle,
-> +			IRQF_DISABLED | IRQF_SHARED,
-> +			"[PCI] PME", hose);
+> +       return pci->cfg.win[idx] + ((devfn << 12) | where);
+> +}
+> +
+> +static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
+> +       .bus_shift      = 20,
+> +       .map_bus        = gen_pci_map_cfg_bus_ecam,
+> +};
+> +
+> +static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
+> +                               int where, int size, u32 *val)
+> +{
+> +       void __iomem *addr;
+> +       struct pci_sys_data *sys = bus->sysdata;
+> +       struct gen_pci *pci = sys->private_data;
+> +
+> +       addr = pci->cfg.ops->map_bus(bus, devfn, where);
+> +
+> +       switch (size) {
+> +       case 1:
+> +               *val = readb(addr);
+> +               break;
+> +       case 2:
+> +               *val = readw(addr);
+> +               break;
+> +       default:
+> +               *val = readl(addr);
+> +       }
+> +
+> +       return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
+> +                                int where, int size, u32 val)
+> +{
+> +       void __iomem *addr;
+> +       struct pci_sys_data *sys = bus->sysdata;
+> +       struct gen_pci *pci = sys->private_data;
+> +
+> +       addr = pci->cfg.ops->map_bus(bus, devfn, where);
+> +
+> +       switch (size) {
+> +       case 1:
+> +               writeb(val, addr);
+> +               break;
+> +       case 2:
+> +               writew(val, addr);
+> +               break;
+> +       default:
+> +               writel(val, addr);
+> +       }
+> +
+> +       return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +static struct pci_ops gen_pci_ops = {
+> +       .read   = gen_pci_config_read,
+> +       .write  = gen_pci_config_write,
+> +};
+> +
+> +static int gen_pci_calc_io_offset(struct device *dev,
+> +                                 struct of_pci_range *range,
+> +                                 struct resource *res,
+> +                                 resource_size_t *offset)
+> +{
+> +       static atomic_t wins = ATOMIC_INIT(0);
+> +       int err, idx, max_win;
+> +       unsigned int window;
+> +
+> +       if (!PAGE_ALIGNED(range->cpu_addr))
+> +               return -EINVAL;
+> +
+> +       max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
+> +       idx = atomic_inc_return(&wins);
+> +       if (idx >= max_win)
+> +               return -ENOSPC;
+> +
+> +       window = (idx - 1) * SZ_64K;
+> +       err = pci_ioremap_io(window, range->cpu_addr);
+> +       if (err)
+> +               return err;
+> +
+> +       of_pci_range_to_resource(range, dev->of_node, res);
+> +       res->start = window;
+> +       res->end = res->start + range->size - 1;
+> +       *offset = window - range->pci_addr;
 
-IRQF_DISABLED is a deprecated no-op.
+If my fix for of_pci_range_to_resource will get accepted, this
+function will have to morph into the pci_register_io_range() call.
+Would that cause problems for other users of of_pci_range_to_resource()
+(namely mach-integrator ?)
 
-> +	if (res < 0) {
-> +		pr_warn("Unable to requiest irq %d for PME\n", pme_irq);
+Otherwise, looks good to me. You can add my (worthless?)
 
-dev_err() etc.
+Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
--Scott
+
+Cheers,
+Liviu
+
+
+> +       return 0;
+> +}
+> +
+> +static int gen_pci_calc_mem_offset(struct device *dev,
+> +                                  struct of_pci_range *range,
+> +                                  struct resource *res,
+> +                                  resource_size_t *offset)
+> +{
+> +       of_pci_range_to_resource(range, dev->of_node, res);
+> +       *offset = range->cpu_addr - range->pci_addr;
+> +       return 0;
+> +}
+> +
+> +static const struct of_device_id gen_pci_of_match[] = {
+> +       { .compatible = "pci-host-cam-generic",
+> +         .data = &gen_pci_cfg_cam_bus_ops },
+> +
+> +       { .compatible = "pci-host-ecam-generic",
+> +         .data = &gen_pci_cfg_ecam_bus_ops },
+> +
+> +       { },
+> +};
+> +MODULE_DEVICE_TABLE(of, gen_pci_of_match);
+> +
+> +static int gen_pci_setup(int nr, struct pci_sys_data *sys)
+> +{
+> +       int err, res_valid;
+> +       u8 bus_max;
+> +       struct pci_host_bridge_window *win;
+> +       struct resource *bus_range;
+> +       resource_size_t busn;
+> +       const char *type;
+> +       struct of_pci_range range;
+> +       struct of_pci_range_parser parser;
+> +       const struct of_device_id *of_id;
+> +       const int *prop;
+> +       struct gen_pci *pci = sys->private_data;
+> +       struct device *dev = pci->host.dev.parent;
+> +       struct device_node *np = dev->of_node;
+> +
+> +       type = of_get_property(np, "device_type", NULL);
+> +       if (!type || strcmp(type, "pci")) {
+> +               dev_err(dev, "invalid \"device_type\" %s\n", type);
+> +               return -EINVAL;
+> +       }
+> +
+> +       if (of_pci_range_parser_init(&parser, np)) {
+> +               dev_err(dev, "missing \"ranges\" property\n");
+> +               return -EINVAL;
+> +       }
+> +
+> +       prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
+> +       if (prop) {
+> +               if (*prop)
+> +                       pci_add_flags(PCI_PROBE_ONLY);
+> +               else
+> +                       pci_clear_flags(PCI_PROBE_ONLY);
+> +       }
+> +
+> +       if (of_pci_parse_bus_range(np, &pci->cfg.bus_range))
+> +               pci->cfg.bus_range = (struct resource) {
+> +                       .name   = np->name,
+> +                       .start  = 0,
+> +                       .end    = 0xff,
+> +                       .flags  = IORESOURCE_BUS,
+> +               };
+> +
+> +       err = of_address_to_resource(np, 0, &pci->cfg.res);
+> +       if (err) {
+> +               dev_err(dev, "missing \"reg\" property\n");
+> +               return err;
+> +       }
+> +
+> +       pci->cfg.win = devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
+> +                                   sizeof(*pci->cfg.win), GFP_KERNEL);
+> +       if (!pci->cfg.win)
+> +               return -ENOMEM;
+> +
+> +       of_id = of_match_node(gen_pci_of_match, np);
+> +       pci->cfg.ops = of_id->data;
+> +       INIT_LIST_HEAD(&pci->host.windows);
+> +
+> +       /* Limit the bus-range to fit within reg */
+> +       bus_max = pci->cfg.bus_range.start +
+> +                 (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
+> +       pci->cfg.bus_range.end = min_t(resource_size_t, pci->cfg.bus_range.end,
+> +                                      bus_max);
+> +
+> +       /* Create and register resources from the ranges property */
+> +       res_valid = 0;
+> +       for_each_of_pci_range(&parser, &range) {
+> +               struct resource *parent, *res;
+> +               resource_size_t offset;
+> +               u32 restype = range.flags & IORESOURCE_TYPE_BITS;
+> +
+> +               res = devm_kmalloc(dev, sizeof(*res), GFP_KERNEL);
+> +               if (!res) {
+> +                       err = -ENOMEM;
+> +                       goto out_release_res;
+> +               }
+> +
+> +               switch (restype) {
+> +               case IORESOURCE_IO:
+> +                       parent = &ioport_resource;
+> +                       err = gen_pci_calc_io_offset(dev, &range, res, &offset);
+> +                       break;
+> +               case IORESOURCE_MEM:
+> +                       parent = &iomem_resource;
+> +                       err = gen_pci_calc_mem_offset(dev, &range, res, &offset);
+> +                       res_valid |= !(res->flags & IORESOURCE_PREFETCH || err);
+> +                       break;
+> +               default:
+> +                       err = -EINVAL;
+> +                       continue;
+> +               }
+> +
+> +               if (err) {
+> +                       dev_warn(dev,
+> +                                "error %d: failed to add resource [type 0x%x, %lld bytes]\n",
+> +                                err, restype, range.size);
+> +                       continue;
+> +               }
+> +
+> +               err = request_resource(parent, res);
+> +               if (err)
+> +                       goto out_release_res;
+> +
+> +               pci_add_resource_offset(&sys->resources, res, offset);
+> +       }
+> +
+> +       if (!res_valid) {
+> +               dev_err(dev, "non-prefetchable memory resource required\n");
+> +               err = -EINVAL;
+> +               goto out_release_res;
+> +       }
+> +
+> +       /* Map our Configuration Space windows */
+> +       if (!request_mem_region(pci->cfg.res.start,
+> +                               resource_size(&pci->cfg.res),
+> +                               "Configuration Space"))
+> +               goto out_release_res;
+> +
+> +       bus_range = &pci->cfg.bus_range;
+> +       for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+> +               u32 idx = busn - bus_range->start;
+> +               u32 sz = 1 << pci->cfg.ops->bus_shift;
+> +
+> +               pci->cfg.win[idx] = devm_ioremap(dev,
+> +                                                pci->cfg.res.start + busn * sz,
+> +                                                sz);
+> +               if (!pci->cfg.win[idx]) {
+> +                       err = -ENOMEM;
+> +                       goto out_unmap_cfg;
+> +               }
+> +       }
+> +
+> +       /* Register bus resource */
+> +       pci_add_resource(&sys->resources, bus_range);
+> +       return 1;
+> +
+> +out_unmap_cfg:
+> +       while (busn-- > bus_range->start)
+> +               devm_iounmap(dev, pci->cfg.win[busn - bus_range->start]);
+> +
+> +out_release_res:
+> +       release_child_resources(&iomem_resource);
+> +       release_child_resources(&ioport_resource);
+> +
+> +       list_for_each_entry(win, &sys->resources, list)
+> +               devm_kfree(dev, win->res);
+> +       pci_free_resource_list(&sys->resources);
+> +
+> +       devm_kfree(dev, pci->cfg.win);
+> +       return err;
+> +}
+> +
+> +static int gen_pci_probe(struct platform_device *pdev)
+> +{
+> +       struct hw_pci hw;
+> +       struct gen_pci *pci;
+> +       struct device *dev = &pdev->dev;
+> +
+> +       if (!dev->of_node)
+> +               return -ENODEV;
+> +
+> +       pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> +       if (!pci)
+> +               return -ENOMEM;
+> +
+> +       pci->host.dev.parent = dev;
+> +       hw = (struct hw_pci) {
+> +               .nr_controllers = 1,
+> +               .private_data   = (void **)&pci,
+> +               .setup          = gen_pci_setup,
+> +               .map_irq        = of_irq_parse_and_map_pci,
+> +               .ops            = &gen_pci_ops,
+> +       };
+> +
+> +       pci_common_init_dev(dev, &hw);
+> +       return 0;
+> +}
+> +
+> +static struct platform_driver gen_pci_driver = {
+> +       .driver = {
+> +               .name = "pci-host-generic",
+> +               .owner = THIS_MODULE,
+> +               .of_match_table = gen_pci_of_match,
+> +       },
+> +       .probe = gen_pci_probe,
+> +};
+> +module_platform_driver(gen_pci_driver);
+> +
+> +MODULE_DESCRIPTION("Generic PCI host driver");
+> +MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+> +MODULE_LICENSE("GPLv2");
+> --
+> 1.8.2.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
