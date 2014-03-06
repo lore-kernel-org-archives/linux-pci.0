@@ -1,70 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Stephane Eranian <eranian@google.com>
-Cc: Borislav Petkov <bp@alien8.de>,
-	lkml <linux-kernel@vger.kernel.org>, x86 <x86@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
-Date: Mon, 17 Mar 2014 01:09:39 +0100
-Message-ID: <1425376.F2qgSAxAbW@vostro.rjw.lan>
-In-Reply-To: <CABPqkBSmes+ee19iVh0EHvMQ=7TAzN3Fx1BKdOZ-2iuk5L0ugw@mail.gmail.com>
-References: <20140224162400.GE16457@pd.tnic> <20140316115546.GA11935@nazgul.tnic> <CABPqkBSmes+ee19iVh0EHvMQ=7TAzN3Fx1BKdOZ-2iuk5L0ugw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:20933 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753314AbaCFUJy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Mar 2014 15:09:54 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	Alexandre Bounine <alexandre.bounine@idt.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 3/4] tsi721: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Thu,  6 Mar 2014 21:11:23 +0100
+Message-Id: <d21563117d14900b2c094847198ff9a99e2e3dfa.1394128952.git.agordeev@redhat.com>
+In-Reply-To: <cover.1394128952.git.agordeev@redhat.com>
+References: <cover.1394128952.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, March 16, 2014 02:08:16 PM Stephane Eranian wrote:
-> Rafael,
-> 
-> Thanks for the analysis.
-> 
-> On Sun, Mar 16, 2014 at 12:55 PM, Borislav Petkov <bp@alien8.de> wrote:
-> > On Sat, Mar 15, 2014 at 03:15:04PM +0100, Rafael J. Wysocki wrote:
-> >> I've just gone throught this.
-> >
-> > Thanks.
-> >
-> >> So the problem is that we have the PNP "system" driver whose only purpose seems
-> >> to be to reserve system resources so that the PCI layer doesn't assign them to
-> >> new devices on hotplug (disclaimer: I didn't invent it, I only read the code and
-> >> comments in there).
-> >>
-> >> It does that for ACPI device objects having the "PNP0C02" and "PNP0C01" IDs.
-> >
-> > Right, pnp 00:01 is PNP0C02.
-> >
-> >> Apparently, snb_uncore_imc_init_box() steps on a range already reserved by that
-> >> driver on your box.  And this doesn't seem to be a coincidence, because the ACPI
-> >> device object in question probably *does* correspond to the memory controller
-> >> that the uncore driver attempts to use.
-> >>
-> >> I'm not sure how to address that right now to be honest.  Arguably, the PNP
-> >> "system" driver should be replaced with something saner, but still the
-> >> resources it claims need to be kept out of reach of the PCI's resource
-> >> allocation code.
-> >
-> > Well, I'm only conjecturing here but there should be a way for the
-> > uncore code to tell the PNP "system" driver to free this resource
-> > because uncore is going to use it now. Or something to that effect.
-> >
-> I agree. The snb_uncore_imc() is making real (good) use of the device.
-> It needs to own it. So we need a way to free the resource from the PNP
-> system or  a way to tell PNP need to grab it on systems with the
-> snb_uncore_imc() support. Does that kind of API exist?
-> 
-> Where do I look to prevent PNP from grabbing the IMC?
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-drivers/pnp/system.c is the driver in question and system_pnp_probe() makes
-the reservations via reserve_resources_of_dev(), so you'd need to modify that.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Matt Porter <mporter@kernel.crashing.org>
+Cc: Alexandre Bounine <alexandre.bounine@idt.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/rapidio/devices/tsi721.c |   11 +++--------
+ 1 files changed, 3 insertions(+), 8 deletions(-)
 
-I'm not sure what's the right way to go here, though.
-
+diff --git a/drivers/rapidio/devices/tsi721.c b/drivers/rapidio/devices/tsi721.c
+index ff7cbf2..ce08e8d 100644
+--- a/drivers/rapidio/devices/tsi721.c
++++ b/drivers/rapidio/devices/tsi721.c
+@@ -768,15 +768,10 @@ static int tsi721_enable_msix(struct tsi721_device *priv)
+ 	}
+ #endif /* CONFIG_RAPIDIO_DMA_ENGINE */
+ 
+-	err = pci_enable_msix(priv->pdev, entries, ARRAY_SIZE(entries));
++	err = pci_enable_msix_exact(priv->pdev, entries, ARRAY_SIZE(entries));
+ 	if (err) {
+-		if (err > 0)
+-			dev_info(&priv->pdev->dev,
+-				 "Only %d MSI-X vectors available, "
+-				 "not using MSI-X\n", err);
+-		else
+-			dev_err(&priv->pdev->dev,
+-				"Failed to enable MSI-X (err=%d)\n", err);
++		dev_err(&priv->pdev->dev,
++			"Failed to enable MSI-X (err=%d)\n", err);
+ 		return err;
+ 	}
+ 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.7.6
+
