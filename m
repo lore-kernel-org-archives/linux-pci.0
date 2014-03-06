@@ -1,126 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50990 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755492AbaCNPfO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 11:35:14 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 6 Mar 2014 16:04:42 +0000
 From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH v7 3/6] pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-Date: Fri, 14 Mar 2014 15:34:29 +0000
-Message-Id: <1394811272-1547-4-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH v5 1/7] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140306160442.GG6457@e106497-lin.cambridge.arm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+ <1393948204-11555-2-git-send-email-Liviu.Dudau@arm.com>
+ <201403042330.09607.arnd@arndb.de>
+MIME-Version: 1.0
+In-Reply-To: <201403042330.09607.arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
-As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
-the creation order has been changed for no good reason. Revert the order of
-creation as we are going to depend on the pci_host_bridge structure to retrieve the
-domain number of the root bus.
+On Tue, Mar 04, 2014 at 10:30:09PM +0000, Arnd Bergmann wrote:
+> On Tuesday 04 March 2014, Liviu Dudau wrote:
+> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> > +{
+> > +       return 0;
+> > +}
+> > +
+> 
+> How about returning an error here? You don't actually register the range.
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Acked-by: Grant Likely <grant.likely@linaro.org>
-Tested-by: Tanmay Inamdar <tinamdar@apm.com>
----
- drivers/pci/probe.c | 36 ++++++++++++++++++------------------
- 1 file changed, 18 insertions(+), 18 deletions(-)
+That's not the intention here. I basically want a nop, as by default (read x86)
+we do nothing with the IO range.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6e34498..fd11c12 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
- 	kfree(bridge);
- }
- 
--static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-+static struct pci_host_bridge *pci_alloc_host_bridge(void)
- {
- 	struct pci_host_bridge *bridge;
- 
-@@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- 		return NULL;
- 
- 	INIT_LIST_HEAD(&bridge->windows);
--	bridge->bus = b;
- 	return bridge;
- }
- 
-@@ -1727,9 +1726,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	char bus_addr[64];
- 	char *fmt;
- 
-+	bridge = pci_alloc_host_bridge();
-+	if (!bridge)
-+		return NULL;
-+
-+	bridge->dev.parent = parent;
-+	bridge->dev.release = pci_release_host_bridge_dev;
-+	error = pcibios_root_bridge_prepare(bridge);
-+	if (error)
-+		goto err_out;
-+
- 	b = pci_alloc_bus();
- 	if (!b)
--		return NULL;
-+		goto err_out;
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
-@@ -1738,26 +1747,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
- 		dev_dbg(&b2->dev, "bus already known\n");
--		goto err_out;
-+		goto err_bus_out;
- 	}
- 
--	bridge = pci_alloc_host_bridge(b);
--	if (!bridge)
--		goto err_out;
--
--	bridge->dev.parent = parent;
--	bridge->dev.release = pci_release_host_bridge_dev;
-+	bridge->bus = b;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
--	error = pcibios_root_bridge_prepare(bridge);
--	if (error) {
--		kfree(bridge);
--		goto err_out;
--	}
--
- 	error = device_register(&bridge->dev);
- 	if (error) {
- 		put_device(&bridge->dev);
--		goto err_out;
-+		goto err_bus_out;
- 	}
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
-@@ -1814,8 +1812,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- class_dev_reg_err:
- 	put_device(&bridge->dev);
- 	device_unregister(&bridge->dev);
--err_out:
-+err_bus_out:
- 	kfree(b);
-+err_out:
-+	kfree(bridge);
- 	return NULL;
- }
- 
+Best regards,
+Liviu
+
+> 
+> 	Arnd
+> 
+
 -- 
-1.9.0
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
