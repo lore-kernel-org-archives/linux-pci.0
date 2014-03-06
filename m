@@ -1,43 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:35603 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753299AbaCEEMT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 23:12:19 -0500
-Subject: Re: sblk->status_tag on drivers/net/ethernet/broadcom/tg3.c
-From: Michael Chan <mchan@broadcom.com>
-To: Jagan Teki <jagannadh.teki@gmail.com>
-CC: <netdev@vger.kernel.org>,
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:38953 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750885AbaCFLhx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 06:37:53 -0500
+Date: Thu, 6 Mar 2014 11:37:17 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"arnd@arndb.de" <arnd@arndb.de>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Nithin Nayak Sujir <nsujir@broadcom.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-In-Reply-To: <CAD6G_RTVVb2qdU43PqKm3BAD2-pvVcs_O=Wck2SCBhRRV-d+Lw@mail.gmail.com>
-References: <CAD6G_RQVD7=v7b6S-muiZBYV7PEykTHOTM23i-BL=wcA5z=4Qg@mail.gmail.com>
-	 <CAD6G_RQ130TunwZDL+8vwx__8NsfzE0AfcfnS7z5OXtZF5T8xQ@mail.gmail.com>
-	 <1393975344.4632.10.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-	 <CAD6G_RTVVb2qdU43PqKm3BAD2-pvVcs_O=Wck2SCBhRRV-d+Lw@mail.gmail.com>
-Content-Type: text/plain; charset="cp1252"
-Date: Tue, 4 Mar 2014 20:12:18 -0800
-Message-ID: <1393992738.4632.15.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v5] PCI: ARM: add support for generic PCI host controller
+Message-ID: <20140306113717.GE5202@mudshark.cambridge.arm.com>
+References: <1393872400-7262-1-git-send-email-will.deacon@arm.com>
+ <20140305181057.GC2214@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140305181057.GC2214@e106497-lin.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-03-05 at 09:33 +0530, Jagan Teki wrote:
-> The driver is not seeing the status block mean - tg3.c driver?
+On Wed, Mar 05, 2014 at 06:10:57PM +0000, Liviu Dudau wrote:
+> On Mon, Mar 03, 2014 at 06:46:40PM +0000, Will Deacon wrote:
+> > +static int gen_pci_calc_io_offset(struct device *dev,
+> > +                                 struct of_pci_range *range,
+> > +                                 struct resource *res,
+> > +                                 resource_size_t *offset)
+> > +{
+> > +       static atomic_t wins = ATOMIC_INIT(0);
+> > +       int err, idx, max_win;
+> > +       unsigned int window;
+> > +
+> > +       if (!PAGE_ALIGNED(range->cpu_addr))
+> > +               return -EINVAL;
+> > +
+> > +       max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
+> > +       idx = atomic_inc_return(&wins);
+> > +       if (idx >= max_win)
+> > +               return -ENOSPC;
+> > +
+> > +       window = (idx - 1) * SZ_64K;
+> > +       err = pci_ioremap_io(window, range->cpu_addr);
+> > +       if (err)
+> > +               return err;
+> > +
+> > +       of_pci_range_to_resource(range, dev->of_node, res);
+> > +       res->start = window;
+> > +       res->end = res->start + range->size - 1;
+> > +       *offset = window - range->pci_addr;
+> 
+> If my fix for of_pci_range_to_resource will get accepted, this
+> function will have to morph into the pci_register_io_range() call.
+> Would that cause problems for other users of of_pci_range_to_resource()
+> (namely mach-integrator ?)
 
-Yes, tg3 driver.  All IRQ events (link change, rx, tx) are in status
-block.  If tg3 does not see the correct bits and indexes in the status
-block, it won't know what to do.  In this case, it doesn't see the link
-change bit in status block (I suspect), so it is not acknowledging and
-clearing the link change event.  Status block is DMA'ed from the NIC to
-memory.
+I imagine anybody using an I/O region would break, no? Maybe you could check
+range->flags in of_pci_range_to_resource and do the right thing if somebody
+passes you an I/O range?
 
-> Does it relates to ISR or addressing of PCIe RC driver, I'm doing
-> nothing on my PCIe RC driver just read the legacy INT# status and
-> return.
+I'm happy to update this driver, but it's best to avoid breaking other users
+if we can.
 
-RC stands for what?  Root Complex?  I don't know what an RC driver does.
+> Otherwise, looks good to me. You can add my (worthless?)
+> 
+> Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
+Thanks, Liviu!
 
+Will
