@@ -1,104 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.130]:62548 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757710AbaCTWLm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 18:11:42 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-sh@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Magnus Damm <damm@opensource.se>,
-	Ben Dooks <ben-linux@fluff.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms+renesas@verge.net.au>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: DMABOUNCE in pci-rcar
-Date: Thu, 20 Mar 2014 23:11:04 +0100
-Message-ID: <14479462.PmG77WeO2J@wuerfel>
-In-Reply-To: <20140320183932.GA7528@n2100.arm.linux.org.uk>
-References: <201402241200.21944.arnd@arndb.de> <201403201929.13633.arnd@arndb.de> <20140320183932.GA7528@n2100.arm.linux.org.uk>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5317D9B0.1080502@amd.com>
+Date: Wed, 5 Mar 2014 20:13:04 -0600
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	<kim.naru@amd.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 0/3] amd/pci: Add AMD hostbridge supports for newer AMD
+ systems
+References: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com> <CAErSpo4MMJh9b0aivwGSbxCMVw24He1+Vo_LH0R0E+fYM5aThg@mail.gmail.com>
+In-Reply-To: <CAErSpo4MMJh9b0aivwGSbxCMVw24He1+Vo_LH0R0E+fYM5aThg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 20 March 2014 18:39:32 Russell King - ARM Linux wrote:
-> On Thu, Mar 20, 2014 at 07:29:13PM +0100, Arnd Bergmann wrote:
-> > On Thursday 20 March 2014, Ben Dooks wrote:
+On 3/5/2014 3:24 PM, Bjorn Helgaas wrote:
+> [+cc linux-acpi]
+>
+> On Wed, Mar 5, 2014 at 2:06 PM,  <suravee.suthikulpanit@amd.com> wrote:
+>> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+>>
+>> The current code only supports upto AMD hostbridge for family11h.
+>> This causes PCI numa_node information to be reported incorrectly
+>> for newer family with multi sockets.
+>
+> Where is the incorrect reporting?  In ACPI tables?  Is this patch a
+> way to cover up firmware defects in the ACPI description?  Or is this
+> for machines without ACPI (it seems unlikely that machines with new
+> AMD processors would not have ACPI)?
 
-> > Shouldn't that mask be 30 instead of 31 when you only support DMA
-> > to the first GB?
-> > 
-> > Another possibility is that 'EARLY' means it gets applied before
-> > the normal mask is set.
-> > 
-> > Finally, setting the mask itself is not enough. As I mentioned you
-> > also need to use the swiotlb_dma_ops. Did you already implement
-> > those?
-> 
-> And the above is no way to handle the DMA mask - it will get
-> overwritten if the PCI device calls pci_set_dma_mask().  Please people,
-> read the documentation on how this stuff is supposed to work:
-> 
->   For correct operation, you must interrogate the kernel in your device
->   probe routine to see if the DMA controller on the machine can properly
->   support the DMA addressing limitation your device has.  It is good
->   style to do this even if your device holds the default setting,
->   because this shows that you did think about these issues wrt. your
->   device.
+This is incorrectly reported in the sysfs for each PCI device (e.g. 
+/devices/pci0000:50/0000:50:00.2/numa_node). Without the patch, they 
+return -1.
 
-The trouble is that in the documentation it is also assumed that
-the bus can do 32-bit DMA, and only the device may have further
-restrictions. Here it is the other way round: the device can do
-32-bit DMA, but the bus is limited to 31-bit, and at least the
-documentation does not say explicitly how that should be handled.
+In file arch/x86/pci/acpi.c, in function pci_acpi_scan_root(), it is 
+queries the node information as following:
 
-> Yes, OHCI's PCI driver doesn't do that at the moment, but that's not
-> to say that it won't in the future - at which point hacks like the
-> above suddenly stop working.
+#ifdef CONFIG_ACPI_NUMA
+	pxm = acpi_get_pxm(device->handle);
+	if (pxm >= 0)
+		node = pxm_to_node(pxm);
+	if (node != -1)
+		set_mp_bus_to_node(busnum, node);
+	else
+#endif
+		node = get_mp_bus_to_node(busnum);
 
-If the OHCI-PCI driver is changed to call
-dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32))), what do you
-think should happen? The way I read it, that call must fail on
-this platform, causing the probe() function to bail out and not
-use the hardware, which is clearly not what we want here.
+In this case, I see that the acpi_get_pxm() returns -1.  Therefore, it 
+falls back to using the node information in mp_bus_to_node[].  So, 
+without this patch, it would also returning -1.
 
-> We have other platforms which suffer from this - IXP is one of those
-> examples where PCI only has 64MB available.  The unfortunate thing is
-> we haven't yet got a good multi-platform way to handle dma_set_mask()
-> and dma_set_coherent_mask() with these kinds of restrictions.
-> 
-> However, the right solution here is that OHCI _should_ be making those
-> calls, and we _should_ be applying the platform specific fixups like
-> IXP does, but in a more generic way.  That includes using swiotlb
-> rather than dmabounce.
+Also, the spec mentioned that the _PXM is optional, so I am not sure if 
+this is a firmware bug.
 
-IXP uses defines a ixp4xx_pci_platform_notify() function that basically
-does the same thing that Ben tried adding here, and then it has a
-dma_set_coherent_mask function that checks whether the mask that the
-device tries to set is even smaller than that, in which case it returns
-a failure, but it returns success if the device tries to set a larger
-mask. In no case does it try to actually set the mask. While this seems
-like a practical approach, I don't see how that actually matches up
-with the documentation, e.g. "dma_set_coherent_mask will always be able
-to set the same or a smaller mask as the streaming mask." and
-"When dma_set_mask() or dma_set_mask_and_coherent() is successful, and
-returns zero, the kernel saves away this mask you have provided."
+Suravee
 
-Once we have figured out what the code should actually do, I think
-we can solve the question of how to do it for multiplatform. The
-approach I would take here is to treat the legacy platforms with
-special requirements the same way we do now -- we will never need
-multiplatform support on ixp4xx,  CM-X255/CM-X270 or sa1111.
-The majority of the platforms we support today are fine with
-always assuming that all of memory can be reached at the physical
-address, and the exceptions are either the legacy non-multiplatform
-ones, or very new platforms with LPAE that can only be probed using
-devicetree. I would think that we can support them all with the
-same dma_set_mask/dma_set_coherent_mask implementation that
-scans the DT for platform and PCI devices.
+>
+> The whole point of ACPI is that we shouldn't need to update the kernel
+> for new hardware, so if there's a firmware bug, it should be fixed, or
+> if the ACPI spec isn't powerful enough, it should be extended.
+>
+>> This patch set introduces the logic to discover AMD hostbridges.
+>>
+>> Note:
+>>      * Patch 1 and 2 are functional changes.
+>>      * Patch 3 is code clean up/restructuring
+>>
+>> Suravee Suthikulpanit (3):
+>>    amd/pci: Add supports for generic AMD hostbridges
+>>    amd/pci: Support additional MMIO ranges capabilities
+>>    amd/pci: Miscellaneous code clean up for early_fillup_mp_bus_info
+>>
+>>   arch/x86/pci/amd_bus.c |  376 ++++++++++++++++++++++++++++++++----------------
+>>   1 file changed, 251 insertions(+), 125 deletions(-)
+>>
+>> --
+>> 1.7.10.4
+>>
+>>
+>
 
-	Arnd
+
