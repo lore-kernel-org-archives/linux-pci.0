@@ -1,71 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:55076 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753716AbaCZN64 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 26 Mar 2014 09:58:56 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
-CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
-	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>
-Subject: [RFC PATCH 00/12] PCIe support for DRA7xx
-Date: Wed, 26 Mar 2014 19:27:40 +0530
-Message-ID: <1395842272-15267-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 6 Mar 2014 22:43:57 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 RESEND 1/4] ioat: Use pci_enable_msix_exact() instead
+ of pci_enable_msix()
+Message-ID: <20140306214356.GA16376@dhcp-26-207.brq.redhat.com>
+References: <cover.1394128952.git.agordeev@redhat.com>
+ <2ba22558b5db90740d5833c35570c3e7cc1e359e.1394128952.git.agordeev@redhat.com>
+ <CAPcyv4jW19zxApviDdbofbXB1OvvN2sCriL3Paszfk9o3T8x0w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPcyv4jW19zxApviDdbofbXB1OvvN2sCriL3Paszfk9o3T8x0w@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds support for PCIe in DRA7xx including drivers and dt
-data. PCIe in DRA7xx uses desingware IP and hence this re-uses the
-pcie desingware driver (pcie-designware.c) by Jingoo.
+On Thu, Mar 06, 2014 at 01:09:39PM -0800, Dan Williams wrote:
+> Can you point me to the background for this change.  From the
+> changelog I have no idea what this patch does or why I need to apply
+> it.
 
-This patch series depends on a few patches that is already in -next.
+Function pci_enable_msix() returns a tri-state value while
+pci_enable_msi_exact() is a canonical zero/-errno variant.
+The former is being phased out in favor of the latter.
+In case of 'ioat' there (should be) no difference.
 
-Tested broadcom PCIe card and XIO2000 bridge along with DGE530T ethernet
-card.
-
-Keerthy (2):
-  ARM: dts: DRA7: Add divider table to optfclk_pciephy_div clock
-  ARM: dts: DRA7: Change the parent of apll_pcie_in_clk_mux to
-    dpll_pcie_ref_m2ldo_ck
-
-Kishon Vijay Abraham I (10):
-  phy: phy-omap-pipe3: Add support for PCIe PHY
-  pci: host: pcie-dra7xx: add support for pcie-dra7xx controller
-  pci: host: pcie-designware: Use *base-mask* for configuring the iATU
-  arm: dra7xx: Add hwmod data for pcie1 phy and pcie2 phy
-  arm: dra7xx: Add hwmod data for pcie1 and pcie2 subsystems
-  ARM: dts: dra7xx-clocks: Add missing 32khz clocks used for PHY
-  ARM: dts: dra7: Add dt data for PCIe PHY control module
-  ARM: dts: dra7: Add dt data for PCIe PHY
-  ARM: dts: dra7: Add dt data for PCIe controller
-  ARM: OMAP: Enable PCI for DRA7
-
- .../devicetree/bindings/pci/designware-pcie.txt    |    1 +
- Documentation/devicetree/bindings/pci/ti-pci.txt   |   35 ++
- Documentation/devicetree/bindings/phy/ti-phy.txt   |    8 +-
- arch/arm/boot/dts/dra7.dtsi                        |   48 +++
- arch/arm/boot/dts/dra7xx-clocks.dtsi               |   11 +-
- arch/arm/mach-omap2/Kconfig                        |    2 +
- arch/arm/mach-omap2/cm2_7xx.h                      |    4 +
- arch/arm/mach-omap2/omap_hwmod_7xx_data.c          |  112 ++++++
- arch/arm/mach-omap2/prm7xx.h                       |    4 +
- drivers/pci/host/Kconfig                           |   10 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pcie-designware.c                 |   39 +-
- drivers/pci/host/pcie-designware.h                 |    1 +
- drivers/pci/host/pcie-dra7xx.c                     |  411 ++++++++++++++++++++
- drivers/phy/phy-ti-pipe3.c                         |   99 ++++-
- 15 files changed, 750 insertions(+), 36 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
- create mode 100644 drivers/pci/host/pcie-dra7xx.c
+HTH.
 
 -- 
-1.7.9.5
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
