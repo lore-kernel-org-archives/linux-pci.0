@@ -1,73 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f45.google.com ([209.85.213.45]:49536 "EHLO
-	mail-yh0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbaCEGV0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 01:21:26 -0500
-MIME-Version: 1.0
-In-Reply-To: <1393992738.4632.15.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-References: <CAD6G_RQVD7=v7b6S-muiZBYV7PEykTHOTM23i-BL=wcA5z=4Qg@mail.gmail.com>
-	<CAD6G_RQ130TunwZDL+8vwx__8NsfzE0AfcfnS7z5OXtZF5T8xQ@mail.gmail.com>
-	<1393975344.4632.10.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-	<CAD6G_RTVVb2qdU43PqKm3BAD2-pvVcs_O=Wck2SCBhRRV-d+Lw@mail.gmail.com>
-	<1393992738.4632.15.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-Date: Wed, 5 Mar 2014 11:43:26 +0530
-Message-ID: <CAD6G_RR=y+myvtEpa3YKiOx_8LR=Ad_nHUxuaXKakfKKyjuEaw@mail.gmail.com>
-Subject: Re: sblk->status_tag on drivers/net/ethernet/broadcom/tg3.c
-From: Jagan Teki <jagannadh.teki@gmail.com>
-To: Michael Chan <mchan@broadcom.com>
-Cc: netdev@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Nithin Nayak Sujir <nsujir@broadcom.com>,
+Received: from exprod5og102.obsmtp.com ([64.18.0.143]:46146 "HELO
+	exprod5og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750714AbaCFGG0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 01:06:26 -0500
+Received: by mail-pd0-f180.google.com with SMTP id v10so2101219pde.11
+        for <linux-pci@vger.kernel.org>; Wed, 05 Mar 2014 22:06:25 -0800 (PST)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Grant Likely <grant.likely@linaro.org>,
 	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v4 3/4] dt-bindings: pci: xgene pcie device tree bindings
+Date: Wed,  5 Mar 2014 22:06:02 -0800
+Message-Id: <1394085963-27553-4-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
+References: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Michael,
+This patch adds the bindings for X-Gene PCIe driver. The driver resides
+under 'drivers/pci/host/pci-xgene.c' file.
 
-Thanks for your inputs.
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ .../devicetree/bindings/pci/xgene-pci.txt          |   52 ++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
 
-On Wed, Mar 5, 2014 at 9:42 AM, Michael Chan <mchan@broadcom.com> wrote:
-> On Wed, 2014-03-05 at 09:33 +0530, Jagan Teki wrote:
->> The driver is not seeing the status block mean - tg3.c driver?
->
-> Yes, tg3 driver.  All IRQ events (link change, rx, tx) are in status
-> block.  If tg3 does not see the correct bits and indexes in the status
-> block, it won't know what to do.  In this case, it doesn't see the link
-> change bit in status block (I suspect), so it is not acknowledging and
-> clearing the link change event.  Status block is DMA'ed from the NIC to
-> memory.
-
-OK.
-
-As per your point I've a question here like - the status block is not properly
-updated (DMA'ed), does this depends on the address range we are advertised
-on PCIe ranges filed to make sure to use EP-
-http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
-
-The reason for asking this is we have two kind of PCIe bridge in separate
-boards where one is working fine by showing below log, and other
-we could see this issue.
-
-# ifconfig eth0 172.16.0.2 up
-RC: handler
-tg3_interrupt_tagged: ++status_tag = 0x1 write status = 0x1
---status_tag = 0x1
-RC: handler
-tg3_interrupt_tagged: ++status_tag = 0x1 write status = 0x1
---status_tag = 0x1 tg3_poll: tag = 0x1 calling tg3_int_reenable val =
-0x01000000
-
->
->> Does it relates to ISR or addressing of PCIe RC driver, I'm doing
->> nothing on my PCIe RC driver just read the legacy INT# status and
->> return.
->
-> RC stands for what?  Root Complex?  I don't know what an RC driver does.
-
-Yes, Root Complex driver in PCIe bridge.
-
+diff --git a/Documentation/devicetree/bindings/pci/xgene-pci.txt b/Documentation/devicetree/bindings/pci/xgene-pci.txt
+new file mode 100644
+index 0000000..e19fdb8
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/xgene-pci.txt
+@@ -0,0 +1,52 @@
++* AppliedMicro X-Gene PCIe interface
++
++Required properties:
++- device_type: set to "pci"
++- compatible: should contain "apm,xgene-pcie" to identify the core.
++- reg: A list of physical base address and length for each set of controller
++       registers. Must contain an entry for each entry in the reg-names
++       property.
++- reg-names: Must include the following entries:
++  "csr": controller configuration registers.
++  "cfg": pcie configuration space registers.
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- ranges: ranges for the outbound memory, I/O regions.
++- dma-ranges: ranges for the inbound memory regions.
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map: standard PCI properties
++	to define the mapping of the PCIe interface to interrupt
++	numbers.
++- clocks: from common clock binding: handle to pci clock.
++
++Optional properties:
++- status: Either "ok" or "disabled".
++
++Example:
++
++SoC specific DT Entry:
++	pcie0: pcie@1f2b0000 {
++		status = "disabled";
++		device_type = "pci";
++		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++			0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++		reg-names = "csr", "cfg";
++		ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
++			  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
++		dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++		clocks = <&pcie0clk 0>;
++	};
++
++Board specific DT Entry:
++	&pcie0 {
++		status = "ok";
++	};
 -- 
-Jagan.
+1.7.9.5
+
