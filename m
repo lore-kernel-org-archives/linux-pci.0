@@ -1,129 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:59391 "EHLO smtp.dudau.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751919AbaCEIfM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Mar 2014 03:35:12 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id 53057FF71C
-	for <linux-pci@vger.kernel.org>; Wed,  5 Mar 2014 08:35:11 +0000 (GMT)
-Date: Wed, 5 Mar 2014 08:33:12 +0000
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Liviu Dudau' <Liviu.Dudau@arm.com>,
-	'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Catalin Marinas' <Catalin.Marinas@arm.com>,
-	'Will Deacon' <Will.Deacon@arm.com>,
-	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
-	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
-	'LKML' <linux-kernel@vger.kernel.org>,
-	devicetree@vger.kernel.org,
-	'LAKML' <linux-arm-kernel@lists.infradead.org>,
-	'Tanmay Inamdar' <tinamdar@apm.com>,
-	'Arnd Bergmann' <arnd@arndb.de>
-Subject: Re: [PATCH v5 7/7] pci: Add support for creating a generic
- host_bridge from device tree
-Message-ID: <20140305083311.GD13582@bart.dudau.co.uk>
-References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
- <1393948204-11555-8-git-send-email-Liviu.Dudau@arm.com>
- <001f01cf3811$18463ed0$48d2bc70$%han@samsung.com>
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:32990
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751650AbaCFUDM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 15:03:12 -0500
+Message-ID: <5318D475.9040701@amd.com>
+Date: Thu, 6 Mar 2014 14:03:01 -0600
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <001f01cf3811$18463ed0$48d2bc70$%han@samsung.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	<kim.naru@amd.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 0/3] amd/pci: Add AMD hostbridge supports for newer AMD
+ systems
+References: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com> <CAErSpo4MMJh9b0aivwGSbxCMVw24He1+Vo_LH0R0E+fYM5aThg@mail.gmail.com> <5317D9B0.1080502@amd.com> <5318160D.8070305@amd.com> <CAErSpo59=52bqgyvqk1x7kcgFmRtdZhT6faYTi3wy7KDtk5=Pw@mail.gmail.com>
+In-Reply-To: <CAErSpo59=52bqgyvqk1x7kcgFmRtdZhT6faYTi3wy7KDtk5=Pw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 05, 2014 at 10:20:28AM +0900, Jingoo Han wrote:
-> On Wednesday, March 05, 2014 12:50 AM, Liviu Dudau wrote:
-> > 
-> > Several platforms use a rather generic version of parsing
-> > the device tree to find the host bridge ranges. Move the common code
-> > into the generic PCI code and use it to create a pci_host_bridge
-> > structure that can be used by arch code.
-> > 
-> > Based on early attempts by Andrew Murray to unify the code.
-> > Used powerpc and microblaze PCI code as starting point.
-> > 
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > 
-> > diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> > index 8708b652..800678a 100644
-> > --- a/drivers/pci/host-bridge.c
-> > +++ b/drivers/pci/host-bridge.c
-> 
-> [.....]
-> 
-> > +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-> 
-> It makes build error with exynos_defconfig. (ARM32)
-> Thus, 'slab.h' is necessary in order to fix the build error.
-> 
-> ./drivers/pci/host-bridge.c
-> @@ -8,6 +8,7 @@
->  #include <linux/module.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> +#include <linux/slab.h>
+On 3/6/2014 11:40 AM, Bjorn Helgaas wrote:
+> [+cc Yinghai, sorry I didn't think of it before]
+>
+> On Wed, Mar 5, 2014 at 11:30 PM, Suravee Suthikulpanit
+> <suravee.suthikulpanit@amd.com> wrote:
+>> On 3/5/2014 8:13 PM, Suravee Suthikulanit wrote:
+>>>
+>>> On 3/5/2014 3:24 PM, Bjorn Helgaas wrote:
+>>>>
+>>>> [+cc linux-acpi]
+>>>>
+>>>> On Wed, Mar 5, 2014 at 2:06 PM,  <suravee.suthikulpanit@amd.com> wrote:
+>>>>>
+>>>>> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+>>>>>
+>>>>> The current code only supports upto AMD hostbridge for family11h.
+>>>>> This causes PCI numa_node information to be reported incorrectly
+>>>>> for newer family with multi sockets.
+>>>>
+>>>>
+>>>> Where is the incorrect reporting?  In ACPI tables?  Is this patch a
+>>>> way to cover up firmware defects in the ACPI description?  Or is this
+>>>> for machines without ACPI (it seems unlikely that machines with new
+>>>> AMD processors would not have ACPI)?
+>>>
+>>>
+>>> This is incorrectly reported in the sysfs for each PCI device (e.g.
+>>> /devices/pci0000:50/0000:50:00.2/numa_node). Without the patch, they
+>>> return -1.
+>>>
+>>> In file arch/x86/pci/acpi.c, in function pci_acpi_scan_root(), it is
+>>> queries the node information as following:
+>>>
+>>> #ifdef CONFIG_ACPI_NUMA
+>>>       pxm = acpi_get_pxm(device->handle);
+>>>       if (pxm >= 0)
+>>>           node = pxm_to_node(pxm);
+>>>       if (node != -1)
+>>>           set_mp_bus_to_node(busnum, node);
+>>>       else
+>>> #endif
+>>>           node = get_mp_bus_to_node(busnum);
+>>>
+>>> In this case, I see that the acpi_get_pxm() returns -1.  Therefore, it
+>>> falls back to using the node information in mp_bus_to_node[].  So,
+>>> without this patch, it would also returning -1.
+>>>
+>>> Also, the spec mentioned that the _PXM is optional, so I am not sure if
+>>> this is a firmware bug.
+>>
+>> I am not quite familiar with the ACPI for this part.  However, after taking
+>> a look at the code (in driver/acpi/pci_root.c: acpi_pci_root_add()), I
+>> believe it's trying to locate _PXM method in the DSDT table, in which I
+>> don't see any _PXM methods.
+>
+> This sure looks like a firmware bug.  True, _PXM is optional, but if
+> the firmware doesn't provide it, nobody should be surprised that the
+> OS thinks everything is in the same proximity domain.
+>
+> I would not endorse extending amd_bus.c for new CPUs.  That just
+> covers up firmware problems like this, and if you ever run a different
+> OS on the box, you'll trip over them again.  And I don't think a patch
+> like this will even be a possibility for Windows.
+>
+> Bjorn
+>
 
-Will add, thanks!
+I understand and am trying to verify this with the BIOS engineers. 
+However, this is currently affecting family15h servers out in the field. 
+  We can try to fix ACPI for newer generation of machines, but it won't 
+be practical to push this BIOS fix to all the BIOS vendors and system 
+vendors for older platforms, as they tend to.
 
-> 
->  #include "pci.h"
-> 
-> 
-> > +		if (!res) {
-> > +			err = -ENOMEM;
-> > +			goto bridge_ranges_nomem;
-> > +		}
-> > +
-> > +		of_pci_range_to_resource(&range, dev, res);
-> > +
-> > +		if (resource_type(res) == IORESOURCE_IO)
-> > +			*io_base = range.cpu_addr;
-> > +
-> > +		pci_add_resource_offset(resources, res,
-> > +				res->start - range.pci_addr);
-> > +	}
-> > +
-> > +	/* Apply architecture specific fixups for the ranges */
-> > +	pcibios_fixup_bridge_ranges(resources);
-> 
-> It also makes compile problem with exynos_defconfig as below:
-> 
-> drivers/built-in.o: In function `pci_host_bridge_of_get_ranges':
-> drivers/pci/host-bridge.c:157: undefined reference to `pcibios_fixup_bridge_ranges'
+What if I localize the extension to the changes to access node 
+information in the hostbridge for just the famil15h which is mostly used 
+in our main server products? Would that be acceptable?
 
-Does that mean that exynos_defconfig doesn't define CONFIG_OF? How do you
-compile all the .dts files then? Should CONFIG_OF not be added to the default config
-file?
-
-Other than that, your comment is correct. drivers/pci/host-bridge.c gets compiled
-in regardless of CONFIG_OF and I need to provide an empty implementation for
-pcibios_fixup_bridge_ranges().
-
-Thanks!
-
-Liviu
-
-> 
-> Best regards,
-> Jingoo Han
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
-
- One small step
-   for me ...
+Suravee
 
