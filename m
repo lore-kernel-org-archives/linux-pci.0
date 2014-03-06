@@ -1,95 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:37362 "EHLO
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:52797 "EHLO
 	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756015AbaCULYc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 07:24:32 -0400
-Message-ID: <1395401031.4554.9.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree bindings
+	with ESMTP id S1752487AbaCFRkE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 12:40:04 -0500
+Message-ID: <1394127555.4582.1.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH v2 2/6] PCI: tegra: use new OF interrupt mapping when
+ possible
 From: Lucas Stach <l.stach@pengutronix.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-sh@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Date: Fri, 21 Mar 2014 12:23:51 +0100
-In-Reply-To: <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
-	 <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>
+	Simon Horman <horms@verge.net.au>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
+Date: Thu, 06 Mar 2014 18:39:15 +0100
+In-Reply-To: <5318B232.2020507@wwwdotorg.org>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+	 <1394025951-32438-3-git-send-email-l.stach@pengutronix.de>
+	 <5318B232.2020507@wwwdotorg.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
-> This patch adds the bindings for the rcar PCIE driver. The driver
-> resides under drivers/pci/host/pcie-rcar.c
+Am Donnerstag, den 06.03.2014, 10:36 -0700 schrieb Stephen Warren:
+> On 03/05/2014 06:25 AM, Lucas Stach wrote:
+> > This is the recommended method of doing the IRQ
+> > mapping. For old devicetrees we fall back to the
+> > previous practice.
 > 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-
-I have one question below. If you can answer this with yes after
-thinking again about it, this is:
-
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
->  Documentation/devicetree/bindings/pci/rcar-pci.txt | 40 ++++++++++++++++++++++
->  1 file changed, 40 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
+> Tested-by: Stephen Warren <swarren@nvidia.com>
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> new file mode 100644
-> index 0000000..0e219b0
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> @@ -0,0 +1,40 @@
-> +* Renesas RCar PCIe interface
-> +
-> +Required properties:
-> +- compatible: should contain one of the following
-> +	"renesas,r8a7779-pcie", "renesas,r8a7790-pcie", "renesas,r8a7791-pcie"
-> +- reg: base addresses and lengths of the pcie controller.
-> +- #address-cells: set to <3>
-> +- #size-cells: set to <2>
-> +- device_type: set to "pci"
-> +- ranges: ranges for the PCI memory and I/O regions
-> +- interrupts: interrupt values for MSI interrupt
-> +- #interrupt-cells: set to <1>
-> +- interrupt-map-mask and interrupt-map: standard PCI properties
-> +	to define the mapping of the PCIe interface to interrupt
-> +	numbers.
-> +- clocks: from common clock binding: handle to pci clock.
-> +- clock-names: from common clock binding: should be "pcie"
+> I tested both with and without patch 1/6, and the PCIe-based NIC on
+> Beaver worked fine either way. Without patch 1/6, I do see:
+> 
+> pci 0000:00:01.0: of_irq_parse_pci() failed with rc=-22
+> 
+> ... but that seems reasonable given that the DT that of_irq_parse_pci()
+> parses is missing, and did correctly trigger the fallback path, so
+> everything still worked.
 
-You really only have one PCIe clock? So the controller is generating the
-PCIe bus clock from it's register clock? No need to enable any other
-clock for PCIe to work?
+Yes, this should be normal. It spits this error for old DTs, but keeps
+doing the right thing. I'm not sure if we should downgrade this to info
+or dbg.
 
-> +
-> +Example:
-> +
-> +SoC specific DT Entry:
-> +
-> +	pcie: pcie@0x01000000 {
-> +		compatible = "renesas,r8a7790-pcie";
-> +		reg = <0 0xfe000000 0 0x80000>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
-> +			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
-> +			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
-> +			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-> +		interrupts = <0 116 4>;
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 0>;
-> +		interrupt-map = <0 0 0 0 &gic 0 116 4>;
-> +		clocks = <&mstp3_clks R8A7790_CLK_PCIE>;
-> +		clock-names = "pcie";
-> +		status = "disabled";
-> +	};
-
+Regards,
+Lucas
 -- 
 Pengutronix e.K.                           | Lucas Stach                 |
 Industrial Linux Solutions                 | http://www.pengutronix.de/  |
