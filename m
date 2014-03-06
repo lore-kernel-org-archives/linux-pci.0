@@ -1,115 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:42919 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752673AbaCUOSq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 10:18:46 -0400
-In-Reply-To: <1395401031.4554.9.camel@weser.hi.pengutronix.de>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>	 <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com> <1395401031.4554.9.camel@weser.hi.pengutronix.de>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
+Received: from mga09.intel.com ([134.134.136.24]:30666 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751697AbaCFV5M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Mar 2014 16:57:12 -0500
+Date: Thu, 6 Mar 2014 13:56:46 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+	"Nyman, Mathias" <mathias.nyman@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2 RESEND 4/4] xhci: Use pci_enable_msix_exact() instead
+ of pci_enable_msix()
+Message-ID: <20140306215646.GA23294@xanatos>
+References: <cover.1394128952.git.agordeev@redhat.com>
+ <606a52afdccf627b6273379b21daffc460b9559a.1394128952.git.agordeev@redhat.com>
 MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OF03C9E23D.07B7D998-ON80257CA2.004E5877-80257CA2.004E9BFB@eu.necel.com>
-Date: Fri, 21 Mar 2014 14:18:38 +0000
-Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree bindings
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <606a52afdccf627b6273379b21daffc460b9559a.1394128952.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas,
+On Thu, Mar 06, 2014 at 09:11:24PM +0100, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+> 
+> This update also cleans up a bit xhci_setup_msi() and
+> xhci_setup_msix() returning of success.
 
-On 21/03/2014 11:24, Lucas wrote:
-> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
-bindings
-> 
-> Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
-> > This patch adds the bindings for the rcar PCIE driver. The driver
-> > resides under drivers/pci/host/pcie-rcar.c
-> > 
-> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> 
-> I have one question below. If you can answer this with yes after
-> thinking again about it, this is:
-> 
-> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-> > ---
-> >  Documentation/devicetree/bindings/pci/rcar-pci.txt | 40 
-++++++++++++++++++++++
-> >  1 file changed, 40 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/
-> Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > new file mode 100644
-> > index 0000000..0e219b0
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > @@ -0,0 +1,40 @@
-> > +* Renesas RCar PCIe interface
-> > +
-> > +Required properties:
-> > +- compatible: should contain one of the following
-> > +   "renesas,r8a7779-pcie", "renesas,r8a7790-pcie", 
-"renesas,r8a7791-pcie"
-> > +- reg: base addresses and lengths of the pcie controller.
-> > +- #address-cells: set to <3>
-> > +- #size-cells: set to <2>
-> > +- device_type: set to "pci"
-> > +- ranges: ranges for the PCI memory and I/O regions
-> > +- interrupts: interrupt values for MSI interrupt
-> > +- #interrupt-cells: set to <1>
-> > +- interrupt-map-mask and interrupt-map: standard PCI properties
-> > +   to define the mapping of the PCIe interface to interrupt
-> > +   numbers.
-> > +- clocks: from common clock binding: handle to pci clock.
-> > +- clock-names: from common clock binding: should be "pcie"
-> 
-> You really only have one PCIe clock? So the controller is generating the
-> PCIe bus clock from it's register clock? No need to enable any other
-> clock for PCIe to work?
-Yes, just the one clock. The PCIe bus clock is an external clock dedicated 
-to PCIe and SATA, and we have no control over it.
+What do you mean by this sentence?  Are you fixing some bug in those two
+functions, or just cleaning up how they look?  Either way, this should
+really be two patches.
 
+Sarah Sharp
 
-> > +
-> > +Example:
-> > +
-> > +SoC specific DT Entry:
-> > +
-> > +   pcie: pcie@0x01000000 {
-> > +      compatible = "renesas,r8a7790-pcie";
-> > +      reg = <0 0xfe000000 0 0x80000>;
-> > +      #address-cells = <3>;
-> > +      #size-cells = <2>;
-> > +      device_type = "pci";
-> > +      ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
-> > +           0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
-> > +           0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
-> > +           0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-> > +      interrupts = <0 116 4>;
-> > +      #interrupt-cells = <1>;
-> > +      interrupt-map-mask = <0 0 0 0>;
-> > +      interrupt-map = <0 0 0 0 &gic 0 116 4>;
-> > +      clocks = <&mstp3_clks R8A7790_CLK_PCIE>;
-> > +      clock-names = "pcie";
-> > +      status = "disabled";
-> > +   };
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: linux-usb@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/usb/host/xhci.c |    7 ++++---
+>  1 files changed, 4 insertions(+), 3 deletions(-)
 > 
+> diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+> index 6fe577d..dc7cfb5 100644
+> --- a/drivers/usb/host/xhci.c
+> +++ b/drivers/usb/host/xhci.c
+> @@ -232,9 +232,10 @@ static int xhci_setup_msi(struct xhci_hcd *xhci)
+>  		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
+>  				"disable MSI interrupt");
+>  		pci_disable_msi(pdev);
+> +		return ret;
+>  	}
+>  
+> -	return ret;
+> +	return 0;
+>  }
+>  
+>  /*
+> @@ -291,7 +292,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
+>  		xhci->msix_entries[i].vector = 0;
+>  	}
+>  
+> -	ret = pci_enable_msix(pdev, xhci->msix_entries, xhci->msix_count);
+> +	ret = pci_enable_msix_exact(pdev, xhci->msix_entries, xhci->msix_count);
+>  	if (ret) {
+>  		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
+>  				"Failed to enable MSI-X");
+> @@ -307,7 +308,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
+>  	}
+>  
+>  	hcd->msix_enabled = 1;
+> -	return ret;
+> +	return 0;
+>  
+>  disable_msix:
+>  	xhci_dbg_trace(xhci, trace_xhci_dbg_init, "disable MSI-X interrupt");
 > -- 
-> Pengutronix e.K.                           | Lucas Stach |
-> Industrial Linux Solutions                 | http://www.pengutronix.de/ 
-|
-> Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 
-|
-> Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 
-|
+> 1.7.7.6
 > 
-
-Thanks
-Phil
