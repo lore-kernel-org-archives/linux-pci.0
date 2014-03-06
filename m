@@ -1,54 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36896 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753512AbaCCKEu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 05:04:50 -0500
-Received: by mail-pa0-f50.google.com with SMTP id kq14so3591026pab.23
-        for <linux-pci@vger.kernel.org>; Mon, 03 Mar 2014 02:04:49 -0800 (PST)
-Date: Mon, 3 Mar 2014 18:04:43 +0800
-From: Lee Jones <lee.jones@linaro.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] timberdale: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140303100132.GA10579@lee--X1>
-References: <1392804931-30671-3-git-send-email-agordeev@redhat.com>
- <20140219114424.GD10504@lee--X1>
- <20140221165606.GH17353@dhcp-26-207.brq.redhat.com>
- <20140221165809.GI17353@dhcp-26-207.brq.redhat.com>
- <20140224162902.GI15847@lee--X1>
- <20140303072551.GC4674@lee--X1>
- <20140303081023.GA25705@dhcp-26-207.brq.redhat.com>
- <20140303092600.GB8282@lee--X1>
- <20140303093318.GB25705@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140303093318.GB25705@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 4/4] xhci: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Thu,  6 Mar 2014 21:11:24 +0100
+Message-Id: <606a52afdccf627b6273379b21daffc460b9559a.1394128952.git.agordeev@redhat.com>
+In-Reply-To: <cover.1394128952.git.agordeev@redhat.com>
+References: <cover.1394128952.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > > > > Applied, thanks.
-> > > > 
-> > > > I've reverted this patch, as it doesn't build othognally.
-> > > > 
-> > > > drivers/mfd/timberdale.c:718:2:
-> > > >   error: implicit declaration of function ‘pci_enable_msix_exact’
-> > > >      [-Werror=implicit-function-declaration]
-> > > 
-> > > I should have to clarify it I think. Do you build on top of 3.14-rc4?
-> > 
-> > Not yet. Is the required patch in there?
-> 
-> Yep - commit 302a252 ("PCI/MSI: Add pci_enable_msi_range() and
-> pci_enable_msix_range()").
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Okay, seems to work fine post-rebase.
+This update also cleans up a bit xhci_setup_msi() and
+xhci_setup_msix() returning of success.
 
-Reapplied, thanks.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/usb/host/xhci.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+index 6fe577d..dc7cfb5 100644
+--- a/drivers/usb/host/xhci.c
++++ b/drivers/usb/host/xhci.c
+@@ -232,9 +232,10 @@ static int xhci_setup_msi(struct xhci_hcd *xhci)
+ 		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
+ 				"disable MSI interrupt");
+ 		pci_disable_msi(pdev);
++		return ret;
+ 	}
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ /*
+@@ -291,7 +292,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
+ 		xhci->msix_entries[i].vector = 0;
+ 	}
+ 
+-	ret = pci_enable_msix(pdev, xhci->msix_entries, xhci->msix_count);
++	ret = pci_enable_msix_exact(pdev, xhci->msix_entries, xhci->msix_count);
+ 	if (ret) {
+ 		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
+ 				"Failed to enable MSI-X");
+@@ -307,7 +308,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
+ 	}
+ 
+ 	hcd->msix_enabled = 1;
+-	return ret;
++	return 0;
+ 
+ disable_msix:
+ 	xhci_dbg_trace(xhci, trace_xhci_dbg_init, "disable MSI-X interrupt");
 -- 
-Lee Jones
-Linaro STMicroelectronics Landing Team Lead
-Linaro.org │ Open source software for ARM SoCs
-Follow Linaro: Facebook | Twitter | Blog
+1.7.7.6
+
