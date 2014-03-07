@@ -1,197 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:62049 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751716AbaCBIC0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Mar 2014 03:02:26 -0500
-Content-Type: multipart/mixed;
-	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_"
-From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-CC: linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v2 03/23] bfa: Cleanup bfad_setup_intr() function
-Date: Sun, 2 Mar 2014 08:02:24 +0000
-Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59F7A207@avmb2.qlogic.org>
-References: <cover.1393191330.git.agordeev@redhat.com>
- <c3fb3d552113a7c180741cf9f577081fc690366f.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <c3fb3d552113a7c180741cf9f577081fc690366f.1393191330.git.agordeev@redhat.com>
-MIME-Version: 1.0
+Received: from mail-we0-f172.google.com ([74.125.82.172]:39135 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752305AbaCHFaX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Mar 2014 00:30:23 -0500
+Received: by mail-we0-f172.google.com with SMTP id t61so6178773wes.31
+        for <linux-pci@vger.kernel.org>; Fri, 07 Mar 2014 21:30:22 -0800 (PST)
+From: Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v2 4/4] pci: Add support for creating a generic host_bridge from device tree
+To: Arnd Bergmann <arnd@arndb.de>, linaro-kernel@lists.linaro.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <18746655.qWHLpMg2Yy@wuerfel>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com> < 1393506402-11474-5-git-send-email-Liviu.Dudau@arm.com> <18746655.qWHLpMg2Yy @wuerfel>
+Date: Fri, 07 Mar 2014 18:58:26 +0000
+Message-Id: <20140307185826.0DF50C40D6D@trevor.secretlab.ca>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Thu, 27 Feb 2014 14:38:32 +0100, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Thursday 27 February 2014 13:06:42 Liviu Dudau wrote:
+> > Several platforms use a rather generic version of parsing
+> > the device tree to find the host bridge ranges. Move the common code
+> > into the generic PCI code and use it to create a pci_host_bridge
+> > structure that can be used by arch code.
+> > 
+> > Based on early attempts by Andrew Murray to unify the code.
+> > Used powerpc and microblaze PCI code as starting point.
+> > 
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> 
+> Please add Benjamin Herrenschmidt to Cc here, I think it would be helpful
+> to get his input so we can make this work on powerpc as well.
 
-Patch look good.
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+s/helpful/required/
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel=
-.org] On Behalf Of Alexander Gordeev
-Sent: 24 February 2014 13:32
-To: linux-kernel
-Cc: Alexander Gordeev; Anil Gurumurthy; Vijaya Mohan Guvva; linux-scsi; lin=
-ux-pci
-Subject: [PATCH v2 03/23] bfa: Cleanup bfad_setup_intr() function
+:-)
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/bfa/bfad.c |   18 ++++++++----------
- 1 files changed, 8 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c index 972ff8=
-d..e7e4774 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1219,7 +1219,7 @@ bfad_install_msix_handler(struct bfad_s *bfad)  int  =
-bfad_setup_intr(struct bfad_s *bfad)  {
--       int error =3D 0;
-+       int error;
-        u32 mask =3D 0, i, num_bit =3D 0, max_bit =3D 0;
-        struct msix_entry msix_entries[MAX_MSIX_ENTRY];
-        struct pci_dev *pdev =3D bfad->pcidev;
-@@ -1279,20 +1279,18 @@ bfad_setup_intr(struct bfad_s *bfad)
-
-                bfad->bfad_flags |=3D BFAD_MSIX_ON;
-
--               return error;
-+               return 0;
-        }
-
- line_based:
--       error =3D 0;
--       if (request_irq
--           (bfad->pcidev->irq, (irq_handler_t) bfad_intx, BFAD_IRQ_FLAGS,
--            BFAD_DRIVER_NAME, bfad) !=3D 0) {
--               /* Enable interrupt handler failed */
--               return 1;
--       }
-+       error =3D request_irq(bfad->pcidev->irq, (irq_handler_t)bfad_intx,
-+                           BFAD_IRQ_FLAGS, BFAD_DRIVER_NAME, bfad);
-+       if (error)
-+               return error;
-+
-        bfad->bfad_flags |=3D BFAD_INTX_ON;
-
--       return error;
-+       return 0;
- }
-
- void
---
-1.7.7.6
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in th=
-e body of a message to majordomo@vger.kernel.org More majordomo info at  ht=
-tp://vger.kernel.org/majordomo-info.html
-
-________________________________
-
-This message and any attached documents contain information from QLogic Cor=
-poration or its wholly-owned subsidiaries that may be confidential. If you =
-are not the intended recipient, you may not read, copy, distribute, or use =
-this information. If you have received this transmission in error, please n=
-otify the sender immediately by reply e-mail and then delete this message.
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-4jvABbBwBbDD1AWxk1YQBCB3aAbwbHks8/8cYLEiDdEKwHEBsgG50QDAfySQsZEb4VHAAQACMAcx
-LnQgSS7weQhgW/C4sW7+bwVAsxKSwi+RHGAJcDlQ/nAIkAIwUpDJksgSyhIJcOc8cFKQBaBweVKQ
-DeFw4dxidRAgUpAFsXUSALIE38N5yUcR0BowyxJlXoGy8veyMT0gAHFtBAHD8rUxheP/UpALUDvw
-zlHKEQaQJJCzEv+ywhuxB3AHgMdBECDGYDtw/ySQCXALUCSQKJAr4sEzsxF/A6BT885ltkUilhVC
-2IAAHwBCAAEAAAAgAAAAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAAfAGUAAQAAADYA
-AABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAA
-AB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QC
-AAAAgEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAUwBNAFQAUAAAAEEAbgBpAGwALgBH
-AHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAANgAAAEEA
-bgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwDl
-XwEAAAA+AAAAcwBpAHAAOgBhAG4AaQBsAC4AZwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcA
-aQBjAC4AYwBvAG0AAAAAAB8AGgwBAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5
-AAAAHwAfDAEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHgAAAAAAAAAgSsf
-pL6jEBmdbgDdAQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAA
-AABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AAFdAQAAADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4A
-YwBvAG0AAAAAAB8A+D8BAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAHwAj
-QAEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMA
-bwBtAAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHgAAAAAAAAAgSsfpL6jEBmd
-bgDdAQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAAAABBAG4A
-aQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAA
-ADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-AAAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIAAABJ
-AFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAMvG
-OukvqhdFgkFQB7dzAm8DABcAAQAAAEAAOQAAqLO+7TXPAUAACDC1dh2/7TXPAQsAKQAAAAAACwAj
-AAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEA
-ZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAA
-AAAAHwA3AAEAAAB6AAAAUgBFADoAIABbAFAAQQBUAEMASAAgAHYAMgAgADAAMwAvADIAMwBdACAA
-YgBmAGEAOgAgAEMAbABlAGEAbgB1AHAAIABiAGYAYQBkAF8AcwBlAHQAdQBwAF8AaQBuAHQAcgAo
-ACkAIABmAHUAbgBjAHQAaQBvAG4AAAAAAB8APQABAAAACgAAAFIARQA6ACAAAAAAAAMANgAAAAAA
-AwAuAAAAAAAfAEIQAQAAAJwAAAA8AGMAMwBmAGIAMwBkADUANQAyADEAMQAzAGEANwBjADEAOAAw
-ADcANAAxAGMAZgA5AGYANQA3ADcAMAA4ADEAZgBjADYAOQAwADMANgA2AGYALgAxADMAOQAzADEA
-OQAxADMAMwAwAC4AZwBpAHQALgBhAGcAbwByAGQAZQBlAHYAQAByAGUAZABoAGEAdAAuAGMAbwBt
-AD4AAAACAXEAAQAAABsAAAABAc8xON5Z6NPEnf45R5ibBjPc6+Vams147yAAHwBwAAEAAAByAAAA
-WwBQAEEAVABDAEgAIAB2ADIAIAAwADMALwAyADMAXQAgAGIAZgBhADoAIABDAGwAZQBhAG4AdQBw
-ACAAYgBmAGEAZABfAHMAZQB0AHUAcABfAGkAbgB0AHIAKAApACAAZgB1AG4AYwB0AGkAbwBuAAAA
-AAAfADUQAQAAAHQAAAA8ADIAMABCADEAQQAzAEMAQgBEADkAOABGADMAOAA0ADUAQgAzAEYANQBG
-ADUANgBEADgANQA5ADcARQBGADUAOQBGADcAQQAyADAANwBAAGEAdgBtAGIAMgAuAHEAbABvAGcA
-aQBjAC4AbwByAGcAPgAAAB8AORABAAAA8gAAADwAYwBvAHYAZQByAC4AMQAzADkAMwAxADkAMQAz
-ADMAMAAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+ACAA
-PABjADMAZgBiADMAZAA1ADUAMgAxADEAMwBhADcAYwAxADgAMAA3ADQAMQBjAGYAOQBmADUANwA3
-ADAAOAAxAGYAYwA2ADkAMAAzADYANgBmAC4AMQAzADkAMwAxADkAMQAzADMAMAAuAGcAaQB0AC4A
-YQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+AAAAAAADAN4/n04AAAsAAIAI
-IAYAAAAAAMAAAAAAAABGAAAAAAOFAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAAYUAAAAA
-AAADAIAQ/////0AABzB1ft697TXPAQsAAgABAAAAAwAmAAAAAAALACsAAAAAAAIBRwABAAAALwAA
-AGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjItMTQwMzAyMDgwMjI0Wi0xNDg1OTAAAAIBEDABAAAA
-RgAAAAAAAACl9rpY+JScQJeq5kM6RFa/BwAgsaPL2Y84RbP19W2Fl+9ZAAAA9I0YAABnBDGMy3Gi
-SKVd3se6CF95AEt6pYzLAAAAAB8A+j8BAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQA
-aAB5AAAAAwAJWQEAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAA
-AMAAAAAAAABGAAAAAA6FAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACA
-CCAGAAAAAADAAAAAAAAARgAAAACChQAAAAAAAB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAAB
-AAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEA
-AAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMC
-AAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAA
-AQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAADoPw==
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_--
+g.
