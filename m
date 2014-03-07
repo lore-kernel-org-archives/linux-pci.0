@@ -1,47 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51465 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754477AbaCDPur (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 10:50:47 -0500
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
+Received: from moutng.kundenserver.de ([212.227.126.131]:56704 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924AbaCGAiW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 19:38:22 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: "Russell King - ARM Linux" <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v6 1/3] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+Date: Fri, 7 Mar 2014 01:37:38 +0100
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
+	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	Tanmay Inamdar <tinamdar@apm.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v5 5/7] pci: Use parent domain number when allocating child busses.
-Date: Tue,  4 Mar 2014 15:50:02 +0000
-Message-Id: <1393948204-11555-6-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+	LAKML <linux-arm-kernel@lists.infradead.org>
+References: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com> <1394020150-1875-2-git-send-email-Liviu.Dudau@arm.com> <20140305233135.GZ21483@n2100.arm.linux.org.uk>
+In-Reply-To: <20140305233135.GZ21483@n2100.arm.linux.org.uk>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201403070137.38621.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_alloc_child_bus() uses the newly allocated child bus to figure
-out the domain number that is going to use for setting the device
-name. A better option is to use the parent bus domain number.
+On Thursday 06 March 2014, Russell King - ARM Linux wrote:
+> On Wed, Mar 05, 2014 at 11:49:08AM +0000, Liviu Dudau wrote:
+> > The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
+> > is wrong. It returns a mapped (i.e. virtual) address that can start from
+> > zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
+> > architectures that use !CONFIG_GENERIC_MAP define.
+> 
+> What value does PCI_IOBASE and IO_SPACE_LIMIT have on other architectures
+> who make use of asm-generic/io.h ?
+> 
+> $ git grep asm-generic/io.h arch/
+> arch/arc/include/asm/io.h:#include <asm-generic/io.h>
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+PCI support hasn't been upstreamed.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 26237a0..a12cda5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -677,7 +677,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	 * now as the parent is not properly set up yet.
- 	 */
- 	child->dev.class = &pcibus_class;
--	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-+	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(parent), busnr);
- 
- 	/*
- 	 * Set up the primary, secondary and subordinate
--- 
-1.9.0
+> arch/blackfin/include/asm/io.h:#include <asm-generic/io.h>
+> arch/metag/include/asm/io.h:#include <asm-generic/io.h>
 
+No PCI support
+
+> arch/microblaze/include/asm/io.h:/* from asm-generic/io.h */
+
+PCI_IOBASE=0, IO_SPACE_LIMIT=0xffffffff, so no change.
+
+> arch/openrisc/include/asm/io.h:#include <asm-generic/io.h>
+
+No PCI support
+
+> arch/s390/include/asm/io.h:#include <asm-generic/io.h>
+
+s390 supports PCI but no I/O space
+
+> arch/score/include/asm/io.h:#include <asm-generic/io.h>
+
+No PCI support
+
+> arch/unicore32/include/asm/io.h:#include <asm-generic/io.h>
+
+unicore32 is broken currently, the patch fixes it.
+
+> arch/xtensa/include/asm/io.h:#include <asm-generic/io.h>
+
+PCI_IOBASE=0, IO_SPACE_LIMIT=0xffffffff, so no change.
+
+For most of these, I assume we actually want to remove support
+for inb/outb as they don't support I/O space accesses. The other
+ones look correct to me.
+
+	Arnd
