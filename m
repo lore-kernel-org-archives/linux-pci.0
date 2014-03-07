@@ -1,43 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:16700 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753577AbaCMJu3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 05:50:29 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
-References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1394704208-7490-9-git-send-email-phil.edworthy@renesas.com>
-Date: Thu, 13 Mar 2014 09:50:07 +0000
-Subject: [PATCH 8/9] ARM: koelsch: Add PCIe to defconfig
+Received: from moutng.kundenserver.de ([212.227.126.131]:57645 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752574AbaCGAZB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 19:25:01 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [PATCH v5 1/7] pci: Introduce pci_register_io_range() helper function.
+Date: Fri, 7 Mar 2014 01:24:12 +0100
+Cc: "linux-pci" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com> <201403042330.09607.arnd@arndb.de> <20140306160442.GG6457@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20140306160442.GG6457@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201403070124.13139.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/configs/koelsch_defconfig |    3 +++
- 1 file changed, 3 insertions(+)
+On Thursday 06 March 2014, Liviu Dudau wrote:
+> On Tue, Mar 04, 2014 at 10:30:09PM +0000, Arnd Bergmann wrote:
+> > On Tuesday 04 March 2014, Liviu Dudau wrote:
+> > > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> > > +{
+> > > +       return 0;
+> > > +}
+> > > +
+> > 
+> > How about returning an error here? You don't actually register the range.
+> 
+> That's not the intention here. I basically want a nop, as by default (read x86)
+> we do nothing with the IO range.
 
-diff --git a/arch/arm/configs/koelsch_defconfig b/arch/arm/configs/koelsch_defconfig
-index 86faab5..ec14547 100644
---- a/arch/arm/configs/koelsch_defconfig
-+++ b/arch/arm/configs/koelsch_defconfig
-@@ -15,6 +15,9 @@ CONFIG_MACH_KOELSCH=y
- CONFIG_CPU_BPREDICT_DISABLE=y
- CONFIG_PL310_ERRATA_588369=y
- CONFIG_ARM_ERRATA_754322=y
-+CONFIG_PCI=y
-+CONFIG_PCI_MSI=y
-+CONFIG_PCI_RCAR_GEN2_PCIE=y
- CONFIG_SMP=y
- CONFIG_SCHED_MC=y
- CONFIG_NR_CPUS=8
--- 
-1.7.9.5
+I think x86 is a bad default though, because that is the exception rather than
+the rule. I also think that on x86, you shouldn't have an entry for the I/O
+space in the "ranges" property since there is no translation, and then we don't
+call this function.
 
+PCI devices described in DT on x86 would still be able to list their I/O BARs
+in DT, but you don't ever translate them into MMIO ranges.
+
+	Arnd
