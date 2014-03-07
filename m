@@ -1,49 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:41191 "EHLO quartz.orcorp.ca"
+Received: from mx1.redhat.com ([209.132.183.28]:11654 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755381AbaCTRbV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Mar 2014 13:31:21 -0400
-Date: Thu, 20 Mar 2014 11:31:07 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-sh@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Magnus Damm <damm@opensource.se>,
-	Ben Dooks <ben-linux@fluff.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms+renesas@verge.net.au>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: DMABOUNCE in pci-rcar
-Message-ID: <20140320173106.GA19395@obsidianresearch.com>
-References: <201402241200.21944.arnd@arndb.de>
- <5527822.QYtFYiIpiW@wuerfel>
- <532B137B.7010900@codethink.co.uk>
- <4884083.IuNl44Y6XD@wuerfel>
- <532B2485.6010005@codethink.co.uk>
+	id S1750905AbaCGHrf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Mar 2014 02:47:35 -0500
+Date: Fri, 7 Mar 2014 08:49:32 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2] ioat: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140307074932.GC2670@dhcp-26-207.brq.redhat.com>
+References: <cover.1394128952.git.agordeev@redhat.com>
+ <2ba22558b5db90740d5833c35570c3e7cc1e359e.1394128952.git.agordeev@redhat.com>
+ <CAPcyv4jW19zxApviDdbofbXB1OvvN2sCriL3Paszfk9o3T8x0w@mail.gmail.com>
+ <20140306214356.GA16376@dhcp-26-207.brq.redhat.com>
+ <CAPcyv4ivvxHvyT_5oybVvRJAUKABQQ1ZH4Eua-1KVDeri5kpkA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <532B2485.6010005@codethink.co.uk>
+In-Reply-To: <CAPcyv4ivvxHvyT_5oybVvRJAUKABQQ1ZH4Eua-1KVDeri5kpkA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 20, 2014 at 06:25:25PM +0100, Ben Dooks wrote:
-> So doing:
-> 
-> static void pci_rcar_fixup(struct pci_dev *dev)
-> {
-> 	if (dev->bus->ops == &rcar_pci_ops) {
-> 		dev_info(&dev->dev, "applying new dma mask\n");
-> 		dev->dma_mask = DMA_BIT_MASK(31);
-> 	}
-> }
-> 
-> DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_rcar_fixup);
-> 
-> Did not work for me :(
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Seems like it should work, do you have CONFIG_PCI_QUIRKS turned on?
+Function pci_enable_msix() returns a tri-state value while
+pci_enable_msi_exact() is a canonical zero/-errno variant.
+The former is being phased out in favor of the latter.
+In case of 'ioat' there (should be) no difference.
 
-Jason
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Vinod Koul <vinod.koul@intel.com>
+Cc: dmaengine@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/dma/ioat/dma.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/dma/ioat/dma.c b/drivers/dma/ioat/dma.c
+index 4e3549a..b76c148 100644
+--- a/drivers/dma/ioat/dma.c
++++ b/drivers/dma/ioat/dma.c
+@@ -947,7 +947,7 @@ msix:
+ 	for (i = 0; i < msixcnt; i++)
+ 		device->msix_entries[i].entry = i;
+ 
+-	err = pci_enable_msix(pdev, device->msix_entries, msixcnt);
++	err = pci_enable_msix_exact(pdev, device->msix_entries, msixcnt);
+ 	if (err)
+ 		goto msi;
+ 
+-- 
+1.7.7.6
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
