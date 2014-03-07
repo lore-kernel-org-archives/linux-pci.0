@@ -1,61 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:36039 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932559AbaCDUyE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 15:54:04 -0500
-Received: by mail-ie0-f180.google.com with SMTP id as1so88348iec.25
-        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 12:54:04 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 7 Mar 2014 01:44:52 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v6 1/3] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+Message-ID: <20140307014452.GI13582@bart.dudau.co.uk>
+References: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394020150-1875-2-git-send-email-Liviu.Dudau@arm.com>
+ <20140305233135.GZ21483@n2100.arm.linux.org.uk>
+ <201403070137.38621.arnd@arndb.de>
+ <20140307010950.GE21483@n2100.arm.linux.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Mar 2014 13:53:44 -0700
-Message-ID: <CAErSpo50x1_iww5EmGXKUxbXUY2NLUxn6_yqF_3ABAjDSeFxog@mail.gmail.com>
-Subject: Re: [PATCH 0/7] PCI: Use default pcibios_enable_device()
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140307010950.GE21483@n2100.arm.linux.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 26, 2014 at 4:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Several architectures implement a simple pcibios_enable_device() that looks
-> like this:
->
->   int pcibios_enable_device(struct pci_dev *dev, int mask)
->   {
->          return pci_enable_resources(dev, mask);
->   }
->
-> This puts a weak version of that in the PCI core and removes the
-> corresponding implementations from the architectures.
->
-> s390 is slightly less trivial but the same general idea.
->
-> I'd like to do the same for all the other architectures, but some (arm,
-> cris, m68k, mips, unicore32, xtensa, and parts of sparc and tile) don't
-> seem to use pci_claim_resource(), so BAR resource r->parent pointers
-> probably aren't set, so I can't change them yet.
->
-> ---
->
-> Bjorn Helgaas (7):
->       PCI: Add "weak" generic pcibios_enable_device() implementation
->       alpha/PCI: Use default pcibios_enable_device()
->       microblaze/PCI: Use default pcibios_enable_device()
->       sh/PCI: Use default pcibios_enable_device()
->       sparc/PCI: Use default pcibios_enable_device() (Leon only)
->       tile PCI RC: Use default pcibios_enable_device()
->       s390/PCI: Use generic pci_enable_resources()
->
->
->  arch/alpha/kernel/pci.c          |    6 ------
->  arch/microblaze/pci/pci-common.c |    5 -----
->  arch/s390/pci/pci.c              |   13 +------------
->  arch/sh/drivers/pci/pci.c        |    5 -----
->  arch/sparc/kernel/leon_pci.c     |    5 -----
->  arch/tile/kernel/pci_gx.c        |   12 ------------
->  drivers/pci/pci.c                |    5 +++++
->  7 files changed, 6 insertions(+), 45 deletions(-)
+On Fri, Mar 07, 2014 at 01:09:50AM +0000, Russell King - ARM Linux wrote:
+> On Fri, Mar 07, 2014 at 01:37:38AM +0100, Arnd Bergmann wrote:
+> > On Thursday 06 March 2014, Russell King - ARM Linux wrote:
+> > > On Wed, Mar 05, 2014 at 11:49:08AM +0000, Liviu Dudau wrote:
+> > > > The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
+> > > > is wrong. It returns a mapped (i.e. virtual) address that can start from
+> > > > zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
+> > > > architectures that use !CONFIG_GENERIC_MAP define.
+> > > 
+> > > What value does PCI_IOBASE and IO_SPACE_LIMIT have on other architectures
+> > > who make use of asm-generic/io.h ?
+> > > 
+> > > $ git grep asm-generic/io.h arch/
+> > > arch/arc/include/asm/io.h:#include <asm-generic/io.h>
+> > 
+> > PCI support hasn't been upstreamed.
+> > 
+> > > arch/blackfin/include/asm/io.h:#include <asm-generic/io.h>
+> > > arch/metag/include/asm/io.h:#include <asm-generic/io.h>
+> > 
+> > No PCI support
+> > 
+> > > arch/microblaze/include/asm/io.h:/* from asm-generic/io.h */
+> > 
+> > PCI_IOBASE=0, IO_SPACE_LIMIT=0xffffffff, so no change.
+> 
+> Seems to define _IO_BASE not PCI_IOBASE.
+> 
+> > > arch/openrisc/include/asm/io.h:#include <asm-generic/io.h>
+> > 
+> > No PCI support
+> > 
+> > > arch/s390/include/asm/io.h:#include <asm-generic/io.h>
+> > 
+> > s390 supports PCI but no I/O space
+> > 
+> > > arch/score/include/asm/io.h:#include <asm-generic/io.h>
+> > 
+> > No PCI support
+> > 
+> > > arch/unicore32/include/asm/io.h:#include <asm-generic/io.h>
+> > 
+> > unicore32 is broken currently, the patch fixes it.
+> > 
+> > > arch/xtensa/include/asm/io.h:#include <asm-generic/io.h>
+> > 
+> > PCI_IOBASE=0, IO_SPACE_LIMIT=0xffffffff, so no change.
+> 
+> Doesn't appear to define PCI_IOBASE.
+> 
+> Maybe there's other patches required for these?
+> 
+> > For most of these, I assume we actually want to remove support
+> > for inb/outb as they don't support I/O space accesses. The other
+> > ones look correct to me.
+> 
+> Right, so:
+> 
+> #ifdef CONFIG_HAS_IOPORT
+> #ifndef CONFIG_GENERIC_IOMAP
+> static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+> {
+>         return (void __iomem *) port;
+> }
+> 
+> changing that to include PCI_IOBASE in there will result in a build
+> failure if the C compiler sees that.  In other words, when HAS_IOPORT=y
+> and GENERIC_IOMAP=n.
+> 
+> HAS_IOPORT is set when HAS_IOMEM is also set and NO_IOPORT unset.
+> 
+> It looks to me like blackfin doesn't set NO_IOPORT nor NO_IOMEM, so
+> this would have HAS_IOPORT set, and from what I can see doesn't set
+> GENERIC_IOMAP.  So, this change probably breaks blackfin.
+> 
+> I haven't looked deeply at the others.
 
-I applied these to pci/resource for v3.15.
+Maybe I'm missing something obvious, but line 118 in include/asm-generic/io.h has:
+
+#ifndef PCI_IOBASE
+#define PCI_IOBASE ((void __iomem *)0)
+#endif
+
+That doesn't seem to be guarded by any other #ifdef (other than the overall
+__ASM_GENERIC_IO_H), so PCI_IOBASE is defined regardless of CONFIG_HAS_IOPORT and 
+CONFIG_GENERIC_IOMAP values.
+
+Best regards,
+Liviu
+
+> 
+> -- 
+> FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+> improving, and getting towards what was expected from it.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
+
