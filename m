@@ -1,93 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:33082 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756651AbaCTSjs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 14:39:48 -0400
-Date: Thu, 20 Mar 2014 18:39:32 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-sh@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Magnus Damm <damm@opensource.se>,
-	Ben Dooks <ben-linux@fluff.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v6 3/6] pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms+renesas@verge.net.au>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: DMABOUNCE in pci-rcar
-Message-ID: <20140320183932.GA7528@n2100.arm.linux.org.uk>
-References: <201402241200.21944.arnd@arndb.de> <20140320173106.GA19395@obsidianresearch.com> <532B2628.5080305@codethink.co.uk> <201403201929.13633.arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201403201929.13633.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <1394020137-1830-4-git-send-email-Liviu.Dudau@arm.com>
+References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com> < 1394020137-1830-4-git-send-email-Liviu.Dudau@arm.com>
+Date: Fri, 07 Mar 2014 21:07:48 +0000
+Message-Id: <20140307210748.A20EFC40E11@trevor.secretlab.ca>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 20, 2014 at 07:29:13PM +0100, Arnd Bergmann wrote:
-> On Thursday 20 March 2014, Ben Dooks wrote:
-> > On 20/03/14 18:31, Jason Gunthorpe wrote:
-> > > On Thu, Mar 20, 2014 at 06:25:25PM +0100, Ben Dooks wrote:
-> > >> So doing:
-> > >>
-> > >> static void pci_rcar_fixup(struct pci_dev *dev)
-> > >> {
-> > >>      if (dev->bus->ops == &rcar_pci_ops) {
-> > >>              dev_info(&dev->dev, "applying new dma mask\n");
-> > >>              dev->dma_mask = DMA_BIT_MASK(31);
-> > >>      }
-> > >> }
-> > >>
-> > >> DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_rcar_fixup);
-> > >>
-> > >> Did not work for me :(
-> > >
-> > > Seems like it should work, do you have CONFIG_PCI_QUIRKS turned on?
-> > 
-> > Yes, see the print happening, just still PCI OHCI dies horribly.
+On Wed,  5 Mar 2014 11:48:54 +0000, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+> As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+> the creation order has been changed for no good reason. Revert the order of
+> creation as we are going to depend on the pci_host_bridge structure to retrieve the
+> domain number of the root bus.
 > 
-> Shouldn't that mask be 30 instead of 31 when you only support DMA
-> to the first GB?
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+
+Acked-by: Grant Likely <grant.likely@linaro.org>
+
+> ---
+>  drivers/pci/probe.c | 36 ++++++++++++++++++------------------
+>  1 file changed, 18 insertions(+), 18 deletions(-)
 > 
-> Another possibility is that 'EARLY' means it gets applied before
-> the normal mask is set.
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6e34498..fd11c12 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+>  	kfree(bridge);
+>  }
+>  
+> -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> +static struct pci_host_bridge *pci_alloc_host_bridge(void)
+>  {
+>  	struct pci_host_bridge *bridge;
+>  
+> @@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+>  		return NULL;
+>  
+>  	INIT_LIST_HEAD(&bridge->windows);
+> -	bridge->bus = b;
+>  	return bridge;
+>  }
+>  
+> @@ -1727,9 +1726,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	char bus_addr[64];
+>  	char *fmt;
+>  
+> +	bridge = pci_alloc_host_bridge();
+> +	if (!bridge)
+> +		return NULL;
+> +
+> +	bridge->dev.parent = parent;
+> +	bridge->dev.release = pci_release_host_bridge_dev;
+> +	error = pcibios_root_bridge_prepare(bridge);
+> +	if (error)
+> +		goto err_out;
+> +
+>  	b = pci_alloc_bus();
+>  	if (!b)
+> -		return NULL;
+> +		goto err_out;
+>  
+>  	b->sysdata = sysdata;
+>  	b->ops = ops;
+> @@ -1738,26 +1747,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	if (b2) {
+>  		/* If we already got to this bus through a different bridge, ignore it */
+>  		dev_dbg(&b2->dev, "bus already known\n");
+> -		goto err_out;
+> +		goto err_bus_out;
+>  	}
+>  
+> -	bridge = pci_alloc_host_bridge(b);
+> -	if (!bridge)
+> -		goto err_out;
+> -
+> -	bridge->dev.parent = parent;
+> -	bridge->dev.release = pci_release_host_bridge_dev;
+> +	bridge->bus = b;
+>  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> -	error = pcibios_root_bridge_prepare(bridge);
+> -	if (error) {
+> -		kfree(bridge);
+> -		goto err_out;
+> -	}
+> -
+>  	error = device_register(&bridge->dev);
+>  	if (error) {
+>  		put_device(&bridge->dev);
+> -		goto err_out;
+> +		goto err_bus_out;
+>  	}
+>  	b->bridge = get_device(&bridge->dev);
+>  	device_enable_async_suspend(b->bridge);
+> @@ -1814,8 +1812,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  class_dev_reg_err:
+>  	put_device(&bridge->dev);
+>  	device_unregister(&bridge->dev);
+> -err_out:
+> +err_bus_out:
+>  	kfree(b);
+> +err_out:
+> +	kfree(bridge);
+>  	return NULL;
+>  }
+>  
+> -- 
+> 1.9.0
 > 
-> Finally, setting the mask itself is not enough. As I mentioned you
-> also need to use the swiotlb_dma_ops. Did you already implement
-> those?
+> 
+> _______________________________________________
+> linaro-kernel mailing list
+> linaro-kernel@lists.linaro.org
+> http://lists.linaro.org/mailman/listinfo/linaro-kernel
 
-And the above is no way to handle the DMA mask - it will get
-overwritten if the PCI device calls pci_set_dma_mask().  Please people,
-read the documentation on how this stuff is supposed to work:
-
-  For correct operation, you must interrogate the kernel in your device
-  probe routine to see if the DMA controller on the machine can properly
-  support the DMA addressing limitation your device has.  It is good
-  style to do this even if your device holds the default setting,
-  because this shows that you did think about these issues wrt. your
-  device.
-
-Yes, OHCI's PCI driver doesn't do that at the moment, but that's not
-to say that it won't in the future - at which point hacks like the
-above suddenly stop working.
-
-We have other platforms which suffer from this - IXP is one of those
-examples where PCI only has 64MB available.  The unfortunate thing is
-we haven't yet got a good multi-platform way to handle dma_set_mask()
-and dma_set_coherent_mask() with these kinds of restrictions.
-
-However, the right solution here is that OHCI _should_ be making those
-calls, and we _should_ be applying the platform specific fixups like
-IXP does, but in a more generic way.  That includes using swiotlb
-rather than dmabounce.
-
-That all said, what I find most annoying is that Ben has ignored my
-question about exactly what the nature of the limitation is on this
-platform.  My response to that is - if you're not going to do the
-curtesy of answering such a simple question, then you don't get to
-patch the kernel for this problem.
-
--- 
-FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
-improving, and getting towards what was expected from it.
