@@ -1,151 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:46615 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755076AbaCZN7T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 09:59:19 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
-CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
-	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>
-Subject: [RFC PATCH 06/12] arm: dra7xx: Add hwmod data for pcie1 phy and pcie2 phy
-Date: Wed, 26 Mar 2014 19:27:46 +0530
-Message-ID: <1395842272-15267-7-git-send-email-kishon@ti.com>
-In-Reply-To: <1395842272-15267-1-git-send-email-kishon@ti.com>
-References: <1395842272-15267-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAMxnaaXd9-VbxSYa9q1YVT+fwfDFYKGG2Hq-1jkc-awLX-HwtQ@mail.gmail.com>
+References: <CAMxnaaXd9-VbxSYa9q1YVT+fwfDFYKGG2Hq-1jkc-awLX-HwtQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 7 Mar 2014 09:45:53 -0700
+Message-ID: <CAErSpo5fkaFNq_qTZ+gTDMV554f4diOXQ7_4bsHqj06iAGTpHg@mail.gmail.com>
+Subject: Re: [Bug] PCI: Enable INTx if BIOS left them disabled - triggers
+ during rescan
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added hwmod data for pcie1 and pcie2 phy present in DRA7xx SOC.
-Also added the missing CLKCTRL OFFSET macro and CONTEXT OFFSET macro
-for pcie1 phy and pcie2 phy.
+[+cc Yinghai, Rajat]
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- arch/arm/mach-omap2/cm2_7xx.h             |    4 ++
- arch/arm/mach-omap2/omap_hwmod_7xx_data.c |   57 +++++++++++++++++++++++++++++
- arch/arm/mach-omap2/prm7xx.h              |    4 ++
- 3 files changed, 65 insertions(+)
+On Fri, Mar 7, 2014 at 7:33 AM, Andreas Noever <andreas.noever@gmail.com> wrote:
+> Hi,
+>
+> After upgrading to the latest RC I noticed that suprise removal
+> stopped working. Linux did not notice that the devices where gone.
+> Bisection points to
+>
+> 1f42db786b14a31bf807fc41ee5583a00c08fcb1 PCI: Enable INTx if BIOS left
+> them disabled
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=1f42db786b14a31bf807fc41ee5583a00c08fcb1
+>
+> It seems that the above patch is triggered on the bridge itself (!)
+> when a new device is added below it. At this point the hotplug driver
+> for the bridge has already enabled MSI. Reenabling INTX kills MSI and
+> prevents later suprise removal notifications.
+>
+> The following stacktrace is from a "echo 1 > rescan" on the bridge:
+> do_pci_enable_device+0x59/0x140
+> pci_reenable_device+0x1f/0x30
+> pci_assign_unassigned_bridge_resources+0x123/0x160
+> pci_rescan_bus_bridge_resize+0x28/0x40
+> dev_bus_rescan_store+0x85/0xa0
+> dev_attr_store+0x18/0x30
+> sysfs_kf_write+0x3d/0x50
+> kernfs_fop_write+0xd2/0x140
+> vfs_write+0xba/0x1e0
+> SyS_write+0x49/0xa0
+> system_call_fastpath+0x1a/0x1f
+>
+> Similarly for a hotplug event:
+> do_pci_enable_device+0x59/0x140
+> pci_reenable_device+0x1f/0x30
+> pci_assign_unassigned_bridge_resources+0x123/0x160
+> pciehp_configure_device+0x90/0x160
+> pciehp_enable_slot+0x163/0x280
+> pciehp_power_thread+0xb8/0xe0
+> process_one_work+0x167/0x420
+> worker_thread+0x121/0x3a0
+>
+> In both cases DisINTx is turned off and the hotplug driver stops
+> reacting to events.
 
-diff --git a/arch/arm/mach-omap2/cm2_7xx.h b/arch/arm/mach-omap2/cm2_7xx.h
-index 9ad7594..e966e3a 100644
---- a/arch/arm/mach-omap2/cm2_7xx.h
-+++ b/arch/arm/mach-omap2/cm2_7xx.h
-@@ -357,6 +357,10 @@
- #define DRA7XX_CM_L3INIT_SATA_CLKCTRL				DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x0088)
- #define DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET				0x00a0
- #define DRA7XX_CM_PCIE_STATICDEP_OFFSET				0x00a4
-+#define DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL_OFFSET			0x00b0
-+#define DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL			DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x00b0)
-+#define DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL_OFFSET			0x00b8
-+#define DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL			DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x00b8)
- #define DRA7XX_CM_GMAC_CLKSTCTRL_OFFSET				0x00c0
- #define DRA7XX_CM_GMAC_STATICDEP_OFFSET				0x00c4
- #define DRA7XX_CM_GMAC_DYNAMICDEP_OFFSET			0x00c8
-diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-index befe7ce..9397265 100644
---- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-+++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-@@ -1290,6 +1290,45 @@ static struct omap_hwmod dra7xx_ocp2scp3_hwmod = {
- };
- 
- /*
-+ * 'PCIE PHY' class
-+ *
-+ */
-+
-+static struct omap_hwmod_class dra7xx_pcie_phy_hwmod_class = {
-+	.name	= "pcie-phy",
-+};
-+
-+/* pcie1 phy */
-+static struct omap_hwmod dra7xx_pcie1_phy_hwmod = {
-+	.name		= "pcie1-phy",
-+	.class		= &dra7xx_pcie_phy_hwmod_class,
-+	.clkdm_name	= "l3init_clkdm",
-+	.main_clk	= "l4_root_clk_div",
-+	.prcm = {
-+		.omap4 = {
-+			.clkctrl_offs = DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL_OFFSET,
-+			.context_offs = DRA7XX_RM_L3INIT_PCIESS1_CONTEXT_OFFSET,
-+			.modulemode   = MODULEMODE_SWCTRL,
-+		},
-+	},
-+};
-+
-+/* pcie2 phy */
-+static struct omap_hwmod dra7xx_pcie2_phy_hwmod = {
-+	.name		= "pcie2-phy",
-+	.class		= &dra7xx_pcie_phy_hwmod_class,
-+	.clkdm_name	= "l3init_clkdm",
-+	.main_clk	= "l4_root_clk_div",
-+	.prcm = {
-+		.omap4 = {
-+			.clkctrl_offs = DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL_OFFSET,
-+			.context_offs = DRA7XX_RM_L3INIT_PCIESS2_CONTEXT_OFFSET,
-+			.modulemode   = MODULEMODE_SWCTRL,
-+		},
-+	},
-+};
-+
-+/*
-  * 'qspi' class
-  *
-  */
-@@ -2420,6 +2459,22 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__ocp2scp1 = {
- 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
- };
- 
-+/* l4_cfg -> pcie1 phy */
-+static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1_phy = {
-+	.master		= &dra7xx_l4_cfg_hwmod,
-+	.slave		= &dra7xx_pcie1_phy_hwmod,
-+	.clk		= "l4_root_clk_div",
-+	.user		= OCP_USER_MPU | OCP_USER_SDMA,
-+};
-+
-+/* l4_cfg -> pcie2 phy */
-+static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie2_phy = {
-+	.master		= &dra7xx_l4_cfg_hwmod,
-+	.slave		= &dra7xx_pcie2_phy_hwmod,
-+	.clk		= "l4_root_clk_div",
-+	.user		= OCP_USER_MPU | OCP_USER_SDMA,
-+};
-+
- static struct omap_hwmod_addr_space dra7xx_qspi_addrs[] = {
- 	{
- 		.pa_start	= 0x4b300000,
-@@ -2769,6 +2824,8 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
- 	&dra7xx_l4_cfg__mpu,
- 	&dra7xx_l4_cfg__ocp2scp1,
- 	&dra7xx_l4_cfg__ocp2scp3,
-+	&dra7xx_l4_cfg__pcie1_phy,
-+	&dra7xx_l4_cfg__pcie2_phy,
- 	&dra7xx_l3_main_1__qspi,
- 	&dra7xx_l4_cfg__sata,
- 	&dra7xx_l4_cfg__smartreflex_core,
-diff --git a/arch/arm/mach-omap2/prm7xx.h b/arch/arm/mach-omap2/prm7xx.h
-index d92a840..4bb50fbf 100644
---- a/arch/arm/mach-omap2/prm7xx.h
-+++ b/arch/arm/mach-omap2/prm7xx.h
-@@ -374,6 +374,10 @@
- #define DRA7XX_RM_L3INIT_IEEE1500_2_OCP_CONTEXT_OFFSET		0x007c
- #define DRA7XX_PM_L3INIT_SATA_WKDEP_OFFSET			0x0088
- #define DRA7XX_RM_L3INIT_SATA_CONTEXT_OFFSET			0x008c
-+#define DRA7XX_PM_L3INIT_PCIESS1_WKDEP_OFFSET			0x00b0
-+#define DRA7XX_RM_L3INIT_PCIESS1_CONTEXT_OFFSET		0x00b4
-+#define DRA7XX_PM_L3INIT_PCIESS2_WKDEP_OFFSET			0x00b8
-+#define DRA7XX_RM_L3INIT_PCIESS2_CONTEXT_OFFSET		0x00bc
- #define DRA7XX_RM_GMAC_GMAC_CONTEXT_OFFSET			0x00d4
- #define DRA7XX_RM_L3INIT_OCP2SCP1_CONTEXT_OFFSET		0x00e4
- #define DRA7XX_RM_L3INIT_OCP2SCP3_CONTEXT_OFFSET		0x00ec
--- 
-1.7.9.5
+Thanks a lot for noticing and bisecting this!
 
+I opened a bugzilla report at https://bugzilla.kernel.org/show_bug.cgi?id=71691
+
+It seems like clearing DisINTx has some effect on MSI.  I don't see
+anything in the spec that would suggest this (I'm looking at the PCIe
+r3.0 spec, sec 7.5.1.1).
+
+Can somebody point out a connection between DisINTx and MSI?  If not,
+maybe we'll need some sort of quirk to deal with this.
+
+Andrea, can you attach a complete dmesg log and "lspci -vv" output to
+the bugzilla?
+
+Thanks again!
+
+Bjorn
