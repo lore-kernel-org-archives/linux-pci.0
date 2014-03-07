@@ -1,64 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:42668 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755053AbaCKRmp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 13:42:45 -0400
-Received: by mail-ig0-f173.google.com with SMTP id t19so11904417igi.0
-        for <linux-pci@vger.kernel.org>; Tue, 11 Mar 2014 10:42:44 -0700 (PDT)
-Subject: [PATCH 1/5] PCI: Don't check resource_size() in
- pci_bus_alloc_resource()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>, Yinghai Lu <yinghai@kernel.org>,
-	linux-kernel@vger.kernel.org
-Date: Tue, 11 Mar 2014 11:42:43 -0600
-Message-ID: <20140311174243.23084.77689.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from moutng.kundenserver.de ([212.227.126.187]:62951 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126AbaCGASQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 19:18:16 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [PATCH v5 3/3] arm64: Add architecture support for PCI
+Date: Fri, 7 Mar 2014 01:17:46 +0100
+Cc: "linux-pci" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+References: <1393948216-11599-1-git-send-email-Liviu.Dudau@arm.com> <201403042328.51361.arnd@arndb.de> <20140306161713.GH6457@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20140306161713.GH6457@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201403070117.47125.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Paul reported that after f75b99d5a77d ("PCI: Enforce bus address limits in
-resource allocation") on a 32-bit kernel (CONFIG_PHYS_ADDR_T_64BIT not
-set), intel-gtt complained "can't ioremap flush page - no chipset
-flushing".  In addition, other PCI resource allocations, e.g., for bridge
-windows, failed.
+On Thursday 06 March 2014, Liviu Dudau wrote:
+> On Tue, Mar 04, 2014 at 10:28:51PM +0000, Arnd Bergmann wrote:
+> > On Tuesday 04 March 2014, Liviu Dudau wrote:
+> > 
+> > > +extern int isa_dma_bridge_buggy;
+> > 
+> > As commented before, I still think we can hardcode this to off
+> 
+> Unfortunately that doesn't work when you have CONFIG_PCI=y. drivers/pci/pci.c has:
+> 
+> drivers/pci/pci.c:int isa_dma_bridge_buggy;
+> drivers/pci/pci.c:EXPORT_SYMBOL(isa_dma_bridge_buggy);
+> 
+> and drivers/pci/quirks.c does:
+> 
+> drivers/pci/quirks.c:   if (!isa_dma_bridge_buggy) {
+> drivers/pci/quirks.c:           isa_dma_bridge_buggy=1;
+> drivers/pci/quirks.c-           dev_info(&dev->dev, "Activating ISA DMA hang workarounds\n");
+> drivers/pci/quirks.c-   }
+> 
 
-This happens because we incorrectly skip bus resources of
-[mem 0x00000000-0xffffffff] because we think they are of size zero.
-When resource_size_t is 32 bits wide, resource_size() on
-[mem 0x00000000-0xffffffff] returns 0 because (r->end - r->start + 1)
-overflows.
+Ah, I see. Should we maybe move the declaration to a more generic header
+file then? If the architectures cannot override it anyway, it shouldn't
+be up to the architecture to declare it.
 
-Therefore, we can't use "resource_size() == 0" to decide that allocation
-from this resource will fail.  allocate_resource() should fail anyway if it
-can't satisfy the address constraints, so we should just depend on that.
-
-A [mem 0x00000000-0xffffffff] bus resource is obviously not really valid,
-but we do fall back to it as a default when we don't have information about
-host bridge apertures.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=71611
-Fixes: f75b99d5a77d PCI: Enforce bus address limits in resource allocation
-Reported-and-tested-by: Paul Bolle <pebolle@tiscali.nl>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/bus.c |    2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 00660cc502c5..38901665c770 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -162,8 +162,6 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
- 
- 		avail = *r;
- 		pci_clip_resource_to_region(bus, &avail, region);
--		if (!resource_size(&avail))
--			continue;
- 
- 		/*
- 		 * "min" is typically PCIBIOS_MIN_IO or PCIBIOS_MIN_MEM to
-
+	Arnd
