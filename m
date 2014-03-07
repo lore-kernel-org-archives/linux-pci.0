@@ -1,86 +1,171 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Liviu Dudau' <Liviu.Dudau@arm.com>
-Cc: 'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Catalin Marinas' <Catalin.Marinas@arm.com>,
-	'Will Deacon' <Will.Deacon@arm.com>,
-	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
-	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
-	'LKML' <linux-kernel@vger.kernel.org>,
-	devicetree@vger.kernel.org,
-	'LAKML' <linux-arm-kernel@lists.infradead.org>,
-	'Tanmay Inamdar' <tinamdar@apm.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
- <1393948204-11555-8-git-send-email-Liviu.Dudau@arm.com>
-In-reply-to: <1393948204-11555-8-git-send-email-Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v5 7/7] pci: Add support for creating a generic host_bridge
- from device tree
-Date: Wed, 05 Mar 2014 10:20:28 +0900
-Message-id: <001f01cf3811$18463ed0$48d2bc70$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:63219 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753449AbaCHFcf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Mar 2014 00:32:35 -0500
+Received: by mail-wg0-f52.google.com with SMTP id k14so6209685wgh.35
+        for <linux-pci@vger.kernel.org>; Fri, 07 Mar 2014 21:32:34 -0800 (PST)
+From: Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v6 4/6] pci: Introduce a domain number for pci_host_bridge.
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <1394020137-1830-5-git-send-email-Liviu.Dudau@arm.com>
+References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com> < 1394020137-1830-5-git-send-email-Liviu.Dudau@arm.com>
+Date: Fri, 07 Mar 2014 21:09:17 +0000
+Message-Id: <20140307210917.152E8C40F14@trevor.secretlab.ca>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, March 05, 2014 12:50 AM, Liviu Dudau wrote:
-> 
-> Several platforms use a rather generic version of parsing
-> the device tree to find the host bridge ranges. Move the common code
-> into the generic PCI code and use it to create a pci_host_bridge
-> structure that can be used by arch code.
-> 
-> Based on early attempts by Andrew Murray to unify the code.
-> Used powerpc and microblaze PCI code as starting point.
+On Wed,  5 Mar 2014 11:48:55 +0000, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> Make it easier to discover the domain number of a bus by storing
+> the number in pci_host_bridge for the root bus. Several architectures
+> have their own way of storing this information, so it makes sense
+> to try to unify the code. While at this, add a new function that
+> creates a root bus in a given domain and make pci_create_root_bus()
+> a wrapper around this function.
 > 
 > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+
+Looks okay to me structure wise, again I'd like an ack from Ben or Arnd.
+
+g.
+
+> ---
+>  drivers/pci/probe.c | 41 +++++++++++++++++++++++++++++++++--------
+>  include/linux/pci.h |  4 ++++
+>  2 files changed, 37 insertions(+), 8 deletions(-)
 > 
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 8708b652..800678a 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-
-[.....]
-
-> +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-
-It makes build error with exynos_defconfig. (ARM32)
-Thus, 'slab.h' is necessary in order to fix the build error.
-
-./drivers/pci/host-bridge.c
-@@ -8,6 +8,7 @@
- #include <linux/module.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-+#include <linux/slab.h>
-
- #include "pci.h"
-
-
-> +		if (!res) {
-> +			err = -ENOMEM;
-> +			goto bridge_ranges_nomem;
-> +		}
-> +
-> +		of_pci_range_to_resource(&range, dev, res);
-> +
-> +		if (resource_type(res) == IORESOURCE_IO)
-> +			*io_base = range.cpu_addr;
-> +
-> +		pci_add_resource_offset(resources, res,
-> +				res->start - range.pci_addr);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index fd11c12..172c615 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1714,8 +1714,9 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+>  {
+>  }
+>  
+> -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> +struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
+> +		int domain, int bus, struct pci_ops *ops, void *sysdata,
+> +		struct list_head *resources)
+>  {
+>  	int error;
+>  	struct pci_host_bridge *bridge;
+> @@ -1728,30 +1729,34 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  
+>  	bridge = pci_alloc_host_bridge();
+>  	if (!bridge)
+> -		return NULL;
+> +		return ERR_PTR(-ENOMEM);
+>  
+>  	bridge->dev.parent = parent;
+>  	bridge->dev.release = pci_release_host_bridge_dev;
+> +	bridge->domain_nr = domain;
+>  	error = pcibios_root_bridge_prepare(bridge);
+>  	if (error)
+>  		goto err_out;
+>  
+>  	b = pci_alloc_bus();
+> -	if (!b)
+> +	if (!b) {
+> +		error = -ENOMEM;
+>  		goto err_out;
 > +	}
+>  
+>  	b->sysdata = sysdata;
+>  	b->ops = ops;
+>  	b->number = b->busn_res.start = bus;
+> -	b2 = pci_find_bus(pci_domain_nr(b), bus);
+> +	b2 = pci_find_bus(bridge->domain_nr, bus);
+>  	if (b2) {
+>  		/* If we already got to this bus through a different bridge, ignore it */
+>  		dev_dbg(&b2->dev, "bus already known\n");
+> +		error = -EEXIST;
+>  		goto err_bus_out;
+>  	}
+>  
+>  	bridge->bus = b;
+> -	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> +	dev_set_name(&bridge->dev, "pci%04x:%02x", bridge->domain_nr, bus);
+>  	error = device_register(&bridge->dev);
+>  	if (error) {
+>  		put_device(&bridge->dev);
+> @@ -1766,7 +1771,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  
+>  	b->dev.class = &pcibus_class;
+>  	b->dev.parent = b->bridge;
+> -	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
+> +	dev_set_name(&b->dev, "%04x:%02x", bridge->domain_nr, bus);
+>  	error = device_register(&b->dev);
+>  	if (error)
+>  		goto class_dev_reg_err;
+> @@ -1816,7 +1821,27 @@ err_bus_out:
+>  	kfree(b);
+>  err_out:
+>  	kfree(bridge);
+> -	return NULL;
+> +	return ERR_PTR(error);
+> +}
 > +
-> +	/* Apply architecture specific fixups for the ranges */
-> +	pcibios_fixup_bridge_ranges(resources);
-
-It also makes compile problem with exynos_defconfig as below:
-
-drivers/built-in.o: In function `pci_host_bridge_of_get_ranges':
-drivers/pci/host-bridge.c:157: undefined reference to `pcibios_fixup_bridge_ranges'
-
-Best regards,
-Jingoo Han
+> +struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> +		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> +{
+> +	int domain_nr;
+> +	struct pci_bus *b = pci_alloc_bus();
+> +	if (!b)
+> +		return NULL;
+> +
+> +	b->sysdata = sysdata;
+> +	domain_nr = pci_domain_nr(b);
+> +	kfree(b);
+> +
+> +	b = pci_create_root_bus_in_domain(parent, domain_nr, bus,
+> +				ops, sysdata, resources);
+> +	if (IS_ERR(b))
+> +		return NULL;
+> +
+> +	return b;
+>  }
+>  
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 33aa2ca..1eed009 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -394,6 +394,7 @@ struct pci_host_bridge_window {
+>  struct pci_host_bridge {
+>  	struct device dev;
+>  	struct pci_bus *bus;		/* root bus */
+> +	int domain_nr;
+>  	struct list_head windows;	/* pci_host_bridge_windows */
+>  	void (*release_fn)(struct pci_host_bridge *);
+>  	void *release_data;
+> @@ -747,6 +748,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  				    struct pci_ops *ops, void *sysdata,
+>  				    struct list_head *resources);
+> +struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
+> +			int domain, int bus, struct pci_ops *ops,
+> +			void *sysdata, struct list_head *resources);
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+>  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+>  void pci_bus_release_busn_res(struct pci_bus *b);
+> -- 
+> 1.9.0
+> 
+> 
+> _______________________________________________
+> linaro-kernel mailing list
+> linaro-kernel@lists.linaro.org
+> http://lists.linaro.org/mailman/listinfo/linaro-kernel
 
