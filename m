@@ -1,68 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:27432 "EHLO mga11.intel.com"
+Received: from mxout1.idt.com ([157.165.5.25]:52818 "EHLO mxout1.idt.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754112AbaCCN4g convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 08:56:36 -0500
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>,
-	"Jiang, Dave" <dave.jiang@intel.com>,
-	intel-linux-scu <intel-linux-scu@intel.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	id S1752347AbaCGNtG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Mar 2014 08:49:06 -0500
+From: "Bounine, Alexandre" <Alexandre.Bounine@idt.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
-Subject: RE: [PATCH v2 10/23] isci: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Date: Mon, 3 Mar 2014 13:56:30 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1A6F3E19@IRSMSX105.ger.corp.intel.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
- <b6c5934fa5e2f17f49a48a38f036bcd5149455c6.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <b6c5934fa5e2f17f49a48a38f036bcd5149455c6.1393191330.git.agordeev@redhat.com>
+	Andrew Morton <akpm@linux-foundation.org>
+CC: Matt Porter <mporter@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v2 RESEND 3/4] tsi721: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Date: Fri, 7 Mar 2014 13:35:34 +0000
+Message-ID: <8D983423E7EDF846BB3056827B8CC5D15CC440A6@corpmail1.na.ads.idt.com>
+References: <cover.1394128952.git.agordeev@redhat.com>
+ <d21563117d14900b2c094847198ff9a99e2e3dfa.1394128952.git.agordeev@redhat.com>
+In-Reply-To: <d21563117d14900b2c094847198ff9a99e2e3dfa.1394128952.git.agordeev@redhat.com>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, February 24, 2014 9:02 AM Alexander Gordeev <agordeev@redhat.com> wrote:
+> From: Alexander Gordeev [mailto:agordeev@redhat.com]
+> Sent: Thursday, March 06, 2014 3:11 PM
+> To: linux-kernel@vger.kernel.org
+> Cc: Alexander Gordeev; Matt Porter; Bounine, Alexandre; linux-
+> pci@vger.kernel.org
+> Subject: [PATCH v2 RESEND 3/4] tsi721: Use pci_enable_msix_exact()
+> instead of pci_enable_msix()
+> 
 > As result of deprecation of MSI-X/MSI enablement functions
 > pci_enable_msix() and pci_enable_msi_block() all drivers
 > using these two interfaces need to be updated to use the
 > new pci_enable_msi_range()  or pci_enable_msi_exact()
 > and pci_enable_msix_range() or pci_enable_msix_exact()
 > interfaces.
+
+
+Acked-by: Alexandre Bounine <alexandre.bounine@idt.com>
+
+Andrew, please pick up this patch for the -next tree.
+
 > 
 > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Lukasz Dorau <lukasz.dorau@intel.com>
-> Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
-> Cc: Dave Jiang <dave.jiang@intel.com>
-> Cc: intel-linux-scu@intel.com
-> Cc: linux-scsi@vger.kernel.org
+> Cc: Matt Porter <mporter@kernel.crashing.org>
+> Cc: Alexandre Bounine <alexandre.bounine@idt.com>
 > Cc: linux-pci@vger.kernel.org
 > ---
->  drivers/scsi/isci/init.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  drivers/rapidio/devices/tsi721.c |   11 +++--------
+>  1 files changed, 3 insertions(+), 8 deletions(-)
 > 
-> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-> index d25d0d8..ce40538 100644
-> --- a/drivers/scsi/isci/init.c
-> +++ b/drivers/scsi/isci/init.c
-> @@ -356,7 +356,7 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
->  	for (i = 0; i < num_msix; i++)
->  		pci_info->msix_entries[i].entry = i;
+> diff --git a/drivers/rapidio/devices/tsi721.c
+> b/drivers/rapidio/devices/tsi721.c
+> index ff7cbf2..ce08e8d 100644
+> --- a/drivers/rapidio/devices/tsi721.c
+> +++ b/drivers/rapidio/devices/tsi721.c
+> @@ -768,15 +768,10 @@ static int tsi721_enable_msix(struct
+> tsi721_device *priv)
+>  	}
+>  #endif /* CONFIG_RAPIDIO_DMA_ENGINE */
 > 
-> -	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
-> +	err = pci_enable_msix_exact(pdev, pci_info->msix_entries, num_msix);
->  	if (err)
->  		goto intx;
+> -	err = pci_enable_msix(priv->pdev, entries, ARRAY_SIZE(entries));
+> +	err = pci_enable_msix_exact(priv->pdev, entries,
+> ARRAY_SIZE(entries));
+>  	if (err) {
+> -		if (err > 0)
+> -			dev_info(&priv->pdev->dev,
+> -				 "Only %d MSI-X vectors available, "
+> -				 "not using MSI-X\n", err);
+> -		else
+> -			dev_err(&priv->pdev->dev,
+> -				"Failed to enable MSI-X (err=%d)\n", err);
+> +		dev_err(&priv->pdev->dev,
+> +			"Failed to enable MSI-X (err=%d)\n", err);
+>  		return err;
+>  	}
 > 
 > --
 > 1.7.7.6
-
-Looks fine.
-
-Acked-by: Lukasz Dorau <lukasz.dorau@intel.com>
-
-Thanks,
-Lukasz
 
