@@ -1,111 +1,268 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:64274 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751488AbaCUPCg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 11:02:36 -0400
-In-Reply-To: <1395412213.4554.17.camel@weser.hi.pengutronix.de>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>		 <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>
-	 <1395401031.4554.9.camel@weser.hi.pengutronix.de>	 <OF03C9E23D.07B7D998-ON80257CA2.004E5877-80257CA2.004E9BFB@eu.necel.com> <1395412213.4554.17.camel@weser.hi.pengutronix.de>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
+Received: from mail-we0-f175.google.com ([74.125.82.175]:40218 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314AbaCHFaY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Mar 2014 00:30:24 -0500
+Received: by mail-we0-f175.google.com with SMTP id q58so6065429wes.6
+        for <linux-pci@vger.kernel.org>; Fri, 07 Mar 2014 21:30:23 -0800 (PST)
+From: Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v6 6/6] pci: Add support for creating a generic host_bridge from device tree
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
-MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OFC7DD5DAC.D378B300-ON80257CA2.0051ECEE-80257CA2.00529F98@eu.necel.com>
-Date: Fri, 21 Mar 2014 15:02:29 +0000
-Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree bindings
-Content-Type: text/plain; charset="US-ASCII"
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+In-Reply-To: <1394020137-1830-7-git-send-email-Liviu.Dudau@arm.com>
+References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com> < 1394020137-1830-7-git-send-email-Liviu.Dudau@arm.com>
+Date: Fri, 07 Mar 2014 21:14:27 +0000
+Message-Id: <20140307211427.0D92DC40F30@trevor.secretlab.ca>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas,
-
-On: 21/03/2014 14:31, Lucas wrote:
-> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
-bindings
+On Wed,  5 Mar 2014 11:48:57 +0000, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> Several platforms use a rather generic version of parsing
+> the device tree to find the host bridge ranges. Move the common code
+> into the generic PCI code and use it to create a pci_host_bridge
+> structure that can be used by arch code.
 > 
-> Am Freitag, den 21.03.2014, 14:18 +0000 schrieb
-> Phil.Edworthy@renesas.com:
-> > Hi Lucas,
-> > 
-> > On 21/03/2014 11:24, Lucas wrote:
-> > > Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
-> > bindings
-> > > 
-> > > Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
-> > > > This patch adds the bindings for the rcar PCIE driver. The driver
-> > > > resides under drivers/pci/host/pcie-rcar.c
-> > > > 
-> > > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > > 
-> > > I have one question below. If you can answer this with yes after
-> > > thinking again about it, this is:
-> > > 
-> > > Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-> > > > ---
-> > > >  Documentation/devicetree/bindings/pci/rcar-pci.txt | 40 
-> > ++++++++++++++++++++++
-> > > >  1 file changed, 40 insertions(+)
-> > > >  create mode 100644 
-Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > > 
-> > > > diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/
-> > > Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > > new file mode 100644
-> > > > index 0000000..0e219b0
-> > > > --- /dev/null
-> > > > +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > > @@ -0,0 +1,40 @@
-> > > > +* Renesas RCar PCIe interface
-> > > > +
-> > > > +Required properties:
-> > > > +- compatible: should contain one of the following
-> > > > +   "renesas,r8a7779-pcie", "renesas,r8a7790-pcie", 
-> > "renesas,r8a7791-pcie"
-> > > > +- reg: base addresses and lengths of the pcie controller.
-> > > > +- #address-cells: set to <3>
-> > > > +- #size-cells: set to <2>
-> > > > +- device_type: set to "pci"
-> > > > +- ranges: ranges for the PCI memory and I/O regions
-> > > > +- interrupts: interrupt values for MSI interrupt
-> > > > +- #interrupt-cells: set to <1>
-> > > > +- interrupt-map-mask and interrupt-map: standard PCI properties
-> > > > +   to define the mapping of the PCIe interface to interrupt
-> > > > +   numbers.
-> > > > +- clocks: from common clock binding: handle to pci clock.
-> > > > +- clock-names: from common clock binding: should be "pcie"
-> > > 
-> > > You really only have one PCIe clock? So the controller is generating 
-the
-> > > PCIe bus clock from it's register clock? No need to enable any other
-> > > clock for PCIe to work?
-> > Yes, just the one clock. The PCIe bus clock is an external clock 
-dedicated 
-> > to PCIe and SATA, and we have no control over it.
-> > 
-> Is this some kind of always-on clock? If not you probably want a
-> reference to it from the PCIe driver even if it's shared between SATA
-> and PCIe. After all you don't want to end up unconditionally enabling
-> this clock from the board or SoC level just to have PCIe working, right?
-Ok, I see, I'll need a reference to a board clock, even if it's always on 
-for these boards. 
+> Based on early attempts by Andrew Murray to unify the code.
+> Used powerpc and microblaze PCI code as starting point.
+> 
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
 
-> Regards,
-> Lucas
+Tentative ack for the whole series conditional on Arnd or Ben
+
+g.
+
+> ---
+>  drivers/pci/host-bridge.c | 156 ++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h       |  13 +++
+>  2 files changed, 169 insertions(+)
+> 
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 8708b652..db9f51a 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -6,9 +6,14 @@
+>  #include <linux/init.h>
+>  #include <linux/pci.h>
+>  #include <linux/module.h>
+> +#include <linux/of_address.h>
+> +#include <linux/of_pci.h>
+> +#include <linux/slab.h>
+>  
+>  #include "pci.h"
+>  
+> +static atomic_t domain_nr = ATOMIC_INIT(-1);
+> +
+>  static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+>  {
+>  	while (bus->parent)
+> @@ -92,3 +97,154 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+>  	res->end = region->end + offset;
+>  }
+>  EXPORT_SYMBOL(pcibios_bus_to_resource);
+> +
+> +#ifdef CONFIG_OF
+> +/**
+> + * Simple version of the platform specific code for filtering the list
+> + * of resources obtained from the ranges declaration in DT.
+> + *
+> + * Platforms can override this function in order to impose stronger
+> + * constraints onto the list of resources that a host bridge can use.
+> + * The filtered list will then be used to create a root bus and associate
+> + * it with the host bridge.
+> + *
+> + */
+> +int __weak pcibios_fixup_bridge_ranges(struct list_head *resources)
+> +{
+> +	return 0;
+> +}
+> +
+> +/**
+> + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
+> + * @dev: device node of the host bridge having the range property
+> + * @resources: list where the range of resources will be added after DT parsing
+> + * @io_base: pointer to a variable that will contain the physical address for
+> + * the start of the I/O range.
+> + *
+> + * It is the callers job to free the @resources list if an error is returned.
+> + *
+> + * This function will parse the "ranges" property of a PCI host bridge device
+> + * node and setup the resource mapping based on its content. It is expected
+> + * that the property conforms with the Power ePAPR document.
+> + *
+> + * Each architecture is then offered the chance of applying their own
+> + * filtering of pci_host_bridge_windows based on their own restrictions by
+> + * calling pcibios_fixup_bridge_ranges(). The filtered list of windows
+> + * can then be used when creating a pci_host_bridge structure.
+> + */
+> +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
+> +		struct list_head *resources, resource_size_t *io_base)
+> +{
+> +	struct resource *res;
+> +	struct of_pci_range range;
+> +	struct of_pci_range_parser parser;
+> +	int err;
+> +
+> +	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
+> +
+> +	/* Check for ranges property */
+> +	err = of_pci_range_parser_init(&parser, dev);
+> +	if (err)
+> +		return err;
+> +
+> +	pr_debug("Parsing ranges property...\n");
+> +	for_each_of_pci_range(&parser, &range) {
+> +		/* Read next ranges element */
+> +		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
+> +				range.pci_space, range.pci_addr);
+> +		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
+> +					range.cpu_addr, range.size);
+> +
+> +		/*
+> +		 * If we failed translation or got a zero-sized region
+> +		 * then skip this range
+> +		 */
+> +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+> +			continue;
+> +
+> +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> +		if (!res)
+> +			return -ENOMEM;
+> +
+> +		of_pci_range_to_resource(&range, dev, res);
+> +
+> +		if (resource_type(res) == IORESOURCE_IO)
+> +			*io_base = range.cpu_addr;
+> +
+> +		pci_add_resource_offset(resources, res,
+> +				res->start - range.pci_addr);
+> +	}
+> +
+> +	/* Apply architecture specific fixups for the ranges */
+> +	return pcibios_fixup_bridge_ranges(resources);
+> +}
+> +
+> +/**
+> + * of_create_pci_host_bridge - Create a PCI host bridge structure using
+> + * information passed in the DT.
+> + * @parent: device owning this host bridge
+> + * @ops: pci_ops associated with the host controller
+> + * @host_data: opaque data structure used by the host controller.
+> + *
+> + * returns a pointer to the newly created pci_host_bridge structure, or
+> + * NULL if the call failed.
+> + *
+> + * This function will try to obtain the host bridge domain number by
+> + * using of_alias_get_id() call with "pci-domain" as a stem. If that
+> + * fails, a local allocator will be used that will put each host bridge
+> + * in a new domain.
+> + */
+> +struct pci_host_bridge *
+> +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
+> +{
+> +	int err, domain, busno;
+> +	struct resource *bus_range;
+> +	struct pci_bus *root_bus;
+> +	struct pci_host_bridge *bridge;
+> +	resource_size_t io_base;
+> +	LIST_HEAD(res);
+> +
+> +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+> +	if (!bus_range)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	domain = of_alias_get_id(parent->of_node, "pci-domain");
+> +	if (domain == -ENODEV)
+> +		domain = atomic_inc_return(&domain_nr);
+> +
+> +	err = of_pci_parse_bus_range(parent->of_node, bus_range);
+> +	if (err) {
+> +		dev_info(parent, "No bus range for %s, using default [0-255]\n",
+> +			parent->of_node->full_name);
+> +		bus_range->start = 0;
+> +		bus_range->end = 255;
+> +		bus_range->flags = IORESOURCE_BUS;
+> +	}
+> +	busno = bus_range->start;
+> +	pci_add_resource(&res, bus_range);
+> +
+> +	/* now parse the rest of host bridge bus ranges */
+> +	err = pci_host_bridge_of_get_ranges(parent->of_node, &res, &io_base);
+> +	if (err)
+> +		goto err_create;
+> +
+> +	/* then create the root bus */
+> +	root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
+> +						ops, host_data, &res);
+> +	if (IS_ERR(root_bus)) {
+> +		err = PTR_ERR(root_bus);
+> +		goto err_create;
+> +	}
+> +
+> +	bridge = to_pci_host_bridge(root_bus->bridge);
+> +	bridge->io_base = io_base;
+> +
+> +	return bridge;
+> +
+> +err_create:
+> +	pci_free_resource_list(&res);
+> +	return ERR_PTR(err);
+> +}
+> +EXPORT_SYMBOL_GPL(of_create_pci_host_bridge);
+> +
+> +#endif /* CONFIG_OF */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1eed009..40ddd3d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -395,6 +395,7 @@ struct pci_host_bridge {
+>  	struct device dev;
+>  	struct pci_bus *bus;		/* root bus */
+>  	int domain_nr;
+> +	resource_size_t io_base;	/* physical address for the start of I/O area */
+>  	struct list_head windows;	/* pci_host_bridge_windows */
+>  	void (*release_fn)(struct pci_host_bridge *);
+>  	void *release_data;
+> @@ -1786,11 +1787,23 @@ static inline struct device_node *pci_bus_to_OF_node(struct pci_bus *bus)
+>  	return bus ? bus->dev.of_node : NULL;
+>  }
+>  
+> +struct pci_host_bridge *
+> +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
+> +			void *host_data);
+> +
+> +int pcibios_fixup_bridge_ranges(struct list_head *resources);
+>  #else /* CONFIG_OF */
+>  static inline void pci_set_of_node(struct pci_dev *dev) { }
+>  static inline void pci_release_of_node(struct pci_dev *dev) { }
+>  static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+>  static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
+> +
+> +static inline struct pci_host_bridge *
+> +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
+> +			void *host_data)
+> +{
+> +	return NULL;
+> +}
+>  #endif  /* CONFIG_OF */
+>  
+>  #ifdef CONFIG_EEH
 > -- 
-> Pengutronix e.K.                           | Lucas Stach |
-> Industrial Linux Solutions                 | http://www.pengutronix.de/ 
-|
-> Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 
-|
-> Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 
-|
+> 1.9.0
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-Thanks
-Phil
