@@ -1,43 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:27432 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932503AbaCDVLm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 16:11:42 -0500
-From: "Nelson, Shannon" <shannon.nelson@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Daniel Borkmann <dborkman@redhat.com>
-CC: "e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Brandeburg, Jesse" <jesse.brandeburg@intel.com>
-Subject: RE: [E1000-devel] kmemleak through e1000?
-Date: Tue, 4 Mar 2014 21:11:41 +0000
-Message-ID: <FC41C24E35F18A40888AACA1A36F3E418A1ECC8F@FMSMSX102.amr.corp.intel.com>
-References: <5315F785.4050602@redhat.com>
- <CAErSpo4hjEG7bVu_T+X6Kie3tzj4PKV_4hoWmxr-pyVu5uD_1Q@mail.gmail.com>
-In-Reply-To: <CAErSpo4hjEG7bVu_T+X6Kie3tzj4PKV_4hoWmxr-pyVu5uD_1Q@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-we0-f176.google.com ([74.125.82.176]:55549 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464AbaCGOdx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Mar 2014 09:33:53 -0500
 MIME-Version: 1.0
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Fri, 7 Mar 2014 15:33:31 +0100
+Message-ID: <CAMxnaaXd9-VbxSYa9q1YVT+fwfDFYKGG2Hq-1jkc-awLX-HwtQ@mail.gmail.com>
+Subject: [Bug] PCI: Enable INTx if BIOS left them disabled - triggers during rescan
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> 
-> On Tue, Mar 4, 2014 at 8:55 AM, Daniel Borkmann <dborkman@redhat.com>
-> wrote:
-> > Hi all, I'm not very familiar with the e1000 code, but on the latest
-> > net.git kernel I get reliably the following (not sure if it's actually
-> > caused by e1000 though):
-> 
-> Thanks a lot for the report.  What kernel is this exactly (URL and
-> SHA-1 hash)?  We have fixes for a couple leaks already queued up [1,
-> 2], so possibly you're seeing those leaks.  If you already have those
-> fixes in net.git, then we should investigate further.
-> 
-> Bjorn
+Hi,
 
+After upgrading to the latest RC I noticed that suprise removal
+stopped working. Linux did not notice that the devices where gone.
+Bisection points to
 
-FYI - I've recently seen similar kmemleak reports from ixgbe and i40e drivers, all seemly pointing to the msix allocations.  I didn't have a chance to track them down, but they were seen in variations of net-next 3.14.0-rc3.
+1f42db786b14a31bf807fc41ee5583a00c08fcb1 PCI: Enable INTx if BIOS left
+them disabled
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=1f42db786b14a31bf807fc41ee5583a00c08fcb1
 
-sln
+It seems that the above patch is triggered on the bridge itself (!)
+when a new device is added below it. At this point the hotplug driver
+for the bridge has already enabled MSI. Reenabling INTX kills MSI and
+prevents later suprise removal notifications.
 
+The following stacktrace is from a "echo 1 > rescan" on the bridge:
+do_pci_enable_device+0x59/0x140
+pci_reenable_device+0x1f/0x30
+pci_assign_unassigned_bridge_resources+0x123/0x160
+pci_rescan_bus_bridge_resize+0x28/0x40
+dev_bus_rescan_store+0x85/0xa0
+dev_attr_store+0x18/0x30
+sysfs_kf_write+0x3d/0x50
+kernfs_fop_write+0xd2/0x140
+vfs_write+0xba/0x1e0
+SyS_write+0x49/0xa0
+system_call_fastpath+0x1a/0x1f
+
+Similarly for a hotplug event:
+do_pci_enable_device+0x59/0x140
+pci_reenable_device+0x1f/0x30
+pci_assign_unassigned_bridge_resources+0x123/0x160
+pciehp_configure_device+0x90/0x160
+pciehp_enable_slot+0x163/0x280
+pciehp_power_thread+0xb8/0xe0
+process_one_work+0x167/0x420
+worker_thread+0x121/0x3a0
+
+In both cases DisINTx is turned off and the hotplug driver stops
+reacting to events.
+
+Andreas
