@@ -1,137 +1,240 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:28489 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752707AbaCXMZ4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 08:25:56 -0400
-In-Reply-To: <533021F6.2000702@codethink.co.uk>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>		 <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>  <1395401031.4554.9.camel@weser.hi.pengutronix.de>
-	 <OF03C9E23D.07B7D998-ON80257CA2.004E5877-80257CA2.004E9BFB@eu.necel.com> <1395412213.4554.17.camel@weser.hi.pengutronix.de> <OFC7DD5DAC.D378B300-ON80257CA2.0051ECEE-80257CA2.00529F98@LocalDomain> <OF9DD6173A.94976872-ON80257CA5.0041752F-80257CA5.0042532C@eu.necel.com> <533021F6.2000702@codethink.co.uk>
-To: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org,
-	Simon Horman <horms@verge.net.au>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:60534 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752075AbaCHBFA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Mar 2014 20:05:00 -0500
+Received: by mail-ie0-f174.google.com with SMTP id rp18so5179988iec.19
+        for <linux-pci@vger.kernel.org>; Fri, 07 Mar 2014 17:04:59 -0800 (PST)
+Date: Fri, 7 Mar 2014 18:04:56 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [Bug] PCI: Enable INTx if BIOS left them disabled - triggers
+ during rescan
+Message-ID: <20140308010456.GA30660@google.com>
+References: <CAMxnaaXd9-VbxSYa9q1YVT+fwfDFYKGG2Hq-1jkc-awLX-HwtQ@mail.gmail.com>
+ <CAErSpo5fkaFNq_qTZ+gTDMV554f4diOXQ7_4bsHqj06iAGTpHg@mail.gmail.com>
+ <CAE9FiQVNFqTw+92qy8zcwG1haiSZzU+KE3oh4YnjNc_aE6KUnA@mail.gmail.com>
 MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OF85DD7B1D.716DE42D-ON80257CA5.00443087-80257CA5.004447DB@eu.necel.com>
-Date: Mon, 24 Mar 2014 12:25:49 +0000
-Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree bindings
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQVNFqTw+92qy8zcwG1haiSZzU+KE3oh4YnjNc_aE6KUnA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
+[+cc Rafael]
 
-On: 24/03/2014 12:16, Ben wrote:
-> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
-bindings
+On Fri, Mar 07, 2014 at 11:39:48AM -0800, Yinghai Lu wrote:
+> On Fri, Mar 7, 2014 at 8:45 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >
+> > I opened a bugzilla report at https://bugzilla.kernel.org/show_bug.cgi?id=71691
+> >
+> > It seems like clearing DisINTx has some effect on MSI.  I don't see
+> > anything in the spec that would suggest this (I'm looking at the PCIe
+> > r3.0 spec, sec 7.5.1.1).
+> >
+> > Can somebody point out a connection between DisINTx and MSI?  If not,
+> > maybe we'll need some sort of quirk to deal with this.
 > 
-> On 24/03/14 12:04, Phil.Edworthy@renesas.com wrote:
-> > Hi Lucas,
-> >
-> > On: 21/03/2014 15:02, Phil wrote:
-> >> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree
-> > bindings
-> >>
-> >> Hi Lucas,
-> >>
-> >> On: 21/03/2014 14:31, Lucas wrote:
-> >>> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree
-> > bindings
-> >>>
-> >>> Am Freitag, den 21.03.2014, 14:18 +0000 schrieb
-> >>> Phil.Edworthy@renesas.com:
-> >>>> Hi Lucas,
-> >>>>
-> >>>> On 21/03/2014 11:24, Lucas wrote:
-> >>>>> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device
-> > tree
-> >>>> bindings
-> >>>>>
-> >>>>> Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
-> >>>>>> This patch adds the bindings for the rcar PCIE driver. The
-> > driver
-> >>>>>> resides under drivers/pci/host/pcie-rcar.c
-> >>>>>>
-> >>>>>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> >>>>>
-> >>>>> I have one question below. If you can answer this with yes after
-> >>>>> thinking again about it, this is:
-> >>>>>
-> >>>>> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-> >>>>>> ---
-> >>>>>>   Documentation/devicetree/bindings/pci/rcar-pci.txt | 40
-> >>>> ++++++++++++++++++++++
-> >>>>>>   1 file changed, 40 insertions(+)
-> >>>>>>   create mode 100644
-> > Documentation/devicetree/bindings/pci/rcar-pci.txt
-> >>>>>>
-> >>>>>> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > b/
-> >>>>> Documentation/devicetree/bindings/pci/rcar-pci.txt
-> >>>>>> new file mode 100644
-> >>>>>> index 0000000..0e219b0
-> >>>>>> --- /dev/null
-> >>>>>> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> >>>>>> @@ -0,0 +1,40 @@
-> >>>>>> +* Renesas RCar PCIe interface
-> >>>>>> +
-> >>>>>> +Required properties:
-> >>>>>> +- compatible: should contain one of the following
-> >>>>>> +   "renesas,r8a7779-pcie", "renesas,r8a7790-pcie",
-> >>>> "renesas,r8a7791-pcie"
-> >>>>>> +- reg: base addresses and lengths of the pcie controller.
-> >>>>>> +- #address-cells: set to <3>
-> >>>>>> +- #size-cells: set to <2>
-> >>>>>> +- device_type: set to "pci"
-> >>>>>> +- ranges: ranges for the PCI memory and I/O regions
-> >>>>>> +- interrupts: interrupt values for MSI interrupt
-> >>>>>> +- #interrupt-cells: set to <1>
-> >>>>>> +- interrupt-map-mask and interrupt-map: standard PCI properties
-> >>>>>> +   to define the mapping of the PCIe interface to interrupt
-> >>>>>> +   numbers.
-> >>>>>> +- clocks: from common clock binding: handle to pci clock.
-> >>>>>> +- clock-names: from common clock binding: should be "pcie"
-> >>>>>
-> >>>>> You really only have one PCIe clock? So the controller is
-> > generating the
-> >>>>> PCIe bus clock from it's register clock? No need to enable any
-> > other
-> >>>>> clock for PCIe to work?
-> >>>> Yes, just the one clock. The PCIe bus clock is an external clock
-> > dedicated
-> >>>> to PCIe and SATA, and we have no control over it.
-> >>>>
-> >>> Is this some kind of always-on clock? If not you probably want a
-> >>> reference to it from the PCIe driver even if it's shared between 
-SATA
-> >>> and PCIe. After all you don't want to end up unconditionally 
-enabling
-> >>> this clock from the board or SoC level just to have PCIe working,
-> > right?
-> >> Ok, I see, I'll need a reference to a board clock, even if it's 
-always
-> > on for
-> >> these boards.
-> > One small question...
-> >
-> > The patches added the PCIe host controller to two devices, r8a7790 and
-> > r8a7791. The r8a7790-based Lager board doesn't have the necessary 
-hardware
-> > to use PCIe, so should I add a dummy pcie_bus clock to the Lager board
-> > dts, even though PCIe is not used?
-> >
-> > I'm just wondering what the dts file looks like for a board that 
-doesn't
-> > support many interfaces. Does it become littered with dummy clocks and
-> > regulators?
+> I had different impression: if you disable INTx in some chipset, MSI will not
+> work anymore.
 > 
-> The bridge node should be set to disabled by default so it never gets
-> probed. Any boards that want to use it can over-ride the status to be
-> enabled.
-Ok, thanks.
+> so we have
+> 
+> static void pci_intx_for_msi(struct pci_dev *dev, int enable)
+> {
+>         if (!(dev->dev_flags & PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG))
+>                 pci_intx(dev, enable);
+> }
+> 
+> and have quirks for ati and broadcom chip to set that FLAG.
 
-Phil
+Setting INTX_DISABLE on some chipsets seems to disable MSI, and that
+behavior seems to be a hardware defect (see ba698ad4b7e4 "PCI: Add
+quirk for devices which disable MSI when INTX_DISABLE is set.")
+
+Andreas has a device where *clearing* INTX_DISABLE seems to disable
+MSI.  Do you think that's also a hardware defect?  If it's not a
+defect, is there something in the spec that explains why that happens?
+
+> regarding the regression: i would suggest move out
+> do_pci_enable_intx() from re-enable path.
+
+Today we have this:
+
+  pcie_portdrv_probe
+    pci_enable_device		# clears INTX_DISABLE
+    pci_enable_msi		# sets INTX_DISABLE
+
+  pciehp_configure_device
+    pci_reenable_device		# clears INTX_DISABLE again
+
+This is clearly not the intent; we set INTX_DISABLE when MSI was
+enabled, then we clear it again later even though MSI is still
+enabled.  Maybe we should just leave INTX_DISABLE alone if
+(dev->msi_enabled || dev->msix_enabled).
+
+pci_reenable_device() is also used in the device resume path.  I don't
+know what should happen there.
+
+But I'm curious about why we set INTX_DISABLE when enabling MSI/MSI-X
+in the first place.  Per the PCI 3.0 spec, sec 6.8.3.3:
+
+  While enabled for MSI or MSI-X operation, a function is prohibited
+  from using its INTx# pin (if implemented) to request service (MSI,
+  MSI-X, and INTx# are mutually exclusive).
+
+This suggests that we might not need to touch INTX_DISABLE when we're
+enabling MSI/MSI-X.  I looked at these commits related to it:
+
+  ba698ad4b7e4 PCI: Add quirk for devices which disable MSI when INTX_DISABLE is set.
+  b1cbf4e4dddd msi: fix up the msi enable/disable logic
+  1769b46a3ed9 PCI MSI: always toggle legacy-INTx-enable bit upon MSI entry/exit
+  986162d3239a ia32 Message Signalled Interrupt support
+
+and none of them mentions a problem that requires us to set
+INTX_DISABLE.  It's possible that we're causing ourselves trouble by
+being overly defensive.  I wonder what would happen if we stopped
+fiddling with it in the MSI/MSI-X paths, e.g., something like this
+(just as an experiment, of course):
+
+  diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+  index 7a0fec6ce571..9ef7bd608add 100644
+  --- a/drivers/pci/msi.c
+  +++ b/drivers/pci/msi.c
+  @@ -442,8 +442,6 @@ static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
+   
+   static void pci_intx_for_msi(struct pci_dev *dev, int enable)
+   {
+  -	if (!(dev->dev_flags & PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG))
+  -		pci_intx(dev, enable);
+   }
+   
+   static void __pci_restore_msi_state(struct pci_dev *dev)
+
+If we did that, INTX_DISABLE would be cleared by the first
+pci_enable_device() and pci_reenable_device() wouldn't do anything,
+leaving it cleared.  The resulting state (cleared) would be the same,
+but the transitions would be gone, and maybe those are important.
+
+The thing I don't like about the patch below is that it's magical: the
+code doesn't have any obvious connection with the problem.  How would
+one deduce that this is necessary, or explain why it's necessary?  A
+changelog like "this makes things work" is not really very useful.  If
+we make a change like this, it needs to be connected with MSI/MSI-X
+somehow so a reader can figure out why we twiddle INTX_DISABLE in the
+enable path but not the reenable path.
+
+Bjorn
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 5a24cb3..92718c9 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1190,11 +1190,22 @@ int __weak pcibios_enable_device(struct
+> pci_dev *dev, int bars)
+>      return pci_enable_resources(dev, bars);
+>  }
+> 
+> +static void do_pci_enable_intx(struct pci_dev *dev)
+> +{
+> +    u8 pin;
+> +    pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+> +    if (pin) {
+> +        pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> +        if (cmd & PCI_COMMAND_INTX_DISABLE)
+> +            pci_write_config_word(dev, PCI_COMMAND,
+> +                          cmd & ~PCI_COMMAND_INTX_DISABLE);
+> +    }
+> +}
+> +
+>  static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>  {
+>      int err;
+>      u16 cmd;
+> -    u8 pin;
+> 
+>      err = pci_set_power_state(dev, PCI_D0);
+>      if (err < 0 && err != -EIO)
+> @@ -1204,14 +1215,6 @@ static int do_pci_enable_device(struct pci_dev
+> *dev, int bars)
+>          return err;
+>      pci_fixup_device(pci_fixup_enable, dev);
+> 
+> -    pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+> -    if (pin) {
+> -        pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> -        if (cmd & PCI_COMMAND_INTX_DISABLE)
+> -            pci_write_config_word(dev, PCI_COMMAND,
+> -                          cmd & ~PCI_COMMAND_INTX_DISABLE);
+> -    }
+> -
+>      return 0;
+>  }
+> 
+> @@ -1287,6 +1290,8 @@ static int pci_enable_device_flags(struct
+> pci_dev *dev, unsigned long flags)
+>      err = do_pci_enable_device(dev, bars);
+>      if (err < 0)
+>          atomic_dec(&dev->enable_cnt);
+> +    else
+> +        do_pci_enable_intx(dev);
+>      return err;
+>  }
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 5a24cb3..92718c9 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1190,11 +1190,22 @@ int __weak pcibios_enable_device(struct pci_dev *dev, int bars)
+>  	return pci_enable_resources(dev, bars);
+>  }
+>  
+> +static void do_pci_enable_intx(struct pci_dev *dev)
+> +{
+> +	u8 pin;
+> +	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+> +	if (pin) {
+> +		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> +		if (cmd & PCI_COMMAND_INTX_DISABLE)
+> +			pci_write_config_word(dev, PCI_COMMAND,
+> +					      cmd & ~PCI_COMMAND_INTX_DISABLE);
+> +	}
+> +}
+> +
+>  static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>  {
+>  	int err;
+>  	u16 cmd;
+> -	u8 pin;
+>  
+>  	err = pci_set_power_state(dev, PCI_D0);
+>  	if (err < 0 && err != -EIO)
+> @@ -1204,14 +1215,6 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>  		return err;
+>  	pci_fixup_device(pci_fixup_enable, dev);
+>  
+> -	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+> -	if (pin) {
+> -		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> -		if (cmd & PCI_COMMAND_INTX_DISABLE)
+> -			pci_write_config_word(dev, PCI_COMMAND,
+> -					      cmd & ~PCI_COMMAND_INTX_DISABLE);
+> -	}
+> -
+>  	return 0;
+>  }
+>  
+> @@ -1287,6 +1290,8 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>  	err = do_pci_enable_device(dev, bars);
+>  	if (err < 0)
+>  		atomic_dec(&dev->enable_cnt);
+> +	else
+> +		do_pci_enable_intx(dev);
+>  	return err;
+>  }
+>  
+
