@@ -1,164 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:34132 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751551AbaCEITd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 03:19:33 -0500
-Date: Wed, 5 Mar 2014 08:19:29 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Yijing Wang' <wangyijing@huawei.com>,
-	'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
+Received: from moutng.kundenserver.de ([212.227.126.187]:53283 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753162AbaCJP6S (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 11:58:18 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
-	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
-	'LKML' <linux-kernel@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	'LAKML' <linux-arm-kernel@lists.infradead.org>,
-	'Tanmay Inamdar' <tinamdar@apm.com>,
-	'Arnd Bergmann' <arnd@arndb.de>
-Subject: Re: [PATCH v5 3/7] pci: Create pci_host_bridge before its associated
- bus in pci_create_root_bus.
-Message-ID: <20140305081929.GE1692@e106497-lin.cambridge.arm.com>
-References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
- <1393948204-11555-4-git-send-email-Liviu.Dudau@arm.com>
- <53169E86.1090609@huawei.com>
- <002401cf382d$3062aa50$9127fef0$%han@samsung.com>
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>
+Subject: Re: [PATCH v5 1/7] pci: Introduce pci_register_io_range() helper function.
+Date: Mon, 10 Mar 2014 16:57:42 +0100
+Message-ID: <1852456.hNkOzqVe7y@wuerfel>
+In-Reply-To: <20140310144519.GU6457@e106497-lin.cambridge.arm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com> <201403070124.13139.arnd@arndb.de> <20140310144519.GU6457@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <002401cf382d$3062aa50$9127fef0$%han@samsung.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 05, 2014 at 04:41:35AM +0000, Jingoo Han wrote:
-> On Wednesday, March 05, 2014 12:48 PM, Yijing Wang wrote:
-> > On 2014/3/4 23:50, Liviu Dudau wrote:
-> > > Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
-> > > As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
-> > > the creation order has been changed for no good reason. Revert the order of
-> > > creation as we are going to depend on the pci_host_bridge structure to retrieve the
-> > > domain number of the root bus.
-> > >
-> > > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > >
-> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > > index 6e34498..78ccba0 100644
-> > > --- a/drivers/pci/probe.c
-> > > +++ b/drivers/pci/probe.c
-> > > @@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
-> > >  	kfree(bridge);
-> > >  }
-> > >
-> > > -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-> > > +static struct pci_host_bridge *pci_alloc_host_bridge(void)
-> > >  {
-> > >  	struct pci_host_bridge *bridge;
-> > >
-> > > @@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-> > >  		return NULL;
-> > >
-> > >  	INIT_LIST_HEAD(&bridge->windows);
-> > > -	bridge->bus = b;
-> > >  	return bridge;
-> > >  }
-> > >
-> > > @@ -1727,9 +1726,21 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> > >  	char bus_addr[64];
-> > >  	char *fmt;
-> > >
-> > > +	bridge = pci_alloc_host_bridge();
-> > > +	if (!bridge)
-> > > +		return NULL;
-> > > +
-> > > +	bridge->dev.parent = parent;
-> > > +	bridge->dev.release = pci_release_host_bridge_dev;
-> > > +	error = pcibios_root_bridge_prepare(bridge);
-> > > +	if (error) {
-> > > +		kfree(bridge);
-> > > +		return NULL;
-> > 
-> > What about use goto err_out?
+On Monday 10 March 2014 14:45:19 Liviu Dudau wrote:
 > 
-> +1
+> So, if I understand you correctly, you would prefer to fail here and hence stop the
+> parsing for the x86, rather than pretending everything is OK and going through the
+> motions?
+
+Yes, on x86 it is clearly a bug if we end up calling this function.
+
+> That was not my original thinking when I've introduced this function here. The main
+> purpose of the function is to help the correct translation of IO addresses in
+> pci_address_to_pio(). As Jason has explained very nicely, we have 3 types of
+> architectures here that we try to support:
+>   - the ones that have separate IO address space (x86)
+>   - the ones that have 1:1 mapping between physical IO addresses and logical ports
+
+Still not convinced this second one actually exists.
+
+>   - the architectures that memory map the IO addresses in virtual address space
+>     and then translate the logical addresses into virtual based on a given offset.
 > 
-> I agree with your opinion.
-> It makes the code simpler.
+> For the first two types we don't want to do anything special. Architectures that
+> fall in the last category will have to provide their own version of this function,
+> with the arm64 version being generic enough to be used as de facto?
 
-Hi Yijing and Jingoo,
+The page flags might be different across architectures: arm32 currently uses
+MT_DEVICE, which only exists on arm32 and derived architectures (unicore32,
+arm64).
 
-Thanks for reviewing these patches, I will make the change for the next version.
+> But I can see your point of view as well. I just don't know if that is good enough
+> for powerpc and microblaze. With the way things are in my patch, they should be able
+> to switch to of_create_pci_host_bridge() easily*, with your suggestion they will
+> have to provide their implementation for pci_register_io_range().
 
-Best regards,
-Liviu
+I think there would still be a lot to do have powerpc switch over to
+of_create_pci_host_bridge(), the more likely thing to happen is to have
+that architecture implement its own copy that calls the same internal helpers
+and does some more things that we may not want on other architectures.
 
-> 
-> Best regards,
-> Jingoo Han
-> 
-> > 
-> > > +	}
-> > > +
-> > >  	b = pci_alloc_bus();
-> > >  	if (!b)
-> > > -		return NULL;
-> > > +		goto err_out;
-> > >
-> > >  	b->sysdata = sysdata;
-> > >  	b->ops = ops;
-> > > @@ -1738,26 +1749,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> > >  	if (b2) {
-> > >  		/* If we already got to this bus through a different bridge, ignore it */
-> > >  		dev_dbg(&b2->dev, "bus already known\n");
-> > > -		goto err_out;
-> > > +		goto err_bus_out;
-> > >  	}
-> > >
-> > > -	bridge = pci_alloc_host_bridge(b);
-> > > -	if (!bridge)
-> > > -		goto err_out;
-> > > -
-> > > -	bridge->dev.parent = parent;
-> > > -	bridge->dev.release = pci_release_host_bridge_dev;
-> > > +	bridge->bus = b;
-> > >  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> > > -	error = pcibios_root_bridge_prepare(bridge);
-> > > -	if (error) {
-> > > -		kfree(bridge);
-> > > -		goto err_out;
-> > > -	}
-> > > -
-> > >  	error = device_register(&bridge->dev);
-> > >  	if (error) {
-> > >  		put_device(&bridge->dev);
-> > > -		goto err_out;
-> > > +		goto err_bus_out;
-> > >  	}
-> > >  	b->bridge = get_device(&bridge->dev);
-> > >  	device_enable_async_suspend(b->bridge);
-> > > @@ -1814,8 +1814,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> > >  class_dev_reg_err:
-> > >  	put_device(&bridge->dev);
-> > >  	device_unregister(&bridge->dev);
-> > > -err_out:
-> > > +err_bus_out:
-> > >  	kfree(b);
-> > > +err_out:
-> > > +	kfree(bridge);
-> > >  	return NULL;
-> > >  }
-> > >
-> > >
-> 
-> 
+Microblaze can probably be changed to use of_create_pci_host_bridge()
+and need no custom code at all, it should need only a subset of what
+we need for arm64.
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+> We really need to get another architecture converted. If there are no other takers I
+> will make a stab once the current push towards upstreaming AArch64 hardware support
+> slows down.
 
+Moving over microblaze I think would be a good start. It has rather
+specific requirements since there is only one host driver, but then again
+that PCI host implementation might be shared with zynq (or synthesizable
+there). I also wonder whether it's actually related to the X-gene PCI,
+since I know some of the ppc4xx use Xilinx PCI and X-gene is also
+based on those.
+
+	Arnd
