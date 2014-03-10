@@ -1,87 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:60759 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751822AbaC2RTI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 29 Mar 2014 13:19:08 -0400
-Received: by mail-pd0-f181.google.com with SMTP id p10so6146563pdj.40
-        for <linux-pci@vger.kernel.org>; Sat, 29 Mar 2014 10:19:07 -0700 (PDT)
-Date: Sat, 29 Mar 2014 11:19:03 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Parag Warudkar <parag.lkml@gmail.com>,
+Received: from dliviu.plus.com ([80.229.23.120]:58428 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753368AbaCJWCF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Mar 2014 18:02:05 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id 0F2B7FF6E6
+	for <linux-pci@vger.kernel.org>; Mon, 10 Mar 2014 22:02:04 +0000 (GMT)
+Date: Mon, 10 Mar 2014 21:56:00 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
 	LKML <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: BAR 14: can't assign mem (size 0x200000)
-Message-ID: <20140329171903.GA10551@google.com>
-References: <CAOULuOY5eryuH1KgaqiuGXyYiQd2h=TZoPe2M2+juts9XuzW6Q@mail.gmail.com>
- <CAE9FiQXmO_sSCnd-0NvXKmyeLP0m4XGRRkAgqSiMkfeTcvXs+A@mail.gmail.com>
- <CAOULuOaeBPpuiYc_Aru+awBDf=Ahbok-UjgY9o7gfO4VMctoqg@mail.gmail.com>
- <CAE9FiQWpprkp_dzviD8wRpqosJq5Oe+8UTwhL87fbzFm3OknUw@mail.gmail.com>
- <CA+55aFx_zAO0iJVi==4X-bYFTopgaOCopCdUBbqUwKfOrXRYqw@mail.gmail.com>
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v6 6/6] pci: Add support for creating a generic
+ host_bridge from device tree
+Message-ID: <20140310215600.GA14968@bart.dudau.co.uk>
+References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com>
+ <2115856.ZTdgp5fkma@wuerfel>
+ <20140310163343.GY6457@e106497-lin.cambridge.arm.com>
+ <1469359.kil5iaOqdU@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFx_zAO0iJVi==4X-bYFTopgaOCopCdUBbqUwKfOrXRYqw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1469359.kil5iaOqdU@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, linux-pci, linux-acpi]
-
-On Sat, Mar 29, 2014 at 09:41:20AM -0700, Linus Torvalds wrote:
-> On Sat, Mar 29, 2014 at 12:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >
-> > Later during resuming, kernel try to assign resource 02:00.0 but it will fail
-> > as parent bridge 00:1c.3 has no resource.
-> > (Not sure how pci_configure_slot get called with this resume path).
+On Mon, Mar 10, 2014 at 07:59:59PM +0100, Arnd Bergmann wrote:
+> On Monday 10 March 2014 16:33:44 Liviu Dudau wrote:
+> > On Mon, Mar 10, 2014 at 03:21:01PM +0000, Arnd Bergmann wrote:
+> > > On Monday 10 March 2014 14:44:14 Liviu Dudau wrote:
+> > > > I will try to improve the error handling in the next patchset version.
+> > > > However I am still confused about the earlier discussion on
+> > > > pci_register_io_range(). Your suggestion initially was to return an
+> > > > error in the default weak implementation, but in your last email you
+> > > > are talking about returning 'port'.
+> > > 
+> > > You can do either one: 'port' should be positive or zero, while the
+> > > error would always be negative. We do the same thing in many interfaces
+> > > in the kernel.
+> > > 
+> > > > My idea when I've introduced the
+> > > > helper function was that it would return an error if it fails to
+> > > > register the IO range and zero otherwise. I agree that we can treat
+> > > > the default 'do nothing with the IO range' case as an error, with
+> > > > the caveat that will force architectures that use this code to
+> > > > provide their own implementation of pci_register_io_range() in order
+> > > > to avoid failure, even for the cases where the architecture has a 1:1
+> > > > mapping between IO and CPU addresses.
+> > > 
+> > > Which architectures are you thinking of? The only one I know that
+> > > does this is ia64, and we won't ever have to support this helper
+> > > on that architecture.
+> > 
+> > I was thinking about architectures that have IO_SPACE_LIMIT >= 0xffffffff.
+> > While not an absolute indicator, with the default pci_address_to_pio()
+> > that means that they can use the CPU MMIO address as IO address directly.
 > 
-> I think that last comment is the most pertinent one: why does resume
-> try to assign resources to PCI devices? It should be *restoring* them,
-> not re-assigning any resources.
+> Not really, that would only work if they also have instructions to do
+> raw accesses to physical memory addresses rather than virtual memory
+> pointers that most architectures do.
 > 
-> Parag, can you add a WARN_ON_ONCE() to that message, so that we see
-> what the call chain is for it.
+> > $ git grep IO_SPACE_LIMIT | grep -i ffffffff
+> > arch/arm/include/asm/io.h:#define IO_SPACE_LIMIT ((resource_size_t)0xffffffff)
+> > arch/arm/mach-at91/include/mach/io.h:#define IO_SPACE_LIMIT		0xFFFFFFFF
+> > arch/arm/mach-omap1/include/mach/io.h:#define IO_SPACE_LIMIT 0xffffffff
+> > arch/arm/mach-pxa/include/mach/io.h:#define IO_SPACE_LIMIT 0xffffffff
+> > arch/arm/mach-s3c24xx/include/mach/io.h:#define IO_SPACE_LIMIT 0xffffffff
+> 
+> These use a special trick where an __iomem pointer is the same as
+> the port number. This works most of the time, but breaks anything
+> that assumes that port numbers are low, such as /dev/port or
+> broken devices. Moreover, it means your code won't work because
+> it depends on passing the virtual start address of the PIO mapping
+> window as io_offset.
+> 
+> > arch/avr32/include/asm/io.h:#define IO_SPACE_LIMIT	0xffffffff
+> > arch/frv/include/asm/io.h:#define IO_SPACE_LIMIT	0xffffffff
+> 
+> They have no MMU, and the code relies on the port number to match
+> both the virtual and the physical address. You could be right about
+> these, but I would guess that the code also needs some other
+> changes if we want to make it work on nommu kernels. It also depends
+> on whether the I/O bus address is the same as the CPU address, or
+> if it starts at bus address 0.
+> 
+> > arch/ia64/include/asm/io.h:#define IO_SPACE_LIMIT		0xffffffffffffffffUL
+> 
+> Here, the definition is special, the token is just used to encode
+> a space number and an offset within the I/O space.
+> 
+> > arch/m32r/include/asm/io.h:#define IO_SPACE_LIMIT  0xFFFFFFFF
+> 
+> no PCI here.
+> 
+> > arch/m68k/include/asm/io_no.h:#define IO_SPACE_LIMIT 0xffffffff
+> 
+> This looks like a mistake, it should be smaller
+> 
+> > arch/microblaze/include/asm/io.h:#define IO_SPACE_LIMIT (0xFFFFFFFF)
+> 
+> I suspect it doesn't actually work. microblaze copied large parts
+> of this from PowerPC, but the parts that differ apparently get
+> it wrong for the I/O space. 
+> 
+> > arch/mn10300/include/asm/io.h:#define IO_SPACE_LIMIT 0xffffffff
+> 
+> Same category as frv. We should ask David Howells whether he
+> thinks I/O space actually works on these.
+> 
+> > arch/sh/include/asm/io.h:#define IO_SPACE_LIMIT 0xffffffff
+> 
+> I think this should just be 0xffff.
+> 
+> > arch/sparc/include/asm/io_32.h:#define IO_SPACE_LIMIT 0xffffffff
+> > arch/sparc/include/asm/io_64.h:#define IO_SPACE_LIMIT 0xffffffffffffffffUL
+> 
+> Sparc actually accesses the physical addresses, so in theory
+> it could always work. In the 64-bit case it would however have
+> to check that the port number is smaller than 0xffffffff, otherwise
+> you couldn't set the BAR. This means you still need a custom
+> function.
+> 
+> > arch/tile/include/asm/io.h:#define IO_SPACE_LIMIT 0xffffffff
+> 
+> tile seems to support only ioport_map() but not inb/outb, if I'm
+> reading this right.
+> 
+> > > I did not ask to treat 'do nothing with the IO range' as an error,
+> > > what I meant is that we should treat 'architecture cannot translate
+> > > from I/O space to memory space but DT lists a translation anyway'
+> > > as an error. On x86, you should never see an entry for the I/O space
+> > > in "ranges", so we will not call this function unless there is a
+> > > bug in DT.
+> > 
+> > Ok, it's just that there is no "architecture cannot translate from I/O
+> > space to memory space" indicator anywhere and I don't want to make x86
+> > a special case.
+> 
+> Right.
+> 
+> > So, my proposal is this: default weak implementation of pci_register_io_range()
+> > returns an error (meaning I have no idea how to translate IO addresses
+> > to memory space) and anyone that wants this function to return success will
+> > have to provide their implementation.
+> 
+> Another idea: make this conditional on the definition of PCI_IOBASE: If this
+> is defined, we can use the arm64 version that uses this number. Otherwise
+> we fall back to returning an error, which means that either on the
+> architecture we shouldn't be calling that function, or we need a custom
+> implementation.
 
-I think we likely get a Bus Check notification when resuming, so we're
-probably in this path:
+PCI_IOBASE is always defined. See the discussion with Russell on this subject.
 
-    acpi_hotplug_notify_cb
-      acpi_hotplug_execute(acpi_device_hotplug, ...)
-	acpi_device_hotplug
-	  acpi_scan_bus_check
-	    acpi_pci_root_scan_dependent        # .hotplug.scan_dependent
-	      acpiphp_check_host_bridge
-		acpiphp_check_bridge    
-		  enable_slot
-		    pcibios_resource_survey_bus
-		      dev_printk("Allocating resources")
+include/asm-generic/io.h has at line 118:
 
-It seems like we ought to do the equivalent of a Bus Check from the
-root at boot-time, even if we don't receive an explicit Bus Check
-notification then (ACPI 5.0, sec 5.6.6, says "OSPM will typically
-perform a full enumeration automatically at boot time, but after
-system initialization it is the responsibility of the ACPI AML code to
-notify OSPM whenever a re-enumeration operation is required"), but I
-don't think we do, which makes the resume path different from the boot
-path.
+#ifndef PCI_IOBASE
+#define PCI_IOBASE ((void __iomem *) 0)
+#endif
 
-Parag, would you mind collecting an acpidump and attaching it to the
-bugzilla below?
+I will go with my idea tomorrow. arm64 overwrite the implementation anyway, I
+find it cleaner rather than having to do #ifdefs and/or ifs.
 
-Is this a regression?  I guess you said that the message (and the sec-
-latency change, which I don't think is applicable to PCIe anyway) are
-the only ill effects you see, so it might not be too serious even if
-it is.
+Best regards,
+Liviu
 
-I am concerned about the VT-d connection and the sec-latency change.
-I wouldn't be surprised to find that the resume path doesn't restore
-sec-latency, but I don't know why VT-d would affect the resource
-allocation.  I guess it's possible that enabling VT-d might change
-the ACPI namespace; maybe you could collect *two* acpidumps: one with
-VT-d enabled and another with it disabled.
+> 
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Let's continue the discussion in email, but I did open
-https://bugzilla.kernel.org/show_bug.cgi?id=73141 as a place to archive
-your logs.
-
-Bjorn
