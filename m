@@ -1,175 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:46047 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750930AbaCGIhp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Mar 2014 03:37:45 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Tanmay Inamdar' <tinamdar@apm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Grant Likely' <grant.likely@linaro.org>,
-	'Rob Herring' <robh+dt@kernel.org>,
-	'Catalin Marinas' <catalin.marinas@arm.com>,
-	'Rob Landley' <rob@landley.net>,
-	'Liviu Dudau' <liviu.dudau@arm.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
- <1394085963-27553-2-git-send-email-tinamdar@apm.com>
-In-reply-to: <1394085963-27553-2-git-send-email-tinamdar@apm.com>
-Subject: Re: [PATCH v4 1/4] pci: APM X-Gene PCIe controller driver
-Date: Fri, 07 Mar 2014 17:37:42 +0900
-Message-id: <005901cf39e0$81ceb960$856c2c20$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from bombadil.infradead.org ([198.137.202.9]:50706 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753247AbaCJNEq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 09:04:46 -0400
+Message-ID: <1394456660.2270.3.camel@shinybook.infradead.org>
+Subject: Re: [Patch Part2 V2 15/17] iommu/vt-d, PCI: update DRHD/RMRR/ATSR
+ device scope caches when PCI hotplug happens
+From: David Woodhouse <dwmw2@infradead.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>, Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Date: Mon, 10 Mar 2014 06:04:20 -0700
+In-Reply-To: <531D7BE8.7060103@linux.intel.com>
+References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+		 <1392790057-32434-16-git-send-email-jiang.liu@linux.intel.com>
+	 <1394130319.9994.28.camel@i7.infradead.org>
+	 <531D7BE8.7060103@linux.intel.com>
+Content-Type: multipart/signed; micalg="sha-1"; protocol="application/x-pkcs7-signature";
+	boundary="=-+tWP9Ncx+FmSUMlXF+N5"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, March 06, 2014 3:06 PM, Tanmay Inamdar wrote:
-> 
 
-Hi Tanmay Inamdar,
+--=-+tWP9Ncx+FmSUMlXF+N5
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I added some minor comments. :-)
+On Mon, 2014-03-10 at 16:46 +0800, Jiang Liu wrote:
+> Hi David,
+>         Good suggestion! It should make hotplug logic simpler too.
+> Will try to work out some patches for it.
 
-> This patch adds the AppliedMicro X-Gene SOC PCIe controller driver.
-> X-Gene PCIe controller supports maxmum upto 8 lanes and GEN3 speed.
+Before doing so, please be aware of the WIP at
+http://git.infradead.org/users/dwmw2/linux-andd.git
 
-Would you fix the followings?
+This is the support for DMA mapping for ACPI devices. Largely thrown
+together on a plane above the Atlantic over the last day, so mostly
+untested, but a lot of it is fairly simply switching to using 'struct
+device' instead of assuming 'struct pci_dev' everywhere.
 
-s/maxmum/maximum
-s/upto/up to
+For now I've taken the simple approach of using the ->devices array, and
+*expanding* it to contain the bus+devfn to use for ACPI devices too.
 
-> X-Gene SOC supports maximum 5 PCIe ports.
-> 
-> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  drivers/pci/host/Kconfig     |   10 +
->  drivers/pci/host/Makefile    |    1 +
->  drivers/pci/host/pci-xgene.c |  739 ++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 750 insertions(+)
->  create mode 100644 drivers/pci/host/pci-xgene.c
+--=20
+dwmw2
 
-[.....]
 
-> --- /dev/null
-> +++ b/drivers/pci/host/pci-xgene.c
+--=-+tWP9Ncx+FmSUMlXF+N5
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
 
-[.....]
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIISxDCCBjQw
+ggQcoAMCAQICAR4wDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0
+Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxKTAn
+BgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3MTAyNDIxMDE1NVoX
+DTE3MTAyNDIxMDE1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSsw
+KQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFy
+dENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTCCASIwDQYJKoZIhvcN
+AQEBBQADggEPADCCAQoCggEBAMcJg8zOLdgasSmkLhOrlr6KMoOMpohBllVHrdRvEg/q6r8jR+EK
+75xCGhR8ToREoqe7zM9/UnC6TS2y9UKTpT1v7RSMzR0t6ndl0TWBuUr/UXBhPk+Kmy7bI4yW4urC
++y7P3/1/X7U8ocb8VpH/Clt+4iq7nirMcNh6qJR+xjOhV+VHzQMALuGYn5KZmc1NbJQYclsGkDxD
+z2UbFqE2+6vIZoL+jb9x4Pa5gNf1TwSDkOkikZB1xtB4ZqtXThaABSONdfmv/Z1pua3FYxnCFmdr
+/+N2JLKutIxMYqQOJebr/f/h5t95m4JgrM3Y/w7YX9d7YAL9jvN4SydHsU6n65cCAwEAAaOCAa0w
+ggGpMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRTcu2SnODaywFc
+fH6WNU7y1LhRgjAfBgNVHSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRa
+MFgwJwYIKwYBBQUHMAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYh
+aHR0cDovL3d3dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6
+Ly93d3cuc3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5j
+b20vc2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
+dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93d3cu
+c3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBAAqDCH14qywG
+XLhjjF6uHLkjd02hcdh9hrw+VUsv+q1eeQWB21jWj3kJ96AUlPCoEGZ/ynJNScWy6QMVQjbbMXlt
+UfO4n4bGGdKo3awPWp61tjAFgraLJgDk+DsSvUD6EowjMTNx25GQgyYJ5RPIzKKR9tQW8gGK+2+R
+HxkUCTbYFnL6kl8Ch507rUdPPipJ9CgJFws3kDS3gOS5WFMxcjO5DwKfKSETEPrHh7p5shuuNktv
+sv6hxHTLhiMKX893gxdT3XLS9OKmCv87vkINQcNEcIIoFWbP9HORz9v3vQwR4e3ksLc2JZOAFK+s
+sS5XMEoznzpihEP0PLc4dCBYjbvSD7kxgDwZ+Aj8Q9PkbvE9sIPP7ON0fz095HdThKjiVJe6vofq
++n6b1NBc8XdrQvBmunwxD5nvtTW4vtN6VY7mUCmxsCieuoBJ9OlqmsVWQvifIYf40dJPZkk9YgGT
+zWLpXDSfLSplbY2LL9C9U0ptvjcDjefLTvqSFc7tw1sEhF0n/qpA2r0GpvkLRDmcSwVyPvmjFBGq
+Up/pNy8ZuPGQmHwFi2/14+xeSUDG2bwnsYJQG2EdJCB6luQ57GEnTA/yKZSTKI8dDQa8Sd3zfXb1
+9mOgSF0bBdXbuKhEpuP9wirslFe6fQ1t5j5R0xi72MZ8ikMu1RQZKCyDbMwazlHiMIIGQjCCBSqg
+AwIBAgIDBoXOMA0GCSqGSIb3DQEBBQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRD
+b20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYG
+A1UEAxMvU3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcN
+MTMwNTAyMDYyMDQ2WhcNMTQwNTAzMTIxNDAyWjBdMRkwFwYDVQQNExBNd0k3ODIxNTRpV21lZVkw
+MRwwGgYDVQQDDBNkd213MkBpbmZyYWRlYWQub3JnMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZy
+YWRlYWQub3JnMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvWGuRDHiXVpOgaFkBaz8
+c3jQTfiEw7j0iKZnktCQi0xjY29QJ7GwL+fgQlbofXgYTm8E9fWERvw2tAy2BxHzAPguBzziS7JN
+hsGP9lf3L8hFJBvmdyyyj8b9A6Oi7s3JLtMRWIvyvE+DbuTkP+htuT4+XuTJr8Y5yIqd1WXr2gJk
+ANr77vTyjeNxceevP58Tqr0f+4v5g6+vNARO3bk3SaVQPDUTwGrpoPtLh3d+mQzZ4iiW3MwQS7Wr
+UVT3l2aTVHCpgtAaBs3zHWarvmIqhbWj8zdcnELNzwqTrOjaoWxuWY4k05GGfzmdjOBUiL7FDNvI
+ZwweJEPwJAQI72YhUwIDAQABo4IC2TCCAtUwCQYDVR0TBAIwADALBgNVHQ8EBAMCBLAwHQYDVR0l
+BBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMB0GA1UdDgQWBBSs0hZhUgQwqGVXzLuH6pJH0hMZwTAf
+BgNVHSMEGDAWgBRTcu2SnODaywFcfH6WNU7y1LhRgjAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRl
+YWQub3JnMIIBTAYDVR0gBIIBQzCCAT8wggE7BgsrBgEEAYG1NwECAzCCASowLgYIKwYBBQUHAgEW
+Imh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwgfcGCCsGAQUFBwICMIHqMCcWIFN0
+YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MAMCAQEagb5UaGlzIGNlcnRpZmljYXRlIHdh
+cyBpc3N1ZWQgYWNjb3JkaW5nIHRvIHRoZSBDbGFzcyAxIFZhbGlkYXRpb24gcmVxdWlyZW1lbnRz
+IG9mIHRoZSBTdGFydENvbSBDQSBwb2xpY3ksIHJlbGlhbmNlIG9ubHkgZm9yIHRoZSBpbnRlbmRl
+ZCBwdXJwb3NlIGluIGNvbXBsaWFuY2Ugb2YgdGhlIHJlbHlpbmcgcGFydHkgb2JsaWdhdGlvbnMu
+MDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9jcmwuc3RhcnRzc2wuY29tL2NydHUxLWNybC5jcmww
+gY4GCCsGAQUFBwEBBIGBMH8wOQYIKwYBBQUHMAGGLWh0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9z
+dWIvY2xhc3MxL2NsaWVudC9jYTBCBggrBgEFBQcwAoY2aHR0cDovL2FpYS5zdGFydHNzbC5jb20v
+Y2VydHMvc3ViLmNsYXNzMS5jbGllbnQuY2EuY3J0MCMGA1UdEgQcMBqGGGh0dHA6Ly93d3cuc3Rh
+cnRzc2wuY29tLzANBgkqhkiG9w0BAQUFAAOCAQEACFLDQnyO8+XA/TiTltjJ/ZAvM+qmBEKN43Vd
++Wio2lM/Wq/scJpkupXGHrl9CueobkDxMAogXbMxqLZYO13PvgjMh+PHxDPnQv8EGxOig+k/Hqvc
+qEdTlm9YEHcbXbWS6XB+zRO7VVIpGMYQ1f1qCOcukxmwIm6iMSHXbOr/7paQm4bO0ULptjBotfiO
+Zo6q8No6SroQlOSyc6v8FYSxTNIAXMaM2FYkjqrxgdnJmSIAfr11gROuF69WuOICxP0zTEjJle+7
+aO9lUWNaWMWPMyFSNCxF6kkRuvUCami7vlhLOTRC1kb+OMhx7keN9At3tdTI3rtuFeSB1Pa3VXVs
+0DCCBkIwggUqoAMCAQICAwaFzjANBgkqhkiG9w0BAQUFADCBjDELMAkGA1UEBhMCSUwxFjAUBgNV
+BAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
+Z25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xp
+ZW50IENBMB4XDTEzMDUwMjA2MjA0NloXDTE0MDUwMzEyMTQwMlowXTEZMBcGA1UEDRMQTXdJNzgy
+MTU0aVdtZWVZMDEcMBoGA1UEAwwTZHdtdzJAaW5mcmFkZWFkLm9yZzEiMCAGCSqGSIb3DQEJARYT
+ZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL1hrkQx
+4l1aToGhZAWs/HN40E34hMO49IimZ5LQkItMY2NvUCexsC/n4EJW6H14GE5vBPX1hEb8NrQMtgcR
+8wD4Lgc84kuyTYbBj/ZX9y/IRSQb5ncsso/G/QOjou7NyS7TEViL8rxPg27k5D/obbk+Pl7kya/G
+OciKndVl69oCZADa++708o3jcXHnrz+fE6q9H/uL+YOvrzQETt25N0mlUDw1E8Bq6aD7S4d3fpkM
+2eIoltzMEEu1q1FU95dmk1RwqYLQGgbN8x1mq75iKoW1o/M3XJxCzc8Kk6zo2qFsblmOJNORhn85
+nYzgVIi+xQzbyGcMHiRD8CQECO9mIVMCAwEAAaOCAtkwggLVMAkGA1UdEwQCMAAwCwYDVR0PBAQD
+AgSwMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQUrNIWYVIEMKhlV8y7
+h+qSR9ITGcEwHwYDVR0jBBgwFoAUU3Ltkpzg2ssBXHx+ljVO8tS4UYIwHgYDVR0RBBcwFYETZHdt
+dzJAaW5mcmFkZWFkLm9yZzCCAUwGA1UdIASCAUMwggE/MIIBOwYLKwYBBAGBtTcBAgMwggEqMC4G
+CCsGAQUFBwIBFiJodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9wb2xpY3kucGRmMIH3BggrBgEFBQcC
+AjCB6jAnFiBTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0
+aWZpY2F0ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJl
+cXVpcmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9saWN5LCByZWxpYW5jZSBvbmx5IGZvciB0
+aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNlIG9mIHRoZSByZWx5aW5nIHBhcnR5IG9i
+bGlnYXRpb25zLjA2BgNVHR8ELzAtMCugKaAnhiVodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9jcnR1
+MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsGAQUFBzABhi1odHRwOi8vb2NzcC5zdGFy
+dHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2EwQgYIKwYBBQUHMAKGNmh0dHA6Ly9haWEuc3Rh
+cnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xpZW50LmNhLmNydDAjBgNVHRIEHDAahhhodHRw
+Oi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEFBQADggEBAAhSw0J8jvPlwP04k5bYyf2Q
+LzPqpgRCjeN1XfloqNpTP1qv7HCaZLqVxh65fQrnqG5A8TAKIF2zMai2WDtdz74IzIfjx8Qz50L/
+BBsTooPpPx6r3KhHU5ZvWBB3G121kulwfs0Tu1VSKRjGENX9agjnLpMZsCJuojEh12zq/+6WkJuG
+ztFC6bYwaLX4jmaOqvDaOkq6EJTksnOr/BWEsUzSAFzGjNhWJI6q8YHZyZkiAH69dYETrhevVrji
+AsT9M0xIyZXvu2jvZVFjWljFjzMhUjQsRepJEbr1Ampou75YSzk0QtZG/jjIce5HjfQLd7XUyN67
+bhXkgdT2t1V1bNAxggNvMIIDawIBATCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0
+Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2
+BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMG
+hc4wCQYFKw4DAhoFAKCCAa8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUx
+DxcNMTQwMzEwMTMwNDIwWjAjBgkqhkiG9w0BCQQxFgQUGdFYfdcPmcDvRxpajsQqZ5hCZj4wgaUG
+CSsGAQQBgjcQBDGBlzCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4x
+KzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0
+YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMGhc4wgacGCyqG
+SIb3DQEJEAILMYGXoIGUMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjEr
+MCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3Rh
+cnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAwaFzjANBgkqhkiG
+9w0BAQEFAASCAQCNhEYppDH4T2HurOHCPkyvQaypTyNTwgHT7aGpXXkLdYWKHP4MRMR4Tiizq9E6
+XMhKxAYRCPgSKlUKH1fwWV8vbRCTW1qrTpwhtJjN31U64VIFhR6pr6cCfkaidsirSdJMEhTBGiR7
+3rpAFk8UgTmAk+QwEIAMzMvvffV8Lf5Fc/ifeimnRQvljEIN3TAzarJ0h6rv2zwwcXYxcEfm0U6K
+kXJyjRFmQrm/qq5J8am5IGrOgS46gWg+ZIXVaCOFwOhdjR67z+HzmvAUH54dk5pv/XEqIlSlYD0O
+vVh2ng4du7/0Q5JJH7o2/ktsP/UOQbJEqOD3+bDNjfR4EicRe/D4AAAAAAAA
 
-> +
-> +static int xgene_pcie_parse_map_dma_ranges(struct xgene_pcie_port *port)
-> +{
-> +	struct device_node *np = port->node;
-> +	struct of_pci_range range;
-> +	struct of_pci_range_parser parser;
-> +	struct device *dev = port->dev;
-> +	u8 ib_reg_mask = 0;
-> +
-> +	if (pci_dma_range_parser_init(&parser, np)) {
-> +		dev_err(dev, "missing dma-ranges property\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	/* Get the dma-ranges from DT */
-> +	for_each_of_pci_range(&parser, &range) {
-> +		u64 end = range.cpu_addr + range.size - 1;
-> +		dev_dbg(port->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
-> +			range.flags, range.cpu_addr, end, range.pci_addr);
-> +		xgene_pcie_setup_ib_reg(port, &range, &ib_reg_mask);
-> +	}
-> +	return 0;
-> +}
-> +
-> +static int __init xgene_pcie_probe_bridge(struct platform_device *pdev)
 
-Please, remove '__init' marker in order to fix section mismatch
-warning.
-
-> +{
-> +	struct device_node *np = of_node_get(pdev->dev.of_node);
-> +	struct xgene_pcie_port *port;
-> +	struct pci_host_bridge *bridge;
-> +	resource_size_t lastbus;
-> +	u32 lanes = 0, speed = 0;
-> +	u64 cfg_addr = 0;
-> +	int ret;
-> +
-> +	port = devm_kzalloc(&pdev->dev, sizeof(*port), GFP_KERNEL);
-> +	if (!port)
-> +		return -ENOMEM;
-> +	port->node = np;
-> +	port->dev = &pdev->dev;
-> +
-> +	ret = xgene_pcie_map_reg(port, pdev, &cfg_addr);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = xgene_pcie_init_port(port);
-> +	if (ret)
-> +		return ret;
-> +	xgene_pcie_program_core(port->csr_base);
-> +	xgene_pcie_setup_root_complex(port);
-> +
-> +	bridge = of_create_pci_host_bridge(&pdev->dev, &xgene_pcie_ops, port);
-> +	if (IS_ERR_OR_NULL(bridge))
-> +		return PTR_ERR(bridge);
-> +
-> +	ret = xgene_pcie_map_ranges(port, bridge, cfg_addr);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = xgene_pcie_parse_map_dma_ranges(port);
-> +	if (ret)
-> +		return ret;
-> +
-> +	xgene_pcie_poll_linkup(port, &lanes, &speed);
-> +	if (!port->link_up)
-> +		dev_info(port->dev, "(rc) link down\n");
-> +	else
-> +		dev_info(port->dev, "(rc) x%d gen-%d link up\n",
-> +				lanes, speed + 1);
-> +	platform_set_drvdata(pdev, port);
-> +	lastbus = pci_rescan_bus(bridge->bus);
-> +	pci_bus_update_busn_res_end(bridge->bus, lastbus);
-> +	return 0;
-> +}
-> +
-> +static const struct of_device_id xgene_pcie_match_table[] __initconst = {
-
-Please, remove '__initconst' marker in order to fix section mismatch
-warning.
-
-> +	{.compatible = "apm,xgene-pcie",},
-> +	{},
-> +};
-> +
-> +static struct platform_driver xgene_pcie_driver = {
-> +	.driver = {
-> +		   .name = "xgene-pcie",
-> +		   .owner = THIS_MODULE,
-> +		   .of_match_table = of_match_ptr(xgene_pcie_match_table),
-> +		  },
-
-Please fix this indent style, as below:
-
-+	},
-
-See you later. :-)
-
-Best regards,
-Jingoo Han
-
-> +	.probe = xgene_pcie_probe_bridge,
-> +};
-> +module_platform_driver(xgene_pcie_driver);
-> +
-> +MODULE_AUTHOR("Tanmay Inamdar <tinamdar@apm.com>");
-> +MODULE_DESCRIPTION("APM X-Gene PCIe driver");
-> +MODULE_LICENSE("GPL v2");
-> --
-> 1.7.9.5
+--=-+tWP9Ncx+FmSUMlXF+N5--
 
