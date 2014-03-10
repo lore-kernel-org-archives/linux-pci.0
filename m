@@ -1,70 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor1.renesas.com ([210.160.252.171]:33976 "EHLO
-	relmlie4.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753829AbaCaKbF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 06:31:05 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
-References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1396261856-22465-5-git-send-email-phil.edworthy@renesas.com>
-Date: Mon, 31 Mar 2014 11:30:49 +0100
-Subject: [PATCH v7 04/10] ARM: shmobile: r8a7791: Add PCIe clock device tree nodes
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v6 6/6] pci: Add support for creating a generic host_bridge from device tree
+Date: Mon, 10 Mar 2014 20:28:32 +0100
+Message-ID: <2669340.5Jm6AjVlSo@wuerfel>
+In-Reply-To: <CAMuHMdWzm1D83zquwuQVKwbqRdXmSw7u1ui7iZyC3VGdGhn0HA@mail.gmail.com>
+References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com> <1469359.kil5iaOqdU@wuerfel> <CAMuHMdWzm1D83zquwuQVKwbqRdXmSw7u1ui7iZyC3VGdGhn0HA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the device tree clock nodes for PCIe
+On Monday 10 March 2014 20:16:25 Geert Uytterhoeven wrote:
+> On Mon, Mar 10, 2014 at 7:59 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> >> arch/avr32/include/asm/io.h:#define IO_SPACE_LIMIT    0xffffffff
+> >> arch/frv/include/asm/io.h:#define IO_SPACE_LIMIT      0xffffffff
+> >
+> > They have no MMU, and the code relies on the port number to match
+> > both the virtual and the physical address. You could be right about
+> > these, but I would guess that the code also needs some other
+> > changes if we want to make it work on nommu kernels. It also depends
+> > on whether the I/O bus address is the same as the CPU address, or
+> > if it starts at bus address 0.
+> 
+> >> arch/m68k/include/asm/io_no.h:#define IO_SPACE_LIMIT 0xffffffff
+> >
+> > This looks like a mistake, it should be smaller
+> 
+> io_no.h is for nommu.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/boot/dts/r8a7791.dtsi            | 7 +++++--
- include/dt-bindings/clock/r8a7791-clock.h | 1 +
- 2 files changed, 6 insertions(+), 2 deletions(-)
+Ah, I missed that. In that case I assume it doesn't matter because
+the only m68k with PCI is M54xx and that always has an MMU.
 
-diff --git a/arch/arm/boot/dts/r8a7791.dtsi b/arch/arm/boot/dts/r8a7791.dtsi
-index 71bac2c..ccfba57 100644
---- a/arch/arm/boot/dts/r8a7791.dtsi
-+++ b/arch/arm/boot/dts/r8a7791.dtsi
-@@ -717,14 +717,17 @@
- 			compatible = "renesas,r8a7791-mstp-clocks", "renesas,cpg-mstp-clocks";
- 			reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
- 			clocks = <&cp_clk>, <&sd2_clk>, <&sd1_clk>,
--				<&cpg_clocks R8A7791_CLK_SD0>, <&mmc0_clk>, <&rclk_clk>;
-+				<&cpg_clocks R8A7791_CLK_SD0>, <&mmc0_clk>, <&rclk_clk>,
-+				<&mp_clk>;
- 			#clock-cells = <1>;
- 			renesas,clock-indices = <
- 				R8A7791_CLK_TPU0 R8A7791_CLK_SDHI2 R8A7791_CLK_SDHI1
- 				R8A7791_CLK_SDHI0 R8A7791_CLK_MMCIF0 R8A7791_CLK_CMT1
-+				R8A7791_CLK_PCIE
- 			>;
- 			clock-output-names =
--				"tpu0", "sdhi2", "sdhi1", "sdhi0", "mmcif0", "cmt1";
-+				"tpu0", "sdhi2", "sdhi1", "sdhi0", "mmcif0", "cmt1",
-+				"pcie";
- 		};
- 		mstp5_clks: mstp5_clks@e6150144 {
- 			compatible = "renesas,r8a7791-mstp-clocks", "renesas,cpg-mstp-clocks";
-diff --git a/include/dt-bindings/clock/r8a7791-clock.h b/include/dt-bindings/clock/r8a7791-clock.h
-index 30f82f2..d3e2cf5 100644
---- a/include/dt-bindings/clock/r8a7791-clock.h
-+++ b/include/dt-bindings/clock/r8a7791-clock.h
-@@ -51,6 +51,7 @@
- #define R8A7791_CLK_SDHI1		12
- #define R8A7791_CLK_SDHI0		14
- #define R8A7791_CLK_MMCIF0		15
-+#define R8A7791_CLK_PCIE		19
- #define R8A7791_CLK_SSUSB		28
- #define R8A7791_CLK_CMT1		29
- #define R8A7791_CLK_USBDMAC0		30
--- 
-1.9.0
-
+	Arnd
