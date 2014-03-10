@@ -1,31 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:57579 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754281AbaCMRkQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 13:40:16 -0400
-Received: by mail-pd0-f173.google.com with SMTP id z10so1382930pdj.4
-        for <linux-pci@vger.kernel.org>; Thu, 13 Mar 2014 10:40:15 -0700 (PDT)
-From: Tim Harvey <tharvey@gateworks.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 0/2] ARM: IMX: fix ability to use pcie interrupt-map
-Date: Thu, 13 Mar 2014 10:40:03 -0700
-Message-Id: <1394732405-2260-1-git-send-email-tharvey@gateworks.com>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:43434 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753136AbaCJTQ0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 15:16:26 -0400
+MIME-Version: 1.0
+In-Reply-To: <1469359.kil5iaOqdU@wuerfel>
+References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com>
+	<2115856.ZTdgp5fkma@wuerfel>
+	<20140310163343.GY6457@e106497-lin.cambridge.arm.com>
+	<1469359.kil5iaOqdU@wuerfel>
+Date: Mon, 10 Mar 2014 20:16:25 +0100
+Message-ID: <CAMuHMdWzm1D83zquwuQVKwbqRdXmSw7u1ui7iZyC3VGdGhn0HA@mail.gmail.com>
+Subject: Re: [PATCH v6 6/6] pci: Add support for creating a generic
+ host_bridge from device tree
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The #address-cells of the arm-cortext-a9 gic in the imx pcie host controller
-node is invalid which breaks the ability to user interrupt-map for legacy
-pci interrupts.
+On Mon, Mar 10, 2014 at 7:59 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> arch/avr32/include/asm/io.h:#define IO_SPACE_LIMIT    0xffffffff
+>> arch/frv/include/asm/io.h:#define IO_SPACE_LIMIT      0xffffffff
+>
+> They have no MMU, and the code relies on the port number to match
+> both the virtual and the physical address. You could be right about
+> these, but I would guess that the code also needs some other
+> changes if we want to make it work on nommu kernels. It also depends
+> on whether the I/O bus address is the same as the CPU address, or
+> if it starts at bus address 0.
 
-Tim Harvey (2):
-  ARM: DT: fix gic interrupt controller documentation
-  ARM: dts: imx: fix invalid #address-cells value
+>> arch/m68k/include/asm/io_no.h:#define IO_SPACE_LIMIT 0xffffffff
+>
+> This looks like a mistake, it should be smaller
 
- Documentation/devicetree/bindings/arm/gic.txt | 2 +-
- arch/arm/boot/dts/imx6qdl.dtsi                | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+io_no.h is for nommu.
 
--- 
-1.8.3.2
+Gr{oetje,eeting}s,
 
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
