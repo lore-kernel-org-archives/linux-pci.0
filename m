@@ -1,51 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.131]:57645 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752574AbaCGAZB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 19:25:01 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v5 1/7] pci: Introduce pci_register_io_range() helper function.
-Date: Fri, 7 Mar 2014 01:24:12 +0100
-Cc: "linux-pci" <linux-pci@vger.kernel.org>,
+Received: from co9ehsobe003.messaging.microsoft.com ([207.46.163.26]:36009
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752403AbaCJDJ0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Mar 2014 23:09:26 -0400
+Date: Mon, 10 Mar 2014 11:09:39 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: <linux-arm-kernel@lists.infradead.org>, <linux-sh@vger.kernel.org>,
+	<linux-samsung-soc@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com> <201403042330.09607.arnd@arndb.de> <20140306160442.GG6457@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140306160442.GG6457@e106497-lin.cambridge.arm.com>
+	Simon Horman <horms@verge.net.au>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <kernel@pengutronix.de>
+Subject: Re: [PATCH v2 5/6] ARM: dts: imx6: add PCIe interrupt mapping
+ properties
+Message-ID: <20140310030938.GB15218@S2101-09.ap.freescale.net>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+ <1394025951-32438-6-git-send-email-l.stach@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201403070124.13139.arnd@arndb.de>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1394025951-32438-6-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 06 March 2014, Liviu Dudau wrote:
-> On Tue, Mar 04, 2014 at 10:30:09PM +0000, Arnd Bergmann wrote:
-> > On Tuesday 04 March 2014, Liviu Dudau wrote:
-> > > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> > > +{
-> > > +       return 0;
-> > > +}
-> > > +
-> > 
-> > How about returning an error here? You don't actually register the range.
+On Wed, Mar 05, 2014 at 02:25:50PM +0100, Lucas Stach wrote:
+> As defined by the common PCI bindings.
 > 
-> That's not the intention here. I basically want a nop, as by default (read x86)
-> we do nothing with the IO range.
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-I think x86 is a bad default though, because that is the exception rather than
-the rule. I also think that on x86, you shouldn't have an entry for the I/O
-space in the "ranges" property since there is no translation, and then we don't
-call this function.
+Applied, thanks.
 
-PCI devices described in DT on x86 would still be able to list their I/O BARs
-in DT, but you don't ever translate them into MMIO ranges.
-
-	Arnd
