@@ -1,59 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:35864 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753654AbaCTPEm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 11:04:42 -0400
-Message-ID: <532B0384.1000400@codethink.co.uk>
-Date: Thu, 20 Mar 2014 16:04:36 +0100
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Received: from mga09.intel.com ([134.134.136.24]:11312 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751041AbaCJIq7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Mar 2014 04:46:59 -0400
+Message-ID: <531D7BE8.7060103@linux.intel.com>
+Date: Mon, 10 Mar 2014 16:46:32 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-sh@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Magnus Damm <damm@opensource.se>,
-	Ben Dooks <ben-linux@fluff.org>,
+To: David Woodhouse <dwmw2@infradead.org>
+CC: Joerg Roedel <joro@8bytes.org>, Yinghai Lu <yinghai@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms+renesas@verge.net.au>
-Subject: Re: DMABOUNCE in pci-rcar
-References: <201402241200.21944.arnd@arndb.de> <CAErSpo5RV=w+DkgHSZZPOFGiEBBxMSraLV3TepYUZwDJuV+Jzg@mail.gmail.com> <5165962.7bqj51B15Z@wuerfel>
-In-Reply-To: <5165962.7bqj51B15Z@wuerfel>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: Re: [Patch Part2 V2 15/17] iommu/vt-d, PCI: update DRHD/RMRR/ATSR
+ device scope caches when PCI hotplug happens
+References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>	 <1392790057-32434-16-git-send-email-jiang.liu@linux.intel.com> <1394130319.9994.28.camel@i7.infradead.org>
+In-Reply-To: <1394130319.9994.28.camel@i7.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 26/02/14 20:57, Arnd Bergmann wrote:
-> On Wednesday 26 February 2014 12:48:17 Bjorn Helgaas wrote:
->> On Mon, Feb 24, 2014 at 4:00 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->>> Hi Magnus,
->>>
->>> I noticed during randconfig testing that you enabled DMABOUNCE for the
->>> pci-rcar-gen2 driver as posted in this patch https://lkml.org/lkml/2014/2/5/30
->>>
->>> I didn't see the original post unfortunately, but I fear we have to
->>> revert it and come up with a better solution, ...
->>
->> Sounds like I should drop the following patches from my pci/host-rcar
->> branch for now?
->>
->>    PCI: rcar: Add DMABOUNCE support
->>    PCI: rcar: Enable BOUNCE in case of HIGHMEM
->>    PCI: rcar: Make the Kconfig dependencies more generic
->
-> Sounds good to me. The last patch is actually fine, but you'll have to
-> fix the context to apply it without the other two.
+Hi David,
+	Good suggestion! It should make hotplug logic simpler too.
+Will try to work out some patches for it.
+Thanks!
+Gerry
 
-As a note, if we now boot a Lager with DT on 3.14-rc3 series the USB
-controllers no longer work with full 2GiB RAM enabled in the device
-tree.
-
-Could we work around this by having 1GiB of memory defined in the
-32bit memory and then add the rest of the 3GiB from the >32bit
-area via LPAE? Will the kernel ever try to allocate DMA memory from
-anything >32bit?
-
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+On 2014/3/7 2:25, David Woodhouse wrote:
+> On Wed, 2014-02-19 at 14:07 +0800, Jiang Liu wrote:
+>> Current Intel DMAR/IOMMU driver assumes that all PCI devices
+>> associated
+>> with DMAR/RMRR/ATSR device scope arrays are created at boot time and
+>> won't change at runtime, so it caches pointers of associated PCI
+>> device
+>> object. That assumption may be wrong now due to:
+>> 1) introduction of PCI host bridge hotplug
+>> 2) PCI device hotplug through sysfs interfaces.
+> ...
+>> This patch introduces a new mechanism to update the DRHD/RMRR/ATSR
+>> device scope caches by hooking PCI bus notification.
+> 
+> Hm, this seems overly complex. Can't we just abandon the
+> dmaru->devices[] array completely? In dmar_find_matched_drhd_unit()
+> can't we just compare the path in the scope entries directly to the PCI
+> device we are trying to find a DRHD for?
+> 
+> We then cache the result in dev->archdata.iommu for ever (well, until
+> hot-unplug) anyway, so it shouldn't even be any less efficient to do it
+> on demand, right?
+> 
+> That's true at least for dmar_find_matched_drhd_unit(). Perhaps we'd
+> need to find a way to cache the result for
+> dmar_find_matched_atsr_unit()?
+> 
