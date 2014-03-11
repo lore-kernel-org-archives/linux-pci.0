@@ -1,44 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14647 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750977AbaCaTvM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 31 Mar 2014 15:51:12 -0400
-Date: Mon, 31 Mar 2014 21:52:52 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
-	linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-	Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: [PATCH v2 0/2] block: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140331195139.GA19867@dhcp-26-207.brq.redhat.com>
-References: <cover.1393404496.git.agordeev@redhat.com>
- <20140313041231.GC26657@google.com>
- <5321CE94.5070506@kernel.dk>
- <20140313173656.GA4939@dhcp-26-207.brq.redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 11 Mar 2014 09:46:41 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v6 6/6] pci: Add support for creating a generic
+ host_bridge from device tree
+Message-ID: <20140311094641.GA27064@e106497-lin.cambridge.arm.com>
+References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com>
+ <1469359.kil5iaOqdU@wuerfel>
+ <20140310215600.GA14968@bart.dudau.co.uk>
+ <4254618.BlpDUOctDb@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140313173656.GA4939@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <4254618.BlpDUOctDb@wuerfel>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 13, 2014 at 06:36:56PM +0100, Alexander Gordeev wrote:
-> Oh-oh, cciss patch #2 requires commit 3ce4e86 ("PCI/MSI: Add
-> pci_enable_msi_exact() and pci_enable_msix_exact()") which was
-> pulled to 3.14-rc4 only. Sorry for failing to clarify that :(
+On Tue, Mar 11, 2014 at 06:50:24AM +0000, Arnd Bergmann wrote:
+> On Monday 10 March 2014 21:56:00 Liviu Dudau wrote:
+> > 
+> > PCI_IOBASE is always defined. See the discussion with Russell on this subject.
+> > 
+> > include/asm-generic/io.h has at line 118:
+> > 
+> > #ifndef PCI_IOBASE
+> > #define PCI_IOBASE ((void __iomem *) 0)
+> > #endif
 > 
-> And I also notice 3111cc3 ("skd: Use pci_enable_msix_exact() instead
-> of pci_enable_msix_range()") in your tree also should not compile :(
+> That is only defined for those that use asm-generic/pci.h, which most architectures
+> don't.
 
-Hi Jens,
+I think it is defined for anyone that #includes <asm-generic/io.h>. There is no other
+#ifdef around that.
 
-3.14 contains prerequisite commits for the patches above.
-Would you pull them or do you want me to resend the two?
+>  
+> > I will go with my idea tomorrow. arm64 overwrite the implementation anyway, I
+> > find it cleaner rather than having to do #ifdefs and/or ifs.
+> 
+> I'd really hope we can get to a point where arm64 doesn't need any architecture
+> specific code for this. It doesn't do anything special.
 
-Thanks!
+I agree.
+
+Best regards,
+Liviu
+
+> 
+> 	Arnd
+> 
+> 
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
