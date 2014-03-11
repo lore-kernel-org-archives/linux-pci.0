@@ -1,107 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:39127 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759427AbaCSRVr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 13:21:47 -0400
-Date: Wed, 19 Mar 2014 17:21:41 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Message-ID: <20140319172140.GA16328@e106497-lin.cambridge.arm.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
- <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
- <20140314171457.GK18126@arm.com>
- <201403141838.08900.arnd@arndb.de>
- <20140314180527.GZ6457@e106497-lin.cambridge.arm.com>
- <20140317173821.GJ24070@arm.com>
- <20140317180525.GL6457@e106497-lin.cambridge.arm.com>
- <20140319135619.GC6231@localhost>
+Received: from mail-we0-f181.google.com ([74.125.82.181]:33944 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754139AbaCKMwY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 08:52:24 -0400
 MIME-Version: 1.0
-In-Reply-To: <20140319135619.GC6231@localhost>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20140311001003.GA14367@google.com>
+References: <CAMxnaaXd9-VbxSYa9q1YVT+fwfDFYKGG2Hq-1jkc-awLX-HwtQ@mail.gmail.com>
+ <CAErSpo5fkaFNq_qTZ+gTDMV554f4diOXQ7_4bsHqj06iAGTpHg@mail.gmail.com>
+ <CAE9FiQVNFqTw+92qy8zcwG1haiSZzU+KE3oh4YnjNc_aE6KUnA@mail.gmail.com>
+ <20140308010456.GA30660@google.com> <CAMxnaaVfpJCW7e-b80y4wmVWcRDK5t7qY+pNn71CsLPRN2ojnA@mail.gmail.com>
+ <CAErSpo4MQsAer7FM0kU5mMOGRok0oFMWX1FqFijmswutjyNoRg@mail.gmail.com>
+ <CAMxnaaWr0z1zbpFQPX6UvYbnxhfA+3aj4ffhCBpp1i4ZLsGTPg@mail.gmail.com> <20140311001003.GA14367@google.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Tue, 11 Mar 2014 13:52:02 +0100
+Message-ID: <CAMxnaaUSs2KXL9=VKLpM=+vyb0RZ4iWPp4WawfFaw+kNbWfNSg@mail.gmail.com>
+Subject: Re: [Bug] PCI: Enable INTx if BIOS left them disabled - triggers
+ during rescan
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 19, 2014 at 01:56:19PM +0000, Catalin Marinas wrote:
-> On Mon, Mar 17, 2014 at 06:05:25PM +0000, Liviu Dudau wrote:
-> > On Mon, Mar 17, 2014 at 05:38:21PM +0000, Catalin Marinas wrote:
-> > > On Fri, Mar 14, 2014 at 06:05:27PM +0000, Liviu Dudau wrote:
-> > > > On Fri, Mar 14, 2014 at 05:38:08PM +0000, Arnd Bergmann wrote:
-> > > > > On Friday 14 March 2014, Catalin Marinas wrote:
-> > > > > > On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
-> > > > > > > --- /dev/null
-> > > > > > > +++ b/arch/arm64/kernel/pci.c
-> > > > > > [...]
-> > > > > > > +int pci_register_io_range(phys_addr_t address, resource_size_t size)
-> > > > > > [...]
-> > > > > > > +unsigned long pci_address_to_pio(phys_addr_t address)
-> > > > > > [...]
-> > > > > > > +void pcibios_fixup_bus(struct pci_bus *bus)
-> > > > > > [ actually most of this file ]
-> > > > > > 
-> > > > > > Maybe it was raised before already but can we have __weak generic
-> > > > > > definitions of these functions? They don't seem to be arm64 specific in
-> > > > > > any way.
-> > > [...]
-> > > > Catalin, if you are happy to ask for ACKs from all arch maintainers that might get
-> > > > affected by our custom version of pci_address_to_pio() before you can pull PCI support
-> > > > for arm64 then I can propose a new patchset.
-> > > 
-> > > You don't need to change the other architectures, that's the point of a
-> > > __weak definition, it will be automatically overridden. If you want, you
-> > > can even place a GENERIC_PCI or whatever config option that is only
-> > > selected by arm64 for the time being.
-> > 
-> > pci_address_to_pio() is alread __weak. My patch was adding the arm64 version of it. Adding
-> > an #ifdef GENERIC_PCI to the __weak implementation is not just a temporary solution.
-> 
-> Ah, I start to understand what you mean, pci_address_to_pio() is already
-> defined as __weak in drivers/of/address.c. So the reason we redefine it
-> on arm64 is that it uses the io_list resources which are populated by
-> pci_register_io_range(). Do you see any other architecture using a
-> similar logic (that could be shared)?
+On Tue, Mar 11, 2014 at 1:10 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Mar 11, 2014 at 12:10:02AM +0100, Andreas Noever wrote:
+>> On Mon, Mar 10, 2014 at 9:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> > On Sat, Mar 8, 2014 at 2:55 AM, Andreas Noever <andreas.noever@gmail.com> wrote:
+>> >> On Sat, Mar 8, 2014 at 2:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> >
+>> >>> If we did that, INTX_DISABLE would be cleared by the first
+>> >>> pci_enable_device() and pci_reenable_device() wouldn't do anything,
+>> >>> leaving it cleared.  The resulting state (cleared) would be the same,
+>> >>> but the transitions would be gone, and maybe those are important.
+>> >> Just a quick note: With pci_intx_for_msi removed no hotplug events are
+>> >> ever delivered. Everything else still works though. So it is either a
+>> >> problem specific to Thunderbolt bridges or maybe it just affects
+>> >> hotplug (and PME?) interrupts.
+>> >
+>> > Interesting.  This is on a MacBook, isn't it?  If you have Mac OS on
+>> > it, is there a way you can do the equivalent of lspci on it?  I'm
+>> > curious about whether it sets INTx_DISABLE when it enables MSI.
+>>
+>> lspci -vv and lspci -vv -xxxx attached (yes, someone made a port).
+>>
+>> It looks like Mac OS sets DisINTx for all devices that have MSI
+>> enabled. The only exception is the Thunderbolt controller (no
+>> idea...). But the hotplug bridges all have DisINTx+.
+>
+> OK, thanks.  I don't know what to make of that.
+>
+> Here's a possible patch; can you try it out?
+>
+>
+> PCI: Do not enable INTx in pci_reenable_device()
+>
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>
+> Previously we cleared the Interrupt Disable bit in do_pci_enable_device(),
+> which is used by both pci_enable_device() and pci_reenable_device().  But
+> we use pci_reenable_device() after the driver may have enabled MSI or
+> MSI-X, and we *set* Interrupt Disable as part of enabling MSI/MSI-X.
+>
+> The pciehp hot-plug path uses pci_reenable_device() on the hotplug bridge,
+> and clearing its Interrupt Disable bit makes its hotplug event-reporting
+> MSI stop working.
+>
+> Fixes: 1f42db786b14 PCI: Enable INTx if BIOS left them disabled
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=71691
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pci.c |    3 +++
+>  1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8dc3e701ec57..79fc89c6c3f3 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1192,6 +1192,9 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>                 return err;
+>         pci_fixup_device(pci_fixup_enable, dev);
+>
+> +       if (dev->msi_enabled || dev->msix_enabled)
+> +               return 0;
+> +
+>         pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>         if (pin) {
+>                 pci_read_config_word(dev, PCI_COMMAND, &cmd);
 
-All architectures that memory map the PCI IO range should be supported by my version of
-pci_address_to_pio(). But that still leaves the x86 and those architectures that have
-separate IO space or map it 1:1 into CPU address space to carry a different version (which
-the current "generic" weak version catters for).
+That fixes it.
 
-> 
-> Any other functions in this file that could be shared (and are not
-> __weak already)?
-
-A version of the pci_register_io_range() that uses part of pci_ioremap_io() (the calculation
-of io_offset part).
-
-My ultimate point is that no matter how long we argue about the shape of the functions that
-I've added into arch/arm64/kernel/pci.c I don't think we can get away without having that
-file, or at least not in the first phase if we want speedy integration into mainline.
-
-Best regards,
-Liviu
-
-> 
-> -- 
-> Catalin
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Thanks,
+Andreas
