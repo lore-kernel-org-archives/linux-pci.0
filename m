@@ -1,81 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <532B2485.6010005@codethink.co.uk>
-Date: Thu, 20 Mar 2014 18:25:25 +0100
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:44303 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755205AbaCKRnA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 13:43:00 -0400
+Received: by mail-ie0-f170.google.com with SMTP id rd18so9350935iec.29
+        for <linux-pci@vger.kernel.org>; Tue, 11 Mar 2014 10:43:00 -0700 (PDT)
+Subject: [PATCH 3/5] PCI: Check all IORESOURCE_TYPE_BITS in
+ pci_bus_alloc_from_region()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org
+Date: Tue, 11 Mar 2014 11:42:57 -0600
+Message-ID: <20140311174257.23084.80235.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-sh@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Magnus Damm <damm@opensource.se>,
-	Ben Dooks <ben-linux@fluff.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms+renesas@verge.net.au>
-Subject: Re: DMABOUNCE in pci-rcar
-References: <201402241200.21944.arnd@arndb.de> <5527822.QYtFYiIpiW@wuerfel> <532B137B.7010900@codethink.co.uk> <4884083.IuNl44Y6XD@wuerfel>
-In-Reply-To: <4884083.IuNl44Y6XD@wuerfel>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/03/14 17:41, Arnd Bergmann wrote:
-> On Thursday 20 March 2014 17:12:43 Ben Dooks wrote:
->> On 20/03/14 17:09, Arnd Bergmann wrote:
->>> On Thursday 20 March 2014 16:04:36 Ben Dooks wrote:
->
->>>> As a note, if we now boot a Lager with DT on 3.14-rc3 series the USB
->>>> controllers no longer work with full 2GiB RAM enabled in the device
->>>> tree.
->>>
->>> Did it work before these patches got applied initially?
->>
->> It did, but I cannot remember if we where limiting DRAM to 1GiB
->> or not.
->
-> I would assume you did, or you happened to never actually use
-> memory higher than that for DMA during tests.
->
->>>> Could we work around this by having 1GiB of memory defined in the
->>>> 32bit memory and then add the rest of the 3GiB from the >32bit
->>>> area via LPAE? Will the kernel ever try to allocate DMA memory from
->>>> anything >32bit?
->>>
->>> You can solve the case for dma_alloc_coherent() this way, or by
->>> setting the mask correctly. It won't help you for dma_map_* though,
->>> which still requires someone to add support for swiotlb or using
->>> an IOMMU if present.
->>
->> We do not have an IOMMU present at the moment. Not sure how
->> to go about setting a mask on a pci-probed device.
->
-> Ah, right. The mask is a problem because PCI devices assume that
-> they can do DMA to any 32-bit masked address without calling
-> dma_set_mask. Your trick to describe the system memory at a different
-> physical alias would solve this part. Another option might be to
-> add a quirk in the OHCI/EHCI drivers, if you are able to detect
-> this special case from the PCI IDs. Whether we can allow the PCI host
-> controller to just set a mask is an open question. If we decide to go
-> that route, you should be able to do it using the add_bus() callback
-> in the host controller driver. However, it would be a departure from
-> the normal way of doing PCI DMA, and I can't foresee what the implications
-> would be.
+When allocating space from a bus resource, i.e., from apertures leading to
+this bus, make sure the entire resource type matches.  The previous code
+assumed the IORESOURCE_TYPE_BITS field was a bitmask with only a single bit
+set, but this is not true.  IORESOURCE_TYPE_BITS is really an enumeration,
+and we have to check all the bits.
 
-So doing:
+See 72dcb1197228 ("resources: Add register address resource type").
 
-static void pci_rcar_fixup(struct pci_dev *dev)
-{
-	if (dev->bus->ops == &rcar_pci_ops) {
-		dev_info(&dev->dev, "applying new dma mask\n");
-		dev->dma_mask = DMA_BIT_MASK(31);
-	}
-}
+No functional change.  If we used this path for allocating IRQs, DMA
+channels, or bus numbers, this would fix a bug because those types are
+indistinguishable when masked by IORESOURCE_IO | IORESOURCE_MEM.  But we
+don't, so this shouldn't make any difference.
 
-DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_rcar_fixup);
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/bus.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Did not work for me :(
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 38901665c770..e3bdc88668ec 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -144,7 +144,7 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
+ 	struct resource *r, avail;
+ 	resource_size_t max;
+ 
+-	type_mask |= IORESOURCE_IO | IORESOURCE_MEM;
++	type_mask |= IORESOURCE_TYPE_BITS;
+ 
+ 	pci_bus_for_each_resource(bus, r, i) {
+ 		if (!r)
 
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
