@@ -1,347 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:62387 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756819AbaC0WrI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 18:47:08 -0400
-Received: by mail-oa0-f46.google.com with SMTP id i7so5114442oag.5
-        for <linux-pci@vger.kernel.org>; Thu, 27 Mar 2014 15:47:07 -0700 (PDT)
-From: Rob Herring <robherring2@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, liviu.dudau@arm.com
-Cc: linus.walleij@linaro.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>
-Subject: [PATCH 3/3] pci: add DT based ARM Versatile PCI host driver
-Date: Thu, 27 Mar 2014 17:46:38 -0500
-Message-Id: <1395960398-4238-4-git-send-email-robherring2@gmail.com>
-In-Reply-To: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
-References: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:45529 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753180AbaCKAKH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 20:10:07 -0400
+Received: by mail-ig0-f174.google.com with SMTP id h18so9819243igc.1
+        for <linux-pci@vger.kernel.org>; Mon, 10 Mar 2014 17:10:07 -0700 (PDT)
+Date: Mon, 10 Mar 2014 18:10:03 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [Bug] PCI: Enable INTx if BIOS left them disabled - triggers
+ during rescan
+Message-ID: <20140311001003.GA14367@google.com>
+References: <CAMxnaaXd9-VbxSYa9q1YVT+fwfDFYKGG2Hq-1jkc-awLX-HwtQ@mail.gmail.com>
+ <CAErSpo5fkaFNq_qTZ+gTDMV554f4diOXQ7_4bsHqj06iAGTpHg@mail.gmail.com>
+ <CAE9FiQVNFqTw+92qy8zcwG1haiSZzU+KE3oh4YnjNc_aE6KUnA@mail.gmail.com>
+ <20140308010456.GA30660@google.com>
+ <CAMxnaaVfpJCW7e-b80y4wmVWcRDK5t7qY+pNn71CsLPRN2ojnA@mail.gmail.com>
+ <CAErSpo4MQsAer7FM0kU5mMOGRok0oFMWX1FqFijmswutjyNoRg@mail.gmail.com>
+ <CAMxnaaWr0z1zbpFQPX6UvYbnxhfA+3aj4ffhCBpp1i4ZLsGTPg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMxnaaWr0z1zbpFQPX6UvYbnxhfA+3aj4ffhCBpp1i4ZLsGTPg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rob Herring <robh@kernel.org>
+On Tue, Mar 11, 2014 at 12:10:02AM +0100, Andreas Noever wrote:
+> On Mon, Mar 10, 2014 at 9:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Sat, Mar 8, 2014 at 2:55 AM, Andreas Noever <andreas.noever@gmail.com> wrote:
+> >> On Sat, Mar 8, 2014 at 2:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >
+> >>> If we did that, INTX_DISABLE would be cleared by the first
+> >>> pci_enable_device() and pci_reenable_device() wouldn't do anything,
+> >>> leaving it cleared.  The resulting state (cleared) would be the same,
+> >>> but the transitions would be gone, and maybe those are important.
+> >> Just a quick note: With pci_intx_for_msi removed no hotplug events are
+> >> ever delivered. Everything else still works though. So it is either a
+> >> problem specific to Thunderbolt bridges or maybe it just affects
+> >> hotplug (and PME?) interrupts.
+> >
+> > Interesting.  This is on a MacBook, isn't it?  If you have Mac OS on
+> > it, is there a way you can do the equivalent of lspci on it?  I'm
+> > curious about whether it sets INTx_DISABLE when it enables MSI.
+> 
+> lspci -vv and lspci -vv -xxxx attached (yes, someone made a port).
+> 
+> It looks like Mac OS sets DisINTx for all devices that have MSI
+> enabled. The only exception is the Thunderbolt controller (no
+> idea...). But the hotplug bridges all have DisINTx+.
 
-This converts the Versatile PCI host code to a platform driver using
-of_create_pci_host_bridge for parsing DT and setup.
+OK, thanks.  I don't know what to make of that.
 
-I think more of this setup could be done by the core code. There are
-accesses to the host's config space (accesses using local_pci_cfg_base)
-which seem like they could be done by the core code or using standard
-config space accessors. The problem is bridge->bus->self is needed, but
-it does not get setup. I'm not exactly sure how that should work.
+Here's a possible patch; can you try it out?
 
-Signed-off-by: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+
+PCI: Do not enable INTx in pci_reenable_device()
+
+From: Bjorn Helgaas <bhelgaas@google.com>
+
+Previously we cleared the Interrupt Disable bit in do_pci_enable_device(),
+which is used by both pci_enable_device() and pci_reenable_device().  But
+we use pci_reenable_device() after the driver may have enabled MSI or
+MSI-X, and we *set* Interrupt Disable as part of enabling MSI/MSI-X.
+
+The pciehp hot-plug path uses pci_reenable_device() on the hotplug bridge,
+and clearing its Interrupt Disable bit makes its hotplug event-reporting
+MSI stop working.
+
+Fixes: 1f42db786b14 PCI: Enable INTx if BIOS left them disabled
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=71691
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/Kconfig         |   4 +
- drivers/pci/host/Makefile        |   1 +
- drivers/pci/host/pci-versatile.c | 275 +++++++++++++++++++++++++++++++++++++++
- 3 files changed, 280 insertions(+)
- create mode 100644 drivers/pci/host/pci-versatile.c
+ drivers/pci/pci.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 47d46c6..b4dd911 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -33,4 +33,8 @@ config PCI_RCAR_GEN2
- 	  There are 3 internal PCI controllers available with a single
- 	  built-in EHCI/OHCI host controller present on each one.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8dc3e701ec57..79fc89c6c3f3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1192,6 +1192,9 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+ 		return err;
+ 	pci_fixup_device(pci_fixup_enable, dev);
  
-+config PCI_VERSATILE
-+	bool "ARM Versatile PB PCI controller"
-+	depends on ARCH_VERSATILE
++	if (dev->msi_enabled || dev->msix_enabled)
++		return 0;
 +
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 13fb333..fe67ab3 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
- obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
- obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
- obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
-+obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
-diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-new file mode 100644
-index 0000000..98abd1f
---- /dev/null
-+++ b/drivers/pci/host/pci-versatile.c
-@@ -0,0 +1,275 @@
-+/*
-+ * Copyright 2004 Koninklijke Philips Electronics NV
-+ *
-+ * Conversion to platform driver and DT:
-+ * Copyright 2014 Linaro Ltd.
-+ *
-+ * This software is licensed under the terms of the GNU General Public
-+ * License version 2, as published by the Free Software Foundation, and
-+ * may be copied, distributed, and modified under those terms.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * 14/04/2005 Initial version, colin.king@philips.com
-+ */
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/of_platform.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/slab.h>
-+
-+static void __iomem *versatile_pci_base;
-+static void __iomem *versatile_cfg_base[2];
-+
-+#define PCI_IMAP(m)		(versatile_pci_base + ((m) * 4))
-+#define PCI_SMAP(m)		(versatile_pci_base + 0x14 + ((m) * 4))
-+#define PCI_SELFID		(versatile_pci_base + 0xc)
-+
-+#define DEVICE_ID_OFFSET		0x00
-+#define CSR_OFFSET			0x04
-+#define CLASS_ID_OFFSET			0x08
-+
-+#define VP_PCI_DEVICE_ID		0x030010ee
-+#define VP_PCI_CLASS_ID			0x0b400000
-+
-+static unsigned long pci_slot_ignore;
-+
-+static int __init versatile_pci_slot_ignore(char *str)
-+{
-+	int retval;
-+	int slot;
-+
-+	while ((retval = get_option(&str, &slot))) {
-+		if ((slot < 0) || (slot > 31))
-+			pr_err("Illegal slot value: %d\n", slot);
-+		else
-+			pci_slot_ignore |= (1 << slot);
-+	}
-+	return 1;
-+}
-+
-+__setup("pci_slot_ignore=", versatile_pci_slot_ignore);
-+
-+
-+static void __iomem *__pci_addr(struct pci_bus *bus,
-+				unsigned int devfn, int offset)
-+{
-+	unsigned int busnr = bus->number;
-+
-+	/*
-+	 * Trap out illegal values
-+	 */
-+	BUG_ON(offset > 255);
-+	BUG_ON(busnr > 255);
-+	BUG_ON(devfn > 255);
-+
-+	return versatile_cfg_base[1] + ((busnr << 16) |
-+		(PCI_SLOT(devfn) << 11) | (PCI_FUNC(devfn) << 8) | offset);
-+}
-+
-+static int versatile_read_config(struct pci_bus *bus, unsigned int devfn,
-+				 int where, int size, u32 *val)
-+{
-+	void __iomem *addr = __pci_addr(bus, devfn, where & ~3);
-+	u32 v;
-+	int slot = PCI_SLOT(devfn);
-+
-+	if (pci_slot_ignore & (1 << slot)) {
-+		/* Ignore this slot */
-+		v = (1 << (8 * size)) - 1;
-+	} else {
-+		switch (size) {
-+		case 1:
-+			v = readl(addr);
-+			if (where & 2)
-+				v >>= 16;
-+			if (where & 1)
-+				v >>= 8;
-+			v &= 0xff;
-+			break;
-+
-+		case 2:
-+			v = readl(addr);
-+			if (where & 2)
-+				v >>= 16;
-+			v &= 0xffff;
-+			break;
-+
-+		default:
-+			v = readl(addr);
-+			break;
-+		}
-+	}
-+
-+	*val = v;
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int versatile_write_config(struct pci_bus *bus, unsigned int devfn,
-+				  int where, int size, u32 val)
-+{
-+	void __iomem *addr = __pci_addr(bus, devfn, where);
-+	int slot = PCI_SLOT(devfn);
-+
-+	if (pci_slot_ignore & (1 << slot))
-+		return PCIBIOS_SUCCESSFUL;
-+
-+	switch (size) {
-+	case 1:
-+		writeb((u8)val, addr);
-+		break;
-+
-+	case 2:
-+		writew((u16)val, addr);
-+		break;
-+
-+	case 4:
-+		writel(val, addr);
-+		break;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static struct pci_ops pci_versatile_ops = {
-+	.read	= versatile_read_config,
-+	.write	= versatile_write_config,
-+};
-+
-+static const struct of_device_id versatile_pci_of_match[] = {
-+	{ .compatible = "arm,versatile-pci", },
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, versatile_pci_of_match);
-+
-+/* Unused, temporary to satisfy ARM arch code */
-+struct pci_sys_data sys;
-+
-+static int versatile_pci_probe(struct platform_device *pdev)
-+{
-+	struct resource *res;
-+	int ret, i, mem = 1, myslot = -1;
-+	unsigned int lastbus;
-+	u32 val;
-+	struct pci_host_bridge *bridge;
-+	void __iomem *local_pci_cfg_base;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res)
-+		return -ENODEV;
-+	versatile_pci_base = devm_ioremap_resource(&pdev->dev, res);
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	if (!res)
-+		return -ENODEV;
-+	versatile_cfg_base[0] = devm_ioremap_resource(&pdev->dev, res);
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
-+	if (!res)
-+		return -ENODEV;
-+	versatile_cfg_base[1] = devm_ioremap_resource(&pdev->dev, res);
-+
-+	bridge = of_create_pci_host_bridge(&pdev->dev, &pci_versatile_ops, &sys);
-+	if (!bridge)
-+		return -ENODEV;
-+
-+	/*
-+	 *  We need to discover the PCI core first to configure itself
-+	 *  before the main PCI probing is performed
-+	 */
-+	for (i = 0; i < 32; i++) {
-+		if ((readl(versatile_cfg_base[0] + (i << 11) + DEVICE_ID_OFFSET) == VP_PCI_DEVICE_ID) &&
-+		    (readl(versatile_cfg_base[0] + (i << 11) + CLASS_ID_OFFSET) == VP_PCI_CLASS_ID)) {
-+			myslot = i;
-+			break;
-+		}
-+	}
-+	if (myslot == -1) {
-+		dev_err(&pdev->dev, "Cannot find PCI core!\n");
-+		ret = -EIO;
-+		goto out;
-+	}
-+	/*
-+	 * Do not to map Versatile FPGA PCI device into memory space
-+	 */
-+	pci_slot_ignore |= (1 << myslot);
-+
-+	dev_info(&pdev->dev, "PCI core found (slot %d)\n", myslot);
-+
-+	writel(myslot, PCI_SELFID);
-+	local_pci_cfg_base = versatile_cfg_base[1] + (myslot << 11);
-+
-+	val = readl(local_pci_cfg_base + CSR_OFFSET);
-+	val |= PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER | PCI_COMMAND_INVALIDATE;
-+	writel(val, local_pci_cfg_base + CSR_OFFSET);
-+
-+	/*
-+	 * Configure the PCI inbound memory windows to be 1:1 mapped to SDRAM
-+	 */
-+	writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_0);
-+	writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_1);
-+	writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_2);
-+
-+	/*
-+	 * For many years the kernel and QEMU were symbiotically buggy
-+	 * in that they both assumed the same broken IRQ mapping.
-+	 * QEMU therefore attempts to auto-detect old broken kernels
-+	 * so that they still work on newer QEMU as they did on old
-+	 * QEMU. Since we now use the correct (ie matching-hardware)
-+	 * IRQ mapping we write a definitely different value to a
-+	 * PCI_INTERRUPT_LINE register to tell QEMU that we expect
-+	 * real hardware behaviour and it need not be backwards
-+	 * compatible for us. This write is harmless on real hardware.
-+	 */
-+	writel(0, versatile_cfg_base[0] + PCI_INTERRUPT_LINE);
-+
-+	pci_bus_for_each_resource(bridge->bus, res, i) {
-+		if (!res || (resource_type(res) != IORESOURCE_MEM))
-+			continue;
-+
-+		writel(res->start >> 28, PCI_IMAP(mem));
-+		writel(PHYS_OFFSET >> 28, PCI_SMAP(mem));
-+
-+		mem++;
-+	}
-+
-+	pci_ioremap_io(0, bridge->io_base);
-+
-+	/* We always enable PCI domains and we keep domain 0 backward
-+	 * compatible in /proc for video cards
-+	 */
-+	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
-+	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
-+
-+	lastbus = pci_scan_child_bus(bridge->bus);
-+	pci_bus_update_busn_res_end(bridge->bus, lastbus);
-+
-+	pci_assign_unassigned_bus_resources(bridge->bus);
-+
-+	pci_bus_add_devices(bridge->bus);
-+
-+	return 0;
-+
-+ out:
-+	return ret;
-+}
-+
-+static struct platform_driver versatile_pci_driver = {
-+	.driver = {
-+		.name = "versatile-pci",
-+		.owner = THIS_MODULE,
-+		.of_match_table = versatile_pci_of_match,
-+		.suppress_bind_attrs = true,
-+	},
-+	.probe = versatile_pci_probe,
-+};
-+module_platform_driver(versatile_pci_driver);
-+
-+MODULE_DESCRIPTION("Versatile PCI driver");
-+MODULE_LICENSE("GPLv2");
--- 
-1.8.3.2
-
+ 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+ 	if (pin) {
+ 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
