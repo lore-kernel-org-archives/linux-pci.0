@@ -1,86 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:57278 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753571AbaCMLbD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 07:31:03 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Phil.Edworthy@renesas.com
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
-Subject: Re: [PATCH 5/9] dt-bindings: pci: rcar pcie device tree bindings
-Date: Thu, 13 Mar 2014 12:30:50 +0100
-Message-ID: <25998973.9XJTBOSo8s@wuerfel>
-In-Reply-To: <OFF61489EE.B9ED2F88-ON80257C9A.00386B74-80257C9A.00398025@eu.necel.com>
-References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com> <33747243.K5i7Ah8L7o@wuerfel> <OFF61489EE.B9ED2F88-ON80257C9A.00386B74-80257C9A.00398025@eu.necel.com>
+Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:58788
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751181AbaCKEYi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 00:24:38 -0400
+From: Rajat Jain <rajatjain@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: RE: Faking a PCI interrupt
+Date: Tue, 11 Mar 2014 04:24:28 +0000
+Message-ID: <4fac9f912ff743309e959000c78b4e32@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <e1766e5c6aec48a588975c07fc00935d@DM2PR05MB671.namprd05.prod.outlook.com>
+ <CAErSpo5DuFNQ3msknhO=m+chRAnt26FOZHkWAuyS-TaO78vcfA@mail.gmail.com>
+In-Reply-To: <CAErSpo5DuFNQ3msknhO=m+chRAnt26FOZHkWAuyS-TaO78vcfA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 13 March 2014 10:28:03 Phil.Edworthy@renesas.com wrote:
-> On 13/03/2014 10:00, Arnd wrote:
-> > On Thursday 13 March 2014 09:50:04 Phil Edworthy wrote:
-> > 
-> > I see your description and example includes I/O regions, but the driver
-> > claims in a comment that these don't work. Do you also have a patch to
-> > make them work?
-> Are you referring to the comment "The controller does not support/use port 
-> I/O" in the driver for the internal PCI controller (pci-rcar-gen2.c)?
-> This is a separate block of hardware, it's a PCIe controller with external 
-> pins, for which we do support I/O regions.
+SGVsbG8gQmpvcm4sDQoNCj4gPg0KPiA+IEkgaGF2ZSBhIGJyb2tlbiBQQ0kgYnJpZGdlIChQQ0ll
+IGRvd25zdHJlYW0gcG9ydCksIHRoYXQgaXMgbm90IHJhaXNpbmcNCj4gaW50ZXJydXB0cyBhdCBj
+ZXJ0YWluIGNvbmRpdGlvbnMuDQo+ID4NCj4gPiBJJ20gdHJ5aW5nIHRvIGZvb2wgdGhlIGRyaXZl
+ciBpbnRvIGJlbGlldmluZyB0aGF0IHRoZSBkZXZpY2UgaXMNCj4gYWN0dWFsbHkgc2VuZGluZyBp
+bnRlcnJ1cHRzIGJ5IGhhdmluZyBhIHF1aXJrIHRoYXQ6DQo+ID4NCj4gPiAxKSBQb2xscyB0aGUg
+ZGV2aWNlIHJlZ2lzdGVyIHRvIG1vbml0b3IgdGhlIGludGVycnVwdCBjb25kaXRpb24uDQo+ID4N
+Cj4gPiAyKSBXaGVuIGEgY29uZGl0aW9uIGlzIGRldGVybWluZWQgdGhhdCBuZWVkcyBhbiBpbnRl
+cnJ1cHQgLSBjYWxscyB0aGUNCj4gZHJpdmVyJ3MgSVNSIG1ldGhvZC4NCj4gPg0KPiA+IE15IHF1
+ZXN0aW9uIC0gSW5zdGVhZCBvZiBkaXJlY3RseSBjYWxsaW5nIHRoZSBJU1IsIGlzIHRoZXJlIGEg
+d2F5IG15DQo+IHF1aXJrIGNhbiBmYWtlIGFuIGludGVycnVwdCBiZWluZyBnZW5lcmF0ZWQsIHRo
+cm91Z2ggdGhlIFBDSSBzdWJzeXN0ZW0/DQo+IFRoYXQgd2F5LCBteSBxdWlyayBkb2VzIG5vdCBo
+YXZlIHRvIGJlIGEgcGFydCBvZiB0aGUgKGdlbmVyaWMpIFBDSQ0KPiBkcml2ZXIuDQo+ID4NCj4g
+PiBQQ0kgYnJpZGdlOiBJbnRlZ3JhdGVkIERldmljZSBUZWNobm9sb2d5LCBJbmMuIFBFUzEyTlQz
+IFBDSSBFeHByZXNzDQo+ID4gU3dpdGNoIChyZXYgMDEpIChwcm9nLWlmIDAwIFtOb3JtYWwgZGVj
+b2RlXSkNCj4gPiBDb250cm9sOiBJL08tIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJ
+TlYtIFZHQVNub29wLSBQYXJFcnItDQo+ID4gU3RlcHBpbmctIFNFUlItIEZhc3RCMkItIERpc0lO
+VHgtDQo+ID4gU3RhdHVzOiBDYXArIDY2TUh6LSBVREYtIEZhc3RCMkItIFBhckVyci0gREVWU0VM
+PWZhc3QgPlRBYm9ydC0NCj4gPiA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItIElOVHgt
+DQo+ID4gTGF0ZW5jeTogMA0KPiA+IEJ1czogcHJpbWFyeT0xMSwgc2Vjb25kYXJ5PTEzLCBzdWJv
+cmRpbmF0ZT0xMywgc2VjLWxhdGVuY3k9MCBJL08NCj4gPiBiZWhpbmQgYnJpZGdlOiAwMDAwZjAw
+MC0wMDAwMGZmZiBNZW1vcnkgYmVoaW5kIGJyaWRnZToNCj4gPiA4MDAwMDAwMC04MGZmZmZmZiBQ
+cmVmZXRjaGFibGUgbWVtb3J5IGJlaGluZCBicmlkZ2U6DQo+ID4gMDAwMDAwMDBmZmYwMDAwMC0w
+MDAwMDAwMDAwMGZmZmZmIFNlY29uZGFyeSBzdGF0dXM6IDY2TUh6LSBGYXN0QjJCLQ0KPiA+IFBh
+ckVyci0gREVWU0VMPWZhc3QgPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0gPFNFUlItIDxQRVJS
+LQ0KPiA+IEJyaWRnZUN0bDogUGFyaXR5LSBTRVJSLSBOb0lTQS0gVkdBLSBNQWJvcnQtID5SZXNl
+dC0gRmFzdEIyQi0NCj4gPiAgICAgICAgIFByaURpc2NUbXItIFNlY0Rpc2NUbXItIERpc2NUbXJT
+dGF0LSBEaXNjVG1yU0VSUkVuLQ0KPiA+IENhcGFiaWxpdGllczogWzQwXSBFeHByZXNzICh2MSkg
+RG93bnN0cmVhbSBQb3J0IChTbG90LSksIE1TSSAwMA0KPiA+ICAgICAgICAgRGV2Q2FwOiBNYXhQ
+YXlsb2FkIDIwNDggYnl0ZXMsIFBoYW50RnVuYyAwLCBMYXRlbmN5IEwwcyA8NjRucywNCj4gTDEg
+PDF1cw0KPiA+ICAgICAgICAgICAgICAgICBFeHRUYWcrIFJCRS0gRkxSZXNldC0NCj4gPiAgICAg
+ICAgIERldkN0bDogUmVwb3J0IGVycm9yczogQ29ycmVjdGFibGUtIE5vbi1GYXRhbC0gRmF0YWwt
+DQo+IFVuc3VwcG9ydGVkLQ0KPiA+ICAgICAgICAgICAgICAgICBSbHhkT3JkLSBFeHRUYWctIFBo
+YW50RnVuYy0gQXV4UHdyLSBOb1Nub29wLQ0KPiA+ICAgICAgICAgICAgICAgICBNYXhQYXlsb2Fk
+IDEyOCBieXRlcywgTWF4UmVhZFJlcSAxMjggYnl0ZXMNCj4gPiAgICAgICAgIERldlN0YTogQ29y
+ckVyci0gVW5jb3JyRXJyKyBGYXRhbEVyci0gVW5zdXBwUmVxKyBBdXhQd3ItDQo+IFRyYW5zUGVu
+ZC0NCj4gPiAgICAgICAgIExua0NhcDogUG9ydCAjMSwgU3BlZWQgMi41R1QvcywgV2lkdGggeDQs
+IEFTUE0gTDBzIEwxLCBMYXRlbmN5DQo+IEwwIDwydXMsIEwxIDw0dXMNCj4gPiAgICAgICAgICAg
+ICAgICAgQ2xvY2tQTS0gU3VycHJpc2UtIExMQWN0UmVwLSBCd05vdC0NCj4gPiAgICAgICAgIExu
+a0N0bDogQVNQTSBEaXNhYmxlZDsgRGlzYWJsZWQtIFJldHJhaW4tIENvbW1DbGstDQo+ID4gICAg
+ICAgICAgICAgICAgIEV4dFN5bmNoLSBDbG9ja1BNLSBBdXRXaWREaXMtIEJXSW50LSBBdXRCV0lu
+dC0NCj4gPiAgICAgICAgIExua1N0YTogU3BlZWQgMi41R1QvcywgV2lkdGggeDAsIFRyRXJyLSBU
+cmFpbi0gU2xvdENsay0NCj4gPiBETEFjdGl2ZS0gQldNZ210LSBBQldNZ210LQ0KPiA+IENhcGFi
+aWxpdGllczogWzcwXSBQb3dlciBNYW5hZ2VtZW50IHZlcnNpb24gMg0KPiA+ICAgICAgICAgRmxh
+Z3M6IFBNRUNsay0gRFNJLSBEMS0gRDItIEF1eEN1cnJlbnQ9MG1BIFBNRShEMCssRDEtLEQyLQ0K
+PiAsRDNob3QrLEQzY29sZCspDQo+ID4gICAgICAgICBTdGF0dXM6IEQwIE5vU29mdFJzdC0gUE1F
+LUVuYWJsZS0gRFNlbD0wIERTY2FsZT0wIFBNRS0NCj4gPiBDYXBhYmlsaXRpZXM6IFsxMDAgdjFd
+IFZpcnR1YWwgQ2hhbm5lbA0KPiA+ICAgICAgICAgQ2FwczogICBMUEVWQz0wIFJlZkNsaz0xMDBu
+cyBQQVRFbnRyeUJpdHM9Mg0KPiA+ICAgICAgICAgQXJiOiAgICBGaXhlZC0gV1JSMzItIFdSUjY0
+LSBXUlIxMjgtDQo+ID4gICAgICAgICBDdHJsOiAgIEFyYlNlbGVjdD1GaXhlZA0KPiA+ICAgICAg
+ICAgU3RhdHVzOiBJblByb2dyZXNzLQ0KPiA+ICAgICAgICAgVkMwOiAgICBDYXBzOiAgIFBBVE9m
+ZnNldD0wMCBNYXhUaW1lU2xvdHM9MSBSZWpTbm9vcFRyYW5zLQ0KPiA+ICAgICAgICAgICAgICAg
+ICBBcmI6ICAgIEZpeGVkKyBXUlIzMi0gV1JSNjQtIFdSUjEyOC0gVFdSUjEyOC0gV1JSMjU2LQ0K
+PiA+ICAgICAgICAgICAgICAgICBDdHJsOiAgIEVuYWJsZSsgSUQ9MCBBcmJTZWxlY3Q9Rml4ZWQg
+VEMvVkM9ZmYNCj4gPiAgICAgICAgICAgICAgICAgU3RhdHVzOiBOZWdvUGVuZGluZy0gSW5Qcm9n
+cmVzcy0gS2VybmVsIGRyaXZlciBpbiB1c2U6DQo+ID4gcGNpZXBvcnQNCj4gDQo+IEh1aC4gIFdo
+YXQgaW50ZXJydXB0IGFyZSB5b3UgZXhwZWN0aW5nIGZyb20gaXQ/ICBJIGRvbid0IHNlZSBhbnkN
+Cj4gImludGVycnVwdCBlbmFibGUiIGJpdHMgaW4geW91ciBsc3BjaSAodGhvdWdoIEkgZGlkbid0
+IGdvIHRocm91Z2gNCj4gZXZlcnl0aGluZyBpbiBkZXRhaWwpLg0KPiANCj4gT3IgYXJlIHlvdSBl
+eHBlY3RpbmcgYW4gaW50ZXJydXB0IGZyb20gYSBkZXZpY2UgYmVsb3cgdGhpcyBicmlkZ2UsIGFu
+ZA0KPiB0aGF0IGludGVycnVwdCBpc24ndCBnZXR0aW5nIHBhc3NlZCB0aHJvdWdoIHRoZSBicmlk
+Z2U/DQoNCkFjdHVhbGx5IHRoaXMgaXMgdGhlIGhvdC1wbHVnIGludGVycnVwdCAobGluayBjaGFu
+Z2Ugbm90aWZpY2F0aW9uIGZyb20gdGhlIGJyaWRnZSBpdHNlbGYpIHRoYXQgSSdtIHRyeWluZyB0
+byBmYWtlLg0KDQpUaGlzIGlzIGFuIG9sZCBQQ0llIHN3aXRjaCBvbiBhbiBleGlzdGluZyBzaGlw
+cGluZyBoYXJkd2FyZS4gVGhpcyBzd2l0Y2ggZG9lcyBub3Qgc3VwcG9ydCB0aGUgTGluayBzdGF0
+dXMgcmVwb3J0aW5nICgiTExBY3RSZXAtIiBpbiBsc3BjaSkuIFJhdGhlciBpdCBoYXMgcHJvcHJp
+ZXRhcnkgcmVnaXN0ZXJzIHRvIGRldGVybWluZSBsaW5rIHN0YXR1cywgYnV0IG5vIGludGVycnVw
+dCBhc3NvY2lhdGVkIHdpdGggY2hhbmdlIGluIHRoYXQgbGluayBzdGF0dXMuIEknbSB0cnlpbmcg
+dG8gbWFrZSB0aGUgcGNpZWhwIGJlbGlldmUgdGhhdCB0aGlzIGJyaWRnZSBzdXBwb3J0cyBsaW5r
+IHN0YXRlIHJlcG9ydGluZyBieSB1c2luZyBhIHF1aXJrIHRvOg0KDQoxKSBPdmVycmlkZSB0aGUg
+Y29uZmlnIHNwYWNlIGFjY2VzcyByb3V0aW5lcyAodXNpbmcgcGNpX2J1c19zZXRfb3BzKCkpIGZv
+ciB0aGlzIGJyaWRnZSBzbyBhcyB0byBvdmVycmlkZSB2YWx1ZXMgb2YgbGluayBzdGF0dXMgLyBs
+aW5rIGN0cmwgLyBsaW5rIGNhcGFiaWxpdGllcyB3aXRoIGRlc2lyZWQgdmFsdWVzIGV0Yy4NCg0K
+MikgU29tZWhvdyBnZW5lcmF0ZSBhbiBpbnRlcnJ1cHQgd2hlbmV2ZXIgdGhlIHByb3ByaWV0YXJ5
+IHJlZ2lzdGVycyBpbmRpY2F0ZSBsaW5rIHN0YXRlIGNoYW5nZWQuIEN1cnJlbnRseSBJIGNhbGwg
+cGNpZV9pc3IgZGlyZWN0bHkgKHRodXMgcmVxdWlyaW5nIHRoZSBxdWlyayB0byBiZSBhIHBhcnQg
+b2YgcGNpZWhwKS4gQnV0IEknbSB0cnlpbmcgdG8gc2VwYXJhdGUgb3V0IHRoZSBxdWlyayBpbnRv
+IGEgcGxhdGZvcm0gc3BlY2lmaWMgY29kZSwgb3V0IG9mIHBjaSBzdWJzeXN0ZW0uDQoNCkkga25v
+dyBvbmUgb2YgdGhlIG9wdGlvbnMgaXMgdG8gdXNlIHRoZSBwY2llaHAgaW4gcG9sbGluZyBtb2Rl
+LCBidXQgdGhhdCBjaGFuZ2VzIHRoZSBtb2RlIGZvciBhbGwgdGhlIHBvcnRzLCBub3QganVzdCBh
+IHNwZWNpZmljIG9uZS4NCg0KDQpUaGFua3MsDQoNClJhamF0IA0KDQpQUzogVGhlIHBjaWVocCBk
+cml2ZXIgd2FzIG5vdCBsb2FkZWQgYW5kIGhlbmNlIHlvdSBkbyBub3Qgc2VlIGFueSBpbnRlcnJ1
+cHRzIGVuYWJsZWQgaW4gdGhlIGxzcGNpIG91dHB1dC4NCg0KPiANCj4gQmpvcm4NCj4gDQoNCg==
 
-Ok, thanks for the clarification.
-
-> > > +- interrupts: interrupt values for MSI interrupt
-> > > +- #interrupt-cells: set to <1>
-> > > +- interrupt-map-mask and interrupt-map: standard PCI properties
-> > > +   to define the mapping of the PCIe interface to interrupt
-> > > +   numbers.
-> > > +- clocks: from common clock binding: handle to pci clock.
-> > > +- clock-names: from common clock binding: should be "pcie"
-> > > +
-> > > +Example:
-> > > +
-> > > +SoC specific DT Entry:
-> > > +
-> > > +   pcie: pcie@0x01000000 {
-> > > +      compatible = "renesas,r8a7790-pcie";
-> > > +      reg = <0 0xfe000000 0 0x80000>;
-> > > +      #address-cells = <3>;
-> > > +      #size-cells = <2>;
-> > > +      device_type = "pci";
-> > > +      ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
-> > > +           0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
-> > > +           0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
-> > > +           0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-> > 
-> > I'm curious about why there are two non-prefetchable regions. What is
-> > the significance of this?
->
-> The devices that have this PCIe controller both have a number of fixed, 
-> non-contiguous memory regions that can be used as PCIe windows. The ranges 
-> here map onto those fixed windows, i.e. if the CPU addresses of the ranges 
-> change it won't work. The first couple of windows are small, we use the 
-> first one for I/O, we decided that we may as well use the next small 
-> window for memory - otherwise we need to figure out a way to tell the 
-> driver to skip a window.
-
-Ok, makes sense. Good to know that this actually works. An idea that
-may be helpful in some corner cases: if you can set up the small window as
-
-           0x02000000 0 0 0 0xfe200000 0 0x00200000
-
-or even
-
-           0x02000000 0 0 0 0xfe200000 0 0x00100000
-           0x02000000 0 0x00f00000 0 0xfe200000 0 0x00100000
-
-then you will be able to map devices with legacy nonrelocatable ISA
-memory BARs such as VGA cards that have PCI resources in the first MB
-of bus space, and in the end of the first 16MB.
-
-	Arnd
