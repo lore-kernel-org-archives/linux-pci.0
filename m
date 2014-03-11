@@ -1,62 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:39436 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753109AbaCNNGN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 09:06:13 -0400
-Received: by mail-ie0-f182.google.com with SMTP id y20so2475367ier.41
-        for <linux-pci@vger.kernel.org>; Fri, 14 Mar 2014 06:06:12 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 5/5] PCI: Log IDE resource quirk in dmesg
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org
+Date: Tue, 11 Mar 2014 11:43:12 -0600
+Message-ID: <20140311174311.23084.15128.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20140313182554.GA15990@obsidianresearch.com>
-References: <1394732405-2260-1-git-send-email-tharvey@gateworks.com>
- <1394732405-2260-2-git-send-email-tharvey@gateworks.com> <5321EE81.1030207@wwwdotorg.org>
- <20140313182554.GA15990@obsidianresearch.com>
-From: Grant Likely <grant.likely@linaro.org>
-Date: Fri, 14 Mar 2014 13:05:52 +0000
-Message-ID: <CACxGe6sEjW+J1ZHq-qb=7yPWLEnfWkSxZvwHUVO3L9vL5rsm1g@mail.gmail.com>
-Subject: Re: [PATCH 1/2] ARM: DT: fix gic interrupt controller documentation
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Richard Zhu <r65037@freescale.com>,
-	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-	Ben Dooks <ben-linux@fluff.org>, Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	linux-tegra <linux-tegra@vger.kernel.org>,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 13, 2014 at 6:25 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Thu, Mar 13, 2014 at 11:44:33AM -0600, Stephen Warren wrote:
->> On 03/13/2014 11:40 AM, Tim Harvey wrote:
->> > When using interrupt-maps, the size of a map entry is #address-cells +
->> >  #interrupt-cells for the parent interrupt controller.  For the ARM GIC
->> > address-cells should be 0 as this is not used.
->> >
->> > This patch fixes the example by correctly specifying #address-cells = 0.
->>
->> If the #address-cells property is required (well, or even optional...)
->> in the node, shouldn't it be included in the list of required/optional
->> properties above, and not solely included in the example?
->
-> AFAIK, #address-cells = 0 is the same as not including a
-> #address-cells at all.
->
-> Omitting entirely is what other interrupt-controller bindings are
-> doing, so I'd just drop mention of #address-cells completely.
+Make a note in dmesg when we overwrite legacy IDE BAR info.  We previously
+logged something like this:
 
-Correct. Just drop it.
+  pci 0000:00:1f.1: reg 0x10: [io  0x0000-0x0007]
 
-g.
+and then silently overwrote the resource.  There's an example in the
+bugzilla below.  This doesn't fix the bugzilla; it just makes what's going
+on more obvious.
+
+No functional change; merely adds some dev_info() calls.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=48451
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |   16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 02654b5ec1b9..6c69c9bb31fb 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1131,10 +1131,10 @@ int pci_setup_device(struct pci_dev *dev)
+ 		pci_read_config_word(dev, PCI_SUBSYSTEM_ID, &dev->subsystem_device);
+ 
+ 		/*
+-		 *	Do the ugly legacy mode stuff here rather than broken chip
+-		 *	quirk code. Legacy mode ATA controllers have fixed
+-		 *	addresses. These are not always echoed in BAR0-3, and
+-		 *	BAR0-3 in a few cases contain junk!
++		 * Do the ugly legacy mode stuff here rather than broken chip
++		 * quirk code. Legacy mode ATA controllers have fixed
++		 * addresses. These are not always echoed in BAR0-3, and
++		 * BAR0-3 in a few cases contain junk!
+ 		 */
+ 		if (class == PCI_CLASS_STORAGE_IDE) {
+ 			u8 progif;
+@@ -1145,11 +1145,15 @@ int pci_setup_device(struct pci_dev *dev)
+ 				res = &dev->resource[0];
+ 				res->flags = LEGACY_IO_RESOURCE;
+ 				pcibios_bus_to_resource(dev->bus, res, &region);
++				dev_info(&dev->dev, "legacy IDE quirk: reg 0x10: %pR\n",
++					 res);
+ 				region.start = 0x3F6;
+ 				region.end = 0x3F6;
+ 				res = &dev->resource[1];
+ 				res->flags = LEGACY_IO_RESOURCE;
+ 				pcibios_bus_to_resource(dev->bus, res, &region);
++				dev_info(&dev->dev, "legacy IDE quirk: reg 0x14: %pR\n",
++					 res);
+ 			}
+ 			if ((progif & 4) == 0) {
+ 				region.start = 0x170;
+@@ -1157,11 +1161,15 @@ int pci_setup_device(struct pci_dev *dev)
+ 				res = &dev->resource[2];
+ 				res->flags = LEGACY_IO_RESOURCE;
+ 				pcibios_bus_to_resource(dev->bus, res, &region);
++				dev_info(&dev->dev, "legacy IDE quirk: reg 0x18: %pR\n",
++					 res);
+ 				region.start = 0x376;
+ 				region.end = 0x376;
+ 				res = &dev->resource[3];
+ 				res->flags = LEGACY_IO_RESOURCE;
+ 				pcibios_bus_to_resource(dev->bus, res, &region);
++				dev_info(&dev->dev, "legacy IDE quirk: reg 0x1c: %pR\n",
++					 res);
+ 			}
+ 		}
+ 		break;
+
