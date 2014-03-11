@@ -1,128 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:64451 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751634AbaCUOeX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 10:34:23 -0400
-In-Reply-To: <1395412013.4554.13.camel@weser.hi.pengutronix.de>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>		 <1395397968-6242-3-git-send-email-phil.edworthy@renesas.com>
-	 <1395400638.4554.5.camel@weser.hi.pengutronix.de>	 <OFFBE32003.3827BA14-ON80257CA2.004D7C1E-80257CA2.004E5338@eu.necel.com> <1395412013.4554.13.camel@weser.hi.pengutronix.de>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:61736 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753851AbaCKQyT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 12:54:19 -0400
+Received: by mail-ie0-f169.google.com with SMTP id to1so9246832ieb.28
+        for <linux-pci@vger.kernel.org>; Tue, 11 Mar 2014 09:54:18 -0700 (PDT)
 MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OFB271EC60.092DC5D0-ON80257CA2.004FA802-80257CA2.00500A37@eu.necel.com>
-Date: Fri, 21 Mar 2014 14:34:16 +0000
-Subject: Re: [PATCH v4 2/9] PCI: host: rcar: Add MSI support
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <4fac9f912ff743309e959000c78b4e32@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <e1766e5c6aec48a588975c07fc00935d@DM2PR05MB671.namprd05.prod.outlook.com>
+ <CAErSpo5DuFNQ3msknhO=m+chRAnt26FOZHkWAuyS-TaO78vcfA@mail.gmail.com> <4fac9f912ff743309e959000c78b4e32@DM2PR05MB671.namprd05.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 11 Mar 2014 10:53:58 -0600
+Message-ID: <CAErSpo5L5ox0DyHdvNhBhD8st4monK8HSqusaJQ4dDXH2T+=gg@mail.gmail.com>
+Subject: Re: Faking a PCI interrupt
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Guenter Roeck <groeck@juniper.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas,
+On Mon, Mar 10, 2014 at 10:24 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+> Hello Bjorn,
+>
+>> >
+>> > I have a broken PCI bridge (PCIe downstream port), that is not raising
+>> interrupts at certain conditions.
+>> >
+>> > I'm trying to fool the driver into believing that the device is
+>> actually sending interrupts by having a quirk that:
+>> >
+>> > 1) Polls the device register to monitor the interrupt condition.
+>> >
+>> > 2) When a condition is determined that needs an interrupt - calls the
+>> driver's ISR method.
+>> >
+>> > My question - Instead of directly calling the ISR, is there a way my
+>> quirk can fake an interrupt being generated, through the PCI subsystem?
+>> That way, my quirk does not have to be a part of the (generic) PCI
+>> driver.
+>> >
+>> > PCI bridge: Integrated Device Technology, Inc. PES12NT3 PCI Express
+>> > Switch (rev 01) (prog-if 00 [Normal decode])
+>> > Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+>> > Stepping- SERR- FastB2B- DisINTx-
+>> > Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>> > <TAbort- <MAbort- >SERR- <PERR- INTx-
+>> > Latency: 0
+>> > Bus: primary=11, secondary=13, subordinate=13, sec-latency=0 I/O
+>> > behind bridge: 0000f000-00000fff Memory behind bridge:
+>> > 80000000-80ffffff Prefetchable memory behind bridge:
+>> > 00000000fff00000-00000000000fffff Secondary status: 66MHz- FastB2B-
+>> > ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+>> > BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+>> >         PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>> > Capabilities: [40] Express (v1) Downstream Port (Slot-), MSI 00
+>> >         DevCap: MaxPayload 2048 bytes, PhantFunc 0, Latency L0s <64ns,
+>> L1 <1us
+>> >                 ExtTag+ RBE- FLReset-
+>> >         DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
+>> Unsupported-
+>> >                 RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+>> >                 MaxPayload 128 bytes, MaxReadReq 128 bytes
+>> >         DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr-
+>> TransPend-
+>> >         LnkCap: Port #1, Speed 2.5GT/s, Width x4, ASPM L0s L1, Latency
+>> L0 <2us, L1 <4us
+>> >                 ClockPM- Surprise- LLActRep- BwNot-
+>> >         LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
+>> >                 ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>> >         LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk-
+>> > DLActive- BWMgmt- ABWMgmt-
+>> > Capabilities: [70] Power Management version 2
+>> >         Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-
+>> ,D3hot+,D3cold+)
+>> >         Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>> > Capabilities: [100 v1] Virtual Channel
+>> >         Caps:   LPEVC=0 RefClk=100ns PATEntryBits=2
+>> >         Arb:    Fixed- WRR32- WRR64- WRR128-
+>> >         Ctrl:   ArbSelect=Fixed
+>> >         Status: InProgress-
+>> >         VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+>> >                 Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
+>> >                 Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+>> >                 Status: NegoPending- InProgress- Kernel driver in use:
+>> > pcieport
+>>
+>> Huh.  What interrupt are you expecting from it?  I don't see any
+>> "interrupt enable" bits in your lspci (though I didn't go through
+>> everything in detail).
+>>
+>> Or are you expecting an interrupt from a device below this bridge, and
+>> that interrupt isn't getting passed through the bridge?
+>
+> Actually this is the hot-plug interrupt (link change notification from the bridge itself) that I'm trying to fake.
+>
+> This is an old PCIe switch on an existing shipping hardware. This switch does not support the Link status reporting ("LLActRep-" in lspci). Rather it has proprietary registers to determine link status, but no interrupt associated with change in that link status. I'm trying to make the pciehp believe that this bridge supports link state reporting by using a quirk to:
+>
+> 1) Override the config space access routines (using pci_bus_set_ops()) for this bridge so as to override values of link status / link ctrl / link capabilities with desired values etc.
+>
+> 2) Somehow generate an interrupt whenever the proprietary registers indicate link state changed. Currently I call pcie_isr directly (thus requiring the quirk to be a part of pciehp). But I'm trying to separate out the quirk into a platform specific code, out of pci subsystem.
+>
+> I know one of the options is to use the pciehp in polling mode, but that changes the mode for all the ports, not just a specific one.
 
-On 21/03/2014 14:27, Lucas wrote:
-> Subject: Re: [PATCH v4 2/9] PCI: host: rcar: Add MSI support
-> 
-> Am Freitag, den 21.03.2014, 14:15 +0000 schrieb
-> Phil.Edworthy@renesas.com:
-> > Hi Lucas,
-> > 
-> > Thanks for the review.
-> > 
-> > On 21/03/2014 11:18, Lucas wrote:
-> > > Subject: Re: [PATCH v4 2/9] PCI: host: rcar: Add MSI support
-> > > 
-> > > Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
-> > > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > > > ---
-> > > >  drivers/pci/host/pcie-rcar.c | 232 
-> > ++++++++++++++++++++++++++++++++++++++++++-
-> > > >  drivers/pci/host/pcie-rcar.h |   5 +
-> > > >  2 files changed, 236 insertions(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/drivers/pci/host/pcie-rcar.c 
-> > b/drivers/pci/host/pcie-rcar.c
-> > > > index 16670e5..cbbcd77 100644
-> > > > --- a/drivers/pci/host/pcie-rcar.c
-> > > > +++ b/drivers/pci/host/pcie-rcar.c
-> > > [...]
-> > > > +
-> > > > +static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
-> > > > +{
-> > > > +   struct rcar_pcie *pcie = data;
-> > > > +   struct rcar_msi *msi = &pcie->msi;
-> > > > +   unsigned long reg;
-> > > > +
-> > > > +   reg = pci_read_reg(pcie, PCIEMSIFR);
-> > > > +
-> > > > +   while (reg) {
-> > > > +      unsigned int index = find_first_bit(&reg, 32);
-> > > > +      unsigned int irq;
-> > > > +
-> > > > +      /* clear the interrupt */
-> > > > +      pci_write_reg(pcie, 1 << index, PCIEMSIFR);
-> > > > +
-> > > > +      irq = irq_find_mapping(msi->domain, index);
-> > > > +      if (irq) {
-> > > > +         if (test_bit(index, msi->used))
-> > > > +            generic_handle_irq(irq);
-> > > > +         else
-> > > > +            dev_info(pcie->dev, "unhandled MSI\n");
-> > > > +      } else {
-> > > > +         /*
-> > > > +          * that's weird who triggered this?
-> > > > +          * just clear it
-> > > > +          */
-> > > > +         dev_info(pcie->dev, "unexpected MSI\n");
-> > > > +      }
-> > > > +
-> > > > +      /* see if there's any more pending in this vector */
-> > > > +      reg = pci_read_reg(pcie, PCIEMSIFR);
-> > > > +   }
-> > > > +
-> > > > +   return IRQ_HANDLED;
-> > > > +}
-> > > > +
-> > > From your DT binding it seems you have only one interrupt from the 
-PCIe
-> > > core, shared between the MSI irqs and the PCI legacy interrupts.
-> > > This means this handler may get called without an MSI irq pending, 
-so
-> > > this function really should have a path where it's returning 
-IRQ_NONE.
-> > Ah, yes you are right... though actually there are two interrupts, one 
-has 
-> > some MSI and INTx, the other has the rest of the MSIs.
-> > 
-> This isn't reflected in the DT binding. If you already know that there
-> may be more than a single interrupt for MSI, please push this into the
-> binding by using named interrupts. Even if your driver doesn't support
-> it yet, additional functionality can always be added later, but the DT
-> should be a stable ABI describing your hardware.
-> 
-> So if you already know your hardware has more than one interrupt, please
-> put it in the binding, to avoid churn later on.
-At the moment we support both interrupts but the code implicitly gets the 
-'next' interrupt for MSI. I'll change that so that all the interrupts are 
-specified in the binding.
+Your quirk could set up a kernel thread for the device that does the
+polling.  Then you'd have to figure out how to inject an interrupt
+when necessary.  I don't think there's a PCI facility for that, but
+there might be a generic way to signal an IRQ.
 
+Or maybe it would be possible to enhance the pciehp polling mode to
+work on a per-device basis, based on a bit set by a quirk.
 
-> Regards,
-> Lucas
-> -- 
-> Pengutronix e.K.                           | Lucas Stach |
-> Industrial Linux Solutions                 | http://www.pengutronix.de/ 
-|
-> Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 
-|
-> Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 
-|
-> 
+> PS: The pciehp driver was not loaded and hence you do not see any interrupts enabled in the lspci output.
 
-Thanks
-Phil
+My question was more about what interrupts possibly *could* be
+enabled.  Purely from a spec point of view, that is a function of what
+the capability and control registers indicate, so it shouldn't depend
+on whether a driver is loaded or not.  (It *would* depend on whether
+your quirk has run and you've turned on this emulation stuff.)
+
+Your device doesn't report that it supports a slot, so we assume
+there's no Slot Control register, where we could enable interrupts for
+attention button, power fault, presence detect, etc.  It does have
+Link registers, but it doesn't claim to support interrupts for data
+link layer active reporting, link bandwidth notification, etc.
+
+It sounds like this bridge really doesn't look much like a standard
+pciehp bridge.  Maybe it would make more sense to write a new hotplug
+driver for it.  All of the signalling and bridge control stuff sounds
+different.  Some of the backend logic for enumerating and removing PCI
+devices would probably be duplicated, and that's an area where I think
+we have a lot of room for improvement.  Even the existing drivers have
+a lot of duplicated and almost-duplicated code there, and it would be
+nice to refactor that.
+
+Bjorn
