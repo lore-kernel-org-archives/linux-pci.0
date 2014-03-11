@@ -1,88 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f181.google.com ([209.85.220.181]:32938 "EHLO
-	mail-vc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755199AbaCZOpP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 10:45:15 -0400
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:42668 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755053AbaCKRmp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 13:42:45 -0400
+Received: by mail-ig0-f173.google.com with SMTP id t19so11904417igi.0
+        for <linux-pci@vger.kernel.org>; Tue, 11 Mar 2014 10:42:44 -0700 (PDT)
+Subject: [PATCH 1/5] PCI: Don't check resource_size() in
+ pci_bus_alloc_resource()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org
+Date: Tue, 11 Mar 2014 11:42:43 -0600
+Message-ID: <20140311174243.23084.77689.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1395842272-15267-3-git-send-email-kishon@ti.com>
-References: <1395842272-15267-1-git-send-email-kishon@ti.com>
-	<1395842272-15267-3-git-send-email-kishon@ti.com>
-Date: Wed, 26 Mar 2014 09:45:13 -0500
-Message-ID: <CAL_JsqKeQvbU24V2-3KQuFoLwkL31DEcEEVDenfTA0P++Hn_fQ@mail.gmail.com>
-Subject: Re: [RFC PATCH 02/12] pci: host: pcie-dra7xx: add support for
- pcie-dra7xx controller
-From: Rob Herring <robherring2@gmail.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-omap <linux-omap@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, mohit.kumar@st.com,
-	Jingoo Han <jg1.han@samsung.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Rob Landley <rob@landley.net>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Tony Lindgren <tony@atomide.com>, rnayak@ti.com,
-	"paul@pwsan.com" <paul@pwsan.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 26, 2014 at 8:57 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> Added support for pcie controller in dra7xx. This driver re-uses
-> the designware core code that is already present in kernel.
->
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  Documentation/devicetree/bindings/pci/ti-pci.txt |   35 ++
->  drivers/pci/host/Kconfig                         |   10 +
->  drivers/pci/host/Makefile                        |    1 +
->  drivers/pci/host/pcie-dra7xx.c                   |  411 ++++++++++++++++++++++
->  4 files changed, 457 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
->  create mode 100644 drivers/pci/host/pcie-dra7xx.c
->
-> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-> new file mode 100644
-> index 0000000..0528c47
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-> @@ -0,0 +1,35 @@
-> +TI PCI Controllers
-> +
-> +PCIe Designware Controller
-> +This node should have the properties described in "designware-pcie.txt".
-> + - compatible: Should be "ti,dra7xx-pcie""
-> + - reg : Address and length of the register set for the device.
-> + - phys : the phandle for the PHY device (used by generic PHY framework)
-> + - phy-names : the names of the PHY corresponding to the PHYs present in the
-> +   *phy* phandle.
-> + - resets: phandle used if reset is handled be soc
+Paul reported that after f75b99d5a77d ("PCI: Enforce bus address limits in
+resource allocation") on a 32-bit kernel (CONFIG_PHYS_ADDR_T_64BIT not
+set), intel-gtt complained "can't ioremap flush page - no chipset
+flushing".  In addition, other PCI resource allocations, e.g., for bridge
+windows, failed.
 
-s/be/by/ ?
+This happens because we incorrectly skip bus resources of
+[mem 0x00000000-0xffffffff] because we think they are of size zero.
+When resource_size_t is 32 bits wide, resource_size() on
+[mem 0x00000000-0xffffffff] returns 0 because (r->end - r->start + 1)
+overflows.
 
-> + - reset-names: name given to the phandle
-> + - ti,device-type: Should be 1 - EP TYPE, 2 - LEG EP TYPE OR 3 - RC TYPE
+Therefore, we can't use "resource_size() == 0" to decide that allocation
+from this resource will fail.  allocate_resource() should fail anyway if it
+can't satisfy the address constraints, so we should just depend on that.
 
-I don't think this makes sense. I'd imagine we'd need the binding to
-look quite a bit different if endpoint mode was actually supported. I
-think I would start defining endpoint mode with a different compatible
-string and go from there.
+A [mem 0x00000000-0xffffffff] bus resource is obviously not really valid,
+but we do fall back to it as a default when we don't have information about
+host bridge apertures.
 
-> +
-> +Example:
-> +pcie@51000000 {
-> +       compatible = "ti,dra7xx-pcie";
-> +       reg = <0x51002000 0x14c>, <0x51000000 0x2000>, <0x4A002540 0x1f>, <0x4A003c24 0x4>, <0x4AE07310 0x4>;
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=71611
+Fixes: f75b99d5a77d PCI: Enforce bus address limits in resource allocation
+Reported-and-tested-by: Paul Bolle <pebolle@tiscali.nl>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/bus.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-This is different number of entries from your actual dts. You need to
-define how many reg entries, what they are, and the order.
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 00660cc502c5..38901665c770 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -162,8 +162,6 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
+ 
+ 		avail = *r;
+ 		pci_clip_resource_to_region(bus, &avail, region);
+-		if (!resource_size(&avail))
+-			continue;
+ 
+ 		/*
+ 		 * "min" is typically PCIBIOS_MIN_IO or PCIBIOS_MIN_MEM to
 
-Rob
