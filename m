@@ -1,51 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48425 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752027AbaCaNTc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 31 Mar 2014 09:19:32 -0400
-Date: Mon, 31 Mar 2014 15:19:29 +0200
-From: Jean Delvare <jdelvare@suse.de>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jiri Slaby <jslaby@suse.cz>
-Subject: [PATCH] pci_ids: Remove old serial device IDs
-Message-ID: <20140331151929.7bd3afef@endymion.delvare>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>, Liviu Dudau <liviu@dudau.co.uk>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v6 6/6] pci: Add support for creating a generic host_bridge from device tree
+Date: Tue, 11 Mar 2014 11:43:39 +0100
+Message-ID: <2664356.LLPHGvlG5M@wuerfel>
+In-Reply-To: <20140311094641.GA27064@e106497-lin.cambridge.arm.com>
+References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com> <4254618.BlpDUOctDb@wuerfel> <20140311094641.GA27064@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These IDs are no longer referenced since kernel 3.1 so I suppose we
-can remove them from pci_ids.h.
+On Tuesday 11 March 2014 09:46:41 Liviu Dudau wrote:
+> On Tue, Mar 11, 2014 at 06:50:24AM +0000, Arnd Bergmann wrote:
+> > On Monday 10 March 2014 21:56:00 Liviu Dudau wrote:
+> > > 
+> > > PCI_IOBASE is always defined. See the discussion with Russell on this subject.
+> > > 
+> > > include/asm-generic/io.h has at line 118:
+> > > 
+> > > #ifndef PCI_IOBASE
+> > > #define PCI_IOBASE ((void __iomem *) 0)
+> > > #endif
+> > 
+> > That is only defined for those that use asm-generic/pci.h, which most architectures
+> > don't.
+> 
+> I think it is defined for anyone that #includes <asm-generic/io.h>. There is no other
+> #ifdef around that.
+> 
 
-Signed-off-by: Jean Delvare <jdelvare@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- include/linux/pci_ids.h |    3 ---
- 1 file changed, 3 deletions(-)
+My mistake, I meant to write asm-generic/io.h.
 
---- linux-3.14-rc8.orig/include/linux/pci_ids.h	2014-03-31 14:15:00.832955000 +0200
-+++ linux-3.14-rc8/include/linux/pci_ids.h	2014-03-31 14:55:08.635085484 +0200
-@@ -1628,8 +1628,6 @@
- #define PCI_DEVICE_ID_ATT_VENUS_MODEM	0x480
- 
- #define PCI_VENDOR_ID_SPECIALIX		0x11cb
--#define PCI_DEVICE_ID_SPECIALIX_IO8	0x2000
--#define PCI_DEVICE_ID_SPECIALIX_RIO	0x8000
- #define PCI_SUBDEVICE_ID_SPECIALIX_SPEED4 0xa004
- 
- #define PCI_VENDOR_ID_ANALOG_DEVICES	0x11d4
-@@ -2868,7 +2866,6 @@
- #define PCI_DEVICE_ID_SCALEMP_VSMP_CTL	0x1010
- 
- #define PCI_VENDOR_ID_COMPUTONE		0x8e0e
--#define PCI_DEVICE_ID_COMPUTONE_IP2EX	0x0291
- #define PCI_DEVICE_ID_COMPUTONE_PG	0x0302
- #define PCI_SUBVENDOR_ID_COMPUTONE	0x8e0e
- #define PCI_SUBDEVICE_ID_COMPUTONE_PG4	0x0001
+On a related note, I would actually prefer to get rid of this PCI_IOBASE
+default and move it into the architectures that really want it like this.
+The default when PCI_IOBASE is not set IMHO should be to also not provide
+inb/outb and ioport_map() helpers, but we need a little more infrastructure
+to actually make the kernel build in all valid configuration when we remove them.
 
-
--- 
-Jean Delvare
-SUSE L3 Support
+	Arnd
