@@ -1,79 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7791 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:3315 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755356AbaCDAMu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Mar 2014 19:12:50 -0500
-Date: Mon, 3 Mar 2014 17:12:12 -0700
+	id S1753439AbaCKRUf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 11 Mar 2014 13:20:35 -0400
+Date: Tue, 11 Mar 2014 10:15:24 -0700
 From: Jon Mason <jon.mason@intel.com>
 To: Alexander Gordeev <agordeev@redhat.com>
 Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/4] ntb: Use pci_msix_vec_count() to obtain number of
- MSI-Xs
-Message-ID: <20140304001211.GC9679@jonmason-lab>
+Subject: Re: [PATCH v2 4/4] ntb: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140311171524.GB26040@jonmason-lab>
 References: <cover.1392996332.git.agordeev@redhat.com>
- <342d032b652517e2084ba97962ed017a25bf10bd.1392996332.git.agordeev@redhat.com>
+ <0afccb5cf0710f980b47e57c4e9b27eeb3033955.1392996332.git.agordeev@redhat.com>
+ <20140311160034.GB25638@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <342d032b652517e2084ba97962ed017a25bf10bd.1392996332.git.agordeev@redhat.com>
+In-Reply-To: <20140311160034.GB25638@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 21, 2014 at 04:49:30PM +0100, Alexander Gordeev wrote:
+On Tue, Mar 11, 2014 at 05:00:35PM +0100, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+> 
 > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 > Cc: Jon Mason <jon.mason@intel.com>
 
-Looks good.  Pulling into my tree.
+Looks good.  I will include it in my next release of the NTB driver
+(e.g. 3.15).
 
 Thanks,
 Jon
 
 > Cc: linux-pci@vger.kernel.org
 > ---
->  drivers/ntb/ntb_hw.c |   15 ++++-----------
->  drivers/ntb/ntb_hw.h |    2 --
->  2 files changed, 4 insertions(+), 13 deletions(-)
+>  drivers/ntb/ntb_hw.c |   20 +++++---------------
+>  1 files changed, 5 insertions(+), 15 deletions(-)
 > 
 > diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
-> index 487169dd..53468f4 100644
+> index 1f8decd..ff5c0a3 100644
 > --- a/drivers/ntb/ntb_hw.c
 > +++ b/drivers/ntb/ntb_hw.c
-> @@ -1085,19 +1085,12 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+> @@ -1088,11 +1088,9 @@ static int ntb_setup_snb_msix(struct ntb_device *ndev, int msix_entries)
+>  	if (msix_entries < ndev->limits.msix_cnt)
+>  		return -ENOSPC;
+>  
+> -	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> +	rc = pci_enable_msix_exact(pdev, ndev->msix_entries, msix_entries);
+>  	if (rc < 0)
+>  		return rc;
+> -	else if (rc > 0)
+> -		return -ENOSPC;
+>  
+>  	for (i = 0; i < msix_entries; i++) {
+>  		msix = &ndev->msix_entries[i];
+> @@ -1138,18 +1136,10 @@ static int ntb_setup_bwd_msix(struct ntb_device *ndev, int msix_entries)
 >  	struct msix_entry *msix;
->  	int msix_entries;
 >  	int rc, i;
-> -	u16 val;
 >  
-> -	if (!pdev->msix_cap) {
-> -		rc = -EIO;
-> -		goto err;
+> -retry:
+> -	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> -	if (rc < 0)
+> -		return rc;
+> -	else if (rc > 0) {
+> -		dev_warn(&pdev->dev,
+> -			 "Only %d MSI-X vectors. "
+> -			 "Limiting the number of queues to that number.\n",
+> -			 rc);
+> -		msix_entries = rc;
+> -		goto retry;
 > -	}
-> -
-> -	rc = pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS, &val);
-> -	if (rc)
-> +	msix_entries = pci_msix_vec_count(pdev);
-> +	if (msix_entries < 0) {
-> +		rc = msix_entries;
->  		goto err;
-> -
-> -	msix_entries = msix_table_size(val);
-> -	if (msix_entries > ndev->limits.msix_cnt) {
-> +	} else if (msix_entries > ndev->limits.msix_cnt) {
->  		rc = -EINVAL;
->  		goto err;
->  	}
-> diff --git a/drivers/ntb/ntb_hw.h b/drivers/ntb/ntb_hw.h
-> index bbdb7ed..d307107 100644
-> --- a/drivers/ntb/ntb_hw.h
-> +++ b/drivers/ntb/ntb_hw.h
-> @@ -60,8 +60,6 @@
->  #define PCI_DEVICE_ID_INTEL_NTB_SS_HSX		0x2F0F
->  #define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
+> +	msix_entries = pci_enable_msix_range(pdev, ndev->msix_entries,
+> +					     1, msix_entries);
+> +	if (msix_entries < 0)
+> +		return msix_entries;
 >  
-> -#define msix_table_size(control)	((control & PCI_MSIX_FLAGS_QSIZE)+1)
-> -
->  #ifndef readq
->  static inline u64 readq(void __iomem *addr)
->  {
+>  	for (i = 0; i < msix_entries; i++) {
+>  		msix = &ndev->msix_entries[i];
 > -- 
 > 1.7.7.6
 > 
+> -- 
+> Regards,
+> Alexander Gordeev
+> agordeev@redhat.com
