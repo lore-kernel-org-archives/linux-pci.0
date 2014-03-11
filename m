@@ -1,66 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:49294 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754094AbaCMPpO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 11:45:14 -0400
-Received: by mail-ie0-f182.google.com with SMTP id y20so1169508ier.27
-        for <linux-pci@vger.kernel.org>; Thu, 13 Mar 2014 08:45:14 -0700 (PDT)
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:59921 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752081AbaCKVjG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 17:39:06 -0400
 MIME-Version: 1.0
-In-Reply-To: <5321CE94.5070506@kernel.dk>
-References: <cover.1393404496.git.agordeev@redhat.com> <20140313041231.GC26657@google.com>
- <5321CE94.5070506@kernel.dk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 13 Mar 2014 09:44:52 -0600
-Message-ID: <CAErSpo74gmXCLCg46Eqmu4r664cRvMFLcBOf9c0UZLf7vFtNsw@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] block: Use pci_enable_msix_exact() instead of pci_enable_msix()
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Keith Busch <keith.busch@intel.com>,
-	Matthew Wilcox <willy@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20140311174243.23084.77689.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	<20140311174243.23084.77689.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Date: Tue, 11 Mar 2014 14:39:03 -0700
+Message-ID: <CAE9FiQVdk6Tg4tNPQihm2YJ5BQO8jrQXfQfgVOSXTaK3o76yqg@mail.gmail.com>
+Subject: Re: [PATCH 1/5] PCI: Don't check resource_size() in pci_bus_alloc_resource()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 13, 2014 at 9:28 AM, Jens Axboe <axboe@kernel.dk> wrote:
-> On 03/12/2014 10:12 PM, Bjorn Helgaas wrote:
->>
->> On Wed, Feb 26, 2014 at 10:02:40AM +0100, Alexander Gordeev wrote:
->>>
->>> Changes since v1:
->>>    - cciss: patch #1: a weird 'goto' removed;
->>>    - cciss: patch #2: pci_enable_msix_exact() used, not
->>> pci_enable_msix_range();
->>>    - rsxx: patch dropped - no need to change anything;
->>>
->>> As result of deprecation of MSI-X/MSI enablement functions
->>> pci_enable_msix() and pci_enable_msi_block() all drivers
->>> using these two interfaces need to be updated to use the
->>> new pci_enable_msi_range()  or pci_enable_msi_exact()
->>> and pci_enable_msix_range() or pci_enable_msix_exact()
->>> interfaces.
->>>
->>> This change updates 'cciss' only, but there is also 'nvme' update
->>> pending - I am waiting for Intel guys to clarify if they want to
->>> route it thru their tree. If not, I will post the 'nvme' patch as
->>> a follow-up to this series.
->>
->>
->> Hi Jens,
->>
->> I'd like to get these merged during the v3.15 merge window.  I'd be glad
->> to
->> review and apply them through my tree, unless you want to do it.  They do
->> depend on f7fc32c, which went in after the v3.14 merge window, which makes
->> it a bit of a hassle.
+On Tue, Mar 11, 2014 at 10:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Paul reported that after f75b99d5a77d ("PCI: Enforce bus address limits in
+> resource allocation") on a 32-bit kernel (CONFIG_PHYS_ADDR_T_64BIT not
+> set), intel-gtt complained "can't ioremap flush page - no chipset
+> flushing".  In addition, other PCI resource allocations, e.g., for bridge
+> windows, failed.
 >
+> This happens because we incorrectly skip bus resources of
+> [mem 0x00000000-0xffffffff] because we think they are of size zero.
+> When resource_size_t is 32 bits wide, resource_size() on
+> [mem 0x00000000-0xffffffff] returns 0 because (r->end - r->start + 1)
+> overflows.
 >
-> My 3.15/drivers (and core) branch are based off 3.14-rc3, so it should be
-> OK. I've queued them up, as it's mostly a followup to the previous ones from
-> Alexander.
+> Therefore, we can't use "resource_size() == 0" to decide that allocation
+> from this resource will fail.  allocate_resource() should fail anyway if it
+> can't satisfy the address constraints, so we should just depend on that.
+>
+> A [mem 0x00000000-0xffffffff] bus resource is obviously not really valid,
+> but we do fall back to it as a default when we don't have information about
+> host bridge apertures.
+>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=71611
+> Fixes: f75b99d5a77d PCI: Enforce bus address limits in resource allocation
+> Reported-and-tested-by: Paul Bolle <pebolle@tiscali.nl>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/bus.c |    2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 00660cc502c5..38901665c770 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -162,8 +162,6 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
+>
+>                 avail = *r;
+>                 pci_clip_resource_to_region(bus, &avail, region);
+> -               if (!resource_size(&avail))
+> -                       continue;
+>
+>                 /*
+>                  * "min" is typically PCIBIOS_MIN_IO or PCIBIOS_MIN_MEM to
+>
 
-Great, thanks!  I'll take them off my to-do list.
+how about replacing that with:
 
-Bjorn
+        if (avail.start > avail.end)
+                  continue;
+
+so we do not need to go deep into allocate_resource()
+
+Thanks
+
+Yinghai
