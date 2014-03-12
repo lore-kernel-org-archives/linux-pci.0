@@ -1,55 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:41697 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751398AbaC0J1M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 05:27:12 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
-References: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1395912416-20087-8-git-send-email-phil.edworthy@renesas.com>
-Date: Thu, 27 Mar 2014 09:26:53 +0000
-Subject: [PATCH v6 07/10] ARM: shmobile: lager: Add PCIe device nodes
+Received: from mailout2.samsung.com ([203.254.224.25]:47814 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756676AbaCLIlh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Mar 2014 04:41:37 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Liviu Dudau' <Liviu.Dudau@arm.com>
+Cc: 'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Catalin Marinas' <Catalin.Marinas@arm.com>,
+	'Will Deacon' <Will.Deacon@arm.com>,
+	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
+	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
+	'LKML' <linux-kernel@vger.kernel.org>,
+	devicetree@vger.kernel.org,
+	'LAKML' <linux-arm-kernel@lists.infradead.org>,
+	'Tanmay Inamdar' <tinamdar@apm.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394020150-1875-4-git-send-email-Liviu.Dudau@arm.com>
+In-reply-to: <1394020150-1875-4-git-send-email-Liviu.Dudau@arm.com>
+Subject: Re: [PATCH v6 3/3] arm64: Add architecture support for PCI
+Date: Wed, 12 Mar 2014 17:41:33 +0900
+Message-id: <000101cf3dce$df2c1840$9d8448c0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+On Wednesday, March 05, 2014 8:49 PM, Liviu Dudau wrote:
+> 
+> Use the generic host bridge functions to provide support for
+> PCI Express on arm64. There is no support for ISA memory.
+> 
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> ---
+>  arch/arm64/Kconfig            |  19 +++-
+>  arch/arm64/include/asm/Kbuild |   1 +
+>  arch/arm64/include/asm/io.h   |   3 +-
+>  arch/arm64/include/asm/pci.h  |  49 +++++++++
+>  arch/arm64/kernel/Makefile    |   1 +
+>  arch/arm64/kernel/pci.c       | 173 ++++++++++++++++++++++++++++++++
+>  6 files changed, 244 insertions(+), 2 deletions(-)
+>  create mode 100644 arch/arm64/include/asm/pci.h
+>  create mode 100644 arch/arm64/kernel/pci.c
 
-v6:
- - Split device and board DT changes
----
- arch/arm/boot/dts/r8a7790-lager.dts | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+[.....]
 
-diff --git a/arch/arm/boot/dts/r8a7790-lager.dts b/arch/arm/boot/dts/r8a7790-lager.dts
-index a55c5f8..bbbcb63 100644
---- a/arch/arm/boot/dts/r8a7790-lager.dts
-+++ b/arch/arm/boot/dts/r8a7790-lager.dts
-@@ -139,6 +139,16 @@
- 		states = <3300000 1
- 			  1800000 0>;
- 	};
-+
-+	clocks {
-+		/* External PCIe bus clock - not used */
-+		pcie_bus_clk: pcie_bus_clk {
-+			compatible = "fixed-clock";
-+			#clock-cells = <0>;
-+			clock-frequency = <0>;
-+			clock-output-names = "pcie_bus";
-+		};
-+	};
- };
- 
- &extal_clk {
--- 
-1.9.0
+> --- /dev/null
+> +++ b/arch/arm64/include/asm/pci.h
+
+[.....]
+
+> +
+> +static inline int pci_domain_nr(struct pci_bus *bus)
+> +{
+> +	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+> +
+> +	if (bridge)
+> +		return bridge->domain_nr;
+> +
+> +	return 0;
+> +}
+
+Hi Liviu Dudau,
+
+When CONFIG_PCI=n, the following build errors happen. :-(
+Would you confirm this?
+
+In file included from include/linux/pci.h:1393:0,
+                 from drivers/scsi/scsi_lib.c:19:
+arch/arm64/include/asm/pci.h:31:19: error: redefinition of 'pci_domain_nr'
+ static inline int pci_domain_nr(struct pci_bus *bus)
+                   ^
+In file included from drivers/scsi/scsi_lib.c:19:0:
+include/linux/pci.h:1383:19: note: previous definition of 'pci_domain_nr' was here
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+                   ^
+             .....
+
+Best regards,
+Jingoo Han
 
