@@ -1,132 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:1592
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751076AbaCYDS2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 23:18:28 -0400
-From: Rajat Jain <rajatjain@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Cristina Olariu <colariu@elfiq.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Matt Domsch <Matt_Domsch@dell.com>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: RE: Help with listing devices in physical PCI slots
-Date: Tue, 25 Mar 2014 03:18:21 +0000
-Message-ID: <1968ce0e581a41ae866b07129132ad9c@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <CAMm_7EozAX7OTAAOzvFfqrar7xnZG+KoX=VygEKNAB6yO=4q=A@mail.gmail.com>
- <CAErSpo45sDNPt6=Yw-qgqdojYL8+_JNOVNEnVxRLatga+bY+2A@mail.gmail.com>
- <CAMm_7EqArczxmyG3Za+Gs5hjTJZ+rDRiDxakCUNi50dO1h9ikg@mail.gmail.com>
- <CAErSpo5ygKWTuPKo1ki-Rrpf+DizkAT0UqrwZH3UFsNNyDvt-w@mail.gmail.com>
- <CAMm_7EpYxnyF74Paj3qpcLqhspECVfUpRzzGAPc78UuGVc4dnQ@mail.gmail.com>
- <CAErSpo5-rWeWeayeTpzgg+N_UYWfyT5-qdYReQm0WDy0WwHFkg@mail.gmail.com>
- <CAMm_7EoCGgQ7aZfESY_-+WFdsZqpBrjEee94e6GyT50CLaVbdQ@mail.gmail.com>
- <CAErSpo5ncPGV9_ijfzCJJP28AX=4erb_iN2sei_DJC7eCsevMg@mail.gmail.com>
-In-Reply-To: <CAErSpo5ncPGV9_ijfzCJJP28AX=4erb_iN2sei_DJC7eCsevMg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:36366 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754782AbaCLDhg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 23:37:36 -0400
+Received: by mail-wi0-f173.google.com with SMTP id f8so1798494wiw.12
+        for <linux-pci@vger.kernel.org>; Tue, 11 Mar 2014 20:37:35 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20140311201533.GF31835@obsidianresearch.com>
+References: <1393944864-28113-1-git-send-email-tharvey@gateworks.com>
+	<20140311201533.GF31835@obsidianresearch.com>
+Date: Tue, 11 Mar 2014 20:37:35 -0700
+Message-ID: <CAJ+vNU1-evvZuLEeKvdRnbt_kXm3-zsNEk9ACQ21UhYxJtWwFg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] of/irq: Fix irq-mapping in of_irq_parse_raw()
+From: Tim Harvey <tharvey@gateworks.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Ben Dooks <ben-linux@fluff.org>,
+	linux-tegra <linux-tegra@vger.kernel.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Grant Likely <grant.likely@linaro.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGksDQoNCj4gDQo+IEl0IGRvZXMgc2VlbSBsaWtlIHRoZSB3YXkgd2UgZXhwb3NlIFBDSWUgc2xv
-dCBpbmZvcm1hdGlvbiBpcyB1bm5lY2Vzc2FyaWx5DQo+IHRpZWQgdG8gdGhlIHF1ZXN0aW9uIG9m
-IHdoZXRoZXIgdGhlIHNsb3Qgc3VwcG9ydHMgaG90cGx1Zy4gIE1heWJlIHRoZSBzbG90DQo+IG51
-bWJlciwgZS5nLiwgdGhlIFBDSWUgb3IgU0hQQyAiUGh5c2ljYWwgU2xvdCBOdW1iZXIiIGNvdWxk
-IGJlIGV4cG9zZWQgaW4NCj4gdGhlIGRldmljZSBkaXJlY3Rvcnkgb2YgdGhlIHVwc3RyZWFtIGJy
-aWRnZSwgZS5nLiwNCj4gL3N5cy9kZXZpY2VzL3BjaTAwMDA6MDAvMDAwMDowMDoxYy4zL3Nsb3Qu
-DQoNCkkgYWdyZWUuIEkgd2FzIGxvb2tpbmcgZm9yIHNvbWV0aGluZyBzaW1pbGFyIGJ1dCBub3cg
-SSBrbm93IEkgd2Fzbid0IHRoZSBvbmx5IG9uZSA6LSkuDQoNClBsZWFzZSBsZXQgbWUga25vdyB3
-aGVuIEkgdGFrZSB0aGUgY29udmVyc2F0aW9uIGludG8gYW5vdGhlciBkaXJlY3Rpb24sIGJ1dDog
-DQoNClRoZXJlIGFyZSBtb3JlIGxpbWl0YXRpb25zLCBvciBtYXliZSBJIGp1c3QgZG9uJ3Qga25v
-dyBob3cgdG8gYWNoaWV2ZSB0aGlzOiBJIGhhdmUgdXNlciBzcGFjZSBhcHBsaWNhdGlvbnMgdGhh
-dCwgbGV0J3Mgc2F5IGZvciB0aGUgc2FrZSBvZiBpdCwgd2FudCB0byBkaXNwbGF5IHRoZSBzdGF0
-ZSBvZiBkaWZmZXJlbnQgaG90IHBsdWdnYWJsZSBzbG90cyBpbiB0aGUgc3lzdGVtIChvY2N1cGll
-ZCAvIHVub2NjdXBpZWQgZXRjKS4gVGhleSByZWx5IG9uIFVERVYgaW5zZXJ0aW9uIC8gcmVtb3Zh
-bCBldmVudHMuIEhvd2V2ZXIsIGN1cnJlbnRseSB0aGUgVURFViBldmVudCB0aGF0IHRoZXkgZ2V0
-IGlzIGEgc2ltcGxlIFVERVYgZXZlbnQgZm9yIHRoZSBQQ0kgZGV2aWNlIHRoYXQgd2FzIGFkZGVk
-LiBUaHVzIHRoZXkgZ2V0IGEgbG9uZyBQQ0kgcGF0aG5hbWUsIGluc3RlYWQgb2YgYW55IGNsdWVz
-IGFib3V0IHRoZSBzbG90IG51bWJlci4gQW5kIHdhbGtpbmcgdGhhdCBwYXRoIGRvZXNuJ3QgaGVs
-cCB0aGVtIGZpZ3VyaW5nIG91dCB0aGUgc2xvdCBudW1iZXIgZWl0aGVyLiBUaGV5IGhhdmUgdG8g
-bG9vayBhdCB0aGUgYWRkcmVzcyBvZiBlYWNoIHNsb3QgaW4gL3N5cy9idXMvcGNpL3Nsb3RzLyBh
-bmQgdGhlbiBwYXJzZSAmIGNvbXBhcmUgYW5kIGxvZ2ljYWxseSBkZWR1Y3Qgd2hpY2ggc2xvdCBk
-b2VzIHRoaXMgYWN0aXZpdHkgYmVsb25nIHRvLiBJdCB3b3VsZCBiZSBtdWNoIG5pY2UgdG8gaGF2
-ZSB0aGF0IHNsb3QgaW5mbyBpbiBhbGwgb2YgdGhlIFBDSWUgZGV2aWNlcy4gDQoNCj4gIFdlIGN1
-cnJlbnRseSBtYWtlIGENCj4gL3N5cy9idXMvcGNpL3Nsb3RzL1ggZGlyZWN0b3J5IGZvciBob3Rw
-bHVnIHNsb3RzLCBidXQgWCBpcyBhIGxvZ2ljYWwgc2xvdCBudW1iZXINCj4gdGhhdCBpcyBub3Qg
-dGhlIHNhbWUgYXMgdGhlIHBoeXNpY2FsIHNsb3QgbnVtYmVyIGZyb20gdGhlIFBDSWUgY2FwYWJp
-bGl0eS4NCg0KVW1tbSwgd2h5IGRvIHlvdSBzYXkgc28/IExvb2tpbmcgYXQgcGNpZWhwLCBhdGxl
-YXN0IGl0IGF0dGVtcHRzIHRvIGNyZWF0ZSB0aGUgc2xvdCB3aXRoIHRoZSBzYW1lIG5hbWUgYXMg
-UENJZSBjYXBhYmlsaXR5LiBBbHRob3VnaCB0aGUgcGNpX2NyZWF0ZV9zbG90KCkgbWF5IHJlbmFt
-ZSBpdCwgYnV0IG9ubHkgaWYgdGhlIGZpcm13YXJlIGFzc2lnbnMgc2FtZSBzbG90IG51bWJlciB0
-byBtdWx0aXBsZSBzbG90cy4NCg0KV2hhdCBpcyByZWFsbHkgbWlzc2luZyBpcyB1c2Ugb2YgImNo
-YXNzaXMgbnVtYmVyIiByZWdpc3RlciBhcyBzcGVjaWZpZWQgaW4gdGhlICJTbG90IG51bWJlcmlu
-ZyIgc2VjdGlvbiBvZiB0aGUgc3BlY3MgKE15IHN5c3RlbSBjcmFzaGVkIGxhc3QgbmlnaHQgYW5k
-IEkgZG8gbm90IGhhdmUgdGhlIHNwZWNzIGluIGZyb250IG9mIG1lIGFueW1vcmUsIEkgY2FuIHBy
-b3ZpZGUgcmVmZXJlbmNlcyB0b21vcnJvdykuIENvbnNpZGVyIGEgbWFpbiBjaGFzc2lzIHRoYXQg
-aGFzIDIgc2xvdHMsIHRoYXQgaGF2ZSAyIGNhcmRzIChvZiB0aGUgc2FtZSB0eXBlKSBwb3B1bGF0
-ZWQuIFRoZSBhZGQgb24gY2FyZHMgdGhlbXNlbHZlcyBoYXZlIGhvdCBwbHVnZ2FibGUgc2xvdHMg
-b24gdGhlbS4gVGhpcyBpcyBub3QgYW4gdW5jb21tb24gc2NlbmFyaW8sIGFuZCBJIGFjdHVhbGx5
-IHNlZSB0aGlzIGlzc3VlIHZlcnkgZnJlcXVlbnRseS4gSW4gc3VjaCBzY2VuYXJpbywgcGNpZWhw
-IGlzIGd1YXJhbnRlZWQgdG8gZmluZCB0aGUgc2xvdCBudW1iZXJzIHByb2dyYW1tZWQgaWRlbnRp
-Y2FsbHkgb24gdGhlIGFkZC1vbiBjYXJkcy4gRGVwZW5kaW5nIG9uIGluc2VydGlvbiAvIHJlbW92
-YWwgZXZlbnRzLCB0b2RheSwgd2UgY2Fubm90IHRlbGwgaW4gYWR2YW5jZSB3aGF0IHRoZSBzbG90
-IG51bWJlciBzaGFsbCBsb29rIGxpa2UuIFdvdWxkIGJlIGdyZWF0IGlmIHdlIGNvdWxkIGhhdmUg
-dGhlIGZsZXhpYmlsaXR5IHRvIG5hbWUgdGhlIHNsb3RzIHNvbWV0aGluZyBsaWtlIDxjaGFzc2lz
-LW51bWJlcj4uPHNsb3QtbnVtYmVyPi4NCg0KSSB0aGluayB3aGF0IHdlIGFyZSBtaXNzaW5nIHRv
-ZGF5IGlzIHRoYXQgbmVpdGhlciB0aGUgY2hhc3NpcyBudW1iZXIgcmVnaXN0ZXIgaXMgcG9wdWxh
-dGVkLCBub3QgaXQgaXMgdXNlZCBmb3Igc2xvdCBudW1iZXJpbmcuIEkgZ3Vlc3Mgb25lIG9mIHRo
-ZSByZWFzb25zIGlzIHRoYXQgYSBsb3Qgb2YgdmVuZG9ycyBkbyBub3QgaW1wbGVtZW50IHRoYXQg
-cmVnaXN0ZXIgYXQgYWxsLCBhbmQgZXZlbiBpZiB0aGV5IGRvLCB0aGVyZSBpcyBubyB3YXkgdG8g
-dGVsbCAoYnkgbG9va2luZyBhdCBjYXBhYmlsaXR5IHJlZ2lzdGVyKSwgdGhhdCB0aGUgcmVnaXN0
-ZXIgaXMgaW1wbGVtZW50ZWQuDQoNClRoYW5rcywNCg0KUmFqYXQNCg0KPiANCj4gQmpvcm4NCj4g
-DQo+IFsxXQ0KPiBodHRwczovL2ZlZG9yYXByb2plY3Qub3JnL3dpa2kvRmVhdHVyZXMvQ29uc2lz
-dGVudE5ldHdvcmtEZXZpY2VOYW1pbmcNCj4gDQo+ID4gT24gRnJpLCBNYXIgMjEsIDIwMTQgYXQg
-NjozNSBQTSwgQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4NCj4gd3JvdGU6DQo+
-ID4+IE9uIEZyaSwgTWFyIDIxLCAyMDE0IGF0IDM6NDcgUE0sIENyaXN0aW5hIE9sYXJpdSA8Y29s
-YXJpdUBlbGZpcS5jb20+IHdyb3RlOg0KPiA+Pg0KPiA+Pj4gaHR0cHM6Ly9idWd6aWxsYS5rZXJu
-ZWwub3JnL3Nob3dfYnVnLmNnaT9pZD03MjY4MQ0KPiA+Pg0KPiA+Pj4+Pj4gT24gRnJpLCBNYXIg
-MjEsIDIwMTQgYXQgMTE6NTYgQU0sIENyaXN0aW5hIE9sYXJpdQ0KPiA+Pj4+Pj4gPGNvbGFyaXVA
-ZWxmaXEuY29tPg0KPiA+Pj4+Pj4gd3JvdGU6DQo+ID4+Pj4+PiA+DQo+ID4+Pj4+PiA+IEkgd2Fz
-IHRyeWluZyB0byB1c2UgdGhlIHBjaV9zbG90IG1vZHVsZSBpbiBvcmRlciB0byBhc3NvY2lhdGUg
-YQ0KPiA+Pj4+Pj4gPiBuZXR3b3JrIGludGVyZmFjZSAgdG8gIGl0cyBjb3JyZXNwb25kaW5nIG5l
-dHdvcmsgcG9ydCBieQ0KPiA+Pj4+Pj4gPiBtYXRjaGluZyBkZXZpY2VzIHdpdGggcGh5c2ljYWwg
-c2xvdCBpbmZvcm1hdGlvbi4NCj4gPj4+Pj4+ID4NCj4gPj4+Pj4+ID4gVW5mb3J0dW5hdGVseSB0
-aGUgUENJZSBzbG90cyBvbiBvdXIgcGxhdGZvcm0gZG9uJ3Qgc3VwcG9ydCB0aGUNCj4gPj4+Pj4+
-ID4gaG90LXBsdWcgZnVuY3Rpb24gYW5kIHRoZSBwY2lfc2xvdCBtb2R1bGUgZG9lc24ndCBleHBv
-c2UgdGhlDQo+ID4+Pj4+PiA+IHNsb3RzIGludGVyZmFjZSBpbiBzeXNmcy4NCj4gPj4+Pj4+ID4N
-Cj4gPj4+Pj4+ID4gSXMgdGhlcmUgYW5vdGhlciB3YXkgdG8gbGlzdCBkZXZpY2VzIGJ5IHBoeXNp
-Y2FsIGFkZC1pbiBzbG90cz8NCj4gPj4+Pj4+ID4gV2UgYXJlIHVzaW5nIGtlcm5lbCB2ZXJzaW9u
-IDMuNC42Ny4NCj4gPj4+Pj4+ID4gQW55IHBvaW50ZXJzIHlvdSBtYXkgYmUgYWJsZSB0byBvZmZl
-ciB3b3VsZCBiZSBhcHByZWNpYXRlZC4NCj4gPj4NCj4gPj4gWW91ciBsc3BjaSAoZnJvbSB0aGUg
-YnVnemlsbGEgbWVudGlvbmVkIGFib3ZlKSBzaG93cyAxMiBkZXZpY2VzIHRoYXQNCj4gPj4gY2xh
-aW0gdG8gaGF2ZSBhIHNsb3QsIGJhc2VkIG9uIHRoZSBQQ0llIENhcGFiaWxpdGllcyBSZWdpc3Rl
-ciwgYnV0DQo+ID4+IG1vc3Qgb2YgdGhlbSBoYXZlIGEgIlBoeXNpY2FsIFNsb3QgTnVtYmVyIiBv
-ZiB6ZXJvOg0KPiA+Pg0KPiA+PiAgICAgMDA6MDEuMCBJbnRlbCBSb290IFBvcnQgU2xvdCAjMCB0
-byBbYnVzIDAxXQ0KPiA+PiAgICAgMDA6MDIuMCBJbnRlbCBSb290IFBvcnQgU2xvdCAjMCB0byBb
-YnVzIDAyXQ0KPiA+PiAgICAgMDA6MDIuMiBJbnRlbCBSb290IFBvcnQgU2xvdCAjMCB0byBbYnVz
-IDAzLTA5XQ0KPiA+PiAgICAgMDA6MDMuMCBJbnRlbCBSb290IFBvcnQgU2xvdCAjMCB0byBbYnVz
-IDBhLTBiXQ0KPiA+PiAgICAgMDA6MDMuMSBJbnRlbCBSb290IFBvcnQgU2xvdCAjMCB0byBbYnVz
-IDBjLTBkXQ0KPiA+PiAgICAgMDA6MDMuMiBJbnRlbCBSb290IFBvcnQgU2xvdCAjMCB0byBbYnVz
-IDBlXQ0KPiA+PiAgICAgMDA6MWMuMCBJbnRlbCBSb290IFBvcnQgU2xvdCAjMCB0byBbYnVzIDEw
-XQ0KPiA+PiAgICAgMDA6MWMuMSBJbnRlbCBSb290IFBvcnQgU2xvdCAjMCB0byBbYnVzIDExXQ0K
-PiA+PiAgICAgMDA6MWMuMiBJbnRlbCBSb290IFBvcnQgU2xvdCAjMCB0byBbYnVzIDEyXQ0KPiA+
-PiAgICAgMDQ6MDAuMCBQTFggRG93bnN0cmVhbSBQb3J0IFNsb3QgIzAgdG8gW2J1cyAwNS0wNl0N
-Cj4gPj4gICAgIDA0OjAxLjAgUExYIERvd25zdHJlYW0gUG9ydCBTbG90ICMxIHRvIFtidXMgMDct
-MDhdDQo+ID4+ICAgICAwNDowOC4wIFBMWCBEb3duc3RyZWFtIFBvcnQgU2xvdCAjOCB0byBbYnVz
-IDA5XQ0KPiA+Pg0KPiA+PiAgICAgMDM6MDAuMCBQTFggVXBzdHJlYW0gUG9ydCB0byBbYnVzIDA0
-LTA5XQ0KPiA+PiAgICAgMDU6MDAuMCBJbnRlbCA4MjU5OUVTIDEwRyBOSUMgKGluIFNsb3QgIzAp
-DQo+ID4+ICAgICAwNzowMC4wIEludGVsIDgyNTk5RVMgMTBHIE5JQyAoaW4gU2xvdCAjMSkNCj4g
-Pj4NCj4gPj4gTXkgZ3Vlc3MgaXMgdGhhdCB0aGUgb25lcyB5b3UgY2FyZSBhYm91dCBhcmUgdGhl
-IHNsb3RzIGNvbm5lY3RlZCB0bw0KPiA+PiB0aGUgUExYIERvd25zdHJlYW0gUG9ydHMsIGJ1dCBJ
-IGRvbid0IGtub3cgaG93IHRvIG1ha2UgYSBydWxlIGFib3V0DQo+ID4+IHdoaWNoIG9uZXMgd2Ug
-c2hvdWxkIGV4cG9zZS4gIEkgdGhpbmsgdGhlIHNsb3QgY29kZSBjYW4gZGlzYW1iaWd1YXRlDQo+
-ID4+IHRoZW0gYnkgYWRkaW5nIGEgc3VmZml4LCBzbyBJIGd1ZXNzIG9uZSBwb3NzaWJpbGl0eSBp
-cyB0byBleHBvc2UgdGhlbQ0KPiA+PiBhbGwgYXMsIGUuZy4sICIwIiwgIjAtMSIsICIwLTIiLCAi
-MC0zIiwgZXRjLiAgVGhlbiB5b3UnZCBlbmQgdXAgd2l0aA0KPiA+PiB0aGUgUExYIERvd25zdHJl
-YW0gUG9ydCBzbG90cyBiZWluZyAiMC05IiwgIjEiLCBhbmQgIjgiLCB3aGljaCBzZWVtcw0KPiA+
-PiBzb3J0IG9mIHVnbHkuDQo+ID4+DQo+ID4+IFdoYXQncyB0aGUgbmV0d29yayBwb3J0IGluZm9y
-bWF0aW9uIHlvdSB3YW50IHRvIG1hdGNoIHVwIHdpdGggdGhlc2UNCj4gPj4gc2xvdCBudW1iZXJz
-Pw0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAi
-dW5zdWJzY3JpYmUgbGludXgtcGNpIiBpbiB0aGUNCj4gYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFq
-b3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0DQo+IGh0dHA6Ly92
-Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPiANCg0K
+On Tue, Mar 11, 2014 at 1:15 PM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Tue, Mar 04, 2014 at 06:54:24AM -0800, Tim Harvey wrote:
+>> When an interrupt-map contains multiple entries an imap pointer arithmetic
+>> bug can cause only the first entry to be properly evaluated and causes
+>> the out_irq parameters to be incorrect depending on the #interrupt-cells
+>> and #address-cells of the parent interrupt controller.
+>
+> Tim,
+>
+> I took a bit closer look at this for you, and I suspect the root fix
+> is this:
+>
+> --- a/Documentation/devicetree/bindings/arm/gic.txt
+> +++ b/Documentation/devicetree/bindings/arm/gic.txt
+> @@ -55,7 +55,6 @@ Example:
+>         intc: interrupt-controller@fff11000 {
+>                 compatible = "arm,cortex-a9-gic";
+>                 #interrupt-cells = <3>;
+> -               #address-cells = <1>;
+>                 interrupt-controller;
+>                 reg = <0xfff11000 0x1000>,
+>                       <0xfff10100 0x100>;
+> (plus the corresponding purge from the .dt files)
+>
+> It looks like the implementation does follow the OF specification:
+>
+>  Each mapping entry consists of a 3-tuple of (child-interrupt,
+>  interrupt-parent, parent-interrupt). The number of cells for the
+>  child-interrupt specifier is determined by the "#address-cells" and
+>  "#interrupt-cells"property of this node. The number of cells for the
+>  parent-interrupt value is determined by the "#address-cells"and
+>  "#interrupt-cells"property values of this node's
+>  interrupt-parent.
 
+Ok - I see I misunderstood the spec with regards to what the
+address-cells related to.
+
+>
+> So by specifying interrupt-cells = 3, address-cells = 1, the GIC is
+> requiring 4 DWs for its interrupt specifier.
+
+Agreed, and the interrupt mapping for the imx6 pcie host controller:
+
+interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
+                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
+                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
+                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+
+has only 3 cells for the parent interrupt, and only 3 are needed so I
+suppose there is no 'address' necessary.
+
+>
+> I see no reason why it doesn't have an address-cells = 0 like other
+> interrupt controllers..
+
+I agree, and I see that as well for other cortex-a9 gic interrupt controllers.
+
+>
+> Setting #address-cells to 0 in the GIC node should be functionally
+> equivalent to your patch below, since newaddrsize will == 0.
+
+yes, it does.  I'll verify and post a followup patch tomorrow for the
+invalid dtsi's.  Thanks for digging into this!
+
+Tim
