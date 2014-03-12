@@ -1,78 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.131]:56704 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750924AbaCGAiW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 19:38:22 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: "Russell King - ARM Linux" <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v6 1/3] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
-Date: Fri, 7 Mar 2014 01:37:38 +0100
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-References: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com> <1394020150-1875-2-git-send-email-Liviu.Dudau@arm.com> <20140305233135.GZ21483@n2100.arm.linux.org.uk>
-In-Reply-To: <20140305233135.GZ21483@n2100.arm.linux.org.uk>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201403070137.38621.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <000001cf3dcd$751a4680$5f4ed380$%han@samsung.com>
+References: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
+	<1394085963-27553-3-git-send-email-tinamdar@apm.com>
+	<000001cf3dcd$751a4680$5f4ed380$%han@samsung.com>
+Date: Wed, 12 Mar 2014 09:44:20 -0700
+Message-ID: <CACoXjckTMbt2GgLFgh39CRNGydZ4u4-L2J1PQfFi8fR7A=LUGQ@mail.gmail.com>
+Subject: Re: [PATCH v4 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches <patches@apm.com>,
+	Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 06 March 2014, Russell King - ARM Linux wrote:
-> On Wed, Mar 05, 2014 at 11:49:08AM +0000, Liviu Dudau wrote:
-> > The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
-> > is wrong. It returns a mapped (i.e. virtual) address that can start from
-> > zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
-> > architectures that use !CONFIG_GENERIC_MAP define.
-> 
-> What value does PCI_IOBASE and IO_SPACE_LIMIT have on other architectures
-> who make use of asm-generic/io.h ?
-> 
-> $ git grep asm-generic/io.h arch/
-> arch/arc/include/asm/io.h:#include <asm-generic/io.h>
+Hello Jingoo Han,
 
-PCI support hasn't been upstreamed.
+On Wed, Mar 12, 2014 at 1:31 AM, Jingoo Han <jg1.han@samsung.com> wrote:
+> On Thursday, March 06, 2014 3:06 PM, Tanmay Inamdar wrote:
+>>
+>> This patch adds the device tree nodes for APM X-Gene PCIe controller and
+>> PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
+>> nodes are added.
+>>
+>> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+>> ---
+>>  arch/arm64/boot/dts/apm-mustang.dts |    8 ++
+>>  arch/arm64/boot/dts/apm-storm.dtsi  |  155 +++++++++++++++++++++++++++++++++++
+>>  2 files changed, 163 insertions(+)
+>
+> [.....]
+>
+>> --- a/arch/arm64/boot/dts/apm-storm.dtsi
+>> +++ b/arch/arm64/boot/dts/apm-storm.dtsi
+>
+> [.....]
+>
+>> +
+>> +             pcie0: pcie@1f2b0000 {
+>> +                     status = "disabled";
+>> +                     device_type = "pci";
+>> +                     compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
+>> +                     #interrupt-cells = <1>;
+>> +                     #size-cells = <2>;
+>> +                     #address-cells = <3>;
+>> +                     reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
+>> +                             0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
+>> +                     reg-names = "csr", "cfg";
+>> +                     ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
+>> +                               0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
+>                                                                           ^^^
+>
+> I have a question about the fourth number '0xe0' of 'ranges' property.
+> Would you let me know what the '0xe0' means?
+>
 
-> arch/blackfin/include/asm/io.h:#include <asm-generic/io.h>
-> arch/metag/include/asm/io.h:#include <asm-generic/io.h>
+In X-Gene address map, the physical address range starting from
+0xe0_00000000 is reserved for PCIe Port 0 outbound memory mappings.
 
-No PCI support
-
-> arch/microblaze/include/asm/io.h:/* from asm-generic/io.h */
-
-PCI_IOBASE=0, IO_SPACE_LIMIT=0xffffffff, so no change.
-
-> arch/openrisc/include/asm/io.h:#include <asm-generic/io.h>
-
-No PCI support
-
-> arch/s390/include/asm/io.h:#include <asm-generic/io.h>
-
-s390 supports PCI but no I/O space
-
-> arch/score/include/asm/io.h:#include <asm-generic/io.h>
-
-No PCI support
-
-> arch/unicore32/include/asm/io.h:#include <asm-generic/io.h>
-
-unicore32 is broken currently, the patch fixes it.
-
-> arch/xtensa/include/asm/io.h:#include <asm-generic/io.h>
-
-PCI_IOBASE=0, IO_SPACE_LIMIT=0xffffffff, so no change.
-
-For most of these, I assume we actually want to remove support
-for inb/outb as they don't support I/O space accesses. The other
-ones look correct to me.
-
-	Arnd
+> Best regards,
+> Jingoo Han
+>
+>> +                     dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
+>> +                     interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+>> +                     interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
+>> +                                      0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
+>> +                                      0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
+>> +                                      0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
+>> +                     clocks = <&pcie0clk 0>;
+>> +             };
+>
