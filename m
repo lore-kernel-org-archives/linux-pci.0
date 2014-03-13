@@ -1,115 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:38654 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754500AbaCYVDW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 17:03:22 -0400
-Date: Tue, 25 Mar 2014 14:03:19 -0700
-From: Simon Horman <horms@verge.net.au>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>
-Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree nodes for
- R8A7790
-Message-ID: <20140325210319.GE27673@verge.net.au>
-References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
- <1395766604-30926-7-git-send-email-phil.edworthy@renesas.com>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:62942 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753787AbaCMRjj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 13:39:39 -0400
+Received: by mail-pa0-f54.google.com with SMTP id lf10so1442792pab.27
+        for <linux-pci@vger.kernel.org>; Thu, 13 Mar 2014 10:39:39 -0700 (PDT)
+Message-ID: <5321ED54.7060503@kernel.dk>
+Date: Thu, 13 Mar 2014 11:39:32 -0600
+From: Jens Axboe <axboe@kernel.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1395766604-30926-7-git-send-email-phil.edworthy@renesas.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
+	linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+	Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [PATCH v2 0/2] block: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+References: <cover.1393404496.git.agordeev@redhat.com> <20140313041231.GC26657@google.com> <5321CE94.5070506@kernel.dk> <20140313173656.GA4939@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20140313173656.GA4939@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 25, 2014 at 04:56:41PM +0000, Phil Edworthy wrote:
-> This patch adds the device tree nodes for R8A7790
-> 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+On 03/13/2014 11:36 AM, Alexander Gordeev wrote:
+> On Thu, Mar 13, 2014 at 09:28:20AM -0600, Jens Axboe wrote:
+>> On 03/12/2014 10:12 PM, Bjorn Helgaas wrote:
+>>> On Wed, Feb 26, 2014 at 10:02:40AM +0100, Alexander Gordeev wrote:
+>>>> Changes since v1:
+>>>>    - cciss: patch #1: a weird 'goto' removed;
+>>>>    - cciss: patch #2: pci_enable_msix_exact() used, not pci_enable_msix_range();
+>>>>    - rsxx: patch dropped - no need to change anything;
+>>>>
+>>>> As result of deprecation of MSI-X/MSI enablement functions
+>>>> pci_enable_msix() and pci_enable_msi_block() all drivers
+>>>> using these two interfaces need to be updated to use the
+>>>> new pci_enable_msi_range()  or pci_enable_msi_exact()
+>>>> and pci_enable_msix_range() or pci_enable_msix_exact()
+>>>> interfaces.
+>>>>
+>>>> This change updates 'cciss' only, but there is also 'nvme' update
+>>>> pending - I am waiting for Intel guys to clarify if they want to
+>>>> route it thru their tree. If not, I will post the 'nvme' patch as
+>>>> a follow-up to this series.
+>>>
+>>> Hi Jens,
+>>>
+>>> I'd like to get these merged during the v3.15 merge window.  I'd be glad to
+>>> review and apply them through my tree, unless you want to do it.  They do
+>>> depend on f7fc32c, which went in after the v3.14 merge window, which makes
+>>> it a bit of a hassle.
+>>
+>> My 3.15/drivers (and core) branch are based off 3.14-rc3, so it
+>> should be OK. I've queued them up, as it's mostly a followup to the
+>> previous ones from Alexander.
+>
+> Oh-oh, cciss patch #2 requires commit 3ce4e86 ("PCI/MSI: Add
+> pci_enable_msi_exact() and pci_enable_msix_exact()") which was
+> pulled to 3.14-rc4 only. Sorry for failing to clarify that :(
+>
+> And I also notice 3111cc3 ("skd: Use pci_enable_msix_exact() instead
+> of pci_enable_msix_range()") in your tree also should not compile :(
 
-Please split this patch into two patches.
+Gah, please be a bit more diligent in the future, that's a lot of 
+breakage for a small series. If it's this broken, I'll have to rebase 
+the branch, which I attempt to never do for the "official" branches.
 
-1. A patch that updates arch/arm/boot/dts/r8a7790.dtsi
+-- 
+Jens Axboe
 
-   I suggest calling that patch
-   "ARM: shmobile: r8a7791: Add PCI device nodes"
-
-2. A patch that updates arch/arm/boot/dts/r8a7790-lager.dts
-
-   I suggest calling that patch
-   "ARM: shmobile: lager: Add PCI device nodes"
-
-> ---
-> v5:
->  - Renesas SoCs compatible string has peripheral before device name
->  - Add PCIe bus clock reference
->  - Add additional interrupt bindings
->  - Use dma-ranges property to specify inbound memory regions
-> ---
->  arch/arm/boot/dts/r8a7790-lager.dts | 10 ++++++++++
->  arch/arm/boot/dts/r8a7790.dtsi      | 24 ++++++++++++++++++++++++
->  2 files changed, 34 insertions(+)
-> 
-> diff --git a/arch/arm/boot/dts/r8a7790-lager.dts b/arch/arm/boot/dts/r8a7790-lager.dts
-> index a55c5f8..bbbcb63 100644
-> --- a/arch/arm/boot/dts/r8a7790-lager.dts
-> +++ b/arch/arm/boot/dts/r8a7790-lager.dts
-> @@ -139,6 +139,16 @@
->  		states = <3300000 1
->  			  1800000 0>;
->  	};
-> +
-> +	clocks {
-> +		/* External PCIe bus clock - not used */
-> +		pcie_bus_clk: pcie_bus_clk {
-> +			compatible = "fixed-clock";
-> +			#clock-cells = <0>;
-> +			clock-frequency = <0>;
-> +			clock-output-names = "pcie_bus";
-> +		};
-> +	};
->  };
->  
->  &extal_clk {
-> diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
-> index df9ec61..dbcea57 100644
-> --- a/arch/arm/boot/dts/r8a7790.dtsi
-> +++ b/arch/arm/boot/dts/r8a7790.dtsi
-> @@ -821,4 +821,28 @@
->  		#size-cells = <0>;
->  		status = "disabled";
->  	};
-> +
-> +	pcie: pcie@fe000000 {
-> +		compatible = "renesas,pcie-r8a7790";
-> +		reg = <0 0xfe000000 0 0x80000>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
-> +			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
-> +			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
-> +			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-> +		/* Map all possible DDR as inbound ranges */
-> +		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000
-> +			      0x43000000 1 0x80000000 1 0x80000000 0 0x80000000>;
-> +		interrupts = <0 116 IRQ_TYPE_LEVEL_HIGH
-> +			      0 117 IRQ_TYPE_LEVEL_HIGH
-> +			      0 118 IRQ_TYPE_LEVEL_HIGH>;
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 0>;
-> +		interrupt-map = <0 0 0 0 &gic 0 116 IRQ_TYPE_LEVEL_HIGH>;
-> +		clocks = <&mstp3_clks R8A7790_CLK_PCIE>, <&pcie_bus_clk>;
-> +		clock-names = "pcie", "pcie_bus";
-> +		status = "disabled";
-> +	};
->  };
-> -- 
-> 1.9.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
