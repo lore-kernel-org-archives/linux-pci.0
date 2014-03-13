@@ -1,71 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:6099 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1760234AbaCUKc7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 06:32:59 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1395397968-6242-4-git-send-email-phil.edworthy@renesas.com>
-Date: Fri, 21 Mar 2014 10:32:42 +0000
-Subject: [PATCH v4 3/9] ARM: shmobile: r8a7790: Add PCIe clock device tree nodes
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 13 Mar 2014 18:36:57 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
+	linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+	Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [PATCH v2 0/2] block: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140313173656.GA4939@dhcp-26-207.brq.redhat.com>
+References: <cover.1393404496.git.agordeev@redhat.com>
+ <20140313041231.GC26657@google.com>
+ <5321CE94.5070506@kernel.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5321CE94.5070506@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the device tree clock nodes for PCIe
+On Thu, Mar 13, 2014 at 09:28:20AM -0600, Jens Axboe wrote:
+> On 03/12/2014 10:12 PM, Bjorn Helgaas wrote:
+> >On Wed, Feb 26, 2014 at 10:02:40AM +0100, Alexander Gordeev wrote:
+> >>Changes since v1:
+> >>   - cciss: patch #1: a weird 'goto' removed;
+> >>   - cciss: patch #2: pci_enable_msix_exact() used, not pci_enable_msix_range();
+> >>   - rsxx: patch dropped - no need to change anything;
+> >>
+> >>As result of deprecation of MSI-X/MSI enablement functions
+> >>pci_enable_msix() and pci_enable_msi_block() all drivers
+> >>using these two interfaces need to be updated to use the
+> >>new pci_enable_msi_range()  or pci_enable_msi_exact()
+> >>and pci_enable_msix_range() or pci_enable_msix_exact()
+> >>interfaces.
+> >>
+> >>This change updates 'cciss' only, but there is also 'nvme' update
+> >>pending - I am waiting for Intel guys to clarify if they want to
+> >>route it thru their tree. If not, I will post the 'nvme' patch as
+> >>a follow-up to this series.
+> >
+> >Hi Jens,
+> >
+> >I'd like to get these merged during the v3.15 merge window.  I'd be glad to
+> >review and apply them through my tree, unless you want to do it.  They do
+> >depend on f7fc32c, which went in after the v3.14 merge window, which makes
+> >it a bit of a hassle.
+> 
+> My 3.15/drivers (and core) branch are based off 3.14-rc3, so it
+> should be OK. I've queued them up, as it's mostly a followup to the
+> previous ones from Alexander.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/boot/dts/r8a7790.dtsi            | 7 ++++---
- include/dt-bindings/clock/r8a7790-clock.h | 1 +
- 2 files changed, 5 insertions(+), 3 deletions(-)
+Oh-oh, cciss patch #2 requires commit 3ce4e86 ("PCI/MSI: Add
+pci_enable_msi_exact() and pci_enable_msix_exact()") which was
+pulled to 3.14-rc4 only. Sorry for failing to clarify that :(
 
-diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
-index da69afc..df9ec61 100644
---- a/arch/arm/boot/dts/r8a7790.dtsi
-+++ b/arch/arm/boot/dts/r8a7790.dtsi
-@@ -704,16 +704,17 @@
- 			reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
- 			clocks = <&cp_clk>, <&mmc1_clk>, <&sd3_clk>, <&sd2_clk>,
- 				 <&cpg_clocks R8A7790_CLK_SD1>, <&cpg_clocks R8A7790_CLK_SD0>,
--				 <&mmc0_clk>, <&rclk_clk>;
-+				 <&mmc0_clk>, <&rclk_clk>, <&mp_clk>;
- 			#clock-cells = <1>;
- 			renesas,clock-indices = <
- 				R8A7790_CLK_TPU0 R8A7790_CLK_MMCIF1 R8A7790_CLK_SDHI3
- 				R8A7790_CLK_SDHI2 R8A7790_CLK_SDHI1 R8A7790_CLK_SDHI0
--				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1
-+				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1 R8A7790_CLK_PCIE
- 			>;
- 			clock-output-names =
- 				"tpu0", "mmcif1", "sdhi3", "sdhi2",
--				"sdhi1", "sdhi0", "mmcif0", "cmt1";
-+				"sdhi1", "sdhi0", "mmcif0", "cmt1",
-+				"pcie";
- 		};
- 		mstp5_clks: mstp5_clks@e6150144 {
- 			compatible = "renesas,r8a7790-mstp-clocks", "renesas,cpg-mstp-clocks";
-diff --git a/include/dt-bindings/clock/r8a7790-clock.h b/include/dt-bindings/clock/r8a7790-clock.h
-index 6548a5f..840dbc8 100644
---- a/include/dt-bindings/clock/r8a7790-clock.h
-+++ b/include/dt-bindings/clock/r8a7790-clock.h
-@@ -57,6 +57,7 @@
- #define R8A7790_CLK_SDHI1		13
- #define R8A7790_CLK_SDHI0		14
- #define R8A7790_CLK_MMCIF0		15
-+#define R8A7790_CLK_PCIE		19
- #define R8A7790_CLK_SSUSB		28
- #define R8A7790_CLK_CMT1		29
- #define R8A7790_CLK_USBDMAC0		30
+And I also notice 3111cc3 ("skd: Use pci_enable_msix_exact() instead
+of pci_enable_msix_range()") in your tree also should not compile :(
+
+> -- 
+> Jens Axboe
+> 
+
 -- 
-1.9.0
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
