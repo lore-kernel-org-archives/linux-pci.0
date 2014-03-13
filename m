@@ -1,73 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.131]:51742 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752368AbaCFPnk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 10:43:40 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v5 3/3] arm64: Add architecture support for PCI
-Date: Tue, 4 Mar 2014 23:28:51 +0100
-Cc: "linux-pci" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-References: <1393948216-11599-1-git-send-email-Liviu.Dudau@arm.com> <1393948216-11599-4-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1393948216-11599-4-git-send-email-Liviu.Dudau@arm.com>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:47604 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754325AbaCMRlq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 13:41:46 -0400
+Received: by mail-wi0-f169.google.com with SMTP id hm4so3890628wib.4
+        for <linux-pci@vger.kernel.org>; Thu, 13 Mar 2014 10:41:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201403042328.51361.arnd@arndb.de>
+In-Reply-To: <201403061633.31260.marex@denx.de>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+	<1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
+	<000201cf38e6$5b02d6e0$110884a0$%han@samsung.com>
+	<201403061633.31260.marex@denx.de>
+Date: Thu, 13 Mar 2014 10:41:45 -0700
+Message-ID: <CAJ+vNU2XrAL+BTTB8i4hQhkZ_NfcS0VrWuHUjeFfU9hhGjNXbg@mail.gmail.com>
+Subject: Re: [PATCH v2 6/6] PCI: designware: use new OF interrupt mapping when possible
+From: Tim Harvey <tharvey@gateworks.com>
+To: Marek Vasut <marex@denx.de>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linux-sh <linux-sh@vger.kernel.org>,
+	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+	linux-tegra <linux-tegra@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 04 March 2014, Liviu Dudau wrote:
+On Thu, Mar 6, 2014 at 7:33 AM, Marek Vasut <marex@denx.de> wrote:
+> On Thursday, March 06, 2014 at 03:47:03 AM, Jingoo Han wrote:
+>> On Wednesday, March 05, 2014 10:26 PM, Lucas Stach wrote:
+>> > This is the recommended method of doing the IRQ
+>> > mapping. For old devicetrees we fall back to the
+>> > previous practice.
+>> >
+>> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+>> > Acked-by: Arnd Bergmann <arnd@arndb.de>
+>>
+>> (+cc Mohit KUMAR, Richard Zhu, Pratyush Anand, Marek Vasut,
+>>        Kishon Vijay Abraham I)
+>>
+>> Acked-by: Jingoo Han <jg1.han@samsung.com>
+>>
+>> It works properly on Exynos platform.
+>> Thank you.
+>
+> Looks reasonable,
+>
+> Reviewed-by: Marek Vasut <marex@denx.de>
+>
 
-> +extern int isa_dma_bridge_buggy;
+I've tested this on the Gateworks Ventana products with P2P bridges
+and with the patch I just submitted here:
+http://thread.gmane.org/gmane.linux.kernel.pci/30017
 
-As commented before, I still think we can hardcode this to off
+Tested-by: Tim Harvey <tharvey@gateworks.com>
 
-> +unsigned long pci_address_to_pio(phys_addr_t address)
-> +{
-> +	struct ioresource *res;
-> +
-> +	list_for_each_entry(res, &io_list, list) {
-> +		if (address >= res->start &&
-> +			address < res->start + res->size) {
-> +			return res->start - address;
-> +		}
-> +	}
-> +
-> +	return (unsigned long)-1;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_address_to_pio);
-
-This has two problems:
-
-- You return the address in bus space not the logical Linux
-  port number as powerpc and microblaze do.
-- You imply that the window starts at bus address zero, which
-  might not be the case.
-
-> +EXPORT_SYMBOL(pcibios_fixup_bus);
-
-no need for this export.
-
-> +/*
-> + * We don't have to worry about legacy ISA devices, so nothing to do here
-> + */
-> +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> +				resource_size_t size, resource_size_t align)
-> +{
-> +	return ALIGN(res->start, align);
-> +}
-> +EXPORT_SYMBOL(pcibios_align_resource);
-
-or this one. Also, the ALIGN() is already done by the PCI core.
-
-	Arnd
+Tim
