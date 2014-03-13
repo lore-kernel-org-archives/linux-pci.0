@@ -1,56 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:51529 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755115AbaCYU5f (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 16:57:35 -0400
-Date: Tue, 25 Mar 2014 13:57:31 -0700
-From: Simon Horman <horms@verge.net.au>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from relmlor4.renesas.com ([210.160.252.174]:30712 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753574AbaCMJu3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 05:50:29 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
 	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
 	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>
-Subject: Re: [PATCH v5 8/9] ARM: koelsch: Add PCIe to defconfig
-Message-ID: <20140325205731.GB27673@verge.net.au>
-References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
- <1395766604-30926-9-git-send-email-phil.edworthy@renesas.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1395766604-30926-9-git-send-email-phil.edworthy@renesas.com>
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	devicetree@vger.kernel.org
+In-Reply-To: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
+References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1394704208-7490-6-git-send-email-phil.edworthy@renesas.com>
+Date: Thu, 13 Mar 2014 09:50:04 +0000
+Subject: [PATCH 5/9] dt-bindings: pci: rcar pcie device tree bindings
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Please update the subject of this patch to:
+This patch adds the bindings for the rcar PCIE driver. The driver
+resides under drivers/pci/host/pcie-rcar.c
 
-ARM: shmobile: koelsch: Add PCIe to defconfig
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 40 ++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
 
-On Tue, Mar 25, 2014 at 04:56:43PM +0000, Phil Edworthy wrote:
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> ---
->  arch/arm/configs/koelsch_defconfig | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/arch/arm/configs/koelsch_defconfig b/arch/arm/configs/koelsch_defconfig
-> index 86faab5..ec14547 100644
-> --- a/arch/arm/configs/koelsch_defconfig
-> +++ b/arch/arm/configs/koelsch_defconfig
-> @@ -15,6 +15,9 @@ CONFIG_MACH_KOELSCH=y
->  CONFIG_CPU_BPREDICT_DISABLE=y
->  CONFIG_PL310_ERRATA_588369=y
->  CONFIG_ARM_ERRATA_754322=y
-> +CONFIG_PCI=y
-> +CONFIG_PCI_MSI=y
-> +CONFIG_PCI_RCAR_GEN2_PCIE=y
->  CONFIG_SMP=y
->  CONFIG_SCHED_MC=y
->  CONFIG_NR_CPUS=8
-> -- 
-> 1.9.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+new file mode 100644
+index 0000000..0e219b0
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -0,0 +1,40 @@
++* Renesas RCar PCIe interface
++
++Required properties:
++- compatible: should contain one of the following
++	"renesas,r8a7779-pcie", "renesas,r8a7790-pcie", "renesas,r8a7791-pcie"
++- reg: base addresses and lengths of the pcie controller.
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- device_type: set to "pci"
++- ranges: ranges for the PCI memory and I/O regions
++- interrupts: interrupt values for MSI interrupt
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map: standard PCI properties
++	to define the mapping of the PCIe interface to interrupt
++	numbers.
++- clocks: from common clock binding: handle to pci clock.
++- clock-names: from common clock binding: should be "pcie"
++
++Example:
++
++SoC specific DT Entry:
++
++	pcie: pcie@0x01000000 {
++		compatible = "renesas,r8a7790-pcie";
++		reg = <0 0xfe000000 0 0x80000>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
++			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
++			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
++			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
++		interrupts = <0 116 4>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic 0 116 4>;
++		clocks = <&mstp3_clks R8A7790_CLK_PCIE>;
++		clock-names = "pcie";
++		status = "disabled";
++	};
+-- 
+1.9.0
+
