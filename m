@@ -1,91 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:54940 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754037AbaCYQ45 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 12:56:57 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	devicetree@vger.kernel.org
-In-Reply-To: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
-References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1395766604-30926-6-git-send-email-phil.edworthy@renesas.com>
-Date: Tue, 25 Mar 2014 16:56:40 +0000
-Subject: [PATCH v5 5/9] dt-bindings: pci: rcar pcie device tree bindings
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 13 Mar 2014 00:11:09 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Liviu Dudau' <Liviu.Dudau@arm.com>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Catalin Marinas' <Catalin.Marinas@arm.com>,
+	'Will Deacon' <Will.Deacon@arm.com>,
+	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
+	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
+	'LKML' <linux-kernel@vger.kernel.org>,
+	devicetree@vger.kernel.org,
+	'LAKML' <linux-arm-kernel@lists.infradead.org>,
+	'Tanmay Inamdar' <tinamdar@apm.com>,
+	'Arnd Bergmann' <arnd@arndb.de>
+Subject: Re: [PATCH v6 3/3] arm64: Add architecture support for PCI
+Message-ID: <20140313001109.GA6915@bart.dudau.co.uk>
+References: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394020150-1875-4-git-send-email-Liviu.Dudau@arm.com>
+ <000101cf3dce$df2c1840$9d8448c0$%han@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <000101cf3dce$df2c1840$9d8448c0$%han@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for the R-Car PCIe driver. The driver
-resides under drivers/pci/host/pcie-rcar.c
+On Wed, Mar 12, 2014 at 05:41:33PM +0900, Jingoo Han wrote:
+> On Wednesday, March 05, 2014 8:49 PM, Liviu Dudau wrote:
+> > 
+> > Use the generic host bridge functions to provide support for
+> > PCI Express on arm64. There is no support for ISA memory.
+> > 
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> > ---
+> >  arch/arm64/Kconfig            |  19 +++-
+> >  arch/arm64/include/asm/Kbuild |   1 +
+> >  arch/arm64/include/asm/io.h   |   3 +-
+> >  arch/arm64/include/asm/pci.h  |  49 +++++++++
+> >  arch/arm64/kernel/Makefile    |   1 +
+> >  arch/arm64/kernel/pci.c       | 173 ++++++++++++++++++++++++++++++++
+> >  6 files changed, 244 insertions(+), 2 deletions(-)
+> >  create mode 100644 arch/arm64/include/asm/pci.h
+> >  create mode 100644 arch/arm64/kernel/pci.c
+> 
+> [.....]
+> 
+> > --- /dev/null
+> > +++ b/arch/arm64/include/asm/pci.h
+> 
+> [.....]
+> 
+> > +
+> > +static inline int pci_domain_nr(struct pci_bus *bus)
+> > +{
+> > +	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+> > +
+> > +	if (bridge)
+> > +		return bridge->domain_nr;
+> > +
+> > +	return 0;
+> > +}
+> 
+> Hi Liviu Dudau,
+> 
+> When CONFIG_PCI=n, the following build errors happen. :-(
+> Would you confirm this?
+> 
+> In file included from include/linux/pci.h:1393:0,
+>                  from drivers/scsi/scsi_lib.c:19:
+> arch/arm64/include/asm/pci.h:31:19: error: redefinition of 'pci_domain_nr'
+>  static inline int pci_domain_nr(struct pci_bus *bus)
+>                    ^
+> In file included from drivers/scsi/scsi_lib.c:19:0:
+> include/linux/pci.h:1383:19: note: previous definition of 'pci_domain_nr' was here
+>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>                    ^
+>              .....
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
-v5:
- - Add PCIe bus clock reference
- - Add additional interrupt bindings
- - Use dma-ranges property to specify inbound memory regions
----
- Documentation/devicetree/bindings/pci/rcar-pci.txt | 44 ++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
+Hi Jingoo,
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-new file mode 100644
-index 0000000..61bf5ef
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-@@ -0,0 +1,44 @@
-+* Renesas RCar PCIe interface
-+
-+Required properties:
-+- compatible: should contain one of the following
-+	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
-+- reg: base addresses and lengths of the pcie controller.
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- device_type: set to "pci"
-+- ranges: ranges for the PCI memory and I/O regions.
-+- dma-ranges: ranges for the inbound memory regions.
-+- interrupts: two interrupt sources for MSI interrupts, followed by interrupt
-+	source for hardware related interrupts (e.g. link speed change).
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+	to define the mapping of the PCIe interface to interrupt
-+	numbers.
-+- clocks: from common clock binding: handle to pci clock.
-+- clock-names: from common clock binding: should be "pcie" and "pcie_bus".
-+
-+Example:
-+
-+SoC specific DT Entry:
-+
-+	pcie: pcie@fe000000 {
-+		compatible = "renesas,pcie-r8a7791";
-+		reg = <0 0xfe000000 0 0x80000>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
-+			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
-+			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
-+			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-+		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000
-+			      0x42000000 2 0x00000000 2 0x00000000 0 0x40000000>;
-+		interrupts = <0 116 4 0 117 4 0 118 4>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 116 4>;
-+		clocks = <&mstp3_clks R8A7791_CLK_PCIE>, <&pcie_bus_clk>;
-+		clock-names = "pcie", "pcie_bus";
-+		status = "disabled";
-+	};
+I confirm the build error. Sorry for missing out on this test. I've now got out
+of some more pressing tasks and I will post v7 tomorrow.
+
+Best regards,
+Liviu
+
+> 
+> Best regards,
+> Jingoo Han
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.9.0
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
