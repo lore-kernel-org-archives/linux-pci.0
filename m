@@ -1,396 +1,366 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hygieia.santi-shop.eu ([78.46.175.2]:34837 "EHLO
-	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753728AbaCRRLu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Mar 2014 13:11:50 -0400
-Date: Tue, 18 Mar 2014 18:05:19 +0100
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: <dri-devel@lists.freedesktop.org>
-Cc: David Herrmann <dh.herrmann@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Peter Jones <pjones@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
-	"H. Peter Anvin" <hpa@zytor.com>
-Subject: [RFC patch v3] x86: Improve boot_vga/vga_default_device() for EFI
-Message-ID: <20140318180519.102f7988@neptune.home>
-In-Reply-To: <20131218194655.044563d2@neptune.home>
-References: <20131125205441.5046e0cb@neptune.home>
-	<20131130145222.292c3f9f@neptune.home>
-	<CANq1E4SqmFiOJx7o9fNq=s-RGqv-Gz8fb3mUMs1s-mD3JkdSGA@mail.gmail.com>
-	<CANq1E4TZOu9D_uZQATK3LsyGjV8jBW17j4_jJ9QvP1T_R7mBkQ@mail.gmail.com>
-	<20131218194655.044563d2@neptune.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from relmlor2.renesas.com ([210.160.252.172]:23609 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753592AbaCMJua (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 05:50:30 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
+References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1394704208-7490-3-git-send-email-phil.edworthy@renesas.com>
+Date: Thu, 13 Mar 2014 09:50:01 +0000
+Subject: [PATCH 2/9] PCI: host: rcar: Add MSI support
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With commit b4aa0163056b6c70029b6e8619ce07c274351f42 Matthew Garret
-introduced a efifb vga_default_device() so that EFI systems that do not
-load shadow VBIOS or setup VGA get proper value for boot_vga PCI sysfs
-attribute on the corresponding PCI device.
-
-Xorg is refusing to detect devices when boot_vga=0 which is the case on
-some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
-the dri device but then bails out with "no devices detected".
-
-With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
-while having native drivers for the GPU also makes selecting
-sysfb/efifb optional.
-
-Remove the efifb implementation of vga_default_device() and initialize
-vgaarb's vga_default_device() with the PCI GPU that matches boot
-screen_info in pci_fixup_video() [x86 and ia64 pci_fixup_video merged
-into common function in vgaarb.c].
-
-Other architectures with PCI GPU might need a similar fixup.
-
-Note: If CONFIG_VGA_ARB is unset vga_default_device() is only available
-      as a stub that returns NULL, making this adjustment insufficient.
-      In addition, with the merge of x86/ia64 fixup code, this would
-      also result in disabled fixup.
-      Unsetting CONFIG_VGA_ARB requires CONFIG_EXPERT=y though.
-
-Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 ---
- arch/ia64/pci/fixup.c      | 56 ++++-----------------------------------------
- arch/x86/include/asm/vga.h |  6 -----
- arch/x86/pci/fixup.c       | 53 +-----------------------------------------
- drivers/gpu/vga/vgaarb.c   | 57 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/video/efifb.c      | 38 -------------------------------
- include/linux/vgaarb.h     | 37 ++++++++++++++++++++++++++++++
- 6 files changed, 99 insertions(+), 148 deletions(-)
+ drivers/pci/host/pcie-rcar.c |  232 +++++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/host/pcie-rcar.h |    5 +
+ 2 files changed, 236 insertions(+), 1 deletion(-)
 
-diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
-index 5dc969d..b036423 100644
---- a/arch/ia64/pci/fixup.c
-+++ b/arch/ia64/pci/fixup.c
-@@ -5,65 +5,17 @@
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 7f094fa..a6f4049 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -14,8 +14,11 @@
  
- #include <linux/pci.h>
- #include <linux/init.h>
-+#include <linux/vgaarb.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/irq.h>
++#include <linux/irqdomain.h>
+ #include <linux/module.h>
+ #include <linux/kernel.h>
++#include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_pci.h>
+@@ -34,6 +37,8 @@ enum chip_id {
+ 	RCAR_H1,
+ };
  
- #include <asm/machvec.h>
++#define INT_PCI_MSI_NR	32
++
+ #define RCONF(x)	(PCICONF(0)+(x))
+ #define RPMCAP(x)	(PMCAP(0)+(x))
+ #define REXPCAP(x)	(EXPCAP(0)+(x))
+@@ -53,6 +58,20 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
  
--/*
-- * Fixup to mark boot BIOS video selected by BIOS before it changes
-- *
-- * From information provided by "Jon Smirl" <jonsmirl@gmail.com>
-- *
-- * The standard boot ROM sequence for an x86 machine uses the BIOS
-- * to select an initial video card for boot display. This boot video
-- * card will have it's BIOS copied to C0000 in system RAM.
-- * IORESOURCE_ROM_SHADOW is used to associate the boot video
-- * card with this copy. On laptops this copy has to be used since
-- * the main ROM may be compressed or combined with another image.
-- * See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
-- * is marked here since the boot video device will be the only enabled
-- * video device at this point.
-- */
--
--static void pci_fixup_video(struct pci_dev *pdev)
-+static void pci_ia64_fixup_video(struct pci_dev *pdev)
- {
--	struct pci_dev *bridge;
--	struct pci_bus *bus;
--	u16 config;
--
- 	if ((strcmp(ia64_platform_name, "dig") != 0)
- 	    && (strcmp(ia64_platform_name, "hpzx1")  != 0))
- 		return;
- 	/* Maybe, this machine supports legacy memory map. */
- 
--	if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
--		return;
--
--	/* Is VGA routed to us? */
--	bus = pdev->bus;
--	while (bus) {
--		bridge = bus->self;
--
--		/*
--		 * From information provided by
--		 * "David Miller" <davem@davemloft.net>
--		 * The bridge control register is valid for PCI header
--		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
--		 * PCI header type NORMAL.
--		 */
--		if (bridge
--		    &&((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
--		       ||(bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
--			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
--						&config);
--			if (!(config & PCI_BRIDGE_CTL_VGA))
--				return;
--		}
--		bus = bus->parent;
--	}
--	pci_read_config_word(pdev, PCI_COMMAND, &config);
--	if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
--		pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
--		dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
--	}
-+	pci_fixup_video(pdev);
- }
--DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pci_fixup_video);
-+DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_DISPLAY_VGA, 8, pci_ia64_fixup_video);
-diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
-index 44282fb..c4b9dc2 100644
---- a/arch/x86/include/asm/vga.h
-+++ b/arch/x86/include/asm/vga.h
-@@ -17,10 +17,4 @@
- #define vga_readb(x) (*(x))
- #define vga_writeb(x, y) (*(y) = (x))
- 
--#ifdef CONFIG_FB_EFI
--#define __ARCH_HAS_VGA_DEFAULT_DEVICE
--extern struct pci_dev *vga_default_device(void);
--extern void vga_set_default_device(struct pci_dev *pdev);
--#endif
--
- #endif /* _ASM_X86_VGA_H */
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index bca9e85..22a4fbe 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -302,58 +302,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PB1,	pcie_r
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC,	pcie_rootport_aspm_quirk);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC1,	pcie_rootport_aspm_quirk);
- 
--/*
-- * Fixup to mark boot BIOS video selected by BIOS before it changes
-- *
-- * From information provided by "Jon Smirl" <jonsmirl@gmail.com>
-- *
-- * The standard boot ROM sequence for an x86 machine uses the BIOS
-- * to select an initial video card for boot display. This boot video
-- * card will have it's BIOS copied to C0000 in system RAM.
-- * IORESOURCE_ROM_SHADOW is used to associate the boot video
-- * card with this copy. On laptops this copy has to be used since
-- * the main ROM may be compressed or combined with another image.
-- * See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
-- * is marked here since the boot video device will be the only enabled
-- * video device at this point.
-- */
--
--static void pci_fixup_video(struct pci_dev *pdev)
--{
--	struct pci_dev *bridge;
--	struct pci_bus *bus;
--	u16 config;
--
--	/* Is VGA routed to us? */
--	bus = pdev->bus;
--	while (bus) {
--		bridge = bus->self;
--
--		/*
--		 * From information provided by
--		 * "David Miller" <davem@davemloft.net>
--		 * The bridge control register is valid for PCI header
--		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
--		 * PCI header type NORMAL.
--		 */
--		if (bridge
--		    && ((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
--		       || (bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
--			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
--						&config);
--			if (!(config & PCI_BRIDGE_CTL_VGA))
--				return;
--		}
--		bus = bus->parent;
--	}
--	pci_read_config_word(pdev, PCI_COMMAND, &config);
--	if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
--		pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
--		dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
--		if (!vga_default_device())
--			vga_set_default_device(pdev);
--	}
--}
-+/* pci_fixup_video shared in vgaarb.c */
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
- 				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_video);
- 
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index af02597..3ab9e35 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -149,6 +149,63 @@ void vga_set_default_device(struct pci_dev *pdev)
- }
- #endif
- 
-+void pci_fixup_video(struct pci_dev *pdev)
++struct rcar_msi {
++	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
++	struct irq_domain *domain;
++	struct msi_chip chip;
++	unsigned long pages;
++	struct mutex lock;
++	int irq;
++};
++
++static inline struct rcar_msi *to_rcar_msi(struct msi_chip *chip)
 +{
-+	struct pci_dev *bridge;
-+	struct pci_bus *bus;
-+	u16 config;
++	return container_of(chip, struct rcar_msi, chip);
++}
 +
-+	if (!vga_default_device()) {
-+		resource_size_t start, end;
-+		int i;
+ /* Structure representing the PCIe interface */
+ struct rcar_pcie {
+ 	struct device		*dev;
+@@ -62,6 +81,7 @@ struct rcar_pcie {
+ 	enum chip_id		chip;
+ 	u8			root_bus_nr;
+ 	struct clk		*clk;
++	struct			rcar_msi msi;
+ };
+ 
+ static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
+@@ -313,6 +333,15 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	return 1;
+ }
+ 
++static void rcar_pcie_add_bus(struct pci_bus *bus)
++{
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
 +
-+		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-+			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-+				continue;
-+
-+			start = pci_resource_start(pdev, i);
-+			end  = pci_resource_end(pdev, i);
-+
-+			if (!start || !end)
-+				continue;
-+
-+			if (screen_info.lfb_base >= start &&
-+				(screen_info.lfb_base + screen_info.lfb_size) < end)
-+				vga_set_default_device(pdev);
-+		}
-+	}
-+
-+	/* Is VGA routed to us? */
-+	bus = pdev->bus;
-+	while (bus) {
-+		bridge = bus->self;
-+
-+		/*
-+		 * From information provided by
-+		 * "David Miller" <davem@davemloft.net>
-+		 * The bridge control register is valid for PCI header
-+		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
-+		 * PCI header type NORMAL.
-+		 */
-+		if (bridge
-+		    && ((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-+		       || (bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
-+			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
-+						&config);
-+			if (!(config & PCI_BRIDGE_CTL_VGA))
-+				return;
-+		}
-+		bus = bus->parent;
-+	}
-+	pci_read_config_word(pdev, PCI_COMMAND, &config);
-+	if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-+		pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
-+		dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
-+		if (!vga_default_device())
-+			vga_set_default_device(pdev);
++		bus->msi = &pcie->msi.chip;
 +	}
 +}
 +
- static inline void vga_irq_set_state(struct vga_device *vgadev, bool state)
+ static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
  {
- 	if (vgadev->irq_set_state)
-diff --git a/drivers/video/efifb.c b/drivers/video/efifb.c
-index cd7c0df..954465e 100644
---- a/drivers/video/efifb.c
-+++ b/drivers/video/efifb.c
-@@ -19,8 +19,6 @@
+ 	struct platform_device *pdev = to_platform_device(pcie->dev);
+@@ -325,6 +354,7 @@ static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
+ 	hw.setup          = rcar_pcie_setup,
+ 	hw.map_irq        = of_irq_parse_and_map_pci,
+ 	hw.ops		  = &rcar_pcie_ops,
++	hw.add_bus	  = rcar_pcie_add_bus;
  
- static bool request_mem_succeeded = false;
- 
--static struct pci_dev *default_vga;
--
- static struct fb_var_screeninfo efifb_defined = {
- 	.activate		= FB_ACTIVATE_NOW,
- 	.height			= -1,
-@@ -85,18 +83,6 @@ static struct fb_ops efifb_ops = {
- 	.fb_imageblit	= cfb_imageblit,
- };
- 
--struct pci_dev *vga_default_device(void)
--{
--	return default_vga;
--}
--
--EXPORT_SYMBOL_GPL(vga_default_device);
--
--void vga_set_default_device(struct pci_dev *pdev)
--{
--	default_vga = pdev;
--}
--
- static int efifb_setup(char *options)
- {
- 	char *this_opt;
-@@ -127,30 +113,6 @@ static int efifb_setup(char *options)
- 		}
- 	}
- 
--	for_each_pci_dev(dev) {
--		int i;
--
--		if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
--			continue;
--
--		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
--			resource_size_t start, end;
--
--			if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
--				continue;
--
--			start = pci_resource_start(dev, i);
--			end  = pci_resource_end(dev, i);
--
--			if (!start || !end)
--				continue;
--
--			if (screen_info.lfb_base >= start &&
--			    (screen_info.lfb_base + screen_info.lfb_size) < end)
--				default_vga = dev;
--		}
--	}
--
- 	return 0;
+ 	pci_common_init_dev(&pdev->dev, &hw);
  }
+@@ -479,6 +509,10 @@ static void __init rcar_pcie_hw_init(struct rcar_pcie *pcie)
+ 	/* Enable MAC data scrambling. */
+ 	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
  
-diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
-index 2c02f3a..6518460 100644
---- a/include/linux/vgaarb.h
-+++ b/include/linux/vgaarb.h
-@@ -162,6 +162,43 @@ extern void vga_put(struct pci_dev *pdev, unsigned int rsrc);
- #define vga_put(pdev, rsrc)
++	/* Enable MSI */
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
++
+ 	/* Finish initialization - establish a PCI Express link */
+ 	pci_write_reg(pcie, CFINIT, PCIETCTLR);
+ 
+@@ -514,12 +548,191 @@ static int rcar_pcie_runtime_resume(struct device *dev)
+ }
  #endif
  
-+/**
-+ *     pci_fixup_video
-+ *
-+ *     This can be called by arch PCI to fixup boot VGA tagging
-+ *     of VGA PCI devices (e.g. for X86, IA64)
-+ *
-+ *     This code was initially spread/duplicated across:
-+ *     - X86 PCI-fixup
-+ *     - IA64 PCI-fixup
-+ *     - EFI_FB
-+ *
-+ *     * PCI-fixup part:
-+ *     Fixup to mark boot BIOS video selected by BIOS before it changes
-+ *
-+ *     From information provided by "Jon Smirl" <jonsmirl@gmail.com>
-+ *
-+ *     The standard boot ROM sequence for an x86 machine uses the BIOS
-+ *     to select an initial video card for boot display. This boot video
-+ *     card will have it's BIOS copied to C0000 in system RAM.
-+ *     IORESOURCE_ROM_SHADOW is used to associate the boot video
-+ *     card with this copy. On laptops this copy has to be used since
-+ *     the main ROM may be compressed or combined with another image.
-+ *     See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
-+ *     is marked here since the boot video device will be the only enabled
-+ *     video device at this point.
-+ *
-+ *     * EFI_FB part:
-+ *     Some EFI-based system (e.g. Intel-Macs from Apple) do not setup
-+ *     shadow Video-BIOS and thus can only be detected by framebuffer
-+ *     IO memory range. Flag the corresponding GPU as boot_vga.
-+ */
++static int rcar_msi_alloc(struct rcar_msi *chip)
++{
++	int msi;
 +
-+#if defined(CONFIG_VGA_ARB)
-+void pci_fixup_video(struct pci_dev *pdev);
-+#else
-+static inline void pci_fixup_video(struct pci_dev *pdev) { }
-+#endif
++	mutex_lock(&chip->lock);
++
++	msi = find_first_zero_bit(chip->used, INT_PCI_MSI_NR);
++	if (msi < INT_PCI_MSI_NR)
++		set_bit(msi, chip->used);
++	else
++		msi = -ENOSPC;
++
++	mutex_unlock(&chip->lock);
++
++	return msi;
++}
++
++static void rcar_msi_free(struct rcar_msi *chip, unsigned long irq)
++{
++	struct device *dev = chip->chip.dev;
++
++	mutex_lock(&chip->lock);
++
++	if (!test_bit(irq, chip->used))
++		dev_err(dev, "trying to free unused MSI#%lu\n", irq);
++	else
++		clear_bit(irq, chip->used);
++
++	mutex_unlock(&chip->lock);
++}
++
++static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
++{
++	struct rcar_pcie *pcie = data;
++	struct rcar_msi *msi = &pcie->msi;
++	unsigned long reg;
++
++	reg = pci_read_reg(pcie, PCIEMSIFR);
++
++	while (reg) {
++		unsigned int index = find_first_bit(&reg, 32);
++		unsigned int irq;
++
++		/* clear the interrupt */
++		pci_write_reg(pcie, 1 << index, PCIEMSIFR);
++
++		irq = irq_find_mapping(msi->domain, index);
++		if (irq) {
++			if (test_bit(index, msi->used))
++				generic_handle_irq(irq);
++			else
++				dev_info(pcie->dev, "unhandled MSI\n");
++		} else {
++			/*
++			 * that's weird who triggered this?
++			 * just clear it
++			 */
++			dev_info(pcie->dev, "unexpected MSI\n");
++		}
++
++		/* see if there's any more pending in this vector */
++		reg = pci_read_reg(pcie, PCIEMSIFR);
++	}
++
++	return IRQ_HANDLED;
++}
++
++static int rcar_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
++			       struct msi_desc *desc)
++{
++	struct rcar_msi *msi = to_rcar_msi(chip);
++	struct rcar_pcie *pcie = container_of(chip, struct rcar_pcie, msi.chip);
++	struct msi_msg msg;
++	unsigned int irq;
++	int hwirq;
++
++	hwirq = rcar_msi_alloc(msi);
++	if (hwirq < 0)
++		return hwirq;
++
++	irq = irq_create_mapping(msi->domain, hwirq);
++	if (!irq) {
++		rcar_msi_free(msi, hwirq);
++		return -EINVAL;
++	}
++
++	irq_set_msi_desc(irq, desc);
++
++	msg.address_lo = pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
++	msg.address_hi = pci_read_reg(pcie, PCIEMSIAUR);
++	msg.data = hwirq;
++
++	write_msi_msg(irq, &msg);
++
++	return 0;
++}
++
++static void rcar_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
++{
++	struct rcar_msi *msi = to_rcar_msi(chip);
++	struct irq_data *d = irq_get_irq_data(irq);
++
++	rcar_msi_free(msi, d->hwirq);
++}
++
++static struct irq_chip rcar_msi_irq_chip = {
++	.name = "R-Car PCIe MSI",
++	.irq_enable = unmask_msi_irq,
++	.irq_disable = mask_msi_irq,
++	.irq_mask = mask_msi_irq,
++	.irq_unmask = unmask_msi_irq,
++};
++
++static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
++			 irq_hw_number_t hwirq)
++{
++	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
++	irq_set_chip_data(irq, domain->host_data);
++	set_irq_flags(irq, IRQF_VALID);
++
++	return 0;
++}
++
++static const struct irq_domain_ops msi_domain_ops = {
++	.map = rcar_msi_map,
++};
++
++static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
++{
++	struct platform_device *pdev = to_platform_device(pcie->dev);
++	struct rcar_msi *msi = &pcie->msi;
++	unsigned long base;
++	int err;
++
++	mutex_init(&msi->lock);
++
++	msi->chip.dev = pcie->dev;
++	msi->chip.setup_irq = rcar_msi_setup_irq;
++	msi->chip.teardown_irq = rcar_msi_teardown_irq;
++
++	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
++					    &msi_domain_ops, &msi->chip);
++	if (!msi->domain) {
++		dev_err(&pdev->dev, "failed to create IRQ domain\n");
++		return -ENOMEM;
++	}
++
++	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
++	err = devm_request_irq(&pdev->dev, msi->irq, rcar_pcie_msi_irq,
++			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
++	if (err < 0) {
++		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
++		goto err;
++	}
++
++	err = devm_request_irq(&pdev->dev, msi->irq+1, rcar_pcie_msi_irq,
++			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
++	if (err < 0) {
++		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
++		goto err;
++	}
++
++	/* setup MSI data target */
++	msi->pages = __get_free_pages(GFP_KERNEL, 0);
++	base = virt_to_phys((void *)msi->pages);
++
++	pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
++	pci_write_reg(pcie, 0, PCIEMSIAUR);
++
++	/* enable all MSI interrupts */
++	pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
++
++	return 0;
++
++err:
++	irq_domain_remove(msi->domain);
++	return err;
++}
++
+ static int __init rcar_pcie_get_resources(struct platform_device *pdev,
+ 	struct rcar_pcie *pcie)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct resource res;
+-	int err;
++	int err, i;
  
- /**
-  *     vga_default_device
+ 	err = of_address_to_resource(pdev->dev.of_node, 0, &res);
+ 	if (err)
+@@ -531,6 +744,13 @@ static int __init rcar_pcie_get_resources(struct platform_device *pdev,
+ 		return PTR_ERR(pcie->clk);
+ 	}
+ 
++	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
++	if (i < 0) {
++		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
++		return -ENOENT;
++	}
++	pcie->msi.irq = i;
++
+ 	pm_runtime_enable(dev);
+ 	pm_runtime_get_sync(dev);
+ 
+@@ -588,6 +808,16 @@ static int __init rcar_pcie_probe(struct platform_device *pdev)
+ 			break;
+ 	}
+ 
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		err = rcar_pcie_enable_msi(pcie);
++		if (err < 0) {
++			dev_err(&pdev->dev,
++				"failed to enable MSI support: %d\n",
++				err);
++			return err;
++		}
++	}
++
+ 	rcar_pcie_hw_init(pcie);
+ 
+ 	if (!pcie->haslink) {
+diff --git a/drivers/pci/host/pcie-rcar.h b/drivers/pci/host/pcie-rcar.h
+index 3dc026b..4f0c678 100644
+--- a/drivers/pci/host/pcie-rcar.h
++++ b/drivers/pci/host/pcie-rcar.h
+@@ -13,6 +13,7 @@
+ #define PCIEMSR			0x000028
+ #define PCIEINTXR		0x000400
+ #define PCIEPHYSR		0x0007f0
++#define PCIEMSITXR		0x000840
+ 
+ /* Transfer control */
+ #define PCIETCTLR		0x02000
+@@ -28,6 +29,10 @@
+ #define PCIEPMSR		0x02034
+ #define PCIEPMSCIER		0x02038
+ #define PCIEMSIFR		0x02044
++#define PCIEMSIALR		0x02048
++#define  MSIFE			1
++#define PCIEMSIAUR		0x0204c
++#define PCIEMSIIER		0x02050
+ 
+ /* root port address */
+ #define PCIEPRAR(x)		(0x02080 + ((x) * 0x4))
+-- 
+1.7.9.5
+
