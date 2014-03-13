@@ -1,80 +1,70 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 10 Mar 2014 12:24:31 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Steven Newbury <steve@snewbury.org.uk>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	David Airlie <airlied@linux.ie>,
-	intel-gfx <intel-gfx@lists.freedesktop.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [Intel-gfx] agp/intel: can't ioremap flush page - no chipset
- flushing
-Message-ID: <20140310182431.GA11424@google.com>
-References: <CAKMK7uFx2kksGgnuy9e0xiQRKpt=_+44O1V4wbX5yNBocvjBkg@mail.gmail.com>
- <1391951759.6036.7.camel@artifact>
- <1391952344.25424.4.camel@x220>
- <CAErSpo6uj_Kuk0_F97nRsnM1Pss4C7=HeEaVu6D-NwFFK=1cvA@mail.gmail.com>
- <1394185698.5608.5.camel@x41>
- <CAErSpo4jiq38P3TNuGLGS--nbV9NtUAmiuK=cwWyFAneY-=eOA@mail.gmail.com>
- <1394212609.1987.6.camel@x41>
- <20140307204021.GA9822@google.com>
- <CAErSpo7Np8oju1ENQA5EgEpN4=Vv7f3s4E823ecbyp6FCWPL_Q@mail.gmail.com>
- <1394289877.31006.2.camel@x41>
+From: James Bottomley <jbottomley@parallels.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>
+CC: "DL-MPTFusionLinux@lsi.com" <DL-MPTFusionLinux@lsi.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"intel-linux-scu@intel.com" <intel-linux-scu@intel.com>,
+	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"pv-drivers@vmware.com" <pv-drivers@vmware.com>,
+	"qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>,
+	"agordeev@redhat.com" <agordeev@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"support@lsi.com" <support@lsi.com>,
+	"iscsi-driver@qlogic.com" <iscsi-driver@qlogic.com>
+Subject: Re: [PATCH v2 00/23] scsi: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Date: Thu, 13 Mar 2014 07:04:07 +0000
+Message-ID: <1394694244.30610.17.camel@dabdike.int.hansenpartnership.com>
+References: <cover.1393191330.git.agordeev@redhat.com>
+	 <20140313040440.GB26657@google.com>
+In-Reply-To: <20140313040440.GB26657@google.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394289877.31006.2.camel@x41>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
-
-On Sat, Mar 08, 2014 at 03:44:37PM +0100, Paul Bolle wrote:
-> Bjorn Helgaas schreef op za 08-03-2014 om 07:12 [-0700]:
-> > I assume you have CONFIG_PHYS_ADDR_T_64BIT=n (which is perfectly
-> > legal); let me know if otherwise.
+On Wed, 2014-03-12 at 22:04 -0600, Bjorn Helgaas wrote:
+> On Mon, Feb 24, 2014 at 09:02:00AM +0100, Alexander Gordeev wrote:
+> > Hello!
+> > 
+> > This series is against James Bottomley's SCSI tree [1], but it needs
+> > commit f7fc32c ("PCI/MSI: Add pci_enable_msi_exact() and
+> > pci_enable_msix_exact()") from from Bjorn Helgaas's PCI tree [2]:
+> > 
+> > 1. git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+> > 2. git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
+> > 
+> > Recently pci_enable_msix_exact() function has been accepted to
+> > the mainline. That is a variation of pci_enable_msix_range() which
+> > allows a device driver to request a particular number of MSI-Xs.
+> > 
+> > As result, most of the changes posted in version 1 of this series
+> > are invalidated and need to use pci_enable_msix_exact() instead of
+> > originally posted pci_enable_msix_range() usages.
+> > 
+> > I removed almost all ACKs, since unlike pci_enable_msix_range()
+> > function which returns the number of MSI-Xs allocated or negative
+> > errno, pci_enable_msix_exact() returns either zero success code or
+> > a negative errno. Although this change is simple, it still entails
+> > an updated error code analysis and would be better reviewed by
+> > driver maintainers.
 > 
-> $ grep CONFIG_PHYS_ADDR_T_64BIT /boot/config-3.14.0-0.rc5.1.local2.fc20.i686 
-> # CONFIG_PHYS_ADDR_T_64BIT is not set
+> Hi James,
 > 
-> So, yes, CONFIG_PHYS_ADDR_T_64BIT=n here.
+> I think Alexander sent these to linux-scsi hoping that you would handle
+> them, but I know it's a hassle because they depend on f7fc32c, which went
+> in after the merge window.
+> 
+> I'd be glad to review these and apply them through my tree, unless you want
+> to do it.  I'd like to get these merged in the v3.15 merge window so
+> Alexander can move on to something else.  I haven't checked for merge
+> conflicts with scsi.git yet, but I assume they'd be pretty trivial if there
+> are any.
 
-Thanks.  Can you try the patch below?  I think it should fix the problem.
+Sure, any that haven't been applied ... I think we already have some
+updates for drivers which do MSIX changes, but for those you'll see the
+conflict with scsi.git and you can just drop the patch for that driver.
 
+James
 
-PCI: Don't check resource_size() in pci_bus_alloc_resource()
-
-From: Bjorn Helgaas <bhelgaas@google.com>
-
-When resource_size_t is 32 bits wide, e.g., when CONFIG_PHYS_ADDR_T_64BIT
-is not defined, resource_size() on [mem 0x00000000-0xffffffff] returns 0
-because (r->end - r->start + 1) overflows.
-
-Therefore, we can't use "resource_size() == 0" to decide that allocation
-from this resource will fail.  allocate_resource() should fail anyway if it
-can't satisfy the address constraints, so we should just depend on that.
-
-A [mem 0x00000000-0xffffffff] bus resource is obviously not really valid,
-but we do fall back to it as a default when we don't have information about
-host bridge apertures.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=71611
-Fixes: f75b99d5a77d PCI: Enforce bus address limits in resource allocation
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/bus.c |    2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 00660cc502c5..38901665c770 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -162,8 +162,6 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
- 
- 		avail = *r;
- 		pci_clip_resource_to_region(bus, &avail, region);
--		if (!resource_size(&avail))
--			continue;
- 
- 		/*
- 		 * "min" is typically PCIBIOS_MIN_IO or PCIBIOS_MIN_MEM to
