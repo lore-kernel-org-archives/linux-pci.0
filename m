@@ -1,76 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:36331 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750813AbaCQQFj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 12:05:39 -0400
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:46661 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750723AbaCMEMg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 00:12:36 -0400
+Received: by mail-qa0-f46.google.com with SMTP id i13so475761qae.5
+        for <linux-pci@vger.kernel.org>; Wed, 12 Mar 2014 21:12:35 -0700 (PDT)
+Date: Wed, 12 Mar 2014 22:12:31 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
+	linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+	Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [PATCH v2 0/2] block: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140313041231.GC26657@google.com>
+References: <cover.1393404496.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
-	<1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
-Date: Mon, 17 Mar 2014 11:05:38 -0500
-Message-ID: <CAL_Jsq+9X-9VahsP79mtHN0RC64vRA_2R3ucjX0LefO6q2YN3Q@mail.gmail.com>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-From: Rob Herring <robherring2@gmail.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1393404496.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 10:34 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> Use the generic host bridge functions to provide support for
-> PCI Express on arm64. There is no support for ISA memory.
->
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  arch/arm64/Kconfig            |  19 +++-
->  arch/arm64/include/asm/Kbuild |   1 +
->  arch/arm64/include/asm/io.h   |   3 +-
->  arch/arm64/include/asm/pci.h  |  51 ++++++++++
->  arch/arm64/kernel/Makefile    |   1 +
->  arch/arm64/kernel/pci.c       | 173 ++++++++++++++++++++++++++++++++
->  6 files changed, 246 insertions(+), 2 deletions(-)
->  create mode 100644 arch/arm64/include/asm/pci.h
->  create mode 100644 arch/arm64/kernel/pci.c
+On Wed, Feb 26, 2014 at 10:02:40AM +0100, Alexander Gordeev wrote:
+> Changes since v1:
+>   - cciss: patch #1: a weird 'goto' removed;
+>   - cciss: patch #2: pci_enable_msix_exact() used, not pci_enable_msix_range();
+>   - rsxx: patch dropped - no need to change anything;
+> 
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+> 
+> This change updates 'cciss' only, but there is also 'nvme' update
+> pending - I am waiting for Intel guys to clarify if they want to
+> route it thru their tree. If not, I will post the 'nvme' patch as
+> a follow-up to this series.
 
-[snip]
+Hi Jens,
 
-> +#endif
-> +
-> +extern unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr);
+I'd like to get these merged during the v3.15 merge window.  I'd be glad to
+review and apply them through my tree, unless you want to do it.  They do
+depend on f7fc32c, which went in after the v3.14 merge window, which makes
+it a bit of a hassle.
 
-Can we at least align the function definition across architectures if
-not the implementation.
+So let me know if you'd rather handle these; otherwise I'll review them and
+put them in my tree next week.
 
+I'll include the nvme update, since it has Keith's "Reviewed-by".
 
-> +int pci_register_io_range(phys_addr_t address, resource_size_t size)
-> +{
-> +       struct ioresource *res;
-> +       resource_size_t allocated_size = 0;
-> +
-> +       /* find if the range has not been already allocated */
-> +       list_for_each_entry(res, &io_list, list) {
-> +               if (address >= res->start &&
-> +                       address + size <= res->start + size)
-> +                       return 0;
-> +               allocated_size += res->size;
-> +       }
-> +
-> +       /* range not already registered, check for space */
-> +       if (allocated_size + size > IO_SPACE_LIMIT)
+Bjorn
 
-I believe this needs to be "allocated_size + size - 1".
-
-> +               return -E2BIG;
-> +
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Mike Miller <mike.miller@hp.com>
+> Cc: iss_storagedev@hp.com
+> Cc: linux-pci@vger.kernel.org
+> 
+> Alexander Gordeev (2):
+>   cciss: Fallback to MSI rather than to INTx if MSI-X failed
+>   cciss: Use pci_enable_msix_exact() instead of pci_enable_msix()
+> 
+>  drivers/block/cciss.c |    8 +-------
+>  1 files changed, 1 insertions(+), 7 deletions(-)
+> 
+> -- 
+> 1.7.7.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
