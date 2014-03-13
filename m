@@ -1,75 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:59921 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752081AbaCKVjG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 17:39:06 -0400
+Received: from moutng.kundenserver.de ([212.227.17.10]:57278 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753571AbaCMLbD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 07:31:03 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Phil.Edworthy@renesas.com
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>
+Subject: Re: [PATCH 5/9] dt-bindings: pci: rcar pcie device tree bindings
+Date: Thu, 13 Mar 2014 12:30:50 +0100
+Message-ID: <25998973.9XJTBOSo8s@wuerfel>
+In-Reply-To: <OFF61489EE.B9ED2F88-ON80257C9A.00386B74-80257C9A.00398025@eu.necel.com>
+References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com> <33747243.K5i7Ah8L7o@wuerfel> <OFF61489EE.B9ED2F88-ON80257C9A.00386B74-80257C9A.00398025@eu.necel.com>
 MIME-Version: 1.0
-In-Reply-To: <20140311174243.23084.77689.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<20140311174243.23084.77689.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Date: Tue, 11 Mar 2014 14:39:03 -0700
-Message-ID: <CAE9FiQVdk6Tg4tNPQihm2YJ5BQO8jrQXfQfgVOSXTaK3o76yqg@mail.gmail.com>
-Subject: Re: [PATCH 1/5] PCI: Don't check resource_size() in pci_bus_alloc_resource()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 11, 2014 at 10:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Paul reported that after f75b99d5a77d ("PCI: Enforce bus address limits in
-> resource allocation") on a 32-bit kernel (CONFIG_PHYS_ADDR_T_64BIT not
-> set), intel-gtt complained "can't ioremap flush page - no chipset
-> flushing".  In addition, other PCI resource allocations, e.g., for bridge
-> windows, failed.
->
-> This happens because we incorrectly skip bus resources of
-> [mem 0x00000000-0xffffffff] because we think they are of size zero.
-> When resource_size_t is 32 bits wide, resource_size() on
-> [mem 0x00000000-0xffffffff] returns 0 because (r->end - r->start + 1)
-> overflows.
->
-> Therefore, we can't use "resource_size() == 0" to decide that allocation
-> from this resource will fail.  allocate_resource() should fail anyway if it
-> can't satisfy the address constraints, so we should just depend on that.
->
-> A [mem 0x00000000-0xffffffff] bus resource is obviously not really valid,
-> but we do fall back to it as a default when we don't have information about
-> host bridge apertures.
->
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=71611
-> Fixes: f75b99d5a77d PCI: Enforce bus address limits in resource allocation
-> Reported-and-tested-by: Paul Bolle <pebolle@tiscali.nl>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/bus.c |    2 --
->  1 file changed, 2 deletions(-)
->
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 00660cc502c5..38901665c770 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -162,8 +162,6 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
->
->                 avail = *r;
->                 pci_clip_resource_to_region(bus, &avail, region);
-> -               if (!resource_size(&avail))
-> -                       continue;
->
->                 /*
->                  * "min" is typically PCIBIOS_MIN_IO or PCIBIOS_MIN_MEM to
->
+On Thursday 13 March 2014 10:28:03 Phil.Edworthy@renesas.com wrote:
+> On 13/03/2014 10:00, Arnd wrote:
+> > On Thursday 13 March 2014 09:50:04 Phil Edworthy wrote:
+> > 
+> > I see your description and example includes I/O regions, but the driver
+> > claims in a comment that these don't work. Do you also have a patch to
+> > make them work?
+> Are you referring to the comment "The controller does not support/use port 
+> I/O" in the driver for the internal PCI controller (pci-rcar-gen2.c)?
+> This is a separate block of hardware, it's a PCIe controller with external 
+> pins, for which we do support I/O regions.
 
-how about replacing that with:
+Ok, thanks for the clarification.
 
-        if (avail.start > avail.end)
-                  continue;
+> > > +- interrupts: interrupt values for MSI interrupt
+> > > +- #interrupt-cells: set to <1>
+> > > +- interrupt-map-mask and interrupt-map: standard PCI properties
+> > > +   to define the mapping of the PCIe interface to interrupt
+> > > +   numbers.
+> > > +- clocks: from common clock binding: handle to pci clock.
+> > > +- clock-names: from common clock binding: should be "pcie"
+> > > +
+> > > +Example:
+> > > +
+> > > +SoC specific DT Entry:
+> > > +
+> > > +   pcie: pcie@0x01000000 {
+> > > +      compatible = "renesas,r8a7790-pcie";
+> > > +      reg = <0 0xfe000000 0 0x80000>;
+> > > +      #address-cells = <3>;
+> > > +      #size-cells = <2>;
+> > > +      device_type = "pci";
+> > > +      ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
+> > > +           0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
+> > > +           0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
+> > > +           0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
+> > 
+> > I'm curious about why there are two non-prefetchable regions. What is
+> > the significance of this?
+>
+> The devices that have this PCIe controller both have a number of fixed, 
+> non-contiguous memory regions that can be used as PCIe windows. The ranges 
+> here map onto those fixed windows, i.e. if the CPU addresses of the ranges 
+> change it won't work. The first couple of windows are small, we use the 
+> first one for I/O, we decided that we may as well use the next small 
+> window for memory - otherwise we need to figure out a way to tell the 
+> driver to skip a window.
 
-so we do not need to go deep into allocate_resource()
+Ok, makes sense. Good to know that this actually works. An idea that
+may be helpful in some corner cases: if you can set up the small window as
 
-Thanks
+           0x02000000 0 0 0 0xfe200000 0 0x00200000
 
-Yinghai
+or even
+
+           0x02000000 0 0 0 0xfe200000 0 0x00100000
+           0x02000000 0 0x00f00000 0 0xfe200000 0 0x00100000
+
+then you will be able to map devices with legacy nonrelocatable ISA
+memory BARs such as VGA cards that have PCI resources in the first MB
+of bus space, and in the end of the first 16MB.
+
+	Arnd
