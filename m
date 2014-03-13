@@ -1,89 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:38665 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756902AbaCQSFa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 14:05:30 -0400
-Date: Mon, 17 Mar 2014 18:05:25 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:44985 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754499AbaCMRkV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 13:40:21 -0400
+Received: by mail-pa0-f48.google.com with SMTP id hz1so1433328pad.35
+        for <linux-pci@vger.kernel.org>; Thu, 13 Mar 2014 10:40:20 -0700 (PDT)
+From: Tim Harvey <tharvey@gateworks.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Message-ID: <20140317180525.GL6457@e106497-lin.cambridge.arm.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
- <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
- <20140314171457.GK18126@arm.com>
- <201403141838.08900.arnd@arndb.de>
- <20140314180527.GZ6457@e106497-lin.cambridge.arm.com>
- <20140317173821.GJ24070@arm.com>
-MIME-Version: 1.0
-In-Reply-To: <20140317173821.GJ24070@arm.com>
-Content-Type: text/plain; charset=UTF-8
+	Simon Horman <horms@verge.net.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Ben Dooks <ben-linux@fluff.org>,
+	linux-tegra <linux-tegra@vger.kernel.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: [PATCH 2/2] ARM: dts: imx: fix invalid #address-cells value
+Date: Thu, 13 Mar 2014 10:40:05 -0700
+Message-Id: <1394732405-2260-3-git-send-email-tharvey@gateworks.com>
+In-Reply-To: <1394732405-2260-1-git-send-email-tharvey@gateworks.com>
+References: <1394732405-2260-1-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 17, 2014 at 05:38:21PM +0000, Catalin Marinas wrote:
-> On Fri, Mar 14, 2014 at 06:05:27PM +0000, Liviu Dudau wrote:
-> > On Fri, Mar 14, 2014 at 05:38:08PM +0000, Arnd Bergmann wrote:
-> > > On Friday 14 March 2014, Catalin Marinas wrote:
-> > > > On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
-> > > > > --- /dev/null
-> > > > > +++ b/arch/arm64/kernel/pci.c
-> > > > [...]
-> > > > > +int pci_register_io_range(phys_addr_t address, resource_size_t size)
-> > > > [...]
-> > > > > +unsigned long pci_address_to_pio(phys_addr_t address)
-> > > > [...]
-> > > > > +void pcibios_fixup_bus(struct pci_bus *bus)
-> > > > [ actually most of this file ]
-> > > > 
-> > > > Maybe it was raised before already but can we have __weak generic
-> > > > definitions of these functions? They don't seem to be arm64 specific in
-> > > > any way.
-> [...]
-> > Catalin, if you are happy to ask for ACKs from all arch maintainers that might get
-> > affected by our custom version of pci_address_to_pio() before you can pull PCI support
-> > for arm64 then I can propose a new patchset.
-> 
-> You don't need to change the other architectures, that's the point of a
-> __weak definition, it will be automatically overridden. If you want, you
-> can even place a GENERIC_PCI or whatever config option that is only
-> selected by arm64 for the time being.
+The invalid value of #address-cells in the imx6 pcie host controller node
+causes of_irq_parse_raw() to incorrectly advance through an interrupt-map
+table of more than one interrupt.
 
-pci_address_to_pio() is alread __weak. My patch was adding the arm64 version of it. Adding
-an #ifdef GENERIC_PCI to the __weak implementation is not just a temporary solution.
-We would still have to keep some sort of #ifdef around in the function as x86
-will never pickup our version. Regardless, the list of people that would need to ACK that
-change will increase, right?
+This patch resolves this issue and allows proper interrupt mapping for an
+imx6 pcie host connected to a P2P bridge when using legacy interrupts.
 
-Best regards,
-Liviu
+Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: linux-samsung-soc <linux-samsung-soc@vger.kernel.org>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Sascha Hauer <kernel@pengutronix.de>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Simon Horman <horms@verge.net.au>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Ben Dooks <ben-linux@fluff.org>
+Cc: linux-tegra <linux-tegra@vger.kernel.org>
+Cc: Kukjin Kim <kgene.kim@samsung.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+---
+ arch/arm/boot/dts/imx6qdl.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> -- 
-> Catalin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
+index af8d28d..2285299 100644
+--- a/arch/arm/boot/dts/imx6qdl.dtsi
++++ b/arch/arm/boot/dts/imx6qdl.dtsi
+@@ -49,7 +49,7 @@
+ 	intc: interrupt-controller@00a01000 {
+ 		compatible = "arm,cortex-a9-gic";
+ 		#interrupt-cells = <3>;
+-		#address-cells = <1>;
++		#address-cells = <0>;
+ 		#size-cells = <1>;
+ 		interrupt-controller;
+ 		reg = <0x00a01000 0x1000>,
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.8.3.2
 
