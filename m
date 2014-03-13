@@ -1,116 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:49220 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751290AbaCTLi3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 07:38:29 -0400
-Date: Thu, 20 Mar 2014 11:38:21 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Catalin Marinas <Catalin.Marinas@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Message-ID: <20140320113820.GH6457@e106497-lin.cambridge.arm.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
- <8312584.jdZZuHGAjg@wuerfel>
- <20140320094654.GZ6457@e106497-lin.cambridge.arm.com>
- <201403201217.22339.arnd@arndb.de>
+Received: from mail-we0-f177.google.com ([74.125.82.177]:64146 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753769AbaCMWZv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 18:25:51 -0400
+Received: by mail-we0-f177.google.com with SMTP id u57so1443409wes.36
+        for <linux-pci@vger.kernel.org>; Thu, 13 Mar 2014 15:25:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201403201217.22339.arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20140313182554.GA15990@obsidianresearch.com>
+References: <1394732405-2260-1-git-send-email-tharvey@gateworks.com>
+	<1394732405-2260-2-git-send-email-tharvey@gateworks.com>
+	<5321EE81.1030207@wwwdotorg.org>
+	<20140313182554.GA15990@obsidianresearch.com>
+Date: Thu, 13 Mar 2014 15:25:50 -0700
+Message-ID: <CAJ+vNU2YYbsH8iOWJ_B-vcHdfWYW1oFsWY_=YEd-ojJASOZgtQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ARM: DT: fix gic interrupt controller documentation
+From: Tim Harvey <tharvey@gateworks.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Ben Dooks <ben-linux@fluff.org>,
+	linux-tegra <linux-tegra@vger.kernel.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Grant Likely <grant.likely@linaro.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 20, 2014 at 11:17:22AM +0000, Arnd Bergmann wrote:
-> On Thursday 20 March 2014, Liviu Dudau wrote:
-> > On Wed, Mar 19, 2014 at 06:37:51PM +0000, Arnd Bergmann wrote:
-> > > On Wednesday 19 March 2014 17:21:41 Liviu Dudau wrote:
-> > > > 
-> > > > My ultimate point is that no matter how long we argue about the shape of the functions that
-> > > > I've added into arch/arm64/kernel/pci.c I don't think we can get away without having that
-> > > > file, or at least not in the first phase if we want speedy integration into mainline.
-> > > 
-> > > Let me simplify the discussion here:
-> > > 
-> > > NAK to adding yet another architecture specific implementation.
-> > 
-> > So what would be your approach for handling pci_address_to_pio() in a non-arch specific way?
-> > 
-> > unsigned long __weak pci_address_to_pio(phys_addr_t address)
-> > {
-> > #ifdef ARCH_HAS_IOSPACE
-> >         if (address > IO_SPACE_LIMIT)
-> >                 return (unsigned long)-1;
-> > 
-> >         return (unsigned long) address;
-> > #else
-> >         struct ioresource *res;
-> > 
-> >         list_for_each_entry(res, &io_list, list) {
-> >                 if (address >= res->start &&
-> >                         address < res->start + res->size) {
-> >                         return res->start - address;
-> >                 }
-> >         }
-> > 
-> >         return (unsigned long)-1;
-> > #endif
-> > }
-> > 
-> > 
-> > Either that, or you have more magic rabbits than me.
-> 
-> I don't even understand why you want to create a generic pci_address_to_pio
-> implementation, when we don't need that for arm64 at all. Unless I'm
-> missing something important, that function is only called in case of
-> PCI_PROBE_DEVTREE with pci_of_scan on PowerPC. I don't expect any
-> architecture to do the same thing, and the only other architecture that
-> needs something like it (sparc) has a different implementation.
+On Thu, Mar 13, 2014 at 11:25 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Thu, Mar 13, 2014 at 11:44:33AM -0600, Stephen Warren wrote:
+>> On 03/13/2014 11:40 AM, Tim Harvey wrote:
+>> > When using interrupt-maps, the size of a map entry is #address-cells +
+>> >  #interrupt-cells for the parent interrupt controller.  For the ARM GIC
+>> > address-cells should be 0 as this is not used.
+>> >
+>> > This patch fixes the example by correctly specifying #address-cells = 0.
+>>
+>> If the #address-cells property is required (well, or even optional...)
+>> in the node, shouldn't it be included in the list of required/optional
+>> properties above, and not solely included in the example?
+>
+> AFAIK, #address-cells = 0 is the same as not including a
+> #address-cells at all.
+>
+> Omitting entirely is what other interrupt-controller bindings are
+> doing, so I'd just drop mention of #address-cells completely.
+>
+> Jason
 
-Because in my [v7 2/6]* patch for the generic host bridge support I start
-using pci_address_to_pio to fix the conversion of PCI ranges to resources.
-That requires an arm64 (or more correctly, an arch with memory mapped IO
-specific) version of pci_address_to_pio().
+Jason / Stephen,
 
-Best regards,
-Liviu
+Yes, it does indeed default to 0 if not specified.  For arm-gic it
+would appear #address-cells must be 0, so should we remove all places
+its set explicitly to 0 in dts as wel as the example in
+Documentation/devicetree/bindings?
 
-> 
-> The regular (non-DEVTREE) PCI bus scan should just be able to translate
-> the BUS I/O addresses into Linux I/O port numbers using io_offset,
-> without going through an intermediate step of translating into a CPU
-> physical address first, so the entire lookup method won't get used.
-> 
-> The reason why PowerPC needs it is that they traditionally don't
-> use PCI config space access to assign or look at resources, but
-> instead rely on the firmware to have set it up in advance and then
-> put matching information into DT and the BARs. For Solaris and AIX,
-> it's probably easier to use the information from DT, but in Linux,
-> we already need to implement the manual bus scan, e.g. to do
-> PCI device hotplugging if nothing else.
-> 
-> 	Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Looking through arch/arm/boot/dts I'm seeing other dts configs using
+'arm,cortex-a9-gic' which I'm guessing are equally as wrong as the
+imx6 situation:
+ - arch/arm/boot/dts/highbank.dts
+ - arch/arm/boot/dts/sh73a0.dtsi
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+I'm also seeing a number of places where its set explicitly to 0:
+ - Documentation/devicetree/bindings/arm/gic.txt
+ - Documentation/devicetree/bindings/arm/vexpress.txt
+ - arch/arm/boot/dts/bcm11351.dtsi
+ - arch/arm/boot/dts/hi3620.dtsi
+ - arch/arm/boot/dts/imx6qdl.dtsi
+ - arch/arm/boot/dts/vexpress-v2p-ca15_a7.dts
 
+If I extend this search to the other compatible gic interrupt
+controllers implemented in drivers/irqchip/irq-gic.c
+(arm,cortex-a15-gic, qcom,msm-8660-qgic, qcom,msm-qgic2) I find even
+more examples where #address-cells is set explicitly to 0 or to 1 (and
+I would believe a value of 1 is invalid, just as it is in my case).
+
+I'm happy to broaden my patch, but I certainly want to make sure I'm
+doing the right thing with it, as I don't have the ability to test all
+the other devicetree configs and am by no means a devicetree expert.
+
+Recommendations?
+
+Tim
