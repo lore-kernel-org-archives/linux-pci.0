@@ -1,133 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og107.obsmtp.com ([64.18.0.184]:59548 "HELO
-	exprod5og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752430AbaCERt2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 12:49:28 -0500
-Received: by mail-vc0-f180.google.com with SMTP id ks9so1346297vcb.25
-        for <linux-pci@vger.kernel.org>; Wed, 05 Mar 2014 09:49:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140305114054.GG1692@e106497-lin.cambridge.arm.com>
-References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
-	<CACoXjcmmbVsmvy46NhjFoBg8mRO=APiY3dZZY=ra-Ceib9Sr4A@mail.gmail.com>
-	<20140305114054.GG1692@e106497-lin.cambridge.arm.com>
-Date: Wed, 5 Mar 2014 09:49:26 -0800
-Message-ID: <CACoXjcmZQuuOW3b6BwWSWPRL7JBCQ9HMWMfXjhCy3tTi+-HV3A@mail.gmail.com>
-Subject: Re: [PATCH v5 0/7] [RFC] Support for creating generic host_bridge
- from device tree
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Tanmay Inamdar <tinamdar@apm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from relmlor3.renesas.com ([210.160.252.173]:35420 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753579AbaCMJua (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 05:50:30 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
+References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1394704208-7490-5-git-send-email-phil.edworthy@renesas.com>
+Date: Thu, 13 Mar 2014 09:50:03 +0000
+Subject: [PATCH 4/9] ARM: shmobile: r8a7791: Add PCIe clock device tree nodes
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 5, 2014 at 3:40 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> On Wed, Mar 05, 2014 at 01:53:55AM +0000, Tanmay Inamdar wrote:
->> Hello,
->>
->> Thanks for the patch set.
->>
->> On Tue, Mar 4, 2014 at 7:49 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> > This is v5 of my attempt to add support for a generic pci_host_bridge controller created
->> > from a description passed in the device tree.
->> >
->> > Changes from v4:
->> >   - Export pci_find_host_bridge() to be used by arch code. There is scope for
->> >     making the arch/arm64 version of pci_domain_nr the default weak implementation
->> >     but that would double the size of this series in order to handle all #define
->> >     versions of the pci_domain_nr() function, so I suggest keeping that for a separate
->> >     cleanup series.
->> >
->> > Changes from v3:
->> >   - Dynamically allocate bus_range resource in of_create_pci_host_bridge()
->> >   - Fix the domain number used when creating child busses.
->> >   - Changed domain number allocator to use atomic operations.
->> >   - Use ERR_PTR() to propagate the error out of pci_create_root_bus_in_domain()
->> >     and of_create_pci_host_bridge().
->> >
->> > Changes from v2:
->> >   - Use range->cpu_addr when calling pci_address_to_pio()
->> >   - Introduce pci_register_io_range() helper function in order to register
->> >     io ranges ahead of their conversion to PIO values. This is needed as no
->> >     information is being stored yet regarding the range mapping, making
->> >     pci_address_to_pio() fail. Default weak implementation does nothing,
->> >     to cover the default weak implementation of pci_address_to_pio() that
->> >     expects direct mapping of physical addresses into PIO values (x86 view).
->> >
->> > Changes from v1:
->> >   - Add patch to fix conversion of IO ranges into IO resources.
->> >   - Added a domain_nr member to pci_host_bridge structure, and a new function
->> >     to create a root bus in a given domain number. In order to facilitate that
->> >     I propose changing the order of initialisation between pci_host_bridge and
->> >     it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
->> >     This is done in patch 1/4 and 2/4.
->> >   - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
->> >     code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
->> >     and if that fails assign the next unallocated domain id.
->> >   - Changed the name of the function that creates the generic host bridge from
->> >     pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
->> >
->> >
->> > v4 thread here: https://lkml.org/lkml/2014/3/3/301
->> > v3 thread here: https://lkml.org/lkml/2014/2/28/216
->> > v2 thread here: https://lkml.org/lkml/2014/2/27/245
->> > v1 thread here: https://lkml.org/lkml/2014/2/3/380
->> >
->> > Best regards,
->> > Liviu
->> >
->> > Liviu Dudau (7):
->> >   pci: Introduce pci_register_io_range() helper function.
->> >   pci: OF: Fix the conversion of IO ranges into IO resources.
->> >   pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
->> >   pci: Introduce a domain number for pci_host_bridge.
->> >   pci: Use parent domain number when allocating child busses.
->> >   pci: Export find_pci_host_bridge() function.
->> >   pci: Add support for creating a generic host_bridge from device tree
->> >
->> >  drivers/of/address.c       |  39 +++++++++++++
->> >  drivers/pci/host-bridge.c  | 142 ++++++++++++++++++++++++++++++++++++++++++++-
->> >  drivers/pci/probe.c        |  72 +++++++++++++++--------
->> >  include/linux/of_address.h |  14 +----
->> >  include/linux/pci.h        |  17 ++++++
->> >  5 files changed, 248 insertions(+), 36 deletions(-)
->> >
->> > --
->> > 1.9.0
->> >
->>
->> This series is working fine on X-Gene with multiple PCIe ports. You
->> can add my Tested-by if you want.
->
-> What about the arm64 series, can I add a Tested-by to that one as well?
+This patch adds the device tree clock nodes for PCIe
 
-Sure.
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/boot/dts/r8a7791.dtsi            |    7 +++++--
+ include/dt-bindings/clock/r8a7791-clock.h |    1 +
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
->
-> Thanks,
-> Liviu
->
->>
->> Thanks,
->> Tanmay
->>
->
-> --
-> ====================
-> | I would like to |
-> | fix the world,  |
-> | but they're not |
-> | giving me the   |
->  \ source code!  /
->   ---------------
->     ¯\_(ツ)_/¯
->
+diff --git a/arch/arm/boot/dts/r8a7791.dtsi b/arch/arm/boot/dts/r8a7791.dtsi
+index 71bac2c..ccfba57 100644
+--- a/arch/arm/boot/dts/r8a7791.dtsi
++++ b/arch/arm/boot/dts/r8a7791.dtsi
+@@ -717,14 +717,17 @@
+ 			compatible = "renesas,r8a7791-mstp-clocks", "renesas,cpg-mstp-clocks";
+ 			reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
+ 			clocks = <&cp_clk>, <&sd2_clk>, <&sd1_clk>,
+-				<&cpg_clocks R8A7791_CLK_SD0>, <&mmc0_clk>, <&rclk_clk>;
++				<&cpg_clocks R8A7791_CLK_SD0>, <&mmc0_clk>, <&rclk_clk>,
++				<&mp_clk>;
+ 			#clock-cells = <1>;
+ 			renesas,clock-indices = <
+ 				R8A7791_CLK_TPU0 R8A7791_CLK_SDHI2 R8A7791_CLK_SDHI1
+ 				R8A7791_CLK_SDHI0 R8A7791_CLK_MMCIF0 R8A7791_CLK_CMT1
++				R8A7791_CLK_PCIE
+ 			>;
+ 			clock-output-names =
+-				"tpu0", "sdhi2", "sdhi1", "sdhi0", "mmcif0", "cmt1";
++				"tpu0", "sdhi2", "sdhi1", "sdhi0", "mmcif0", "cmt1",
++				"pcie";
+ 		};
+ 		mstp5_clks: mstp5_clks@e6150144 {
+ 			compatible = "renesas,r8a7791-mstp-clocks", "renesas,cpg-mstp-clocks";
+diff --git a/include/dt-bindings/clock/r8a7791-clock.h b/include/dt-bindings/clock/r8a7791-clock.h
+index 30f82f2..d3e2cf5 100644
+--- a/include/dt-bindings/clock/r8a7791-clock.h
++++ b/include/dt-bindings/clock/r8a7791-clock.h
+@@ -51,6 +51,7 @@
+ #define R8A7791_CLK_SDHI1		12
+ #define R8A7791_CLK_SDHI0		14
+ #define R8A7791_CLK_MMCIF0		15
++#define R8A7791_CLK_PCIE		19
+ #define R8A7791_CLK_SSUSB		28
+ #define R8A7791_CLK_CMT1		29
+ #define R8A7791_CLK_USBDMAC0		30
+-- 
+1.7.9.5
+
