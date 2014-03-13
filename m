@@ -1,54 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:42755 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753600AbaCXRTo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 13:19:44 -0400
-Date: Mon, 24 Mar 2014 13:19:43 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Bjorn Helgaas <bhelgaas@google.com>
-cc: Andreas Noever <andreas.noever@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Pavel Machek <pavel@ucw.cz>
-Subject: Re: how to trigger pcieport runtime suspend?
-In-Reply-To: <CAErSpo5yOEqHZmWZ3j8NQs_DapmkegDTm8uLJCS2uCKvTvtT6Q@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1403241316280.1197-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from relmlor2.renesas.com ([210.160.252.172]:34652 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753589AbaCMJua (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 05:50:30 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
+References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1394704208-7490-10-git-send-email-phil.edworthy@renesas.com>
+Date: Thu, 13 Mar 2014 09:50:08 +0000
+Subject: [PATCH 9/9] ARM: koelsch: Add HAVE_ARM_ARCH_TIMER to defconfig
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 24 Mar 2014, Bjorn Helgaas wrote:
+This is fixes a boot problem when the R-Car PCIe driver is enabled.
 
-> [+cc Rafael, Pavel, linux-pm]
-> 
-> On Sun, Mar 23, 2014 at 12:16 PM, Andreas Noever
-> <andreas.noever@gmail.com> wrote:
-> > The pcieport driver defines runtime_suspend and runtime_resume methods
-> > (pcie_port_runtime_suspend/resume in portdrv_pci.c). I am trying to
-> > trigger that code. But I cannot get power/runtime_usage to drop to
-> > zero.
-> >
-> > Initially power/runtime_usage is set to 2. The 2 comes (imho) from:
-> > pci_pm_init -> pm_runtime_forbid
-> > local_pci_probe -> pm_runtime_get_sync
-> >
-> > The pm_runtime_forbid can be undone with echo auto > power/control,
-> > but the second one seems to never go away. local_pci_probe spots the
-> > following comment:
-> > "If the driver supports runtime PM, it should call
-> > pm_runtime_put_noidle() in its probe routine and
-> > pm_runtime_get_noresume() in its remove routine." I cannot find any
-> > such calls in the pcieport driver (or in the port service drivers).
-> >
-> > What am I missing?
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/configs/koelsch_defconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
-You're not missing anything, but apparently the people who added
-runtime PM support to the pcieport driver missed the comment you 
-quoted.
-
-If you add those calls to the driver, does it do what you want?
-
-Alan Stern
+diff --git a/arch/arm/configs/koelsch_defconfig b/arch/arm/configs/koelsch_defconfig
+index ec14547..67666b6 100644
+--- a/arch/arm/configs/koelsch_defconfig
++++ b/arch/arm/configs/koelsch_defconfig
+@@ -15,6 +15,7 @@ CONFIG_MACH_KOELSCH=y
+ CONFIG_CPU_BPREDICT_DISABLE=y
+ CONFIG_PL310_ERRATA_588369=y
+ CONFIG_ARM_ERRATA_754322=y
++CONFIG_HAVE_ARM_ARCH_TIMER=y
+ CONFIG_PCI=y
+ CONFIG_PCI_MSI=y
+ CONFIG_PCI_RCAR_GEN2_PCIE=y
+-- 
+1.7.9.5
 
