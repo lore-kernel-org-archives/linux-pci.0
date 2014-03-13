@@ -1,123 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:63508 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753766AbaCMK2P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 06:28:15 -0400
-In-Reply-To: <33747243.K5i7Ah8L7o@wuerfel>
-References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com> <1394704208-7490-6-git-send-email-phil.edworthy@renesas.com> <33747243.K5i7Ah8L7o@wuerfel>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
+Received: from mail-ve0-f176.google.com ([209.85.128.176]:40441 "EHLO
+	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751286AbaCMIvW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 04:51:22 -0400
 MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OFF61489EE.B9ED2F88-ON80257C9A.00386B74-80257C9A.00398025@eu.necel.com>
-Date: Thu, 13 Mar 2014 10:28:03 +0000
-Subject: Re: [PATCH 5/9] dt-bindings: pci: rcar pcie device tree bindings
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	<20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Date: Thu, 13 Mar 2014 16:51:21 +0800
+Message-ID: <CACVXFVOqBuCcQC6ku0abqstkgJWGe21ZztB-eTsyDwsvDvXNZw@mail.gmail.com>
+Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding disabled
+From: Ming Lei <tom.leiming@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+Hi Bjorn,
 
-Thanks for your review.
+I found this patch broke virtio-pci devices.
 
-On 13/03/2014 10:00, Arnd wrote:
-> On Thursday 13 March 2014 09:50:04 Phil Edworthy wrote:
-> > This patch adds the bindings for the rcar PCIE driver. The driver
-> > resides under drivers/pci/host/pcie-rcar.c
-> > 
-> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > ---
-> >  Documentation/devicetree/bindings/pci/rcar-pci.txt | 40 
-++++++++++++++++++++++
-> >  1 file changed, 40 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/
-> Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > new file mode 100644
-> > index 0000000..0e219b0
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > @@ -0,0 +1,40 @@
-> > +* Renesas RCar PCIe interface
-> > +
-> > +Required properties:
-> > +- compatible: should contain one of the following
-> > +   "renesas,r8a7779-pcie", "renesas,r8a7790-pcie", 
-"renesas,r8a7791-pcie"
-> > +- reg: base addresses and lengths of the pcie controller.
-> > +- #address-cells: set to <3>
-> > +- #size-cells: set to <2>
-> > +- device_type: set to "pci"
-> > +- ranges: ranges for the PCI memory and I/O regions
-> 
-> I see your description and example includes I/O regions, but the driver
-> claims in a comment that these don't work. Do you also have a patch to
-> make them work?
-Are you referring to the comment "The controller does not support/use port 
-I/O" in the driver for the internal PCI controller (pci-rcar-gen2.c)?
-This is a separate block of hardware, it's a PCIe controller with external 
-pins, for which we do support I/O regions.
+On Thu, Feb 27, 2014 at 3:37 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Don't rely on BAR contents when the command register says the BAR is
+> disabled.
+>
+> If we receive a PCI device from firmware (or a hot-added device that was
+> just powered up) with the MEMORY or IO enable bits in the PCI command
+> register cleared, there's no reason to believe the BARs contain valid
+> addresses.
 
-> In case that patch is part of the 9-patch series, do you mind adding the
-> arm kernel mailing list (and maybe me personally) to Cc the next time?
-Sure, the rest of the patch set adds this new PCIe driver and adds it to 
-the R-Car devices & boards.
+>From PCI LOCAL BUS SPECIFICATION, REV. 3.0, both
+PCI_COMMAND_IO and PCI_COMMAND_MEM should be
+cleared after reset, so looks the patch sets IORESOURCE_UNSET
+too early because PCI drivers may call pci_enable_device()
+(->pci_enable_resources()) to enable the two bits of
+PCI_COMMAND explicitly.
 
-> > +- interrupts: interrupt values for MSI interrupt
-> > +- #interrupt-cells: set to <1>
-> > +- interrupt-map-mask and interrupt-map: standard PCI properties
-> > +   to define the mapping of the PCIe interface to interrupt
-> > +   numbers.
-> > +- clocks: from common clock binding: handle to pci clock.
-> > +- clock-names: from common clock binding: should be "pcie"
-> > +
-> > +Example:
-> > +
-> > +SoC specific DT Entry:
-> > +
-> > +   pcie: pcie@0x01000000 {
-> > +      compatible = "renesas,r8a7790-pcie";
-> > +      reg = <0 0xfe000000 0 0x80000>;
-> > +      #address-cells = <3>;
-> > +      #size-cells = <2>;
-> > +      device_type = "pci";
-> > +      ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
-> > +           0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
-> > +           0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
-> > +           0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-> 
-> I'm curious about why there are two non-prefetchable regions. What is
-> the significance of this?
-The devices that have this PCIe controller both have a number of fixed, 
-non-contiguous memory regions that can be used as PCIe windows. The ranges 
-here map onto those fixed windows, i.e. if the CPU addresses of the ranges 
-change it won't work. The first couple of windows are small, we use the 
-first one for I/O, we decided that we may as well use the next small 
-window for memory - otherwise we need to figure out a way to tell the 
-driver to skip a window.
+With this patch, driver can't enable device/resource with
+pci_enable_device() any more because IORESOURCE_UNSET
+has been set already.
 
-> > +      interrupts = <0 116 4>;
-> > +      #interrupt-cells = <1>;
-> > +      interrupt-map-mask = <0 0 0 0>;
-> > +      interrupt-map = <0 0 0 0 &gic 0 116 4>;
-> > +      clocks = <&mstp3_clks R8A7790_CLK_PCIE>;
-> > +      clock-names = "pcie";
-> > +      status = "disabled";
-> > +   };
-> 
-> Are you sure that there is only one legacy interrupt?  Most host
-> controllers wire up IntA through IntD to different output pins.
-Yes, and we've tested that as well.
+>
+> In that case, we still know the type and size of the BAR, but this
+> patch marks the resource as "unset" so we have a chance to reassign it.
+>
+> Historically, we often used "BAR == 0" to decide the BAR is invalid.  But 0
+> is a legal BAR value, especially if the host bridge translates addresses,
+> so I think it's better to decide based on the PCI command register, and
+> store the conclusion in the IORESOURCE_UNSET bit.
+>
+> Reference: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=679545
+> Reference: https://bugzilla.kernel.org/show_bug.cgi?id=48451
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/probe.c |    8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6e34498ec9f0..02654b5ec1b9 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -177,9 +177,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>
+>         mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
+>
+> +       pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
+> +
+>         /* No printks while decoding is disabled! */
+>         if (!dev->mmio_always_on) {
+> -               pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
+>                 if (orig_cmd & PCI_COMMAND_DECODE_ENABLE) {
+>                         pci_write_config_word(dev, PCI_COMMAND,
+>                                 orig_cmd & ~PCI_COMMAND_DECODE_ENABLE);
+> @@ -215,9 +216,13 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>                 if (res->flags & IORESOURCE_IO) {
+>                         l &= PCI_BASE_ADDRESS_IO_MASK;
+>                         mask = PCI_BASE_ADDRESS_IO_MASK & (u32) IO_SPACE_LIMIT;
+> +                       if (!(orig_cmd & PCI_COMMAND_IO))
+> +                               res->flags |= IORESOURCE_UNSET;
+>                 } else {
+>                         l &= PCI_BASE_ADDRESS_MEM_MASK;
+>                         mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+> +                       if (!(orig_cmd & PCI_COMMAND_MEMORY))
+> +                               res->flags |= IORESOURCE_UNSET;
+>                 }
+>         } else {
+>                 res->flags |= (l & IORESOURCE_ROM_ENABLE);
+> @@ -252,6 +257,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>                         /* Address above 32-bit boundary; disable the BAR */
+>                         pci_write_config_dword(dev, pos, 0);
+>                         pci_write_config_dword(dev, pos + 4, 0);
+> +                       res->flags |= IORESOURCE_UNSET;
+>                         region.start = 0;
+>                         region.end = sz64;
+>                         bar_disabled = true;
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-> Otherwise looks good.
-> 
->    Arnd
 
-Thanks
-Phil
+Thanks,
+-- 
+Ming Lei
