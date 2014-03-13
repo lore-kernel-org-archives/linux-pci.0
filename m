@@ -1,153 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.131]:62040 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752851AbaCJTAP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 15:00:15 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v6 6/6] pci: Add support for creating a generic host_bridge from device tree
-Date: Mon, 10 Mar 2014 19:59:59 +0100
-Message-ID: <1469359.kil5iaOqdU@wuerfel>
-In-Reply-To: <20140310163343.GY6457@e106497-lin.cambridge.arm.com>
-References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com> <2115856.ZTdgp5fkma@wuerfel> <20140310163343.GY6457@e106497-lin.cambridge.arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo6ZbKFMgcm4upR7gTnYwZ15UJpxzctOwWMsGyONipq8aw@mail.gmail.com>
+References: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
+	<CAErSpo4MMJh9b0aivwGSbxCMVw24He1+Vo_LH0R0E+fYM5aThg@mail.gmail.com>
+	<5317D9B0.1080502@amd.com>
+	<5318160D.8070305@amd.com>
+	<CAErSpo59=52bqgyvqk1x7kcgFmRtdZhT6faYTi3wy7KDtk5=Pw@mail.gmail.com>
+	<5318D475.9040701@amd.com>
+	<CAErSpo5Dq3M5ik=dgF5dLsZV87XJeT3nEiYptPBXPCyLZ9xhgA@mail.gmail.com>
+	<CAErSpo6ZbKFMgcm4upR7gTnYwZ15UJpxzctOwWMsGyONipq8aw@mail.gmail.com>
+Date: Wed, 12 Mar 2014 19:30:16 -0600
+Message-ID: <CAL-B5D0+4vyOCGZafZr==xhas492yWwb4YKksmBR+JzMcZgoPA@mail.gmail.com>
+Subject: Re: [PATCH 0/3] amd/pci: Add AMD hostbridge supports for newer AMD systems
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	kim.naru@amd.com,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 10 March 2014 16:33:44 Liviu Dudau wrote:
-> On Mon, Mar 10, 2014 at 03:21:01PM +0000, Arnd Bergmann wrote:
-> > On Monday 10 March 2014 14:44:14 Liviu Dudau wrote:
-> > > I will try to improve the error handling in the next patchset version.
-> > > However I am still confused about the earlier discussion on
-> > > pci_register_io_range(). Your suggestion initially was to return an
-> > > error in the default weak implementation, but in your last email you
-> > > are talking about returning 'port'.
-> > 
-> > You can do either one: 'port' should be positive or zero, while the
-> > error would always be negative. We do the same thing in many interfaces
-> > in the kernel.
-> > 
-> > > My idea when I've introduced the
-> > > helper function was that it would return an error if it fails to
-> > > register the IO range and zero otherwise. I agree that we can treat
-> > > the default 'do nothing with the IO range' case as an error, with
-> > > the caveat that will force architectures that use this code to
-> > > provide their own implementation of pci_register_io_range() in order
-> > > to avoid failure, even for the cases where the architecture has a 1:1
-> > > mapping between IO and CPU addresses.
-> > 
-> > Which architectures are you thinking of? The only one I know that
-> > does this is ia64, and we won't ever have to support this helper
-> > on that architecture.
-> 
-> I was thinking about architectures that have IO_SPACE_LIMIT >= 0xffffffff.
-> While not an absolute indicator, with the default pci_address_to_pio()
-> that means that they can use the CPU MMIO address as IO address directly.
+Based on Bjorn's latest response it looks as if pci_acpi_scan_root()
+is only used as a fallback when the platform's BIOS has not put a
+proper ACPI SRAT table and/or _PXM method in place.  It will be
+interesting to see if the 'dmesg' log and 'acpidump' information ends
+up proving this out.
 
-Not really, that would only work if they also have instructions to do
-raw accesses to physical memory addresses rather than virtual memory
-pointers that most architectures do.
+Regardless of the above, if I'm understanding your patches -
+specifically 1/3 - it looks as if the arch/x86/pci/amd_bus.c changes
+remove a lot of the CPU family specifics and yield a generally more
+generic approach that won't have to be constantly updated as new AMD
+CPU families are introduced going forward (exactly the situation we
+are now in).  Today, before patch 1/3 here, amd_bus.c only handles AMD
+CPU families K8, 0x10, and 0x11 (ref: static struct
+pci_hostbridge_probe pci_probes[] __initdata = { ...) and as such,
+when the 0x15 family was introduced, the response supplied upstream
+was to add to an existing quirk - commit f62ef5f.  I believe with the
+approach supplied here - patch 1/3 - the 'quirk_amd_nb_node()' quirk
+becomes obsolete and can be removed.  Do you agree?
 
-> $ git grep IO_SPACE_LIMIT | grep -i ffffffff
-> arch/arm/include/asm/io.h:#define IO_SPACE_LIMIT ((resource_size_t)0xffffffff)
-> arch/arm/mach-at91/include/mach/io.h:#define IO_SPACE_LIMIT		0xFFFFFFFF
-> arch/arm/mach-omap1/include/mach/io.h:#define IO_SPACE_LIMIT 0xffffffff
-> arch/arm/mach-pxa/include/mach/io.h:#define IO_SPACE_LIMIT 0xffffffff
-> arch/arm/mach-s3c24xx/include/mach/io.h:#define IO_SPACE_LIMIT 0xffffffff
+Myron
 
-These use a special trick where an __iomem pointer is the same as
-the port number. This works most of the time, but breaks anything
-that assumes that port numbers are low, such as /dev/port or
-broken devices. Moreover, it means your code won't work because
-it depends on passing the virtual start address of the PIO mapping
-window as io_offset.
-
-> arch/avr32/include/asm/io.h:#define IO_SPACE_LIMIT	0xffffffff
-> arch/frv/include/asm/io.h:#define IO_SPACE_LIMIT	0xffffffff
-
-They have no MMU, and the code relies on the port number to match
-both the virtual and the physical address. You could be right about
-these, but I would guess that the code also needs some other
-changes if we want to make it work on nommu kernels. It also depends
-on whether the I/O bus address is the same as the CPU address, or
-if it starts at bus address 0.
-
-> arch/ia64/include/asm/io.h:#define IO_SPACE_LIMIT		0xffffffffffffffffUL
-
-Here, the definition is special, the token is just used to encode
-a space number and an offset within the I/O space.
-
-> arch/m32r/include/asm/io.h:#define IO_SPACE_LIMIT  0xFFFFFFFF
-
-no PCI here.
-
-> arch/m68k/include/asm/io_no.h:#define IO_SPACE_LIMIT 0xffffffff
-
-This looks like a mistake, it should be smaller
-
-> arch/microblaze/include/asm/io.h:#define IO_SPACE_LIMIT (0xFFFFFFFF)
-
-I suspect it doesn't actually work. microblaze copied large parts
-of this from PowerPC, but the parts that differ apparently get
-it wrong for the I/O space. 
-
-> arch/mn10300/include/asm/io.h:#define IO_SPACE_LIMIT 0xffffffff
-
-Same category as frv. We should ask David Howells whether he
-thinks I/O space actually works on these.
-
-> arch/sh/include/asm/io.h:#define IO_SPACE_LIMIT 0xffffffff
-
-I think this should just be 0xffff.
-
-> arch/sparc/include/asm/io_32.h:#define IO_SPACE_LIMIT 0xffffffff
-> arch/sparc/include/asm/io_64.h:#define IO_SPACE_LIMIT 0xffffffffffffffffUL
-
-Sparc actually accesses the physical addresses, so in theory
-it could always work. In the 64-bit case it would however have
-to check that the port number is smaller than 0xffffffff, otherwise
-you couldn't set the BAR. This means you still need a custom
-function.
-
-> arch/tile/include/asm/io.h:#define IO_SPACE_LIMIT 0xffffffff
-
-tile seems to support only ioport_map() but not inb/outb, if I'm
-reading this right.
-
-> > I did not ask to treat 'do nothing with the IO range' as an error,
-> > what I meant is that we should treat 'architecture cannot translate
-> > from I/O space to memory space but DT lists a translation anyway'
-> > as an error. On x86, you should never see an entry for the I/O space
-> > in "ranges", so we will not call this function unless there is a
-> > bug in DT.
-> 
-> Ok, it's just that there is no "architecture cannot translate from I/O
-> space to memory space" indicator anywhere and I don't want to make x86
-> a special case.
-
-Right.
-
-> So, my proposal is this: default weak implementation of pci_register_io_range()
-> returns an error (meaning I have no idea how to translate IO addresses
-> to memory space) and anyone that wants this function to return success will
-> have to provide their implementation.
-
-Another idea: make this conditional on the definition of PCI_IOBASE: If this
-is defined, we can use the arm64 version that uses this number. Otherwise
-we fall back to returning an error, which means that either on the
-architecture we shouldn't be calling that function, or we need a custom
-implementation.
-
-	Arnd
+On Wed, Mar 12, 2014 at 3:13 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Mar 11, 2014 at 12:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, Mar 6, 2014 at 1:03 PM, Suravee Suthikulpanit
+>> <suravee.suthikulpanit@amd.com> wrote:
+>>> On 3/6/2014 11:40 AM, Bjorn Helgaas wrote:
+>>>>
+>>>> [+cc Yinghai, sorry I didn't think of it before]
+>>>>
+>>>> On Wed, Mar 5, 2014 at 11:30 PM, Suravee Suthikulpanit
+>>>> <suravee.suthikulpanit@amd.com> wrote:
+>>>>>
+>>>>> On 3/5/2014 8:13 PM, Suravee Suthikulanit wrote:
+>>>>>>
+>>>>>>
+>>>>>> On 3/5/2014 3:24 PM, Bjorn Helgaas wrote:
+>>>>>>>
+>>>>>>>
+>>>>>>> [+cc linux-acpi]
+>>>>>>>
+>>>>>>> On Wed, Mar 5, 2014 at 2:06 PM,  <suravee.suthikulpanit@amd.com> wrote:
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+>>>>>>>>
+>>>>>>>> The current code only supports upto AMD hostbridge for family11h.
+>>>>>>>> This causes PCI numa_node information to be reported incorrectly
+>>>>>>>> for newer family with multi sockets.
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> Where is the incorrect reporting?  In ACPI tables?  Is this patch a
+>>>>>>> way to cover up firmware defects in the ACPI description?  Or is this
+>>>>>>> for machines without ACPI (it seems unlikely that machines with new
+>>>>>>> AMD processors would not have ACPI)?
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> This is incorrectly reported in the sysfs for each PCI device (e.g.
+>>>>>> /devices/pci0000:50/0000:50:00.2/numa_node). Without the patch, they
+>>>>>> return -1.
+>>>>>>
+>>>>>> In file arch/x86/pci/acpi.c, in function pci_acpi_scan_root(), it is
+>>>>>> queries the node information as following:
+>>>>>>
+>>>>>> #ifdef CONFIG_ACPI_NUMA
+>>>>>>       pxm = acpi_get_pxm(device->handle);
+>>>>>>       if (pxm >= 0)
+>>>>>>           node = pxm_to_node(pxm);
+>>>>>>       if (node != -1)
+>>>>>>           set_mp_bus_to_node(busnum, node);
+>>>>>>       else
+>>>>>> #endif
+>>>>>>           node = get_mp_bus_to_node(busnum);
+>>>>>>
+>>>>>> In this case, I see that the acpi_get_pxm() returns -1.  Therefore, it
+>>>>>> falls back to using the node information in mp_bus_to_node[].  So,
+>>>>>> without this patch, it would also returning -1.
+>>>>>>
+>>>>>> Also, the spec mentioned that the _PXM is optional, so I am not sure if
+>>>>>> this is a firmware bug.
+>>>>>
+>>>>>
+>>>>> I am not quite familiar with the ACPI for this part.  However, after
+>>>>> taking
+>>>>> a look at the code (in driver/acpi/pci_root.c: acpi_pci_root_add()), I
+>>>>> believe it's trying to locate _PXM method in the DSDT table, in which I
+>>>>> don't see any _PXM methods.
+>>>>
+>>>>
+>>>> This sure looks like a firmware bug.  True, _PXM is optional, but if
+>>>> the firmware doesn't provide it, nobody should be surprised that the
+>>>> OS thinks everything is in the same proximity domain.
+>>>>
+>>>> I would not endorse extending amd_bus.c for new CPUs.  That just
+>>>> covers up firmware problems like this, and if you ever run a different
+>>>> OS on the box, you'll trip over them again.  And I don't think a patch
+>>>> like this will even be a possibility for Windows.
+>>>
+>>> I understand and am trying to verify this with the BIOS engineers. However,
+>>> this is currently affecting family15h servers out in the field.  We can try
+>>> to fix ACPI for newer generation of machines, but it won't be practical to
+>>> push this BIOS fix to all the BIOS vendors and system vendors for older
+>>> platforms, as they tend to.
+>>>
+>>> What if I localize the extension to the changes to access node information
+>>> in the hostbridge for just the famil15h which is mostly used in our main
+>>> server products? Would that be acceptable?
+>>
+>> I assume the system is fully functional even without these patches,
+>> right?  The only effect of these changes should be a performance
+>> improvement.
+>>
+>> So the choices are:
+>>
+>>   1) Change the BIOS to provide _PXM
+>>   2) Change Linux with your patches
+>>
+>> Either way, the customer has to upgrade something.  Choice 1) gets you
+>> the performance improvement on all Linux and Windows releases, even
+>> the ones that are already in the field.  Choice 2) fixes future Linux
+>> distros and whatever old releases you can convince the distro to
+>> backport to, and doesn't help Windows at all.  It makes work for all
+>> the distros and we (i.e., I) have to worry about maintaining this in
+>> the future.
+>>
+>> I'm curious to see what your BIOS folks say.  It seems strange that
+>> after all these years, they wouldn't provide something relatively
+>> simple like _PXM, so I wonder if there's more to the story.
+>
+> I looked at this a bit more.  Your patches fill in the
+> mp_bus_to_node[] table, and pci_acpi_scan_root() uses
+> get_mp_bus_to_node() to get that information back out.  But
+> pci_acpi_scan_root() only uses get_mp_bus_to_node() if acpi_get_pxm()
+> fails, or if pxm_to_node() returns -1.
+>
+> If acpi_get_pxm() failed, that's pretty good indication that the _PXM
+> method is missing or broken.  If pxm_to_node() failed, it looks like
+> that could mean the SRAT table is missing or broken, and we didn't
+> fill in the relevant pxm_to_node_map[] entry.  So it's possible that
+> we do have a _PXM method, but there's something wrong with the SRAT.
+>
+> Can you collect an acpidump and complete dmesg log from a system with
+> the problem?  They might be too big for the mailing list; if so, you
+> can attach them to a kernel.org bugzilla and just include the URL
+> here.
+>
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
