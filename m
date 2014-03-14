@@ -1,116 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:49277 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752080AbaCFQRQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 11:17:16 -0500
-Date: Thu, 6 Mar 2014 16:17:13 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
+To: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH v5 3/3] arm64: Add architecture support for PCI
-Message-ID: <20140306161713.GH6457@e106497-lin.cambridge.arm.com>
-References: <1393948216-11599-1-git-send-email-Liviu.Dudau@arm.com>
- <1393948216-11599-4-git-send-email-Liviu.Dudau@arm.com>
- <201403042328.51361.arnd@arndb.de>
-MIME-Version: 1.0
-In-Reply-To: <201403042328.51361.arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: [PATCH v7 1/3] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+Date: Fri, 14 Mar 2014 15:34:16 +0000
+Message-Id: <1394811258-1500-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 04, 2014 at 10:28:51PM +0000, Arnd Bergmann wrote:
-> On Tuesday 04 March 2014, Liviu Dudau wrote:
-> 
-> > +extern int isa_dma_bridge_buggy;
-> 
-> As commented before, I still think we can hardcode this to off
+The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
+is wrong. It returns a mapped (i.e. virtual) address that can start from
+zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
+architectures that use !CONFIG_GENERIC_MAP define.
 
-Unfortunately that doesn't work when you have CONFIG_PCI=y. drivers/pci/pci.c has:
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ include/asm-generic/io.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-drivers/pci/pci.c:int isa_dma_bridge_buggy;
-drivers/pci/pci.c:EXPORT_SYMBOL(isa_dma_bridge_buggy);
-
-and drivers/pci/quirks.c does:
-
-drivers/pci/quirks.c:   if (!isa_dma_bridge_buggy) {
-drivers/pci/quirks.c:           isa_dma_bridge_buggy=1;
-drivers/pci/quirks.c-           dev_info(&dev->dev, "Activating ISA DMA hang workarounds\n");
-drivers/pci/quirks.c-   }
-
-
-> 
-> > +unsigned long pci_address_to_pio(phys_addr_t address)
-> > +{
-> > +	struct ioresource *res;
-> > +
-> > +	list_for_each_entry(res, &io_list, list) {
-> > +		if (address >= res->start &&
-> > +			address < res->start + res->size) {
-> > +			return res->start - address;
-> > +		}
-> > +	}
-> > +
-> > +	return (unsigned long)-1;
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_address_to_pio);
-> 
-> This has two problems:
-> 
-> - You return the address in bus space not the logical Linux
->   port number as powerpc and microblaze do.
-> - You imply that the window starts at bus address zero, which
->   might not be the case.
-
-That's definitely not the intention here. I want to return the
-logical port number and I want that port number to start from
-zero for every registered IO range. 
-
-> 
-> > +EXPORT_SYMBOL(pcibios_fixup_bus);
-> 
-> no need for this export.
-
-OK.
-
-> 
-> > +/*
-> > + * We don't have to worry about legacy ISA devices, so nothing to do here
-> > + */
-> > +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> > +				resource_size_t size, resource_size_t align)
-> > +{
-> > +	return ALIGN(res->start, align);
-> > +}
-> > +EXPORT_SYMBOL(pcibios_align_resource);
-> 
-> or this one. Also, the ALIGN() is already done by the PCI core.
-
-This has been fix in v6 already.
-
-Thanks for reviewing this!
-
-Liviu
-
-> 
-> 	Arnd
-> 
-
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index d5afe96..df72051 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -331,7 +331,7 @@ static inline void iounmap(void __iomem *addr)
+ #ifndef CONFIG_GENERIC_IOMAP
+ static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+ {
+-	return (void __iomem *) port;
++	return (void __iomem *)(PCI_IOBASE + (port & IO_SPACE_LIMIT));
+ }
+ 
+ static inline void ioport_unmap(void __iomem *p)
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.9.0
 
