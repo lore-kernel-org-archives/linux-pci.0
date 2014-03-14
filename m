@@ -1,613 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [216.32.180.13] ([216.32.180.13]:21590 "EHLO
-	va3outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751448AbaCTDXa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 23:23:30 -0400
-From: Dongsheng Wang <dongsheng.wang@freescale.com>
-To: <scottwood@freescale.com>
-CC: <tie-fei.zang@freescale.com>, <bhelgaas@google.com>,
-	<rjw@rjwysocki.net>, <galak@codeaurora.org>,
-	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	Wang Dongsheng <dongsheng.wang@freescale.com>
-Subject: [PATCH v2] fsl/pci: The new pci suspend/resume implementation
-Date: Thu, 20 Mar 2014 11:19:37 +0800
-Message-ID: <1395285577-35519-1-git-send-email-dongsheng.wang@freescale.com>
+Received: from moutng.kundenserver.de ([212.227.126.187]:64122 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754598AbaCNMTL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 08:19:11 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH v4 1/4] pci: APM X-Gene PCIe controller driver
+Date: Fri, 14 Mar 2014 13:18:26 +0100
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	patches@apm.com, jcm@redhat.com
+References: <1394085963-27553-1-git-send-email-tinamdar@apm.com> <1394085963-27553-2-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1394085963-27553-2-git-send-email-tinamdar@apm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201403141318.27183.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wang Dongsheng <dongsheng.wang@freescale.com>
+On Thursday 06 March 2014, Tanmay Inamdar wrote:
 
-If we do nothing in suspend/resume, some platform PCIe ip-block
-can't guarantee the link back to L0 state from sleep, then, when
-we read the EP device will hang. Only we send pme turnoff message
-in pci controller suspend, and send pme exit message in resume, the
-link state will be normal.
+> +static inline void xgene_pcie_cfg_out16(void __iomem *addr, u16 val)
+> +{
+> +	u64 temp_addr = (u64)addr & ~0x3;
 
-When we send pme turnoff message in pci controller suspend, the
-links will into l2/l3 ready, then, host cannot communicate with
-ep device, but pci-driver will call back EP device to save them
-state. So we need to change platform_driver->suspend/resume to
-syscore->suspend/resume.
+Please use 'unsigned long' as the type for calculations like this one,
+to make the code more portable. You mentioned before that the same PCI
+host controller is used on some ppc4xx, and we may want to share the
+code later.
 
-So the new suspend/resume implementation, send pme turnoff message
-in suspend, and send pme exit message in resume. And add a PME handler,
-to response PME & message interrupt.
+> +static int xgene_pcie_read_config(struct pci_bus *bus, unsigned int devfn,
+> +				  int offset, int len, u32 *val)
+> +{
+> +	struct xgene_pcie_port *port = bus->sysdata;
+> +	void __iomem *addr;
+> +	u8 val8;
+> +	u16 val16;
+> +
+> +	if ((pci_is_root_bus(bus) && devfn != 0) || !port->link_up)
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+> +	xgene_pcie_set_rtdid_reg(bus, devfn);
+> +	addr = xgene_pcie_get_cfg_base(bus);
+> +	switch (len) {
+> +	case 1:
+> +		xgene_pcie_cfg_in8(addr + offset, &val8);
+> +		*val = val8;
+> +		break;
 
-Change platform_driver->suspend/resume to syscore->suspend/resume.
-pci-driver will call back EP device, to save EP state in
-pci_pm_suspend_noirq, so we need to keep the link, until
-pci_pm_suspend_noirq finish.
+Actually it would be better to just pass both addr and offset
+down into the low-level accessors and then do the calculation
+on 'offset', which is already a scalar.
 
-Signed-off-by: Wang Dongsheng <dongsheng.wang@freescale.com>
----
-*V2*
-- Abandon patch 1/2. And send this as a independent patch.
-  The original patch links:
-  patch 1/2, http://patchwork.ozlabs.org/patch/307553/ (Abandon)
-  patch 2/2, http://patchwork.ozlabs.org/patch/307554/
-- Change pr_warn to dev_err().
-- Fix code style that to deal with if statement.
+> +static void xgene_pcie_poll_linkup(struct xgene_pcie_port *port,
+> +				   u32 *lanes, u32 *speed)
+> +{
+> +	void __iomem *csr_base = port->csr_base;
+> +	u32 val32;
+> +	u64 start_time, time;
+> +
+> +	/*
+> +	 * A component enters the LTSSM Detect state within
+> +	 * 20ms of the end of fundamental core reset.
+> +	 */
+> +	msleep(XGENE_LTSSM_DETECT_WAIT);
+> +	port->link_up = 0;
+> +	start_time = jiffies;
+> +	do {
+> +		val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
+> +		if (val32 & LINK_UP_MASK) {
+> +			port->link_up = 1;
+> +			*speed = PIPE_PHY_RATE_RD(val32);
+> +			val32 = readl(csr_base + BRIDGE_STATUS_0);
+> +			*lanes = val32 >> 26;
+> +			break;
+> +		}
+> +		msleep(1);
+> +		time = jiffies_to_msecs(jiffies - start_time);
+> +	} while (time <= XGENE_LTSSM_L0_WAIT);
+> +}
 
-diff --git a/arch/powerpc/platforms/85xx/c293pcie.c b/arch/powerpc/platforms/85xx/c293pcie.c
-index 213d5b8..84476b6 100644
---- a/arch/powerpc/platforms/85xx/c293pcie.c
-+++ b/arch/powerpc/platforms/85xx/c293pcie.c
-@@ -68,6 +68,7 @@ define_machine(c293_pcie) {
- 	.init_IRQ		= c293_pcie_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-diff --git a/arch/powerpc/platforms/85xx/corenet_generic.c b/arch/powerpc/platforms/85xx/corenet_generic.c
-index fbd871e..aa8b9a3 100644
---- a/arch/powerpc/platforms/85xx/corenet_generic.c
-+++ b/arch/powerpc/platforms/85xx/corenet_generic.c
-@@ -163,6 +163,7 @@ define_machine(corenet_generic) {
- 	.init_IRQ		= corenet_gen_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_coreint_irq,
- 	.restart		= fsl_rstcr_restart,
-diff --git a/arch/powerpc/platforms/85xx/ge_imp3a.c b/arch/powerpc/platforms/85xx/ge_imp3a.c
-index e6285ae..11790e0 100644
---- a/arch/powerpc/platforms/85xx/ge_imp3a.c
-+++ b/arch/powerpc/platforms/85xx/ge_imp3a.c
-@@ -215,6 +215,7 @@ define_machine(ge_imp3a) {
- 	.show_cpuinfo		= ge_imp3a_show_cpuinfo,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-diff --git a/arch/powerpc/platforms/85xx/mpc8536_ds.c b/arch/powerpc/platforms/85xx/mpc8536_ds.c
-index 15ce4b5..a378ba3 100644
---- a/arch/powerpc/platforms/85xx/mpc8536_ds.c
-+++ b/arch/powerpc/platforms/85xx/mpc8536_ds.c
-@@ -76,6 +76,7 @@ define_machine(mpc8536_ds) {
- 	.init_IRQ		= mpc8536_ds_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-diff --git a/arch/powerpc/platforms/85xx/mpc85xx_cds.c b/arch/powerpc/platforms/85xx/mpc85xx_cds.c
-index 7a31a0e..b0753e2 100644
---- a/arch/powerpc/platforms/85xx/mpc85xx_cds.c
-+++ b/arch/powerpc/platforms/85xx/mpc85xx_cds.c
-@@ -385,6 +385,7 @@ define_machine(mpc85xx_cds) {
- #ifdef CONFIG_PCI
- 	.restart	= mpc85xx_cds_restart,
- 	.pcibios_fixup_bus	= mpc85xx_cds_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #else
- 	.restart	= fsl_rstcr_restart,
- #endif
-diff --git a/arch/powerpc/platforms/85xx/mpc85xx_ds.c b/arch/powerpc/platforms/85xx/mpc85xx_ds.c
-index 9ebb91e..ffdf021 100644
---- a/arch/powerpc/platforms/85xx/mpc85xx_ds.c
-+++ b/arch/powerpc/platforms/85xx/mpc85xx_ds.c
-@@ -209,6 +209,7 @@ define_machine(mpc8544_ds) {
- 	.init_IRQ		= mpc85xx_ds_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -223,6 +224,7 @@ define_machine(mpc8572_ds) {
- 	.init_IRQ		= mpc85xx_ds_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -237,6 +239,7 @@ define_machine(p2020_ds) {
- 	.init_IRQ		= mpc85xx_ds_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-diff --git a/arch/powerpc/platforms/85xx/mpc85xx_mds.c b/arch/powerpc/platforms/85xx/mpc85xx_mds.c
-index a7b3621..6cd3b8a 100644
---- a/arch/powerpc/platforms/85xx/mpc85xx_mds.c
-+++ b/arch/powerpc/platforms/85xx/mpc85xx_mds.c
-@@ -416,6 +416,7 @@ define_machine(mpc8568_mds) {
- 	.progress	= udbg_progress,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- };
- 
-@@ -437,6 +438,7 @@ define_machine(mpc8569_mds) {
- 	.progress	= udbg_progress,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- };
- 
-@@ -459,6 +461,7 @@ define_machine(p1021_mds) {
- 	.progress	= udbg_progress,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- };
- 
-diff --git a/arch/powerpc/platforms/85xx/mpc85xx_rdb.c b/arch/powerpc/platforms/85xx/mpc85xx_rdb.c
-index 53b6fb0..3e2bc3d 100644
---- a/arch/powerpc/platforms/85xx/mpc85xx_rdb.c
-+++ b/arch/powerpc/platforms/85xx/mpc85xx_rdb.c
-@@ -254,6 +254,7 @@ define_machine(p2020_rdb) {
- 	.init_IRQ		= mpc85xx_rdb_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -268,6 +269,7 @@ define_machine(p1020_rdb) {
- 	.init_IRQ		= mpc85xx_rdb_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -282,6 +284,7 @@ define_machine(p1021_rdb_pc) {
- 	.init_IRQ		= mpc85xx_rdb_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -296,6 +299,7 @@ define_machine(p2020_rdb_pc) {
- 	.init_IRQ		= mpc85xx_rdb_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -310,6 +314,7 @@ define_machine(p1025_rdb) {
- 	.init_IRQ		= mpc85xx_rdb_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -324,6 +329,7 @@ define_machine(p1020_mbg_pc) {
- 	.init_IRQ		= mpc85xx_rdb_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -338,6 +344,7 @@ define_machine(p1020_utm_pc) {
- 	.init_IRQ		= mpc85xx_rdb_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -352,6 +359,7 @@ define_machine(p1020_rdb_pc) {
- 	.init_IRQ		= mpc85xx_rdb_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -366,6 +374,7 @@ define_machine(p1020_rdb_pd) {
- 	.init_IRQ		= mpc85xx_rdb_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -380,6 +389,7 @@ define_machine(p1024_rdb) {
- 	.init_IRQ		= mpc85xx_rdb_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-diff --git a/arch/powerpc/platforms/85xx/p1010rdb.c b/arch/powerpc/platforms/85xx/p1010rdb.c
-index d6a3dd3..ad1a3d4 100644
---- a/arch/powerpc/platforms/85xx/p1010rdb.c
-+++ b/arch/powerpc/platforms/85xx/p1010rdb.c
-@@ -78,6 +78,7 @@ define_machine(p1010_rdb) {
- 	.init_IRQ		= p1010_rdb_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-diff --git a/arch/powerpc/platforms/85xx/p1022_ds.c b/arch/powerpc/platforms/85xx/p1022_ds.c
-index e611e79..6ac986d 100644
---- a/arch/powerpc/platforms/85xx/p1022_ds.c
-+++ b/arch/powerpc/platforms/85xx/p1022_ds.c
-@@ -567,6 +567,7 @@ define_machine(p1022_ds) {
- 	.init_IRQ		= p1022_ds_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb	= fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-diff --git a/arch/powerpc/platforms/85xx/p1022_rdk.c b/arch/powerpc/platforms/85xx/p1022_rdk.c
-index 8c92971..7a180f0 100644
---- a/arch/powerpc/platforms/85xx/p1022_rdk.c
-+++ b/arch/powerpc/platforms/85xx/p1022_rdk.c
-@@ -147,6 +147,7 @@ define_machine(p1022_rdk) {
- 	.init_IRQ		= p1022_rdk_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-diff --git a/arch/powerpc/platforms/85xx/p1023_rds.c b/arch/powerpc/platforms/85xx/p1023_rds.c
-index 2ae9d49..0e61400 100644
---- a/arch/powerpc/platforms/85xx/p1023_rds.c
-+++ b/arch/powerpc/platforms/85xx/p1023_rds.c
-@@ -126,6 +126,7 @@ define_machine(p1023_rds) {
- 	.progress		= udbg_progress,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- };
- 
-@@ -140,5 +141,6 @@ define_machine(p1023_rdb) {
- 	.progress		= udbg_progress,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- };
-diff --git a/arch/powerpc/platforms/85xx/qemu_e500.c b/arch/powerpc/platforms/85xx/qemu_e500.c
-index 5cefc5a..7f26732 100644
---- a/arch/powerpc/platforms/85xx/qemu_e500.c
-+++ b/arch/powerpc/platforms/85xx/qemu_e500.c
-@@ -66,6 +66,7 @@ define_machine(qemu_e500) {
- 	.init_IRQ		= qemu_e500_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_coreint_irq,
- 	.restart		= fsl_rstcr_restart,
-diff --git a/arch/powerpc/platforms/85xx/sbc8548.c b/arch/powerpc/platforms/85xx/sbc8548.c
-index f621218..b072146 100644
---- a/arch/powerpc/platforms/85xx/sbc8548.c
-+++ b/arch/powerpc/platforms/85xx/sbc8548.c
-@@ -135,6 +135,7 @@ define_machine(sbc8548) {
- 	.restart	= fsl_rstcr_restart,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.calibrate_decr = generic_calibrate_decr,
- 	.progress	= udbg_progress,
-diff --git a/arch/powerpc/platforms/85xx/xes_mpc85xx.c b/arch/powerpc/platforms/85xx/xes_mpc85xx.c
-index dcbf7e4..1a9c108 100644
---- a/arch/powerpc/platforms/85xx/xes_mpc85xx.c
-+++ b/arch/powerpc/platforms/85xx/xes_mpc85xx.c
-@@ -170,6 +170,7 @@ define_machine(xes_mpc8572) {
- 	.init_IRQ		= xes_mpc85xx_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -184,6 +185,7 @@ define_machine(xes_mpc8548) {
- 	.init_IRQ		= xes_mpc85xx_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-@@ -198,6 +200,7 @@ define_machine(xes_mpc8540) {
- 	.init_IRQ		= xes_mpc85xx_pic_init,
- #ifdef CONFIG_PCI
- 	.pcibios_fixup_bus	= fsl_pcibios_fixup_bus,
-+	.pcibios_fixup_phb      = fsl_pcibios_fixup_phb,
- #endif
- 	.get_irq		= mpic_get_irq,
- 	.restart		= fsl_rstcr_restart,
-diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
-index 4dfd61d..ccb3cb8 100644
---- a/arch/powerpc/sysdev/fsl_pci.c
-+++ b/arch/powerpc/sysdev/fsl_pci.c
-@@ -22,10 +22,13 @@
- #include <linux/delay.h>
- #include <linux/string.h>
- #include <linux/init.h>
-+#include <linux/interrupt.h>
- #include <linux/bootmem.h>
- #include <linux/memblock.h>
- #include <linux/log2.h>
- #include <linux/slab.h>
-+#include <linux/suspend.h>
-+#include <linux/syscore_ops.h>
- #include <linux/uaccess.h>
- 
- #include <asm/io.h>
-@@ -1085,55 +1088,171 @@ void fsl_pci_assign_primary(void)
- 	}
- }
- 
--static int fsl_pci_probe(struct platform_device *pdev)
-+#ifdef CONFIG_PM_SLEEP
-+static irqreturn_t fsl_pci_pme_handle(int irq, void *dev_id)
- {
--	int ret;
--	struct device_node *node;
-+	struct pci_controller *hose = dev_id;
-+	struct ccsr_pci __iomem *pci = hose->private_data;
-+	u32 dr;
- 
--	node = pdev->dev.of_node;
--	ret = fsl_add_bridge(pdev, fsl_pci_primary == node);
-+	dr = in_be32(&pci->pex_pme_mes_dr);
-+	if (!dr)
-+		return IRQ_NONE;
- 
--	mpc85xx_pci_err_probe(pdev);
-+	out_be32(&pci->pex_pme_mes_dr, dr);
- 
--	return 0;
-+	return IRQ_HANDLED;
- }
- 
--#ifdef CONFIG_PM
--static int fsl_pci_resume(struct device *dev)
-+static int fsl_pci_pme_probe(struct pci_controller *hose)
- {
--	struct pci_controller *hose;
--	struct resource pci_rsrc;
-+	struct ccsr_pci __iomem *pci;
-+	struct pci_dev *dev;
-+	int pme_irq;
-+	int res;
-+	u16 pms;
- 
--	hose = pci_find_hose_for_OF_device(dev->of_node);
--	if (!hose)
--		return -ENODEV;
-+	/* Get hose's pci_dev */
-+	dev = list_first_entry(&hose->bus->devices, typeof(*dev), bus_list);
-+
-+	/* PME Disable */
-+	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pms);
-+	pms &= ~PCI_PM_CTRL_PME_ENABLE;
-+	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pms);
-+
-+	pme_irq = irq_of_parse_and_map(hose->dn, 0);
-+	if (!pme_irq) {
-+		dev_err(&dev->dev, "Failed to map PME interrupt.\n");
-+
-+		return -ENXIO;
-+	}
-+
-+	res = devm_request_irq(hose->parent, pme_irq,
-+			fsl_pci_pme_handle,
-+			IRQF_SHARED,
-+			"[PCI] PME", hose);
-+	if (res < 0) {
-+		dev_err(&dev->dev, "Unable to requiest irq %d for PME\n", pme_irq);
-+		irq_dispose_mapping(pme_irq);
- 
--	if (of_address_to_resource(dev->of_node, 0, &pci_rsrc)) {
--		dev_err(dev, "Get pci register base failed.");
- 		return -ENODEV;
- 	}
- 
--	setup_pci_atmu(hose);
-+	pci = hose->private_data;
-+
-+	/* Enable PTOD, ENL23D & EXL23D */
-+	out_be32(&pci->pex_pme_mes_disr, 0);
-+	setbits32(&pci->pex_pme_mes_disr,
-+		  PME_DISR_EN_PTOD | PME_DISR_EN_ENL23D | PME_DISR_EN_EXL23D);
-+
-+	out_be32(&pci->pex_pme_mes_ier, 0);
-+	setbits32(&pci->pex_pme_mes_ier,
-+		  PME_DISR_EN_PTOD | PME_DISR_EN_ENL23D | PME_DISR_EN_EXL23D);
-+
-+	/* PME Enable */
-+	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pms);
-+	pms |= PCI_PM_CTRL_PME_ENABLE;
-+	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pms);
- 
- 	return 0;
- }
- 
--static const struct dev_pm_ops pci_pm_ops = {
--	.resume = fsl_pci_resume,
--};
-+static void send_pme_turnoff_message(struct pci_controller *hose)
-+{
-+	struct ccsr_pci __iomem *pci = hose->private_data;
-+	u32 dr;
-+	int i;
- 
--#define PCI_PM_OPS (&pci_pm_ops)
-+	/* Send PME_Turn_Off Message Request */
-+	setbits32(&pci->pex_pmcr, PEX_PMCR_PTOMR);
- 
--#else
-+	/* Wait trun off done */
-+	for (i = 0; i < 150; i++) {
-+		dr = in_be32(&pci->pex_pme_mes_dr);
-+		if (dr) {
-+			out_be32(&pci->pex_pme_mes_dr, dr);
-+			break;
-+		}
- 
--#define PCI_PM_OPS NULL
-+		udelay(1000);
-+	}
-+}
- 
-+static void fsl_pci_syscore_do_suspend(struct pci_controller *hose)
-+{
-+	send_pme_turnoff_message(hose);
-+}
-+
-+static int fsl_pci_syscore_suspend(void)
-+{
-+	struct pci_controller *hose, *tmp;
-+
-+	list_for_each_entry_safe(hose, tmp, &hose_list, list_node)
-+		fsl_pci_syscore_do_suspend(hose);
-+
-+	return 0;
-+}
-+
-+static void fsl_pci_syscore_do_resume(struct pci_controller *hose)
-+{
-+	struct ccsr_pci __iomem *pci = hose->private_data;
-+	u32 dr;
-+	int i;
-+
-+	/* Send Exit L2 State Message */
-+	setbits32(&pci->pex_pmcr, PEX_PMCR_EXL2S);
-+
-+	/* Wait exit done */
-+	for (i = 0; i < 150; i++) {
-+		dr = in_be32(&pci->pex_pme_mes_dr);
-+		if (dr) {
-+			out_be32(&pci->pex_pme_mes_dr, dr);
-+			break;
-+		}
-+
-+		udelay(1000);
-+	}
-+
-+	setup_pci_atmu(hose);
-+}
-+
-+static void fsl_pci_syscore_resume(void)
-+{
-+	struct pci_controller *hose, *tmp;
-+
-+	list_for_each_entry_safe(hose, tmp, &hose_list, list_node)
-+		fsl_pci_syscore_do_resume(hose);
-+}
-+
-+static struct syscore_ops pci_syscore_pm_ops = {
-+	.suspend = fsl_pci_syscore_suspend,
-+	.resume = fsl_pci_syscore_resume,
-+};
- #endif
- 
-+void fsl_pcibios_fixup_phb(struct pci_controller *phb)
-+{
-+#ifdef CONFIG_PM_SLEEP
-+	fsl_pci_pme_probe(phb);
-+#endif
-+}
-+
-+static int fsl_pci_probe(struct platform_device *pdev)
-+{
-+	struct device_node *node;
-+	int ret;
-+
-+	node = pdev->dev.of_node;
-+	ret = fsl_add_bridge(pdev, fsl_pci_primary == node);
-+
-+	mpc85xx_pci_err_probe(pdev);
-+
-+	return 0;
-+}
-+
- static struct platform_driver fsl_pci_driver = {
- 	.driver = {
- 		.name = "fsl-pci",
--		.pm = PCI_PM_OPS,
- 		.of_match_table = pci_ids,
- 	},
- 	.probe = fsl_pci_probe,
-@@ -1141,6 +1260,9 @@ static struct platform_driver fsl_pci_driver = {
- 
- static int __init fsl_pci_init(void)
- {
-+#ifdef CONFIG_PM_SLEEP
-+	register_syscore_ops(&pci_syscore_pm_ops);
-+#endif
- 	return platform_driver_register(&fsl_pci_driver);
- }
- arch_initcall(fsl_pci_init);
-diff --git a/arch/powerpc/sysdev/fsl_pci.h b/arch/powerpc/sysdev/fsl_pci.h
-index 8d455df..c1cec77 100644
---- a/arch/powerpc/sysdev/fsl_pci.h
-+++ b/arch/powerpc/sysdev/fsl_pci.h
-@@ -32,6 +32,13 @@ struct platform_device;
- #define PIWAR_WRITE_SNOOP	0x00005000
- #define PIWAR_SZ_MASK          0x0000003f
- 
-+#define PEX_PMCR_PTOMR		0x1
-+#define PEX_PMCR_EXL2S		0x2
-+
-+#define PME_DISR_EN_PTOD	0x00008000
-+#define PME_DISR_EN_ENL23D	0x00002000
-+#define PME_DISR_EN_EXL23D	0x00001000
-+
- /* PCI/PCI Express outbound window reg */
- struct pci_outbound_window_regs {
- 	__be32	potar;	/* 0x.0 - Outbound translation address register */
-@@ -111,6 +118,7 @@ struct ccsr_pci {
- 
- extern int fsl_add_bridge(struct platform_device *pdev, int is_primary);
- extern void fsl_pcibios_fixup_bus(struct pci_bus *bus);
-+extern void fsl_pcibios_fixup_phb(struct pci_controller *phb);
- extern int mpc83xx_add_bridge(struct device_node *dev);
- u64 fsl_pci_immrbar_base(struct pci_controller *hose);
- 
--- 
-1.8.5
+This can be written ina simpler way using 'time_before()'.
+
+> +/* Return 0 on success */
+> +static int xgene_pcie_init_ecc(struct xgene_pcie_port *port)
+> +{
+> +	void __iomem *csr_base = port->csr_base;
+> +	u64 start_time, time = 0;
+> +	u32 val;
+> +
+> +	val = readl(csr_base + MEM_RAM_SHUTDOWN);
+> +	if (!val)
+> +		return 0;
+> +	writel(0x0, csr_base + MEM_RAM_SHUTDOWN);
+> +	start_time = jiffies;
+> +	do {
+> +		val = readl(csr_base + BLOCK_MEM_RDY);
+> +		if (val == BLOCK_MEM_RDY_VAL)
+> +			break;
+> +		msleep(1);
+> +		time = jiffies_to_msecs(jiffies - start_time);
+> +	} while (time < XGENE_PCIE_ECC_TIMEOUT);
+
+Same here.
+
+> +static int xgene_pcie_init_port(struct xgene_pcie_port *port)
+> +{
+> +	int rc;
+> +
+> +	port->clk = clk_get(port->dev, NULL);
+> +	if (IS_ERR_OR_NULL(port->clk)) {
+> +		dev_err(port->dev, "clock not available\n");
+> +		return -ENODEV;
+> +	}
+
+Practically every use of IS_ERR_OR_NULL() is a bug, don't do that.
+NULL is a valid return code from clk_get(), and should not be
+treated as an error.
 
 
+> +static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
+> +				 struct pci_host_bridge *bridge,
+> +				 u64 cfg_addr)
+> +{
+> +	struct device *dev = port->dev;
+> +	struct pci_host_bridge_window *window;
+> +
+> +	list_for_each_entry(window, &bridge->windows, list) {
+> +		struct resource *res = window->res;
+> +		u64 restype = resource_type(res);
+> +		dev_dbg(port->dev, "0x%08lx 0x%016llx...0x%016llx\n",
+> +			res->flags, res->start, res->end);
+> +
+> +		switch (restype) {
+> +		case IORESOURCE_IO:
+> +			xgene_pcie_setup_ob_reg(port, res, OMR2BARL,
+> +						bridge->io_base);
+> +			BUG_ON(pci_ioremap_io(res, bridge->io_base) < 0);
+> +			break;
+
+No need to BUG_ON() here, this is not a fatal condition, just
+don't register the I/O space resource if this fails.
+
+I think as the PCI base support patch series evolves, you will actually
+not have to do this at all.
+
+	Arnd
