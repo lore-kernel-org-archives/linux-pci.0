@@ -1,46 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.austin.arm.com ([217.140.110.23]:28287 "EHLO
-	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756272AbaCNRPP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 13:15:15 -0400
-Date: Fri, 14 Mar 2014 17:14:57 +0000
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Message-ID: <20140314171457.GK18126@arm.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
- <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
+Received: from mx08-00178001.pphosted.com ([62.209.51.94]:52052 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753668AbaCNL3Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 07:29:16 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "arnd@arndb.de" <arnd@arndb.de>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"'Viresh Kumar'" <viresh.linux@gmail.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Fri, 14 Mar 2014 19:09:48 +0800
+Subject: RE: [PATCH V7 08/10] pcie: SPEAr13xx: Add designware wrapper support
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FD6D7D21@EAPEX1MAIL1.st.com>
+References: <cover.1393568715.git.mohit.kumar@st.com>
+ <cbfef3a20e6c713a0d7d6b970dc4c75928798442.1393568715.git.mohit.kumar@st.com>
+ <000001cf3f4a$e71b75a0$b55260e0$%han@samsung.com>
+In-Reply-To: <000001cf3f4a$e71b75a0$b55260e0$%han@samsung.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
-> --- /dev/null
-> +++ b/arch/arm64/kernel/pci.c
-[...]
-> +int pci_register_io_range(phys_addr_t address, resource_size_t size)
-[...]
-> +unsigned long pci_address_to_pio(phys_addr_t address)
-[...]
-> +void pcibios_fixup_bus(struct pci_bus *bus)
-[ actually most of this file ]
-
-Maybe it was raised before already but can we have __weak generic
-definitions of these functions? They don't seem to be arm64 specific in
-any way.
-
--- 
-Catalin
+SGVsbG8gSmluZ29vLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpp
+bmdvbyBIYW4gW21haWx0bzpqZzEuaGFuQHNhbXN1bmcuY29tXQ0KPiBTZW50OiBGcmlkYXksIE1h
+cmNoIDE0LCAyMDE0IDExOjMyIEFNDQo+IFRvOiBNb2hpdCBLVU1BUiBEQ0cNCj4gQ2M6IGFybmRA
+YXJuZGIuZGU7IFByYXR5dXNoIEFOQU5EOyAnVmlyZXNoIEt1bWFyJzsgc3BlYXItZGV2ZWw7IGxp
+bnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyAnSmluZ29vIEhhbicNCj4gU3ViamVjdDogUmU6
+IFtQQVRDSCBWNyAwOC8xMF0gcGNpZTogU1BFQXIxM3h4OiBBZGQgZGVzaWdud2FyZSB3cmFwcGVy
+DQo+IHN1cHBvcnQNCj4gDQo+IE9uIEZyaWRheSwgRmVicnVhcnkgMjgsIDIwMTQgODo1NSBQTSwg
+TW9oaXQgS3VtYXIgd3JvdGU6DQo+ID4NCj4gPiBGcm9tOiBQcmF0eXVzaCBBbmFuZCA8cHJhdHl1
+c2guYW5hbmRAc3QuY29tPg0KPiA+DQo+ID4gU1BFQXIxMzEwIGFuZCBTUEVBcjEzNDAgU09DIHVz
+ZXMgZGVzaWdud2FyZSBQQ0llIGNvbnRyb2xsZXIuIEFkZA0KPiA+IFNQRUFyMTN4eCBQQ0llIGRy
+aXZlciBiYXNlZCBvbiBkZXNpZ253YXJlIGNvbnRyb2xsZXIgZHJpdmVyLg0KPiA+DQo+ID4gU1BF
+QXIxMzEwIGhhcyAzIFBDSWUgcG9ydHMgYW5kIFNQRUFyMTM0MCBoYXMgMSwgd2hpY2ggYXJlIG11
+bHRpcGxleGVkDQo+ID4gd2l0aCBhaGNpL3NhdGEgcGlucy4gQnkgZGVmYXVsdCBldmFsdWF0aW9u
+IGJvYXJkIG9mIGJvdGggY29udHJvbGxlcg0KPiA+IHdvcmtzIGZvciBhaGNpIG1vZGUuDQo+ID4g
+VG8gdXNlIHRoZXNlIHBhdGNoZXMgb24gU1BFQXIxMzQwLzEzMTAgZXZhbHVhdGlvbiBib2FyZCwg
+ZG8gdGhlDQo+ID4gbmVjZXNzYXJ5IG1vZGlmaWNhdGlvbnMgb24gYm9hcmQgYW5kIGVuYWJsZSAo
+b2theSkgcGNpZSBhbmQgbWlwaHkgZnJvbQ0KPiA+IHJlc3BlY3RpdmUgZXZiIGR0c2kgZmlsZS4N
+Cj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFByYXR5dXNoIEFuYW5kIDxwcmF0eXVzaC5hbmFuZEBz
+dC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogTW9oaXQgS3VtYXIgPG1vaGl0Lmt1bWFyQHN0LmNv
+bT4NCj4gPiBDYzogSmluZ29vIEhhbiA8amcxLmhhbkBzYW1zdW5nLmNvbT4NCj4gDQo+IEZvciAn
+ZHJpdmVycy9wY2kvaG9zdC9wY2llLXNwZWFyMTN4eC5jJywNCj4gDQo+IFJldmlld2VkLWJ5OiBK
+aW5nb28gSGFuIDxqZzEuaGFuQHNhbXN1bmcuY29tPg0KDQotIFRoYW5rcyBmb3IgdGhlIHJldmll
+dy4uDQoNClJlZ2FyZHMNCk1vaGl0DQoNCj4gDQo+IEJlc3QgcmVnYXJkcywNCj4gSmluZ29vIEhh
+bg0KPiANCj4gPiBDYzogQXJuZCBCZXJnbWFubiA8YXJuZEBhcm5kYi5kZT4NCj4gPiBDYzogVmly
+ZXNoIEt1bWFyIDx2aXJlc2gubGludXhAZ21haWwuY29tPg0KPiA+IENjOiBzcGVhci1kZXZlbEBs
+aXN0LnN0LmNvbQ0KPiA+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQo+ID4gLS0tDQo+
+ID4gIGFyY2gvYXJtL2Jvb3QvZHRzL3NwZWFyMTMxMC5kdHNpICB8ICAgIDYgKw0KPiA+ICBhcmNo
+L2FybS9ib290L2R0cy9zcGVhcjEzNDAuZHRzaSAgfCAgICAyICsNCj4gPiAgYXJjaC9hcm0vYm9v
+dC9kdHMvc3BlYXIxM3h4LmR0c2kgIHwgICAgNCArLQ0KPiA+ICBhcmNoL2FybS9tYWNoLXNwZWFy
+L0tjb25maWcgICAgICAgfCAgICAxICsNCj4gPiAgZHJpdmVycy9wY2kvaG9zdC9LY29uZmlnICAg
+ICAgICAgIHwgICAgOCArDQo+ID4gIGRyaXZlcnMvcGNpL2hvc3QvTWFrZWZpbGUgICAgICAgICB8
+ICAgIDEgKw0KPiA+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtc3BlYXIxM3h4LmMgfCAgNDE0DQo+
+ID4gKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKw0KPiA+ICA3IGZpbGVzIGNo
+YW5nZWQsIDQzNCBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKSAgY3JlYXRlIG1vZGUNCj4g
+PiAxMDA2NDQgZHJpdmVycy9wY2kvaG9zdC9wY2llLXNwZWFyMTN4eC5jDQo+IA0KDQo=
