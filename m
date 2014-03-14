@@ -1,64 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:36938 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752128AbaC3VCH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 30 Mar 2014 17:02:07 -0400
-From: Marek Vasut <marex@denx.de>
-To: Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH 2/8] PCI: designware: split Exynos and i.MX bindings
-Date: Sun, 30 Mar 2014 19:36:49 +0200
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	Sean Cross <xobs@kosagi.com>,
+Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:45267
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754209AbaCNNbI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 09:31:08 -0400
+Date: Fri, 14 Mar 2014 21:31:46 +0800
+From: Shawn Guo <shawn.guo@freescale.com>
+To: Tim Harvey <tharvey@gateworks.com>
+CC: <linux-pci@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>,
 	Richard Zhu <r65037@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ben Dooks <ben-linux@fluff.org>, Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
 	Jingoo Han <jg1.han@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-tegra <linux-tegra@vger.kernel.org>,
+	Simon Horman <horms@verge.net.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
 	Shawn Guo <shawn.guo@linaro.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de> <1396025579-14344-3-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1396025579-14344-3-git-send-email-l.stach@pengutronix.de>
+	<linux-arm-kernel@lists.infradead.org>,
+	Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH 2/2] ARM: dts: imx: fix invalid #address-cells value
+Message-ID: <20140314133144.GE813@S2101-09.ap.freescale.net>
+References: <1394732405-2260-1-git-send-email-tharvey@gateworks.com>
+ <1394732405-2260-3-git-send-email-tharvey@gateworks.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201403301936.49692.marex@denx.de>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1394732405-2260-3-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, March 28, 2014 at 05:52:53 PM, Lucas Stach wrote:
-> The glue around the core designware IP is significantly
-> different between the Exynos and i.MX implementation,
-> which is reflected in the DT bindings.
+On Thu, Mar 13, 2014 at 10:40:05AM -0700, Tim Harvey wrote:
+> The invalid value of #address-cells in the imx6 pcie host controller node
+> causes of_irq_parse_raw() to incorrectly advance through an interrupt-map
+> table of more than one interrupt.
 > 
-> This changes the i.MX6 binding to reuse as much as
-> possible from the common designware binding and
-> removes old cruft.
+> This patch resolves this issue and allows proper interrupt mapping for an
+> imx6 pcie host connected to a P2P bridge when using legacy interrupts.
 > 
-> I removed the optional GPIOs with the following reasoning:
-> - disable-gpio: endpoint specific GPIO, not currently
->   wired up in any code. Should be handled by the PCI device
->   driver, not the host controller driver.
-> - wake-up-gpio: same as above.
-> - power-on-gpio: No user in any upstream DT. This should
->   be handled by a regulator which shouldn't be controlled
->   by the host driver, but rather by the PCI device driver.
+> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Mark Rutland <mark.rutland@arm.com>
+> Cc: linux-samsung-soc <linux-samsung-soc@vger.kernel.org>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Sascha Hauer <kernel@pengutronix.de>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Stephen Warren <swarren@wwwdotorg.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Simon Horman <horms@verge.net.au>
+> Cc: Thierry Reding <thierry.reding@gmail.com>
+> Cc: Ben Dooks <ben-linux@fluff.org>
+> Cc: linux-tegra <linux-tegra@vger.kernel.org>
+> Cc: Kukjin Kim <kgene.kim@samsung.com>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> ---
+>  arch/arm/boot/dts/imx6qdl.dtsi | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
+> index af8d28d..2285299 100644
+> --- a/arch/arm/boot/dts/imx6qdl.dtsi
+> +++ b/arch/arm/boot/dts/imx6qdl.dtsi
+> @@ -49,7 +49,7 @@
+>  	intc: interrupt-controller@00a01000 {
+>  		compatible = "arm,cortex-a9-gic";
+>  		#interrupt-cells = <3>;
+> -		#address-cells = <1>;
+> +		#address-cells = <0>;
+>  		#size-cells = <1>;
 
-This power-on-gpio should indeed be handled by the regulator, but the regulator 
-cannot be handled by the PCIe device driver. This power-on-gpio must be operated 
-on per-slot basis if I understand it correctly, so it cannot be controlled by 
-the host controller driver either.
+So we should probably just drop both #address-cells and #size-cells?  If
+so, please help patch imx6sl.dtsi as well.
 
-The reason why this cannot be controlled by the device driver is that if the 
-device is powered down, it won't be detected on the PCIe bus, thus it cannot 
-enable the regulator which will power up the slot the device is sitting in.
+Shawn
 
-[...]
+>  		interrupt-controller;
+>  		reg = <0x00a01000 0x1000>,
+> -- 
+> 1.8.3.2
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> 
 
-btw. am I blind or do I just not see devicetree-discuss on CC ?
-
-Best regards,
-Marek Vasut
