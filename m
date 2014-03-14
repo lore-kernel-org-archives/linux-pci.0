@@ -1,135 +1,256 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <532FCA9B.7080707@1degreenorth.com>
-Date: Mon, 24 Mar 2014 14:03:07 +0800
-From: Daniel J Blueman <daniel@1degreenorth.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Borislav Petkov <bp@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Steffen Persvold <sp@numascale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	kim.naru@amd.com,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH] Fix northbridge quirk to assign correct NUMA node
-References: <1394710981-3596-1-git-send-email-daniel@numascale.com> <CAErSpo6psgDr3XYh6m+vYcAOix2Vttrwz1jK7bS47Liy2Lw-=g@mail.gmail.com> <532BB431.7020501@numascale.com> <CAErSpo4x+=EQ5h8DuzoRznZ_d8Roy4LHer7ELEVeHxDsKwDhzA@mail.gmail.com>
-In-Reply-To: <CAErSpo4x+=EQ5h8DuzoRznZ_d8Roy4LHer7ELEVeHxDsKwDhzA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51033 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755524AbaCNPfT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 11:35:19 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: [PATCH v7 6/6] pci: Add support for creating a generic host_bridge from device tree
+Date: Fri, 14 Mar 2014 15:34:32 +0000
+Message-Id: <1394811272-1547-7-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/22/2014 12:11 AM, Bjorn Helgaas wrote:
-> [+cc Rafael, linux-acpi for _PXM questions]
->
-> On Thu, Mar 20, 2014 at 9:38 PM, Daniel J Blueman <daniel@numascale.com> wrote:
->> On 21/03/2014 06:07, Bjorn Helgaas wrote:
->>> On Thu, Mar 13, 2014 at 5:43 AM, Daniel J Blueman <daniel@numascale.com>
->>> wrote:
->>>>
->>>> For systems with multiple servers and routed fabric, all northbridges get
->>>> assigned to the first server. Fix this by also using the node reported
->>>> from
->>>> the PCI bus. For single-fabric systems, the northbriges are on PCI bus 0
->>>> by definition, which are on NUMA node 0 by definition, so this is
->>>> invarient
->>>> on most systems.
->>>>
->>>> Tested on fam10h and fam15h single and multi-fabric systems and candidate
->>>> for stable.
->
->>> So I suspect the problem is more complicated, and maybe _PXM is
->>> insufficient to describe the topology?  Are there subtrees that should
->>> have nodes different from the host bridge?
->>
->> Yes; see below.
->> ...
->> The _PXM method associates each northbridge with the first NUMA node, 0 in
->> single-fabric systems, and eg 4 for the second server in a multi-fabric
->> system with 2 dual-module Opterons (with 2 NUMA nodes internally) etc, since
->> the northbridges appear in the PCI tree, under the host bridge, not above it
->> [1].
->>
->> With _PXM, the rest of the PCI bus hierarchy has the right NUMA node
->> associated, but the northbridge PCI devices should be associated with their
->> actual NUMA node, 0, 1, 2, 3 for the first server in this example. The quirk
->> fixes this up; irqbalance at least uses this NUMA data exposed in /sys.
->
-> I'm confused about which devices we're talking about.  We currently
-> look at _PXM for PNP0A08 (and PNP0A03) ACPI devices.  The resulting
-> node is associated with every PCI device we enumerate below the
-> PNP0A08 bridge.  This association is made in pci_device_add().
->
-> When you say "northbridge PCI devices should be associated with their
-> actual NUMA node," I assume you mean the 00:18.x and 00:19.x devices
-> ("AMD Family 10h Processor ..."), since those seem to be what the
-> quirk applies to.  You are *not* talking about 00:00.0 ("ATI RD890
-> Northbridge"), right?
+Several platforms use a rather generic version of parsing
+the device tree to find the host bridge ranges. Move the common code
+into the generic PCI code and use it to create a pci_host_bridge
+structure that can be used by arch code.
 
-Yes, on bus 0, devices 0x18 to 0x20 decode to the (up to) eight 
-Hypertransport devices in the processor fabric, normally all processor 
-northbridges.
+Based on early attempts by Andrew Murray to unify the code.
+Used powerpc and microblaze PCI code as starting point.
 
-> You mention irqbalance; is the NUMA node information for the 00:18.x
-> and 00:19.x devices important because you get a lot of interrupts from
-> those devices?  Or is the issue with actual I/O devices (NICs, SCSI
-> adapters, etc.)?  If so, I don't see how this quirk would affect
-> those, because the node information for them comes from the PNP0A08
-> bridge (in pci_device_add()), not from the 00:00.0, 00:18.x, or
-> 00:19.x devices.
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ drivers/pci/host-bridge.c | 158 ++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h       |  13 +++
+ 2 files changed, 171 insertions(+)
 
-I need to investigate the lockups irqbalance was causing on a customer 
-system, and am not sure what interrupt source that was rewritten which 
-causing hangs; disabling the daemon prevented the hangs.
-
->> The alternative to the quirk may be to explicitly express the northbridge
->> PCI devices in the AML with their own _PXM methods. If it's valid, it may be
->> the honest approach, though the quirk may be needed for most BIOSs; I can
->> check the AML on a few servers to confirm if helpful.
->
-> ACPI allows _PXM for any device, so this might be a possible approach.
->   However, it looks like Linux only pays attention to _PXM for
-> PNP0A08/03, CPUs, memory and IOAPICs (which seems like a Linux defect
-> to me).
-
-> I'm really worried about the approach here:
->
->          pci_read_config_dword(nb_ht, 0x60, &val);
->          node = pcibus_to_node(dev->bus) | (val & 7);
->
-> because the pcibus_to_node() information comes indirectly from _PXM,
-> and the "val" part comes from the hardware, and I don't think these
-> are the same node number space.  If I understand correctly, the BIOS
-> can synthesize whatever numbers it wants for _PXM, which returns a
-> "proximity domain," and then Linux can make up its own mapping of
-> "proximity domain" to "logical Linux node."  So I don't see why we can
-> assume that it's valid to OR in the bits from a PCI config register to
-> this logical Linux node number.
-
-pcibus_to_node uses the proximity domain values in the ACPI SRAT table, 
-which is thus correctly mapped to the linux NUMA node ID, so my oneliner 
-is still progress.
-
-Linux allocates NUMA node ids using the ordering of PXM values seen in 
-the SRAT table, ie first_unset_node(nodes_found_map). The APIC ids are 
-initialised using the HyperTransport NodeId [1, p263 and p465], but the 
-NodeId can be reprogrammed after the APIC ids are set (which also 
-changes the PCI configuration device id from 0x18 on bus 0 it responds 
-to), and the SRAT table needn't be emitted in order, perhaps except for 
-the bootstrap core.
-
-I guess fixing the original quirk depends on how important these cases 
-really are.
-
-Thanks,
-   Daniel
-
-[1] http://support.amd.com/TechDocs/42301_15h_Mod_00h-0Fh_BKDG.pdf
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 8708b652..7cda90b 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -6,9 +6,14 @@
+ #include <linux/init.h>
+ #include <linux/pci.h>
+ #include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/slab.h>
+ 
+ #include "pci.h"
+ 
++static atomic_t domain_nr = ATOMIC_INIT(-1);
++
+ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ {
+ 	while (bus->parent)
+@@ -92,3 +97,156 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 	res->end = region->end + offset;
+ }
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
++
++#ifdef CONFIG_OF
++/**
++ * Simple version of the platform specific code for filtering the list
++ * of resources obtained from the ranges declaration in DT.
++ *
++ * Platforms can override this function in order to impose stronger
++ * constraints onto the list of resources that a host bridge can use.
++ * The filtered list will then be used to create a root bus and associate
++ * it with the host bridge.
++ *
++ */
++int __weak pcibios_fixup_bridge_ranges(struct list_head *resources)
++{
++	return 0;
++}
++
++/**
++ * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
++ * @dev: device node of the host bridge having the range property
++ * @resources: list where the range of resources will be added after DT parsing
++ * @io_base: pointer to a variable that will contain the physical address for
++ * the start of the I/O range.
++ *
++ * It is the callers job to free the @resources list if an error is returned.
++ *
++ * This function will parse the "ranges" property of a PCI host bridge device
++ * node and setup the resource mapping based on its content. It is expected
++ * that the property conforms with the Power ePAPR document.
++ *
++ * Each architecture is then offered the chance of applying their own
++ * filtering of pci_host_bridge_windows based on their own restrictions by
++ * calling pcibios_fixup_bridge_ranges(). The filtered list of windows
++ * can then be used when creating a pci_host_bridge structure.
++ */
++static int pci_host_bridge_of_get_ranges(struct device_node *dev,
++		struct list_head *resources, resource_size_t *io_base)
++{
++	struct resource *res;
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	int err;
++
++	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
++
++	/* Check for ranges property */
++	err = of_pci_range_parser_init(&parser, dev);
++	if (err)
++		return err;
++
++	pr_debug("Parsing ranges property...\n");
++	for_each_of_pci_range(&parser, &range) {
++		/* Read next ranges element */
++		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
++				range.pci_space, range.pci_addr);
++		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
++					range.cpu_addr, range.size);
++
++		/*
++		 * If we failed translation or got a zero-sized region
++		 * then skip this range
++		 */
++		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
++			continue;
++
++		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
++		if (!res)
++			return -ENOMEM;
++
++		err = of_pci_range_to_resource(&range, dev, res);
++		if (err)
++			return err;
++
++		if (resource_type(res) == IORESOURCE_IO)
++			*io_base = range.cpu_addr;
++
++		pci_add_resource_offset(resources, res,
++				res->start - range.pci_addr);
++	}
++
++	/* Apply architecture specific fixups for the ranges */
++	return pcibios_fixup_bridge_ranges(resources);
++}
++
++/**
++ * of_create_pci_host_bridge - Create a PCI host bridge structure using
++ * information passed in the DT.
++ * @parent: device owning this host bridge
++ * @ops: pci_ops associated with the host controller
++ * @host_data: opaque data structure used by the host controller.
++ *
++ * returns a pointer to the newly created pci_host_bridge structure, or
++ * NULL if the call failed.
++ *
++ * This function will try to obtain the host bridge domain number by
++ * using of_alias_get_id() call with "pci-domain" as a stem. If that
++ * fails, a local allocator will be used that will put each host bridge
++ * in a new domain.
++ */
++struct pci_host_bridge *
++of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
++{
++	int err, domain, busno;
++	struct resource *bus_range;
++	struct pci_bus *root_bus;
++	struct pci_host_bridge *bridge;
++	resource_size_t io_base;
++	LIST_HEAD(res);
++
++	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
++	if (!bus_range)
++		return ERR_PTR(-ENOMEM);
++
++	domain = of_alias_get_id(parent->of_node, "pci-domain");
++	if (domain == -ENODEV)
++		domain = atomic_inc_return(&domain_nr);
++
++	err = of_pci_parse_bus_range(parent->of_node, bus_range);
++	if (err) {
++		dev_info(parent, "No bus range for %s, using default [0-255]\n",
++			parent->of_node->full_name);
++		bus_range->start = 0;
++		bus_range->end = 255;
++		bus_range->flags = IORESOURCE_BUS;
++	}
++	busno = bus_range->start;
++	pci_add_resource(&res, bus_range);
++
++	/* now parse the rest of host bridge bus ranges */
++	err = pci_host_bridge_of_get_ranges(parent->of_node, &res, &io_base);
++	if (err)
++		goto err_create;
++
++	/* then create the root bus */
++	root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
++						ops, host_data, &res);
++	if (IS_ERR(root_bus)) {
++		err = PTR_ERR(root_bus);
++		goto err_create;
++	}
++
++	bridge = to_pci_host_bridge(root_bus->bridge);
++	bridge->io_base = io_base;
++
++	return bridge;
++
++err_create:
++	pci_free_resource_list(&res);
++	return ERR_PTR(err);
++}
++EXPORT_SYMBOL_GPL(of_create_pci_host_bridge);
++
++#endif /* CONFIG_OF */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1eed009..40ddd3d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -395,6 +395,7 @@ struct pci_host_bridge {
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
+ 	int domain_nr;
++	resource_size_t io_base;	/* physical address for the start of I/O area */
+ 	struct list_head windows;	/* pci_host_bridge_windows */
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+@@ -1786,11 +1787,23 @@ static inline struct device_node *pci_bus_to_OF_node(struct pci_bus *bus)
+ 	return bus ? bus->dev.of_node : NULL;
+ }
+ 
++struct pci_host_bridge *
++of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
++			void *host_data);
++
++int pcibios_fixup_bridge_ranges(struct list_head *resources);
+ #else /* CONFIG_OF */
+ static inline void pci_set_of_node(struct pci_dev *dev) { }
+ static inline void pci_release_of_node(struct pci_dev *dev) { }
+ static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+ static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
++
++static inline struct pci_host_bridge *
++of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
++			void *host_data)
++{
++	return NULL;
++}
+ #endif  /* CONFIG_OF */
+ 
+ #ifdef CONFIG_EEH
 -- 
-Daniel J Blueman
-Principal Software Engineer, Numascale
+1.9.0
+
