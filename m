@@ -1,64 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:43599 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755982AbaCUO3o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 10:29:44 -0400
-Received: by mail-la0-f53.google.com with SMTP id b8so1735981lan.12
-        for <linux-pci@vger.kernel.org>; Fri, 21 Mar 2014 07:29:43 -0700 (PDT)
-Message-ID: <532C5ADE.4030708@cogentembedded.com>
-Date: Fri, 21 Mar 2014 18:29:34 +0300
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Phil Edworthy <phil.edworthy@renesas.com>,
-	linux-pci@vger.kernel.org
-CC: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+Date: Fri, 14 Mar 2014 18:38:08 +0100
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>
-Subject: Re: [PATCH v4 6/9] ARM: shmobile: Add PCIe device tree nodes for
- R8A7790
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com> <1395397968-6242-7-git-send-email-phil.edworthy@renesas.com>
-In-Reply-To: <1395397968-6242-7-git-send-email-phil.edworthy@renesas.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com> <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com> <20140314171457.GK18126@arm.com>
+In-Reply-To: <20140314171457.GK18126@arm.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201403141838.08900.arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+On Friday 14 March 2014, Catalin Marinas wrote:
+> On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
+> > --- /dev/null
+> > +++ b/arch/arm64/kernel/pci.c
+> [...]
+> > +int pci_register_io_range(phys_addr_t address, resource_size_t size)
+> [...]
+> > +unsigned long pci_address_to_pio(phys_addr_t address)
+> [...]
+> > +void pcibios_fixup_bus(struct pci_bus *bus)
+> [ actually most of this file ]
+> 
+> Maybe it was raised before already but can we have __weak generic
+> definitions of these functions? They don't seem to be arm64 specific in
+> any way.
+> 
 
-On 03/21/2014 01:32 PM, Phil Edworthy wrote:
+I would definitely prefer that.
 
-> This patch adds the device tree nodes for R8A7790
-
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> ---
->   arch/arm/boot/dts/r8a7790.dtsi | 19 +++++++++++++++++++
->   1 file changed, 19 insertions(+)
-
-> diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
-> index df9ec61..e7d498a 100644
-> --- a/arch/arm/boot/dts/r8a7790.dtsi
-> +++ b/arch/arm/boot/dts/r8a7790.dtsi
-> @@ -821,4 +821,23 @@
->   		#size-cells = <0>;
->   		status = "disabled";
->   	};
-> +
-> +	pcie: pcie@fe000000 {
-> +		compatible = "renesas,r8a7790-pcie";
-
-    The convention adopted on this list is to put the "pcie" first, and SoC 
-name the last.
-
-> +		reg = <0 0xfe000000 0 0x80000>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-
-    This legacy property is only meaningful for the true OF firmware and thus 
-have been phased out (it's only actively used for the memory nodes).
-
-WBR, Sergei
-
+	Arnd
