@@ -1,79 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53232F01.8040209@gmail.com>
-Date: Fri, 14 Mar 2014 09:32:01 -0700
-From: Rajat Jain <rajatxjain@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:39436 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753109AbaCNNGN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 09:06:13 -0400
+Received: by mail-ie0-f182.google.com with SMTP id y20so2475367ier.41
+        for <linux-pci@vger.kernel.org>; Fri, 14 Mar 2014 06:06:12 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-CC: Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Andrew Murray <amurray@embedded-bits.co.uk>,
-	Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH] pci: Allow hotplug service drivers to operate in polling
- mode
+In-Reply-To: <20140313182554.GA15990@obsidianresearch.com>
+References: <1394732405-2260-1-git-send-email-tharvey@gateworks.com>
+ <1394732405-2260-2-git-send-email-tharvey@gateworks.com> <5321EE81.1030207@wwwdotorg.org>
+ <20140313182554.GA15990@obsidianresearch.com>
+From: Grant Likely <grant.likely@linaro.org>
+Date: Fri, 14 Mar 2014 13:05:52 +0000
+Message-ID: <CACxGe6sEjW+J1ZHq-qb=7yPWLEnfWkSxZvwHUVO3L9vL5rsm1g@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ARM: DT: fix gic interrupt controller documentation
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Richard Zhu <r65037@freescale.com>,
+	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+	Ben Dooks <ben-linux@fluff.org>, Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	linux-tegra <linux-tegra@vger.kernel.org>,
+	Simon Horman <horms@verge.net.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Lucas Stach <l.stach@pengutronix.de>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Today the PCIe port bus driver disables the Hot-plug service if the
-port device does not have the capability to generate interrupts.
-However, drivers may have a polling method that can be used in this
-case. In case of pciehp, user must be able to use the "pciehp_poll_mode"
-parameter to use polling method in such a case. Today it is not
-possible.
+On Thu, Mar 13, 2014 at 6:25 PM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Thu, Mar 13, 2014 at 11:44:33AM -0600, Stephen Warren wrote:
+>> On 03/13/2014 11:40 AM, Tim Harvey wrote:
+>> > When using interrupt-maps, the size of a map entry is #address-cells +
+>> >  #interrupt-cells for the parent interrupt controller.  For the ARM GIC
+>> > address-cells should be 0 as this is not used.
+>> >
+>> > This patch fixes the example by correctly specifying #address-cells = 0.
+>>
+>> If the #address-cells property is required (well, or even optional...)
+>> in the node, shouldn't it be included in the list of required/optional
+>> properties above, and not solely included in the example?
+>
+> AFAIK, #address-cells = 0 is the same as not including a
+> #address-cells at all.
+>
+> Omitting entirely is what other interrupt-controller bindings are
+> doing, so I'd just drop mention of #address-cells completely.
 
-This patch allows a hotplug service driver to decide whether or not
-it would like to continue in absense of interrupts. Also, the current
-hotplug service driver (pciehp) is changed to check that either IRQs are
-supported, or polling mode is to be used.
+Correct. Just drop it.
 
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
----
- drivers/pci/hotplug/pciehp_hpc.c |    8 ++++++++
- drivers/pci/pcie/portdrv_core.c  |    5 ++++-
- 2 files changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 1463412..65fc1ef 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -86,6 +86,14 @@ static inline int pciehp_request_irq(struct controller *ctrl)
- 		init_timer(&ctrl->poll_timer);
- 		start_int_poll_timer(ctrl, 10);
- 		return 0;
-+	} else if (irq == -1) {
-+		/*
-+		 * Bail out if there is neither a way to generate
-+		 * interrupts, nor polling is to be used.
-+		 */
-+		ctrl_err(ctrl,
-+			 "No way to generate IRQ. Use pciehp_poll_mode\n");
-+		return -1;
- 	}
- 
- 	/* Installs the interrupt handler */
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 986f8ea..e92cd34 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -379,10 +379,13 @@ int pcie_port_device_register(struct pci_dev *dev)
- 	/*
- 	 * Initialize service irqs. Don't use service devices that
- 	 * require interrupts if there is no way to generate them.
-+	 * However, some drivers (e.g. pciehp) may have a polling mode
-+	 * that can be used in absense of irqs. Allow them to determine
-+	 * if that is to be used.
- 	 */
- 	status = init_service_irqs(dev, irqs, capabilities);
- 	if (status) {
--		capabilities &= PCIE_PORT_SERVICE_VC;
-+		capabilities &= PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_HP;
- 		if (!capabilities)
- 			goto error_disable;
- 	}
--- 
-1.7.9.5
-
+g.
