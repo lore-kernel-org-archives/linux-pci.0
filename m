@@ -1,39 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f54.google.com ([209.85.216.54]:44108 "EHLO
-	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754705AbaCRLaV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Mar 2014 07:30:21 -0400
-MIME-Version: 1.0
-In-Reply-To: <20140317235240.GA14292@google.com>
-References: <CAGG0vUg+No2GHLbOLQzV+fNm37OW-pfhmoQ3moxhr8uEObj9pQ@mail.gmail.com>
-	<20140317235240.GA14292@google.com>
-Date: Tue, 18 Mar 2014 13:30:20 +0200
-Message-ID: <CAGG0vUi0Rpm3h6KMgnqTyAPQGr3Qgk9iNnDC7kAHaU--Qfnucg@mail.gmail.com>
-Subject: Re: [bisected] e501 "agp: Support 64-bit APBASE" agp fails without iommu=remap=2
-From: =?UTF-8?B?Sm91bmkgTWV0dMOkbMOk?= <jtmettala@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	David Airlie <airlied@linux.ie>,
-	Aaron Durbin <adurbin@google.com>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50909 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755309AbaCNPfG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 11:35:06 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: [PATCH v7 4/6] pci: Introduce a domain number for pci_host_bridge.
+Date: Fri, 14 Mar 2014 15:34:30 +0000
+Message-Id: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2014-03-18 1:52 GMT+02:00 Bjorn Helgaas <bhelgaas@google.com>:
->
+Make it easier to discover the domain number of a bus by storing
+the number in pci_host_bridge for the root bus. Several architectures
+have their own way of storing this information, so it makes sense
+to try to unify the code. While at this, add a new function that
+creates a root bus in a given domain and make pci_create_root_bus()
+a wrapper around this function.
 
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ drivers/pci/probe.c | 41 +++++++++++++++++++++++++++++++++--------
+ include/linux/pci.h |  4 ++++
+ 2 files changed, 37 insertions(+), 8 deletions(-)
 
->
-> Jouni, could you try the patch below?
->
-> Bjorn
->
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index fd11c12..172c615 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1714,8 +1714,9 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ {
+ }
+ 
+-struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
++		int domain, int bus, struct pci_ops *ops, void *sysdata,
++		struct list_head *resources)
+ {
+ 	int error;
+ 	struct pci_host_bridge *bridge;
+@@ -1728,30 +1729,34 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 
+ 	bridge = pci_alloc_host_bridge();
+ 	if (!bridge)
+-		return NULL;
++		return ERR_PTR(-ENOMEM);
+ 
+ 	bridge->dev.parent = parent;
+ 	bridge->dev.release = pci_release_host_bridge_dev;
++	bridge->domain_nr = domain;
+ 	error = pcibios_root_bridge_prepare(bridge);
+ 	if (error)
+ 		goto err_out;
+ 
+ 	b = pci_alloc_bus();
+-	if (!b)
++	if (!b) {
++		error = -ENOMEM;
+ 		goto err_out;
++	}
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bus;
+-	b2 = pci_find_bus(pci_domain_nr(b), bus);
++	b2 = pci_find_bus(bridge->domain_nr, bus);
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
++		error = -EEXIST;
+ 		goto err_bus_out;
+ 	}
+ 
+ 	bridge->bus = b;
+-	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	dev_set_name(&bridge->dev, "pci%04x:%02x", bridge->domain_nr, bus);
+ 	error = device_register(&bridge->dev);
+ 	if (error) {
+ 		put_device(&bridge->dev);
+@@ -1766,7 +1771,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+-	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
++	dev_set_name(&b->dev, "%04x:%02x", bridge->domain_nr, bus);
+ 	error = device_register(&b->dev);
+ 	if (error)
+ 		goto class_dev_reg_err;
+@@ -1816,7 +1821,27 @@ err_bus_out:
+ 	kfree(b);
+ err_out:
+ 	kfree(bridge);
+-	return NULL;
++	return ERR_PTR(error);
++}
++
++struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	int domain_nr;
++	struct pci_bus *b = pci_alloc_bus();
++	if (!b)
++		return NULL;
++
++	b->sysdata = sysdata;
++	domain_nr = pci_domain_nr(b);
++	kfree(b);
++
++	b = pci_create_root_bus_in_domain(parent, domain_nr, bus,
++				ops, sysdata, resources);
++	if (IS_ERR(b))
++		return NULL;
++
++	return b;
+ }
+ 
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 33aa2ca..1eed009 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -394,6 +394,7 @@ struct pci_host_bridge_window {
+ struct pci_host_bridge {
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
++	int domain_nr;
+ 	struct list_head windows;	/* pci_host_bridge_windows */
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+@@ -747,6 +748,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
++			int domain, int bus, struct pci_ops *ops,
++			void *sysdata, struct list_head *resources);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
+-- 
+1.9.0
 
->
-> Revert "[PATCH] Insert GART region into resource map"
->
-
-Works for me. dmesg attached to:
-https://bugzilla.kernel.org/show_bug.cgi?id=72201
