@@ -1,110 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 13 Mar 2014 00:11:09 +0000
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Liviu Dudau' <Liviu.Dudau@arm.com>,
-	'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Catalin Marinas' <Catalin.Marinas@arm.com>,
-	'Will Deacon' <Will.Deacon@arm.com>,
-	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
-	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
-	'LKML' <linux-kernel@vger.kernel.org>,
-	devicetree@vger.kernel.org,
-	'LAKML' <linux-arm-kernel@lists.infradead.org>,
-	'Tanmay Inamdar' <tinamdar@apm.com>,
-	'Arnd Bergmann' <arnd@arndb.de>
-Subject: Re: [PATCH v6 3/3] arm64: Add architecture support for PCI
-Message-ID: <20140313001109.GA6915@bart.dudau.co.uk>
-References: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
- <1394020150-1875-4-git-send-email-Liviu.Dudau@arm.com>
- <000101cf3dce$df2c1840$9d8448c0$%han@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <000101cf3dce$df2c1840$9d8448c0$%han@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50998 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755524AbaCNPfP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 11:35:15 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
+Date: Fri, 14 Mar 2014 15:34:27 +0000
+Message-Id: <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 12, 2014 at 05:41:33PM +0900, Jingoo Han wrote:
-> On Wednesday, March 05, 2014 8:49 PM, Liviu Dudau wrote:
-> > 
-> > Use the generic host bridge functions to provide support for
-> > PCI Express on arm64. There is no support for ISA memory.
-> > 
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> > ---
-> >  arch/arm64/Kconfig            |  19 +++-
-> >  arch/arm64/include/asm/Kbuild |   1 +
-> >  arch/arm64/include/asm/io.h   |   3 +-
-> >  arch/arm64/include/asm/pci.h  |  49 +++++++++
-> >  arch/arm64/kernel/Makefile    |   1 +
-> >  arch/arm64/kernel/pci.c       | 173 ++++++++++++++++++++++++++++++++
-> >  6 files changed, 244 insertions(+), 2 deletions(-)
-> >  create mode 100644 arch/arm64/include/asm/pci.h
-> >  create mode 100644 arch/arm64/kernel/pci.c
-> 
-> [.....]
-> 
-> > --- /dev/null
-> > +++ b/arch/arm64/include/asm/pci.h
-> 
-> [.....]
-> 
-> > +
-> > +static inline int pci_domain_nr(struct pci_bus *bus)
-> > +{
-> > +	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-> > +
-> > +	if (bridge)
-> > +		return bridge->domain_nr;
-> > +
-> > +	return 0;
-> > +}
-> 
-> Hi Liviu Dudau,
-> 
-> When CONFIG_PCI=n, the following build errors happen. :-(
-> Would you confirm this?
-> 
-> In file included from include/linux/pci.h:1393:0,
->                  from drivers/scsi/scsi_lib.c:19:
-> arch/arm64/include/asm/pci.h:31:19: error: redefinition of 'pci_domain_nr'
->  static inline int pci_domain_nr(struct pci_bus *bus)
->                    ^
-> In file included from drivers/scsi/scsi_lib.c:19:0:
-> include/linux/pci.h:1383:19: note: previous definition of 'pci_domain_nr' was here
->  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
->                    ^
->              .....
+Some architectures do not share x86 simple view of the PCI I/O space
+and instead use a range of addresses that map to bus addresses. For
+some architectures these ranges will be expressed by OF bindings
+in a device tree file.
 
-Hi Jingoo,
+Introduce a pci_register_io_range() helper function that can be used
+by the architecture code to keep track of the I/O ranges described by the
+PCI bindings. If the PCI_IOBASE macro is not defined that signals
+lack of support for PCI and we return an error.
 
-I confirm the build error. Sorry for missing out on this test. I've now got out
-of some more pressing tasks and I will post v7 tomorrow.
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Acked-by: Grant Likely <grant.likely@linaro.org>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ drivers/of/address.c       | 9 +++++++++
+ include/linux/of_address.h | 1 +
+ 2 files changed, 10 insertions(+)
 
-Best regards,
-Liviu
-
-> 
-> Best regards,
-> Jingoo Han
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 1a54f1f..be958ed 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -619,6 +619,15 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+ }
+ EXPORT_SYMBOL(of_get_address);
+ 
++int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
++{
++#ifndef PCI_IOBASE
++	return -EINVAL;
++#else
++	return 0;
++#endif
++}
++
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
+ 	if (address > IO_SPACE_LIMIT)
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 5f6ed6b..40c418d 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -56,6 +56,7 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+ extern const __be32 *of_get_address(struct device_node *dev, int index,
+ 			   u64 *size, unsigned int *flags);
+ 
++extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+ extern unsigned long pci_address_to_pio(phys_addr_t addr);
+ 
+ extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
 -- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
-
- One small step
-   for me ...
+1.9.0
 
