@@ -1,167 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og113.obsmtp.com ([64.18.0.26]:46136 "HELO
-	exprod5og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755741AbaCOD3P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 23:29:15 -0400
-Received: by mail-vc0-f173.google.com with SMTP id il7so3703738vcb.32
-        for <linux-pci@vger.kernel.org>; Fri, 14 Mar 2014 20:29:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201403141318.27183.arnd@arndb.de>
-References: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
-	<1394085963-27553-2-git-send-email-tinamdar@apm.com>
-	<201403141318.27183.arnd@arndb.de>
-Date: Fri, 14 Mar 2014 20:29:13 -0700
-Message-ID: <CACoXjcm8TugNdPd=gUB7cFpFgraPa=B1eR5Pxmf=y1-2aTzGvw@mail.gmail.com>
-Subject: Re: [PATCH v4 1/4] pci: APM X-Gene PCIe controller driver
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50990 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755492AbaCNPfO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 11:35:14 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches <patches@apm.com>,
-	Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: [PATCH v7 3/6] pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+Date: Fri, 14 Mar 2014 15:34:29 +0000
+Message-Id: <1394811272-1547-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the review and comments. I will incorporate the comments
-from you and Jingoo Han in next version.
+Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+the creation order has been changed for no good reason. Revert the order of
+creation as we are going to depend on the pci_host_bridge structure to retrieve the
+domain number of the root bus.
 
--Tanmay
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Acked-by: Grant Likely <grant.likely@linaro.org>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ drivers/pci/probe.c | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
 
-On Fri, Mar 14, 2014 at 5:18 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Thursday 06 March 2014, Tanmay Inamdar wrote:
->
->> +static inline void xgene_pcie_cfg_out16(void __iomem *addr, u16 val)
->> +{
->> +     u64 temp_addr = (u64)addr & ~0x3;
->
-> Please use 'unsigned long' as the type for calculations like this one,
-> to make the code more portable. You mentioned before that the same PCI
-> host controller is used on some ppc4xx, and we may want to share the
-> code later.
->
->> +static int xgene_pcie_read_config(struct pci_bus *bus, unsigned int devfn,
->> +                               int offset, int len, u32 *val)
->> +{
->> +     struct xgene_pcie_port *port = bus->sysdata;
->> +     void __iomem *addr;
->> +     u8 val8;
->> +     u16 val16;
->> +
->> +     if ((pci_is_root_bus(bus) && devfn != 0) || !port->link_up)
->> +             return PCIBIOS_DEVICE_NOT_FOUND;
->> +
->> +     xgene_pcie_set_rtdid_reg(bus, devfn);
->> +     addr = xgene_pcie_get_cfg_base(bus);
->> +     switch (len) {
->> +     case 1:
->> +             xgene_pcie_cfg_in8(addr + offset, &val8);
->> +             *val = val8;
->> +             break;
->
-> Actually it would be better to just pass both addr and offset
-> down into the low-level accessors and then do the calculation
-> on 'offset', which is already a scalar.
->
->> +static void xgene_pcie_poll_linkup(struct xgene_pcie_port *port,
->> +                                u32 *lanes, u32 *speed)
->> +{
->> +     void __iomem *csr_base = port->csr_base;
->> +     u32 val32;
->> +     u64 start_time, time;
->> +
->> +     /*
->> +      * A component enters the LTSSM Detect state within
->> +      * 20ms of the end of fundamental core reset.
->> +      */
->> +     msleep(XGENE_LTSSM_DETECT_WAIT);
->> +     port->link_up = 0;
->> +     start_time = jiffies;
->> +     do {
->> +             val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
->> +             if (val32 & LINK_UP_MASK) {
->> +                     port->link_up = 1;
->> +                     *speed = PIPE_PHY_RATE_RD(val32);
->> +                     val32 = readl(csr_base + BRIDGE_STATUS_0);
->> +                     *lanes = val32 >> 26;
->> +                     break;
->> +             }
->> +             msleep(1);
->> +             time = jiffies_to_msecs(jiffies - start_time);
->> +     } while (time <= XGENE_LTSSM_L0_WAIT);
->> +}
->
-> This can be written ina simpler way using 'time_before()'.
->
->> +/* Return 0 on success */
->> +static int xgene_pcie_init_ecc(struct xgene_pcie_port *port)
->> +{
->> +     void __iomem *csr_base = port->csr_base;
->> +     u64 start_time, time = 0;
->> +     u32 val;
->> +
->> +     val = readl(csr_base + MEM_RAM_SHUTDOWN);
->> +     if (!val)
->> +             return 0;
->> +     writel(0x0, csr_base + MEM_RAM_SHUTDOWN);
->> +     start_time = jiffies;
->> +     do {
->> +             val = readl(csr_base + BLOCK_MEM_RDY);
->> +             if (val == BLOCK_MEM_RDY_VAL)
->> +                     break;
->> +             msleep(1);
->> +             time = jiffies_to_msecs(jiffies - start_time);
->> +     } while (time < XGENE_PCIE_ECC_TIMEOUT);
->
-> Same here.
->
->> +static int xgene_pcie_init_port(struct xgene_pcie_port *port)
->> +{
->> +     int rc;
->> +
->> +     port->clk = clk_get(port->dev, NULL);
->> +     if (IS_ERR_OR_NULL(port->clk)) {
->> +             dev_err(port->dev, "clock not available\n");
->> +             return -ENODEV;
->> +     }
->
-> Practically every use of IS_ERR_OR_NULL() is a bug, don't do that.
-> NULL is a valid return code from clk_get(), and should not be
-> treated as an error.
->
->
->> +static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
->> +                              struct pci_host_bridge *bridge,
->> +                              u64 cfg_addr)
->> +{
->> +     struct device *dev = port->dev;
->> +     struct pci_host_bridge_window *window;
->> +
->> +     list_for_each_entry(window, &bridge->windows, list) {
->> +             struct resource *res = window->res;
->> +             u64 restype = resource_type(res);
->> +             dev_dbg(port->dev, "0x%08lx 0x%016llx...0x%016llx\n",
->> +                     res->flags, res->start, res->end);
->> +
->> +             switch (restype) {
->> +             case IORESOURCE_IO:
->> +                     xgene_pcie_setup_ob_reg(port, res, OMR2BARL,
->> +                                             bridge->io_base);
->> +                     BUG_ON(pci_ioremap_io(res, bridge->io_base) < 0);
->> +                     break;
->
-> No need to BUG_ON() here, this is not a fatal condition, just
-> don't register the I/O space resource if this fails.
->
-> I think as the PCI base support patch series evolves, you will actually
-> not have to do this at all.
->
->         Arnd
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6e34498..fd11c12 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+ 	kfree(bridge);
+ }
+ 
+-static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
++static struct pci_host_bridge *pci_alloc_host_bridge(void)
+ {
+ 	struct pci_host_bridge *bridge;
+ 
+@@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+ 		return NULL;
+ 
+ 	INIT_LIST_HEAD(&bridge->windows);
+-	bridge->bus = b;
+ 	return bridge;
+ }
+ 
+@@ -1727,9 +1726,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	char bus_addr[64];
+ 	char *fmt;
+ 
++	bridge = pci_alloc_host_bridge();
++	if (!bridge)
++		return NULL;
++
++	bridge->dev.parent = parent;
++	bridge->dev.release = pci_release_host_bridge_dev;
++	error = pcibios_root_bridge_prepare(bridge);
++	if (error)
++		goto err_out;
++
+ 	b = pci_alloc_bus();
+ 	if (!b)
+-		return NULL;
++		goto err_out;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+@@ -1738,26 +1747,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 
+-	bridge = pci_alloc_host_bridge(b);
+-	if (!bridge)
+-		goto err_out;
+-
+-	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_host_bridge_dev;
++	bridge->bus = b;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+-	error = pcibios_root_bridge_prepare(bridge);
+-	if (error) {
+-		kfree(bridge);
+-		goto err_out;
+-	}
+-
+ 	error = device_register(&bridge->dev);
+ 	if (error) {
+ 		put_device(&bridge->dev);
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+@@ -1814,8 +1812,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ class_dev_reg_err:
+ 	put_device(&bridge->dev);
+ 	device_unregister(&bridge->dev);
+-err_out:
++err_bus_out:
+ 	kfree(b);
++err_out:
++	kfree(bridge);
+ 	return NULL;
+ }
+ 
+-- 
+1.9.0
+
