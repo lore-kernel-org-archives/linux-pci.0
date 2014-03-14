@@ -1,67 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32988 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbaCUUZ2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 16:25:28 -0400
-Message-ID: <532CA02C.40505@oracle.com>
-Date: Fri, 21 Mar 2014 16:25:16 -0400
-From: Sasha Levin <sasha.levin@oracle.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Ming Lei <tom.leiming@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Pekka Enberg <penberg@kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding
- disabled
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com> <CACVXFVOqBuCcQC6ku0abqstkgJWGe21ZztB-eTsyDwsvDvXNZw@mail.gmail.com> <CAErSpo4ngU60XQCD=DbFJbqNOMkOwwhHB1oau1mmr7rJQQ2+pg@mail.gmail.com> <CACVXFVMz+6DaSgT0EHeVfyBOsXfWDYnZQ0wy7pwcey5ahM6rUA@mail.gmail.com> <20140318002700.GA22356@google.com> <CACVXFVNbzjYa7dJpH+k-F02Cap7yBBi7TkngjVu_KthXw-WKJA@mail.gmail.com> <CACVXFVO2rR+H7X2Xv_d-U0NeikT4dR97ffQ7PuV7+i0fN=_k3w@mail.gmail.com> <CAErSpo5qsosqLXdkS2__d2J7sM4T2nBfO1ewKg1=kFri3mcdrQ@mail.gmail.com> <CACVXFVPq2nQ8jcn+v424roieO+v_asyfXcHUHv=uSOABYHJ4eg@mail.gmail.com> <CAErSpo6zjOA43yrwk-4F8PDGTS-8G4piDBq+z-zv+L6_KkKFHQ@mail.gmail.com>
-In-Reply-To: <CAErSpo6zjOA43yrwk-4F8PDGTS-8G4piDBq+z-zv+L6_KkKFHQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50783 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755006AbaCNPe6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 11:34:58 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: [PATCH v7 2/3] arm64: Extend the PCI I/O space to 16MB
+Date: Fri, 14 Mar 2014 15:34:17 +0000
+Message-Id: <1394811258-1500-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/21/2014 04:07 PM, Bjorn Helgaas wrote:
-> I think I figured out what the problem is.  In virtio_pci__init(), we
-> allocate some address space with pci_get_io_space_block(), save its
-> address in vpci->mmio_addr, and hook that address space up to
-> virtio_pci__io_mmio_callback with kvm__register_mmio().
->
-> But when we update the BAR value in pci__config_wr(), the address
-> space mapping is never updated.  I think this means that virtio-pci
-> can't tolerate its devices being moved by the OS.
->
-> In my opinion, this is a bug in linux-kvm.  We've managed to avoid
-> triggering this bug by preventing Linux from moving the BAR (either by
-> me reverting my patch, or by Sasha's linux-kvm change [1]).  But it's
-> not very robust to assume that the OS will never change the BAR, so
-> it's quite possible that you'll trip over this again in the future.
+From: Catalin Marinas <catalin.marinas@arm.com>
 
-The purpose of KVM tool is to implement as much as possible of the KVM
-interface and the virtio spec so that we'll have a good development/testing
-environment with a very simple to understand codebase.
+The patch moves the PCI I/O space (currently at 64K) before the
+earlyprintk mapping and extends it to 16MB.
 
-The issue you've mentioned is the "evil" side of the KVM tool. It never
-tried (or claimed) to implement anything close to legacy hardware
-interfaces. This means, for example, that it doesn't run any BIOS, there's
-very lacking APIC support and the kernel is just injected into the virtual
-RAM and gets run from there.
+Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
+---
+ Documentation/arm64/memory.txt | 16 ++++++++++------
+ arch/arm64/include/asm/io.h    |  2 +-
+ 2 files changed, 11 insertions(+), 7 deletions(-)
 
-It also means that we went into the PCI spec deep enough to get the code
-to work with the kernel. The only reason we implemented MSI interrupts
-for example is because they provide improved performance with KVM, not
-because we were trying to get a complete implementation of the PCI spec.
+diff --git a/Documentation/arm64/memory.txt b/Documentation/arm64/memory.txt
+index 5e054bf..85e24c4 100644
+--- a/Documentation/arm64/memory.txt
++++ b/Documentation/arm64/memory.txt
+@@ -35,11 +35,13 @@ ffffffbc00000000	ffffffbdffffffff	   8GB		vmemmap
+ 
+ ffffffbe00000000	ffffffbffbbfffff	  ~8GB		[guard, future vmmemap]
+ 
+-ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
++ffffffbffa000000	ffffffbffaffffff	  16MB		PCI I/O space
++
++ffffffbffb000000	ffffffbffbbfffff	  12MB		[guard]
+ 
+-ffffffbffbe00000	ffffffbffbe0ffff	  64KB		PCI I/O space
++ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
+ 
+-ffffffbffbe10000	ffffffbcffffffff	  ~2MB		[guard]
++ffffffbffbe00000	ffffffbffbffffff	   2MB		[guard]
+ 
+ ffffffbffc000000	ffffffbfffffffff	  64MB		modules
+ 
+@@ -60,11 +62,13 @@ fffffdfc00000000	fffffdfdffffffff	   8GB		vmemmap
+ 
+ fffffdfe00000000	fffffdfffbbfffff	  ~8GB		[guard, future vmmemap]
+ 
+-fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
++fffffdfffa000000	fffffdfffaffffff	  16MB		PCI I/O space
++
++fffffdfffb000000	fffffdfffbbfffff	  12MB		[guard]
+ 
+-fffffdfffbe00000	fffffdfffbe0ffff	  64KB		PCI I/O space
++fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
+ 
+-fffffdfffbe10000	fffffdfffbffffff	  ~2MB		[guard]
++fffffdfffbe00000	fffffdfffbffffff	   2MB		[guard]
+ 
+ fffffdfffc000000	fffffdffffffffff	  64MB		modules
+ 
+diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+index 4cc813e..7846a6b 100644
+--- a/arch/arm64/include/asm/io.h
++++ b/arch/arm64/include/asm/io.h
+@@ -121,7 +121,7 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+  *  I/O port access primitives.
+  */
+ #define IO_SPACE_LIMIT		0xffff
+-#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_2M))
++#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
+ 
+ static inline u8 inb(unsigned long addr)
+ {
+-- 
+1.9.0
 
-So yes, the PCI implementation in the KVM tool is lacking and what we
-have there might be broken by making the kernel conform more closely
-to the spec, but we are always happy to adapt and improve our code to
-work with any changes in the kernel.
-
-To sum it up, If you'll end up adding a change to the kernel that is
-valid according to the spec but breaks the KVM tool we'll just go ahead
-and fix the tool. You really don't need to worry about breaking it.
-
-
-Thanks,
-Sasha
