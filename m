@@ -1,86 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:6428 "EHLO
-	co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751594AbaCURQS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 13:16:18 -0400
-Message-ID: <532C73DA.7060008@amd.com>
-Date: Fri, 21 Mar 2014 12:16:10 -0500
-From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Received: from moutng.kundenserver.de ([212.227.126.131]:58428 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753489AbaCNMHk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 08:07:40 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH v4 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
+Date: Fri, 14 Mar 2014 13:07:22 +0100
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	patches@apm.com, jcm@redhat.com
+References: <1394085963-27553-1-git-send-email-tinamdar@apm.com> <1394085963-27553-3-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1394085963-27553-3-git-send-email-tinamdar@apm.com>
 MIME-Version: 1.0
-To: Daniel J Blueman <daniel@numascale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Borislav Petkov <bp@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Steffen Persvold <sp@numascale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	<kim.naru@amd.com>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH] Fix northbridge quirk to assign correct NUMA node
-References: <1394710981-3596-1-git-send-email-daniel@numascale.com> <CAErSpo6psgDr3XYh6m+vYcAOix2Vttrwz1jK7bS47Liy2Lw-=g@mail.gmail.com> <532BB431.7020501@numascale.com>
-In-Reply-To: <532BB431.7020501@numascale.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201403141307.23286.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/20/2014 10:38 PM, Daniel J Blueman wrote:
-> On 21/03/2014 06:07, Bjorn Helgaas wrote:
->> [+cc linux-pci, Myron, Suravee, Kim, Aravind]
->>
->> On Thu, Mar 13, 2014 at 5:43 AM, Daniel J Blueman <daniel@numascale.com> wrote:
->>> For systems with multiple servers and routed fabric, all northbridges get
->>> assigned to the first server. Fix this by also using the node reported from
->>> the PCI bus. For single-fabric systems, the northbriges are on PCI bus 0
->>> by definition, which are on NUMA node 0 by definition, so this is invarient
->>> on most systems.
->>>
->>> Tested on fam10h and fam15h single and multi-fabric systems and candidate
->>> for stable.
->
->> I wish this had been cc'd to linux-pci.  We're talking about a related
->> change by Suravee there.  In fact, we were hoping this quirk could be
->> removed altogether.
->
-> Noted.
->
->> I don't understand what this quirk is doing.  Normally we discover the
->> NUMA node for a PCI host bridge via the ACPI _PXM method.  The way
->> _PXM works is that every PCI device in the hierarchy below the bridge
->> inherits the same node number as the host bridge.  I first thought
->> this might be a workaround for a system that lacks _PXM, but I don't
->> think that can be right, because you're only changing the node for a
->> few devices, not the whole hierarchy.
->  >
->> So I suspect the problem is more complicated, and maybe _PXM is
->> insufficient to describe the topology?  Are there subtrees that should
->> have nodes different from the host bridge?
->
-> Yes; see below.
->
->> I know this patch is already in v3.14-rc7, but I'd still like to
->> understand it so we can do the right thing with Suravee's patch.
->
-> The _PXM method associates each northbridge with the first NUMA node, 0 in single-fabric systems, and eg 4 for the second server in a multi-fabric system with 2 dual-module Opterons (with 2 NUMA nodes internally) etc, since the northbridges appear in the
-> PCI tree, under the host bridge, not above it [1].
-Daniel,
+On Thursday 06 March 2014, Tanmay Inamdar wrote:
+> +		pcie0: pcie@1f2b0000 {
+> +			status = "disabled";
+> +			device_type = "pci";
+> +			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
+> +			#interrupt-cells = <1>;
+> +			#size-cells = <2>;
+> +			#address-cells = <3>;
+> +			reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
+> +				0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
+> +			reg-names = "csr", "cfg";
+> +			ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
+> +				  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
+> +			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
+> +			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+> +			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
+> +					 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
+> +					 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
+> +					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
+> +			clocks = <&pcie0clk 0>;
+> +		};
 
-That lspci looks interesting, what is the value returned from pci_bus_to_node() on your system for each fabric?
+Is 0x40.0x00000000 the start of your RAM? I had expected RAM to start at 0.0,
+and in that case the dma-ranges property would be wrong.
 
-Suravee
-
->
-> With _PXM, the rest of the PCI bus hierarchy has the right NUMA node associated, but the northbridge PCI devices should be associated with their actual NUMA node, 0, 1, 2, 3 for the first server in this example. The quirk fixes this up; irqbalance at least
-> uses this NUMA data exposed in /sys.
->
-> The alternative to the quirk may be to explicitly express the northbridge PCI devices in the AML with their own _PXM methods. If it's valid, it may be the honest approach, though the quirk may be needed for most BIOSs; I can check the AML on a few servers
-> to confirm if helpful.
->
-> Thanks,
->    Daniel
->
-> [1] http://quora.org/2014/lspci.txt
-
-
+	Arnd
