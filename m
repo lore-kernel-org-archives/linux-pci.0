@@ -1,51 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 10 Mar 2014 17:43:18 -0400
-From: Vivek Goyal <vgoyal@redhat.com>
-To: Bill Sumner <bill.sumner@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, alex.williamson@redhat.com,
-	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
-	ddutile@redhat.com, doug.hatch@hp.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com, zhenhua@hp.com
-Subject: Re: [PATCHv3 0/6] Crashdump Accepting Active IOMMU
-Message-ID: <20140310214318.GJ4352@redhat.com>
-References: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:28287 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756272AbaCNRPP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 13:15:15 -0400
+Date: Fri, 14 Mar 2014 17:14:57 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+Message-ID: <20140314171457.GK18126@arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 10, 2014 at 03:07:26PM -0700, Bill Sumner wrote:
+On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
+> --- /dev/null
+> +++ b/arch/arm64/kernel/pci.c
+[...]
+> +int pci_register_io_range(phys_addr_t address, resource_size_t size)
+[...]
+> +unsigned long pci_address_to_pio(phys_addr_t address)
+[...]
+> +void pcibios_fixup_bus(struct pci_bus *bus)
+[ actually most of this file ]
 
-[..]
-> This patch set modifies the behavior of the iommu in the (new) crashdump kernel: 
-> 1. to accept the iommu hardware in an active state, 
-> 2. to leave the current translations in-place so that legacy DMA will continue
->    using its current buffers until the device drivers in the crashdump kernel
->    initialize and initialize their devices,
-> 3. to use different portions of the iova address ranges for the device drivers
->    in the crashdump kernel than the iova ranges that were in-use at the time
->    of the panic.  
+Maybe it was raised before already but can we have __weak generic
+definitions of these functions? They don't seem to be arm64 specific in
+any way.
 
-Conceptually, above makes sense to me. I have few queries.
-
-- Do we need to pass any kind of data from first kernel to second kernel, 
-  like table size etc? Calgary IOMMU was using first kernel's tables
-  also and it was determining previous kernel's table size using saved_max_pfn.
-
-- I don't know how IOMMU translation tables look like, but are new DMA
-  zones setup by drivers in second kernel part of same table? How do we
-  make sure that sufficient space is available. I am not sure if possible
-  table corruption from crashed kernel is an issue here or not.
-
-In general, I think changelogs of these patches need to be little better.
-There seem to be lot of text and still I can't quickly wrap my head around
-what a particular patch is supposed to be doing.
-
-But we definitely need to fix this issue. IOMMU issues with kdump have
-been troubling us for a very long time.
-
-Thanks
-Vivek
+-- 
+Catalin
