@@ -1,115 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f178.google.com ([209.85.220.178]:36404 "EHLO
-	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752497AbaCSDcO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Mar 2014 23:32:14 -0400
+Received: from exprod5og113.obsmtp.com ([64.18.0.26]:46136 "HELO
+	exprod5og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755741AbaCOD3P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 23:29:15 -0400
+Received: by mail-vc0-f173.google.com with SMTP id il7so3703738vcb.32
+        for <linux-pci@vger.kernel.org>; Fri, 14 Mar 2014 20:29:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140318002700.GA22356@google.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<CACVXFVOqBuCcQC6ku0abqstkgJWGe21ZztB-eTsyDwsvDvXNZw@mail.gmail.com>
-	<CAErSpo4ngU60XQCD=DbFJbqNOMkOwwhHB1oau1mmr7rJQQ2+pg@mail.gmail.com>
-	<CACVXFVMz+6DaSgT0EHeVfyBOsXfWDYnZQ0wy7pwcey5ahM6rUA@mail.gmail.com>
-	<20140318002700.GA22356@google.com>
-Date: Wed, 19 Mar 2014 11:32:12 +0800
-Message-ID: <CACVXFVNbzjYa7dJpH+k-F02Cap7yBBi7TkngjVu_KthXw-WKJA@mail.gmail.com>
-Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding disabled
-From: Ming Lei <tom.leiming@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <201403141318.27183.arnd@arndb.de>
+References: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
+	<1394085963-27553-2-git-send-email-tinamdar@apm.com>
+	<201403141318.27183.arnd@arndb.de>
+Date: Fri, 14 Mar 2014 20:29:13 -0700
+Message-ID: <CACoXjcm8TugNdPd=gUB7cFpFgraPa=B1eR5Pxmf=y1-2aTzGvw@mail.gmail.com>
+Subject: Re: [PATCH v4 1/4] pci: APM X-Gene PCIe controller driver
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches <patches@apm.com>,
+	Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 18, 2014 at 8:27 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Mar 14, 2014 at 09:48:35AM +0800, Ming Lei wrote:
->> On Fri, Mar 14, 2014 at 12:08 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> > On Thu, Mar 13, 2014 at 2:51 AM, Ming Lei <tom.leiming@gmail.com> wrote:
->> >> Hi Bjorn,
->> >>
->> >> I found this patch broke virtio-pci devices.
->> >
->> > Thanks a lot for testing this.
->> >
->> >> On Thu, Feb 27, 2014 at 3:37 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> >>> Don't rely on BAR contents when the command register says the BAR is
->> >>> disabled.
->> >>>
->> >>> If we receive a PCI device from firmware (or a hot-added device that was
->> >>> just powered up) with the MEMORY or IO enable bits in the PCI command
->> >>> register cleared, there's no reason to believe the BARs contain valid
->> >>> addresses.
->> >>
->> >> From PCI LOCAL BUS SPECIFICATION, REV. 3.0, both
->> >> PCI_COMMAND_IO and PCI_COMMAND_MEM should be
->> >> cleared after reset, so looks the patch sets IORESOURCE_UNSET
->> >> too early because PCI drivers may call pci_enable_device()
->> >> (->pci_enable_resources()) to enable the two bits of
->> >> PCI_COMMAND explicitly.
->> >
->> > The point is that it's not safe to enable those two bits unless we're
->> > certain that the BARs they control contain valid values that don't
->> > conflict with anything else in the system.
->> >
->> > Maybe we should only set IORESOURCE_UNSET when we find a conflict or a
->> > BAR that's not contained by an upstream bridge window, and we should
->> > try to reallocate then.  I'm pretty sure we do that at least in some
->> > cases, but it would probably simplify things if we did it more
->> > consistently, and maybe we shouldn't set it at all here in
->> > __pci_read_base().
->>
->> I think so because __pci_read_base() is called in device emulation
->> path.
->
-> Which path is this?  I don't know anything about virtio-pci, and I only see
-> calls to __pci_read_base() from:
->
->   sriov_init()
->   pci_sriov_resource_alignment()
->   pci_read_bases()
->
->> > But I'd like to understand your situation better, so can you provide
->> > more details, please?  Complete before/after dmesg logs would go a
->> > long way toward illustrating the problem you're seeing.
->>
->> Please see the two attachment log. The memory allocation failure
->> is caused by mistaken value read from pci address after the device
->> is failed to enable.
->
-> Your logs are harder than necessary to compare because one has a lot more
-> debug turned on than the other.
->
-> In the failing case, we ignore all the initial BAR values, but we do assign
-> values to all of them later:
->
->   pci 0000:00:00.0: can't claim BAR 0 [mem size 0x00000400]: no address assigned
->   pci 0000:00:00.0: can't claim BAR 1 [io  size 0x0400]: no address assigned
->   ...
->   pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x400003ff]
->   pci 0000:00:00.0: BAR 1: assigned [io  0x1000-0x13ff]
->   ...
->
-> The newly-assigned values look valid, and as far as I can tell, they should
-> work.  Do you know why they don't?  Is there an assumption somewhere that
-> we never change BAR values?
+Thanks for the review and comments. I will incorporate the comments
+from you and Jingoo Han in next version.
 
-I don't know the cause, maybe it is related with the hypervisor
-implementation.
+-Tanmay
 
+On Fri, Mar 14, 2014 at 5:18 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Thursday 06 March 2014, Tanmay Inamdar wrote:
 >
-> Even if we don't need to ignore BAR values in as many cases as we do, it
-> should be legal to ignore them and reassign them, so I want to understand
-> what's going on here before reverting this.
+>> +static inline void xgene_pcie_cfg_out16(void __iomem *addr, u16 val)
+>> +{
+>> +     u64 temp_addr = (u64)addr & ~0x3;
 >
-> Is there an easy way I can reproduce the problem on my own box?
-
-It is not quite difficult, you can build a lkvm following the README in
-below link and test -next tree on the small kvm hypervisor:
-
-     https://github.com/penberg/linux-kvm/blob/master/tools/kvm/README
-
-Thanks,
--- 
-Ming Lei
+> Please use 'unsigned long' as the type for calculations like this one,
+> to make the code more portable. You mentioned before that the same PCI
+> host controller is used on some ppc4xx, and we may want to share the
+> code later.
+>
+>> +static int xgene_pcie_read_config(struct pci_bus *bus, unsigned int devfn,
+>> +                               int offset, int len, u32 *val)
+>> +{
+>> +     struct xgene_pcie_port *port = bus->sysdata;
+>> +     void __iomem *addr;
+>> +     u8 val8;
+>> +     u16 val16;
+>> +
+>> +     if ((pci_is_root_bus(bus) && devfn != 0) || !port->link_up)
+>> +             return PCIBIOS_DEVICE_NOT_FOUND;
+>> +
+>> +     xgene_pcie_set_rtdid_reg(bus, devfn);
+>> +     addr = xgene_pcie_get_cfg_base(bus);
+>> +     switch (len) {
+>> +     case 1:
+>> +             xgene_pcie_cfg_in8(addr + offset, &val8);
+>> +             *val = val8;
+>> +             break;
+>
+> Actually it would be better to just pass both addr and offset
+> down into the low-level accessors and then do the calculation
+> on 'offset', which is already a scalar.
+>
+>> +static void xgene_pcie_poll_linkup(struct xgene_pcie_port *port,
+>> +                                u32 *lanes, u32 *speed)
+>> +{
+>> +     void __iomem *csr_base = port->csr_base;
+>> +     u32 val32;
+>> +     u64 start_time, time;
+>> +
+>> +     /*
+>> +      * A component enters the LTSSM Detect state within
+>> +      * 20ms of the end of fundamental core reset.
+>> +      */
+>> +     msleep(XGENE_LTSSM_DETECT_WAIT);
+>> +     port->link_up = 0;
+>> +     start_time = jiffies;
+>> +     do {
+>> +             val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
+>> +             if (val32 & LINK_UP_MASK) {
+>> +                     port->link_up = 1;
+>> +                     *speed = PIPE_PHY_RATE_RD(val32);
+>> +                     val32 = readl(csr_base + BRIDGE_STATUS_0);
+>> +                     *lanes = val32 >> 26;
+>> +                     break;
+>> +             }
+>> +             msleep(1);
+>> +             time = jiffies_to_msecs(jiffies - start_time);
+>> +     } while (time <= XGENE_LTSSM_L0_WAIT);
+>> +}
+>
+> This can be written ina simpler way using 'time_before()'.
+>
+>> +/* Return 0 on success */
+>> +static int xgene_pcie_init_ecc(struct xgene_pcie_port *port)
+>> +{
+>> +     void __iomem *csr_base = port->csr_base;
+>> +     u64 start_time, time = 0;
+>> +     u32 val;
+>> +
+>> +     val = readl(csr_base + MEM_RAM_SHUTDOWN);
+>> +     if (!val)
+>> +             return 0;
+>> +     writel(0x0, csr_base + MEM_RAM_SHUTDOWN);
+>> +     start_time = jiffies;
+>> +     do {
+>> +             val = readl(csr_base + BLOCK_MEM_RDY);
+>> +             if (val == BLOCK_MEM_RDY_VAL)
+>> +                     break;
+>> +             msleep(1);
+>> +             time = jiffies_to_msecs(jiffies - start_time);
+>> +     } while (time < XGENE_PCIE_ECC_TIMEOUT);
+>
+> Same here.
+>
+>> +static int xgene_pcie_init_port(struct xgene_pcie_port *port)
+>> +{
+>> +     int rc;
+>> +
+>> +     port->clk = clk_get(port->dev, NULL);
+>> +     if (IS_ERR_OR_NULL(port->clk)) {
+>> +             dev_err(port->dev, "clock not available\n");
+>> +             return -ENODEV;
+>> +     }
+>
+> Practically every use of IS_ERR_OR_NULL() is a bug, don't do that.
+> NULL is a valid return code from clk_get(), and should not be
+> treated as an error.
+>
+>
+>> +static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
+>> +                              struct pci_host_bridge *bridge,
+>> +                              u64 cfg_addr)
+>> +{
+>> +     struct device *dev = port->dev;
+>> +     struct pci_host_bridge_window *window;
+>> +
+>> +     list_for_each_entry(window, &bridge->windows, list) {
+>> +             struct resource *res = window->res;
+>> +             u64 restype = resource_type(res);
+>> +             dev_dbg(port->dev, "0x%08lx 0x%016llx...0x%016llx\n",
+>> +                     res->flags, res->start, res->end);
+>> +
+>> +             switch (restype) {
+>> +             case IORESOURCE_IO:
+>> +                     xgene_pcie_setup_ob_reg(port, res, OMR2BARL,
+>> +                                             bridge->io_base);
+>> +                     BUG_ON(pci_ioremap_io(res, bridge->io_base) < 0);
+>> +                     break;
+>
+> No need to BUG_ON() here, this is not a fatal condition, just
+> don't register the I/O space resource if this fails.
+>
+> I think as the PCI base support patch series evolves, you will actually
+> not have to do this at all.
+>
+>         Arnd
