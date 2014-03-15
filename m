@@ -1,67 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:52274 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560AbaCKRGb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 13:06:31 -0400
-From: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v2 01/23] be2iscsi: Use pci_enable_msix_exact() instead
- of pci_enable_msix()
-Date: Tue, 11 Mar 2014 17:06:29 +0000
-Message-ID: <37724B2049F71D4C9B086F99DDB2DE112A8F0A03@CMEXMB1.ad.emulex.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
- <7870f36835f20cbe81dfa1540e6671d486fda0b0.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <7870f36835f20cbe81dfa1540e6671d486fda0b0.1393191330.git.agordeev@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from exprod5og111.obsmtp.com ([64.18.0.22]:42781 "HELO
+	exprod5og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754391AbaCOD1O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 23:27:14 -0400
+Received: by mail-vc0-f175.google.com with SMTP id lh14so3656891vcb.34
+        for <linux-pci@vger.kernel.org>; Fri, 14 Mar 2014 20:27:13 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <201403141307.23286.arnd@arndb.de>
+References: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
+	<1394085963-27553-3-git-send-email-tinamdar@apm.com>
+	<201403141307.23286.arnd@arndb.de>
+Date: Fri, 14 Mar 2014 20:27:12 -0700
+Message-ID: <CACoXjc=t1SuyE5jzHjGk7eNUjVCNW9_iqOTru8PQ191h=pP1sw@mail.gmail.com>
+Subject: Re: [PATCH v4 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches <patches@apm.com>,
+	Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Mar 14, 2014 at 5:07 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Thursday 06 March 2014, Tanmay Inamdar wrote:
+>> +             pcie0: pcie@1f2b0000 {
+>> +                     status = "disabled";
+>> +                     device_type = "pci";
+>> +                     compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
+>> +                     #interrupt-cells = <1>;
+>> +                     #size-cells = <2>;
+>> +                     #address-cells = <3>;
+>> +                     reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
+>> +                             0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
+>> +                     reg-names = "csr", "cfg";
+>> +                     ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
+>> +                               0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
+>> +                     dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
+>> +                     interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+>> +                     interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
+>> +                                      0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
+>> +                                      0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
+>> +                                      0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
+>> +                     clocks = <&pcie0clk 0>;
+>> +             };
+>
+> Is 0x40.0x00000000 the start of your RAM? I had expected RAM to start at 0.0,
+> and in that case the dma-ranges property would be wrong.
 
+RAM starting address is 0x40_00000000.
 
------Original Message-----
-From: Alexander Gordeev [mailto:agordeev@redhat.com] 
-Sent: Monday, February 24, 2014 12:02 AM
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev; Jayamohan Kallickal; linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org
-Subject: [PATCH v2 01/23] be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers using these two interfaces need to be updated to use the new pci_enable_msi_range()  or pci_enable_msi_exact() and pci_enable_msix_range() or pci_enable_msix_exact() interfaces.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/be2iscsi/be_main.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c index 1f37505..580192f 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -5284,12 +5284,10 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
- 	for (i = 0; i <= phba->num_cpus; i++)
- 		phba->msix_entries[i].entry = i;
- 
--	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
--				 (phba->num_cpus + 1));
-+	status = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
-+				       phba->num_cpus + 1);
- 	if (!status)
- 		phba->msix_enabled = true;
--
--	return;
- }
- 
- /*
---
-1.7.7.6
-
-Acked-By: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-
---
-
+>
+>         Arnd
+> CONFIDENTIALITY NOTICE: This e-mail message, including any attachments,
+> is for the sole use of the intended recipient(s) and contains information
+> that is confidential and proprietary to Applied Micro Circuits Corporation or its subsidiaries.
+> It is to be used solely for the purpose of furthering the parties' business relationship.
+> All unauthorized review, use, disclosure or distribution is prohibited.
+> If you are not the intended recipient, please contact the sender by reply e-mail
+> and destroy all copies of the original message.
+>
