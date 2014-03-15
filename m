@@ -1,98 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 25 Mar 2014 10:54:21 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Richard Zhu <r65037@freescale.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>, linux-kernel@vger.kernel.org,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [RESEND: RFC PATCH 3/3] pcie: keystone: add pcie driver based on
- designware core driver
-Message-ID: <20140325165421.GB30641@obsidianresearch.com>
-References: <1395707726-20437-1-git-send-email-m-karicheri2@ti.com>
- <1395707726-20437-4-git-send-email-m-karicheri2@ti.com>
- <235376049.yyfljDtinu@wuerfel>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:34095 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755967AbaCOAac (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 20:30:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <235376049.yyfljDtinu@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140311174809.23257.77363.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140311174555.23257.66798.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	<20140311174809.23257.77363.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Date: Fri, 14 Mar 2014 17:30:31 -0700
+Message-ID: <CAE9FiQUFoKrhKfHqE6cq=R54Uo5GyL1u=GZnBZAGZ+JJ-fR+fg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Do not enable INTx in pci_reenable_device()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Chris Cheng <chris.cheng@atrustcorp.com>,
+	Jamie Chen <jamie.chen@intel.com>,
+	Andreas Noever <andreas.noever@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 25, 2014 at 08:44:36AM +0100, Arnd Bergmann wrote:
+On Tue, Mar 11, 2014 at 10:48 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Andreas reported that after 1f42db786b14 ("PCI: Enable INTx if BIOS left
+> them disabled"), pciehp surprise removal stopped working.
+>
+> This happens because pci_reenable_device() on the hotplug bridge (used in
+> the pciehp_configure_device() path) clears the Interrupt Disable bit, which
+> apparently breaks the bridge's MSI hotplug event reporting.
+>
+> Previously we cleared the Interrupt Disable bit in do_pci_enable_device(),
+> which is used by both pci_enable_device() and pci_reenable_device().  But
+> we use pci_reenable_device() after the driver may have enabled MSI or
+> MSI-X, and we *set* Interrupt Disable as part of enabling MSI/MSI-X.
+>
+> This patch clears Interrupt Disable only when MSI/MSI-X has not been
+> enabled.
+>
+> Fixes: 1f42db786b14 PCI: Enable INTx if BIOS left them disabled
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=71691
+> Reported-and-tested-by: Andreas Noever <andreas.noever@gmail.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: stable@vger.kernel.org
+> CC: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+> ---
+>  drivers/pci/pci.c |    3 +++
+>  1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8dc3e701ec57..79fc89c6c3f3 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1192,6 +1192,9 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>                 return err;
+>         pci_fixup_device(pci_fixup_enable, dev);
+>
+> +       if (dev->msi_enabled || dev->msix_enabled)
+> +               return 0;
+> +
+>         pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>         if (pin) {
+>                 pci_read_config_word(dev, PCI_COMMAND, &cmd);
 
-> I have no idea how this would work with the standard interrupt-map property,
-> since the legacy interrupt host is now the same device as the pci host.
-> 
-> Maybe it's better to move the legacy irqchip handling entirely out of
-> the driver and use a separate device node for the registers so it can
-> come with its own #interrupt-cells, and then refer to this irqchip from
-> the interrupt-map.
+looks ugly.
 
-The other DW PCI-E drivers are being fixed to use interrupt-map, so I
-think this driver should be fixed before it goes in as well.
+We really should move out those irq handling out of pci_enable_device.
 
-Other PCI-E hosts have handled this particular problem with a
-construction like this:
-
-       pcie@21800000 {
-               compatible = "ti,keystone2-pcie";
-               device_type = "pci";
-               #address-cells = <3>;
-               #size-cells = <2>;
-               #interrupt-cells = <1>;
-	       reg = ..
-
-               pcie_intc: interrupt-controller {
-                  interrupt-controller;
-		  #address-cells = <0>;
-                  #interrupt-cells = <1>;
-               }
-
-               interrupts =  ... enough to decode INTx;
-
-	       interrtup-map = <0 0 0 1 &pcie_intc 1>, // INT A
-	                       <0 0 0 2 &pcie_intc 2>, // INT B
-                               <0 0 0 3 &pcie_intc 3>, // INT C
-                               <0 0 0 4 &pcie_intc 4>; // INT D
-       }
-
-When the legacy irq domain is created it should be bound to the
-pcie_intc node, not to pcie node.
-
-ks_pcie_map_irq should be removed.
-
-> > +#ifdef CONFIG_PCIE_KEYSTONE
-> > +/*
-> > + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
-> > + * Force this configuration for all EP including bridges.
-> > + */
-> > +static void quirk_limit_readrequest(struct pci_dev *dev)
-> > +{
-> > +	pcie_set_readrq(dev, 256);
-> > +}
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
-> > +#endif /* CONFIG_TI_KEYSTONE_PCIE */
-> 
-> You can't do this:
-> 
-> A quirk for a specific hardware must not be enabled by compile-time options.
-> You have to find a different way to do this.
-
-This configuration should happen automatically by the PCI core if the
-config spaces are correct. See pcie_write_mrrs, pcie_write_mps,
-pcie_bus_configure_settings, etc.
-
-Your host will need to conform to the PCI spec and provide a root
-port bridge header for this to work.
-
-Also, even in the keystone case the MRRS should not be globally forced
-like this, there may be other bridges in the system with a 128 byte
-MPS.
-
-Jason
+Yinghai
