@@ -1,38 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5339CC40.9050506@kernel.dk>
-Date: Mon, 31 Mar 2014 14:12:48 -0600
-From: Jens Axboe <axboe@kernel.dk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.13]:54388 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108AbaCOI7M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Mar 2014 04:59:12 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH v4 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
+Date: Sat, 15 Mar 2014 09:58:52 +0100
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches <patches@apm.com>,
+	Jon Masters <jcm@redhat.com>
+References: <1394085963-27553-1-git-send-email-tinamdar@apm.com> <201403141307.23286.arnd@arndb.de> <CACoXjc=t1SuyE5jzHjGk7eNUjVCNW9_iqOTru8PQ191h=pP1sw@mail.gmail.com>
+In-Reply-To: <CACoXjc=t1SuyE5jzHjGk7eNUjVCNW9_iqOTru8PQ191h=pP1sw@mail.gmail.com>
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
-	linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-	Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: [PATCH v2 0/2] block: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-References: <cover.1393404496.git.agordeev@redhat.com> <20140313041231.GC26657@google.com> <5321CE94.5070506@kernel.dk> <20140313173656.GA4939@dhcp-26-207.brq.redhat.com> <20140331195139.GA19867@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20140331195139.GA19867@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201403150958.52419.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/31/2014 01:52 PM, Alexander Gordeev wrote:
-> On Thu, Mar 13, 2014 at 06:36:56PM +0100, Alexander Gordeev wrote:
->> Oh-oh, cciss patch #2 requires commit 3ce4e86 ("PCI/MSI: Add
->> pci_enable_msi_exact() and pci_enable_msix_exact()") which was
->> pulled to 3.14-rc4 only. Sorry for failing to clarify that :(
->>
->> And I also notice 3111cc3 ("skd: Use pci_enable_msix_exact() instead
->> of pci_enable_msix_range()") in your tree also should not compile :(
->
-> Hi Jens,
->
-> 3.14 contains prerequisite commits for the patches above.
-> Would you pull them or do you want me to resend the two?
+On Saturday 15 March 2014, Tanmay Inamdar wrote:
+> On Fri, Mar 14, 2014 at 5:07 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Thursday 06 March 2014, Tanmay Inamdar wrote:
+> >> +             pcie0: pcie@1f2b0000 {
+> >> +                     status = "disabled";
+> >> +                     device_type = "pci";
+> >> +                     compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
+> >> +                     #interrupt-cells = <1>;
+> >> +                     #size-cells = <2>;
+> >> +                     #address-cells = <3>;
+> >> +                     reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
+> >> +                             0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
+> >> +                     reg-names = "csr", "cfg";
+> >> +                     ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
+> >> +                               0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
+> >> +                     dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
+> >> +                     interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+> >> +                     interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
+> >> +                                      0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
+> >> +                                      0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
+> >> +                                      0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
+> >> +                     clocks = <&pcie0clk 0>;
+> >> +             };
+> >
+> > Is 0x40.0x00000000 the start of your RAM? I had expected RAM to start at 0.0,
+> > and in that case the dma-ranges property would be wrong.
+> 
+> RAM starting address is 0x40_00000000.
 
-I'm assuming you are referring to the cciss patches? I can add those 
-back, for a post-merge pull request.
+Ok, it's good then. Thanks for the clarification, I keep losing track of how each of
+the ~40 SoCs I'm dealing with handles these things.
 
--- 
-Jens Axboe
-
+	Arnd
