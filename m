@@ -1,135 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f48.google.com ([209.85.213.48]:32911 "EHLO
-	mail-yh0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753972AbaCDRzQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 12:55:16 -0500
+Received: from mail.skyhub.de ([78.46.96.112]:60769 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751322AbaCPLz5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 16 Mar 2014 07:55:57 -0400
+Date: Sun, 16 Mar 2014 12:55:47 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: lkml <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+Message-ID: <20140316115546.GA11935@nazgul.tnic>
+References: <20140224162400.GE16457@pd.tnic>
+ <4205942.Tp8ltEsv6e@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAD6G_RQVD7=v7b6S-muiZBYV7PEykTHOTM23i-BL=wcA5z=4Qg@mail.gmail.com>
-References: <CAD6G_RQVD7=v7b6S-muiZBYV7PEykTHOTM23i-BL=wcA5z=4Qg@mail.gmail.com>
-Date: Tue, 4 Mar 2014 23:25:15 +0530
-Message-ID: <CAD6G_RQ130TunwZDL+8vwx__8NsfzE0AfcfnS7z5OXtZF5T8xQ@mail.gmail.com>
-Subject: Re: sblk->status_tag on drivers/net/ethernet/broadcom/tg3.c
-From: Jagan Teki <jagannadh.teki@gmail.com>
-To: netdev@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Nithin Nayak Sujir <nsujir@broadcom.com>,
-	Michael Chan <mchan@broadcom.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4205942.Tp8ltEsv6e@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+On Sat, Mar 15, 2014 at 03:15:04PM +0100, Rafael J. Wysocki wrote:
+> I've just gone throught this.
 
-I have a board setup with PCIe host bridge links to BCRM NIC/tg3 EP.
+Thanks.
 
-I'm verifying legacy INT# for ifconfig up operation, typically for
-link up EP trigger an interrupt as Assert_INT# and PCIe RC driver
-ISR will called and then EP ISR will clear and send Dessert_INT#
+> So the problem is that we have the PNP "system" driver whose only purpose seems
+> to be to reserve system resources so that the PCI layer doesn't assign them to
+> new devices on hotplug (disclaimer: I didn't invent it, I only read the code and
+> comments in there).
+> 
+> It does that for ACPI device objects having the "PNP0C02" and "PNP0C01" IDs.
 
-But I got the continues interrupts from EP which will keep ISR's in
-both PCIe RC and EP in busy loop.
+Right, pnp 00:01 is PNP0C02.
 
-Log dump:
-# ifconfig eth0 172.16.0.2 up
-RC: handler
-tg3_interrupt_tagged: write status = 0x1
-RC: handler
-tg3_interrupt_tagged: write status = 0x1
-RC: handler
-tg3_interrupt_tagged: write status = 0x1
-RC: handler
-tg3_interrupt_tagged: write status = 0x1
-............................
-..............
+> Apparently, snb_uncore_imc_init_box() steps on a range already reserved by that
+> driver on your box.  And this doesn't seem to be a coincidence, because the ACPI
+> device object in question probably *does* correspond to the memory controller
+> that the uncore driver attempts to use.
+> 
+> I'm not sure how to address that right now to be honest.  Arguably, the PNP
+> "system" driver should be replaced with something saner, but still the
+> resources it claims need to be kept out of reach of the PCI's resource
+> allocation code.
 
-I debugged further on EP driver where I could see interrupt
-re-enabling is happening continuously by writing 0x0 to onto
-MAILBOX_INTERRUPT_0 + TG3_64BIT_REG_LOW
+Well, I'm only conjecturing here but there should be a way for the
+uncore code to tell the PNP "system" driver to free this resource
+because uncore is going to use it now. Or something to that effect.
 
-Debug code:
-static irqreturn_t tg3_interrupt_tagged(int irq, void *dev_id)
-{
-      ...................
-      printk(" ++status_tag = 0x%x", sblk->status_tag);
-      .......................
-
-      tw32_mailbox_f(MAILBOX_
-INTERRUPT_0 + TG3_64BIT_REG_LOW, 0x00000001);
-      printk(" write status = 0x%x", tr32(MAILBOX_INTERRUPT_0 +
-TG3_64BIT_REG_LOW));
-      ..................
-      tnapi->last_irq_tag = sblk->status_tag;
-      printk(" --status_tag = 0x%x\n", tnapi->last_irq_tag);
-}
-
-static int tg3_poll(struct napi_struct *napi, int budget)
-{
-               printk("%s: ", __func__);
-               if (tg3_flag(tp, TAGGED_STATUS)) {
-                        /* tp->last_tag is used in tg3_int_reenable() below
-                         * to tell the hw how much work has been processed,
-                         * so we must read it before checking for more work.
-                         */
-                        tnapi->last_tag = sblk->status_tag;
-                        tnapi->last_irq_tag = tnapi->last_tag;
-                        rmb();
-                } else
-                        sblk->status &= ~SD_STATUS_UPDATED;
-
-                printk(" tag = 0x%x\n", sblk->status_tag);
-                if (likely(!tg3_has_work(tnapi))) {
-                        napi_complete(napi);
-                        printk("calling tg3_int_reenable\n");
-                        tg3_int_reenable(tnapi);
-                        break;
-              }
-}
-
-static void tg3_int_reenable(struct tg3_napi *tnapi)
-{
-        struct tg3 *tp = tnapi->tp;
-
-        printk("%s val = 0x%x\n", __func__, tnapi->last_tag << 24);
-        tw32_mailbox(tnapi->int_mbox, tnapi->last_tag << 24);
-        ..............................
-}
-
-Log dump:
-# ifconfig eth0 172.16.0.2 up
-RC: handler
-tg3_interrupt_tagged: ++status_tag = 0x0 write status = 0x1
---status_tag = 0x0 tg3_poll: tag = 0x0 calling tg3_int_reenable val =
-0x0
-RC: handler
-tg3_interrupt_tagged: ++status_tag = 0x0 write status = 0x1
---status_tag = 0x0 tg3_poll: tag = 0x0 calling tg3_int_reenable val =
-0x0
-RC: handler
-tg3_interrupt_tagged: ++status_tag = 0x0 write status = 0x1
---status_tag = 0x0 tg3_poll: tag = 0x0 calling tg3_int_reenable val =
-0x0
-RC: handler
-tg3_interrupt_tagged: ++status_tag = 0x0 write status = 0x1
---status_tag = 0x0 tg3_poll: tag = 0x0 calling tg3_int_reenable val =
-0x0
-............................
-..............
-
->From the comments in ISR any non-zero value to intr-mbox-0 clear
-the interrupt ie write status as 1 so I assume interrupt is clear and then
-in tg3_int_reenable is going to write 0x0 on to intr-mbox-0
-which again reenables the interrupt, was my guess is true?
-
-And sblk->status_tag is always 0 in ISR and BH(poll) why is that so?
-If it's is 1(unsigned non-zero) then possibly tg3_int_reenable will write
-non-zero value on intr-mbox-0 which will clear the interrupt.
-
-Request for any help who updates sblk->status_tag value and
-how many time the ISR in PCIe RC and ISR in EP will call for link up?
-
-thanks!
---
-Jagan.
+Oh well.
