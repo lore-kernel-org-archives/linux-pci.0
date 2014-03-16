@@ -1,112 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:52529 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753726AbaCUQLw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 12:11:52 -0400
-Received: by mail-ie0-f173.google.com with SMTP id rl12so2668623iec.18
-        for <linux-pci@vger.kernel.org>; Fri, 21 Mar 2014 09:11:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <532BB431.7020501@numascale.com>
-References: <1394710981-3596-1-git-send-email-daniel@numascale.com>
- <CAErSpo6psgDr3XYh6m+vYcAOix2Vttrwz1jK7bS47Liy2Lw-=g@mail.gmail.com> <532BB431.7020501@numascale.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 21 Mar 2014 10:11:31 -0600
-Message-ID: <CAErSpo4x+=EQ5h8DuzoRznZ_d8Roy4LHer7ELEVeHxDsKwDhzA@mail.gmail.com>
-Subject: Re: [PATCH] Fix northbridge quirk to assign correct NUMA node
-To: Daniel J Blueman <daniel@numascale.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Borislav Petkov <bp@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Steffen Persvold <sp@numascale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	kim.naru@amd.com,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from gate.crashing.org ([63.228.1.57]:42483 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750801AbaCPGXg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 16 Mar 2014 02:23:36 -0400
+Message-ID: <1394950946.15098.111.camel@pasglop>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Date: Sun, 16 Mar 2014 17:22:26 +1100
+In-Reply-To: <201403142010.39886.arnd@arndb.de>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+	 <201403141838.08900.arnd@arndb.de>
+	 <20140314180527.GZ6457@e106497-lin.cambridge.arm.com>
+	 <201403142010.39886.arnd@arndb.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, linux-acpi for _PXM questions]
+On Fri, 2014-03-14 at 20:10 +0100, Arnd Bergmann wrote:
+> > As for the other two functions, I've no special attachment to where they are present
+> > and I'm happy to move them into drivers/pci on the condition that the patchset doesn't
+> > double in size. The reason why I'm weary of touching other architectures in a significant
+> > way is the current lack of engineering bandwidth and way of testing all the architectures.
+> > My low friction approach has been to introduce them in arm64 and then slowly move them
+> > into core (and yes, I know about good intentions and the road to hell.)
+> 
+> I think everyone working on PCI is fed up with having arch-specific implementations
+> of all these, and Bjorn has been very supportive of generic infrastructure in the
+> past. Even just adding a generic infrastructure in a common place that is used
+> only by one architecture in my mind would be a significant improvement.
 
-On Thu, Mar 20, 2014 at 9:38 PM, Daniel J Blueman <daniel@numascale.com> wrote:
-> On 21/03/2014 06:07, Bjorn Helgaas wrote:
->> On Thu, Mar 13, 2014 at 5:43 AM, Daniel J Blueman <daniel@numascale.com>
->> wrote:
->>>
->>> For systems with multiple servers and routed fabric, all northbridges get
->>> assigned to the first server. Fix this by also using the node reported
->>> from
->>> the PCI bus. For single-fabric systems, the northbriges are on PCI bus 0
->>> by definition, which are on NUMA node 0 by definition, so this is
->>> invarient
->>> on most systems.
->>>
->>> Tested on fam10h and fam15h single and multi-fabric systems and candidate
->>> for stable.
+I agree, it's a reasonable approach and microblaze which is simple and just "copied"
+powerpc originally would be a good one to move over as well.
 
->> So I suspect the problem is more complicated, and maybe _PXM is
->> insufficient to describe the topology?  Are there subtrees that should
->> have nodes different from the host bridge?
->
-> Yes; see below.
-> ...
-> The _PXM method associates each northbridge with the first NUMA node, 0 in
-> single-fabric systems, and eg 4 for the second server in a multi-fabric
-> system with 2 dual-module Opterons (with 2 NUMA nodes internally) etc, since
-> the northbridges appear in the PCI tree, under the host bridge, not above it
-> [1].
->
-> With _PXM, the rest of the PCI bus hierarchy has the right NUMA node
-> associated, but the northbridge PCI devices should be associated with their
-> actual NUMA node, 0, 1, 2, 3 for the first server in this example. The quirk
-> fixes this up; irqbalance at least uses this NUMA data exposed in /sys.
+powerpc itself has many historical quirks and while I'm interested in a common
+implementation, it will take me a bit of spare time to get through things and
+figure out what can be done there and what "hooks" might still be necessary.
 
-I'm confused about which devices we're talking about.  We currently
-look at _PXM for PNP0A08 (and PNP0A03) ACPI devices.  The resulting
-node is associated with every PCI device we enumerate below the
-PNP0A08 bridge.  This association is made in pci_device_add().
+At this point, it's mostly a matter of:
 
-When you say "northbridge PCI devices should be associated with their
-actual NUMA node," I assume you mean the 00:18.x and 00:19.x devices
-("AMD Family 10h Processor ..."), since those seem to be what the
-quirk applies to.  You are *not* talking about 00:00.0 ("ATI RD890
-Northbridge"), right?
+ - I'm the one who knows the most about the powerpc PCI code as I wrote large
+chunks of it
 
-You mention irqbalance; is the NUMA node information for the 00:18.x
-and 00:19.x devices important because you get a lot of interrupts from
-those devices?  Or is the issue with actual I/O devices (NICs, SCSI
-adapters, etc.)?  If so, I don't see how this quirk would affect
-those, because the node information for them comes from the PNP0A08
-bridge (in pci_device_add()), not from the 00:00.0, 00:18.x, or
-00:19.x devices.
+ - I'm very very very busy with some other things at the moment
 
-> The alternative to the quirk may be to explicitly express the northbridge
-> PCI devices in the AML with their own _PXM methods. If it's valid, it may be
-> the honest approach, though the quirk may be needed for most BIOSs; I can
-> check the AML on a few servers to confirm if helpful.
+So don't take my silence on these matters as a lack of interest, I think it's
+definitely all going in the right direction, I just don't have much bandwidth
+to consider the move of powerpc over just yet.
 
-ACPI allows _PXM for any device, so this might be a possible approach.
- However, it looks like Linux only pays attention to _PXM for
-PNP0A08/03, CPUs, memory and IOAPICs (which seems like a Linux defect
-to me).
+Cheers,
+Ben.
 
-I'm really worried about the approach here:
 
-        pci_read_config_dword(nb_ht, 0x60, &val);
-        node = pcibus_to_node(dev->bus) | (val & 7);
-
-because the pcibus_to_node() information comes indirectly from _PXM,
-and the "val" part comes from the hardware, and I don't think these
-are the same node number space.  If I understand correctly, the BIOS
-can synthesize whatever numbers it wants for _PXM, which returns a
-"proximity domain," and then Linux can make up its own mapping of
-"proximity domain" to "logical Linux node."  So I don't see why we can
-assume that it's valid to OR in the bits from a PCI config register to
-this logical Linux node number.
-
-> [1] http://quora.org/2014/lspci.txt
