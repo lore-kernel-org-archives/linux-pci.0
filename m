@@ -1,56 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:56518 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755193AbaCYVCH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 17:02:07 -0400
-Date: Tue, 25 Mar 2014 14:02:04 -0700
-From: Simon Horman <horms@verge.net.au>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>
-Subject: Re: [PATCH v5 9/9] ARM: koelsch: Add HAVE_ARM_ARCH_TIMER to defconfig
-Message-ID: <20140325210204.GD27673@verge.net.au>
-References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
- <1395766604-30926-10-git-send-email-phil.edworthy@renesas.com>
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:47289 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750729AbaCPMFp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 16 Mar 2014 08:05:45 -0400
+Received: by mail-qa0-f45.google.com with SMTP id hw13so4211334qab.4
+        for <linux-pci@vger.kernel.org>; Sun, 16 Mar 2014 05:05:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1395766604-30926-10-git-send-email-phil.edworthy@renesas.com>
+In-Reply-To: <CAGG0vUgk7u6pDRJ9f+vFm9DvGyiE_M7N_Ux0EskpYwuJJvneDQ@mail.gmail.com>
+References: <CAGG0vUgk7u6pDRJ9f+vFm9DvGyiE_M7N_Ux0EskpYwuJJvneDQ@mail.gmail.com>
+Date: Sun, 16 Mar 2014 14:05:44 +0200
+Message-ID: <CAGG0vUgp9bc=xxp4T672sfm+Y-JQWmvXtdnQonGcHQUZ4WENcg@mail.gmail.com>
+Subject: [bisected] e501 "agp: Support 64-bit APBASE" agp fails without iommu=remap=2
+From: =?UTF-8?B?Sm91bmkgTWV0dMOkbMOk?= <jtmettala@gmail.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Please update the subject of this patch to:
+Hi. I can't start xsession without iommu=remap=2 kernel parameter.
 
-ARM: shmobile: koelsch: Add HAVE_ARM_ARCH_TIMER to defconfig
+Kernel bisect lead to commit e501b3d87f003dfad8fcbd0f55ae17ea52495a56
+agp: Support 64-bit APBASE
 
-On Tue, Mar 25, 2014 at 04:56:44PM +0000, Phil Edworthy wrote:
-> This is fixes a boot problem when the R-Car PCIe driver is enabled.
-> 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> ---
->  arch/arm/configs/koelsch_defconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/arch/arm/configs/koelsch_defconfig b/arch/arm/configs/koelsch_defconfig
-> index ec14547..67666b6 100644
-> --- a/arch/arm/configs/koelsch_defconfig
-> +++ b/arch/arm/configs/koelsch_defconfig
-> @@ -15,6 +15,7 @@ CONFIG_MACH_KOELSCH=y
->  CONFIG_CPU_BPREDICT_DISABLE=y
->  CONFIG_PL310_ERRATA_588369=y
->  CONFIG_ARM_ERRATA_754322=y
-> +CONFIG_HAVE_ARM_ARCH_TIMER=y
->  CONFIG_PCI=y
->  CONFIG_PCI_MSI=y
->  CONFIG_PCI_RCAR_GEN2_PCIE=y
-> -- 
-> 1.9.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Reverting this fixes it for me.
+
+I think this is relevant part of dmesg from affected kernel
+
+agpgart-amd64 0000:00:04.0: AGP bridge [10b9/1689]
+agpgart-amd64 0000:00:04.0: aperture from AGP @ 0 size 4096 MB
+pci 0000:00:18.3: no usable aperture found
+pci 0000:00:18.3: consider rebooting with iommu=memaper=2 to get a good aperture
+agpgart-amd64 0000:00:04.0: AGP bridge [10b9/1689]
+agpgart-amd64 0000:00:04.0: aperture from AGP @ 0 size 4096 MB
+pci 0000:00:18.3: no usable aperture found
+pci 0000:00:18.3: consider rebooting with iommu=memaper=2 to get a good aperture
+agpgart-amd64 0000:04:00.0: AGP bridge [1002/4150]
+agpgart-amd64 0000:04:00.0: aperture size 4096 MB is not right, using
+settings from NB
+agpgart-amd64 0000:04:00.0: AGP aperture is 256M @ 0xa0000000
+
+Please cc me if you need more information. I am not subscribed to list.
