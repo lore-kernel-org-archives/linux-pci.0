@@ -1,78 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:34967 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756336AbaCLIba (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Mar 2014 04:31:30 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Tanmay Inamdar' <tinamdar@apm.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Grant Likely' <grant.likely@linaro.org>,
-	'Rob Herring' <robh+dt@kernel.org>,
-	'Catalin Marinas' <catalin.marinas@arm.com>,
-	'Rob Landley' <rob@landley.net>,
-	'Liviu Dudau' <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	patches@apm.com, jcm@redhat.com, 'Jingoo Han' <jg1.han@samsung.com>
-References: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
- <1394085963-27553-3-git-send-email-tinamdar@apm.com>
-In-reply-to: <1394085963-27553-3-git-send-email-tinamdar@apm.com>
-Subject: Re: [PATCH v4 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
-Date: Wed, 12 Mar 2014 17:31:25 +0900
-Message-id: <000001cf3dcd$751a4680$5f4ed380$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:36331 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750813AbaCQQFj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 12:05:39 -0400
+MIME-Version: 1.0
+In-Reply-To: <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+	<1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
+Date: Mon, 17 Mar 2014 11:05:38 -0500
+Message-ID: <CAL_Jsq+9X-9VahsP79mtHN0RC64vRA_2R3ucjX0LefO6q2YN3Q@mail.gmail.com>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+From: Rob Herring <robherring2@gmail.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, March 06, 2014 3:06 PM, Tanmay Inamdar wrote:
-> 
-> This patch adds the device tree nodes for APM X-Gene PCIe controller and
-> PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
-> nodes are added.
-> 
-> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+On Fri, Mar 14, 2014 at 10:34 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> Use the generic host bridge functions to provide support for
+> PCI Express on arm64. There is no support for ISA memory.
+>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
 > ---
->  arch/arm64/boot/dts/apm-mustang.dts |    8 ++
->  arch/arm64/boot/dts/apm-storm.dtsi  |  155 +++++++++++++++++++++++++++++++++++
->  2 files changed, 163 insertions(+)
+>  arch/arm64/Kconfig            |  19 +++-
+>  arch/arm64/include/asm/Kbuild |   1 +
+>  arch/arm64/include/asm/io.h   |   3 +-
+>  arch/arm64/include/asm/pci.h  |  51 ++++++++++
+>  arch/arm64/kernel/Makefile    |   1 +
+>  arch/arm64/kernel/pci.c       | 173 ++++++++++++++++++++++++++++++++
+>  6 files changed, 246 insertions(+), 2 deletions(-)
+>  create mode 100644 arch/arm64/include/asm/pci.h
+>  create mode 100644 arch/arm64/kernel/pci.c
 
-[.....]
+[snip]
 
-> --- a/arch/arm64/boot/dts/apm-storm.dtsi
-> +++ b/arch/arm64/boot/dts/apm-storm.dtsi
-
-[.....]
-
+> +#endif
 > +
-> +		pcie0: pcie@1f2b0000 {
-> +			status = "disabled";
-> +			device_type = "pci";
-> +			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-> +			#interrupt-cells = <1>;
-> +			#size-cells = <2>;
-> +			#address-cells = <3>;
-> +			reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-> +				0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
-> +			reg-names = "csr", "cfg";
-> +			ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
-> +				  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
-                                                                          ^^^
+> +extern unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr);
 
-I have a question about the fourth number '0xe0' of 'ranges' property.
-Would you let me know what the '0xe0' means?
+Can we at least align the function definition across architectures if
+not the implementation.
 
-Best regards,
-Jingoo Han
 
-> +			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-> +			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-> +			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-> +					 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-> +					 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-> +					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-> +			clocks = <&pcie0clk 0>;
-> +		};
+> +int pci_register_io_range(phys_addr_t address, resource_size_t size)
+> +{
+> +       struct ioresource *res;
+> +       resource_size_t allocated_size = 0;
+> +
+> +       /* find if the range has not been already allocated */
+> +       list_for_each_entry(res, &io_list, list) {
+> +               if (address >= res->start &&
+> +                       address + size <= res->start + size)
+> +                       return 0;
+> +               allocated_size += res->size;
+> +       }
+> +
+> +       /* range not already registered, check for space */
+> +       if (allocated_size + size > IO_SPACE_LIMIT)
 
+I believe this needs to be "allocated_size + size - 1".
+
+> +               return -E2BIG;
+> +
