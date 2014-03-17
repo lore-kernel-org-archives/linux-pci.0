@@ -1,93 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:4270 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754676AbaCLQfy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Mar 2014 12:35:54 -0400
-From: "Sumner, William" <bill.sumner@hp.com>
-To: Vivek Goyal <vgoyal@redhat.com>
-CC: "dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"indou.takao@jp.fujitsu.com" <indou.takao@jp.fujitsu.com>,
-	"bhe@redhat.com" <bhe@redhat.com>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"ddutile@redhat.com" <ddutile@redhat.com>,
-	"Hatch, Douglas B (HPS Linux PM)" <doug.hatch@hp.com>,
-	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Li, Zhen-Hua" <zhen-hual@hp.com>
-Subject: FW: Re: [PATCHv3 0/6] Crashdump Accepting Active IOMMU
-Date: Wed, 12 Mar 2014 16:34:18 +0000
-Message-ID: <875D89B79D1D86448A583A7302C022A066E093DB@G4W3212.americas.hpqcorp.net>
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:40699 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200AbaCQXwp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 19:52:45 -0400
+Received: by mail-pa0-f43.google.com with SMTP id bj1so6429342pad.30
+        for <linux-pci@vger.kernel.org>; Mon, 17 Mar 2014 16:52:45 -0700 (PDT)
+Date: Mon, 17 Mar 2014 17:52:40 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jouni =?iso-8859-1?Q?Mett=E4l=E4?= <jtmettala@gmail.com>
+Cc: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	David Airlie <airlied@linux.ie>,
+	Aaron Durbin <adurbin@google.com>, linux-kernel@vger.kernel.org
+Subject: Re: [bisected] e501 "agp: Support 64-bit APBASE" agp fails without
+ iommu=remap=2
+Message-ID: <20140317235240.GA14292@google.com>
+References: <CAGG0vUg+No2GHLbOLQzV+fNm37OW-pfhmoQ3moxhr8uEObj9pQ@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAGG0vUg+No2GHLbOLQzV+fNm37OW-pfhmoQ3moxhr8uEObj9pQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Resending as plain-text.
-Bill
+[+cc Daniel, Dave, Yinghai, Guo, Aaron, LKML]
 
-From: Sumner, William 
-Sent: Wednesday, March 12, 2014 11:15 AM
-To: 'Vivek Goyal'
-Cc: dwmw2@infradead.org; indou.takao@jp.fujitsu.com; bhe@redhat.com; joro@8bytes.org; linux-pci@vger.kernel.org; kexec@lists.infradead.org; alex.williamson@redhat.com; linux-kernel@vger.kernel.org; iommu@lists.linux-foundation.org; ddutile@redhat.com; Hatch, Douglas B (HPS Linux PM); ishii.hironobu@jp.fujitsu.com; bhelgaas@google.com; Li, Zhen-Hua
-Subject: Re: [PATCHv3 0/6] Crashdump Accepting Active IOMMU
+On Sat, Mar 15, 2014 at 02:32:22PM +0200, Jouni Mettälä wrote:
+> Hi. I can't start xsession without iommu=remap=2 kernel parameter.
+> 
+> Kernel bisect lead to this commit
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=e501b3d87f003dfad8fcbd0f55ae17ea52495a56
+> 
+> Reverting e501b3d87f003dfad8fcbd0f55ae17ea52495a56 fixes if for me.
+> 
+> I think this is relevant part of dmesg from affected kernel
+> 
+> agpgart-amd64 0000:00:04.0: AGP bridge [10b9/1689]
+> agpgart-amd64 0000:00:04.0: aperture from AGP @ 0 size 4096 MB
+> pci 0000:00:18.3: no usable aperture found
+> pci 0000:00:18.3: consider rebooting with iommu=memaper=2 to get a good
+> aperture
+> agpgart-amd64 0000:00:04.0: AGP bridge [10b9/1689]
+> agpgart-amd64 0000:00:04.0: aperture from AGP @ 0 size 4096 MB
+> pci 0000:00:18.3: no usable aperture found
+> pci 0000:00:18.3: consider rebooting with iommu=memaper=2 to get a good
+> aperture
+> agpgart-amd64 0000:04:00.0: AGP bridge [1002/4150]
+> agpgart-amd64 0000:04:00.0: aperture size 4096 MB is not right, using
+> settings from NB
+> agpgart-amd64 0000:04:00.0: AGP aperture is 256M @ 0xa0000000
 
-On Mon, Mar 10, 2014 at 04:43PM, Vivek Goyal wrote:
->On Fri, Jan 10, 2014 at 03:07:26PM -0700, Bill Sumner wrote:
->
->[..]
->> This patch set modifies the behavior of the iommu in the (new) crashdump kernel:
->> 1. to accept the iommu hardware in an active state, 2. to leave the
->> current translations in-place so that legacy DMA will continue
->>    using its current buffers until the device drivers in the crashdump kernel>>    initialize and initialize their devices, 3. to use different
->> portions of the iova address ranges for the device drivers
->>    in the crashdump kernel than the iova ranges that were in-use at the time
->>    of the panic.
->
->Conceptually, above makes sense to me. I have few queries.
->
->- Do we need to pass any kind of data from first kernel to second kernel,
->  like table size etc? Calgary IOMMU was using first kernel's tables
->  also and it was determining previous kernel's table size using saved_max_pfn.
+Jouni also opened this bug report with complete dmesg logs:
+https://bugzilla.kernel.org/show_bug.cgi?id=72201
 
-Yes. We need to pass the intel-iommu translation tables from the first kernel to the second kernel - well, to allow the second kernel to read them.  Only the tree of tables that the intel-iommu hardware references are needed: the root-entry table, the context-entry tables, and the page-translation tables.  This patch involves only the intel-iommu -- and none of the other iommu hardware types.
+This is a regression that appeared in v3.14-rc1, when we merged
+e501b3d87f00.  The relevant part of that change is this:
 
-During the early initialization of the new kdump kernel this patch copies (duplicates) the tree of iommu translation tables from the old kernel into the new kernel.  These tables are all linked together as a tree by physical memory addresses. The physical address of the top of the tree -- the root-entry table -- is obtained from a register in the iommu hardware. The copy operation traverses the tree in depth-first order, sanity-checking each table and then duplicating it into the kernel address space of the new kernel, linking the new tables appropriately.  If the copy succeeds then the iommu register is updated to point to the copy in the new kernel and the iommu continues translating DMA requests from IO devices.  If a sanity-check fails, the patch currently errors-out of the dump (might want to revisit this error case and see if there is something better to do.)
+    --- a/drivers/char/agp/amd64-agp.c
+    +++ b/drivers/char/agp/amd64-agp.c
+    @@ -295,9 +294,7 @@ static int fix_northbridge(struct pci_dev *nb, struct pci_dev *agp, u16 cap)
 
-By copying the tables into the new kernel, all of the existing code in intel-iommu.c continues to work nearly unchanged, with only a few added initializations of fields when kdump is active and when intel-iommu.c creates its "bookkeeping" structures for the device -- to make sure they correspond to the contents of the translate tables. I made a determined effort to avoid changing the existing execution path for the non-kdump case, and to minimize the changes even when kdump is active.  
+    -       pci_read_config_dword(agp, 0x10, &aper_low);
+    -       pci_read_config_dword(agp, 0x14, &aper_hi);
+    -       aper = (aper_low & ~((1<<22)-1)) | ((u64)aper_hi << 32);
+    +       aper = pci_bus_address(agp, AGP_APERTURE_BAR);
 
-Note also that this leaves the copy of the translate tables in the old panicked kernel unused and unchanged during the operation of 'makedumpfile', so they appear correctly in the dump as they were at the time of the panic.
+Here's what I think is happening: Previously, we read the GART
+aperture base directly from the BAR.  After e501b3d87f00, we use
+pci_bus_address() to convert the aperture *resource* (which the PCI
+core has previously read from the BAR and converted to a CPU address)
+back into a bus address.
 
->
->- I don't know how IOMMU translation tables look like, but are new DMA
->  zones setup by drivers in second kernel part of same table?
+Normally both ways would give the same result, but here we had this:
 
-Yes. The copied translation tables in the kdump kernel contain both the translations that were active at the time of the dump (which will never go away until the dump is finished and the platform is rebooted), plus any translations needed by the kdump kernel (which come and go as necessary).  As the "bookkeeping" structures are created in the new kernel (typically the first time that a device requests a translation for a buffer) they are initialized such that all IOVAs that already exist in the translate tables for tht device are marked as "not available for allocation" so all requests by device drivers in the new kernel receive IOVAs that were not in-use at the time of the panic.
+    Node 0: aperture @ a0000000 size 256 MB
+    pci 0000:00:04.0: reg 0x10: [mem 0xa0000000-0xafffffff pref]
+    pci 0000:00:04.0: address space collision: [mem 0xa0000000-0xafffffff pref] conflicts with GART [mem 0xa0000000-0xafffffff]
 
-> How do we
->  make sure that sufficient space is available.
+The "Node 0" line is where we inserted the "GART [mem 0xa0000000-
+0xafffffff]" resource in gart_iommu_hole_init().  Then we enumerated
+the northbridge, which had a BAR containing 0xa0000000.  When we tried
+to claim that BAR, it conflicted with the "GART" resource, and we set
+r->start = 0 (in pcibios_allocate_dev_resources()).  So when we
+finally got to fix_northbridge(), the aperture resource was set to
+zero, not 0xa0000000.
 
-So far I have not seen any problem with running out of space because of this copy;  however, I believe that this may be a valid concern with very large IO configurations -- and it deserves some attention as the community reviews and tests this patch.
+Note that we complained about the collision even before e501b3d87f00.
+The only difference is that we used to re-read the BAR, where we still
+got 0xa0000000 even though the PCI core thought the resource was
+invalid and had set it to zero.
 
-> I am not sure if possible
->  table corruption from crashed kernel is an issue here or not.
+I think we should stop inserting the GART resource directly in
+iomem_resource in gart_iommu_hole_init().  That should avoid the
+collision and leave the BAR resource valid, which means
+pci_bus_address() should work.
 
-Any corrupted translation tables from the crashed kernel would be a problem that would prevent using copies of them. I hope and expect that this happens rarely -- and that we would catch it during the copy when it does.
+Jouni, could you try the patch below?
 
-Fortunately, these tables are only manipulated by the code in intel-iommu.c - which limits the amount of code that has to be "right".  Of course, there is always the possibility that other code in the kernel could "hose" one of these tables -- so we need to sanity-check the tables before the new kernel uses them.
+Bjorn
 
->
->In general, I think changelogs of these patches need to be little better.
->There seem to be lot of text and still I can't quickly wrap my head around what a particular patch is supposed to be doing.
 
-I will work on the changelogs as I re-arrange the code and the structure of the patch-set for the next submitted version.
 
->
->But we definitely need to fix this issue. IOMMU issues with kdump have been troubling us for a very long time.
-Strongly agree.
+Revert "[PATCH] Insert GART region into resource map"
 
--- Bill
+From: Bjorn Helgaas <bhelgaas@google.com>
+
+This reverts commit 56dd669a138c, which makes the GART visible in
+/proc/iomem.
+
+The GART addresses are bus addresses, not CPU addresses, and therefore
+should not be inserted in iomem_resource.
+
+On many machines, the GART region is addressable by the CPU as well as by
+an AGP master, but CPU addressability is not required by the spec.  On some
+of these machines, the GART is mapped by a PCI BAR, and in that case, the
+PCI core automatically inserts it into iomem_resource, just as it does for
+all BARs.
+
+Inserting it here means we'll have a conflict if the PCI core later tries
+to claim the GART region.
+
+Conflicts:
+	arch/x86_64/kernel/aperture.c
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/kernel/aperture_64.c |   20 +-------------------
+ 1 file changed, 1 insertion(+), 19 deletions(-)
+
+diff --git a/arch/x86/kernel/aperture_64.c b/arch/x86/kernel/aperture_64.c
+index fd972a3e4cbb..9fa8aa051f54 100644
+--- a/arch/x86/kernel/aperture_64.c
++++ b/arch/x86/kernel/aperture_64.c
+@@ -18,7 +18,6 @@
+ #include <linux/pci_ids.h>
+ #include <linux/pci.h>
+ #include <linux/bitops.h>
+-#include <linux/ioport.h>
+ #include <linux/suspend.h>
+ #include <asm/e820.h>
+ #include <asm/io.h>
+@@ -54,18 +53,6 @@ int fallback_aper_force __initdata;
+ 
+ int fix_aperture __initdata = 1;
+ 
+-static struct resource gart_resource = {
+-	.name	= "GART",
+-	.flags	= IORESOURCE_MEM,
+-};
+-
+-static void __init insert_aperture_resource(u32 aper_base, u32 aper_size)
+-{
+-	gart_resource.start = aper_base;
+-	gart_resource.end = aper_base + aper_size - 1;
+-	insert_resource(&iomem_resource, &gart_resource);
+-}
+-
+ /* This code runs before the PCI subsystem is initialized, so just
+    access the northbridge directly. */
+ 
+@@ -96,7 +83,6 @@ static u32 __init allocate_aperture(void)
+ 	memblock_reserve(addr, aper_size);
+ 	printk(KERN_INFO "Mapping aperture over %d KB of RAM @ %lx\n",
+ 			aper_size >> 10, addr);
+-	insert_aperture_resource((u32)addr, aper_size);
+ 	register_nosave_region(addr >> PAGE_SHIFT,
+ 			       (addr+aper_size) >> PAGE_SHIFT);
+ 
+@@ -444,12 +430,8 @@ int __init gart_iommu_hole_init(void)
+ 
+ out:
+ 	if (!fix && !fallback_aper_force) {
+-		if (last_aper_base) {
+-			unsigned long n = (32 * 1024 * 1024) << last_aper_order;
+-
+-			insert_aperture_resource((u32)last_aper_base, n);
++		if (last_aper_base)
+ 			return 1;
+-		}
+ 		return 0;
+ 	}
+ 
