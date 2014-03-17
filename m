@@ -1,170 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:37395 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755441AbaC0Ra6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 13:30:58 -0400
-Received: by mail-ie0-f174.google.com with SMTP id rp18so3758866iec.33
-        for <linux-pci@vger.kernel.org>; Thu, 27 Mar 2014 10:30:58 -0700 (PDT)
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:58204 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933027AbaCQRiw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 13:38:52 -0400
+Date: Mon, 17 Mar 2014 17:38:21 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+Message-ID: <20140317173821.GJ24070@arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
+ <20140314171457.GK18126@arm.com>
+ <201403141838.08900.arnd@arndb.de>
+ <20140314180527.GZ6457@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo71-t_c1dh_B7-HJD45Yd_0WZr1pUK6cn4uOtPUiGQ7Jw@mail.gmail.com>
-References: <CALCETrVG6uRysbXSbyPfKzG7uBHu9PX6SKvDbUQWG1TOfc04zQ@mail.gmail.com>
- <CADnq5_NJLsF4MmcQVN7jDD6-ZjAobw0bf2ft2HWGid6GMcXWcA@mail.gmail.com>
- <CALCETrVjHkdbe5N4iov-7dg6tGmuFsr70z2ASpX+=km=FMWe7Q@mail.gmail.com>
- <CAErSpo4J-rEkr-xDojZNTShRxoimUsYcFwrY-K4K3sZ3rporRw@mail.gmail.com>
- <CALCETrVtfvBu0=2hofkSfh-ohrnUCS18yE4N0UYg7kqjJYBp1g@mail.gmail.com> <CAErSpo71-t_c1dh_B7-HJD45Yd_0WZr1pUK6cn4uOtPUiGQ7Jw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 27 Mar 2014 11:30:37 -0600
-Message-ID: <CAErSpo5LuKUNFiEy4=tRcT-aXpbkZkWQxpfajYRngt65WS852Q@mail.gmail.com>
-Subject: Re: 3.14 radeon regression: radeon is broken (pci bug?)
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Alex Deucher <alexdeucher@gmail.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140314180527.GZ6457@e106497-lin.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 24, 2014 at 4:04 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sat, Mar 22, 2014 at 9:18 AM, Andy Lutomirski <luto@amacapital.net> wrote:
->> On Fri, Mar 21, 2014 at 9:37 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Fri, Mar 21, 2014 at 9:49 AM, Andy Lutomirski <luto@amacapital.net> wrote:
->>>> On Fri, Mar 21, 2014 at 7:41 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
->>>>> On Thu, Mar 20, 2014 at 10:17 PM, Andy Lutomirski <luto@amacapital.net> wrote:
->>>>>> My system works on a 3.13 Fedora kernel.  It does not work on a
->>>>>> more-or-less identically configured 3.14-rc7+ kernel.  The symptom is
->>>>>> that the Plymouth password prompt flashes and them the screen goes
->>>>>> blank.  Hitting escape brings back the text console, and all is well
->>>>>> until X tries to start.  Then I get a blank screen.  killall -9 Xorg
->>>>>> from ssh causes these errors to be logged:
->>>>>>
->>>>>>
->>>>>> [  226.239747] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
->>>>>> more than 5secs aborting
->>>>>> [  226.239751] [drm:atom_execute_table_locked] *ERROR* atombios stuck
->>>>>> executing CD34 (len 55, WS 0, PS 0) @ 0xCD57
->>>>>> [  231.241492] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
->>>>>> more than 5secs aborting
->>>>>> [  231.241496] [drm:atom_execute_table_locked] *ERROR* atombios stuck
->>>>>> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
->>>>>> [  236.243111] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
->>>>>> more than 5secs aborting
->>>>>> [  236.243115] [drm:atom_execute_table_locked] *ERROR* atombios stuck
->>>>>> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
->>>>>> [  241.244625] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
->>>>>> more than 5secs aborting
->>>>>> [  241.244628] [drm:atom_execute_table_locked] *ERROR* atombios stuck
->>>>>> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
->>>>>>
->>>>>>
->>>>>> lspci -vvvxxxnn on 3.14-rc7+ says:
->>>>>>
->>>>>> 09:00.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc.
->>>>>> [AMD/ATI] Caicos [Radeon HD 6450/7450/8450 / R5 230 OEM] [1002:6779]
->>>>>> (rev ff) (prog-if ff)
->>>>>>     !!! Unknown header type 7f
->>>>>>     Kernel driver in use: radeon
->>>>>> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>>>>> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>>>>> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>>>>> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>>>>>
->>>>>> 09:00.1 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI]
->>>>>> Caicos HDMI Audio [Radeon HD 6400 Series] [1002:aa98] (rev ff)
->>>>>> (prog-if ff)
->>>>>>     !!! Unknown header type 7f
->>>>>>     Kernel driver in use: snd_hda_intel
->>>>>> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>>>>> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>>>>> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>>>>> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>>>>>
->>>>>> (oops!)
->>>>>>
->>>>>> On 3.13, it says:
->>>>>>
->>>>>> 09:00.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc.
->>>>>> [AMD/ATI] Caicos [Radeon HD 6450/7450/8450 / R5 230 OEM] [1002:6779]
->>>>>> (prog-if 00 [VGA controller])
->>>>>>         Subsystem: PC Partner Limited / Sapphire Technology Radeon HD
->>>>>> 6450 1 GB DDR3 [174b:e164]
->>>>>>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
->>>>>> ParErr- Stepping- SERR- FastB2B- DisINTx+
->>>>>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
->>>>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>>>>         Latency: 0, Cache Line Size: 64 bytes
->>>>>>         Interrupt: pin A routed to IRQ 92
->>>>>>         Region 0: Memory at e0000000 (64-bit, prefetchable) [size=256M]
->>>>>>         Region 2: Memory at f4a20000 (64-bit, non-prefetchable) [size=128K]
->>>>>>         Region 4: I/O ports at c000 [size=256]
->>>>>>         Expansion ROM at f4a00000 [disabled] [size=128K]
->>>>>>         Capabilities: <access denied>
->>>>>>         Kernel driver in use: radeon
->>>>>> 00: 02 10 79 67 07 04 10 00 00 00 00 03 10 00 80 00
->>>>>> 10: 0c 00 00 e0 00 00 00 00 04 00 a2 f4 00 00 00 00
->>>>>> 20: 01 c0 00 00 00 00 00 00 00 00 00 00 4b 17 64 e1
->>>>>> 30: 00 00 a0 f4 50 00 00 00 00 00 00 00 0a 01 00 00
->>>>>>
->>>>>> 09:00.1 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI]
->>>>>> Caicos HDMI Audio [Radeon HD 6400 Series] [1002:aa98]
->>>>>>         Subsystem: PC Partner Limited / Sapphire Technology Radeon HD
->>>>>> 6450 1GB DDR3 [174b:aa98]
->>>>>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
->>>>>> ParErr- Stepping- SERR- FastB2B- DisINTx+
->>>>>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
->>>>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>>>>         Latency: 0, Cache Line Size: 64 bytes
->>>>>>         Interrupt: pin B routed to IRQ 96
->>>>>>         Region 0: Memory at f4a40000 (64-bit, non-prefetchable) [size=16K]
->>>>>>         Capabilities: <access denied>
->>>>>>         Kernel driver in use: snd_hda_intel
->>>>>> 00: 02 10 98 aa 06 04 10 00 00 00 03 04 10 00 80 00
->>>>>> 10: 04 00 a4 f4 00 00 00 00 00 00 00 00 00 00 00 00
->>>>>> 20: 00 00 00 00 00 00 00 00 00 00 00 00 4b 17 98 aa
->>>>>> 30: 00 00 00 00 50 00 00 00 00 00 00 00 05 02 00 00
->>>>>>
->>>>>> Logs attached.
->>>
->>> Hi Andy,
->>>
->>> I'm really sorry that you tripped over this, but thanks a lot for the
->>> report.  Is there any chance the box is currently running v3.13, and
->>> you could collect the dmesg log from it?  I don't see anything unusual
->>> from a PCI perspective in the v3.14-rc7 dmesg; all the PCI device
->>> resources look fine, and we didn't reassign anything.  It seems like
->>> the 0000:09:00.x devices just stopped responding for some reason, and
->>> the PCI core shouldn't really be involved after the radeon driver
->>> claims and enables those devices.  But it's possible I'd get a clue by
->>> comparing the v3.13 and v3.14-rc7 dmesg logs.
->>
->> Attached.  I also clearly screwed something up about my 3.14 config --
->> I meant for it to match the Fedora config, but it doesn't.  At least
->> NR_CPUs is too low.  That shoudn't break radeon, but maybe something
->> odd happens.
->>
->> 3.14 also complains that it can't find an AGP bridge.  3.13 does not
->> complain about that.
->
-> CONFIG_GART_IOMMU is not defined for the 3.13.6-200.rc20.x86_64
-> kernel, but apparently it is for your v3.14-rc7 kernel.  That explains
-> the "No AGP bridge found" difference.
->
-> I'm afraid I still can't shed any light on the problem with the radeon device.
+On Fri, Mar 14, 2014 at 06:05:27PM +0000, Liviu Dudau wrote:
+> On Fri, Mar 14, 2014 at 05:38:08PM +0000, Arnd Bergmann wrote:
+> > On Friday 14 March 2014, Catalin Marinas wrote:
+> > > On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
+> > > > --- /dev/null
+> > > > +++ b/arch/arm64/kernel/pci.c
+> > > [...]
+> > > > +int pci_register_io_range(phys_addr_t address, resource_size_t size)
+> > > [...]
+> > > > +unsigned long pci_address_to_pio(phys_addr_t address)
+> > > [...]
+> > > > +void pcibios_fixup_bus(struct pci_bus *bus)
+> > > [ actually most of this file ]
+> > > 
+> > > Maybe it was raised before already but can we have __weak generic
+> > > definitions of these functions? They don't seem to be arm64 specific in
+> > > any way.
+[...]
+> Catalin, if you are happy to ask for ACKs from all arch maintainers that might get
+> affected by our custom version of pci_address_to_pio() before you can pull PCI support
+> for arm64 then I can propose a new patchset.
 
-Is there any news on this?  It would be a shame to release v3.14 with
-a known regression.
+You don't need to change the other architectures, that's the point of a
+__weak definition, it will be automatically overridden. If you want, you
+can even place a GENERIC_PCI or whatever config option that is only
+selected by arm64 for the time being.
 
-I opened https://bugzilla.kernel.org/show_bug.cgi?id=73041 as a place
-to archive the dmesg, etc.
-
-I looked at the lspci output again (by the way, if you have occasion
-to collect that again, do it as root so we can see the capabilites as
-well).  Apart from the fact that 09:00.0 and 09:00.1 stopped
-responding completely, the only differences are that the "Received
-Master-Abort" bit is set in some of the bridges.  I think this
-difference is related to 5b764b834ea9 ("PCI: Stop clearing bridge
-Secondary Status when setting up I/O aperture"), which appeared in
-v3.14-rc1.  I don't think this is related to the problem with the
-Radeon device, though.
-
-Bjorn
+-- 
+Catalin
