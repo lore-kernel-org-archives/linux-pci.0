@@ -1,158 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50909 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755309AbaCNPfG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 11:35:06 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH v7 4/6] pci: Introduce a domain number for pci_host_bridge.
-Date: Fri, 14 Mar 2014 15:34:30 +0000
-Message-Id: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:47690 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754554AbaCQQgs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 12:36:48 -0400
+Received: by mail-ie0-f174.google.com with SMTP id rp18so5732974iec.19
+        for <linux-pci@vger.kernel.org>; Mon, 17 Mar 2014 09:36:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAMxnaaUSs2KXL9=VKLpM=+vyb0RZ4iWPp4WawfFaw+kNbWfNSg@mail.gmail.com>
+References: <CAMxnaaXd9-VbxSYa9q1YVT+fwfDFYKGG2Hq-1jkc-awLX-HwtQ@mail.gmail.com>
+ <CAErSpo5fkaFNq_qTZ+gTDMV554f4diOXQ7_4bsHqj06iAGTpHg@mail.gmail.com>
+ <CAE9FiQVNFqTw+92qy8zcwG1haiSZzU+KE3oh4YnjNc_aE6KUnA@mail.gmail.com>
+ <20140308010456.GA30660@google.com> <CAMxnaaVfpJCW7e-b80y4wmVWcRDK5t7qY+pNn71CsLPRN2ojnA@mail.gmail.com>
+ <CAErSpo4MQsAer7FM0kU5mMOGRok0oFMWX1FqFijmswutjyNoRg@mail.gmail.com>
+ <CAMxnaaWr0z1zbpFQPX6UvYbnxhfA+3aj4ffhCBpp1i4ZLsGTPg@mail.gmail.com>
+ <20140311001003.GA14367@google.com> <CAMxnaaUSs2KXL9=VKLpM=+vyb0RZ4iWPp4WawfFaw+kNbWfNSg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 17 Mar 2014 10:36:27 -0600
+Message-ID: <CAErSpo6APp4QufzfXUxx6vf4iQk60dmoW-t=OP503uH5P96LHg@mail.gmail.com>
+Subject: Re: [Bug] PCI: Enable INTx if BIOS left them disabled - triggers
+ during rescan
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make it easier to discover the domain number of a bus by storing
-the number in pci_host_bridge for the root bus. Several architectures
-have their own way of storing this information, so it makes sense
-to try to unify the code. While at this, add a new function that
-creates a root bus in a given domain and make pci_create_root_bus()
-a wrapper around this function.
+On Tue, Mar 11, 2014 at 6:52 AM, Andreas Noever
+<andreas.noever@gmail.com> wrote:
+> On Tue, Mar 11, 2014 at 1:10 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Tue, Mar 11, 2014 at 12:10:02AM +0100, Andreas Noever wrote:
+>>> On Mon, Mar 10, 2014 at 9:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> > On Sat, Mar 8, 2014 at 2:55 AM, Andreas Noever <andreas.noever@gmail.com> wrote:
+>>> >> On Sat, Mar 8, 2014 at 2:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> >
+>>> >>> If we did that, INTX_DISABLE would be cleared by the first
+>>> >>> pci_enable_device() and pci_reenable_device() wouldn't do anything,
+>>> >>> leaving it cleared.  The resulting state (cleared) would be the same,
+>>> >>> but the transitions would be gone, and maybe those are important.
+>>> >> Just a quick note: With pci_intx_for_msi removed no hotplug events are
+>>> >> ever delivered. Everything else still works though. So it is either a
+>>> >> problem specific to Thunderbolt bridges or maybe it just affects
+>>> >> hotplug (and PME?) interrupts.
+>>> >
+>>> > Interesting.  This is on a MacBook, isn't it?  If you have Mac OS on
+>>> > it, is there a way you can do the equivalent of lspci on it?  I'm
+>>> > curious about whether it sets INTx_DISABLE when it enables MSI.
+>>>
+>>> lspci -vv and lspci -vv -xxxx attached (yes, someone made a port).
+>>>
+>>> It looks like Mac OS sets DisINTx for all devices that have MSI
+>>> enabled. The only exception is the Thunderbolt controller (no
+>>> idea...). But the hotplug bridges all have DisINTx+.
+>>
+>> OK, thanks.  I don't know what to make of that.
+>>
+>> Here's a possible patch; can you try it out?
+>>
+>>
+>> PCI: Do not enable INTx in pci_reenable_device()
+>>
+>> From: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> Previously we cleared the Interrupt Disable bit in do_pci_enable_device(),
+>> which is used by both pci_enable_device() and pci_reenable_device().  But
+>> we use pci_reenable_device() after the driver may have enabled MSI or
+>> MSI-X, and we *set* Interrupt Disable as part of enabling MSI/MSI-X.
+>>
+>> The pciehp hot-plug path uses pci_reenable_device() on the hotplug bridge,
+>> and clearing its Interrupt Disable bit makes its hotplug event-reporting
+>> MSI stop working.
+>>
+>> Fixes: 1f42db786b14 PCI: Enable INTx if BIOS left them disabled
+>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=71691
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  drivers/pci/pci.c |    3 +++
+>>  1 file changed, 3 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 8dc3e701ec57..79fc89c6c3f3 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -1192,6 +1192,9 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>>                 return err;
+>>         pci_fixup_device(pci_fixup_enable, dev);
+>>
+>> +       if (dev->msi_enabled || dev->msix_enabled)
+>> +               return 0;
+>> +
+>>         pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>>         if (pin) {
+>>                 pci_read_config_word(dev, PCI_COMMAND, &cmd);
+>
+> That fixes it.
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Tested-by: Tanmay Inamdar <tinamdar@apm.com>
----
- drivers/pci/probe.c | 41 +++++++++++++++++++++++++++++++++--------
- include/linux/pci.h |  4 ++++
- 2 files changed, 37 insertions(+), 8 deletions(-)
+Thanks for testing this, Andreas.  I merged it and it's in Linus' tree now.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index fd11c12..172c615 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1714,8 +1714,9 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
- }
- 
--struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
-+		int domain, int bus, struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources)
- {
- 	int error;
- 	struct pci_host_bridge *bridge;
-@@ -1728,30 +1729,34 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 
- 	bridge = pci_alloc_host_bridge();
- 	if (!bridge)
--		return NULL;
-+		return ERR_PTR(-ENOMEM);
- 
- 	bridge->dev.parent = parent;
- 	bridge->dev.release = pci_release_host_bridge_dev;
-+	bridge->domain_nr = domain;
- 	error = pcibios_root_bridge_prepare(bridge);
- 	if (error)
- 		goto err_out;
- 
- 	b = pci_alloc_bus();
--	if (!b)
-+	if (!b) {
-+		error = -ENOMEM;
- 		goto err_out;
-+	}
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bus;
--	b2 = pci_find_bus(pci_domain_nr(b), bus);
-+	b2 = pci_find_bus(bridge->domain_nr, bus);
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
- 		dev_dbg(&b2->dev, "bus already known\n");
-+		error = -EEXIST;
- 		goto err_bus_out;
- 	}
- 
- 	bridge->bus = b;
--	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-+	dev_set_name(&bridge->dev, "pci%04x:%02x", bridge->domain_nr, bus);
- 	error = device_register(&bridge->dev);
- 	if (error) {
- 		put_device(&bridge->dev);
-@@ -1766,7 +1771,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 
- 	b->dev.class = &pcibus_class;
- 	b->dev.parent = b->bridge;
--	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
-+	dev_set_name(&b->dev, "%04x:%02x", bridge->domain_nr, bus);
- 	error = device_register(&b->dev);
- 	if (error)
- 		goto class_dev_reg_err;
-@@ -1816,7 +1821,27 @@ err_bus_out:
- 	kfree(b);
- err_out:
- 	kfree(bridge);
--	return NULL;
-+	return ERR_PTR(error);
-+}
-+
-+struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-+		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+{
-+	int domain_nr;
-+	struct pci_bus *b = pci_alloc_bus();
-+	if (!b)
-+		return NULL;
-+
-+	b->sysdata = sysdata;
-+	domain_nr = pci_domain_nr(b);
-+	kfree(b);
-+
-+	b = pci_create_root_bus_in_domain(parent, domain_nr, bus,
-+				ops, sysdata, resources);
-+	if (IS_ERR(b))
-+		return NULL;
-+
-+	return b;
- }
- 
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33aa2ca..1eed009 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -394,6 +394,7 @@ struct pci_host_bridge_window {
- struct pci_host_bridge {
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
-+	int domain_nr;
- 	struct list_head windows;	/* pci_host_bridge_windows */
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
-@@ -747,6 +748,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
-+struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
-+			int domain, int bus, struct pci_ops *ops,
-+			void *sysdata, struct list_head *resources);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
--- 
-1.9.0
+Would you mind booting with "pci=earlydump" sometime and attaching the
+dmesg to the bugzilla?  Your lspci output shows that INTx_DISABLE is
+set, and I'm curious about whether it was set by the BIOS or by Mac
+OS.
 
+Bjorn
