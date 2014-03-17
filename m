@@ -1,57 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:57726 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752967AbaCGA01 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 19:26:27 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v2 2/6] PCI: tegra: use new OF interrupt mapping when possible
-Date: Fri, 7 Mar 2014 01:25:28 +0100
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
+Received: from service87.mimecast.com ([91.220.42.44]:41524 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754709AbaCQQWP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 12:22:15 -0400
+Date: Mon, 17 Mar 2014 16:22:11 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Ben Dooks <ben-linux@fluff.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	kernel@pengutronix.de
-References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de> <5318B232.2020507@wwwdotorg.org> <1394127555.4582.1.camel@weser.hi.pengutronix.de>
-In-Reply-To: <1394127555.4582.1.camel@weser.hi.pengutronix.de>
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+Message-ID: <20140317162211.GH6457@e106497-lin.cambridge.arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_Jsq+9X-9VahsP79mtHN0RC64vRA_2R3ucjX0LefO6q2YN3Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201403070125.28582.arnd@arndb.de>
+In-Reply-To: <CAL_Jsq+9X-9VahsP79mtHN0RC64vRA_2R3ucjX0LefO6q2YN3Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 06 March 2014, Lucas Stach wrote:
-> Am Donnerstag, den 06.03.2014, 10:36 -0700 schrieb Stephen Warren:
-> > On 03/05/2014 06:25 AM, Lucas Stach wrote:
-> > > This is the recommended method of doing the IRQ
-> > > mapping. For old devicetrees we fall back to the
-> > > previous practice.
-> > 
-> > Tested-by: Stephen Warren <swarren@nvidia.com>
-> > 
-> > I tested both with and without patch 1/6, and the PCIe-based NIC on
-> > Beaver worked fine either way. Without patch 1/6, I do see:
-> > 
-> > pci 0000:00:01.0: of_irq_parse_pci() failed with rc=-22
-> > 
-> > ... but that seems reasonable given that the DT that of_irq_parse_pci()
-> > parses is missing, and did correctly trigger the fallback path, so
-> > everything still worked.
+On Mon, Mar 17, 2014 at 04:05:38PM +0000, Rob Herring wrote:
+> On Fri, Mar 14, 2014 at 10:34 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > Use the generic host bridge functions to provide support for
+> > PCI Express on arm64. There is no support for ISA memory.
+> >
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> > ---
+> >  arch/arm64/Kconfig            |  19 +++-
+> >  arch/arm64/include/asm/Kbuild |   1 +
+> >  arch/arm64/include/asm/io.h   |   3 +-
+> >  arch/arm64/include/asm/pci.h  |  51 ++++++++++
+> >  arch/arm64/kernel/Makefile    |   1 +
+> >  arch/arm64/kernel/pci.c       | 173 ++++++++++++++++++++++++++++++++
+> >  6 files changed, 246 insertions(+), 2 deletions(-)
+> >  create mode 100644 arch/arm64/include/asm/pci.h
+> >  create mode 100644 arch/arm64/kernel/pci.c
 > 
-> Yes, this should be normal. It spits this error for old DTs, but keeps
-> doing the right thing. I'm not sure if we should downgrade this to info
-> or dbg.
+> [snip]
+> 
+> > +#endif
+> > +
+> > +extern unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr);
+> 
+> Can we at least align the function definition across architectures if
+> not the implementation.
 
-No, I think printing an error like this is appropriate: it is an incentive
-to update the dts files, but doesn't look too urgent as long as everything
-still works.
+The choice of names is unfortunate. We are trying to follow the spirit of the
+arch/arm function, not the implementation, and for RFC that served the purpose.
 
-	Arnd
+I'll come up with a better name as I don't intend to share the implementation
+with arch/arm here.
+
+Best regards,
+Liviu
+
+> 
+> 
+> > +int pci_register_io_range(phys_addr_t address, resource_size_t size)
+> > +{
+> > +       struct ioresource *res;
+> > +       resource_size_t allocated_size = 0;
+> > +
+> > +       /* find if the range has not been already allocated */
+> > +       list_for_each_entry(res, &io_list, list) {
+> > +               if (address >= res->start &&
+> > +                       address + size <= res->start + size)
+> > +                       return 0;
+> > +               allocated_size += res->size;
+> > +       }
+> > +
+> > +       /* range not already registered, check for space */
+> > +       if (allocated_size + size > IO_SPACE_LIMIT)
+> 
+> I believe this needs to be "allocated_size + size - 1".
+> 
+> > +               return -E2BIG;
+> > +
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
