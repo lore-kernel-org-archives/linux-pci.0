@@ -1,53 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:34159 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752150AbaC3VCH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 30 Mar 2014 17:02:07 -0400
-From: Marek Vasut <marex@denx.de>
-To: Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH 0/8] i.MX6 PCIe binding change and MSI support
-Date: Sun, 30 Mar 2014 19:41:52 +0200
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	Sean Cross <xobs@kosagi.com>,
-	Richard Zhu <r65037@freescale.com>,
+Received: from service87.mimecast.com ([91.220.42.44]:38665 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756902AbaCQSFa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 14:05:30 -0400
+Date: Mon, 17 Mar 2014 18:05:25 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+Message-ID: <20140317180525.GL6457@e106497-lin.cambridge.arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
+ <20140314171457.GK18126@arm.com>
+ <201403141838.08900.arnd@arndb.de>
+ <20140314180527.GZ6457@e106497-lin.cambridge.arm.com>
+ <20140317173821.GJ24070@arm.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201403301941.52149.marex@denx.de>
+In-Reply-To: <20140317173821.GJ24070@arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, March 28, 2014 at 05:52:51 PM, Lucas Stach wrote:
-> While working on MSI support for the i.MX6 PCIe host driver
-> it has been discovered that the binding for this host controller
-> is broken in many ways (refer to the patch descriptions for more
-> info) and was introduced without proper discussion about what
-> should/should not be in the binding.
+On Mon, Mar 17, 2014 at 05:38:21PM +0000, Catalin Marinas wrote:
+> On Fri, Mar 14, 2014 at 06:05:27PM +0000, Liviu Dudau wrote:
+> > On Fri, Mar 14, 2014 at 05:38:08PM +0000, Arnd Bergmann wrote:
+> > > On Friday 14 March 2014, Catalin Marinas wrote:
+> > > > On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
+> > > > > --- /dev/null
+> > > > > +++ b/arch/arm64/kernel/pci.c
+> > > > [...]
+> > > > > +int pci_register_io_range(phys_addr_t address, resource_size_t size)
+> > > > [...]
+> > > > > +unsigned long pci_address_to_pio(phys_addr_t address)
+> > > > [...]
+> > > > > +void pcibios_fixup_bus(struct pci_bus *bus)
+> > > > [ actually most of this file ]
+> > > > 
+> > > > Maybe it was raised before already but can we have __weak generic
+> > > > definitions of these functions? They don't seem to be arm64 specific in
+> > > > any way.
+> [...]
+> > Catalin, if you are happy to ask for ACKs from all arch maintainers that might get
+> > affected by our custom version of pci_address_to_pio() before you can pull PCI support
+> > for arm64 then I can propose a new patchset.
 > 
-> This series fixes this and minimizes the difference of the
-> i.MX6 binding to the common designware PCIe binding. I'm aware
-> that this is a quite radical change, but I think it's justified
-> to do this as long as there aren't many user of the old binding
-> (most of the optional properties in the binding aren't even
-> implemented).
-> 
-> Looking forward to your feedback.
+> You don't need to change the other architectures, that's the point of a
+> __weak definition, it will be automatically overridden. If you want, you
+> can even place a GENERIC_PCI or whatever config option that is only
+> selected by arm64 for the time being.
 
-Other but 2/8, which needs further discussion,
-
-Reviewed-by: Marek Vasut <marex@denx.de>
+pci_address_to_pio() is alread __weak. My patch was adding the arm64 version of it. Adding
+an #ifdef GENERIC_PCI to the __weak implementation is not just a temporary solution.
+We would still have to keep some sort of #ifdef around in the function as x86
+will never pickup our version. Regardless, the list of people that would need to ACK that
+change will increase, right?
 
 Best regards,
-Marek Vasut
+Liviu
+
+> 
+> -- 
+> Catalin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
