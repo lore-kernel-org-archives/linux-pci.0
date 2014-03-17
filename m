@@ -1,160 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
-CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
-	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>
-Subject: [RFC PATCH 03/12] pci: host: pcie-designware: Use *base-mask* for configuring the iATU
-Date: Wed, 26 Mar 2014 19:27:43 +0530
-Message-ID: <1395842272-15267-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1395842272-15267-1-git-send-email-kishon@ti.com>
-References: <1395842272-15267-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <53226433.3090803@amd.com>
+References: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <CAErSpo4MMJh9b0aivwGSbxCMVw24He1+Vo_LH0R0E+fYM5aThg@mail.gmail.com>
+ <5317D9B0.1080502@amd.com> <5318160D.8070305@amd.com> <CAErSpo59=52bqgyvqk1x7kcgFmRtdZhT6faYTi3wy7KDtk5=Pw@mail.gmail.com>
+ <5318D475.9040701@amd.com> <CAErSpo5Dq3M5ik=dgF5dLsZV87XJeT3nEiYptPBXPCyLZ9xhgA@mail.gmail.com>
+ <CAErSpo6ZbKFMgcm4upR7gTnYwZ15UJpxzctOwWMsGyONipq8aw@mail.gmail.com> <53226433.3090803@amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 17 Mar 2014 11:18:37 -0600
+Message-ID: <CAErSpo6=pr4rouacs29ZpN2EbgPiUFWwSXVE+uUL+-H4CeTdzQ@mail.gmail.com>
+Subject: Re: [PATCH 0/3] amd/pci: Add AMD hostbridge supports for newer AMD systems
+To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	kim.naru@amd.com,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
-address. So whenever the cpu issues a read/write request, the 4 most
-significant bits are used by L3 to determine the target controller.
-For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
-the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
-the outbound translation window the *base* should be programmed as 0x000_0000.
-Whenever we try to write to say 0x2000_0000, it will be translated to whatever
-we have programmed in the translation window with base as 0x000_0000.
+[+cc Rafael]
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- .../devicetree/bindings/pci/designware-pcie.txt    |    1 +
- drivers/pci/host/pcie-designware.c                 |   39 ++++++++++++++------
- drivers/pci/host/pcie-designware.h                 |    1 +
- 3 files changed, 29 insertions(+), 12 deletions(-)
+On Thu, Mar 13, 2014 at 8:06 PM, Suravee Suthikulpanit
+<suravee.suthikulpanit@amd.com> wrote:
+> On 3/12/2014 4:13 PM, Bjorn Helgaas wrote:
+>>>
+>>> I assume the system is fully functional even without these patches,
+>>> >right?  The only effect of these changes should be a performance
+>>> >improvement.
+>
+> [Suravee] Yes, the system is fully functional except the numa information
+> for PCI ethernet adapters is returning -1.
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index d6fae13..c574dd3 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -27,6 +27,7 @@ Optional properties for fsl,imx6q-pcie
- - power-on-gpio: gpio pin number of power-enable signal
- - wake-up-gpio: gpio pin number of incoming wakeup signal
- - disable-gpio: gpio pin number of outgoing rfkill/endpoint disable signal
-+- base-mask: address mask for the PCIe controller target port
- 
- Example:
- 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 17ce88f..98b661c 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -464,6 +464,9 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 		return -EINVAL;
- 	}
- 
-+	if (of_property_read_u64(np, "base-mask", &pp->base_mask))
-+		pp->base_mask = ~(0x0ULL);
-+
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
- 					MAX_MSI_IRQS, &msi_domain_ops,
-@@ -503,12 +506,15 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 
- static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
- {
-+	u64 cfg0_base;
-+
-+	cfg0_base = pp->cfg0_base & pp->base_mask;
- 	/* Program viewport 0 : OUTBOUND : CFG0 */
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
- 			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, pp->cfg0_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->cfg0_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->cfg0_base + pp->config.cfg0_size - 1,
-+	dw_pcie_writel_rc(pp, cfg0_base, PCIE_ATU_LOWER_BASE);
-+	dw_pcie_writel_rc(pp, (cfg0_base >> 32), PCIE_ATU_UPPER_BASE);
-+	dw_pcie_writel_rc(pp, cfg0_base + pp->config.cfg0_size - 1,
- 			  PCIE_ATU_LIMIT);
- 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
-@@ -518,14 +524,17 @@ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
- 
- static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
- {
-+	u64 cfg1_base;
-+
-+	cfg1_base = pp->cfg1_base & pp->base_mask;
- 	/* Program viewport 1 : OUTBOUND : CFG1 */
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--	dw_pcie_writel_rc(pp, pp->cfg1_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->cfg1_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->cfg1_base + pp->config.cfg1_size - 1,
-+	dw_pcie_writel_rc(pp, cfg1_base, PCIE_ATU_LOWER_BASE);
-+	dw_pcie_writel_rc(pp, (cfg1_base >> 32), PCIE_ATU_UPPER_BASE);
-+	dw_pcie_writel_rc(pp, cfg1_base + pp->config.cfg1_size - 1,
- 			  PCIE_ATU_LIMIT);
- 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
-@@ -533,14 +542,17 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
- 
- static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
- {
-+	u64 mem_base;
-+
-+	mem_base = pp->mem_base & pp->base_mask;
- 	/* Program viewport 0 : OUTBOUND : MEM */
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
-+	dw_pcie_writel_rc(pp, mem_base, PCIE_ATU_LOWER_BASE);
-+	dw_pcie_writel_rc(pp, (mem_base >> 32), PCIE_ATU_UPPER_BASE);
-+	dw_pcie_writel_rc(pp, mem_base + pp->config.mem_size - 1,
- 			  PCIE_ATU_LIMIT);
- 	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
-@@ -549,14 +561,17 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
- 
- static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
- {
-+	u64 io_base;
-+
-+	io_base = pp->io_base & pp->base_mask;
- 	/* Program viewport 1 : OUTBOUND : IO */
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--	dw_pcie_writel_rc(pp, pp->io_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->io_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->io_base + pp->config.io_size - 1,
-+	dw_pcie_writel_rc(pp, io_base, PCIE_ATU_LOWER_BASE);
-+	dw_pcie_writel_rc(pp, (io_base >> 32), PCIE_ATU_UPPER_BASE);
-+	dw_pcie_writel_rc(pp, io_base + pp->config.io_size - 1,
- 			  PCIE_ATU_LIMIT);
- 	dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 3063b35..3fa12a6 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -35,6 +35,7 @@ struct pcie_port {
- 	struct device		*dev;
- 	u8			root_bus_nr;
- 	void __iomem		*dbi_base;
-+	u64			base_mask;
- 	u64			cfg0_base;
- 	void __iomem		*va_cfg0_base;
- 	u64			cfg1_base;
--- 
-1.7.9.5
+This would normally be determined by the _PXM of the PCI host bridge
+leading to the NIC.  The DSDT you attached to the bug report contains
+no _PXM methods at all, so we have no idea what the NUMA information
+should be.
 
+>>> >So the choices are:
+>>> >
+>>> >   1) Change the BIOS to provide _PXM
+>>> >   2) Change Linux with your patches
+>>> >
+>>> >Either way, the customer has to upgrade something.  Choice 1) gets you
+>>> >the performance improvement on all Linux and Windows releases, even
+>>> >the ones that are already in the field.
+>
+> [Suravee] I agree with you on both cases and I am working with the BIOS team
+> to see if they can look into this and provide fixes for the future.  My only
+> concern is the device _PXM information might be specific to each platform
+> vendors since they are the one deciding the number of northbridge to be put
+> on the systems. Also, it's quite difficult to influence HW/BIOS vendor to
+> provide fixes for older platforms unless some important customers are
+> complaining to them.
+
+Yes, you're right that _PXM describes platform topology and can't be
+implemented by the CPU vendor because it doesn't know the topology of
+the system where the CPUs will end up.
+
+>>> >Choice 2) fixes future Linux
+>>> >distros and whatever old releases you can convince the distro to
+>>> >backport to, and doesn't help Windows at all.  It makes work for all
+>>> >the distros and we (i.e., I) have to worry about maintaining this in
+>>> >the future.
+>
+> [Suravee] Actually, this was originally reported by Redhat (please see
+> https://bugzilla.redhat.com/show_bug.cgi?id=1040440), and they are waiting
+> for the fixes if we decide to fix it in the upstream Linux code base.
+
+This RH bugzilla is private, so I can't see it.
+
+> [Suravee] I am not sure which table is the _PXM method supposed to be apart
+> of.
+
+It would be in the DSDT (or an SSDT).  In this case, the PCI host
+bridges (the PNP0A08 devices) are described in the DSDT you posted, so
+_PXM would normally be there, too.
+
+>> Can you collect an acpidump and complete dmesg log from a system with
+>> the problem?
+>
+> [Suravee] Please see https://bugzilla.kernel.org/show_bug.cgi?id=72051
+> I have included SRAT, SLIT and DSDT table as part of the bug. Please let me
+> know if you are looking for more information.
+
+One of my objections to your patches is that if we include them, it
+will reinforce the perception that the BIOS is doing things correctly,
+so there will be less incentive to actually fix the problem by
+following the spec.  This has happened several times in the past,
+e.g., quirk_amd_nb_node() and amd_bus.c itself.
+
+Another is more of a question: as coded, your patch assumes *all* AMD
+host bridge devices will have these registers at those locations
+forever.  Are those registers documented as being architected?
+
+Finally, your patch extracts a 3-bit number from a CPU register and
+uses it as the node number.  The node numbers used by Linux are
+logical and there's no reason they need to be identical to settings in
+the CPU registers.  So if we got some node information in the normal
+way (from _PXM, SLIT, SRAT, etc.) and some from your patch, there's no
+reason to believe they would be compatible.
+
+Bjorn
