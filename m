@@ -1,72 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:48896 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755520AbaCZSYA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 14:24:00 -0400
-Received: by mail-oa0-f49.google.com with SMTP id h16so3045938oag.22
-        for <linux-pci@vger.kernel.org>; Wed, 26 Mar 2014 11:23:59 -0700 (PDT)
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:64907 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962AbaCQQYJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 12:24:09 -0400
+Received: by mail-ie0-f169.google.com with SMTP id to1so5719630ieb.0
+        for <linux-pci@vger.kernel.org>; Mon, 17 Mar 2014 09:24:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5ncPGV9_ijfzCJJP28AX=4erb_iN2sei_DJC7eCsevMg@mail.gmail.com>
-References: <CAMm_7EozAX7OTAAOzvFfqrar7xnZG+KoX=VygEKNAB6yO=4q=A@mail.gmail.com>
-	<CAErSpo45sDNPt6=Yw-qgqdojYL8+_JNOVNEnVxRLatga+bY+2A@mail.gmail.com>
-	<CAMm_7EqArczxmyG3Za+Gs5hjTJZ+rDRiDxakCUNi50dO1h9ikg@mail.gmail.com>
-	<CAErSpo5ygKWTuPKo1ki-Rrpf+DizkAT0UqrwZH3UFsNNyDvt-w@mail.gmail.com>
-	<CAMm_7EpYxnyF74Paj3qpcLqhspECVfUpRzzGAPc78UuGVc4dnQ@mail.gmail.com>
-	<CAErSpo5-rWeWeayeTpzgg+N_UYWfyT5-qdYReQm0WDy0WwHFkg@mail.gmail.com>
-	<CAMm_7EoCGgQ7aZfESY_-+WFdsZqpBrjEee94e6GyT50CLaVbdQ@mail.gmail.com>
-	<CAErSpo5ncPGV9_ijfzCJJP28AX=4erb_iN2sei_DJC7eCsevMg@mail.gmail.com>
-Date: Wed, 26 Mar 2014 14:23:59 -0400
-Message-ID: <CAMm_7Epo7D53_Cui7zN1Zv0F4HAOSdUv6M9pLJxjrFAWbB7aNw@mail.gmail.com>
-Subject: Re: Help with listing devices in physical PCI slots
-From: Cristina Olariu <colariu@elfiq.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
+In-Reply-To: <CAE9FiQUFoKrhKfHqE6cq=R54Uo5GyL1u=GZnBZAGZ+JJ-fR+fg@mail.gmail.com>
+References: <20140311174555.23257.66798.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140311174809.23257.77363.stgit@bhelgaas-glaptop.roam.corp.google.com> <CAE9FiQUFoKrhKfHqE6cq=R54Uo5GyL1u=GZnBZAGZ+JJ-fR+fg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 17 Mar 2014 10:23:48 -0600
+Message-ID: <CAErSpo62pKkJeWrPC3Jp5Ppgwu2fmtf2gsPpsn0KNy1M0iMqSg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Do not enable INTx in pci_reenable_device()
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Matt Domsch <Matt_Domsch@dell.com>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Chris Cheng <chris.cheng@atrustcorp.com>,
+	Jamie Chen <jamie.chen@intel.com>,
+	Andreas Noever <andreas.noever@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 24, 2014 at 7:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Matt, Jordan]
+On Fri, Mar 14, 2014 at 6:30 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Mar 11, 2014 at 10:48 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> Andreas reported that after 1f42db786b14 ("PCI: Enable INTx if BIOS left
+>> them disabled"), pciehp surprise removal stopped working.
+>>
+>> This happens because pci_reenable_device() on the hotplug bridge (used in
+>> the pciehp_configure_device() path) clears the Interrupt Disable bit, which
+>> apparently breaks the bridge's MSI hotplug event reporting.
+>>
+>> Previously we cleared the Interrupt Disable bit in do_pci_enable_device(),
+>> which is used by both pci_enable_device() and pci_reenable_device().  But
+>> we use pci_reenable_device() after the driver may have enabled MSI or
+>> MSI-X, and we *set* Interrupt Disable as part of enabling MSI/MSI-X.
+>>
+>> This patch clears Interrupt Disable only when MSI/MSI-X has not been
+>> enabled.
+>>
+>> Fixes: 1f42db786b14 PCI: Enable INTx if BIOS left them disabled
+>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=71691
+>> Reported-and-tested-by: Andreas Noever <andreas.noever@gmail.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: stable@vger.kernel.org
+>> CC: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+>> ---
+>>  drivers/pci/pci.c |    3 +++
+>>  1 file changed, 3 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 8dc3e701ec57..79fc89c6c3f3 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -1192,6 +1192,9 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+>>                 return err;
+>>         pci_fixup_device(pci_fixup_enable, dev);
+>>
+>> +       if (dev->msi_enabled || dev->msix_enabled)
+>> +               return 0;
+>> +
+>>         pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+>>         if (pin) {
+>>                 pci_read_config_word(dev, PCI_COMMAND, &cmd);
+>
+> looks ugly.
+>
+> We really should move out those irq handling out of pci_enable_device.
 
-> I was really trying to ask "what is the specific information you have
-> about your network port that you want to match up with something from
-> PCI?"
+OK, I'll watch for your patch.
 
-Sorry; what I had in mind was the PCI address: domain/bus/device/function.
-
-> It sounds like what you're really after is "Consistent Network Device
-> Naming" [1].  I'm not very familiar with it, but it might be a way to
-> do what you need.  It looks like it can use SMBIOS to help figure out
-> naming information, so maybe that will work even if we don't have the
-> PCIe slot information.
-
-That's true. I'm aware of biosdevname; I have a similar user
-application, tailored for our platform.
-
-I get a list of all PCI network devices and for each one I look up its
-interface name in sysfs.
->From SMBIOS I get the list of physical slots along with their
-corresponding  bus addresses.
-Then, I match the lists and identify the physical slot for every network device.
-
-I was trying to simplify the design and thought that it would be
-easier if the physical slot number would be already available in sysfs
-hierarchy.
-
-> It does seem like the way we expose PCIe slot information is
-> unnecessarily tied to the question of whether the slot supports
-> hotplug.  Maybe the slot number, e.g., the PCIe or SHPC "Physical Slot
-> Number" could be exposed in the device directory of the upstream
-> bridge, e.g., /sys/devices/pci0000:00/0000:00:1c.3/slot.
-
-Yes, this could be helpful. I was looking for a PCI address inside
-/sys/bus/pci/slots/X but this is better.
-
-Thank you,
-Cristina
-
--- 
-CRISTINA OLARIU * Elfiq Networks * Software Developer
-T. 514.667.0611 x 821 *  E.  colariu@elfiq.com
+Bjorn
