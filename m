@@ -1,58 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:59375 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875AbaCYAeF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 20:34:05 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-samsung-soc@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Jingoo Han <jg1.han@samsung.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Borislav Petkov <bp@alien8.de>
+Cc: Stephane Eranian <eranian@google.com>,
+	lkml <linux-kernel@vger.kernel.org>, x86 <x86@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>
-Subject: [PATCH 1/3] ARM: keystone: add pcie related options
-Date: Mon, 24 Mar 2014 20:33:22 -0400
-Message-ID: <1395707604-20377-3-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1395707604-20377-1-git-send-email-m-karicheri2@ti.com>
-References: <1395707604-20377-1-git-send-email-m-karicheri2@ti.com>
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+Date: Mon, 17 Mar 2014 01:23:37 +0100
+Message-ID: <6878235.CLHeQJJUpt@vostro.rjw.lan>
+In-Reply-To: <1425376.F2qgSAxAbW@vostro.rjw.lan>
+References: <20140224162400.GE16457@pd.tnic> <CABPqkBSmes+ee19iVh0EHvMQ=7TAzN3Fx1BKdOZ-2iuk5L0ugw@mail.gmail.com> <1425376.F2qgSAxAbW@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pcie related options by default for keystone architecture
+On Monday, March 17, 2014 01:09:39 AM Rafael J. Wysocki wrote:
+> On Sunday, March 16, 2014 02:08:16 PM Stephane Eranian wrote:
+> > Rafael,
+> > 
+> > Thanks for the analysis.
+> > 
+> > On Sun, Mar 16, 2014 at 12:55 PM, Borislav Petkov <bp@alien8.de> wrote:
+> > > On Sat, Mar 15, 2014 at 03:15:04PM +0100, Rafael J. Wysocki wrote:
+> > >> I've just gone throught this.
+> > >
+> > > Thanks.
+> > >
+> > >> So the problem is that we have the PNP "system" driver whose only purpose seems
+> > >> to be to reserve system resources so that the PCI layer doesn't assign them to
+> > >> new devices on hotplug (disclaimer: I didn't invent it, I only read the code and
+> > >> comments in there).
+> > >>
+> > >> It does that for ACPI device objects having the "PNP0C02" and "PNP0C01" IDs.
+> > >
+> > > Right, pnp 00:01 is PNP0C02.
+> > >
+> > >> Apparently, snb_uncore_imc_init_box() steps on a range already reserved by that
+> > >> driver on your box.  And this doesn't seem to be a coincidence, because the ACPI
+> > >> device object in question probably *does* correspond to the memory controller
+> > >> that the uncore driver attempts to use.
+> > >>
+> > >> I'm not sure how to address that right now to be honest.  Arguably, the PNP
+> > >> "system" driver should be replaced with something saner, but still the
+> > >> resources it claims need to be kept out of reach of the PCI's resource
+> > >> allocation code.
+> > >
+> > > Well, I'm only conjecturing here but there should be a way for the
+> > > uncore code to tell the PNP "system" driver to free this resource
+> > > because uncore is going to use it now. Or something to that effect.
+> > >
+> > I agree. The snb_uncore_imc() is making real (good) use of the device.
+> > It needs to own it. So we need a way to free the resource from the PNP
+> > system or  a way to tell PNP need to grab it on systems with the
+> > snb_uncore_imc() support. Does that kind of API exist?
+> > 
+> > Where do I look to prevent PNP from grabbing the IMC?
+> 
+> drivers/pnp/system.c is the driver in question and system_pnp_probe() makes
+> the reservations via reserve_resources_of_dev(), so you'd need to modify that.
+> 
+> I'm not sure what's the right way to go here, though.
 
-CC: Jingoo Han <jg1.han@samsung.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Kukjin Kim <kgene.kim@samsung.com>
-CC: Richard Zhu <r65037@freescale.com>
-CC: Shawn Guo <shawn.guo@linaro.org>
-CC: Mohit Kumar <mohit.kumar@st.com>
-CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+Boris, can you please sent the acpidump output from that machine?
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- arch/arm/mach-keystone/Kconfig |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/arch/arm/mach-keystone/Kconfig b/arch/arm/mach-keystone/Kconfig
-index 7e16d07..22c2174 100644
---- a/arch/arm/mach-keystone/Kconfig
-+++ b/arch/arm/mach-keystone/Kconfig
-@@ -17,6 +17,8 @@ config ARCH_KEYSTONE
- 	select TI_KEYSTONE
- 	select ARCH_SUPPORTS_BIG_ENDIAN
- 	select ZONE_DMA if ARM_LPAE
-+	select MIGHT_HAVE_PCI
-+	select ARCH_SUPPORTS_MSI
- 	help
- 	  Support for boards based on the Texas Instruments Keystone family of
- 	  SoCs.
 -- 
-1.7.9.5
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
