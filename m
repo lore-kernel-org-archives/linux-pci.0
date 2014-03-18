@@ -1,147 +1,108 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <532BBCB4.4070107@numascale.com>
-Date: Fri, 21 Mar 2014 12:14:44 +0800
-From: Daniel J Blueman <daniel@numascale.com>
-MIME-Version: 1.0
-To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
+Subject: [PATCH] Revert "[PATCH] Insert GART region into resource map"
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Aaron Durbin <adurbin@google.com>, David Airlie <airlied@linux.ie>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Borislav Petkov <bp@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Steffen Persvold <sp@numascale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	kim.naru@amd.com,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Hurwitz, Sherry" <sherry.hurwitz@amd.com>
-Subject: Re: [PATCH] Fix northbridge quirk to assign correct NUMA node
-References: <1394710981-3596-1-git-send-email-daniel@numascale.com> <CAErSpo6psgDr3XYh6m+vYcAOix2Vttrwz1jK7bS47Liy2Lw-=g@mail.gmail.com> <532BB75E.90301@amd.com>
-In-Reply-To: <532BB75E.90301@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jouni =?utf-8?b?TWV0dMOkbMOk?= <jtmettala@gmail.com>
+Date: Tue, 18 Mar 2014 11:14:01 -0600
+Message-ID: <20140318171401.8189.46642.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140318170841.8189.7972.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140318170841.8189.7972.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21/03/2014 11:51, Suravee Suthikulpanit wrote:
-> Bjorn,
->
-> On a typical AMD system, there are two types of host bridges:
-> * PCI Root Complex Host bridge (e.g. RD890, SR56xx, etc.)
-> * CPU Host bridge
->
-> Here is an example from a 2 sockets system:
->
-> $ lspci
-[]
+This reverts commit 56dd669a138c, which makes the GART visible in
+/proc/iomem.  This fixes a regression: e501b3d87f00 ("agp: Support 64-bit
+APBASE") exposed an existing problem with a conflict between the GART
+region and a PCI BAR region.
 
-> The host bridge 00:00.0 is basically the PCI root complex which connects
-> to the actual PCI bus with
-> PCI devices hanging off of it.  However, the host bridge 00:[18,19].x
-> are the CPU host bridges,
-> each of which represents a CPU node within the system. In system with
-> single root complex,
-> the root complex is normally connected to node 0 (i.e. 00:18.0) via
-> non-coherent HT (I/O) link.
+The GART addresses are bus addresses, not CPU addresses, and therefore
+should not be inserted in iomem_resource.
 
-> Even though the CPU host bridge 00:[18,19].x is on the same bus as the
-> PCI root complex, it should
-> not be using the NUMA information from the PCI root complex host bridge.
+On many machines, the GART region is addressable by the CPU as well as by
+an AGP master, but CPU addressability is not required by the spec.  On some
+of these machines, the GART is mapped by a PCI BAR, and in that case, the
+PCI core automatically inserts it into iomem_resource, just as it does for
+all BARs.
 
-This is unavoidable unless we special-case it via another mechanism (ie 
-not quirks), since the northbridges/CPU host bridges are logically under 
-the _PXM method.
+Inserting it here means we'll have a conflict if the PCI core later tries
+to claim the GART region, so let's drop the insertion here.
 
-> Therefore, I don't think we should be using the pcibus_to_node(dev->bus)
-> here.
-> Only the "val" from pci_read_config_dword(nb_ht, 0x60, &val), should be
-> used here.
+The conflict indirectly causes X failures, as reported by Jouni in the
+bugzilla below.  We detected the conflict even before e501b3d87f00, but
+after it the AGP code (fix_northbridge()) uses the PCI resource (which is
+zeroed because of the conflict) instead of reading the BAR again.
 
-Using only effectively the NUMA node ID (HT node ID here) would 
-associate all the northbridges with the first fabric, which is false 
-information. If there was no quirk, they'd all be associated with the 
-first NUMA node in each fabric, as you'd expect.
+Conflicts:
+	arch/x86_64/kernel/aperture.c
 
-This was the only safe and defensible one-liner approach I could 
-prepare; if you find it introduces a regression or you can find a better 
-approach, do tell. If not, we can decouple this fix from an overall new 
-approach, since it's unlikely that'll get backported to stable kernels.
+Fixes: e501b3d87f00 agp: Support 64-bit APBASE
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=72201
+Reported-and-tested-by: Jouni Mettälä <jtmettala@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/kernel/aperture_64.c |   20 +-------------------
+ 1 file changed, 1 insertion(+), 19 deletions(-)
 
-Thanks,
-   Daniel
+diff --git a/arch/x86/kernel/aperture_64.c b/arch/x86/kernel/aperture_64.c
+index fd972a3e4cbb..9fa8aa051f54 100644
+--- a/arch/x86/kernel/aperture_64.c
++++ b/arch/x86/kernel/aperture_64.c
+@@ -18,7 +18,6 @@
+ #include <linux/pci_ids.h>
+ #include <linux/pci.h>
+ #include <linux/bitops.h>
+-#include <linux/ioport.h>
+ #include <linux/suspend.h>
+ #include <asm/e820.h>
+ #include <asm/io.h>
+@@ -54,18 +53,6 @@ int fallback_aper_force __initdata;
+ 
+ int fix_aperture __initdata = 1;
+ 
+-static struct resource gart_resource = {
+-	.name	= "GART",
+-	.flags	= IORESOURCE_MEM,
+-};
+-
+-static void __init insert_aperture_resource(u32 aper_base, u32 aper_size)
+-{
+-	gart_resource.start = aper_base;
+-	gart_resource.end = aper_base + aper_size - 1;
+-	insert_resource(&iomem_resource, &gart_resource);
+-}
+-
+ /* This code runs before the PCI subsystem is initialized, so just
+    access the northbridge directly. */
+ 
+@@ -96,7 +83,6 @@ static u32 __init allocate_aperture(void)
+ 	memblock_reserve(addr, aper_size);
+ 	printk(KERN_INFO "Mapping aperture over %d KB of RAM @ %lx\n",
+ 			aper_size >> 10, addr);
+-	insert_aperture_resource((u32)addr, aper_size);
+ 	register_nosave_region(addr >> PAGE_SHIFT,
+ 			       (addr+aper_size) >> PAGE_SHIFT);
+ 
+@@ -444,12 +430,8 @@ int __init gart_iommu_hole_init(void)
+ 
+ out:
+ 	if (!fix && !fallback_aper_force) {
+-		if (last_aper_base) {
+-			unsigned long n = (32 * 1024 * 1024) << last_aper_order;
+-
+-			insert_aperture_resource((u32)last_aper_base, n);
++		if (last_aper_base)
+ 			return 1;
+-		}
+ 		return 0;
+ 	}
+ 
 
-> On 3/20/2014 5:07 PM, Bjorn Helgaas wrote:
->> [+cc linux-pci, Myron, Suravee, Kim, Aravind]
->>
->> On Thu, Mar 13, 2014 at 5:43 AM, Daniel J Blueman
->> <daniel@numascale.com> wrote:
->>> For systems with multiple servers and routed fabric, all northbridges
->>> get
->>> assigned to the first server. Fix this by also using the node
->>> reported from
->>> the PCI bus. For single-fabric systems, the northbriges are on PCI bus 0
->>> by definition, which are on NUMA node 0 by definition, so this is
->>> invarient
->>> on most systems.
->>>
->>> Tested on fam10h and fam15h single and multi-fabric systems and
->>> candidate
->>> for stable.
->>
->> I wish this had been cc'd to linux-pci.  We're talking about a related
->> change by Suravee there.  In fact, we were hoping this quirk could be
->> removed altogether.
->>
->> I don't understand what this quirk is doing.  Normally we discover the
->> NUMA node for a PCI host bridge via the ACPI _PXM method.  The way
->> _PXM works is that every PCI device in the hierarchy below the bridge
->> inherits the same node number as the host bridge.  I first thought
->> this might be a workaround for a system that lacks _PXM, but I don't
->> think that can be right, because you're only changing the node for a
->> few devices, not the whole hierarchy.
->>
->> So I suspect the problem is more complicated, and maybe _PXM is
->> insufficient to describe the topology?  Are there subtrees that should
->> have nodes different from the host bridge?
->>
->> I know this patch is already in v3.14-rc7, but I'd still like to
->> understand it so we can do the right thing with Suravee's patch.
->>
->> Bjorn
->>
->>> Signed-off-by: Daniel J Blueman <daniel@numascale.com>
->>> Acked-by: Steffen Persvold <sp@numascale.com>
->>> ---
->>>   arch/x86/kernel/quirks.c | 2 +-
->>>   1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
->>> index 04ee1e2..52dbf1e 100644
->>> --- a/arch/x86/kernel/quirks.c
->>> +++ b/arch/x86/kernel/quirks.c
->>> @@ -529,7 +529,7 @@ static void quirk_amd_nb_node(struct pci_dev *dev)
->>>                  return;
->>>
->>>          pci_read_config_dword(nb_ht, 0x60, &val);
->>> -       node = val & 7;
->>> +       node = pcibus_to_node(dev->bus) | (val & 7);
->>>          /*
->>>           * Some hardware may return an invalid node ID,
->>>           * so check it first:
->>> --
->>> 1.8.3.2
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe
->>> linux-kernel" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>> Please read the FAQ at  http://www.tux.org/lkml/
->>
->
->
-
-
--- 
-Daniel J Blueman
-Principal Software Engineer, Numascale
