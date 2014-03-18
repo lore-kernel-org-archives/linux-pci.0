@@ -1,101 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:14844 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753540AbaCZKMl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 06:12:41 -0400
-In-Reply-To: <5331B733.8090802@codethink.co.uk>
-References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com> <1395766604-30926-3-git-send-email-phil.edworthy@renesas.com> <5331B733.8090802@codethink.co.uk>
-To: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:45751 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751801AbaCRA1F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 20:27:05 -0400
+Received: by mail-pb0-f44.google.com with SMTP id rp16so6463602pbb.3
+        for <linux-pci@vger.kernel.org>; Mon, 17 Mar 2014 17:27:04 -0700 (PDT)
+Date: Mon, 17 Mar 2014 18:27:00 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding
+ disabled
+Message-ID: <20140318002700.GA22356@google.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CACVXFVOqBuCcQC6ku0abqstkgJWGe21ZztB-eTsyDwsvDvXNZw@mail.gmail.com>
+ <CAErSpo4ngU60XQCD=DbFJbqNOMkOwwhHB1oau1mmr7rJQQ2+pg@mail.gmail.com>
+ <CACVXFVMz+6DaSgT0EHeVfyBOsXfWDYnZQ0wy7pwcey5ahM6rUA@mail.gmail.com>
 MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OF62BCE896.5AFD55D6-ON80257CA7.0037C4A7-80257CA7.00381353@eu.necel.com>
-Date: Wed, 26 Mar 2014 10:12:31 +0000
-Subject: Re: [PATCH v5 2/9] PCI: host: rcar: Add MSI support
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACVXFVMz+6DaSgT0EHeVfyBOsXfWDYnZQ0wy7pwcey5ahM6rUA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
-
-On: 25/03/2014 17:05, Ben wrote:
-> Subject: Re: [PATCH v5 2/9] PCI: host: rcar: Add MSI support
+On Fri, Mar 14, 2014 at 09:48:35AM +0800, Ming Lei wrote:
+> On Fri, Mar 14, 2014 at 12:08 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Thu, Mar 13, 2014 at 2:51 AM, Ming Lei <tom.leiming@gmail.com> wrote:
+> >> Hi Bjorn,
+> >>
+> >> I found this patch broke virtio-pci devices.
+> >
+> > Thanks a lot for testing this.
+> >
+> >> On Thu, Feb 27, 2014 at 3:37 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >>> Don't rely on BAR contents when the command register says the BAR is
+> >>> disabled.
+> >>>
+> >>> If we receive a PCI device from firmware (or a hot-added device that was
+> >>> just powered up) with the MEMORY or IO enable bits in the PCI command
+> >>> register cleared, there's no reason to believe the BARs contain valid
+> >>> addresses.
+> >>
+> >> From PCI LOCAL BUS SPECIFICATION, REV. 3.0, both
+> >> PCI_COMMAND_IO and PCI_COMMAND_MEM should be
+> >> cleared after reset, so looks the patch sets IORESOURCE_UNSET
+> >> too early because PCI drivers may call pci_enable_device()
+> >> (->pci_enable_resources()) to enable the two bits of
+> >> PCI_COMMAND explicitly.
+> >
+> > The point is that it's not safe to enable those two bits unless we're
+> > certain that the BARs they control contain valid values that don't
+> > conflict with anything else in the system.
+> >
+> > Maybe we should only set IORESOURCE_UNSET when we find a conflict or a
+> > BAR that's not contained by an upstream bridge window, and we should
+> > try to reallocate then.  I'm pretty sure we do that at least in some
+> > cases, but it would probably simplify things if we did it more
+> > consistently, and maybe we shouldn't set it at all here in
+> > __pci_read_base().
 > 
-> On 25/03/14 16:56, Phil Edworthy wrote:
-> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > ---
-> > v5:
-> >   - Return IRQ_NONE from MSI isr when there is no pending MSI
-> >   - Add additional interrupt bindings
-> > +
-> > +static void rcar_msi_free(struct rcar_msi *chip, unsigned long irq)
-> > +{
-> > +   struct device *dev = chip->chip.dev;
-> > +
-> > +   mutex_lock(&chip->lock);
-> > +
-> > +   if (!test_bit(irq, chip->used))
-> > +      dev_err(dev, "trying to free unused MSI#%lu\n", irq);
-> 
-> Does the upper level not check for this?
-Yes, the default_teardown_msi_irqs function checks for unused MSIs, so we 
-don't really need to check here.
+> I think so because __pci_read_base() is called in device emulation
+> path.
 
+Which path is this?  I don't know anything about virtio-pci, and I only see
+calls to __pci_read_base() from:
 
-> > +   else
-> > +      clear_bit(irq, chip->used);
-> > +
-> > +   mutex_unlock(&chip->lock);
-> 
-> 
-> > +}
-> > +
-> > +static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
-> > +{
-> > +   struct rcar_pcie *pcie = data;
-> > +   struct rcar_msi *msi = &pcie->msi;
-> > +   unsigned long reg;
-> > +
-> > +   reg = pci_read_reg(pcie, PCIEMSIFR);
-> > +
-> > +   /* MSI & INTx share an interrupt - we only handle MSI here */
-> > +   if (!reg)
-> > +      return IRQ_NONE;
-> > +
-> > +   while (reg) {
-> > +      unsigned int index = find_first_bit(&reg, 32);
-> > +      unsigned int irq;
-> > +
-> > +      /* clear the interrupt */
-> > +      pci_write_reg(pcie, 1 << index, PCIEMSIFR);
-> > +
-> > +      irq = irq_find_mapping(msi->domain, index);
-> > +      if (irq) {
-> > +         if (test_bit(index, msi->used))
-> > +            generic_handle_irq(irq);
-> > +         else
-> > +            dev_info(pcie->dev, "unhandled MSI\n");
-> > +      } else {
-> > +         /*
-> > +          * that's weird who triggered this?
-> > +          * just clear it
-> > +          */
-> > +         dev_info(pcie->dev, "unexpected MSI\n");
-> > +      }
-> 
-> You may want to change this to something that is either rate-limited
-> or is say debug level so it does not spam the console if something
-> does go wrong.
-I'll change that to debug level.
+  sriov_init()
+  pci_sriov_resource_alignment()
+  pci_read_bases()
 
-> Also the comment could easily be made one line
->    /* Weird, unknown MSI IRQ, just clear it */
-Sure!
+> > But I'd like to understand your situation better, so can you provide
+> > more details, please?  Complete before/after dmesg logs would go a
+> > long way toward illustrating the problem you're seeing.
+> 
+> Please see the two attachment log. The memory allocation failure
+> is caused by mistaken value read from pci address after the device
+> is failed to enable.
 
-Thanks
-Phil
+Your logs are harder than necessary to compare because one has a lot more
+debug turned on than the other.
+
+In the failing case, we ignore all the initial BAR values, but we do assign
+values to all of them later:
+
+  pci 0000:00:00.0: can't claim BAR 0 [mem size 0x00000400]: no address assigned
+  pci 0000:00:00.0: can't claim BAR 1 [io  size 0x0400]: no address assigned
+  ...
+  pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x400003ff]
+  pci 0000:00:00.0: BAR 1: assigned [io  0x1000-0x13ff]
+  ...
+
+The newly-assigned values look valid, and as far as I can tell, they should
+work.  Do you know why they don't?  Is there an assumption somewhere that
+we never change BAR values?
+
+Even if we don't need to ignore BAR values in as many cases as we do, it
+should be legal to ignore them and reassign them, so I want to understand
+what's going on here before reverting this.
+
+Is there an easy way I can reproduce the problem on my own box?
+
+Bjorn
