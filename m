@@ -1,114 +1,222 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:50714 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754659AbaCNTQ1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 15:16:27 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v7 2/6] pci: OF: Fix the conversion of IO ranges into IO resources.
-Date: Fri, 14 Mar 2014 20:16:10 +0100
-Cc: "linux-pci" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <201403141946.23921.arnd@arndb.de> <20140314190017.GA6457@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140314190017.GA6457@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201403142016.11105.arnd@arndb.de>
+Received: from exprod5og116.obsmtp.com ([64.18.0.147]:50741 "HELO
+	exprod5og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756047AbaCSXNH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 19:13:07 -0400
+Received: by mail-pd0-f177.google.com with SMTP id y10so39277pdj.36
+        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 16:13:06 -0700 (PDT)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v5 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
+Date: Wed, 19 Mar 2014 16:12:40 -0700
+Message-Id: <1395270762-6055-3-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
+References: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 14 March 2014, Liviu Dudau wrote:
-> On Fri, Mar 14, 2014 at 06:46:23PM +0000, Arnd Bergmann wrote:
-> > On Friday 14 March 2014, Liviu Dudau wrote:
-> > 
-> > > +int of_pci_range_to_resource(struct of_pci_range *range,
-> > > +       struct device_node *np, struct resource *res)
-> > > +{
-> > > +       res->flags = range->flags;
-> > > +       res->parent = res->child = res->sibling = NULL;
-> > > +       res->name = np->full_name;
-> > > +
-> > > +       if (res->flags & IORESOURCE_IO) {
-> > > +               unsigned long port = -1;
-> > > +               int err = pci_register_io_range(range->cpu_addr, range->size);
-> > > +               if (err)
-> > > +                       goto invalid_range;
-> > > +               port = pci_address_to_pio(range->cpu_addr);
-> > > +               if (port == (unsigned long)-1) {
-> > > +                       err = -EINVAL;
-> > > +                       goto invalid_range;
-> > > +               }
-> > > +               res->start = port;
-> > > +       } else {
-> > 
-> > This one concatenates the I/O spaces and assumes that each space starts
-> > at bus address zero, and takes little precaution to avoid filling up IO_SPACE_LIMIT
-> > if the sizes are too big.
-> 
-> Actually, you are attaching too much meaning to this one. pci_register_io_range()
-> only tries to remember the ranges, nothing else. And it *does* check that the
-> total sum of registered ranges does not exceed IO_SPACE_LIMIT. This is used before
-> we have any resource mapped for that range (actually it is used to *create* the
-> resource for the range) so there is no other helping hand.
-> 
-> It doesn't assume that space starts at bus address zero, it ignores the bus address.
-> It only handles CPU addresses for the range, to help with generating logical IO ports.
-> If you have overlapping CPU addresses with different bus addresses it will not work,
-> but then I guess you will have different problems then.
+This patch adds the device tree nodes for APM X-Gene PCIe controller and
+PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
+nodes are added.
 
-The problem is that it tries to set up a mapping so that pci_address_to_pio
-returns the actual port number, but the port that you assign to res->start
-above is assumed to match the 'start' variable below. If the value ends
-up different, the BARs that get set by the PCI bus scan are not in the
-same place that got ioremapped into the virtual I/O aperture.
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ arch/arm64/boot/dts/apm-mustang.dts |    8 ++
+ arch/arm64/boot/dts/apm-storm.dtsi  |  155 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 163 insertions(+)
 
-> > >+unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr)
-> > >+{
-> > >+       unsigned long start, len, virt_start;
-> > >+       int err;
-> > >+
-> > >+       if (res->end > IO_SPACE_LIMIT)
-> > >+               return -EINVAL;
-> > >+
-> > >+       /*
-> > >+        * try finding free space for the whole size first,
-> > >+        * fall back to 64K if not available
-> > >+        */
-> > >+       len = resource_size(res);
-> > >+       start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-> > >+                               res->start / PAGE_SIZE, len / PAGE_SIZE, 0);
-> > >+       if (start == IO_SPACE_PAGES && len > SZ_64K) {
-> > >+               len = SZ_64K;
-> > >+               start = 0;
-> > >+               start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-> > >+                                       start, len / PAGE_SIZE, 0);
-> > >+       }
-> > >+
-> > >+       /* no 64K area found */
-> > >+       if (start == IO_SPACE_PAGES)
-> > >+               return -ENOMEM;
-> > >+
-> > >+       /* ioremap physical aperture to virtual aperture */
-> > >+       virt_start = start * PAGE_SIZE + (unsigned long)PCI_IOBASE;
-> > >+       err = ioremap_page_range(virt_start, virt_start + len,
-> > >+                               phys_addr, __pgprot(PROT_DEVICE_nGnRE));
-> > >+       if (err)
-> > >+               return err;
-> > >+
-> > >+       bitmap_set(pci_iospace, start, len / PAGE_SIZE);
-> > >+
-> > >+       /* return io_offset */
-> > >+       return start * PAGE_SIZE - res->start;
-> > >+}
+diff --git a/arch/arm64/boot/dts/apm-mustang.dts b/arch/arm64/boot/dts/apm-mustang.dts
+index 1247ca1..507b6c9 100644
+--- a/arch/arm64/boot/dts/apm-mustang.dts
++++ b/arch/arm64/boot/dts/apm-mustang.dts
+@@ -24,3 +24,11 @@
+ 		reg = < 0x1 0x00000000 0x0 0x80000000 >; /* Updated by bootloader */
+ 	};
+ };
++
++&pcie0clk {
++	status = "ok";
++};
++
++&pcie0 {
++	status = "ok";
++};
+diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
+index d37d736..6011d25 100644
+--- a/arch/arm64/boot/dts/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm-storm.dtsi
+@@ -176,6 +176,161 @@
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "eth8clk";
+ 			};
++
++			pcie0clk: pcie0clk@1f2bc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2bc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie0clk";
++			};
++
++			pcie1clk: pcie1clk@1f2cc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2cc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie1clk";
++			};
++
++			pcie2clk: pcie2clk@1f2dc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2dc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie2clk";
++			};
++
++			pcie3clk: pcie3clk@1f50c000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f50c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie3clk";
++			};
++
++			pcie4clk: pcie4clk@1f51c000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f51c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie4clk";
++			};
++		};
++
++		pcie0: pcie@1f2b0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++				0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
++				  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++			clocks = <&pcie0clk 0>;
++		};
++
++		pcie1: pcie@1f2c0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f2c0000 0x0 0x00010000   /* Controller registers */
++				0xd0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xd0 0x00000000 0x00 0x00010000   /* io  */
++				  0x02000000 0x0 0x10000000 0xd0 0x10000000 0x00 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc8 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xc9 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xca 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
++			clocks = <&pcie1clk 0>;
++		};
++
++		pcie2: pcie@1f2d0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg =  < 0x00 0x1f2d0000 0x0 0x00010000   /* Controller registers */
++				 0x90 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0x90 0x00000000 0x0 0x00010000   /* io  */
++				  0x02000000 0x0 0x10000000 0x90 0x10000000 0x0 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xce 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xcf 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xd0 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
++			clocks = <&pcie2clk 0>;
++		};
++
++		pcie3: pcie@1f500000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f500000 0x0 0x00010000   /* Controller registers */
++				0xa0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xa0 0x00000000 0x0 0x00010000  /* io */
++				  0x02000000 0x0 0x10000000 0xa0 0x10000000 0x0 0x80000000>; /* mem  */
++			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xd4 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xd5 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xd6 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
++			clocks = <&pcie3clk 0>;
++		};
++
++		pcie4: pcie@1f510000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f510000 0x0 0x00010000   /* Controller registers */
++				0xc0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xc0 0x00000000 0x0 0x00010000   /* io  */
++				  0x02000000 0x0 0x10000000 0xc0 0x10000000 0x0 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xda 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xdb 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xdc 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
++			clocks = <&pcie4clk 0>;
+ 		};
+ 
+ 		serial0: serial@1c020000 {
+-- 
+1.7.9.5
 
-	Arnd
