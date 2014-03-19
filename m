@@ -1,39 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.13]:52066 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbaCHRSD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Mar 2014 12:18:03 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v6 2/6] pci: OF: Fix the conversion of IO ranges into IO resources.
-Date: Sat, 8 Mar 2014 18:17:39 +0100
-Cc: "linux-pci" <linux-pci@vger.kernel.org>,
+Received: from service87.mimecast.com ([91.220.42.44]:39127 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759427AbaCSRVr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 13:21:47 -0400
+Date: Wed, 19 Mar 2014 17:21:41 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
 	LKML <linux-kernel@vger.kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com> <1394020137-1830-3-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1394020137-1830-3-git-send-email-Liviu.Dudau@arm.com>
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+Message-ID: <20140319172140.GA16328@e106497-lin.cambridge.arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
+ <20140314171457.GK18126@arm.com>
+ <201403141838.08900.arnd@arndb.de>
+ <20140314180527.GZ6457@e106497-lin.cambridge.arm.com>
+ <20140317173821.GJ24070@arm.com>
+ <20140317180525.GL6457@e106497-lin.cambridge.arm.com>
+ <20140319135619.GC6231@localhost>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201403081817.39810.arnd@arndb.de>
+In-Reply-To: <20140319135619.GC6231@localhost>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 05 March 2014, Liviu Dudau wrote:
-> +               unsigned long port = -1;
-> +               if (!pci_register_io_range(range->cpu_addr, range->size))
-> +                       port = pci_address_to_pio(range->cpu_addr);
+On Wed, Mar 19, 2014 at 01:56:19PM +0000, Catalin Marinas wrote:
+> On Mon, Mar 17, 2014 at 06:05:25PM +0000, Liviu Dudau wrote:
+> > On Mon, Mar 17, 2014 at 05:38:21PM +0000, Catalin Marinas wrote:
+> > > On Fri, Mar 14, 2014 at 06:05:27PM +0000, Liviu Dudau wrote:
+> > > > On Fri, Mar 14, 2014 at 05:38:08PM +0000, Arnd Bergmann wrote:
+> > > > > On Friday 14 March 2014, Catalin Marinas wrote:
+> > > > > > On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
+> > > > > > > --- /dev/null
+> > > > > > > +++ b/arch/arm64/kernel/pci.c
+> > > > > > [...]
+> > > > > > > +int pci_register_io_range(phys_addr_t address, resource_size_t size)
+> > > > > > [...]
+> > > > > > > +unsigned long pci_address_to_pio(phys_addr_t address)
+> > > > > > [...]
+> > > > > > > +void pcibios_fixup_bus(struct pci_bus *bus)
+> > > > > > [ actually most of this file ]
+> > > > > > 
+> > > > > > Maybe it was raised before already but can we have __weak generic
+> > > > > > definitions of these functions? They don't seem to be arm64 specific in
+> > > > > > any way.
+> > > [...]
+> > > > Catalin, if you are happy to ask for ACKs from all arch maintainers that might get
+> > > > affected by our custom version of pci_address_to_pio() before you can pull PCI support
+> > > > for arm64 then I can propose a new patchset.
+> > > 
+> > > You don't need to change the other architectures, that's the point of a
+> > > __weak definition, it will be automatically overridden. If you want, you
+> > > can even place a GENERIC_PCI or whatever config option that is only
+> > > selected by arm64 for the time being.
+> > 
+> > pci_address_to_pio() is alread __weak. My patch was adding the arm64 version of it. Adding
+> > an #ifdef GENERIC_PCI to the __weak implementation is not just a temporary solution.
+> 
+> Ah, I start to understand what you mean, pci_address_to_pio() is already
+> defined as __weak in drivers/of/address.c. So the reason we redefine it
+> on arm64 is that it uses the io_list resources which are populated by
+> pci_register_io_range(). Do you see any other architecture using a
+> similar logic (that could be shared)?
 
-I don't remember the outcome of my suggestion to just return 'port' from
-pci_register_io_range(). In my mind that would be much simpler than
-adding the range in a data structure just so we can look it up in the very
-next line.
+All architectures that memory map the PCI IO range should be supported by my version of
+pci_address_to_pio(). But that still leaves the x86 and those architectures that have
+separate IO space or map it 1:1 into CPU address space to carry a different version (which
+the current "generic" weak version catters for).
 
-	Arnd
+> 
+> Any other functions in this file that could be shared (and are not
+> __weak already)?
+
+A version of the pci_register_io_range() that uses part of pci_ioremap_io() (the calculation
+of io_offset part).
+
+My ultimate point is that no matter how long we argue about the shape of the functions that
+I've added into arch/arm64/kernel/pci.c I don't think we can get away without having that
+file, or at least not in the first phase if we want speedy integration into mainline.
+
+Best regards,
+Liviu
+
+> 
+> -- 
+> Catalin
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
