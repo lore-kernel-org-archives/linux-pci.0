@@ -1,63 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:39537 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753448AbaCEXbv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 18:31:51 -0500
-Date: Wed, 5 Mar 2014 23:31:35 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v6 1/3] Fix ioport_map() for !CONFIG_GENERIC_IOMAP
-	cases.
-Message-ID: <20140305233135.GZ21483@n2100.arm.linux.org.uk>
-References: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com> <1394020150-1875-2-git-send-email-Liviu.Dudau@arm.com>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:34260 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737AbaCSSSs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 14:18:48 -0400
+Received: by mail-ig0-f171.google.com with SMTP id hl1so12494542igb.4
+        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 11:18:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394020150-1875-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <CAErSpo6vuzaKJ-qWKfwcY_MsDhSdG9NazaYzG3=tabJerUv6mw@mail.gmail.com>
+References: <1393286367-16482-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com>
+	<CAE9FiQUvU=BqPXDHC+B=zC7ZGarimLDdvHsDbVL8t8qnZLJpzw@mail.gmail.com>
+	<CAErSpo6vuzaKJ-qWKfwcY_MsDhSdG9NazaYzG3=tabJerUv6mw@mail.gmail.com>
+Date: Wed, 19 Mar 2014 11:18:47 -0700
+Message-ID: <CAE9FiQV3bM087uhWc5oH6j_7AJim0ECwTZKD05JSe2R5KmuCAQ@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: only wait command complete for really hotplug control
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 05, 2014 at 11:49:08AM +0000, Liviu Dudau wrote:
-> The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
-> is wrong. It returns a mapped (i.e. virtual) address that can start from
-> zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
-> architectures that use !CONFIG_GENERIC_MAP define.
+On Tue, Feb 25, 2014 at 9:45 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Feb 24, 2014 at 6:55 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+> It's quite likely that I'm mistaken, and this is not a silicon
+> problem, especially since two vendors apparently did it the same way.
+> But I'd like to see the explanation from Intel about how this complies
+> with the spec.  I provided a spec reference for why I think we should
+> wait for a command completed event.  The next step would be for you or
+> Intel to respond with "here's the section in the spec that you missed,
+> and it says the OS should not wait for an event unless it is changing
+> the EIC, PCC, PIC, or AIC bits."
 
-What value does PCI_IOBASE and IO_SPACE_LIMIT have on other architectures
-who make use of asm-generic/io.h ?
+Hi, Bjorn,
 
-$ git grep asm-generic/io.h arch/
-arch/arc/include/asm/io.h:#include <asm-generic/io.h>
-arch/blackfin/include/asm/io.h:#include <asm-generic/io.h>
-arch/metag/include/asm/io.h:#include <asm-generic/io.h>
-arch/microblaze/include/asm/io.h:/* from asm-generic/io.h */
-arch/openrisc/include/asm/io.h:#include <asm-generic/io.h>
-arch/s390/include/asm/io.h:#include <asm-generic/io.h>
-arch/score/include/asm/io.h:#include <asm-generic/io.h>
-arch/unicore32/include/asm/io.h:#include <asm-generic/io.h>
-arch/xtensa/include/asm/io.h:#include <asm-generic/io.h>
-$ arch/arc/include/asm/io.h:#define PCI_IOBASE ((void __iomem *)0)
-arch/arm64/include/asm/io.h:#define PCI_IOBASE          ((void __iomem *)(MODULES_VADDR - SZ_2M))
-arch/arm64/include/asm/io.h:    return readb(addr + PCI_IOBASE);
-arch/arm64/include/asm/io.h:    return readw(addr + PCI_IOBASE);
-arch/arm64/include/asm/io.h:    return readl(addr + PCI_IOBASE);
-arch/arm64/include/asm/io.h:    writeb(b, addr + PCI_IOBASE);
-arch/arm64/include/asm/io.h:    writew(b, addr + PCI_IOBASE);
-arch/arm64/include/asm/io.h:    writel(b, addr + PCI_IOBASE);
-arch/arm64/include/asm/io.h:            *buf++ = __raw_readb(addr + PCI_IOBASE);arch/arm64/include/asm/io.h:            *buf++ = __raw_readw(addr + PCI_IOBASE);arch/arm64/include/asm/io.h:            *buf++ = __raw_readl(addr + PCI_IOBASE);arch/arm64/include/asm/io.h:            __raw_writeb(*buf++, addr + PCI_IOBASE);arch/arm64/include/asm/io.h:            __raw_writew(*buf++, addr + PCI_IOBASE);arch/arm64/include/asm/io.h:            __raw_writel(*buf++, addr + PCI_IOBASE);arch/unicore32/include/asm/io.h:#define PCI_IOBASE      PKUNITY_PCILIO_BASE
-arch/unicore32/include/asm/io.h:#define PIO_OFFSET              (unsigned int)(PCI_IOBASE)
+Intel admits that it is silicon problem.
+CC will be set iff EIC || PCC || PIC || AIC is set.
 
+so please me know if you want
+1. just use the patch in current form. it will do that for ...
+2. or modify the patch to check vendor to set flag for every controller, and use
+that to decide if need to wait CC.
 
--- 
-FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
-improving, and getting towards what was expected from it.
+BTW, other OS does not check CC for other than the four bits.
+
+Thanks
+
+Yinghai
