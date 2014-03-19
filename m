@@ -1,73 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:35420 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753558AbaCMJu2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 05:50:28 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
-References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1394704208-7490-8-git-send-email-phil.edworthy@renesas.com>
-Date: Thu, 13 Mar 2014 09:50:06 +0000
-Subject: [PATCH 7/9] ARM: shmobile: Add PCIe device tree nodes for R8A7791 Koelsch
- board
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:62800 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752737AbaCSVQi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 17:16:38 -0400
+Received: by mail-ig0-f171.google.com with SMTP id hl1so12926259igb.4
+        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 14:16:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140319185423.GA5514@google.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140319185423.GA5514@google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 19 Mar 2014 15:16:17 -0600
+Message-ID: <CAErSpo42K6W8b+7A7dyxUp-rNQttMQY7jcbpgyGv9sctyAqJCA@mail.gmail.com>
+Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding disabled
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ming Lei <tom.leiming@gmail.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Pekka Enberg <penberg@kernel.org>,
+	Sasha Levin <sasha.levin@oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the device tree nodes for the R8A7791 Koelsch board
+On Wed, Mar 19, 2014 at 12:54 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Ming, Rusty, Pekka, Sasha]
+> ...
+> I plan to replace this patch with the following, which only sets
+> IORESOURCE_UNSET when we already have been clearing the bus region start
+> address.  (This probably should have been a separate patch to begin with,
+> mea culpa.)
+>
+> This is intended for the v3.15 merge window, so I made the minimal change
+> to reduce risk.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/boot/dts/r8a7791-koelsch.dts |    4 ++++
- arch/arm/boot/dts/r8a7791.dtsi        |   19 +++++++++++++++++++
- 2 files changed, 23 insertions(+)
+I put this patch in my pci/resource branch and re-merged it into my
+"next" branch.  This rebased both pci/resource and next, which is
+unfortunate, but I think it's the cleanest and least risky way at this
+point.
 
-diff --git a/arch/arm/boot/dts/r8a7791-koelsch.dts b/arch/arm/boot/dts/r8a7791-koelsch.dts
-index e24fed9..17c953f 100644
---- a/arch/arm/boot/dts/r8a7791-koelsch.dts
-+++ b/arch/arm/boot/dts/r8a7791-koelsch.dts
-@@ -352,3 +352,7 @@
- 		spi-cpha;
- 	};
- };
-+
-+&pcie {
-+	status = "okay";
-+};
-diff --git a/arch/arm/boot/dts/r8a7791.dtsi b/arch/arm/boot/dts/r8a7791.dtsi
-index ccfba57..915a5a6 100644
---- a/arch/arm/boot/dts/r8a7791.dtsi
-+++ b/arch/arm/boot/dts/r8a7791.dtsi
-@@ -836,4 +836,23 @@
- 		#size-cells = <0>;
- 		status = "disabled";
- 	};
-+
-+	pcie: pcie@fe000000 {
-+		compatible = "renesas,r8a7791-pcie";
-+		reg = <0 0xfe000000 0 0x80000>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
-+			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
-+			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
-+			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-+		interrupts = <0 116 IRQ_TYPE_LEVEL_HIGH>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 116 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&mstp3_clks R8A7791_CLK_PCIE>;
-+		clock-names = "pcie";
-+		status = "disabled";
-+	};
- };
--- 
-1.7.9.5
+Bjorn
 
+> PCI: Mark 64-bit resource as IORESOURCE_UNSET if we only support 32-bit
+>
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>
+> If we don't support 64-bit addresses, i.e., CONFIG_PHYS_ADDR_T_64BIT is not
+> set, we can't deal with BARs above 4GB.  In this case we already pretend
+> the BAR contained zero; this patch also sets IORESOURCE_UNSET so we can try
+> to reallocate it later.
+>
+> I don't think this is exactly correct: what we care about here are *bus*
+> addresses, not CPU addresses, so the tests of sizeof(resource_size_t)
+> probably should be on sizeof(dma_addr_t) instead.  But this is what's been
+> in -next, so we'll fix that later.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/probe.c |    1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6e34498ec9f0..78335efbbb74 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -252,6 +252,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>                         /* Address above 32-bit boundary; disable the BAR */
+>                         pci_write_config_dword(dev, pos, 0);
+>                         pci_write_config_dword(dev, pos + 4, 0);
+> +                       res->flags |= IORESOURCE_UNSET;
+>                         region.start = 0;
+>                         region.end = sz64;
+>                         bar_disabled = true;
