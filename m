@@ -1,43 +1,35 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:51987 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752791AbaCESmo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Mar 2014 13:42:44 -0500
-Date: Wed, 5 Mar 2014 11:42:19 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ben Dooks <ben-linux@fluff.org>, linux-tegra@vger.kernel.org,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>, kernel@pengutronix.de
-Subject: Re: [PATCH v2 6/6] PCI: designware: use new OF interrupt mapping
- when possible
-Message-ID: <20140305184219.GA29903@obsidianresearch.com>
-References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
- <1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+Date: Wed, 19 Mar 2014 19:37:51 +0100
+Message-ID: <8312584.jdZZuHGAjg@wuerfel>
+In-Reply-To: <20140319172140.GA16328@e106497-lin.cambridge.arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com> <20140319135619.GC6231@localhost> <20140319172140.GA16328@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 05, 2014 at 02:25:51PM +0100, Lucas Stach wrote:
-> -	return pp->irq;
-> +	irq = of_irq_parse_and_map_pci(dev, slot, pin);
-> +	if (!irq)
-> +		irq = pp->irq;
+On Wednesday 19 March 2014 17:21:41 Liviu Dudau wrote:
+> 
+> My ultimate point is that no matter how long we argue about the shape of the functions that
+> I've added into arch/arm64/kernel/pci.c I don't think we can get away without having that
+> file, or at least not in the first phase if we want speedy integration into mainline.
 
-In light of the two bugs that Tim found, it might be wise to throw a
-'dev_warn(FW_BUG "Missing DT interrupt mapping")' in the fall back
-path, so it doesn't continue to silently cover up errors on the OF/DT
-side..
+Let me simplify the discussion here:
 
-Regards,
-Jason
+NAK to adding yet another architecture specific implementation.
+
+	Arnd
