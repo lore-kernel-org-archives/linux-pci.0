@@ -1,91 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:34409 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752229AbaCFRlP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 12:41:15 -0500
-Received: by mail-ie0-f169.google.com with SMTP id to1so3125251ieb.0
-        for <linux-pci@vger.kernel.org>; Thu, 06 Mar 2014 09:41:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5318160D.8070305@amd.com>
-References: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
- <CAErSpo4MMJh9b0aivwGSbxCMVw24He1+Vo_LH0R0E+fYM5aThg@mail.gmail.com>
- <5317D9B0.1080502@amd.com> <5318160D.8070305@amd.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 6 Mar 2014 10:40:54 -0700
-Message-ID: <CAErSpo59=52bqgyvqk1x7kcgFmRtdZhT6faYTi3wy7KDtk5=Pw@mail.gmail.com>
-Subject: Re: [PATCH 0/3] amd/pci: Add AMD hostbridge supports for newer AMD systems
-To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	kim.naru@amd.com,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from exprod5og117.obsmtp.com ([64.18.0.149]:36652 "HELO
+	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755202AbaCSXNC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 19:13:02 -0400
+Received: by mail-pd0-f170.google.com with SMTP id v10so40857pde.29
+        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 16:13:01 -0700 (PDT)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v5 0/4] APM X-Gene PCIe controller
+Date: Wed, 19 Mar 2014 16:12:38 -0700
+Message-Id: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai, sorry I didn't think of it before]
+This patch adds support for AppliedMicro X-Gene PCIe host controller. The
+driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
+cards.
 
-On Wed, Mar 5, 2014 at 11:30 PM, Suravee Suthikulpanit
-<suravee.suthikulpanit@amd.com> wrote:
-> On 3/5/2014 8:13 PM, Suravee Suthikulanit wrote:
->>
->> On 3/5/2014 3:24 PM, Bjorn Helgaas wrote:
->>>
->>> [+cc linux-acpi]
->>>
->>> On Wed, Mar 5, 2014 at 2:06 PM,  <suravee.suthikulpanit@amd.com> wrote:
->>>>
->>>> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
->>>>
->>>> The current code only supports upto AMD hostbridge for family11h.
->>>> This causes PCI numa_node information to be reported incorrectly
->>>> for newer family with multi sockets.
->>>
->>>
->>> Where is the incorrect reporting?  In ACPI tables?  Is this patch a
->>> way to cover up firmware defects in the ACPI description?  Or is this
->>> for machines without ACPI (it seems unlikely that machines with new
->>> AMD processors would not have ACPI)?
->>
->>
->> This is incorrectly reported in the sysfs for each PCI device (e.g.
->> /devices/pci0000:50/0000:50:00.2/numa_node). Without the patch, they
->> return -1.
->>
->> In file arch/x86/pci/acpi.c, in function pci_acpi_scan_root(), it is
->> queries the node information as following:
->>
->> #ifdef CONFIG_ACPI_NUMA
->>      pxm = acpi_get_pxm(device->handle);
->>      if (pxm >= 0)
->>          node = pxm_to_node(pxm);
->>      if (node != -1)
->>          set_mp_bus_to_node(busnum, node);
->>      else
->> #endif
->>          node = get_mp_bus_to_node(busnum);
->>
->> In this case, I see that the acpi_get_pxm() returns -1.  Therefore, it
->> falls back to using the node information in mp_bus_to_node[].  So,
->> without this patch, it would also returning -1.
->>
->> Also, the spec mentioned that the _PXM is optional, so I am not sure if
->> this is a firmware bug.
->
-> I am not quite familiar with the ACPI for this part.  However, after taking
-> a look at the code (in driver/acpi/pci_root.c: acpi_pci_root_add()), I
-> believe it's trying to locate _PXM method in the DSDT table, in which I
-> don't see any _PXM methods.
+X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
+Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
+support for creating generic pcie bridge from device tree. Liviu's patches
+are available here
+1. https://lkml.org/lkml/2014/3/14/320
+2. https://lkml.org/lkml/2014/3/14/279
 
-This sure looks like a firmware bug.  True, _PXM is optional, but if
-the firmware doesn't provide it, nobody should be surprised that the
-OS thinks everything is in the same proximity domain.
+If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
+patches from Liviu must be applied before the patches in this patch set.
 
-I would not endorse extending amd_bus.c for new CPUs.  That just
-covers up firmware problems like this, and if you ever run a different
-OS on the box, you'll trip over them again.  And I don't think a patch
-like this will even be a possibility for Windows.
+changes since V4:
+1. fix section mismatch warnings
+2. fix the patch description
+3. fix indentation
+4. update read/write cfg functions by passing both addr and offset.
+5. use 'time_before' for timeout.
+6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
+7. remove BUG_ON for pci_ioremap_io. 
 
-Bjorn
+changes since V3:
+1. remove 'struct hw_pci' and supporting ops in hw_pci
+2. add code to create the host bridge from dts
+3. add code to scan the the host bridge
+4. modify outbound windows setup function to get resource information from
+   'bridge->windows'
+5. add compatible string in pcie dts node with current X-Gene SOC name.
+
+changes since V2:
+1. redefined each PCI port in different PCI domain correctly.
+2. removed setup_lane and setup_link functions from driver.
+3. removed scan_bus wrapper and set_primary_bus hack.
+4. added pci_ioremap_io for io resources.
+
+changes since V1:
+1. added PCI domain support
+2. reading cpu and pci addresses from device tree to configure regions.
+3. got rid of unnecessary wrappers for readl and writel.
+4. got rid of endpoint configuration code.
+5. added 'dma-ranges' property support to read inbound region configuration.
+6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
+7. dropped 'clock-names' property from bindings
+8. added comments whereever requested.
+
+Tanmay Inamdar (4):
+  pci: APM X-Gene PCIe controller driver
+  arm64: dts: APM X-Gene PCIe device tree nodes
+  dt-bindings: pci: xgene pcie device tree bindings
+  MAINTAINERS: entry for APM X-Gene PCIe host driver
+
+ .../devicetree/bindings/pci/xgene-pci.txt          |   52 ++
+ MAINTAINERS                                        |    7 +
+ arch/arm64/boot/dts/apm-mustang.dts                |    8 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |  155 +++++
+ drivers/pci/host/Kconfig                           |   10 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pci-xgene.c                       |  725 ++++++++++++++++++++
+ 7 files changed, 958 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
+ create mode 100644 drivers/pci/host/pci-xgene.c
+
+-- 
+1.7.9.5
+
