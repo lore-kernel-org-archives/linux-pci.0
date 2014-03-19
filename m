@@ -1,92 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og117.obsmtp.com ([64.18.0.149]:36652 "HELO
-	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755202AbaCSXNC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 19:13:02 -0400
-Received: by mail-pd0-f170.google.com with SMTP id v10so40857pde.29
-        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 16:13:01 -0700 (PDT)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v5 0/4] APM X-Gene PCIe controller
-Date: Wed, 19 Mar 2014 16:12:38 -0700
-Message-Id: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:54986 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932602AbaCSQsb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 12:48:31 -0400
+Received: by mail-ie0-f170.google.com with SMTP id rd18so9290558iec.29
+        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 09:48:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQU3BPNf7JubnxN46eM=fPvLGk544oqjH9W+NC28xvLeVg@mail.gmail.com>
+References: <20140318212733.GA2467@google.com> <CAE9FiQU3BPNf7JubnxN46eM=fPvLGk544oqjH9W+NC28xvLeVg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 19 Mar 2014 10:48:11 -0600
+Message-ID: <CAErSpo7q_uGmK_A4+x+fHxJhMb+U9n0Qk2M-g9K7O3mrOeMmyA@mail.gmail.com>
+Subject: Re: Changes for v3.15 merge window
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support for AppliedMicro X-Gene PCIe host controller. The
-driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
-cards.
+On Tue, Mar 18, 2014 at 10:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Mar 18, 2014 at 2:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> Here are the contents of my "next" branch, planned for release in v3.15.
+>> Let me know if I'm missing something important.
+>
+> Can you check
+>
+> http://patchwork.ozlabs.org/patch/328067/
 
-X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
-Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
-support for creating generic pcie bridge from device tree. Liviu's patches
-are available here
-1. https://lkml.org/lkml/2014/3/14/320
-2. https://lkml.org/lkml/2014/3/14/279
+Yep, I was hoping to put that in for v3.15, but it's a fairly big
+change and I'm not comfortable putting it in so late in the cycle.
+But it's on the top of my list for v3.16.
 
-If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
-patches from Liviu must be applied before the patches in this patch set.
-
-changes since V4:
-1. fix section mismatch warnings
-2. fix the patch description
-3. fix indentation
-4. update read/write cfg functions by passing both addr and offset.
-5. use 'time_before' for timeout.
-6. remove unnecessary 'IS_ERR_OR_NULL'. Keep 'IS_ERR' for 'clk_get'
-7. remove BUG_ON for pci_ioremap_io. 
-
-changes since V3:
-1. remove 'struct hw_pci' and supporting ops in hw_pci
-2. add code to create the host bridge from dts
-3. add code to scan the the host bridge
-4. modify outbound windows setup function to get resource information from
-   'bridge->windows'
-5. add compatible string in pcie dts node with current X-Gene SOC name.
-
-changes since V2:
-1. redefined each PCI port in different PCI domain correctly.
-2. removed setup_lane and setup_link functions from driver.
-3. removed scan_bus wrapper and set_primary_bus hack.
-4. added pci_ioremap_io for io resources.
-
-changes since V1:
-1. added PCI domain support
-2. reading cpu and pci addresses from device tree to configure regions.
-3. got rid of unnecessary wrappers for readl and writel.
-4. got rid of endpoint configuration code.
-5. added 'dma-ranges' property support to read inbound region configuration.
-6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
-7. dropped 'clock-names' property from bindings
-8. added comments whereever requested.
-
-Tanmay Inamdar (4):
-  pci: APM X-Gene PCIe controller driver
-  arm64: dts: APM X-Gene PCIe device tree nodes
-  dt-bindings: pci: xgene pcie device tree bindings
-  MAINTAINERS: entry for APM X-Gene PCIe host driver
-
- .../devicetree/bindings/pci/xgene-pci.txt          |   52 ++
- MAINTAINERS                                        |    7 +
- arch/arm64/boot/dts/apm-mustang.dts                |    8 +
- arch/arm64/boot/dts/apm-storm.dtsi                 |  155 +++++
- drivers/pci/host/Kconfig                           |   10 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pci-xgene.c                       |  725 ++++++++++++++++++++
- 7 files changed, 958 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
- create mode 100644 drivers/pci/host/pci-xgene.c
-
--- 
-1.7.9.5
-
+Bjorn
