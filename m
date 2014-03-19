@@ -1,62 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:44949 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932481AbaCDVdy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 16:33:54 -0500
-Received: by mail-ie0-f181.google.com with SMTP id tp5so143133ieb.40
-        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 13:33:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <FC41C24E35F18A40888AACA1A36F3E418A1ECC8F@FMSMSX102.amr.corp.intel.com>
-References: <5315F785.4050602@redhat.com> <CAErSpo4hjEG7bVu_T+X6Kie3tzj4PKV_4hoWmxr-pyVu5uD_1Q@mail.gmail.com>
- <FC41C24E35F18A40888AACA1A36F3E418A1ECC8F@FMSMSX102.amr.corp.intel.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:39821 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753707AbaCSSyi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 14:54:38 -0400
+Received: by mail-ie0-f174.google.com with SMTP id rp18so9377935iec.33
+        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 11:54:38 -0700 (PDT)
+Date: Wed, 19 Mar 2014 12:54:23 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Mar 2014 14:33:33 -0700
-Message-ID: <CAErSpo4H=yKEnYwOPZ+i3sn08UqMzpXQg92e6ZxpDyZse=QSEQ@mail.gmail.com>
-Subject: Re: [E1000-devel] kmemleak through e1000?
-To: "Nelson, Shannon" <shannon.nelson@intel.com>
-Cc: Daniel Borkmann <dborkman@redhat.com>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Brandeburg, Jesse" <jesse.brandeburg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Ming Lei <tom.leiming@gmail.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Pekka Enberg <penberg@kernel.org>,
+	Sasha Levin <sasha.levin@oracle.com>
+Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding
+ disabled
+Message-ID: <20140319185423.GA5514@google.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 4, 2014 at 2:11 PM, Nelson, Shannon
-<shannon.nelson@intel.com> wrote:
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->>
->> On Tue, Mar 4, 2014 at 8:55 AM, Daniel Borkmann <dborkman@redhat.com>
->> wrote:
->> > Hi all, I'm not very familiar with the e1000 code, but on the latest
->> > net.git kernel I get reliably the following (not sure if it's actually
->> > caused by e1000 though):
->>
->> Thanks a lot for the report.  What kernel is this exactly (URL and
->> SHA-1 hash)?  We have fixes for a couple leaks already queued up [1,
->> 2], so possibly you're seeing those leaks.  If you already have those
->> fixes in net.git, then we should investigate further.
->>
->> Bjorn
->
->
-> FYI - I've recently seen similar kmemleak reports from ixgbe and i40e drivers, all seemly pointing to the msix allocations.  I didn't have a chance to track them down, but they were seen in variations of net-next 3.14.0-rc3.
+[+cc Ming, Rusty, Pekka, Sasha]
 
-I don't think that has the leak fixes in it yet.  I'm looking here:
+On Wed, Feb 26, 2014 at 12:37:57PM -0700, Bjorn Helgaas wrote:
+> Don't rely on BAR contents when the command register says the BAR is
+> disabled.
+> 
+> If we receive a PCI device from firmware (or a hot-added device that was
+> just powered up) with the MEMORY or IO enable bits in the PCI command
+> register cleared, there's no reason to believe the BARs contain valid
+> addresses.
+> 
+> In that case, we still know the type and size of the BAR, but this
+> patch marks the resource as "unset" so we have a chance to reassign it.
+> 
+> Historically, we often used "BAR == 0" to decide the BAR is invalid.  But 0
+> is a legal BAR value, especially if the host bridge translates addresses,
+> so I think it's better to decide based on the PCI command register, and
+> store the conclusion in the IORESOURCE_UNSET bit.
 
-  http://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/log/drivers/pci/msi.c
+I plan to replace this patch with the following, which only sets
+IORESOURCE_UNSET when we already have been clearing the bus region start
+address.  (This probably should have been a separate patch to begin with,
+mea culpa.)
 
-which does not contain the fixes from 2014-02-13 that are listed here:
+This is intended for the v3.15 merge window, so I made the minimal change
+to reduce risk.
 
-  http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/log/drivers/pci/msi.c
-
-In particular, these two look related:
-
-  PCI/MSI: Fix leak of msi_attrs
-  PCI/MSI: Check kmalloc() return value, fix leak of name
-
-So if you do look into them further, make sure you pick up these fixes
-first, and let me know if you still see issues.
+Thanks to Ming Lei for prompting me to look at this; I think the issue he
+reported with the original patch is really a problem somewhere else that
+the patch just happened to expose, but the original patch was more
+aggressive than necessary, so this revision tones it down a bit.
 
 Bjorn
+
+
+PCI: Mark 64-bit resource as IORESOURCE_UNSET if we only support 32-bit
+
+From: Bjorn Helgaas <bhelgaas@google.com>
+
+If we don't support 64-bit addresses, i.e., CONFIG_PHYS_ADDR_T_64BIT is not
+set, we can't deal with BARs above 4GB.  In this case we already pretend
+the BAR contained zero; this patch also sets IORESOURCE_UNSET so we can try
+to reallocate it later.
+
+I don't think this is exactly correct: what we care about here are *bus*
+addresses, not CPU addresses, so the tests of sizeof(resource_size_t)
+probably should be on sizeof(dma_addr_t) instead.  But this is what's been
+in -next, so we'll fix that later.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6e34498ec9f0..78335efbbb74 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -252,6 +252,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 			/* Address above 32-bit boundary; disable the BAR */
+ 			pci_write_config_dword(dev, pos, 0);
+ 			pci_write_config_dword(dev, pos + 4, 0);
++			res->flags |= IORESOURCE_UNSET;
+ 			region.start = 0;
+ 			region.end = sz64;
+ 			bar_disabled = true;
