@@ -1,64 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:58515 "EHLO mail.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757289AbaCDPGX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Mar 2014 10:06:23 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id F289312B27B
-	for <linux-pci@vger.kernel.org>; Tue,  4 Mar 2014 16:06:22 +0100 (CET)
-Date: Tue, 4 Mar 2014 16:06:17 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Bill Sumner <bill.sumner@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, zhenhua@hp.com
-Subject: Re: [PATCHv3 0/6] Crashdump Accepting Active IOMMU
-Message-ID: <20140304150611.GE2799@8bytes.org>
-References: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
+Received: from [216.32.180.12] ([216.32.180.12]:3900 "EHLO
+	va3outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753637AbaCST7Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 15:59:24 -0400
+From: Rajat Jain <rajatjain@juniper.net>
+To: Valentin Longchamp <valentin.longchamp@keymile.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Guenter Roeck <groeck@juniper.net>
+Subject: RE: EDAC PCIe errors when scannning the bus
+Date: Wed, 19 Mar 2014 19:58:46 +0000
+Message-ID: <5603f3ee421547dea5cdc861483f8231@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <532991AD.6020903@keymile.com>
+In-Reply-To: <532991AD.6020903@keymile.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bill,
-
-On Fri, Jan 10, 2014 at 03:07:26PM -0700, Bill Sumner wrote:
-> Bill Sumner (6):
->   Crashdump-Accepting-Active-IOMMU-Flags-and-Prototype
->   Crashdump-Accepting-Active-IOMMU-Utility-functions
->   Crashdump-Accepting-Active-IOMMU-Domain-Interfaces
->   Crashdump-Accepting-Active-IOMMU-Copy-Translations
->   Crashdump-Accepting-Active-IOMMU-Debug-Print-IOMMU
->   Crashdump-Accepting-Active-IOMMU-Call-From-Mainline
-> 
->  drivers/iommu/intel-iommu.c | 1293 ++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 1225 insertions(+), 68 deletions(-)
-
-This is a pretty big change, before merging I would like to get more
-eyes on it. Please make sure you get more reviews on the code and the
-general concept. A few things I noticed while looking at it:
-
-* You put a lot of code into #define CONFIG_CRASH_DUMP. Isn't the same
-  approach necessary to for KEXEC?
-
-* Please get rid of all the pr_debug stuff.
-
-* I think it makes sense to put the functions to access the IOMMU
-  configuration values of the old kernel into a new file. This is better
-  than adding over 1000 new lines to intel-iommu.c
-
-* I have seen your new single-patch for this change. A single patch with
-  more than 1200 changed lines is not something anyone is willing to
-  review. Please split the patches again in a meaningful and bisectable
-  way.
-
-
-Thanks,
-
-	Joerg
-
+SGVsbG8sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtcGNp
+LW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3duZXJAdmdlci5r
+ZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgVmFsZW50aW4gTG9uZ2NoYW1wDQo+IFNlbnQ6IFdlZG5l
+c2RheSwgTWFyY2ggMTksIDIwMTQgNTo0NyBBTQ0KPiBUbzogbGludXhwcGMtZGV2QGxpc3RzLm96
+bGFicy5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogRURBQyBQQ0ll
+IGVycm9ycyB3aGVuIHNjYW5ubmluZyB0aGUgYnVzDQo+IA0KPiBIZWxsbywNCj4gDQo+IFdlIGhh
+dmUgYSBib2FyZCB0aGF0IGlzIGJhc2VkIG9uIEZyZWVzY2FsZSdzIFAyMDQxIFNvQy4gVGhlIGJv
+YXJkcyBoYXMgMg0KPiBQQ0llIGJ1c2VzIHdpdGggdGhpcyB0b3BvbG9neToNCj4gDQo+IFBDSWUg
+MCA8LS0tPiBQRVg4NTA1IHN3aXRjaCA8LS0tPiA0IG5ldHdvcmsgZGV2aWNlcyBQQ0lFIDIgPC0t
+LT4gRlBHQQ0KPiANCj4gT24gMy4xMC4zMyArIGEgc3Vic2V0IG9mIHRoZSBGcmVlc2NhbGUgU0RL
+IDEuNCBwYXRjaGVzLCBib3RoIFBDSWUgYnVzZXMNCj4gd29yayB3ZWxsIGFuZCB3ZSBhcmUgYWJs
+ZSB0byB1c2UgdGhlIGRldmljZXMgb24gdGhlbS4NCj4gDQo+IEZvciBlYWNoIGJ1cywgSSBob3dl
+dmVyIGtlZXAgZ2V0dGluZyBFREFDIFBDSWUgZXJyb3JzIGF0IHRoZSB2ZXJ5IGZpcnN0DQo+IHN0
+YWdlIG9mIGJ1cyBlbnVtZXJhdGlvbiAocGxlYXNlIHNlZSB0aGUgYXR0YWNoZWQga2VybmVsIGxv
+Zywgd2l0aCBzb21lDQo+IGRlYnVnIG91dHB1dCBmcm9tIGFyY2gvcG93ZXJwYy9rZXJuZWwvcGNp
+LWNvbW1vbi5jIGFuZA0KPiBkcml2ZXJzL3BjaS9wcm9iZS5jKSBmb3IgYm90aCBidXNlcy4NCj4g
+DQo+IE15IGN1cnJlbnQgInVuZGVyc3RhbmRpbmciIG9mIHRoZSBzaXR1YXRpb24gaXMgc3VjaDog
+c2luY2UNCj4gUENJX1BST0JFX05PUk1BTCBpcyB1c2VkLCBwY2liaW9zX3NjYW5fcGhiKCkgY2Fs
+bHMgcGNpX3NjYW5fY2hpbGRfYnVzKCkNCj4gdGhhdCBkb2VzIGEgcGNpX3NjYW5fc2xvdCgpIG9u
+IHRoZSBidXMgZm9yIDMyIHNsb3RzLiBUaGUgZmlyc3QNCj4gcGNpX3NjYW5fc2xvdCgpIGlzIHN1
+Y2Nlc3NmdWwgYW5kIGl0IGRpc2NvdmVycyB0aGUgUDIwNDEncyBQQ0llDQo+IENvbnRyb2xsZXIu
+IEFsbCB0aGUgMzEgb3RoZXIgcGNpX3NjYW5fc2xvdCgpIGNhbGxzIGdlbmVyYXRlIGFuIEVEQUMg
+UENJZQ0KPiBlcnJvciwgdGhhdCBpcyB0cmlnZ2VyZWQgYnkgdGhlIGNvbmZpZ3VyYXRpb24gcmVh
+ZCB0cmFuc2FjdGlvbiB0byByZWFkDQo+IGFuIGh5cG90aGV0aWNhbCB2ZW5kb3IgSUQgb2YgYSBk
+ZXZpY2Ugb24gdGhlIGJ1cy4gVGhpcyBpcyByZWxldmFudCB3aXRoDQo+IHRoYXQgaXMgcmVwb3J0
+ZWQgYnkgdGhlIEVEQUMgZXJyb3IgaGFuZGxlciAoYWxsIHRoZSAzMSBhcmUgdGhlIHNhbWUpOg0K
+PiANCj4gPiBQQ0lFIGVycm9yKHMpIGRldGVjdGVkDQo+ID4gUENJRSBFUlJfRFIgcmVnaXN0ZXI6
+IDB4MDAwMjAwMDANCj4gDQo+IElDQ0EgYml0IGlzIHNldDogQWNjZXNzIHRvIGFuIGlsbGVnYWwg
+Y29uZmlndXJhdGlvbiBzcGFjZSBmcm9tDQo+IFBFWF9DT05GSUdfQUREUi9QRVhfQ09ORklHX0RB
+VEEgd2FzIGRldGVjdGVkLg0KPiANCj4gPiBQQ0lFIEVSUl9DQVBfU1RBVCByZWdpc3RlcjogMHg4
+MDAwMDAwMQ0KPiANCj4gVG8gaXMgc2V0OiBUcmFuc2FjdGlvbiBvcmlnaW5hdGVkIGZyb20gUEVY
+X0NPTkZJR19BRERSL1BFWF9DT05GSUdfREFUQS4NCj4gDQo+ID4gUENJRSBFUlJfQ0FQX1IwIHJl
+Z2lzdGVyOiAweDAwMDAwODAwDQo+IA0KPiBGTVQ6IDBiMDAsIFRZUEU6IDBiMDAxMDAgKENvbmZp
+ZyByZWFkIEkgZ3Vlc3MpDQo+IA0KPiA+IFBDSUUgRVJSX0NBUF9SMSByZWdpc3RlcjogMHgwMDAw
+MDAwMA0KPiA+IFBDSUUgRVJSX0NBUF9SMiByZWdpc3RlcjogMHgwMDAwMDAwMA0KPiA+IFBDSUUg
+RVJSX0NBUF9SMyByZWdpc3RlcjogMHgwMDAwMDAwMA0KPiANCj4gQWZ0ZXJ3YXJkcywgcGNpX3Nj
+YW5fY2hpbGRfYnVzKCkgY2FsbHMgcGNpYmlvc19maXh1cF9idXMgKHRoYXQgbWF5YmUNCj4gaGVs
+cHMgPykuDQo+IEZyb20gaGVyZSwgc2luY2UgdGhlIFAyMDQxJ3MgUENJZSBDb250cm9sbGVyIGlz
+IGEgYnJpZGdlLA0KPiBwY2lfc2Nhbl9icmlkZ2UgaXMgY2FsbGVkIGZvciB0aGlzIGJ1cyBhbmQg
+YWxsIHRoZSBkZXZpY2VzIGFyZSBkZXRlY3RlZA0KPiB3aXRob3V0IGhhdmluZyBhbnkgY29uZmln
+dXJhdGlvbiB0cmFuc2FjdGlvbiBjYXVzaW5nIEVEQUMgZXJyb3JzLg0KPiANCj4gSGFzIHNvbWVv
+bmUgYWxyZWFkeSBvYnNlcnZlZCBzdWNoIGEgYmVoYXZpb3IgPyBXaHkgZG8gdGhlc2UgaW5pdGlh
+bA0KPiB0cmFuc2FjdGlvbiBnZW5lcmF0ZSBhbiBlcnJvciA/IFdoYXQgd291bGQgYmUgYSBwb3Nz
+aWJsZSBmaXggdG8gYXZvaWQNCj4gdGhlc2UgdHJhbnNhY3Rpb24gZXJyb3JzIGZvciB0aGVzZSAz
+MSAodW5uZWRlZCA/KSBwY2lfc2Nhbl9zbG90KCkgY2FsbHMNCj4gb24gdGhlIGluaXRpYWwgYnVz
+ID8NCg0KSSBzZWUgdGhpcyB0b28gb24gbXkgUDUwMjAgYmFzZWQgcGxhdGZvcm0uIE5vIGZpeCB5
+ZXQsIGZvciBub3cgZGlzYWJsaW5nIHRoZSBFREFDLg0KDQpUaGFua3MsDQoNClJhamF0DQoNCj4g
+DQo+IEJlc3QgUmVnYXJkcywNCj4gDQo+IFZhbGVudGluDQo=
 
