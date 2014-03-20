@@ -1,151 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:53387 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753027AbaCXMqr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 08:46:47 -0400
-In-Reply-To: <OF85DD7B1D.716DE42D-ON80257CA5.00443087-80257CA5.004447DB@LocalDomain>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>		 <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>  <1395401031.4554.9.camel@weser.hi.pengutronix.de>
-	 <OF03C9E23D.07B7D998-ON80257CA2.004E5877-80257CA2.004E9BFB@eu.necel.com> <1395412213.4554.17.camel@weser.hi.pengutronix.de> <OFC7DD5DAC.D378B300-ON80257CA2.0051ECEE-80257CA2.00529F98@LocalDomain> <OF9DD6173A.94976872-ON80257CA5.0041752F-80257CA5.0042532C@eu.necel.com> <533021F6.2000702@codethink.co.uk> <OF85DD7B1D.716DE42D-ON80257CA5.00443087-80257CA5.004447DB@LocalDomain>
-To: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org,
-	Simon Horman <horms@verge.net.au>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
+Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:35864 "EHLO
+	ducie-dc1.codethink.co.uk" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753654AbaCTPEm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 11:04:42 -0400
+Message-ID: <532B0384.1000400@codethink.co.uk>
+Date: Thu, 20 Mar 2014 16:04:36 +0100
+From: Ben Dooks <ben.dooks@codethink.co.uk>
 MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OF01E3AAFE.D9BF866A-ON80257CA5.0045F63A-80257CA5.00463029@eu.necel.com>
-Date: Mon, 24 Mar 2014 12:46:39 +0000
-Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree bindings
-Content-Type: text/plain; charset="US-ASCII"
+To: Arnd Bergmann <arnd@arndb.de>
+CC: linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-sh@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Magnus Damm <damm@opensource.se>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: Re: DMABOUNCE in pci-rcar
+References: <201402241200.21944.arnd@arndb.de> <CAErSpo5RV=w+DkgHSZZPOFGiEBBxMSraLV3TepYUZwDJuV+Jzg@mail.gmail.com> <5165962.7bqj51B15Z@wuerfel>
+In-Reply-To: <5165962.7bqj51B15Z@wuerfel>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
+On 26/02/14 20:57, Arnd Bergmann wrote:
+> On Wednesday 26 February 2014 12:48:17 Bjorn Helgaas wrote:
+>> On Mon, Feb 24, 2014 at 4:00 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>>> Hi Magnus,
+>>>
+>>> I noticed during randconfig testing that you enabled DMABOUNCE for the
+>>> pci-rcar-gen2 driver as posted in this patch https://lkml.org/lkml/2014/2/5/30
+>>>
+>>> I didn't see the original post unfortunately, but I fear we have to
+>>> revert it and come up with a better solution, ...
+>>
+>> Sounds like I should drop the following patches from my pci/host-rcar
+>> branch for now?
+>>
+>>    PCI: rcar: Add DMABOUNCE support
+>>    PCI: rcar: Enable BOUNCE in case of HIGHMEM
+>>    PCI: rcar: Make the Kconfig dependencies more generic
+>
+> Sounds good to me. The last patch is actually fine, but you'll have to
+> fix the context to apply it without the other two.
 
-On: 24/03/2014 12:25, Phil wrote:
-> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
-bindings
-> 
-> Hi Ben,
-> 
-> On: 24/03/2014 12:16, Ben wrote:
-> > Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
-bindings
-> > 
-> > On 24/03/14 12:04, Phil.Edworthy@renesas.com wrote:
-> > > Hi Lucas,
-> > >
-> > > On: 21/03/2014 15:02, Phil wrote:
-> > >> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree
-> > > bindings
-> > >>
-> > >> Hi Lucas,
-> > >>
-> > >> On: 21/03/2014 14:31, Lucas wrote:
-> > >>> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device 
-tree
-> > > bindings
-> > >>>
-> > >>> Am Freitag, den 21.03.2014, 14:18 +0000 schrieb
-> > >>> Phil.Edworthy@renesas.com:
-> > >>>> Hi Lucas,
-> > >>>>
-> > >>>> On 21/03/2014 11:24, Lucas wrote:
-> > >>>>> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device
-> > > tree
-> > >>>> bindings
-> > >>>>>
-> > >>>>> Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
-> > >>>>>> This patch adds the bindings for the rcar PCIE driver. The
-> > > driver
-> > >>>>>> resides under drivers/pci/host/pcie-rcar.c
-> > >>>>>>
-> > >>>>>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > >>>>>
-> > >>>>> I have one question below. If you can answer this with yes after
-> > >>>>> thinking again about it, this is:
-> > >>>>>
-> > >>>>> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-> > >>>>>> ---
-> > >>>>>>   Documentation/devicetree/bindings/pci/rcar-pci.txt | 40
-> > >>>> ++++++++++++++++++++++
-> > >>>>>>   1 file changed, 40 insertions(+)
-> > >>>>>>   create mode 100644
-> > > Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > >>>>>>
-> > >>>>>> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > b/
-> > >>>>> Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > >>>>>> new file mode 100644
-> > >>>>>> index 0000000..0e219b0
-> > >>>>>> --- /dev/null
-> > >>>>>> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > >>>>>> @@ -0,0 +1,40 @@
-> > >>>>>> +* Renesas RCar PCIe interface
-> > >>>>>> +
-> > >>>>>> +Required properties:
-> > >>>>>> +- compatible: should contain one of the following
-> > >>>>>> +   "renesas,r8a7779-pcie", "renesas,r8a7790-pcie",
-> > >>>> "renesas,r8a7791-pcie"
-> > >>>>>> +- reg: base addresses and lengths of the pcie controller.
-> > >>>>>> +- #address-cells: set to <3>
-> > >>>>>> +- #size-cells: set to <2>
-> > >>>>>> +- device_type: set to "pci"
-> > >>>>>> +- ranges: ranges for the PCI memory and I/O regions
-> > >>>>>> +- interrupts: interrupt values for MSI interrupt
-> > >>>>>> +- #interrupt-cells: set to <1>
-> > >>>>>> +- interrupt-map-mask and interrupt-map: standard PCI 
-properties
-> > >>>>>> +   to define the mapping of the PCIe interface to interrupt
-> > >>>>>> +   numbers.
-> > >>>>>> +- clocks: from common clock binding: handle to pci clock.
-> > >>>>>> +- clock-names: from common clock binding: should be "pcie"
-> > >>>>>
-> > >>>>> You really only have one PCIe clock? So the controller is
-> > > generating the
-> > >>>>> PCIe bus clock from it's register clock? No need to enable any
-> > > other
-> > >>>>> clock for PCIe to work?
-> > >>>> Yes, just the one clock. The PCIe bus clock is an external clock
-> > > dedicated
-> > >>>> to PCIe and SATA, and we have no control over it.
-> > >>>>
-> > >>> Is this some kind of always-on clock? If not you probably want a
-> > >>> reference to it from the PCIe driver even if it's shared between 
-SATA
-> > >>> and PCIe. After all you don't want to end up unconditionally 
-enabling
-> > >>> this clock from the board or SoC level just to have PCIe working,
-> > > right?
-> > >> Ok, I see, I'll need a reference to a board clock, even if it's 
-always
-> > > on for
-> > >> these boards.
-> > > One small question...
-> > >
-> > > The patches added the PCIe host controller to two devices, r8a7790 
-and
-> > > r8a7791. The r8a7790-based Lager board doesn't have the necessary 
-hardware
-> > > to use PCIe, so should I add a dummy pcie_bus clock to the Lager 
-board
-> > > dts, even though PCIe is not used?
-> > >
-> > > I'm just wondering what the dts file looks like for a board that 
-doesn't
-> > > support many interfaces. Does it become littered with dummy clocks 
-and
-> > > regulators?
-> > 
-> > The bridge node should be set to disabled by default so it never gets
-> > probed. Any boards that want to use it can over-ride the status to be
-> > enabled.
-> Ok, thanks.
-Hmm, yes it doesn't get probed, but you still get a build problem as the 
-DT entry references an clock that doesn't exist. Maybe I'm missing 
-something...
+As a note, if we now boot a Lager with DT on 3.14-rc3 series the USB
+controllers no longer work with full 2GiB RAM enabled in the device
+tree.
 
-Phil
+Could we work around this by having 1GiB of memory defined in the
+32bit memory and then add the rest of the 3GiB from the >32bit
+area via LPAE? Will the kernel ever try to allocate DMA memory from
+anything >32bit?
+
+-- 
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
