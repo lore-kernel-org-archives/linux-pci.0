@@ -1,77 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:46563 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751290AbaC1N1H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 09:27:07 -0400
-Received: by mail-vc0-f180.google.com with SMTP id lf12so5720223vcb.25
-        for <linux-pci@vger.kernel.org>; Fri, 28 Mar 2014 06:27:05 -0700 (PDT)
+Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:39614 "EHLO
+	ducie-dc1.codethink.co.uk" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751271AbaCTQt2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 12:49:28 -0400
+Message-ID: <532B1C14.6050902@codethink.co.uk>
+Date: Thu, 20 Mar 2014 17:49:24 +0100
+From: Ben Dooks <ben.dooks@codethink.co.uk>
 MIME-Version: 1.0
-In-Reply-To: <20140328114618.GY17163@e106497-lin.cambridge.arm.com>
-References: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
-	<20140328114618.GY17163@e106497-lin.cambridge.arm.com>
-Date: Fri, 28 Mar 2014 08:27:05 -0500
-Message-ID: <CAL_JsqL-LxCWe2Lopf3ZGHXmJB4fwEmKj1y7-bgBpYd5owNKKg@mail.gmail.com>
-Subject: Re: [PATCH 0/3] Versatile PCI DT support
-From: Rob Herring <robherring2@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linus.walleij@linaro.org" <linus.walleij@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Phil.Edworthy@renesas.com
+CC: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>, linux-sh@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>
+Subject: Re: [PATCH 1/9 v3] PCI: host: rcar: Add Renesas R-Car PCIe driver
+References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com> <1394704208-7490-2-git-send-email-phil.edworthy@renesas.com> <OFA03366C1.FF33E94A-ON80257CA1.005B32AE-80257CA1.005BAE71@eu.necel.com>
+In-Reply-To: <OFA03366C1.FF33E94A-ON80257CA1.005B32AE-80257CA1.005BAE71@eu.necel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 28, 2014 at 6:46 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> On Thu, Mar 27, 2014 at 10:46:35PM +0000, Rob Herring wrote:
->> From: Rob Herring <robh@kernel.org>
->>
->> This series adds a platform driver for Versatile PB's PCI host using
->> Liviu's recent patch series[1] for DT parsing and setup.
->>
->> The first patch is a hack to get Liviu's current patches to work on ARM.
->> It at least shows we are not that far off from being able to use the
->> series on ARM.
->>
->> I've tested PCI under QEMU, but need someone with actual h/w to test.
->> A branch with this series and which includes full conversion of
->> Versatile to DT is available here[2].
+On 20/03/14 17:41, Phil.Edworthy@renesas.com wrote:
+> Hi,
 >
-> Hi Rob,
->
-> Thanks for doing this. Hopefully others will take inspiration and start to
-> convert their host bridge controllers as well.
->
-> I will post an updated series soon. (Un)fortunately it will look slightly
-> different than the last one I've posted as I am trying to get more code
-> that I've currently placed in arch/arm64/kernel/pci.c into drivers/pci,
-> so you will need to revisit your series.
->
-> Regarding your comment about bridge->bus->self being needed: root busses
-> are supposed to have bus->self == NULL, and the bridge->bus *is* the root
-> bus. Where would you need to use bridge->bus->self?
+> Whilst looking at something else, I've realised that I completely messed
+> up my use of runtime PM in this driver... I'll fix that up & resend.
 
-If I want to use pci_write_config_* accesses, then I need a struct
-pci_dev pointer for the host. I can get this since I know the slot of
-the host, but only after pci_bus_add_devices which is perhaps too
-late. Historically, the Versatile PCI driver has blocked config
-accesses to the host's config space. I'm just wondering if this is
-really correct behavior and whether the core code should do the setup.
-This is setup that is done which doesn't seem like it is very specific
-to Versatile.
+Yes, you don't need the suspend/resume hooks at-all by the looks
+of it. Hopefully the pm_runtime driver for shmobile will be sorted
+upstream soon.
 
-local_pci_cfg_base = versatile_cfg_base[1] + (myslot << 11);
+And it looks as if your hooks would never have been called anyway
+as your probe does a pm_runtime_get_sync() to keep the pm_runtime
+for the device open (which probably for this bus bridge is what
+you wanted)
 
-val = readl(local_pci_cfg_base + CSR_OFFSET);
-val |= PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER | PCI_COMMAND_INVALIDATE;
-writel(val, local_pci_cfg_base + CSR_OFFSET);
-
-/*
-* Configure the PCI inbound memory windows to be 1:1 mapped to SDRAM
-*/
-writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_0);
-writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_1);
-writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_2);
-
-
-Rob
+-- 
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
