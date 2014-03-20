@@ -1,46 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:50433 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753228AbaCFSVi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 13:21:38 -0500
-Message-ID: <5318BCAE.7000108@codethink.co.uk>
-Date: Thu, 06 Mar 2014 18:21:34 +0000
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:59910 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758670AbaCTTEX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 15:04:23 -0400
 MIME-Version: 1.0
-To: Ben Dooks <ben.dooks@codethink.co.uk>
-CC: linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-kernel@lists.codethink.co.uk,
-	sergei.shtylyov@cogentembedded.com, magnus.damn@opensource.se,
-	horms@verge.net.au, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 1/9] pci-rcar-gen2: add devicetree support
-References: <1394128887-4197-1-git-send-email-ben.dooks@codethink.co.uk> <1394128887-4197-2-git-send-email-ben.dooks@codethink.co.uk>
-In-Reply-To: <1394128887-4197-2-git-send-email-ben.dooks@codethink.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20140320183932.GA7528@n2100.arm.linux.org.uk>
+References: <201402241200.21944.arnd@arndb.de>
+	<20140320173106.GA19395@obsidianresearch.com>
+	<532B2628.5080305@codethink.co.uk>
+	<201403201929.13633.arnd@arndb.de>
+	<20140320183932.GA7528@n2100.arm.linux.org.uk>
+Date: Thu, 20 Mar 2014 20:04:22 +0100
+Message-ID: <CAMuHMdX0kZhJyJFCQK7MUbv3nnKbqLkEJ2gnWMuHLSGLQvuQ2A@mail.gmail.com>
+Subject: Re: DMABOUNCE in pci-rcar
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Magnus Damm <damm@opensource.se>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms+renesas@verge.net.au>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/03/14 18:01, Ben Dooks wrote:
-> Add OF match table for pci-rcar-gen2 driver for device tree support.
->
+Hi Russell,
 
-> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-> index fd3e3ab..1216784 100644
-> --- a/drivers/pci/host/pci-rcar-gen2.c
-> +++ b/drivers/pci/host/pci-rcar-gen2.c
-> @@ -16,6 +16,7 @@
->   #include <linux/kernel.h>
->   #include <linux/module.h>
->   #include <linux/pci.h>
-> +#include <linux/of_pci.h>
->   #include <linux/platform_device.h>
->   #include <linux/pm_runtime.h>
->   #include <linux/sizes.h>
+On Thu, Mar 20, 2014 at 7:39 PM, Russell King - ARM Linux
+<linux@arm.linux.org.uk> wrote:
+> That all said, what I find most annoying is that Ben has ignored my
+> question about exactly what the nature of the limitation is on this
+> platform.  My response to that is - if you're not going to do the
+> curtesy of answering such a simple question, then you don't get to
+> patch the kernel for this problem.
 
-Apologies all, there's a missing include of <linux/of.h> which should
-have been added here
+Ben did answer:
+"If the window is set to 2GiB it can only access 2GiB aligned to 2GiB
+ boundary, however DRAM spans a 2GiB boundary (being at 1-3GiB)"
 
+Gr{oetje,eeting}s,
 
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
