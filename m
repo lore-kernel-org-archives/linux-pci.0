@@ -1,108 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og104.obsmtp.com ([64.18.0.178]:58253 "HELO
-	exprod5og104.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755693AbaCEBx5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 20:53:57 -0500
-Received: by mail-vc0-f169.google.com with SMTP id hq11so384099vcb.28
-        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 17:53:56 -0800 (PST)
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:42584 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759160AbaCTWu3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 18:50:29 -0400
+Received: by mail-ie0-f177.google.com with SMTP id rl12so1679556iec.36
+        for <linux-pci@vger.kernel.org>; Thu, 20 Mar 2014 15:50:29 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
-Date: Tue, 4 Mar 2014 17:53:55 -0800
-Message-ID: <CACoXjcmmbVsmvy46NhjFoBg8mRO=APiY3dZZY=ra-Ceib9Sr4A@mail.gmail.com>
-Subject: Re: [PATCH v5 0/7] [RFC] Support for creating generic host_bridge
- from device tree
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>
+In-Reply-To: <20140320124143.GA10751@localhost>
+References: <20140320124143.GA10751@localhost>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 20 Mar 2014 16:50:08 -0600
+Message-ID: <CAErSpo7i1sD=mNd1MZ+yWrPrPJDpZx2w-L3Dj=2N+gJBqVdSzA@mail.gmail.com>
+Subject: Re: [pci] WARNING: CPU: 0 PID: 1 at drivers/gpu/drm/drm_crtc.c:94 drm_warn_on_modeset_not_all_locked()
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Thu, Mar 20, 2014 at 6:41 AM, Fengguang Wu <fengguang.wu@intel.com> wrote:
+> Greetings,
+>
+> I got the below dmesg and the first bad commit is
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/resource
+>
+> commit aa11fc58dc71c27701b1f9a529a36a38d4337722
+> Author:     Bjorn Helgaas <bhelgaas@google.com>
+> AuthorDate: Fri Mar 7 13:39:01 2014 -0700
+> Commit:     Bjorn Helgaas <bhelgaas@google.com>
+> CommitDate: Wed Mar 19 15:00:16 2014 -0600
+>
+>     PCI: Check all IORESOURCE_TYPE_BITS in pci_bus_alloc_from_region()
+>
+>     When allocating space from a bus resource, i.e., from apertures leading to
+>     this bus, make sure the entire resource type matches.  The previous code
+>     assumed the IORESOURCE_TYPE_BITS field was a bitmask with only a single bit
+>     set, but this is not true.  IORESOURCE_TYPE_BITS is really an enumeration,
+>     and we have to check all the bits.
+>
+>     See 72dcb1197228 ("resources: Add register address resource type").
+>
+>     No functional change.  If we used this path for allocating IRQs, DMA
+>     channels, or bus numbers, this would fix a bug because those types are
+>     indistinguishable when masked by IORESOURCE_IO | IORESOURCE_MEM.  But we
+>     don't, so this shouldn't make any difference.
+>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Thanks for the patch set.
+Thanks (I think).  I'm afraid I'm going to need some more help to
+debug this.  I built aa11fc58dc with the config you supplied and
+booted it on qemu with no real issues (it didn't boot all the way
+because the config doesn't include a driver for my root disk, but
+that's to be expected).
 
-On Tue, Mar 4, 2014 at 7:49 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> This is v5 of my attempt to add support for a generic pci_host_bridge controller created
-> from a description passed in the device tree.
->
-> Changes from v4:
->   - Export pci_find_host_bridge() to be used by arch code. There is scope for
->     making the arch/arm64 version of pci_domain_nr the default weak implementation
->     but that would double the size of this series in order to handle all #define
->     versions of the pci_domain_nr() function, so I suggest keeping that for a separate
->     cleanup series.
->
-> Changes from v3:
->   - Dynamically allocate bus_range resource in of_create_pci_host_bridge()
->   - Fix the domain number used when creating child busses.
->   - Changed domain number allocator to use atomic operations.
->   - Use ERR_PTR() to propagate the error out of pci_create_root_bus_in_domain()
->     and of_create_pci_host_bridge().
->
-> Changes from v2:
->   - Use range->cpu_addr when calling pci_address_to_pio()
->   - Introduce pci_register_io_range() helper function in order to register
->     io ranges ahead of their conversion to PIO values. This is needed as no
->     information is being stored yet regarding the range mapping, making
->     pci_address_to_pio() fail. Default weak implementation does nothing,
->     to cover the default weak implementation of pci_address_to_pio() that
->     expects direct mapping of physical addresses into PIO values (x86 view).
->
-> Changes from v1:
->   - Add patch to fix conversion of IO ranges into IO resources.
->   - Added a domain_nr member to pci_host_bridge structure, and a new function
->     to create a root bus in a given domain number. In order to facilitate that
->     I propose changing the order of initialisation between pci_host_bridge and
->     it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
->     This is done in patch 1/4 and 2/4.
->   - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
->     code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
->     and if that fails assign the next unallocated domain id.
->   - Changed the name of the function that creates the generic host bridge from
->     pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
->
->
-> v4 thread here: https://lkml.org/lkml/2014/3/3/301
-> v3 thread here: https://lkml.org/lkml/2014/2/28/216
-> v2 thread here: https://lkml.org/lkml/2014/2/27/245
-> v1 thread here: https://lkml.org/lkml/2014/2/3/380
->
-> Best regards,
-> Liviu
->
-> Liviu Dudau (7):
->   pci: Introduce pci_register_io_range() helper function.
->   pci: OF: Fix the conversion of IO ranges into IO resources.
->   pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
->   pci: Introduce a domain number for pci_host_bridge.
->   pci: Use parent domain number when allocating child busses.
->   pci: Export find_pci_host_bridge() function.
->   pci: Add support for creating a generic host_bridge from device tree
->
->  drivers/of/address.c       |  39 +++++++++++++
->  drivers/pci/host-bridge.c  | 142 ++++++++++++++++++++++++++++++++++++++++++++-
->  drivers/pci/probe.c        |  72 +++++++++++++++--------
->  include/linux/of_address.h |  14 +----
->  include/linux/pci.h        |  17 ++++++
->  5 files changed, 248 insertions(+), 36 deletions(-)
->
-> --
-> 1.9.0
->
+The dmesg you supplied is for some other commit 2d18516 that I don't
+have, so I'm confused about why it's not from aa11fc58dc.
 
-This series is working fine on X-Gene with multiple PCIe ports. You
-can add my Tested-by if you want.
+I did reproduce what appears to be basically the same problem with
+a654dc797f3e, which is the 20140320 linux-next tree.  I backed up to
+93ecdc077282, which is where pci/next was merged (this includes
+aa11fc58dc), but I could not reproduce the problem there.
 
-Thanks,
-Tanmay
+So bottom line, I'm confused because your bisection doesn't match what
+I'm seeing, and I don't want to spend more time flailing around.
+
+Bjorn
+
+
+> +------------------------------------------------------------------------------------------------+------------+------------+
+> |                                                                                                | aa11fc58dc | 2d18516523 |
+> +------------------------------------------------------------------------------------------------+------------+------------+
+> | boot_successes                                                                                 | 19         | 0          |
+> | boot_failures                                                                                  | 1          | 19         |
+> | BUG:unable_to_handle_kernel_NULL_pointer_dereference                                           | 1          | 1          |
+> | Oops                                                                                           | 1          | 1          |
+> | EIP_is_at_rapl_pmu_init                                                                        | 1          | 1          |
+> | Kernel_panic-not_syncing:Attempted_to_kill_init_exitcode=                                      | 1          | 1          |
+> | backtrace:rapl_pmu_init                                                                        | 1          | 1          |
+> | backtrace:kernel_init_freeable                                                                 | 1          | 19         |
+> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_crtc.c:drm_warn_on_modeset_not_all_locked()             | 0          | 18         |
+> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_crtc_helper.c:drm_helper_encoder_in_use()               | 0          | 18         |
+> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_crtc_helper.c:drm_helper_crtc_in_use()                  | 0          | 18         |
+> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_crtc_helper.c:drm_helper_probe_single_connector_modes() | 0          | 18         |
+> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_modes.c:drm_mode_probed_add()                           | 0          | 18         |
+> | WARNING:CPU:PID:at_drivers/gpu/drm/drm_modes.c:drm_mode_connector_list_update()                | 0          | 18         |
+> | backtrace:drm_helper_disable_unused_functions                                                  | 0          | 18         |
+> | backtrace:cirrus_fbdev_init                                                                    | 0          | 18         |
+> | backtrace:cirrus_modeset_init                                                                  | 0          | 18         |
+> | backtrace:__pci_register_driver                                                                | 0          | 18         |
+> | backtrace:drm_pci_init                                                                         | 0          | 18         |
+> | backtrace:cirrus_init                                                                          | 0          | 18         |
+> | backtrace:drm_fb_helper_initial_config                                                         | 0          | 18         |
+> +------------------------------------------------------------------------------------------------+------------+------------+
+>
+> [    1.624247] [TTM] Initializing pool allocator
+> [    1.625248] ------------[ cut here ]------------
+> [    1.625248] ------------[ cut here ]------------
+> [    1.626136] WARNING: CPU: 0 PID: 1 at drivers/gpu/drm/drm_crtc.c:94 drm_warn_on_modeset_not_all_locked+0x61/0xc6()
+>
+> git bisect start 2d1851652373730f6b8c7fa7f45eaa854f23da8f dcb99fd9b08cfe1afe426af4d8d3cbc429190f15 --
+> git bisect  bad 82202f95148065d7a0f5d86d4d6e39f31dbd7937  # 12:19      0-     10  Merge 'asoc/fix/cs42l51' into devel-hourly-2014032007
+> git bisect good 9115e0b3218bd6b97e830bc36e6e80c4890f6fe4  # 12:45     20+      0  Merge 'scsi/misc' into devel-hourly-2014032007
+> git bisect good 4fb88b0dc2d9b229d03a9e6555d9056888c90137  # 14:42     20+      0  Merge 'target/for-next' into devel-hourly-2014032007
+> git bisect  bad c5011f998a8e94c052c5aa71cf19510f2d0bf5fd  # 15:06      0-      1  Merge 'pci/pci/resource' into devel-hourly-2014032007
+> git bisect good daec480a6e6be6e9716a56029aafcbfb79e6b47b  # 15:41     20+      0  Merge 'netdev-next/master' into devel-hourly-2014032007
+> git bisect good 937441ae220fd3fae143ef394227337c969ad155  # 15:57     20+      0  Merge 'kvm/queue' into devel-hourly-2014032007
+> git bisect good 3cedcc3621289d41bd21c5dbe0b886d57c83a1ea  # 16:27     20+      0  PCI: Don't enable decoding if BAR hasn't been assigned an address
+> git bisect good d75332325389a95c4ddbfa0f0cd7e5e08a54aa43  # 16:54     20+      0  s390/PCI: Use generic pci_enable_resources()
+> git bisect  bad aa11fc58dc71c27701b1f9a529a36a38d4337722  # 17:11      0-      1  PCI: Check all IORESOURCE_TYPE_BITS in pci_bus_alloc_from_region()
+> git bisect good 6404e88e8385638123f4b18b104430480870601a  # 17:23     20+      0  resources: Set type in __request_region()
+> # first bad commit: [aa11fc58dc71c27701b1f9a529a36a38d4337722] PCI: Check all IORESOURCE_TYPE_BITS in pci_bus_alloc_from_region()
+> git bisect good 6404e88e8385638123f4b18b104430480870601a  # 17:27     60+      0  resources: Set type in __request_region()
+> git bisect  bad 2d1851652373730f6b8c7fa7f45eaa854f23da8f  # 17:27      0-     19  0day head guard for 'devel-hourly-2014032007'
+> git bisect good 887843961c4b4681ee993c36d4997bf4b4aa8253  # 19:24     60+      0  mm: fix bad rss-counter if remap_file_pages raced migration
+> git bisect  bad a654dc797f3ea1cb5719a71a17af35f57fddb2d8  # 20:10      0-      1  Add linux-next specific files for 20140320
+>
+> Thanks,
+> Fengguang
