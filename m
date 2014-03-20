@@ -1,87 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:30666 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751697AbaCFV5M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Mar 2014 16:57:12 -0500
-Date: Thu, 6 Mar 2014 13:56:46 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
-	"Nyman, Mathias" <mathias.nyman@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 RESEND 4/4] xhci: Use pci_enable_msix_exact() instead
- of pci_enable_msix()
-Message-ID: <20140306215646.GA23294@xanatos>
-References: <cover.1394128952.git.agordeev@redhat.com>
- <606a52afdccf627b6273379b21daffc460b9559a.1394128952.git.agordeev@redhat.com>
+Received: from mail-ve0-f169.google.com ([209.85.128.169]:41197 "EHLO
+	mail-ve0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760015AbaCTWHq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 18:07:46 -0400
+Received: by mail-ve0-f169.google.com with SMTP id pa12so1705441veb.14
+        for <linux-pci@vger.kernel.org>; Thu, 20 Mar 2014 15:07:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <606a52afdccf627b6273379b21daffc460b9559a.1394128952.git.agordeev@redhat.com>
+In-Reply-To: <1394710981-3596-1-git-send-email-daniel@numascale.com>
+References: <1394710981-3596-1-git-send-email-daniel@numascale.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 20 Mar 2014 16:07:25 -0600
+Message-ID: <CAErSpo6psgDr3XYh6m+vYcAOix2Vttrwz1jK7bS47Liy2Lw-=g@mail.gmail.com>
+Subject: Re: [PATCH] Fix northbridge quirk to assign correct NUMA node
+To: Daniel J Blueman <daniel@numascale.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>, Borislav Petkov <bp@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Steffen Persvold <sp@numascale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	kim.naru@amd.com,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 06, 2014 at 09:11:24PM +0100, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
-> 
-> This update also cleans up a bit xhci_setup_msi() and
-> xhci_setup_msix() returning of success.
+[+cc linux-pci, Myron, Suravee, Kim, Aravind]
 
-What do you mean by this sentence?  Are you fixing some bug in those two
-functions, or just cleaning up how they look?  Either way, this should
-really be two patches.
+On Thu, Mar 13, 2014 at 5:43 AM, Daniel J Blueman <daniel@numascale.com> wrote:
+> For systems with multiple servers and routed fabric, all northbridges get
+> assigned to the first server. Fix this by also using the node reported from
+> the PCI bus. For single-fabric systems, the northbriges are on PCI bus 0
+> by definition, which are on NUMA node 0 by definition, so this is invarient
+> on most systems.
+>
+> Tested on fam10h and fam15h single and multi-fabric systems and candidate
+> for stable.
 
-Sarah Sharp
+I wish this had been cc'd to linux-pci.  We're talking about a related
+change by Suravee there.  In fact, we were hoping this quirk could be
+removed altogether.
 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: linux-usb@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
+I don't understand what this quirk is doing.  Normally we discover the
+NUMA node for a PCI host bridge via the ACPI _PXM method.  The way
+_PXM works is that every PCI device in the hierarchy below the bridge
+inherits the same node number as the host bridge.  I first thought
+this might be a workaround for a system that lacks _PXM, but I don't
+think that can be right, because you're only changing the node for a
+few devices, not the whole hierarchy.
+
+So I suspect the problem is more complicated, and maybe _PXM is
+insufficient to describe the topology?  Are there subtrees that should
+have nodes different from the host bridge?
+
+I know this patch is already in v3.14-rc7, but I'd still like to
+understand it so we can do the right thing with Suravee's patch.
+
+Bjorn
+
+> Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+> Acked-by: Steffen Persvold <sp@numascale.com>
 > ---
->  drivers/usb/host/xhci.c |    7 ++++---
->  1 files changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
-> index 6fe577d..dc7cfb5 100644
-> --- a/drivers/usb/host/xhci.c
-> +++ b/drivers/usb/host/xhci.c
-> @@ -232,9 +232,10 @@ static int xhci_setup_msi(struct xhci_hcd *xhci)
->  		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
->  				"disable MSI interrupt");
->  		pci_disable_msi(pdev);
-> +		return ret;
->  	}
->  
-> -	return ret;
-> +	return 0;
->  }
->  
->  /*
-> @@ -291,7 +292,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
->  		xhci->msix_entries[i].vector = 0;
->  	}
->  
-> -	ret = pci_enable_msix(pdev, xhci->msix_entries, xhci->msix_count);
-> +	ret = pci_enable_msix_exact(pdev, xhci->msix_entries, xhci->msix_count);
->  	if (ret) {
->  		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
->  				"Failed to enable MSI-X");
-> @@ -307,7 +308,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
->  	}
->  
->  	hcd->msix_enabled = 1;
-> -	return ret;
-> +	return 0;
->  
->  disable_msix:
->  	xhci_dbg_trace(xhci, trace_xhci_dbg_init, "disable MSI-X interrupt");
-> -- 
-> 1.7.7.6
-> 
+>  arch/x86/kernel/quirks.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
+> index 04ee1e2..52dbf1e 100644
+> --- a/arch/x86/kernel/quirks.c
+> +++ b/arch/x86/kernel/quirks.c
+> @@ -529,7 +529,7 @@ static void quirk_amd_nb_node(struct pci_dev *dev)
+>                 return;
+>
+>         pci_read_config_dword(nb_ht, 0x60, &val);
+> -       node = val & 7;
+> +       node = pcibus_to_node(dev->bus) | (val & 7);
+>         /*
+>          * Some hardware may return an invalid node ID,
+>          * so check it first:
+> --
+> 1.8.3.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
