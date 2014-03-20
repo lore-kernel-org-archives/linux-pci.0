@@ -1,82 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:51417 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933983AbaCUKdB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 06:33:01 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	devicetree@vger.kernel.org
-In-Reply-To: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>
-Date: Fri, 21 Mar 2014 10:32:44 +0000
-Subject: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree bindings
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:54709 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917AbaCTDQE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 23:16:04 -0400
+Received: by mail-ig0-f177.google.com with SMTP id ur14so872425igb.4
+        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 20:16:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo75LCpED6T48osUkGJ5CS7tUSEmdKye0wJZVOSb_OwnQQ@mail.gmail.com>
+References: <1393286367-16482-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com>
+	<CAE9FiQUvU=BqPXDHC+B=zC7ZGarimLDdvHsDbVL8t8qnZLJpzw@mail.gmail.com>
+	<CAErSpo6vuzaKJ-qWKfwcY_MsDhSdG9NazaYzG3=tabJerUv6mw@mail.gmail.com>
+	<CAE9FiQV3bM087uhWc5oH6j_7AJim0ECwTZKD05JSe2R5KmuCAQ@mail.gmail.com>
+	<CAErSpo75LCpED6T48osUkGJ5CS7tUSEmdKye0wJZVOSb_OwnQQ@mail.gmail.com>
+Date: Wed, 19 Mar 2014 20:16:02 -0700
+Message-ID: <CAE9FiQX+hOUsLRrL8u_T7SPU4s3SKdUiXOHSwoswKZoBNqXGUw@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: only wait command complete for really hotplug control
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for the rcar PCIE driver. The driver
-resides under drivers/pci/host/pcie-rcar.c
+On Wed, Mar 19, 2014 at 3:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Mar 19, 2014 at 12:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+> I think the current pciehp design is a bit broken.  Today we perform
+> commands very synchronously:
+>
+>     pcie_write_cmd() {
+>         write Slot Control
+>         if (Command Complete supported) {
+>             wait for Command Complete
+>         }
+>     }
+>
+> The typical driver pattern would be more asynchronous, like this:
+>
+>     pcie_write_cmd() {
+>         read Slot Status
+>         if (!Command Completed) {
+>             wait for Command Complete
+>         }
+>         write Slot Control
+>     }
+>
+> With the asynchronous pattern, we would probably never wait at all
+> unless we performed two commands in immediate succession.  I wouldn't
+> be surprised if doing this asynchronously would effectively cover up
+> these hardware differences.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- Documentation/devicetree/bindings/pci/rcar-pci.txt | 40 ++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
+I like this idea. Will give it a try.
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-new file mode 100644
-index 0000000..0e219b0
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-@@ -0,0 +1,40 @@
-+* Renesas RCar PCIe interface
-+
-+Required properties:
-+- compatible: should contain one of the following
-+	"renesas,r8a7779-pcie", "renesas,r8a7790-pcie", "renesas,r8a7791-pcie"
-+- reg: base addresses and lengths of the pcie controller.
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- device_type: set to "pci"
-+- ranges: ranges for the PCI memory and I/O regions
-+- interrupts: interrupt values for MSI interrupt
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+	to define the mapping of the PCIe interface to interrupt
-+	numbers.
-+- clocks: from common clock binding: handle to pci clock.
-+- clock-names: from common clock binding: should be "pcie"
-+
-+Example:
-+
-+SoC specific DT Entry:
-+
-+	pcie: pcie@0x01000000 {
-+		compatible = "renesas,r8a7790-pcie";
-+		reg = <0 0xfe000000 0 0x80000>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
-+			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
-+			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
-+			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-+		interrupts = <0 116 4>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 116 4>;
-+		clocks = <&mstp3_clks R8A7790_CLK_PCIE>;
-+		clock-names = "pcie";
-+		status = "disabled";
-+	};
--- 
-1.9.0
+Thanks
 
+Yinghai
