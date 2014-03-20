@@ -1,58 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:56533 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754236AbaCMP2X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 11:28:23 -0400
-Received: by mail-pa0-f45.google.com with SMTP id kl14so1270759pab.4
-        for <linux-pci@vger.kernel.org>; Thu, 13 Mar 2014 08:28:22 -0700 (PDT)
-Message-ID: <5321CE94.5070506@kernel.dk>
-Date: Thu, 13 Mar 2014 09:28:20 -0600
-From: Jens Axboe <axboe@kernel.dk>
+Received: from moutng.kundenserver.de ([212.227.17.24]:57239 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757263AbaCTQmf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 12:42:35 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-sh@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Magnus Damm <damm@opensource.se>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: Re: DMABOUNCE in pci-rcar
+Date: Thu, 20 Mar 2014 17:41:49 +0100
+Message-ID: <4884083.IuNl44Y6XD@wuerfel>
+In-Reply-To: <532B137B.7010900@codethink.co.uk>
+References: <201402241200.21944.arnd@arndb.de> <5527822.QYtFYiIpiW@wuerfel> <532B137B.7010900@codethink.co.uk>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-CC: linux-kernel@vger.kernel.org, Mike Miller <mike.miller@hp.com>,
-	iss_storagedev@hp.com, linux-pci@vger.kernel.org,
-	Keith Busch <keith.busch@intel.com>,
-	Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: [PATCH v2 0/2] block: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-References: <cover.1393404496.git.agordeev@redhat.com> <20140313041231.GC26657@google.com>
-In-Reply-To: <20140313041231.GC26657@google.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/12/2014 10:12 PM, Bjorn Helgaas wrote:
-> On Wed, Feb 26, 2014 at 10:02:40AM +0100, Alexander Gordeev wrote:
->> Changes since v1:
->>    - cciss: patch #1: a weird 'goto' removed;
->>    - cciss: patch #2: pci_enable_msix_exact() used, not pci_enable_msix_range();
->>    - rsxx: patch dropped - no need to change anything;
->>
->> As result of deprecation of MSI-X/MSI enablement functions
->> pci_enable_msix() and pci_enable_msi_block() all drivers
->> using these two interfaces need to be updated to use the
->> new pci_enable_msi_range()  or pci_enable_msi_exact()
->> and pci_enable_msix_range() or pci_enable_msix_exact()
->> interfaces.
->>
->> This change updates 'cciss' only, but there is also 'nvme' update
->> pending - I am waiting for Intel guys to clarify if they want to
->> route it thru their tree. If not, I will post the 'nvme' patch as
->> a follow-up to this series.
->
-> Hi Jens,
->
-> I'd like to get these merged during the v3.15 merge window.  I'd be glad to
-> review and apply them through my tree, unless you want to do it.  They do
-> depend on f7fc32c, which went in after the v3.14 merge window, which makes
-> it a bit of a hassle.
+On Thursday 20 March 2014 17:12:43 Ben Dooks wrote:
+> On 20/03/14 17:09, Arnd Bergmann wrote:
+> > On Thursday 20 March 2014 16:04:36 Ben Dooks wrote:
 
-My 3.15/drivers (and core) branch are based off 3.14-rc3, so it should 
-be OK. I've queued them up, as it's mostly a followup to the previous 
-ones from Alexander.
+> >> As a note, if we now boot a Lager with DT on 3.14-rc3 series the USB
+> >> controllers no longer work with full 2GiB RAM enabled in the device
+> >> tree.
+> >
+> > Did it work before these patches got applied initially?
+> 
+> It did, but I cannot remember if we where limiting DRAM to 1GiB
+> or not.
 
--- 
-Jens Axboe
+I would assume you did, or you happened to never actually use
+memory higher than that for DMA during tests.
 
+> >> Could we work around this by having 1GiB of memory defined in the
+> >> 32bit memory and then add the rest of the 3GiB from the >32bit
+> >> area via LPAE? Will the kernel ever try to allocate DMA memory from
+> >> anything >32bit?
+> >
+> > You can solve the case for dma_alloc_coherent() this way, or by
+> > setting the mask correctly. It won't help you for dma_map_* though,
+> > which still requires someone to add support for swiotlb or using
+> > an IOMMU if present.
+> 
+> We do not have an IOMMU present at the moment. Not sure how
+> to go about setting a mask on a pci-probed device.
+
+Ah, right. The mask is a problem because PCI devices assume that
+they can do DMA to any 32-bit masked address without calling
+dma_set_mask. Your trick to describe the system memory at a different
+physical alias would solve this part. Another option might be to
+add a quirk in the OHCI/EHCI drivers, if you are able to detect
+this special case from the PCI IDs. Whether we can allow the PCI host
+controller to just set a mask is an open question. If we decide to go
+that route, you should be able to do it using the add_bus() callback
+in the host controller driver. However, it would be a departure from
+the normal way of doing PCI DMA, and I can't foresee what the implications
+would be.
+
+	Arnd
