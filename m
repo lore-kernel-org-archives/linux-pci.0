@@ -1,75 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:36306 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933594AbaCTJrB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 05:47:01 -0400
+Date: Thu, 20 Mar 2014 09:46:54 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Catalin Marinas <Catalin.Marinas@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+Message-ID: <20140320094654.GZ6457@e106497-lin.cambridge.arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140319135619.GC6231@localhost>
+ <20140319172140.GA16328@e106497-lin.cambridge.arm.com>
+ <8312584.jdZZuHGAjg@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVdk6Tg4tNPQihm2YJ5BQO8jrQXfQfgVOSXTaK3o76yqg@mail.gmail.com>
-References: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140311174243.23084.77689.stgit@bhelgaas-glaptop.roam.corp.google.com> <CAE9FiQVdk6Tg4tNPQihm2YJ5BQO8jrQXfQfgVOSXTaK3o76yqg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Mar 2014 16:02:32 -0600
-Message-ID: <CAErSpo5Xxr96hsNxO5HrxV31B4Uh=oTsTgfQ-CfHNXP+quM+kg@mail.gmail.com>
-Subject: Re: [PATCH 1/5] PCI: Don't check resource_size() in pci_bus_alloc_resource()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <8312584.jdZZuHGAjg@wuerfel>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 11, 2014 at 3:39 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Mar 11, 2014 at 10:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> Paul reported that after f75b99d5a77d ("PCI: Enforce bus address limits in
->> resource allocation") on a 32-bit kernel (CONFIG_PHYS_ADDR_T_64BIT not
->> set), intel-gtt complained "can't ioremap flush page - no chipset
->> flushing".  In addition, other PCI resource allocations, e.g., for bridge
->> windows, failed.
->>
->> This happens because we incorrectly skip bus resources of
->> [mem 0x00000000-0xffffffff] because we think they are of size zero.
->> When resource_size_t is 32 bits wide, resource_size() on
->> [mem 0x00000000-0xffffffff] returns 0 because (r->end - r->start + 1)
->> overflows.
->>
->> Therefore, we can't use "resource_size() == 0" to decide that allocation
->> from this resource will fail.  allocate_resource() should fail anyway if it
->> can't satisfy the address constraints, so we should just depend on that.
->>
->> A [mem 0x00000000-0xffffffff] bus resource is obviously not really valid,
->> but we do fall back to it as a default when we don't have information about
->> host bridge apertures.
->>
->> Link: https://bugzilla.kernel.org/show_bug.cgi?id=71611
->> Fixes: f75b99d5a77d PCI: Enforce bus address limits in resource allocation
->> Reported-and-tested-by: Paul Bolle <pebolle@tiscali.nl>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> ---
->>  drivers/pci/bus.c |    2 --
->>  1 file changed, 2 deletions(-)
->>
->> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> index 00660cc502c5..38901665c770 100644
->> --- a/drivers/pci/bus.c
->> +++ b/drivers/pci/bus.c
->> @@ -162,8 +162,6 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
->>
->>                 avail = *r;
->>                 pci_clip_resource_to_region(bus, &avail, region);
->> -               if (!resource_size(&avail))
->> -                       continue;
->>
->>                 /*
->>                  * "min" is typically PCIBIOS_MIN_IO or PCIBIOS_MIN_MEM to
->>
->
-> how about replacing that with:
->
->         if (avail.start > avail.end)
->                   continue;
->
-> so we do not need to go deep into allocate_resource()
+On Wed, Mar 19, 2014 at 06:37:51PM +0000, Arnd Bergmann wrote:
+> On Wednesday 19 March 2014 17:21:41 Liviu Dudau wrote:
+> > 
+> > My ultimate point is that no matter how long we argue about the shape of the functions that
+> > I've added into arch/arm64/kernel/pci.c I don't think we can get away without having that
+> > file, or at least not in the first phase if we want speedy integration into mainline.
+> 
+> Let me simplify the discussion here:
+> 
+> NAK to adding yet another architecture specific implementation.
 
-We could, but why bother?  This isn't a performance path, so there's
-no need to add more code to optimize it.  Adding code means there's
-more for human readers to look at and understand, so I prefer not to
-add it unless it's needed.
+So what would be your approach for handling pci_address_to_pio() in a non-arch specific way?
 
-Bjorn
+unsigned long __weak pci_address_to_pio(phys_addr_t address)
+{
+#ifdef ARCH_HAS_IOSPACE
+	if (address > IO_SPACE_LIMIT)
+		return (unsigned long)-1;
+
+	return (unsigned long) address;
+#else
+	struct ioresource *res;
+
+	list_for_each_entry(res, &io_list, list) {
+		if (address >= res->start &&
+			address < res->start + res->size) {
+			return res->start - address;
+		}
+	}
+
+	return (unsigned long)-1;
+#endif
+}
+
+
+Either that, or you have more magic rabbits than me.
+
+Best regards,
+Liviu
+
+> 
+> 	Arnd
+> 
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
