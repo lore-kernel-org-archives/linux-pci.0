@@ -1,90 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:42879 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757188AbaCDOyi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 09:54:38 -0500
-Received: by mail-pd0-f182.google.com with SMTP id g10so5242606pdj.13
-        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 06:54:38 -0800 (PST)
-From: Tim Harvey <tharvey@gateworks.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ben Dooks <ben-linux@fluff.org>,
-	linux-tegra <linux-tegra@vger.kernel.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: [PATCH 1/2] of/irq: Fix irq-mapping in of_irq_parse_raw()
-Date: Tue,  4 Mar 2014 06:54:24 -0800
-Message-Id: <1393944864-28113-1-git-send-email-tharvey@gateworks.com>
+Received: from mail-ve0-f170.google.com ([209.85.128.170]:38036 "EHLO
+	mail-ve0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756019AbaCTBcx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 21:32:53 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5qsosqLXdkS2__d2J7sM4T2nBfO1ewKg1=kFri3mcdrQ@mail.gmail.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	<20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	<CACVXFVOqBuCcQC6ku0abqstkgJWGe21ZztB-eTsyDwsvDvXNZw@mail.gmail.com>
+	<CAErSpo4ngU60XQCD=DbFJbqNOMkOwwhHB1oau1mmr7rJQQ2+pg@mail.gmail.com>
+	<CACVXFVMz+6DaSgT0EHeVfyBOsXfWDYnZQ0wy7pwcey5ahM6rUA@mail.gmail.com>
+	<20140318002700.GA22356@google.com>
+	<CACVXFVNbzjYa7dJpH+k-F02Cap7yBBi7TkngjVu_KthXw-WKJA@mail.gmail.com>
+	<CACVXFVO2rR+H7X2Xv_d-U0NeikT4dR97ffQ7PuV7+i0fN=_k3w@mail.gmail.com>
+	<CAErSpo5qsosqLXdkS2__d2J7sM4T2nBfO1ewKg1=kFri3mcdrQ@mail.gmail.com>
+Date: Thu, 20 Mar 2014 09:32:52 +0800
+Message-ID: <CACVXFVPq2nQ8jcn+v424roieO+v_asyfXcHUHv=uSOABYHJ4eg@mail.gmail.com>
+Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding disabled
+From: Ming Lei <tom.leiming@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Pekka Enberg <penberg@kernel.org>,
+	Sasha Levin <sasha.levin@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When an interrupt-map contains multiple entries an imap pointer arithmetic
-bug can cause only the first entry to be properly evaluated and causes
-the out_irq parameters to be incorrect depending on the #interrupt-cells
-and #address-cells of the parent interrupt controller.
+On Thu, Mar 20, 2014 at 12:45 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Mar 18, 2014 at 10:52 PM, Ming Lei <tom.leiming@gmail.com> wrote:
+>> Hi,
+>>
+>> Looks Sasha fixed the problem in lkvm tool[1].
+>>
+>> Sasha, looks we both saw the problem, but from technical
+>> view, I am wondering if the fix is correct, because PCI spec.
+>> requires that the IO/MMIO bits in COMMAND register should
+>> be cleared after reset, maybe there are some potential problem
+>> in lkvm pci emulation.
+>
+> I think I'm going to revert this patch ([2], "Ignore BAR contents when
+> firmware left decoding disabled").  The main reason for that patch was
+> to try for a consistent way of figuring out whether BARs are valid
+> that we could use on all architectures, but I think we can do it in a
+> better way.
+>
+> That said, this kvm change should not be necessary.  We *should* be
+> able to take any PCI device and initialize it from power-on state
+> without any dependencies on what the BIOS left in the BARs or the
+> command register.  As far as I can tell, the PCI core actually worked
+> fine in this case (we assigned valid addresses to the devices), but
+> something else blew up.  If I revert that patch, it will cover up
+> whatever this other bug is, but it would be much better to figure out
+> what it is and fix is.
+>
+> You said earlier that "The memory allocation failure is caused by
+> mistaken value read from pci address after the device is failed to
+> enable."  Can you elaborate on that?  Are you saying that something
 
-Specifically, the imap pointer into the interrupt-map table should be
-adjusted by the parent interrupt controller #interrupt-cells size only
-as at this point the only the parent unit interrupt specifier needs to be
-stepped over.
+Sorry, that's my take for granted.
 
-This resolves an issue encountered when using the of_irq_parse_and_map_pci()
-for the imx6 pcie host controller driver map_irq function where a P2P bridge
-is on the bus and legacy PCI interrupts are to be used.
+> tried to read from a region mapped by a BAR even though
+> pci_enable_device() failed?  That would be a programming error, of
+> course.  If you have any more details about exactly where this
+> happened, that would help a lot in finding the problem.
 
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: linux-samsung-soc <linux-samsung-soc@vger.kernel.org>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <kernel@pengutronix.de>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Simon Horman <horms@verge.net.au>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Ben Dooks <ben-linux@fluff.org>
-Cc: linux-tegra <linux-tegra@vger.kernel.org>
-Cc: Kukjin Kim <kgene.kim@samsung.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Grant Likely <grant.likely@linaro.org>
----
- drivers/of/irq.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+When I check again, as you saw in the dmesg log after reverting, the
+virtio device has been enabled successfully, looks no obvious PCI
+failure, and the only problem is that the virtio driver reads zero queue
+number from one region mapped by a BAR:
 
-diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-index 9bcf2cf..8829197 100644
---- a/drivers/of/irq.c
-+++ b/drivers/of/irq.c
-@@ -237,11 +237,11 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
- 			/* Check for malformed properties */
- 			if (WARN_ON(newaddrsize + newintsize > MAX_PHANDLE_ARGS))
- 				goto fail;
--			if (imaplen < (newaddrsize + newintsize))
-+			if (imaplen < newintsize)
- 				goto fail;
- 
--			imap += newaddrsize + newintsize;
--			imaplen -= newaddrsize + newintsize;
-+			imap += newintsize;
-+			imaplen -= newintsize;
- 
- 			pr_debug(" -> imaplen=%d\n", imaplen);
- 		}
+ioread16(vp_dev->ioaddr + VIRTIO_PCI_QUEUE_NUM)
+         <- setup_vq(): drivers/virtio/virtio_pci.c
+
+That causes the memory allocation failure.
+
+Thanks,
 -- 
-1.8.3.2
-
+Ming Lei
