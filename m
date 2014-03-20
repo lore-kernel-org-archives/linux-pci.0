@@ -1,158 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:59007 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752450AbaC1QxH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 12:53:07 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
-	Richard Zhu <r65037@freescale.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <532A514C.5010106@intel.com>
+Date: Thu, 20 Mar 2014 10:24:12 +0800
+From: Aaron Lu <aaron.lu@intel.com>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Borislav Petkov <bp@alien8.de>
+CC: lkml <linux-kernel@vger.kernel.org>, x86@kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
-Subject: [PATCH 4/8] PCI: imx6: use new clock names
-Date: Fri, 28 Mar 2014 17:52:55 +0100
-Message-Id: <1396025579-14344-5-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+References: <20140224162400.GE16457@pd.tnic> <4205942.Tp8ltEsv6e@vostro.rjw.lan>
+In-Reply-To: <4205942.Tp8ltEsv6e@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As defined in the new binding.
+On 03/15/2014 10:15 PM, Rafael J. Wysocki wrote:
+> [CC list rearranged]
+> 
+> On Monday, February 24, 2014 05:24:00 PM Borislav Petkov wrote:
+>> This started happening this morning after booting -rc4+tip, let's
+>> add *everybody* to CC :-)
+>>
+>> We have intel_uncore_init, snb_uncore_imc_init_box, uncore_pci_probe and
+>> other goodies on the stack.
+> 
+> I've just gone throught this.
+> 
+> So the problem is that we have the PNP "system" driver whose only purpose seems
+> to be to reserve system resources so that the PCI layer doesn't assign them to
+> new devices on hotplug (disclaimer: I didn't invent it, I only read the code and
+> comments in there).
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/host/pci-imx6.c | 74 ++++++++++++++++++---------------------------
- 1 file changed, 29 insertions(+), 45 deletions(-)
+And to PCI devices which have uninitialized BARs.
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index ee082509b0ba..71730bbcd9a2 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -35,10 +35,9 @@ struct imx6_pcie {
- 	int			power_on_gpio;
- 	int			wake_up_gpio;
- 	int			disable_gpio;
--	struct clk		*lvds_gate;
--	struct clk		*sata_ref_100m;
--	struct clk		*pcie_ref_125m;
--	struct clk		*pcie_axi;
-+	struct clk		*pcie_bus;
-+	struct clk		*pcie_phy;
-+	struct clk		*pcie;
- 	struct pcie_port	pp;
- 	struct regmap		*iomuxc_gpr;
- 	void __iomem		*mem_base;
-@@ -239,28 +238,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
- 
--	ret = clk_prepare_enable(imx6_pcie->sata_ref_100m);
-+	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
- 	if (ret) {
--		dev_err(pp->dev, "unable to enable sata_ref_100m\n");
--		goto err_sata_ref;
-+		dev_err(pp->dev, "unable to enable pcie_phy clock\n");
-+		goto err_pcie_phy;
- 	}
- 
--	ret = clk_prepare_enable(imx6_pcie->pcie_ref_125m);
-+	ret = clk_prepare_enable(imx6_pcie->pcie_bus);
- 	if (ret) {
--		dev_err(pp->dev, "unable to enable pcie_ref_125m\n");
--		goto err_pcie_ref;
-+		dev_err(pp->dev, "unable to enable pcie_bus clock\n");
-+		goto err_pcie_bus;
- 	}
- 
--	ret = clk_prepare_enable(imx6_pcie->lvds_gate);
-+	ret = clk_prepare_enable(imx6_pcie->pcie);
- 	if (ret) {
--		dev_err(pp->dev, "unable to enable lvds_gate\n");
--		goto err_lvds_gate;
--	}
--
--	ret = clk_prepare_enable(imx6_pcie->pcie_axi);
--	if (ret) {
--		dev_err(pp->dev, "unable to enable pcie_axi\n");
--		goto err_pcie_axi;
-+		dev_err(pp->dev, "unable to enable pcie clock\n");
-+		goto err_pcie;
- 	}
- 
- 	/* allow the clocks to stabilize */
-@@ -274,13 +267,11 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 	}
- 	return 0;
- 
--err_pcie_axi:
--	clk_disable_unprepare(imx6_pcie->lvds_gate);
--err_lvds_gate:
--	clk_disable_unprepare(imx6_pcie->pcie_ref_125m);
--err_pcie_ref:
--	clk_disable_unprepare(imx6_pcie->sata_ref_100m);
--err_sata_ref:
-+err_pcie:
-+	clk_disable_unprepare(imx6_pcie->pcie_bus);
-+err_pcie_bus:
-+	clk_disable_unprepare(imx6_pcie->pcie_phy);
-+err_pcie_phy:
- 	return ret;
- 
- }
-@@ -583,32 +574,25 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	/* Fetch clocks */
--	imx6_pcie->lvds_gate = devm_clk_get(&pdev->dev, "lvds_gate");
--	if (IS_ERR(imx6_pcie->lvds_gate)) {
--		dev_err(&pdev->dev,
--			"lvds_gate clock select missing or invalid\n");
--		return PTR_ERR(imx6_pcie->lvds_gate);
--	}
--
--	imx6_pcie->sata_ref_100m = devm_clk_get(&pdev->dev, "sata_ref_100m");
--	if (IS_ERR(imx6_pcie->sata_ref_100m)) {
-+	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
-+	if (IS_ERR(imx6_pcie->pcie_phy)) {
- 		dev_err(&pdev->dev,
--			"sata_ref_100m clock source missing or invalid\n");
--		return PTR_ERR(imx6_pcie->sata_ref_100m);
-+			"pcie_phy clock source missing or invalid\n");
-+		return PTR_ERR(imx6_pcie->pcie_phy);
- 	}
- 
--	imx6_pcie->pcie_ref_125m = devm_clk_get(&pdev->dev, "pcie_ref_125m");
--	if (IS_ERR(imx6_pcie->pcie_ref_125m)) {
-+	imx6_pcie->pcie_bus = devm_clk_get(&pdev->dev, "pcie_bus");
-+	if (IS_ERR(imx6_pcie->pcie_bus)) {
- 		dev_err(&pdev->dev,
--			"pcie_ref_125m clock source missing or invalid\n");
--		return PTR_ERR(imx6_pcie->pcie_ref_125m);
-+			"pcie_bus clock source missing or invalid\n");
-+		return PTR_ERR(imx6_pcie->pcie_bus);
- 	}
- 
--	imx6_pcie->pcie_axi = devm_clk_get(&pdev->dev, "pcie_axi");
--	if (IS_ERR(imx6_pcie->pcie_axi)) {
-+	imx6_pcie->pcie = devm_clk_get(&pdev->dev, "pcie");
-+	if (IS_ERR(imx6_pcie->pcie)) {
- 		dev_err(&pdev->dev,
--			"pcie_axi clock source missing or invalid\n");
--		return PTR_ERR(imx6_pcie->pcie_axi);
-+			"pcie clock source missing or invalid\n");
-+		return PTR_ERR(imx6_pcie->pcie);
- 	}
- 
- 	/* Grab GPR config register range */
--- 
-1.9.0
+> 
+> It does that for ACPI device objects having the "PNP0C02" and "PNP0C01" IDs.
+> 
+> Apparently, snb_uncore_imc_init_box() steps on a range already reserved by that
+> driver on your box.  And this doesn't seem to be a coincidence, because the ACPI
+> device object in question probably *does* correspond to the memory controller
+> that the uncore driver attempts to use.
+> 
+> I'm not sure how to address that right now to be honest.  Arguably, the PNP
+> "system" driver should be replaced with something saner, but still the
+> resources it claims need to be kept out of reach of the PCI's resource
+> allocation code.
+
+The quirk_system_pci_resources is meant to disable PNP devices' resource if
+they collide with any known PCI device's BAR. I'm not sure why it doesn't work
+here, perhaps the uncore PCI device doesn't have a BAR that falls in the PNP
+device's resource window?
+
+Thanks,
+Aaron
+
+> 
+>> ...
+>> [    0.488998] software IO TLB [mem 0xcac30000-0xcec30000] (64MB) mapped at [ffff8800cac30000-ffff8800cec2ffff]
+>> [    0.489975] resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
+>> [    0.490079] ------------[ cut here ]------------
+>> [    0.490204] WARNING: CPU: 2 PID: 1 at arch/x86/mm/ioremap.c:171 __ioremap_caller+0x372/0x380()
+>> [    0.490306] Info: mapping multiple BARs. Your kernel is fine.
+>> [    0.490371] Modules linked in:
+>> [    0.490558] CPU: 2 PID: 1 Comm: swapper/0 Not tainted 3.14.0-rc4+ #1
+>> [    0.490642] Hardware name: LENOVO 2320CTO/2320CTO, BIOS G2ET86WW (2.06 ) 11/13/2012
+>> [    0.490742]  00000000000000ab ffff880213d01ad8 ffffffff816112e3 0000000000000006
+>> [    0.491032]  ffff880213d01b28 ffff880213d01b18 ffffffff8104e9bc ffff880213d01b08
+>> [    0.491343]  ffffc90000c58000 00000000fed10000 00000000fed10000 0000000000006000
+>> [    0.491631] Call Trace:
+>> [    0.493337]  [<ffffffff816112e3>] dump_stack+0x4f/0x7c
+>> [    0.493420]  [<ffffffff8104e9bc>] warn_slowpath_common+0x8c/0xc0
+>> [    0.493503]  [<ffffffff8104eaa6>] warn_slowpath_fmt+0x46/0x50
+>> [    0.493588]  [<ffffffff8103f1e2>] __ioremap_caller+0x372/0x380
+>> [    0.493674]  [<ffffffff810211a2>] ? snb_uncore_imc_init_box+0x62/0x90
+>> [    0.493761]  [<ffffffff8103f247>] ioremap_nocache+0x17/0x20
+>> [    0.493846]  [<ffffffff810211a2>] snb_uncore_imc_init_box+0x62/0x90
+>> [    0.493933]  [<ffffffff81022925>] uncore_pci_probe+0xe5/0x1e0
+>> [    0.494020]  [<ffffffff812d487e>] local_pci_probe+0x4e/0xa0
+>> [    0.494104]  [<ffffffff81418a59>] ? get_device+0x19/0x20
+>> [    0.494213]  [<ffffffff812d5cd1>] pci_device_probe+0xe1/0x130
+>> [    0.494300]  [<ffffffff8141d3cb>] driver_probe_device+0x7b/0x240
+>> [    0.494385]  [<ffffffff8141d63b>] __driver_attach+0xab/0xb0
+>> [    0.494469]  [<ffffffff8141d590>] ? driver_probe_device+0x240/0x240
+>> [    0.494551]  [<ffffffff8141b71e>] bus_for_each_dev+0x5e/0x90
+>> [    0.494634]  [<ffffffff8141cede>] driver_attach+0x1e/0x20
+>> [    0.494718]  [<ffffffff8141ca57>] bus_add_driver+0x117/0x230
+>> [    0.494802]  [<ffffffff8141dd34>] driver_register+0x64/0xf0
+>> [    0.494884]  [<ffffffff812d4c14>] __pci_register_driver+0x64/0x70
+>> [    0.494972]  [<ffffffff81d0319b>] ? uncore_types_init+0x19c/0x19c
+>> [    0.495056]  [<ffffffff81d03312>] intel_uncore_init+0x177/0x41c
+>> [    0.495155]  [<ffffffff81d0319b>] ? uncore_types_init+0x19c/0x19c
+>> [    0.495242]  [<ffffffff8100029e>] do_one_initcall+0x4e/0x170
+>> [    0.495326]  [<ffffffff81071100>] ? parse_args+0x60/0x360
+>> [    0.495411]  [<ffffffff81cfbfb8>] kernel_init_freeable+0x106/0x19a
+>> [    0.495497]  [<ffffffff81cfb83b>] ? do_early_param+0x86/0x86
+>> [    0.495582]  [<ffffffff81607ef0>] ? rest_init+0xd0/0xd0
+>> [    0.495666]  [<ffffffff81607efe>] kernel_init+0xe/0xf0
+>> [    0.495749]  [<ffffffff81621f6c>] ret_from_fork+0x7c/0xb0
+>> [    0.495831]  [<ffffffff81607ef0>] ? rest_init+0xd0/0xd0
+>> [    0.495921] ---[ end trace 428f365c054d9a01 ]---
+>> [    0.496196] RAPL PMU detected, hw unit 2^-16 Joules, API unit is 2^-32 Joules, 3 fixed counters 163840 ms ovfl timer
+>> [    0.498598] futex hash table entries: 1024 (order: 5, 131072 bytes)
+>> [    0.498833] audit: initializing netlink subsys (disabled)
+>> [    0.499024] audit: type=2000 audit(1393259866.477:1): initialized
+>> ...
+>>
+>>
+> 
 
