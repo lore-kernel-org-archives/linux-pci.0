@@ -1,148 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:44919 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751685AbaCTQqN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 12:46:13 -0400
+Received: by mail-ie0-f169.google.com with SMTP id to1so1180958ieb.0
+        for <linux-pci@vger.kernel.org>; Thu, 20 Mar 2014 09:46:13 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5Dq3M5ik=dgF5dLsZV87XJeT3nEiYptPBXPCyLZ9xhgA@mail.gmail.com>
-References: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
- <CAErSpo4MMJh9b0aivwGSbxCMVw24He1+Vo_LH0R0E+fYM5aThg@mail.gmail.com>
- <5317D9B0.1080502@amd.com> <5318160D.8070305@amd.com> <CAErSpo59=52bqgyvqk1x7kcgFmRtdZhT6faYTi3wy7KDtk5=Pw@mail.gmail.com>
- <5318D475.9040701@amd.com> <CAErSpo5Dq3M5ik=dgF5dLsZV87XJeT3nEiYptPBXPCyLZ9xhgA@mail.gmail.com>
+In-Reply-To: <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
+References: <20140224162400.GE16457@pd.tnic> <4205942.Tp8ltEsv6e@vostro.rjw.lan>
+ <532A514C.5010106@intel.com> <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Mar 2014 15:13:49 -0600
-Message-ID: <CAErSpo6ZbKFMgcm4upR7gTnYwZ15UJpxzctOwWMsGyONipq8aw@mail.gmail.com>
-Subject: Re: [PATCH 0/3] amd/pci: Add AMD hostbridge supports for newer AMD systems
-To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	kim.naru@amd.com,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
+Date: Thu, 20 Mar 2014 10:45:52 -0600
+Message-ID: <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+To: "Zhang, Rui" <rui.zhang@intel.com>
+Cc: "Lu, Aaron" <aaron.lu@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Borislav Petkov <bp@alien8.de>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>,
+	"Yan, Zheng Z" <zheng.z.yan@intel.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 11, 2014 at 12:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Mar 6, 2014 at 1:03 PM, Suravee Suthikulpanit
-> <suravee.suthikulpanit@amd.com> wrote:
->> On 3/6/2014 11:40 AM, Bjorn Helgaas wrote:
->>>
->>> [+cc Yinghai, sorry I didn't think of it before]
->>>
->>> On Wed, Mar 5, 2014 at 11:30 PM, Suravee Suthikulpanit
->>> <suravee.suthikulpanit@amd.com> wrote:
->>>>
->>>> On 3/5/2014 8:13 PM, Suravee Suthikulanit wrote:
->>>>>
->>>>>
->>>>> On 3/5/2014 3:24 PM, Bjorn Helgaas wrote:
->>>>>>
->>>>>>
->>>>>> [+cc linux-acpi]
->>>>>>
->>>>>> On Wed, Mar 5, 2014 at 2:06 PM,  <suravee.suthikulpanit@amd.com> wrote:
->>>>>>>
->>>>>>>
->>>>>>> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
->>>>>>>
->>>>>>> The current code only supports upto AMD hostbridge for family11h.
->>>>>>> This causes PCI numa_node information to be reported incorrectly
->>>>>>> for newer family with multi sockets.
->>>>>>
->>>>>>
->>>>>>
->>>>>> Where is the incorrect reporting?  In ACPI tables?  Is this patch a
->>>>>> way to cover up firmware defects in the ACPI description?  Or is this
->>>>>> for machines without ACPI (it seems unlikely that machines with new
->>>>>> AMD processors would not have ACPI)?
->>>>>
->>>>>
->>>>>
->>>>> This is incorrectly reported in the sysfs for each PCI device (e.g.
->>>>> /devices/pci0000:50/0000:50:00.2/numa_node). Without the patch, they
->>>>> return -1.
->>>>>
->>>>> In file arch/x86/pci/acpi.c, in function pci_acpi_scan_root(), it is
->>>>> queries the node information as following:
->>>>>
->>>>> #ifdef CONFIG_ACPI_NUMA
->>>>>       pxm = acpi_get_pxm(device->handle);
->>>>>       if (pxm >= 0)
->>>>>           node = pxm_to_node(pxm);
->>>>>       if (node != -1)
->>>>>           set_mp_bus_to_node(busnum, node);
->>>>>       else
->>>>> #endif
->>>>>           node = get_mp_bus_to_node(busnum);
->>>>>
->>>>> In this case, I see that the acpi_get_pxm() returns -1.  Therefore, it
->>>>> falls back to using the node information in mp_bus_to_node[].  So,
->>>>> without this patch, it would also returning -1.
->>>>>
->>>>> Also, the spec mentioned that the _PXM is optional, so I am not sure if
->>>>> this is a firmware bug.
->>>>
->>>>
->>>> I am not quite familiar with the ACPI for this part.  However, after
->>>> taking
->>>> a look at the code (in driver/acpi/pci_root.c: acpi_pci_root_add()), I
->>>> believe it's trying to locate _PXM method in the DSDT table, in which I
->>>> don't see any _PXM methods.
->>>
->>>
->>> This sure looks like a firmware bug.  True, _PXM is optional, but if
->>> the firmware doesn't provide it, nobody should be surprised that the
->>> OS thinks everything is in the same proximity domain.
->>>
->>> I would not endorse extending amd_bus.c for new CPUs.  That just
->>> covers up firmware problems like this, and if you ever run a different
->>> OS on the box, you'll trip over them again.  And I don't think a patch
->>> like this will even be a possibility for Windows.
->>
->> I understand and am trying to verify this with the BIOS engineers. However,
->> this is currently affecting family15h servers out in the field.  We can try
->> to fix ACPI for newer generation of machines, but it won't be practical to
->> push this BIOS fix to all the BIOS vendors and system vendors for older
->> platforms, as they tend to.
->>
->> What if I localize the extension to the changes to access node information
->> in the hostbridge for just the famil15h which is mostly used in our main
->> server products? Would that be acceptable?
->
-> I assume the system is fully functional even without these patches,
-> right?  The only effect of these changes should be a performance
-> improvement.
->
-> So the choices are:
->
->   1) Change the BIOS to provide _PXM
->   2) Change Linux with your patches
->
-> Either way, the customer has to upgrade something.  Choice 1) gets you
-> the performance improvement on all Linux and Windows releases, even
-> the ones that are already in the field.  Choice 2) fixes future Linux
-> distros and whatever old releases you can convince the distro to
-> backport to, and doesn't help Windows at all.  It makes work for all
-> the distros and we (i.e., I) have to worry about maintaining this in
-> the future.
->
-> I'm curious to see what your BIOS folks say.  It seems strange that
-> after all these years, they wouldn't provide something relatively
-> simple like _PXM, so I wonder if there's more to the story.
+On Wed, Mar 19, 2014 at 9:03 PM, Zhang, Rui <rui.zhang@intel.com> wrote:
 
-I looked at this a bit more.  Your patches fill in the
-mp_bus_to_node[] table, and pci_acpi_scan_root() uses
-get_mp_bus_to_node() to get that information back out.  But
-pci_acpi_scan_root() only uses get_mp_bus_to_node() if acpi_get_pxm()
-fails, or if pxm_to_node() returns -1.
+> I've talked with Yan Zheng, and I was told that this resource "0xfed10000 - 0xfed15fff"
+> is got from PCI device register directly, which is not in its BAR range.
+> Thus IMO, it is impossible for PNP layer to be aware of this resource.
 
-If acpi_get_pxm() failed, that's pretty good indication that the _PXM
-method is missing or broken.  If pxm_to_node() failed, it looks like
-that could mean the SRAT table is missing or broken, and we didn't
-fill in the relevant pxm_to_node_map[] entry.  So it's possible that
-we do have a _PXM method, but there's something wrong with the SRAT.
+Slow down, this isn't quite correct.  The *base* address (0xfed10000)
+is from a PCI config register (MCHBAR, at PCI config offset 0x48) [1].
+ This is a device-dependent register, so the PCI core knows neither
+the base nor the size.
 
-Can you collect an acpidump and complete dmesg log from a system with
-the problem?  They might be too big for the mailing list; if so, you
-can attach them to a kernel.org bugzilla and just include the URL
-here.
+The device consumes address space that is not reported via the
+architected PCI mechanism, so the only way to report that space is via
+the PNP0C02 ACPI device.  The BIOS has to determine the base and size
+based on its knowledge of the hardware.  On this hardware, per the
+spec in [1], the region described by MCHBAR is 32KB in size.
+
+The 0x6000 (24KB) size of the region above comes from the driver and
+is actually less than what the device consumes.  It is legal for a
+driver to request only the area it requires, but the entire area
+consumed by the device should be reported via the PNP0C02 device.  The
+fact that PNP0C02 reports 16KB but the device actually consumes 32KB
+is a BIOS defect.  This probably happened because previous versions of
+this chip consumed only 16KB, and the BIOS didn't get updated for the
+change.
+
+> BTW, about drivers/pnp/system.c, if its ONLY purpose is to prevent those
+> resources from being allocated to uninitialized PCI devices, then IMO,
+> the best way to do this is make PCI bus handle those PNP0C01/PNP0C02
+> resources directly, probably via a platform callback, say,
+> 1. make drivers/pnp/system.c a no-op for PNPACPI, by checking pnp_dev->protocol.
+> 2. introduce acpi_check_reserved_resource() to parsing PNP0C01/PNP0C02 resources.
+> 3. in PCI bus, invoke acpi_check_reserved_resource() when assigning
+>    resources to PCI devices.
+
+The purpose of system.c is indeed to prevent resources from being
+allocated to other devices.  This is really a question for Rafael, but
+in my opinion this function (reserving resources of PNP/ACPI devices
+to prevent their allocation to other devices) should be done for *all*
+PNP and ACPI devices, not just the PNP0C01/PNP0C02 devices handled by
+system.c.
+
+So I think the best solution would be to move that into the ACPI core
+somehow so it happens for all devices.  If we had that, we could get
+rid of system.c altogether, and we wouldn't have to do anything
+special in PCI.  This is much easier to say than to do, however,
+because there are all kinds of issues with legacy resource
+reservations, and we currently can't really deal with overlapping
+resources.
 
 Bjorn
+
+[1] https://www-ssl.intel.com/content/www/us/en/processors/core/4th-gen-core-family-desktop-vol-2-datasheet,
+sec. 3.1.2 on p. 61
