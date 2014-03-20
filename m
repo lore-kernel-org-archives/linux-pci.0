@@ -1,60 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.austin.arm.com ([217.140.110.23]:58204 "EHLO
-	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933027AbaCQRiw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 13:38:52 -0400
-Date: Mon, 17 Mar 2014 17:38:21 +0000
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Received: from moutng.kundenserver.de ([212.227.17.10]:55791 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751599AbaCTQKs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 12:10:48 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-sh@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Magnus Damm <damm@opensource.se>,
+	Ben Dooks <ben-linux@fluff.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Message-ID: <20140317173821.GJ24070@arm.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
- <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
- <20140314171457.GK18126@arm.com>
- <201403141838.08900.arnd@arndb.de>
- <20140314180527.GZ6457@e106497-lin.cambridge.arm.com>
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: Re: DMABOUNCE in pci-rcar
+Date: Thu, 20 Mar 2014 17:09:57 +0100
+Message-ID: <5527822.QYtFYiIpiW@wuerfel>
+In-Reply-To: <532B0384.1000400@codethink.co.uk>
+References: <201402241200.21944.arnd@arndb.de> <5165962.7bqj51B15Z@wuerfel> <532B0384.1000400@codethink.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140314180527.GZ6457@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 06:05:27PM +0000, Liviu Dudau wrote:
-> On Fri, Mar 14, 2014 at 05:38:08PM +0000, Arnd Bergmann wrote:
-> > On Friday 14 March 2014, Catalin Marinas wrote:
-> > > On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
-> > > > --- /dev/null
-> > > > +++ b/arch/arm64/kernel/pci.c
-> > > [...]
-> > > > +int pci_register_io_range(phys_addr_t address, resource_size_t size)
-> > > [...]
-> > > > +unsigned long pci_address_to_pio(phys_addr_t address)
-> > > [...]
-> > > > +void pcibios_fixup_bus(struct pci_bus *bus)
-> > > [ actually most of this file ]
-> > > 
-> > > Maybe it was raised before already but can we have __weak generic
-> > > definitions of these functions? They don't seem to be arm64 specific in
-> > > any way.
-[...]
-> Catalin, if you are happy to ask for ACKs from all arch maintainers that might get
-> affected by our custom version of pci_address_to_pio() before you can pull PCI support
-> for arm64 then I can propose a new patchset.
+On Thursday 20 March 2014 16:04:36 Ben Dooks wrote:
+> On 26/02/14 20:57, Arnd Bergmann wrote:
+> > On Wednesday 26 February 2014 12:48:17 Bjorn Helgaas wrote:
+> >> On Mon, Feb 24, 2014 at 4:00 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> >>> Hi Magnus,
+> >>>
+> >>> I noticed during randconfig testing that you enabled DMABOUNCE for the
+> >>> pci-rcar-gen2 driver as posted in this patch https://lkml.org/lkml/2014/2/5/30
+> >>>
+> >>> I didn't see the original post unfortunately, but I fear we have to
+> >>> revert it and come up with a better solution, ...
+> >>
+> >> Sounds like I should drop the following patches from my pci/host-rcar
+> >> branch for now?
+> >>
+> >>    PCI: rcar: Add DMABOUNCE support
+> >>    PCI: rcar: Enable BOUNCE in case of HIGHMEM
+> >>    PCI: rcar: Make the Kconfig dependencies more generic
+> >
+> > Sounds good to me. The last patch is actually fine, but you'll have to
+> > fix the context to apply it without the other two.
+> 
+> As a note, if we now boot a Lager with DT on 3.14-rc3 series the USB
+> controllers no longer work with full 2GiB RAM enabled in the device
+> tree.
 
-You don't need to change the other architectures, that's the point of a
-__weak definition, it will be automatically overridden. If you want, you
-can even place a GENERIC_PCI or whatever config option that is only
-selected by arm64 for the time being.
+Did it work before these patches got applied initially?
 
--- 
-Catalin
+> Could we work around this by having 1GiB of memory defined in the
+> 32bit memory and then add the rest of the 3GiB from the >32bit
+> area via LPAE? Will the kernel ever try to allocate DMA memory from
+> anything >32bit?
+
+You can solve the case for dma_alloc_coherent() this way, or by
+setting the mask correctly. It won't help you for dma_map_* though,
+which still requires someone to add support for swiotlb or using
+an IOMMU if present.
+
+	Arnd
