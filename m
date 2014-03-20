@@ -1,111 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44238 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756397AbaCDV4N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Mar 2014 16:56:13 -0500
-Message-ID: <53164BEE.9060405@redhat.com>
-Date: Tue, 04 Mar 2014 22:55:58 +0100
-From: Daniel Borkmann <dborkman@redhat.com>
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:42028 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750729AbaCTC3f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 22:29:35 -0400
+Received: by mail-oa0-f50.google.com with SMTP id i7so231914oag.37
+        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 19:29:35 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>
-Subject: Re: kmemleak through e1000?
-References: <5315F785.4050602@redhat.com> <CAErSpo4hjEG7bVu_T+X6Kie3tzj4PKV_4hoWmxr-pyVu5uD_1Q@mail.gmail.com>
-In-Reply-To: <CAErSpo4hjEG7bVu_T+X6Kie3tzj4PKV_4hoWmxr-pyVu5uD_1Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <532A514C.5010106@intel.com>
+References: <20140224162400.GE16457@pd.tnic>
+	<4205942.Tp8ltEsv6e@vostro.rjw.lan>
+	<532A514C.5010106@intel.com>
+Date: Thu, 20 Mar 2014 03:29:34 +0100
+Message-ID: <CABPqkBSejasvsNx7L6Y+7G_F5+p66OBEqJei5EiwAjW8P62_4A@mail.gmail.com>
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+From: Stephane Eranian <eranian@google.com>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Borislav Petkov <bp@alien8.de>,
+	lkml <linux-kernel@vger.kernel.org>, x86 <x86@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/04/2014 09:58 PM, Bjorn Helgaas wrote:
-> On Tue, Mar 4, 2014 at 8:55 AM, Daniel Borkmann <dborkman@redhat.com> wrote:
->> Hi all, I'm not very familiar with the e1000 code, but on the latest
->> net.git kernel I get reliably the following (not sure if it's actually
->> caused by e1000 though):
+On Thu, Mar 20, 2014 at 3:24 AM, Aaron Lu <aaron.lu@intel.com> wrote:
+> On 03/15/2014 10:15 PM, Rafael J. Wysocki wrote:
+>> [CC list rearranged]
+>>
+>> On Monday, February 24, 2014 05:24:00 PM Borislav Petkov wrote:
+>>> This started happening this morning after booting -rc4+tip, let's
+>>> add *everybody* to CC :-)
+>>>
+>>> We have intel_uncore_init, snb_uncore_imc_init_box, uncore_pci_probe and
+>>> other goodies on the stack.
+>>
+>> I've just gone throught this.
+>>
+>> So the problem is that we have the PNP "system" driver whose only purpose seems
+>> to be to reserve system resources so that the PCI layer doesn't assign them to
+>> new devices on hotplug (disclaimer: I didn't invent it, I only read the code and
+>> comments in there).
 >
-> Thanks a lot for the report.  What kernel is this exactly (URL and
-> SHA-1 hash)?  We have fixes for a couple leaks already queued up [1,
-> 2], so possibly you're seeing those leaks.  If you already have those
-> fixes in net.git, then we should investigate further.
-
-Great, good to know Bjorn.
-
-I was using [1] with 8b4703e9bd117 ("macvlan: Add support for 'always_on'
-offload features") as HEAD.
-
-   [1] https://git.kernel.org/cgit/linux/kernel/git/davem/net.git/
-
-> Bjorn
+> And to PCI devices which have uninitialized BARs.
 >
-> [1] http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/msi&id=13f81c099bee8141f764fd41a1f4b68b93be3296
-> [2] http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/msi&id=b3bac8e57c82e8d3e05f4abcb18c4f0a40656655
+>>
+>> It does that for ACPI device objects having the "PNP0C02" and "PNP0C01" IDs.
+>>
+>> Apparently, snb_uncore_imc_init_box() steps on a range already reserved by that
+>> driver on your box.  And this doesn't seem to be a coincidence, because the ACPI
+>> device object in question probably *does* correspond to the memory controller
+>> that the uncore driver attempts to use.
+>>
+>> I'm not sure how to address that right now to be honest.  Arguably, the PNP
+>> "system" driver should be replaced with something saner, but still the
+>> resources it claims need to be kept out of reach of the PCI's resource
+>> allocation code.
 >
->> unreferenced object 0xffff8800361a7d80 (size 32):
->>    comm "systemd-udevd", pid 246, jiffies 4294677997 (age 1117.522s)
->>    hex dump (first 32 bytes):
->>      60 7d 1a 36 00 88 ff ff 24 01 00 00 00 00 00 00  `}.6....$.......
->>      f0 aa 35 81 ff ff ff ff 00 00 00 00 00 00 00 00  ..5.............
->>    backtrace:
->>      [<ffffffff8166609e>] kmemleak_alloc+0x4e/0xb0
->>      [<ffffffff8119f547>] kmem_cache_alloc_trace+0xd7/0x220
->>      [<ffffffff8135ad48>] populate_msi_sysfs+0x128/0x220
->>      [<ffffffff8135b4b8>] pci_enable_msi_block+0x1b8/0x2c0
->>      [<ffffffffa0221781>] e1000e_set_interrupt_capability+0x41/0x120 [e1000e]
->>      [<ffffffffa0226047>] e1000_probe+0x3a7/0xe20 [e1000e]
->>      [<ffffffff81343805>] local_pci_probe+0x45/0xa0
->>      [<ffffffff81344b89>] pci_device_probe+0xd9/0x130
->>      [<ffffffff813fc317>] driver_probe_device+0x87/0x390
->>      [<ffffffff813fc6f3>] __driver_attach+0x93/0xa0
->>      [<ffffffff813fa323>] bus_for_each_dev+0x63/0xa0
->>      [<ffffffff813fbd6e>] driver_attach+0x1e/0x20
->>      [<ffffffff813fb950>] bus_add_driver+0x180/0x250
->>      [<ffffffff813fcd04>] driver_register+0x64/0xf0
->>      [<ffffffff813431ab>] __pci_register_driver+0x4b/0x50
->>      [<ffffffffa0240041>] iptable_filter_hook+0x41/0x70 [iptable_filter]
->> unreferenced object 0xffff8800c4ac1920 (size 32):
->>    comm "NetworkManager", pid 409, jiffies 4294693366 (age 1102.161s)
->>    hex dump (first 32 bytes):
->>      34 34 00 c4 00 88 ff ff 00 00 00 00 00 00 00 00  44..............
->>      00 00 00 00 00 00 00 00 6f 2e 32 00 00 00 00 00  ........o.2.....
->>    backtrace:
->>      [<ffffffff8166609e>] kmemleak_alloc+0x4e/0xb0
->>      [<ffffffff8119f547>] kmem_cache_alloc_trace+0xd7/0x220
->>      [<ffffffff8135ad2f>] populate_msi_sysfs+0x10f/0x220
->>      [<ffffffff8135b4b8>] pci_enable_msi_block+0x1b8/0x2c0
->>      [<ffffffffa0226ce5>] e1000_open+0x225/0x5b0 [e1000e]
->>      [<ffffffff815785af>] __dev_open+0xbf/0x140
->>      [<ffffffff815788bd>] __dev_change_flags+0x9d/0x170
->>      [<ffffffff815789b9>] dev_change_flags+0x29/0x60
->>      [<ffffffff81585482>] do_setlink+0x312/0x9e0
->>      [<ffffffff81587958>] rtnl_newlink+0x508/0x710
->>      [<ffffffff81584199>] rtnetlink_rcv_msg+0x99/0x260
->>      [<ffffffff815a3269>] netlink_rcv_skb+0xa9/0xc0
->>      [<ffffffff815840f8>] rtnetlink_rcv+0x28/0x30
->>      [<ffffffff815a2bd8>] netlink_unicast+0x168/0x250
->>      [<ffffffff815a2fa1>] netlink_sendmsg+0x2e1/0x3f0
->>      [<ffffffff8155cc6b>] sock_sendmsg+0x8b/0xc0
->> unreferenced object 0xffff8800c4ac17a0 (size 32):
->>    comm "NetworkManager", pid 409, jiffies 4294693366 (age 1102.161s)
->>    hex dump (first 32 bytes):
->>      20 19 ac c4 00 88 ff ff 24 01 00 00 00 00 00 00   .......$.......
->>      f0 aa 35 81 ff ff ff ff 00 00 00 00 00 00 00 00  ..5.............
->>    backtrace:
->>      [<ffffffff8166609e>] kmemleak_alloc+0x4e/0xb0
->>      [<ffffffff8119f547>] kmem_cache_alloc_trace+0xd7/0x220
->>      [<ffffffff8135ad48>] populate_msi_sysfs+0x128/0x220
->>      [<ffffffff8135b4b8>] pci_enable_msi_block+0x1b8/0x2c0
->>      [<ffffffffa0226ce5>] e1000_open+0x225/0x5b0 [e1000e]
->>      [<ffffffff815785af>] __dev_open+0xbf/0x140
->>      [<ffffffff815788bd>] __dev_change_flags+0x9d/0x170
->>      [<ffffffff815789b9>] dev_change_flags+0x29/0x60
->>      [<ffffffff81585482>] do_setlink+0x312/0x9e0
->>      [<ffffffff81587958>] rtnl_newlink+0x508/0x710
->>      [<ffffffff81584199>] rtnetlink_rcv_msg+0x99/0x260
->>      [<ffffffff815a3269>] netlink_rcv_skb+0xa9/0xc0
->>      [<ffffffff815840f8>] rtnetlink_rcv+0x28/0x30
->>      [<ffffffff815a2bd8>] netlink_unicast+0x168/0x250
->>      [<ffffffff815a2fa1>] netlink_sendmsg+0x2e1/0x3f0
->>      [<ffffffff8155cc6b>] sock_sendmsg+0x8b/0xc0
+> The quirk_system_pci_resources is meant to disable PNP devices' resource if
+> they collide with any known PCI device's BAR. I'm not sure why it doesn't work
+> here, perhaps the uncore PCI device doesn't have a BAR that falls in the PNP
+> device's resource window?
+>
+Another hypothesis I am exploring with Bjorn is that the BIOS does not advertise
+this correctly or that this BAR has non-standard size or behavior. So
+far, we have
+observed the collision only on Lenovo IvyBridge laptops. I have tried
+on my desktop
+SNB, IVB, HSW machines and never saw the assertion.
+
+> Thanks,
+> Aaron
+>
+>>
+>>> ...
+>>> [    0.488998] software IO TLB [mem 0xcac30000-0xcec30000] (64MB) mapped at [ffff8800cac30000-ffff8800cec2ffff]
+>>> [    0.489975] resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
+>>> [    0.490079] ------------[ cut here ]------------
+>>> [    0.490204] WARNING: CPU: 2 PID: 1 at arch/x86/mm/ioremap.c:171 __ioremap_caller+0x372/0x380()
+>>> [    0.490306] Info: mapping multiple BARs. Your kernel is fine.
+>>> [    0.490371] Modules linked in:
+>>> [    0.490558] CPU: 2 PID: 1 Comm: swapper/0 Not tainted 3.14.0-rc4+ #1
+>>> [    0.490642] Hardware name: LENOVO 2320CTO/2320CTO, BIOS G2ET86WW (2.06 ) 11/13/2012
+>>> [    0.490742]  00000000000000ab ffff880213d01ad8 ffffffff816112e3 0000000000000006
+>>> [    0.491032]  ffff880213d01b28 ffff880213d01b18 ffffffff8104e9bc ffff880213d01b08
+>>> [    0.491343]  ffffc90000c58000 00000000fed10000 00000000fed10000 0000000000006000
+>>> [    0.491631] Call Trace:
+>>> [    0.493337]  [<ffffffff816112e3>] dump_stack+0x4f/0x7c
+>>> [    0.493420]  [<ffffffff8104e9bc>] warn_slowpath_common+0x8c/0xc0
+>>> [    0.493503]  [<ffffffff8104eaa6>] warn_slowpath_fmt+0x46/0x50
+>>> [    0.493588]  [<ffffffff8103f1e2>] __ioremap_caller+0x372/0x380
+>>> [    0.493674]  [<ffffffff810211a2>] ? snb_uncore_imc_init_box+0x62/0x90
+>>> [    0.493761]  [<ffffffff8103f247>] ioremap_nocache+0x17/0x20
+>>> [    0.493846]  [<ffffffff810211a2>] snb_uncore_imc_init_box+0x62/0x90
+>>> [    0.493933]  [<ffffffff81022925>] uncore_pci_probe+0xe5/0x1e0
+>>> [    0.494020]  [<ffffffff812d487e>] local_pci_probe+0x4e/0xa0
+>>> [    0.494104]  [<ffffffff81418a59>] ? get_device+0x19/0x20
+>>> [    0.494213]  [<ffffffff812d5cd1>] pci_device_probe+0xe1/0x130
+>>> [    0.494300]  [<ffffffff8141d3cb>] driver_probe_device+0x7b/0x240
+>>> [    0.494385]  [<ffffffff8141d63b>] __driver_attach+0xab/0xb0
+>>> [    0.494469]  [<ffffffff8141d590>] ? driver_probe_device+0x240/0x240
+>>> [    0.494551]  [<ffffffff8141b71e>] bus_for_each_dev+0x5e/0x90
+>>> [    0.494634]  [<ffffffff8141cede>] driver_attach+0x1e/0x20
+>>> [    0.494718]  [<ffffffff8141ca57>] bus_add_driver+0x117/0x230
+>>> [    0.494802]  [<ffffffff8141dd34>] driver_register+0x64/0xf0
+>>> [    0.494884]  [<ffffffff812d4c14>] __pci_register_driver+0x64/0x70
+>>> [    0.494972]  [<ffffffff81d0319b>] ? uncore_types_init+0x19c/0x19c
+>>> [    0.495056]  [<ffffffff81d03312>] intel_uncore_init+0x177/0x41c
+>>> [    0.495155]  [<ffffffff81d0319b>] ? uncore_types_init+0x19c/0x19c
+>>> [    0.495242]  [<ffffffff8100029e>] do_one_initcall+0x4e/0x170
+>>> [    0.495326]  [<ffffffff81071100>] ? parse_args+0x60/0x360
+>>> [    0.495411]  [<ffffffff81cfbfb8>] kernel_init_freeable+0x106/0x19a
+>>> [    0.495497]  [<ffffffff81cfb83b>] ? do_early_param+0x86/0x86
+>>> [    0.495582]  [<ffffffff81607ef0>] ? rest_init+0xd0/0xd0
+>>> [    0.495666]  [<ffffffff81607efe>] kernel_init+0xe/0xf0
+>>> [    0.495749]  [<ffffffff81621f6c>] ret_from_fork+0x7c/0xb0
+>>> [    0.495831]  [<ffffffff81607ef0>] ? rest_init+0xd0/0xd0
+>>> [    0.495921] ---[ end trace 428f365c054d9a01 ]---
+>>> [    0.496196] RAPL PMU detected, hw unit 2^-16 Joules, API unit is 2^-32 Joules, 3 fixed counters 163840 ms ovfl timer
+>>> [    0.498598] futex hash table entries: 1024 (order: 5, 131072 bytes)
+>>> [    0.498833] audit: initializing netlink subsys (disabled)
+>>> [    0.499024] audit: type=2000 audit(1393259866.477:1): initialized
+>>> ...
+>>>
+>>>
+>>
+>
