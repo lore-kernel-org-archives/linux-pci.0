@@ -1,100 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([122.248.162.5]:33914 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754978AbaCJUiz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 16:38:55 -0400
-Received: from /spool/local
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <srivatsa.bhat@linux.vnet.ibm.com>;
-	Tue, 11 Mar 2014 02:08:53 +0530
-From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Subject: [PATCH v3 27/52] x86, pci,
- amd-bus: Fix CPU hotplug callback registration
-To: paulus@samba.org, oleg@redhat.com, mingo@kernel.org,
-	rjw@rjwysocki.net, rusty@rustcorp.com.au, peterz@infradead.org,
-	tglx@linutronix.de, akpm@linux-foundation.org
-Cc: paulmck@linux.vnet.ibm.com, tj@kernel.org, walken@google.com,
-	ego@linux.vnet.ibm.com, linux@arm.linux.org.uk,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	linux-pm@vger.kernel.org, linuxppc-dev@ozlabs.org,
-	srivatsa.bhat@linux.vnet.ibm.com,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Date: Tue, 11 Mar 2014 02:08:43 +0530
-Message-ID: <20140310203842.10746.18948.stgit@srivatsabhat.in.ibm.com>
-In-Reply-To: <20140310203312.10746.310.stgit@srivatsabhat.in.ibm.com>
-References: <20140310203312.10746.310.stgit@srivatsabhat.in.ibm.com>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:32829 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756353AbaCTP04 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 11:26:56 -0400
+Date: Thu, 20 Mar 2014 15:26:40 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-sh@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Magnus Damm <damm@opensource.se>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms+renesas@verge.net.au>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: DMABOUNCE in pci-rcar
+Message-ID: <20140320152640.GW7528@n2100.arm.linux.org.uk>
+References: <201402241200.21944.arnd@arndb.de> <CAErSpo5RV=w+DkgHSZZPOFGiEBBxMSraLV3TepYUZwDJuV+Jzg@mail.gmail.com> <5165962.7bqj51B15Z@wuerfel> <532B0384.1000400@codethink.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <532B0384.1000400@codethink.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Subsystems that want to register CPU hotplug callbacks, as well as perform
-initialization for the CPUs that are already online, often do it as shown
-below:
+On Thu, Mar 20, 2014 at 04:04:36PM +0100, Ben Dooks wrote:
+> On 26/02/14 20:57, Arnd Bergmann wrote:
+>> On Wednesday 26 February 2014 12:48:17 Bjorn Helgaas wrote:
+>>> On Mon, Feb 24, 2014 at 4:00 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>>>> Hi Magnus,
+>>>>
+>>>> I noticed during randconfig testing that you enabled DMABOUNCE for the
+>>>> pci-rcar-gen2 driver as posted in this patch https://lkml.org/lkml/2014/2/5/30
+>>>>
+>>>> I didn't see the original post unfortunately, but I fear we have to
+>>>> revert it and come up with a better solution, ...
+>>>
+>>> Sounds like I should drop the following patches from my pci/host-rcar
+>>> branch for now?
+>>>
+>>>    PCI: rcar: Add DMABOUNCE support
+>>>    PCI: rcar: Enable BOUNCE in case of HIGHMEM
+>>>    PCI: rcar: Make the Kconfig dependencies more generic
+>>
+>> Sounds good to me. The last patch is actually fine, but you'll have to
+>> fix the context to apply it without the other two.
+>
+> As a note, if we now boot a Lager with DT on 3.14-rc3 series the USB
+> controllers no longer work with full 2GiB RAM enabled in the device
+> tree.
+>
+> Could we work around this by having 1GiB of memory defined in the
+> 32bit memory and then add the rest of the 3GiB from the >32bit
+> area via LPAE? Will the kernel ever try to allocate DMA memory from
+> anything >32bit?
 
-	get_online_cpus();
+Ignore highmem.  What is the actual hardware restriction concerning memory
+it can access?
 
-	for_each_online_cpu(cpu)
-		init_cpu(cpu);
-
-	register_cpu_notifier(&foobar_cpu_notifier);
-
-	put_online_cpus();
-
-This is wrong, since it is prone to ABBA deadlocks involving the
-cpu_add_remove_lock and the cpu_hotplug.lock (when running concurrently
-with CPU hotplug operations).
-
-Instead, the correct and race-free way of performing the callback
-registration is:
-
-	cpu_notifier_register_begin();
-
-	for_each_online_cpu(cpu)
-		init_cpu(cpu);
-
-	/* Note the use of the double underscored version of the API */
-	__register_cpu_notifier(&foobar_cpu_notifier);
-
-	cpu_notifier_register_done();
-
-
-Fix the amd-bus code in x86 by using this latter form of callback
-registration.
-
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
----
-
- arch/x86/pci/amd_bus.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index a48be98..f05cbf0 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -380,10 +380,13 @@ static int __init pci_io_ecs_init(void)
- 	if (early_pci_allowed())
- 		pci_enable_pci_io_ecs();
- 
--	register_cpu_notifier(&amd_cpu_notifier);
-+	cpu_notifier_register_begin();
- 	for_each_online_cpu(cpu)
- 		amd_cpu_notify(&amd_cpu_notifier, (unsigned long)CPU_ONLINE,
- 			       (void *)(long)cpu);
-+	__register_cpu_notifier(&amd_cpu_notifier);
-+	cpu_notifier_register_done();
-+
- 	pci_probe |= PCI_HAS_IO_ECS;
- 
- 	return 0;
-
+-- 
+FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+improving, and getting towards what was expected from it.
