@@ -1,178 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CA+mB=1Lz6Wux-fZ-tECpn3QnwXa4pAZxpSbNng9KHbs_ACnzXQ@mail.gmail.com>
-References: <1393854036-5244-1-git-send-email-sthokal@xilinx.com>
-	<20140303174325.GB31062@obsidianresearch.com>
-	<CA+mB=1Lz6Wux-fZ-tECpn3QnwXa4pAZxpSbNng9KHbs_ACnzXQ@mail.gmail.com>
-Date: Mon, 3 Mar 2014 23:44:24 +0530
-Message-ID: <CA+mB=1LY7=7CTf==L=Ohe0Wai5jHsma7FV3F-m=c=6kJXsDCUw@mail.gmail.com>
-Subject: Re: [PATCH v2] pcie: Add Xilinx PCIe Host Bridge IP driver
-From: Srikanth Thokala <sthokal@xilinx.com>
-To: Srikanth Thokala <sthokal@xilinx.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:47867 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754071AbaCTMuL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 08:50:11 -0400
+Date: Thu, 20 Mar 2014 12:50:04 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Catalin Marinas <Catalin.Marinas@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	devicetree@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+Message-ID: <20140320125004.GK6457@e106497-lin.cambridge.arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+ <201403201217.22339.arnd@arndb.de>
+ <20140320113820.GH6457@e106497-lin.cambridge.arm.com>
+ <201403201326.02377.arnd@arndb.de>
+MIME-Version: 1.0
+In-Reply-To: <201403201326.02377.arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Please ignore the last message,  accidentally it was sent.  Apologies.
+On Thu, Mar 20, 2014 at 12:26:02PM +0000, Arnd Bergmann wrote:
+> On Thursday 20 March 2014, Liviu Dudau wrote:
+> > > I don't even understand why you want to create a generic pci_address_to_pio
+> > > implementation, when we don't need that for arm64 at all. Unless I'm
+> > > missing something important, that function is only called in case of
+> > > PCI_PROBE_DEVTREE with pci_of_scan on PowerPC. I don't expect any
+> > > architecture to do the same thing, and the only other architecture that
+> > > needs something like it (sparc) has a different implementation.
+> > 
+> > Because in my [v7 2/6]* patch for the generic host bridge support I start
+> > using pci_address_to_pio to fix the conversion of PCI ranges to resources.
+> > That requires an arm64 (or more correctly, an arch with memory mapped IO
+> > specific) version of pci_address_to_pio().
+> 
+> Yes, but why do you use it there?
 
-Srikanth
+I'm parsing the device tree and have reached the PCI IO range for the host bridge.
+There is no host bridge created yet for that and hence no mapping. I need to
+take the DT range declaration that gives me   CPU start .. SIZE --> BUS start and
+convert it into   Logical IO port start .. Logical IO port end. While I could've
+come up with (yet) another function that does the conversion from CPU address to
+port IO address, I thought it would be nice to use the existing pci_address_to_pio()
+function and adapt it to my needs. It has a __weak implementation anyway so I
+could overwrite it in the architecture code.
 
-On Mon, Mar 3, 2014 at 11:43 PM, Srikanth Thokala <sthokal@xilinx.com> wrote:
-> On Mon, Mar 3, 2014 at 11:13 PM, Jason Gunthorpe
-> <jgunthorpe@obsidianresearch.com> wrote:
->> On Mon, Mar 03, 2014 at 07:10:36PM +0530, Srikanth Thokala wrote:
->>
->>> +Required properties:
->>> +- #address-cells: Address representation for root ports, set to <3>
->>> +- #size-cells: Size representation for root ports, set to <2>
->>> +- compatible: Should contain "xlnx,axi-pcie-host-1.00.a"
->>> +- reg: Should contain AXI PCIe registers location and length
->>> +- interrupts: Should contain AXI PCIe interrupt
->>> +- ranges: ranges for the PCI memory regions
->>> +     Please refer to the standard PCI bus binding document for a more
->>> +     detailed explanation
->>> +
->>> +Example:
->>> +++++++++
->>> +
->>> +     pci_express: axi-pcie@50000000 {
->>> +             #address-cells = <3>;
->>> +             #size-cells = <2>;
->>> +             compatible = "xlnx,axi-pcie-host-1.00.a";
->>> +             reg = < 0x50000000 0x10000000 >;
->>> +             interrupts = < 0 52 4 >;
->>> +             ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
->>> +     };
->>
->> That is much shorter, more notes:
->>  - It looks like the driver (HW?) has no support for IO space?
->
-> Yes, there is no support for IO space.
->
->>  - How are INTA/B/C/D handled? Typically I'd like to see an
->>    interrupt-mapping block describing them.
->
->                                   /
->                                  /
-> CPU   <--- PCIe IP  <---
->
->
->
->>
->>    There are a few options here, if the HW can decode A/B/C/D then
->>    it probably needs another irq_domain for INTx, and have the IRQ
->>    handler decode like it does for MSI.
->> - The stanza needs a
->>     device_type = "pci";
->>
->>> +     for (i = 0; i < port->mem_resno; i++)
->>> +             pci_add_resource_offset(&sys->resources, &port->mem[i],
->>> +                                     sys->mem_offset);
->>
->> The sys->mem_offset is probably wrong, please review Arnd's comments
->> on the recent threads with Will and Liviu regarding how this is
->> supposed to work with DT.
->>
->> You may want to work with Liviu to use his patch set which provides
->> more generic support. Also, the driver needs to put every one of these
->> ports in a PCI domain, Liviu is working on generic support for that
->> too.
->
-> Sure, I will check and come back to you.
->
->>
->>> +static struct pci_bus __init *xilinx_pcie_scan_bus(int nr,
->>> +                             struct pci_sys_data *sys)
->>> +{
->>> +     struct xilinx_pcie_port *port = sys_to_pcie(sys);
->>> +     struct pci_bus *bus;
->>> +
->>> +     if (port) {
->>> +             port->root_busno = sys->busnr;
->>> +             bus = pci_scan_root_bus(NULL, sys->busnr, &xilinx_pcie_ops,
->>> +                                     sys, &sys->resources);
->>
->> The NULL is probably wrong, please review the recent thread with Lucas
->> and Jingoo 'PCI irq mapping fixes and cleanups'
->
-> Ok.
->
->>
->>> +static int xilinx_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
->>> +{
->>> +     struct xilinx_pcie_port *port = sys_to_pcie(dev->bus->sysdata);
->>> +
->>> +     if (!port)
->>> +             return -EINVAL;
->>> +
->>> +     return port->irq;
->>> +}
->>
->> It is preferred to use DT mechanisms via of_irq_parse_and_map_pci
->> (interrupt-mapping, etc) to define the slot IRQ, drivers should not
->> provide a map_irq unless absolutely necessary.
->
-> Ok.
->
->>
->>> +     /* make sure it is root port before touching header */
->>> +     pcie_write(port, PCI_COMMAND_MASTER, PCI_COMMAND);
->>
->> Bit of a confusing comment
->
-> I will correct it.
->
->>
->>> +     /* Check if PCIe link is up? */
->>> +     port->link_up = xilinx_pcie_is_link_up(port);
->>> +     if (!port->link_up)
->>> +             dev_info(port->dev, "PCIe Link is DOWN\n");
->>> +     else
->>> +             dev_info(port->dev, "PCIe Link is UP\n");
->>
->> Don't forget to think about hot plug
->
-> Ok, you mean using the 'rescan' correct?
->
->>
->>> +     /* Register Interrupt Handler */
->>> +     err = request_irq(port->irq, xilinx_pcie_intr_handler,
->>> +                             IRQF_SHARED, "xilinx-pcie", port);
->>
->> Use devm? This is leaking on error cases.
->>
->> Review other resources too...
->>
->>> +     /* Request and map I/O memory */
->>> +     io = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->>> +     port->phys_reg_base = io->start;
->>> +     port->reg_size = resource_size(io);
->>
->> Here it uses the platform resource..
->>
->>> +     /* Map the IRQ */
->>> +     port->irq = irq_of_parse_and_map(node, 0);
->>
->> .. And here it doesn't, probably should be consistent and just use the
->> platform resources.
->
-> Ok, I will correct it.
->
-> Srikanth
->
->>
->> Jason
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To me it looked like a good plan and we had some discussions around my initial
+goofy mistake of using pci_addr as physical address for translation. I never
+thought it was considered a bad idea.
+
+Best regards,
+Liviu
+
+> 
+> 	Arnd
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
