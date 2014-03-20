@@ -1,102 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:33337 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755543AbaCNJft (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 05:35:49 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 1/3] PCI: rename pci_is_bridge() to pci_has_subordinate()
-Date: Fri, 14 Mar 2014 17:34:38 +0800
-Message-ID: <1394789678-2204-1-git-send-email-wangyijing@huawei.com>
+Received: from service87.mimecast.com ([91.220.42.44]:49220 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751290AbaCTLi3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 07:38:29 -0400
+Date: Thu, 20 Mar 2014 11:38:21 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Catalin Marinas <Catalin.Marinas@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+Message-ID: <20140320113820.GH6457@e106497-lin.cambridge.arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+ <8312584.jdZZuHGAjg@wuerfel>
+ <20140320094654.GZ6457@e106497-lin.cambridge.arm.com>
+ <201403201217.22339.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <201403201217.22339.arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_is_bridge() return true only when the device subordinate
-is not equal to NULL. This confuses people. PCI device is a
-bridge means header type(bit 0 through 6) is 0x1(PCI bridge) or 
-0x2(CardBus bridge).
+On Thu, Mar 20, 2014 at 11:17:22AM +0000, Arnd Bergmann wrote:
+> On Thursday 20 March 2014, Liviu Dudau wrote:
+> > On Wed, Mar 19, 2014 at 06:37:51PM +0000, Arnd Bergmann wrote:
+> > > On Wednesday 19 March 2014 17:21:41 Liviu Dudau wrote:
+> > > > 
+> > > > My ultimate point is that no matter how long we argue about the shape of the functions that
+> > > > I've added into arch/arm64/kernel/pci.c I don't think we can get away without having that
+> > > > file, or at least not in the first phase if we want speedy integration into mainline.
+> > > 
+> > > Let me simplify the discussion here:
+> > > 
+> > > NAK to adding yet another architecture specific implementation.
+> > 
+> > So what would be your approach for handling pci_address_to_pio() in a non-arch specific way?
+> > 
+> > unsigned long __weak pci_address_to_pio(phys_addr_t address)
+> > {
+> > #ifdef ARCH_HAS_IOSPACE
+> >         if (address > IO_SPACE_LIMIT)
+> >                 return (unsigned long)-1;
+> > 
+> >         return (unsigned long) address;
+> > #else
+> >         struct ioresource *res;
+> > 
+> >         list_for_each_entry(res, &io_list, list) {
+> >                 if (address >= res->start &&
+> >                         address < res->start + res->size) {
+> >                         return res->start - address;
+> >                 }
+> >         }
+> > 
+> >         return (unsigned long)-1;
+> > #endif
+> > }
+> > 
+> > 
+> > Either that, or you have more magic rabbits than me.
+> 
+> I don't even understand why you want to create a generic pci_address_to_pio
+> implementation, when we don't need that for arm64 at all. Unless I'm
+> missing something important, that function is only called in case of
+> PCI_PROBE_DEVTREE with pci_of_scan on PowerPC. I don't expect any
+> architecture to do the same thing, and the only other architecture that
+> needs something like it (sparc) has a different implementation.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pci-acpi.c   |    5 -----
- drivers/pci/pci-driver.c |    8 ++++----
- drivers/pci/pci.h        |    2 +-
- 3 files changed, 5 insertions(+), 10 deletions(-)
+Because in my [v7 2/6]* patch for the generic host bridge support I start
+using pci_address_to_pio to fix the conversion of PCI ranges to resources.
+That requires an arm64 (or more correctly, an arch with memory mapped IO
+specific) version of pci_address_to_pio().
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index f49abef..4bc7971 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -309,11 +309,6 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
- 	bool check_children;
- 	u64 addr;
- 
--	/*
--	 * pci_is_bridge() is not suitable here, because pci_dev->subordinate
--	 * is set only after acpi_pci_find_device() has been called for the
--	 * given device.
--	 */
- 	check_children = pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE
- 			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
- 	/* Please ref to ACPI spec for the syntax of _ADR */
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 25f0bc6..019dcb2 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -580,14 +580,14 @@ static void pci_pm_default_resume(struct pci_dev *pci_dev)
- {
- 	pci_fixup_device(pci_fixup_resume, pci_dev);
- 
--	if (!pci_is_bridge(pci_dev))
-+	if (!pci_has_subordinate(pci_dev))
- 		pci_enable_wake(pci_dev, PCI_D0, false);
- }
- 
- static void pci_pm_default_suspend(struct pci_dev *pci_dev)
- {
- 	/* Disable non-bridge devices without PM support */
--	if (!pci_is_bridge(pci_dev))
-+	if (!pci_has_subordinate(pci_dev))
- 		pci_disable_enabled_device(pci_dev);
- }
- 
-@@ -711,7 +711,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 
- 	if (!pci_dev->state_saved) {
- 		pci_save_state(pci_dev);
--		if (!pci_is_bridge(pci_dev))
-+		if (!pci_has_subordinate(pci_dev))
- 			pci_prepare_to_sleep(pci_dev);
- 	}
- 
-@@ -954,7 +954,7 @@ static int pci_pm_poweroff_noirq(struct device *dev)
- 			return error;
- 	}
- 
--	if (!pci_dev->state_saved && !pci_is_bridge(pci_dev))
-+	if (!pci_dev->state_saved && !pci_has_subordinate(pci_dev))
- 		pci_prepare_to_sleep(pci_dev);
- 
- 	/*
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4df38df..a3b9cc1 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -79,7 +79,7 @@ static inline void pci_wakeup_event(struct pci_dev *dev)
- 	pm_wakeup_event(&dev->dev, 100);
- }
- 
--static inline bool pci_is_bridge(struct pci_dev *pci_dev)
-+static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
- {
- 	return !!(pci_dev->subordinate);
- }
+Best regards,
+Liviu
+
+> 
+> The regular (non-DEVTREE) PCI bus scan should just be able to translate
+> the BUS I/O addresses into Linux I/O port numbers using io_offset,
+> without going through an intermediate step of translating into a CPU
+> physical address first, so the entire lookup method won't get used.
+> 
+> The reason why PowerPC needs it is that they traditionally don't
+> use PCI config space access to assign or look at resources, but
+> instead rely on the firmware to have set it up in advance and then
+> put matching information into DT and the BARs. For Solaris and AIX,
+> it's probably easier to use the information from DT, but in Linux,
+> we already need to implement the manual bus scan, e.g. to do
+> PCI device hotplugging if nothing else.
+> 
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.7.1
-
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
