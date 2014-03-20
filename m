@@ -1,36 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay3-d.mail.gandi.net ([217.70.183.195]:52527 "EHLO
-	relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751680AbaC1TNz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 15:13:55 -0400
-From: Ryan Desfosses <ryan@desfo.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
-Subject: [PATCH] pci: changed '...pci_bus* bus' to '...pci_bus *bus'
-Date: Fri, 28 Mar 2014 15:13:38 -0400
-Message-Id: <1396034018-5645-1-git-send-email-ryan@desfo.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <532B2485.6010005@codethink.co.uk>
+Date: Thu, 20 Mar 2014 18:25:25 +0100
+From: Ben Dooks <ben.dooks@codethink.co.uk>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-sh@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Magnus Damm <damm@opensource.se>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: Re: DMABOUNCE in pci-rcar
+References: <201402241200.21944.arnd@arndb.de> <5527822.QYtFYiIpiW@wuerfel> <532B137B.7010900@codethink.co.uk> <4884083.IuNl44Y6XD@wuerfel>
+In-Reply-To: <4884083.IuNl44Y6XD@wuerfel>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-   change made to resolve following checkpatch message:
-       drivers/pci/pci.c:109: ERROR: "foo* bar" should be "foo *bar"
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 20/03/14 17:41, Arnd Bergmann wrote:
+> On Thursday 20 March 2014 17:12:43 Ben Dooks wrote:
+>> On 20/03/14 17:09, Arnd Bergmann wrote:
+>>> On Thursday 20 March 2014 16:04:36 Ben Dooks wrote:
+>
+>>>> As a note, if we now boot a Lager with DT on 3.14-rc3 series the USB
+>>>> controllers no longer work with full 2GiB RAM enabled in the device
+>>>> tree.
+>>>
+>>> Did it work before these patches got applied initially?
+>>
+>> It did, but I cannot remember if we where limiting DRAM to 1GiB
+>> or not.
+>
+> I would assume you did, or you happened to never actually use
+> memory higher than that for DMA during tests.
+>
+>>>> Could we work around this by having 1GiB of memory defined in the
+>>>> 32bit memory and then add the rest of the 3GiB from the >32bit
+>>>> area via LPAE? Will the kernel ever try to allocate DMA memory from
+>>>> anything >32bit?
+>>>
+>>> You can solve the case for dma_alloc_coherent() this way, or by
+>>> setting the mask correctly. It won't help you for dma_map_* though,
+>>> which still requires someone to add support for swiotlb or using
+>>> an IOMMU if present.
+>>
+>> We do not have an IOMMU present at the moment. Not sure how
+>> to go about setting a mask on a pci-probed device.
+>
+> Ah, right. The mask is a problem because PCI devices assume that
+> they can do DMA to any 32-bit masked address without calling
+> dma_set_mask. Your trick to describe the system memory at a different
+> physical alias would solve this part. Another option might be to
+> add a quirk in the OHCI/EHCI drivers, if you are able to detect
+> this special case from the PCI IDs. Whether we can allow the PCI host
+> controller to just set a mask is an open question. If we decide to go
+> that route, you should be able to do it using the add_bus() callback
+> in the host controller driver. However, it would be a departure from
+> the normal way of doing PCI DMA, and I can't foresee what the implications
+> would be.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index fdbc294..a50d542 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -106,7 +106,7 @@ static bool pcie_ari_disabled;
-  * Given a PCI bus, returns the highest PCI bus number present in the set
-  * including the given PCI bus and its list of child PCI buses.
-  */
--unsigned char pci_bus_max_busnr(struct pci_bus* bus)
-+unsigned char pci_bus_max_busnr(struct pci_bus *bus)
- {
- 	struct list_head *tmp;
- 	unsigned char max, n;
+So doing:
+
+static void pci_rcar_fixup(struct pci_dev *dev)
+{
+	if (dev->bus->ops == &rcar_pci_ops) {
+		dev_info(&dev->dev, "applying new dma mask\n");
+		dev->dma_mask = DMA_BIT_MASK(31);
+	}
+}
+
+DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_rcar_fixup);
+
+Did not work for me :(
+
 -- 
-1.9.1
-
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
