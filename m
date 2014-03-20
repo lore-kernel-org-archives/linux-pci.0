@@ -1,133 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:38527 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751661AbaCCRnb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Mar 2014 12:43:31 -0500
-Date: Mon, 3 Mar 2014 10:43:25 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Srikanth Thokala <sthokal@xilinx.com>
-Cc: bhelgaas@google.com, michal.simek@xilinx.com,
-	grant.likely@linaro.org, robh+dt@kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2] pcie: Add Xilinx PCIe Host Bridge IP driver
-Message-ID: <20140303174325.GB31062@obsidianresearch.com>
-References: <1393854036-5244-1-git-send-email-sthokal@xilinx.com>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:41227 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751883AbaCTNam (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 09:30:42 -0400
+Received: by mail-pa0-f42.google.com with SMTP id fb1so959801pad.1
+        for <linux-pci@vger.kernel.org>; Thu, 20 Mar 2014 06:30:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1393854036-5244-1-git-send-email-sthokal@xilinx.com>
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <CAE9FiQVN9R3DJWasRqNyzNK2vOpmnRZdbp0KjnPUeMtoJXoJiQ@mail.gmail.com>
+References: <1393286367-16482-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com>
+	<CAE9FiQUvU=BqPXDHC+B=zC7ZGarimLDdvHsDbVL8t8qnZLJpzw@mail.gmail.com>
+	<CAErSpo6vuzaKJ-qWKfwcY_MsDhSdG9NazaYzG3=tabJerUv6mw@mail.gmail.com>
+	<CAE9FiQV3bM087uhWc5oH6j_7AJim0ECwTZKD05JSe2R5KmuCAQ@mail.gmail.com>
+	<CAErSpo75LCpED6T48osUkGJ5CS7tUSEmdKye0wJZVOSb_OwnQQ@mail.gmail.com>
+	<CAE9FiQX+hOUsLRrL8u_T7SPU4s3SKdUiXOHSwoswKZoBNqXGUw@mail.gmail.com>
+	<CAE9FiQVN9R3DJWasRqNyzNK2vOpmnRZdbp0KjnPUeMtoJXoJiQ@mail.gmail.com>
+Date: Thu, 20 Mar 2014 06:30:41 -0700
+Message-ID: <CAA93t1oMD3bR_zKUK5_Hw+J_LeF3GTGBfR+JA=mV=L7z9X+y1Q@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: only wait command complete for really hotplug control
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>, Guenter Roeck <groeck@juniper.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 03, 2014 at 07:10:36PM +0530, Srikanth Thokala wrote:
+Thanks, I'll test it out on my systems today.
 
-> +Required properties:
-> +- #address-cells: Address representation for root ports, set to <3>
-> +- #size-cells: Size representation for root ports, set to <2>
-> +- compatible: Should contain "xlnx,axi-pcie-host-1.00.a"
-> +- reg: Should contain AXI PCIe registers location and length
-> +- interrupts: Should contain AXI PCIe interrupt
-> +- ranges: ranges for the PCI memory regions
-> +	Please refer to the standard PCI bus binding document for a more
-> +	detailed explanation
+On Wed, Mar 19, 2014 at 11:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Mar 19, 2014 at 8:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, Mar 19, 2014 at 3:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Wed, Mar 19, 2014 at 12:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>
+>>> I think the current pciehp design is a bit broken.  Today we perform
+>>> commands very synchronously:
+>>>
+>>>     pcie_write_cmd() {
+>>>         write Slot Control
+>>>         if (Command Complete supported) {
+>>>             wait for Command Complete
+>>>         }
+>>>     }
+>>>
+>>> The typical driver pattern would be more asynchronous, like this:
+>>>
+>>>     pcie_write_cmd() {
+>>>         read Slot Status
+>>>         if (!Command Completed) {
+>>>             wait for Command Complete
+>>>         }
+>>>         write Slot Control
+>>>     }
+>>>
+>>> With the asynchronous pattern, we would probably never wait at all
+>>> unless we performed two commands in immediate succession.  I wouldn't
+>>> be surprised if doing this asynchronously would effectively cover up
+>>> these hardware differences.
+>>
+>> I like this idea. Will give it a try.
+>
+> It works. Please check the patch that check CC before wait/write command.
+>
+> Subject: [PATCH v2] pciehp: only wait command complete for real hotplug control
+>
+> On system with 16 PCI express hotplug slots, customer complain every slot
+> will report "Command not completed in 1000 msec" during initialization.
+>
+> Intel says that we should only wait command complete only for
+>            Electromechanical Interlock Control
+>            Power Controller Control
+>            Power Indicator Control
+>            Attention Indicator Control
+>
+> System with AMD/Nvidia chipset have same problem.
+>
+> Two ways to address the problem:
+> 1. change to only wait when (EIC, PCC, PIC, AIC) bits get changed.
+> 2. or check CMD_COMPLETE and wait before write command. Only wait
+>    when CC is set and cmd_busy is true. For chipset from intel
+>    will only have CC set for real hotplug control, so we could
+>    skip the wait for others.
+>
+> This patch is using second way.
+>
+> With that we could save 16 seconds during booting, later with 32 sockets system
+> with 64 pcie hotplug slots we could save 64 seconds.
+>
+> -v2: use second way that is suggested by Bjorn.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c |   26 ++++++++++----------------
+>  1 file changed, 10 insertions(+), 16 deletions(-)
+>
+> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
+> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -158,15 +158,8 @@ static void pcie_write_cmd(struct contro
+>      mutex_lock(&ctrl->ctrl_lock);
+>
+>      pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+> -    if (slot_status & PCI_EXP_SLTSTA_CC) {
+> -        if (!ctrl->no_cmd_complete) {
+> -            /*
+> -             * After 1 sec and CMD_COMPLETED still not set, just
+> -             * proceed forward to issue the next command according
+> -             * to spec. Just print out the error message.
+> -             */
+> -            ctrl_dbg(ctrl, "CMD_COMPLETED not clear after 1 sec\n");
+> -        } else if (!NO_CMD_CMPL(ctrl)) {
+> +    if (ctrl->no_cmd_complete && slot_status & PCI_EXP_SLTSTA_CC) {
+> +        if (!NO_CMD_CMPL(ctrl)) {
+>              /*
+>               * This controller seems to notify of command completed
+>               * event even though it supports none of power
+> @@ -182,16 +175,11 @@ static void pcie_write_cmd(struct contro
+>      }
+>
+>      pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+> -    slot_ctrl &= ~mask;
+> -    slot_ctrl |= (cmd & mask);
+> -    ctrl->cmd_busy = 1;
+> -    smp_mb();
+> -    pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
+> -
+>      /*
+>       * Wait for command completion.
+>       */
+> -    if (!ctrl->no_cmd_complete) {
+> +    if (!ctrl->no_cmd_complete && (slot_status & PCI_EXP_SLTSTA_CC) &&
+> +        ctrl->cmd_busy) {
+>          int poll = 0;
+>          /*
+>           * if hotplug interrupt is not enabled or command
+> @@ -203,6 +191,12 @@ static void pcie_write_cmd(struct contro
+>              poll = 1;
+>                  pcie_wait_cmd(ctrl, poll);
+>      }
 > +
-> +Example:
-> +++++++++
-> +
-> +	pci_express: axi-pcie@50000000 {
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		compatible = "xlnx,axi-pcie-host-1.00.a";
-> +		reg = < 0x50000000 0x10000000 >;
-> +		interrupts = < 0 52 4 >;
-> +		ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
-> +	};
-
-That is much shorter, more notes:
- - It looks like the driver (HW?) has no support for IO space?
- - How are INTA/B/C/D handled? Typically I'd like to see an
-   interrupt-mapping block describing them.
-
-   There are a few options here, if the HW can decode A/B/C/D then
-   it probably needs another irq_domain for INTx, and have the IRQ
-   handler decode like it does for MSI.
-- The stanza needs a
-    device_type = "pci";
-
-> +	for (i = 0; i < port->mem_resno; i++)
-> +		pci_add_resource_offset(&sys->resources, &port->mem[i],
-> +					sys->mem_offset);
-
-The sys->mem_offset is probably wrong, please review Arnd's comments
-on the recent threads with Will and Liviu regarding how this is
-supposed to work with DT.
-
-You may want to work with Liviu to use his patch set which provides
-more generic support. Also, the driver needs to put every one of these
-ports in a PCI domain, Liviu is working on generic support for that
-too.
-
-> +static struct pci_bus __init *xilinx_pcie_scan_bus(int nr,
-> +				struct pci_sys_data *sys)
-> +{
-> +	struct xilinx_pcie_port *port = sys_to_pcie(sys);
-> +	struct pci_bus *bus;
-> +
-> +	if (port) {
-> +		port->root_busno = sys->busnr;
-> +		bus = pci_scan_root_bus(NULL, sys->busnr, &xilinx_pcie_ops,
-> +					sys, &sys->resources);
-
-The NULL is probably wrong, please review the recent thread with Lucas
-and Jingoo 'PCI irq mapping fixes and cleanups'
-
-> +static int xilinx_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-> +{
-> +	struct xilinx_pcie_port *port = sys_to_pcie(dev->bus->sysdata);
-> +
-> +	if (!port)
-> +		return -EINVAL;
-> +
-> +	return port->irq;
-> +}
-
-It is preferred to use DT mechanisms via of_irq_parse_and_map_pci
-(interrupt-mapping, etc) to define the slot IRQ, drivers should not
-provide a map_irq unless absolutely necessary.
-
-> +	/* make sure it is root port before touching header */
-> +	pcie_write(port, PCI_COMMAND_MASTER, PCI_COMMAND);
-
-Bit of a confusing comment
-
-> +	/* Check if PCIe link is up? */
-> +	port->link_up = xilinx_pcie_is_link_up(port);
-> +	if (!port->link_up)
-> +		dev_info(port->dev, "PCIe Link is DOWN\n");
-> +	else
-> +		dev_info(port->dev, "PCIe Link is UP\n");
-
-Don't forget to think about hot plug
-
-> +	/* Register Interrupt Handler */
-> +	err = request_irq(port->irq, xilinx_pcie_intr_handler,
-> +				IRQF_SHARED, "xilinx-pcie", port);
-
-Use devm? This is leaking on error cases.
-
-Review other resources too...
-
-> +	/* Request and map I/O memory */
-> +	io = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +	port->phys_reg_base = io->start;
-> +	port->reg_size = resource_size(io);
-
-Here it uses the platform resource..
-
-> +	/* Map the IRQ */
-> +	port->irq = irq_of_parse_and_map(node, 0);
-
-.. And here it doesn't, probably should be consistent and just use the
-platform resources.
-
-Jason
+> +    slot_ctrl &= ~mask;
+> +    slot_ctrl |= (cmd & mask);
+> +    ctrl->cmd_busy = 1;
+> +    smp_mb();
+> +    pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
+>      mutex_unlock(&ctrl->ctrl_lock);
+>  }
