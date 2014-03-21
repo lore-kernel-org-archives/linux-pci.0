@@ -1,79 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:62461 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754281AbaCMRkS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 13:40:18 -0400
-Received: by mail-pa0-f47.google.com with SMTP id lj1so1433124pab.20
-        for <linux-pci@vger.kernel.org>; Thu, 13 Mar 2014 10:40:18 -0700 (PDT)
-From: Tim Harvey <tharvey@gateworks.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ben Dooks <ben-linux@fluff.org>,
-	linux-tegra <linux-tegra@vger.kernel.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: [PATCH 1/2] ARM: DT: fix gic interrupt controller documentation
-Date: Thu, 13 Mar 2014 10:40:04 -0700
-Message-Id: <1394732405-2260-2-git-send-email-tharvey@gateworks.com>
-In-Reply-To: <1394732405-2260-1-git-send-email-tharvey@gateworks.com>
-References: <1394732405-2260-1-git-send-email-tharvey@gateworks.com>
+Received: from mail-ve0-f175.google.com ([209.85.128.175]:47321 "EHLO
+	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753331AbaCUPtt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 11:49:49 -0400
+Received: by mail-ve0-f175.google.com with SMTP id oz11so2734360veb.20
+        for <linux-pci@vger.kernel.org>; Fri, 21 Mar 2014 08:49:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CADnq5_NJLsF4MmcQVN7jDD6-ZjAobw0bf2ft2HWGid6GMcXWcA@mail.gmail.com>
+References: <CALCETrVG6uRysbXSbyPfKzG7uBHu9PX6SKvDbUQWG1TOfc04zQ@mail.gmail.com>
+ <CADnq5_NJLsF4MmcQVN7jDD6-ZjAobw0bf2ft2HWGid6GMcXWcA@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Fri, 21 Mar 2014 08:49:27 -0700
+Message-ID: <CALCETrVjHkdbe5N4iov-7dg6tGmuFsr70z2ASpX+=km=FMWe7Q@mail.gmail.com>
+Subject: Re: 3.14 radeon regression: radeon is broken (pci bug?)
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: DRI <dri-devel@lists.freedesktop.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When using interrupt-maps, the size of a map entry is #address-cells +
- #interrupt-cells for the parent interrupt controller.  For the ARM GIC
-address-cells should be 0 as this is not used.
+On Fri, Mar 21, 2014 at 7:41 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
+> On Thu, Mar 20, 2014 at 10:17 PM, Andy Lutomirski <luto@amacapital.net> wrote:
+>> My system works on a 3.13 Fedora kernel.  It does not work on a
+>> more-or-less identically configured 3.14-rc7+ kernel.  The symptom is
+>> that the Plymouth password prompt flashes and them the screen goes
+>> blank.  Hitting escape brings back the text console, and all is well
+>> until X tries to start.  Then I get a blank screen.  killall -9 Xorg
+>> from ssh causes these errors to be logged:
+>>
+>>
+>> [  226.239747] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
+>> more than 5secs aborting
+>> [  226.239751] [drm:atom_execute_table_locked] *ERROR* atombios stuck
+>> executing CD34 (len 55, WS 0, PS 0) @ 0xCD57
+>> [  231.241492] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
+>> more than 5secs aborting
+>> [  231.241496] [drm:atom_execute_table_locked] *ERROR* atombios stuck
+>> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
+>> [  236.243111] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
+>> more than 5secs aborting
+>> [  236.243115] [drm:atom_execute_table_locked] *ERROR* atombios stuck
+>> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
+>> [  241.244625] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
+>> more than 5secs aborting
+>> [  241.244628] [drm:atom_execute_table_locked] *ERROR* atombios stuck
+>> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
+>>
+>>
+>> lspci -vvvxxxnn on 3.14-rc7+ says:
+>>
+>> 09:00.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc.
+>> [AMD/ATI] Caicos [Radeon HD 6450/7450/8450 / R5 230 OEM] [1002:6779]
+>> (rev ff) (prog-if ff)
+>>     !!! Unknown header type 7f
+>>     Kernel driver in use: radeon
+>> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>>
+>> 09:00.1 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI]
+>> Caicos HDMI Audio [Radeon HD 6400 Series] [1002:aa98] (rev ff)
+>> (prog-if ff)
+>>     !!! Unknown header type 7f
+>>     Kernel driver in use: snd_hda_intel
+>> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>>
+>> (oops!)
+>>
+>> On 3.13, it says:
+>>
+>> 09:00.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc.
+>> [AMD/ATI] Caicos [Radeon HD 6450/7450/8450 / R5 230 OEM] [1002:6779]
+>> (prog-if 00 [VGA controller])
+>>         Subsystem: PC Partner Limited / Sapphire Technology Radeon HD
+>> 6450 1 GB DDR3 [174b:e164]
+>>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>         Latency: 0, Cache Line Size: 64 bytes
+>>         Interrupt: pin A routed to IRQ 92
+>>         Region 0: Memory at e0000000 (64-bit, prefetchable) [size=256M]
+>>         Region 2: Memory at f4a20000 (64-bit, non-prefetchable) [size=128K]
+>>         Region 4: I/O ports at c000 [size=256]
+>>         Expansion ROM at f4a00000 [disabled] [size=128K]
+>>         Capabilities: <access denied>
+>>         Kernel driver in use: radeon
+>> 00: 02 10 79 67 07 04 10 00 00 00 00 03 10 00 80 00
+>> 10: 0c 00 00 e0 00 00 00 00 04 00 a2 f4 00 00 00 00
+>> 20: 01 c0 00 00 00 00 00 00 00 00 00 00 4b 17 64 e1
+>> 30: 00 00 a0 f4 50 00 00 00 00 00 00 00 0a 01 00 00
+>>
+>> 09:00.1 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI]
+>> Caicos HDMI Audio [Radeon HD 6400 Series] [1002:aa98]
+>>         Subsystem: PC Partner Limited / Sapphire Technology Radeon HD
+>> 6450 1GB DDR3 [174b:aa98]
+>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>         Latency: 0, Cache Line Size: 64 bytes
+>>         Interrupt: pin B routed to IRQ 96
+>>         Region 0: Memory at f4a40000 (64-bit, non-prefetchable) [size=16K]
+>>         Capabilities: <access denied>
+>>         Kernel driver in use: snd_hda_intel
+>> 00: 02 10 98 aa 06 04 10 00 00 00 03 04 10 00 80 00
+>> 10: 04 00 a4 f4 00 00 00 00 00 00 00 00 00 00 00 00
+>> 20: 00 00 00 00 00 00 00 00 00 00 00 00 4b 17 98 aa
+>> 30: 00 00 00 00 50 00 00 00 00 00 00 00 05 02 00 00
+>>
+>> Logs attached.
+>>
+>> Unfortunately, I'll be away from this computer until Wednesday.
+>
+> Can you bisect?
 
-This patch fixes the example by correctly specifying #address-cells = 0.
+Not until Wednesday -- I don't have any way to test this remotely.  I
+can do tests that don't involve rebooting, though.
 
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: linux-samsung-soc <linux-samsung-soc@vger.kernel.org>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <kernel@pengutronix.de>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Simon Horman <horms@verge.net.au>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Ben Dooks <ben-linux@fluff.org>
-Cc: linux-tegra <linux-tegra@vger.kernel.org>
-Cc: Kukjin Kim <kgene.kim@samsung.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Grant Likely <grant.likely@linaro.org>
----
- Documentation/devicetree/bindings/arm/gic.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> Alex
 
-diff --git a/Documentation/devicetree/bindings/arm/gic.txt b/Documentation/devicetree/bindings/arm/gic.txt
-index bae0d87..b59ff1f 100644
---- a/Documentation/devicetree/bindings/arm/gic.txt
-+++ b/Documentation/devicetree/bindings/arm/gic.txt
-@@ -55,7 +55,7 @@ Example:
- 	intc: interrupt-controller@fff11000 {
- 		compatible = "arm,cortex-a9-gic";
- 		#interrupt-cells = <3>;
--		#address-cells = <1>;
-+		#address-cells = <0>;
- 		interrupt-controller;
- 		reg = <0xfff11000 0x1000>,
- 		      <0xfff10100 0x100>;
+
+
 -- 
-1.8.3.2
-
+Andy Lutomirski
+AMA Capital Management, LLC
