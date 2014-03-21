@@ -1,129 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:59854 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751622AbaCEISD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 03:18:03 -0500
-Date: Wed, 5 Mar 2014 08:18:00 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:44412 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760282AbaCULSD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 07:18:03 -0400
+Message-ID: <1395400638.4554.5.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH v4 2/9] PCI: host: rcar: Add MSI support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v5 0/7] [RFC] Support for creating generic host_bridge
- from device tree
-Message-ID: <20140305081800.GD1692@e106497-lin.cambridge.arm.com>
-References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
- <CACoXjcmmbVsmvy46NhjFoBg8mRO=APiY3dZZY=ra-Ceib9Sr4A@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CACoXjcmmbVsmvy46NhjFoBg8mRO=APiY3dZZY=ra-Ceib9Sr4A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Date: Fri, 21 Mar 2014 12:17:18 +0100
+In-Reply-To: <1395397968-6242-3-git-send-email-phil.edworthy@renesas.com>
+References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
+	 <1395397968-6242-3-git-send-email-phil.edworthy@renesas.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 05, 2014 at 01:53:55AM +0000, Tanmay Inamdar wrote:
-> Hello,
+Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> ---
+>  drivers/pci/host/pcie-rcar.c | 232 ++++++++++++++++++++++++++++++++++++++++++-
+>  drivers/pci/host/pcie-rcar.h |   5 +
+>  2 files changed, 236 insertions(+), 1 deletion(-)
 > 
-> Thanks for the patch set.
-> 
-> On Tue, Mar 4, 2014 at 7:49 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > This is v5 of my attempt to add support for a generic pci_host_bridge controller created
-> > from a description passed in the device tree.
-> >
-> > Changes from v4:
-> >   - Export pci_find_host_bridge() to be used by arch code. There is scope for
-> >     making the arch/arm64 version of pci_domain_nr the default weak implementation
-> >     but that would double the size of this series in order to handle all #define
-> >     versions of the pci_domain_nr() function, so I suggest keeping that for a separate
-> >     cleanup series.
-> >
-> > Changes from v3:
-> >   - Dynamically allocate bus_range resource in of_create_pci_host_bridge()
-> >   - Fix the domain number used when creating child busses.
-> >   - Changed domain number allocator to use atomic operations.
-> >   - Use ERR_PTR() to propagate the error out of pci_create_root_bus_in_domain()
-> >     and of_create_pci_host_bridge().
-> >
-> > Changes from v2:
-> >   - Use range->cpu_addr when calling pci_address_to_pio()
-> >   - Introduce pci_register_io_range() helper function in order to register
-> >     io ranges ahead of their conversion to PIO values. This is needed as no
-> >     information is being stored yet regarding the range mapping, making
-> >     pci_address_to_pio() fail. Default weak implementation does nothing,
-> >     to cover the default weak implementation of pci_address_to_pio() that
-> >     expects direct mapping of physical addresses into PIO values (x86 view).
-> >
-> > Changes from v1:
-> >   - Add patch to fix conversion of IO ranges into IO resources.
-> >   - Added a domain_nr member to pci_host_bridge structure, and a new function
-> >     to create a root bus in a given domain number. In order to facilitate that
-> >     I propose changing the order of initialisation between pci_host_bridge and
-> >     it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
-> >     This is done in patch 1/4 and 2/4.
-> >   - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
-> >     code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
-> >     and if that fails assign the next unallocated domain id.
-> >   - Changed the name of the function that creates the generic host bridge from
-> >     pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
-> >
-> >
-> > v4 thread here: https://lkml.org/lkml/2014/3/3/301
-> > v3 thread here: https://lkml.org/lkml/2014/2/28/216
-> > v2 thread here: https://lkml.org/lkml/2014/2/27/245
-> > v1 thread here: https://lkml.org/lkml/2014/2/3/380
-> >
-> > Best regards,
-> > Liviu
-> >
-> > Liviu Dudau (7):
-> >   pci: Introduce pci_register_io_range() helper function.
-> >   pci: OF: Fix the conversion of IO ranges into IO resources.
-> >   pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-> >   pci: Introduce a domain number for pci_host_bridge.
-> >   pci: Use parent domain number when allocating child busses.
-> >   pci: Export find_pci_host_bridge() function.
-> >   pci: Add support for creating a generic host_bridge from device tree
-> >
-> >  drivers/of/address.c       |  39 +++++++++++++
-> >  drivers/pci/host-bridge.c  | 142 ++++++++++++++++++++++++++++++++++++++++++++-
-> >  drivers/pci/probe.c        |  72 +++++++++++++++--------
-> >  include/linux/of_address.h |  14 +----
-> >  include/linux/pci.h        |  17 ++++++
-> >  5 files changed, 248 insertions(+), 36 deletions(-)
-> >
-> > --
-> > 1.9.0
-> >
-> 
-> This series is working fine on X-Gene with multiple PCIe ports. You
-> can add my Tested-by if you want.
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 16670e5..cbbcd77 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+[...]
+> +
+> +static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
+> +{
+> +	struct rcar_pcie *pcie = data;
+> +	struct rcar_msi *msi = &pcie->msi;
+> +	unsigned long reg;
+> +
+> +	reg = pci_read_reg(pcie, PCIEMSIFR);
+> +
+> +	while (reg) {
+> +		unsigned int index = find_first_bit(&reg, 32);
+> +		unsigned int irq;
+> +
+> +		/* clear the interrupt */
+> +		pci_write_reg(pcie, 1 << index, PCIEMSIFR);
+> +
+> +		irq = irq_find_mapping(msi->domain, index);
+> +		if (irq) {
+> +			if (test_bit(index, msi->used))
+> +				generic_handle_irq(irq);
+> +			else
+> +				dev_info(pcie->dev, "unhandled MSI\n");
+> +		} else {
+> +			/*
+> +			 * that's weird who triggered this?
+> +			 * just clear it
+> +			 */
+> +			dev_info(pcie->dev, "unexpected MSI\n");
+> +		}
+> +
+> +		/* see if there's any more pending in this vector */
+> +		reg = pci_read_reg(pcie, PCIEMSIFR);
+> +	}
+> +
+> +	return IRQ_HANDLED;
+> +}
+> +
+>From your DT binding it seems you have only one interrupt from the PCIe
+core, shared between the MSI irqs and the PCI legacy interrupts.
+This means this handler may get called without an MSI irq pending, so
+this function really should have a path where it's returning IRQ_NONE.
 
-Cheers! Any ETA on your updated patches?
-
-I might get the required signatures on the legal approval next week and
-then I will publish my host controller driver.
-
-Best regards,
-Liviu
-
-> 
-> Thanks,
-> Tanmay
-> 
+Regards,
+Lucas
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Pengutronix e.K.                           | Lucas Stach                 |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
 
