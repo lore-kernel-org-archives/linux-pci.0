@@ -1,71 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:17605 "EHLO
+Received: from relmlor4.renesas.com ([210.160.252.174]:58038 "EHLO
 	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753030AbaC0J1J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 05:27:09 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
+	by vger.kernel.org with ESMTP id S1751420AbaCUQbc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 12:31:32 -0400
+In-Reply-To: <532C6BF7.1050404@cogentembedded.com>
+References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com> <532C5ADE.4030708@cogentembedded.com> <OF4D80B18E.5A1F55AB-ON80257CA2.0051AADA-80257CA2.0051D412@eu.necel.com> <6044873.2S2Xlhp0hC@wuerfel> <532C6BF7.1050404@cogentembedded.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
 	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
-References: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1395912416-20087-4-git-send-email-phil.edworthy@renesas.com>
-Date: Thu, 27 Mar 2014 09:26:49 +0000
-Subject: [PATCH v6 03/10] ARM: shmobile: r8a7790: Add PCIe clock device tree nodes
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>
+MIME-Version: 1.0
+From: Phil.Edworthy@renesas.com
+Message-ID: <OFCC2858D2.BB49EE27-ON80257CA2.005AA51E-80257CA2.005AC3A0@eu.necel.com>
+Date: Fri, 21 Mar 2014 16:31:24 +0000
+Subject: Re: [PATCH v4 6/9] ARM: shmobile: Add PCIe device tree nodes for R8A7790
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the device tree clock nodes for PCIe
+Hi Sergei,
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/boot/dts/r8a7790.dtsi            | 7 ++++---
- include/dt-bindings/clock/r8a7790-clock.h | 1 +
- 2 files changed, 5 insertions(+), 3 deletions(-)
+On: 21/03/2014 15:42, Sergei wrote:
+> Subject: Re: [PATCH v4 6/9] ARM: shmobile: Add PCIe device tree nodes 
+for R8A7790
+> 
+> Hello.
+> 
+> On 03/21/2014 05:57 PM, Arnd Bergmann wrote:
+> 
+> >>>> +      reg = <0 0xfe000000 0 0x80000>;
+> >>>> +      #address-cells = >;
+> >>>> +      #size-cells = <2>;
+> >>>> +      device_type = "pci";
+> 
+> >>>      This legacy property is only meaningful for the true OF 
+firmware and thus
+> >>> have been phased out (it's only actively used for the memory nodes).
+> 
+> >> Ok, thanks for pointing this out.
+> 
+> > I think the code still relies on it for PCI though.
+> 
+>     OK, I have found where it does that but the recommended value seems 
+to be 
+> "pciex" for PCI-Express case.
 
-diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
-index da69afc..df9ec61 100644
---- a/arch/arm/boot/dts/r8a7790.dtsi
-+++ b/arch/arm/boot/dts/r8a7790.dtsi
-@@ -704,16 +704,17 @@
- 			reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
- 			clocks = <&cp_clk>, <&mmc1_clk>, <&sd3_clk>, <&sd2_clk>,
- 				 <&cpg_clocks R8A7790_CLK_SD1>, <&cpg_clocks R8A7790_CLK_SD0>,
--				 <&mmc0_clk>, <&rclk_clk>;
-+				 <&mmc0_clk>, <&rclk_clk>, <&mp_clk>;
- 			#clock-cells = <1>;
- 			renesas,clock-indices = <
- 				R8A7790_CLK_TPU0 R8A7790_CLK_MMCIF1 R8A7790_CLK_SDHI3
- 				R8A7790_CLK_SDHI2 R8A7790_CLK_SDHI1 R8A7790_CLK_SDHI0
--				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1
-+				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1 R8A7790_CLK_PCIE
- 			>;
- 			clock-output-names =
- 				"tpu0", "mmcif1", "sdhi3", "sdhi2",
--				"sdhi1", "sdhi0", "mmcif0", "cmt1";
-+				"sdhi1", "sdhi0", "mmcif0", "cmt1",
-+				"pcie";
- 		};
- 		mstp5_clks: mstp5_clks@e6150144 {
- 			compatible = "renesas,r8a7790-mstp-clocks", "renesas,cpg-mstp-clocks";
-diff --git a/include/dt-bindings/clock/r8a7790-clock.h b/include/dt-bindings/clock/r8a7790-clock.h
-index 6548a5f..840dbc8 100644
---- a/include/dt-bindings/clock/r8a7790-clock.h
-+++ b/include/dt-bindings/clock/r8a7790-clock.h
-@@ -57,6 +57,7 @@
- #define R8A7790_CLK_SDHI1		13
- #define R8A7790_CLK_SDHI0		14
- #define R8A7790_CLK_MMCIF0		15
-+#define R8A7790_CLK_PCIE		19
- #define R8A7790_CLK_SSUSB		28
- #define R8A7790_CLK_CMT1		29
- #define R8A7790_CLK_USBDMAC0		30
--- 
-1.9.0
+Ok, but why then do all the other PCIe hosts use "pci"?
 
+Thanks
+Phil
