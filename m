@@ -1,67 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor1.renesas.com ([210.160.252.171]:49782 "EHLO
-	relmlie4.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753845AbaCaKbG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 06:31:06 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from quartz.orcorp.ca ([184.70.90.242]:55242 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761031AbaCUQk1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Mar 2014 12:40:27 -0400
+Date: Fri, 21 Mar 2014 10:40:15 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org, Phil.Edworthy@renesas.com,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
 	Valentine Barshak <valentine.barshak@cogentembedded.com>,
 	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
-References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1396261856-22465-7-git-send-email-phil.edworthy@renesas.com>
-Date: Mon, 31 Mar 2014 11:30:51 +0100
-Subject: [PATCH v7 06/10] ARM: shmobile: r8a7790: Add PCIe device nodes
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>
+Subject: Re: [PATCH v4 6/9] ARM: shmobile: Add PCIe device tree nodes for
+ R8A7790
+Message-ID: <20140321164015.GA3374@obsidianresearch.com>
+References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
+ <532C5ADE.4030708@cogentembedded.com>
+ <OF4D80B18E.5A1F55AB-ON80257CA2.0051AADA-80257CA2.0051D412@eu.necel.com>
+ <6044873.2S2Xlhp0hC@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6044873.2S2Xlhp0hC@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+On Fri, Mar 21, 2014 at 03:57:25PM +0100, Arnd Bergmann wrote:
+> On Friday 21 March 2014 14:53:48 Phil.Edworthy@renesas.com wrote:
+> > 
+> > > > +      reg = <0 0xfe000000 0 0x80000>;
+> > > > +      #address-cells = >;
+> > > > +      #size-cells = <2>;
+> > > > +      device_type = "pci";
+> > > 
+> > >     This legacy property is only meaningful for the true OF firmware and 
+> > thus 
+> > > have been phased out (it's only actively used for the memory nodes).
+> > Ok, thanks for pointing this out.
+> > 
+> 
+> I think the code still relies on it for PCI though.
 
-v6:
- - Split device and board DT changes
----
- arch/arm/boot/dts/r8a7790.dtsi | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+Right, it must be present for PCI nodes, it triggers special behavior
+in the address parsing routines.
 
-diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
-index df9ec61..dbcea57 100644
---- a/arch/arm/boot/dts/r8a7790.dtsi
-+++ b/arch/arm/boot/dts/r8a7790.dtsi
-@@ -821,4 +821,28 @@
- 		#size-cells = <0>;
- 		status = "disabled";
- 	};
-+
-+	pcie: pcie@fe000000 {
-+		compatible = "renesas,pcie-r8a7790";
-+		reg = <0 0xfe000000 0 0x80000>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
-+			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
-+			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
-+			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-+		/* Map all possible DDR as inbound ranges */
-+		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000
-+			      0x43000000 1 0x80000000 1 0x80000000 0 0x80000000>;
-+		interrupts = <0 116 IRQ_TYPE_LEVEL_HIGH
-+			      0 117 IRQ_TYPE_LEVEL_HIGH
-+			      0 118 IRQ_TYPE_LEVEL_HIGH>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 116 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&mstp3_clks R8A7790_CLK_PCIE>, <&pcie_bus_clk>;
-+		clock-names = "pcie", "pcie_bus";
-+		status = "disabled";
-+	};
- };
--- 
-1.9.0
+What Phil has looks correct to me.
 
+Regards,
+Jason
