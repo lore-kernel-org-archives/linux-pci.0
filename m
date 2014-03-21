@@ -1,65 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:42232 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995AbaCWKIk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Mar 2014 06:08:40 -0400
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:47005 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881AbaCUUHn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 16:07:43 -0400
+Received: by mail-ig0-f170.google.com with SMTP id uq10so2687636igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 21 Mar 2014 13:07:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4337701.rbRMDOA6lL@wuerfel>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
-	<27671657.LuGQtNBfqX@wuerfel>
-	<OF038A7DC3.59E6288A-ON80257CA2.004AF404-80257CA2.004CDD76@eu.necel.com>
-	<4337701.rbRMDOA6lL@wuerfel>
-Date: Sun, 23 Mar 2014 11:05:20 +0100
-Message-ID: <CAMuHMdWWujnkYvMp3f30oBGD6XyDrNj0kNwmjmVr+ko-9ktXuQ@mail.gmail.com>
-Subject: Re: [PATCH v4 1/9] PCI: host: rcar: Add Renesas R-Car PCIe driver
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Phil Edworthy <Phil.Edworthy@renesas.com>,
-	Simon Horman <horms@verge.net.au>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>
+In-Reply-To: <CACVXFVPq2nQ8jcn+v424roieO+v_asyfXcHUHv=uSOABYHJ4eg@mail.gmail.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CACVXFVOqBuCcQC6ku0abqstkgJWGe21ZztB-eTsyDwsvDvXNZw@mail.gmail.com>
+ <CAErSpo4ngU60XQCD=DbFJbqNOMkOwwhHB1oau1mmr7rJQQ2+pg@mail.gmail.com>
+ <CACVXFVMz+6DaSgT0EHeVfyBOsXfWDYnZQ0wy7pwcey5ahM6rUA@mail.gmail.com>
+ <20140318002700.GA22356@google.com> <CACVXFVNbzjYa7dJpH+k-F02Cap7yBBi7TkngjVu_KthXw-WKJA@mail.gmail.com>
+ <CACVXFVO2rR+H7X2Xv_d-U0NeikT4dR97ffQ7PuV7+i0fN=_k3w@mail.gmail.com>
+ <CAErSpo5qsosqLXdkS2__d2J7sM4T2nBfO1ewKg1=kFri3mcdrQ@mail.gmail.com> <CACVXFVPq2nQ8jcn+v424roieO+v_asyfXcHUHv=uSOABYHJ4eg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 21 Mar 2014 14:07:22 -0600
+Message-ID: <CAErSpo6zjOA43yrwk-4F8PDGTS-8G4piDBq+z-zv+L6_KkKFHQ@mail.gmail.com>
+Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding disabled
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Pekka Enberg <penberg@kernel.org>,
+	Sasha Levin <sasha.levin@oracle.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 21, 2014 at 4:07 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Friday 21 March 2014 13:59:35 Phil.Edworthy@renesas.com wrote:
->> > From: Arnd Bergmann <arnd@arndb.de>
->> > static const struct of_device_id rcar_pcie_of_match[] = {
->> >    { .compatible = "renesas,r8a7779-pcie", .data =
->> rcar_pcie_phy_init_rcar_h1},
->> >    { .compatible = "renesas,r8a7790-pcie", .data =  rcar_pcie_hw_init},
->> >    { .compatible = "renesas,r8a7791-pcie", .data =  rcar_pcie_hw_init},
->> >    {},
->> > };
->> >
->> > If you need other differences in the future, you can extend this
->> > to use a pointer to a struct containing the init function pointer.
+[+cc kvm list]
+
+On Wed, Mar 19, 2014 at 7:32 PM, Ming Lei <tom.leiming@gmail.com> wrote:
+> On Thu, Mar 20, 2014 at 12:45 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Tue, Mar 18, 2014 at 10:52 PM, Ming Lei <tom.leiming@gmail.com> wrote:
+>>> Hi,
+>>>
+>>> Looks Sasha fixed the problem in lkvm tool[1].
+>>>
+>>> Sasha, looks we both saw the problem, but from technical
+>>> view, I am wondering if the fix is correct, because PCI spec.
+>>> requires that the IO/MMIO bits in COMMAND register should
+>>> be cleared after reset, maybe there are some potential problem
+>>> in lkvm pci emulation.
 >>
->> Ok, I understand what you mean, though the rcar_pcie_phy_init_rcar_h1
->> function is an extra call for r8a7779 devices to setup the PHY, not an
->> alternative to rcar_pcie_hw_init.
->
-> I assumed that would be trivial to change, by calling rcar_pcie_hw_init
-> at the end of rcar_pcie_phy_init_rcar_h1 rather than the other way round.
+>> I think I'm going to revert this patch ([2], "Ignore BAR contents when
+>> firmware left decoding disabled").  The main reason for that patch was
+>> to try for a consistent way of figuring out whether BARs are valid
+>> that we could use on all architectures, but I think we can do it in a
+>> better way.
+>>
+>> That said, this kvm change should not be necessary.  We *should* be
+>> able to take any PCI device and initialize it from power-on state
+>> without any dependencies on what the BIOS left in the BARs or the
+>> command register.  As far as I can tell, the PCI core actually worked
+>> fine in this case (we assigned valid addresses to the devices), but
+>> something else blew up.  If I revert that patch, it will cover up
+>> whatever this other bug is, but it would be much better to figure out
+>> what it is and fix is.
 
-And this would allow to propagate the error code from
-rcar_pcie_phy_init_rcar_h1(), as currently rcar_pcie_hw_init() ignores it,
-and returns void.
+I think I figured out what the problem is.  In virtio_pci__init(), we
+allocate some address space with pci_get_io_space_block(), save its
+address in vpci->mmio_addr, and hook that address space up to
+virtio_pci__io_mmio_callback with kvm__register_mmio().
 
-Gr{oetje,eeting}s,
+But when we update the BAR value in pci__config_wr(), the address
+space mapping is never updated.  I think this means that virtio-pci
+can't tolerate its devices being moved by the OS.
 
-                        Geert
+In my opinion, this is a bug in linux-kvm.  We've managed to avoid
+triggering this bug by preventing Linux from moving the BAR (either by
+me reverting my patch, or by Sasha's linux-kvm change [1]).  But it's
+not very robust to assume that the OS will never change the BAR, so
+it's quite possible that you'll trip over this again in the future.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Bjorn
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+[1] 6478ce1416aa kvm tools: mark our PCI card as PIO and MMIO able
