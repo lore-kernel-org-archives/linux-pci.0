@@ -1,72 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32890 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751605AbaCTIRD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Mar 2014 04:17:03 -0400
-Message-ID: <532AA3F6.9090402@intel.com>
-Date: Thu, 20 Mar 2014 16:16:54 +0800
-From: "Yan, Zheng" <zheng.z.yan@intel.com>
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:56784 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751594AbaCUPmm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 11:42:42 -0400
+Received: by mail-lb0-f170.google.com with SMTP id s7so1822820lbd.29
+        for <linux-pci@vger.kernel.org>; Fri, 21 Mar 2014 08:42:41 -0700 (PDT)
+Message-ID: <532C6BF7.1050404@cogentembedded.com>
+Date: Fri, 21 Mar 2014 19:42:31 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-To: "Zhang, Rui" <rui.zhang@intel.com>,
-	Stephane Eranian <eranian@google.com>
-CC: "Lu, Aaron" <aaron.lu@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Borislav Petkov <bp@alien8.de>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
-References: <20140224162400.GE16457@pd.tnic>	<4205942.Tp8ltEsv6e@vostro.rjw.lan>	<532A514C.5010106@intel.com>	<744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com> <CABPqkBTyti0owCA_cWf9GcvYnOSvbMQpRC29rgpicjW1iYBjYQ@mail.gmail.com> <744357E9AAD1214791ACBA4B0B9092630121F3B7@SHSMSX101.ccr.corp.intel.com>
-In-Reply-To: <744357E9AAD1214791ACBA4B0B9092630121F3B7@SHSMSX101.ccr.corp.intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+CC: Phil.Edworthy@renesas.com, Simon Horman <horms@verge.net.au>,
+	linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v4 6/9] ARM: shmobile: Add PCIe device tree nodes for
+ R8A7790
+References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com> <532C5ADE.4030708@cogentembedded.com> <OF4D80B18E.5A1F55AB-ON80257CA2.0051AADA-80257CA2.0051D412@eu.necel.com> <6044873.2S2Xlhp0hC@wuerfel>
+In-Reply-To: <6044873.2S2Xlhp0hC@wuerfel>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/20/2014 03:53 PM, Zhang, Rui wrote:
-> The resource length is also hardcoded to 0x6000, right?
-> This is probably a problem, because
-> only if the resource length read from PCI config space is larger than 0x4000,
-> drivers/pnp/quirks.c will detect the conflict and disable the PNP0C02
-> resource 0xfed10000 - 0xfed13fff, and the PCI device can request this
-> resource successfully.
-> In order to check this, can you please attach the dmesg output after boot?
+Hello.
 
-maybe the issue can be fixed by below untested patch
+On 03/21/2014 05:57 PM, Arnd Bergmann wrote:
 
----
-diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore.c b/arch/x86/kernel/cpu/perf_event_intel_uncore.c
-index fd5e883..2b3d834 100644
---- a/arch/x86/kernel/cpu/perf_event_intel_uncore.c
-+++ b/arch/x86/kernel/cpu/perf_event_intel_uncore.c
-@@ -1701,7 +1701,7 @@ static struct uncore_event_desc snb_uncore_imc_events[] = {
- #define SNB_UNCORE_PCI_IMC_BAR_OFFSET		0x48
- 
- /* page size multiple covering all config regs */
--#define SNB_UNCORE_PCI_IMC_MAP_SIZE		0x6000
-+#define SNB_UNCORE_PCI_IMC_MAP_SIZE		0x8
- 
- #define SNB_UNCORE_PCI_IMC_DATA_READS		0x1
- #define SNB_UNCORE_PCI_IMC_DATA_READS_BASE	0x5050
-@@ -1736,7 +1736,8 @@ static void snb_uncore_imc_init_box(struct intel_uncore_box *box)
- 
- 	addr &= ~(PAGE_SIZE - 1);
- 
--	box->io_addr = ioremap(addr, SNB_UNCORE_PCI_IMC_MAP_SIZE);
-+	box->io_addr = ioremap(addr + SNB_UNCORE_PCI_IMC_CTR_BASE,
-+			       SNB_UNCORE_PCI_IMC_MAP_SIZE);
- 	box->hrtimer_duration = UNCORE_SNB_IMC_HRTIMER_INTERVAL;
- }
- 
-@@ -1832,7 +1833,7 @@ static int snb_uncore_imc_event_init(struct perf_event *event)
- 	}
- 
- 	/* must be done before validate_group */
--	event->hw.event_base = base;
-+	event->hw.event_base = base - SNB_UNCORE_PCI_IMC_CTR_BASE;
- 	event->hw.config = cfg;
- 	event->hw.idx = idx;
- 
+>>>> +      reg = <0 0xfe000000 0 0x80000>;
+>>>> +      #address-cells = >;
+>>>> +      #size-cells = <2>;
+>>>> +      device_type = "pci";
+
+>>>      This legacy property is only meaningful for the true OF firmware and thus
+>>> have been phased out (it's only actively used for the memory nodes).
+
+>> Ok, thanks for pointing this out.
+
+> I think the code still relies on it for PCI though.
+
+    OK, I have found where it does that but the recommended value seems to be 
+"pciex" for PCI-Express case.
+
+> 	Arnd
+
+WBR, Sergei
+
