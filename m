@@ -1,59 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11312 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751041AbaCJIq7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Mar 2014 04:46:59 -0400
-Message-ID: <531D7BE8.7060103@linux.intel.com>
-Date: Mon, 10 Mar 2014 16:46:32 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: David Woodhouse <dwmw2@infradead.org>
-CC: Joerg Roedel <joro@8bytes.org>, Yinghai Lu <yinghai@kernel.org>,
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:37362 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756015AbaCULYc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 07:24:32 -0400
+Message-ID: <1395401031.4554.9.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree bindings
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-sh@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [Patch Part2 V2 15/17] iommu/vt-d, PCI: update DRHD/RMRR/ATSR
- device scope caches when PCI hotplug happens
-References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>	 <1392790057-32434-16-git-send-email-jiang.liu@linux.intel.com> <1394130319.9994.28.camel@i7.infradead.org>
-In-Reply-To: <1394130319.9994.28.camel@i7.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Date: Fri, 21 Mar 2014 12:23:51 +0100
+In-Reply-To: <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>
+References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
+	 <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David,
-	Good suggestion! It should make hotplug logic simpler too.
-Will try to work out some patches for it.
-Thanks!
-Gerry
+Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
+> This patch adds the bindings for the rcar PCIE driver. The driver
+> resides under drivers/pci/host/pcie-rcar.c
+> 
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 
-On 2014/3/7 2:25, David Woodhouse wrote:
-> On Wed, 2014-02-19 at 14:07 +0800, Jiang Liu wrote:
->> Current Intel DMAR/IOMMU driver assumes that all PCI devices
->> associated
->> with DMAR/RMRR/ATSR device scope arrays are created at boot time and
->> won't change at runtime, so it caches pointers of associated PCI
->> device
->> object. That assumption may be wrong now due to:
->> 1) introduction of PCI host bridge hotplug
->> 2) PCI device hotplug through sysfs interfaces.
-> ...
->> This patch introduces a new mechanism to update the DRHD/RMRR/ATSR
->> device scope caches by hooking PCI bus notification.
+I have one question below. If you can answer this with yes after
+thinking again about it, this is:
+
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+>  Documentation/devicetree/bindings/pci/rcar-pci.txt | 40 ++++++++++++++++++++++
+>  1 file changed, 40 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
 > 
-> Hm, this seems overly complex. Can't we just abandon the
-> dmaru->devices[] array completely? In dmar_find_matched_drhd_unit()
-> can't we just compare the path in the scope entries directly to the PCI
-> device we are trying to find a DRHD for?
-> 
-> We then cache the result in dev->archdata.iommu for ever (well, until
-> hot-unplug) anyway, so it shouldn't even be any less efficient to do it
-> on demand, right?
-> 
-> That's true at least for dmar_find_matched_drhd_unit(). Perhaps we'd
-> need to find a way to cache the result for
-> dmar_find_matched_atsr_unit()?
-> 
+> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> new file mode 100644
+> index 0000000..0e219b0
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> @@ -0,0 +1,40 @@
+> +* Renesas RCar PCIe interface
+> +
+> +Required properties:
+> +- compatible: should contain one of the following
+> +	"renesas,r8a7779-pcie", "renesas,r8a7790-pcie", "renesas,r8a7791-pcie"
+> +- reg: base addresses and lengths of the pcie controller.
+> +- #address-cells: set to <3>
+> +- #size-cells: set to <2>
+> +- device_type: set to "pci"
+> +- ranges: ranges for the PCI memory and I/O regions
+> +- interrupts: interrupt values for MSI interrupt
+> +- #interrupt-cells: set to <1>
+> +- interrupt-map-mask and interrupt-map: standard PCI properties
+> +	to define the mapping of the PCIe interface to interrupt
+> +	numbers.
+> +- clocks: from common clock binding: handle to pci clock.
+> +- clock-names: from common clock binding: should be "pcie"
+
+You really only have one PCIe clock? So the controller is generating the
+PCIe bus clock from it's register clock? No need to enable any other
+clock for PCIe to work?
+
+> +
+> +Example:
+> +
+> +SoC specific DT Entry:
+> +
+> +	pcie: pcie@0x01000000 {
+> +		compatible = "renesas,r8a7790-pcie";
+> +		reg = <0 0xfe000000 0 0x80000>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
+> +			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
+> +			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
+> +			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
+> +		interrupts = <0 116 4>;
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0 0 0 0>;
+> +		interrupt-map = <0 0 0 0 &gic 0 116 4>;
+> +		clocks = <&mstp3_clks R8A7790_CLK_PCIE>;
+> +		clock-names = "pcie";
+> +		status = "disabled";
+> +	};
+
+-- 
+Pengutronix e.K.                           | Lucas Stach                 |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+
