@@ -1,52 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:59243 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751942AbaC3TKk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 30 Mar 2014 15:10:40 -0400
-Received: by mail-lb0-f178.google.com with SMTP id s7so5114694lbd.37
-        for <linux-pci@vger.kernel.org>; Sun, 30 Mar 2014 12:10:39 -0700 (PDT)
-Message-ID: <53386C2F.1090508@cogentembedded.com>
-Date: Sun, 30 Mar 2014 23:10:39 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:61867 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760438AbaCUOlN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 10:41:13 -0400
 MIME-Version: 1.0
-To: Ben Dooks <ben.dooks@codethink.co.uk>
-CC: linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-kernel@lists.codethink.co.uk, magnus.damn@opensource.se,
-	horms@verge.net.au, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 1/9] pci-rcar-gen2: add devicetree support
-References: <1394128887-4197-1-git-send-email-ben.dooks@codethink.co.uk> <1394128887-4197-2-git-send-email-ben.dooks@codethink.co.uk> <5318BCAE.7000108@codethink.co.uk>
-In-Reply-To: <5318BCAE.7000108@codethink.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CALCETrVG6uRysbXSbyPfKzG7uBHu9PX6SKvDbUQWG1TOfc04zQ@mail.gmail.com>
+References: <CALCETrVG6uRysbXSbyPfKzG7uBHu9PX6SKvDbUQWG1TOfc04zQ@mail.gmail.com>
+Date: Fri, 21 Mar 2014 10:41:12 -0400
+Message-ID: <CADnq5_NJLsF4MmcQVN7jDD6-ZjAobw0bf2ft2HWGid6GMcXWcA@mail.gmail.com>
+Subject: Re: 3.14 radeon regression: radeon is broken (pci bug?)
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: DRI <dri-devel@lists.freedesktop.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+On Thu, Mar 20, 2014 at 10:17 PM, Andy Lutomirski <luto@amacapital.net> wrote:
+> My system works on a 3.13 Fedora kernel.  It does not work on a
+> more-or-less identically configured 3.14-rc7+ kernel.  The symptom is
+> that the Plymouth password prompt flashes and them the screen goes
+> blank.  Hitting escape brings back the text console, and all is well
+> until X tries to start.  Then I get a blank screen.  killall -9 Xorg
+> from ssh causes these errors to be logged:
+>
+>
+> [  226.239747] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
+> more than 5secs aborting
+> [  226.239751] [drm:atom_execute_table_locked] *ERROR* atombios stuck
+> executing CD34 (len 55, WS 0, PS 0) @ 0xCD57
+> [  231.241492] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
+> more than 5secs aborting
+> [  231.241496] [drm:atom_execute_table_locked] *ERROR* atombios stuck
+> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
+> [  236.243111] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
+> more than 5secs aborting
+> [  236.243115] [drm:atom_execute_table_locked] *ERROR* atombios stuck
+> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
+> [  241.244625] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
+> more than 5secs aborting
+> [  241.244628] [drm:atom_execute_table_locked] *ERROR* atombios stuck
+> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
+>
+>
+> lspci -vvvxxxnn on 3.14-rc7+ says:
+>
+> 09:00.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc.
+> [AMD/ATI] Caicos [Radeon HD 6450/7450/8450 / R5 230 OEM] [1002:6779]
+> (rev ff) (prog-if ff)
+>     !!! Unknown header type 7f
+>     Kernel driver in use: radeon
+> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>
+> 09:00.1 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI]
+> Caicos HDMI Audio [Radeon HD 6400 Series] [1002:aa98] (rev ff)
+> (prog-if ff)
+>     !!! Unknown header type 7f
+>     Kernel driver in use: snd_hda_intel
+> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>
+> (oops!)
+>
+> On 3.13, it says:
+>
+> 09:00.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc.
+> [AMD/ATI] Caicos [Radeon HD 6450/7450/8450 / R5 230 OEM] [1002:6779]
+> (prog-if 00 [VGA controller])
+>         Subsystem: PC Partner Limited / Sapphire Technology Radeon HD
+> 6450 1 GB DDR3 [174b:e164]
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0, Cache Line Size: 64 bytes
+>         Interrupt: pin A routed to IRQ 92
+>         Region 0: Memory at e0000000 (64-bit, prefetchable) [size=256M]
+>         Region 2: Memory at f4a20000 (64-bit, non-prefetchable) [size=128K]
+>         Region 4: I/O ports at c000 [size=256]
+>         Expansion ROM at f4a00000 [disabled] [size=128K]
+>         Capabilities: <access denied>
+>         Kernel driver in use: radeon
+> 00: 02 10 79 67 07 04 10 00 00 00 00 03 10 00 80 00
+> 10: 0c 00 00 e0 00 00 00 00 04 00 a2 f4 00 00 00 00
+> 20: 01 c0 00 00 00 00 00 00 00 00 00 00 4b 17 64 e1
+> 30: 00 00 a0 f4 50 00 00 00 00 00 00 00 0a 01 00 00
+>
+> 09:00.1 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI]
+> Caicos HDMI Audio [Radeon HD 6400 Series] [1002:aa98]
+>         Subsystem: PC Partner Limited / Sapphire Technology Radeon HD
+> 6450 1GB DDR3 [174b:aa98]
+>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0, Cache Line Size: 64 bytes
+>         Interrupt: pin B routed to IRQ 96
+>         Region 0: Memory at f4a40000 (64-bit, non-prefetchable) [size=16K]
+>         Capabilities: <access denied>
+>         Kernel driver in use: snd_hda_intel
+> 00: 02 10 98 aa 06 04 10 00 00 00 03 04 10 00 80 00
+> 10: 04 00 a4 f4 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 4b 17 98 aa
+> 30: 00 00 00 00 50 00 00 00 00 00 00 00 05 02 00 00
+>
+> Logs attached.
+>
+> Unfortunately, I'll be away from this computer until Wednesday.
 
-On 03/06/2014 09:21 PM, Ben Dooks wrote:
+Can you bisect?
 
->> Add OF match table for pci-rcar-gen2 driver for device tree support.
-[...]
-
->> diff --git a/drivers/pci/host/pci-rcar-gen2.c
->> b/drivers/pci/host/pci-rcar-gen2.c
->> index fd3e3ab..1216784 100644
->> --- a/drivers/pci/host/pci-rcar-gen2.c
->> +++ b/drivers/pci/host/pci-rcar-gen2.c
->> @@ -16,6 +16,7 @@
->>   #include <linux/kernel.h>
->>   #include <linux/module.h>
->>   #include <linux/pci.h>
->> +#include <linux/of_pci.h>
->>   #include <linux/platform_device.h>
->>   #include <linux/pm_runtime.h>
->>   #include <linux/sizes.h>
-
-> Apologies all, there's a missing include of <linux/of.h> which should
-> have been added here
-
-    Have you ever re-posted this patch fixed? If not, it's not going to be 
-merged for 3.15 I guess...
-
-WBR, Sergei
-
+Alex
