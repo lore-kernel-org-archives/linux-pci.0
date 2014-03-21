@@ -1,134 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:50729 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760468AbaCUQiE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 12:38:04 -0400
-Received: by mail-ie0-f175.google.com with SMTP id to1so2708251ieb.34
-        for <linux-pci@vger.kernel.org>; Fri, 21 Mar 2014 09:38:03 -0700 (PDT)
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:52529 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753726AbaCUQLw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 12:11:52 -0400
+Received: by mail-ie0-f173.google.com with SMTP id rl12so2668623iec.18
+        for <linux-pci@vger.kernel.org>; Fri, 21 Mar 2014 09:11:51 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CALCETrVjHkdbe5N4iov-7dg6tGmuFsr70z2ASpX+=km=FMWe7Q@mail.gmail.com>
-References: <CALCETrVG6uRysbXSbyPfKzG7uBHu9PX6SKvDbUQWG1TOfc04zQ@mail.gmail.com>
- <CADnq5_NJLsF4MmcQVN7jDD6-ZjAobw0bf2ft2HWGid6GMcXWcA@mail.gmail.com> <CALCETrVjHkdbe5N4iov-7dg6tGmuFsr70z2ASpX+=km=FMWe7Q@mail.gmail.com>
+In-Reply-To: <532BB431.7020501@numascale.com>
+References: <1394710981-3596-1-git-send-email-daniel@numascale.com>
+ <CAErSpo6psgDr3XYh6m+vYcAOix2Vttrwz1jK7bS47Liy2Lw-=g@mail.gmail.com> <532BB431.7020501@numascale.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 21 Mar 2014 10:37:41 -0600
-Message-ID: <CAErSpo4J-rEkr-xDojZNTShRxoimUsYcFwrY-K4K3sZ3rporRw@mail.gmail.com>
-Subject: Re: 3.14 radeon regression: radeon is broken (pci bug?)
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Alex Deucher <alexdeucher@gmail.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
+Date: Fri, 21 Mar 2014 10:11:31 -0600
+Message-ID: <CAErSpo4x+=EQ5h8DuzoRznZ_d8Roy4LHer7ELEVeHxDsKwDhzA@mail.gmail.com>
+Subject: Re: [PATCH] Fix northbridge quirk to assign correct NUMA node
+To: Daniel J Blueman <daniel@numascale.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>, Borislav Petkov <bp@suse.de>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+	Steffen Persvold <sp@numascale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	kim.naru@amd.com,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 21, 2014 at 9:49 AM, Andy Lutomirski <luto@amacapital.net> wrote:
-> On Fri, Mar 21, 2014 at 7:41 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
->> On Thu, Mar 20, 2014 at 10:17 PM, Andy Lutomirski <luto@amacapital.net> wrote:
->>> My system works on a 3.13 Fedora kernel.  It does not work on a
->>> more-or-less identically configured 3.14-rc7+ kernel.  The symptom is
->>> that the Plymouth password prompt flashes and them the screen goes
->>> blank.  Hitting escape brings back the text console, and all is well
->>> until X tries to start.  Then I get a blank screen.  killall -9 Xorg
->>> from ssh causes these errors to be logged:
->>>
->>>
->>> [  226.239747] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
->>> more than 5secs aborting
->>> [  226.239751] [drm:atom_execute_table_locked] *ERROR* atombios stuck
->>> executing CD34 (len 55, WS 0, PS 0) @ 0xCD57
->>> [  231.241492] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
->>> more than 5secs aborting
->>> [  231.241496] [drm:atom_execute_table_locked] *ERROR* atombios stuck
->>> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
->>> [  236.243111] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
->>> more than 5secs aborting
->>> [  236.243115] [drm:atom_execute_table_locked] *ERROR* atombios stuck
->>> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
->>> [  241.244625] [drm:atom_op_jump] *ERROR* atombios stuck in loop for
->>> more than 5secs aborting
->>> [  241.244628] [drm:atom_execute_table_locked] *ERROR* atombios stuck
->>> executing CD6C (len 62, WS 0, PS 0) @ 0xCD88
->>>
->>>
->>> lspci -vvvxxxnn on 3.14-rc7+ says:
->>>
->>> 09:00.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc.
->>> [AMD/ATI] Caicos [Radeon HD 6450/7450/8450 / R5 230 OEM] [1002:6779]
->>> (rev ff) (prog-if ff)
->>>     !!! Unknown header type 7f
->>>     Kernel driver in use: radeon
->>> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>>
->>> 09:00.1 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI]
->>> Caicos HDMI Audio [Radeon HD 6400 Series] [1002:aa98] (rev ff)
->>> (prog-if ff)
->>>     !!! Unknown header type 7f
->>>     Kernel driver in use: snd_hda_intel
->>> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->>>
->>> (oops!)
->>>
->>> On 3.13, it says:
->>>
->>> 09:00.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc.
->>> [AMD/ATI] Caicos [Radeon HD 6450/7450/8450 / R5 230 OEM] [1002:6779]
->>> (prog-if 00 [VGA controller])
->>>         Subsystem: PC Partner Limited / Sapphire Technology Radeon HD
->>> 6450 1 GB DDR3 [174b:e164]
->>>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
->>> ParErr- Stepping- SERR- FastB2B- DisINTx+
->>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
->>> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>         Latency: 0, Cache Line Size: 64 bytes
->>>         Interrupt: pin A routed to IRQ 92
->>>         Region 0: Memory at e0000000 (64-bit, prefetchable) [size=256M]
->>>         Region 2: Memory at f4a20000 (64-bit, non-prefetchable) [size=128K]
->>>         Region 4: I/O ports at c000 [size=256]
->>>         Expansion ROM at f4a00000 [disabled] [size=128K]
->>>         Capabilities: <access denied>
->>>         Kernel driver in use: radeon
->>> 00: 02 10 79 67 07 04 10 00 00 00 00 03 10 00 80 00
->>> 10: 0c 00 00 e0 00 00 00 00 04 00 a2 f4 00 00 00 00
->>> 20: 01 c0 00 00 00 00 00 00 00 00 00 00 4b 17 64 e1
->>> 30: 00 00 a0 f4 50 00 00 00 00 00 00 00 0a 01 00 00
->>>
->>> 09:00.1 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI]
->>> Caicos HDMI Audio [Radeon HD 6400 Series] [1002:aa98]
->>>         Subsystem: PC Partner Limited / Sapphire Technology Radeon HD
->>> 6450 1GB DDR3 [174b:aa98]
->>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
->>> ParErr- Stepping- SERR- FastB2B- DisINTx+
->>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
->>> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>         Latency: 0, Cache Line Size: 64 bytes
->>>         Interrupt: pin B routed to IRQ 96
->>>         Region 0: Memory at f4a40000 (64-bit, non-prefetchable) [size=16K]
->>>         Capabilities: <access denied>
->>>         Kernel driver in use: snd_hda_intel
->>> 00: 02 10 98 aa 06 04 10 00 00 00 03 04 10 00 80 00
->>> 10: 04 00 a4 f4 00 00 00 00 00 00 00 00 00 00 00 00
->>> 20: 00 00 00 00 00 00 00 00 00 00 00 00 4b 17 98 aa
->>> 30: 00 00 00 00 50 00 00 00 00 00 00 00 05 02 00 00
->>>
->>> Logs attached.
+[+cc Rafael, linux-acpi for _PXM questions]
 
-Hi Andy,
+On Thu, Mar 20, 2014 at 9:38 PM, Daniel J Blueman <daniel@numascale.com> wrote:
+> On 21/03/2014 06:07, Bjorn Helgaas wrote:
+>> On Thu, Mar 13, 2014 at 5:43 AM, Daniel J Blueman <daniel@numascale.com>
+>> wrote:
+>>>
+>>> For systems with multiple servers and routed fabric, all northbridges get
+>>> assigned to the first server. Fix this by also using the node reported
+>>> from
+>>> the PCI bus. For single-fabric systems, the northbriges are on PCI bus 0
+>>> by definition, which are on NUMA node 0 by definition, so this is
+>>> invarient
+>>> on most systems.
+>>>
+>>> Tested on fam10h and fam15h single and multi-fabric systems and candidate
+>>> for stable.
 
-I'm really sorry that you tripped over this, but thanks a lot for the
-report.  Is there any chance the box is currently running v3.13, and
-you could collect the dmesg log from it?  I don't see anything unusual
-from a PCI perspective in the v3.14-rc7 dmesg; all the PCI device
-resources look fine, and we didn't reassign anything.  It seems like
-the 0000:09:00.x devices just stopped responding for some reason, and
-the PCI core shouldn't really be involved after the radeon driver
-claims and enables those devices.  But it's possible I'd get a clue by
-comparing the v3.13 and v3.14-rc7 dmesg logs.
+>> So I suspect the problem is more complicated, and maybe _PXM is
+>> insufficient to describe the topology?  Are there subtrees that should
+>> have nodes different from the host bridge?
+>
+> Yes; see below.
+> ...
+> The _PXM method associates each northbridge with the first NUMA node, 0 in
+> single-fabric systems, and eg 4 for the second server in a multi-fabric
+> system with 2 dual-module Opterons (with 2 NUMA nodes internally) etc, since
+> the northbridges appear in the PCI tree, under the host bridge, not above it
+> [1].
+>
+> With _PXM, the rest of the PCI bus hierarchy has the right NUMA node
+> associated, but the northbridge PCI devices should be associated with their
+> actual NUMA node, 0, 1, 2, 3 for the first server in this example. The quirk
+> fixes this up; irqbalance at least uses this NUMA data exposed in /sys.
 
-Bjorn
+I'm confused about which devices we're talking about.  We currently
+look at _PXM for PNP0A08 (and PNP0A03) ACPI devices.  The resulting
+node is associated with every PCI device we enumerate below the
+PNP0A08 bridge.  This association is made in pci_device_add().
+
+When you say "northbridge PCI devices should be associated with their
+actual NUMA node," I assume you mean the 00:18.x and 00:19.x devices
+("AMD Family 10h Processor ..."), since those seem to be what the
+quirk applies to.  You are *not* talking about 00:00.0 ("ATI RD890
+Northbridge"), right?
+
+You mention irqbalance; is the NUMA node information for the 00:18.x
+and 00:19.x devices important because you get a lot of interrupts from
+those devices?  Or is the issue with actual I/O devices (NICs, SCSI
+adapters, etc.)?  If so, I don't see how this quirk would affect
+those, because the node information for them comes from the PNP0A08
+bridge (in pci_device_add()), not from the 00:00.0, 00:18.x, or
+00:19.x devices.
+
+> The alternative to the quirk may be to explicitly express the northbridge
+> PCI devices in the AML with their own _PXM methods. If it's valid, it may be
+> the honest approach, though the quirk may be needed for most BIOSs; I can
+> check the AML on a few servers to confirm if helpful.
+
+ACPI allows _PXM for any device, so this might be a possible approach.
+ However, it looks like Linux only pays attention to _PXM for
+PNP0A08/03, CPUs, memory and IOAPICs (which seems like a Linux defect
+to me).
+
+I'm really worried about the approach here:
+
+        pci_read_config_dword(nb_ht, 0x60, &val);
+        node = pcibus_to_node(dev->bus) | (val & 7);
+
+because the pcibus_to_node() information comes indirectly from _PXM,
+and the "val" part comes from the hardware, and I don't think these
+are the same node number space.  If I understand correctly, the BIOS
+can synthesize whatever numbers it wants for _PXM, which returns a
+"proximity domain," and then Linux can make up its own mapping of
+"proximity domain" to "logical Linux node."  So I don't see why we can
+assume that it's valid to OR in the bits from a PCI config register to
+this logical Linux node number.
+
+> [1] http://quora.org/2014/lspci.txt
