@@ -1,175 +1,190 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:48306 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755352AbaCSQqJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 12:46:09 -0400
-Received: by mail-ig0-f178.google.com with SMTP id uq10so12234191igb.5
-        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 09:46:08 -0700 (PDT)
+Received: from moutng.kundenserver.de ([212.227.17.24]:62637 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759943AbaCULE7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 07:04:59 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>
+Subject: Re: [PATCH v4 1/9] PCI: host: rcar: Add Renesas R-Car PCIe driver
+Date: Fri, 21 Mar 2014 12:04:16 +0100
+Message-ID: <27671657.LuGQtNBfqX@wuerfel>
+In-Reply-To: <1395397968-6242-2-git-send-email-phil.edworthy@renesas.com>
+References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com> <1395397968-6242-2-git-send-email-phil.edworthy@renesas.com>
 MIME-Version: 1.0
-In-Reply-To: <CACVXFVO2rR+H7X2Xv_d-U0NeikT4dR97ffQ7PuV7+i0fN=_k3w@mail.gmail.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CACVXFVOqBuCcQC6ku0abqstkgJWGe21ZztB-eTsyDwsvDvXNZw@mail.gmail.com>
- <CAErSpo4ngU60XQCD=DbFJbqNOMkOwwhHB1oau1mmr7rJQQ2+pg@mail.gmail.com>
- <CACVXFVMz+6DaSgT0EHeVfyBOsXfWDYnZQ0wy7pwcey5ahM6rUA@mail.gmail.com>
- <20140318002700.GA22356@google.com> <CACVXFVNbzjYa7dJpH+k-F02Cap7yBBi7TkngjVu_KthXw-WKJA@mail.gmail.com>
- <CACVXFVO2rR+H7X2Xv_d-U0NeikT4dR97ffQ7PuV7+i0fN=_k3w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Mar 2014 10:45:48 -0600
-Message-ID: <CAErSpo5qsosqLXdkS2__d2J7sM4T2nBfO1ewKg1=kFri3mcdrQ@mail.gmail.com>
-Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding disabled
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Pekka Enberg <penberg@kernel.org>,
-	Sasha Levin <sasha.levin@oracle.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 18, 2014 at 10:52 PM, Ming Lei <tom.leiming@gmail.com> wrote:
-> Hi,
->
-> Looks Sasha fixed the problem in lkvm tool[1].
->
-> Sasha, looks we both saw the problem, but from technical
-> view, I am wondering if the fix is correct, because PCI spec.
-> requires that the IO/MMIO bits in COMMAND register should
-> be cleared after reset, maybe there are some potential problem
-> in lkvm pci emulation.
+On Friday 21 March 2014 10:32:40 Phil Edworthy wrote:
+> +static const struct of_device_id rcar_pcie_of_match[] = {
+> +	{ .compatible = "renesas,r8a7779-pcie", .data = (void *)RCAR_H1 },
+> +	{ .compatible = "renesas,r8a7790-pcie", .data = (void *)RCAR_GENERIC },
+> +	{ .compatible = "renesas,r8a7791-pcie", .data = (void *)RCAR_GENERIC },
+> +	{},
+> +};
+> +MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
 
-I think I'm going to revert this patch ([2], "Ignore BAR contents when
-firmware left decoding disabled").  The main reason for that patch was
-to try for a consistent way of figuring out whether BARs are valid
-that we could use on all architectures, but I think we can do it in a
-better way.
+The only difference between RCAR_H1 and RCAR_GENERIC seems to be the
+use of the rcar_pcie_phy_init_rcar_h1 vs rcar_pcie_hw_init
+functions. I think this would be expressed in a nicer way doing
 
-That said, this kvm change should not be necessary.  We *should* be
-able to take any PCI device and initialize it from power-on state
-without any dependencies on what the BIOS left in the BARs or the
-command register.  As far as I can tell, the PCI core actually worked
-fine in this case (we assigned valid addresses to the devices), but
-something else blew up.  If I revert that patch, it will cover up
-whatever this other bug is, but it would be much better to figure out
-what it is and fix is.
+static const struct of_device_id rcar_pcie_of_match[] = {
+	{ .compatible = "renesas,r8a7779-pcie", .data =  rcar_pcie_phy_init_rcar_h1},
+	{ .compatible = "renesas,r8a7790-pcie", .data =  rcar_pcie_hw_init},
+	{ .compatible = "renesas,r8a7791-pcie", .data =  rcar_pcie_hw_init},
+	{},
+};
 
-You said earlier that "The memory allocation failure is caused by
-mistaken value read from pci address after the device is failed to
-enable."  Can you elaborate on that?  Are you saying that something
-tried to read from a region mapped by a BAR even though
-pci_enable_device() failed?  That would be a programming error, of
-course.  If you have any more details about exactly where this
-happened, that would help a lot in finding the problem.
+If you need other differences in the future, you can extend this
+to use a pointer to a struct containing the init function pointer.
 
-Bjorn
+> +static int rcar_pcie_setup_window(int win, struct resource *res,
+> +					struct rcar_pcie *pcie)
+> +{
+> +	/* Setup PCIe address space mappings for each resource */
+> +	resource_size_t size;
+> +	u32 mask;
+> +
+> +	pci_write_reg(pcie, 0x00000000, PCIEPTCTLR(win));
+> +
+> +	/*
+> +	 * The PAMR mask is calculated in units of 128Bytes, which
+> +	 * keeps things pretty simple.
+> +	 */
+> +	size = resource_size(res);
+> +	mask = (roundup_pow_of_two(size) / SZ_128) - 1;
+> +	pci_write_reg(pcie, mask << 7, PCIEPAMR(win));
+> +
+> +	pci_write_reg(pcie, upper_32_bits(res->start), PCIEPARH(win));
+> +	pci_write_reg(pcie, lower_32_bits(res->start), PCIEPARL(win));
+> +
+> +	/* First resource is for IO */
+> +	mask = PAR_ENABLE;
+> +	if (res->flags & IORESOURCE_IO)
+> +		mask |= IO_SPACE;
+> +
+> +	pci_write_reg(pcie, mask, PCIEPTCTLR(win));
+> +
+> +	return 0;
+> +}
 
-[2] http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?id=5c89a9ee943d5e
+Would it be possible to have this done in the boot loader so the kernel
+doesn't need to be bothered with it?
 
-> [1],  commit 6478ce1416aacf1ce35530f79ea035f89fb21e90
-> Author: Sasha Levin <sasha.levin@oracle.com>
-> Date:   Wed Mar 5 23:08:16 2014 -0500
->
->     kvm tools: mark our PCI card as PIO and MMIO able
->
->
-> Thanks,
-> --
-> Ming Lei
->
-> On Wed, Mar 19, 2014 at 11:32 AM, Ming Lei <tom.leiming@gmail.com> wrote:
->> On Tue, Mar 18, 2014 at 8:27 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Fri, Mar 14, 2014 at 09:48:35AM +0800, Ming Lei wrote:
->>>> On Fri, Mar 14, 2014 at 12:08 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> > On Thu, Mar 13, 2014 at 2:51 AM, Ming Lei <tom.leiming@gmail.com> wrote:
->>>> >> Hi Bjorn,
->>>> >>
->>>> >> I found this patch broke virtio-pci devices.
->>>> >
->>>> > Thanks a lot for testing this.
->>>> >
->>>> >> On Thu, Feb 27, 2014 at 3:37 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> >>> Don't rely on BAR contents when the command register says the BAR is
->>>> >>> disabled.
->>>> >>>
->>>> >>> If we receive a PCI device from firmware (or a hot-added device that was
->>>> >>> just powered up) with the MEMORY or IO enable bits in the PCI command
->>>> >>> register cleared, there's no reason to believe the BARs contain valid
->>>> >>> addresses.
->>>> >>
->>>> >> From PCI LOCAL BUS SPECIFICATION, REV. 3.0, both
->>>> >> PCI_COMMAND_IO and PCI_COMMAND_MEM should be
->>>> >> cleared after reset, so looks the patch sets IORESOURCE_UNSET
->>>> >> too early because PCI drivers may call pci_enable_device()
->>>> >> (->pci_enable_resources()) to enable the two bits of
->>>> >> PCI_COMMAND explicitly.
->>>> >
->>>> > The point is that it's not safe to enable those two bits unless we're
->>>> > certain that the BARs they control contain valid values that don't
->>>> > conflict with anything else in the system.
->>>> >
->>>> > Maybe we should only set IORESOURCE_UNSET when we find a conflict or a
->>>> > BAR that's not contained by an upstream bridge window, and we should
->>>> > try to reallocate then.  I'm pretty sure we do that at least in some
->>>> > cases, but it would probably simplify things if we did it more
->>>> > consistently, and maybe we shouldn't set it at all here in
->>>> > __pci_read_base().
->>>>
->>>> I think so because __pci_read_base() is called in device emulation
->>>> path.
->>>
->>> Which path is this?  I don't know anything about virtio-pci, and I only see
->>> calls to __pci_read_base() from:
->>>
->>>   sriov_init()
->>>   pci_sriov_resource_alignment()
->>>   pci_read_bases()
->>>
->>>> > But I'd like to understand your situation better, so can you provide
->>>> > more details, please?  Complete before/after dmesg logs would go a
->>>> > long way toward illustrating the problem you're seeing.
->>>>
->>>> Please see the two attachment log. The memory allocation failure
->>>> is caused by mistaken value read from pci address after the device
->>>> is failed to enable.
->>>
->>> Your logs are harder than necessary to compare because one has a lot more
->>> debug turned on than the other.
->>>
->>> In the failing case, we ignore all the initial BAR values, but we do assign
->>> values to all of them later:
->>>
->>>   pci 0000:00:00.0: can't claim BAR 0 [mem size 0x00000400]: no address assigned
->>>   pci 0000:00:00.0: can't claim BAR 1 [io  size 0x0400]: no address assigned
->>>   ...
->>>   pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x400003ff]
->>>   pci 0000:00:00.0: BAR 1: assigned [io  0x1000-0x13ff]
->>>   ...
->>>
->>> The newly-assigned values look valid, and as far as I can tell, they should
->>> work.  Do you know why they don't?  Is there an assumption somewhere that
->>> we never change BAR values?
->>
->> I don't know the cause, maybe it is related with the hypervisor
->> implementation.
->>
->>>
->>> Even if we don't need to ignore BAR values in as many cases as we do, it
->>> should be legal to ignore them and reassign them, so I want to understand
->>> what's going on here before reverting this.
->>>
->>> Is there an easy way I can reproduce the problem on my own box?
->>
->> It is not quite difficult, you can build a lkvm following the README in
->> below link and test -next tree on the small kvm hypervisor:
->>
->>      https://github.com/penberg/linux-kvm/blob/master/tools/kvm/README
->>
->> Thanks,
->> --
->> Ming Lei
->
->
->
-> --
-> Ming Lei
+> +
+> +static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
+> +{
+> +	struct rcar_pcie *pcie = sys_to_pcie(sys);
+> +	struct resource *res;
+> +	int i, ret;
+> +
+> +	pcie->root_bus_nr = sys->busnr;
+> +
+> +	/* Setup PCI resources */
+> +	for (i = 0; i < PCI_MAX_RESOURCES; i++) {
+> +
+> +		res = &pcie->res[i];
+> +		if (!res->flags)
+> +			continue;
+> +
+> +		if (res->flags & IORESOURCE_IO) {
+> +			/* Setup IO mapped memory accesses */
+> +			ret = pci_ioremap_io(0, res->start);
+> +			if (ret)
+> +				return 1;
+> +
+> +			/* Correct addresses for remapped IO */
+> +			res->end = res->end - res->start;
+> +			res->start = 0;
+> +		}
+> +
+> +		rcar_pcie_setup_window(i, res, pcie);
+> +		pci_add_resource(&sys->resources, res);
+> +	}
+
+This assumes that the start of the I/O window is always at
+bus address 0, and that you have only one PCI host in the system.
+Are both guaranteed through the hardware design?
+
+> +static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
+> +{
+> +	struct platform_device *pdev = to_platform_device(pcie->dev);
+> +	struct hw_pci hw;
+> +
+> +	memset(&hw, 0, sizeof(hw));
+> +
+> +	hw.nr_controllers = 1;
+> +	hw.private_data   = (void **)&pcie;
+> +	hw.setup          = rcar_pcie_setup,
+> +	hw.map_irq        = of_irq_parse_and_map_pci,
+> +	hw.ops		  = &rcar_pcie_ops,
+
+You can write this slightly nicer doing
+
+	struct hw_pci hw = {
+		.nr_controllers = 1,
+		.private_data = (void **)&pcie,
+		...
+	};
+> +static int __init rcar_pcie_phy_init_rcar_h1(struct rcar_pcie *pcie)
+> +{
+> +	unsigned int timeout = 10;
+> +
+> +	/* Initialize the phy */
+> +	phy_write_reg(pcie, 0, 0x42, 0x1, 0x0EC34191);
+> +	phy_write_reg(pcie, 1, 0x42, 0x1, 0x0EC34180);
+> +	phy_write_reg(pcie, 0, 0x43, 0x1, 0x00210188);
+> +	phy_write_reg(pcie, 1, 0x43, 0x1, 0x00210188);
+> +	phy_write_reg(pcie, 0, 0x44, 0x1, 0x015C0014);
+> +	phy_write_reg(pcie, 1, 0x44, 0x1, 0x015C0014);
+> +	phy_write_reg(pcie, 1, 0x4C, 0x1, 0x786174A0);
+
+Have you considered moving this into a separate PHY driver?
+There are probably good reasons either way, so I'm not asking you
+to do it, just to think about what would be best for this driver.
+
+It seems that you already have two different implementations
+that only vary in how they access the PHY, so moving that
+into a separate driver would keep the knowledge out of the
+host driver. OTOH, the PHY registers look like they are part of
+the pci host itself.
+
+> +	/*
+> +	 * For target transfers, setup a single 64-bit 4GB mapping at address
+> +	 * 0. The hardware can only map memory that starts on a power of two
+> +	 * boundary, and size is power of 2, so best to ignore it.
+> +	 */
+> +	pci_write_reg(pcie, 0, PCIEPRAR(0));
+> +	pci_write_reg(pcie, 0, PCIELAR(0));
+> +	pci_write_reg(pcie, 0xfffffff0UL | LAM_PREFETCH |
+> +		LAM_64BIT | LAR_ENABLE, PCIELAMR(0));
+> +	pci_write_reg(pcie, 0, PCIELAR(1));
+> +	pci_write_reg(pcie, 0, PCIEPRAR(1));
+> +	pci_write_reg(pcie, 0, PCIELAMR(1));
+
+Is this the only reasonable configuration? If not, you might want to
+do the same thing as the x-gene PCI driver that is not yet merged,
+and parse the 'dma-ranges' property to determine what the mapping
+on a particular machine should be.
+
+Most importantly, why don't you use a mapping that includes RAM beyond
+the first 4GB?
+
+> +static int __init pcie_init(void)
+> +{
+> +	return platform_driver_probe(&rcar_pcie_driver, rcar_pcie_probe);
+> +}
+> +subsys_initcall(pcie_init);
+
+Why so early?
+
+Overall, this driver looks pretty good.
+
+	Arnd
