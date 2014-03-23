@@ -1,69 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:23609 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753563AbaCMJu2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 05:50:28 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
-References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1394704208-7490-4-git-send-email-phil.edworthy@renesas.com>
-Date: Thu, 13 Mar 2014 09:50:02 +0000
-Subject: [PATCH 3/9] ARM: shmobile: r8a7790: Add PCIe clock device tree nodes
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:41762 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752448AbaCWSQV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Mar 2014 14:16:21 -0400
+Received: by mail-ig0-f171.google.com with SMTP id hl1so6041130igb.4
+        for <linux-pci@vger.kernel.org>; Sun, 23 Mar 2014 11:16:21 -0700 (PDT)
+MIME-Version: 1.0
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Sun, 23 Mar 2014 19:16:00 +0100
+Message-ID: <CAMxnaaVQLuExn_aEzY7QrxHiJ8Y0ZmG-EcDCuXyxH=rUdm-B6A@mail.gmail.com>
+Subject: how to trigger pcieport runtime suspend?
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the device tree clock nodes for PCIe
+The pcieport driver defines runtime_suspend and runtime_resume methods
+(pcie_port_runtime_suspend/resume in portdrv_pci.c). I am trying to
+trigger that code. But I cannot get power/runtime_usage to drop to
+zero.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/boot/dts/r8a7790.dtsi            |    7 ++++---
- include/dt-bindings/clock/r8a7790-clock.h |    1 +
- 2 files changed, 5 insertions(+), 3 deletions(-)
+Initially power/runtime_usage is set to 2. The 2 comes (imho) from:
+pci_pm_init -> pm_runtime_forbid
+local_pci_probe -> pm_runtime_get_sync
 
-diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
-index da69afc..df9ec61 100644
---- a/arch/arm/boot/dts/r8a7790.dtsi
-+++ b/arch/arm/boot/dts/r8a7790.dtsi
-@@ -704,16 +704,17 @@
- 			reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
- 			clocks = <&cp_clk>, <&mmc1_clk>, <&sd3_clk>, <&sd2_clk>,
- 				 <&cpg_clocks R8A7790_CLK_SD1>, <&cpg_clocks R8A7790_CLK_SD0>,
--				 <&mmc0_clk>, <&rclk_clk>;
-+				 <&mmc0_clk>, <&rclk_clk>, <&mp_clk>;
- 			#clock-cells = <1>;
- 			renesas,clock-indices = <
- 				R8A7790_CLK_TPU0 R8A7790_CLK_MMCIF1 R8A7790_CLK_SDHI3
- 				R8A7790_CLK_SDHI2 R8A7790_CLK_SDHI1 R8A7790_CLK_SDHI0
--				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1
-+				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1 R8A7790_CLK_PCIE
- 			>;
- 			clock-output-names =
- 				"tpu0", "mmcif1", "sdhi3", "sdhi2",
--				"sdhi1", "sdhi0", "mmcif0", "cmt1";
-+				"sdhi1", "sdhi0", "mmcif0", "cmt1",
-+				"pcie";
- 		};
- 		mstp5_clks: mstp5_clks@e6150144 {
- 			compatible = "renesas,r8a7790-mstp-clocks", "renesas,cpg-mstp-clocks";
-diff --git a/include/dt-bindings/clock/r8a7790-clock.h b/include/dt-bindings/clock/r8a7790-clock.h
-index 6548a5f..840dbc8 100644
---- a/include/dt-bindings/clock/r8a7790-clock.h
-+++ b/include/dt-bindings/clock/r8a7790-clock.h
-@@ -57,6 +57,7 @@
- #define R8A7790_CLK_SDHI1		13
- #define R8A7790_CLK_SDHI0		14
- #define R8A7790_CLK_MMCIF0		15
-+#define R8A7790_CLK_PCIE		19
- #define R8A7790_CLK_SSUSB		28
- #define R8A7790_CLK_CMT1		29
- #define R8A7790_CLK_USBDMAC0		30
--- 
-1.7.9.5
+The pm_runtime_forbid can be undone with echo auto > power/control,
+but the second one seems to never go away. local_pci_probe spots the
+following comment:
+"If the driver supports runtime PM, it should call
+pm_runtime_put_noidle() in its probe routine and
+pm_runtime_get_noresume() in its remove routine." I cannot find any
+such calls in the pcieport driver (or in the port service drivers).
 
+What am I missing?
+
+Thanks,
+Andreas
