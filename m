@@ -1,48 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:36439 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751054AbaCZR2t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 13:28:49 -0400
-Received: by mail-ie0-f182.google.com with SMTP id y20so2030880ier.13
-        for <linux-pci@vger.kernel.org>; Wed, 26 Mar 2014 10:28:49 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <532EEFF9.4020706@numascale.com>
+Date: Sun, 23 Mar 2014 22:30:17 +0800
+From: Daniel J Blueman <daniel@numascale.com>
 MIME-Version: 1.0
-In-Reply-To: <CANwwZzXdFsZGcjwOZURNG4=NPj0ZZ20e7euecGjgv==g=pBusQ@mail.gmail.com>
-References: <CANwwZzXdFsZGcjwOZURNG4=NPj0ZZ20e7euecGjgv==g=pBusQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Mar 2014 11:28:29 -0600
-Message-ID: <CAErSpo5OoxphacWhCCXS7LrpgJSdmq1wgqFdKByMEoqCAamH2Q@mail.gmail.com>
-Subject: Re: query regarding BAR mapping
-To: Bob Biloxi <iambobbiloxi@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>, Borislav Petkov <bp@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Steffen Persvold <sp@numascale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	kim.naru@amd.com,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH] Fix northbridge quirk to assign correct NUMA node
+References: <1394710981-3596-1-git-send-email-daniel@numascale.com> <CAErSpo6psgDr3XYh6m+vYcAOix2Vttrwz1jK7bS47Liy2Lw-=g@mail.gmail.com> <532BB431.7020501@numascale.com> <532C73DA.7060008@amd.com>
+In-Reply-To: <532C73DA.7060008@amd.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 26, 2014 at 5:50 AM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
-> Hi All,
+On 03/22/2014 01:16 AM, Suravee Suthikulpanit wrote:
+> On 3/20/2014 10:38 PM, Daniel J Blueman wrote:
+>> On 21/03/2014 06:07, Bjorn Helgaas wrote:
+>>> [+cc linux-pci, Myron, Suravee, Kim, Aravind]
+>>>
+>>> On Thu, Mar 13, 2014 at 5:43 AM, Daniel J Blueman
+>>> <daniel@numascale.com> wrote:
+>>>> For systems with multiple servers and routed fabric, all
+>>>> northbridges get
+>>>> assigned to the first server. Fix this by also using the node
+>>>> reported from
+>>>> the PCI bus. For single-fabric systems, the northbriges are on PCI
+>>>> bus 0
+>>>> by definition, which are on NUMA node 0 by definition, so this is
+>>>> invarient
+>>>> on most systems.
+>>>>
+>>>> Tested on fam10h and fam15h single and multi-fabric systems and
+>>>> candidate
+>>>> for stable.
+>>
+>>> I wish this had been cc'd to linux-pci.  We're talking about a related
+>>> change by Suravee there.  In fact, we were hoping this quirk could be
+>>> removed altogether.
+>>
+>> Noted.
+>>
+>>> I don't understand what this quirk is doing.  Normally we discover the
+>>> NUMA node for a PCI host bridge via the ACPI _PXM method.  The way
+>>> _PXM works is that every PCI device in the hierarchy below the bridge
+>>> inherits the same node number as the host bridge.  I first thought
+>>> this might be a workaround for a system that lacks _PXM, but I don't
+>>> think that can be right, because you're only changing the node for a
+>>> few devices, not the whole hierarchy.
+>>  >
+>>> So I suspect the problem is more complicated, and maybe _PXM is
+>>> insufficient to describe the topology?  Are there subtrees that should
+>>> have nodes different from the host bridge?
+>>
+>> Yes; see below.
+>>
+>>> I know this patch is already in v3.14-rc7, but I'd still like to
+>>> understand it so we can do the right thing with Suravee's patch.
+>>
+>> The _PXM method associates each northbridge with the first NUMA node,
+>> 0 in single-fabric systems, and eg 4 for the second server in a
+>> multi-fabric system with 2 dual-module Opterons (with 2 NUMA nodes
+>> internally) etc, since the northbridges appear in the
+>> PCI tree, under the host bridge, not above it [1].
+> Daniel,
 >
-> I am writing a driver for PCIe network device. I am still trying to
-> learn, so my question might be like a simple one as I do not
-> understand most of the things.
+> That lspci looks interesting, what is the value returned from
+> pci_bus_to_node() on your system for each fabric?
 
-You should start by looking at and copying an existing, working
-driver.  bnx2x and ixgbe are examples for some current hardware, but
-they are big and complicated.  e100 is older but simpler.  A
-networking person could give better advice.
+pci_bus_to_node returns 0 for PCI domain 0000, 2 for PCI domain 0001, 4 
+for PCI domain 0002 and so on.
 
-> From the BAR0 address that I read, the memory size is around 256MB.
-> But I have only 128MB at my disposal.
+Our processor fabric interconnect has HyperTransport NodeId 2 on each 
+server (as they start from bus 0, device 0x18 of course):
+0000:00:1a.0 Host bridge: Device 1b47:0601 (rev 02)
+0000:00:1a.1 Host bridge: Device 1b47:0602 (rev 02)
 
-The BAR determines the size in MMIO space.  I'm not sure what you mean
-by "have only 128MB at my disposal."  If you have limited virtual
-memory space and your driver doesn't need the whole MMIO region, you
-can just map the part you need.
-
-> So my question is how do i map this BAR so as to access the MMIO region.
-
-pci_iomap() is a good place to start.  That gives you an __iomem
-address that you can then pass to ioread*() and iowrite*() to access
-the MMIO region.  It maps the entire region, so if you need less,
-you'd probably use ioremap() directly.
-
-Bjorn
+Thanks,
+   Daniel
+-- 
+Daniel J Blueman
+Principal Software Engineer, Numascale
