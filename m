@@ -1,67 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:59000 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699AbaC1QxH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 12:53:07 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
-	Richard Zhu <r65037@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
-Subject: [PATCH 0/8] i.MX6 PCIe binding change and MSI support
-Date: Fri, 28 Mar 2014 17:52:51 +0100
-Message-Id: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+Received: from iolanthe.rowland.org ([192.131.102.54]:42755 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753600AbaCXRTo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 13:19:44 -0400
+Date: Mon, 24 Mar 2014 13:19:43 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: Andreas Noever <andreas.noever@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Pavel Machek <pavel@ucw.cz>
+Subject: Re: how to trigger pcieport runtime suspend?
+In-Reply-To: <CAErSpo5yOEqHZmWZ3j8NQs_DapmkegDTm8uLJCS2uCKvTvtT6Q@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1403241316280.1197-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While working on MSI support for the i.MX6 PCIe host driver
-it has been discovered that the binding for this host controller
-is broken in many ways (refer to the patch descriptions for more
-info) and was introduced without proper discussion about what
-should/should not be in the binding.
+On Mon, 24 Mar 2014, Bjorn Helgaas wrote:
 
-This series fixes this and minimizes the difference of the
-i.MX6 binding to the common designware PCIe binding. I'm aware
-that this is a quite radical change, but I think it's justified
-to do this as long as there aren't many user of the old binding
-(most of the optional properties in the binding aren't even
-implemented).
+> [+cc Rafael, Pavel, linux-pm]
+> 
+> On Sun, Mar 23, 2014 at 12:16 PM, Andreas Noever
+> <andreas.noever@gmail.com> wrote:
+> > The pcieport driver defines runtime_suspend and runtime_resume methods
+> > (pcie_port_runtime_suspend/resume in portdrv_pci.c). I am trying to
+> > trigger that code. But I cannot get power/runtime_usage to drop to
+> > zero.
+> >
+> > Initially power/runtime_usage is set to 2. The 2 comes (imho) from:
+> > pci_pm_init -> pm_runtime_forbid
+> > local_pci_probe -> pm_runtime_get_sync
+> >
+> > The pm_runtime_forbid can be undone with echo auto > power/control,
+> > but the second one seems to never go away. local_pci_probe spots the
+> > following comment:
+> > "If the driver supports runtime PM, it should call
+> > pm_runtime_put_noidle() in its probe routine and
+> > pm_runtime_get_noresume() in its remove routine." I cannot find any
+> > such calls in the pcieport driver (or in the port service drivers).
+> >
+> > What am I missing?
 
-Looking forward to your feedback.
+You're not missing anything, but apparently the people who added
+runtime PM support to the pcieport driver missed the comment you 
+quoted.
 
-Lucas Stach (8):
-  ARM: imx6q-clk: parent lvds_gate from lvds_sel
-  PCI: designware: split Exynos and i.MX bindings
-  ARM: dts: imx6: update pcie to bring in line with new binding
-  PCI: imx6: use new clock names
-  PCI: imx6: drop old irq mapping
-  PCI: imx6: rip out optional (and unused) irqs
-  PCI: designware: make MSI isr shared irq aware
-  PCI: imx6: add support for MSI
+If you add those calls to the driver, does it do what you want?
 
- .../devicetree/bindings/pci/designware-pcie.txt    |  74 +----------
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  38 ++++++
- .../bindings/pci/samsung,exynos5440-pcie.txt       |  65 +++++++++
- arch/arm/boot/dts/imx6qdl.dtsi                     |   7 +-
- arch/arm/mach-imx/clk-imx6q.c                      |   4 +-
- drivers/pci/host/pci-exynos.c                      |   4 +-
- drivers/pci/host/pci-imx6.c                        | 145 ++++++++-------------
- drivers/pci/host/pcie-designware.c                 |   6 +-
- drivers/pci/host/pcie-designware.h                 |   2 +-
- 9 files changed, 176 insertions(+), 169 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-
--- 
-1.9.0
+Alan Stern
 
