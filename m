@@ -1,62 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:42312 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754997AbaCDTkr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 14:40:47 -0500
-Received: by mail-we0-f170.google.com with SMTP id w61so5567249wes.15
-        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 11:40:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1393944864-28113-1-git-send-email-tharvey@gateworks.com>
-References: <1393944864-28113-1-git-send-email-tharvey@gateworks.com>
-Date: Tue, 4 Mar 2014 11:40:46 -0800
-Message-ID: <CAJ+vNU07D-u+-Lj5nOSveO94S93d_5=FKq34Gk2O2OVDRexWww@mail.gmail.com>
-Subject: Re: [PATCH 1/2] of/irq: Fix irq-mapping in of_irq_parse_raw()
-From: Tim Harvey <tharvey@gateworks.com>
-To: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:52128 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752902AbaCXMyl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 08:54:41 -0400
+Message-ID: <1395665627.5062.12.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree bindings
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Phil.Edworthy@renesas.com
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ben Dooks <ben-linux@fluff.org>,
-	linux-tegra <linux-tegra@vger.kernel.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Grant Likely <grant.likely@linaro.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>
+Date: Mon, 24 Mar 2014 13:53:47 +0100
+In-Reply-To: <OF01E3AAFE.D9BF866A-ON80257CA5.0045F63A-80257CA5.00463029@eu.necel.com>
+References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
+			 <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>
+	  <1395401031.4554.9.camel@weser.hi.pengutronix.de>
+	 <OF03C9E23D.07B7D998-ON80257CA2.004E5877-80257CA2.004E9BFB@eu.necel.com>
+	 <1395412213.4554.17.camel@weser.hi.pengutronix.de>
+	 <OFC7DD5DAC.D378B300-ON80257CA2.0051ECEE-80257CA2.00529F98@LocalDomain>
+	 <OF9DD6173A.94976872-ON80257CA5.0041752F-80257CA5.0042532C@eu.necel.com>
+	 <533021F6.2000702@codethink.co.uk>
+	 <OF85DD7B1D.716DE42D-ON80257CA5.00443087-80257CA5.004447DB@LocalDomain>
+	 <OF01E3AAFE.D9BF866A-ON80257CA5.0045F63A-80257CA5.00463029@eu.necel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 4, 2014 at 6:54 AM, Tim Harvey <tharvey@gateworks.com> wrote:
-> When an interrupt-map contains multiple entries an imap pointer arithmetic
-> bug can cause only the first entry to be properly evaluated and causes
-> the out_irq parameters to be incorrect depending on the #interrupt-cells
-> and #address-cells of the parent interrupt controller.
->
-> Specifically, the imap pointer into the interrupt-map table should be
-> adjusted by the parent interrupt controller #interrupt-cells size only
-> as at this point the only the parent unit interrupt specifier needs to be
-> stepped over.
->
-> This resolves an issue encountered when using the of_irq_parse_and_map_pci()
-> for the imx6 pcie host controller driver map_irq function where a P2P bridge
-> is on the bus and legacy PCI interrupts are to be used.
->
+Am Montag, den 24.03.2014, 12:46 +0000 schrieb
+Phil.Edworthy@renesas.com:
+> Hi Ben,
+> 
+> On: 24/03/2014 12:25, Phil wrote:
+> > Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
+> bindings
+> > 
+> > Hi Ben,
+> > 
+> > On: 24/03/2014 12:16, Ben wrote:
+> > > Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
+> bindings
+> > > 
+> > > On 24/03/14 12:04, Phil.Edworthy@renesas.com wrote:
+> > > > Hi Lucas,
+> > > >
+> > > > On: 21/03/2014 15:02, Phil wrote:
+> > > >> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree
+> > > > bindings
+> > > >>
+> > > >> Hi Lucas,
+> > > >>
+> > > >> On: 21/03/2014 14:31, Lucas wrote:
+> > > >>> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device 
+> tree
+> > > > bindings
+> > > >>>
+> > > >>> Am Freitag, den 21.03.2014, 14:18 +0000 schrieb
+> > > >>> Phil.Edworthy@renesas.com:
+> > > >>>> Hi Lucas,
+> > > >>>>
+> > > >>>> On 21/03/2014 11:24, Lucas wrote:
+> > > >>>>> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device
+> > > > tree
+> > > >>>> bindings
+> > > >>>>>
+> > > >>>>> Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
+> > > >>>>>> This patch adds the bindings for the rcar PCIE driver. The
+> > > > driver
+> > > >>>>>> resides under drivers/pci/host/pcie-rcar.c
+> > > >>>>>>
+> > > >>>>>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > > >>>>>
+> > > >>>>> I have one question below. If you can answer this with yes after
+> > > >>>>> thinking again about it, this is:
+> > > >>>>>
+> > > >>>>> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+> > > >>>>>> ---
+> > > >>>>>>   Documentation/devicetree/bindings/pci/rcar-pci.txt | 40
+> > > >>>> ++++++++++++++++++++++
+> > > >>>>>>   1 file changed, 40 insertions(+)
+> > > >>>>>>   create mode 100644
+> > > > Documentation/devicetree/bindings/pci/rcar-pci.txt
+> > > >>>>>>
+> > > >>>>>> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> > > > b/
+> > > >>>>> Documentation/devicetree/bindings/pci/rcar-pci.txt
+> > > >>>>>> new file mode 100644
+> > > >>>>>> index 0000000..0e219b0
+> > > >>>>>> --- /dev/null
+> > > >>>>>> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> > > >>>>>> @@ -0,0 +1,40 @@
+> > > >>>>>> +* Renesas RCar PCIe interface
+> > > >>>>>> +
+> > > >>>>>> +Required properties:
+> > > >>>>>> +- compatible: should contain one of the following
+> > > >>>>>> +   "renesas,r8a7779-pcie", "renesas,r8a7790-pcie",
+> > > >>>> "renesas,r8a7791-pcie"
+> > > >>>>>> +- reg: base addresses and lengths of the pcie controller.
+> > > >>>>>> +- #address-cells: set to <3>
+> > > >>>>>> +- #size-cells: set to <2>
+> > > >>>>>> +- device_type: set to "pci"
+> > > >>>>>> +- ranges: ranges for the PCI memory and I/O regions
+> > > >>>>>> +- interrupts: interrupt values for MSI interrupt
+> > > >>>>>> +- #interrupt-cells: set to <1>
+> > > >>>>>> +- interrupt-map-mask and interrupt-map: standard PCI 
+> properties
+> > > >>>>>> +   to define the mapping of the PCIe interface to interrupt
+> > > >>>>>> +   numbers.
+> > > >>>>>> +- clocks: from common clock binding: handle to pci clock.
+> > > >>>>>> +- clock-names: from common clock binding: should be "pcie"
+> > > >>>>>
+> > > >>>>> You really only have one PCIe clock? So the controller is
+> > > > generating the
+> > > >>>>> PCIe bus clock from it's register clock? No need to enable any
+> > > > other
+> > > >>>>> clock for PCIe to work?
+> > > >>>> Yes, just the one clock. The PCIe bus clock is an external clock
+> > > > dedicated
+> > > >>>> to PCIe and SATA, and we have no control over it.
+> > > >>>>
+> > > >>> Is this some kind of always-on clock? If not you probably want a
+> > > >>> reference to it from the PCIe driver even if it's shared between 
+> SATA
+> > > >>> and PCIe. After all you don't want to end up unconditionally 
+> enabling
+> > > >>> this clock from the board or SoC level just to have PCIe working,
+> > > > right?
+> > > >> Ok, I see, I'll need a reference to a board clock, even if it's 
+> always
+> > > > on for
+> > > >> these boards.
+> > > > One small question...
+> > > >
+> > > > The patches added the PCIe host controller to two devices, r8a7790 
+> and
+> > > > r8a7791. The r8a7790-based Lager board doesn't have the necessary 
+> hardware
+> > > > to use PCIe, so should I add a dummy pcie_bus clock to the Lager 
+> board
+> > > > dts, even though PCIe is not used?
+> > > >
+> > > > I'm just wondering what the dts file looks like for a board that 
+> doesn't
+> > > > support many interfaces. Does it become littered with dummy clocks 
+> and
+> > > > regulators?
+> > > 
+> > > The bridge node should be set to disabled by default so it never gets
+> > > probed. Any boards that want to use it can over-ride the status to be
+> > > enabled.
+> > Ok, thanks.
+> Hmm, yes it doesn't get probed, but you still get a build problem as the 
+> DT entry references an clock that doesn't exist. Maybe I'm missing 
+> something...
+> 
+If the clock is a board supplied one then you have to supply to clocks
+property from the board dts, to get rid of the compile failure. You can
+not have phandles in the PCIe node referencing a non-existing clock.
 
-Note the subject of my patch was incorrect - its a single patch, not a
-series.  The subject should read:
+Regards,
+Lucas
+-- 
+Pengutronix e.K.                           | Lucas Stach                 |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
 
-[PATCH] of/irq: Fix irq-mapping in of_irq_parse_raw()
-
-Sorry for the confusion,
-
-Tim
