@@ -1,69 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:12751 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754565AbaCNGB6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 02:01:58 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N2E002GUWR7TI90@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 14 Mar 2014 15:01:55 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Mohit Kumar' <mohit.kumar@st.com>
-Cc: arnd@arndb.de, 'Pratyush Anand' <pratyush.anand@st.com>,
-	'Viresh Kumar' <viresh.linux@gmail.com>,
-	spear-devel@list.st.com, linux-pci@vger.kernel.org,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <cover.1393568715.git.mohit.kumar@st.com>
- <cbfef3a20e6c713a0d7d6b970dc4c75928798442.1393568715.git.mohit.kumar@st.com>
-In-reply-to: <cbfef3a20e6c713a0d7d6b970dc4c75928798442.1393568715.git.mohit.kumar@st.com>
-Subject: Re: [PATCH V7 08/10] pcie: SPEAr13xx: Add designware wrapper support
-Date: Fri, 14 Mar 2014 15:01:55 +0900
-Message-id: <000001cf3f4a$e71b75a0$b55260e0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
+Received: from userp1040.oracle.com ([156.151.31.81]:35938 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750875AbaCXWMN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 18:12:13 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2] pciehp: only wait command complete for real hotplug control
+Date: Mon, 24 Mar 2014 15:13:52 -0700
+Message-Id: <1395699232-28727-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <CAA93t1rPE3yUh8nAGJDiqeGhixznZdhdyFwRoX_c1VWT3WEtvw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, February 28, 2014 8:55 PM, Mohit Kumar wrote:
-> 
-> From: Pratyush Anand <pratyush.anand@st.com>
-> 
-> SPEAr1310 and SPEAr1340 SOC uses designware PCIe controller. Add
-> SPEAr13xx PCIe driver based on designware controller driver.
-> 
-> SPEAr1310 has 3 PCIe ports and SPEAr1340 has 1, which are multiplexed
-> with ahci/sata pins. By default evaluation board of both controller
-> works for ahci mode.
-> To use these patches on SPEAr1340/1310 evaluation board, do the
-> necessary modifications on board and enable (okay) pcie and miphy
-> from respective evb dtsi file.
-> 
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-> Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-> Cc: Jingoo Han <jg1.han@samsung.com>
+On system with 16 PCI express hotplug slots, customer complain every slot
+will report "Command not completed in 1000 msec" during initialization.
 
-For 'drivers/pci/host/pcie-spear13xx.c',
+Intel says that we should only wait command complete only for
+           Electromechanical Interlock Control
+           Power Controller Control
+           Power Indicator Control
+           Attention Indicator Control
 
-Reviewed-by: Jingoo Han <jg1.han@samsung.com>
+System with AMD/Nvidia chipset have same problem.
 
-Best regards,
-Jingoo Han
+Two ways to address the problem:
+1. change to only wait when (EIC, PCC, PIC, AIC) bits get changed.
+2. or check CMD_COMPLETE and wait before write command. Only wait
+   when CC is set and cmd_busy is true. For chipset from intel
+   will only have CC set for real hotplug control, so we could
+   skip the wait for others.
 
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Viresh Kumar <viresh.linux@gmail.com>
-> Cc: spear-devel@list.st.com
-> Cc: linux-pci@vger.kernel.org
-> ---
->  arch/arm/boot/dts/spear1310.dtsi  |    6 +
->  arch/arm/boot/dts/spear1340.dtsi  |    2 +
->  arch/arm/boot/dts/spear13xx.dtsi  |    4 +-
->  arch/arm/mach-spear/Kconfig       |    1 +
->  drivers/pci/host/Kconfig          |    8 +
->  drivers/pci/host/Makefile         |    1 +
->  drivers/pci/host/pcie-spear13xx.c |  414 +++++++++++++++++++++++++++++++++++++
->  7 files changed, 434 insertions(+), 2 deletions(-)
->  create mode 100644 drivers/pci/host/pcie-spear13xx.c
+This patch is using second way.
 
+With that we could save 16 seconds during booting, later with 32 sockets system
+with 64 pcie hotplug slots we could save 64 seconds.
 
+-v2: use second way that is suggested by Bjorn.
+     It also solve the problem on Rajat's sytem that have wrong inital CC
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Rajat Jain <rajatxjain@gmail.com>
+
+---
+ drivers/pci/hotplug/pciehp_hpc.c |   26 ++++++++++----------------
+ 1 file changed, 10 insertions(+), 16 deletions(-)
+
+Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
++++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+@@ -158,15 +158,8 @@ static void pcie_write_cmd(struct contro
+ 	mutex_lock(&ctrl->ctrl_lock);
+ 
+ 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+-	if (slot_status & PCI_EXP_SLTSTA_CC) {
+-		if (!ctrl->no_cmd_complete) {
+-			/*
+-			 * After 1 sec and CMD_COMPLETED still not set, just
+-			 * proceed forward to issue the next command according
+-			 * to spec. Just print out the error message.
+-			 */
+-			ctrl_dbg(ctrl, "CMD_COMPLETED not clear after 1 sec\n");
+-		} else if (!NO_CMD_CMPL(ctrl)) {
++	if (ctrl->no_cmd_complete && slot_status & PCI_EXP_SLTSTA_CC) {
++		if (!NO_CMD_CMPL(ctrl)) {
+ 			/*
+ 			 * This controller seems to notify of command completed
+ 			 * event even though it supports none of power
+@@ -182,16 +175,11 @@ static void pcie_write_cmd(struct contro
+ 	}
+ 
+ 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+-	slot_ctrl &= ~mask;
+-	slot_ctrl |= (cmd & mask);
+-	ctrl->cmd_busy = 1;
+-	smp_mb();
+-	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
+-
+ 	/*
+ 	 * Wait for command completion.
+ 	 */
+-	if (!ctrl->no_cmd_complete) {
++	if (!ctrl->no_cmd_complete && (slot_status & PCI_EXP_SLTSTA_CC) &&
++	    ctrl->cmd_busy) {
+ 		int poll = 0;
+ 		/*
+ 		 * if hotplug interrupt is not enabled or command
+@@ -203,6 +191,12 @@ static void pcie_write_cmd(struct contro
+ 			poll = 1;
+                 pcie_wait_cmd(ctrl, poll);
+ 	}
++
++	slot_ctrl &= ~mask;
++	slot_ctrl |= (cmd & mask);
++	ctrl->cmd_busy = 1;
++	smp_mb();
++	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
+ 	mutex_unlock(&ctrl->ctrl_lock);
+ }
+ 
