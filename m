@@ -1,110 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:45704 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751681AbaCUO1k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 10:27:40 -0400
-Message-ID: <1395412013.4554.13.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH v4 2/9] PCI: host: rcar: Add MSI support
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Phil.Edworthy@renesas.com
-Cc: Simon Horman <horms@verge.net.au>, linux-sh@vger.kernel.org,
-	linux-pci@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Date: Fri, 21 Mar 2014 15:26:53 +0100
-In-Reply-To: <OFFBE32003.3827BA14-ON80257CA2.004D7C1E-80257CA2.004E5338@eu.necel.com>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
-		 <1395397968-6242-3-git-send-email-phil.edworthy@renesas.com>
-	 <1395400638.4554.5.camel@weser.hi.pengutronix.de>
-	 <OFFBE32003.3827BA14-ON80257CA2.004D7C1E-80257CA2.004E5338@eu.necel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:26005
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751132AbaCXXTz convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Mar 2014 19:19:55 -0400
+From: Rajat Jain <rajatjain@juniper.net>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Rajat Jain <rajatxjain@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: RE: [PATCH v2] pciehp: only wait command complete for real hotplug
+ control
+Date: Mon, 24 Mar 2014 23:19:48 +0000
+Message-ID: <83f00436a12b44f799bd1222b91297cd@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <CAA93t1rPE3yUh8nAGJDiqeGhixznZdhdyFwRoX_c1VWT3WEtvw@mail.gmail.com>
+ <1395699232-28727-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1395699232-28727-1-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 21.03.2014, 14:15 +0000 schrieb
-Phil.Edworthy@renesas.com:
-> Hi Lucas,
-> 
-> Thanks for the review.
-> 
-> On 21/03/2014 11:18, Lucas wrote:
-> > Subject: Re: [PATCH v4 2/9] PCI: host: rcar: Add MSI support
-> > 
-> > Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
-> > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > > ---
-> > >  drivers/pci/host/pcie-rcar.c | 232 
-> ++++++++++++++++++++++++++++++++++++++++++-
-> > >  drivers/pci/host/pcie-rcar.h |   5 +
-> > >  2 files changed, 236 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/pci/host/pcie-rcar.c 
-> b/drivers/pci/host/pcie-rcar.c
-> > > index 16670e5..cbbcd77 100644
-> > > --- a/drivers/pci/host/pcie-rcar.c
-> > > +++ b/drivers/pci/host/pcie-rcar.c
-> > [...]
-> > > +
-> > > +static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
-> > > +{
-> > > +   struct rcar_pcie *pcie = data;
-> > > +   struct rcar_msi *msi = &pcie->msi;
-> > > +   unsigned long reg;
-> > > +
-> > > +   reg = pci_read_reg(pcie, PCIEMSIFR);
-> > > +
-> > > +   while (reg) {
-> > > +      unsigned int index = find_first_bit(&reg, 32);
-> > > +      unsigned int irq;
-> > > +
-> > > +      /* clear the interrupt */
-> > > +      pci_write_reg(pcie, 1 << index, PCIEMSIFR);
-> > > +
-> > > +      irq = irq_find_mapping(msi->domain, index);
-> > > +      if (irq) {
-> > > +         if (test_bit(index, msi->used))
-> > > +            generic_handle_irq(irq);
-> > > +         else
-> > > +            dev_info(pcie->dev, "unhandled MSI\n");
-> > > +      } else {
-> > > +         /*
-> > > +          * that's weird who triggered this?
-> > > +          * just clear it
-> > > +          */
-> > > +         dev_info(pcie->dev, "unexpected MSI\n");
-> > > +      }
-> > > +
-> > > +      /* see if there's any more pending in this vector */
-> > > +      reg = pci_read_reg(pcie, PCIEMSIFR);
-> > > +   }
-> > > +
-> > > +   return IRQ_HANDLED;
-> > > +}
-> > > +
-> > From your DT binding it seems you have only one interrupt from the PCIe
-> > core, shared between the MSI irqs and the PCI legacy interrupts.
-> > This means this handler may get called without an MSI irq pending, so
-> > this function really should have a path where it's returning IRQ_NONE.
-> Ah, yes you are right... though actually there are two interrupts, one has 
-> some MSI and INTx, the other has the rest of the MSIs.
-> 
-This isn't reflected in the DT binding. If you already know that there
-may be more than a single interrupt for MSI, please push this into the
-binding by using named interrupts. Even if your driver doesn't support
-it yet, additional functionality can always be added later, but the DT
-should be a stable ABI describing your hardware.
+Just a note  :-)
 
-So if you already know your hardware has more than one interrupt, please
-put it in the binding, to avoid churn later on.
+> -v2: use second way that is suggested by Bjorn.
+>     It also solve the problem on Rajat's sytem that have wrong inital CC
 
-Regards,
-Lucas
--- 
-Pengutronix e.K.                           | Lucas Stach                 |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+Er, not wrong initial CC.
+
+Just a different (but not necessarily wrong) different CC bit behavior :-). In my systems, the CC bit gets set for every write to the slot control register (even if Button, LED, EMI, power controller are not implemented).
+
+> Tested-by: Rajat Jain <rajatxjain@gmail.com>
+
+Yes, I tested and it seems to work fine on such systems too.
+
+Best Regards,
+
+Rajat
 
