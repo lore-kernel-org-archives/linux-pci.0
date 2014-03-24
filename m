@@ -1,71 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:38953 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750885AbaCFLhx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 06:37:53 -0500
-Date: Thu, 6 Mar 2014 11:37:17 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v5] PCI: ARM: add support for generic PCI host controller
-Message-ID: <20140306113717.GE5202@mudshark.cambridge.arm.com>
-References: <1393872400-7262-1-git-send-email-will.deacon@arm.com>
- <20140305181057.GC2214@e106497-lin.cambridge.arm.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:44224 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752200AbaCXRL2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 13:11:28 -0400
+Received: by mail-ie0-f170.google.com with SMTP id rd18so5846010iec.15
+        for <linux-pci@vger.kernel.org>; Mon, 24 Mar 2014 10:11:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140305181057.GC2214@e106497-lin.cambridge.arm.com>
+In-Reply-To: <CAMxnaaVQLuExn_aEzY7QrxHiJ8Y0ZmG-EcDCuXyxH=rUdm-B6A@mail.gmail.com>
+References: <CAMxnaaVQLuExn_aEzY7QrxHiJ8Y0ZmG-EcDCuXyxH=rUdm-B6A@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 24 Mar 2014 11:11:05 -0600
+Message-ID: <CAErSpo5yOEqHZmWZ3j8NQs_DapmkegDTm8uLJCS2uCKvTvtT6Q@mail.gmail.com>
+Subject: Re: how to trigger pcieport runtime suspend?
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Pavel Machek <pavel@ucw.cz>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 05, 2014 at 06:10:57PM +0000, Liviu Dudau wrote:
-> On Mon, Mar 03, 2014 at 06:46:40PM +0000, Will Deacon wrote:
-> > +static int gen_pci_calc_io_offset(struct device *dev,
-> > +                                 struct of_pci_range *range,
-> > +                                 struct resource *res,
-> > +                                 resource_size_t *offset)
-> > +{
-> > +       static atomic_t wins = ATOMIC_INIT(0);
-> > +       int err, idx, max_win;
-> > +       unsigned int window;
-> > +
-> > +       if (!PAGE_ALIGNED(range->cpu_addr))
-> > +               return -EINVAL;
-> > +
-> > +       max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
-> > +       idx = atomic_inc_return(&wins);
-> > +       if (idx >= max_win)
-> > +               return -ENOSPC;
-> > +
-> > +       window = (idx - 1) * SZ_64K;
-> > +       err = pci_ioremap_io(window, range->cpu_addr);
-> > +       if (err)
-> > +               return err;
-> > +
-> > +       of_pci_range_to_resource(range, dev->of_node, res);
-> > +       res->start = window;
-> > +       res->end = res->start + range->size - 1;
-> > +       *offset = window - range->pci_addr;
-> 
-> If my fix for of_pci_range_to_resource will get accepted, this
-> function will have to morph into the pci_register_io_range() call.
-> Would that cause problems for other users of of_pci_range_to_resource()
-> (namely mach-integrator ?)
+[+cc Rafael, Pavel, linux-pm]
 
-I imagine anybody using an I/O region would break, no? Maybe you could check
-range->flags in of_pci_range_to_resource and do the right thing if somebody
-passes you an I/O range?
-
-I'm happy to update this driver, but it's best to avoid breaking other users
-if we can.
-
-> Otherwise, looks good to me. You can add my (worthless?)
-> 
-> Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
-
-Thanks, Liviu!
-
-Will
+On Sun, Mar 23, 2014 at 12:16 PM, Andreas Noever
+<andreas.noever@gmail.com> wrote:
+> The pcieport driver defines runtime_suspend and runtime_resume methods
+> (pcie_port_runtime_suspend/resume in portdrv_pci.c). I am trying to
+> trigger that code. But I cannot get power/runtime_usage to drop to
+> zero.
+>
+> Initially power/runtime_usage is set to 2. The 2 comes (imho) from:
+> pci_pm_init -> pm_runtime_forbid
+> local_pci_probe -> pm_runtime_get_sync
+>
+> The pm_runtime_forbid can be undone with echo auto > power/control,
+> but the second one seems to never go away. local_pci_probe spots the
+> following comment:
+> "If the driver supports runtime PM, it should call
+> pm_runtime_put_noidle() in its probe routine and
+> pm_runtime_get_noresume() in its remove routine." I cannot find any
+> such calls in the pcieport driver (or in the port service drivers).
+>
+> What am I missing?
+>
+> Thanks,
+> Andreas
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
