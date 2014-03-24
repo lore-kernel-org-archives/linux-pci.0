@@ -1,66 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 13 Mar 2014 18:36:57 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
-	linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-	Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: [PATCH v2 0/2] block: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140313173656.GA4939@dhcp-26-207.brq.redhat.com>
-References: <cover.1393404496.git.agordeev@redhat.com>
- <20140313041231.GC26657@google.com>
- <5321CE94.5070506@kernel.dk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:32971 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750938AbaCXE2v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 00:28:51 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Mon, 24 Mar 2014 12:02:32 +0800
+Subject: RE: [PATCH V2 0/2] PCI: dessignware: fixes and cleanup
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FE74A982@EAPEX1MAIL1.st.com>
+References: <cover.1392904207.git.mohit.kumar@st.com>
+In-Reply-To: <cover.1392904207.git.mohit.kumar@st.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5321CE94.5070506@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 13, 2014 at 09:28:20AM -0600, Jens Axboe wrote:
-> On 03/12/2014 10:12 PM, Bjorn Helgaas wrote:
-> >On Wed, Feb 26, 2014 at 10:02:40AM +0100, Alexander Gordeev wrote:
-> >>Changes since v1:
-> >>   - cciss: patch #1: a weird 'goto' removed;
-> >>   - cciss: patch #2: pci_enable_msix_exact() used, not pci_enable_msix_range();
-> >>   - rsxx: patch dropped - no need to change anything;
-> >>
-> >>As result of deprecation of MSI-X/MSI enablement functions
-> >>pci_enable_msix() and pci_enable_msi_block() all drivers
-> >>using these two interfaces need to be updated to use the
-> >>new pci_enable_msi_range()  or pci_enable_msi_exact()
-> >>and pci_enable_msix_range() or pci_enable_msix_exact()
-> >>interfaces.
-> >>
-> >>This change updates 'cciss' only, but there is also 'nvme' update
-> >>pending - I am waiting for Intel guys to clarify if they want to
-> >>route it thru their tree. If not, I will post the 'nvme' patch as
-> >>a follow-up to this series.
-> >
-> >Hi Jens,
-> >
-> >I'd like to get these merged during the v3.15 merge window.  I'd be glad to
-> >review and apply them through my tree, unless you want to do it.  They do
-> >depend on f7fc32c, which went in after the v3.14 merge window, which makes
-> >it a bit of a hassle.
-> 
-> My 3.15/drivers (and core) branch are based off 3.14-rc3, so it
-> should be OK. I've queued them up, as it's mostly a followup to the
-> previous ones from Alexander.
-
-Oh-oh, cciss patch #2 requires commit 3ce4e86 ("PCI/MSI: Add
-pci_enable_msi_exact() and pci_enable_msix_exact()") which was
-pulled to 3.14-rc4 only. Sorry for failing to clarify that :(
-
-And I also notice 3111cc3 ("skd: Use pci_enable_msix_exact() instead
-of pci_enable_msix_range()") in your tree also should not compile :(
-
-> -- 
-> Jens Axboe
-> 
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+SGVsbG8gQmpvcm4sDQoNClBscyBsb29rIGlmIHRoZXNlIHNtYWxsIHBhdGNoZXMgY2FuIGFsc28g
+YmUgcGlja2VkIGZvciB5b3VyIHRyZWUuDQoNClRoYW5rcw0KTW9oaXQNCg0KPiAtLS0tLU9yaWdp
+bmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNb2hpdCBLVU1BUiBEQ0cNCj4gU2VudDogVGh1cnNk
+YXksIEZlYnJ1YXJ5IDI3LCAyMDE0IDExOjMxIEFNDQo+IFRvOiBiaGVsZ2Fhc0Bnb29nbGUuY29t
+DQo+IENjOiBNb2hpdCBLVU1BUiBEQ0c7IEppbmdvbyBIYW47IHNwZWFyLWRldmVsOyBsaW51eC1w
+Y2lAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFtQQVRDSCBWMiAwLzJdIFBDSTogZGVzc2ln
+bndhcmU6IGZpeGVzIGFuZCBjbGVhbnVwDQo+IA0KPiBUaGlzIHBhdGNoc2V0IGZpeGVzIGlBVFUg
+cHJvZ3JhbW1pbmcgc2VxdWVuY2UgYW5kIGNvcnJlY3Qgc29tZQ0KPiBjb21tZW50cy4NCj4gDQo+
+IENoYW5nZXMgc3NpbmNlIHYxOg0KPiAJLSBDaGFuZ2Ugc3N1YmplY3QgbGluZSB3aXRoIHByb3Bl
+ciBzcGFjaW5nDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBNb2hpdCBLdW1hciA8bW9oaXQua3VtYXJA
+c3QuY29tPg0KPiBDYzogSmluZ29vIEhhbiA8amcxLmhhbkBzYW1zdW5nLmNvbT4NCj4gQ2M6IEJq
+b3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+DQo+IENjOiBzcGVhci1kZXZlbEBsaXN0
+LnN0LmNvbQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZw0KPiANCj4gTW9oaXQgS3Vt
+YXIgKDIpOg0KPiAgIFBDSTogZGVzaWdud2FyZTogRml4IGNvbW1lbnQgZm9yIHNldHRpbmcgbnVt
+YmVyIG9mIGxhbmVzDQo+ICAgUENJOiBkZXNpZ253YXJlOiBGaXggaUFUVSBwcm9ncmFtbWluZyBm
+b3IgY2ZnMSwgaW8gYW5kIG1lbSB2aWV3cG9ydA0KPiANCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNp
+ZS1kZXNpZ253YXJlLmMgfCAgICA4ICsrKystLS0tDQo+ICAxIGZpbGVzIGNoYW5nZWQsIDQgaW5z
+ZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkNCj4gDQo+IC0tDQo+IDEuNy4zLjQNCg0K
