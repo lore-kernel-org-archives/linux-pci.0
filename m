@@ -1,82 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:33058 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932938AbaCDUxf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 15:53:35 -0500
-Received: by mail-ie0-f178.google.com with SMTP id lx4so88738iec.23
-        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 12:53:34 -0800 (PST)
+Received: from relmlor3.renesas.com ([210.160.252.173]:28489 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752707AbaCXMZ4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 08:25:56 -0400
+In-Reply-To: <533021F6.2000702@codethink.co.uk>
+References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>		 <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>  <1395401031.4554.9.camel@weser.hi.pengutronix.de>
+	 <OF03C9E23D.07B7D998-ON80257CA2.004E5877-80257CA2.004E9BFB@eu.necel.com> <1395412213.4554.17.camel@weser.hi.pengutronix.de> <OFC7DD5DAC.D378B300-ON80257CA2.0051ECEE-80257CA2.00529F98@LocalDomain> <OF9DD6173A.94976872-ON80257CA5.0041752F-80257CA5.0042532C@eu.necel.com> <533021F6.2000702@codethink.co.uk>
+To: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org,
+	Simon Horman <horms@verge.net.au>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>
 MIME-Version: 1.0
-In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Mar 2014 13:53:13 -0700
-Message-ID: <CAErSpo6V+P-fVibXysQeDRRcxAarrtqpe+UNemy=LECCXT_QhA@mail.gmail.com>
-Subject: Re: [PATCH 0/9] PCI: Use IORESOURCE_UNSET for unassigned BARs
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+From: Phil.Edworthy@renesas.com
+Message-ID: <OF85DD7B1D.716DE42D-ON80257CA5.00443087-80257CA5.004447DB@eu.necel.com>
+Date: Mon, 24 Mar 2014 12:25:49 +0000
+Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree bindings
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 26, 2014 at 12:37 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> I'm trying to unify the way we handle unassigned PCI BARs, i.e., resources
-> where we know the type and size, but we haven't assigned an address yet.
-> The PCI core and the various architectures don't really have a consistent
-> way of dealing with these.
->
-> Many places currently use "res->start == 0" to indicate unassigned
-> resources.  I don't think that's a good idea in general, because it's
-> possible for a resource to actually start at zero.  Zero is also a
-> perfectly good BAR value, especially for a host bridge that translates
-> addresses, so I want to support that, too.
->
-> The IORESOURCE_UNSET flag exists already, but is hardly used at all.  In
-> drivers/pci, we set it for an obscure error case, and clear it when
-> updating a BAR.  The microblaze and powerpc architectures use it the same
-> way I want to use it here: to indicate a resource with no assigned address.
->
-> Here's the outline of what this series does:
->
-> - Add resource_contains(): true iff r1 contains r2 (for minor cleanup)
-> - Make %pR print resource size, not address, when IORESOURCE_UNSET
-> - Stop advertising pci_find_parent_resource() for use in allocation
-> - Mark PCI resources IORESOURCE_UNSET when BIOS left decoding disabled
-> - Mark PCI resources IORESOURCE_UNSET while we're trying to assign addresses
-> - Don't enable PCI decoding when no address has been assigned to BARs
->
-> It might be too aggressive to ignore the initial value of a BAR and try to
-> reassign it when the BIOS left decoding disabled.  If the BIOS left
-> decoding *enabled*, we can have some confidence that the BAR value is
-> valid.  It's possible the BAR is also valid even if the BIOS turned off
-> decoding.  We could conceivably try to use BAR values that are inside
-> upstream bridge windows, even if the BAR was initially disabled.  But this
-> first pass just ignores the values in BARs that are disabled.
->
-> I welcome any comments :)
->
-> ---
->
-> Bjorn Helgaas (9):
->       resource: Add resource_contains()
->       vsprintf: Add support for IORESOURCE_UNSET in %pR
->       PCI: Remove pci_find_parent_resource() use for allocation
->       PCI: Mark resources as IORESOURCE_UNSET if we can't assign them
->       PCI: Don't clear IORESOURCE_UNSET when updating BAR
->       PCI: Check IORESOURCE_UNSET before updating BAR
->       PCI: Don't try to claim IORESOURCE_UNSET resources
->       PCI: Ignore BAR contents when firmware left decoding disabled
->       PCI: Don't enable decoding if BAR hasn't been assigned an address
->
->
->  drivers/pci/host-bridge.c |    8 --------
->  drivers/pci/pci.c         |   41 +++++++++++++++++++++++++----------------
->  drivers/pci/probe.c       |    8 +++++++-
->  drivers/pci/quirks.c      |    5 +++++
->  drivers/pci/rom.c         |    2 ++
->  drivers/pci/setup-res.c   |   37 +++++++++++++++++++++++++------------
->  include/linux/ioport.h    |   12 +++++++++++-
->  kernel/resource.c         |    8 ++------
->  lib/vsprintf.c            |   13 +++++++++----
->  9 files changed, 86 insertions(+), 48 deletions(-)
+Hi Ben,
 
-I applied these to pci/resource for v3.15.
+On: 24/03/2014 12:16, Ben wrote:
+> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
+bindings
+> 
+> On 24/03/14 12:04, Phil.Edworthy@renesas.com wrote:
+> > Hi Lucas,
+> >
+> > On: 21/03/2014 15:02, Phil wrote:
+> >> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree
+> > bindings
+> >>
+> >> Hi Lucas,
+> >>
+> >> On: 21/03/2014 14:31, Lucas wrote:
+> >>> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree
+> > bindings
+> >>>
+> >>> Am Freitag, den 21.03.2014, 14:18 +0000 schrieb
+> >>> Phil.Edworthy@renesas.com:
+> >>>> Hi Lucas,
+> >>>>
+> >>>> On 21/03/2014 11:24, Lucas wrote:
+> >>>>> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device
+> > tree
+> >>>> bindings
+> >>>>>
+> >>>>> Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
+> >>>>>> This patch adds the bindings for the rcar PCIE driver. The
+> > driver
+> >>>>>> resides under drivers/pci/host/pcie-rcar.c
+> >>>>>>
+> >>>>>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> >>>>>
+> >>>>> I have one question below. If you can answer this with yes after
+> >>>>> thinking again about it, this is:
+> >>>>>
+> >>>>> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+> >>>>>> ---
+> >>>>>>   Documentation/devicetree/bindings/pci/rcar-pci.txt | 40
+> >>>> ++++++++++++++++++++++
+> >>>>>>   1 file changed, 40 insertions(+)
+> >>>>>>   create mode 100644
+> > Documentation/devicetree/bindings/pci/rcar-pci.txt
+> >>>>>>
+> >>>>>> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> > b/
+> >>>>> Documentation/devicetree/bindings/pci/rcar-pci.txt
+> >>>>>> new file mode 100644
+> >>>>>> index 0000000..0e219b0
+> >>>>>> --- /dev/null
+> >>>>>> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> >>>>>> @@ -0,0 +1,40 @@
+> >>>>>> +* Renesas RCar PCIe interface
+> >>>>>> +
+> >>>>>> +Required properties:
+> >>>>>> +- compatible: should contain one of the following
+> >>>>>> +   "renesas,r8a7779-pcie", "renesas,r8a7790-pcie",
+> >>>> "renesas,r8a7791-pcie"
+> >>>>>> +- reg: base addresses and lengths of the pcie controller.
+> >>>>>> +- #address-cells: set to <3>
+> >>>>>> +- #size-cells: set to <2>
+> >>>>>> +- device_type: set to "pci"
+> >>>>>> +- ranges: ranges for the PCI memory and I/O regions
+> >>>>>> +- interrupts: interrupt values for MSI interrupt
+> >>>>>> +- #interrupt-cells: set to <1>
+> >>>>>> +- interrupt-map-mask and interrupt-map: standard PCI properties
+> >>>>>> +   to define the mapping of the PCIe interface to interrupt
+> >>>>>> +   numbers.
+> >>>>>> +- clocks: from common clock binding: handle to pci clock.
+> >>>>>> +- clock-names: from common clock binding: should be "pcie"
+> >>>>>
+> >>>>> You really only have one PCIe clock? So the controller is
+> > generating the
+> >>>>> PCIe bus clock from it's register clock? No need to enable any
+> > other
+> >>>>> clock for PCIe to work?
+> >>>> Yes, just the one clock. The PCIe bus clock is an external clock
+> > dedicated
+> >>>> to PCIe and SATA, and we have no control over it.
+> >>>>
+> >>> Is this some kind of always-on clock? If not you probably want a
+> >>> reference to it from the PCIe driver even if it's shared between 
+SATA
+> >>> and PCIe. After all you don't want to end up unconditionally 
+enabling
+> >>> this clock from the board or SoC level just to have PCIe working,
+> > right?
+> >> Ok, I see, I'll need a reference to a board clock, even if it's 
+always
+> > on for
+> >> these boards.
+> > One small question...
+> >
+> > The patches added the PCIe host controller to two devices, r8a7790 and
+> > r8a7791. The r8a7790-based Lager board doesn't have the necessary 
+hardware
+> > to use PCIe, so should I add a dummy pcie_bus clock to the Lager board
+> > dts, even though PCIe is not used?
+> >
+> > I'm just wondering what the dts file looks like for a board that 
+doesn't
+> > support many interfaces. Does it become littered with dummy clocks and
+> > regulators?
+> 
+> The bridge node should be set to disabled by default so it never gets
+> probed. Any boards that want to use it can over-ride the status to be
+> enabled.
+Ok, thanks.
+
+Phil
