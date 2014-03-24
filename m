@@ -1,68 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11654 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750905AbaCGHrf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Mar 2014 02:47:35 -0500
-Date: Fri, 7 Mar 2014 08:49:32 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2] ioat: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140307074932.GC2670@dhcp-26-207.brq.redhat.com>
-References: <cover.1394128952.git.agordeev@redhat.com>
- <2ba22558b5db90740d5833c35570c3e7cc1e359e.1394128952.git.agordeev@redhat.com>
- <CAPcyv4jW19zxApviDdbofbXB1OvvN2sCriL3Paszfk9o3T8x0w@mail.gmail.com>
- <20140306214356.GA16376@dhcp-26-207.brq.redhat.com>
- <CAPcyv4ivvxHvyT_5oybVvRJAUKABQQ1ZH4Eua-1KVDeri5kpkA@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <532FCA9B.7080707@1degreenorth.com>
+Date: Mon, 24 Mar 2014 14:03:07 +0800
+From: Daniel J Blueman <daniel@1degreenorth.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPcyv4ivvxHvyT_5oybVvRJAUKABQQ1ZH4Eua-1KVDeri5kpkA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>, Borislav Petkov <bp@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Steffen Persvold <sp@numascale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	kim.naru@amd.com,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH] Fix northbridge quirk to assign correct NUMA node
+References: <1394710981-3596-1-git-send-email-daniel@numascale.com> <CAErSpo6psgDr3XYh6m+vYcAOix2Vttrwz1jK7bS47Liy2Lw-=g@mail.gmail.com> <532BB431.7020501@numascale.com> <CAErSpo4x+=EQ5h8DuzoRznZ_d8Roy4LHer7ELEVeHxDsKwDhzA@mail.gmail.com>
+In-Reply-To: <CAErSpo4x+=EQ5h8DuzoRznZ_d8Roy4LHer7ELEVeHxDsKwDhzA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On 03/22/2014 12:11 AM, Bjorn Helgaas wrote:
+> [+cc Rafael, linux-acpi for _PXM questions]
+>
+> On Thu, Mar 20, 2014 at 9:38 PM, Daniel J Blueman <daniel@numascale.com> wrote:
+>> On 21/03/2014 06:07, Bjorn Helgaas wrote:
+>>> On Thu, Mar 13, 2014 at 5:43 AM, Daniel J Blueman <daniel@numascale.com>
+>>> wrote:
+>>>>
+>>>> For systems with multiple servers and routed fabric, all northbridges get
+>>>> assigned to the first server. Fix this by also using the node reported
+>>>> from
+>>>> the PCI bus. For single-fabric systems, the northbriges are on PCI bus 0
+>>>> by definition, which are on NUMA node 0 by definition, so this is
+>>>> invarient
+>>>> on most systems.
+>>>>
+>>>> Tested on fam10h and fam15h single and multi-fabric systems and candidate
+>>>> for stable.
+>
+>>> So I suspect the problem is more complicated, and maybe _PXM is
+>>> insufficient to describe the topology?  Are there subtrees that should
+>>> have nodes different from the host bridge?
+>>
+>> Yes; see below.
+>> ...
+>> The _PXM method associates each northbridge with the first NUMA node, 0 in
+>> single-fabric systems, and eg 4 for the second server in a multi-fabric
+>> system with 2 dual-module Opterons (with 2 NUMA nodes internally) etc, since
+>> the northbridges appear in the PCI tree, under the host bridge, not above it
+>> [1].
+>>
+>> With _PXM, the rest of the PCI bus hierarchy has the right NUMA node
+>> associated, but the northbridge PCI devices should be associated with their
+>> actual NUMA node, 0, 1, 2, 3 for the first server in this example. The quirk
+>> fixes this up; irqbalance at least uses this NUMA data exposed in /sys.
+>
+> I'm confused about which devices we're talking about.  We currently
+> look at _PXM for PNP0A08 (and PNP0A03) ACPI devices.  The resulting
+> node is associated with every PCI device we enumerate below the
+> PNP0A08 bridge.  This association is made in pci_device_add().
+>
+> When you say "northbridge PCI devices should be associated with their
+> actual NUMA node," I assume you mean the 00:18.x and 00:19.x devices
+> ("AMD Family 10h Processor ..."), since those seem to be what the
+> quirk applies to.  You are *not* talking about 00:00.0 ("ATI RD890
+> Northbridge"), right?
 
-Function pci_enable_msix() returns a tri-state value while
-pci_enable_msi_exact() is a canonical zero/-errno variant.
-The former is being phased out in favor of the latter.
-In case of 'ioat' there (should be) no difference.
+Yes, on bus 0, devices 0x18 to 0x20 decode to the (up to) eight 
+Hypertransport devices in the processor fabric, normally all processor 
+northbridges.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Vinod Koul <vinod.koul@intel.com>
-Cc: dmaengine@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/dma/ioat/dma.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> You mention irqbalance; is the NUMA node information for the 00:18.x
+> and 00:19.x devices important because you get a lot of interrupts from
+> those devices?  Or is the issue with actual I/O devices (NICs, SCSI
+> adapters, etc.)?  If so, I don't see how this quirk would affect
+> those, because the node information for them comes from the PNP0A08
+> bridge (in pci_device_add()), not from the 00:00.0, 00:18.x, or
+> 00:19.x devices.
 
-diff --git a/drivers/dma/ioat/dma.c b/drivers/dma/ioat/dma.c
-index 4e3549a..b76c148 100644
---- a/drivers/dma/ioat/dma.c
-+++ b/drivers/dma/ioat/dma.c
-@@ -947,7 +947,7 @@ msix:
- 	for (i = 0; i < msixcnt; i++)
- 		device->msix_entries[i].entry = i;
- 
--	err = pci_enable_msix(pdev, device->msix_entries, msixcnt);
-+	err = pci_enable_msix_exact(pdev, device->msix_entries, msixcnt);
- 	if (err)
- 		goto msi;
- 
+I need to investigate the lockups irqbalance was causing on a customer 
+system, and am not sure what interrupt source that was rewritten which 
+causing hangs; disabling the daemon prevented the hangs.
+
+>> The alternative to the quirk may be to explicitly express the northbridge
+>> PCI devices in the AML with their own _PXM methods. If it's valid, it may be
+>> the honest approach, though the quirk may be needed for most BIOSs; I can
+>> check the AML on a few servers to confirm if helpful.
+>
+> ACPI allows _PXM for any device, so this might be a possible approach.
+>   However, it looks like Linux only pays attention to _PXM for
+> PNP0A08/03, CPUs, memory and IOAPICs (which seems like a Linux defect
+> to me).
+
+> I'm really worried about the approach here:
+>
+>          pci_read_config_dword(nb_ht, 0x60, &val);
+>          node = pcibus_to_node(dev->bus) | (val & 7);
+>
+> because the pcibus_to_node() information comes indirectly from _PXM,
+> and the "val" part comes from the hardware, and I don't think these
+> are the same node number space.  If I understand correctly, the BIOS
+> can synthesize whatever numbers it wants for _PXM, which returns a
+> "proximity domain," and then Linux can make up its own mapping of
+> "proximity domain" to "logical Linux node."  So I don't see why we can
+> assume that it's valid to OR in the bits from a PCI config register to
+> this logical Linux node number.
+
+pcibus_to_node uses the proximity domain values in the ACPI SRAT table, 
+which is thus correctly mapped to the linux NUMA node ID, so my oneliner 
+is still progress.
+
+Linux allocates NUMA node ids using the ordering of PXM values seen in 
+the SRAT table, ie first_unset_node(nodes_found_map). The APIC ids are 
+initialised using the HyperTransport NodeId [1, p263 and p465], but the 
+NodeId can be reprogrammed after the APIC ids are set (which also 
+changes the PCI configuration device id from 0x18 on bus 0 it responds 
+to), and the SRAT table needn't be emitted in order, perhaps except for 
+the bootstrap core.
+
+I guess fixing the original quirk depends on how important these cases 
+really are.
+
+Thanks,
+   Daniel
+
+[1] http://support.amd.com/TechDocs/42301_15h_Mod_00h-0Fh_BKDG.pdf
 -- 
-1.7.7.6
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Daniel J Blueman
+Principal Software Engineer, Numascale
