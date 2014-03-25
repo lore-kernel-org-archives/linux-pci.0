@@ -1,87 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:10835 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751919AbaCEI6Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 03:58:25 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Liviu Dudau' <liviu@dudau.co.uk>
-Cc: 'Liviu Dudau' <Liviu.Dudau@arm.com>,
-	'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Catalin Marinas' <Catalin.Marinas@arm.com>,
-	'Will Deacon' <Will.Deacon@arm.com>,
-	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
-	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
-	'LKML' <linux-kernel@vger.kernel.org>,
-	devicetree@vger.kernel.org,
-	'LAKML' <linux-arm-kernel@lists.infradead.org>,
-	'Tanmay Inamdar' <tinamdar@apm.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
- <1393948204-11555-8-git-send-email-Liviu.Dudau@arm.com>
- <001f01cf3811$18463ed0$48d2bc70$%han@samsung.com>
- <20140305083311.GD13582@bart.dudau.co.uk>
-In-reply-to: <20140305083311.GD13582@bart.dudau.co.uk>
-Subject: Re: [PATCH v5 7/7] pci: Add support for creating a generic host_bridge
- from device tree
-Date: Wed, 05 Mar 2014 17:58:22 +0900
-Message-id: <000b01cf3851$0fe55d30$2fb01790$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
+Received: from comal.ext.ti.com ([198.47.26.152]:44370 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751466AbaCYAeH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Mar 2014 20:34:07 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-samsung-soc@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>
+Subject: [RFC PATCH 0/3] Add Keystone pcie driver
+Date: Mon, 24 Mar 2014 20:33:20 -0400
+Message-ID: <1395707604-20377-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, March 05, 2014 5:33 PM, Liviu Dudau wrote:
-> On Wed, Mar 05, 2014 at 10:20:28AM +0900, Jingoo Han wrote:
-> > On Wednesday, March 05, 2014 12:50 AM, Liviu Dudau wrote:
-> > >
-> > > Several platforms use a rather generic version of parsing
-> > > the device tree to find the host bridge ranges. Move the common code
-> > > into the generic PCI code and use it to create a pci_host_bridge
-> > > structure that can be used by arch code.
-> > >
-> > > Based on early attempts by Andrew Murray to unify the code.
-> > > Used powerpc and microblaze PCI code as starting point.
-> > >
-> > > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > >
-> > > diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> > > index 8708b652..800678a 100644
-> > > --- a/drivers/pci/host-bridge.c
-> > > +++ b/drivers/pci/host-bridge.c
+This is a RFC to add Keystone pcie driver. I had some earlier discussion on
+the pcie mailing about this driver and at that time I didn't have the driver
+ported to dw core driver. I now have a driver working with intel's e1000e
+ethernet driver and want to review this RFC on this list.
 
-[.....]
+Kestone PCIE hardware is based on dw version 3.65. It lacks ATU port and
+standard MSI controller found in newer version of the dw hardware. This version
+uses registers in PCIE application space to configure MSI controller. It has 4
+host irqs for legacy IRQs A/B/C/D and 8 host irqs to muliplex 32 MSI irqs.
+Also has one host irq line for errors.
 
-> > > +
-> > > +	/* Apply architecture specific fixups for the ranges */
-> > > +	pcibios_fixup_bridge_ranges(resources);
-> >
-> > It also makes compile problem with exynos_defconfig as below:
-> >
-> > drivers/built-in.o: In function `pci_host_bridge_of_get_ranges':
-> > drivers/pci/host-bridge.c:157: undefined reference to `pcibios_fixup_bridge_ranges'
-> 
-> Does that mean that exynos_defconfig doesn't define CONFIG_OF? How do you
-> compile all the .dts files then? Should CONFIG_OF not be added to the default config
-> file?
+Please review and provide your comments.
 
-Now, I am testing your patches with ARM32 platform such as
-Exynos SoCs. And the default 'exynos_defconfig' already defines
-CONFIG_OF=y. (./arch/arm/configs/exynos_defconfig)
+CC: Jingoo Han <jg1.han@samsung.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Kukjin Kim <kgene.kim@samsung.com>
+CC: Richard Zhu <r65037@freescale.com>
+CC: Shawn Guo <shawn.guo@linaro.org>
+CC: Mohit Kumar <mohit.kumar@st.com>
+CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
 
-> 
-> Other than that, your comment is correct. drivers/pci/host-bridge.c gets compiled
-> in regardless of CONFIG_OF and I need to provide an empty implementation for
-> pcibios_fixup_bridge_ranges().
+Murali Karicheri (3):
+  ARM: keystone: add pcie related options
+  pci: designware: enhancements to support keystone pcie
+  pcie: keystone: add pcie driver based on designware core driver
 
-There is no pcibios_fixup_bridge_ranges() in ./arch/arm/ directory.
-So, it makes the compile problem.
+ .../devicetree/bindings/pci/pcie-keystone.txt      |   32 +
+ arch/arm/mach-keystone/Kconfig                     |    2 +
+ drivers/pci/host/Kconfig                           |    5 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/k2-platform.c                     |  191 +++++
+ drivers/pci/host/pci-exynos.c                      |    2 +-
+ drivers/pci/host/pci-imx6.c                        |    2 +-
+ drivers/pci/host/pcie-designware.c                 |   99 ++-
+ drivers/pci/host/pcie-designware.h                 |   14 +-
+ drivers/pci/host/pcie-keystone.c                   |  860 ++++++++++++++++++++
+ drivers/pci/host/pcie-ks-pdata.h                   |   19 +
+ drivers/pci/quirks.c                               |   12 +
+ 12 files changed, 1203 insertions(+), 36 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/pcie-keystone.txt
+ create mode 100644 drivers/pci/host/k2-platform.c
+ create mode 100644 drivers/pci/host/pcie-keystone.c
+ create mode 100644 drivers/pci/host/pcie-ks-pdata.h
 
-I think that the empty implementation for pcibios_fixup_bridge_ranges()
-may be necessary, in order to the compile problem.
-Or, __weak pcibios_fixup_bridge_ranges() would be used.
-
-Best regards,
-Jingoo Han
+-- 
+1.7.9.5
 
