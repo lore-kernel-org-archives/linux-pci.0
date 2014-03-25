@@ -1,65 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 4 Mar 2014 08:40:17 -0800
-From: tip-bot for Thomas Gleixner <tipbot@zytor.com>
-Message-ID: <tip-f7bfca6db60a6ca0a73126918b2fb6f851065947@git.kernel.org>
-Cc: linux-kernel@vger.kernel.org, hpa@zytor.com, mingo@kernel.org,
-	peterz@infradead.org, jg1.han@samsung.com, bhelgaas@google.com,
-	mohit.kumar@st.com, tglx@linutronix.de, linux-pci@vger.kernel.org
-Reply-To: mingo@kernel.org, hpa@zytor.com, linux-kernel@vger.kernel.org,
-	  peterz@infradead.org, jg1.han@samsung.com, bhelgaas@google.com,
-	  mohit.kumar@st.com, tglx@linutronix.de, linux-pci@vger.kernel.org
-In-Reply-To: <20140223212736.987803648@linutronix.de>
-References: <20140223212736.987803648@linutronix.de>
-To: linux-tip-commits@vger.kernel.org
-Subject: [tip:irq/core] pci: pcie-designware: Remove irq_desc abuse
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor4.renesas.com ([210.160.252.174]:54940 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754037AbaCYQ45 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 12:56:57 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	devicetree@vger.kernel.org
+In-Reply-To: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
+References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1395766604-30926-6-git-send-email-phil.edworthy@renesas.com>
+Date: Tue, 25 Mar 2014 16:56:40 +0000
+Subject: [PATCH v5 5/9] dt-bindings: pci: rcar pcie device tree bindings
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit-ID:  f7bfca6db60a6ca0a73126918b2fb6f851065947
-Gitweb:     http://git.kernel.org/tip/f7bfca6db60a6ca0a73126918b2fb6f851065947
-Author:     Thomas Gleixner <tglx@linutronix.de>
-AuthorDate: Sun, 23 Feb 2014 21:40:11 +0000
-Committer:  Thomas Gleixner <tglx@linutronix.de>
-CommitDate: Tue, 4 Mar 2014 17:37:52 +0100
+This patch adds the bindings for the R-Car PCIe driver. The driver
+resides under drivers/pci/host/pcie-rcar.c
 
-pci: pcie-designware: Remove irq_desc abuse
-
-There is no reason to care about irq_desc in that context, escpecially
-as irq_data for that interrupt is retrieved as well.
-
-Use the proper accessor for the msi descriptor
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: pci <linux-pci@vger.kernel.org>
-Link: http://lkml.kernel.org/r/20140223212736.987803648@linutronix.de
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 ---
- drivers/pci/host/pcie-designware.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+v5:
+ - Add PCIe bus clock reference
+ - Add additional interrupt bindings
+ - Use dma-ranges property to specify inbound memory regions
+---
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 44 ++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 17ce88f..2e48ecf 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -294,14 +294,12 @@ no_valid_irq:
- static void clear_irq(unsigned int irq)
- {
- 	unsigned int pos, nvec;
--	struct irq_desc *desc;
- 	struct msi_desc *msi;
- 	struct pcie_port *pp;
- 	struct irq_data *data = irq_get_irq_data(irq);
- 
- 	/* get the port structure */
--	desc = irq_to_desc(irq);
--	msi = irq_desc_get_msi_desc(desc);
-+	msi = irq_data_get_msi(data);
- 	pp = sys_to_pcie(msi->dev->bus->sysdata);
- 	if (!pp) {
- 		BUG();
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+new file mode 100644
+index 0000000..61bf5ef
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -0,0 +1,44 @@
++* Renesas RCar PCIe interface
++
++Required properties:
++- compatible: should contain one of the following
++	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
++- reg: base addresses and lengths of the pcie controller.
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- device_type: set to "pci"
++- ranges: ranges for the PCI memory and I/O regions.
++- dma-ranges: ranges for the inbound memory regions.
++- interrupts: two interrupt sources for MSI interrupts, followed by interrupt
++	source for hardware related interrupts (e.g. link speed change).
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map: standard PCI properties
++	to define the mapping of the PCIe interface to interrupt
++	numbers.
++- clocks: from common clock binding: handle to pci clock.
++- clock-names: from common clock binding: should be "pcie" and "pcie_bus".
++
++Example:
++
++SoC specific DT Entry:
++
++	pcie: pcie@fe000000 {
++		compatible = "renesas,pcie-r8a7791";
++		reg = <0 0xfe000000 0 0x80000>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
++			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
++			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
++			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
++		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000
++			      0x42000000 2 0x00000000 2 0x00000000 0 0x40000000>;
++		interrupts = <0 116 4 0 117 4 0 118 4>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic 0 116 4>;
++		clocks = <&mstp3_clks R8A7791_CLK_PCIE>, <&pcie_bus_clk>;
++		clock-names = "pcie", "pcie_bus";
++		status = "disabled";
++	};
+-- 
+1.9.0
+
