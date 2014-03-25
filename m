@@ -1,52 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.24]:54966 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751697AbaCYSnX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 14:43:23 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH] ACPI / hotplug / PCI: Use pci_device_is_present()
-Date: Mon, 03 Mar 2014 01:19:25 +0100
-Message-ID: <1505390.MlpMqG8COu@vostro.rjw.lan>
+	Ben Dooks <ben.dooks@codethink.co.uk>
+Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree nodes for R8A7790
+Date: Tue, 25 Mar 2014 19:42:42 +0100
+Message-ID: <14997425.EPjrKhVy10@wuerfel>
+In-Reply-To: <1395766604-30926-7-git-send-email-phil.edworthy@renesas.com>
+References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com> <1395766604-30926-7-git-send-email-phil.edworthy@renesas.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tuesday 25 March 2014 16:56:41 Phil Edworthy wrote:
+> +               /* Map all possible DDR as inbound ranges */
+> +               dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000
+> +                             0x43000000 1 0x80000000 1 0x80000000 0 0x80000000>;
 
-Make the ACPI-based PCI hotplug (ACPIPHP) code use
-pci_device_is_present() for checking if devices are present instead
-of open coding the same thing.
+Typo: 0x43000000 should be 0x42000000 I guess.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
+Since you control the mapping, I wonder if you could also do this as
 
-On top of current linux-next.
+               dma-ranges = <0x42000000 0 0x00000000 0 0x40000000 0 0x80000000
+                             0x43000000 0 0x80000000 1 0x80000000 0 0x80000000>;
 
-Thanks!
+i.e. map all the RAM into PCI bus addresses below the 32-bit boundary.
+This would be really nice from the perspective that now all PCI
+devices could access all of RAM without using an IOMMU or the
+relying on 64-bit master capability.
 
----
- drivers/pci/hotplug/acpiphp_glue.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+The downside of this is that you'd probably need a custom dma_map_ops
+wrapper.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -668,12 +668,9 @@ static void trim_stale_devices(struct pc
- 		alive = (ACPI_SUCCESS(status) && device_status_valid(sta))
- 			|| acpiphp_no_hotplug(adev);
- 	}
--	if (!alive) {
--		u32 v;
-+	if (!alive)
-+		alive = pci_device_is_present(dev);
- 
--		/* Check if the device responds. */
--		alive = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &v, 0);
--	}
- 	if (!alive) {
- 		pci_stop_and_remove_bus_device(dev);
- 		if (adev)
-
+	Arnd
