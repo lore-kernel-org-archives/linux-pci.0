@@ -1,54 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:42129 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754284AbaCDRqR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 12:46:17 -0500
-Received: by mail-ig0-f180.google.com with SMTP id hl1so2023173igb.1
-        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 09:46:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140304035917.GA3032@pratyush-vbox>
-References: <CAHH3p5JzL-9T-Hn=fp1S9=URzycpKTy6toaA0AjQfJYt7mQXsA@mail.gmail.com>
- <20140304035917.GA3032@pratyush-vbox>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Mar 2014 10:45:56 -0700
-Message-ID: <CAErSpo7s7fdUZH6zXr3ZWHq8s+zQ_5_sszzBZWrqFOh+jXHUgA@mail.gmail.com>
-Subject: Re: PCIE: Program pcie device private registers
-To: Pratyush Anand <pratyush.anand@st.com>
-Cc: shiv prakash Agarwal <chhotu.shiv@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from relmlor2.renesas.com ([210.160.252.172]:21937 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753583AbaCYQ4z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 12:56:55 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
+References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1395766604-30926-9-git-send-email-phil.edworthy@renesas.com>
+Date: Tue, 25 Mar 2014 16:56:43 +0000
+Subject: [PATCH v5 8/9] ARM: koelsch: Add PCIe to defconfig
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 3, 2014 at 8:59 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
-> On Thu, Feb 27, 2014 at 05:12:38PM +0800, shiv prakash Agarwal wrote:
->>    Hi All,
->>
->>
->>
->>    One query:
->>
->>
->>
->>    We can program config space registers of a pcie device using setpci but
->>    how can we program private registers of a pcie device?
->
-> You mean application specific registers?
-> These registers will not be accessible through any generic user space program.
->
-> If you want to access them for debug purposes then you can provide
-> support in your driver.
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/configs/koelsch_defconfig | 3 +++
+ 1 file changed, 3 insertions(+)
 
-If the registers are in config space, you can use setpci, even if they
-are non-architected registers specific to the device.
+diff --git a/arch/arm/configs/koelsch_defconfig b/arch/arm/configs/koelsch_defconfig
+index 86faab5..ec14547 100644
+--- a/arch/arm/configs/koelsch_defconfig
++++ b/arch/arm/configs/koelsch_defconfig
+@@ -15,6 +15,9 @@ CONFIG_MACH_KOELSCH=y
+ CONFIG_CPU_BPREDICT_DISABLE=y
+ CONFIG_PL310_ERRATA_588369=y
+ CONFIG_ARM_ERRATA_754322=y
++CONFIG_PCI=y
++CONFIG_PCI_MSI=y
++CONFIG_PCI_RCAR_GEN2_PCIE=y
+ CONFIG_SMP=y
+ CONFIG_SCHED_MC=y
+ CONFIG_NR_CPUS=8
+-- 
+1.9.0
 
-If they are in MMIO space, you can use lspci to learn where the BARs
-are mapped, and then use something like rdwrmem
-(http://cmp.felk.cvut.cz/~pisa/linux/rdwrmem.c) to access the
-registers.
-
-If they are in I/O port space, you can again use lspci to learn where
-they are mapped, and then use ioperm()/iopl()/inb()/outb()/etc.
-
-Bjorn
