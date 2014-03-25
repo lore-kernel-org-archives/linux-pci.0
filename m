@@ -1,32 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:45029 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750972AbaCFRlR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 12:41:17 -0500
-Message-ID: <5318B338.8000709@wwwdotorg.org>
-Date: Thu, 06 Mar 2014 10:41:12 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Lucas Stach <l.stach@pengutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-CC: linux-sh@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Ben Dooks <ben-linux@fluff.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
-Subject: Re: [PATCH v2 1/6] ARM: dts: tegra: add PCIe interrupt mapping properties
-References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de> <1394025951-32438-2-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1394025951-32438-2-git-send-email-l.stach@pengutronix.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <OF8E4162E1.91105680-ON80257CA6.002FEBD9-80257CA6.0030BE31@eu.necel.com>
+References: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
+	<1395270762-6055-2-git-send-email-tinamdar@apm.com>
+	<OF8E4162E1.91105680-ON80257CA6.002FEBD9-80257CA6.0030BE31@eu.necel.com>
+Date: Tue, 25 Mar 2014 14:52:49 -0700
+Message-ID: <CACoXjcmmjxiTvsiqCXE4noQ-2AxEzYYM=Ux6ACUahut06bUSsg@mail.gmail.com>
+Subject: Re: [PATCH v5 1/4] pci: APM X-Gene PCIe controller driver
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Phil.Edworthy@renesas.com
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-pci-owner@vger.kernel.org, Liviu Dudau <liviu.dudau@arm.com>,
+	patches <patches@apm.com>, Rob Landley <rob@landley.net>,
+	Rob Herring <robh+dt@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/05/2014 06:25 AM, Lucas Stach wrote:
-> Those are defined by the common PCI binding.
+Hello Phil,
 
-I've applied this to Tegra's for-3.15/dt branch.
+Thanks for reviewing. Please see inline.
+
+On Tue, Mar 25, 2014 at 1:52 AM,  <Phil.Edworthy@renesas.com> wrote:
+> Hi Tanmay,
+>
+> On: 19/03/2014 23:15, Tanmay wrote:
+>> Subject: [PATCH v5 1/4] pci: APM X-Gene PCIe controller driver
+>> Sent by: linux-pci-owner@vger.kernel.org
+>>
+>> This patch adds the AppliedMicro X-Gene SOC PCIe controller driver.
+>> X-Gene PCIe controller supports maximum up to 8 lanes and GEN3 speed.
+>> X-Gene SOC supports maximum 5 PCIe ports.
+> <snip>
+>
+>> +static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *port,
+>> +                struct of_pci_range *range, u8 *ib_reg_mask)
+>> +{
+>> +   void __iomem *csr_base = port->csr_base;
+>> +   void __iomem *cfg_base = port->cfg_base;
+>> +   void *bar_addr;
+>> +   void *pim_addr;
+>> +   u64 restype = range->flags & IORESOURCE_TYPE_BITS;
+>> +   u64 cpu_addr = range->cpu_addr;
+>> +   u64 pci_addr = range->pci_addr;
+>> +   u64 size = range->size;
+>> +   u64 mask = ~(size - 1) | EN_REG;
+>> +   u32 flags = PCI_BASE_ADDRESS_MEM_TYPE_64;
+>> +   u32 bar_low;
+>> +   int region;
+>> +
+>> +   region = xgene_pcie_select_ib_reg(ib_reg_mask, range->size);
+>> +   if (region < 0) {
+>> +      dev_warn(port->dev, "invalid pcie dma-range config\n");
+>> +      return;
+>> +   }
+>> +
+>> +   if (restype == PCI_BASE_ADDRESS_MEM_PREFETCH)
+>> +      flags |= PCI_BASE_ADDRESS_MEM_PREFETCH;
+>
+> Since IORESOURCE_TYPE_BITS is 0x00001f00, and
+> PCI_BASE_ADDRESS_MEM_PREFETCH is 0x08, this will never match. I think you
+> are mixing up different sets of definitions here. Also, the address
+> properties in range->flags are bitfields.
+
+You are right. I will fix this.
+
+>
+> Regards
+> Phil
