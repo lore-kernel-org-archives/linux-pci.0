@@ -1,88 +1,385 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39187 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753269AbaCDP4C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Mar 2014 10:56:02 -0500
-Message-ID: <5315F785.4050602@redhat.com>
-Date: Tue, 04 Mar 2014 16:55:49 +0100
-From: Daniel Borkmann <dborkman@redhat.com>
-MIME-Version: 1.0
-To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-CC: Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	e1000-devel@lists.sourceforge.net
-Subject: kmemleak through e1000?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from relmlor3.renesas.com ([210.160.252.173]:42448 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753872AbaCYQ4z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 12:56:55 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
+References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1395766604-30926-3-git-send-email-phil.edworthy@renesas.com>
+Date: Tue, 25 Mar 2014 16:56:37 +0000
+Subject: [PATCH v5 2/9] PCI: host: rcar: Add MSI support
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all, I'm not very familiar with the e1000 code, but on the latest
-net.git kernel I get reliably the following (not sure if it's actually
-caused by e1000 though):
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+v5:
+ - Return IRQ_NONE from MSI isr when there is no pending MSI
+ - Add additional interrupt bindings
+---
+ drivers/pci/host/pcie-rcar.c | 246 ++++++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/host/pcie-rcar.h |   5 +
+ 2 files changed, 250 insertions(+), 1 deletion(-)
 
-unreferenced object 0xffff8800361a7d80 (size 32):
-   comm "systemd-udevd", pid 246, jiffies 4294677997 (age 1117.522s)
-   hex dump (first 32 bytes):
-     60 7d 1a 36 00 88 ff ff 24 01 00 00 00 00 00 00  `}.6....$.......
-     f0 aa 35 81 ff ff ff ff 00 00 00 00 00 00 00 00  ..5.............
-   backtrace:
-     [<ffffffff8166609e>] kmemleak_alloc+0x4e/0xb0
-     [<ffffffff8119f547>] kmem_cache_alloc_trace+0xd7/0x220
-     [<ffffffff8135ad48>] populate_msi_sysfs+0x128/0x220
-     [<ffffffff8135b4b8>] pci_enable_msi_block+0x1b8/0x2c0
-     [<ffffffffa0221781>] e1000e_set_interrupt_capability+0x41/0x120 [e1000e]
-     [<ffffffffa0226047>] e1000_probe+0x3a7/0xe20 [e1000e]
-     [<ffffffff81343805>] local_pci_probe+0x45/0xa0
-     [<ffffffff81344b89>] pci_device_probe+0xd9/0x130
-     [<ffffffff813fc317>] driver_probe_device+0x87/0x390
-     [<ffffffff813fc6f3>] __driver_attach+0x93/0xa0
-     [<ffffffff813fa323>] bus_for_each_dev+0x63/0xa0
-     [<ffffffff813fbd6e>] driver_attach+0x1e/0x20
-     [<ffffffff813fb950>] bus_add_driver+0x180/0x250
-     [<ffffffff813fcd04>] driver_register+0x64/0xf0
-     [<ffffffff813431ab>] __pci_register_driver+0x4b/0x50
-     [<ffffffffa0240041>] iptable_filter_hook+0x41/0x70 [iptable_filter]
-unreferenced object 0xffff8800c4ac1920 (size 32):
-   comm "NetworkManager", pid 409, jiffies 4294693366 (age 1102.161s)
-   hex dump (first 32 bytes):
-     34 34 00 c4 00 88 ff ff 00 00 00 00 00 00 00 00  44..............
-     00 00 00 00 00 00 00 00 6f 2e 32 00 00 00 00 00  ........o.2.....
-   backtrace:
-     [<ffffffff8166609e>] kmemleak_alloc+0x4e/0xb0
-     [<ffffffff8119f547>] kmem_cache_alloc_trace+0xd7/0x220
-     [<ffffffff8135ad2f>] populate_msi_sysfs+0x10f/0x220
-     [<ffffffff8135b4b8>] pci_enable_msi_block+0x1b8/0x2c0
-     [<ffffffffa0226ce5>] e1000_open+0x225/0x5b0 [e1000e]
-     [<ffffffff815785af>] __dev_open+0xbf/0x140
-     [<ffffffff815788bd>] __dev_change_flags+0x9d/0x170
-     [<ffffffff815789b9>] dev_change_flags+0x29/0x60
-     [<ffffffff81585482>] do_setlink+0x312/0x9e0
-     [<ffffffff81587958>] rtnl_newlink+0x508/0x710
-     [<ffffffff81584199>] rtnetlink_rcv_msg+0x99/0x260
-     [<ffffffff815a3269>] netlink_rcv_skb+0xa9/0xc0
-     [<ffffffff815840f8>] rtnetlink_rcv+0x28/0x30
-     [<ffffffff815a2bd8>] netlink_unicast+0x168/0x250
-     [<ffffffff815a2fa1>] netlink_sendmsg+0x2e1/0x3f0
-     [<ffffffff8155cc6b>] sock_sendmsg+0x8b/0xc0
-unreferenced object 0xffff8800c4ac17a0 (size 32):
-   comm "NetworkManager", pid 409, jiffies 4294693366 (age 1102.161s)
-   hex dump (first 32 bytes):
-     20 19 ac c4 00 88 ff ff 24 01 00 00 00 00 00 00   .......$.......
-     f0 aa 35 81 ff ff ff ff 00 00 00 00 00 00 00 00  ..5.............
-   backtrace:
-     [<ffffffff8166609e>] kmemleak_alloc+0x4e/0xb0
-     [<ffffffff8119f547>] kmem_cache_alloc_trace+0xd7/0x220
-     [<ffffffff8135ad48>] populate_msi_sysfs+0x128/0x220
-     [<ffffffff8135b4b8>] pci_enable_msi_block+0x1b8/0x2c0
-     [<ffffffffa0226ce5>] e1000_open+0x225/0x5b0 [e1000e]
-     [<ffffffff815785af>] __dev_open+0xbf/0x140
-     [<ffffffff815788bd>] __dev_change_flags+0x9d/0x170
-     [<ffffffff815789b9>] dev_change_flags+0x29/0x60
-     [<ffffffff81585482>] do_setlink+0x312/0x9e0
-     [<ffffffff81587958>] rtnl_newlink+0x508/0x710
-     [<ffffffff81584199>] rtnetlink_rcv_msg+0x99/0x260
-     [<ffffffff815a3269>] netlink_rcv_skb+0xa9/0xc0
-     [<ffffffff815840f8>] rtnetlink_rcv+0x28/0x30
-     [<ffffffff815a2bd8>] netlink_unicast+0x168/0x250
-     [<ffffffff815a2fa1>] netlink_sendmsg+0x2e1/0x3f0
-     [<ffffffff8155cc6b>] sock_sendmsg+0x8b/0xc0
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index c22c896..280f370 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -15,8 +15,11 @@
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/irq.h>
++#include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_pci.h>
+@@ -28,6 +31,8 @@
+ 
+ #define DRV_NAME "rcar-pcie"
+ 
++#define INT_PCI_MSI_NR	32
++
+ #define RCONF(x)	(PCICONF(0)+(x))
+ #define RPMCAP(x)	(PMCAP(0)+(x))
+ #define REXPCAP(x)	(EXPCAP(0)+(x))
+@@ -40,6 +45,21 @@
+ #define PCI_MAX_RESOURCES 4
+ #define MAX_NR_INBOUND_MAPS 6
+ 
++struct rcar_msi {
++	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
++	struct irq_domain *domain;
++	struct msi_chip chip;
++	unsigned long pages;
++	struct mutex lock;
++	int irq1;
++	int irq2;
++};
++
++static inline struct rcar_msi *to_rcar_msi(struct msi_chip *chip)
++{
++	return container_of(chip, struct rcar_msi, chip);
++}
++
+ /* Structure representing the PCIe interface */
+ struct rcar_pcie {
+ 	struct device		*dev;
+@@ -48,6 +68,7 @@ struct rcar_pcie {
+ 	u8			root_bus_nr;
+ 	struct clk		*clk;
+ 	struct clk		*bus_clk;
++	struct			rcar_msi msi;
+ };
+ 
+ static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
+@@ -292,6 +313,15 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	return 1;
+ }
+ 
++static void rcar_pcie_add_bus(struct pci_bus *bus)
++{
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
++
++		bus->msi = &pcie->msi.chip;
++	}
++}
++
+ static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
+ {
+ 	struct platform_device *pdev = to_platform_device(pcie->dev);
+@@ -301,6 +331,7 @@ static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
+ 		.setup          = rcar_pcie_setup,
+ 		.map_irq        = of_irq_parse_and_map_pci,
+ 		.ops            = &rcar_pcie_ops,
++		.add_bus        = rcar_pcie_add_bus,
+ 	};
+ 
+ 	pci_common_init_dev(&pdev->dev, &hw);
+@@ -408,6 +439,10 @@ static int __init rcar_pcie_hw_init(struct rcar_pcie *pcie)
+ 	/* Enable MAC data scrambling. */
+ 	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
+ 
++	/* Enable MSI */
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
++
+ 	/* Finish initialization - establish a PCI Express link */
+ 	pci_write_reg(pcie, CFINIT, PCIETCTLR);
+ 
+@@ -461,11 +496,194 @@ static int __init rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
+ 	return -ETIMEDOUT;
+ }
+ 
++static int rcar_msi_alloc(struct rcar_msi *chip)
++{
++	int msi;
++
++	mutex_lock(&chip->lock);
++
++	msi = find_first_zero_bit(chip->used, INT_PCI_MSI_NR);
++	if (msi < INT_PCI_MSI_NR)
++		set_bit(msi, chip->used);
++	else
++		msi = -ENOSPC;
++
++	mutex_unlock(&chip->lock);
++
++	return msi;
++}
++
++static void rcar_msi_free(struct rcar_msi *chip, unsigned long irq)
++{
++	struct device *dev = chip->chip.dev;
++
++	mutex_lock(&chip->lock);
++
++	if (!test_bit(irq, chip->used))
++		dev_err(dev, "trying to free unused MSI#%lu\n", irq);
++	else
++		clear_bit(irq, chip->used);
++
++	mutex_unlock(&chip->lock);
++}
++
++static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
++{
++	struct rcar_pcie *pcie = data;
++	struct rcar_msi *msi = &pcie->msi;
++	unsigned long reg;
++
++	reg = pci_read_reg(pcie, PCIEMSIFR);
++
++	/* MSI & INTx share an interrupt - we only handle MSI here */
++	if (!reg)
++		return IRQ_NONE;
++
++	while (reg) {
++		unsigned int index = find_first_bit(&reg, 32);
++		unsigned int irq;
++
++		/* clear the interrupt */
++		pci_write_reg(pcie, 1 << index, PCIEMSIFR);
++
++		irq = irq_find_mapping(msi->domain, index);
++		if (irq) {
++			if (test_bit(index, msi->used))
++				generic_handle_irq(irq);
++			else
++				dev_info(pcie->dev, "unhandled MSI\n");
++		} else {
++			/*
++			 * that's weird who triggered this?
++			 * just clear it
++			 */
++			dev_info(pcie->dev, "unexpected MSI\n");
++		}
++
++		/* see if there's any more pending in this vector */
++		reg = pci_read_reg(pcie, PCIEMSIFR);
++	}
++
++	return IRQ_HANDLED;
++}
++
++static int rcar_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
++			       struct msi_desc *desc)
++{
++	struct rcar_msi *msi = to_rcar_msi(chip);
++	struct rcar_pcie *pcie = container_of(chip, struct rcar_pcie, msi.chip);
++	struct msi_msg msg;
++	unsigned int irq;
++	int hwirq;
++
++	hwirq = rcar_msi_alloc(msi);
++	if (hwirq < 0)
++		return hwirq;
++
++	irq = irq_create_mapping(msi->domain, hwirq);
++	if (!irq) {
++		rcar_msi_free(msi, hwirq);
++		return -EINVAL;
++	}
++
++	irq_set_msi_desc(irq, desc);
++
++	msg.address_lo = pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
++	msg.address_hi = pci_read_reg(pcie, PCIEMSIAUR);
++	msg.data = hwirq;
++
++	write_msi_msg(irq, &msg);
++
++	return 0;
++}
++
++static void rcar_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
++{
++	struct rcar_msi *msi = to_rcar_msi(chip);
++	struct irq_data *d = irq_get_irq_data(irq);
++
++	rcar_msi_free(msi, d->hwirq);
++}
++
++static struct irq_chip rcar_msi_irq_chip = {
++	.name = "R-Car PCIe MSI",
++	.irq_enable = unmask_msi_irq,
++	.irq_disable = mask_msi_irq,
++	.irq_mask = mask_msi_irq,
++	.irq_unmask = unmask_msi_irq,
++};
++
++static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
++			 irq_hw_number_t hwirq)
++{
++	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
++	irq_set_chip_data(irq, domain->host_data);
++	set_irq_flags(irq, IRQF_VALID);
++
++	return 0;
++}
++
++static const struct irq_domain_ops msi_domain_ops = {
++	.map = rcar_msi_map,
++};
++
++static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
++{
++	struct platform_device *pdev = to_platform_device(pcie->dev);
++	struct rcar_msi *msi = &pcie->msi;
++	unsigned long base;
++	int err;
++
++	mutex_init(&msi->lock);
++
++	msi->chip.dev = pcie->dev;
++	msi->chip.setup_irq = rcar_msi_setup_irq;
++	msi->chip.teardown_irq = rcar_msi_teardown_irq;
++
++	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
++					    &msi_domain_ops, &msi->chip);
++	if (!msi->domain) {
++		dev_err(&pdev->dev, "failed to create IRQ domain\n");
++		return -ENOMEM;
++	}
++
++	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
++	err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
++			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
++	if (err < 0) {
++		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
++		goto err;
++	}
++
++	err = devm_request_irq(&pdev->dev, msi->irq2, rcar_pcie_msi_irq,
++			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
++	if (err < 0) {
++		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
++		goto err;
++	}
++
++	/* setup MSI data target */
++	msi->pages = __get_free_pages(GFP_KERNEL, 0);
++	base = virt_to_phys((void *)msi->pages);
++
++	pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
++	pci_write_reg(pcie, 0, PCIEMSIAUR);
++
++	/* enable all MSI interrupts */
++	pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
++
++	return 0;
++
++err:
++	irq_domain_remove(msi->domain);
++	return err;
++}
++
+ static int __init rcar_pcie_get_resources(struct platform_device *pdev,
+ 	struct rcar_pcie *pcie)
+ {
+ 	struct resource res;
+-	int err;
++	int err, i;
+ 
+ 	err = of_address_to_resource(pdev->dev.of_node, 0, &res);
+ 	if (err)
+@@ -490,6 +708,22 @@ static int __init rcar_pcie_get_resources(struct platform_device *pdev,
+ 	if (err)
+ 		goto err_map_reg;
+ 
++	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
++	if (i < 0) {
++		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
++		err = -ENOENT;
++		goto err_map_reg;
++	}
++	pcie->msi.irq1 = i;
++
++	i = irq_of_parse_and_map(pdev->dev.of_node, 1);
++	if (i < 0) {
++		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
++		err = -ENOENT;
++		goto err_map_reg;
++	}
++	pcie->msi.irq2 = i;
++
+ 	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
+ 	if (IS_ERR(pcie->base)) {
+ 		err = PTR_ERR(pcie->base);
+@@ -657,6 +891,16 @@ static int __init rcar_pcie_probe(struct platform_device *pdev)
+ 	 if (err)
+ 		return err;
+ 
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		err = rcar_pcie_enable_msi(pcie);
++		if (err < 0) {
++			dev_err(&pdev->dev,
++				"failed to enable MSI support: %d\n",
++				err);
++			return err;
++		}
++	}
++
+ 	of_id = of_match_device(rcar_pcie_of_match, pcie->dev);
+ 	if (!of_id || !of_id->data)
+ 		return -EINVAL;
+diff --git a/drivers/pci/host/pcie-rcar.h b/drivers/pci/host/pcie-rcar.h
+index 3dc026b..4f0c678 100644
+--- a/drivers/pci/host/pcie-rcar.h
++++ b/drivers/pci/host/pcie-rcar.h
+@@ -13,6 +13,7 @@
+ #define PCIEMSR			0x000028
+ #define PCIEINTXR		0x000400
+ #define PCIEPHYSR		0x0007f0
++#define PCIEMSITXR		0x000840
+ 
+ /* Transfer control */
+ #define PCIETCTLR		0x02000
+@@ -28,6 +29,10 @@
+ #define PCIEPMSR		0x02034
+ #define PCIEPMSCIER		0x02038
+ #define PCIEMSIFR		0x02044
++#define PCIEMSIALR		0x02048
++#define  MSIFE			1
++#define PCIEMSIAUR		0x0204c
++#define PCIEMSIIER		0x02050
+ 
+ /* root port address */
+ #define PCIEPRAR(x)		(0x02080 + ((x) * 0x4))
+-- 
+1.9.0
+
