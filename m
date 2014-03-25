@@ -1,449 +1,317 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og109.obsmtp.com ([64.18.0.188]:51956 "HELO
-	exprod5og109.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751991AbaCAIaS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Mar 2014 03:30:18 -0500
-Received: by mail-ve0-f177.google.com with SMTP id sa20so1755787veb.8
-        for <linux-pci@vger.kernel.org>; Sat, 01 Mar 2014 00:30:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140301023905.GB31753@bart.dudau.co.uk>
-References: <1393592902-24750-1-git-send-email-Liviu.Dudau@arm.com>
-	<1393592902-24750-6-git-send-email-Liviu.Dudau@arm.com>
-	<CACoXjck59jA1Ub8mHB0zn16krCxagUgH8BmJVnLQ8KGpFg7WpA@mail.gmail.com>
-	<CACoXjckem9p0uKRBTF67xJ6-_nM2mxcmRyfsb0jue2TiVZiuxQ@mail.gmail.com>
-	<20140301023905.GB31753@bart.dudau.co.uk>
-Date: Sat, 1 Mar 2014 00:30:16 -0800
-Message-ID: <CACoXjcnMe1PV7=p6iK++op_9+Sm-4Umx6Nf6MoX1Se8Y33RVbQ@mail.gmail.com>
-Subject: Re: [PATCH v3 5/5] pci: Add support for creating a generic
- host_bridge from device tree
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Tanmay Inamdar <tinamdar@apm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Received: from arroyo.ext.ti.com ([192.94.94.40]:46160 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751121AbaCYAeF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Mar 2014 20:34:05 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-samsung-soc@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	patches <patches@apm.com>
-Content-Type: text/plain; charset=UTF-8
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>
+Subject: [PATCH 2/3] pci: designware: enhancements to support keystone pcie
+Date: Mon, 24 Mar 2014 20:33:21 -0400
+Message-ID: <1395707604-20377-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1395707604-20377-1-git-send-email-m-karicheri2@ti.com>
+References: <1395707604-20377-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+keystone pcie hardware is based on designware hw version 3.65.
+There is no support for ATU port and have registers in
+application space to configure inbound/outbound access. Also
+doesn't support PCI PVM option. So the MSI IRQ registers available
+in application space is used to mask/unmask/enable the MSI IRQs.
+This requires changes to designware core driver to support the
+keystone pcie driver.
 
-On Fri, Feb 28, 2014 at 6:39 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> On Fri, Feb 28, 2014 at 06:07:05PM -0800, Tanmay Inamdar wrote:
->> Earlier email did not deliver to mailing lists because of plain text
->> setting problem on my side. Apologies for spamming. Sending it again.
->>
->> Hello Liviu,
->>
->
-> Hello Tanmay,
->
->> While porting X-Gene PCIe driver to v2 series, following problems were observed.
->
-> Thanks for trying it out.
->
->>
->> 1. In 'of_create_pci_host_bridge' function, bus_range is defined
->> locally. So, while walking over list of resources in bridge->windows
->> later, during X-Gene controller related setup, garbage values are
->> found in the resource. Please allocate it dynamically.
->
-> Bah, sorry for that. Will fix.
->
->>
->> 2. 'domain_nr' problem is partially solved. There are still some
->> places where functions are getting invalid domain_nr.  For example,
->> 'pci_alloc_child_bus' tries to get domain_nr when bridge is not
->> assigned to bus. You may want to look for all the places where
->> pci_domain_nr is used. Please see below dump -->
->>
->> pci 0001:00:00.0: scanning [bus 00-00] behind bridge, pass 1
->> ------------[ cut here ]------------
->> WARNING: CPU: 0 PID: 1 at
->> /home/tinamdar/work/open-source/linux/fs/sysfs/dir.c:52
->> sysfs_warn_dup+0x80/0xc0()
->> sysfs: cannot create duplicate filename '/class/pci_bus/0000:01'
->> Modules linked in:
->> CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.14.0-rc4+ #37
->> Call trace:
->> [<ffffffc000088140>] dump_backtrace+0x0/0x140
->> [<ffffffc000088294>] show_stack+0x14/0x20
->> [<ffffffc0004f64b0>] dump_stack+0x78/0xc4
->> [<ffffffc000096c88>] warn_slowpath_common+0x88/0xc0
->> [<ffffffc000096d10>] warn_slowpath_fmt+0x50/0x60
->> [<ffffffc0001b8260>] sysfs_warn_dup+0x80/0xc0
->> [<ffffffc0001b8718>] sysfs_do_create_link_sd.isra.2+0xf8/0x100
->> [<ffffffc0001b8740>] sysfs_create_link+0x20/0x40
->> [<ffffffc000322f5c>] device_add+0x41c/0x520
->> [<ffffffc00032307c>] device_register+0x1c/0x40
->> [<ffffffc0004f1924>] pci_add_new_bus+0x284/0x380
->> [<ffffffc0002c51a0>] pci_scan_bridge+0x4e0/0x540
->> [<ffffffc0002c52b4>] pci_scan_child_bus+0xb4/0x140
->> [<ffffffc0004f1a34>] pci_rescan_bus+0x14/0x40
->> [<ffffffc0006a12d4>] xgene_pcie_probe_bridge+0x688/0x750
->> [<ffffffc000327c64>] platform_drv_probe+0x24/0x60
->> [<ffffffc000325d74>] really_probe+0xf4/0x220
->> [<ffffffc000325fc4>] __driver_attach+0xa4/0xc0
->> [<ffffffc000323e18>] bus_for_each_dev+0x58/0xa0
->> [<ffffffc000325800>] driver_attach+0x20/0x40
->> [<ffffffc0003253d0>] bus_add_driver+0x150/0x220
->> [<ffffffc000326780>] driver_register+0x60/0x120
->> [<ffffffc000327c20>] __platform_driver_register+0x60/0x80
->> [<ffffffc0006a0c44>] xgene_pcie_driver_init+0x18/0x20
->> [<ffffffc0000814c4>] do_one_initcall+0xe4/0x160
->
-> do you have your xgene_pcie_driver_init being called out of some subsys_initcall?
-> If so, remove it and let the generic DT parsing code match your driver. The
+Also modified affected drivers to work with the APIs that
+are modified for to keystone pcie driver.
 
-I am using 'module_platform_driver' which is nothing but module_init.
+CC: Jingoo Han <jg1.han@samsung.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Kukjin Kim <kgene.kim@samsung.com>
+CC: Richard Zhu <r65037@freescale.com>
+CC: Shawn Guo <shawn.guo@linaro.org>
+CC: Mohit Kumar <mohit.kumar@st.com>
+CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
 
-> bridge should've been associated with the root bus by the time the child busses
-> are scanned and allocated, unless I'm missing something obvious.
->
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/pci/host/pci-exynos.c      |    2 +-
+ drivers/pci/host/pci-imx6.c        |    2 +-
+ drivers/pci/host/pcie-designware.c |   99 ++++++++++++++++++++++++------------
+ drivers/pci/host/pcie-designware.h |   14 ++++-
+ 4 files changed, 81 insertions(+), 36 deletions(-)
 
-If you look at the implementation of 'pci_alloc_child_bus', you will
-find that 'dev_set_name(&child->dev, "%04x:%02x",
-pci_domain_nr(child), busnr);' is done before 'child->bridge =
-get_device(&bridge->dev);' Hence pcie_domain_nr finds NULL bridge and
-returns 0. That might be the problem. Please correct me if I am wrong.
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 24beed3..3cae9b1 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -546,7 +546,7 @@ static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+ 	pp->ops = &exynos_pcie_host_ops;
+ 
+ 	spin_lock_init(&pp->conf_lock);
+-	ret = dw_pcie_host_init(pp);
++	ret = dw_pcie_host_init(pp, NULL, NULL);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "failed to initialize host\n");
+ 		return ret;
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index bd70af8..0d77047 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -397,7 +397,7 @@ static int imx6_add_pcie_port(struct pcie_port *pp,
+ 	pp->ops = &imx6_pcie_host_ops;
+ 
+ 	spin_lock_init(&pp->conf_lock);
+-	ret = dw_pcie_host_init(pp);
++	ret = dw_pcie_host_init(pp, NULL, NULL);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "failed to initialize host\n");
+ 		return ret;
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index e33b68b..02d4d25 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -248,11 +248,15 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+ 		irq_alloc_descs((irq + i), (irq + i), 1, 0);
+ 		irq_set_msi_desc(irq + i, desc);
+ 		/*Enable corresponding interrupt in MSI interrupt controller */
+-		res = ((pos0 + i) / 32) * 12;
+-		bit = (pos0 + i) % 32;
+-		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+-		val |= 1 << bit;
+-		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
++		if (!(pp->version & DW_VERSION_PRE_3_70)) {
++			res = ((pos0 + i) / 32) * 12;
++			bit = (pos0 + i) % 32;
++			dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
++						 4, &val);
++			val |= 1 << bit;
++			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
++						 4, val);
++		}
+ 		i++;
+ 	}
+ 
+@@ -288,11 +292,13 @@ static void clear_irq(unsigned int irq)
+ 	clear_bit(pos, pp->msi_irq_in_use);
+ 
+ 	/* Disable corresponding interrupt on MSI interrupt controller */
+-	res = (pos / 32) * 12;
+-	bit = pos % 32;
+-	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+-	val &= ~(1 << bit);
+-	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
++	if (!(pp->version & DW_VERSION_PRE_3_70)) {
++		res = (pos / 32) * 12;
++		bit = pos % 32;
++		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
++		val &= ~(1 << bit);
++		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
++	}
+ }
+ 
+ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+@@ -326,7 +332,10 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+ 				msg_ctr);
+ 	desc->msi_attrib.multiple = msgvec;
+ 
+-	msg.address_lo = virt_to_phys((void *)pp->msi_data);
++	if (pp->ops->get_msi_data)
++		msg.address_lo = pp->ops->get_msi_data(pp);
++	else
++		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+ 	msg.address_hi = 0x0;
+ 	msg.data = pos;
+ 	write_msi_msg(irq, &msg);
+@@ -366,14 +375,27 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 	.map = dw_pcie_msi_map,
+ };
+ 
+-int __init dw_pcie_host_init(struct pcie_port *pp)
++int __init dw_pcie_host_init(struct pcie_port *pp, struct hw_pci *hw,
++				const struct irq_domain_ops *irq_ops)
+ {
+ 	struct device_node *np = pp->dev->of_node;
+-	struct of_pci_range range;
++	const struct irq_domain_ops *irq_msi_ops;
+ 	struct of_pci_range_parser parser;
++	struct of_pci_range range;
++	struct hw_pci *hw_pci;
+ 	u32 val;
+ 	int i;
+ 
++	/* if glue driver provides its own hw ops, override the default */
++	hw_pci = hw;
++	if (!hw_pci)
++		hw_pci = &dw_pci;
++
++	/* if glue driver provides its own irq msi ops, override default */
++	irq_msi_ops = irq_ops;
++	if (!irq_msi_ops)
++		irq_msi_ops = &msi_domain_ops;
++
+ 	if (of_pci_range_parser_init(&parser, np)) {
+ 		dev_err(pp->dev, "missing ranges property\n");
+ 		return -EINVAL;
+@@ -422,17 +444,20 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	pp->io_base = pp->io.start;
+ 	pp->mem_base = pp->mem.start;
+ 
+-	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+-					pp->config.cfg0_size);
+-	if (!pp->va_cfg0_base) {
+-		dev_err(pp->dev, "error with ioremap in function\n");
+-		return -ENOMEM;
+-	}
+-	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
+-					pp->config.cfg1_size);
+-	if (!pp->va_cfg1_base) {
+-		dev_err(pp->dev, "error with ioremap\n");
+-		return -ENOMEM;
++	if (!(pp->version & DW_VERSION_PRE_3_70)) {
++		/* only version 3.70 or later support ATU port */
++		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
++						pp->config.cfg0_size);
++		if (!pp->va_cfg0_base) {
++			dev_err(pp->dev, "error with ioremap in function\n");
++			return -ENOMEM;
++		}
++		pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
++						pp->config.cfg1_size);
++		if (!pp->va_cfg1_base) {
++			dev_err(pp->dev, "error with ioremap\n");
++			return -ENOMEM;
++		}
+ 	}
+ 
+ 	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
+@@ -442,7 +467,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+-					MAX_MSI_IRQS, &msi_domain_ops,
++					MAX_MSI_IRQS, irq_msi_ops,
+ 					&dw_pcie_msi_chip);
+ 		if (!pp->irq_domain) {
+ 			dev_err(pp->dev, "irq domain init failed\n");
+@@ -465,10 +490,10 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	val |= PORT_LOGIC_SPEED_CHANGE;
+ 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+ 
+-	dw_pci.nr_controllers = 1;
+-	dw_pci.private_data = (void **)&pp;
++	hw_pci->nr_controllers = 1;
++	hw_pci->private_data = (void **)&pp;
+ 
+-	pci_common_init(&dw_pci);
++	pci_common_init(hw_pci);
+ 	pci_assign_unassigned_resources();
+ #ifdef CONFIG_PCI_DOMAINS
+ 	dw_pci.domain++;
+@@ -628,7 +653,11 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 
+ 	spin_lock_irqsave(&pp->conf_lock, flags);
+ 	if (bus->number != pp->root_bus_nr)
+-		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
++		if (pp->ops->rd_other_conf)
++			ret = pp->ops->rd_other_conf(pp, bus, devfn,
++						where, size, val);
++		else
++			ret = dw_pcie_rd_other_conf(pp, bus, devfn,
+ 						where, size, val);
+ 	else
+ 		ret = dw_pcie_rd_own_conf(pp, where, size, val);
+@@ -654,7 +683,11 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 
+ 	spin_lock_irqsave(&pp->conf_lock, flags);
+ 	if (bus->number != pp->root_bus_nr)
+-		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
++		if (pp->ops->wr_other_conf)
++			ret = pp->ops->wr_other_conf(pp, bus, devfn,
++						where, size, val);
++		else
++			ret = dw_pcie_wr_other_conf(pp, bus, devfn,
+ 						where, size, val);
+ 	else
+ 		ret = dw_pcie_wr_own_conf(pp, where, size, val);
+@@ -668,7 +701,7 @@ static struct pci_ops dw_pcie_ops = {
+ 	.write = dw_pcie_wr_conf,
+ };
+ 
+-static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
++int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+ {
+ 	struct pcie_port *pp;
+ 
+@@ -691,7 +724,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	return 1;
+ }
+ 
+-static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
++struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ {
+ 	struct pci_bus *bus;
+ 	struct pcie_port *pp = sys_to_pcie(sys);
+@@ -715,7 +748,7 @@ static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return pp->irq;
+ }
+ 
+-static void dw_pcie_add_bus(struct pci_bus *bus)
++void dw_pcie_add_bus(struct pci_bus *bus)
+ {
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index c15379b..da35a80 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -48,6 +48,8 @@ struct pcie_port {
+ 	struct pcie_port_info	config;
+ 	int			irq;
+ 	u32			lanes;
++#define DW_VERSION_PRE_3_70	BIT(0)
++	u32			version;
+ 	struct pcie_host_ops	*ops;
+ 	int			msi_irq;
+ 	struct irq_domain	*irq_domain;
+@@ -62,8 +64,13 @@ struct pcie_host_ops {
+ 			u32 val, void __iomem *dbi_base);
+ 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
+ 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
++	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
++			unsigned int devfn, int where, int size, u32 *val);
++	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
++			unsigned int devfn, int where, int size, u32 val);
+ 	int (*link_up)(struct pcie_port *pp);
+ 	void (*host_init)(struct pcie_port *pp);
++	u32 (*get_msi_data)(struct pcie_port *pp);
+ };
+ 
+ int cfg_read(void __iomem *addr, int where, int size, u32 *val);
+@@ -72,6 +79,11 @@ void dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
+ int dw_pcie_link_up(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+-int dw_pcie_host_init(struct pcie_port *pp);
++int dw_pcie_host_init(struct pcie_port *pp, struct hw_pci *dw_pci,
++		const struct irq_domain_ops *irq_ops);
++int dw_pcie_setup(int nr, struct pci_sys_data *sys);
++struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys);
++void dw_pcie_add_bus(struct pci_bus *bus);
++
+ 
+ #endif /* _PCIE_DESIGNWARE_H */
+-- 
+1.7.9.5
 
-> Also, can you share your version of your driver with me?
-
-Sure. I am in the process of sending out RFC version. I will post it
-in a day or two.
-
->
-> Best regards,
-> Liviu
->
->> [<ffffffc00068c938>] kernel_init_freeable+0x138/0x1d8
->> [<ffffffc0004f06b0>] kernel_init+0x10/0xe0
->> ---[ end trace 53db1c3a7fbdeb88 ]---
->> ------------[ cut here ]------------
->> WARNING: CPU: 0 PID: 1 at
->> /home/tinamdar/work/open-source/linux/drivers/pci/probe.c:711
->> pci_add_new_bus+0x36c/0x380()
->>
->> Thanks,
->> Tanmay
->>
->> On Fri, Feb 28, 2014 at 6:01 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
->> > Hello Liviu,
->> >
->> > While porting X-Gene PCIe driver to v2 series, following problems were
->> > observed.
->> >
->> > 1. In 'of_create_pci_host_bridge' function, bus_range is defined locally.
->> > So, while walking over list of resources in bridge->windows later, during
->> > X-Gene controller related setup, garbage values are found in the resource.
->> > Please allocate it dynamically.
->> >
->> > 2. 'domain_nr' problem is partially solved. There are still some places
->> > where functions are getting invalid domain_nr.  For example,
->> > 'pci_alloc_child_bus' tries to get domain_nr when bridge is not assigned to
->> > bus. You may want to look for all the places where pci_domain_nr is used.
->> > Please see below dump -->
->> >
->> > pci 0001:00:00.0: scanning [bus 00-00] behind bridge, pass 1
->> > ------------[ cut here ]------------
->> > WARNING: CPU: 0 PID: 1 at
->> > /home/tinamdar/work/open-source/linux/fs/sysfs/dir.c:52
->> > sysfs_warn_dup+0x80/0xc0()
->> > sysfs: cannot create duplicate filename '/class/pci_bus/0000:01'
->> > Modules linked in:
->> > CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.14.0-rc4+ #37
->> > Call trace:
->> > [<ffffffc000088140>] dump_backtrace+0x0/0x140
->> > [<ffffffc000088294>] show_stack+0x14/0x20
->> > [<ffffffc0004f64b0>] dump_stack+0x78/0xc4
->> > [<ffffffc000096c88>] warn_slowpath_common+0x88/0xc0
->> > [<ffffffc000096d10>] warn_slowpath_fmt+0x50/0x60
->> > [<ffffffc0001b8260>] sysfs_warn_dup+0x80/0xc0
->> > [<ffffffc0001b8718>] sysfs_do_create_link_sd.isra.2+0xf8/0x100
->> > [<ffffffc0001b8740>] sysfs_create_link+0x20/0x40
->> > [<ffffffc000322f5c>] device_add+0x41c/0x520
->> > [<ffffffc00032307c>] device_register+0x1c/0x40
->> > [<ffffffc0004f1924>] pci_add_new_bus+0x284/0x380
->> > [<ffffffc0002c51a0>] pci_scan_bridge+0x4e0/0x540
->> > [<ffffffc0002c52b4>] pci_scan_child_bus+0xb4/0x140
->> > [<ffffffc0004f1a34>] pci_rescan_bus+0x14/0x40
->> > [<ffffffc0006a12d4>] xgene_pcie_probe_bridge+0x688/0x750
->> > [<ffffffc000327c64>] platform_drv_probe+0x24/0x60
->> > [<ffffffc000325d74>] really_probe+0xf4/0x220
->> > [<ffffffc000325fc4>] __driver_attach+0xa4/0xc0
->> > [<ffffffc000323e18>] bus_for_each_dev+0x58/0xa0
->> > [<ffffffc000325800>] driver_attach+0x20/0x40
->> > [<ffffffc0003253d0>] bus_add_driver+0x150/0x220
->> > [<ffffffc000326780>] driver_register+0x60/0x120
->> > [<ffffffc000327c20>] __platform_driver_register+0x60/0x80
->> > [<ffffffc0006a0c44>] xgene_pcie_driver_init+0x18/0x20
->> > [<ffffffc0000814c4>] do_one_initcall+0xe4/0x160
->> > [<ffffffc00068c938>] kernel_init_freeable+0x138/0x1d8
->> > [<ffffffc0004f06b0>] kernel_init+0x10/0xe0
->> > ---[ end trace 53db1c3a7fbdeb88 ]---
->> > ------------[ cut here ]------------
->> > WARNING: CPU: 0 PID: 1 at
->> > /home/tinamdar/work/open-source/linux/drivers/pci/probe.c:711
->> > pci_add_new_bus+0x36c/0x380()
->> >
->> > Thanks,
->> > Tanmay
->> >
->> >
->> >
->> > On Fri, Feb 28, 2014 at 5:08 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> >>
->> >> Several platforms use a rather generic version of parsing
->> >> the device tree to find the host bridge ranges. Move the common code
->> >> into the generic PCI code and use it to create a pci_host_bridge
->> >> structure that can be used by arch code.
->> >>
->> >> Based on early attempts by Andrew Murray to unify the code.
->> >> Used powerpc and microblaze PCI code as starting point.
->> >>
->> >> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->> >>
->> >> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->> >> index 06ace62..feb8436 100644
->> >> --- a/drivers/pci/host-bridge.c
->> >> +++ b/drivers/pci/host-bridge.c
->> >> @@ -6,9 +6,13 @@
->> >>  #include <linux/init.h>
->> >>  #include <linux/pci.h>
->> >>  #include <linux/module.h>
->> >> +#include <linux/of_address.h>
->> >> +#include <linux/of_pci.h>
->> >>
->> >>  #include "pci.h"
->> >>
->> >> +static int domain_nr;
->> >> +
->> >>  static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->> >>  {
->> >>         while (bus->parent)
->> >> @@ -91,3 +95,133 @@ void pcibios_bus_to_resource(struct pci_bus *bus,
->> >> struct resource *res,
->> >>         res->end = region->end + offset;
->> >>  }
->> >>  EXPORT_SYMBOL(pcibios_bus_to_resource);
->> >> +
->> >> +/**
->> >> + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from
->> >> DT
->> >> + * @dev: device node of the host bridge having the range property
->> >> + * @resources: list where the range of resources will be added after DT
->> >> parsing
->> >> + * @io_base: pointer to a variable that will contain the physical address
->> >> for
->> >> + * the start of the I/O range.
->> >> + *
->> >> + * If this function returns an error then the @resources list will be
->> >> freed.
->> >> + *
->> >> + * This function will parse the "ranges" property of a PCI host bridge
->> >> device
->> >> + * node and setup the resource mapping based on its content. It is
->> >> expected
->> >> + * that the property conforms with the Power ePAPR document.
->> >> + *
->> >> + * Each architecture is then offered the chance of applying their own
->> >> + * filtering of pci_host_bridge_windows based on their own restrictions
->> >> by
->> >> + * calling pcibios_fixup_bridge_ranges(). The filtered list of windows
->> >> + * can then be used when creating a pci_host_bridge structure.
->> >> + */
->> >> +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
->> >> +               struct list_head *resources, resource_size_t *io_base)
->> >> +{
->> >> +       struct resource *res;
->> >> +       struct of_pci_range range;
->> >> +       struct of_pci_range_parser parser;
->> >> +       int err;
->> >> +
->> >> +       pr_info("PCI host bridge %s ranges:\n", dev->full_name);
->> >> +
->> >> +       /* Check for ranges property */
->> >> +       err = of_pci_range_parser_init(&parser, dev);
->> >> +       if (err)
->> >> +               return err;
->> >> +
->> >> +       pr_debug("Parsing ranges property...\n");
->> >> +       for_each_of_pci_range(&parser, &range) {
->> >> +               /* Read next ranges element */
->> >> +               pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
->> >> +                               range.pci_space, range.pci_addr);
->> >> +               pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
->> >> +                                       range.cpu_addr, range.size);
->> >> +
->> >> +               /*
->> >> +                * If we failed translation or got a zero-sized region
->> >> +                * then skip this range
->> >> +                */
->> >> +               if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
->> >> +                       continue;
->> >> +
->> >> +               res = kzalloc(sizeof(struct resource), GFP_KERNEL);
->> >> +               if (!res) {
->> >> +                       err = -ENOMEM;
->> >> +                       goto bridge_ranges_nomem;
->> >> +               }
->> >> +
->> >> +               of_pci_range_to_resource(&range, dev, res);
->> >> +
->> >> +               if (resource_type(res) == IORESOURCE_IO)
->> >> +                       *io_base = range.cpu_addr;
->> >> +
->> >> +               pci_add_resource_offset(resources, res,
->> >> +                               res->start - range.pci_addr);
->> >> +       }
->> >> +
->> >> +       /* Apply architecture specific fixups for the ranges */
->> >> +       pcibios_fixup_bridge_ranges(resources);
->> >> +
->> >> +       return 0;
->> >> +
->> >> +bridge_ranges_nomem:
->> >> +       pci_free_resource_list(resources);
->> >> +       return err;
->> >> +}
->> >> +
->> >> +/**
->> >> + * of_create_pci_host_bridge - Create a PCI host bridge structure using
->> >> + * information passed in the DT.
->> >> + * @parent: device owning this host bridge
->> >> + * @ops: pci_ops associated with the host controller
->> >> + * @host_data: opaque data structure used by the host controller.
->> >> + *
->> >> + * returns a pointer to the newly created pci_host_bridge structure, or
->> >> + * NULL if the call failed.
->> >> + *
->> >> + * This function will try to obtain the host bridge domain number by
->> >> + * using of_alias_get_id() call with "pci-domain" as a stem. If that
->> >> + * fails, a local allocator will be used that will put each host bridge
->> >> + * in a new domain.
->> >> + */
->> >> +struct pci_host_bridge *
->> >> +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
->> >> void *host_data)
->> >> +{
->> >> +       int err, domain, busno;
->> >> +       struct resource bus_range;
->> >> +       struct pci_bus *root_bus;
->> >> +       struct pci_host_bridge *bridge;
->> >> +       resource_size_t io_base;
->> >> +       LIST_HEAD(res);
->> >> +
->> >> +       domain = of_alias_get_id(parent->of_node, "pci-domain");
->> >> +       if (domain == -ENODEV)
->> >> +               domain = domain_nr++;
->> >> +
->> >> +       err = of_pci_parse_bus_range(parent->of_node, &bus_range);
->> >> +       if (err) {
->> >> +               dev_info(parent, "No bus range for %s, using default
->> >> [0-255]\n",
->> >> +                       parent->of_node->full_name);
->> >> +               bus_range.start = 0;
->> >> +               bus_range.end = 255;
->> >> +               bus_range.flags = IORESOURCE_BUS;
->> >> +       }
->> >> +       busno = bus_range.start;
->> >> +       pci_add_resource(&res, &bus_range);
->> >> +
->> >> +       /* now parse the rest of host bridge bus ranges */
->> >> +       if (pci_host_bridge_of_get_ranges(parent->of_node, &res,
->> >> &io_base))
->> >> +               return NULL;
->> >> +
->> >> +       /* then create the root bus */
->> >> +       root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
->> >> +                                               ops, host_data, &res);
->> >> +       if (!root_bus)
->> >> +               return NULL;
->> >> +
->> >> +       bridge = to_pci_host_bridge(root_bus->bridge);
->> >> +       bridge->io_base = io_base;
->> >> +
->> >> +       return bridge;
->> >> +}
->> >> +EXPORT_SYMBOL_GPL(of_create_pci_host_bridge);
->> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> >> index 1eed009..0c5e269 100644
->> >> --- a/include/linux/pci.h
->> >> +++ b/include/linux/pci.h
->> >> @@ -395,6 +395,7 @@ struct pci_host_bridge {
->> >>         struct device dev;
->> >>         struct pci_bus *bus;            /* root bus */
->> >>         int domain_nr;
->> >> +       resource_size_t io_base;        /* physical address for the start
->> >> of I/O area */
->> >>         struct list_head windows;       /* pci_host_bridge_windows */
->> >>         void (*release_fn)(struct pci_host_bridge *);
->> >>         void *release_data;
->> >> @@ -1786,11 +1787,23 @@ static inline struct device_node
->> >> *pci_bus_to_OF_node(struct pci_bus *bus)
->> >>         return bus ? bus->dev.of_node : NULL;
->> >>  }
->> >>
->> >> +struct pci_host_bridge *
->> >> +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
->> >> +                       void *host_data);
->> >> +
->> >> +void pcibios_fixup_bridge_ranges(struct list_head *resources);
->> >>  #else /* CONFIG_OF */
->> >>  static inline void pci_set_of_node(struct pci_dev *dev) { }
->> >>  static inline void pci_release_of_node(struct pci_dev *dev) { }
->> >>  static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
->> >>  static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
->> >> +
->> >> +static inline struct pci_host_bridge *
->> >> +pci_host_bridge_of_init(struct device *parent, struct pci_ops *ops,
->> >> +                       void *host_data)
->> >> +{
->> >> +       return NULL;
->> >> +}
->> >>  #endif  /* CONFIG_OF */
->> >>
->> >>  #ifdef CONFIG_EEH
->> >> --
->> >> 1.9.0
->> >>
->> >>
->> >> _______________________________________________
->> >> linux-arm-kernel mailing list
->> >> linux-arm-kernel@lists.infradead.org
->> >> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
->> >
->> >
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> --
-> -------------------
->    .oooO
->    (   )
->     \ (  Oooo.
->      \_) (   )
->           ) /
->          (_/
->
->  One small step
->    for me ...
->
-> CONFIDENTIALITY NOTICE: This e-mail message, including any attachments,
-> is for the sole use of the intended recipient(s) and contains information
-> that is confidential and proprietary to Applied Micro Circuits Corporation or its subsidiaries.
-> It is to be used solely for the purpose of furthering the parties' business relationship.
-> All unauthorized review, use, disclosure or distribution is prohibited.
-> If you are not the intended recipient, please contact the sender by reply e-mail
-> and destroy all copies of the original message.
->
