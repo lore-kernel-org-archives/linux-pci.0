@@ -1,61 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 5 Mar 2014 08:48:04 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: Re: [Patch Part2 V2 00/17] Enhance DMAR drivers to handle PCI/memory
- hotplug events
-Message-ID: <20140305074804.GE27471@8bytes.org>
-References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yh0-f43.google.com ([209.85.213.43]:55316 "EHLO
+	mail-yh0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752167AbaCYLql (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 07:46:41 -0400
+Received: by mail-yh0-f43.google.com with SMTP id b6so262319yha.2
+        for <linux-pci@vger.kernel.org>; Tue, 25 Mar 2014 04:46:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140325103525.GA14789@ulmo>
+References: <1395707726-20437-1-git-send-email-m-karicheri2@ti.com>
+	<1395707726-20437-4-git-send-email-m-karicheri2@ti.com>
+	<235376049.yyfljDtinu@wuerfel>
+	<20140325103525.GA14789@ulmo>
+Date: Tue, 25 Mar 2014 11:46:41 +0000
+Message-ID: <CAPcvp5Gy8uNW3UULi8jYk7GNbmgTd2B_qOEAXnP4H4Wq3v9BCw@mail.gmail.com>
+Subject: Re: [RESEND: RFC PATCH 3/3] pcie: keystone: add pcie driver based on
+ designware core driver
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Richard Zhu <r65037@freescale.com>,
+	linux-samsung-soc@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 19, 2014 at 02:07:20PM +0800, Jiang Liu wrote:
-> Jiang Liu (17):
->   iommu/vt-d: avoid double free of g_iommus on error recovery path
->   iommu/vt-d: avoid caching stale domain_device_info and fix memory
->     leak
->   iommu/vt-d: avoid caching stale domain_device_info when hot-removing
->     PCI device
->   iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
->   iommu/vt-d: move private structures and variables into intel-iommu.c
->   iommu/vt-d: simplify function get_domain_for_dev()
->   iommu/vt-d: free resources if failed to create domain for PCIe
->     endpoint
->   iommu/vt-d: reduce duplicated code to handle virtual machine domains
->   iommu/vt-d: fix incorrect iommu_count for si_domain
->   iommu/vt-d: check for NULL pointer when freeing IOMMU data structure
->   iommu/vt-d: fix error in detect ATS capability
->   iommu/vt-d: introduce macro for_each_dev_scope() to walk device scope
->     entries
->   iommu/vt-d: introduce a rwsem to protect global data structures
->   iommu/vt-d: use RCU to protect global resources in interrupt context
->   iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI
->     hotplug happens
->   iommu/vt-d, PCI: unify the way to process DMAR device scope array
->   iommu/vt-d: update IOMMU state when memory hotplug happens
-> 
->  drivers/iommu/dmar.c                |  412 +++++++++++++------
->  drivers/iommu/intel-iommu.c         |  750 ++++++++++++++++++-----------------
->  drivers/iommu/intel_irq_remapping.c |  108 +++--
->  drivers/iommu/iova.c                |   64 ++-
->  include/linux/dmar.h                |   74 ++--
->  include/linux/iova.h                |    2 +
->  6 files changed, 848 insertions(+), 562 deletions(-)
+On 25 March 2014 10:35, Thierry Reding <thierry.reding@gmail.com> wrote:
+> On Tue, Mar 25, 2014 at 08:44:36AM +0100, Arnd Bergmann wrote:
+>> On Monday 24 March 2014 20:35:26 Murali Karicheri wrote:
+> [...]
+>> > +/* Keystone PCIe driver does not allow module unload */
+>> > +static int __init ks_pcie_init(void)
+>> > +{
+>> > +   return platform_driver_probe(&ks_pcie_driver, ks_pcie_probe);
+>> > +}
+>> > +subsys_initcall(ks_pcie_init);
+>>
+>> Why subsys_initcall?
+>>
+>> We should probably try to fix unloading soon.
+>
+> I did some work on this a few months ago but never got around to
+> cleaning up the patches. Let me see if I can resurrect that work.
 
-Applied, thanks Jiang.
+I think there may be merit in these drivers using subsys_init. I've
+not had time to investigate, but as far as I can remember this causes
+issues with piceport.
 
+For ARM32 host drivers, pci_fixup_irqs (arch/arm/kernel/bios32.c) must
+be called before init_service_irqs (portdrv_core.c) otherwise pcieport
+acts on invalid information in dev->irq and breaks. It seems that its
+possible for the portbus driver to pick up new devices before bios32
+has been able to fixup the irqs. Making the host bridge drivers subsys
+will overcome this. I guess this hasn't been an issue in the past as
+host bridge drivers were always in the arch/ directories.
 
+In any case it may be worth testing this driver with PCIEPORTBUS enabled.
+
+Andrew Murray
