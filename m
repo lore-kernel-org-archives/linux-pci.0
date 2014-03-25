@@ -1,81 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mxout1.idt.com ([157.165.5.25]:52818 "EHLO mxout1.idt.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752347AbaCGNtG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Mar 2014 08:49:06 -0500
-From: "Bounine, Alexandre" <Alexandre.Bounine@idt.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-CC: Matt Porter <mporter@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v2 RESEND 3/4] tsi721: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Date: Fri, 7 Mar 2014 13:35:34 +0000
-Message-ID: <8D983423E7EDF846BB3056827B8CC5D15CC440A6@corpmail1.na.ads.idt.com>
-References: <cover.1394128952.git.agordeev@redhat.com>
- <d21563117d14900b2c094847198ff9a99e2e3dfa.1394128952.git.agordeev@redhat.com>
-In-Reply-To: <d21563117d14900b2c094847198ff9a99e2e3dfa.1394128952.git.agordeev@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:37430 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877AbaCYTWR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 15:22:17 -0400
+Received: by mail-lb0-f181.google.com with SMTP id c11so723210lbj.26
+        for <linux-pci@vger.kernel.org>; Tue, 25 Mar 2014 12:22:15 -0700 (PDT)
+Message-ID: <5331E576.2000202@cogentembedded.com>
+Date: Tue, 25 Mar 2014 23:22:14 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
+To: Phil Edworthy <phil.edworthy@renesas.com>,
+	linux-pci@vger.kernel.org
+CC: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v5 5/9] dt-bindings: pci: rcar pcie device tree bindings
+References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com> <1395766604-30926-6-git-send-email-phil.edworthy@renesas.com>
+In-Reply-To: <1395766604-30926-6-git-send-email-phil.edworthy@renesas.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Alexander Gordeev [mailto:agordeev@redhat.com]
-> Sent: Thursday, March 06, 2014 3:11 PM
-> To: linux-kernel@vger.kernel.org
-> Cc: Alexander Gordeev; Matt Porter; Bounine, Alexandre; linux-
-> pci@vger.kernel.org
-> Subject: [PATCH v2 RESEND 3/4] tsi721: Use pci_enable_msix_exact()
-> instead of pci_enable_msix()
-> 
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+Hello.
 
+On 03/25/2014 07:56 PM, Phil Edworthy wrote:
 
-Acked-by: Alexandre Bounine <alexandre.bounine@idt.com>
+> This patch adds the bindings for the R-Car PCIe driver. The driver
+> resides under drivers/pci/host/pcie-rcar.c
 
-Andrew, please pick up this patch for the -next tree.
-
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Matt Porter <mporter@kernel.crashing.org>
-> Cc: Alexandre Bounine <alexandre.bounine@idt.com>
-> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 > ---
->  drivers/rapidio/devices/tsi721.c |   11 +++--------
->  1 files changed, 3 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/rapidio/devices/tsi721.c
-> b/drivers/rapidio/devices/tsi721.c
-> index ff7cbf2..ce08e8d 100644
-> --- a/drivers/rapidio/devices/tsi721.c
-> +++ b/drivers/rapidio/devices/tsi721.c
-> @@ -768,15 +768,10 @@ static int tsi721_enable_msix(struct
-> tsi721_device *priv)
->  	}
->  #endif /* CONFIG_RAPIDIO_DMA_ENGINE */
-> 
-> -	err = pci_enable_msix(priv->pdev, entries, ARRAY_SIZE(entries));
-> +	err = pci_enable_msix_exact(priv->pdev, entries,
-> ARRAY_SIZE(entries));
->  	if (err) {
-> -		if (err > 0)
-> -			dev_info(&priv->pdev->dev,
-> -				 "Only %d MSI-X vectors available, "
-> -				 "not using MSI-X\n", err);
-> -		else
-> -			dev_err(&priv->pdev->dev,
-> -				"Failed to enable MSI-X (err=%d)\n", err);
-> +		dev_err(&priv->pdev->dev,
-> +			"Failed to enable MSI-X (err=%d)\n", err);
->  		return err;
->  	}
-> 
-> --
-> 1.7.7.6
+> v5:
+>   - Add PCIe bus clock reference
+>   - Add additional interrupt bindings
+>   - Use dma-ranges property to specify inbound memory regions
+> ---
+>   Documentation/devicetree/bindings/pci/rcar-pci.txt | 44 ++++++++++++++++++++++
+>   1 file changed, 44 insertions(+)
+>   create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
+>
+> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> new file mode 100644
+> index 0000000..61bf5ef
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> @@ -0,0 +1,44 @@
+> +* Renesas RCar PCIe interface
+> +
+> +Required properties:
+> +- compatible: should contain one of the following
+> +	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
+> +- reg: base addresses and lengths of the pcie controller.
+
+    Hmm, need "registers" at end. And why plural?
+
+> +- #address-cells: set to <3>
+> +- #size-cells: set to <2>
+> +- device_type: set to "pci"
+> +- ranges: ranges for the PCI memory and I/O regions.
+> +- dma-ranges: ranges for the inbound memory regions.
+> +- interrupts: two interrupt sources for MSI interrupts, followed by interrupt
+> +	source for hardware related interrupts (e.g. link speed change).
+> +- #interrupt-cells: set to <1>
+> +- interrupt-map-mask and interrupt-map: standard PCI properties
+> +	to define the mapping of the PCIe interface to interrupt
+> +	numbers.
+> +- clocks: from common clock binding: handle to pci clock.
+
+    s/handle/phandle/, s/pci/PCI/.
+    Actually, it's a clock specifier consisting not only of phandle but also 
+of clock #. Looking at your example, it's even a pair of clock specifiers.
+
+> +- clock-names: from common clock binding: should be "pcie" and "pcie_bus".
+> +
+> +Example:
+> +
+> +SoC specific DT Entry:
+> +
+> +	pcie: pcie@fe000000 {
+> +		compatible = "renesas,pcie-r8a7791";
+> +		reg = <0 0xfe000000 0 0x80000>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
+> +			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
+> +			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
+> +			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
+> +		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000
+> +			      0x42000000 2 0x00000000 2 0x00000000 0 0x40000000>;
+
+    Hmm, this prop looks board-dependent...
+
+> +		interrupts = <0 116 4 0 117 4 0 118 4>;
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0 0 0 0>;
+> +		interrupt-map = <0 0 0 0 &gic 0 116 4>;
+> +		clocks = <&mstp3_clks R8A7791_CLK_PCIE>, <&pcie_bus_clk>;
+> +		clock-names = "pcie", "pcie_bus";
+> +		status = "disabled";
+> +	};
+
+WBR, Sergei
 
