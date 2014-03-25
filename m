@@ -1,104 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:39182 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751786AbaCUOPq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 10:15:46 -0400
-In-Reply-To: <1395400638.4554.5.camel@weser.hi.pengutronix.de>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>	 <1395397968-6242-3-git-send-email-phil.edworthy@renesas.com> <1395400638.4554.5.camel@weser.hi.pengutronix.de>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
+Received: from kirsty.vergenet.net ([202.4.237.240]:56518 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755193AbaCYVCH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 17:02:07 -0400
+Date: Tue, 25 Mar 2014 14:02:04 -0700
+From: Simon Horman <horms@verge.net.au>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
 	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
+	Ben Dooks <ben.dooks@codethink.co.uk>
+Subject: Re: [PATCH v5 9/9] ARM: koelsch: Add HAVE_ARM_ARCH_TIMER to defconfig
+Message-ID: <20140325210204.GD27673@verge.net.au>
+References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
+ <1395766604-30926-10-git-send-email-phil.edworthy@renesas.com>
 MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OFFBE32003.3827BA14-ON80257CA2.004D7C1E-80257CA2.004E5338@eu.necel.com>
-Date: Fri, 21 Mar 2014 14:15:32 +0000
-Subject: Re: [PATCH v4 2/9] PCI: host: rcar: Add MSI support
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1395766604-30926-10-git-send-email-phil.edworthy@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas,
+Please update the subject of this patch to:
 
-Thanks for the review.
+ARM: shmobile: koelsch: Add HAVE_ARM_ARCH_TIMER to defconfig
 
-On 21/03/2014 11:18, Lucas wrote:
-> Subject: Re: [PATCH v4 2/9] PCI: host: rcar: Add MSI support
+On Tue, Mar 25, 2014 at 04:56:44PM +0000, Phil Edworthy wrote:
+> This is fixes a boot problem when the R-Car PCIe driver is enabled.
 > 
-> Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
-> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > ---
-> >  drivers/pci/host/pcie-rcar.c | 232 
-++++++++++++++++++++++++++++++++++++++++++-
-> >  drivers/pci/host/pcie-rcar.h |   5 +
-> >  2 files changed, 236 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/host/pcie-rcar.c 
-b/drivers/pci/host/pcie-rcar.c
-> > index 16670e5..cbbcd77 100644
-> > --- a/drivers/pci/host/pcie-rcar.c
-> > +++ b/drivers/pci/host/pcie-rcar.c
-> [...]
-> > +
-> > +static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
-> > +{
-> > +   struct rcar_pcie *pcie = data;
-> > +   struct rcar_msi *msi = &pcie->msi;
-> > +   unsigned long reg;
-> > +
-> > +   reg = pci_read_reg(pcie, PCIEMSIFR);
-> > +
-> > +   while (reg) {
-> > +      unsigned int index = find_first_bit(&reg, 32);
-> > +      unsigned int irq;
-> > +
-> > +      /* clear the interrupt */
-> > +      pci_write_reg(pcie, 1 << index, PCIEMSIFR);
-> > +
-> > +      irq = irq_find_mapping(msi->domain, index);
-> > +      if (irq) {
-> > +         if (test_bit(index, msi->used))
-> > +            generic_handle_irq(irq);
-> > +         else
-> > +            dev_info(pcie->dev, "unhandled MSI\n");
-> > +      } else {
-> > +         /*
-> > +          * that's weird who triggered this?
-> > +          * just clear it
-> > +          */
-> > +         dev_info(pcie->dev, "unexpected MSI\n");
-> > +      }
-> > +
-> > +      /* see if there's any more pending in this vector */
-> > +      reg = pci_read_reg(pcie, PCIEMSIFR);
-> > +   }
-> > +
-> > +   return IRQ_HANDLED;
-> > +}
-> > +
-> From your DT binding it seems you have only one interrupt from the PCIe
-> core, shared between the MSI irqs and the PCI legacy interrupts.
-> This means this handler may get called without an MSI irq pending, so
-> this function really should have a path where it's returning IRQ_NONE.
-Ah, yes you are right... though actually there are two interrupts, one has 
-some MSI and INTx, the other has the rest of the MSIs.
-
-> Regards,
-> Lucas
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> ---
+>  arch/arm/configs/koelsch_defconfig | 1 +
+>  1 file changed, 1 insertion(+)
 > 
+> diff --git a/arch/arm/configs/koelsch_defconfig b/arch/arm/configs/koelsch_defconfig
+> index ec14547..67666b6 100644
+> --- a/arch/arm/configs/koelsch_defconfig
+> +++ b/arch/arm/configs/koelsch_defconfig
+> @@ -15,6 +15,7 @@ CONFIG_MACH_KOELSCH=y
+>  CONFIG_CPU_BPREDICT_DISABLE=y
+>  CONFIG_PL310_ERRATA_588369=y
+>  CONFIG_ARM_ERRATA_754322=y
+> +CONFIG_HAVE_ARM_ARCH_TIMER=y
+>  CONFIG_PCI=y
+>  CONFIG_PCI_MSI=y
+>  CONFIG_PCI_RCAR_GEN2_PCIE=y
 > -- 
-> Pengutronix e.K.                           | Lucas Stach |
-> Industrial Linux Solutions                 | http://www.pengutronix.de/ 
-|
-> Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 
-|
-> Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 
-|
+> 1.9.0
 > 
-
-Thanks
-Phil
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
