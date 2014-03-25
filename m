@@ -1,65 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:54774 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754594AbaCKRsL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 13:48:11 -0400
-Received: by mail-ie0-f171.google.com with SMTP id ar20so9404149iec.30
-        for <linux-pci@vger.kernel.org>; Tue, 11 Mar 2014 10:48:10 -0700 (PDT)
-Subject: [PATCH] PCI: Do not enable INTx in pci_reenable_device()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org,
-	Chris Cheng <chris.cheng@atrustcorp.com>,
-	Jamie Chen <jamie.chen@intel.com>,
-	Andreas Noever <andreas.noever@gmail.com>
-Date: Tue, 11 Mar 2014 11:48:09 -0600
-Message-ID: <20140311174809.23257.77363.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140311174555.23257.66798.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140311174555.23257.66798.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:41163 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751121AbaCYARm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 20:17:42 -0400
+Received: by mail-ig0-f175.google.com with SMTP id ur14so9349726igb.2
+        for <linux-pci@vger.kernel.org>; Mon, 24 Mar 2014 17:17:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <83f00436a12b44f799bd1222b91297cd@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <CAA93t1rPE3yUh8nAGJDiqeGhixznZdhdyFwRoX_c1VWT3WEtvw@mail.gmail.com>
+	<1395699232-28727-1-git-send-email-yinghai@kernel.org>
+	<83f00436a12b44f799bd1222b91297cd@DM2PR05MB671.namprd05.prod.outlook.com>
+Date: Mon, 24 Mar 2014 17:17:41 -0700
+Message-ID: <CAE9FiQXuv4tW44_9sRUyx7NxgGaw4hxVm7DJCYugX33K-ZrVcg@mail.gmail.com>
+Subject: Re: [PATCH v2] pciehp: only wait command complete for real hotplug control
+From: Yinghai Lu <yinghai@kernel.org>
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Guenter Roeck <groeck@juniper.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Andreas reported that after 1f42db786b14 ("PCI: Enable INTx if BIOS left
-them disabled"), pciehp surprise removal stopped working.
+On Mon, Mar 24, 2014 at 4:19 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+> Just a note  :-)
+>
+>> -v2: use second way that is suggested by Bjorn.
+>>     It also solve the problem on Rajat's sytem that have wrong inital CC
+>
+> Er, not wrong initial CC.
+>
+> Just a different (but not necessarily wrong) different CC bit behavior :-). In my systems, the CC bit gets set for every write to the slot control register (even if Button, LED, EMI, power controller are not implemented).
+>
+>> Tested-by: Rajat Jain <rajatxjain@gmail.com>
+>
+> Yes, I tested and it seems to work fine on such systems too.
 
-This happens because pci_reenable_device() on the hotplug bridge (used in
-the pciehp_configure_device() path) clears the Interrupt Disable bit, which
-apparently breaks the bridge's MSI hotplug event reporting.
+Thanks for inputs for change log changes.
 
-Previously we cleared the Interrupt Disable bit in do_pci_enable_device(),
-which is used by both pci_enable_device() and pci_reenable_device().  But
-we use pci_reenable_device() after the driver may have enabled MSI or
-MSI-X, and we *set* Interrupt Disable as part of enabling MSI/MSI-X.
+Assume Bjorn will sort it out.
 
-This patch clears Interrupt Disable only when MSI/MSI-X has not been
-enabled.
+Thanks
 
-Fixes: 1f42db786b14 PCI: Enable INTx if BIOS left them disabled
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=71691
-Reported-and-tested-by: Andreas Noever <andreas.noever@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: stable@vger.kernel.org
-CC: Sarah Sharp <sarah.a.sharp@linux.intel.com>
----
- drivers/pci/pci.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8dc3e701ec57..79fc89c6c3f3 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1192,6 +1192,9 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
- 		return err;
- 	pci_fixup_device(pci_fixup_enable, dev);
- 
-+	if (dev->msi_enabled || dev->msix_enabled)
-+		return 0;
-+
- 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
- 	if (pin) {
- 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
-
+Yinghai
