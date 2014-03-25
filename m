@@ -1,77 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:47867 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754071AbaCTMuL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 08:50:11 -0400
-Date: Thu, 20 Mar 2014 12:50:04 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Catalin Marinas <Catalin.Marinas@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Received: from arroyo.ext.ti.com ([192.94.94.40]:46248 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751791AbaCYAgA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Mar 2014 20:36:00 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-samsung-soc@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Message-ID: <20140320125004.GK6457@e106497-lin.cambridge.arm.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
- <201403201217.22339.arnd@arndb.de>
- <20140320113820.GH6457@e106497-lin.cambridge.arm.com>
- <201403201326.02377.arnd@arndb.de>
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>
+Subject: [RESEND: RFC PATCH 0/3] Add Keystone pcie driver
+Date: Mon, 24 Mar 2014 20:35:23 -0400
+Message-ID: <1395707726-20437-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <201403201326.02377.arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 20, 2014 at 12:26:02PM +0000, Arnd Bergmann wrote:
-> On Thursday 20 March 2014, Liviu Dudau wrote:
-> > > I don't even understand why you want to create a generic pci_address_to_pio
-> > > implementation, when we don't need that for arm64 at all. Unless I'm
-> > > missing something important, that function is only called in case of
-> > > PCI_PROBE_DEVTREE with pci_of_scan on PowerPC. I don't expect any
-> > > architecture to do the same thing, and the only other architecture that
-> > > needs something like it (sparc) has a different implementation.
-> > 
-> > Because in my [v7 2/6]* patch for the generic host bridge support I start
-> > using pci_address_to_pio to fix the conversion of PCI ranges to resources.
-> > That requires an arm64 (or more correctly, an arch with memory mapped IO
-> > specific) version of pci_address_to_pio().
-> 
-> Yes, but why do you use it there?
+This is a RFC to add Keystone pcie driver. I had some earlier discussion on
+the pcie mailing about this driver and at that time I didn't have the driver
+ported to dw core driver. I now have a driver working with intel's e1000e
+ethernet driver and want to review this RFC on this list.
 
-I'm parsing the device tree and have reached the PCI IO range for the host bridge.
-There is no host bridge created yet for that and hence no mapping. I need to
-take the DT range declaration that gives me   CPU start .. SIZE --> BUS start and
-convert it into   Logical IO port start .. Logical IO port end. While I could've
-come up with (yet) another function that does the conversion from CPU address to
-port IO address, I thought it would be nice to use the existing pci_address_to_pio()
-function and adapt it to my needs. It has a __weak implementation anyway so I
-could overwrite it in the architecture code.
+Kestone PCIE hardware is based on dw version 3.65. It lacks ATU port and
+standard MSI controller found in newer version of the dw hardware. This version
+uses registers in PCIE application space to configure MSI controller. It has 4
+host irqs for legacy IRQs A/B/C/D and 8 host irqs to muliplex 32 MSI irqs.
+Also has one host irq line for errors.
 
-To me it looked like a good plan and we had some discussions around my initial
-goofy mistake of using pci_addr as physical address for translation. I never
-thought it was considered a bad idea.
+Please review and provide your comments.
 
-Best regards,
-Liviu
+CC: Jingoo Han <jg1.han@samsung.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Kukjin Kim <kgene.kim@samsung.com>
+CC: Richard Zhu <r65037@freescale.com>
+CC: Shawn Guo <shawn.guo@linaro.org>
+CC: Mohit Kumar <mohit.kumar@st.com>
+CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
 
-> 
-> 	Arnd
-> 
+Murali Karicheri (3):
+  ARM: keystone: add pcie related options
+  pci: designware: enhancements to support keystone pcie
+  pcie: keystone: add pcie driver based on designware core driver
+
+ .../devicetree/bindings/pci/pcie-keystone.txt      |   32 +
+ arch/arm/mach-keystone/Kconfig                     |    2 +
+ drivers/pci/host/Kconfig                           |    5 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/k2-platform.c                     |  191 +++++
+ drivers/pci/host/pci-exynos.c                      |    2 +-
+ drivers/pci/host/pci-imx6.c                        |    2 +-
+ drivers/pci/host/pcie-designware.c                 |   99 ++-
+ drivers/pci/host/pcie-designware.h                 |   14 +-
+ drivers/pci/host/pcie-keystone.c                   |  860 ++++++++++++++++++++
+ drivers/pci/host/pcie-ks-pdata.h                   |   19 +
+ drivers/pci/quirks.c                               |   12 +
+ 12 files changed, 1203 insertions(+), 36 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/pcie-keystone.txt
+ create mode 100644 drivers/pci/host/k2-platform.c
+ create mode 100644 drivers/pci/host/pcie-keystone.c
+ create mode 100644 drivers/pci/host/pcie-ks-pdata.h
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.9.5
 
