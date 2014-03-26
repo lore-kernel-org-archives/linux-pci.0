@@ -1,38 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:32971 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750938AbaCXE2v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 00:28:51 -0400
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: "bhelgaas@google.com" <bhelgaas@google.com>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Mon, 24 Mar 2014 12:02:32 +0800
-Subject: RE: [PATCH V2 0/2] PCI: dessignware: fixes and cleanup
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FE74A982@EAPEX1MAIL1.st.com>
-References: <cover.1392904207.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1392904207.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
+	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>
+Subject: [RFC PATCH 11/12] ARM: dts: dra7: Add dt data for PCIe controller
+Date: Wed, 26 Mar 2014 19:27:51 +0530
+Message-ID: <1395842272-15267-12-git-send-email-kishon@ti.com>
+In-Reply-To: <1395842272-15267-1-git-send-email-kishon@ti.com>
+References: <1395842272-15267-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gQmpvcm4sDQoNClBscyBsb29rIGlmIHRoZXNlIHNtYWxsIHBhdGNoZXMgY2FuIGFsc28g
-YmUgcGlja2VkIGZvciB5b3VyIHRyZWUuDQoNClRoYW5rcw0KTW9oaXQNCg0KPiAtLS0tLU9yaWdp
-bmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNb2hpdCBLVU1BUiBEQ0cNCj4gU2VudDogVGh1cnNk
-YXksIEZlYnJ1YXJ5IDI3LCAyMDE0IDExOjMxIEFNDQo+IFRvOiBiaGVsZ2Fhc0Bnb29nbGUuY29t
-DQo+IENjOiBNb2hpdCBLVU1BUiBEQ0c7IEppbmdvbyBIYW47IHNwZWFyLWRldmVsOyBsaW51eC1w
-Y2lAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFtQQVRDSCBWMiAwLzJdIFBDSTogZGVzc2ln
-bndhcmU6IGZpeGVzIGFuZCBjbGVhbnVwDQo+IA0KPiBUaGlzIHBhdGNoc2V0IGZpeGVzIGlBVFUg
-cHJvZ3JhbW1pbmcgc2VxdWVuY2UgYW5kIGNvcnJlY3Qgc29tZQ0KPiBjb21tZW50cy4NCj4gDQo+
-IENoYW5nZXMgc3NpbmNlIHYxOg0KPiAJLSBDaGFuZ2Ugc3N1YmplY3QgbGluZSB3aXRoIHByb3Bl
-ciBzcGFjaW5nDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBNb2hpdCBLdW1hciA8bW9oaXQua3VtYXJA
-c3QuY29tPg0KPiBDYzogSmluZ29vIEhhbiA8amcxLmhhbkBzYW1zdW5nLmNvbT4NCj4gQ2M6IEJq
-b3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+DQo+IENjOiBzcGVhci1kZXZlbEBsaXN0
-LnN0LmNvbQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZw0KPiANCj4gTW9oaXQgS3Vt
-YXIgKDIpOg0KPiAgIFBDSTogZGVzaWdud2FyZTogRml4IGNvbW1lbnQgZm9yIHNldHRpbmcgbnVt
-YmVyIG9mIGxhbmVzDQo+ICAgUENJOiBkZXNpZ253YXJlOiBGaXggaUFUVSBwcm9ncmFtbWluZyBm
-b3IgY2ZnMSwgaW8gYW5kIG1lbSB2aWV3cG9ydA0KPiANCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNp
-ZS1kZXNpZ253YXJlLmMgfCAgICA4ICsrKystLS0tDQo+ICAxIGZpbGVzIGNoYW5nZWQsIDQgaW5z
-ZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkNCj4gDQo+IC0tDQo+IDEuNy4zLjQNCg0K
+Added dt data for PCIe controller. This node contains dt data for
+both the DRA7 part of designware controller and for the designware core.
+The documention for this node can be found @ ../bindings/pci/ti-pci.txt.
+
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra7.dtsi |   24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index 7ac372b..10def39 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -701,6 +701,30 @@
+ 			};
+ 		};
+ 
++		pcie@51000000 {
++			compatible = "ti,dra7xx-pcie";
++			reg = <0x51002000 0x14c>, <0x51000000 0x2000>, <0x4A002540 0x1f>;
++			reg-names = "ti_conf", "rc_dbics", "mmr_unlock";
++			interrupts = <0 232 0x4>, <0 233 0x4>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			ti,device_type = <3>;
++			ranges = <0x00000800 0 0x20001000 0x20001000 0 0x00002000
++				  0x81000000 0 0          0x20003000 0 0x00010000
++				  0x82000000 0 0x20013000 0x20013000 0 0xffed000>;
++			#interrupt-cells = <1>;
++			base-mask = <0x00000000 0x0fffffff>;
++			num-lanes = <1>;
++			interrupt-map-mask = <0 0 0 0>;
++			interrupt-map = <0x0 0 &gic 233>;
++			ti,hwmods = "pcie1";
++			phys = <&pcie1_phy>;
++			phy-names = "pcie-phy";
++			resets = <&prm_resets &device_reset>;
++			reset-names = "reset";
++		};
++
+ 		sata: sata@4a141100 {
+ 			compatible = "snps,dwc-ahci";
+ 			reg = <0x4a140000 0x1100>, <0x4a141100 0x7>;
+-- 
+1.7.9.5
+
