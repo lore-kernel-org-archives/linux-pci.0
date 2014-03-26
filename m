@@ -1,38 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:54901
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751990AbaCCGTR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 01:19:17 -0500
-Date: Mon, 3 Mar 2014 13:22:21 +0800
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, Richard Zhu <r65037@freescale.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, <kernel@pengutronix.de>
-Subject: Re: [PATCH 1/3] ARM: dts: imx6: extend PCIe interrupt list for MSI
-Message-ID: <20140303052216.GC9706@shlinux1.ap.freescale.net>
-References: <1393608633-18321-1-git-send-email-l.stach@pengutronix.de>
- <1393608633-18321-2-git-send-email-l.stach@pengutronix.de>
+Received: from comal.ext.ti.com ([198.47.26.152]:33782 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755017AbaCZN7Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 26 Mar 2014 09:59:16 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
+	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>,
+	Keerthy <j-keerthy@ti.com>
+Subject: [RFC PATCH 05/12] ARM: dts: DRA7: Change the parent of apll_pcie_in_clk_mux to dpll_pcie_ref_m2ldo_ck
+Date: Wed, 26 Mar 2014 19:27:45 +0530
+Message-ID: <1395842272-15267-6-git-send-email-kishon@ti.com>
+In-Reply-To: <1395842272-15267-1-git-send-email-kishon@ti.com>
+References: <1395842272-15267-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1393608633-18321-2-git-send-email-l.stach@pengutronix.de>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 28, 2014 at 06:30:31PM +0100, Lucas Stach wrote:
-> Optional IRQ necessary for handling MSI.
-> 
-> Signed-off-by: Juergen Beisert <jbe@pengutronix.de>
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
->  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 9 ++++++++-
+From: Keerthy <j-keerthy@ti.com>
 
-Please have this change go with driver or a separate patch, not with
-dts update.
+Change the parent of apll_pcie_in_clk_mux to dpll_pcie_ref_m2ldo_ck
+from dpll_pcie_ref_ck.
 
-Shawn
+Signed-off-by: Keerthy <j-keerthy@ti.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra7xx-clocks.dtsi |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->  arch/arm/boot/dts/imx6qdl.dtsi                           | 4 +++-
->  2 files changed, 11 insertions(+), 2 deletions(-)
+diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+index d909484..9e0bb09 100644
+--- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
++++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+@@ -1152,7 +1152,7 @@
+ 
+ 	apll_pcie_in_clk_mux: apll_pcie_in_clk_mux@4ae06118 {
+ 		compatible = "ti,mux-clock";
+-		clocks = <&dpll_pcie_ref_ck>, <&pciesref_acs_clk_ck>;
++		clocks = <&dpll_pcie_ref_m2ldo_ck>, <&pciesref_acs_clk_ck>;
+ 		#clock-cells = <0>;
+ 		reg = <0x021c 0x4>;
+ 		ti,bit-shift = <7>;
+-- 
+1.7.9.5
 
