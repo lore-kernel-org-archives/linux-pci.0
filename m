@@ -1,129 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:15346 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751375AbaCZLeu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 07:34:50 -0400
-In-Reply-To: <5228683.eofaEcInBi@wuerfel>
-References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com> <5768554.vihmtytclA@wuerfel> <OF5271824A.6BF6DD0C-ON80257CA7.003BC04D-80257CA7.003C95A1@eu.necel.com> <5228683.eofaEcInBi@wuerfel>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 26 Mar 2014 15:35:11 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"patches@apm.com" <patches@apm.com>,
+	"jcm@redhat.com" <jcm@redhat.com>
+Subject: Re: [PATCH v5 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
+Message-ID: <20140326153511.GR17163@e106497-lin.cambridge.arm.com>
+References: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
+ <1395270762-6055-3-git-send-email-tinamdar@apm.com>
+ <CAL_Jsq+XxAtUeNKFi0hH=ehb_fhFvkM0U1Zm_j1LdtQZbvSzfA@mail.gmail.com>
 MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OF362EF259.A035C442-ON80257CA7.003E97FF-80257CA7.003F9959@eu.necel.com>
-Date: Wed, 26 Mar 2014 11:34:41 +0000
-Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree nodes for R8A7790
-Content-Type: text/plain; charset="US-ASCII"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAL_Jsq+XxAtUeNKFi0hH=ehb_fhFvkM0U1Zm_j1LdtQZbvSzfA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
-
-On: 26/03/2014 11:14, Arnd wrote:
-> Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree nodes 
-for R8A7790
+On Wed, Mar 26, 2014 at 02:28:42PM +0000, Rob Herring wrote:
+> On Wed, Mar 19, 2014 at 6:12 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+> > This patch adds the device tree nodes for APM X-Gene PCIe controller and
+> > PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
+> > nodes are added.
 > 
-> On Wednesday 26 March 2014 11:01:46 Phil.Edworthy@renesas.com wrote:
-> > On: 26/03/2014 10:34, Arnd wrote:
-> > > Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree 
-nodes 
-> > for R8A7790
-> > > 
-> > > On Wednesday 26 March 2014 09:55:04 Phil.Edworthy@renesas.com wrote:
-> > > > Hi Arnd,
-> > > > 
-> > > > On: 25/03/2014 18:42, Arnd wrote:
-> > > > > Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree 
-> > nodes 
-> > > > for R8A7790
-> > > > > 
-> > > > > On Tuesday 25 March 2014 16:56:41 Phil Edworthy wrote:
-> > > > > > +               /* Map all possible DDR as inbound ranges */
-> > > > > > +               dma-ranges = <0x42000000 0 0x40000000 0 
-0x40000000 
-> > 0 
-> > > > 0x80000000
-> > > > > > +                             0x43000000 1 0x80000000 1 
-0x80000000 
-> > 0 
-> > > > 0x80000000>;
-> > > > > 
-> > > > > Typo: 0x43000000 should be 0x42000000 I guess.
-> > > > I used 0x43000000 as this is a 64-bit type. The OF PCI range code 
-> > > > currently treats both 32 and 64-bit types the same way, but I 
-thought 
-> > it 
-> > > > would be good to set this in case we ever need to use it.
-> > > 
-> > > Ah, I forgot about the space identifier. It looks correct then, but
-> > > it seems  a little strange to use a 32-bit identifier in one case
-> > > and a 64-bit one in the other.
-> > 
-> > If the OF PCI range code allowed the PCIe host driver to determine if 
-it's 
-> > a 32-bit mapping, we could use that and get a small performance 
-> > improvement with PCIe throughput.
+> [snip]
 > 
-> I don't think it's supposed to care. Soem of the upper bits of the 
-ranges
-> only really make sense of PCI device registers, not for the top-level
-> ranges property. The driver can however still look at the address itself
-> to get that information.
-
-Ah, yes that is a possibility.
-
-
-> > > > Since the OF PCi range code treats both 32 and 64-bit types the 
-same 
-> > way, 
-> > > > my PCIe driver only creates 64-bit mappings. In addition, the PCIe 
-
-> > > > controller has to use a 64-bit mapping for anything over 2GiB. 
-Based 
-> > on 
-> > > > this, I think it's sensible to leave the mappings as 1-to-1.
-> > > 
-> > > I'm not following, sorry. What is the hardware requirement in the
-> > > controller?
-> > With this controller, you can only specify maps whose size are a power 
-of 
-> > two, and the size must be less than or equal to the cpu address 
-alignment. 
-> > Further, when the size is 4GiB, you have to use a 64-bit mapping. 
-Thinking 
-> > about it, the 4GiB case is not relevant to our discussion about 32-bit 
-vs 
-> > 64-bit mappings.
+> > +               pcie0: pcie@1f2b0000 {
+> > +                       status = "disabled";
+> > +                       device_type = "pci";
+> > +                       compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
+> > +                       #interrupt-cells = <1>;
+> > +                       #size-cells = <2>;
+> > +                       #address-cells = <3>;
+> > +                       reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
+> > +                               0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
 > 
-> But the ranges you specified in the property don't actually fit in those
-> constraints: you have a range with size 0x8000000 and start 0x40000000,
-> which you say can't be programmed into the hardware.
+> Where is the right place for config space? This binding has it here
+> and others have it in ranges. Given that config space type is defined
+> for ranges, I would think that is the right place. But Liviu's patches
+> do not process config space entries in ranges. Perhaps we need a
+> config space resource populated in the bridge struct.
 
-Actually, the driver checks the dma-ranges against these constraints, and 
-if necessary will create multiple mappings to fulfil the requested 
-dma-ranges.
+Rob,
 
+Have a look at the discussion between Will and Arnd on the subject of virtual PCI
+host controller for arm 32bit. My understanding is that config space is described
+via reg entries.
 
-> > Still, my comment about the OF PCI range code treating both 32 and 
-64-bit 
-> > types the same way means that PCIe host driver has to assume it's a 
-64-bit 
-> > mapping.
+See here: http://archive.arm.linux.org.uk/lurker/message/20140205.190947.b3c3e464.en.html
+
+Best regards,
+Liviu
+
 > 
-> I was thinking more of PCI devices than the host itself. If the host
-> driver can verify that all mappings are in the first 4GB and cover all 
-of
-> RAM, we won't have to use an swiotlb for devices that don't support 
-64-bit
-> DMA, which is a very significant performance difference.
-Ok, I think I understand. However, all the other PCI host drivers just do 
-1-to-1 mapping between PCI and CPU addresses, right? Whilst it might be 
-nice be able to support mapping CPU addresses > 4GiB to PCI addresses 
-under 4GiB, can that be something to consider later on?
+> Rob
+> 
+> 
+> > +                       reg-names = "csr", "cfg";
+> > +                       ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
+> > +                                 0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
+> 
 
-Thanks
-Phil
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
