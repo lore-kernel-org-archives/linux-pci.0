@@ -1,74 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:35539 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753520AbaCJUoK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 16:44:10 -0400
-Received: by mail-ie0-f174.google.com with SMTP id rp18so7906514iec.33
-        for <linux-pci@vger.kernel.org>; Mon, 10 Mar 2014 13:44:10 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
+	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>
+Subject: [RFC PATCH 09/12] ARM: dts: dra7: Add dt data for PCIe PHY control module
+Date: Wed, 26 Mar 2014 19:27:49 +0530
+Message-ID: <1395842272-15267-10-git-send-email-kishon@ti.com>
+In-Reply-To: <1395842272-15267-1-git-send-email-kishon@ti.com>
+References: <1395842272-15267-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <CAMxnaaVfpJCW7e-b80y4wmVWcRDK5t7qY+pNn71CsLPRN2ojnA@mail.gmail.com>
-References: <CAMxnaaXd9-VbxSYa9q1YVT+fwfDFYKGG2Hq-1jkc-awLX-HwtQ@mail.gmail.com>
- <CAErSpo5fkaFNq_qTZ+gTDMV554f4diOXQ7_4bsHqj06iAGTpHg@mail.gmail.com>
- <CAE9FiQVNFqTw+92qy8zcwG1haiSZzU+KE3oh4YnjNc_aE6KUnA@mail.gmail.com>
- <20140308010456.GA30660@google.com> <CAMxnaaVfpJCW7e-b80y4wmVWcRDK5t7qY+pNn71CsLPRN2ojnA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 10 Mar 2014 14:43:44 -0600
-Message-ID: <CAErSpo4MQsAer7FM0kU5mMOGRok0oFMWX1FqFijmswutjyNoRg@mail.gmail.com>
-Subject: Re: [Bug] PCI: Enable INTx if BIOS left them disabled - triggers
- during rescan
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 8, 2014 at 2:55 AM, Andreas Noever <andreas.noever@gmail.com> wrote:
-> On Sat, Mar 8, 2014 at 2:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+Added dt data for PCIe PHY control module used by PCIe PHY.
+The documention for this node can be found @ ../bindings/phy/ti-phy.txt
 
->> If we did that, INTX_DISABLE would be cleared by the first
->> pci_enable_device() and pci_reenable_device() wouldn't do anything,
->> leaving it cleared.  The resulting state (cleared) would be the same,
->> but the transitions would be gone, and maybe those are important.
-> Just a quick note: With pci_intx_for_msi removed no hotplug events are
-> ever delivered. Everything else still works though. So it is either a
-> problem specific to Thunderbolt bridges or maybe it just affects
-> hotplug (and PME?) interrupts.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra7.dtsi |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Interesting.  This is on a MacBook, isn't it?  If you have Mac OS on
-it, is there a way you can do the equivalent of lspci on it?  I'm
-curious about whether it sets INTx_DISABLE when it enables MSI.
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index f3565ac..73c61d0 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -656,6 +656,14 @@
+ 			clock-names = "sysclk";
+ 		};
+ 
++		omap_control_pcie1phy: omap-control-pciephy@0x4a003c40 {
++			compatible = "ti,control-phy-pipe3";
++			reg = <0x4a003c40 0x4>;
++			reg-names = "power";
++			clocks = <&sys_clkin1>;
++			clock-names = "sysclk";
++		};
++
+ 		/* OCP2SCP3 */
+ 		ocp2scp@4a090000 {
+ 			compatible = "ti,omap-ocp2scp";
+-- 
+1.7.9.5
 
-I still haven't found any indication that INTx_DISABLE is intended or
-required as part of enabling MSI/MSI-X, so I'm quite dubious about
-Linux using it that way.  The references I've seen, e.g.,
-http://www.pcisig.com/reflector/msg05301.html,
-http://www.pcisig.com/reflector/msg05302.html, say the purpose is to
-better manage shared IRQs.
-
-> I also attempted booting with pcie_hp=nomsi and now everything works.
-> Interestingly pciehp now also  gets an interrupt from 09 (event though
-> that card has just been removed). I suspect this is just pciehp not
-> noticing that it itself is gone.
-> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3-1)
-> pciehp 0000:09:00.0:pcie24: Latch open on Slot(9)
-> pciehp 0000:09:00.0:pcie24: Button pressed on Slot(9)
-> pciehp 0000:09:00.0:pcie24: Card present on Slot(9)
-> pciehp 0000:09:00.0:pcie24: Power fault on slot 9
-> pciehp 0000:09:00.0:pcie24: Power fault bit 0 set
-> pciehp 0000:09:00.0:pcie24: PCI slot #9 - powering on due to button press.
-> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
-> pciehp 0000:09:00.0:pcie24: Link Training Error occurs
-> pciehp 0000:09:00.0:pcie24: Failed to check link status
-
-This is a good clue.  I think the portdrv registration thing is a bit
-more confusing than necessary.  I'll poke around in there a bit.
-
-Unfortunately, I don't think this is going to lead to a quick easy fix
-suitable for -rc7, so we'll probably have to do something simple like
-skipping the INTx enable if MSI is already enabled.
-
-Bjorn
