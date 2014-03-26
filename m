@@ -1,139 +1,129 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Zhang, Rui" <rui.zhang@intel.com>
-To: "Lu, Aaron" <aaron.lu@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Borislav Petkov <bp@alien8.de>
-CC: lkml <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor3.renesas.com ([210.160.252.173]:15346 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751375AbaCZLeu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 07:34:50 -0400
+In-Reply-To: <5228683.eofaEcInBi@wuerfel>
+References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com> <5768554.vihmtytclA@wuerfel> <OF5271824A.6BF6DD0C-ON80257CA7.003BC04D-80257CA7.003C95A1@eu.necel.com> <5228683.eofaEcInBi@wuerfel>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Stephane Eranian <eranian@google.com>,
-	"Yan, Zheng Z" <zheng.z.yan@intel.com>
-Subject: RE: Info: mapping multiple BARs. Your kernel is fine.
-Date: Thu, 20 Mar 2014 03:03:45 +0000
-Message-ID: <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
-References: <20140224162400.GE16457@pd.tnic>
- <4205942.Tp8ltEsv6e@vostro.rjw.lan> <532A514C.5010106@intel.com>
-In-Reply-To: <532A514C.5010106@intel.com>
-Content-Type: text/plain; charset="utf-8"
+	Simon Horman <horms@verge.net.au>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+From: Phil.Edworthy@renesas.com
+Message-ID: <OF362EF259.A035C442-ON80257CA7.003E97FF-80257CA7.003F9959@eu.necel.com>
+Date: Wed, 26 Mar 2014 11:34:41 +0000
+Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree nodes for R8A7790
+Content-Type: text/plain; charset="US-ASCII"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTHUsIEFhcm9uDQo+IFNl
-bnQ6IFRodXJzZGF5LCBNYXJjaCAyMCwgMjAxNCAxMDoyNCBBTQ0KPiBUbzogUmFmYWVsIEouIFd5
-c29ja2k7IEJvcmlzbGF2IFBldGtvdg0KPiBDYzogbGttbDsgeDg2QGtlcm5lbC5vcmc7IEJqb3Ju
-IEhlbGdhYXM7IExpbnV4IFBDSTsgQUNQSSBEZXZlbCBNYWxpbmcNCj4gTGlzdDsgWmhhbmcsIFJ1
-aTsgWWluZ2hhaSBMdTsgSC4gUGV0ZXIgQW52aW47IFN0ZXBoYW5lIEVyYW5pYW4NCj4gU3ViamVj
-dDogUmU6IEluZm86IG1hcHBpbmcgbXVsdGlwbGUgQkFScy4gWW91ciBrZXJuZWwgaXMgZmluZS4N
-Cj4gSW1wb3J0YW5jZTogSGlnaA0KPiANCj4gT24gMDMvMTUvMjAxNCAxMDoxNSBQTSwgUmFmYWVs
-IEouIFd5c29ja2kgd3JvdGU6DQo+ID4gW0NDIGxpc3QgcmVhcnJhbmdlZF0NCj4gPg0KPiA+IE9u
-IE1vbmRheSwgRmVicnVhcnkgMjQsIDIwMTQgMDU6MjQ6MDAgUE0gQm9yaXNsYXYgUGV0a292IHdy
-b3RlOg0KPiA+PiBUaGlzIHN0YXJ0ZWQgaGFwcGVuaW5nIHRoaXMgbW9ybmluZyBhZnRlciBib290
-aW5nIC1yYzQrdGlwLCBsZXQncw0KPiBhZGQNCj4gPj4gKmV2ZXJ5Ym9keSogdG8gQ0MgOi0pDQo+
-ID4+DQo+ID4+IFdlIGhhdmUgaW50ZWxfdW5jb3JlX2luaXQsIHNuYl91bmNvcmVfaW1jX2luaXRf
-Ym94LCB1bmNvcmVfcGNpX3Byb2JlDQo+ID4+IGFuZCBvdGhlciBnb29kaWVzIG9uIHRoZSBzdGFj
-ay4NCj4gPg0KPiA+IEkndmUganVzdCBnb25lIHRocm91Z2h0IHRoaXMuDQo+ID4NCj4gPiBTbyB0
-aGUgcHJvYmxlbSBpcyB0aGF0IHdlIGhhdmUgdGhlIFBOUCAic3lzdGVtIiBkcml2ZXIgd2hvc2Ug
-b25seQ0KPiA+IHB1cnBvc2Ugc2VlbXMgdG8gYmUgdG8gcmVzZXJ2ZSBzeXN0ZW0gcmVzb3VyY2Vz
-IHNvIHRoYXQgdGhlIFBDSSBsYXllcg0KPiA+IGRvZXNuJ3QgYXNzaWduIHRoZW0gdG8gbmV3IGRl
-dmljZXMgb24gaG90cGx1ZyAoZGlzY2xhaW1lcjogSSBkaWRuJ3QNCj4gPiBpbnZlbnQgaXQsIEkg
-b25seSByZWFkIHRoZSBjb2RlIGFuZCBjb21tZW50cyBpbiB0aGVyZSkuDQo+IA0KPiBBbmQgdG8g
-UENJIGRldmljZXMgd2hpY2ggaGF2ZSB1bmluaXRpYWxpemVkIEJBUnMuDQo+IA0KPiA+DQo+ID4g
-SXQgZG9lcyB0aGF0IGZvciBBQ1BJIGRldmljZSBvYmplY3RzIGhhdmluZyB0aGUgIlBOUDBDMDIi
-IGFuZA0KPiAiUE5QMEMwMSIgSURzLg0KPiA+DQo+ID4gQXBwYXJlbnRseSwgc25iX3VuY29yZV9p
-bWNfaW5pdF9ib3goKSBzdGVwcyBvbiBhIHJhbmdlIGFscmVhZHkNCj4gPiByZXNlcnZlZCBieSB0
-aGF0IGRyaXZlciBvbiB5b3VyIGJveC4gIEFuZCB0aGlzIGRvZXNuJ3Qgc2VlbSB0byBiZSBhDQo+
-ID4gY29pbmNpZGVuY2UsIGJlY2F1c2UgdGhlIEFDUEkgZGV2aWNlIG9iamVjdCBpbiBxdWVzdGlv
-biBwcm9iYWJseQ0KPiA+ICpkb2VzKiBjb3JyZXNwb25kIHRvIHRoZSBtZW1vcnkgY29udHJvbGxl
-ciB0aGF0IHRoZSB1bmNvcmUgZHJpdmVyDQo+IGF0dGVtcHRzIHRvIHVzZS4NCj4gPg0KPiA+IEkn
-bSBub3Qgc3VyZSBob3cgdG8gYWRkcmVzcyB0aGF0IHJpZ2h0IG5vdyB0byBiZSBob25lc3QuICBB
-cmd1YWJseSwNCj4gPiB0aGUgUE5QICJzeXN0ZW0iIGRyaXZlciBzaG91bGQgYmUgcmVwbGFjZWQg
-d2l0aCBzb21ldGhpbmcgc2FuZXIsIGJ1dA0KPiA+IHN0aWxsIHRoZSByZXNvdXJjZXMgaXQgY2xh
-aW1zIG5lZWQgdG8gYmUga2VwdCBvdXQgb2YgcmVhY2ggb2YgdGhlDQo+ID4gUENJJ3MgcmVzb3Vy
-Y2UgYWxsb2NhdGlvbiBjb2RlLg0KPiANCj4gVGhlIHF1aXJrX3N5c3RlbV9wY2lfcmVzb3VyY2Vz
-IGlzIG1lYW50IHRvIGRpc2FibGUgUE5QIGRldmljZXMnDQo+IHJlc291cmNlIGlmIHRoZXkgY29s
-bGlkZSB3aXRoIGFueSBrbm93biBQQ0kgZGV2aWNlJ3MgQkFSLiBJJ20gbm90IHN1cmUNCj4gd2h5
-IGl0IGRvZXNuJ3Qgd29yayBoZXJlLCBwZXJoYXBzIHRoZSB1bmNvcmUgUENJIGRldmljZSBkb2Vz
-bid0IGhhdmUgYQ0KPiBCQVIgdGhhdCBmYWxscyBpbiB0aGUgUE5QIGRldmljZSdzIHJlc291cmNl
-IHdpbmRvdz8NCj4NCkkndmUgdGFsa2VkIHdpdGggWWFuIFpoZW5nLCBhbmQgSSB3YXMgdG9sZCB0
-aGF0IHRoaXMgcmVzb3VyY2UgIjB4ZmVkMTAwMDAgLSAweGZlZDE1ZmZmIg0KaXMgZ290IGZyb20g
-UENJIGRldmljZSByZWdpc3RlciBkaXJlY3RseSwgd2hpY2ggaXMgbm90IGluIGl0cyBCQVIgcmFu
-Z2UuDQpUaHVzIElNTywgaXQgaXMgaW1wb3NzaWJsZSBmb3IgUE5QIGxheWVyIHRvIGJlIGF3YXJl
-IG9mIHRoaXMgcmVzb3VyY2UuDQoNCkJUVywgYWJvdXQgZHJpdmVycy9wbnAvc3lzdGVtLmMsIGlm
-IGl0cyBPTkxZIHB1cnBvc2UgaXMgdG8gcHJldmVudCB0aG9zZQ0KcmVzb3VyY2VzIGZyb20gYmVp
-bmcgYWxsb2NhdGVkIHRvIHVuaW5pdGlhbGl6ZWQgUENJIGRldmljZXMsIHRoZW4gSU1PLA0KdGhl
-IGJlc3Qgd2F5IHRvIGRvIHRoaXMgaXMgbWFrZSBQQ0kgYnVzIGhhbmRsZSB0aG9zZSBQTlAwQzAx
-L1BOUDBDMDINCnJlc291cmNlcyBkaXJlY3RseSwgcHJvYmFibHkgdmlhIGEgcGxhdGZvcm0gY2Fs
-bGJhY2ssIHNheSwNCjEuIG1ha2UgZHJpdmVycy9wbnAvc3lzdGVtLmMgYSBuby1vcCBmb3IgUE5Q
-QUNQSSwgYnkgY2hlY2tpbmcgcG5wX2Rldi0+cHJvdG9jb2wuDQoyLiBpbnRyb2R1Y2UgYWNwaV9j
-aGVja19yZXNlcnZlZF9yZXNvdXJjZSgpIHRvIHBhcnNpbmcgUE5QMEMwMS9QTlAwQzAyIHJlc291
-cmNlcy4NCjMuIGluIFBDSSBidXMsIGludm9rZSBhY3BpX2NoZWNrX3Jlc2VydmVkX3Jlc291cmNl
-KCkgd2hlbiBhc3NpZ25pbmcNCiAgIHJlc291cmNlcyB0byBQQ0kgZGV2aWNlcy4NCg0KVGhhbmtz
-LA0KcnVpDQogDQo+IFRoYW5rcywNCj4gQWFyb24NCj4gDQo+ID4NCj4gPj4gLi4uDQo+ID4+IFsg
-ICAgMC40ODg5OThdIHNvZnR3YXJlIElPIFRMQiBbbWVtIDB4Y2FjMzAwMDAtMHhjZWMzMDAwMF0g
-KDY0TUIpDQo+IG1hcHBlZCBhdCBbZmZmZjg4MDBjYWMzMDAwMC1mZmZmODgwMGNlYzJmZmZmXQ0K
-PiA+PiBbICAgIDAuNDg5OTc1XSByZXNvdXJjZSBtYXAgc2FuaXR5IGNoZWNrIGNvbmZsaWN0OiAw
-eGZlZDEwMDAwDQo+IDB4ZmVkMTVmZmYgMHhmZWQxMDAwMCAweGZlZDEzZmZmIHBucCAwMDowMQ0K
-PiA+PiBbICAgIDAuNDkwMDc5XSAtLS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0N
-Cj4gPj4gWyAgICAwLjQ5MDIwNF0gV0FSTklORzogQ1BVOiAyIFBJRDogMSBhdCBhcmNoL3g4Ni9t
-bS9pb3JlbWFwLmM6MTcxDQo+IF9faW9yZW1hcF9jYWxsZXIrMHgzNzIvMHgzODAoKQ0KPiA+PiBb
-ICAgIDAuNDkwMzA2XSBJbmZvOiBtYXBwaW5nIG11bHRpcGxlIEJBUnMuIFlvdXIga2VybmVsIGlz
-IGZpbmUuDQo+ID4+IFsgICAgMC40OTAzNzFdIE1vZHVsZXMgbGlua2VkIGluOg0KPiA+PiBbICAg
-IDAuNDkwNTU4XSBDUFU6IDIgUElEOiAxIENvbW06IHN3YXBwZXIvMCBOb3QgdGFpbnRlZCAzLjE0
-LjAtcmM0Kw0KPiAjMQ0KPiA+PiBbICAgIDAuNDkwNjQyXSBIYXJkd2FyZSBuYW1lOiBMRU5PVk8g
-MjMyMENUTy8yMzIwQ1RPLCBCSU9TIEcyRVQ4NldXDQo+ICgyLjA2ICkgMTEvMTMvMjAxMg0KPiA+
-PiBbICAgIDAuNDkwNzQyXSAgMDAwMDAwMDAwMDAwMDBhYiBmZmZmODgwMjEzZDAxYWQ4IGZmZmZm
-ZmZmODE2MTEyZTMNCj4gMDAwMDAwMDAwMDAwMDAwNg0KPiA+PiBbICAgIDAuNDkxMDMyXSAgZmZm
-Zjg4MDIxM2QwMWIyOCBmZmZmODgwMjEzZDAxYjE4IGZmZmZmZmZmODEwNGU5YmMNCj4gZmZmZjg4
-MDIxM2QwMWIwOA0KPiA+PiBbICAgIDAuNDkxMzQzXSAgZmZmZmM5MDAwMGM1ODAwMCAwMDAwMDAw
-MGZlZDEwMDAwIDAwMDAwMDAwZmVkMTAwMDANCj4gMDAwMDAwMDAwMDAwNjAwMA0KPiA+PiBbICAg
-IDAuNDkxNjMxXSBDYWxsIFRyYWNlOg0KPiA+PiBbICAgIDAuNDkzMzM3XSAgWzxmZmZmZmZmZjgx
-NjExMmUzPl0gZHVtcF9zdGFjaysweDRmLzB4N2MNCj4gPj4gWyAgICAwLjQ5MzQyMF0gIFs8ZmZm
-ZmZmZmY4MTA0ZTliYz5dIHdhcm5fc2xvd3BhdGhfY29tbW9uKzB4OGMvMHhjMA0KPiA+PiBbICAg
-IDAuNDkzNTAzXSAgWzxmZmZmZmZmZjgxMDRlYWE2Pl0gd2Fybl9zbG93cGF0aF9mbXQrMHg0Ni8w
-eDUwDQo+ID4+IFsgICAgMC40OTM1ODhdICBbPGZmZmZmZmZmODEwM2YxZTI+XSBfX2lvcmVtYXBf
-Y2FsbGVyKzB4MzcyLzB4MzgwDQo+ID4+IFsgICAgMC40OTM2NzRdICBbPGZmZmZmZmZmODEwMjEx
-YTI+XSA/DQo+IHNuYl91bmNvcmVfaW1jX2luaXRfYm94KzB4NjIvMHg5MA0KPiA+PiBbICAgIDAu
-NDkzNzYxXSAgWzxmZmZmZmZmZjgxMDNmMjQ3Pl0gaW9yZW1hcF9ub2NhY2hlKzB4MTcvMHgyMA0K
-PiA+PiBbICAgIDAuNDkzODQ2XSAgWzxmZmZmZmZmZjgxMDIxMWEyPl0NCj4gc25iX3VuY29yZV9p
-bWNfaW5pdF9ib3grMHg2Mi8weDkwDQo+ID4+IFsgICAgMC40OTM5MzNdICBbPGZmZmZmZmZmODEw
-MjI5MjU+XSB1bmNvcmVfcGNpX3Byb2JlKzB4ZTUvMHgxZTANCj4gPj4gWyAgICAwLjQ5NDAyMF0g
-IFs8ZmZmZmZmZmY4MTJkNDg3ZT5dIGxvY2FsX3BjaV9wcm9iZSsweDRlLzB4YTANCj4gPj4gWyAg
-ICAwLjQ5NDEwNF0gIFs8ZmZmZmZmZmY4MTQxOGE1OT5dID8gZ2V0X2RldmljZSsweDE5LzB4MjAN
-Cj4gPj4gWyAgICAwLjQ5NDIxM10gIFs8ZmZmZmZmZmY4MTJkNWNkMT5dIHBjaV9kZXZpY2VfcHJv
-YmUrMHhlMS8weDEzMA0KPiA+PiBbICAgIDAuNDk0MzAwXSAgWzxmZmZmZmZmZjgxNDFkM2NiPl0g
-ZHJpdmVyX3Byb2JlX2RldmljZSsweDdiLzB4MjQwDQo+ID4+IFsgICAgMC40OTQzODVdICBbPGZm
-ZmZmZmZmODE0MWQ2M2I+XSBfX2RyaXZlcl9hdHRhY2grMHhhYi8weGIwDQo+ID4+IFsgICAgMC40
-OTQ0NjldICBbPGZmZmZmZmZmODE0MWQ1OTA+XSA/DQo+IGRyaXZlcl9wcm9iZV9kZXZpY2UrMHgy
-NDAvMHgyNDANCj4gPj4gWyAgICAwLjQ5NDU1MV0gIFs8ZmZmZmZmZmY4MTQxYjcxZT5dIGJ1c19m
-b3JfZWFjaF9kZXYrMHg1ZS8weDkwDQo+ID4+IFsgICAgMC40OTQ2MzRdICBbPGZmZmZmZmZmODE0
-MWNlZGU+XSBkcml2ZXJfYXR0YWNoKzB4MWUvMHgyMA0KPiA+PiBbICAgIDAuNDk0NzE4XSAgWzxm
-ZmZmZmZmZjgxNDFjYTU3Pl0gYnVzX2FkZF9kcml2ZXIrMHgxMTcvMHgyMzANCj4gPj4gWyAgICAw
-LjQ5NDgwMl0gIFs8ZmZmZmZmZmY4MTQxZGQzND5dIGRyaXZlcl9yZWdpc3RlcisweDY0LzB4ZjAN
-Cj4gPj4gWyAgICAwLjQ5NDg4NF0gIFs8ZmZmZmZmZmY4MTJkNGMxND5dIF9fcGNpX3JlZ2lzdGVy
-X2RyaXZlcisweDY0LzB4NzANCj4gPj4gWyAgICAwLjQ5NDk3Ml0gIFs8ZmZmZmZmZmY4MWQwMzE5
-Yj5dID8gdW5jb3JlX3R5cGVzX2luaXQrMHgxOWMvMHgxOWMNCj4gPj4gWyAgICAwLjQ5NTA1Nl0g
-IFs8ZmZmZmZmZmY4MWQwMzMxMj5dIGludGVsX3VuY29yZV9pbml0KzB4MTc3LzB4NDFjDQo+ID4+
-IFsgICAgMC40OTUxNTVdICBbPGZmZmZmZmZmODFkMDMxOWI+XSA/IHVuY29yZV90eXBlc19pbml0
-KzB4MTljLzB4MTljDQo+ID4+IFsgICAgMC40OTUyNDJdICBbPGZmZmZmZmZmODEwMDAyOWU+XSBk
-b19vbmVfaW5pdGNhbGwrMHg0ZS8weDE3MA0KPiA+PiBbICAgIDAuNDk1MzI2XSAgWzxmZmZmZmZm
-ZjgxMDcxMTAwPl0gPyBwYXJzZV9hcmdzKzB4NjAvMHgzNjANCj4gPj4gWyAgICAwLjQ5NTQxMV0g
-IFs8ZmZmZmZmZmY4MWNmYmZiOD5dDQo+IGtlcm5lbF9pbml0X2ZyZWVhYmxlKzB4MTA2LzB4MTlh
-DQo+ID4+IFsgICAgMC40OTU0OTddICBbPGZmZmZmZmZmODFjZmI4M2I+XSA/IGRvX2Vhcmx5X3Bh
-cmFtKzB4ODYvMHg4Ng0KPiA+PiBbICAgIDAuNDk1NTgyXSAgWzxmZmZmZmZmZjgxNjA3ZWYwPl0g
-PyByZXN0X2luaXQrMHhkMC8weGQwDQo+ID4+IFsgICAgMC40OTU2NjZdICBbPGZmZmZmZmZmODE2
-MDdlZmU+XSBrZXJuZWxfaW5pdCsweGUvMHhmMA0KPiA+PiBbICAgIDAuNDk1NzQ5XSAgWzxmZmZm
-ZmZmZjgxNjIxZjZjPl0gcmV0X2Zyb21fZm9yaysweDdjLzB4YjANCj4gPj4gWyAgICAwLjQ5NTgz
-MV0gIFs8ZmZmZmZmZmY4MTYwN2VmMD5dID8gcmVzdF9pbml0KzB4ZDAvMHhkMA0KPiA+PiBbICAg
-IDAuNDk1OTIxXSAtLS1bIGVuZCB0cmFjZSA0MjhmMzY1YzA1NGQ5YTAxIF0tLS0NCj4gPj4gWyAg
-ICAwLjQ5NjE5Nl0gUkFQTCBQTVUgZGV0ZWN0ZWQsIGh3IHVuaXQgMl4tMTYgSm91bGVzLCBBUEkg
-dW5pdCBpcw0KPiAyXi0zMiBKb3VsZXMsIDMgZml4ZWQgY291bnRlcnMgMTYzODQwIG1zIG92Zmwg
-dGltZXINCj4gPj4gWyAgICAwLjQ5ODU5OF0gZnV0ZXggaGFzaCB0YWJsZSBlbnRyaWVzOiAxMDI0
-IChvcmRlcjogNSwgMTMxMDcyDQo+IGJ5dGVzKQ0KPiA+PiBbICAgIDAuNDk4ODMzXSBhdWRpdDog
-aW5pdGlhbGl6aW5nIG5ldGxpbmsgc3Vic3lzIChkaXNhYmxlZCkNCj4gPj4gWyAgICAwLjQ5OTAy
-NF0gYXVkaXQ6IHR5cGU9MjAwMCBhdWRpdCgxMzkzMjU5ODY2LjQ3NzoxKTogaW5pdGlhbGl6ZWQN
-Cj4gPj4gLi4uDQo+ID4+DQo+ID4+DQo+ID4NCg0K
+Hi Arnd,
+
+On: 26/03/2014 11:14, Arnd wrote:
+> Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree nodes 
+for R8A7790
+> 
+> On Wednesday 26 March 2014 11:01:46 Phil.Edworthy@renesas.com wrote:
+> > On: 26/03/2014 10:34, Arnd wrote:
+> > > Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree 
+nodes 
+> > for R8A7790
+> > > 
+> > > On Wednesday 26 March 2014 09:55:04 Phil.Edworthy@renesas.com wrote:
+> > > > Hi Arnd,
+> > > > 
+> > > > On: 25/03/2014 18:42, Arnd wrote:
+> > > > > Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree 
+> > nodes 
+> > > > for R8A7790
+> > > > > 
+> > > > > On Tuesday 25 March 2014 16:56:41 Phil Edworthy wrote:
+> > > > > > +               /* Map all possible DDR as inbound ranges */
+> > > > > > +               dma-ranges = <0x42000000 0 0x40000000 0 
+0x40000000 
+> > 0 
+> > > > 0x80000000
+> > > > > > +                             0x43000000 1 0x80000000 1 
+0x80000000 
+> > 0 
+> > > > 0x80000000>;
+> > > > > 
+> > > > > Typo: 0x43000000 should be 0x42000000 I guess.
+> > > > I used 0x43000000 as this is a 64-bit type. The OF PCI range code 
+> > > > currently treats both 32 and 64-bit types the same way, but I 
+thought 
+> > it 
+> > > > would be good to set this in case we ever need to use it.
+> > > 
+> > > Ah, I forgot about the space identifier. It looks correct then, but
+> > > it seems  a little strange to use a 32-bit identifier in one case
+> > > and a 64-bit one in the other.
+> > 
+> > If the OF PCI range code allowed the PCIe host driver to determine if 
+it's 
+> > a 32-bit mapping, we could use that and get a small performance 
+> > improvement with PCIe throughput.
+> 
+> I don't think it's supposed to care. Soem of the upper bits of the 
+ranges
+> only really make sense of PCI device registers, not for the top-level
+> ranges property. The driver can however still look at the address itself
+> to get that information.
+
+Ah, yes that is a possibility.
+
+
+> > > > Since the OF PCi range code treats both 32 and 64-bit types the 
+same 
+> > way, 
+> > > > my PCIe driver only creates 64-bit mappings. In addition, the PCIe 
+
+> > > > controller has to use a 64-bit mapping for anything over 2GiB. 
+Based 
+> > on 
+> > > > this, I think it's sensible to leave the mappings as 1-to-1.
+> > > 
+> > > I'm not following, sorry. What is the hardware requirement in the
+> > > controller?
+> > With this controller, you can only specify maps whose size are a power 
+of 
+> > two, and the size must be less than or equal to the cpu address 
+alignment. 
+> > Further, when the size is 4GiB, you have to use a 64-bit mapping. 
+Thinking 
+> > about it, the 4GiB case is not relevant to our discussion about 32-bit 
+vs 
+> > 64-bit mappings.
+> 
+> But the ranges you specified in the property don't actually fit in those
+> constraints: you have a range with size 0x8000000 and start 0x40000000,
+> which you say can't be programmed into the hardware.
+
+Actually, the driver checks the dma-ranges against these constraints, and 
+if necessary will create multiple mappings to fulfil the requested 
+dma-ranges.
+
+
+> > Still, my comment about the OF PCI range code treating both 32 and 
+64-bit 
+> > types the same way means that PCIe host driver has to assume it's a 
+64-bit 
+> > mapping.
+> 
+> I was thinking more of PCI devices than the host itself. If the host
+> driver can verify that all mappings are in the first 4GB and cover all 
+of
+> RAM, we won't have to use an swiotlb for devices that don't support 
+64-bit
+> DMA, which is a very significant performance difference.
+Ok, I think I understand. However, all the other PCI host drivers just do 
+1-to-1 mapping between PCI and CPU addresses, right? Whilst it might be 
+nice be able to support mapping CPU addresses > 4GiB to PCI addresses 
+under 4GiB, can that be something to consider later on?
+
+Thanks
+Phil
