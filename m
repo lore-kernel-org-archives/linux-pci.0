@@ -1,105 +1,235 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:36366 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754782AbaCLDhg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 23:37:36 -0400
-Received: by mail-wi0-f173.google.com with SMTP id f8so1798494wiw.12
-        for <linux-pci@vger.kernel.org>; Tue, 11 Mar 2014 20:37:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140311201533.GF31835@obsidianresearch.com>
-References: <1393944864-28113-1-git-send-email-tharvey@gateworks.com>
-	<20140311201533.GF31835@obsidianresearch.com>
-Date: Tue, 11 Mar 2014 20:37:35 -0700
-Message-ID: <CAJ+vNU1-evvZuLEeKvdRnbt_kXm3-zsNEk9ACQ21UhYxJtWwFg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] of/irq: Fix irq-mapping in of_irq_parse_raw()
-From: Tim Harvey <tharvey@gateworks.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:55111 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755204AbaCZN7V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 26 Mar 2014 09:59:21 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ben Dooks <ben-linux@fluff.org>,
-	linux-tegra <linux-tegra@vger.kernel.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Grant Likely <grant.likely@linaro.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
+	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>
+Subject: [RFC PATCH 01/12] phy: phy-omap-pipe3: Add support for PCIe PHY
+Date: Wed, 26 Mar 2014 19:27:41 +0530
+Message-ID: <1395842272-15267-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1395842272-15267-1-git-send-email-kishon@ti.com>
+References: <1395842272-15267-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 11, 2014 at 1:15 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Tue, Mar 04, 2014 at 06:54:24AM -0800, Tim Harvey wrote:
->> When an interrupt-map contains multiple entries an imap pointer arithmetic
->> bug can cause only the first entry to be properly evaluated and causes
->> the out_irq parameters to be incorrect depending on the #interrupt-cells
->> and #address-cells of the parent interrupt controller.
->
-> Tim,
->
-> I took a bit closer look at this for you, and I suspect the root fix
-> is this:
->
-> --- a/Documentation/devicetree/bindings/arm/gic.txt
-> +++ b/Documentation/devicetree/bindings/arm/gic.txt
-> @@ -55,7 +55,6 @@ Example:
->         intc: interrupt-controller@fff11000 {
->                 compatible = "arm,cortex-a9-gic";
->                 #interrupt-cells = <3>;
-> -               #address-cells = <1>;
->                 interrupt-controller;
->                 reg = <0xfff11000 0x1000>,
->                       <0xfff10100 0x100>;
-> (plus the corresponding purge from the .dt files)
->
-> It looks like the implementation does follow the OF specification:
->
->  Each mapping entry consists of a 3-tuple of (child-interrupt,
->  interrupt-parent, parent-interrupt). The number of cells for the
->  child-interrupt specifier is determined by the "#address-cells" and
->  "#interrupt-cells"property of this node. The number of cells for the
->  parent-interrupt value is determined by the "#address-cells"and
->  "#interrupt-cells"property values of this node's
->  interrupt-parent.
+PCIe PHY uses an external pll instead of the internal pll used by SATA
+and USB3. So added support in pipe3 PHY to use external pll
 
-Ok - I see I misunderstood the spec with regards to what the
-address-cells related to.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/devicetree/bindings/phy/ti-phy.txt |    8 +-
+ drivers/phy/phy-ti-pipe3.c                       |   99 +++++++++++++++++-----
+ 2 files changed, 84 insertions(+), 23 deletions(-)
 
->
-> So by specifying interrupt-cells = 3, address-cells = 1, the GIC is
-> requiring 4 DWs for its interrupt specifier.
+diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+index 788fb0f..e628a23 100644
+--- a/Documentation/devicetree/bindings/phy/ti-phy.txt
++++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+@@ -49,8 +49,8 @@ usb2phy@4a0ad080 {
+ TI PIPE3 PHY
+ 
+ Required properties:
+- - compatible: Should be "ti,phy-usb3" or "ti,phy-pipe3-sata".
+-   "ti,omap-usb3" is deprecated.
++ - compatible: Should be "ti,phy-usb3", "ti,phy-pipe3-sata" or
++   "ti,phy-pipe3-pcie. "ti,omap-usb3" is deprecated.
+  - reg : Address and length of the register set for the device.
+  - reg-names: The names of the register addresses corresponding to the registers
+    filled in "reg".
+@@ -62,6 +62,10 @@ Required properties:
+    * "wkupclk" - wakeup clock.
+    * "sysclk" - system clock.
+    * "refclk" - reference clock.
++   * "dpll_ref" - external dpll ref clk
++   * "dpll_ref_m2" - external dpll ref clk
++   * "phy-div" - divider for apll
++   * "div-clk" - apll clock
+ 
+ Optional properties:
+  - ctrl-module : phandle of the control module used by PHY driver to power on
+diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
+index 5913676..d43019d 100644
+--- a/drivers/phy/phy-ti-pipe3.c
++++ b/drivers/phy/phy-ti-pipe3.c
+@@ -80,6 +80,7 @@ struct ti_pipe3 {
+ 	struct clk		*wkupclk;
+ 	struct clk		*sys_clk;
+ 	struct clk		*refclk;
++	struct clk		*div_clk;
+ 	struct pipe3_dpll_map	*dpll_map;
+ };
+ 
+@@ -215,6 +216,9 @@ static int ti_pipe3_init(struct phy *x)
+ 	u32 val;
+ 	int ret = 0;
+ 
++	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-pcie"))
++		return 0;
++
+ 	/* Bring it out of IDLE if it is IDLE */
+ 	val = ti_pipe3_readl(phy->pll_ctrl_base, PLL_CONFIGURATION2);
+ 	if (val & PLL_IDLE) {
+@@ -238,8 +242,11 @@ static int ti_pipe3_exit(struct phy *x)
+ 	u32 val;
+ 	unsigned long timeout;
+ 
+-	/* SATA DPLL can't be powered down due to Errata i783 */
+-	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-sata"))
++	/* SATA DPLL can't be powered down due to Errata i783 and PCIe
++	 * does not have internal DPLL
++	 */
++	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-sata") ||
++	    of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-pcie"))
+ 		return 0;
+ 
+ 	/* Put DPLL in IDLE mode */
+@@ -286,32 +293,41 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+ 	struct device_node *control_node;
+ 	struct platform_device *control_pdev;
+ 	const struct of_device_id *match;
+-
+-	match = of_match_device(of_match_ptr(ti_pipe3_id_table), &pdev->dev);
+-	if (!match)
+-		return -EINVAL;
++	struct clk *clk;
+ 
+ 	phy = devm_kzalloc(&pdev->dev, sizeof(*phy), GFP_KERNEL);
+ 	if (!phy) {
+ 		dev_err(&pdev->dev, "unable to alloc mem for TI PIPE3 PHY\n");
+ 		return -ENOMEM;
+ 	}
++	phy->dev		= &pdev->dev;
+ 
+-	phy->dpll_map = (struct pipe3_dpll_map *)match->data;
+-	if (!phy->dpll_map) {
+-		dev_err(&pdev->dev, "no DPLL data\n");
+-		return -EINVAL;
+-	}
++	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
++		match = of_match_device(of_match_ptr(ti_pipe3_id_table),
++					&pdev->dev);
++		if (!match)
++			return -EINVAL;
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pll_ctrl");
+-	phy->pll_ctrl_base = devm_ioremap_resource(&pdev->dev, res);
+-	if (IS_ERR(phy->pll_ctrl_base))
+-		return PTR_ERR(phy->pll_ctrl_base);
++		phy->dpll_map = (struct pipe3_dpll_map *)match->data;
++		if (!phy->dpll_map) {
++			dev_err(&pdev->dev, "no DPLL data\n");
++			return -EINVAL;
++		}
+ 
+-	phy->dev		= &pdev->dev;
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++						   "pll_ctrl");
++		phy->pll_ctrl_base = devm_ioremap_resource(&pdev->dev, res);
++		if (IS_ERR(phy->pll_ctrl_base))
++			return PTR_ERR(phy->pll_ctrl_base);
+ 
+-	if (!of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
++		phy->sys_clk = devm_clk_get(phy->dev, "sysclk");
++		if (IS_ERR(phy->sys_clk)) {
++			dev_err(&pdev->dev, "unable to get sysclk\n");
++			return -EINVAL;
++		}
++	}
+ 
++	if (!of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
+ 		phy->wkupclk = devm_clk_get(phy->dev, "wkupclk");
+ 		if (IS_ERR(phy->wkupclk)) {
+ 			dev_err(&pdev->dev, "unable to get wkupclk\n");
+@@ -328,10 +344,35 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+ 		phy->refclk = ERR_PTR(-ENODEV);
+ 	}
+ 
+-	phy->sys_clk = devm_clk_get(phy->dev, "sysclk");
+-	if (IS_ERR(phy->sys_clk)) {
+-		dev_err(&pdev->dev, "unable to get sysclk\n");
+-		return -EINVAL;
++	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
++		clk = devm_clk_get(phy->dev, "dpll_ref");
++		if (IS_ERR(clk)) {
++			dev_err(&pdev->dev, "unable to get dpll ref clk\n");
++			return PTR_ERR(clk);
++		}
++		clk_set_rate(clk, 1500000000);
++
++		clk = devm_clk_get(phy->dev, "dpll_ref_m2");
++		if (IS_ERR(clk)) {
++			dev_err(&pdev->dev, "unable to get dpll ref m2 clk\n");
++			return PTR_ERR(clk);
++		}
++		clk_set_rate(clk, 100000000);
++
++		clk = devm_clk_get(phy->dev, "phy-div");
++		if (IS_ERR(clk)) {
++			dev_err(&pdev->dev, "unable to get phy-div clk\n");
++			return PTR_ERR(clk);
++		}
++		clk_set_rate(clk, 100000000);
++
++		phy->div_clk = devm_clk_get(phy->dev, "div-clk");
++		if (IS_ERR(phy->div_clk)) {
++			dev_err(&pdev->dev, "unable to get div-clk\n");
++			return PTR_ERR(phy->div_clk);
++		}
++	} else {
++		phy->div_clk = ERR_PTR(-ENODEV);
+ 	}
+ 
+ 	control_node = of_parse_phandle(node, "ctrl-module", 0);
+@@ -387,6 +428,8 @@ static int ti_pipe3_runtime_suspend(struct device *dev)
+ 		clk_disable_unprepare(phy->wkupclk);
+ 	if (!IS_ERR(phy->refclk))
+ 		clk_disable_unprepare(phy->refclk);
++	if (!IS_ERR(phy->div_clk))
++		clk_disable_unprepare(phy->div_clk);
+ 
+ 	return 0;
+ }
+@@ -412,8 +455,19 @@ static int ti_pipe3_runtime_resume(struct device *dev)
+ 		}
+ 	}
+ 
++	if (!IS_ERR(phy->div_clk)) {
++		ret = clk_prepare_enable(phy->div_clk);
++		if (ret) {
++			dev_err(phy->dev, "Failed to enable div_clk %d\n", ret);
++			goto err3;
++		}
++	}
+ 	return 0;
+ 
++err3:
++	if (!IS_ERR(phy->wkupclk))
++		clk_disable_unprepare(phy->wkupclk);
++
+ err2:
+ 	if (!IS_ERR(phy->refclk))
+ 		clk_disable_unprepare(phy->refclk);
+@@ -446,6 +500,9 @@ static const struct of_device_id ti_pipe3_id_table[] = {
+ 		.compatible = "ti,phy-pipe3-sata",
+ 		.data = dpll_map_sata,
+ 	},
++	{
++		.compatible = "ti,phy-pipe3-pcie",
++	},
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(of, ti_pipe3_id_table);
+-- 
+1.7.9.5
 
-Agreed, and the interrupt mapping for the imx6 pcie host controller:
-
-interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
-                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
-                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
-                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-
-has only 3 cells for the parent interrupt, and only 3 are needed so I
-suppose there is no 'address' necessary.
-
->
-> I see no reason why it doesn't have an address-cells = 0 like other
-> interrupt controllers..
-
-I agree, and I see that as well for other cortex-a9 gic interrupt controllers.
-
->
-> Setting #address-cells to 0 in the GIC node should be functionally
-> equivalent to your patch below, since newaddrsize will == 0.
-
-yes, it does.  I'll verify and post a followup patch tomorrow for the
-invalid dtsi's.  Thanks for digging into this!
-
-Tim
