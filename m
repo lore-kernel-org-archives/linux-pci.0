@@ -1,66 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Date: Fri, 14 Mar 2014 20:10:39 +0100
-Cc: Catalin Marinas <Catalin.Marinas@arm.com>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor4.renesas.com ([210.160.252.174]:42825 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751821AbaCZL4w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 07:56:52 -0400
+In-Reply-To: <17762778.T67iL7T7u4@wuerfel>
+References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com> <5228683.eofaEcInBi@wuerfel> <OF362EF259.A035C442-ON80257CA7.003E97FF-80257CA7.003F9959@eu.necel.com> <17762778.T67iL7T7u4@wuerfel>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com> <201403141838.08900.arnd@arndb.de> <20140314180527.GZ6457@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140314180527.GZ6457@e106497-lin.cambridge.arm.com>
+	Simon Horman <horms@verge.net.au>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201403142010.39886.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Phil.Edworthy@renesas.com
+Message-ID: <OF0D8ED62E.8AD2947E-ON80257CA7.004189DE-80257CA7.00419EC8@eu.necel.com>
+Date: Wed, 26 Mar 2014 11:56:46 +0000
+Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree nodes for R8A7790
+Content-Type: text/plain; charset="US-ASCII"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 14 March 2014, Liviu Dudau wrote:
+Hi Arnd,
+
+On: 26/03/2014 11:53, Arnd wrote:
+> Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree nodes 
+for R8A7790
+> 
+> On Wednesday 26 March 2014 11:34:41 Phil.Edworthy@renesas.com wrote:
+> > > But the ranges you specified in the property don't actually fit in 
+those
+> > > constraints: you have a range with size 0x8000000 and start 
+0x40000000,
+> > > which you say can't be programmed into the hardware.
 > > 
+> > Actually, the driver checks the dma-ranges against these constraints, 
+and 
+> > if necessary will create multiple mappings to fulfil the requested 
+> > dma-ranges.
 > 
-> I haven't seen any reaction from Bjorn on this, so I threaded carefully on that
-> subject. I'm new to this so I don't know how to handle this.
+> Ok, I didn't notice. My initial suggestion was to not put that logic
+> into the driver but instead specify in the host bridge binding that each
+> entry in the dma-ranges property has to meet the hardware constraints.
 > 
-> To my mind, and looking at the way every architecture has been setup, the pcibios_*
-> function are intended to be provided by the architecture.
+> As long as you don't have too much complexity to detect this case, I'm
+> fine with it either way.
+Ok, good!
 
-That is definitely correct.
+> > > > Still, my comment about the OF PCI range code treating both 32 and 
 
-> No matter how much wishful
-> thinking we are going to put in here, it will not change the fact that the non-arm64
-> specific version of pcibios_fixup_bus() that I wrote is not shared by anyone else
-> and it will remain "for arm64 use only" regardless to where it is placed until the
-> next architecture comes into the kernel. And even then its adoption is questionable.
+> > 64-bit 
+> > > > types the same way means that PCIe host driver has to assume it's 
+a 
+> > 64-bit 
+> > > > mapping.
+> > > 
+> > > I was thinking more of PCI devices than the host itself. If the host
+> > > driver can verify that all mappings are in the first 4GB and cover 
+all 
+> > of
+> > > RAM, we won't have to use an swiotlb for devices that don't support 
+> > 64-bit
+> > > DMA, which is a very significant performance difference.
+> > Ok, I think I understand. However, all the other PCI host drivers just 
+do 
+> > 1-to-1 mapping between PCI and CPU addresses, right? Whilst it might 
+be 
+> > nice be able to support mapping CPU addresses > 4GiB to PCI addresses 
+> > under 4GiB, can that be something to consider later on?
+> 
+> Yes, fair enough. The current version is much simpler, so that's ok.
+> Just keep it in mind if you run into performance problems. Also, note
+> that we don't actually support swiotlb on arm32 yet, so your current
+> code is broken for an PCI DMA master that is not 64-bit capable.
+> We need swiotlb on arm32 anyway, and that will fix this problem, but
+> adding the hack I described would also fix it.
+Ok, thanks for all your comments!
 
-Agreed as well.
+Phil
 
-> If we are looking for simple and common implementations of this function, maybe we
-> should look at why microblaze and powerpc versions, that are identical, are not being
-> made the default __weak implementation.
-
-Microblaze could most likely just be moved over to your version. The only
-reason it is shared with the powerpc implementation is that they were
-anticipating the code to become shared again and that it was known to
-be working with flattened device tree.
-
-> As for the other two functions, I've no special attachment to where they are present
-> and I'm happy to move them into drivers/pci on the condition that the patchset doesn't
-> double in size. The reason why I'm weary of touching other architectures in a significant
-> way is the current lack of engineering bandwidth and way of testing all the architectures.
-> My low friction approach has been to introduce them in arm64 and then slowly move them
-> into core (and yes, I know about good intentions and the road to hell.)
-
-I think everyone working on PCI is fed up with having arch-specific implementations
-of all these, and Bjorn has been very supportive of generic infrastructure in the
-past. Even just adding a generic infrastructure in a common place that is used
-only by one architecture in my mind would be a significant improvement.
-
-	Arnd
