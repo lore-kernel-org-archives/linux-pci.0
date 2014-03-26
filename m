@@ -1,48 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53754 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754082AbaCCReK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 12:34:10 -0500
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v4 1/3] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
-Date: Mon,  3 Mar 2014 17:33:31 +0000
-Message-Id: <1393868013-32345-2-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1393868013-32345-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1393868013-32345-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
+	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>
+Subject: [RFC PATCH 12/12] ARM: OMAP: Enable PCI for DRA7
+Date: Wed, 26 Mar 2014 19:27:52 +0530
+Message-ID: <1395842272-15267-13-git-send-email-kishon@ti.com>
+In-Reply-To: <1395842272-15267-1-git-send-email-kishon@ti.com>
+References: <1395842272-15267-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
-is wrong. It returns a mapped (i.e. virtual) address that can start from
-zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
-architectures that use !CONFIG_GENERIC_MAP define.
+Now that we have added PCIe driver for DRA7 SOCs, enable PCI on
+DRA7 SOCs.
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/mach-omap2/Kconfig |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index d5afe96..df72051 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -331,7 +331,7 @@ static inline void iounmap(void __iomem *addr)
- #ifndef CONFIG_GENERIC_IOMAP
- static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
- {
--	return (void __iomem *) port;
-+	return (void __iomem *)(PCI_IOBASE + (port & IO_SPACE_LIMIT));
- }
+diff --git a/arch/arm/mach-omap2/Kconfig b/arch/arm/mach-omap2/Kconfig
+index 46f8c53..352f252 100644
+--- a/arch/arm/mach-omap2/Kconfig
++++ b/arch/arm/mach-omap2/Kconfig
+@@ -86,6 +86,8 @@ config SOC_DRA7XX
+ 	select HAVE_SMP
+ 	select HAVE_ARM_ARCH_TIMER
+ 	select IRQ_CROSSBAR
++	select MIGHT_HAVE_PCI
++	select ARCH_SUPPORTS_MSI
  
- static inline void ioport_unmap(void __iomem *p)
+ config ARCH_OMAP2PLUS
+ 	bool
 -- 
-1.9.0
+1.7.9.5
 
