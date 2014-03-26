@@ -1,85 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:44919 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751685AbaCTQqN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 12:46:13 -0400
-Received: by mail-ie0-f169.google.com with SMTP id to1so1180958ieb.0
-        for <linux-pci@vger.kernel.org>; Thu, 20 Mar 2014 09:46:13 -0700 (PDT)
+Received: from relmlor3.renesas.com ([210.160.252.173]:14844 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753540AbaCZKMl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 06:12:41 -0400
+In-Reply-To: <5331B733.8090802@codethink.co.uk>
+References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com> <1395766604-30926-3-git-send-email-phil.edworthy@renesas.com> <5331B733.8090802@codethink.co.uk>
+To: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>
 MIME-Version: 1.0
-In-Reply-To: <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
-References: <20140224162400.GE16457@pd.tnic> <4205942.Tp8ltEsv6e@vostro.rjw.lan>
- <532A514C.5010106@intel.com> <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 20 Mar 2014 10:45:52 -0600
-Message-ID: <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
-Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
-To: "Zhang, Rui" <rui.zhang@intel.com>
-Cc: "Lu, Aaron" <aaron.lu@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Borislav Petkov <bp@alien8.de>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Stephane Eranian <eranian@google.com>,
-	"Yan, Zheng Z" <zheng.z.yan@intel.com>
-Content-Type: text/plain; charset=UTF-8
+From: Phil.Edworthy@renesas.com
+Message-ID: <OF62BCE896.5AFD55D6-ON80257CA7.0037C4A7-80257CA7.00381353@eu.necel.com>
+Date: Wed, 26 Mar 2014 10:12:31 +0000
+Subject: Re: [PATCH v5 2/9] PCI: host: rcar: Add MSI support
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 19, 2014 at 9:03 PM, Zhang, Rui <rui.zhang@intel.com> wrote:
+Hi Ben,
 
-> I've talked with Yan Zheng, and I was told that this resource "0xfed10000 - 0xfed15fff"
-> is got from PCI device register directly, which is not in its BAR range.
-> Thus IMO, it is impossible for PNP layer to be aware of this resource.
+On: 25/03/2014 17:05, Ben wrote:
+> Subject: Re: [PATCH v5 2/9] PCI: host: rcar: Add MSI support
+> 
+> On 25/03/14 16:56, Phil Edworthy wrote:
+> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > ---
+> > v5:
+> >   - Return IRQ_NONE from MSI isr when there is no pending MSI
+> >   - Add additional interrupt bindings
+> > +
+> > +static void rcar_msi_free(struct rcar_msi *chip, unsigned long irq)
+> > +{
+> > +   struct device *dev = chip->chip.dev;
+> > +
+> > +   mutex_lock(&chip->lock);
+> > +
+> > +   if (!test_bit(irq, chip->used))
+> > +      dev_err(dev, "trying to free unused MSI#%lu\n", irq);
+> 
+> Does the upper level not check for this?
+Yes, the default_teardown_msi_irqs function checks for unused MSIs, so we 
+don't really need to check here.
 
-Slow down, this isn't quite correct.  The *base* address (0xfed10000)
-is from a PCI config register (MCHBAR, at PCI config offset 0x48) [1].
- This is a device-dependent register, so the PCI core knows neither
-the base nor the size.
 
-The device consumes address space that is not reported via the
-architected PCI mechanism, so the only way to report that space is via
-the PNP0C02 ACPI device.  The BIOS has to determine the base and size
-based on its knowledge of the hardware.  On this hardware, per the
-spec in [1], the region described by MCHBAR is 32KB in size.
+> > +   else
+> > +      clear_bit(irq, chip->used);
+> > +
+> > +   mutex_unlock(&chip->lock);
+> 
+> 
+> > +}
+> > +
+> > +static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
+> > +{
+> > +   struct rcar_pcie *pcie = data;
+> > +   struct rcar_msi *msi = &pcie->msi;
+> > +   unsigned long reg;
+> > +
+> > +   reg = pci_read_reg(pcie, PCIEMSIFR);
+> > +
+> > +   /* MSI & INTx share an interrupt - we only handle MSI here */
+> > +   if (!reg)
+> > +      return IRQ_NONE;
+> > +
+> > +   while (reg) {
+> > +      unsigned int index = find_first_bit(&reg, 32);
+> > +      unsigned int irq;
+> > +
+> > +      /* clear the interrupt */
+> > +      pci_write_reg(pcie, 1 << index, PCIEMSIFR);
+> > +
+> > +      irq = irq_find_mapping(msi->domain, index);
+> > +      if (irq) {
+> > +         if (test_bit(index, msi->used))
+> > +            generic_handle_irq(irq);
+> > +         else
+> > +            dev_info(pcie->dev, "unhandled MSI\n");
+> > +      } else {
+> > +         /*
+> > +          * that's weird who triggered this?
+> > +          * just clear it
+> > +          */
+> > +         dev_info(pcie->dev, "unexpected MSI\n");
+> > +      }
+> 
+> You may want to change this to something that is either rate-limited
+> or is say debug level so it does not spam the console if something
+> does go wrong.
+I'll change that to debug level.
 
-The 0x6000 (24KB) size of the region above comes from the driver and
-is actually less than what the device consumes.  It is legal for a
-driver to request only the area it requires, but the entire area
-consumed by the device should be reported via the PNP0C02 device.  The
-fact that PNP0C02 reports 16KB but the device actually consumes 32KB
-is a BIOS defect.  This probably happened because previous versions of
-this chip consumed only 16KB, and the BIOS didn't get updated for the
-change.
+> Also the comment could easily be made one line
+>    /* Weird, unknown MSI IRQ, just clear it */
+Sure!
 
-> BTW, about drivers/pnp/system.c, if its ONLY purpose is to prevent those
-> resources from being allocated to uninitialized PCI devices, then IMO,
-> the best way to do this is make PCI bus handle those PNP0C01/PNP0C02
-> resources directly, probably via a platform callback, say,
-> 1. make drivers/pnp/system.c a no-op for PNPACPI, by checking pnp_dev->protocol.
-> 2. introduce acpi_check_reserved_resource() to parsing PNP0C01/PNP0C02 resources.
-> 3. in PCI bus, invoke acpi_check_reserved_resource() when assigning
->    resources to PCI devices.
-
-The purpose of system.c is indeed to prevent resources from being
-allocated to other devices.  This is really a question for Rafael, but
-in my opinion this function (reserving resources of PNP/ACPI devices
-to prevent their allocation to other devices) should be done for *all*
-PNP and ACPI devices, not just the PNP0C01/PNP0C02 devices handled by
-system.c.
-
-So I think the best solution would be to move that into the ACPI core
-somehow so it happens for all devices.  If we had that, we could get
-rid of system.c altogether, and we wouldn't have to do anything
-special in PCI.  This is much easier to say than to do, however,
-because there are all kinds of issues with legacy resource
-reservations, and we currently can't really deal with overlapping
-resources.
-
-Bjorn
-
-[1] https://www-ssl.intel.com/content/www/us/en/processors/core/4th-gen-core-family-desktop-vol-2-datasheet,
-sec. 3.1.2 on p. 61
+Thanks
+Phil
