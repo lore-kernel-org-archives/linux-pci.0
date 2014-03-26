@@ -1,97 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og102.obsmtp.com ([64.18.0.143]:46146 "HELO
-	exprod5og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750714AbaCFGG0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 01:06:26 -0500
-Received: by mail-pd0-f180.google.com with SMTP id v10so2101219pde.11
-        for <linux-pci@vger.kernel.org>; Wed, 05 Mar 2014 22:06:25 -0800 (PST)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v4 3/4] dt-bindings: pci: xgene pcie device tree bindings
-Date: Wed,  5 Mar 2014 22:06:02 -0800
-Message-Id: <1394085963-27553-4-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
-References: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
+Received: from relmlor4.renesas.com ([210.160.252.174]:22473 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750792AbaCZIuH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 04:50:07 -0400
+In-Reply-To: <CANqRtoRCK8rLKDuy9kuyES=Y0Ek00BVnzzTdCeTKpPjrxiP7RQ@mail.gmail.com>
+References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>	<1395766604-30926-10-git-send-email-phil.edworthy@renesas.com> <CANqRtoRCK8rLKDuy9kuyES=Y0Ek00BVnzzTdCeTKpPjrxiP7RQ@mail.gmail.com>
+To: Magnus Damm <magnus.damm@gmail.com>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linux-pci@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>
+MIME-Version: 1.0
+From: Phil.Edworthy@renesas.com
+Message-ID: <OFB07E7C91.23278323-ON80257CA7.00305D4A-80257CA7.00308574@eu.necel.com>
+Date: Wed, 26 Mar 2014 08:50:00 +0000
+Subject: Re: [PATCH v5 9/9] ARM: koelsch: Add HAVE_ARM_ARCH_TIMER to defconfig
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for X-Gene PCIe driver. The driver resides
-under 'drivers/pci/host/pci-xgene.c' file.
+Hi Magnus,
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- .../devicetree/bindings/pci/xgene-pci.txt          |   52 ++++++++++++++++++++
- 1 file changed, 52 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
+On: 26/03/2014 05:39, Magnus wrote:
+> Subject: Re: [PATCH v5 9/9] ARM: koelsch: Add HAVE_ARM_ARCH_TIMER to 
+defconfig
+> 
+> On Wed, Mar 26, 2014 at 1:56 AM, Phil Edworthy
+> <phil.edworthy@renesas.com> wrote:
+> > This is fixes a boot problem when the R-Car PCIe driver is enabled.
+> >
+> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > ---
+> >  arch/arm/configs/koelsch_defconfig | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> > diff --git a/arch/arm/configs/koelsch_defconfig 
+b/arch/arm/configs/koelsch_defconfig
+> > index ec14547..67666b6 100644
+> > --- a/arch/arm/configs/koelsch_defconfig
+> > +++ b/arch/arm/configs/koelsch_defconfig
+> > @@ -15,6 +15,7 @@ CONFIG_MACH_KOELSCH=y
+> >  CONFIG_CPU_BPREDICT_DISABLE=y
+> >  CONFIG_PL310_ERRATA_588369=y
+> >  CONFIG_ARM_ERRATA_754322=y
+> > +CONFIG_HAVE_ARM_ARCH_TIMER=y
+> 
+> Hi Phil,
+> 
+> Thanks for your patches! I appreciate that you send out a whole series
+> with broken out patches, that makes it easier to see what is going on.
+> 
+> However, regarding this particular patch I'm not so sure if your fix
+> is correct. The issue is most likely there, no doubt about that, but
+> this "select" does not match well with how we currently handle timers
+> for the rest of the SoCs in mach-shmobile. We for instance want to be
+> able to boot with CMT only.
+> 
+> So here's a gentle "NAK" on this particular patch. I think this shows
+> that either deferred probing or a different init ordering is needed
+> somehow.
 
-diff --git a/Documentation/devicetree/bindings/pci/xgene-pci.txt b/Documentation/devicetree/bindings/pci/xgene-pci.txt
-new file mode 100644
-index 0000000..e19fdb8
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xgene-pci.txt
-@@ -0,0 +1,52 @@
-+* AppliedMicro X-Gene PCIe interface
-+
-+Required properties:
-+- device_type: set to "pci"
-+- compatible: should contain "apm,xgene-pcie" to identify the core.
-+- reg: A list of physical base address and length for each set of controller
-+       registers. Must contain an entry for each entry in the reg-names
-+       property.
-+- reg-names: Must include the following entries:
-+  "csr": controller configuration registers.
-+  "cfg": pcie configuration space registers.
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- ranges: ranges for the outbound memory, I/O regions.
-+- dma-ranges: ranges for the inbound memory regions.
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+	to define the mapping of the PCIe interface to interrupt
-+	numbers.
-+- clocks: from common clock binding: handle to pci clock.
-+
-+Optional properties:
-+- status: Either "ok" or "disabled".
-+
-+Example:
-+
-+SoC specific DT Entry:
-+	pcie0: pcie@1f2b0000 {
-+		status = "disabled";
-+		device_type = "pci";
-+		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-+			0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
-+		reg-names = "csr", "cfg";
-+		ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
-+			  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
-+		dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+		clocks = <&pcie0clk 0>;
-+	};
-+
-+Board specific DT Entry:
-+	&pcie0 {
-+		status = "ok";
-+	};
--- 
-1.7.9.5
+When reading your comments, I realised that since I changed the driver to 
+use module_platform_driver instead of subsys_initcall, we no longer need 
+this patch.
 
+Thanks
+Phil
