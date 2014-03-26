@@ -1,136 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:49755 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752834AbaCKSMt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 14:12:49 -0400
-Received: by mail-ig0-f172.google.com with SMTP id uq10so11888998igb.5
-        for <linux-pci@vger.kernel.org>; Tue, 11 Mar 2014 11:12:49 -0700 (PDT)
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:56873 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbaCZFjI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 01:39:08 -0400
 MIME-Version: 1.0
-In-Reply-To: <5318D475.9040701@amd.com>
-References: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
- <CAErSpo4MMJh9b0aivwGSbxCMVw24He1+Vo_LH0R0E+fYM5aThg@mail.gmail.com>
- <5317D9B0.1080502@amd.com> <5318160D.8070305@amd.com> <CAErSpo59=52bqgyvqk1x7kcgFmRtdZhT6faYTi3wy7KDtk5=Pw@mail.gmail.com>
- <5318D475.9040701@amd.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Mar 2014 12:12:29 -0600
-Message-ID: <CAErSpo5Dq3M5ik=dgF5dLsZV87XJeT3nEiYptPBXPCyLZ9xhgA@mail.gmail.com>
-Subject: Re: [PATCH 0/3] amd/pci: Add AMD hostbridge supports for newer AMD systems
-To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	kim.naru@amd.com,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1395766604-30926-10-git-send-email-phil.edworthy@renesas.com>
+References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
+	<1395766604-30926-10-git-send-email-phil.edworthy@renesas.com>
+Date: Wed, 26 Mar 2014 14:39:06 +0900
+Message-ID: <CANqRtoRCK8rLKDuy9kuyES=Y0Ek00BVnzzTdCeTKpPjrxiP7RQ@mail.gmail.com>
+Subject: Re: [PATCH v5 9/9] ARM: koelsch: Add HAVE_ARM_ARCH_TIMER to defconfig
+From: Magnus Damm <magnus.damm@gmail.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: linux-pci@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Ben Dooks <ben.dooks@codethink.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 6, 2014 at 1:03 PM, Suravee Suthikulpanit
-<suravee.suthikulpanit@amd.com> wrote:
-> On 3/6/2014 11:40 AM, Bjorn Helgaas wrote:
->>
->> [+cc Yinghai, sorry I didn't think of it before]
->>
->> On Wed, Mar 5, 2014 at 11:30 PM, Suravee Suthikulpanit
->> <suravee.suthikulpanit@amd.com> wrote:
->>>
->>> On 3/5/2014 8:13 PM, Suravee Suthikulanit wrote:
->>>>
->>>>
->>>> On 3/5/2014 3:24 PM, Bjorn Helgaas wrote:
->>>>>
->>>>>
->>>>> [+cc linux-acpi]
->>>>>
->>>>> On Wed, Mar 5, 2014 at 2:06 PM,  <suravee.suthikulpanit@amd.com> wrote:
->>>>>>
->>>>>>
->>>>>> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
->>>>>>
->>>>>> The current code only supports upto AMD hostbridge for family11h.
->>>>>> This causes PCI numa_node information to be reported incorrectly
->>>>>> for newer family with multi sockets.
->>>>>
->>>>>
->>>>>
->>>>> Where is the incorrect reporting?  In ACPI tables?  Is this patch a
->>>>> way to cover up firmware defects in the ACPI description?  Or is this
->>>>> for machines without ACPI (it seems unlikely that machines with new
->>>>> AMD processors would not have ACPI)?
->>>>
->>>>
->>>>
->>>> This is incorrectly reported in the sysfs for each PCI device (e.g.
->>>> /devices/pci0000:50/0000:50:00.2/numa_node). Without the patch, they
->>>> return -1.
->>>>
->>>> In file arch/x86/pci/acpi.c, in function pci_acpi_scan_root(), it is
->>>> queries the node information as following:
->>>>
->>>> #ifdef CONFIG_ACPI_NUMA
->>>>       pxm = acpi_get_pxm(device->handle);
->>>>       if (pxm >= 0)
->>>>           node = pxm_to_node(pxm);
->>>>       if (node != -1)
->>>>           set_mp_bus_to_node(busnum, node);
->>>>       else
->>>> #endif
->>>>           node = get_mp_bus_to_node(busnum);
->>>>
->>>> In this case, I see that the acpi_get_pxm() returns -1.  Therefore, it
->>>> falls back to using the node information in mp_bus_to_node[].  So,
->>>> without this patch, it would also returning -1.
->>>>
->>>> Also, the spec mentioned that the _PXM is optional, so I am not sure if
->>>> this is a firmware bug.
->>>
->>>
->>> I am not quite familiar with the ACPI for this part.  However, after
->>> taking
->>> a look at the code (in driver/acpi/pci_root.c: acpi_pci_root_add()), I
->>> believe it's trying to locate _PXM method in the DSDT table, in which I
->>> don't see any _PXM methods.
->>
->>
->> This sure looks like a firmware bug.  True, _PXM is optional, but if
->> the firmware doesn't provide it, nobody should be surprised that the
->> OS thinks everything is in the same proximity domain.
->>
->> I would not endorse extending amd_bus.c for new CPUs.  That just
->> covers up firmware problems like this, and if you ever run a different
->> OS on the box, you'll trip over them again.  And I don't think a patch
->> like this will even be a possibility for Windows.
+On Wed, Mar 26, 2014 at 1:56 AM, Phil Edworthy
+<phil.edworthy@renesas.com> wrote:
+> This is fixes a boot problem when the R-Car PCIe driver is enabled.
 >
-> I understand and am trying to verify this with the BIOS engineers. However,
-> this is currently affecting family15h servers out in the field.  We can try
-> to fix ACPI for newer generation of machines, but it won't be practical to
-> push this BIOS fix to all the BIOS vendors and system vendors for older
-> platforms, as they tend to.
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> ---
+>  arch/arm/configs/koelsch_defconfig | 1 +
+>  1 file changed, 1 insertion(+)
 >
-> What if I localize the extension to the changes to access node information
-> in the hostbridge for just the famil15h which is mostly used in our main
-> server products? Would that be acceptable?
+> diff --git a/arch/arm/configs/koelsch_defconfig b/arch/arm/configs/koelsch_defconfig
+> index ec14547..67666b6 100644
+> --- a/arch/arm/configs/koelsch_defconfig
+> +++ b/arch/arm/configs/koelsch_defconfig
+> @@ -15,6 +15,7 @@ CONFIG_MACH_KOELSCH=y
+>  CONFIG_CPU_BPREDICT_DISABLE=y
+>  CONFIG_PL310_ERRATA_588369=y
+>  CONFIG_ARM_ERRATA_754322=y
+> +CONFIG_HAVE_ARM_ARCH_TIMER=y
 
-I assume the system is fully functional even without these patches,
-right?  The only effect of these changes should be a performance
-improvement.
+Hi Phil,
 
-So the choices are:
+Thanks for your patches! I appreciate that you send out a whole series
+with broken out patches, that makes it easier to see what is going on.
 
-  1) Change the BIOS to provide _PXM
-  2) Change Linux with your patches
+However, regarding this particular patch I'm not so sure if your fix
+is correct. The issue is most likely there, no doubt about that, but
+this "select" does not match well with how we currently handle timers
+for the rest of the SoCs in mach-shmobile. We for instance want to be
+able to boot with CMT only.
 
-Either way, the customer has to upgrade something.  Choice 1) gets you
-the performance improvement on all Linux and Windows releases, even
-the ones that are already in the field.  Choice 2) fixes future Linux
-distros and whatever old releases you can convince the distro to
-backport to, and doesn't help Windows at all.  It makes work for all
-the distros and we (i.e., I) have to worry about maintaining this in
-the future.
+So here's a gentle "NAK" on this particular patch. I think this shows
+that either deferred probing or a different init ordering is needed
+somehow.
 
-I'm curious to see what your BIOS folks say.  It seems strange that
-after all these years, they wouldn't provide something relatively
-simple like _PXM, so I wonder if there's more to the story.
+Thanks,
 
-Bjorn
+/ magnus
