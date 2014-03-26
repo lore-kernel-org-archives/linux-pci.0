@@ -1,51 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:51301 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761038AbaCUQtr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Mar 2014 12:49:47 -0400
-Date: Fri, 21 Mar 2014 10:49:43 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Phil.Edworthy@renesas.com
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-sh@vger.kernel.org,
-	linux-pci@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v4 6/9] ARM: shmobile: Add PCIe device tree nodes for
- R8A7790
-Message-ID: <20140321164943.GB3374@obsidianresearch.com>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
- <532C5ADE.4030708@cogentembedded.com>
- <OF4D80B18E.5A1F55AB-ON80257CA2.0051AADA-80257CA2.0051D412@eu.necel.com>
- <6044873.2S2Xlhp0hC@wuerfel>
- <532C6BF7.1050404@cogentembedded.com>
- <OFCC2858D2.BB49EE27-ON80257CA2.005AA51E-80257CA2.005AC3A0@eu.necel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
+	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>
+Subject: [RFC PATCH 08/12] ARM: dts: dra7xx-clocks: Add missing 32khz clocks used for PHY
+Date: Wed, 26 Mar 2014 19:27:48 +0530
+Message-ID: <1395842272-15267-9-git-send-email-kishon@ti.com>
+In-Reply-To: <1395842272-15267-1-git-send-email-kishon@ti.com>
+References: <1395842272-15267-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <OFCC2858D2.BB49EE27-ON80257CA2.005AA51E-80257CA2.005AC3A0@eu.necel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 21, 2014 at 04:31:24PM +0000, Phil.Edworthy@renesas.com wrote:
-> >     OK, I have found where it does that but the recommended value
-> > seems to be "pciex" for PCI-Express case.
-> 
-> Ok, but why then do all the other PCIe hosts use "pci"?
+Added missing 32khz clock used by PCIe PHY.
+The documention for this node can be found @ ../bindings/clock/ti/gate.txt.
 
-Because that is what the PCI bus binding standard says to do, and
-new drivers have been pushed toward conforming to that document.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra7xx-clocks.dtsi |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-I'm not sure if "pciex" was ever standardized, I haven't see a spec
-that reflects that at least.
+diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+index 9e0bb09..5f13189 100644
+--- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
++++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+@@ -1165,6 +1165,14 @@
+ 		reg = <0x021c>, <0x0220>;
+ 	};
+ 
++	optfclk_pciephy_32khz: optfclk_pciephy_32khz@4a0093b0 {
++		compatible = "ti,gate-clock";
++		clocks = <&sys_32k_ck>;
++		#clock-cells = <0>;
++		reg = <0x13b0>;
++		ti,bit-shift = <8>;
++	};
++
+ 	optfclk_pciephy_div: optfclk_pciephy_div@4a00821c {
+ 		compatible = "ti,divider-clock";
+ 		clocks = <&apll_pcie_ck>;
+-- 
+1.7.9.5
 
-Commit 14e2abb732e485ee57d9d5b2cb8884652238e5c1 introduced support for
-the "pciex" word, but it looks driven by proprietary choices by IBM..
-
-In any event there isn't a single 'device_type = "pciex";' pre-exsting
-in the kernel bindings today, so please don't add one :)
-
-Regards,
-Jason
