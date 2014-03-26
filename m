@@ -1,146 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f170.google.com ([209.85.220.170]:57340 "EHLO
-	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762AbaCSEw0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 00:52:26 -0400
+Received: from devils.ext.ti.com ([198.47.26.153]:46620 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755019AbaCZN7Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 09:59:24 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
+	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>
+Subject: [RFC PATCH 07/12] arm: dra7xx: Add hwmod data for pcie1 and pcie2 subsystems
+Date: Wed, 26 Mar 2014 19:27:47 +0530
+Message-ID: <1395842272-15267-8-git-send-email-kishon@ti.com>
+In-Reply-To: <1395842272-15267-1-git-send-email-kishon@ti.com>
+References: <1395842272-15267-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <CACVXFVNbzjYa7dJpH+k-F02Cap7yBBi7TkngjVu_KthXw-WKJA@mail.gmail.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<CACVXFVOqBuCcQC6ku0abqstkgJWGe21ZztB-eTsyDwsvDvXNZw@mail.gmail.com>
-	<CAErSpo4ngU60XQCD=DbFJbqNOMkOwwhHB1oau1mmr7rJQQ2+pg@mail.gmail.com>
-	<CACVXFVMz+6DaSgT0EHeVfyBOsXfWDYnZQ0wy7pwcey5ahM6rUA@mail.gmail.com>
-	<20140318002700.GA22356@google.com>
-	<CACVXFVNbzjYa7dJpH+k-F02Cap7yBBi7TkngjVu_KthXw-WKJA@mail.gmail.com>
-Date: Wed, 19 Mar 2014 12:52:25 +0800
-Message-ID: <CACVXFVO2rR+H7X2Xv_d-U0NeikT4dR97ffQ7PuV7+i0fN=_k3w@mail.gmail.com>
-Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding disabled
-From: Ming Lei <tom.leiming@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Pekka Enberg <penberg@kernel.org>,
-	Sasha Levin <sasha.levin@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Added hwmod data for pcie1 and pcie2 subsystem present in DRA7xx SOC.
 
-Looks Sasha fixed the problem in lkvm tool[1].
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/mach-omap2/omap_hwmod_7xx_data.c |   55 +++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
-Sasha, looks we both saw the problem, but from technical
-view, I am wondering if the fix is correct, because PCI spec.
-requires that the IO/MMIO bits in COMMAND register should
-be cleared after reset, maybe there are some potential problem
-in lkvm pci emulation.
-
-
-[1],  commit 6478ce1416aacf1ce35530f79ea035f89fb21e90
-Author: Sasha Levin <sasha.levin@oracle.com>
-Date:   Wed Mar 5 23:08:16 2014 -0500
-
-    kvm tools: mark our PCI card as PIO and MMIO able
-
-
-Thanks,
---
-Ming Lei
-
-On Wed, Mar 19, 2014 at 11:32 AM, Ming Lei <tom.leiming@gmail.com> wrote:
-> On Tue, Mar 18, 2014 at 8:27 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Fri, Mar 14, 2014 at 09:48:35AM +0800, Ming Lei wrote:
->>> On Fri, Mar 14, 2014 at 12:08 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> > On Thu, Mar 13, 2014 at 2:51 AM, Ming Lei <tom.leiming@gmail.com> wrote:
->>> >> Hi Bjorn,
->>> >>
->>> >> I found this patch broke virtio-pci devices.
->>> >
->>> > Thanks a lot for testing this.
->>> >
->>> >> On Thu, Feb 27, 2014 at 3:37 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> >>> Don't rely on BAR contents when the command register says the BAR is
->>> >>> disabled.
->>> >>>
->>> >>> If we receive a PCI device from firmware (or a hot-added device that was
->>> >>> just powered up) with the MEMORY or IO enable bits in the PCI command
->>> >>> register cleared, there's no reason to believe the BARs contain valid
->>> >>> addresses.
->>> >>
->>> >> From PCI LOCAL BUS SPECIFICATION, REV. 3.0, both
->>> >> PCI_COMMAND_IO and PCI_COMMAND_MEM should be
->>> >> cleared after reset, so looks the patch sets IORESOURCE_UNSET
->>> >> too early because PCI drivers may call pci_enable_device()
->>> >> (->pci_enable_resources()) to enable the two bits of
->>> >> PCI_COMMAND explicitly.
->>> >
->>> > The point is that it's not safe to enable those two bits unless we're
->>> > certain that the BARs they control contain valid values that don't
->>> > conflict with anything else in the system.
->>> >
->>> > Maybe we should only set IORESOURCE_UNSET when we find a conflict or a
->>> > BAR that's not contained by an upstream bridge window, and we should
->>> > try to reallocate then.  I'm pretty sure we do that at least in some
->>> > cases, but it would probably simplify things if we did it more
->>> > consistently, and maybe we shouldn't set it at all here in
->>> > __pci_read_base().
->>>
->>> I think so because __pci_read_base() is called in device emulation
->>> path.
->>
->> Which path is this?  I don't know anything about virtio-pci, and I only see
->> calls to __pci_read_base() from:
->>
->>   sriov_init()
->>   pci_sriov_resource_alignment()
->>   pci_read_bases()
->>
->>> > But I'd like to understand your situation better, so can you provide
->>> > more details, please?  Complete before/after dmesg logs would go a
->>> > long way toward illustrating the problem you're seeing.
->>>
->>> Please see the two attachment log. The memory allocation failure
->>> is caused by mistaken value read from pci address after the device
->>> is failed to enable.
->>
->> Your logs are harder than necessary to compare because one has a lot more
->> debug turned on than the other.
->>
->> In the failing case, we ignore all the initial BAR values, but we do assign
->> values to all of them later:
->>
->>   pci 0000:00:00.0: can't claim BAR 0 [mem size 0x00000400]: no address assigned
->>   pci 0000:00:00.0: can't claim BAR 1 [io  size 0x0400]: no address assigned
->>   ...
->>   pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x400003ff]
->>   pci 0000:00:00.0: BAR 1: assigned [io  0x1000-0x13ff]
->>   ...
->>
->> The newly-assigned values look valid, and as far as I can tell, they should
->> work.  Do you know why they don't?  Is there an assumption somewhere that
->> we never change BAR values?
->
-> I don't know the cause, maybe it is related with the hypervisor
-> implementation.
->
->>
->> Even if we don't need to ignore BAR values in as many cases as we do, it
->> should be legal to ignore them and reassign them, so I want to understand
->> what's going on here before reverting this.
->>
->> Is there an easy way I can reproduce the problem on my own box?
->
-> It is not quite difficult, you can build a lkvm following the README in
-> below link and test -next tree on the small kvm hypervisor:
->
->      https://github.com/penberg/linux-kvm/blob/master/tools/kvm/README
->
-> Thanks,
-> --
-> Ming Lei
-
-
-
+diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+index 9397265..c789b00 100644
+--- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
++++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+@@ -1290,6 +1290,43 @@ static struct omap_hwmod dra7xx_ocp2scp3_hwmod = {
+ };
+ 
+ /*
++ * 'PCIE' class
++ *
++ */
++
++static struct omap_hwmod_class dra7xx_pcie_hwmod_class = {
++	.name	= "pcie",
++};
++
++/* pcie1 */
++static struct omap_hwmod dra7xx_pcie1_hwmod = {
++	.name		= "pcie1",
++	.class		= &dra7xx_pcie_hwmod_class,
++	.clkdm_name	= "l3init_clkdm",
++	.main_clk	= "l4_root_clk_div",
++	.prcm = {
++		.omap4 = {
++			.clkctrl_offs	= DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET,
++			.modulemode	= MODULEMODE_SWCTRL,
++		},
++	},
++};
++
++/* pcie2 */
++static struct omap_hwmod dra7xx_pcie2_hwmod = {
++	.name		= "pcie2",
++	.class		= &dra7xx_pcie_hwmod_class,
++	.clkdm_name	= "l3init_clkdm",
++	.main_clk	= "l4_root_clk_div",
++	.prcm = {
++		.omap4 = {
++			.clkctrl_offs = DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET,
++			.modulemode   = MODULEMODE_SWCTRL,
++		},
++	},
++};
++
++/*
+  * 'PCIE PHY' class
+  *
+  */
+@@ -2459,6 +2496,22 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__ocp2scp1 = {
+ 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
+ };
+ 
++/* l4_cfg -> pcie1 */
++static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1 = {
++	.master		= &dra7xx_l4_cfg_hwmod,
++	.slave		= &dra7xx_pcie1_hwmod,
++	.clk		= "l4_root_clk_div",
++	.user		= OCP_USER_MPU | OCP_USER_SDMA,
++};
++
++/* l4_cfg -> pcie2 */
++static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie2 = {
++	.master		= &dra7xx_l4_cfg_hwmod,
++	.slave		= &dra7xx_pcie2_hwmod,
++	.clk		= "l4_root_clk_div",
++	.user		= OCP_USER_MPU | OCP_USER_SDMA,
++};
++
+ /* l4_cfg -> pcie1 phy */
+ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1_phy = {
+ 	.master		= &dra7xx_l4_cfg_hwmod,
+@@ -2824,6 +2877,8 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
+ 	&dra7xx_l4_cfg__mpu,
+ 	&dra7xx_l4_cfg__ocp2scp1,
+ 	&dra7xx_l4_cfg__ocp2scp3,
++	&dra7xx_l4_cfg__pcie1,
++	&dra7xx_l4_cfg__pcie2,
+ 	&dra7xx_l4_cfg__pcie1_phy,
+ 	&dra7xx_l4_cfg__pcie2_phy,
+ 	&dra7xx_l3_main_1__qspi,
 -- 
-Ming Lei
+1.7.9.5
+
