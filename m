@@ -1,235 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:55111 "EHLO arroyo.ext.ti.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:38808 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755204AbaCZN7V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 26 Mar 2014 09:59:21 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
+	id S1755288AbaCZQf3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 26 Mar 2014 12:35:29 -0400
+Date: Wed, 26 Mar 2014 10:35:13 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
-CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
-	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>
-Subject: [RFC PATCH 01/12] phy: phy-omap-pipe3: Add support for PCIe PHY
-Date: Wed, 26 Mar 2014 19:27:41 +0530
-Message-ID: <1395842272-15267-2-git-send-email-kishon@ti.com>
-In-Reply-To: <1395842272-15267-1-git-send-email-kishon@ti.com>
-References: <1395842272-15267-1-git-send-email-kishon@ti.com>
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"patches@apm.com" <patches@apm.com>,
+	"jcm@redhat.com" <jcm@redhat.com>
+Subject: Re: [PATCH v5 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
+Message-ID: <20140326163513.GB2440@obsidianresearch.com>
+References: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
+ <1395270762-6055-3-git-send-email-tinamdar@apm.com>
+ <CAL_Jsq+XxAtUeNKFi0hH=ehb_fhFvkM0U1Zm_j1LdtQZbvSzfA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_Jsq+XxAtUeNKFi0hH=ehb_fhFvkM0U1Zm_j1LdtQZbvSzfA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe PHY uses an external pll instead of the internal pll used by SATA
-and USB3. So added support in pipe3 PHY to use external pll
+On Wed, Mar 26, 2014 at 09:28:42AM -0500, Rob Herring wrote:
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/devicetree/bindings/phy/ti-phy.txt |    8 +-
- drivers/phy/phy-ti-pipe3.c                       |   99 +++++++++++++++++-----
- 2 files changed, 84 insertions(+), 23 deletions(-)
+> Where is the right place for config space? This binding has it here
+> and others have it in ranges. 
 
-diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
-index 788fb0f..e628a23 100644
---- a/Documentation/devicetree/bindings/phy/ti-phy.txt
-+++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
-@@ -49,8 +49,8 @@ usb2phy@4a0ad080 {
- TI PIPE3 PHY
- 
- Required properties:
-- - compatible: Should be "ti,phy-usb3" or "ti,phy-pipe3-sata".
--   "ti,omap-usb3" is deprecated.
-+ - compatible: Should be "ti,phy-usb3", "ti,phy-pipe3-sata" or
-+   "ti,phy-pipe3-pcie. "ti,omap-usb3" is deprecated.
-  - reg : Address and length of the register set for the device.
-  - reg-names: The names of the register addresses corresponding to the registers
-    filled in "reg".
-@@ -62,6 +62,10 @@ Required properties:
-    * "wkupclk" - wakeup clock.
-    * "sysclk" - system clock.
-    * "refclk" - reference clock.
-+   * "dpll_ref" - external dpll ref clk
-+   * "dpll_ref_m2" - external dpll ref clk
-+   * "phy-div" - divider for apll
-+   * "div-clk" - apll clock
- 
- Optional properties:
-  - ctrl-module : phandle of the control module used by PHY driver to power on
-diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
-index 5913676..d43019d 100644
---- a/drivers/phy/phy-ti-pipe3.c
-+++ b/drivers/phy/phy-ti-pipe3.c
-@@ -80,6 +80,7 @@ struct ti_pipe3 {
- 	struct clk		*wkupclk;
- 	struct clk		*sys_clk;
- 	struct clk		*refclk;
-+	struct clk		*div_clk;
- 	struct pipe3_dpll_map	*dpll_map;
- };
- 
-@@ -215,6 +216,9 @@ static int ti_pipe3_init(struct phy *x)
- 	u32 val;
- 	int ret = 0;
- 
-+	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-pcie"))
-+		return 0;
-+
- 	/* Bring it out of IDLE if it is IDLE */
- 	val = ti_pipe3_readl(phy->pll_ctrl_base, PLL_CONFIGURATION2);
- 	if (val & PLL_IDLE) {
-@@ -238,8 +242,11 @@ static int ti_pipe3_exit(struct phy *x)
- 	u32 val;
- 	unsigned long timeout;
- 
--	/* SATA DPLL can't be powered down due to Errata i783 */
--	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-sata"))
-+	/* SATA DPLL can't be powered down due to Errata i783 and PCIe
-+	 * does not have internal DPLL
-+	 */
-+	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-sata") ||
-+	    of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-pcie"))
- 		return 0;
- 
- 	/* Put DPLL in IDLE mode */
-@@ -286,32 +293,41 @@ static int ti_pipe3_probe(struct platform_device *pdev)
- 	struct device_node *control_node;
- 	struct platform_device *control_pdev;
- 	const struct of_device_id *match;
--
--	match = of_match_device(of_match_ptr(ti_pipe3_id_table), &pdev->dev);
--	if (!match)
--		return -EINVAL;
-+	struct clk *clk;
- 
- 	phy = devm_kzalloc(&pdev->dev, sizeof(*phy), GFP_KERNEL);
- 	if (!phy) {
- 		dev_err(&pdev->dev, "unable to alloc mem for TI PIPE3 PHY\n");
- 		return -ENOMEM;
- 	}
-+	phy->dev		= &pdev->dev;
- 
--	phy->dpll_map = (struct pipe3_dpll_map *)match->data;
--	if (!phy->dpll_map) {
--		dev_err(&pdev->dev, "no DPLL data\n");
--		return -EINVAL;
--	}
-+	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
-+		match = of_match_device(of_match_ptr(ti_pipe3_id_table),
-+					&pdev->dev);
-+		if (!match)
-+			return -EINVAL;
- 
--	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pll_ctrl");
--	phy->pll_ctrl_base = devm_ioremap_resource(&pdev->dev, res);
--	if (IS_ERR(phy->pll_ctrl_base))
--		return PTR_ERR(phy->pll_ctrl_base);
-+		phy->dpll_map = (struct pipe3_dpll_map *)match->data;
-+		if (!phy->dpll_map) {
-+			dev_err(&pdev->dev, "no DPLL data\n");
-+			return -EINVAL;
-+		}
- 
--	phy->dev		= &pdev->dev;
-+		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+						   "pll_ctrl");
-+		phy->pll_ctrl_base = devm_ioremap_resource(&pdev->dev, res);
-+		if (IS_ERR(phy->pll_ctrl_base))
-+			return PTR_ERR(phy->pll_ctrl_base);
- 
--	if (!of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
-+		phy->sys_clk = devm_clk_get(phy->dev, "sysclk");
-+		if (IS_ERR(phy->sys_clk)) {
-+			dev_err(&pdev->dev, "unable to get sysclk\n");
-+			return -EINVAL;
-+		}
-+	}
- 
-+	if (!of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
- 		phy->wkupclk = devm_clk_get(phy->dev, "wkupclk");
- 		if (IS_ERR(phy->wkupclk)) {
- 			dev_err(&pdev->dev, "unable to get wkupclk\n");
-@@ -328,10 +344,35 @@ static int ti_pipe3_probe(struct platform_device *pdev)
- 		phy->refclk = ERR_PTR(-ENODEV);
- 	}
- 
--	phy->sys_clk = devm_clk_get(phy->dev, "sysclk");
--	if (IS_ERR(phy->sys_clk)) {
--		dev_err(&pdev->dev, "unable to get sysclk\n");
--		return -EINVAL;
-+	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
-+		clk = devm_clk_get(phy->dev, "dpll_ref");
-+		if (IS_ERR(clk)) {
-+			dev_err(&pdev->dev, "unable to get dpll ref clk\n");
-+			return PTR_ERR(clk);
-+		}
-+		clk_set_rate(clk, 1500000000);
-+
-+		clk = devm_clk_get(phy->dev, "dpll_ref_m2");
-+		if (IS_ERR(clk)) {
-+			dev_err(&pdev->dev, "unable to get dpll ref m2 clk\n");
-+			return PTR_ERR(clk);
-+		}
-+		clk_set_rate(clk, 100000000);
-+
-+		clk = devm_clk_get(phy->dev, "phy-div");
-+		if (IS_ERR(clk)) {
-+			dev_err(&pdev->dev, "unable to get phy-div clk\n");
-+			return PTR_ERR(clk);
-+		}
-+		clk_set_rate(clk, 100000000);
-+
-+		phy->div_clk = devm_clk_get(phy->dev, "div-clk");
-+		if (IS_ERR(phy->div_clk)) {
-+			dev_err(&pdev->dev, "unable to get div-clk\n");
-+			return PTR_ERR(phy->div_clk);
-+		}
-+	} else {
-+		phy->div_clk = ERR_PTR(-ENODEV);
- 	}
- 
- 	control_node = of_parse_phandle(node, "ctrl-module", 0);
-@@ -387,6 +428,8 @@ static int ti_pipe3_runtime_suspend(struct device *dev)
- 		clk_disable_unprepare(phy->wkupclk);
- 	if (!IS_ERR(phy->refclk))
- 		clk_disable_unprepare(phy->refclk);
-+	if (!IS_ERR(phy->div_clk))
-+		clk_disable_unprepare(phy->div_clk);
- 
- 	return 0;
- }
-@@ -412,8 +455,19 @@ static int ti_pipe3_runtime_resume(struct device *dev)
- 		}
- 	}
- 
-+	if (!IS_ERR(phy->div_clk)) {
-+		ret = clk_prepare_enable(phy->div_clk);
-+		if (ret) {
-+			dev_err(phy->dev, "Failed to enable div_clk %d\n", ret);
-+			goto err3;
-+		}
-+	}
- 	return 0;
- 
-+err3:
-+	if (!IS_ERR(phy->wkupclk))
-+		clk_disable_unprepare(phy->wkupclk);
-+
- err2:
- 	if (!IS_ERR(phy->refclk))
- 		clk_disable_unprepare(phy->refclk);
-@@ -446,6 +500,9 @@ static const struct of_device_id ti_pipe3_id_table[] = {
- 		.compatible = "ti,phy-pipe3-sata",
- 		.data = dpll_map_sata,
- 	},
-+	{
-+		.compatible = "ti,phy-pipe3-pcie",
-+	},
- 	{}
- };
- MODULE_DEVICE_TABLE(of, ti_pipe3_id_table);
--- 
-1.7.9.5
+I think all the drivers in drivers/pci/host use 'reg', this was
+discussed in the dt-bindings list and AFAIK no new drivers have used
+ranges since it was brought up.
 
+> Given that config space type is defined for ranges, I would think
+> that is the right place. But Liviu's patches do not process config
+> space entries in ranges. Perhaps we need a config space resource
+> populated in the bridge struct.
+
+When we talked about this earlier on the DT bindings list the
+consensus seemed to be that configuration MMIO ranges should only be
+used if the underlying memory was exactly ECAM, and was not to be used
+for random configuration related register blocks.
+
+The rational being that generic code, upon seeing that ranges entry,
+could just go ahead and assume ECAM mapping.
+
+Jason
