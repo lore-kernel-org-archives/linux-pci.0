@@ -1,72 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:53485 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752412AbaCJTLo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 15:11:44 -0400
-From: "Sumner, William" <bill.sumner@hp.com>
-To: Joerg Roedel <joro@8bytes.org>
-CC: "dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"indou.takao@jp.fujitsu.com" <indou.takao@jp.fujitsu.com>,
-	"bhe@redhat.com" <bhe@redhat.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ddutile@redhat.com" <ddutile@redhat.com>,
-	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Hatch, Douglas B (HPS Linux PM)" <doug.hatch@hp.com>,
-	"Li, Zhen-Hua" <zhen-hual@hp.com>
-Subject: RE: [PATCHv3 0/6] Crashdump Accepting Active IOMMU
-Date: Mon, 10 Mar 2014 19:10:17 +0000
-Message-ID: <875D89B79D1D86448A583A7302C022A066E08AFE@G4W3212.americas.hpqcorp.net>
-References: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
- <20140304150611.GE2799@8bytes.org>
-In-Reply-To: <20140304150611.GE2799@8bytes.org>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:48896 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755520AbaCZSYA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 14:24:00 -0400
+Received: by mail-oa0-f49.google.com with SMTP id h16so3045938oag.22
+        for <linux-pci@vger.kernel.org>; Wed, 26 Mar 2014 11:23:59 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAErSpo5ncPGV9_ijfzCJJP28AX=4erb_iN2sei_DJC7eCsevMg@mail.gmail.com>
+References: <CAMm_7EozAX7OTAAOzvFfqrar7xnZG+KoX=VygEKNAB6yO=4q=A@mail.gmail.com>
+	<CAErSpo45sDNPt6=Yw-qgqdojYL8+_JNOVNEnVxRLatga+bY+2A@mail.gmail.com>
+	<CAMm_7EqArczxmyG3Za+Gs5hjTJZ+rDRiDxakCUNi50dO1h9ikg@mail.gmail.com>
+	<CAErSpo5ygKWTuPKo1ki-Rrpf+DizkAT0UqrwZH3UFsNNyDvt-w@mail.gmail.com>
+	<CAMm_7EpYxnyF74Paj3qpcLqhspECVfUpRzzGAPc78UuGVc4dnQ@mail.gmail.com>
+	<CAErSpo5-rWeWeayeTpzgg+N_UYWfyT5-qdYReQm0WDy0WwHFkg@mail.gmail.com>
+	<CAMm_7EoCGgQ7aZfESY_-+WFdsZqpBrjEee94e6GyT50CLaVbdQ@mail.gmail.com>
+	<CAErSpo5ncPGV9_ijfzCJJP28AX=4erb_iN2sei_DJC7eCsevMg@mail.gmail.com>
+Date: Wed, 26 Mar 2014 14:23:59 -0400
+Message-ID: <CAMm_7Epo7D53_Cui7zN1Zv0F4HAOSdUv6M9pLJxjrFAWbB7aNw@mail.gmail.com>
+Subject: Re: Help with listing devices in physical PCI slots
+From: Cristina Olariu <colariu@elfiq.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Matt Domsch <Matt_Domsch@dell.com>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joerg,
+On Mon, Mar 24, 2014 at 7:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Matt, Jordan]
 
-On Tue 3/4/2014 9:06 AM, Joerg Roedel wrote:
->
->On Fri, Jan 10, 2014 at 03:07:26PM -0700, Bill Sumner wrote:
->> Bill Sumner (6):
->>   Crashdump-Accepting-Active-IOMMU-Flags-and-Prototype
->>   Crashdump-Accepting-Active-IOMMU-Utility-functions
->>   Crashdump-Accepting-Active-IOMMU-Domain-Interfaces
->>   Crashdump-Accepting-Active-IOMMU-Copy-Translations
->>   Crashdump-Accepting-Active-IOMMU-Debug-Print-IOMMU
->>   Crashdump-Accepting-Active-IOMMU-Call-From-Mainline
->>
->>  drivers/iommu/intel-iommu.c | 1293
->> ++++++++++++++++++++++++++++++++++++++++---
->>  1 file changed, 1225 insertions(+), 68 deletions(-)
->
->This is a pretty big change, before merging I would like to get more eyes on it. Please make sure you get more reviews on the code and the general concept. A few things I noticed while looking at it:
-Yes, as I was developing this, I realized that it is far more code than most Linux submissions.  In addition to more eyes reviewing the code, I hope to see additional members of the community trying it out -- testing it on a wide variety of system configurations.  Let me encourage additional reviewers and testers to look at this fix to crashdump.
->
->* You put a lot of code into #define CONFIG_CRASH_DUMP. Isn't the same approach necessary to for KEXEC?
-Until I saw your email, I had been focused only on the immediate problem of fixing crashdump and had not considered using this approach in the more-general context of KEXEC.  It certainly looks like it could be useful with KEXEC as well.  
+> I was really trying to ask "what is the specific information you have
+> about your network port that you want to match up with something from
+> PCI?"
 
-I would like to take-on the effort of expanding this technique into KEXEC as a separate follow-on project so that the original "fix crashdump" project is not delayed.  On a quick look, I believe that the amount of additional code would be minimal; but the expansion of the testing matrix might be quite large.
->
->* Please get rid of all the pr_debug stuff.
-Will do.
->
->* I think it makes sense to put the functions to access the IOMMU
->  configuration values of the old kernel into a new file. This is better
->  than adding over 1000 new lines to intel-iommu.c
-Sounds good.  I will move these functions into a new file.
->
->* I have seen your new single-patch for this change. A single patch with
->  more than 1200 changed lines is not something anyone is willing to
->  review. Please split the patches again in a meaningful and bisectable
->  way.
-I will return to a multiple-patch set for future submissions.
+Sorry; what I had in mind was the PCI address: domain/bus/device/function.
 
+> It sounds like what you're really after is "Consistent Network Device
+> Naming" [1].  I'm not very familiar with it, but it might be a way to
+> do what you need.  It looks like it can use SMBIOS to help figure out
+> naming information, so maybe that will work even if we don't have the
+> PCIe slot information.
 
--- Bill
+That's true. I'm aware of biosdevname; I have a similar user
+application, tailored for our platform.
+
+I get a list of all PCI network devices and for each one I look up its
+interface name in sysfs.
+>From SMBIOS I get the list of physical slots along with their
+corresponding  bus addresses.
+Then, I match the lists and identify the physical slot for every network device.
+
+I was trying to simplify the design and thought that it would be
+easier if the physical slot number would be already available in sysfs
+hierarchy.
+
+> It does seem like the way we expose PCIe slot information is
+> unnecessarily tied to the question of whether the slot supports
+> hotplug.  Maybe the slot number, e.g., the PCIe or SHPC "Physical Slot
+> Number" could be exposed in the device directory of the upstream
+> bridge, e.g., /sys/devices/pci0000:00/0000:00:1c.3/slot.
+
+Yes, this could be helpful. I was looking for a PCI address inside
+/sys/bus/pci/slots/X but this is better.
+
+Thank you,
+Cristina
+
+-- 
+CRISTINA OLARIU * Elfiq Networks * Software Developer
+T. 514.667.0611 x 821 *  E.  colariu@elfiq.com
