@@ -1,148 +1,382 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og117.obsmtp.com ([64.18.0.149]:39779 "HELO
-	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755436AbaCCXOs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 18:14:48 -0500
-Received: by mail-ve0-f174.google.com with SMTP id oz11so3450955veb.19
-        for <linux-pci@vger.kernel.org>; Mon, 03 Mar 2014 15:14:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1393867996-32299-6-git-send-email-Liviu.Dudau@arm.com>
-References: <1393867996-32299-1-git-send-email-Liviu.Dudau@arm.com>
-	<1393867996-32299-6-git-send-email-Liviu.Dudau@arm.com>
-Date: Mon, 3 Mar 2014 15:14:47 -0800
-Message-ID: <CACoXjcnP80rSaYqy2EK8SBh8Q=5E8kh_GQ84Y_0hg3WrQ=fy+A@mail.gmail.com>
-Subject: Re: [PATCH v4 5/6] pci: Use parent domain number when allocating
- child busses.
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
+Received: from relmlor3.renesas.com ([210.160.252.173]:41697 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752049AbaC0J1J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 05:27:09 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
+References: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1395912416-20087-3-git-send-email-phil.edworthy@renesas.com>
+Date: Thu, 27 Mar 2014 09:26:48 +0000
+Subject: [PATCH v6 02/10] PCI: host: rcar: Add MSI support
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Liviu,
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 
-Thanks for fixing up domain_nr. Now I have moved on further to a new
-domain_nr related warning dump :-)
+v6:
+ - Don't check MSI irq number is valid, as upper level checks this
+ - Change "Unexpected MSI" msg to debug level
+ - Reword "Unexpected MSI" comment so that it's one line
 
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-xgene-pcie 1f500000.pcie: (rc) x8 gen-3 link up
-pci_bus 0001:00: scanning bus
-pci_setup_device:1101 domain_nr = 1
-pci 0001:00:00.0: [e008:e004] type 01 class 0x060400
-pci 0001:00:00.0: reg 0x10: [mem 0x4000000000-0x7fffffffff 64bit]
-pci 0001:00:00.0: calling xgene_pcie_fixup_bridge+0x0/0x80
-pci 0001:00:00.0: Hiding X-Gene pci host bridge resources 0001:00:00.0
-pci 0001:00:00.0: supports D1 D2
-pci_bus 0001:00: fixups for bus
-pci 0001:00:00.0: scanning [bus 03-03] behind bridge, pass 0
-pci 0001:00:00.0: bridge configuration invalid ([bus 03-03]), reconfiguring
-pci 0001:00:00.0: scanning [bus 00-00] behind bridge, pass 1
-** pci_scan_bridge:855  pci_domain_nr(bus) = 1
-** pci_alloc_child_bus:681  pci_domain_nr(bus) = 1
-pci_bus 0001:01: scanning bus
-pci_setup_device:1101 domain_nr = 0
-pci 0000:01:00.0: [15b3:1003] type 00 class 0x020000
-pci 0000:01:00.0: reg 0x10: [mem 0x00100000-0x001fffff 64bit]
-pci 0000:01:00.0: reg 0x18: [mem 0x00800000-0x00ffffff 64bit pref]
-pci 0000:01:00.0: reg 0x30: [mem 0x01000000-0x010fffff pref]
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 1 at
-/home/tinamdar/work/open-source/linux/fs/sysfs/dir.c:52
-sysfs_warn_dup+0x80/0xc0()
-sysfs: cannot create duplicate filename '/bus/pci/devices/0000:01:00.0'
-Modules linked in:
-CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.14.0-rc5+ #40
-Call trace:
-[<ffffffc000088180>] dump_backtrace+0x0/0x140
-[<ffffffc0000882d0>] show_stack+0x10/0x20
-[<ffffffc0004f65ac>] dump_stack+0x74/0xc4
-[<ffffffc000096e04>] warn_slowpath_common+0x84/0xc0
-[<ffffffc000096e8c>] warn_slowpath_fmt+0x4c/0x60
-[<ffffffc0001b83dc>] sysfs_warn_dup+0x7c/0xc0
-[<ffffffc0001b8894>] sysfs_do_create_link_sd.isra.2+0xf4/0x100
-[<ffffffc0001b88bc>] sysfs_create_link+0x1c/0x40
-[<ffffffc0003250b0>] bus_add_device+0x110/0x1c0
-[<ffffffc000322f1c>] device_add+0x31c/0x520
-[<ffffffc0002c444c>] pci_device_add+0xec/0x140
-[<ffffffc0004f1758>] pci_scan_single_device+0x98/0xe0
-[<ffffffc0002c44e8>] pci_scan_slot+0x48/0x120
-[<ffffffc0002c5368>] pci_scan_child_bus+0x48/0x140
-[<ffffffc0002c522c>] pci_scan_bridge+0x4ec/0x5e0
-[<ffffffc0002c53c8>] pci_scan_child_bus+0xa8/0x140
-[<ffffffc0004f1b30>] pci_rescan_bus+0x10/0x40
-[<ffffffc0006a12ac>] xgene_pcie_probe_bridge+0x660/0x72c
-[<ffffffc000327d20>] platform_drv_probe+0x20/0x60
-[<ffffffc000325e30>] really_probe+0xf0/0x220
-[<ffffffc000326080>] __driver_attach+0xa0/0xc0
-[<ffffffc000323ed4>] bus_for_each_dev+0x54/0xa0
-[<ffffffc0003258bc>] driver_attach+0x1c/0x40
-[<ffffffc00032548c>] bus_add_driver+0x14c/0x220
-[<ffffffc00032683c>] driver_register+0x5c/0x120
-[<ffffffc000327cdc>] __platform_driver_register+0x5c/0x80
-[<ffffffc0006a0c40>] xgene_pcie_driver_init+0x14/0x20
-[<ffffffc0000814c0>] do_one_initcall+0xe0/0x160
-[<ffffffc00068c934>] kernel_init_freeable+0x134/0x1d8
-[<ffffffc0004f07ac>] kernel_init+0xc/0xe0
----[ end trace 3ee052d463aab7f3 ]---
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 1 at
-/home/tinamdar/work/open-source/linux/drivers/pci/probe.c:1380
-pci_device_add+0x128/0x140()
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+v5:
+ - Return IRQ_NONE from MSI isr when there is no pending MSI
+ - Add additional interrupt bindings
+---
+ drivers/pci/host/pcie-rcar.c | 238 ++++++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/host/pcie-rcar.h |   5 +
+ 2 files changed, 242 insertions(+), 1 deletion(-)
 
-I have made a small fix above your patch. After the fix is applied,
-dumps are gone and the enumeration finishes up smoothly for all the
-ports.
-Since the change is small, just pasting it here. Please review and
-apply if it's clean.
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index c22c896..e3ce3d1 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -15,8 +15,11 @@
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/irq.h>
++#include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_pci.h>
+@@ -28,6 +31,8 @@
+ 
+ #define DRV_NAME "rcar-pcie"
+ 
++#define INT_PCI_MSI_NR	32
++
+ #define RCONF(x)	(PCICONF(0)+(x))
+ #define RPMCAP(x)	(PMCAP(0)+(x))
+ #define REXPCAP(x)	(EXPCAP(0)+(x))
+@@ -40,6 +45,21 @@
+ #define PCI_MAX_RESOURCES 4
+ #define MAX_NR_INBOUND_MAPS 6
+ 
++struct rcar_msi {
++	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
++	struct irq_domain *domain;
++	struct msi_chip chip;
++	unsigned long pages;
++	struct mutex lock;
++	int irq1;
++	int irq2;
++};
++
++static inline struct rcar_msi *to_rcar_msi(struct msi_chip *chip)
++{
++	return container_of(chip, struct rcar_msi, chip);
++}
++
+ /* Structure representing the PCIe interface */
+ struct rcar_pcie {
+ 	struct device		*dev;
+@@ -48,6 +68,7 @@ struct rcar_pcie {
+ 	u8			root_bus_nr;
+ 	struct clk		*clk;
+ 	struct clk		*bus_clk;
++	struct			rcar_msi msi;
+ };
+ 
+ static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
+@@ -292,6 +313,15 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	return 1;
+ }
+ 
++static void rcar_pcie_add_bus(struct pci_bus *bus)
++{
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
++
++		bus->msi = &pcie->msi.chip;
++	}
++}
++
+ static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
+ {
+ 	struct platform_device *pdev = to_platform_device(pcie->dev);
+@@ -301,6 +331,7 @@ static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
+ 		.setup          = rcar_pcie_setup,
+ 		.map_irq        = of_irq_parse_and_map_pci,
+ 		.ops            = &rcar_pcie_ops,
++		.add_bus        = rcar_pcie_add_bus,
+ 	};
+ 
+ 	pci_common_init_dev(&pdev->dev, &hw);
+@@ -408,6 +439,10 @@ static int __init rcar_pcie_hw_init(struct rcar_pcie *pcie)
+ 	/* Enable MAC data scrambling. */
+ 	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
+ 
++	/* Enable MSI */
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
++
+ 	/* Finish initialization - establish a PCI Express link */
+ 	pci_write_reg(pcie, CFINIT, PCIETCTLR);
+ 
+@@ -461,11 +496,186 @@ static int __init rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
+ 	return -ETIMEDOUT;
+ }
+ 
++static int rcar_msi_alloc(struct rcar_msi *chip)
++{
++	int msi;
++
++	mutex_lock(&chip->lock);
++
++	msi = find_first_zero_bit(chip->used, INT_PCI_MSI_NR);
++	if (msi < INT_PCI_MSI_NR)
++		set_bit(msi, chip->used);
++	else
++		msi = -ENOSPC;
++
++	mutex_unlock(&chip->lock);
++
++	return msi;
++}
++
++static void rcar_msi_free(struct rcar_msi *chip, unsigned long irq)
++{
++	struct device *dev = chip->chip.dev;
++
++	mutex_lock(&chip->lock);
++	clear_bit(irq, chip->used);
++	mutex_unlock(&chip->lock);
++}
++
++static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
++{
++	struct rcar_pcie *pcie = data;
++	struct rcar_msi *msi = &pcie->msi;
++	unsigned long reg;
++
++	reg = pci_read_reg(pcie, PCIEMSIFR);
++
++	/* MSI & INTx share an interrupt - we only handle MSI here */
++	if (!reg)
++		return IRQ_NONE;
++
++	while (reg) {
++		unsigned int index = find_first_bit(&reg, 32);
++		unsigned int irq;
++
++		/* clear the interrupt */
++		pci_write_reg(pcie, 1 << index, PCIEMSIFR);
++
++		irq = irq_find_mapping(msi->domain, index);
++		if (irq) {
++			if (test_bit(index, msi->used))
++				generic_handle_irq(irq);
++			else
++				dev_info(pcie->dev, "unhandled MSI\n");
++		} else {
++			/* Unknown MSI, just clear it */
++			dev_dbg(pcie->dev, "unexpected MSI\n");
++		}
++
++		/* see if there's any more pending in this vector */
++		reg = pci_read_reg(pcie, PCIEMSIFR);
++	}
++
++	return IRQ_HANDLED;
++}
++
++static int rcar_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
++			       struct msi_desc *desc)
++{
++	struct rcar_msi *msi = to_rcar_msi(chip);
++	struct rcar_pcie *pcie = container_of(chip, struct rcar_pcie, msi.chip);
++	struct msi_msg msg;
++	unsigned int irq;
++	int hwirq;
++
++	hwirq = rcar_msi_alloc(msi);
++	if (hwirq < 0)
++		return hwirq;
++
++	irq = irq_create_mapping(msi->domain, hwirq);
++	if (!irq) {
++		rcar_msi_free(msi, hwirq);
++		return -EINVAL;
++	}
++
++	irq_set_msi_desc(irq, desc);
++
++	msg.address_lo = pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
++	msg.address_hi = pci_read_reg(pcie, PCIEMSIAUR);
++	msg.data = hwirq;
++
++	write_msi_msg(irq, &msg);
++
++	return 0;
++}
++
++static void rcar_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
++{
++	struct rcar_msi *msi = to_rcar_msi(chip);
++	struct irq_data *d = irq_get_irq_data(irq);
++
++	rcar_msi_free(msi, d->hwirq);
++}
++
++static struct irq_chip rcar_msi_irq_chip = {
++	.name = "R-Car PCIe MSI",
++	.irq_enable = unmask_msi_irq,
++	.irq_disable = mask_msi_irq,
++	.irq_mask = mask_msi_irq,
++	.irq_unmask = unmask_msi_irq,
++};
++
++static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
++			 irq_hw_number_t hwirq)
++{
++	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
++	irq_set_chip_data(irq, domain->host_data);
++	set_irq_flags(irq, IRQF_VALID);
++
++	return 0;
++}
++
++static const struct irq_domain_ops msi_domain_ops = {
++	.map = rcar_msi_map,
++};
++
++static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
++{
++	struct platform_device *pdev = to_platform_device(pcie->dev);
++	struct rcar_msi *msi = &pcie->msi;
++	unsigned long base;
++	int err;
++
++	mutex_init(&msi->lock);
++
++	msi->chip.dev = pcie->dev;
++	msi->chip.setup_irq = rcar_msi_setup_irq;
++	msi->chip.teardown_irq = rcar_msi_teardown_irq;
++
++	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
++					    &msi_domain_ops, &msi->chip);
++	if (!msi->domain) {
++		dev_err(&pdev->dev, "failed to create IRQ domain\n");
++		return -ENOMEM;
++	}
++
++	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
++	err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
++			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
++	if (err < 0) {
++		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
++		goto err;
++	}
++
++	err = devm_request_irq(&pdev->dev, msi->irq2, rcar_pcie_msi_irq,
++			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
++	if (err < 0) {
++		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
++		goto err;
++	}
++
++	/* setup MSI data target */
++	msi->pages = __get_free_pages(GFP_KERNEL, 0);
++	base = virt_to_phys((void *)msi->pages);
++
++	pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
++	pci_write_reg(pcie, 0, PCIEMSIAUR);
++
++	/* enable all MSI interrupts */
++	pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
++
++	return 0;
++
++err:
++	irq_domain_remove(msi->domain);
++	return err;
++}
++
+ static int __init rcar_pcie_get_resources(struct platform_device *pdev,
+ 	struct rcar_pcie *pcie)
+ {
+ 	struct resource res;
+-	int err;
++	int err, i;
+ 
+ 	err = of_address_to_resource(pdev->dev.of_node, 0, &res);
+ 	if (err)
+@@ -490,6 +700,22 @@ static int __init rcar_pcie_get_resources(struct platform_device *pdev,
+ 	if (err)
+ 		goto err_map_reg;
+ 
++	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
++	if (i < 0) {
++		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
++		err = -ENOENT;
++		goto err_map_reg;
++	}
++	pcie->msi.irq1 = i;
++
++	i = irq_of_parse_and_map(pdev->dev.of_node, 1);
++	if (i < 0) {
++		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
++		err = -ENOENT;
++		goto err_map_reg;
++	}
++	pcie->msi.irq2 = i;
++
+ 	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
+ 	if (IS_ERR(pcie->base)) {
+ 		err = PTR_ERR(pcie->base);
+@@ -657,6 +883,16 @@ static int __init rcar_pcie_probe(struct platform_device *pdev)
+ 	 if (err)
+ 		return err;
+ 
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		err = rcar_pcie_enable_msi(pcie);
++		if (err < 0) {
++			dev_err(&pdev->dev,
++				"failed to enable MSI support: %d\n",
++				err);
++			return err;
++		}
++	}
++
+ 	of_id = of_match_device(rcar_pcie_of_match, pcie->dev);
+ 	if (!of_id || !of_id->data)
+ 		return -EINVAL;
+diff --git a/drivers/pci/host/pcie-rcar.h b/drivers/pci/host/pcie-rcar.h
+index 3dc026b..4f0c678 100644
+--- a/drivers/pci/host/pcie-rcar.h
++++ b/drivers/pci/host/pcie-rcar.h
+@@ -13,6 +13,7 @@
+ #define PCIEMSR			0x000028
+ #define PCIEINTXR		0x000400
+ #define PCIEPHYSR		0x0007f0
++#define PCIEMSITXR		0x000840
+ 
+ /* Transfer control */
+ #define PCIETCTLR		0x02000
+@@ -28,6 +29,10 @@
+ #define PCIEPMSR		0x02034
+ #define PCIEPMSCIER		0x02038
+ #define PCIEMSIFR		0x02044
++#define PCIEMSIALR		0x02048
++#define  MSIFE			1
++#define PCIEMSIAUR		0x0204c
++#define PCIEMSIIER		0x02050
+ 
+ /* root port address */
+ #define PCIEPRAR(x)		(0x02080 + ((x) * 0x4))
+-- 
+1.9.0
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index a12cda5..aac8366 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -693,7 +693,7 @@ static struct pci_bus *pci_alloc_child_bus(struct
-pci_bus *parent,
-        }
-
-        child->self = bridge;
--       child->bridge = get_device(&bridge->dev);
-+       child->bridge = get_device(parent->bridge);
-        child->dev.parent = child->bridge;
-        pci_set_bus_of_node(child);
-        pci_set_bus_speed(child);
-
-Thanks,
-Tanmay
-
-On Mon, Mar 3, 2014 at 9:33 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> pci_alloc_child_bus() uses the newly allocated child bus to figure
-> out the domain number that is going to use for setting the device
-> name. A better option is to use the parent bus domain number.
->
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 26237a0..a12cda5 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -677,7 +677,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->          * now as the parent is not properly set up yet.
->          */
->         child->dev.class = &pcibus_class;
-> -       dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-> +       dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(parent), busnr);
->
->         /*
->          * Set up the primary, secondary and subordinate
-> --
-> 1.9.0
->
