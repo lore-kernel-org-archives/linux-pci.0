@@ -1,45 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Date: Fri, 14 Mar 2014 18:38:08 +0100
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor2.renesas.com ([210.160.252.172]:51005 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751914AbaC0Lke (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 07:40:34 -0400
+In-Reply-To: <53340690.20006@cogentembedded.com>
+References: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com> <1395912416-20087-6-git-send-email-phil.edworthy@renesas.com> <53340690.20006@cogentembedded.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com> <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com> <20140314171457.GK18126@arm.com>
-In-Reply-To: <20140314171457.GK18126@arm.com>
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201403141838.08900.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Phil.Edworthy@renesas.com
+Message-ID: <OF9F94FEE3.D67AC138-ON80257CA8.00401203-80257CA8.00401F68@eu.necel.com>
+Date: Thu, 27 Mar 2014 11:40:24 +0000
+Subject: Re: [PATCH v6 05/10] dt-bindings: pci: rcar pcie device tree bindings
+Content-Type: text/plain; charset="US-ASCII"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 14 March 2014, Catalin Marinas wrote:
-> On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
+Hi Sergei,
+
+On: 27/03/2014 11:08, Sergei wrote:
+> Subject: Re: [PATCH v6 05/10] dt-bindings: pci: rcar pcie device tree 
+bindings
+> 
+> Hello.
+> 
+> On 27-03-2014 13:26, Phil Edworthy wrote:
+> 
+> > This patch adds the bindings for the R-Car PCIe driver. The driver
+> > resides under drivers/pci/host/pcie-rcar.c
+> 
+> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> 
+> > v6:
+> >   - Correct DT bindings description for reg and clocks
+> 
+> > v5:
+> >   - Add PCIe bus clock reference
+> >   - Add additional interrupt bindings
+> >   - Use dma-ranges property to specify inbound memory regions
+> 
+>     Put these under --- tear line, please.
+> 
+> > ---
+> >   Documentation/devicetree/bindings/pci/rcar-pci.txt | 45 
+++++++++++++++++++++++
+> >   1 file changed, 45 insertions(+)
+> >   create mode 100644 
+Documentation/devicetree/bindings/pci/rcar-pci.txt
+> 
+> > diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/
+> Documentation/devicetree/bindings/pci/rcar-pci.txt
+> > new file mode 100644
+> > index 0000000..a97ebe6
 > > --- /dev/null
-> > +++ b/arch/arm64/kernel/pci.c
-> [...]
-> > +int pci_register_io_range(phys_addr_t address, resource_size_t size)
-> [...]
-> > +unsigned long pci_address_to_pio(phys_addr_t address)
-> [...]
-> > +void pcibios_fixup_bus(struct pci_bus *bus)
-> [ actually most of this file ]
+> > +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> > @@ -0,0 +1,45 @@
+> > +* Renesas RCar PCIe interface
+> > +
+> > +Required properties:
+> > +- compatible: should contain one of the following
+> > +   "renesas,pcie-r8a7779", "renesas,pcie-r8a7790", 
+"renesas,pcie-r8a7791"
+> > +- reg: base address and length of the pcie controller registers.
+> > +- #address-cells: set to <3>
+> > +- #size-cells: set to <2>
+> > +- device_type: set to "pci"
+> > +- ranges: ranges for the PCI memory and I/O regions.
+> > +- dma-ranges: ranges for the inbound memory regions.
+> > +- interrupts: two interrupt sources for MSI interrupts, followed by 
+interrupt
+> > +   source for hardware related interrupts (e.g. link speed change).
+> > +- #interrupt-cells: set to <1>
+> > +- interrupt-map-mask and interrupt-map: standard PCI properties
+> > +   to define the mapping of the PCIe interface to interrupt
+> > +   numbers.
+> > +- clocks: from common clock binding: phandles to PCIe controller and 
+PCIe bus
+> > +   clocks.
 > 
-> Maybe it was raised before already but can we have __weak generic
-> definitions of these functions? They don't seem to be arm64 specific in
-> any way.
-> 
+>     I told it's not only phandles (e.g. &mstp3_clks) but the clock 
+specifiers.
+Ah, yes you did.
 
-I would definitely prefer that.
-
-	Arnd
+Thanks
+Phil
