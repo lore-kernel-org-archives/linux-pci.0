@@ -1,79 +1,25 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:61342 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469AbaC0KyN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 06:54:13 -0400
+Received: by mail-oa0-f53.google.com with SMTP id j17so4015433oag.26
+        for <linux-pci@vger.kernel.org>; Thu, 27 Mar 2014 03:54:12 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAMxnaaXd9-VbxSYa9q1YVT+fwfDFYKGG2Hq-1jkc-awLX-HwtQ@mail.gmail.com>
-References: <CAMxnaaXd9-VbxSYa9q1YVT+fwfDFYKGG2Hq-1jkc-awLX-HwtQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 7 Mar 2014 09:45:53 -0700
-Message-ID: <CAErSpo5fkaFNq_qTZ+gTDMV554f4diOXQ7_4bsHqj06iAGTpHg@mail.gmail.com>
-Subject: Re: [Bug] PCI: Enable INTx if BIOS left them disabled - triggers
- during rescan
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Thu, 27 Mar 2014 16:24:12 +0530
+Message-ID: <CAHH3p5+aJfJ_vdkpVbOvi8OgDsv-UgbRg+keE-YSUwrF8c93tA@mail.gmail.com>
+Subject: Test MSI without device driver
+From: shiv prakash Agarwal <chhotu.shiv@gmail.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai, Rajat]
+Hi All,
 
-On Fri, Mar 7, 2014 at 7:33 AM, Andreas Noever <andreas.noever@gmail.com> wrote:
-> Hi,
->
-> After upgrading to the latest RC I noticed that suprise removal
-> stopped working. Linux did not notice that the devices where gone.
-> Bisection points to
->
-> 1f42db786b14a31bf807fc41ee5583a00c08fcb1 PCI: Enable INTx if BIOS left
-> them disabled
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=1f42db786b14a31bf807fc41ee5583a00c08fcb1
->
-> It seems that the above patch is triggered on the bridge itself (!)
-> when a new device is added below it. At this point the hotplug driver
-> for the bridge has already enabled MSI. Reenabling INTX kills MSI and
-> prevents later suprise removal notifications.
->
-> The following stacktrace is from a "echo 1 > rescan" on the bridge:
-> do_pci_enable_device+0x59/0x140
-> pci_reenable_device+0x1f/0x30
-> pci_assign_unassigned_bridge_resources+0x123/0x160
-> pci_rescan_bus_bridge_resize+0x28/0x40
-> dev_bus_rescan_store+0x85/0xa0
-> dev_attr_store+0x18/0x30
-> sysfs_kf_write+0x3d/0x50
-> kernfs_fop_write+0xd2/0x140
-> vfs_write+0xba/0x1e0
-> SyS_write+0x49/0xa0
-> system_call_fastpath+0x1a/0x1f
->
-> Similarly for a hotplug event:
-> do_pci_enable_device+0x59/0x140
-> pci_reenable_device+0x1f/0x30
-> pci_assign_unassigned_bridge_resources+0x123/0x160
-> pciehp_configure_device+0x90/0x160
-> pciehp_enable_slot+0x163/0x280
-> pciehp_power_thread+0xb8/0xe0
-> process_one_work+0x167/0x420
-> worker_thread+0x121/0x3a0
->
-> In both cases DisINTx is turned off and the hotplug driver stops
-> reacting to events.
-
-Thanks a lot for noticing and bisecting this!
-
-I opened a bugzilla report at https://bugzilla.kernel.org/show_bug.cgi?id=71691
-
-It seems like clearing DisINTx has some effect on MSI.  I don't see
-anything in the spec that would suggest this (I'm looking at the PCIe
-r3.0 spec, sec 7.5.1.1).
-
-Can somebody point out a connection between DisINTx and MSI?  If not,
-maybe we'll need some sort of quirk to deal with this.
-
-Andrea, can you attach a complete dmesg log and "lspci -vv" output to
-the bugzilla?
-
-Thanks again!
-
-Bjorn
+Could we test MSI functionality of Root Complex without having Endpoint driver?
+If not, could we use some test code just to simulate endpoint driver
+for MSI functionality?
