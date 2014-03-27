@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:41697 "EHLO
+Received: from relmlor3.renesas.com ([210.160.252.173]:36473 "EHLO
 	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752049AbaC0J1J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 05:27:09 -0400
+	by vger.kernel.org with ESMTP id S1754104AbaC0J1K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 05:27:10 -0400
 From: Phil Edworthy <phil.edworthy@renesas.com>
 To: linux-pci@vger.kernel.org
 Cc: linux-sh@vger.kernel.org,
@@ -15,368 +15,56 @@ Cc: linux-sh@vger.kernel.org,
 	Phil Edworthy <phil.edworthy@renesas.com>
 In-Reply-To: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
 References: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1395912416-20087-3-git-send-email-phil.edworthy@renesas.com>
-Date: Thu, 27 Mar 2014 09:26:48 +0000
-Subject: [PATCH v6 02/10] PCI: host: rcar: Add MSI support
+Message-ID: <1395912416-20087-5-git-send-email-phil.edworthy@renesas.com>
+Date: Thu, 27 Mar 2014 09:26:50 +0000
+Subject: [PATCH v6 04/10] ARM: shmobile: r8a7791: Add PCIe clock device tree nodes
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch adds the device tree clock nodes for PCIe
+
 Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-
-v6:
- - Don't check MSI irq number is valid, as upper level checks this
- - Change "Unexpected MSI" msg to debug level
- - Reword "Unexpected MSI" comment so that it's one line
-
-v5:
- - Return IRQ_NONE from MSI isr when there is no pending MSI
- - Add additional interrupt bindings
 ---
- drivers/pci/host/pcie-rcar.c | 238 ++++++++++++++++++++++++++++++++++++++++++-
- drivers/pci/host/pcie-rcar.h |   5 +
- 2 files changed, 242 insertions(+), 1 deletion(-)
+ arch/arm/boot/dts/r8a7791.dtsi            | 7 +++++--
+ include/dt-bindings/clock/r8a7791-clock.h | 1 +
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index c22c896..e3ce3d1 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -15,8 +15,11 @@
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
- #include <linux/of_pci.h>
-@@ -28,6 +31,8 @@
- 
- #define DRV_NAME "rcar-pcie"
- 
-+#define INT_PCI_MSI_NR	32
-+
- #define RCONF(x)	(PCICONF(0)+(x))
- #define RPMCAP(x)	(PMCAP(0)+(x))
- #define REXPCAP(x)	(EXPCAP(0)+(x))
-@@ -40,6 +45,21 @@
- #define PCI_MAX_RESOURCES 4
- #define MAX_NR_INBOUND_MAPS 6
- 
-+struct rcar_msi {
-+	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-+	struct irq_domain *domain;
-+	struct msi_chip chip;
-+	unsigned long pages;
-+	struct mutex lock;
-+	int irq1;
-+	int irq2;
-+};
-+
-+static inline struct rcar_msi *to_rcar_msi(struct msi_chip *chip)
-+{
-+	return container_of(chip, struct rcar_msi, chip);
-+}
-+
- /* Structure representing the PCIe interface */
- struct rcar_pcie {
- 	struct device		*dev;
-@@ -48,6 +68,7 @@ struct rcar_pcie {
- 	u8			root_bus_nr;
- 	struct clk		*clk;
- 	struct clk		*bus_clk;
-+	struct			rcar_msi msi;
- };
- 
- static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
-@@ -292,6 +313,15 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
- 
-+static void rcar_pcie_add_bus(struct pci_bus *bus)
-+{
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
-+
-+		bus->msi = &pcie->msi.chip;
-+	}
-+}
-+
- static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
- {
- 	struct platform_device *pdev = to_platform_device(pcie->dev);
-@@ -301,6 +331,7 @@ static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
- 		.setup          = rcar_pcie_setup,
- 		.map_irq        = of_irq_parse_and_map_pci,
- 		.ops            = &rcar_pcie_ops,
-+		.add_bus        = rcar_pcie_add_bus,
- 	};
- 
- 	pci_common_init_dev(&pdev->dev, &hw);
-@@ -408,6 +439,10 @@ static int __init rcar_pcie_hw_init(struct rcar_pcie *pcie)
- 	/* Enable MAC data scrambling. */
- 	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
- 
-+	/* Enable MSI */
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
-+
- 	/* Finish initialization - establish a PCI Express link */
- 	pci_write_reg(pcie, CFINIT, PCIETCTLR);
- 
-@@ -461,11 +496,186 @@ static int __init rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
- 	return -ETIMEDOUT;
- }
- 
-+static int rcar_msi_alloc(struct rcar_msi *chip)
-+{
-+	int msi;
-+
-+	mutex_lock(&chip->lock);
-+
-+	msi = find_first_zero_bit(chip->used, INT_PCI_MSI_NR);
-+	if (msi < INT_PCI_MSI_NR)
-+		set_bit(msi, chip->used);
-+	else
-+		msi = -ENOSPC;
-+
-+	mutex_unlock(&chip->lock);
-+
-+	return msi;
-+}
-+
-+static void rcar_msi_free(struct rcar_msi *chip, unsigned long irq)
-+{
-+	struct device *dev = chip->chip.dev;
-+
-+	mutex_lock(&chip->lock);
-+	clear_bit(irq, chip->used);
-+	mutex_unlock(&chip->lock);
-+}
-+
-+static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
-+{
-+	struct rcar_pcie *pcie = data;
-+	struct rcar_msi *msi = &pcie->msi;
-+	unsigned long reg;
-+
-+	reg = pci_read_reg(pcie, PCIEMSIFR);
-+
-+	/* MSI & INTx share an interrupt - we only handle MSI here */
-+	if (!reg)
-+		return IRQ_NONE;
-+
-+	while (reg) {
-+		unsigned int index = find_first_bit(&reg, 32);
-+		unsigned int irq;
-+
-+		/* clear the interrupt */
-+		pci_write_reg(pcie, 1 << index, PCIEMSIFR);
-+
-+		irq = irq_find_mapping(msi->domain, index);
-+		if (irq) {
-+			if (test_bit(index, msi->used))
-+				generic_handle_irq(irq);
-+			else
-+				dev_info(pcie->dev, "unhandled MSI\n");
-+		} else {
-+			/* Unknown MSI, just clear it */
-+			dev_dbg(pcie->dev, "unexpected MSI\n");
-+		}
-+
-+		/* see if there's any more pending in this vector */
-+		reg = pci_read_reg(pcie, PCIEMSIFR);
-+	}
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int rcar_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
-+			       struct msi_desc *desc)
-+{
-+	struct rcar_msi *msi = to_rcar_msi(chip);
-+	struct rcar_pcie *pcie = container_of(chip, struct rcar_pcie, msi.chip);
-+	struct msi_msg msg;
-+	unsigned int irq;
-+	int hwirq;
-+
-+	hwirq = rcar_msi_alloc(msi);
-+	if (hwirq < 0)
-+		return hwirq;
-+
-+	irq = irq_create_mapping(msi->domain, hwirq);
-+	if (!irq) {
-+		rcar_msi_free(msi, hwirq);
-+		return -EINVAL;
-+	}
-+
-+	irq_set_msi_desc(irq, desc);
-+
-+	msg.address_lo = pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
-+	msg.address_hi = pci_read_reg(pcie, PCIEMSIAUR);
-+	msg.data = hwirq;
-+
-+	write_msi_msg(irq, &msg);
-+
-+	return 0;
-+}
-+
-+static void rcar_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
-+{
-+	struct rcar_msi *msi = to_rcar_msi(chip);
-+	struct irq_data *d = irq_get_irq_data(irq);
-+
-+	rcar_msi_free(msi, d->hwirq);
-+}
-+
-+static struct irq_chip rcar_msi_irq_chip = {
-+	.name = "R-Car PCIe MSI",
-+	.irq_enable = unmask_msi_irq,
-+	.irq_disable = mask_msi_irq,
-+	.irq_mask = mask_msi_irq,
-+	.irq_unmask = unmask_msi_irq,
-+};
-+
-+static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
-+			 irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+	set_irq_flags(irq, IRQF_VALID);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops msi_domain_ops = {
-+	.map = rcar_msi_map,
-+};
-+
-+static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
-+{
-+	struct platform_device *pdev = to_platform_device(pcie->dev);
-+	struct rcar_msi *msi = &pcie->msi;
-+	unsigned long base;
-+	int err;
-+
-+	mutex_init(&msi->lock);
-+
-+	msi->chip.dev = pcie->dev;
-+	msi->chip.setup_irq = rcar_msi_setup_irq;
-+	msi->chip.teardown_irq = rcar_msi_teardown_irq;
-+
-+	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
-+					    &msi_domain_ops, &msi->chip);
-+	if (!msi->domain) {
-+		dev_err(&pdev->dev, "failed to create IRQ domain\n");
-+		return -ENOMEM;
-+	}
-+
-+	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
-+	err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
-+			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
-+		goto err;
-+	}
-+
-+	err = devm_request_irq(&pdev->dev, msi->irq2, rcar_pcie_msi_irq,
-+			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
-+		goto err;
-+	}
-+
-+	/* setup MSI data target */
-+	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-+	base = virt_to_phys((void *)msi->pages);
-+
-+	pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
-+	pci_write_reg(pcie, 0, PCIEMSIAUR);
-+
-+	/* enable all MSI interrupts */
-+	pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
-+
-+	return 0;
-+
-+err:
-+	irq_domain_remove(msi->domain);
-+	return err;
-+}
-+
- static int __init rcar_pcie_get_resources(struct platform_device *pdev,
- 	struct rcar_pcie *pcie)
- {
- 	struct resource res;
--	int err;
-+	int err, i;
- 
- 	err = of_address_to_resource(pdev->dev.of_node, 0, &res);
- 	if (err)
-@@ -490,6 +700,22 @@ static int __init rcar_pcie_get_resources(struct platform_device *pdev,
- 	if (err)
- 		goto err_map_reg;
- 
-+	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
-+	if (i < 0) {
-+		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
-+		err = -ENOENT;
-+		goto err_map_reg;
-+	}
-+	pcie->msi.irq1 = i;
-+
-+	i = irq_of_parse_and_map(pdev->dev.of_node, 1);
-+	if (i < 0) {
-+		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
-+		err = -ENOENT;
-+		goto err_map_reg;
-+	}
-+	pcie->msi.irq2 = i;
-+
- 	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
- 	if (IS_ERR(pcie->base)) {
- 		err = PTR_ERR(pcie->base);
-@@ -657,6 +883,16 @@ static int __init rcar_pcie_probe(struct platform_device *pdev)
- 	 if (err)
- 		return err;
- 
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		err = rcar_pcie_enable_msi(pcie);
-+		if (err < 0) {
-+			dev_err(&pdev->dev,
-+				"failed to enable MSI support: %d\n",
-+				err);
-+			return err;
-+		}
-+	}
-+
- 	of_id = of_match_device(rcar_pcie_of_match, pcie->dev);
- 	if (!of_id || !of_id->data)
- 		return -EINVAL;
-diff --git a/drivers/pci/host/pcie-rcar.h b/drivers/pci/host/pcie-rcar.h
-index 3dc026b..4f0c678 100644
---- a/drivers/pci/host/pcie-rcar.h
-+++ b/drivers/pci/host/pcie-rcar.h
-@@ -13,6 +13,7 @@
- #define PCIEMSR			0x000028
- #define PCIEINTXR		0x000400
- #define PCIEPHYSR		0x0007f0
-+#define PCIEMSITXR		0x000840
- 
- /* Transfer control */
- #define PCIETCTLR		0x02000
-@@ -28,6 +29,10 @@
- #define PCIEPMSR		0x02034
- #define PCIEPMSCIER		0x02038
- #define PCIEMSIFR		0x02044
-+#define PCIEMSIALR		0x02048
-+#define  MSIFE			1
-+#define PCIEMSIAUR		0x0204c
-+#define PCIEMSIIER		0x02050
- 
- /* root port address */
- #define PCIEPRAR(x)		(0x02080 + ((x) * 0x4))
+diff --git a/arch/arm/boot/dts/r8a7791.dtsi b/arch/arm/boot/dts/r8a7791.dtsi
+index 71bac2c..ccfba57 100644
+--- a/arch/arm/boot/dts/r8a7791.dtsi
++++ b/arch/arm/boot/dts/r8a7791.dtsi
+@@ -717,14 +717,17 @@
+ 			compatible = "renesas,r8a7791-mstp-clocks", "renesas,cpg-mstp-clocks";
+ 			reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
+ 			clocks = <&cp_clk>, <&sd2_clk>, <&sd1_clk>,
+-				<&cpg_clocks R8A7791_CLK_SD0>, <&mmc0_clk>, <&rclk_clk>;
++				<&cpg_clocks R8A7791_CLK_SD0>, <&mmc0_clk>, <&rclk_clk>,
++				<&mp_clk>;
+ 			#clock-cells = <1>;
+ 			renesas,clock-indices = <
+ 				R8A7791_CLK_TPU0 R8A7791_CLK_SDHI2 R8A7791_CLK_SDHI1
+ 				R8A7791_CLK_SDHI0 R8A7791_CLK_MMCIF0 R8A7791_CLK_CMT1
++				R8A7791_CLK_PCIE
+ 			>;
+ 			clock-output-names =
+-				"tpu0", "sdhi2", "sdhi1", "sdhi0", "mmcif0", "cmt1";
++				"tpu0", "sdhi2", "sdhi1", "sdhi0", "mmcif0", "cmt1",
++				"pcie";
+ 		};
+ 		mstp5_clks: mstp5_clks@e6150144 {
+ 			compatible = "renesas,r8a7791-mstp-clocks", "renesas,cpg-mstp-clocks";
+diff --git a/include/dt-bindings/clock/r8a7791-clock.h b/include/dt-bindings/clock/r8a7791-clock.h
+index 30f82f2..d3e2cf5 100644
+--- a/include/dt-bindings/clock/r8a7791-clock.h
++++ b/include/dt-bindings/clock/r8a7791-clock.h
+@@ -51,6 +51,7 @@
+ #define R8A7791_CLK_SDHI1		12
+ #define R8A7791_CLK_SDHI0		14
+ #define R8A7791_CLK_MMCIF0		15
++#define R8A7791_CLK_PCIE		19
+ #define R8A7791_CLK_SSUSB		28
+ #define R8A7791_CLK_CMT1		29
+ #define R8A7791_CLK_USBDMAC0		30
 -- 
 1.9.0
 
