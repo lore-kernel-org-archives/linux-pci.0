@@ -1,74 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:62800 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752737AbaCSVQi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 17:16:38 -0400
-Received: by mail-ig0-f171.google.com with SMTP id hl1so12926259igb.4
-        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 14:16:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140319185423.GA5514@google.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140319185423.GA5514@google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Mar 2014 15:16:17 -0600
-Message-ID: <CAErSpo42K6W8b+7A7dyxUp-rNQttMQY7jcbpgyGv9sctyAqJCA@mail.gmail.com>
-Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding disabled
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ming Lei <tom.leiming@gmail.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Pekka Enberg <penberg@kernel.org>,
-	Sasha Levin <sasha.levin@oracle.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from relmlor3.renesas.com ([210.160.252.173]:26033 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751398AbaC0J1I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 05:27:08 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Message-ID: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
+Date: Thu, 27 Mar 2014 09:26:46 +0000
+Subject: [PATCH v6 00/10] R-Car Gen2 PCIe host driver
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 19, 2014 at 12:54 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Ming, Rusty, Pekka, Sasha]
-> ...
-> I plan to replace this patch with the following, which only sets
-> IORESOURCE_UNSET when we already have been clearing the bus region start
-> address.  (This probably should have been a separate patch to begin with,
-> mea culpa.)
->
-> This is intended for the v3.15 merge window, so I made the minimal change
-> to reduce risk.
+This is version 6 of a PCIe Host driver for the R-Car Gen2 devices,
+i.e. R-Car H2 (r8a7790) and R-Car M2 (r8a7791).
 
-I put this patch in my pci/resource branch and re-merged it into my
-"next" branch.  This rebased both pci/resource and next, which is
-unfortunate, but I think it's the cleanest and least risky way at this
-point.
+v6:
+ - Correct DT bindings description for reg and clocks
+ - Split device and board DT changes
+ - Add shmobile to subject for shmobile DT patches
+ - Don't check MSI irq number is valid, as upper level checks this
+ - Change "Unexpected MSI" msg to debug level
+ - Reword "Unexpected MSI" comment so that it's one line
+ - Remove patch that adds HAVE_ARM_ARCH_TIMER to koelsch defconfig as not needed
 
-Bjorn
+v5:
+ - Use module_platform_driver instead of subsys_initcall
+ - Use the of_device_id data field for HW init function
+ - Init hw_pci struct in declaration
+ - Renesas SoC compatible string has peripheral before device name
+ - Add PCIe bus clock reference
+ - Use dma-ranges property to specify inbound memory regions
+ - Support multiple IO windows and correct resources
+ - Return IRQ_NONE from MSI isr when there is no pending MSI
+ - Add additional interrupt bindings
 
-> PCI: Mark 64-bit resource as IORESOURCE_UNSET if we only support 32-bit
->
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
-> If we don't support 64-bit addresses, i.e., CONFIG_PHYS_ADDR_T_64BIT is not
-> set, we can't deal with BARs above 4GB.  In this case we already pretend
-> the BAR contained zero; this patch also sets IORESOURCE_UNSET so we can try
-> to reallocate it later.
->
-> I don't think this is exactly correct: what we care about here are *bus*
-> addresses, not CPU addresses, so the tests of sizeof(resource_size_t)
-> probably should be on sizeof(dma_addr_t) instead.  But this is what's been
-> in -next, so we'll fix that later.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/probe.c |    1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6e34498ec9f0..78335efbbb74 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -252,6 +252,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->                         /* Address above 32-bit boundary; disable the BAR */
->                         pci_write_config_dword(dev, pos, 0);
->                         pci_write_config_dword(dev, pos + 4, 0);
-> +                       res->flags |= IORESOURCE_UNSET;
->                         region.start = 0;
->                         region.end = sz64;
->                         bar_disabled = true;
+v4:
+ - Use runtime PM properly
+
+
+Phil Edworthy (10):
+  PCI: host: rcar: Add Renesas R-Car PCIe driver
+  PCI: host: rcar: Add MSI support
+  ARM: shmobile: r8a7790: Add PCIe clock device tree nodes
+  ARM: shmobile: r8a7791: Add PCIe clock device tree nodes
+  dt-bindings: pci: rcar pcie device tree bindings
+  ARM: shmobile: r8a7790: Add PCIe device nodes
+  ARM: shmobile: lager: Add PCIe device nodes
+  ARM: shmobile: r8a7791: Add PCIe device nodes
+  ARM: shmobile: koelsch: Add PCIe device nodes
+  ARM: shmobile: koelsch: Add PCIe to defconfig
+
+ Documentation/devicetree/bindings/pci/rcar-pci.txt |  45 +
+ arch/arm/boot/dts/r8a7790-lager.dts                |  10 +
+ arch/arm/boot/dts/r8a7790.dtsi                     |  31 +-
+ arch/arm/boot/dts/r8a7791-koelsch.dts              |  14 +
+ arch/arm/boot/dts/r8a7791.dtsi                     |  31 +-
+ arch/arm/configs/koelsch_defconfig                 |   3 +
+ drivers/pci/host/Kconfig                           |   6 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-rcar.c                       | 929 +++++++++++++++++++++
+ drivers/pci/host/pcie-rcar.h                       |  87 ++
+ include/dt-bindings/clock/r8a7790-clock.h          |   1 +
+ include/dt-bindings/clock/r8a7791-clock.h          |   1 +
+ 12 files changed, 1154 insertions(+), 5 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
+ create mode 100644 drivers/pci/host/pcie-rcar.c
+ create mode 100644 drivers/pci/host/pcie-rcar.h
+
+-- 
+1.9.0
+
