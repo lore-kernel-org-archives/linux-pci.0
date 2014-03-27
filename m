@@ -1,43 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:40361 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752933AbaCUOcJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 10:32:09 -0400
-Received: by mail-la0-f53.google.com with SMTP id b8so1697919lan.26
-        for <linux-pci@vger.kernel.org>; Fri, 21 Mar 2014 07:32:08 -0700 (PDT)
-Message-ID: <532C5B70.5060509@cogentembedded.com>
-Date: Fri, 21 Mar 2014 18:32:00 +0300
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Phil Edworthy <phil.edworthy@renesas.com>,
-	linux-pci@vger.kernel.org
-CC: linux-sh@vger.kernel.org,
+Received: from relmlor3.renesas.com ([210.160.252.173]:26033 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754102AbaC0J1K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 05:27:10 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Valentine Barshak <valentine.barshak@cogentembedded.com>,
 	Simon Horman <horms@verge.net.au>,
 	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>
-Subject: Re: [PATCH v4 6/9] ARM: shmobile: Add PCIe device tree nodes for
- R8A7790
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com> <1395397968-6242-7-git-send-email-phil.edworthy@renesas.com>
-In-Reply-To: <1395397968-6242-7-git-send-email-phil.edworthy@renesas.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
+References: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1395912416-20087-7-git-send-email-phil.edworthy@renesas.com>
+Date: Thu, 27 Mar 2014 09:26:52 +0000
+Subject: [PATCH v6 06/10] ARM: shmobile: r8a7790: Add PCIe device nodes
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 
-On 03/21/2014 01:32 PM, Phil Edworthy wrote:
+v6:
+ - Split device and board DT changes
+---
+ arch/arm/boot/dts/r8a7790.dtsi | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-> This patch adds the device tree nodes for R8A7790
-
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> ---
->   arch/arm/boot/dts/r8a7790.dtsi | 19 +++++++++++++++++++
->   1 file changed, 19 insertions(+)
-
-    Why are you not enabling PCIe for Lager, only on Koelsch?
-
-WBR, Sergei
+diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
+index df9ec61..dbcea57 100644
+--- a/arch/arm/boot/dts/r8a7790.dtsi
++++ b/arch/arm/boot/dts/r8a7790.dtsi
+@@ -821,4 +821,28 @@
+ 		#size-cells = <0>;
+ 		status = "disabled";
+ 	};
++
++	pcie: pcie@fe000000 {
++		compatible = "renesas,pcie-r8a7790";
++		reg = <0 0xfe000000 0 0x80000>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
++			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
++			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
++			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
++		/* Map all possible DDR as inbound ranges */
++		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000
++			      0x43000000 1 0x80000000 1 0x80000000 0 0x80000000>;
++		interrupts = <0 116 IRQ_TYPE_LEVEL_HIGH
++			      0 117 IRQ_TYPE_LEVEL_HIGH
++			      0 118 IRQ_TYPE_LEVEL_HIGH>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic 0 116 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7790_CLK_PCIE>, <&pcie_bus_clk>;
++		clock-names = "pcie", "pcie_bus";
++		status = "disabled";
++	};
+ };
+-- 
+1.9.0
 
