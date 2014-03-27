@@ -1,172 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:52128 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752902AbaCXMyl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 08:54:41 -0400
-Message-ID: <1395665627.5062.12.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree bindings
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Phil.Edworthy@renesas.com
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+Received: from relmlor4.renesas.com ([210.160.252.174]:17605 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753030AbaC0J1J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 05:27:09 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
 	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
-Date: Mon, 24 Mar 2014 13:53:47 +0100
-In-Reply-To: <OF01E3AAFE.D9BF866A-ON80257CA5.0045F63A-80257CA5.00463029@eu.necel.com>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>
-			 <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>
-	  <1395401031.4554.9.camel@weser.hi.pengutronix.de>
-	 <OF03C9E23D.07B7D998-ON80257CA2.004E5877-80257CA2.004E9BFB@eu.necel.com>
-	 <1395412213.4554.17.camel@weser.hi.pengutronix.de>
-	 <OFC7DD5DAC.D378B300-ON80257CA2.0051ECEE-80257CA2.00529F98@LocalDomain>
-	 <OF9DD6173A.94976872-ON80257CA5.0041752F-80257CA5.0042532C@eu.necel.com>
-	 <533021F6.2000702@codethink.co.uk>
-	 <OF85DD7B1D.716DE42D-ON80257CA5.00443087-80257CA5.004447DB@LocalDomain>
-	 <OF01E3AAFE.D9BF866A-ON80257CA5.0045F63A-80257CA5.00463029@eu.necel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
+References: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1395912416-20087-4-git-send-email-phil.edworthy@renesas.com>
+Date: Thu, 27 Mar 2014 09:26:49 +0000
+Subject: [PATCH v6 03/10] ARM: shmobile: r8a7790: Add PCIe clock device tree nodes
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 24.03.2014, 12:46 +0000 schrieb
-Phil.Edworthy@renesas.com:
-> Hi Ben,
-> 
-> On: 24/03/2014 12:25, Phil wrote:
-> > Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
-> bindings
-> > 
-> > Hi Ben,
-> > 
-> > On: 24/03/2014 12:16, Ben wrote:
-> > > Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
-> bindings
-> > > 
-> > > On 24/03/14 12:04, Phil.Edworthy@renesas.com wrote:
-> > > > Hi Lucas,
-> > > >
-> > > > On: 21/03/2014 15:02, Phil wrote:
-> > > >> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree
-> > > > bindings
-> > > >>
-> > > >> Hi Lucas,
-> > > >>
-> > > >> On: 21/03/2014 14:31, Lucas wrote:
-> > > >>> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device 
-> tree
-> > > > bindings
-> > > >>>
-> > > >>> Am Freitag, den 21.03.2014, 14:18 +0000 schrieb
-> > > >>> Phil.Edworthy@renesas.com:
-> > > >>>> Hi Lucas,
-> > > >>>>
-> > > >>>> On 21/03/2014 11:24, Lucas wrote:
-> > > >>>>> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device
-> > > > tree
-> > > >>>> bindings
-> > > >>>>>
-> > > >>>>> Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
-> > > >>>>>> This patch adds the bindings for the rcar PCIE driver. The
-> > > > driver
-> > > >>>>>> resides under drivers/pci/host/pcie-rcar.c
-> > > >>>>>>
-> > > >>>>>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > > >>>>>
-> > > >>>>> I have one question below. If you can answer this with yes after
-> > > >>>>> thinking again about it, this is:
-> > > >>>>>
-> > > >>>>> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-> > > >>>>>> ---
-> > > >>>>>>   Documentation/devicetree/bindings/pci/rcar-pci.txt | 40
-> > > >>>> ++++++++++++++++++++++
-> > > >>>>>>   1 file changed, 40 insertions(+)
-> > > >>>>>>   create mode 100644
-> > > > Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > >>>>>>
-> > > >>>>>> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > > b/
-> > > >>>>> Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > >>>>>> new file mode 100644
-> > > >>>>>> index 0000000..0e219b0
-> > > >>>>>> --- /dev/null
-> > > >>>>>> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > >>>>>> @@ -0,0 +1,40 @@
-> > > >>>>>> +* Renesas RCar PCIe interface
-> > > >>>>>> +
-> > > >>>>>> +Required properties:
-> > > >>>>>> +- compatible: should contain one of the following
-> > > >>>>>> +   "renesas,r8a7779-pcie", "renesas,r8a7790-pcie",
-> > > >>>> "renesas,r8a7791-pcie"
-> > > >>>>>> +- reg: base addresses and lengths of the pcie controller.
-> > > >>>>>> +- #address-cells: set to <3>
-> > > >>>>>> +- #size-cells: set to <2>
-> > > >>>>>> +- device_type: set to "pci"
-> > > >>>>>> +- ranges: ranges for the PCI memory and I/O regions
-> > > >>>>>> +- interrupts: interrupt values for MSI interrupt
-> > > >>>>>> +- #interrupt-cells: set to <1>
-> > > >>>>>> +- interrupt-map-mask and interrupt-map: standard PCI 
-> properties
-> > > >>>>>> +   to define the mapping of the PCIe interface to interrupt
-> > > >>>>>> +   numbers.
-> > > >>>>>> +- clocks: from common clock binding: handle to pci clock.
-> > > >>>>>> +- clock-names: from common clock binding: should be "pcie"
-> > > >>>>>
-> > > >>>>> You really only have one PCIe clock? So the controller is
-> > > > generating the
-> > > >>>>> PCIe bus clock from it's register clock? No need to enable any
-> > > > other
-> > > >>>>> clock for PCIe to work?
-> > > >>>> Yes, just the one clock. The PCIe bus clock is an external clock
-> > > > dedicated
-> > > >>>> to PCIe and SATA, and we have no control over it.
-> > > >>>>
-> > > >>> Is this some kind of always-on clock? If not you probably want a
-> > > >>> reference to it from the PCIe driver even if it's shared between 
-> SATA
-> > > >>> and PCIe. After all you don't want to end up unconditionally 
-> enabling
-> > > >>> this clock from the board or SoC level just to have PCIe working,
-> > > > right?
-> > > >> Ok, I see, I'll need a reference to a board clock, even if it's 
-> always
-> > > > on for
-> > > >> these boards.
-> > > > One small question...
-> > > >
-> > > > The patches added the PCIe host controller to two devices, r8a7790 
-> and
-> > > > r8a7791. The r8a7790-based Lager board doesn't have the necessary 
-> hardware
-> > > > to use PCIe, so should I add a dummy pcie_bus clock to the Lager 
-> board
-> > > > dts, even though PCIe is not used?
-> > > >
-> > > > I'm just wondering what the dts file looks like for a board that 
-> doesn't
-> > > > support many interfaces. Does it become littered with dummy clocks 
-> and
-> > > > regulators?
-> > > 
-> > > The bridge node should be set to disabled by default so it never gets
-> > > probed. Any boards that want to use it can over-ride the status to be
-> > > enabled.
-> > Ok, thanks.
-> Hmm, yes it doesn't get probed, but you still get a build problem as the 
-> DT entry references an clock that doesn't exist. Maybe I'm missing 
-> something...
-> 
-If the clock is a board supplied one then you have to supply to clocks
-property from the board dts, to get rid of the compile failure. You can
-not have phandles in the PCIe node referencing a non-existing clock.
+This patch adds the device tree clock nodes for PCIe
 
-Regards,
-Lucas
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/boot/dts/r8a7790.dtsi            | 7 ++++---
+ include/dt-bindings/clock/r8a7790-clock.h | 1 +
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
+index da69afc..df9ec61 100644
+--- a/arch/arm/boot/dts/r8a7790.dtsi
++++ b/arch/arm/boot/dts/r8a7790.dtsi
+@@ -704,16 +704,17 @@
+ 			reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
+ 			clocks = <&cp_clk>, <&mmc1_clk>, <&sd3_clk>, <&sd2_clk>,
+ 				 <&cpg_clocks R8A7790_CLK_SD1>, <&cpg_clocks R8A7790_CLK_SD0>,
+-				 <&mmc0_clk>, <&rclk_clk>;
++				 <&mmc0_clk>, <&rclk_clk>, <&mp_clk>;
+ 			#clock-cells = <1>;
+ 			renesas,clock-indices = <
+ 				R8A7790_CLK_TPU0 R8A7790_CLK_MMCIF1 R8A7790_CLK_SDHI3
+ 				R8A7790_CLK_SDHI2 R8A7790_CLK_SDHI1 R8A7790_CLK_SDHI0
+-				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1
++				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1 R8A7790_CLK_PCIE
+ 			>;
+ 			clock-output-names =
+ 				"tpu0", "mmcif1", "sdhi3", "sdhi2",
+-				"sdhi1", "sdhi0", "mmcif0", "cmt1";
++				"sdhi1", "sdhi0", "mmcif0", "cmt1",
++				"pcie";
+ 		};
+ 		mstp5_clks: mstp5_clks@e6150144 {
+ 			compatible = "renesas,r8a7790-mstp-clocks", "renesas,cpg-mstp-clocks";
+diff --git a/include/dt-bindings/clock/r8a7790-clock.h b/include/dt-bindings/clock/r8a7790-clock.h
+index 6548a5f..840dbc8 100644
+--- a/include/dt-bindings/clock/r8a7790-clock.h
++++ b/include/dt-bindings/clock/r8a7790-clock.h
+@@ -57,6 +57,7 @@
+ #define R8A7790_CLK_SDHI1		13
+ #define R8A7790_CLK_SDHI0		14
+ #define R8A7790_CLK_MMCIF0		15
++#define R8A7790_CLK_PCIE		19
+ #define R8A7790_CLK_SSUSB		28
+ #define R8A7790_CLK_CMT1		29
+ #define R8A7790_CLK_USBDMAC0		30
 -- 
-Pengutronix e.K.                           | Lucas Stach                 |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+1.9.0
 
