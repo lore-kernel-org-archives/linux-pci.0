@@ -1,55 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og118.obsmtp.com ([64.18.0.160]:34383 "HELO
-	exprod5og118.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751896AbaCFGG2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 01:06:28 -0500
-Received: by mail-pb0-f48.google.com with SMTP id md12so2147553pbc.7
-        for <linux-pci@vger.kernel.org>; Wed, 05 Mar 2014 22:06:28 -0800 (PST)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v4 4/4] MAINTAINERS: entry for APM X-Gene PCIe host driver
-Date: Wed,  5 Mar 2014 22:06:03 -0800
-Message-Id: <1394085963-27553-5-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
-References: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
+Received: from relmlor2.renesas.com ([210.160.252.172]:13391 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753951AbaC0J1P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 05:27:15 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
+References: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1395912416-20087-10-git-send-email-phil.edworthy@renesas.com>
+Date: Thu, 27 Mar 2014 09:26:55 +0000
+Subject: [PATCH v6 09/10] ARM: shmobile: koelsch: Add PCIe device nodes
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add entry for AppliedMicro X-Gene PCIe host driver.
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+v6:
+ - Split device and board DT changes
 ---
- MAINTAINERS |    7 +++++++
- 1 file changed, 7 insertions(+)
+ arch/arm/boot/dts/r8a7791-koelsch.dts | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index e1297ff..80b7fe5 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6629,6 +6629,13 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/*designware*
- 
-+PCI DRIVER FOR APPLIEDMICRO XGENE
-+M:	Tanmay Inamdar <tinamdar@apm.com>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-arm-kernel@lists.infradead.org
-+S:	Maintained
-+F:	drivers/pci/host/pci-xgene.c
+diff --git a/arch/arm/boot/dts/r8a7791-koelsch.dts b/arch/arm/boot/dts/r8a7791-koelsch.dts
+index ee23b7b..3130a0c 100644
+--- a/arch/arm/boot/dts/r8a7791-koelsch.dts
++++ b/arch/arm/boot/dts/r8a7791-koelsch.dts
+@@ -204,6 +204,16 @@
+ 		states = <3300000 1
+ 			  1800000 0>;
+ 	};
 +
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
++	clocks {
++		/* External PCIe bus clock */
++		pcie_bus_clk: pcie_bus_clk {
++			compatible = "fixed-clock";
++			#clock-cells = <0>;
++			clock-frequency = <100000000>;
++			clock-output-names = "pcie_bus";
++		};
++	};
+ };
+ 
+ &extal_clk {
+@@ -382,3 +392,7 @@
+ 		spi-cpha;
+ 	};
+ };
++
++&pcie {
++	status = "okay";
++};
 -- 
-1.7.9.5
+1.9.0
 
