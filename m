@@ -1,70 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:63276 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752086AbaCYTTI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 15:19:08 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5333B66A.8020804@ti.com>
+Date: Thu, 27 Mar 2014 10:56:02 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1403241316280.1197-100000@iolanthe.rowland.org>
-References: <CAErSpo5yOEqHZmWZ3j8NQs_DapmkegDTm8uLJCS2uCKvTvtT6Q@mail.gmail.com>
- <Pine.LNX.4.44L0.1403241316280.1197-100000@iolanthe.rowland.org>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Tue, 25 Mar 2014 20:18:47 +0100
-Message-ID: <CAMxnaaUnm0Gez1UOtRP3raBEVbEg7gWXbwDUGOCcMnktKT8xFA@mail.gmail.com>
-Subject: Re: how to trigger pcieport runtime suspend?
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Pavel Machek <pavel@ucw.cz>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Jingoo Han <jg1.han@samsung.com>
+CC: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
+	<rnayak@ti.com>, <paul@pwsan.com>
+Subject: Re: [RFC PATCH 02/12] pci: host: pcie-dra7xx: add support for pcie-dra7xx
+ controller
+References: <1395842272-15267-1-git-send-email-kishon@ti.com> <1395842272-15267-3-git-send-email-kishon@ti.com> <000c01cf496e$bf2c85b0$3d859110$%han@samsung.com>
+In-Reply-To: <000c01cf496e$bf2c85b0$3d859110$%han@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 24, 2014 at 6:19 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Mon, 24 Mar 2014, Bjorn Helgaas wrote:
->
->> [+cc Rafael, Pavel, linux-pm]
+
+
+On Thursday 27 March 2014 09:13 AM, Jingoo Han wrote:
+> On Wednesday, March 26, 2014 10:58 PM, Kishon Vijay Abraham I wrote:
 >>
->> On Sun, Mar 23, 2014 at 12:16 PM, Andreas Noever
->> <andreas.noever@gmail.com> wrote:
->> > The pcieport driver defines runtime_suspend and runtime_resume methods
->> > (pcie_port_runtime_suspend/resume in portdrv_pci.c). I am trying to
->> > trigger that code. But I cannot get power/runtime_usage to drop to
->> > zero.
->> >
->> > Initially power/runtime_usage is set to 2. The 2 comes (imho) from:
->> > pci_pm_init -> pm_runtime_forbid
->> > local_pci_probe -> pm_runtime_get_sync
->> >
->> > The pm_runtime_forbid can be undone with echo auto > power/control,
->> > but the second one seems to never go away. local_pci_probe spots the
->> > following comment:
->> > "If the driver supports runtime PM, it should call
->> > pm_runtime_put_noidle() in its probe routine and
->> > pm_runtime_get_noresume() in its remove routine." I cannot find any
->> > such calls in the pcieport driver (or in the port service drivers).
->> >
->> > What am I missing?
->
-> You're not missing anything, but apparently the people who added
-> runtime PM support to the pcieport driver missed the comment you
-> quoted.
->
-> If you add those calls to the driver, does it do what you want?
-If I add that call and remove the pme_poll check in
-pcie_port_runtime_idle (pme_poll seems to be set for all devices) then
-it seems to work. The bridge goes to D3 if no device is present or if
-all devices below it are in D3. It even reacts to hotplug events while
-in D3. I'm not sure that everything *really* works as I cannot see any
-code that would call resume/suspend on the individual port service
-drivers (as compared to the system suspend path). It probably just
-works by accident.
+>> Added support for pcie controller in dra7xx. This driver re-uses
+>> the designware core code that is already present in kernel.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> 
+> Hi Kishon,
+> Long time no see! I added trivial comments.
 
-Anyhow, the reason I was trying to do this is, is that I observed
-different behavior from a device in runtime D3 as compared to system
-suspend. I thought it might have something to do with the power status
-of the parent bridge, but that turned out to be not the case... back
-to square one.
+yeah, these were in my TODO for a long time. Sorry for it though.
+> 
+>> ---
+>>  Documentation/devicetree/bindings/pci/ti-pci.txt |   35 ++
+>>  drivers/pci/host/Kconfig                         |   10 +
+>>  drivers/pci/host/Makefile                        |    1 +
+>>  drivers/pci/host/pcie-dra7xx.c                   |  411 ++++++++++++++++++++++
+> 
+> How about using 'pci-' prefix?
+> As it was discussed earlier, 'pci-' prefix is more proper.
+> 
+>>  4 files changed, 457 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
+>>  create mode 100644 drivers/pci/host/pcie-dra7xx.c
+> 
+> [.....]
+> 
+>> --- /dev/null
+>> +++ b/drivers/pci/host/pcie-dra7xx.c
+> 
+> [.....]
+> 
+>> +#define	PCIECTRL_TI_CONF_IRQSTATUS_MAIN		0x0024
+>> +#define	PCIECTRL_TI_CONF_IRQENABLE_SET_MAIN	0x0028
+> 
+> I don't think that it's good to add vendor names such as TI
+> to SFR names.
+> 
+> How about adding 'DRA7XX' or just removing 'TI'?
+> 
+> 1. PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN
 
-Andreas
+ok.
+> 
+> 2. PCIECTRL_CONF_IRQSTATUS_MAIN
+> 
+> [.....]
+> 
+>> +enum dra7xx_pcie_device_type {
+>> +	DRA7XX_PCIE_UNKNOWN_TYPE,
+>> +	DRA7XX_PCIE_EP_TYPE,
+>> +	DRA7XX_PCIE_LEG_EP_TYPE,
+>> +	DRA7XX_PCIE_RC_TYPE,
+>> +};
+> 
+> This driver can support only RC mode, so, these enum can be removed.
+> 
+> [.....]
+> 
+>> +	of_property_read_u32(node, "ti,device-type", &device_type);
+>> +	switch (device_type) {
+>> +	case DRA7XX_PCIE_RC_TYPE:
+>> +		dra7xx_pcie_writel(dra7xx->base,
+>> +			PCIECTRL_TI_CONF_DEVICE_TYPE, DEVICE_TYPE_RC);
+>> +		break;
+>> +	case DRA7XX_PCIE_EP_TYPE:
+>> +		dra7xx_pcie_writel(dra7xx->base,
+>> +			PCIECTRL_TI_CONF_DEVICE_TYPE, DEVICE_TYPE_EP);
+>> +		break;
+>> +	case DRA7XX_PCIE_LEG_EP_TYPE:
+>> +		dra7xx_pcie_writel(dra7xx->base,
+>> +			PCIECTRL_TI_CONF_DEVICE_TYPE, DEVICE_TYPE_LEG_EP);
+>> +		break;
+>> +	default:
+>> +		dev_dbg(dev, "UNKNOWN device type %d\n", device_type);
+>> +	}
+> 
+> Thus, this switch can be removed.
+
+sure.
+
+Thanks
+Kishon
