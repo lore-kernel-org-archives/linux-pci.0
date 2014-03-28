@@ -1,90 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f169.google.com ([209.85.128.169]:41197 "EHLO
-	mail-ve0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760015AbaCTWHq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 18:07:46 -0400
-Received: by mail-ve0-f169.google.com with SMTP id pa12so1705441veb.14
-        for <linux-pci@vger.kernel.org>; Thu, 20 Mar 2014 15:07:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1394710981-3596-1-git-send-email-daniel@numascale.com>
-References: <1394710981-3596-1-git-send-email-daniel@numascale.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 20 Mar 2014 16:07:25 -0600
-Message-ID: <CAErSpo6psgDr3XYh6m+vYcAOix2Vttrwz1jK7bS47Liy2Lw-=g@mail.gmail.com>
-Subject: Re: [PATCH] Fix northbridge quirk to assign correct NUMA node
-To: Daniel J Blueman <daniel@numascale.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Borislav Petkov <bp@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Steffen Persvold <sp@numascale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	kim.naru@amd.com,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:59055 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752581AbaC1QxO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 12:53:14 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
+	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
+	Richard Zhu <r65037@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
+Subject: [PATCH 1/8] ARM: imx6q-clk: parent lvds_gate from lvds_sel
+Date: Fri, 28 Mar 2014 17:52:52 +0100
+Message-Id: <1396025579-14344-2-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci, Myron, Suravee, Kim, Aravind]
+Allows fror proper refcounting of the parent clocks
+when enabling the clock output on CLK1/2 pads.
 
-On Thu, Mar 13, 2014 at 5:43 AM, Daniel J Blueman <daniel@numascale.com> wrote:
-> For systems with multiple servers and routed fabric, all northbridges get
-> assigned to the first server. Fix this by also using the node reported from
-> the PCI bus. For single-fabric systems, the northbriges are on PCI bus 0
-> by definition, which are on NUMA node 0 by definition, so this is invarient
-> on most systems.
->
-> Tested on fam10h and fam15h single and multi-fabric systems and candidate
-> for stable.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ arch/arm/mach-imx/clk-imx6q.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I wish this had been cc'd to linux-pci.  We're talking about a related
-change by Suravee there.  In fact, we were hoping this quirk could be
-removed altogether.
+diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
+index af2e582d2b74..f98a6bb98145 100644
+--- a/arch/arm/mach-imx/clk-imx6q.c
++++ b/arch/arm/mach-imx/clk-imx6q.c
+@@ -208,8 +208,8 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
+ 	 * the "output_enable" bit as a gate, even though it's really just
+ 	 * enabling clock output.
+ 	 */
+-	clk[lvds1_gate] = imx_clk_gate("lvds1_gate", "dummy", base + 0x160, 10);
+-	clk[lvds2_gate] = imx_clk_gate("lvds2_gate", "dummy", base + 0x160, 11);
++	clk[lvds1_gate] = imx_clk_gate("lvds1_gate", "lvds1_sel", base + 0x160, 10);
++	clk[lvds2_gate] = imx_clk_gate("lvds2_gate", "lvds2_sel", base + 0x160, 11);
+ 
+ 	/*                                name              parent_name        reg       idx */
+ 	clk[pll2_pfd0_352m] = imx_clk_pfd("pll2_pfd0_352m", "pll2_bus",     base + 0x100, 0);
+-- 
+1.9.0
 
-I don't understand what this quirk is doing.  Normally we discover the
-NUMA node for a PCI host bridge via the ACPI _PXM method.  The way
-_PXM works is that every PCI device in the hierarchy below the bridge
-inherits the same node number as the host bridge.  I first thought
-this might be a workaround for a system that lacks _PXM, but I don't
-think that can be right, because you're only changing the node for a
-few devices, not the whole hierarchy.
-
-So I suspect the problem is more complicated, and maybe _PXM is
-insufficient to describe the topology?  Are there subtrees that should
-have nodes different from the host bridge?
-
-I know this patch is already in v3.14-rc7, but I'd still like to
-understand it so we can do the right thing with Suravee's patch.
-
-Bjorn
-
-> Signed-off-by: Daniel J Blueman <daniel@numascale.com>
-> Acked-by: Steffen Persvold <sp@numascale.com>
-> ---
->  arch/x86/kernel/quirks.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
-> index 04ee1e2..52dbf1e 100644
-> --- a/arch/x86/kernel/quirks.c
-> +++ b/arch/x86/kernel/quirks.c
-> @@ -529,7 +529,7 @@ static void quirk_amd_nb_node(struct pci_dev *dev)
->                 return;
->
->         pci_read_config_dword(nb_ht, 0x60, &val);
-> -       node = val & 7;
-> +       node = pcibus_to_node(dev->bus) | (val & 7);
->         /*
->          * Some hardware may return an invalid node ID,
->          * so check it first:
-> --
-> 1.8.3.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
