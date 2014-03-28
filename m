@@ -1,105 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:45751 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801AbaCRA1F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 20:27:05 -0400
-Received: by mail-pb0-f44.google.com with SMTP id rp16so6463602pbb.3
-        for <linux-pci@vger.kernel.org>; Mon, 17 Mar 2014 17:27:04 -0700 (PDT)
-Date: Mon, 17 Mar 2014 18:27:00 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding
- disabled
-Message-ID: <20140318002700.GA22356@google.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CACVXFVOqBuCcQC6ku0abqstkgJWGe21ZztB-eTsyDwsvDvXNZw@mail.gmail.com>
- <CAErSpo4ngU60XQCD=DbFJbqNOMkOwwhHB1oau1mmr7rJQQ2+pg@mail.gmail.com>
- <CACVXFVMz+6DaSgT0EHeVfyBOsXfWDYnZQ0wy7pwcey5ahM6rUA@mail.gmail.com>
+Received: from mail-ve0-f180.google.com ([209.85.128.180]:51568 "EHLO
+	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924AbaC1PUV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 11:20:21 -0400
+Received: by mail-ve0-f180.google.com with SMTP id jz11so5744834veb.25
+        for <linux-pci@vger.kernel.org>; Fri, 28 Mar 2014 08:20:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACVXFVMz+6DaSgT0EHeVfyBOsXfWDYnZQ0wy7pwcey5ahM6rUA@mail.gmail.com>
+In-Reply-To: <20140328145718.GZ17163@e106497-lin.cambridge.arm.com>
+References: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
+	<20140328114618.GY17163@e106497-lin.cambridge.arm.com>
+	<CAL_JsqL-LxCWe2Lopf3ZGHXmJB4fwEmKj1y7-bgBpYd5owNKKg@mail.gmail.com>
+	<20140328145718.GZ17163@e106497-lin.cambridge.arm.com>
+Date: Fri, 28 Mar 2014 10:20:20 -0500
+Message-ID: <CAL_JsqLh3i56Vp9UGELTr-eq8mQ87BAMYzFnC+6G_vDKR6awug@mail.gmail.com>
+Subject: Re: [PATCH 0/3] Versatile PCI DT support
+From: Rob Herring <robherring2@gmail.com>
+To: Rob Herring <robherring2@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linus.walleij@linaro.org" <linus.walleij@linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 09:48:35AM +0800, Ming Lei wrote:
-> On Fri, Mar 14, 2014 at 12:08 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Thu, Mar 13, 2014 at 2:51 AM, Ming Lei <tom.leiming@gmail.com> wrote:
-> >> Hi Bjorn,
-> >>
-> >> I found this patch broke virtio-pci devices.
-> >
-> > Thanks a lot for testing this.
-> >
-> >> On Thu, Feb 27, 2014 at 3:37 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >>> Don't rely on BAR contents when the command register says the BAR is
-> >>> disabled.
-> >>>
-> >>> If we receive a PCI device from firmware (or a hot-added device that was
-> >>> just powered up) with the MEMORY or IO enable bits in the PCI command
-> >>> register cleared, there's no reason to believe the BARs contain valid
-> >>> addresses.
-> >>
-> >> From PCI LOCAL BUS SPECIFICATION, REV. 3.0, both
-> >> PCI_COMMAND_IO and PCI_COMMAND_MEM should be
-> >> cleared after reset, so looks the patch sets IORESOURCE_UNSET
-> >> too early because PCI drivers may call pci_enable_device()
-> >> (->pci_enable_resources()) to enable the two bits of
-> >> PCI_COMMAND explicitly.
-> >
-> > The point is that it's not safe to enable those two bits unless we're
-> > certain that the BARs they control contain valid values that don't
-> > conflict with anything else in the system.
-> >
-> > Maybe we should only set IORESOURCE_UNSET when we find a conflict or a
-> > BAR that's not contained by an upstream bridge window, and we should
-> > try to reallocate then.  I'm pretty sure we do that at least in some
-> > cases, but it would probably simplify things if we did it more
-> > consistently, and maybe we shouldn't set it at all here in
-> > __pci_read_base().
-> 
-> I think so because __pci_read_base() is called in device emulation
-> path.
+On Fri, Mar 28, 2014 at 9:57 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Fri, Mar 28, 2014 at 01:27:05PM +0000, Rob Herring wrote:
+>> On Fri, Mar 28, 2014 at 6:46 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> > On Thu, Mar 27, 2014 at 10:46:35PM +0000, Rob Herring wrote:
+>> >> From: Rob Herring <robh@kernel.org>
+>> >>
+>> >> This series adds a platform driver for Versatile PB's PCI host using
+>> >> Liviu's recent patch series[1] for DT parsing and setup.
+>> >>
+>> >> The first patch is a hack to get Liviu's current patches to work on ARM.
+>> >> It at least shows we are not that far off from being able to use the
+>> >> series on ARM.
+>> >>
+>> >> I've tested PCI under QEMU, but need someone with actual h/w to test.
+>> >> A branch with this series and which includes full conversion of
+>> >> Versatile to DT is available here[2].
+>> >
+>> > Hi Rob,
+>> >
+>> > Thanks for doing this. Hopefully others will take inspiration and start to
+>> > convert their host bridge controllers as well.
+>> >
+>> > I will post an updated series soon. (Un)fortunately it will look slightly
+>> > different than the last one I've posted as I am trying to get more code
+>> > that I've currently placed in arch/arm64/kernel/pci.c into drivers/pci,
+>> > so you will need to revisit your series.
+>> >
+>> > Regarding your comment about bridge->bus->self being needed: root busses
+>> > are supposed to have bus->self == NULL, and the bridge->bus *is* the root
+>> > bus. Where would you need to use bridge->bus->self?
+>>
+>> If I want to use pci_write_config_* accesses, then I need a struct
+>> pci_dev pointer for the host. I can get this since I know the slot of
+>> the host, but only after pci_bus_add_devices which is perhaps too
+>> late. Historically, the Versatile PCI driver has blocked config
+>> accesses to the host's config space. I'm just wondering if this is
+>> really correct behavior and whether the core code should do the setup.
+>
+> PCI core? It knows nothing of the Versatile registers. Versatile core code? Maybe.
 
-Which path is this?  I don't know anything about virtio-pci, and I only see
-calls to __pci_read_base() from:
+These are all standard config space registers based on the offsets and
+documentation. The only thing that I think might make this Versatile
+specific is a host bridge having its own config space at all is
+optional.
 
-  sriov_init()
-  pci_sriov_resource_alignment()
-  pci_read_bases()
+>> This is setup that is done which doesn't seem like it is very specific
+>> to Versatile.
+>>
+>> local_pci_cfg_base = versatile_cfg_base[1] + (myslot << 11);
+>>
+>> val = readl(local_pci_cfg_base + CSR_OFFSET);
+>> val |= PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER | PCI_COMMAND_INVALIDATE;
+>> writel(val, local_pci_cfg_base + CSR_OFFSET);
+>
+> Why don't you do this in a versatile_fixup_bridge() call, like pci-tegra.c
+> does?
 
-> > But I'd like to understand your situation better, so can you provide
-> > more details, please?  Complete before/after dmesg logs would go a
-> > long way toward illustrating the problem you're seeing.
-> 
-> Please see the two attachment log. The memory allocation failure
-> is caused by mistaken value read from pci address after the device
-> is failed to enable.
+I could, but doesn't any host need these bits set (assuming the host
+has a config space)?
 
-Your logs are harder than necessary to compare because one has a lot more
-debug turned on than the other.
+As it stands now, the PCI core would never call a fixup because the
+host's config space is masked out (with pci_slot_ignore). So is that
+wrong?
 
-In the failing case, we ignore all the initial BAR values, but we do assign
-values to all of them later:
+>>
+>> /*
+>> * Configure the PCI inbound memory windows to be 1:1 mapped to SDRAM
+>> */
+>> writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_0);
+>> writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_1);
+>> writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_2);
+>
+> My guess is that this has to be done at probe time. It just happens that for
+> Versatile PCI they live in the host config space, but they are not really
+> PCI config space writes.
 
-  pci 0000:00:00.0: can't claim BAR 0 [mem size 0x00000400]: no address assigned
-  pci 0000:00:00.0: can't claim BAR 1 [io  size 0x0400]: no address assigned
-  ...
-  pci 0000:00:00.0: BAR 0: assigned [mem 0x40000000-0x400003ff]
-  pci 0000:00:00.0: BAR 1: assigned [io  0x1000-0x13ff]
-  ...
+It is not completely obvious since they use private defines, but
+PCI_BASE_ADDRESS_x registers are BAR registers AFAICT.
 
-The newly-assigned values look valid, and as far as I can tell, they should
-work.  Do you know why they don't?  Is there an assumption somewhere that
-we never change BAR values?
-
-Even if we don't need to ignore BAR values in as many cases as we do, it
-should be legal to ignore them and reassign them, so I want to understand
-what's going on here before reverting this.
-
-Is there an easy way I can reproduce the problem on my own box?
-
-Bjorn
+Rob
