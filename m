@@ -1,91 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <532EEFF9.4020706@numascale.com>
-Date: Sun, 23 Mar 2014 22:30:17 +0800
-From: Daniel J Blueman <daniel@numascale.com>
-MIME-Version: 1.0
-To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Borislav Petkov <bp@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Steffen Persvold <sp@numascale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	kim.naru@amd.com,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH] Fix northbridge quirk to assign correct NUMA node
-References: <1394710981-3596-1-git-send-email-daniel@numascale.com> <CAErSpo6psgDr3XYh6m+vYcAOix2Vttrwz1jK7bS47Liy2Lw-=g@mail.gmail.com> <532BB431.7020501@numascale.com> <532C73DA.7060008@amd.com>
-In-Reply-To: <532C73DA.7060008@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:59003 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751712AbaC1QxH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 12:53:07 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
+	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
+	Richard Zhu <r65037@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
+Subject: [PATCH 3/8] ARM: dts: imx6: update pcie to bring in line with new binding
+Date: Fri, 28 Mar 2014 17:52:54 +0100
+Message-Id: <1396025579-14344-4-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/22/2014 01:16 AM, Suravee Suthikulpanit wrote:
-> On 3/20/2014 10:38 PM, Daniel J Blueman wrote:
->> On 21/03/2014 06:07, Bjorn Helgaas wrote:
->>> [+cc linux-pci, Myron, Suravee, Kim, Aravind]
->>>
->>> On Thu, Mar 13, 2014 at 5:43 AM, Daniel J Blueman
->>> <daniel@numascale.com> wrote:
->>>> For systems with multiple servers and routed fabric, all
->>>> northbridges get
->>>> assigned to the first server. Fix this by also using the node
->>>> reported from
->>>> the PCI bus. For single-fabric systems, the northbriges are on PCI
->>>> bus 0
->>>> by definition, which are on NUMA node 0 by definition, so this is
->>>> invarient
->>>> on most systems.
->>>>
->>>> Tested on fam10h and fam15h single and multi-fabric systems and
->>>> candidate
->>>> for stable.
->>
->>> I wish this had been cc'd to linux-pci.  We're talking about a related
->>> change by Suravee there.  In fact, we were hoping this quirk could be
->>> removed altogether.
->>
->> Noted.
->>
->>> I don't understand what this quirk is doing.  Normally we discover the
->>> NUMA node for a PCI host bridge via the ACPI _PXM method.  The way
->>> _PXM works is that every PCI device in the hierarchy below the bridge
->>> inherits the same node number as the host bridge.  I first thought
->>> this might be a workaround for a system that lacks _PXM, but I don't
->>> think that can be right, because you're only changing the node for a
->>> few devices, not the whole hierarchy.
->>  >
->>> So I suspect the problem is more complicated, and maybe _PXM is
->>> insufficient to describe the topology?  Are there subtrees that should
->>> have nodes different from the host bridge?
->>
->> Yes; see below.
->>
->>> I know this patch is already in v3.14-rc7, but I'd still like to
->>> understand it so we can do the right thing with Suravee's patch.
->>
->> The _PXM method associates each northbridge with the first NUMA node,
->> 0 in single-fabric systems, and eg 4 for the second server in a
->> multi-fabric system with 2 dual-module Opterons (with 2 NUMA nodes
->> internally) etc, since the northbridges appear in the
->> PCI tree, under the host bridge, not above it [1].
-> Daniel,
->
-> That lspci looks interesting, what is the value returned from
-> pci_bus_to_node() on your system for each fabric?
+The new bindings drops one clock, renames the others and
+drops the old interrupt mapping.
 
-pci_bus_to_node returns 0 for PCI domain 0000, 2 for PCI domain 0001, 4 
-for PCI domain 0002 and so on.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ arch/arm/boot/dts/imx6qdl.dtsi | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Our processor fabric interconnect has HyperTransport NodeId 2 on each 
-server (as they start from bus 0, device 0x18 of course):
-0000:00:1a.0 Host bridge: Device 1b47:0601 (rev 02)
-0000:00:1a.1 Host bridge: Device 1b47:0602 (rev 02)
-
-Thanks,
-   Daniel
+diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
+index c1c06d25decc..1ea1adb6d8c6 100644
+--- a/arch/arm/boot/dts/imx6qdl.dtsi
++++ b/arch/arm/boot/dts/imx6qdl.dtsi
+@@ -128,15 +128,16 @@
+ 				  0x81000000 0 0          0x01f80000 0 0x00010000 /* downstream I/O */
+ 				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
+ 			num-lanes = <1>;
+-			interrupts = <0 123 0x04>;
++			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "msi";
+ 			#interrupt-cells = <1>;
+ 			interrupt-map-mask = <0 0 0 0x7>;
+ 			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
+ 			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
+ 			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
+ 			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+-			clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>;
+-			clock-names = "pcie_ref_125m", "sata_ref_100m", "lvds_gate", "pcie_axi";
++			clocks = <&clks 144>, <&clks 206>, <&clks 189>;
++			clock-names = "pcie", "pcie_bus", "pcie_phy";
+ 			status = "disabled";
+ 		};
+ 
 -- 
-Daniel J Blueman
-Principal Software Engineer, Numascale
+1.9.0
+
