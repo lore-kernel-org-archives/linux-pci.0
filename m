@@ -1,74 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: ACPI and PM material for v3.15-rc1 (current queue)
-Date: Fri, 21 Mar 2014 17:40:26 +0100
-Message-ID: <4752174.DIeOl6EhdE@vostro.rjw.lan>
-In-Reply-To: <532B8A4B.9000808@linaro.org>
-References: <2611540.GrpzWjVQ7v@vostro.rjw.lan> <532B8A4B.9000808@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:37798 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751164AbaC1LqX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 07:46:23 -0400
+Date: Fri, 28 Mar 2014 11:46:18 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linus.walleij@linaro.org" <linus.walleij@linaro.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH 0/3] Versatile PCI DT support
+Message-ID: <20140328114618.GY17163@e106497-lin.cambridge.arm.com>
+References: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, March 21, 2014 08:39:39 AM Hanjun Guo wrote:
-> Hi Rafael,
-
-Hi,
-
-> On 2014年03月21日 08:23, Rafael J. Wysocki wrote:
-> > Hi All,
-> >
-> > My queue for the first pull request during the upcoming 3.15 merge window
-> > contains the material below.  Following the rule that everything I send
-> > pull requests for should spend at least one day in linux-next, I'm not
-> > going to add any more new commits to it at this point.
-> >
-> > Most likely, there will be more ACPI+PM pull request during the 3.15 cycle,
-> > so if I missed something, it still may be possible to get that into that
-> > kernel, but there has to be a good reason for it.
-> >
-> > Kind regards,
-> > Rafael
-> >
-> >
-> > ---------------
-> >
-> > Hanjun Guo (2):
-> >        ACPI / tables: Replace printk with pr_*
-> >        ACPI: Remove duplicate definitions of PREFIX
+On Thu, Mar 27, 2014 at 10:46:35PM +0000, Rob Herring wrote:
+> From: Rob Herring <robh@kernel.org>
 > 
-> It seems that you missed some of my patches:
-> ACPI: Move BAD_MADT_ENTRY() to linux/acpi.h
-> ACPI / idle: Make idle_boot_override depend on x86 and ia64
-> ACPI / trivial: Fix the return value type of acpi_processor_eval_pdc()
-> ACPI / processor: Replace hard-coded "ACPI0007" with 
-> ACPI_PROCESSOR_DEVICE_HID
+> This series adds a platform driver for Versatile PB's PCI host using
+> Liviu's recent patch series[1] for DT parsing and setup.
 > 
-> I think those 4 patches can be merged in 3.15 and you already accepted them.
-
-Yes, I did not include the acpi-processor branch, sorry about that and thanks
-for spotting it!
-
-That branch was in linux-next before, though, so I'll push it for 3.15-rc1.
-
-> and this patch still need more acks and then you will accept it:
-> ACPI / processor_core: Rework _PDC related stuff to make it more 
-> arch-independent
+> The first patch is a hack to get Liviu's current patches to work on ARM.
+> It at least shows we are not that far off from being able to use the
+> series on ARM.
 > 
-> and this patch was reverted from your tree suggested by Catalin and Sudeep,
-> ACPI / processor: Introduce map_gic_id() to get apic id from MADT or 
-> _MAT method
-> 
-> Sorry for the confusion if I missed something.
+> I've tested PCI under QEMU, but need someone with actual h/w to test.
+> A branch with this series and which includes full conversion of
+> Versatile to DT is available here[2].
 
-I don't think you missed anything, thanks!
+Hi Rob,
+
+Thanks for doing this. Hopefully others will take inspiration and start to
+convert their host bridge controllers as well.
+
+I will post an updated series soon. (Un)fortunately it will look slightly
+different than the last one I've posted as I am trying to get more code
+that I've currently placed in arch/arm64/kernel/pci.c into drivers/pci,
+so you will need to revisit your series.
+
+Regarding your comment about bridge->bus->self being needed: root busses
+are supposed to have bus->self == NULL, and the bridge->bus *is* the root
+bus. Where would you need to use bridge->bus->self?
+
+Best regards,
+Liviu
+
+> 
+> Rob
+> 
+> [1] https://lkml.org/lkml/2014/3/14/279
+> [2] git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git versatile
+> 
+> Rob Herring (3):
+>   ARM: hackup pcibios support for commmon bridge code
+>   dt/bindings: add versatile PCI binding
+>   pci: add DT based ARM Versatile PCI host driver
+> 
+>  .../devicetree/bindings/pci/versatile.txt          |  59 +++++
+>  arch/arm/kernel/bios32.c                           |  63 +++++
+>  drivers/pci/host/Kconfig                           |   4 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pci-versatile.c                   | 275 +++++++++++++++++++++
+>  5 files changed, 402 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/versatile.txt
+>  create mode 100644 drivers/pci/host/pci-versatile.c
+> 
+> -- 
+> 1.8.3.2
+> 
+> 
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
