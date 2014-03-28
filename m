@@ -1,200 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:2735 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754349AbaCEVHR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 16:07:17 -0500
-From: <suravee.suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <aravind.gopalakrishnan@amd.com>,
-	<kim.naru@amd.com>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Subject: [PATCH 1/3] amd/pci: Add supports for generic AMD hostbridges
-Date: Wed, 5 Mar 2014 15:06:41 -0600
-Message-ID: <1394053603-3724-2-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:46563 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751290AbaC1N1H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 09:27:07 -0400
+Received: by mail-vc0-f180.google.com with SMTP id lf12so5720223vcb.25
+        for <linux-pci@vger.kernel.org>; Fri, 28 Mar 2014 06:27:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20140328114618.GY17163@e106497-lin.cambridge.arm.com>
+References: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
+	<20140328114618.GY17163@e106497-lin.cambridge.arm.com>
+Date: Fri, 28 Mar 2014 08:27:05 -0500
+Message-ID: <CAL_JsqL-LxCWe2Lopf3ZGHXmJB4fwEmKj1y7-bgBpYd5owNKKg@mail.gmail.com>
+Subject: Re: [PATCH 0/3] Versatile PCI DT support
+From: Rob Herring <robherring2@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linus.walleij@linaro.org" <linus.walleij@linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+On Fri, Mar 28, 2014 at 6:46 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Thu, Mar 27, 2014 at 10:46:35PM +0000, Rob Herring wrote:
+>> From: Rob Herring <robh@kernel.org>
+>>
+>> This series adds a platform driver for Versatile PB's PCI host using
+>> Liviu's recent patch series[1] for DT parsing and setup.
+>>
+>> The first patch is a hack to get Liviu's current patches to work on ARM.
+>> It at least shows we are not that far off from being able to use the
+>> series on ARM.
+>>
+>> I've tested PCI under QEMU, but need someone with actual h/w to test.
+>> A branch with this series and which includes full conversion of
+>> Versatile to DT is available here[2].
+>
+> Hi Rob,
+>
+> Thanks for doing this. Hopefully others will take inspiration and start to
+> convert their host bridge controllers as well.
+>
+> I will post an updated series soon. (Un)fortunately it will look slightly
+> different than the last one I've posted as I am trying to get more code
+> that I've currently placed in arch/arm64/kernel/pci.c into drivers/pci,
+> so you will need to revisit your series.
+>
+> Regarding your comment about bridge->bus->self being needed: root busses
+> are supposed to have bus->self == NULL, and the bridge->bus *is* the root
+> bus. Where would you need to use bridge->bus->self?
 
-AMD hostbridges are gnenerally show up as PCI device 0:18.0.
-This patch adds logic to automatically probe the device at
-this location and check PCI device class code.
+If I want to use pci_write_config_* accesses, then I need a struct
+pci_dev pointer for the host. I can get this since I know the slot of
+the host, but only after pci_bus_add_devices which is perhaps too
+late. Historically, the Versatile PCI driver has blocked config
+accesses to the host's config space. I'm just wondering if this is
+really correct behavior and whether the core code should do the setup.
+This is setup that is done which doesn't seem like it is very specific
+to Versatile.
 
-This patch should support AMD hostbridges from AMD platforms
-(K8, family10h, 11h, 12h, 14h 15h  and 16h processors).
+local_pci_cfg_base = versatile_cfg_base[1] + (myslot << 11);
 
-Signed-off-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
----
- arch/x86/pci/amd_bus.c |   88 +++++++++++++++++++++++++++++++++---------------
- 1 file changed, 60 insertions(+), 28 deletions(-)
+val = readl(local_pci_cfg_base + CSR_OFFSET);
+val |= PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER | PCI_COMMAND_INVALIDATE;
+writel(val, local_pci_cfg_base + CSR_OFFSET);
 
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index a48be98..4041cbe 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -11,27 +11,39 @@
- 
- #include "bus_numa.h"
- 
-+#define AMD_NB_F0_NODE_ID                       0x60
-+#define AMD_NB_F0_UNIT_ID                       0x64
-+#define AMD_NB_F1_MMIO_BASE_REG                 0x80
-+#define AMD_NB_F1_MMIO_LIMIT_REG                0x84
-+#define AMD_NB_F1_IO_BASEA_DDR_REG              0xc0
-+#define AMD_NB_F1_IO_LIMIT_ADDR_REG             0xc4
-+#define AMD_NB_F1_CONFIG_MAP_REG                0xe0
-+
-+#define RANGE_NUM                               16
-+#define AMD_NB_F1_MMIO_RANGES                   8
-+#define AMD_NB_F1_IOPORT_RANGES                 4
-+#define AMD_NB_F1_CONFIG_MAP_RANGES             4
-+
- /*
-  * This discovers the pcibus <-> node mapping on AMD K8.
-  * also get peer root bus resource for io,mmio
-  */
- 
--struct pci_hostbridge_probe {
-+struct amd_hostbridge {
- 	u32 bus;
- 	u32 slot;
--	u32 vendor;
- 	u32 device;
- };
- 
--static struct pci_hostbridge_probe pci_probes[] __initdata = {
--	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 },
--	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 },
--	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 },
--	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
-+static struct amd_hostbridge hb_probes[] __initdata = {
-+	/* Standard AMD Hostbriges is at bus 0x0 slot 0x18.
-+	 * In case of PCI_ANY_ID, the logic will try matching
-+	 * PCI_CLASS_BRIDGE_HOST instead.
-+	 */
-+	{ 0x0 , 0x18, PCI_ANY_ID },
-+	{ 0xff, 0   , PCI_DEVICE_ID_AMD_10H_NB_HT },
- };
- 
--#define RANGE_NUM 16
--
- static struct pci_root_info __init *find_pci_root_info(int node, int link)
- {
- 	struct pci_root_info *info;
-@@ -84,31 +96,47 @@ static int __init early_fill_mp_bus_info(void)
- 		return -1;
- 
- 	found = false;
--	for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
-+	for (i = 0; i < ARRAY_SIZE(hb_probes); i++) {
- 		u32 id;
- 		u16 device;
- 		u16 vendor;
-+		u32 class;
- 
--		bus = pci_probes[i].bus;
--		slot = pci_probes[i].slot;
-+		bus = hb_probes[i].bus;
-+		slot = hb_probes[i].slot;
- 		id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
--
- 		vendor = id & 0xffff;
- 		device = (id>>16) & 0xffff;
--		if (pci_probes[i].vendor == vendor &&
--		    pci_probes[i].device == device) {
--			found = true;
--			break;
-+		class = read_pci_config(bus, slot, 0,
-+			PCI_CLASS_REVISION) >> 16;
-+
-+		if (PCI_VENDOR_ID_AMD == vendor) {
-+			if (hb_probes[i].device == device) {
-+				found = true;
-+				break;
-+			}
-+
-+			if ((hb_probes[i].device == PCI_ANY_ID) &&
-+			    (class == PCI_CLASS_BRIDGE_HOST)) {
-+				hb_probes[i].device = device;
-+				found = true;
-+				break;
-+			}
- 		}
- 	}
- 
--	if (!found)
-+	if (!found) {
-+		printk(KERN_WARNING "AMD hostbridge not found\n");
- 		return 0;
-+	}
-+
-+	printk(KERN_DEBUG "Found AMD hostbridge at %x:%x.0\n", bus, slot);
- 
--	for (i = 0; i < 4; i++) {
-+	for (i = 0; i < AMD_NB_F1_CONFIG_MAP_RANGES; i++) {
- 		int min_bus;
- 		int max_bus;
--		reg = read_pci_config(bus, slot, 1, 0xe0 + (i << 2));
-+		reg = read_pci_config(bus, slot, 1,
-+				AMD_NB_F1_CONFIG_MAP_REG + (i << 2));
- 
- 		/* Check if that register is enabled for bus range */
- 		if ((reg & 7) != 3)
-@@ -124,21 +152,23 @@ static int __init early_fill_mp_bus_info(void)
- 	}
- 
- 	/* get the default node and link for left over res */
--	reg = read_pci_config(bus, slot, 0, 0x60);
-+	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_NODE_ID);
- 	def_node = (reg >> 8) & 0x07;
--	reg = read_pci_config(bus, slot, 0, 0x64);
-+	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_UNIT_ID);
- 	def_link = (reg >> 8) & 0x03;
- 
- 	memset(range, 0, sizeof(range));
- 	add_range(range, RANGE_NUM, 0, 0, 0xffff + 1);
- 	/* io port resource */
--	for (i = 0; i < 4; i++) {
--		reg = read_pci_config(bus, slot, 1, 0xc0 + (i << 3));
-+	for (i = 0; i < AMD_NB_F1_IOPORT_RANGES; i++) {
-+		reg = read_pci_config(bus, slot, 1,
-+				AMD_NB_F1_IO_BASEA_DDR_REG + (i << 3));
- 		if (!(reg & 3))
- 			continue;
- 
- 		start = reg & 0xfff000;
--		reg = read_pci_config(bus, slot, 1, 0xc4 + (i << 3));
-+		reg = read_pci_config(bus, slot, 1,
-+				AMD_NB_F1_IO_LIMIT_ADDR_REG + (i << 3));
- 		node = reg & 0x07;
- 		link = (reg >> 4) & 0x03;
- 		end = (reg & 0xfff000) | 0xfff;
-@@ -198,14 +228,16 @@ static int __init early_fill_mp_bus_info(void)
- 	}
- 
- 	/* mmio resource */
--	for (i = 0; i < 8; i++) {
--		reg = read_pci_config(bus, slot, 1, 0x80 + (i << 3));
-+	for (i = 0; i < AMD_NB_F1_MMIO_RANGES; i++) {
-+		reg = read_pci_config(bus, slot, 1,
-+				AMD_NB_F1_MMIO_BASE_REG + (i << 3));
- 		if (!(reg & 3))
- 			continue;
- 
- 		start = reg & 0xffffff00; /* 39:16 on 31:8*/
- 		start <<= 8;
--		reg = read_pci_config(bus, slot, 1, 0x84 + (i << 3));
-+		reg = read_pci_config(bus, slot, 1,
-+				AMD_NB_F1_MMIO_LIMIT_REG + (i << 3));
- 		node = reg & 0x07;
- 		link = (reg >> 4) & 0x03;
- 		end = (reg & 0xffffff00);
--- 
-1.7.10.4
+/*
+* Configure the PCI inbound memory windows to be 1:1 mapped to SDRAM
+*/
+writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_0);
+writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_1);
+writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_2);
 
 
+Rob
