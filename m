@@ -1,256 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51033 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755524AbaCNPfT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 11:35:19 -0400
+Received: from service87.mimecast.com ([91.220.42.44]:54203 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427AbaC1QVl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 12:21:41 -0400
+Date: Fri, 28 Mar 2014 16:21:38 +0000
 From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH v7 6/6] pci: Add support for creating a generic host_bridge from device tree
-Date: Fri, 14 Mar 2014 15:34:32 +0000
-Message-Id: <1394811272-1547-7-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linus.walleij@linaro.org" <linus.walleij@linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 0/3] Versatile PCI DT support
+Message-ID: <20140328162137.GA17163@e106497-lin.cambridge.arm.com>
+References: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
+ <20140328114618.GY17163@e106497-lin.cambridge.arm.com>
+ <CAL_JsqL-LxCWe2Lopf3ZGHXmJB4fwEmKj1y7-bgBpYd5owNKKg@mail.gmail.com>
+ <20140328145718.GZ17163@e106497-lin.cambridge.arm.com>
+ <CAL_JsqLh3i56Vp9UGELTr-eq8mQ87BAMYzFnC+6G_vDKR6awug@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAL_JsqLh3i56Vp9UGELTr-eq8mQ87BAMYzFnC+6G_vDKR6awug@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Several platforms use a rather generic version of parsing
-the device tree to find the host bridge ranges. Move the common code
-into the generic PCI code and use it to create a pci_host_bridge
-structure that can be used by arch code.
+On Fri, Mar 28, 2014 at 03:20:20PM +0000, Rob Herring wrote:
+> On Fri, Mar 28, 2014 at 9:57 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > On Fri, Mar 28, 2014 at 01:27:05PM +0000, Rob Herring wrote:
+> >> On Fri, Mar 28, 2014 at 6:46 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> >> > On Thu, Mar 27, 2014 at 10:46:35PM +0000, Rob Herring wrote:
+> >> >> From: Rob Herring <robh@kernel.org>
+> >> >>
+> >> >> This series adds a platform driver for Versatile PB's PCI host using
+> >> >> Liviu's recent patch series[1] for DT parsing and setup.
+> >> >>
+> >> >> The first patch is a hack to get Liviu's current patches to work on ARM.
+> >> >> It at least shows we are not that far off from being able to use the
+> >> >> series on ARM.
+> >> >>
+> >> >> I've tested PCI under QEMU, but need someone with actual h/w to test.
+> >> >> A branch with this series and which includes full conversion of
+> >> >> Versatile to DT is available here[2].
+> >> >
+> >> > Hi Rob,
+> >> >
+> >> > Thanks for doing this. Hopefully others will take inspiration and start to
+> >> > convert their host bridge controllers as well.
+> >> >
+> >> > I will post an updated series soon. (Un)fortunately it will look slightly
+> >> > different than the last one I've posted as I am trying to get more code
+> >> > that I've currently placed in arch/arm64/kernel/pci.c into drivers/pci,
+> >> > so you will need to revisit your series.
+> >> >
+> >> > Regarding your comment about bridge->bus->self being needed: root busses
+> >> > are supposed to have bus->self == NULL, and the bridge->bus *is* the root
+> >> > bus. Where would you need to use bridge->bus->self?
+> >>
+> >> If I want to use pci_write_config_* accesses, then I need a struct
+> >> pci_dev pointer for the host. I can get this since I know the slot of
+> >> the host, but only after pci_bus_add_devices which is perhaps too
+> >> late. Historically, the Versatile PCI driver has blocked config
+> >> accesses to the host's config space. I'm just wondering if this is
+> >> really correct behavior and whether the core code should do the setup.
+> >
+> > PCI core? It knows nothing of the Versatile registers. Versatile core code? Maybe.
+> 
+> These are all standard config space registers based on the offsets and
+> documentation. The only thing that I think might make this Versatile
+> specific is a host bridge having its own config space at all is
+> optional.
 
-Based on early attempts by Andrew Murray to unify the code.
-Used powerpc and microblaze PCI code as starting point.
+Sorry, got confused by your CSR_OFFSET macro into thinking it's Versatile specific (I
+still cannot get hold of the SP810 manual, sigh). Why don't you use PCI_COMMAND ?
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Tested-by: Tanmay Inamdar <tinamdar@apm.com>
----
- drivers/pci/host-bridge.c | 158 ++++++++++++++++++++++++++++++++++++
- include/linux/pci.h       |  13 +++
- 2 files changed, 171 insertions(+)
+> 
+> >> This is setup that is done which doesn't seem like it is very specific
+> >> to Versatile.
+> >>
+> >> local_pci_cfg_base = versatile_cfg_base[1] + (myslot << 11);
+> >>
+> >> val = readl(local_pci_cfg_base + CSR_OFFSET);
+> >> val |= PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER | PCI_COMMAND_INVALIDATE;
+> >> writel(val, local_pci_cfg_base + CSR_OFFSET);
+> >
+> > Why don't you do this in a versatile_fixup_bridge() call, like pci-tegra.c
+> > does?
+> 
+> I could, but doesn't any host need these bits set (assuming the host
+> has a config space)?
+> 
+> As it stands now, the PCI core would never call a fixup because the
+> host's config space is masked out (with pci_slot_ignore). So is that
+> wrong?
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 8708b652..7cda90b 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -6,9 +6,14 @@
- #include <linux/init.h>
- #include <linux/pci.h>
- #include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/slab.h>
- 
- #include "pci.h"
- 
-+static atomic_t domain_nr = ATOMIC_INIT(-1);
-+
- static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
- {
- 	while (bus->parent)
-@@ -92,3 +97,156 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 	res->end = region->end + offset;
- }
- EXPORT_SYMBOL(pcibios_bus_to_resource);
-+
-+#ifdef CONFIG_OF
-+/**
-+ * Simple version of the platform specific code for filtering the list
-+ * of resources obtained from the ranges declaration in DT.
-+ *
-+ * Platforms can override this function in order to impose stronger
-+ * constraints onto the list of resources that a host bridge can use.
-+ * The filtered list will then be used to create a root bus and associate
-+ * it with the host bridge.
-+ *
-+ */
-+int __weak pcibios_fixup_bridge_ranges(struct list_head *resources)
-+{
-+	return 0;
-+}
-+
-+/**
-+ * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
-+ * @dev: device node of the host bridge having the range property
-+ * @resources: list where the range of resources will be added after DT parsing
-+ * @io_base: pointer to a variable that will contain the physical address for
-+ * the start of the I/O range.
-+ *
-+ * It is the callers job to free the @resources list if an error is returned.
-+ *
-+ * This function will parse the "ranges" property of a PCI host bridge device
-+ * node and setup the resource mapping based on its content. It is expected
-+ * that the property conforms with the Power ePAPR document.
-+ *
-+ * Each architecture is then offered the chance of applying their own
-+ * filtering of pci_host_bridge_windows based on their own restrictions by
-+ * calling pcibios_fixup_bridge_ranges(). The filtered list of windows
-+ * can then be used when creating a pci_host_bridge structure.
-+ */
-+static int pci_host_bridge_of_get_ranges(struct device_node *dev,
-+		struct list_head *resources, resource_size_t *io_base)
-+{
-+	struct resource *res;
-+	struct of_pci_range range;
-+	struct of_pci_range_parser parser;
-+	int err;
-+
-+	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
-+
-+	/* Check for ranges property */
-+	err = of_pci_range_parser_init(&parser, dev);
-+	if (err)
-+		return err;
-+
-+	pr_debug("Parsing ranges property...\n");
-+	for_each_of_pci_range(&parser, &range) {
-+		/* Read next ranges element */
-+		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
-+				range.pci_space, range.pci_addr);
-+		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
-+					range.cpu_addr, range.size);
-+
-+		/*
-+		 * If we failed translation or got a zero-sized region
-+		 * then skip this range
-+		 */
-+		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-+			continue;
-+
-+		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-+		if (!res)
-+			return -ENOMEM;
-+
-+		err = of_pci_range_to_resource(&range, dev, res);
-+		if (err)
-+			return err;
-+
-+		if (resource_type(res) == IORESOURCE_IO)
-+			*io_base = range.cpu_addr;
-+
-+		pci_add_resource_offset(resources, res,
-+				res->start - range.pci_addr);
-+	}
-+
-+	/* Apply architecture specific fixups for the ranges */
-+	return pcibios_fixup_bridge_ranges(resources);
-+}
-+
-+/**
-+ * of_create_pci_host_bridge - Create a PCI host bridge structure using
-+ * information passed in the DT.
-+ * @parent: device owning this host bridge
-+ * @ops: pci_ops associated with the host controller
-+ * @host_data: opaque data structure used by the host controller.
-+ *
-+ * returns a pointer to the newly created pci_host_bridge structure, or
-+ * NULL if the call failed.
-+ *
-+ * This function will try to obtain the host bridge domain number by
-+ * using of_alias_get_id() call with "pci-domain" as a stem. If that
-+ * fails, a local allocator will be used that will put each host bridge
-+ * in a new domain.
-+ */
-+struct pci_host_bridge *
-+of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
-+{
-+	int err, domain, busno;
-+	struct resource *bus_range;
-+	struct pci_bus *root_bus;
-+	struct pci_host_bridge *bridge;
-+	resource_size_t io_base;
-+	LIST_HEAD(res);
-+
-+	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
-+	if (!bus_range)
-+		return ERR_PTR(-ENOMEM);
-+
-+	domain = of_alias_get_id(parent->of_node, "pci-domain");
-+	if (domain == -ENODEV)
-+		domain = atomic_inc_return(&domain_nr);
-+
-+	err = of_pci_parse_bus_range(parent->of_node, bus_range);
-+	if (err) {
-+		dev_info(parent, "No bus range for %s, using default [0-255]\n",
-+			parent->of_node->full_name);
-+		bus_range->start = 0;
-+		bus_range->end = 255;
-+		bus_range->flags = IORESOURCE_BUS;
-+	}
-+	busno = bus_range->start;
-+	pci_add_resource(&res, bus_range);
-+
-+	/* now parse the rest of host bridge bus ranges */
-+	err = pci_host_bridge_of_get_ranges(parent->of_node, &res, &io_base);
-+	if (err)
-+		goto err_create;
-+
-+	/* then create the root bus */
-+	root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
-+						ops, host_data, &res);
-+	if (IS_ERR(root_bus)) {
-+		err = PTR_ERR(root_bus);
-+		goto err_create;
-+	}
-+
-+	bridge = to_pci_host_bridge(root_bus->bridge);
-+	bridge->io_base = io_base;
-+
-+	return bridge;
-+
-+err_create:
-+	pci_free_resource_list(&res);
-+	return ERR_PTR(err);
-+}
-+EXPORT_SYMBOL_GPL(of_create_pci_host_bridge);
-+
-+#endif /* CONFIG_OF */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1eed009..40ddd3d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -395,6 +395,7 @@ struct pci_host_bridge {
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
- 	int domain_nr;
-+	resource_size_t io_base;	/* physical address for the start of I/O area */
- 	struct list_head windows;	/* pci_host_bridge_windows */
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
-@@ -1786,11 +1787,23 @@ static inline struct device_node *pci_bus_to_OF_node(struct pci_bus *bus)
- 	return bus ? bus->dev.of_node : NULL;
- }
- 
-+struct pci_host_bridge *
-+of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
-+			void *host_data);
-+
-+int pcibios_fixup_bridge_ranges(struct list_head *resources);
- #else /* CONFIG_OF */
- static inline void pci_set_of_node(struct pci_dev *dev) { }
- static inline void pci_release_of_node(struct pci_dev *dev) { }
- static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
- static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
-+
-+static inline struct pci_host_bridge *
-+of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
-+			void *host_data)
-+{
-+	return NULL;
-+}
- #endif  /* CONFIG_OF */
- 
- #ifdef CONFIG_EEH
+No, it is right. Host bridge config space should not be visible if it is a PCI
+host bridge. And I'm guessing that this is the reason why everyone and their dog
+does the PCI_COMMAND register setup for the host brige manually.
+
+For PCIe the spec is a bit more forgiving is you use ECAM, although it doesn't
+explicitly allow writes to the config space of the host bridge. From PCI Express
+Base spec, rev 3.0:
+
+	7.2.2.1. Host Bridge Requirements 
+	For those systems that implement the ECAM, the PCI Express Host Bridge is
+	required to translate the memory-mapped PCI Express Configuration Space
+	accesses from the host processor to PCI Express configuration transactions.
+	The use of Host Bridge PCI class code is Reserved for backwards compatibility;
+	host Bridge Configuration Space is opaque to standard PCI Express software
+	and may be implemented in an implementation specific manner that is compatible
+	with PCI Host Bridge Type 0 Configuration Space.  A PCI Express Host Bridge is
+	not required to signal errors through a Root Complex Event Collector.  This
+	support is optional for PCI Express Host Bridges. 
+
+So it looks like you need to do those in the host bridge probe function, rather than
+in a generic way.
+
+Best regards,
+Liviu
+
+> 
+> >>
+> >> /*
+> >> * Configure the PCI inbound memory windows to be 1:1 mapped to SDRAM
+> >> */
+> >> writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_0);
+> >> writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_1);
+> >> writel(PHYS_OFFSET, local_pci_cfg_base + PCI_BASE_ADDRESS_2);
+> >
+> > My guess is that this has to be done at probe time. It just happens that for
+> > Versatile PCI they live in the host config space, but they are not really
+> > PCI config space writes.
+> 
+> It is not completely obvious since they use private defines, but
+> PCI_BASE_ADDRESS_x registers are BAR registers AFAICT.
+> 
+> Rob
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.9.0
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
