@@ -1,60 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:55996 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873AbaC0Pjn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 11:39:43 -0400
-Received: by mail-ig0-f179.google.com with SMTP id t19so1739459igi.6
-        for <linux-pci@vger.kernel.org>; Thu, 27 Mar 2014 08:39:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAHH3p5Km5_hKvNizysUp=LsbBw2jEJAZ_NdwPDCSi1PBrAdRyw@mail.gmail.com>
-References: <CAHH3p5Km5_hKvNizysUp=LsbBw2jEJAZ_NdwPDCSi1PBrAdRyw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 27 Mar 2014 09:39:22 -0600
-Message-ID: <CAErSpo6aD==u=WHiv6D3mGZoc5SBX-GtW7mW=hNt--QQP+ePQQ@mail.gmail.com>
-Subject: Re: Read/Write BARs of device directly
-To: shiv prakash Agarwal <chhotu.shiv@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:33559 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750974AbaC1Psk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 11:48:40 -0400
+Message-ID: <1396021656.4563.3.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH v2 0/6] PCI irq mapping fixes and cleanups
+From: Lucas Stach <l.stach@pengutronix.de>
+To: linux-arm-kernel@lists.infradead.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-sh@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
+Date: Fri, 28 Mar 2014 16:47:36 +0100
+In-Reply-To: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 27, 2014 at 5:02 AM, shiv prakash Agarwal
-<chhotu.shiv@gmail.com> wrote:
-> I have a kernel space testcode which does below after all enumeration
-> and driver loading is done:
->
-> 1. read BARx address of endpoint from its config space
+Friendly ping.
 
-The BAR contains a PCI bus address.  This is often, but not always,
-identical to the CPU physical address.  To ioremap it, you must supply
-the CPU physical address, which you get from pci_resource_start().
+Bjorn could you please pick the patches labeled "PCI: ..." up? Both the
+Tegra and i.MX dts changes are already queued up for 3.15 and I think
+all patches gathered enough acks and tested-bys for this to be low risk.
 
-> 2. ioremap this physical address to get virtual address
-> 3. read this virtual address using readl/readw api
+Regards,
+Lucas
 
-The CPU internally converts the virtual address to a physical address
-and issues a read transaction to the physical address.  A host bridge,
-e.g., a PCIe root complex, claims the transaction and issues a
-corresponding PCI or PCIe transaction.  This is where the host bridge
-may optionally convert the CPU physical address to a different PCI bus
-address.
+Am Mittwoch, den 05.03.2014, 14:25 +0100 schrieb Lucas Stach:
+> This series cleans up the PCI irq mapping for all
+> the ARM PCI host drivers, so they handle it in the
+> way defined in the common PCI bindings.
+> 
+> I've worked in all the feedback I received on the first
+> round of this series and left out the i.MX pcie driver
+> changes, as these need more work includig breaking
+> of the existing binding, which I'll send as a separate
+> series.
+> 
+> Lucas Stach (6):
+>   ARM: dts: tegra: add PCIe interrupt mapping properties
+>   PCI: tegra: use new OF interrupt mapping when possible
+>   PCI: rcar: use new OF interrupt mapping when possible
+>   ARM: dts: exynos5440: fix PCIe interrupt mapping
+>   ARM: dts: imx6: add PCIe interrupt mapping properties
+>   PCI: designware: use new OF interrupt mapping when possible
+> 
+>  .../devicetree/bindings/pci/nvidia,tegra20-pcie.txt          |  8 ++++++++
+>  arch/arm/boot/dts/exynos5440.dtsi                            |  6 ++++--
+>  arch/arm/boot/dts/imx6qdl.dtsi                               |  8 ++++++++
+>  arch/arm/boot/dts/tegra20.dtsi                               |  4 ++++
+>  arch/arm/boot/dts/tegra30.dtsi                               |  4 ++++
+>  drivers/pci/host/pci-rcar-gen2.c                             | 12 +++++++++---
+>  drivers/pci/host/pci-tegra.c                                 |  7 ++++++-
+>  drivers/pci/host/pcie-designware.c                           | 12 +++++++++---
+>  8 files changed, 52 insertions(+), 9 deletions(-)
+> 
 
-I'm not quite sure what you mean by "upstream or downstream traffic."
-The transaction generated by the host bridge travels downstream, i.e.,
-away from the CPU.  The response from the device then travels
-upstream, back towards the CPU, of course.  But maybe you had some
-hardware detail in mind, and I'm not a hardware expert.
+-- 
+Pengutronix e.K.                           | Lucas Stach                 |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
 
-You can also do writes the same way.
-
-> Query is:
->
-> 1. Does read in point 3 above happens through PCIE interface?
-> 2. Is it upstream or downstream traffic?
-> 3. Could we do corresponding write also?
-
-Does this answer your questions?
-
-Bjorn
