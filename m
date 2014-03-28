@@ -1,150 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp14.uk.ibm.com ([195.75.94.110]:50236 "EHLO
-	e06smtp14.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753881AbaCCNfL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 08:35:11 -0500
-Received: from /spool/local
-	by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
-	Mon, 3 Mar 2014 13:35:08 -0000
-Date: Mon, 3 Mar 2014 14:35:04 +0100 (CET)
-From: Sebastian Ott <sebott@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-cc: linux-pci@vger.kernel.org, Jan Glauber <jang@linux.vnet.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux-kernel@vger.kernel.org,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	linux390@de.ibm.com
-Subject: Re: [PATCH 7/7] s390/PCI: Use generic pci_enable_resources()
-In-Reply-To: <20140226234215.18970.1743.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.LFD.2.11.1403031429080.1476@denkbrett>
-References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>  <20140226234215.18970.1743.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:59000 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699AbaC1QxH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 12:53:07 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
+	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
+	Richard Zhu <r65037@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
+Subject: [PATCH 0/8] i.MX6 PCIe binding change and MSI support
+Date: Fri, 28 Mar 2014 17:52:51 +0100
+Message-Id: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+While working on MSI support for the i.MX6 PCIe host driver
+it has been discovered that the binding for this host controller
+is broken in many ways (refer to the patch descriptions for more
+info) and was introduced without proper discussion about what
+should/should not be in the binding.
 
-On Wed, 26 Feb 2014, Bjorn Helgaas wrote:
+This series fixes this and minimizes the difference of the
+i.MX6 binding to the common designware PCIe binding. I'm aware
+that this is a quite radical change, but I think it's justified
+to do this as long as there aren't many user of the old binding
+(most of the optional properties in the binding aren't even
+implemented).
 
-> The generic pci_enable_resources() does essentially the same thing as the
-> code in the s390 version of pcibios_enable_device().
-> 
-> There are differences, but I don't think any of them are a problem.  The
-> generic code:
-> 
->   - Checks everything up to PCI_NUM_RESOURCES, not PCI_BAR_COUNT (6), so
->     we'll now check the ROM resource, IOV resources, and bridge windows.
-> 
->   - Checks for res->flags & IORESOURCE_UNSET.  The s390 code never sets
->     IORESOURCE_UNSET, so this isn't a problem.
-> 
->   - Checks res->parent.  The s390 pcibios_add_device() calls
->     pci_claim_resource() on all BARs (except ROM, IOV, and bridge windows)
->     so this isn't a problem either.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Martin Schwidefsky <schwidefsky@de.ibm.com>
-> CC: Heiko Carstens <heiko.carstens@de.ibm.com>
-> CC: Sebastian Ott <sebott@linux.vnet.ibm.com>
-> CC: Jan Glauber <jang@linux.vnet.ibm.com>
-> CC: linux390@de.ibm.com
-> ---
->  arch/s390/pci/pci.c |   13 +------------
->  1 file changed, 1 insertion(+), 12 deletions(-)
-> 
-> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> index 66670ff262a0..7d5fcaed3361 100644
-> --- a/arch/s390/pci/pci.c
-> +++ b/arch/s390/pci/pci.c
-> @@ -695,18 +695,7 @@ int pcibios_enable_device(struct pci_dev *pdev, int mask)
->  	zpci_fmb_enable_device(zdev);
->  	zpci_map_resources(zdev);
-> 
-> -	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> -	for (i = 0; i < PCI_BAR_COUNT; i++) {
-> -		res = &pdev->resource[i];
-> -
-> -		if (res->flags & IORESOURCE_IO)
-> -			return -EINVAL;
-> -
-> -		if (res->flags & IORESOURCE_MEM)
-> -			cmd |= PCI_COMMAND_MEMORY;
-> -	}
-> -	pci_write_config_word(pdev, PCI_COMMAND, cmd);
-> -	return 0;
-> +	return pci_enable_resources(pdev, mask);
->  }
-> 
->  void pcibios_disable_device(struct pci_dev *pdev)
-> 
+Looking forward to your feedback.
 
-Let's also remove some now unused variables (updated patch below). Other
-than that:
+Lucas Stach (8):
+  ARM: imx6q-clk: parent lvds_gate from lvds_sel
+  PCI: designware: split Exynos and i.MX bindings
+  ARM: dts: imx6: update pcie to bring in line with new binding
+  PCI: imx6: use new clock names
+  PCI: imx6: drop old irq mapping
+  PCI: imx6: rip out optional (and unused) irqs
+  PCI: designware: make MSI isr shared irq aware
+  PCI: imx6: add support for MSI
 
-Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+ .../devicetree/bindings/pci/designware-pcie.txt    |  74 +----------
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  38 ++++++
+ .../bindings/pci/samsung,exynos5440-pcie.txt       |  65 +++++++++
+ arch/arm/boot/dts/imx6qdl.dtsi                     |   7 +-
+ arch/arm/mach-imx/clk-imx6q.c                      |   4 +-
+ drivers/pci/host/pci-exynos.c                      |   4 +-
+ drivers/pci/host/pci-imx6.c                        | 145 ++++++++-------------
+ drivers/pci/host/pcie-designware.c                 |   6 +-
+ drivers/pci/host/pcie-designware.h                 |   2 +-
+ 9 files changed, 176 insertions(+), 169 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
 
-Regards,
-Sebastian
----
-s390/PCI: Use generic pci_enable_resources()
-
-The generic pci_enable_resources() does essentially the same thing as the
-code in the s390 version of pcibios_enable_device().
-
-There are differences, but I don't think any of them are a problem.  The
-generic code:
-
-  - Checks everything up to PCI_NUM_RESOURCES, not PCI_BAR_COUNT (6), so
-    we'll now check the ROM resource, IOV resources, and bridge windows.
-
-  - Checks for res->flags & IORESOURCE_UNSET.  The s390 code never sets
-    IORESOURCE_UNSET, so this isn't a problem.
-
-  - Checks res->parent.  The s390 pcibios_add_device() calls
-    pci_claim_resource() on all BARs (except ROM, IOV, and bridge windows)
-    so this isn't a problem either.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Martin Schwidefsky <schwidefsky@de.ibm.com>
-CC: Heiko Carstens <heiko.carstens@de.ibm.com>
-CC: Sebastian Ott <sebott@linux.vnet.ibm.com>
-CC: Jan Glauber <jang@linux.vnet.ibm.com>
-CC: linux390@de.ibm.com
----
- arch/s390/pci/pci.c |   16 +---------------
- 1 file changed, 1 insertion(+), 15 deletions(-)
-
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -686,27 +686,13 @@ int pcibios_add_device(struct pci_dev *p
- int pcibios_enable_device(struct pci_dev *pdev, int mask)
- {
- 	struct zpci_dev *zdev = get_zdev(pdev);
--	struct resource *res;
--	u16 cmd;
--	int i;
- 
- 	zdev->pdev = pdev;
- 	zpci_debug_init_device(zdev);
- 	zpci_fmb_enable_device(zdev);
- 	zpci_map_resources(zdev);
- 
--	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
--	for (i = 0; i < PCI_BAR_COUNT; i++) {
--		res = &pdev->resource[i];
--
--		if (res->flags & IORESOURCE_IO)
--			return -EINVAL;
--
--		if (res->flags & IORESOURCE_MEM)
--			cmd |= PCI_COMMAND_MEMORY;
--	}
--	pci_write_config_word(pdev, PCI_COMMAND, cmd);
--	return 0;
-+	return pci_enable_resources(pdev, mask);
- }
- 
- void pcibios_disable_device(struct pci_dev *pdev)
+-- 
+1.9.0
 
