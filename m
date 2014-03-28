@@ -1,61 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57637 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751348AbaCaV7I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 31 Mar 2014 17:59:08 -0400
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: bhelgaas@google.com
-Cc: Mark Rustad <mark.d.rustad@intel.com>, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: [PATCH] pci: Use designated initialization in PCI_VDEVICE
-Date: Mon, 31 Mar 2014 14:58:39 -0700
-Message-Id: <1396303119-16766-1-git-send-email-jeffrey.t.kirsher@intel.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:59017 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752567AbaC1QxI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 12:53:08 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
+	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
+	Richard Zhu <r65037@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
+Subject: [PATCH 8/8] PCI: imx6: add support for MSI
+Date: Fri, 28 Mar 2014 17:52:59 +0100
+Message-Id: <1396025579-14344-9-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Mark Rustad <mark.d.rustad@intel.com>
+This patch adds support for Message Signaled Interrupts in the
+imx6-pcie driver.
 
-By using designated initialization in PCI_VDEVICE, like other
-similar macros, many "missing initializer" warnings that appear
-when compiling with W=2 can be silenced.
-
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
-Tested-by: Aaron Brown <aaron.f.brown@intel.com>
-Tested-by: Kavindya Deegala <kavindya.s.deegala@intel.com>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Signed-off-by: Harro Haan <hrhaan@gmail.com>
+Signed-off-by: Juergen Beisert <jbe@pengutronix.de>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- include/linux/pci.h | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/pci/host/pci-imx6.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index fb57c89..49455f9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -680,8 +680,8 @@ struct pci_driver {
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 4c20fc4795e5..41008b7804f9 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -25,6 +25,7 @@
+ #include <linux/resource.h>
+ #include <linux/signal.h>
+ #include <linux/types.h>
++#include <linux/interrupt.h>
  
- /**
-  * PCI_VDEVICE - macro used to describe a specific pci device in short form
-- * @vendor: the vendor name
-- * @device: the 16 bit PCI Device ID
-+ * @vend: the vendor name
-+ * @dev: the 16 bit PCI Device ID
-  *
-  * This macro is used to create a struct pci_device_id that matches a
-  * specific PCI device.  The subvendor, and subdevice fields will be set
-@@ -689,9 +689,9 @@ struct pci_driver {
-  * private data.
-  */
+ #include "pcie-designware.h"
  
--#define PCI_VDEVICE(vendor, device)		\
--	PCI_VENDOR_ID_##vendor, (device),	\
--	PCI_ANY_ID, PCI_ANY_ID, 0, 0
-+#define PCI_VDEVICE(vend, dev) \
-+	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
-+	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+@@ -314,6 +315,13 @@ static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+ 	return 0;
+ }
  
- /* these external functions are only available when PCI support is enabled */
- #ifdef CONFIG_PCI
++static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
++{
++	struct pcie_port *pp = arg;
++
++	return dw_handle_msi_irq(pp);
++}
++
+ static int imx6_pcie_start_link(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+@@ -388,6 +396,9 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 	dw_pcie_setup_rc(pp);
+ 
+ 	imx6_pcie_start_link(pp);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		dw_pcie_msi_init(pp);
+ }
+ 
+ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+@@ -477,6 +488,22 @@ static int imx6_add_pcie_port(struct pcie_port *pp,
+ {
+ 	int ret;
+ 
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
++		if (pp->msi_irq <= 0) {
++			dev_err(&pdev->dev, "failed to get MSI irq\n");
++			return -ENODEV;
++		}
++
++		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
++		                       imx6_pcie_msi_handler,
++		                       IRQF_SHARED, "mx6-pcie-msi", pp);
++		if (ret) {
++			dev_err(&pdev->dev, "failed to request MSI irq\n");
++			return -ENODEV;
++		}
++	}
++
+ 	pp->root_bus_nr = -1;
+ 	pp->ops = &imx6_pcie_host_ops;
+ 
 -- 
 1.9.0
 
