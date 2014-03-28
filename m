@@ -1,156 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53901 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753925AbaCCRe0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 12:34:26 -0500
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:59014 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752560AbaC1QxI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 12:53:08 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
+	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
+	Richard Zhu <r65037@freescale.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v4 0/6] [RFC] Support for creating generic host_bridge from device tree
-Date: Mon,  3 Mar 2014 17:33:10 +0000
-Message-Id: <1393867996-32299-1-git-send-email-Liviu.Dudau@arm.com>
+	Jingoo Han <jg1.han@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
+Subject: [PATCH 6/8] PCI: imx6: rip out optional (and unused) irqs
+Date: Fri, 28 Mar 2014 17:52:57 +0100
+Message-Id: <1396025579-14344-7-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is v4 of my attempt to add support for a generic pci_host_bridge controller created
-from a description passed in the device tree.
+They are dropped with the new binding.
 
-Changes from v3:
-  - Dynamically allocate bus_range resource in of_create_pci_host_bridge()
-  - Fix the domain number used when creating child busses.
-  - Changed domain number allocator to use atomic operations.
-  - Use ERR_PTR() to propagate the error out of pci_create_root_bus_in_domain()
-    and of_create_pci_host_bridge().
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/host/pci-imx6.c | 42 ------------------------------------------
+ 1 file changed, 42 deletions(-)
 
-Changes from v2:
-  - Use range->cpu_addr when calling pci_address_to_pio()
-  - Introduce pci_register_io_range() helper function in order to register
-    io ranges ahead of their conversion to PIO values. This is needed as no
-    information is being stored yet regarding the range mapping, making
-    pci_address_to_pio() fail. Default weak implementation does nothing,
-    to cover the default weak implementation of pci_address_to_pio() that
-    expects direct mapping of physical addresses into PIO values (x86 view).
-
-Changes from v1:
-  - Add patch to fix conversion of IO ranges into IO resources.
-  - Added a domain_nr member to pci_host_bridge structure, and a new function
-    to create a root bus in a given domain number. In order to facilitate that
-    I propose changing the order of initialisation between pci_host_bridge and
-    it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
-    This is done in patch 1/4 and 2/4.
-  - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
-    code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
-    and if that fails assign the next unallocated domain id.
-  - Changed the name of the function that creates the generic host bridge from
-    pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
-
-v1 thread here: https://lkml.org/lkml/2014/2/3/380
-
-The following is an edit of the original blurb:
-
-Following the discussion started here [1], I now have a proposal for tackling
-generic support for host bridges described via device tree. It is an initial
-stab at it, to try to get feedback and suggestions, but it is functional enough
-that I have PCI Express for arm64 working on an FPGA using the patch that I am
-also publishing that adds support for PCI for that platform.
-
-Looking at the existing architectures that fit the requirements (use of device
-tree and PCI) yields the powerpc and microblaze as generic enough to make them
-candidates for conversion. I have a tentative patch for microblaze that I can
-only compile test it, unfortunately using qemu-microblaze leads to an early
-crash in the kernel.
-
-As Bjorn has mentioned in the previous discussion, the idea is to add to
-struct pci_host_bridge enough data to be able to reduce the size or remove the
-architecture specific pci_controller structure. arm64 support actually manages
-to get rid of all the architecture static data and has no pci_controller structure
-defined. For host bridge drivers that means a change of API unless architectures
-decide to provide a compatibility layer (comments here please).
-
-In order to initialise a host bridge with the new API, the following example
-code is sufficient for a _probe() function:
-
-static int myhostbridge_probe(struct platform_device *pdev)
-{
-	int err;
-	struct device_node *dev;
-	struct pci_host_bridge *bridge;
-	struct myhostbridge_port *pp;
-	resource_size_t lastbus;
-
-	dev = pdev->dev.of_node;
-
-	if (!of_device_is_available(dev)) {
-		pr_warn("%s: disabled\n", dev->full_name);
-		return -ENODEV;
-	}
-
-	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
-	if (!pp)
-		return -ENOMEM;
-
-	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
-	if (IS_ERR(bridge)) {
-		err = PTR_ERR(bridge);
-		goto bridge_create_fail;
-	}
-
-	err = myhostbridge_setup(bridge->bus);
-	if (err)
-		goto bridge_setup_fail;
-
-	/* We always enable PCI domains and we keep domain 0 backward
-	 * compatible in /proc for video cards
-	 */
-	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
-	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
-
-	lastbus = pci_scan_child_bus(bridge->bus);
-	pci_bus_update_busn_res_end(bridge->bus, lastbus);
-
-	pci_assign_unassigned_bus_resources(bridge->bus);
-
-	pci_bus_add_devices(bridge->bus);
-
-	return 0;
-
-bridge_setup_fail:
-	put_device(&bridge->dev);
-	device_unregister(&bridge->dev);
-bridge_create_fail:
-	kfree(pp);
-	return err;
-}
-
-[1] http://thread.gmane.org/gmane.linux.kernel.pci/25946
-
-Best regards,
-Liviu
-
-
-Liviu Dudau (6):
-  pci: Introduce pci_register_io_range() helper function.
-  pci: OF: Fix the conversion of IO ranges into IO resources.
-  pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-  pci: Introduce a domain number for pci_host_bridge.
-  pci: Use parent domain number when allocating child busses.
-  pci: Add support for creating a generic host_bridge from device tree
-
- drivers/of/address.c       |  39 +++++++++++++
- drivers/pci/host-bridge.c  | 139 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c        |  72 +++++++++++++++--------
- include/linux/of_address.h |  14 +----
- include/linux/pci.h        |  17 ++++++
- 5 files changed, 246 insertions(+), 35 deletions(-)
-
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 259a73687526..4c20fc4795e5 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -32,9 +32,6 @@
+ 
+ struct imx6_pcie {
+ 	int			reset_gpio;
+-	int			power_on_gpio;
+-	int			wake_up_gpio;
+-	int			disable_gpio;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
+ 	struct clk		*pcie;
+@@ -230,9 +227,6 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	int ret;
+ 
+-	if (gpio_is_valid(imx6_pcie->power_on_gpio))
+-		gpio_set_value(imx6_pcie->power_on_gpio, 1);
+-
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+@@ -531,42 +525,6 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	imx6_pcie->power_on_gpio = of_get_named_gpio(np, "power-on-gpio", 0);
+-	if (gpio_is_valid(imx6_pcie->power_on_gpio)) {
+-		ret = devm_gpio_request_one(&pdev->dev,
+-					imx6_pcie->power_on_gpio,
+-					GPIOF_OUT_INIT_LOW,
+-					"PCIe power enable");
+-		if (ret) {
+-			dev_err(&pdev->dev, "unable to get power-on gpio\n");
+-			return ret;
+-		}
+-	}
+-
+-	imx6_pcie->wake_up_gpio = of_get_named_gpio(np, "wake-up-gpio", 0);
+-	if (gpio_is_valid(imx6_pcie->wake_up_gpio)) {
+-		ret = devm_gpio_request_one(&pdev->dev,
+-					imx6_pcie->wake_up_gpio,
+-					GPIOF_IN,
+-					"PCIe wake up");
+-		if (ret) {
+-			dev_err(&pdev->dev, "unable to get wake-up gpio\n");
+-			return ret;
+-		}
+-	}
+-
+-	imx6_pcie->disable_gpio = of_get_named_gpio(np, "disable-gpio", 0);
+-	if (gpio_is_valid(imx6_pcie->disable_gpio)) {
+-		ret = devm_gpio_request_one(&pdev->dev,
+-					imx6_pcie->disable_gpio,
+-					GPIOF_OUT_INIT_HIGH,
+-					"PCIe disable endpoint");
+-		if (ret) {
+-			dev_err(&pdev->dev, "unable to get disable-ep gpio\n");
+-			return ret;
+-		}
+-	}
+-
+ 	/* Fetch clocks */
+ 	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
+ 	if (IS_ERR(imx6_pcie->pcie_phy)) {
 -- 
 1.9.0
 
