@@ -1,151 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51693 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755924AbaCELtx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 06:49:53 -0500
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v6 0/3] [RFC] Add support for PCI in AArch64
-Date: Wed,  5 Mar 2014 11:49:07 +0000
-Message-Id: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:46030 "EHLO
+	ducie-dc1.codethink.co.uk" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751718AbaC3TVG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 30 Mar 2014 15:21:06 -0400
+Message-ID: <53386E9D.70803@codethink.co.uk>
+Date: Sun, 30 Mar 2014 20:21:01 +0100
+From: Ben Dooks <ben.dooks@codethink.co.uk>
+MIME-Version: 1.0
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+CC: linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-kernel@lists.codethink.co.uk, magnus.damn@opensource.se,
+	horms@verge.net.au, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/9] pci-rcar-gen2: add devicetree support
+References: <1394128887-4197-1-git-send-email-ben.dooks@codethink.co.uk> <1394128887-4197-2-git-send-email-ben.dooks@codethink.co.uk> <5318BCAE.7000108@codethink.co.uk> <53386C2F.1090508@cogentembedded.com>
+In-Reply-To: <53386C2F.1090508@cogentembedded.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 30/03/14 20:10, Sergei Shtylyov wrote:
+> Hello.
+>
+> On 03/06/2014 09:21 PM, Ben Dooks wrote:
+>
+>>> Add OF match table for pci-rcar-gen2 driver for device tree support.
+> [...]
+>
+>>> diff --git a/drivers/pci/host/pci-rcar-gen2.c
+>>> b/drivers/pci/host/pci-rcar-gen2.c
+>>> index fd3e3ab..1216784 100644
+>>> --- a/drivers/pci/host/pci-rcar-gen2.c
+>>> +++ b/drivers/pci/host/pci-rcar-gen2.c
+>>> @@ -16,6 +16,7 @@
+>>>   #include <linux/kernel.h>
+>>>   #include <linux/module.h>
+>>>   #include <linux/pci.h>
+>>> +#include <linux/of_pci.h>
+>>>   #include <linux/platform_device.h>
+>>>   #include <linux/pm_runtime.h>
+>>>   #include <linux/sizes.h>
+>
+>> Apologies all, there's a missing include of <linux/of.h> which should
+>> have been added here
+>
+>     Have you ever re-posted this patch fixed? If not, it's not going to
+> be merged for 3.15 I guess...
 
-This patch adds support for PCI to AArch64. It is based on my v6 patch
-that adds support for creating generic host bridge structure from
-device tree. With that in place, I was able to boot a platform that
-has PCIe host bridge support and use a PCIe network card.
-
-Changes from v5:
-  - Removed pcibios_fixup_bridge_ranges() as the week default version is fine.
-  - Removed the ALIGN() call in pcibios_align_resource()
-  - Stopped exporting pcibios_align_resource()
-
-Changes from v4:
-  - Fixed the pci_domain_nr() implementation for arm64. Now we use
-    find_pci_host_bride() to find the host bridge before we retrieve
-    the domain number.
-
-Changes from v3:
-  - Added Acks accumulated so far ;)
-  - Still carrying Catalin's patch for moving the PCI_IO_BASE until it
-    lands in linux-next or mainline, in order to ease applying the series
-
-Changes from v2:
-  - Implement an arch specific version of pci_register_io_range() and
-    pci_address_to_pio().
-  - Return 1 from pci_proc_domain().
-
-Changes from v1:
-  - Added Catalin's patch for moving the PCI_IO_BASE location and extend
-    its size to 16MB
-  - Integrated Arnd's version of pci_ioremap_io that uses a bitmap for
-    keeping track of assigned IO space and returns an io_offset. At the
-    moment the code is added in arch/arm64 but it can be moved in drivers/pci.
-  - Added a fix for the generic ioport_map() function when !CONFIG_GENERIC_IOMAP
-    as suggested by Arnd.
-
-v5 thread here: https://lkml.org/lkml/2014/3/4/307
-v4 thread here: https://lkml.org/lkml/2014/3/3/298
-v3 thread here: https://lkml.org/lkml/2014/2/28/211
-v2 thread here: https://lkml.org/lkml/2014/2/27/255
-v1 thread here: https://lkml.org/lkml/2014/2/3/389
-
-
-The API used is different from the one used by ARM architecture. There is
-no pci_common_init_dev() function and no hw_pci structure, as that is no
-longer needed. Once the last signature is added to the legal agreement, I
-will post the host bridge driver code that I am using. Meanwhile, here
-is an example of what the probe function looks like, posted as an example:
-
-static int myhostbridge_probe(struct platform_device *pdev)
-{
-	int err;
-	struct device_node *dev;
-	struct pci_host_bridge *bridge;
-	struct myhostbridge_port *pp;
-	resource_size_t lastbus;
-
-	dev = pdev->dev.of_node;
-
-	if (!of_device_is_available(dev)) {
-		pr_warn("%s: disabled\n", dev->full_name);
-		return -ENODEV;
-	}
-
-	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
-	if (!pp)
-		return -ENOMEM;
-
-	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
-	if (IS_ERR(bridge)) {
-		err = PTR_ERR(bridge);
-		goto bridge_create_fail;
-	}
-
-	err = myhostbridge_setup(bridge->bus);
-	if (err)
-		goto bridge_setup_fail;
-
-	/* We always enable PCI domains and we keep domain 0 backward
-	 * compatible in /proc for video cards
-	 */
-	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
-	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
-
-	lastbus = pci_scan_child_bus(bridge->bus);
-	pci_bus_update_busn_res_end(bridge->bus, lastbus);
-
-	pci_assign_unassigned_bus_resources(bridge->bus);
-
-	pci_bus_add_devices(bridge->bus);
-
-	return 0;
-
-bridge_setup_fail:
-	put_device(&bridge->dev);
-	device_unregister(&bridge->dev);
-bridge_create_fail:
-	kfree(pp);
-	return err;
-}
-
-Best regards,
-Liviu
-
-
-
-Catalin Marinas (1):
-  arm64: Extend the PCI I/O space to 16MB
-
-Liviu Dudau (2):
-  Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
-  arm64: Add architecture support for PCI
-
- Documentation/arm64/memory.txt |  16 ++--
- arch/arm64/Kconfig             |  19 ++++-
- arch/arm64/include/asm/Kbuild  |   1 +
- arch/arm64/include/asm/io.h    |   5 +-
- arch/arm64/include/asm/pci.h   |  49 ++++++++++++
- arch/arm64/kernel/Makefile     |   1 +
- arch/arm64/kernel/pci.c        | 173 +++++++++++++++++++++++++++++++++++++++++
- include/asm-generic/io.h       |   2 +-
- 8 files changed, 256 insertions(+), 10 deletions(-)
- create mode 100644 arch/arm64/include/asm/pci.h
- create mode 100644 arch/arm64/kernel/pci.c
+I thought I did. I can have a look a reposting it.
 
 -- 
-1.9.0
-
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
