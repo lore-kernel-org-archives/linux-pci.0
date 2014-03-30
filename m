@@ -1,68 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<bhelgaas@google.com>, <mohit.kumar@st.com>, <jg1.han@samsung.com>
-CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rob@landley.net>, <linux@arm.linux.org.uk>, <tony@atomide.com>,
-	<rnayak@ti.com>, <paul@pwsan.com>, <kishon@ti.com>
-Subject: [RFC PATCH 11/12] ARM: dts: dra7: Add dt data for PCIe controller
-Date: Wed, 26 Mar 2014 19:27:51 +0530
-Message-ID: <1395842272-15267-12-git-send-email-kishon@ti.com>
-In-Reply-To: <1395842272-15267-1-git-send-email-kishon@ti.com>
-References: <1395842272-15267-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:64095 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742AbaC3T0Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 30 Mar 2014 15:26:25 -0400
+Received: by mail-lb0-f169.google.com with SMTP id q8so5251820lbi.0
+        for <linux-pci@vger.kernel.org>; Sun, 30 Mar 2014 12:26:24 -0700 (PDT)
+Message-ID: <53386FE1.5000002@cogentembedded.com>
+Date: Sun, 30 Mar 2014 23:26:25 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+To: Ben Dooks <ben.dooks@codethink.co.uk>
+CC: linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-kernel@lists.codethink.co.uk, magnus.damn@opensource.se,
+	horms@verge.net.au, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/9] pci-rcar-gen2: add devicetree support
+References: <1394128887-4197-1-git-send-email-ben.dooks@codethink.co.uk> <1394128887-4197-2-git-send-email-ben.dooks@codethink.co.uk> <5318BCAE.7000108@codethink.co.uk> <53386C2F.1090508@cogentembedded.com> <53386E9D.70803@codethink.co.uk>
+In-Reply-To: <53386E9D.70803@codethink.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added dt data for PCIe controller. This node contains dt data for
-both the DRA7 part of designware controller and for the designware core.
-The documention for this node can be found @ ../bindings/pci/ti-pci.txt.
+Hello.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- arch/arm/boot/dts/dra7.dtsi |   24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+On 03/30/2014 11:21 PM, Ben Dooks wrote:
 
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
-index 7ac372b..10def39 100644
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -701,6 +701,30 @@
- 			};
- 		};
- 
-+		pcie@51000000 {
-+			compatible = "ti,dra7xx-pcie";
-+			reg = <0x51002000 0x14c>, <0x51000000 0x2000>, <0x4A002540 0x1f>;
-+			reg-names = "ti_conf", "rc_dbics", "mmr_unlock";
-+			interrupts = <0 232 0x4>, <0 233 0x4>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			ti,device_type = <3>;
-+			ranges = <0x00000800 0 0x20001000 0x20001000 0 0x00002000
-+				  0x81000000 0 0          0x20003000 0 0x00010000
-+				  0x82000000 0 0x20013000 0x20013000 0 0xffed000>;
-+			#interrupt-cells = <1>;
-+			base-mask = <0x00000000 0x0fffffff>;
-+			num-lanes = <1>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0x0 0 &gic 233>;
-+			ti,hwmods = "pcie1";
-+			phys = <&pcie1_phy>;
-+			phy-names = "pcie-phy";
-+			resets = <&prm_resets &device_reset>;
-+			reset-names = "reset";
-+		};
-+
- 		sata: sata@4a141100 {
- 			compatible = "snps,dwc-ahci";
- 			reg = <0x4a140000 0x1100>, <0x4a141100 0x7>;
--- 
-1.7.9.5
+>>>> Add OF match table for pci-rcar-gen2 driver for device tree support.
+>> [...]
+
+>>>> diff --git a/drivers/pci/host/pci-rcar-gen2.c
+>>>> b/drivers/pci/host/pci-rcar-gen2.c
+>>>> index fd3e3ab..1216784 100644
+>>>> --- a/drivers/pci/host/pci-rcar-gen2.c
+>>>> +++ b/drivers/pci/host/pci-rcar-gen2.c
+>>>> @@ -16,6 +16,7 @@
+>>>>   #include <linux/kernel.h>
+>>>>   #include <linux/module.h>
+>>>>   #include <linux/pci.h>
+>>>> +#include <linux/of_pci.h>
+>>>>   #include <linux/platform_device.h>
+>>>>   #include <linux/pm_runtime.h>
+>>>>   #include <linux/sizes.h>
+
+>>> Apologies all, there's a missing include of <linux/of.h> which should
+>>> have been added here
+
+>>     Have you ever re-posted this patch fixed? If not, it's not going to
+>> be merged for 3.15 I guess...
+
+> I thought I did.
+
+    I don't see such repost in 'linux-sh'.
+
+> I can have a look a reposting it.
+
+    It doesn't apply to the current renesas.git devel branch. What tree it was 
+against?
+
+WBR, Sergei
 
