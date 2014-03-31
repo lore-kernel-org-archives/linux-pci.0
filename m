@@ -1,78 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <OF8E4162E1.91105680-ON80257CA6.002FEBD9-80257CA6.0030BE31@eu.necel.com>
-References: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
-	<1395270762-6055-2-git-send-email-tinamdar@apm.com>
-	<OF8E4162E1.91105680-ON80257CA6.002FEBD9-80257CA6.0030BE31@eu.necel.com>
-Date: Tue, 25 Mar 2014 14:52:49 -0700
-Message-ID: <CACoXjcmmjxiTvsiqCXE4noQ-2AxEzYYM=Ux6ACUahut06bUSsg@mail.gmail.com>
-Subject: Re: [PATCH v5 1/4] pci: APM X-Gene PCIe controller driver
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Phil.Edworthy@renesas.com
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-pci-owner@vger.kernel.org, Liviu Dudau <liviu.dudau@arm.com>,
-	patches <patches@apm.com>, Rob Landley <rob@landley.net>,
-	Rob Herring <robh+dt@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor4.renesas.com ([210.160.252.174]:8805 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753933AbaCaKbH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 06:31:07 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1396261856-22465-10-git-send-email-phil.edworthy@renesas.com>
+Date: Mon, 31 Mar 2014 11:30:54 +0100
+Subject: [PATCH v7 09/10] ARM: shmobile: koelsch: Add PCIe device nodes
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Phil,
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 
-Thanks for reviewing. Please see inline.
+v6:
+ - Split device and board DT changes
+---
+ arch/arm/boot/dts/r8a7791-koelsch.dts | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-On Tue, Mar 25, 2014 at 1:52 AM,  <Phil.Edworthy@renesas.com> wrote:
-> Hi Tanmay,
->
-> On: 19/03/2014 23:15, Tanmay wrote:
->> Subject: [PATCH v5 1/4] pci: APM X-Gene PCIe controller driver
->> Sent by: linux-pci-owner@vger.kernel.org
->>
->> This patch adds the AppliedMicro X-Gene SOC PCIe controller driver.
->> X-Gene PCIe controller supports maximum up to 8 lanes and GEN3 speed.
->> X-Gene SOC supports maximum 5 PCIe ports.
-> <snip>
->
->> +static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *port,
->> +                struct of_pci_range *range, u8 *ib_reg_mask)
->> +{
->> +   void __iomem *csr_base = port->csr_base;
->> +   void __iomem *cfg_base = port->cfg_base;
->> +   void *bar_addr;
->> +   void *pim_addr;
->> +   u64 restype = range->flags & IORESOURCE_TYPE_BITS;
->> +   u64 cpu_addr = range->cpu_addr;
->> +   u64 pci_addr = range->pci_addr;
->> +   u64 size = range->size;
->> +   u64 mask = ~(size - 1) | EN_REG;
->> +   u32 flags = PCI_BASE_ADDRESS_MEM_TYPE_64;
->> +   u32 bar_low;
->> +   int region;
->> +
->> +   region = xgene_pcie_select_ib_reg(ib_reg_mask, range->size);
->> +   if (region < 0) {
->> +      dev_warn(port->dev, "invalid pcie dma-range config\n");
->> +      return;
->> +   }
->> +
->> +   if (restype == PCI_BASE_ADDRESS_MEM_PREFETCH)
->> +      flags |= PCI_BASE_ADDRESS_MEM_PREFETCH;
->
-> Since IORESOURCE_TYPE_BITS is 0x00001f00, and
-> PCI_BASE_ADDRESS_MEM_PREFETCH is 0x08, this will never match. I think you
-> are mixing up different sets of definitions here. Also, the address
-> properties in range->flags are bitfields.
+diff --git a/arch/arm/boot/dts/r8a7791-koelsch.dts b/arch/arm/boot/dts/r8a7791-koelsch.dts
+index ee23b7b..3130a0c 100644
+--- a/arch/arm/boot/dts/r8a7791-koelsch.dts
++++ b/arch/arm/boot/dts/r8a7791-koelsch.dts
+@@ -204,6 +204,16 @@
+ 		states = <3300000 1
+ 			  1800000 0>;
+ 	};
++
++	clocks {
++		/* External PCIe bus clock */
++		pcie_bus_clk: pcie_bus_clk {
++			compatible = "fixed-clock";
++			#clock-cells = <0>;
++			clock-frequency = <100000000>;
++			clock-output-names = "pcie_bus";
++		};
++	};
+ };
+ 
+ &extal_clk {
+@@ -382,3 +392,7 @@
+ 		spi-cpha;
+ 	};
+ };
++
++&pcie {
++	status = "okay";
++};
+-- 
+1.9.0
 
-You are right. I will fix this.
-
->
-> Regards
-> Phil
