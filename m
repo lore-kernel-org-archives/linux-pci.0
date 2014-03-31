@@ -1,43 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:60223 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755781AbaCEGuc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 01:50:32 -0500
-Subject: Re: sblk->status_tag on drivers/net/ethernet/broadcom/tg3.c
-From: Michael Chan <mchan@broadcom.com>
-To: Jagan Teki <jagannadh.teki@gmail.com>
-CC: <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Nithin Nayak Sujir <nsujir@broadcom.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-In-Reply-To: <CAD6G_RR=y+myvtEpa3YKiOx_8LR=Ad_nHUxuaXKakfKKyjuEaw@mail.gmail.com>
-References: <CAD6G_RQVD7=v7b6S-muiZBYV7PEykTHOTM23i-BL=wcA5z=4Qg@mail.gmail.com>
-	 <CAD6G_RQ130TunwZDL+8vwx__8NsfzE0AfcfnS7z5OXtZF5T8xQ@mail.gmail.com>
-	 <1393975344.4632.10.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-	 <CAD6G_RTVVb2qdU43PqKm3BAD2-pvVcs_O=Wck2SCBhRRV-d+Lw@mail.gmail.com>
-	 <1393992738.4632.15.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-	 <CAD6G_RR=y+myvtEpa3YKiOx_8LR=Ad_nHUxuaXKakfKKyjuEaw@mail.gmail.com>
-Content-Type: text/plain; charset="cp1252"
-Date: Tue, 4 Mar 2014 22:50:30 -0800
-Message-ID: <1394002230.4632.28.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-MIME-Version: 1.0
+Received: from relmlor1.renesas.com ([210.160.252.171]:41929 "EHLO
+	relmlie4.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754094AbaCaKbL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 06:31:11 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	devicetree@vger.kernel.org
+In-Reply-To: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1396261856-22465-6-git-send-email-phil.edworthy@renesas.com>
+Date: Mon, 31 Mar 2014 11:30:50 +0100
+Subject: [PATCH v7 05/10] dt-bindings: pci: rcar pcie device tree bindings
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-03-05 at 11:43 +0530, Jagan Teki wrote: 
-> As per your point I've a question here like - the status block is not properly
-> updated (DMA'ed), does this depends on the address range we are advertised
-> on PCIe ranges filed to make sure to use EP-
-> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge 
+This patch adds the bindings for the R-Car PCIe driver. The driver
+resides under drivers/pci/host/pcie-rcar.c
 
-The status block is in host memory (CPU memory).  This memory is
-allocated by the driver.  The DMA address of the status block is then
-programmed into the NIC register HOSTCC_STATUS_BLK_HOST_ADDR so that the
-NIC knows where to DMA the status block.  When there is an event, the
-NIC DMAs a new status block and then generates IRQ.
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 
-The status block is not in PCI memory.  PCI memory is where the
-registers are mapped.  Hope this helps.
+v7:
+ - Change binding description of clocks to 'clock specifiers'
+
+v6:
+ - Correct DT bindings description for reg and clocks
+
+v5:
+ - Add PCIe bus clock reference
+ - Add additional interrupt bindings
+ - Use dma-ranges property to specify inbound memory regions
+---
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 45 ++++++++++++++++++++++
+ 1 file changed, 45 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
+
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+new file mode 100644
+index 0000000..789bd46
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -0,0 +1,45 @@
++* Renesas RCar PCIe interface
++
++Required properties:
++- compatible: should contain one of the following
++	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
++- reg: base address and length of the pcie controller registers.
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- device_type: set to "pci"
++- ranges: ranges for the PCI memory and I/O regions.
++- dma-ranges: ranges for the inbound memory regions.
++- interrupts: two interrupt sources for MSI interrupts, followed by interrupt
++	source for hardware related interrupts (e.g. link speed change).
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map: standard PCI properties
++	to define the mapping of the PCIe interface to interrupt
++	numbers.
++- clocks: from common clock binding: clock specifiers for the PCIe controller
++	and PCIe bus clocks.
++- clock-names: from common clock binding: should be "pcie" and "pcie_bus".
++
++Example:
++
++SoC specific DT Entry:
++
++	pcie: pcie@fe000000 {
++		compatible = "renesas,pcie-r8a7791";
++		reg = <0 0xfe000000 0 0x80000>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
++			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
++			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
++			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
++		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000
++			      0x42000000 2 0x00000000 2 0x00000000 0 0x40000000>;
++		interrupts = <0 116 4 0 117 4 0 118 4>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic 0 116 4>;
++		clocks = <&mstp3_clks R8A7791_CLK_PCIE>, <&pcie_bus_clk>;
++		clock-names = "pcie", "pcie_bus";
++		status = "disabled";
++	};
+-- 
+1.9.0
 
