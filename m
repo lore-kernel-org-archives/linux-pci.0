@@ -1,183 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:40699 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200AbaCQXwp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 19:52:45 -0400
-Received: by mail-pa0-f43.google.com with SMTP id bj1so6429342pad.30
-        for <linux-pci@vger.kernel.org>; Mon, 17 Mar 2014 16:52:45 -0700 (PDT)
-Date: Mon, 17 Mar 2014 17:52:40 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jouni =?iso-8859-1?Q?Mett=E4l=E4?= <jtmettala@gmail.com>
-Cc: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	David Airlie <airlied@linux.ie>,
-	Aaron Durbin <adurbin@google.com>, linux-kernel@vger.kernel.org
-Subject: Re: [bisected] e501 "agp: Support 64-bit APBASE" agp fails without
- iommu=remap=2
-Message-ID: <20140317235240.GA14292@google.com>
-References: <CAGG0vUg+No2GHLbOLQzV+fNm37OW-pfhmoQ3moxhr8uEObj9pQ@mail.gmail.com>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:42365 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751439AbaCaXvz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 19:51:55 -0400
+Message-ID: <5339FF99.2050200@gmail.com>
+Date: Mon, 31 Mar 2014 16:51:53 -0700
+From: Rajat Jain <rajatxjain@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAGG0vUg+No2GHLbOLQzV+fNm37OW-pfhmoQ3moxhr8uEObj9pQ@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+CC: Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: [PATCH] pci/pciehp: Allow polling/irq mode to be decided on a per-port
+ basis
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Daniel, Dave, Yinghai, Guo, Aaron, LKML]
+Today, there is a global pciehp_poll_mode module parameter using which
+either _all_ the hot-pluggable ports are to use polling, or _all_ the
+ports are to use interrupts.
 
-On Sat, Mar 15, 2014 at 02:32:22PM +0200, Jouni Mettälä wrote:
-> Hi. I can't start xsession without iommu=remap=2 kernel parameter.
-> 
-> Kernel bisect lead to this commit
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=e501b3d87f003dfad8fcbd0f55ae17ea52495a56
-> 
-> Reverting e501b3d87f003dfad8fcbd0f55ae17ea52495a56 fixes if for me.
-> 
-> I think this is relevant part of dmesg from affected kernel
-> 
-> agpgart-amd64 0000:00:04.0: AGP bridge [10b9/1689]
-> agpgart-amd64 0000:00:04.0: aperture from AGP @ 0 size 4096 MB
-> pci 0000:00:18.3: no usable aperture found
-> pci 0000:00:18.3: consider rebooting with iommu=memaper=2 to get a good
-> aperture
-> agpgart-amd64 0000:00:04.0: AGP bridge [10b9/1689]
-> agpgart-amd64 0000:00:04.0: aperture from AGP @ 0 size 4096 MB
-> pci 0000:00:18.3: no usable aperture found
-> pci 0000:00:18.3: consider rebooting with iommu=memaper=2 to get a good
-> aperture
-> agpgart-amd64 0000:04:00.0: AGP bridge [1002/4150]
-> agpgart-amd64 0000:04:00.0: aperture size 4096 MB is not right, using
-> settings from NB
-> agpgart-amd64 0000:04:00.0: AGP aperture is 256M @ 0xa0000000
+In a system where a certain port has IRQ issues, today the only option
+is to use the parameter that converts ALL the ports to use polling mode.
+This is not good, and hence this patch intruduces a bit field that can
+be set using a PCI quirk that indicates that polling should always be
+used for this particular PCIe port. The remaining ports can still
+hoose to continue to operate in whatever mode they wish to.
 
-Jouni also opened this bug report with complete dmesg logs:
-https://bugzilla.kernel.org/show_bug.cgi?id=72201
-
-This is a regression that appeared in v3.14-rc1, when we merged
-e501b3d87f00.  The relevant part of that change is this:
-
-    --- a/drivers/char/agp/amd64-agp.c
-    +++ b/drivers/char/agp/amd64-agp.c
-    @@ -295,9 +294,7 @@ static int fix_northbridge(struct pci_dev *nb, struct pci_dev *agp, u16 cap)
-
-    -       pci_read_config_dword(agp, 0x10, &aper_low);
-    -       pci_read_config_dword(agp, 0x14, &aper_hi);
-    -       aper = (aper_low & ~((1<<22)-1)) | ((u64)aper_hi << 32);
-    +       aper = pci_bus_address(agp, AGP_APERTURE_BAR);
-
-Here's what I think is happening: Previously, we read the GART
-aperture base directly from the BAR.  After e501b3d87f00, we use
-pci_bus_address() to convert the aperture *resource* (which the PCI
-core has previously read from the BAR and converted to a CPU address)
-back into a bus address.
-
-Normally both ways would give the same result, but here we had this:
-
-    Node 0: aperture @ a0000000 size 256 MB
-    pci 0000:00:04.0: reg 0x10: [mem 0xa0000000-0xafffffff pref]
-    pci 0000:00:04.0: address space collision: [mem 0xa0000000-0xafffffff pref] conflicts with GART [mem 0xa0000000-0xafffffff]
-
-The "Node 0" line is where we inserted the "GART [mem 0xa0000000-
-0xafffffff]" resource in gart_iommu_hole_init().  Then we enumerated
-the northbridge, which had a BAR containing 0xa0000000.  When we tried
-to claim that BAR, it conflicted with the "GART" resource, and we set
-r->start = 0 (in pcibios_allocate_dev_resources()).  So when we
-finally got to fix_northbridge(), the aperture resource was set to
-zero, not 0xa0000000.
-
-Note that we complained about the collision even before e501b3d87f00.
-The only difference is that we used to re-read the BAR, where we still
-got 0xa0000000 even though the PCI core thought the resource was
-invalid and had set it to zero.
-
-I think we should stop inserting the GART resource directly in
-iomem_resource in gart_iommu_hole_init().  That should avoid the
-collision and leave the BAR resource valid, which means
-pci_bus_address() should work.
-
-Jouni, could you try the patch below?
-
-Bjorn
-
-
-
-Revert "[PATCH] Insert GART region into resource map"
-
-From: Bjorn Helgaas <bhelgaas@google.com>
-
-This reverts commit 56dd669a138c, which makes the GART visible in
-/proc/iomem.
-
-The GART addresses are bus addresses, not CPU addresses, and therefore
-should not be inserted in iomem_resource.
-
-On many machines, the GART region is addressable by the CPU as well as by
-an AGP master, but CPU addressability is not required by the spec.  On some
-of these machines, the GART is mapped by a PCI BAR, and in that case, the
-PCI core automatically inserts it into iomem_resource, just as it does for
-all BARs.
-
-Inserting it here means we'll have a conflict if the PCI core later tries
-to claim the GART region.
-
-Conflicts:
-	arch/x86_64/kernel/aperture.c
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
 ---
- arch/x86/kernel/aperture_64.c |   20 +-------------------
- 1 file changed, 1 insertion(+), 19 deletions(-)
+ drivers/pci/hotplug/pciehp.h     |    1 +
+ drivers/pci/hotplug/pciehp_hpc.c |   16 ++++++++++------
+ include/linux/pci.h              |    1 +
+ 3 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/kernel/aperture_64.c b/arch/x86/kernel/aperture_64.c
-index fd972a3e4cbb..9fa8aa051f54 100644
---- a/arch/x86/kernel/aperture_64.c
-+++ b/arch/x86/kernel/aperture_64.c
-@@ -18,7 +18,6 @@
- #include <linux/pci_ids.h>
- #include <linux/pci.h>
- #include <linux/bitops.h>
--#include <linux/ioport.h>
- #include <linux/suspend.h>
- #include <asm/e820.h>
- #include <asm/io.h>
-@@ -54,18 +53,6 @@ int fallback_aper_force __initdata;
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index d208791..753a3b4 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -98,6 +98,7 @@ struct controller {
+ 	unsigned int no_cmd_complete:1;
+ 	unsigned int link_active_reporting:1;
+ 	unsigned int notification_enabled:1;
++	unsigned int use_polling:1;	/* Always uses polling for this slot */
+ 	unsigned int power_fault_detected;
+ };
  
- int fix_aperture __initdata = 1;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index d7d058f..d210d23 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -82,7 +82,7 @@ static inline int pciehp_request_irq(struct controller *ctrl)
+ 	int retval, irq = ctrl->pcie->irq;
  
--static struct resource gart_resource = {
--	.name	= "GART",
--	.flags	= IORESOURCE_MEM,
--};
--
--static void __init insert_aperture_resource(u32 aper_base, u32 aper_size)
--{
--	gart_resource.start = aper_base;
--	gart_resource.end = aper_base + aper_size - 1;
--	insert_resource(&iomem_resource, &gart_resource);
--}
--
- /* This code runs before the PCI subsystem is initialized, so just
-    access the northbridge directly. */
- 
-@@ -96,7 +83,6 @@ static u32 __init allocate_aperture(void)
- 	memblock_reserve(addr, aper_size);
- 	printk(KERN_INFO "Mapping aperture over %d KB of RAM @ %lx\n",
- 			aper_size >> 10, addr);
--	insert_aperture_resource((u32)addr, aper_size);
- 	register_nosave_region(addr >> PAGE_SHIFT,
- 			       (addr+aper_size) >> PAGE_SHIFT);
- 
-@@ -444,12 +430,8 @@ int __init gart_iommu_hole_init(void)
- 
- out:
- 	if (!fix && !fallback_aper_force) {
--		if (last_aper_base) {
--			unsigned long n = (32 * 1024 * 1024) << last_aper_order;
--
--			insert_aperture_resource((u32)last_aper_base, n);
-+		if (last_aper_base)
- 			return 1;
--		}
+ 	/* Install interrupt polling timer. Start with 10 sec delay */
+-	if (pciehp_poll_mode) {
++	if (ctrl->use_polling) {
+ 		init_timer(&ctrl->poll_timer);
+ 		start_int_poll_timer(ctrl, 10);
  		return 0;
- 	}
+@@ -98,7 +98,7 @@ static inline int pciehp_request_irq(struct controller *ctrl)
  
+ static inline void pciehp_free_irq(struct controller *ctrl)
+ {
+-	if (pciehp_poll_mode)
++	if (ctrl->use_polling)
+ 		del_timer_sync(&ctrl->poll_timer);
+ 	else
+ 		free_irq(ctrl->pcie->irq, ctrl);
+@@ -131,7 +131,7 @@ static int pcie_poll_cmd(struct controller *ctrl)
+ 
+ static void pcie_wait_cmd(struct controller *ctrl, int poll)
+ {
+-	unsigned int msecs = pciehp_poll_mode ? 2500 : 1000;
++	unsigned int msecs = ctrl->use_polling ? 2500 : 1000;
+ 	unsigned long timeout = msecs_to_jiffies(msecs);
+ 	int rc;
+ 
+@@ -595,7 +595,7 @@ void pcie_enable_notification(struct controller *ctrl)
+ 		cmd |= PCI_EXP_SLTCTL_PDCE;
+ 	if (MRL_SENS(ctrl))
+ 		cmd |= PCI_EXP_SLTCTL_MRLSCE;
+-	if (!pciehp_poll_mode)
++	if (!ctrl->use_polling)
+ 		cmd |= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE;
+ 
+ 	mask = (PCI_EXP_SLTCTL_PDCE | PCI_EXP_SLTCTL_ABPE |
+@@ -642,14 +642,14 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+ 	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
+ 
+ 	pcie_write_cmd(ctrl, 0, ctrl_mask);
+-	if (pciehp_poll_mode)
++	if (ctrl->use_polling)
+ 		del_timer_sync(&ctrl->poll_timer);
+ 
+ 	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
+ 
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
+ 	pcie_write_cmd(ctrl, ctrl_mask, ctrl_mask);
+-	if (pciehp_poll_mode)
++	if (ctrl->use_polling)
+ 		int_poll_timeout(ctrl->poll_timer.data);
+ 
+ 	return 0;
+@@ -789,6 +789,10 @@ struct controller *pcie_init(struct pcie_device *dev)
+                 ctrl_dbg(ctrl, "Link Active Reporting supported\n");
+                 ctrl->link_active_reporting = 1;
+         }
++	if (pciehp_poll_mode || dev->port->hotplug_polling) {
++		ctrl_info(ctrl, "will use polling\n");
++		ctrl->use_polling = 1;
++	}
+ 
+ 	/* Clear all remaining event bits in Slot Status register */
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a13d682..b2ec72e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -336,6 +336,7 @@ struct pci_dev {
+ 	unsigned int	is_virtfn:1;
+ 	unsigned int	reset_fn:1;
+ 	unsigned int    is_hotplug_bridge:1;
++	unsigned int    hotplug_polling:1; /* Port uses polling for hotplug */
+ 	unsigned int    __aer_firmware_first_valid:1;
+ 	unsigned int	__aer_firmware_first:1;
+ 	unsigned int	broken_intx_masking:1;
+-- 
+1.7.9.5
+
