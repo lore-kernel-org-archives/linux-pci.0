@@ -1,59 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:61924 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752511AbaCYSXp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 14:23:45 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Pavel Machek <pavel@ucw.cz>
-Subject: Re: how to trigger pcieport runtime suspend?
-Date: Tue, 25 Mar 2014 19:39:22 +0100
-Message-ID: <1688228.SWW1OT04ps@vostro.rjw.lan>
-In-Reply-To: <Pine.LNX.4.44L0.1403241316280.1197-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1403241316280.1197-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from relmlor2.renesas.com ([210.160.252.172]:31759 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753819AbaCaKbF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 06:31:05 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1396261856-22465-4-git-send-email-phil.edworthy@renesas.com>
+Date: Mon, 31 Mar 2014 11:30:48 +0100
+Subject: [PATCH v7 03/10] ARM: shmobile: r8a7790: Add PCIe clock device tree nodes
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, March 24, 2014 01:19:43 PM Alan Stern wrote:
-> On Mon, 24 Mar 2014, Bjorn Helgaas wrote:
-> 
-> > [+cc Rafael, Pavel, linux-pm]
-> > 
-> > On Sun, Mar 23, 2014 at 12:16 PM, Andreas Noever
-> > <andreas.noever@gmail.com> wrote:
-> > > The pcieport driver defines runtime_suspend and runtime_resume methods
-> > > (pcie_port_runtime_suspend/resume in portdrv_pci.c). I am trying to
-> > > trigger that code. But I cannot get power/runtime_usage to drop to
-> > > zero.
-> > >
-> > > Initially power/runtime_usage is set to 2. The 2 comes (imho) from:
-> > > pci_pm_init -> pm_runtime_forbid
-> > > local_pci_probe -> pm_runtime_get_sync
-> > >
-> > > The pm_runtime_forbid can be undone with echo auto > power/control,
-> > > but the second one seems to never go away. local_pci_probe spots the
-> > > following comment:
-> > > "If the driver supports runtime PM, it should call
-> > > pm_runtime_put_noidle() in its probe routine and
-> > > pm_runtime_get_noresume() in its remove routine." I cannot find any
-> > > such calls in the pcieport driver (or in the port service drivers).
-> > >
-> > > What am I missing?
-> 
-> You're not missing anything, but apparently the people who added
-> runtime PM support to the pcieport driver missed the comment you 
-> quoted.
+This patch adds the device tree clock nodes for PCIe
 
-In fact, they were removed, because it turned out that some systems broke
-when we enabled runtime PM for PCIe ports.  In other words, this feature
-is incomplete now.
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/boot/dts/r8a7790.dtsi            | 7 ++++---
+ include/dt-bindings/clock/r8a7790-clock.h | 1 +
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-Thanks,
-Rafael
+diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
+index da69afc..df9ec61 100644
+--- a/arch/arm/boot/dts/r8a7790.dtsi
++++ b/arch/arm/boot/dts/r8a7790.dtsi
+@@ -704,16 +704,17 @@
+ 			reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
+ 			clocks = <&cp_clk>, <&mmc1_clk>, <&sd3_clk>, <&sd2_clk>,
+ 				 <&cpg_clocks R8A7790_CLK_SD1>, <&cpg_clocks R8A7790_CLK_SD0>,
+-				 <&mmc0_clk>, <&rclk_clk>;
++				 <&mmc0_clk>, <&rclk_clk>, <&mp_clk>;
+ 			#clock-cells = <1>;
+ 			renesas,clock-indices = <
+ 				R8A7790_CLK_TPU0 R8A7790_CLK_MMCIF1 R8A7790_CLK_SDHI3
+ 				R8A7790_CLK_SDHI2 R8A7790_CLK_SDHI1 R8A7790_CLK_SDHI0
+-				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1
++				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1 R8A7790_CLK_PCIE
+ 			>;
+ 			clock-output-names =
+ 				"tpu0", "mmcif1", "sdhi3", "sdhi2",
+-				"sdhi1", "sdhi0", "mmcif0", "cmt1";
++				"sdhi1", "sdhi0", "mmcif0", "cmt1",
++				"pcie";
+ 		};
+ 		mstp5_clks: mstp5_clks@e6150144 {
+ 			compatible = "renesas,r8a7790-mstp-clocks", "renesas,cpg-mstp-clocks";
+diff --git a/include/dt-bindings/clock/r8a7790-clock.h b/include/dt-bindings/clock/r8a7790-clock.h
+index 6548a5f..840dbc8 100644
+--- a/include/dt-bindings/clock/r8a7790-clock.h
++++ b/include/dt-bindings/clock/r8a7790-clock.h
+@@ -57,6 +57,7 @@
+ #define R8A7790_CLK_SDHI1		13
+ #define R8A7790_CLK_SDHI0		14
+ #define R8A7790_CLK_MMCIF0		15
++#define R8A7790_CLK_PCIE		19
+ #define R8A7790_CLK_SSUSB		28
+ #define R8A7790_CLK_CMT1		29
+ #define R8A7790_CLK_USBDMAC0		30
+-- 
+1.9.0
 
