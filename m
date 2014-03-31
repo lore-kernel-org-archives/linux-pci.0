@@ -1,75 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:46661 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750723AbaCMEMg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 00:12:36 -0400
-Received: by mail-qa0-f46.google.com with SMTP id i13so475761qae.5
-        for <linux-pci@vger.kernel.org>; Wed, 12 Mar 2014 21:12:35 -0700 (PDT)
-Date: Wed, 12 Mar 2014 22:12:31 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
-	linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-	Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: [PATCH v2 0/2] block: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140313041231.GC26657@google.com>
-References: <cover.1393404496.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1393404496.git.agordeev@redhat.com>
+Received: from relmlor4.renesas.com ([210.160.252.174]:14433 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753821AbaCaKbF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 06:31:05 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Message-ID: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+Date: Mon, 31 Mar 2014 11:30:45 +0100
+Subject: [PATCH v7 00/10] R-Car Gen2 PCIe host driver
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 26, 2014 at 10:02:40AM +0100, Alexander Gordeev wrote:
-> Changes since v1:
->   - cciss: patch #1: a weird 'goto' removed;
->   - cciss: patch #2: pci_enable_msix_exact() used, not pci_enable_msix_range();
->   - rsxx: patch dropped - no need to change anything;
-> 
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
-> 
-> This change updates 'cciss' only, but there is also 'nvme' update
-> pending - I am waiting for Intel guys to clarify if they want to
-> route it thru their tree. If not, I will post the 'nvme' patch as
-> a follow-up to this series.
+This is version 7 of a PCIe Host driver for the R-Car Gen2 devices,
+i.e. R-Car H2 (r8a7790) and R-Car M2 (r8a7791).
 
-Hi Jens,
+v7:
+ - Change binding description of clocks to 'clock specifiers'
 
-I'd like to get these merged during the v3.15 merge window.  I'd be glad to
-review and apply them through my tree, unless you want to do it.  They do
-depend on f7fc32c, which went in after the v3.14 merge window, which makes
-it a bit of a hassle.
+v6:
+ - Correct DT bindings description for reg and clocks
+ - Split device and board DT changes
+ - Add shmobile to subject for shmobile DT patches
+ - Don't check MSI irq number is valid, as upper level checks this
+ - Change "Unexpected MSI" msg to debug level
+ - Reword "Unexpected MSI" comment so that it's one line
+ - Remove patch that adds HAVE_ARM_ARCH_TIMER to koelsch defconfig as not needed
 
-So let me know if you'd rather handle these; otherwise I'll review them and
-put them in my tree next week.
+v5:
+ - Use module_platform_driver instead of subsys_initcall
+ - Use the of_device_id data field for HW init function
+ - Init hw_pci struct in declaration
+ - Renesas SoC compatible string has peripheral before device name
+ - Add PCIe bus clock reference
+ - Use dma-ranges property to specify inbound memory regions
+ - Support multiple IO windows and correct resources
+ - Return IRQ_NONE from MSI isr when there is no pending MSI
+ - Add additional interrupt bindings
 
-I'll include the nvme update, since it has Keith's "Reviewed-by".
+v4:
+ - Use runtime PM properly
 
-Bjorn
+Phil Edworthy (10):
+  PCI: host: rcar: Add Renesas R-Car PCIe driver
+  PCI: host: rcar: Add MSI support
+  ARM: shmobile: r8a7790: Add PCIe clock device tree nodes
+  ARM: shmobile: r8a7791: Add PCIe clock device tree nodes
+  dt-bindings: pci: rcar pcie device tree bindings
+  ARM: shmobile: r8a7790: Add PCIe device nodes
+  ARM: shmobile: lager: Add PCIe device nodes
+  ARM: shmobile: r8a7791: Add PCIe device nodes
+  ARM: shmobile: koelsch: Add PCIe device nodes
+  ARM: shmobile: koelsch: Add PCIe to defconfig
 
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Mike Miller <mike.miller@hp.com>
-> Cc: iss_storagedev@hp.com
-> Cc: linux-pci@vger.kernel.org
-> 
-> Alexander Gordeev (2):
->   cciss: Fallback to MSI rather than to INTx if MSI-X failed
->   cciss: Use pci_enable_msix_exact() instead of pci_enable_msix()
-> 
->  drivers/block/cciss.c |    8 +-------
->  1 files changed, 1 insertions(+), 7 deletions(-)
-> 
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Documentation/devicetree/bindings/pci/rcar-pci.txt |  45 +
+ arch/arm/boot/dts/r8a7790-lager.dts                |  10 +
+ arch/arm/boot/dts/r8a7790.dtsi                     |  31 +-
+ arch/arm/boot/dts/r8a7791-koelsch.dts              |  14 +
+ arch/arm/boot/dts/r8a7791.dtsi                     |  31 +-
+ arch/arm/configs/koelsch_defconfig                 |   3 +
+ drivers/pci/host/Kconfig                           |   6 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-rcar.c                       | 929 +++++++++++++++++++++
+ drivers/pci/host/pcie-rcar.h                       |  87 ++
+ include/dt-bindings/clock/r8a7790-clock.h          |   1 +
+ include/dt-bindings/clock/r8a7791-clock.h          |   1 +
+ 12 files changed, 1154 insertions(+), 5 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
+ create mode 100644 drivers/pci/host/pcie-rcar.c
+ create mode 100644 drivers/pci/host/pcie-rcar.h
+
+-- 
+1.9.0
+
