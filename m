@@ -1,58 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:57874 "EHLO gate.crashing.org"
+Received: from cantor2.suse.de ([195.135.220.15]:42911 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753367AbaCBB0h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 1 Mar 2014 20:26:37 -0500
-Message-ID: <1393723559.12039.3.camel@pasglop>
-Subject: Re: [PATCH v2 4/4] pci: Add support for creating a generic
- host_bridge from device tree
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
+	id S1752967AbaCaIRx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 31 Mar 2014 04:17:53 -0400
+Subject: Interrupt remapping quirk tainting the kernel
+From: Jean Delvare <jdelvare@suse.de>
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Date: Sun, 02 Mar 2014 12:25:59 +1100
-In-Reply-To: <1393723415.12039.1.camel@pasglop>
-References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
-	 <1393506402-11474-5-git-send-email-Liviu.Dudau@arm.com>
-	 <18746655.qWHLpMg2Yy@wuerfel> <1393543924.14012.56.camel@pasglop>
-	 <20140228095559.GU1692@e106497-lin.cambridge.arm.com>
-	 <1393723415.12039.1.camel@pasglop>
+	linux-pci <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 31 Mar 2014 10:17:48 +0200
+Message-ID: <1396253868.23070.94.camel@chaos.site>
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2014-03-02 at 12:23 +1100, Benjamin Herrenschmidt wrote:
-> On Fri, 2014-02-28 at 09:55 +0000, Liviu Dudau wrote:
-> > The next phase will be to see how much of the pci_controller structure can move
-> > into the generic code and reduce its size. I do suffer from not having a PowerPC
-> > platform where I can test the changes, but I can produce some compiled code that
-> > someone can test.
-> 
-> Ok, we can probably start from there. I think the right approach is to actually
-> kill pci_controller by merging it with the new host bridge structure.
-> 
-> Most of the resources are there now, we need to move the rest. We probably will
-> need a way to attach platform specific bits to it though, and a few hooks to
-> populate them but that isn't terribly hard.
+Hi Neil and all,
 
-Oh and regarding testing...
+I have (once again) a question about this commit:
 
-qemu should help. For qemu ppc64, try -M pseries, that's fairly well
-maintained since it's the basis for all our new KVM based products,
-and there's still some (hopefully) working 32-bit mac stuff in there.
+From: Neil Horman <nhorman@tuxdriver.com>
+Date: Tue, 16 Apr 2013 20:38:32 +0000
+Subject: iommu/vt-d: add quirk for broken interrupt remapping on 55XX chipsets
+Git-commit: 03bbcb2e7e292838bb0244f5a7816d194c911d62
 
-With pseries, I would expect that you can install fedora, debian or
-ubuntu (in fact you can also install SLES11/RHEL6 I believe).
+When interrupt remapping is disabled by this quirk, the kernel gets
+tainted. What is the rationale for doing that?
 
-Cheers,
-Ben.
+The user can boot with intremap=off. That will also disable interrupt
+remapping, as the quirk does, but not taint the kernel. If this is
+considered OK then I fail to see why the quirk should behave differently
+and taint the kernel.
 
+Thanks,
+-- 
+Jean Delvare
+SUSE L3 Support
 
