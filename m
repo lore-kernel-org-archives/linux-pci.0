@@ -1,356 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50802 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755010AbaCNPfA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 11:35:00 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
+Received: from mail-out.m-online.net ([212.18.0.9]:50956 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887AbaCaKwU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 06:52:20 -0400
+From: Marek Vasut <marex@denx.de>
+To: Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH 2/8] PCI: designware: split Exynos and i.MX bindings
+Date: Mon, 31 Mar 2014 12:52:15 +0200
+Cc: Richard Zhu <r65037@freescale.com>, devicetree@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	linux-pci@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Rob Herring <robh+dt@kernel.org>, kernel@pengutronix.de,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Date: Fri, 14 Mar 2014 15:34:18 +0000
-Message-Id: <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Tim Harvey <tharvey@gateworks.com>,
+	linux-arm-kernel@lists.infradead.org
+References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de> <201403311136.49280.marex@denx.de> <1396262281.5533.21.camel@weser.hi.pengutronix.de>
+In-Reply-To: <1396262281.5533.21.camel@weser.hi.pengutronix.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201403311252.16096.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the generic host bridge functions to provide support for
-PCI Express on arm64. There is no support for ISA memory.
+On Monday, March 31, 2014 at 12:38:01 PM, Lucas Stach wrote:
+> Am Montag, den 31.03.2014, 11:36 +0200 schrieb Marek Vasut:
+> > On Monday, March 31, 2014 at 11:28:29 AM, Lucas Stach wrote:
+> > > Am Sonntag, den 30.03.2014, 19:36 +0200 schrieb Marek Vasut:
+> > > > On Friday, March 28, 2014 at 05:52:53 PM, Lucas Stach wrote:
+> > > > > The glue around the core designware IP is significantly
+> > > > > different between the Exynos and i.MX implementation,
+> > > > > which is reflected in the DT bindings.
+> > > > > 
+> > > > > This changes the i.MX6 binding to reuse as much as
+> > > > > possible from the common designware binding and
+> > > > > removes old cruft.
+> > > > > 
+> > > > > I removed the optional GPIOs with the following reasoning:
+> > > > > - disable-gpio: endpoint specific GPIO, not currently
+> > > > > 
+> > > > >   wired up in any code. Should be handled by the PCI device
+> > > > >   driver, not the host controller driver.
+> > > > > 
+> > > > > - wake-up-gpio: same as above.
+> > > > > - power-on-gpio: No user in any upstream DT. This should
+> > > > > 
+> > > > >   be handled by a regulator which shouldn't be controlled
+> > > > >   by the host driver, but rather by the PCI device driver.
+> > > > 
+> > > > This power-on-gpio should indeed be handled by the regulator, but the
+> > > > regulator cannot be handled by the PCIe device driver. This
+> > > > power-on-gpio must be operated on per-slot basis if I understand it
+> > > > correctly, so it cannot be controlled by the host controller driver
+> > > > either.
+> > > > 
+> > > > The reason why this cannot be controlled by the device driver is that
+> > > > if the device is powered down, it won't be detected on the PCIe bus,
+> > > > thus it cannot enable the regulator which will power up the slot the
+> > > > device is sitting in.
+> > > 
+> > > So we are on the same page with regard to a GPIO being the wrong
+> > > abstraction for this, I think.
+> > 
+> > Yes.
+> > 
+> > > For the regulator part I would argue that PCI is a bus that is built
+> > > around the ability to inspect the bus and detect devices on the bus at
+> > > probe time, so any regulator that's powering a PCI device should be
+> > > boot-on.
+> > 
+> > This thing about regulator being boot-on should really be documented.
+> > 
+> > Moreover, I think it's a waste of power to keep the devices ON on boot
+> > even if the PCIe bus was not started (yet). The bus might not be started
+> > at all and the regulators would still be ON, which would be quite a
+> > waste.
+> 
+> It's the exact same behavior that you get on x86: all devices are
+> powered after boot, once you loaded a device driver it may choose to
+> turn the device off. I don't think it makes sense to deviate here for
+> the sake of being embedded and special.
+> 
+> > > Only after the device driver is loaded it should be able to fetch the
+> > > regulator to power down/up the device as it wishes. In the x86 world
+> > > this is AFAIK done using ACPI methods.
+> > > 
+> > > I think the host controller driver has no business in controlling the
+> > > device power, more so as there possibly could be a lot of devices on
+> > > the bus even with a single host lane.
+> > 
+> > The power should be controlled per-slot, but I don't know how to model
+> > that. Note that there might be a PCIe device with a switch popped into a
+> > single slot, which makes things much more interesting. In such case, you
+> > need to power up the slot and neither of the downstream devices should
+> > control the power regulator of that slot.
+> 
+> We could just add the regulator to the PCI hierarchy in the DT and
+> handle it similar to IRQs where we just walk up the DT starting from the
+> device until we find the matching IRQ/regulator.
+> 
+> Still for this to work with a regulator shared between several devices,
+> all the device drivers have to be aware of the regulator. Otherwise a
+> single device may choose to power down and erroneously cut power to a
+> sibling device, where the driver hasn't requested the regulator.
+> 
+> In all those scenarios the host controller driver still would not have
+> any business dealing with the regulator. Same situation as with the
+> legacy IRQs, that aren't handled by the host driver, but just routed to
+> the right instance through the DT.
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Tested-by: Tanmay Inamdar <tinamdar@apm.com>
----
- arch/arm64/Kconfig            |  19 +++-
- arch/arm64/include/asm/Kbuild |   1 +
- arch/arm64/include/asm/io.h   |   3 +-
- arch/arm64/include/asm/pci.h  |  51 ++++++++++
- arch/arm64/kernel/Makefile    |   1 +
- arch/arm64/kernel/pci.c       | 173 ++++++++++++++++++++++++++++++++
- 6 files changed, 246 insertions(+), 2 deletions(-)
- create mode 100644 arch/arm64/include/asm/pci.h
- create mode 100644 arch/arm64/kernel/pci.c
-
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 27bbcfc..d1c8568 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -62,7 +62,7 @@ config MMU
- 	def_bool y
- 
- config NO_IOPORT
--	def_bool y
-+	def_bool y if !PCI
- 
- config STACKTRACE_SUPPORT
- 	def_bool y
-@@ -134,6 +134,23 @@ menu "Bus support"
- config ARM_AMBA
- 	bool
- 
-+config PCI
-+	bool "PCI support"
-+	help
-+	  This feature enables support for PCIe bus system. If you say Y
-+	  here, the kernel will include drivers and infrastructure code
-+	  to support PCIe bus devices.
-+
-+config PCI_DOMAINS
-+	def_bool PCI
-+
-+config PCI_SYSCALL
-+	def_bool PCI
-+
-+source "drivers/pci/Kconfig"
-+source "drivers/pci/pcie/Kconfig"
-+source "drivers/pci/hotplug/Kconfig"
-+
- endmenu
- 
- menu "Kernel Features"
-diff --git a/arch/arm64/include/asm/Kbuild b/arch/arm64/include/asm/Kbuild
-index 71c53ec..46924bc 100644
---- a/arch/arm64/include/asm/Kbuild
-+++ b/arch/arm64/include/asm/Kbuild
-@@ -26,6 +26,7 @@ generic-y += mman.h
- generic-y += msgbuf.h
- generic-y += mutex.h
- generic-y += pci.h
-+generic-y += pci-bridge.h
- generic-y += poll.h
- generic-y += posix_types.h
- generic-y += resource.h
-diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-index 7846a6b..67463a5 100644
---- a/arch/arm64/include/asm/io.h
-+++ b/arch/arm64/include/asm/io.h
-@@ -120,7 +120,8 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
- /*
-  *  I/O port access primitives.
-  */
--#define IO_SPACE_LIMIT		0xffff
-+#define arch_has_dev_port()	(1)
-+#define IO_SPACE_LIMIT		0x1ffffff
- #define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
- 
- static inline u8 inb(unsigned long addr)
-diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-new file mode 100644
-index 0000000..d93576f
---- /dev/null
-+++ b/arch/arm64/include/asm/pci.h
-@@ -0,0 +1,51 @@
-+#ifndef __ASM_PCI_H
-+#define __ASM_PCI_H
-+#ifdef __KERNEL__
-+
-+#include <linux/types.h>
-+#include <linux/slab.h>
-+#include <linux/dma-mapping.h>
-+
-+#include <asm/io.h>
-+#include <asm-generic/pci-bridge.h>
-+#include <asm-generic/pci-dma-compat.h>
-+
-+#define PCIBIOS_MIN_IO		0x1000
-+#define PCIBIOS_MIN_MEM		0
-+
-+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
-+
-+/*
-+ * Set to 1 if the kernel should re-assign all PCI bus numbers
-+ */
-+#define pcibios_assign_all_busses() \
-+	(pci_has_flag(PCI_REASSIGN_ALL_BUS))
-+
-+/*
-+ * PCI address space differs from physical memory address space
-+ */
-+#define PCI_DMA_BUS_IS_PHYS	(0)
-+
-+extern int isa_dma_bridge_buggy;
-+
-+#ifdef CONFIG_PCI
-+static inline int pci_domain_nr(struct pci_bus *bus)
-+{
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-+
-+	if (bridge)
-+		return bridge->domain_nr;
-+
-+	return 0;
-+}
-+
-+static inline int pci_proc_domain(struct pci_bus *bus)
-+{
-+	return 1;
-+}
-+#endif
-+
-+extern unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr);
-+
-+#endif  /* __KERNEL__ */
-+#endif  /* __ASM_PCI_H */
-diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
-index 2d4554b..64fc479 100644
---- a/arch/arm64/kernel/Makefile
-+++ b/arch/arm64/kernel/Makefile
-@@ -20,6 +20,7 @@ arm64-obj-$(CONFIG_HAVE_HW_BREAKPOINT)+= hw_breakpoint.o
- arm64-obj-$(CONFIG_EARLY_PRINTK)	+= early_printk.o
- arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)	+= sleep.o suspend.o
- arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
-+arm64-obj-$(CONFIG_PCI)			+= pci.o
- 
- obj-y					+= $(arm64-obj-y) vdso/
- obj-m					+= $(arm64-obj-m)
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-new file mode 100644
-index 0000000..9f29c9a
---- /dev/null
-+++ b/arch/arm64/kernel/pci.c
-@@ -0,0 +1,173 @@
-+/*
-+ * Code borrowed from powerpc/kernel/pci-common.c
-+ *
-+ * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
-+ * Copyright (C) 2014 ARM Ltd.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * version 2 as published by the Free Software Foundation.
-+ *
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/io.h>
-+#include <linux/kernel.h>
-+#include <linux/mm.h>
-+#include <linux/of_pci.h>
-+#include <linux/of_platform.h>
-+#include <linux/slab.h>
-+
-+#include <asm/pci-bridge.h>
-+
-+struct ioresource {
-+	struct list_head list;
-+	phys_addr_t start;
-+	resource_size_t size;
-+};
-+
-+static LIST_HEAD(io_list);
-+
-+int pci_register_io_range(phys_addr_t address, resource_size_t size)
-+{
-+	struct ioresource *res;
-+	resource_size_t allocated_size = 0;
-+
-+	/* find if the range has not been already allocated */
-+	list_for_each_entry(res, &io_list, list) {
-+		if (address >= res->start &&
-+			address + size <= res->start + size)
-+			return 0;
-+		allocated_size += res->size;
-+	}
-+
-+	/* range not already registered, check for space */
-+	if (allocated_size + size > IO_SPACE_LIMIT)
-+		return -E2BIG;
-+
-+	/* add the range in the list */
-+	res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	if (!res)
-+		return -ENOMEM;
-+	res->start = address;
-+	res->size = size;
-+
-+	list_add_tail(&res->list, &io_list);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_register_io_range);
-+
-+unsigned long pci_address_to_pio(phys_addr_t address)
-+{
-+	struct ioresource *res;
-+
-+	list_for_each_entry(res, &io_list, list) {
-+		if (address >= res->start &&
-+			address < res->start + res->size) {
-+			return res->start - address;
-+		}
-+	}
-+
-+	return (unsigned long)-1;
-+}
-+EXPORT_SYMBOL_GPL(pci_address_to_pio);
-+
-+/*
-+ * Called after each bus is probed, but before its children are examined
-+ */
-+void pcibios_fixup_bus(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+	struct resource *res;
-+	int i;
-+
-+	if (!pci_is_root_bus(bus)) {
-+		pci_read_bridge_bases(bus);
-+
-+		pci_bus_for_each_resource(bus, res, i) {
-+			if (!res || !res->flags || res->parent)
-+				continue;
-+
-+			/*
-+			 * If we are going to reassign everything, we can
-+			 * shrink the P2P resource to have zero size to
-+			 * save space
-+			 */
-+			if (pci_has_flag(PCI_REASSIGN_ALL_RSRC)) {
-+				res->flags |= IORESOURCE_UNSET;
-+				res->start = 0;
-+				res->end = -1;
-+				continue;
-+			}
-+		}
-+	}
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		/* Ignore fully discovered devices */
-+		if (dev->is_added)
-+			continue;
-+
-+		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
-+
-+		/* Read default IRQs and fixup if necessary */
-+		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-+	}
-+}
-+EXPORT_SYMBOL(pcibios_fixup_bus);
-+
-+/*
-+ * We don't have to worry about legacy ISA devices, so nothing to do here
-+ */
-+resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-+				resource_size_t size, resource_size_t align)
-+{
-+	return res->start;
-+}
-+
-+int pcibios_enable_device(struct pci_dev *dev, int mask)
-+{
-+	return pci_enable_resources(dev, mask);
-+}
-+
-+#define IO_SPACE_PAGES	((IO_SPACE_LIMIT + 1) / PAGE_SIZE)
-+static DECLARE_BITMAP(pci_iospace, IO_SPACE_PAGES);
-+
-+unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr)
-+{
-+	unsigned long start, len, virt_start;
-+	int err;
-+
-+	if (res->end > IO_SPACE_LIMIT)
-+		return -EINVAL;
-+
-+	/*
-+	 * try finding free space for the whole size first,
-+	 * fall back to 64K if not available
-+	 */
-+	len = resource_size(res);
-+	start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-+				res->start / PAGE_SIZE, len / PAGE_SIZE, 0);
-+	if (start == IO_SPACE_PAGES && len > SZ_64K) {
-+		len = SZ_64K;
-+		start = 0;
-+		start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-+					start, len / PAGE_SIZE, 0);
-+	}
-+
-+	/* no 64K area found */
-+	if (start == IO_SPACE_PAGES)
-+		return -ENOMEM;
-+
-+	/* ioremap physical aperture to virtual aperture */
-+	virt_start = start * PAGE_SIZE + (unsigned long)PCI_IOBASE;
-+	err = ioremap_page_range(virt_start, virt_start + len,
-+				phys_addr, __pgprot(PROT_DEVICE_nGnRE));
-+	if (err)
-+		return err;
-+
-+	bitmap_set(pci_iospace, start, len / PAGE_SIZE);
-+
-+	/* return io_offset */
-+	return start * PAGE_SIZE - res->start;
-+}
--- 
-1.9.0
-
+OK, it all makes sense. What I find a bit unfortunate is that we loose the Plug-
+n-Play nature of the PCIe here, but I guess that cannot be helped.
