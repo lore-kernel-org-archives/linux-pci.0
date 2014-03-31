@@ -1,87 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20140329171903.GA10551@google.com>
-References: <CAOULuOY5eryuH1KgaqiuGXyYiQd2h=TZoPe2M2+juts9XuzW6Q@mail.gmail.com>
-	<CAE9FiQXmO_sSCnd-0NvXKmyeLP0m4XGRRkAgqSiMkfeTcvXs+A@mail.gmail.com>
-	<CAOULuOaeBPpuiYc_Aru+awBDf=Ahbok-UjgY9o7gfO4VMctoqg@mail.gmail.com>
-	<CAE9FiQWpprkp_dzviD8wRpqosJq5Oe+8UTwhL87fbzFm3OknUw@mail.gmail.com>
-	<CA+55aFx_zAO0iJVi==4X-bYFTopgaOCopCdUBbqUwKfOrXRYqw@mail.gmail.com>
-	<20140329171903.GA10551@google.com>
-Date: Sat, 29 Mar 2014 20:14:30 -0400
-Message-ID: <CAOULuOaUke-W1W0o=1rhhk43Fy_RAYLdfhXQjdhy2xjHxP0oWA@mail.gmail.com>
-Subject: Re: BAR 14: can't assign mem (size 0x200000)
-From: Parag Warudkar <parag.lkml@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:50191 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752222AbaCaOSJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 31 Mar 2014 10:18:09 -0400
+Subject: Re: Interrupt remapping quirk tainting the kernel
+From: Jean Delvare <jdelvare@suse.de>
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+In-Reply-To: <20140331105619.GA8050@hmsreliant.think-freely.org>
+References: <1396253868.23070.94.camel@chaos.site>
+	 <20140331105619.GA8050@hmsreliant.think-freely.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 31 Mar 2014 16:18:05 +0200
+Message-ID: <1396275485.23070.261.camel@chaos.site>
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 29, 2014 at 1:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Rafael, linux-pci, linux-acpi]
->
-> On Sat, Mar 29, 2014 at 09:41:20AM -0700, Linus Torvalds wrote:
+Hi Neil,
 
->> Parag, can you add a WARN_ON_ONCE() to that message, so that we see
->> what the call chain is for it.
->
-> I think we likely get a Bus Check notification when resuming, so we're
-> probably in this path:
->
->     acpi_hotplug_notify_cb
->       acpi_hotplug_execute(acpi_device_hotplug, ...)
->         acpi_device_hotplug
->           acpi_scan_bus_check
->             acpi_pci_root_scan_dependent        # .hotplug.scan_dependent
->               acpiphp_check_host_bridge
->                 acpiphp_check_bridge
->                   enable_slot
->                     pcibios_resource_survey_bus
->                       dev_printk("Allocating resources")
->
-> It seems like we ought to do the equivalent of a Bus Check from the
-> root at boot-time, even if we don't receive an explicit Bus Check
-> notification then (ACPI 5.0, sec 5.6.6, says "OSPM will typically
-> perform a full enumeration automatically at boot time, but after
-> system initialization it is the responsibility of the ACPI AML code to
-> notify OSPM whenever a re-enumeration operation is required"), but I
-> don't think we do, which makes the resume path different from the boot
-> path.
->
-> Parag, would you mind collecting an acpidump and attaching it to the
-> bugzilla below?
+Le Monday 31 March 2014 à 06:56 -0400, Neil Horman a écrit :
+> On Mon, Mar 31, 2014 at 10:17:48AM +0200, Jean Delvare wrote:
+> > Hi Neil and all,
+> > 
+> > I have (once again) a question about this commit:
+> > 
+> > From: Neil Horman <nhorman@tuxdriver.com>
+> > Date: Tue, 16 Apr 2013 20:38:32 +0000
+> > Subject: iommu/vt-d: add quirk for broken interrupt remapping on 55XX chipsets
+> > Git-commit: 03bbcb2e7e292838bb0244f5a7816d194c911d62
+> > 
+> > When interrupt remapping is disabled by this quirk, the kernel gets
+> > tainted. What is the rationale for doing that?
+> > 
+> > The user can boot with intremap=off. That will also disable interrupt
+> > remapping, as the quirk does, but not taint the kernel. If this is
+> > considered OK then I fail to see why the quirk should behave differently
+> > and taint the kernel.
+> > 
+> > Thanks,
+> The quirk is intented to flag to the user the fact that BIOS has not followed
+> the recommended procedure that was laied out in the intel published errata
+> sheet.  Arguably you could say that we should still taint the kernel in the
+> event that intremap=off is still specified, but it seems pragmatic not to do so,
+> as the use of that option suggsts the administrator has asserted a workaround to
+> the problem that is identical to the fix (in the event that the BIOS vendor has
+> not released an update).
 
-I have attached a single acpidump to the bugzilla.
+That doesn't really answer my question. While I understand that the
+preferred fix is that the BIOS disables the feature, how bad are we if
+it does not and the kernel has to do it?
 
-I realized that I misspoke when I said VTd makes a difference.
-Actually on 3.14 exact same message appears on resume irrespective of
-whether or not VTd is enabled.
-
-However on 3.11 (3.11.0-18-generic Ubuntu LTS latest kernel) - I don't
-see those messages irrespective of VTd status.
-I must have accidentally booted into 3.11 kernel after disabling VTd
-and thought the messages went away because of disabling VTd.
-
-So we can ignore the VTd part.
-
->
-> Is this a regression?  I guess you said that the message (and the sec-
-> latency change, which I don't think is applicable to PCIe anyway) are
-> the only ill effects you see, so it might not be too serious even if
-> it is.
-
-Not sure if Ubuntu includes any patches on top of 3.11 mainline that
-make a difference to this issue - but in case they don't this might be
-a regression.
-About the seriousness part - I am not seeing any issues in my regular
-use. Not sure what that bridge does and if there are any specific
-devices involved - so it might just be that I am not using anything
-that could be problematic due to this issue.
+We normally taint the kernel when the situation is such that debugging
+the kernel would be a waste of time. For example, because a binary
+driver was loaded, or a module was forcibly unloaded, etc. How does that
+apply here? If the quirk kicks in, aren't we just as safe as if the BIOS
+had disabled the feature? If not, then I would like to understand why,
+and document it properly.
 
 Thanks,
+-- 
+Jean Delvare
+SUSE L3 Support
 
-Parag
