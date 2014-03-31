@@ -1,96 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:52077 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754076AbaCZPUt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 11:20:49 -0400
-Message-ID: <5332F01A.6090307@ti.com>
-Date: Wed, 26 Mar 2014 20:49:54 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Received: from mx1.redhat.com ([209.132.183.28]:11491 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750966AbaCaUYr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 31 Mar 2014 16:24:47 -0400
+Date: Mon, 31 Mar 2014 22:26:33 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
+	linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+	Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [PATCH v2 0/2] block: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140331202632.GA20443@dhcp-26-207.brq.redhat.com>
+References: <cover.1393404496.git.agordeev@redhat.com>
+ <20140313041231.GC26657@google.com>
+ <5321CE94.5070506@kernel.dk>
+ <20140313173656.GA4939@dhcp-26-207.brq.redhat.com>
+ <20140331195139.GA19867@dhcp-26-207.brq.redhat.com>
+ <5339CC40.9050506@kernel.dk>
 MIME-Version: 1.0
-To: Rob Herring <robherring2@gmail.com>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-omap <linux-omap@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Rob Landley <rob@landley.net>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Tony Lindgren <tony@atomide.com>, <rnayak@ti.com>,
-	"paul@pwsan.com" <paul@pwsan.com>
-Subject: Re: [RFC PATCH 02/12] pci: host: pcie-dra7xx: add support for pcie-dra7xx
- controller
-References: <1395842272-15267-1-git-send-email-kishon@ti.com>	<1395842272-15267-3-git-send-email-kishon@ti.com> <CAL_JsqKeQvbU24V2-3KQuFoLwkL31DEcEEVDenfTA0P++Hn_fQ@mail.gmail.com>
-In-Reply-To: <CAL_JsqKeQvbU24V2-3KQuFoLwkL31DEcEEVDenfTA0P++Hn_fQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5339CC40.9050506@kernel.dk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Wednesday 26 March 2014 08:15 PM, Rob Herring wrote:
-> On Wed, Mar 26, 2014 at 8:57 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
->> Added support for pcie controller in dra7xx. This driver re-uses
->> the designware core code that is already present in kernel.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  Documentation/devicetree/bindings/pci/ti-pci.txt |   35 ++
->>  drivers/pci/host/Kconfig                         |   10 +
->>  drivers/pci/host/Makefile                        |    1 +
->>  drivers/pci/host/pcie-dra7xx.c                   |  411 ++++++++++++++++++++++
->>  4 files changed, 457 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
->>  create mode 100644 drivers/pci/host/pcie-dra7xx.c
->>
->> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
->> new file mode 100644
->> index 0000000..0528c47
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
->> @@ -0,0 +1,35 @@
->> +TI PCI Controllers
->> +
->> +PCIe Designware Controller
->> +This node should have the properties described in "designware-pcie.txt".
->> + - compatible: Should be "ti,dra7xx-pcie""
->> + - reg : Address and length of the register set for the device.
->> + - phys : the phandle for the PHY device (used by generic PHY framework)
->> + - phy-names : the names of the PHY corresponding to the PHYs present in the
->> +   *phy* phandle.
->> + - resets: phandle used if reset is handled be soc
+On Mon, Mar 31, 2014 at 02:12:48PM -0600, Jens Axboe wrote:
+> On 03/31/2014 01:52 PM, Alexander Gordeev wrote:
+> >On Thu, Mar 13, 2014 at 06:36:56PM +0100, Alexander Gordeev wrote:
+> >>Oh-oh, cciss patch #2 requires commit 3ce4e86 ("PCI/MSI: Add
+> >>pci_enable_msi_exact() and pci_enable_msix_exact()") which was
+> >>pulled to 3.14-rc4 only. Sorry for failing to clarify that :(
+> >>
+> >>And I also notice 3111cc3 ("skd: Use pci_enable_msix_exact() instead
+> >>of pci_enable_msix_range()") in your tree also should not compile :(
+> >
+> >Hi Jens,
+> >
+> >3.14 contains prerequisite commits for the patches above.
+> >Would you pull them or do you want me to resend the two?
 > 
-> s/be/by/ ?
-> 
->> + - reset-names: name given to the phandle
->> + - ti,device-type: Should be 1 - EP TYPE, 2 - LEG EP TYPE OR 3 - RC TYPE
-> 
-> I don't think this makes sense. I'd imagine we'd need the binding to
-> look quite a bit different if endpoint mode was actually supported. I
+> I'm assuming you are referring to the cciss patches? I can add those
+> back, for a post-merge pull request.
 
-right, it makes sense to remove the ti,device-type altogether as this driver
-only supports RC.
-> think I would start defining endpoint mode with a different compatible
-> string and go from there.
-> 
->> +
->> +Example:
->> +pcie@51000000 {
->> +       compatible = "ti,dra7xx-pcie";
->> +       reg = <0x51002000 0x14c>, <0x51000000 0x2000>, <0x4A002540 0x1f>, <0x4A003c24 0x4>, <0x4AE07310 0x4>;
-> 
-> This is different number of entries from your actual dts. You need to
-> define how many reg entries, what they are, and the order.
+Nope. You kicked off the second of two 'cciss' patch ("PCI/MSI: Add
+pci_enable_msi_exact() and pci_enable_msix_exact()") and the last one
+from a series I posted in another thread ("skd: Use pci_enable_msix_exact()
+instead of pci_enable_msix_range()").
 
-Ok. Will fix it.
+> 
+> -- 
+> Jens Axboe
+> 
 
-Thanks
-Kishon
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
