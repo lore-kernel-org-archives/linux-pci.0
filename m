@@ -1,48 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62817 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57229 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751176AbaDNHMg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 03:12:36 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Frank Haverkamp <haver@linux.vnet.ibm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 0/2] Phase out pci_enable_msi_block()
-Date: Mon, 14 Apr 2014 09:14:05 +0200
-Message-Id: <cover.1397458024.git.agordeev@redhat.com>
+	id S1751453AbaDAWcD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Apr 2014 18:32:03 -0400
+From: Bandan Das <bsd@redhat.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: rework new_id interface for known vendor/device values
+References: <jpgeh1gpwwo.fsf@nelium.bos.redhat.com>
+	<1396388707.476.188.camel@ul30vt.home>
+Date: Tue, 01 Apr 2014 18:00:08 -0400
+In-Reply-To: <1396388707.476.188.camel@ul30vt.home> (Alex Williamson's message
+	of "Tue, 01 Apr 2014 15:45:07 -0600")
+Message-ID: <jpgr45gk8wn.fsf@nelium.bos.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Alex Williamson <alex.williamson@redhat.com> writes:
 
-This series is against 3.15-rc1.
+> On Tue, 2014-04-01 at 17:22 -0400, Bandan Das wrote:
+>> While using the new_id interface, the user can unintentionally feed
+>> incorrect values if the driver static table has a matching entry.
+>> This is possible since only the device and vendor fields are
+>> mandatory and the rest are optional. As a result, store_new_id
+>> will fill in default values that are then passed on to the driver
+>> and can have unintended consequences.
+>> 
+>> As an example, consider the ixgbe driver and the 82599EB network card :
+>> echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
+>> 
+>> This will pass a driver_data value of 0 to the driver whereas
+>> the index 0 in ixgbe actually points to a different set of card
+>> operations.
+>> 
+>> This change returns an error if the user attempts to add a dynid for
+>> a vendor/device combination for which a static entry already exists.
+>> However, if the user intentionally wants a different set of values,
+>> she must provide all the 7 fields and that will be accepted.
+>> 
+>> In KVM/device assignment scenario, the user might want 
+>> to bind a device back to the host driver by writing to new_id
+>> and trip on a possible null pointer dereference.
+>> 
+>> Signed-off-by: Bandan Das <bsd@redhat.com>
+>> ---
+>> v2:
+>> 1. Return error if there is a matching static entry
+>> and change commit message to reflect this behavior
+>> 3. Fill in a pdev and call pci_match_id instead of creating
+>> a new matching function
+>> 4. Change commit message to reflect that libvirt does not
+>> depend on this behavior
+>> 
+>>  drivers/pci/pci-driver.c | 23 ++++++++++++++++++++++-
+>>  1 file changed, 22 insertions(+), 1 deletion(-)
+>> 
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 25f0bc6..493514e 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -103,11 +103,12 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>>  {
+>>  	struct pci_driver *pdrv = to_pci_driver(driver);
+>>  	const struct pci_device_id *ids = pdrv->id_table;
+>> +	struct pci_dev *pdev;
+>>  	__u32 vendor, device, subvendor=PCI_ANY_ID,
+>>  		subdevice=PCI_ANY_ID, class=0, class_mask=0;
+>>  	unsigned long driver_data=0;
+>>  	int fields=0;
+>> -	int retval;
+>> +	int retval = 0;
+>>  
+>>  	fields = sscanf(buf, "%x %x %x %x %x %x %lx",
+>>  			&vendor, &device, &subvendor, &subdevice,
+>> @@ -115,6 +116,26 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>>  	if (fields < 2)
+>>  		return -EINVAL;
+>>  
+>> +	if (fields != 7) {
+>
+> nit, pdev could be declared within this scope.
 
-This update obsoletes pci_enable_msi_block() function in
-favor of pci_enable_msi_range() and pci_enable_msi_exact().
+Ok, will spin a new one.
 
+>> +		pdev = kzalloc(sizeof(*pdev), GFP_KERNEL);
+>> +		if (!pdev)
+>> +			return -ENOMEM;
+>> +
+>> +		pdev->vendor = vendor;
+>> +		pdev->device = device;
+>> +		pdev->subsystem_vendor = subvendor;
+>> +		pdev->subsystem_device = subdevice;
+>> +		pdev->class = class;
+>
+> Why not class_mask?
+pdev->class_mask isn't used anywhere.
 
-Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-mips@linux-mips.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-s390@vger.kernel.org
-Cc: x86@kernel.org
-Cc: linux-pci@vger.kernel.org
-
-
-Alexander Gordeev (2):
-  GenWQE: Use pci_enable_msi_exact() instead of pci_enable_msi_block()
-  PCI/MSI: Phase out pci_enable_msi_block()
-
- drivers/misc/genwqe/card_utils.c |    2 +-
- drivers/pci/msi.c                |   79 ++++++++++++++++----------------------
- include/linux/pci.h              |    5 +--
- 3 files changed, 35 insertions(+), 51 deletions(-)
-
--- 
-1.7.7.6
-
+>> +
+>> +		if (pci_match_id(pdrv->id_table, pdev))
+>> +			retval = -EEXIST;
+>> +
+>> +		kfree(pdev);
+>> +
+>> +		if (retval)
+>> +			return retval;
+>> +	}
+>> +
+>>  	/* Only accept driver_data values that match an existing id_table
+>>  	   entry */
+>>  	if (ids) {
