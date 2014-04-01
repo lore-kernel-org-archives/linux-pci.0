@@ -1,108 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:50078 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756126AbaDHKLV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 06:11:21 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
-Date: Tue, 08 Apr 2014 12:11:07 +0200
-Message-ID: <6228807.4v9ZRtib77@wuerfel>
-In-Reply-To: <20140408094933.GS17163@e106497-lin.cambridge.arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <CAErSpo6S49qNuJQB-XXEfJ1Nkz=4gZ5_hE93=gb_yGZesA1H9Q@mail.gmail.com> <20140408094933.GS17163@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:44551 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751794AbaDAVpP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Apr 2014 17:45:15 -0400
+Message-ID: <1396388707.476.188.camel@ul30vt.home>
+Subject: Re: [PATCH v2] PCI: rework new_id interface for known vendor/device
+ values
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bandan Das <bsd@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 01 Apr 2014 15:45:07 -0600
+In-Reply-To: <jpgeh1gpwwo.fsf@nelium.bos.redhat.com>
+References: <jpgeh1gpwwo.fsf@nelium.bos.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 08 April 2014 10:49:33 Liviu Dudau wrote:
-> On Tue, Apr 08, 2014 at 12:21:51AM +0100, Bjorn Helgaas wrote:
-> > On Fri, Mar 14, 2014 at 9:34 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > > Some architectures do not share x86 simple view of the PCI I/O space
-> > > and instead use a range of addresses that map to bus addresses. For
-> > > some architectures these ranges will be expressed by OF bindings
-> > > in a device tree file.
-> > >
-> > > Introduce a pci_register_io_range() helper function that can be used
-> > > by the architecture code to keep track of the I/O ranges described by the
-> > > PCI bindings. If the PCI_IOBASE macro is not defined that signals
-> > > lack of support for PCI and we return an error.
-> > >
-> > > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > > Acked-by: Grant Likely <grant.likely@linaro.org>
-> > > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> > > ---
-> > >  drivers/of/address.c       | 9 +++++++++
-> > >  include/linux/of_address.h | 1 +
-> > >  2 files changed, 10 insertions(+)
-> > >
-> > > diff --git a/drivers/of/address.c b/drivers/of/address.c
-> > > index 1a54f1f..be958ed 100644
-> > > --- a/drivers/of/address.c
-> > > +++ b/drivers/of/address.c
-> > > @@ -619,6 +619,15 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
-> > >  }
-> > >  EXPORT_SYMBOL(of_get_address);
-> > >
-> > > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> > > +{
-> > > +#ifndef PCI_IOBASE
-> > > +       return -EINVAL;
-> > > +#else
-> > > +       return 0;
-> > > +#endif
-> > > +}
-> > 
-> > This isn't PCI code, so I'm fine with it in that sense, but I'm not
-> > sure the idea of a PCI_IOBASE #define is really what we need.  It's
-> > not really determined by the processor architecture, it's determined
-> > by the platform.  And a single address isn't enough in general,
-> > either, because if there are multiple host bridges, there's no reason
-> > the apertures that generate PCI I/O transactions need to be contiguous
-> > on the CPU side.
+On Tue, 2014-04-01 at 17:22 -0400, Bandan Das wrote:
+> While using the new_id interface, the user can unintentionally feed
+> incorrect values if the driver static table has a matching entry.
+> This is possible since only the device and vendor fields are
+> mandatory and the rest are optional. As a result, store_new_id
+> will fill in default values that are then passed on to the driver
+> and can have unintended consequences.
 > 
-> It should not be only platform's choice if the architecture doesn't support it.
-> To my mind PCI_IOBASE means "I support MMIO operations and this is the
-> start of the virtual address where my I/O ranges are mapped." It's the
-> same as ppc's _IO_BASE. And pci_address_to_pio() will take care to give
-> you the correct io_offset in the presence of multiple host bridges,
-> while keeping the io resource in the range [0 .. host_bridge_io_range_size - 1]
+> As an example, consider the ixgbe driver and the 82599EB network card :
+> echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
+> 
+> This will pass a driver_data value of 0 to the driver whereas
+> the index 0 in ixgbe actually points to a different set of card
+> operations.
+> 
+> This change returns an error if the user attempts to add a dynid for
+> a vendor/device combination for which a static entry already exists.
+> However, if the user intentionally wants a different set of values,
+> she must provide all the 7 fields and that will be accepted.
+> 
+> In KVM/device assignment scenario, the user might want 
+> to bind a device back to the host driver by writing to new_id
+> and trip on a possible null pointer dereference.
+> 
+> Signed-off-by: Bandan Das <bsd@redhat.com>
+> ---
+> v2:
+> 1. Return error if there is a matching static entry
+> and change commit message to reflect this behavior
+> 3. Fill in a pdev and call pci_match_id instead of creating
+> a new matching function
+> 4. Change commit message to reflect that libvirt does not
+> depend on this behavior
+> 
+>  drivers/pci/pci-driver.c | 23 ++++++++++++++++++++++-
+>  1 file changed, 22 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 25f0bc6..493514e 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -103,11 +103,12 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>  {
+>  	struct pci_driver *pdrv = to_pci_driver(driver);
+>  	const struct pci_device_id *ids = pdrv->id_table;
+> +	struct pci_dev *pdev;
+>  	__u32 vendor, device, subvendor=PCI_ANY_ID,
+>  		subdevice=PCI_ANY_ID, class=0, class_mask=0;
+>  	unsigned long driver_data=0;
+>  	int fields=0;
+> -	int retval;
+> +	int retval = 0;
+>  
+>  	fields = sscanf(buf, "%x %x %x %x %x %x %lx",
+>  			&vendor, &device, &subvendor, &subdevice,
+> @@ -115,6 +116,26 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>  	if (fields < 2)
+>  		return -EINVAL;
+>  
+> +	if (fields != 7) {
 
-There is a wide range of implementations across architectures:
+nit, pdev could be declared within this scope.
 
-a) no access to I/O ports at all (tile, s390, ...)
-b) access to I/O ports only through special instructions (x86, ...)
-c) all MMIO is mapped virtual contiguous to PCI_IOBASE or _IO_BASE
-   (most ppc64, arm32 with MMU, arm64, ...)
-d) only one PCI host can have an I/O space (mips, microblaze, ...)
-e) each host controller can have its own method (ppc64 with indirect pio)
-f) PIO token equals virtual address plus offset (some legacy ARM platforms,
-   probably some other architectures), or physical address (sparc)
-g) PIO token encodes address space number plus offset (ia64)
+> +		pdev = kzalloc(sizeof(*pdev), GFP_KERNEL);
+> +		if (!pdev)
+> +			return -ENOMEM;
+> +
+> +		pdev->vendor = vendor;
+> +		pdev->device = device;
+> +		pdev->subsystem_vendor = subvendor;
+> +		pdev->subsystem_device = subdevice;
+> +		pdev->class = class;
 
-a) and b) are trivially handled by any implementation that falls
-back to 'return -EINVAL'.
-I believe that c) is the most appropriate solution and we should be
-able to adopt it by most of the architectures that have an MMU and
-make it the default implementation.
-d) seems like a good fallback for noMMU architectures: While we do
-need to support I/O spaces, we need to support multiple PCI domains,
-and we need to support noMMU, the combination of all three should
-be extremely rare, and I'd leave it up to the architecture to support
-that if there is a real use case, rather than trying to put that into
-common code.
-Anything that currently requires e), f) or g) I think should keep
-doing that and not try to use the generic implementation.
+Why not class_mask?
 
-	Arnd
+> +
+> +		if (pci_match_id(pdrv->id_table, pdev))
+> +			retval = -EEXIST;
+> +
+> +		kfree(pdev);
+> +
+> +		if (retval)
+> +			return retval;
+> +	}
+> +
+>  	/* Only accept driver_data values that match an existing id_table
+>  	   entry */
+>  	if (ids) {
+
+
+
