@@ -1,73 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:42396 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753616AbaDDPrs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 11:47:48 -0400
-Received: by mail-pb0-f52.google.com with SMTP id rr13so3629497pbb.39
-        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 08:47:48 -0700 (PDT)
-Date: Fri, 4 Apr 2014 09:47:44 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Dave Airlie <airlied@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Coverity CID 142811: pci_set_vga_state() operands don't affect
- result
-Message-ID: <20140404154744.GA8549@google.com>
-References: <CAErSpo6JNDFiV6tmDKKDdnod+skBHx6T-+JGvjCRRLsL98h_uQ@mail.gmail.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:34855 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751867AbaDAQpF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Apr 2014 12:45:05 -0400
+Date: Tue, 1 Apr 2014 09:47:25 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: stuart.yoder@freescale.com, kvm@vger.kernel.org,
+	jan.kiszka@siemens.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, mhocko@suse.cz, bhelgaas@google.com,
+	Varun.Sethi@freescale.com, kvmarm@lists.cs.columbia.edu,
+	rafael.j.wysocki@intel.com, agraf@suse.de,
+	linux-pci@vger.kernel.org, linux@roeck-us.net,
+	konrad.wilk@oracle.com, d.kasatkin@samsung.com, tj@kernel.org,
+	scottwood@freescale.com, a.motakis@virtualopensystems.com,
+	tech@virtualopensystems.com, Bharat.Bhushan@freescale.com,
+	toshi.kani@hp.com, kim.phillips@linaro.org,
+	a.rigo@virtualopensystems.com, iommu@lists.linux-foundation.org,
+	joe@perches.com, christoffer.dall@linaro.org
+Subject: Re: [RFC PATCH] PCI: Introduce new device binding path using
+ pci_dev.driver_override
+Message-ID: <20140401164725.GA4649@kroah.com>
+References: <20140401161851.18815.31108.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo6JNDFiV6tmDKKDdnod+skBHx6T-+JGvjCRRLsL98h_uQ@mail.gmail.com>
+In-Reply-To: <20140401161851.18815.31108.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 03, 2014 at 02:43:05PM -0600, Bjorn Helgaas wrote:
-> Coverity complains about this in drivers/pci/pci.c:
+On Tue, Apr 01, 2014 at 10:28:54AM -0600, Alex Williamson wrote:
+> The driver_override field allows us to specify the driver for a device
+> rather than relying on the driver to provide a positive match of the
+> device.  This shortcuts the existing process of looking up the vendor
+> and device ID, adding them to the driver new_id, binding the device,
+> then removing the ID, but it also provides a couple advantages.
 > 
-> CID 142811 (#1 of 1): Operands don't affect result (CONSTANT_EXPRESSION_RESULT)
-> result_independent_of_operands: flags & (2U /* 1 << 1 */) &
-> (command_bits & 4294967292U /* ~(1 | 2) */) is always 0 regardless of
-> the values of its operands. This occurs as the logical operand of if.
+> First, the above process allows the driver to bind to any device
+> matching the new_id for the window where it's enabled.  This is often
+> not desired, such as the case of trying to bind a single device to a
+> meta driver like pci-stub or vfio-pci.  Using driver_override we can
+> do this deterministically using:
 > 
-> 4128        WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) &
-> (command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
+> echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
 > 
-> This is a result of 3448a19da479 "vgaarb: use bridges to control VGA
-> routing where possible."
+> Previously we could not invoke drivers_probe after adding a device
+> to new_id for a driver as we get non-deterministic behavior whether
+> the driver we intend or the standard driver will claim the device.
+> Now it becomes a deterministic process, only the driver matching
+> driver_override will probe the device.
 > 
-> I wonder if that middle "&" was intended to be "&&"?
+> To return the device to the standard driver, we simply clear the
+> driver_override and reprobe the device, ex:
+> 
+> echo > /sys/bus/pci/devices/0000:03:00.0/preferred_driver
+> echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> 
+> Another advantage to this approach is that we can specify a driver
+> override to force a specific binding or prevent any binding.  For
+> instance when an IOMMU group is exposed to userspace through VFIO
+> we require that all devices within that group are owned by VFIO.
+> However, devices can be hot-added into an IOMMU group, in which case
+> we want to prevent the device from binding to any driver (preferred
+> driver = "none") or perhaps have it automatically bind to vfio-pci.
+> With driver_override it's a simple matter for this field to be set
+> internally when the device is first discovered to prevent driver
+> matches.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+> 
+> Apologies for the exceptionally long cc list, this is a follow-up to
+> Stuart's "Subject: mechanism to allow a driver to bind to any device"
+> thread.  This is effectively a v2 of the proof-of-concept patch I
+> posted in that thread.  This version changes to use a dummy id struct
+> to return on an "override" match, which removes the collateral damage
+> and greatly simplifies the patch.  This feels fairly well baked for
+> PCI and I would expect that platform drivers could do a similar
+> implementation.  From there perhaps we can discuss whether there's
+> any advantage to placing driver_override on struct device.  The logic
+> for incorporating it into the match still needs to happen per bus
+> driver, so it might only contribute to consistency of the show/store
+> sysfs attributes to move it up to struct device.  Please comment.
+> Thanks,
+> 
+> Alex
+> 
+>  drivers/pci/pci-driver.c |   25 ++++++++++++++++++++++---
+>  drivers/pci/pci-sysfs.c  |   40 ++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h      |    1 +
+>  3 files changed, 63 insertions(+), 3 deletions(-)
 
-I propose the following patch for this.  Unless there's objection, I'll
-queue this for v3.16.  I took the liberty of interpreting your email
-responses as acks.
+No Documentation/ABI/ update to reflect the ABI you are creating?
 
+thanks,
 
-PCI: Fix incorrect vgaarb conditional in WARN_ON()
-
-From: Bjorn Helgaas <bhelgaas@google.com>
-
-3448a19da479 "vgaarb: use bridges to control VGA routing where possible"
-added the "flags & PCI_VGA_STATE_CHANGE_DECODES" condition to an existing
-WARN_ON(), but used bitwise AND (&) instead of logical AND (&&), so the
-condition is never true.  Replace with logical AND.
-
-Found by Coverity (CID 142811).
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
-Acked-by: David Airlie <airlied@redhat.com>
----
- drivers/pci/pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7325d43bf030..39012831867e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4125,7 +4125,7 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
- 	u16 cmd;
- 	int rc;
- 
--	WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) & (command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
-+	WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) && (command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
- 
- 	/* ARCH specific VGA enables */
- 	rc = pci_set_vga_state_arch(dev, decode, command_bits, flags);
+greg k-h
