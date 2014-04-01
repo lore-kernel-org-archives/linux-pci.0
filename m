@@ -1,112 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH v7 0/6] Support for creating generic host_bridge from device tree
-Date: Fri, 14 Mar 2014 15:34:26 +0000
-Message-Id: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:48376 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751615AbaDAD6s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 23:58:48 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Pratyush Anand' <pratyush.anand@st.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <000001cf4d55$c4455230$4ccff690$%han@samsung.com>
+ <20140401034344.GA18207@pratyush-vbox>
+In-reply-to: <20140401034344.GA18207@pratyush-vbox>
+Subject: Re: [PATCH] ARM: dts: Increase the size of PCIe configuration space
+ for EXYNOS5440
+Date: Tue, 01 Apr 2014 12:58:46 +0900
+Message-id: <000201cf4d5e$ae96b290$0bc417b0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm dropping the RFC tag now as I have the feeling that we are starting to have something in
-a good shape that can be pushed for more testing in near future.
+On Tuesday, April 01, 2014 12:44 PM, Pratyush Anand wrote:
+> On Tue, Apr 01, 2014 at 10:54:57AM +0800, Jingoo Han wrote:
+> > Increase the size of PCIe configuration space to 8kB from 4kB,
+> > because 4kB for cfg0 and 4kB for cfg1 are required respectively.
+> > If 2kB for cfg0 and 2kB for cfg1 are set, it will make problems
+> > when a PCIe card having multiple EPs below a bridge is used.
+> >
+> > Suggested-by: Pratyush Anand <pratyush.anand@st.com>
+> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> > ---
+> >  arch/arm/boot/dts/exynos5440.dtsi |   12 ++++++------
+> >  1 file changed, 6 insertions(+), 6 deletions(-)
+> >
+> > diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
+> > index d600733..5d08be8 100644
+> > --- a/arch/arm/boot/dts/exynos5440.dtsi
+> > +++ b/arch/arm/boot/dts/exynos5440.dtsi
+> > @@ -281,9 +281,9 @@
+> >  		#address-cells = <3>;
+> >  		#size-cells = <2>;
+> >  		device_type = "pci";
+> > -		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /* configuration space */
+> > -			  0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
+> > -			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>; /* non-prefetchable memory */
+> > +		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00002000   /* configuration space */
+> > +			  0x81000000 0 0	  0x40002000 0 0x00010000   /* downstream I/O */
+> > +			  0x82000000 0 0x40012000 0x40012000 0 0x1ffee000>; /* non-prefetchable memory */
+> >  		#interrupt-cells = <1>;
+> >  		interrupt-map-mask = <0 0 0 0>;
+> >  		interrupt-map = <0x0 0 &gic 53>;
+> > @@ -302,9 +302,9 @@
+> >  		#address-cells = <3>;
+> >  		#size-cells = <2>;
+> >  		device_type = "pci";
+> > -		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /* configuration space */
+> > -			  0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
+> > -			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>; /* non-prefetchable memory */
+> > +		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00002000   /* configuration space */
+> > +			  0x81000000 0 0	  0x60002000 0 0x00020000   /* downstream I/O */
+> 
+> is I/O size change intentional?
 
-This is v7 of my attempt to add support for a generic pci_host_bridge controller created
-from a description passed in the device tree.
+Hi Pratyush Anand,
 
-Changes from v6:
-  - Made pci_register_io_range() return an error if PCI_IOBASE is not defined. When the
-    cleanup of PCI_IOBASE use is going to happen, that will catch all those architectures
-    that don't use virtual mapping of I/O ranges (like x86) or don't support PCI at all.
-  - Improved the error handling in of_pci_range_to_resource() and made it propagate the
-    error as well.
-  - Bail out of the parsing of PCI ranges if of_pci_range_to_resource() fails.
-
-Changes from v5:
-  - Tested by Tanmay Inamdar, thanks Tanmay!
-  - dropped v5 5/7 pci: Use parent domain number when allocating child busses.
-  - Added weak implementation of pcibios_fixup_bridge_ranges() in drivers/pci/host-bridge.c
-    so that architectures that enable CONFIG_OF and CONFIG_PCI don't suddenly get compilation
-    errors. While at this, changed the signature of the function so that an error can be
-    returned.
-  - With the new error code in pcibios_fixup_bridge_ranges(), reworked the error handling
-    in pci_host_bridge_of_get_ranges() and of_create_pci_host_bridge().
-  - Add linux/slab.h to the #include list
-  - Revisit the error path in pci_create_root_bus[_in_domain]() and fixed the case where
-    failing to allocate the bus will not return an error.
-
-Changes from v4:
-  - Export pci_find_host_bridge() to be used by arch code. There is scope for
-    making the arch/arm64 version of pci_domain_nr the default weak implementation
-    but that would double the size of this series in order to handle all #define
-    versions of the pci_domain_nr() function, so I suggest keeping that for a separate
-    cleanup series.
-
-Changes from v3:
-  - Dynamically allocate bus_range resource in of_create_pci_host_bridge()
-  - Fix the domain number used when creating child busses.
-  - Changed domain number allocator to use atomic operations.
-  - Use ERR_PTR() to propagate the error out of pci_create_root_bus_in_domain()
-    and of_create_pci_host_bridge().
-
-Changes from v2:
-  - Use range->cpu_addr when calling pci_address_to_pio()
-  - Introduce pci_register_io_range() helper function in order to register
-    io ranges ahead of their conversion to PIO values. This is needed as no
-    information is being stored yet regarding the range mapping, making
-    pci_address_to_pio() fail. Default weak implementation does nothing,
-    to cover the default weak implementation of pci_address_to_pio() that
-    expects direct mapping of physical addresses into PIO values (x86 view).
-
-Changes from v1:
-  - Add patch to fix conversion of IO ranges into IO resources.
-  - Added a domain_nr member to pci_host_bridge structure, and a new function
-    to create a root bus in a given domain number. In order to facilitate that
-    I propose changing the order of initialisation between pci_host_bridge and
-    it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
-    This is done in patch 1/4 and 2/4.
-  - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
-    code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
-    and if that fails assign the next unallocated domain id.
-  - Changed the name of the function that creates the generic host bridge from
-    pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
-
-v6 thread here: https://lkml.org/lkml/2014/3/5/179
-v5 thread here: https://lkml.org/lkml/2014/3/4/318
-v4 thread here: https://lkml.org/lkml/2014/3/3/301
-v3 thread here: https://lkml.org/lkml/2014/2/28/216
-v2 thread here: https://lkml.org/lkml/2014/2/27/245
-v1 thread here: https://lkml.org/lkml/2014/2/3/380
+No, it is my mistake. I/O size should not be modified.
+I really appreciate your review. I will send v2 patch. :-)
+Thank you.
 
 Best regards,
-Liviu
+Jingoo Han
 
-
-Liviu Dudau (6):
-  pci: Introduce pci_register_io_range() helper function.
-  pci: OF: Fix the conversion of IO ranges into IO resources.
-  pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-  pci: Introduce a domain number for pci_host_bridge.
-  pci: Export find_pci_host_bridge() function.
-  pci: Add support for creating a generic host_bridge from device tree
-
- drivers/of/address.c       |  49 +++++++++++
- drivers/pci/host-bridge.c  | 161 ++++++++++++++++++++++++++++++++++-
- drivers/pci/probe.c        |  73 ++++++++++------
- include/linux/of_address.h |  14 +--
- include/linux/pci.h        |  17 ++++
- 5 files changed, 278 insertions(+), 36 deletions(-)
-
--- 
-1.9.0
+> 
+> Regards
+> Pratyush
+> > +			  0x82000000 0 0x60012000 0x60012000 0 0x1ffee000>; /* non-prefetchable memory */
+> >  		#interrupt-cells = <1>;
+> >  		interrupt-map-mask = <0 0 0 0>;
+> >  		interrupt-map = <0x0 0 &gic 56>;
+> > --
+> > 1.7.10.4
+> >
 
