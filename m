@@ -1,119 +1,131 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for pci_host_bridge.
-Date: Fri, 11 Apr 2014 10:36:06 +0200
-Message-ID: <5745677.MbvfSQPiZ9@wuerfel>
-In-Reply-To: <1397192469.19518.11.camel@pasglop>
-References: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com> <6459805.ygy4tBNDNz@wuerfel> <1397192469.19518.11.camel@pasglop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46986 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751247AbaDARQV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Apr 2014 13:16:21 -0400
+Message-ID: <1396372540.476.160.camel@ul30vt.home>
+Subject: Re: [RFC PATCH] PCI: Introduce new device binding path using
+ pci_dev.driver_override
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: stuart.yoder@freescale.com, kvm@vger.kernel.org,
+	jan.kiszka@siemens.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, mhocko@suse.cz, bhelgaas@google.com,
+	Varun.Sethi@freescale.com, kvmarm@lists.cs.columbia.edu,
+	rafael.j.wysocki@intel.com, agraf@suse.de,
+	linux-pci@vger.kernel.org, linux@roeck-us.net,
+	konrad.wilk@oracle.com, d.kasatkin@samsung.com, tj@kernel.org,
+	scottwood@freescale.com, a.motakis@virtualopensystems.com,
+	tech@virtualopensystems.com, Bharat.Bhushan@freescale.com,
+	toshi.kani@hp.com, kim.phillips@linaro.org,
+	a.rigo@virtualopensystems.com, iommu@lists.linux-foundation.org,
+	joe@perches.com, christoffer.dall@linaro.org
+Date: Tue, 01 Apr 2014 11:15:40 -0600
+In-Reply-To: <20140401164725.GA4649@kroah.com>
+References: <20140401161851.18815.31108.stgit@bling.home>
+	 <20140401164725.GA4649@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 11 April 2014 15:01:09 Benjamin Herrenschmidt wrote:
-> On Thu, 2014-04-10 at 22:46 +0200, Arnd Bergmann wrote:
-> 
-> > Half of it ;-)
+On Tue, 2014-04-01 at 09:47 -0700, Greg KH wrote:
+> On Tue, Apr 01, 2014 at 10:28:54AM -0600, Alex Williamson wrote:
+> > The driver_override field allows us to specify the driver for a device
+> > rather than relying on the driver to provide a positive match of the
+> > device.  This shortcuts the existing process of looking up the vendor
+> > and device ID, adding them to the driver new_id, binding the device,
+> > then removing the ID, but it also provides a couple advantages.
 > > 
-> > I think it would be better to not have an architecture specific data
-> > structure, just like it would be better not to have architecture specific
-> > pcibios_* functions that get called by the PCI core. Note that the
-> > architecture specific functions are the ones that rely on the architecture
-> > specific data structures as well. If they only use the common fields,
-> > it should also be possible to share the code.
+> > First, the above process allows the driver to bind to any device
+> > matching the new_id for the window where it's enabled.  This is often
+> > not desired, such as the case of trying to bind a single device to a
+> > meta driver like pci-stub or vfio-pci.  Using driver_override we can
+> > do this deterministically using:
+> > 
+> > echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> > 
+> > Previously we could not invoke drivers_probe after adding a device
+> > to new_id for a driver as we get non-deterministic behavior whether
+> > the driver we intend or the standard driver will claim the device.
+> > Now it becomes a deterministic process, only the driver matching
+> > driver_override will probe the device.
+> > 
+> > To return the device to the standard driver, we simply clear the
+> > driver_override and reprobe the device, ex:
+> > 
+> > echo > /sys/bus/pci/devices/0000:03:00.0/preferred_driver
+> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> > 
+> > Another advantage to this approach is that we can specify a driver
+> > override to force a specific binding or prevent any binding.  For
+> > instance when an IOMMU group is exposed to userspace through VFIO
+> > we require that all devices within that group are owned by VFIO.
+> > However, devices can be hot-added into an IOMMU group, in which case
+> > we want to prevent the device from binding to any driver (preferred
+> > driver = "none") or perhaps have it automatically bind to vfio-pci.
+> > With driver_override it's a simple matter for this field to be set
+> > internally when the device is first discovered to prevent driver
+> > matches.
+> > 
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> > 
+> > Apologies for the exceptionally long cc list, this is a follow-up to
+> > Stuart's "Subject: mechanism to allow a driver to bind to any device"
+> > thread.  This is effectively a v2 of the proof-of-concept patch I
+> > posted in that thread.  This version changes to use a dummy id struct
+> > to return on an "override" match, which removes the collateral damage
+> > and greatly simplifies the patch.  This feels fairly well baked for
+> > PCI and I would expect that platform drivers could do a similar
+> > implementation.  From there perhaps we can discuss whether there's
+> > any advantage to placing driver_override on struct device.  The logic
+> > for incorporating it into the match still needs to happen per bus
+> > driver, so it might only contribute to consistency of the show/store
+> > sysfs attributes to move it up to struct device.  Please comment.
+> > Thanks,
+> > 
+> > Alex
+> > 
+> >  drivers/pci/pci-driver.c |   25 ++++++++++++++++++++++---
+> >  drivers/pci/pci-sysfs.c  |   40 ++++++++++++++++++++++++++++++++++++++++
+> >  include/linux/pci.h      |    1 +
+> >  3 files changed, 63 insertions(+), 3 deletions(-)
 > 
-> I don't understand... we'll never get rid of architecture specific hooks
-> in one form or another.
-> 
-> We'll always need to some things in an architecture or host-bridge
-> specific way. Now if you don't want to call them arch hooks, then call
-> them host bridge ops, but they are needed and thus they will need some
-> kind of architecture specific extension to the base host bridge 
-> structure.
+> No Documentation/ABI/ update to reflect the ABI you are creating?
 
-Absolutely right. The thing I'd like to get rid of in the long run
-is global functions defined in the architecture code that are called
-by core code for host bridge specific functionality. In a lot of
-cases, they should not be needed if we can express the same things
-in a generic way. In other cases, we can use function pointers that
-are set at the time that the host bridge is registered.
+Oops, thanks for the reminder.  I'd propose this:
 
-> EEH is one big nasty example on powerpc.
-> 
-> Another random one that happens to be hot in my brain right now because
-> we just finished debugging it: On powernv, we are just fixing a series
-> of bugs caused by the generic code trying to do hot resets on PCIe "by
-> hand" by directly toggling the secondary reset register in bridges.
-> 
-> Well, on our root complexes, this triggers a link loss which triggers
-> a fatal EEH "ER_all" interrupt which we escalate into a fence and all
-> hell breaks loose.
-> 
-> We need to mask some error traps in the hardware before doing something
-> that can cause an intentional link loss... and unmask them when done.
-> (Among other things, there are other issues on P7 with hot reset).
-> 
-> So hot reset must be an architecture hook.
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index a3c5a66..55ca6e5 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -250,3 +250,21 @@ Description:
+ 		valid.  For example, writing a 2 to this file when sriov_numvfs
+ 		is not 0 and not 2 already will return an error. Writing a 10
+ 		when the value of sriov_totalvfs is 8 will return an error.
++
++What:		/sys/bus/pci/devices/.../driver_override
++Date:		April 2014
++Contact:	Alex Williamson <alex.williamson@redhat.com>
++Description:
++		This file allows the driver for a device to be specified
++		which will override standard static and dynamic ID matching.
++		When specified, only a driver with a name matching the value
++		written to driver_override will have an opportunity to bind
++		to the device.  The override may be cleared by writing an
++		empty string (ex. echo > driver_override), returning the
++		device to standard matching rules binding.  Writing to
++		driver_override does not automatically unbind the device from
++		its current driver or make any attempt to automatically load
++		the specified driver name.  If no driver with a matching name
++		is currently loaded in the kernel, no match will be found.
++		This also allows devices to opt-out of driver binding using
++		a driver_override name such as "none".
 
-This sounds to me very much host bridge specific, not architecture specific.
-If you have the same host bridge in an ARM system, you'd want the same
-things to happen, and if you have another host bridge on PowerPC, you
-probably don't want that code to be called.
+Thanks,
+Alex
 
-> PERST (fundamental reset) can *only* be a hook. The way to generate a
-> PERST is not specified. In fact, on our machines, we have special GPIOs
-> we can use to generate PERST on individual slots below a PLX bridge
-> and a different methods for slots directly on a PHB.
-> 
-> Eventually most of those hooks land into firmware, and as such it's akin
-> to ACPI which also keeps a separate state structure and a pile of hooks.
-
-On PowerPC, there are currently a bunch of platform specific callbacks
-in the ppc_md: pcibios_after_init, pci_exclude_device,
-pcibios_fixup_resources, pcibios_fixup_bus, pcibios_enable_device_hook,
-pcibios_fixup_phb, pcibios_window_alignment, and possibly some more.
-There is some architecture specific code that gets called by the
-PCI core, with the main purpose of calling into these.
-
-On ARM32, we have a similar set of callbacks in the architecture
-private pci_sys_data: swizzle, map_irq, align_resource, add_bus,
-remove_bus, and some more callbacks for setup in the hw_pci
-structure that is used at initialization time: setup, scan,
-preinit, postinit. Again, these are called from architecture
-specific code that gets called by the PCI core.
-
-I'm sure some of the other architectures have similar things, most
-of them probably less verbose because there is fewer variability
-between subarchitectures.
-
-I think a nice way to deal with these in the long run would be
-to have a generic 'struct pci_host_bridge_ops' that can be defined
-by the architecture or the platform, or a particular host bridge
-driver. We'd have to define exactly which function pointers would
-go in there, but a good start would be the set of functions that
-are today provided by each architecture. The reset method you describe
-above would also fit well into this.
-
-A host bridge driver can fill out the pointers with its own functions,
-or put platform or architecture specific function pointers in there,
-that get called by the PCI core. There are multiple ways to deal with
-default implementations here, one way would be that the core just
-falls back to a generic implementation (which is currently the __weak
-function) if it sees a NULL pointer. Another way would be to require
-each driver to either fill out all pointers or none of them, in which
-case we would use a default pci_host_bridge_ops struct that contains
-the pointers to the global pcibios_*() functions.
-
-	Arnd
