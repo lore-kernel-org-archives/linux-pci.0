@@ -1,75 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:37792 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014AbaDHIWu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 04:22:50 -0400
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <yan@linux.vnet.ibm.com>;
-	Tue, 8 Apr 2014 13:52:48 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id D3B563940058
-	for <linux-pci@vger.kernel.org>; Tue,  8 Apr 2014 13:52:46 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s388MqEe1048942
-	for <linux-pci@vger.kernel.org>; Tue, 8 Apr 2014 13:52:52 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s388Miq8016510
-	for <linux-pci@vger.kernel.org>; Tue, 8 Apr 2014 13:52:46 +0530
-Date: Tue, 8 Apr 2014 16:22:40 +0800
-From: Guo Chao <yan@linux.vnet.ibm.com>
-To: Or Gerlitz <ogerlitz@mellanox.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Amir Vadai <amirv@mellanox.com>,
-	Eugenia Emantayev <eugenia@mellanox.com>, talal@mellanox.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v7] PCI: Try best to allocate pref mmio 64bit above 4g
-Message-ID: <20140408082240.GB3198@yanx>
-References: <CAE9FiQXzRQ9S0mwwb58R2icBTtHHJ6NMVFMaxEgtVNP9mZVjZw@mail.gmail.com>
- <1394222924-28886-1-git-send-email-yinghai@kernel.org>
- <CAErSpo6r16va7oBpaDcTXw0Y0igc=NbXy9G7c27X+P0UM7fh8g@mail.gmail.com>
- <20140408025738.GA3198@yanx>
- <5343A2D8.20803@mellanox.com>
- <20140408074135.GA12126@richard>
- <5343AB8B.5070409@mellanox.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bandan Das <bsd@redhat.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: rework new_id interface for known vendor/device values
+References: <jpgsipz3sbs.fsf@nelium.bos.redhat.com>
+	<1396371204.476.156.camel@ul30vt.home>
+Date: Tue, 01 Apr 2014 14:32:09 -0400
+In-Reply-To: <1396371204.476.156.camel@ul30vt.home> (Alex Williamson's message
+	of "Tue, 01 Apr 2014 10:53:24 -0600")
+Message-ID: <jpg7g78hpee.fsf@nelium.bos.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5343AB8B.5070409@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 08, 2014 at 10:55:55AM +0300, Or Gerlitz wrote:
-> On 08/04/2014 10:41, Wei Yang wrote:
-> >>>So just to make sure we're on the same page -- fixing the bug is
-> >>>carried out through netdev, e.g this 3.14-rc8
-> >>>upstream commit 97a5221 "net/mlx4_core: pass
-> >>>pci_device_id.driver_data to __mlx4_init_one during reset"
-> >>>and now this one more fix which is under discussion
-> >>>http://marc.info/?l=linux-pci&m=139675010015646&w=2, right?
-> >No, this onehttp://marc.info/?l=linux-pci&m=139675010015646&w=2  is another
-> >bug in mlx4 driver, missing a proper pci_dev_data in mlx4_init_one.
-> >
-> >The bug discussing in this thread is the driver "forget" to release the
-> >"owner" during kexec. So this device couldn't be usded after kexec.
-> >
-> Can you guys please open a kernel.org bugzilla ticket, or better...
-> work on a patch?
-> 
+Alex Williamson <alex.williamson@redhat.com> writes:
 
-It's already fixed in upstream.
+> On Mon, 2014-03-31 at 00:28 -0400, Bandan Das wrote:
+>> While using the new_id interface, the user can unintentionally feed
+>> incorrect values if the driver static table has a matching entry.
+>> This is possible since only the device and vendor fields are
+>> mandatory and the rest are optional. As a result, store_new_id
+>> will fill in default values that are then passed on to the driver
+>> and can have unintended consequences.
+>> 
+>> As an example, consider the ixgbe driver and the 82599EB network card :
+>> echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
+>> 
+>> This will pass a driver_data value of 0 to the driver whereas
+>> the index 0 in ixgbe actually points to a different set of card
+>> operations.
+>> 
+>> This change automatically selects the matching static entry if there
+>> is one for the newly created dynid. However, if the user intentionally
+>> wants a different set of values, she must provide all the 7 fields
+>> and the static entry will be ignored.
+>> 
+>> In most cases, this use case seems unnecessary, however, this
+>> is a common libvirt/KVM/device assignment scenario where the
+>> user might want to bind a device back to the host driver.
+>> 
+>> Signed-off-by: Bandan Das <bsd@redhat.com>
+>> ---
+>>  drivers/pci/pci-driver.c | 42 ++++++++++++++++++++++++++++++++++++++----
+>>  1 file changed, 38 insertions(+), 4 deletions(-)
+>> 
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 25f0bc6..187e572 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -90,6 +90,24 @@ static void pci_free_dynids(struct pci_driver *drv)
+>>  	spin_unlock(&drv->dynids.lock);
+>>  }
+>>  
+>> +static const struct
+>> +pci_device_id *match_id_table_entry(struct device_driver *driver,
+>> +				    __u32 vendor, __u32 device)
+>> +{
+>> +	struct pci_driver *pdrv = to_pci_driver(driver);
+>> +	const struct pci_device_id *ids = pdrv->id_table;
+>> +
+>> +	if (ids) {
+>> +		while (ids->vendor || ids->subvendor || ids->class_mask) {
+>> +			if ((ids->vendor == vendor) && (ids->device == device))
+>> +				return ids;
+>> +			ids++;
+>> +		}
+>> +	}
+>> +
+>> +	return NULL;
+>> +}
+>> +
+>>  /**
+>>   * store_new_id - sysfs frontend to pci_add_dynid()
+>>   * @driver: target device driver
+>> @@ -102,7 +120,8 @@ static ssize_t
+>>  store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>>  {
+>>  	struct pci_driver *pdrv = to_pci_driver(driver);
+>> -	const struct pci_device_id *ids = pdrv->id_table;
+>> +	const struct pci_device_id *ids = pdrv->id_table,
+>> +		*tids = NULL;
+>>  	__u32 vendor, device, subvendor=PCI_ANY_ID,
+>>  		subdevice=PCI_ANY_ID, class=0, class_mask=0;
+>>  	unsigned long driver_data=0;
+>> @@ -115,9 +134,24 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>>  	if (fields < 2)
+>>  		return -EINVAL;
+>>  
+>> -	/* Only accept driver_data values that match an existing id_table
+>> -	   entry */
+>> -	if (ids) {
+>> +	tids = match_id_table_entry(driver, vendor, device);
+>> +
+>
+> Would it make more sense to construct a pci_dev, ex:
+>
+> if (fields != 7) {
+> 	struct pci_dev dev = { .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID };
+>
+> 	dev.vendor = vendor;
+> 	dev.device = device;
+> 	if (fields > 2)
+> 		dev.subvendor = subvendor;
+> 	if (fields > 3)
+> 		dev.subdevice = subdevice;
+> 	...
+>
+> 	if (pci_match_id(drv->id_table, &dev))
+> 		return -EEXIST;
+> }
 
-commit 367d56f7b4d5ce61e883c64f81786c7a3ae88eea
-Author: Gavin Shan <shangw@linux.vnet.ibm.com>
-Date:   Tue Mar 4 15:35:20 2014 +0800
+I initially went ahead this way, but the compilation warns about frame size 
+being larger, possibly because of a kernel config option that's set in my config
 
-    net/mlx4: Support shutdown() interface
+drivers/pci/pci-driver.c:193:1: warning: the frame size of 
+2264 bytes is larger than 2048 bytes [-Wframe-larger-than=]
 
+Do you know if it is safe to ignore this ? This seems to be coming up 
+if I add the struct pdev. 
+
+>
+>> +	if (tids && (fields != 7)) {
+>> +
+>> +		subvendor = tids->subvendor;
+>> +		subdevice = tids->subdevice;
+>> +		class = tids->class;
+>> +		class_mask = tids->class_mask;
+>> +		driver_data = tids->driver_data;
+>
+> This doesn't look right.  First, we're potentially overwriting user
+> stored data for fields >2 but <7.  Second, we only matched on vendor &
+> device and could be filling the rest with data that isn't the best match
+> (and is guaranteed to just be a duplicate of a static table ID).
+>
+>> +
+>> +		pr_warn("pci: Using driver (%s) static DeviceID table entry for vendor 0x%04x and device 0x%04x",
+>> +			driver->name, vendor, device);
+>
+> I think we should be error'ing rather than inventing a duplicate ID to
+> insert.  How would a user ever know how to use remove_id to clean out
+> this new_id?  Thanks,
+
+Ok, makes sense to just error out. Good point about remove_id, 
+didn't think about that.
 
 Thanks,
-Guo Chao
+Bandan
 
+> Alex
+>
+>> +
+>> +	} else if (ids) {
+>> +
+>> +		/* Only accept driver_data values that match an existing
+>> +		   id_table entry */
+>> +
+>>  		retval = -EINVAL;
+>>  		while (ids->vendor || ids->subvendor || ids->class_mask) {
+>>  			if (driver_data == ids->driver_data) {
