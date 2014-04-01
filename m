@@ -1,98 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v6 0/6] [RFC] Support for creating generic host_bridge from device tree
-Date: Wed,  5 Mar 2014 11:48:51 +0000
-Message-Id: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp05.in.ibm.com ([122.248.162.5]:40802 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750777AbaDAEg2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Apr 2014 00:36:28 -0400
+Received: from /spool/local
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 1 Apr 2014 10:06:25 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: netdev@vger.kernel.org, yevgenyp@mellanox.com,
+	ogerlitz@mellanox.com, amirv@mellanox.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH] net/mlx4_core: match pci_device_id including dynids
+Date: Tue,  1 Apr 2014 12:36:01 +0800
+Message-Id: <1396326961-20395-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is v6 of my attempt to add support for a generic pci_host_bridge controller created
-from a description passed in the device tree.
+Fix issue introduced by commit: 97a5221 "net/mlx4_core: pass
+pci_device_id.driver_data to __mlx4_init_one during reset".
 
-Changes from v5:
-  - Tested by Tanmay Inamdar, thanks Tanmay!
-  - dropped v5 5/7 pci: Use parent domain number when allocating child busses.
-  - Added weak implementation of pcibios_fixup_bridge_ranges() in drivers/pci/host-bridge.c
-    so that architectures that enable CONFIG_OF and CONFIG_PCI don't suddenly get compilation
-    errors. While at this, changed the signature of the function so that an error can be
-    returned.
-  - With the new error code in pcibios_fixup_bridge_ranges(), reworked the error handling
-    in pci_host_bridge_of_get_ranges() and of_create_pci_host_bridge().
-  - Add linux/slab.h to the #include list
-  - Revisit the error path in pci_create_root_bus[_in_domain]() and fixed the case where
-    failing to allocate the bus will not return an error.
+pci_match_id() just match the static pci_device_id, which may return NULL if
+someone binds the driver to a device manually using
+/sys/bus/pci/drivers/.../new_id.
 
-Changes from v4:
-  - Export pci_find_host_bridge() to be used by arch code. There is scope for
-    making the arch/arm64 version of pci_domain_nr the default weak implementation
-    but that would double the size of this series in order to handle all #define
-    versions of the pci_domain_nr() function, so I suggest keeping that for a separate
-    cleanup series.
+This patch match pci_device_id with pci_match_device() to cover both dynids
+and static id_table.
 
-Changes from v3:
-  - Dynamically allocate bus_range resource in of_create_pci_host_bridge()
-  - Fix the domain number used when creating child busses.
-  - Changed domain number allocator to use atomic operations.
-  - Use ERR_PTR() to propagate the error out of pci_create_root_bus_in_domain()
-    and of_create_pci_host_bridge().
+Thanks to Bjorn finding this issue.
 
-Changes from v2:
-  - Use range->cpu_addr when calling pci_address_to_pio()
-  - Introduce pci_register_io_range() helper function in order to register
-    io ranges ahead of their conversion to PIO values. This is needed as no
-    information is being stored yet regarding the range mapping, making
-    pci_address_to_pio() fail. Default weak implementation does nothing,
-    to cover the default weak implementation of pci_address_to_pio() that
-    expects direct mapping of physical addresses into PIO values (x86 view).
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Amir Vadai <amirv@mellanox.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Amir Vadai <amirv@mellanox.com>
+---
+ drivers/net/ethernet/mellanox/mlx4/main.c |    4 +++-
+ drivers/pci/pci-driver.c                  |    3 ++-
+ include/linux/pci.h                       |    2 ++
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
-Changes from v1:
-  - Add patch to fix conversion of IO ranges into IO resources.
-  - Added a domain_nr member to pci_host_bridge structure, and a new function
-    to create a root bus in a given domain number. In order to facilitate that
-    I propose changing the order of initialisation between pci_host_bridge and
-    it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
-    This is done in patch 1/4 and 2/4.
-  - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
-    code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
-    and if that fails assign the next unallocated domain id.
-  - Changed the name of the function that creates the generic host bridge from
-    pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
-
-v5 thread here: https://lkml.org/lkml/2014/3/4/318
-v4 thread here: https://lkml.org/lkml/2014/3/3/301
-v3 thread here: https://lkml.org/lkml/2014/2/28/216
-v2 thread here: https://lkml.org/lkml/2014/2/27/245
-v1 thread here: https://lkml.org/lkml/2014/2/3/380
-
-Best regards,
-Liviu
-
-Liviu Dudau (6):
-  pci: Introduce pci_register_io_range() helper function.
-  pci: OF: Fix the conversion of IO ranges into IO resources.
-  pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-  pci: Introduce a domain number for pci_host_bridge.
-  pci: Export find_pci_host_bridge() function.
-  pci: Add support for creating a generic host_bridge from device tree
-
- drivers/of/address.c       |  39 +++++++++++
- drivers/pci/host-bridge.c  | 159 ++++++++++++++++++++++++++++++++++++++++++++-
- drivers/pci/probe.c        |  70 +++++++++++++-------
- include/linux/of_address.h |  14 +---
- include/linux/pci.h        |  17 +++++
- 5 files changed, 264 insertions(+), 35 deletions(-)
-
+diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+index aa54ef7..b0edb5c 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/main.c
++++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+@@ -2673,7 +2673,9 @@ static pci_ers_result_t mlx4_pci_slot_reset(struct pci_dev *pdev)
+ 	const struct pci_device_id *id;
+ 	int ret;
+ 
+-	id = pci_match_id(mlx4_pci_table, pdev);
++	id = pci_match_device(pci_dev_driver(pdev), pdev);
++	BUG_ON(!id);
++
+ 	ret = __mlx4_init_one(pdev, id->driver_data);
+ 
+ 	return ret ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 25f0bc6..1ee26a1 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -225,7 +225,7 @@ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
+  * system is in its list of supported devices.  Returns the matching
+  * pci_device_id structure or %NULL if there is no match.
+  */
+-static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
++const struct pci_device_id *pci_match_device(struct pci_driver *drv,
+ 						    struct pci_dev *dev)
+ {
+ 	struct pci_dynid *dynid;
+@@ -1355,6 +1355,7 @@ postcore_initcall(pci_driver_init);
+ 
+ EXPORT_SYMBOL_GPL(pci_add_dynid);
+ EXPORT_SYMBOL(pci_match_id);
++EXPORT_SYMBOL(pci_match_device);
+ EXPORT_SYMBOL(__pci_register_driver);
+ EXPORT_SYMBOL(pci_unregister_driver);
+ EXPORT_SYMBOL(pci_dev_driver);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 44f6883..8ede1b5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1134,6 +1134,8 @@ int pci_add_dynid(struct pci_driver *drv,
+ 		  unsigned long driver_data);
+ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
+ 					 struct pci_dev *dev);
++const struct pci_device_id *pci_match_device(struct pci_driver *drv,
++						    struct pci_dev *dev);
+ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 		    int pass);
+ 
 -- 
-1.9.0
+1.7.9.5
 
