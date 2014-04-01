@@ -1,77 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v6 1/6] pci: Introduce pci_register_io_range() helper function.
-To: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-In-Reply-To: <1394020137-1830-2-git-send-email-Liviu.Dudau@arm.com>
-References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com> < 1394020137-1830-2-git-send-email-Liviu.Dudau@arm.com>
-Date: Fri, 07 Mar 2014 19:35:40 +0000
-Message-Id: <20140307193540.72720C40DBA@trevor.secretlab.ca>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:55971 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751118AbaDADoA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 23:44:00 -0400
+Date: Tue, 1 Apr 2014 09:13:44 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "'Kukjin Kim'" <kgene.kim@samsung.com>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] ARM: dts: Increase the size of PCIe configuration space
+ for EXYNOS5440
+Message-ID: <20140401034344.GA18207@pratyush-vbox>
+References: <000001cf4d55$c4455230$4ccff690$%han@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <000001cf4d55$c4455230$4ccff690$%han@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed,  5 Mar 2014 11:48:52 +0000, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> Some architectures do not share x86 simple view of the I/O space and
-> instead use a range of addresses that map to external devices. For PCI,
-> these ranges can be expressed by OF bindings in a device tree file.
+On Tue, Apr 01, 2014 at 10:54:57AM +0800, Jingoo Han wrote:
+> Increase the size of PCIe configuration space to 8kB from 4kB,
+> because 4kB for cfg0 and 4kB for cfg1 are required respectively.
+> If 2kB for cfg0 and 2kB for cfg1 are set, it will make problems
+> when a PCIe card having multiple EPs below a bridge is used.
 > 
-> Introduce a pci_register_io_range() helper function that can be used
-> by the architecture code to keep track of the io ranges described by the
-> PCI bindings.
-> 
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-
-Acked-by: Grant Likely <grant.likely@linaro.org>
-
+> Suggested-by: Pratyush Anand <pratyush.anand@st.com>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 > ---
->  drivers/of/address.c       | 5 +++++
->  include/linux/of_address.h | 1 +
->  2 files changed, 6 insertions(+)
+>  arch/arm/boot/dts/exynos5440.dtsi |   12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
 > 
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 1a54f1f..d1bb30f 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -619,6 +619,11 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
->  }
->  EXPORT_SYMBOL(of_get_address);
->  
-> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> +{
-> +	return 0;
-> +}
-> +
->  unsigned long __weak pci_address_to_pio(phys_addr_t address)
->  {
->  	if (address > IO_SPACE_LIMIT)
-> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> index 5f6ed6b..40c418d 100644
-> --- a/include/linux/of_address.h
-> +++ b/include/linux/of_address.h
-> @@ -56,6 +56,7 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
->  extern const __be32 *of_get_address(struct device_node *dev, int index,
->  			   u64 *size, unsigned int *flags);
->  
-> +extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
->  extern unsigned long pci_address_to_pio(phys_addr_t addr);
->  
->  extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
-> -- 
-> 1.9.0
-> 
-> 
-> _______________________________________________
-> linaro-kernel mailing list
-> linaro-kernel@lists.linaro.org
-> http://lists.linaro.org/mailman/listinfo/linaro-kernel
+> diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
+> index d600733..5d08be8 100644
+> --- a/arch/arm/boot/dts/exynos5440.dtsi
+> +++ b/arch/arm/boot/dts/exynos5440.dtsi
+> @@ -281,9 +281,9 @@
+>  		#address-cells = <3>;
+>  		#size-cells = <2>;
+>  		device_type = "pci";
+> -		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   /* configuration space */
+> -			  0x81000000 0 0	  0x40001000 0 0x00010000   /* downstream I/O */
+> -			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>; /* non-prefetchable memory */
+> +		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00002000   /* configuration space */
+> +			  0x81000000 0 0	  0x40002000 0 0x00010000   /* downstream I/O */
+> +			  0x82000000 0 0x40012000 0x40012000 0 0x1ffee000>; /* non-prefetchable memory */
+>  		#interrupt-cells = <1>;
+>  		interrupt-map-mask = <0 0 0 0>;
+>  		interrupt-map = <0x0 0 &gic 53>;
+> @@ -302,9 +302,9 @@
+>  		#address-cells = <3>;
+>  		#size-cells = <2>;
+>  		device_type = "pci";
+> -		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   /* configuration space */
+> -			  0x81000000 0 0	  0x60001000 0 0x00010000   /* downstream I/O */
+> -			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>; /* non-prefetchable memory */
+> +		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00002000   /* configuration space */
+> +			  0x81000000 0 0	  0x60002000 0 0x00020000   /* downstream I/O */
 
+is I/O size change intentional? 
+
+Regards
+Pratyush
+> +			  0x82000000 0 0x60012000 0x60012000 0 0x1ffee000>; /* non-prefetchable memory */
+>  		#interrupt-cells = <1>;
+>  		interrupt-map-mask = <0 0 0 0>;
+>  		interrupt-map = <0x0 0 &gic 56>;
+> -- 
+> 1.7.10.4
+> 
