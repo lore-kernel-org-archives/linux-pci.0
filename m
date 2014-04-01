@@ -1,255 +1,147 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:20582 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751541AbaDYAiY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 20:38:24 -0400
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com,
-	jerry.hoemann@hp.com
-Subject: [PATCH 8/8] iommu/vt-d: Changes to support kdump
-Date: Thu, 24 Apr 2014 18:36:38 -0600
-Message-Id: <1398386198-19304-9-git-send-email-bill.sumner@hp.com>
-In-Reply-To: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
-References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1396371204.476.156.camel@ul30vt.home>
+Subject: Re: [PATCH] PCI: rework new_id interface for known vendor/device
+ values
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bandan Das <bsd@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 01 Apr 2014 10:53:24 -0600
+In-Reply-To: <jpgsipz3sbs.fsf@nelium.bos.redhat.com>
+References: <jpgsipz3sbs.fsf@nelium.bos.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- Add "#include <linux/crash_dump.h>" to gain access to is_kdump_kernel()
+On Mon, 2014-03-31 at 00:28 -0400, Bandan Das wrote:
+> While using the new_id interface, the user can unintentionally feed
+> incorrect values if the driver static table has a matching entry.
+> This is possible since only the device and vendor fields are
+> mandatory and the rest are optional. As a result, store_new_id
+> will fill in default values that are then passed on to the driver
+> and can have unintended consequences.
+> 
+> As an example, consider the ixgbe driver and the 82599EB network card :
+> echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
+> 
+> This will pass a driver_data value of 0 to the driver whereas
+> the index 0 in ixgbe actually points to a different set of card
+> operations.
+> 
+> This change automatically selects the matching static entry if there
+> is one for the newly created dynid. However, if the user intentionally
+> wants a different set of values, she must provide all the 7 fields
+> and the static entry will be ignored.
+> 
+> In most cases, this use case seems unnecessary, however, this
+> is a common libvirt/KVM/device assignment scenario where the
+> user might want to bind a device back to the host driver.
+> 
+> Signed-off-by: Bandan Das <bsd@redhat.com>
+> ---
+>  drivers/pci/pci-driver.c | 42 ++++++++++++++++++++++++++++++++++++++----
+>  1 file changed, 38 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 25f0bc6..187e572 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -90,6 +90,24 @@ static void pci_free_dynids(struct pci_driver *drv)
+>  	spin_unlock(&drv->dynids.lock);
+>  }
+>  
+> +static const struct
+> +pci_device_id *match_id_table_entry(struct device_driver *driver,
+> +				    __u32 vendor, __u32 device)
+> +{
+> +	struct pci_driver *pdrv = to_pci_driver(driver);
+> +	const struct pci_device_id *ids = pdrv->id_table;
+> +
+> +	if (ids) {
+> +		while (ids->vendor || ids->subvendor || ids->class_mask) {
+> +			if ((ids->vendor == vendor) && (ids->device == device))
+> +				return ids;
+> +			ids++;
+> +		}
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+>  /**
+>   * store_new_id - sysfs frontend to pci_add_dynid()
+>   * @driver: target device driver
+> @@ -102,7 +120,8 @@ static ssize_t
+>  store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>  {
+>  	struct pci_driver *pdrv = to_pci_driver(driver);
+> -	const struct pci_device_id *ids = pdrv->id_table;
+> +	const struct pci_device_id *ids = pdrv->id_table,
+> +		*tids = NULL;
+>  	__u32 vendor, device, subvendor=PCI_ANY_ID,
+>  		subdevice=PCI_ANY_ID, class=0, class_mask=0;
+>  	unsigned long driver_data=0;
+> @@ -115,9 +134,24 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>  	if (fields < 2)
+>  		return -EINVAL;
+>  
+> -	/* Only accept driver_data values that match an existing id_table
+> -	   entry */
+> -	if (ids) {
+> +	tids = match_id_table_entry(driver, vendor, device);
+> +
 
- Modify the operation of the following functions when called during crash dump:
- device_to_domain_id
- get_domain_for_dev
- init_dmars
- intel_iommu_init
+Would it make more sense to construct a pci_dev, ex:
 
-Signed-off-by: Bill Sumner <bill.sumner@hp.com>
----
- drivers/iommu/intel-iommu.c | 133 +++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 120 insertions(+), 13 deletions(-)
+if (fields != 7) {
+	struct pci_dev dev = { .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID };
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 226c1d0..8b3e509 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -46,6 +46,7 @@
- #include "irq_remapping.h"
- #include "pci.h"
- #include "intel-iommu-private.h"
-+#include <linux/crash_dump.h>
- 
- static LIST_HEAD(dmar_atsr_units);
- static LIST_HEAD(dmar_rmrr_units);
-@@ -53,6 +54,7 @@ static LIST_HEAD(dmar_rmrr_units);
- #define for_each_rmrr_units(rmrr) \
- 	list_for_each_entry(rmrr, &dmar_rmrr_units, list)
- 
-+static int intel_iommu_in_crashdump;
- 
- static void __init check_tylersburg_isoch(void);
- 
-@@ -1796,6 +1798,24 @@ static void domain_remove_dev_info(struct dmar_domain *domain)
- 	spin_unlock_irqrestore(&device_domain_lock, flags);
- }
- 
-+#ifdef CONFIG_CRASH_DUMP
-+static int device_to_domain_id(struct intel_iommu *iommu, u8 bus, u8 devfn)
-+{
-+	int did = -1;			/* domain-id returned */
-+	struct root_entry *root;
-+	struct context_entry *context;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&iommu->lock, flags);
-+	root = &iommu->root_entry[bus];
-+	context = get_context_addr_from_root(root);
-+	if (context && context_present(context+devfn))
-+		did = context_get_did(context+devfn);
-+	spin_unlock_irqrestore(&iommu->lock, flags);
-+	return did;
-+}
-+#endif /* CONFIG_CRASH_DUMP */
-+
- /*
-  * find_domain
-  * Note: we use struct device->archdata.iommu stores the info
-@@ -1880,6 +1900,9 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	unsigned long flags;
- 	u8 bus, devfn, bridge_bus, bridge_devfn;
- 	int did = -1;   /* Default to "no domain_id supplied" */
-+#ifdef CONFIG_CRASH_DUMP
-+	struct domain_values_entry *dve = NULL;
-+#endif /* CONFIG_CRASH_DUMP */
- 
- 	domain = find_domain(dev);
- 	if (domain)
-@@ -1920,6 +1943,24 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(false);
- 	if (!domain)
- 		goto error;
-+
-+#ifdef CONFIG_CRASH_DUMP
-+	if (intel_iommu_in_crashdump) {
-+		/*
-+		 * if this device had a did in the old kernel
-+		 * use its values instead of generating new ones
-+		 */
-+		did = device_to_domain_id(iommu, bus, devfn);
-+		if (did > 0 || (did == 0 && !cap_caching_mode(iommu->cap)))
-+			dve = intel_iommu_did_to_domain_values_entry(did,
-+								iommu);
-+		if (dve)
-+			gaw = dve->gaw;
-+		else
-+			did = -1;
-+	}
-+#endif /* CONFIG_CRASH_DUMP */
-+
- 	if (iommu_attach_domain(domain, iommu, did)) {
- 		free_domain_mem(domain);
- 		domain = NULL;
-@@ -1929,6 +1970,18 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	if (domain_init(domain, gaw))
- 		goto error;
- 
-+#ifdef CONFIG_CRASH_DUMP
-+	if (intel_iommu_in_crashdump && dve) {
-+
-+		if (domain->pgd)
-+			free_pgtable_page(domain->pgd);
-+
-+		domain->pgd = dve->pgd;
-+
-+		copy_reserved_iova(&dve->iovad, &domain->iovad);
-+	}
-+#endif /* CONFIG_CRASH_DUMP */
-+
- 	/* register pcie-to-pci device */
- 	if (dev_tmp) {
- 		domain = dmar_insert_dev_info(iommu, bridge_bus, bridge_devfn,
-@@ -2331,6 +2384,10 @@ static int __init init_dmars(void)
- 	struct device *dev;
- 	struct intel_iommu *iommu;
- 	int i, ret;
-+#ifdef CONFIG_CRASH_DUMP
-+	struct root_entry *root_old_phys;
-+	struct root_entry *root_new_virt;
-+#endif /* CONFIG_CRASH_DUMP */
- 
- 	/*
- 	 * for each drhd
-@@ -2374,16 +2431,40 @@ static int __init init_dmars(void)
- 		if (ret)
- 			goto free_iommu;
- 
--		/*
--		 * TBD:
--		 * we could share the same root & context tables
--		 * among all IOMMU's. Need to Split it later.
--		 */
--		ret = iommu_alloc_root_entry(iommu);
--		if (ret) {
--			printk(KERN_ERR "IOMMU: allocate root entry failed\n");
--			goto free_iommu;
-+#ifdef CONFIG_CRASH_DUMP
-+		if (intel_iommu_in_crashdump) {
-+			pr_info("IOMMU Copying translate tables from panicked kernel\n");
-+			ret = intel_iommu_copy_translation_tables(drhd,
-+					&root_old_phys, &root_new_virt,
-+					g_num_of_iommus);
-+			if (ret) {
-+				pr_err("IOMMU: Copy translate tables failed\n");
-+
-+				/* Best to stop trying */
-+				intel_iommu_in_crashdump = false;
-+				goto error;
-+			}
-+			iommu->root_entry = root_new_virt;
-+			pr_info("IOMMU: root_new_virt:0x%12.12llx phys:0x%12.12llx\n",
-+				(u64)root_new_virt,
-+				virt_to_phys(root_new_virt));
-+			intel_iommu_get_dids_from_old_kernel(iommu);
-+		} else {
-+#endif /* CONFIG_CRASH_DUMP */
-+			/*
-+			 * TBD:
-+			 * we could share the same root & context tables
-+			 * among all IOMMU's. Need to Split it later.
-+			 */
-+			ret = iommu_alloc_root_entry(iommu);
-+			if (ret) {
-+				printk(KERN_ERR "IOMMU: allocate root entry failed\n");
-+				goto free_iommu;
-+			}
-+#ifdef CONFIG_CRASH_DUMP
- 		}
-+#endif /* CONFIG_CRASH_DUMP */
-+
- 		if (!ecap_pass_through(iommu->ecap))
- 			hw_pass_through = 0;
- 	}
-@@ -2442,6 +2523,16 @@ static int __init init_dmars(void)
- 
- 	check_tylersburg_isoch();
- 
-+#ifdef CONFIG_CRASH_DUMP
-+	/*
-+	 * In the crashdump kernel: Skip setting-up new domains for
-+	 * si, rmrr, and the isa bus on the expectation that these
-+	 * translations were copied from the old kernel.
-+	 */
-+	if (intel_iommu_in_crashdump)
-+		goto skip_new_domains_for_si_rmrr_isa;
-+#endif /* CONFIG_CRASH_DUMP */
-+
- 	/*
- 	 * If pass through is not set or not enabled, setup context entries for
- 	 * identity mappings for rmrr, gfx, and isa and may fall back to static
-@@ -2482,6 +2573,10 @@ static int __init init_dmars(void)
- 
- 	iommu_prepare_isa();
- 
-+#ifdef CONFIG_CRASH_DUMP
-+skip_new_domains_for_si_rmrr_isa:;
-+#endif /* CONFIG_CRASH_DUMP */
-+
- 	/*
- 	 * for each drhd
- 	 *   enable fault log
-@@ -3624,12 +3719,24 @@ int __init intel_iommu_init(void)
- 		goto out_free_dmar;
- 	}
- 
-+#ifdef CONFIG_CRASH_DUMP
- 	/*
--	 * Disable translation if already enabled prior to OS handover.
-+	 * If (This is the crash kernel)
-+	 *    Set: copy iommu translate tables from old kernel
-+	 *    Skip disabling the iommu hardware translations
- 	 */
--	for_each_active_iommu(iommu, drhd)
--		if (iommu->gcmd & DMA_GCMD_TE)
--			iommu_disable_translation(iommu);
-+	if (is_kdump_kernel()) {
-+		intel_iommu_in_crashdump = true;
-+		pr_info("IOMMU intel_iommu_in_crashdump = true\n");
-+		pr_info("IOMMU Skip disabling iommu hardware translations\n");
-+	} else
-+#endif /* CONFIG_CRASH_DUMP */
-+		/*
-+		 * Disable translation if already enabled prior to OS handover.
-+		 */
-+		for_each_active_iommu(iommu, drhd)
-+			if (iommu->gcmd & DMA_GCMD_TE)
-+				iommu_disable_translation(iommu);
- 
- 	if (dmar_dev_scope_init() < 0) {
- 		if (force_on)
--- 
-Bill Sumner <bill.sumner@hp.com>
+	dev.vendor = vendor;
+	dev.device = device;
+	if (fields > 2)
+		dev.subvendor = subvendor;
+	if (fields > 3)
+		dev.subdevice = subdevice;
+	...
+
+	if (pci_match_id(drv->id_table, &dev))
+		return -EEXIST;
+}
+
+
+> +	if (tids && (fields != 7)) {
+> +
+> +		subvendor = tids->subvendor;
+> +		subdevice = tids->subdevice;
+> +		class = tids->class;
+> +		class_mask = tids->class_mask;
+> +		driver_data = tids->driver_data;
+
+This doesn't look right.  First, we're potentially overwriting user
+stored data for fields >2 but <7.  Second, we only matched on vendor &
+device and could be filling the rest with data that isn't the best match
+(and is guaranteed to just be a duplicate of a static table ID).
+
+> +
+> +		pr_warn("pci: Using driver (%s) static DeviceID table entry for vendor 0x%04x and device 0x%04x",
+> +			driver->name, vendor, device);
+
+I think we should be error'ing rather than inventing a duplicate ID to
+insert.  How would a user ever know how to use remove_id to clean out
+this new_id?  Thanks,
+
+Alex
+
+> +
+> +	} else if (ids) {
+> +
+> +		/* Only accept driver_data values that match an existing
+> +		   id_table entry */
+> +
+>  		retval = -EINVAL;
+>  		while (ids->vendor || ids->subvendor || ids->class_mask) {
+>  			if (driver_data == ids->driver_data) {
+
+
 
