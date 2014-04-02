@@ -1,95 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Arnd Bergmann' <arnd@arndb.de>,
-	'Liviu Dudau' <Liviu.Dudau@arm.com>
-Cc: 'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-kernel@lists.linaro.org, linux-kernel@vger.kernel.org,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Marek Vasut' <marex@denx.de>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Byungho An' <bh74.an@samsung.com>,
-	'Rob Herring' <robherring2@gmail.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
- <000901cf592e$563bc8c0$02b35a40$%han@samsung.com>
- <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
- <16730530.rJ9T0MsYmt@wuerfel> <000001cf5d04$982a6000$c87f2000$%han@samsung.com>
-In-reply-to: <000001cf5d04$982a6000$c87f2000$%han@samsung.com>
-Subject: Re: [RFC PATCH 1/2] PCI: designware: Add ARM64 PCI support
-Date: Mon, 21 Apr 2014 18:58:52 +0900
-Message-id: <000501cf5d48$4cf707c0$e6e51740$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:53336 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758761AbaDBRYL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Apr 2014 13:24:11 -0400
+Message-ID: <533C4795.9080209@ti.com>
+Date: Wed, 2 Apr 2014 13:23:33 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Andrew Murray <amurray@embedded-bits.co.uk>
+CC: Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Richard Zhu <r65037@freescale.com>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>
+Subject: Re: [RESEND: RFC PATCH 3/3] pcie: keystone: add pcie driver based
+ on designware core driver
+References: <1395707726-20437-1-git-send-email-m-karicheri2@ti.com> <1395707726-20437-4-git-send-email-m-karicheri2@ti.com> <235376049.yyfljDtinu@wuerfel>	<20140325103525.GA14789@ulmo> <CAPcvp5Gy8uNW3UULi8jYk7GNbmgTd2B_qOEAXnP4H4Wq3v9BCw@mail.gmail.com> <533C300E.7070109@ti.com> <CAPcvp5FEFbP_Fwc47V=LppiZnfbTgPqaAAm-A9K17dVEZWwHQQ@mail.gmail.com>
+In-Reply-To: <CAPcvp5FEFbP_Fwc47V=LppiZnfbTgPqaAAm-A9K17dVEZWwHQQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, April 21, 2014 10:54 AM, Jingoo Han wrote:
-> On Thursday, April 17, 2014 3:26 AM, Arnd Bergmann wrote:
-> > On Wednesday 16 April 2014 17:57:24 Liviu Dudau wrote:
-> > > Jingoo,
-> > >
-> > > Thanks for taking a stab at trying to convert a host bridge
-> > > driver to use the new generic host bridge code.
-> > >
-> > > I do however have concerns on the direction you took. You have split
-> > > your driver in two, depending on whether it was CONFIG_ARM or CONFIG_ARM64,
-> > > even if (with my series) it should be no reason why the host bridge
-> > > driver should not work on other architectures as well once they are
-> > > converted.
-> >
-> > Right.
-> >
-> > > Also, some of the functions that you use have identical names but different
-> > > signatures depending on what arch you have selected. This is really bad
-> > > in my books!
+On 4/2/2014 12:47 PM, Andrew Murray wrote:
+> On 2 April 2014 16:43, Murali Karicheri <m-karicheri2@ti.com> wrote:
+>
+>> Keystone pcie driver is developed based on other dw based pcie drivers
+>>
+>> such as pci-exynos that uses subsys_initcall(). I am new to this list,
+>>
+>> probably Jingoo (copied) has some history on why we can't use module.
+>> For now I will keep it as is and can be re-visited in the next revisions.
+>> Also I will experiment with PCIE port driver as well.
+>>
+>>
+>> BTW, PCIE driver currently uses Legacy or MSI IRQ. Keystone PCI has
+>> a platform IRQ. Is DT based irq configuration is the appropriate way
+>> to add this capability?
+> As far as I am aware - the PCI standards define a particular way for
+> devices to describe which interrupt will be used for things like
+> hotplug, AER and PME. These interrupts are always PCI interrupts (i.e.
+> MSI/MSI-X/legacy). Thus the port services code in the kernel uses
+> standard configuration space accesses to determine the interrupt to
+> use. Also note that it's not just the host bridge that can provide
+> these services but any PCIE device, I guess in this sense a host
+> bridge is treated like any other device.
+>
+> If my understanding is correct I don't believe the current port
+> services code allows exceptions to this, i.e. to say this host bridge
+> actually uses a platform IRQ for AER rather than an MSI. Though this
+> may be quite useful as I suspect many host bridges provide interrupts
+> for things like PME through platform IRQs rather that PCI interrupts.
+>
+> Does the Keystone have platform IRQs for things like AER? Is that
+> because the IP makes these events available through platform IRQs in
+> addition to the standard PCI means?
+>
+> Andrew Murray
+Andrew,
 
-[.....]
+Yes. Keystone PCIe hw is based on designware hw version v3.65 that 
+implements
+Error interrupt as a platform IRQ only (not in addition) and 
+unfortunately standard
+PCI means are not supported. The latter versions do support standard PCI 
+means.
 
-> > > What about creating functions that use my series directly if CONFIG_ARM64 is
-> > > defined (or any CONFIG_ you want to create for your driver that you select
-> > > from CONFIG_ARM64) and otherwise implement the CONFIG_ARM version? That
-> > > way your driver will call only one API without any #ifdef and when arm code
-> > > gets converted you drop your adaptation functions. Or (better yet), have a
-> > > stab at converting bios32 (Rob Herring has already provided some hints on
-> > > how to do it for arch/arm).
-> 
-> To: Liviu Dudau
-> 
-> Sorry, but I will not implement this.
-> At first, you had to think the compatibility with ARM32 PCIe.
-> Why do you want other engineers to take this load?
-
-(+cc Rob Herring)
-
-Um, I am looking at Rob Herring's patchset for Versatile PCI. [1]
-Then, do you mean the following?
-
-1. Add Rob Herring's patch converting bios32. [2]
-2. Reference Rob Herring's patch in order to know how to
-    handle "of_create_pci_host_bridge()" directly in ARM32. [3]
-3. Use of_create_pci_host_bridge() for the designware PCIe
-    driver in ARM32.
-4. Also, use of_create_pci_host_bridge() for the designware PCIe
-    driver in "ARM64".
-
-
-[1] http://www.spinics.net/lists/linux-pci/msg30084.html
-[2] http://www.spinics.net/lists/linux-pci/msg30083.html
-[3] http://www.spinics.net/lists/linux-pci/msg30086.html
-
-Best regards,
-Jingoo Han
-
-> 
-> >
-> > That would of course be best.
-> >
-
-[.....]
+Murali
 
