@@ -1,58 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:46547 "EHLO
-	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754665AbaDGQzl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 12:55:41 -0400
-Date: Mon, 7 Apr 2014 09:58:08 -0700
-From: Greg KH <greg@kroah.com>
-To: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Cc: linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add new PCI id for Intel GPU interrupt quirk
-Message-ID: <20140407165808.GC7119@kroah.com>
-References: <3185796.STv3LRO1j8@storm>
+Received: from mail-bl2lp0210.outbound.protection.outlook.com ([207.46.163.210]:15548
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758593AbaDBL7E convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Apr 2014 07:59:04 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Marek Vasut <marex@denx.de>, Kishon Vijay Abraham I <kishon@ti.com>
+CC: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush ANAND <pratyush.anand@st.com>
+Subject: RE: [PATCH] PCI: designware: Remove unnecessary RC BAR setting
+Date: Wed, 2 Apr 2014 11:58:42 +0000
+Message-ID: <65debfc7f79a4a27a58bd7c64382881f@BLUPR03MB136.namprd03.prod.outlook.com>
+References: <000801cf4d95$64322ef0$2c968cd0$%han@samsung.com>
+ <2CC2A0A4A178534D93D5159BF3BCB66189FEC4809B@EAPEX1MAIL1.st.com>
+ <533BA157.6030004@ti.com> <201404021234.48134.marex@denx.de>
+In-Reply-To: <201404021234.48134.marex@denx.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3185796.STv3LRO1j8@storm>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 07, 2014 at 03:10:32PM +0200, Thomas Jarosch wrote:
-> After a CPU upgrade while keeping the same mainboard,
-> we faced "spurious interrupt" problems again.
-> 
-> It turned out that the new CPU also featured a
-> new GPU with a different PCI id.
-> 
-> -> Add this PCI id to the quirk table. Probably all other
-> Intel GPU PCI ids are affected, too, but I don't want
-> to add them without a test system.
-> 
-> Signed-off-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
-> Tested-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
-> ---
->  drivers/pci/quirks.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index e729206..0feb4a3 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2954,6 +2954,7 @@ static void disable_igfx_irq(struct pci_dev *dev)
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0152, disable_igfx_irq);
->  
->  /*
->   * PCI devices which are on Intel chips can skip the 10ms delay
-> -- 
-> 1.8.1.4
+Hi Marek:
 
-<formletter>
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
+> On Behalf Of Marek Vasut
+> Sent: Wednesday, April 02, 2014 6:35 PM
+> To: Kishon Vijay Abraham I
+> Cc: Mohit KUMAR DCG; Jingoo Han; 'Bjorn Helgaas'; linux-pci@vger.kernel.org;
+> Pratyush ANAND; Zhu Richard-R65037
+> Subject: Re: [PATCH] PCI: designware: Remove unnecessary RC BAR setting
+> 
+> On Wednesday, April 02, 2014 at 07:34:15 AM, Kishon Vijay Abraham I wrote:
+> > On Wednesday 02 April 2014 11:03 AM, Mohit KUMAR DCG wrote:
+> > > Hello Jingoo,
+> > >
+> > >> -----Original Message-----
+> > >> From: Jingoo Han [mailto:jg1.han@samsung.com]
+> > >> Sent: Wednesday, April 02, 2014 10:53 AM
+> > >> To: Mohit KUMAR DCG
+> > >> Cc: 'Bjorn Helgaas'; linux-pci@vger.kernel.org; Pratyush ANAND;
+> > >> 'Marek Vasut'; 'Richard Zhu'; 'Kishon Vijay Abraham I'
+> > >> Subject: Re: [PATCH] PCI: designware: Remove unnecessary RC BAR
+> > >> setting
+> > >>
+> > >> On Wednesday, April 02, 2014 1:57 PM, Mohit KUMAR DCG wrote:
+> > >>> On Tuesday, April 01, 2014 4:00 PM, Jingoo Han wrote:
+> > >>>> According to the spec, the synopsys core does not implement the
+> > >>>> optional BARs such as BAR0/1. This is based on the assumption
+> > >>>> that the RC host probably has registers on some other internal
+> > >>>> bus and has knowledge and setup access to these registers already.
+> > >>>> So, remove unnecessary RC BAR setting.
+> > >>>
+> > >>> - Normally BARs in RC are not used but somehow available in the
+> > >>> design. One possible BAR use can be if RC has some memory
+> > >>> connected to
+> > >>
+> > >> the BAR that needs to be accessed through link.
+> > >>
+> > >>> Otherwise we can ignore BARs setup here.
+> > >>
+> > >> Hi Mohit KUMAR DCG,
+> > >>
+> > >> Thank you for your feedback.
+> > >>
+> > >> I want to know whether or not other SoCs such as ST, Freescale, TI
+> > >> support BAR0/BAR1. If no SoC supports BAR0/BAR1, the unnecessary RC
+> > >> BAR setting code should  be removed.
+> > >
+> > > - We are not currently using RC's BAR0/1 in any application but no
+> > > such restriction from HW as ST SoCs support BARs in HW design.
+> >
+> > Neither do we in DRA7xx.
+> 
+> I suspect that means we should keep the code to make sure the registers are
+> configured correctly, no?
+> 
+> Richard, can you comment on MX6 please ?
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-for how to do this properly.
+ [Richard] Sorry to reply late. I'm engaged in another stuff in the past days.
+i.MX6 pcie doesn't use RC's BAR0/1 in applications either.
+> 
+> Best regards,
+> Marek Vasut
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
+> 
+Best Regards
+Richard Zhu
 
-</formletter>
