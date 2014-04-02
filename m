@@ -1,85 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:42277 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162578AbaDCIw1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 04:52:27 -0400
-Message-ID: <1396515089.5057.14.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH 4/8] PCI: imx6: use new clock names
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Shawn Guo <shawn.guo@linaro.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
-	Richard Zhu <r65037@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
+Received: from mail-yh0-f44.google.com ([209.85.213.44]:42398 "EHLO
+	mail-yh0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932451AbaDBQrG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Apr 2014 12:47:06 -0400
+Received: by mail-yh0-f44.google.com with SMTP id f10so469198yha.31
+        for <linux-pci@vger.kernel.org>; Wed, 02 Apr 2014 09:47:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <533C300E.7070109@ti.com>
+References: <1395707726-20437-1-git-send-email-m-karicheri2@ti.com>
+	<1395707726-20437-4-git-send-email-m-karicheri2@ti.com>
+	<235376049.yyfljDtinu@wuerfel>
+	<20140325103525.GA14789@ulmo>
+	<CAPcvp5Gy8uNW3UULi8jYk7GNbmgTd2B_qOEAXnP4H4Wq3v9BCw@mail.gmail.com>
+	<533C300E.7070109@ti.com>
+Date: Wed, 2 Apr 2014 17:47:04 +0100
+Message-ID: <CAPcvp5FEFbP_Fwc47V=LppiZnfbTgPqaAAm-A9K17dVEZWwHQQ@mail.gmail.com>
+Subject: Re: [RESEND: RFC PATCH 3/3] pcie: keystone: add pcie driver based on
+ designware core driver
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
-Date: Thu, 03 Apr 2014 10:51:29 +0200
-In-Reply-To: <1396513265.5057.7.camel@weser.hi.pengutronix.de>
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
-	 <1396025579-14344-5-git-send-email-l.stach@pengutronix.de>
-	 <20140403065037.GJ2801@dragon>
-	 <1396513265.5057.7.camel@weser.hi.pengutronix.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Richard Zhu <r65037@freescale.com>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 03.04.2014, 10:21 +0200 schrieb Lucas Stach:
-> Hi Shawn,
-> 
-> Am Donnerstag, den 03.04.2014, 14:50 +0800 schrieb Shawn Guo:
-> > On Fri, Mar 28, 2014 at 05:52:55PM +0100, Lucas Stach wrote:
-> > > As defined in the new binding.
-> > > 
-> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > > ---
-> > >  drivers/pci/host/pci-imx6.c | 74 ++++++++++++++++++---------------------------
-> > >  1 file changed, 29 insertions(+), 45 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> > > index ee082509b0ba..71730bbcd9a2 100644
-> > > --- a/drivers/pci/host/pci-imx6.c
-> > > +++ b/drivers/pci/host/pci-imx6.c
-> > ...
-> > > @@ -583,32 +574,25 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
-> > >  	}
-> > >  
-> > >  	/* Fetch clocks */
-> > > -	imx6_pcie->lvds_gate = devm_clk_get(&pdev->dev, "lvds_gate");
-> > > -	if (IS_ERR(imx6_pcie->lvds_gate)) {
-> > > -		dev_err(&pdev->dev,
-> > > -			"lvds_gate clock select missing or invalid\n");
-> > > -		return PTR_ERR(imx6_pcie->lvds_gate);
-> > > -	}
-> > > -
-> > > -	imx6_pcie->sata_ref_100m = devm_clk_get(&pdev->dev, "sata_ref_100m");
-> > > -	if (IS_ERR(imx6_pcie->sata_ref_100m)) {
-> > > +	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
-> > > +	if (IS_ERR(imx6_pcie->pcie_phy)) {
-> > 
-> > Won't this break the existing DTBs?
-> > 
-> Yes, it will. But I think it's justified to break the binding,
-> considering how much brokenness was in there and the relatively few
-> number of users right now.
-> 
-> All these patches depend on agreement of the new binding, as laid out in
-> patch 2/8. I don't think it makes much sense in keeping the old cruft
-> around given that the old binding was properly reviewed by PCI experts.
-                                    ^ wasn't (obviously)
-> 
-> Regards,
-> Lucas
+On 2 April 2014 16:43, Murali Karicheri <m-karicheri2@ti.com> wrote:
 
--- 
-Pengutronix e.K.                           | Lucas Stach                 |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+> Keystone pcie driver is developed based on other dw based pcie drivers
+>
+> such as pci-exynos that uses subsys_initcall(). I am new to this list,
+>
+> probably Jingoo (copied) has some history on why we can't use module.
+> For now I will keep it as is and can be re-visited in the next revisions.
+> Also I will experiment with PCIE port driver as well.
+>
+>
+> BTW, PCIE driver currently uses Legacy or MSI IRQ. Keystone PCI has
+> a platform IRQ. Is DT based irq configuration is the appropriate way
+> to add this capability?
 
+As far as I am aware - the PCI standards define a particular way for
+devices to describe which interrupt will be used for things like
+hotplug, AER and PME. These interrupts are always PCI interrupts (i.e.
+MSI/MSI-X/legacy). Thus the port services code in the kernel uses
+standard configuration space accesses to determine the interrupt to
+use. Also note that it's not just the host bridge that can provide
+these services but any PCIE device, I guess in this sense a host
+bridge is treated like any other device.
+
+If my understanding is correct I don't believe the current port
+services code allows exceptions to this, i.e. to say this host bridge
+actually uses a platform IRQ for AER rather than an MSI. Though this
+may be quite useful as I suspect many host bridges provide interrupts
+for things like PME through platform IRQs rather that PCI interrupts.
+
+Does the Keystone have platform IRQs for things like AER? Is that
+because the IP makes these events available through platform IRQs in
+addition to the standard PCI means?
+
+Andrew Murray
