@@ -1,354 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay5-d.mail.gandi.net ([217.70.183.197]:37539 "EHLO
-	relay5-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754044AbaDGWBg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 18:01:36 -0400
-From: Ryan Desfosses <ryan@desfo.org>
-To: trivial@kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Ryan Desfosses <ryan@desfo.org>
-Subject: [PATCH] pci: moved EXPORT_SYMBOL so that it immediately followed its  function/variable
-Date: Mon,  7 Apr 2014 18:01:23 -0400
-Message-Id: <1396908083-5580-1-git-send-email-ryan@desfo.org>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:39464 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030593AbaDBWGm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Apr 2014 18:06:42 -0400
+Received: by mail-ob0-f180.google.com with SMTP id wn1so1015870obc.25
+        for <linux-pci@vger.kernel.org>; Wed, 02 Apr 2014 15:06:41 -0700 (PDT)
+Date: Wed, 2 Apr 2014 17:06:38 -0500
+From: Kim Phillips <kim.phillips@linaro.org>
+To: gregkh@linuxfoundation.org
+Cc: alex.williamson@redhat.com, stuart.yoder@freescale.com,
+	kvm@vger.kernel.org, jan.kiszka@siemens.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, mhocko@suse.cz, bhelgaas@google.com,
+	Varun.Sethi@freescale.com, kvmarm@lists.cs.columbia.edu,
+	rafael.j.wysocki@intel.com, agraf@suse.de,
+	linux-pci@vger.kernel.org, linux@roeck-us.net,
+	konrad.wilk@oracle.com, d.kasatkin@samsung.com, tj@kernel.org,
+	scottwood@freescale.com, a.motakis@virtualopensystems.com,
+	tech@virtualopensystems.com, Bharat.Bhushan@freescale.com,
+	toshi.kani@hp.com, a.rigo@virtualopensystems.com,
+	iommu@lists.linux-foundation.org, joe@perches.com,
+	christoffer.dall@linaro.org, kim.phillips@freescale.com
+Subject: Re: [RFC PATCH] PCI: Introduce new device binding path using
+ pci_dev.driver_override
+Message-Id: <20140402170638.51745f5c231a7632422e4cc5@linaro.org>
+In-Reply-To: <20140402002324.GA2662@kroah.com>
+References: <20140401161851.18815.31108.stgit@bling.home>
+	<20140401185212.7229f2c114c7e95089f00e90@linaro.org>
+	<20140402002324.GA2662@kroah.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-change made to resolve following checkpatch message:
-        WARNING: EXPORT_SYMBOL(foo); should immediately follow
-                its function/aariable
-branch: Linux 3.14
+On Tue, 1 Apr 2014 17:23:24 -0700
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-Signed-off-by: Ryan Desfosses <ryan@desfo.org>
----
- drivers/pci/pci.c | 71 ++++++++++++++++++++++++++++---------------------------
- 1 file changed, 36 insertions(+), 35 deletions(-)
+> On Tue, Apr 01, 2014 at 06:52:12PM -0500, Kim Phillips wrote:
+> > On Tue, 01 Apr 2014 10:28:54 -0600
+> > Alex Williamson <alex.williamson@redhat.com> wrote:
+> > 
+> > > The driver_override field allows us to specify the driver for a device
+> > > rather than relying on the driver to provide a positive match of the
+> > > device.  This shortcuts the existing process of looking up the vendor
+> > > and device ID, adding them to the driver new_id, binding the device,
+> > > then removing the ID, but it also provides a couple advantages.
+> > > 
+> > > First, the above process allows the driver to bind to any device
+> > > matching the new_id for the window where it's enabled.  This is often
+> > > not desired, such as the case of trying to bind a single device to a
+> > > meta driver like pci-stub or vfio-pci.  Using driver_override we can
+> > > do this deterministically using:
+> > > 
+> > > echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> > > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> > > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> > > 
+> > > Previously we could not invoke drivers_probe after adding a device
+> > > to new_id for a driver as we get non-deterministic behavior whether
+> > > the driver we intend or the standard driver will claim the device.
+> > > Now it becomes a deterministic process, only the driver matching
+> > > driver_override will probe the device.
+> > > 
+> > > To return the device to the standard driver, we simply clear the
+> > > driver_override and reprobe the device, ex:
+> > > 
+> > > echo > /sys/bus/pci/devices/0000:03:00.0/preferred_driver
+> > > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> > > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> > > 
+> > > Another advantage to this approach is that we can specify a driver
+> > > override to force a specific binding or prevent any binding.  For
+> > > instance when an IOMMU group is exposed to userspace through VFIO
+> > > we require that all devices within that group are owned by VFIO.
+> > > However, devices can be hot-added into an IOMMU group, in which case
+> > > we want to prevent the device from binding to any driver (preferred
+> > > driver = "none") or perhaps have it automatically bind to vfio-pci.
+> > > With driver_override it's a simple matter for this field to be set
+> > > internally when the device is first discovered to prevent driver
+> > > matches.
+> > > 
+> > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > > ---
+> > > 
+> > > Apologies for the exceptionally long cc list, this is a follow-up to
+> > > Stuart's "Subject: mechanism to allow a driver to bind to any device"
+> > > thread.  This is effectively a v2 of the proof-of-concept patch I
+> > > posted in that thread.  This version changes to use a dummy id struct
+> > > to return on an "override" match, which removes the collateral damage
+> > > and greatly simplifies the patch.  This feels fairly well baked for
+> > > PCI and I would expect that platform drivers could do a similar
+> > > implementation.  From there perhaps we can discuss whether there's
+> > > any advantage to placing driver_override on struct device.  The logic
+> > > for incorporating it into the match still needs to happen per bus
+> > > driver, so it might only contribute to consistency of the show/store
+> > > sysfs attributes to move it up to struct device.  Please comment.
+> > 
+> > Sounds like Greg likes this approach more than {drv,dev}_sysfs_only.
+> 
+> I have made no such judgement, I only pointed out that if you
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index fdbc294..7852f70 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -226,6 +226,7 @@ int pci_find_capability(struct pci_dev *dev, int cap)
- 
- 	return pos;
- }
-+EXPORT_SYMBOL(pci_find_capability);
- 
- /**
-  * pci_bus_find_capability - query for devices' capabilities
-@@ -253,6 +254,7 @@ int pci_bus_find_capability(struct pci_bus *bus, unsigned int devfn, int cap)
- 
- 	return pos;
- }
-+EXPORT_SYMBOL(pci_bus_find_capability);
- 
- /**
-  * pci_find_next_ext_capability - Find an extended capability
-@@ -429,6 +431,7 @@ pci_find_parent_resource(const struct pci_dev *dev, struct resource *res)
- 	}
- 	return best;
- }
-+EXPORT_SYMBOL(pci_find_parent_resource);
- 
- /**
-  * pci_wait_for_pending - wait for @mask bit(s) to clear in status word @pos
-@@ -493,6 +496,7 @@ static inline int platform_pci_set_power_state(struct pci_dev *dev,
- {
- 	return pci_platform_pm ? pci_platform_pm->set_state(dev, t) : -ENOSYS;
- }
-+EXPORT_SYMBOL(pci_set_power_state);
- 
- static inline pci_power_t platform_pci_choose_state(struct pci_dev *dev)
- {
-@@ -1010,6 +1014,7 @@ pci_save_state(struct pci_dev *dev)
- 		return i;
- 	return 0;
- }
-+EXPORT_SYMBOL(pci_save_state);
- 
- static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
- 				     u32 saved_val, int retry)
-@@ -1080,6 +1085,7 @@ void pci_restore_state(struct pci_dev *dev)
- 
- 	dev->state_saved = false;
- }
-+EXPORT_SYMBOL(pci_restore_state);
- 
- struct pci_saved_state {
- 	u32 config_space[16];
-@@ -1219,6 +1225,7 @@ int pci_reenable_device(struct pci_dev *dev)
- 		return do_pci_enable_device(dev, (1 << PCI_NUM_RESOURCES) - 1);
- 	return 0;
- }
-+EXPORT_SYMBOL(pci_reenable_device);
- 
- static void pci_enable_bridge(struct pci_dev *dev)
- {
-@@ -1293,6 +1300,7 @@ int pci_enable_device_io(struct pci_dev *dev)
- {
- 	return pci_enable_device_flags(dev, IORESOURCE_IO);
- }
-+EXPORT_SYMBOL(pci_enable_device_io);
- 
- /**
-  * pci_enable_device_mem - Initialize a device for use with Memory space
-@@ -1306,6 +1314,7 @@ int pci_enable_device_mem(struct pci_dev *dev)
- {
- 	return pci_enable_device_flags(dev, IORESOURCE_MEM);
- }
-+EXPORT_SYMBOL(pci_enable_device_mem);
- 
- /**
-  * pci_enable_device - Initialize device before it's used by a driver.
-@@ -1322,6 +1331,7 @@ int pci_enable_device(struct pci_dev *dev)
- {
- 	return pci_enable_device_flags(dev, IORESOURCE_MEM | IORESOURCE_IO);
- }
-+EXPORT_SYMBOL(pci_enable_device);
- 
- /*
-  * Managed PCI resources.  This manages device on/off, intx/msi/msix
-@@ -1404,6 +1414,7 @@ int pcim_enable_device(struct pci_dev *pdev)
- 	}
- 	return rc;
- }
-+EXPORT_SYMBOL(pcim_enable_device);
- 
- /**
-  * pcim_pin_device - Pin managed PCI device
-@@ -1422,6 +1433,7 @@ void pcim_pin_device(struct pci_dev *pdev)
- 	if (dr)
- 		dr->pinned = 1;
- }
-+EXPORT_SYMBOL(pcim_pin_device);
- 
- /*
-  * pcibios_add_device - provide arch specific hooks when adding device dev
-@@ -1511,6 +1523,7 @@ pci_disable_device(struct pci_dev *dev)
- 
- 	dev->is_busmaster = 0;
- }
-+EXPORT_SYMBOL(pci_disable_device);
- 
- /**
-  * pcibios_set_pcie_reset_state - set reset state for device dev
-@@ -1539,6 +1552,7 @@ int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
- {
- 	return pcibios_set_pcie_reset_state(dev, state);
- }
-+EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
- 
- /**
-  * pci_check_pme_status - Check if given device has generated PME.
-@@ -1618,6 +1632,7 @@ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state)
- 
- 	return !!(dev->pme_support & (1 << state));
- }
-+EXPORT_SYMBOL(pci_pme_capable);
- 
- static void pci_pme_list_scan(struct work_struct *work)
- {
-@@ -1724,6 +1739,7 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
- 
- 	dev_dbg(&dev->dev, "PME# %s\n", enable ? "enabled" : "disabled");
- }
-+EXPORT_SYMBOL(pci_pme_active);
- 
- /**
-  * __pci_enable_wake - enable PCI device as wakeup event source
-@@ -1809,6 +1825,7 @@ int pci_wake_from_d3(struct pci_dev *dev, bool enable)
- 			pci_enable_wake(dev, PCI_D3cold, enable) :
- 			pci_enable_wake(dev, PCI_D3hot, enable);
- }
-+EXPORT_SYMBOL(pci_wake_from_d3);
- 
- /**
-  * pci_target_state - find an appropriate low power state for a given PCI dev
-@@ -1887,6 +1904,7 @@ int pci_prepare_to_sleep(struct pci_dev *dev)
- 
- 	return error;
- }
-+EXPORT_SYMBOL(pci_prepare_to_sleep);
- 
- /**
-  * pci_back_from_sleep - turn PCI device on during system-wide transition into working state
-@@ -1899,6 +1917,7 @@ int pci_back_from_sleep(struct pci_dev *dev)
- 	pci_enable_wake(dev, PCI_D0, false);
- 	return pci_set_power_state(dev, PCI_D0);
- }
-+EXPORT_SYMBOL(pci_back_from_sleep);
- 
- /**
-  * pci_finish_runtime_suspend - Carry out PCI-specific part of runtime suspend.
-@@ -2443,6 +2462,7 @@ void pci_release_region(struct pci_dev *pdev, int bar)
- 	if (dr)
- 		dr->region_mask &= ~(1 << bar);
- }
-+EXPORT_SYMBOL(pci_release_region);
- 
- /**
-  *	__pci_request_region - Reserved PCI I/O and memory resource
-@@ -2513,6 +2533,7 @@ int pci_request_region(struct pci_dev *pdev, int bar, const char *res_name)
- {
- 	return __pci_request_region(pdev, bar, res_name, 0);
- }
-+EXPORT_SYMBOL(pci_request_region);
- 
- /**
-  *	pci_request_region_exclusive - Reserved PCI I/O and memory resource
-@@ -2536,6 +2557,8 @@ int pci_request_region_exclusive(struct pci_dev *pdev, int bar, const char *res_
- {
- 	return __pci_request_region(pdev, bar, res_name, IORESOURCE_EXCLUSIVE);
- }
-+EXPORT_SYMBOL(pci_request_region_exclusive);
-+
- /**
-  * pci_release_selected_regions - Release selected PCI I/O and memory resources
-  * @pdev: PCI device whose resources were previously reserved
-@@ -2552,6 +2575,7 @@ void pci_release_selected_regions(struct pci_dev *pdev, int bars)
- 		if (bars & (1 << i))
- 			pci_release_region(pdev, i);
- }
-+EXPORT_SYMBOL(pci_release_selected_regions);
- 
- static int __pci_request_selected_regions(struct pci_dev *pdev, int bars,
- 				 const char *res_name, int excl)
-@@ -2584,6 +2608,7 @@ int pci_request_selected_regions(struct pci_dev *pdev, int bars,
- {
- 	return __pci_request_selected_regions(pdev, bars, res_name, 0);
- }
-+EXPORT_SYMBOL(pci_request_selected_regions);
- 
- int pci_request_selected_regions_exclusive(struct pci_dev *pdev,
- 				 int bars, const char *res_name)
-@@ -2591,6 +2616,7 @@ int pci_request_selected_regions_exclusive(struct pci_dev *pdev,
- 	return __pci_request_selected_regions(pdev, bars, res_name,
- 			IORESOURCE_EXCLUSIVE);
- }
-+EXPORT_SYMBOL(pci_request_selected_regions_exclusive);
- 
- /**
-  *	pci_release_regions - Release reserved PCI I/O and memory resources
-@@ -2605,6 +2631,7 @@ void pci_release_regions(struct pci_dev *pdev)
- {
- 	pci_release_selected_regions(pdev, (1 << 6) - 1);
- }
-+EXPORT_SYMBOL(pci_release_regions);
- 
- /**
-  *	pci_request_regions - Reserved PCI I/O and memory resources
-@@ -2623,6 +2650,7 @@ int pci_request_regions(struct pci_dev *pdev, const char *res_name)
- {
- 	return pci_request_selected_regions(pdev, ((1 << 6) - 1), res_name);
- }
-+EXPORT_SYMBOL(pci_request_regions);
- 
- /**
-  *	pci_request_regions_exclusive - Reserved PCI I/O and memory resources
-@@ -2645,6 +2673,7 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
- 	return pci_request_selected_regions_exclusive(pdev,
- 					((1 << 6) - 1), res_name);
- }
-+EXPORT_SYMBOL(pci_request_regions_exclusive);
- 
- static void __pci_set_master(struct pci_dev *dev, bool enable)
- {
-@@ -2714,6 +2743,7 @@ void pci_set_master(struct pci_dev *dev)
- 	__pci_set_master(dev, true);
- 	pcibios_set_master(dev);
- }
-+EXPORT_SYMBOL(pci_set_master);
- 
- /**
-  * pci_clear_master - disables bus-mastering for device dev
-@@ -2723,6 +2753,7 @@ void pci_clear_master(struct pci_dev *dev)
- {
- 	__pci_set_master(dev, false);
- }
-+EXPORT_SYMBOL(pci_clear_master);
- 
- /**
-  * pci_set_cacheline_size - ensure the CACHE_LINE_SIZE register is programmed
-@@ -2767,6 +2798,7 @@ int pci_set_mwi(struct pci_dev *dev)
- {
- 	return 0;
- }
-+EXPORT_SYMBOL(pci_set_mwi);
- 
- int pci_try_set_mwi(struct pci_dev *dev)
- {
-@@ -2821,6 +2853,7 @@ int pci_try_set_mwi(struct pci_dev *dev)
- 	int rc = pci_set_mwi(dev);
- 	return rc;
- }
-+EXPORT_SYMBOL(pci_try_set_mwi);
- 
- /**
-  * pci_clear_mwi - disables Memory-Write-Invalidate for device dev
-@@ -2839,6 +2872,7 @@ pci_clear_mwi(struct pci_dev *dev)
- 		pci_write_config_word(dev, PCI_COMMAND, cmd);
- 	}
- }
-+EXPORT_SYMBOL(pci_clear_mwi);
- #endif /* ! PCI_DISABLE_MWI */
- 
- /**
-@@ -2873,6 +2907,7 @@ pci_intx(struct pci_dev *pdev, int enable)
- 		}
- 	}
- }
-+EXPORT_SYMBOL_GPL(pci_intx);
- 
- /**
-  * pci_intx_mask_supported - probe for INTx masking support
-@@ -4038,6 +4073,7 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags)
- 			bars |= (1 << i);
- 	return bars;
- }
-+EXPORT_SYMBOL(pci_select_bars);
- 
- /**
-  * pci_resource_bar - get position of the BAR associated with a resource
-@@ -4389,40 +4425,5 @@ static int __init pci_setup(char *str)
- }
- early_param("pci", pci_setup);
- 
--EXPORT_SYMBOL(pci_reenable_device);
--EXPORT_SYMBOL(pci_enable_device_io);
--EXPORT_SYMBOL(pci_enable_device_mem);
--EXPORT_SYMBOL(pci_enable_device);
--EXPORT_SYMBOL(pcim_enable_device);
--EXPORT_SYMBOL(pcim_pin_device);
--EXPORT_SYMBOL(pci_disable_device);
--EXPORT_SYMBOL(pci_find_capability);
--EXPORT_SYMBOL(pci_bus_find_capability);
--EXPORT_SYMBOL(pci_release_regions);
--EXPORT_SYMBOL(pci_request_regions);
--EXPORT_SYMBOL(pci_request_regions_exclusive);
--EXPORT_SYMBOL(pci_release_region);
--EXPORT_SYMBOL(pci_request_region);
--EXPORT_SYMBOL(pci_request_region_exclusive);
--EXPORT_SYMBOL(pci_release_selected_regions);
--EXPORT_SYMBOL(pci_request_selected_regions);
--EXPORT_SYMBOL(pci_request_selected_regions_exclusive);
--EXPORT_SYMBOL(pci_set_master);
--EXPORT_SYMBOL(pci_clear_master);
--EXPORT_SYMBOL(pci_set_mwi);
--EXPORT_SYMBOL(pci_try_set_mwi);
--EXPORT_SYMBOL(pci_clear_mwi);
--EXPORT_SYMBOL_GPL(pci_intx);
- EXPORT_SYMBOL(pci_assign_resource);
--EXPORT_SYMBOL(pci_find_parent_resource);
--EXPORT_SYMBOL(pci_select_bars);
- 
--EXPORT_SYMBOL(pci_set_power_state);
--EXPORT_SYMBOL(pci_save_state);
--EXPORT_SYMBOL(pci_restore_state);
--EXPORT_SYMBOL(pci_pme_capable);
--EXPORT_SYMBOL(pci_pme_active);
--EXPORT_SYMBOL(pci_wake_from_d3);
--EXPORT_SYMBOL(pci_prepare_to_sleep);
--EXPORT_SYMBOL(pci_back_from_sleep);
--EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
--- 
-1.9.1
+ok.  If no-one chimes in in favour of one or the other, driver_override
+works for platform devices.
 
+> modify/add/remove a sysfs file, it needs to have documentation for it.
+
+ok, so the platform device implementation should add a new
+Documentation/ABI/testing/sysfs-bus-platform...
+
+> > The diff below is the result of duplicating and converting this patch
+> > for platform devices, and, indeed, binding a device to the
+> > vfio-platform driver succeeds with:
+> > 
+> > echo vfio-platform > /sys/bus/platform/devices/fff51000.ethernet/driver_override
+> > echo fff51000.ethernet > /sys/bus/platform/devices/fff51000.ethernet/driver/unbind
+> > echo fff51000.ethernet > /sys/bus/platform/drivers_probe
+> > 
+> > However, it's almost pure duplication modulo the bus match code.  The
+> > only other place I can see where to put the common bus check is
+> > drivers/base/base.h:driver_match_device(), which I'm guessing is
+> > off-limits?  So should we leave this as per-bus code, and somehow
+> > refactor driver_override_{show,store}?
+> 
+> If you can provide a way for this to be done in a bus-independant way,
+> like we did for new_id and the like, I'd be open to reviewing it.
+
+I may be blind, but I don't see any new_id-related code shared
+between drivers/pci/pci-driver.c and, e.g., drivers/usb/serial/bus.c,
+nor do I see anything new_id related in drivers/base/.
+
+So if we are to follow the current model, the PCI and platform device
+implementations should be maintained separately.
+
+Kim
