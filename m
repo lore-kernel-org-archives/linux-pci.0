@@ -1,45 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 14 Apr 2014 18:12:07 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Don Dugger <donald.d.dugger@intel.com>
-Subject: Re: [PATCH] PCI: Add Patsburg (X79) to Intel PCH root port ACS quirk
-Message-ID: <20140415001207.GE16058@google.com>
-References: <20140331182113.23398.38246.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140331182113.23398.38246.stgit@bling.home>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52942 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751959AbaDBBmA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Apr 2014 21:42:00 -0400
+Message-ID: <1396402918.476.231.camel@ul30vt.home>
+Subject: Re: [PATCH v3] PCI: rework new_id interface for known vendor/device
+ values
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bandan Das <bsd@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 01 Apr 2014 19:41:58 -0600
+In-Reply-To: <jpgbnwkplbo.fsf@nelium.bos.redhat.com>
+References: <jpgbnwkplbo.fsf@nelium.bos.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 31, 2014 at 12:21:38PM -0600, Alex Williamson wrote:
-> Intel has updated Red Hat bz1037684 to note that X79 PCH root ports
-> also provide isolation and the same ACS quirks apply.  Some sources
-> indicate additional device IDs for X79, but this patch includes only
-> the ones specifically identified by Intel:
-> https://bugzilla.redhat.com/show_bug.cgi?id=1037684#c11
+On Tue, 2014-04-01 at 21:32 -0400, Bandan Das wrote:
+> While using the new_id interface, the user can unintentionally feed
+> incorrect values if the driver static table has a matching entry.
+> This is possible since only the device and vendor fields are
+> mandatory and the rest are optional. As a result, store_new_id
+> will fill in default values that are then passed on to the driver
+> and can have unintended consequences.
 > 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Don Dugger <donald.d.dugger@intel.com>
+> As an example, consider the ixgbe driver and the 82599EB network card :
+> echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
+> 
+> This will pass a driver_data value of 0 to the driver whereas
+> the index 0 in ixgbe actually points to a different set of card
+> operations.
+> 
+> This change returns an error if the user attempts to add a dynid for
+> a vendor/device combination for which a static entry already exists.
+> However, if the user intentionally wants a different set of values,
+> she must provide all the 7 fields and that will be accepted.
+> 
+> In KVM/device assignment scenario, the user might want 
+> to bind a device back to the host driver by writing to new_id
+> and trip on a possible null pointer dereference.
+> 
+> Signed-off-by: Bandan Das <bsd@redhat.com>
 
-Applied with Don's ack to pci/virtualization for v3.16, thanks!
+Looks ok to me
+
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
 
 > ---
->  drivers/pci/quirks.c |    2 ++
->  1 file changed, 2 insertions(+)
+> v3:
+> relocate pdev decl
+> v2:
+> 1. Return error if there is a matching static entry
+> and change commit message to reflect this behavior
+> 3. Fill in a pdev and call pci_match_id instead of creating
+> a new matching function
+> 4. Change commit message to reflect that libvirt does not
+> depend on this behavior
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index e729206..5e4ac63 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3453,6 +3453,8 @@ static const u16 pci_quirk_intel_pch_acs_ids[] = {
->  	/* Wildcat PCH */
->  	0x9c90, 0x9c91, 0x9c92, 0x9c93, 0x9c94, 0x9c95, 0x9c96, 0x9c97,
->  	0x9c98, 0x9c99, 0x9c9a, 0x9c9b,
-> +	/* Patsburg (X79) PCH */
-> +	0x1d10, 0x1d12, 0x1d14, 0x1d16, 0x1d18, 0x1d1a, 0x1d1c, 0x1d1e,
->  };
+>  drivers/pci/pci-driver.c | 22 +++++++++++++++++++++-
+>  1 file changed, 21 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 25f0bc6..a65a014 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -107,7 +107,7 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>  		subdevice=PCI_ANY_ID, class=0, class_mask=0;
+>  	unsigned long driver_data=0;
+>  	int fields=0;
+> -	int retval;
+> +	int retval = 0;
 >  
->  static bool pci_quirk_intel_pch_acs_match(struct pci_dev *dev)
-> 
+>  	fields = sscanf(buf, "%x %x %x %x %x %x %lx",
+>  			&vendor, &device, &subvendor, &subdevice,
+> @@ -115,6 +115,26 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>  	if (fields < 2)
+>  		return -EINVAL;
+>  
+> +	if (fields != 7) {
+> +		struct pci_dev *pdev = kzalloc(sizeof(*pdev), GFP_KERNEL);
+> +		if (!pdev)
+> +			return -ENOMEM;
+> +
+> +		pdev->vendor = vendor;
+> +		pdev->device = device;
+> +		pdev->subsystem_vendor = subvendor;
+> +		pdev->subsystem_device = subdevice;
+> +		pdev->class = class;
+> +
+> +		if (pci_match_id(pdrv->id_table, pdev))
+> +			retval = -EEXIST;
+> +
+> +		kfree(pdev);
+> +
+> +		if (retval)
+> +			return retval;
+> +	}
+> +
+>  	/* Only accept driver_data values that match an existing id_table
+>  	   entry */
+>  	if (ids) {
+
+
+
