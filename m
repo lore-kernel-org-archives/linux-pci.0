@@ -1,75 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
-Date: Tue, 08 Apr 2014 12:22:13 +0200
-Message-ID: <4778371.oH3kIlbD0f@wuerfel>
-In-Reply-To: <20140408095038.GT17163@e106497-lin.cambridge.arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com> <20140408095038.GT17163@e106497-lin.cambridge.arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:48653 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932455AbaDBRAw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Apr 2014 13:00:52 -0400
+Received: by mail-ie0-f169.google.com with SMTP id to1so529535ieb.28
+        for <linux-pci@vger.kernel.org>; Wed, 02 Apr 2014 10:00:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140402114932.GB10007@dhcp-26-207.brq.redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com> <20140313040440.GB26657@google.com>
+ <20140402114932.GB10007@dhcp-26-207.brq.redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 2 Apr 2014 11:00:31 -0600
+Message-ID: <CAErSpo4Bz1PCj0kU7WwtJj7zhmomGzRTzcB5N2HKS8tNsNk69Q@mail.gmail.com>
+Subject: Re: [PATCH v2 00/23] scsi: Use pci_enable_msix_range() instead of pci_enable_msix()
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	iss_storagedev@hp.com, intel-linux-scu@intel.com,
+	Support <support@lsi.com>,
+	DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>,
+	qla2xxx-upstream@qlogic.com, iscsi-driver@qlogic.com,
+	pv-drivers@vmware.com,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 08 April 2014 10:50:39 Liviu Dudau wrote:
-> On Mon, Apr 07, 2014 at 06:58:24PM +0100, Bjorn Helgaas wrote:
-> > On Mon, Apr 7, 2014 at 5:36 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > 
-> > > I think migrating other architectures to use the same code should be
-> > > a separate effort from adding a generic implementation that can be
-> > > used by arm64. It's probably a good idea to have patches to convert
-> > > arm32 and/or microblaze.
-> > 
-> > Let me reiterate that I am 100% in favor of replacing arch-specific
-> > code with more generic implementations.
-> > 
-> > However, I am not 100% in favor of doing it as separate efforts
-> > (although maybe I could be convinced).  The reasons I hesitate are
-> > that (1) if only one architecture uses a new "generic" implementation,
-> > we really don't know whether it is generic enough, (2) until I see the
-> > patches to convert other architectures, I have to assume that I'm the
-> > one who will write them, and (3) as soon as we add the code to
-> > drivers/pci, it becomes partly my headache to maintain it, even if
-> > only one arch benefits from it.
+On Wed, Apr 2, 2014 at 5:49 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> On Wed, Mar 12, 2014 at 10:04:40PM -0600, Bjorn Helgaas wrote:
+>> Hi James,
+>>
+>> I think Alexander sent these to linux-scsi hoping that you would handle
+>> them, but I know it's a hassle because they depend on f7fc32c, which went
+>> in after the merge window.
+>>
+>> I'd be glad to review these and apply them through my tree, unless you want
+>> to do it.  I'd like to get these merged in the v3.15 merge window so
+>> Alexander can move on to something else.  I haven't checked for merge
+>> conflicts with scsi.git yet, but I assume they'd be pretty trivial if there
+>> are any.
+>
+> Hi Bjorn,
+>
+> It has shifted to v3.16, right?
 
-Fair enough.
+Yep, sorry, I meant to get to these, but was too busy, so they'll
+probably go in v3.16.
 
-My approach to the asm-generic infrastruction has mostly been to ensure
-that whoever adds a new architecture has to make things easier for the
-next person. For the PCI code it's clearly your call to pick whatever
-works best for you.
-
-> > Please don't think I'm questioning anyone's intent or good will.  It's
-> > just that I understand the business pressures, and I know how hard it
-> > can be to justify this sort of work to one's management, especially
-> > after the immediate problem has been solved.
-> 
-> I understand your concern. I guess the only way to prove my good intentions
-> is to shut up and show the code.
-
-I'd suggest looking at architectures in this order then:
-
-* microblaze (this one is easy and wants to share code with us)
-* arm32-multiplatform (obviously interesting, but not as easy as microblaze)
-* powerpc64 (they are keen on sharing, code is similar to what you have)
-* mips (this is really platform specific, some want to share drivers with
-  arm32, others should keep their current code. Note that platform selection
-  on mips is compile-time only, they don't have to do it all the same way)
-* powerpc32 (their code is currently different, might not be worth it)
-
-My preference would be to have only the first two done initially and leave
-the other ones up to architecture maintainers, but Bjorn should say
-how much he wants to see get done.
-
-	Arnd
+Bjorn
