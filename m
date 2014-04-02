@@ -1,53 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f177.google.com ([209.85.220.177]:56966 "EHLO
-	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753325AbaDXXhV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 19:37:21 -0400
-Received: by mail-vc0-f177.google.com with SMTP id if17so3824966vcb.36
-        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 16:37:21 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 1 Apr 2014 17:23:24 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Kim Phillips <kim.phillips@linaro.org>
+Cc: alex.williamson@redhat.com, stuart.yoder@freescale.com,
+	kvm@vger.kernel.org, jan.kiszka@siemens.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, mhocko@suse.cz, bhelgaas@google.com,
+	Varun.Sethi@freescale.com, kvmarm@lists.cs.columbia.edu,
+	rafael.j.wysocki@intel.com, agraf@suse.de,
+	linux-pci@vger.kernel.org, linux@roeck-us.net,
+	konrad.wilk@oracle.com, d.kasatkin@samsung.com, tj@kernel.org,
+	scottwood@freescale.com, a.motakis@virtualopensystems.com,
+	tech@virtualopensystems.com, Bharat.Bhushan@freescale.com,
+	toshi.kani@hp.com, a.rigo@virtualopensystems.com,
+	iommu@lists.linux-foundation.org, joe@perches.com,
+	christoffer.dall@linaro.org, kim.phillips@freescale.com
+Subject: Re: [RFC PATCH] PCI: Introduce new device binding path using
+ pci_dev.driver_override
+Message-ID: <20140402002324.GA2662@kroah.com>
+References: <20140401161851.18815.31108.stgit@bling.home>
+ <20140401185212.7229f2c114c7e95089f00e90@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <20140424232431.GO29593@google.com>
-References: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
-	<1395960398-4238-4-git-send-email-robherring2@gmail.com>
-	<20140424232431.GO29593@google.com>
-Date: Thu, 24 Apr 2014 18:37:20 -0500
-Message-ID: <CAL_JsqLsDge54k5v_R9rvaGTrPu2qhC5shgg3dNAqV3re+ZPxQ@mail.gmail.com>
-Subject: Re: [PATCH 3/3] pci: add DT based ARM Versatile PCI host driver
-From: Rob Herring <robherring2@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140401185212.7229f2c114c7e95089f00e90@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 24, 2014 at 6:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Mar 27, 2014 at 05:46:38PM -0500, Rob Herring wrote:
->> From: Rob Herring <robh@kernel.org>
->>
->> This converts the Versatile PCI host code to a platform driver using
->> of_create_pci_host_bridge for parsing DT and setup.
->>
->> I think more of this setup could be done by the core code. There are
->> accesses to the host's config space (accesses using local_pci_cfg_base)
->> which seem like they could be done by the core code or using standard
->> config space accessors. The problem is bridge->bus->self is needed, but
->> it does not get setup. I'm not exactly sure how that should work.
->>
->> Signed-off-by: Rob Herring <robh@kernel.org>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> ...
+On Tue, Apr 01, 2014 at 06:52:12PM -0500, Kim Phillips wrote:
+> On Tue, 01 Apr 2014 10:28:54 -0600
+> Alex Williamson <alex.williamson@redhat.com> wrote:
+> 
+> > The driver_override field allows us to specify the driver for a device
+> > rather than relying on the driver to provide a positive match of the
+> > device.  This shortcuts the existing process of looking up the vendor
+> > and device ID, adding them to the driver new_id, binding the device,
+> > then removing the ID, but it also provides a couple advantages.
+> > 
+> > First, the above process allows the driver to bind to any device
+> > matching the new_id for the window where it's enabled.  This is often
+> > not desired, such as the case of trying to bind a single device to a
+> > meta driver like pci-stub or vfio-pci.  Using driver_override we can
+> > do this deterministically using:
+> > 
+> > echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> > 
+> > Previously we could not invoke drivers_probe after adding a device
+> > to new_id for a driver as we get non-deterministic behavior whether
+> > the driver we intend or the standard driver will claim the device.
+> > Now it becomes a deterministic process, only the driver matching
+> > driver_override will probe the device.
+> > 
+> > To return the device to the standard driver, we simply clear the
+> > driver_override and reprobe the device, ex:
+> > 
+> > echo > /sys/bus/pci/devices/0000:03:00.0/preferred_driver
+> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> > 
+> > Another advantage to this approach is that we can specify a driver
+> > override to force a specific binding or prevent any binding.  For
+> > instance when an IOMMU group is exposed to userspace through VFIO
+> > we require that all devices within that group are owned by VFIO.
+> > However, devices can be hot-added into an IOMMU group, in which case
+> > we want to prevent the device from binding to any driver (preferred
+> > driver = "none") or perhaps have it automatically bind to vfio-pci.
+> > With driver_override it's a simple matter for this field to be set
+> > internally when the device is first discovered to prevent driver
+> > matches.
+> > 
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> > 
+> > Apologies for the exceptionally long cc list, this is a follow-up to
+> > Stuart's "Subject: mechanism to allow a driver to bind to any device"
+> > thread.  This is effectively a v2 of the proof-of-concept patch I
+> > posted in that thread.  This version changes to use a dummy id struct
+> > to return on an "override" match, which removes the collateral damage
+> > and greatly simplifies the patch.  This feels fairly well baked for
+> > PCI and I would expect that platform drivers could do a similar
+> > implementation.  From there perhaps we can discuss whether there's
+> > any advantage to placing driver_override on struct device.  The logic
+> > for incorporating it into the match still needs to happen per bus
+> > driver, so it might only contribute to consistency of the show/store
+> > sysfs attributes to move it up to struct device.  Please comment.
+> 
+> Sounds like Greg likes this approach more than {drv,dev}_sysfs_only.
 
->> +     bridge = of_create_pci_host_bridge(&pdev->dev, &pci_versatile_ops, &sys);
->
-> Are we still relying on the PCI core to default to a bus number range of
-> 00-ff?  Can we not do that?
+I have made no such judgement, I only pointed out that if you
+modify/add/remove a sysfs file, it needs to have documentation for it.
 
-No, that comes from DT.
+> The diff below is the result of duplicating and converting this patch
+> for platform devices, and, indeed, binding a device to the
+> vfio-platform driver succeeds with:
+> 
+> echo vfio-platform > /sys/bus/platform/devices/fff51000.ethernet/driver_override
+> echo fff51000.ethernet > /sys/bus/platform/devices/fff51000.ethernet/driver/unbind
+> echo fff51000.ethernet > /sys/bus/platform/drivers_probe
+> 
+> However, it's almost pure duplication modulo the bus match code.  The
+> only other place I can see where to put the common bus check is
+> drivers/base/base.h:driver_match_device(), which I'm guessing is
+> off-limits?  So should we leave this as per-bus code, and somehow
+> refactor driver_override_{show,store}?
 
-Rob
+If you can provide a way for this to be done in a bus-independant way,
+like we did for new_id and the like, I'd be open to reviewing it.
+
+
+greg k-h
