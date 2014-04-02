@@ -1,187 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [207.46.163.237] ([207.46.163.237]:52774 "EHLO
-	na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751524AbaDQHAj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Apr 2014 03:00:39 -0400
-From: "Dongsheng.Wang@freescale.com" <Dongsheng.Wang@freescale.com>
-To: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Powerpc: e1000e cannot work normally after system resume from
- sleep(standby)
-Date: Thu, 17 Apr 2014 07:00:16 +0000
-Message-ID: <5f7a898d9d6e4b7ea5c781d40c483a88@BN1PR03MB188.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:20894 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758337AbaDBPSz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Apr 2014 11:18:55 -0400
+Date: Wed, 2 Apr 2014 17:20:44 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Mathias Nyman <mathias.nyman@intel.com>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+	Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2 RESEND 4/4] xhci: Use pci_enable_msix_exact() instead
+ of pci_enable_msix()
+Message-ID: <20140402152044.GA13421@dhcp-26-207.brq.redhat.com>
+References: <cover.1394128952.git.agordeev@redhat.com>
+ <606a52afdccf627b6273379b21daffc460b9559a.1394128952.git.agordeev@redhat.com>
+ <20140306215646.GA23294@xanatos>
+ <20140325142730.GA4518@dhcp-26-207.brq.redhat.com>
+ <20140402114127.GA10007@dhcp-26-207.brq.redhat.com>
+ <533C1919.3010506@intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <533C1919.3010506@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+On Wed, Apr 02, 2014 at 05:05:13PM +0300, Mathias Nyman wrote:
+> On 04/02/2014 02:41 PM, Alexander Gordeev wrote:
+> >On Tue, Mar 25, 2014 at 03:27:30PM +0100, Alexander Gordeev wrote:
+> >>On Thu, Mar 06, 2014 at 01:56:46PM -0800, Sarah Sharp wrote:
+> >>>What do you mean by this sentence?  Are you fixing some bug in those two
+> >>>functions, or just cleaning up how they look?  Either way, this should
+> >>>really be two patches.
+> >>Hi Sarah,
+> >>
+> >>Any feedback on v2?
+> >
+> 
+> Hi
 
-Now I'm developing Freescale PCIe power management feature. The following is my PCIe
-suspend/resume code.
+Thank you for the review, Mathias.
 
-when I test system wake up from sleep(STANDBY), I got below calltrace. Looks like e1000e
-cannot transfer data, maybe watchdog has some issue. Or maybe some of the other causes.
-I think this is not root cause. Because If changed mdelay(10) to 20ms. E1000 will work normal.
-Maybe e1000e need more time to recover? Or ?
+> Thanks for the patches,
+> I'll  queue patch 2/2  for usb-linus once 3.15-rc1 comes out.
+> 
+> But I'm going to omit patch 1/2 because it doesn't really improve
+> code readability and doesn't change functionality.
 
-Here are my test results:
-E1000e plug in PCIe slot 1, we need to delay 10ms.
-E1000e plug in PCIe slot 2, we need to delay 20ms.
-E1000e plug in PCIe slot 3, we need to delay 60ms.
+I fail to see how it does not improve the readability. It makes the
+way the result returned consistent with the rest of the code and
+explicitly returns succeess where it is known 'ret' contains zero.
 
-Anyone have any idea about this?
+But it surely up to you :)
 
+> At this stage I'd like to avoid extra patches as much as possible.
+> And besides, it adds one extra line of code
+> 
+> -Mathias
 
-*Suspend flow*: 
-if (fsl_pcie_check_link(hose))
-		return;
-
-/* Send PME_Turn_Off Message Request */
-setbits32(&pci->pex_pmcr, PEX_PMCR_PTOMR);
-
-/* Wait trun off done */
-/* RC will get this detect quickly */
-for (i = 0; i < 50; i++) {
-	dr = in_be32(&pci->pex_pme_mes_dr);
-	if (dr & ENL23_DETECT_BIT) {
-			out_be32(&pci->pex_pme_mes_dr, dr);
-			break;
-	}
-
-	udelay(1000);
-}
-
-/*
- * "PCI Bus Power Management Interface Specification" define
- * Minimum System Software Guaranteed Delays
- *
- * D0, D1 or D2 --> D3, need delay 10ms.
- * But we need to delay more time when EP plug in p1022 slot2.
- */
-mdelay(10);
-
-
-*Resume flow*:
-if (fsl_pcie_check_link(hose))
-		return;
-
-/* Send Exit L2 State Message */
-setbits32(&pci->pex_pmcr, PEX_PMCR_EXL2S);
-
-/* Wait exit done */
-/* RC will get this detect quickly */
-for (i = 0; i < 50; i++) {
-	dr = in_be32(&pci->pex_pme_mes_dr);
-	if (dr & EXL23_DETECT_BIT) {
-			out_be32(&pci->pex_pme_mes_dr, dr);
-			break;
-	}
-
-	udelay(1000);
-}
-
-/*
- * "PCI Bus Power Management Interface Specification" define
- * Minimum System Software Guaranteed Delays
- *
- * D3 hot --> D0, need delay 10ms.
- * But we need to delay more time when EP plug in p1022 slot2.
- */
-mdelay(10);
-
-================================================================================
-					CALL TRACE
-================================================================================
-
-[root@p1022 /root]# udhcpc -i eth0
-udhcpc (v1.11.2) started
-IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
-Sending discover...
-e1000e: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: Rx/Tx
-IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
-Sending discover...
-Sending discover...
-NETDEV WATCHDOG: eth0 (e1000e): transmit queue 0 timed out
-------------[ cut here ]------------
-WARNING: at net/sched/sch_generic.c:264
-Modules linked in:
-CPU: 1 PID: 0 Comm: swapper/1 Not tainted 3.14.0-173871-g9964256-dirty #42
-task: ee0534e0 ti: ee070000 task.ti: ee070000
-NIP: c036267c LR: c036267c CTR: c028b834
-REGS: ee071d00 TRAP: 0700   Not tainted  (3.14.0-173871-g9964256-dirty)
-MSR: 00029000 <CE,EE,ME>  CR: 42000022  XER: 20000000
-
-GPR00: c036267c ee071db0 ee0534e0 0000003a c16393b0 c16398e8 01079000 c05c03a8
-GPR08: 00000001 00000001 01079000 00000132 00000132 00000000 00000004 c05ed040
-GPR16: 00000001 00000100 00000004 fffef539 00000000 c05c10c0 00000038 ffffffff
-GPR24: 00000000 00000001 ee070000 00000004 c05e0000 c05f0000 ee3c0000 00000000
-NIP [c036267c] dev_watchdog+0x2c8/0x2d8
-LR [c036267c] dev_watchdog+0x2c8/0x2d8
-Call Trace:
-[ee071db0] [c036267c] dev_watchdog+0x2c8/0x2d8 (unreliable)
-[ee071de0] [c004778c] call_timer_fn.isra.24+0x28/0x84
-[ee071e00] [c00479b8] run_timer_softirq+0x1d0/0x248
-[ee071e40] [c004090c] __do_softirq+0x104/0x20c
-[ee071ea0] [c0040cd8] irq_exit+0xa4/0xc8
-[ee071eb0] [c0009ef4] timer_interrupt+0xb8/0xdc
-[ee071ed0] [c000f57c] ret_from_except+0x0/0x18
---- Exception: 901 at arch_cpu_idle+0x24/0x5c
-    LR = arch_cpu_idle+0x24/0x5c
-[ee071f90] [c0089534] rcu_idle_enter+0xa4/0xd0 (unreliable)
-[ee071fa0] [c0076010] cpu_startup_entry+0x120/0x17c
-[ee071fd0] [c0010bbc] start_secondary+0x214/0x224
-[ee071ff0] [c0002154] __secondary_start+0x7c/0xc8
-Instruction dump:
-4e800421 80fe0224 4bffff4c 7fc3f378 4bfe5401 7fc4f378 7c651b78 3c60c055
-7fe6fb78 3863e0f4 4cc63182 480e9a05 <0fe00000> 39200001 993c6f38 4bffffb4
----[ end trace 2d4f2cedfa86e32f ]---
-e1000e 0002:05:00.0: Net device Info
-e1000e: Device Name     state            trans_start      last_rx
-e1000e: eth0            0000000000000003 00000000FFFEF040 0000000000000000
-e1000e 0002:05:00.0: Register Dump
-e1000e:  Register Name   Value
-e1000e: CTRL            58100248
-e1000e: STATUS          00080783
-e1000e: CTRL_EXT        18580000
-e1000e: ICR             00000000
-e1000e: RCTL            04008002
-e1000e: RDLEN           00001000
-e1000e: RDH             0000001d
-e1000e: RDT             000000f0
-e1000e: RDTR            00000020
-e1000e: RXDCTL[0-1]     01040420 01040420
-e1000e: ERT             00000000
-e1000e: RDBAL           2d390000
-e1000e: RDBAH           00000000
-e1000e: RDFH            0000020a
-e1000e: RDFT            0000020a
-e1000e: RDFHS           0000020a
-e1000e: RDFTS           0000020a
-e1000e: RDFPC           00000000
-e1000e: TCTL            3103f0fa
-e1000e: TDBAL           2e158000
-e1000e: TDBAH           00000000
-e1000e: TDLEN           00001000
-e1000e: TDH             00000001
-e1000e: TDT             00000001
-e1000e: TIDV            00000008
-e1000e: TXDCTL[0-1]     0141011f 0141011f
-e1000e: TADV            00000020
-e1000e: TARC[0-1]       04000403 00000403
-e1000e: TDFH            00001000
-e1000e: TDFT            00001012
-e1000e: TDFHS           00001000
-e1000e: TDFTS           00001000
-e1000e: TDFPC           00000000
-e1000e 0002:05:00.0: Tx Ring Summary
-e1000e: Queue [NTU] [NTC] [bi(ntc)->dma  ] leng ntw timestamp
-e1000e:      0     1     0 000000002C809802 005A   0 00000000FFFEF044
-e1000e 0002:05:00.0: Rx Ring Summary
-e1000e: Queue [NTU] [NTC]
-e1000e:      0    FF     0
-e1000e 0002:05:00.0 eth0: Reset adapter unexpectedly
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
