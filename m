@@ -1,88 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51165 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:3664 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752465AbaDYIFV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 Apr 2014 04:05:21 -0400
+	id S1758197AbaDBLrq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Apr 2014 07:47:46 -0400
+Date: Wed, 2 Apr 2014 13:49:32 +0200
 From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Mitch Williams <mitch.a.williams@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Linux NICS <linux.nics@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 1/2] i40evf: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Fri, 25 Apr 2014 10:06:24 +0200
-Message-Id: <110dd7806f49f62272bd960ae8101c9da81a3f01.1398412015.git.agordeev@redhat.com>
-In-Reply-To: <cover.1398412015.git.agordeev@redhat.com>
-References: <cover.1398412015.git.agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>,
+	linux-kernel@vger.kernel.org, iss_storagedev@hp.com,
+	intel-linux-scu@intel.com, support@lsi.com,
+	DL-MPTFusionLinux@lsi.com, qla2xxx-upstream@qlogic.com,
+	iscsi-driver@qlogic.com, pv-drivers@vmware.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 00/23] scsi: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140402114932.GB10007@dhcp-26-207.brq.redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com>
+ <20140313040440.GB26657@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140313040440.GB26657@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Wed, Mar 12, 2014 at 10:04:40PM -0600, Bjorn Helgaas wrote:
+> Hi James,
+> 
+> I think Alexander sent these to linux-scsi hoping that you would handle
+> them, but I know it's a hassle because they depend on f7fc32c, which went
+> in after the merge window.
+> 
+> I'd be glad to review these and apply them through my tree, unless you want
+> to do it.  I'd like to get these merged in the v3.15 merge window so
+> Alexander can move on to something else.  I haven't checked for merge
+> conflicts with scsi.git yet, but I assume they'd be pretty trivial if there
+> are any.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Mitch Williams <mitch.a.williams@intel.com>
-Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
-Cc: Linux NICS <linux.nics@intel.com>
-Cc: e1000-devel@lists.sourceforge.net
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/net/ethernet/intel/i40evf/i40evf_main.c |   31 ++++++++--------------
- 1 files changed, 11 insertions(+), 20 deletions(-)
+Hi Bjorn,
 
-diff --git a/drivers/net/ethernet/intel/i40evf/i40evf_main.c b/drivers/net/ethernet/intel/i40evf/i40evf_main.c
-index da6054c..78f1859 100644
---- a/drivers/net/ethernet/intel/i40evf/i40evf_main.c
-+++ b/drivers/net/ethernet/intel/i40evf/i40evf_main.c
-@@ -1027,30 +1027,21 @@ i40evf_acquire_msix_vectors(struct i40evf_adapter *adapter, int vectors)
- 	 * Right now, we simply care about how many we'll get; we'll
- 	 * set them up later while requesting irq's.
- 	 */
--	while (vectors >= vector_threshold) {
--		err = pci_enable_msix(adapter->pdev, adapter->msix_entries,
--				      vectors);
--		if (!err) /* Success in acquiring all requested vectors. */
--			break;
--		else if (err < 0)
--			vectors = 0; /* Nasty failure, quit now */
--		else /* err == number of vectors we should try again with */
--			vectors = err;
--	}
--
--	if (vectors < vector_threshold) {
-+	err = pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
-+				    vector_threshold, vectors);
-+	if (err < 0) {
- 		dev_err(&adapter->pdev->dev, "Unable to allocate MSI-X interrupts.\n");
- 		kfree(adapter->msix_entries);
- 		adapter->msix_entries = NULL;
--		err = -EIO;
--	} else {
--		/* Adjust for only the vectors we'll use, which is minimum
--		 * of max_msix_q_vectors + NONQ_VECS, or the number of
--		 * vectors we were allocated.
--		 */
--		adapter->num_msix_vectors = vectors;
-+		return err;
- 	}
--	return err;
-+
-+	/* Adjust for only the vectors we'll use, which is minimum
-+	 * of max_msix_q_vectors + NONQ_VECS, or the number of
-+	 * vectors we were allocated.
-+	 */
-+	adapter->num_msix_vectors = err;
-+	return 0;
- }
- 
- /**
+It has shifted to v3.16, right?
+
+> Bjorn
+
 -- 
-1.7.7.6
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
