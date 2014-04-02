@@ -1,72 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:57077 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752074AbaDOLuq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 07:50:46 -0400
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <spear-devel@list.st.com>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Mohit Kumar <mohit.kumar@st.com>, <stable@vger.kernel.org>
-Subject: [PATCH V8 2/9] SPEAr13XX: Fix static mapping table
-Date: Tue, 15 Apr 2014 17:19:44 +0530
-Message-ID: <d6886e0f97dff12932cf89cb33721ac86c3a8e8b.1397555158.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1397555158.git.mohit.kumar@st.com>
-References: <cover.1397555158.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:47789 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752492AbaDBFdX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Apr 2014 01:33:23 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"'Marek Vasut'" <marex@denx.de>,
+	"'Richard Zhu'" <r65037@freescale.com>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>
+Date: Wed, 2 Apr 2014 13:33:02 +0800
+Subject: RE: [PATCH] PCI: designware: Remove unnecessary RC BAR setting
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FEC4809B@EAPEX1MAIL1.st.com>
+References: <000801cf4d95$64322ef0$2c968cd0$%han@samsung.com>
+ <2CC2A0A4A178534D93D5159BF3BCB66189FEB13752@EAPEX1MAIL1.st.com>
+ <000001cf4e33$946db4b0$bd491e10$%han@samsung.com>
+In-Reply-To: <000001cf4e33$946db4b0$bd491e10$%han@samsung.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@st.com>
+Hello Jingoo,
 
-SPEAr13XX was using virtual address space 0xFE000000 to map physical address
-space 0xB3000000. pci_remap_io uses 0xFEE00000 as virtual address. So
-change 0xFE000000 to 0xF9000000.
+> -----Original Message-----
+> From: Jingoo Han [mailto:jg1.han@samsung.com]
+> Sent: Wednesday, April 02, 2014 10:53 AM
+> To: Mohit KUMAR DCG
+> Cc: 'Bjorn Helgaas'; linux-pci@vger.kernel.org; Pratyush ANAND; 'Marek
+> Vasut'; 'Richard Zhu'; 'Kishon Vijay Abraham I'
+> Subject: Re: [PATCH] PCI: designware: Remove unnecessary RC BAR setting
+> 
+> On Wednesday, April 02, 2014 1:57 PM, Mohit KUMAR DCG wrote:
+> > On Tuesday, April 01, 2014 4:00 PM, Jingoo Han wrote:
+> > >
+> > > According to the spec, the synopsys core does not implement the
+> > > optional BARs such as BAR0/1. This is based on the assumption that
+> > > the RC host probably has registers on some other internal bus and
+> > > has knowledge and setup access to these registers already.
+> > > So, remove unnecessary RC BAR setting.
+> > >
+> > - Normally BARs in RC are not used but somehow available in the
+> > design. One possible BAR use can be if RC has some memory connected to
+> the BAR that needs to be accessed through link.
+> >
+> > Otherwise we can ignore BARs setup here.
+> 
+> Hi Mohit KUMAR DCG,
+> 
+> Thank you for your feedback.
+> 
+> I want to know whether or not other SoCs such as ST, Freescale, TI support
+> BAR0/BAR1. If no SoC supports BAR0/BAR1, the unnecessary RC BAR setting
+> code should  be removed.
+> 
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Cc: spear-devel@list.st.com
-Cc: stable@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
----
- arch/arm/mach-spear/include/mach/spear.h |    4 ++--
- arch/arm/mach-spear/spear13xx.c          |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+- We are not currently using RC's BAR0/1 in any application but no such restriction from HW as
+ST SoCs support BARs in HW design. 
 
-diff --git a/arch/arm/mach-spear/include/mach/spear.h b/arch/arm/mach-spear/include/mach/spear.h
-index 5cdc53d..f2d6a01 100644
---- a/arch/arm/mach-spear/include/mach/spear.h
-+++ b/arch/arm/mach-spear/include/mach/spear.h
-@@ -52,10 +52,10 @@
- #ifdef CONFIG_ARCH_SPEAR13XX
- 
- #define PERIP_GRP2_BASE				UL(0xB3000000)
--#define VA_PERIP_GRP2_BASE			IOMEM(0xFE000000)
-+#define VA_PERIP_GRP2_BASE			IOMEM(0xF9000000)
- #define MCIF_SDHCI_BASE				UL(0xB3000000)
- #define SYSRAM0_BASE				UL(0xB3800000)
--#define VA_SYSRAM0_BASE				IOMEM(0xFE800000)
-+#define VA_SYSRAM0_BASE				IOMEM(0xF9800000)
- #define SYS_LOCATION				(VA_SYSRAM0_BASE + 0x600)
- 
- #define PERIP_GRP1_BASE				UL(0xE0000000)
-diff --git a/arch/arm/mach-spear/spear13xx.c b/arch/arm/mach-spear/spear13xx.c
-index 7aa6e8c..89212ff 100644
---- a/arch/arm/mach-spear/spear13xx.c
-+++ b/arch/arm/mach-spear/spear13xx.c
-@@ -52,7 +52,7 @@ void __init spear13xx_l2x0_init(void)
- /*
-  * Following will create 16MB static virtual/physical mappings
-  * PHYSICAL		VIRTUAL
-- * 0xB3000000		0xFE000000
-+ * 0xB3000000		0xF9000000
-  * 0xE0000000		0xFD000000
-  * 0xEC000000		0xFC000000
-  * 0xED000000		0xFB000000
--- 
-1.7.0.1
+Regards
+Mohit
+
+> Best regards,
+> Jingoo Han
+> 
+> >
+> > Thanks
+> > Mohit
+> >
+> > > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> > > ---
+> > > Tested on Exynos5440.
+> > >
+> > >  drivers/pci/host/pcie-designware.c |    4 ----
+> > >  1 file changed, 4 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/host/pcie-designware.c
+> > > b/drivers/pci/host/pcie- designware.c index 6d23d8c..7bee01f 100644
+> > > --- a/drivers/pci/host/pcie-designware.c
+> > > +++ b/drivers/pci/host/pcie-designware.c
+> > > @@ -798,10 +798,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+> > >  	}
+> > >  	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
+> > >
+> > > -	/* setup RC BARs */
+> > > -	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_0);
+> > > -	dw_pcie_writel_rc(pp, 0x00000000, PCI_BASE_ADDRESS_1);
+> > > -
+> > >  	/* setup interrupt pins */
+> > >  	dw_pcie_readl_rc(pp, PCI_INTERRUPT_LINE, &val);
+> > >  	val &= 0xffff00ff;
+> > > --
+> > > 1.7.10.4
 
