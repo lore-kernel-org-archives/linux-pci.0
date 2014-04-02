@@ -1,60 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:54255 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751975AbaD2Xf7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 19:35:59 -0400
-Received: by mail-ie0-f175.google.com with SMTP id rl12so1045819iec.34
-        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 16:35:59 -0700 (PDT)
-Date: Tue, 29 Apr 2014 17:35:56 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Cc: linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add new PCI id for Intel GPU interrupt quirk
-Message-ID: <20140429233556.GB9912@google.com>
-References: <3185796.STv3LRO1j8@storm>
+Received: from mx1.redhat.com ([209.132.183.28]:52580 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758559AbaDBLjj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Apr 2014 07:39:39 -0400
+Date: Wed, 2 Apr 2014 13:41:27 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+	"Nyman, Mathias" <mathias.nyman@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2 RESEND 4/4] xhci: Use pci_enable_msix_exact() instead
+ of pci_enable_msix()
+Message-ID: <20140402114127.GA10007@dhcp-26-207.brq.redhat.com>
+References: <cover.1394128952.git.agordeev@redhat.com>
+ <606a52afdccf627b6273379b21daffc460b9559a.1394128952.git.agordeev@redhat.com>
+ <20140306215646.GA23294@xanatos>
+ <20140325142730.GA4518@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3185796.STv3LRO1j8@storm>
+In-Reply-To: <20140325142730.GA4518@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 07, 2014 at 03:10:32PM +0200, Thomas Jarosch wrote:
-> After a CPU upgrade while keeping the same mainboard,
-> we faced "spurious interrupt" problems again.
+On Tue, Mar 25, 2014 at 03:27:30PM +0100, Alexander Gordeev wrote:
+> On Thu, Mar 06, 2014 at 01:56:46PM -0800, Sarah Sharp wrote:
+> > What do you mean by this sentence?  Are you fixing some bug in those two
+> > functions, or just cleaning up how they look?  Either way, this should
+> > really be two patches.
 > 
-> It turned out that the new CPU also featured a
-> new GPU with a different PCI id.
+> Hi Sarah,
 > 
-> -> Add this PCI id to the quirk table. Probably all other
-> Intel GPU PCI ids are affected, too, but I don't want
-> to add them without a test system.
-> 
-> Signed-off-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
-> Tested-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
+> Any feedback on v2?
 
-I applied this to pci/misc for v3.16, with a stable tag for v3.4+, thanks!
+Sarah?
 
-> ---
->  drivers/pci/quirks.c | 1 +
->  1 file changed, 1 insertion(+)
+> Thanks!
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index e729206..0feb4a3 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2954,6 +2954,7 @@ static void disable_igfx_irq(struct pci_dev *dev)
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0152, disable_igfx_irq);
->  
->  /*
->   * PCI devices which are on Intel chips can skip the 10ms delay
+> > Sarah Sharp
+> 
 > -- 
-> 1.8.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Regards,
+> Alexander Gordeev
+> agordeev@redhat.com
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
