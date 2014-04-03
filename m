@@ -1,36 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1401182225170.776@be1.lrz>
-References: <alpine.DEB.2.02.1401182225170.776@be1.lrz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 14 Apr 2014 15:34:16 -0600
-Message-ID: <CAErSpo7LCx_eakiiOjOcQwojQnFEcvJfeDUVFfMCGN-vbrSdSg@mail.gmail.com>
-Subject: Re: [Bug 68591] - Please help debugging
-To: 7eggert@gmx.de
-Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1396513926.5057.12.camel@weser.hi.pengutronix.de>
+Subject: Re: [RESEND: RFC PATCH 3/3] pcie: keystone: add pcie driver based
+ on designware core driver
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, xobs@kosagi.com,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Richard Zhu <r65037@freescale.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <shawn.guo@linaro.org>
+Date: Thu, 03 Apr 2014 10:32:06 +0200
+In-Reply-To: <533C460D.1030608@ti.com>
+References: <1395707726-20437-1-git-send-email-m-karicheri2@ti.com>
+	 <1395707726-20437-4-git-send-email-m-karicheri2@ti.com>
+	 <235376049.yyfljDtinu@wuerfel> <533C460D.1030608@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 18, 2014 at 3:59 PM,  <7eggert@gmx.de> wrote:
-> Hi,
->
-> I need some help debugging and possibly fixing this bug. E.g. "do
-> bisecting in spite of the big version difference" or "use these debugging
-> parameters".
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=68591
-> "Regression: Asrock M3A UCC does not boot without acpi=off or pci=noacpi"
->
-> thanks in advance
->         Bodo Eggert
+Am Mittwoch, den 02.04.2014, 13:17 -0400 schrieb Murali Karicheri:
+> Arnd,
+> 
+> Thanks for reviewing the RFC patch. Please see below my response.
+> 
+> On 3/25/2014 3:44 AM, Arnd Bergmann wrote:
+> > On Monday 24 March 2014 20:35:26 Murali Karicheri wrote:
+[...]
+> 
+> >> +	ks_pcie->clk = devm_clk_get(&pdev->dev, "pcie");
+> >> +	if (IS_ERR(ks_pcie->clk)) {
+> >> +		dev_err(&pdev->dev, "Failed to get pcie rc clock\n");
+> >> +		return PTR_ERR(ks_pcie->clk);
+> >> +	}
+> >> +	ret = clk_prepare_enable(ks_pcie->clk);
+> >> +	if (ret)
+> >> +		return ret;
+> > Could you move the clock handling into the generic dw-pcie code?
+> 
+> Could be. But currently only pci-exynos.c is using a clock name 
+> "pcie".pci-imx6.c uses pcie_axi" and
+> will have to be fixed so that we can move this code to the generic 
+> dw-pcie code.  Sean Cross is the
+> author for pci-imx6.c.
+> 
+> Sean,
+> 
+> Is "pcie_axi" is the pcie hw clock? If so, can you rename this to "pcie" 
+> so that  my patch can move the
+> clock handling code to pcie designware code?
+> 
+My series "i.MX6 PCIe binding change and MSI support" already changes
+the clock name. So we could consolidate the clock handling once this is
+in. Only difference is that the i.MX6 needs an additional PHY clock.
 
-Hi Bodo,
+Regards,
+Lucas
+-- 
+Pengutronix e.K.                           | Lucas Stach                 |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
 
-Any chance you could try the patch attached to that bugzilla?
-(https://bugzilla.kernel.org/attachment.cgi?id=130681)
-
-I think it should fix the problem you're seeing.
-
-Bjorn
