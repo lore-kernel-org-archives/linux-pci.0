@@ -1,178 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:26256 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750719AbaDYIsR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 04:48:17 -0400
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s3P8j1X9023690
-	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 01:48:17 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1kfd4mgdkr-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 01:48:17 -0700
-Content-Type: multipart/mixed;
-	boundary="_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EE54avmb2qlogicorg_"
-From: Shahed Shaikh <shahed.shaikh@qlogic.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-CC: Dept-HSG Linux NIC Dev <Dept-HSGLinuxNICDev@qlogic.com>,
-	netdev <netdev@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH net-next 2/2] qlcnic: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Date: Fri, 25 Apr 2014 08:48:14 +0000
-Message-ID: <262CB373A6D1F14F9B81E82F74F77D5A46F9EE54@avmb2.qlogic.org>
-References: <cover.1398412015.git.agordeev@redhat.com>
- <0a0d5f5c33d86e3777c22c3c1bbd81035660d57c.1398412015.git.agordeev@redhat.com>
-In-Reply-To: <0a0d5f5c33d86e3777c22c3c1bbd81035660d57c.1398412015.git.agordeev@redhat.com>
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:16058 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752822AbaDCQzZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Apr 2014 12:55:25 -0400
+Message-ID: <1396544123.3215.8.camel@ul30vt.home>
+Subject: Re: Coverity CID 714665: vfio_ext_cap_len() use of uninitialized
+ variable
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Thu, 03 Apr 2014 10:55:23 -0600
+In-Reply-To: <CAErSpo4-sW3Ge55oAzz=Xm1rbU1UZWQ=jBKUtL28yeTx-YOapw@mail.gmail.com>
+References: <CAErSpo79w7n=kOUM7D+USA7tHGJ50Sggndun=LwTkeirVqKfvg@mail.gmail.com>
+	 <CAErSpo4-sW3Ge55oAzz=Xm1rbU1UZWQ=jBKUtL28yeTx-YOapw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EE54avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2014-04-03 at 10:48 -0600, Bjorn Helgaas wrote:
+> On Thu, Apr 3, 2014 at 9:53 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > Coverity complains that "byte" is used uninitialized in
+> > drivers/vfio/pci/vfio_pci_config.c in vfio_ext_cap_len():
+> >
+> > 1139                        sts = byte & PCI_TPH_CAP_ST_MASK;
+> > 1140                        sts >>= PCI_TPH_CAP_ST_SHIFT;
+> > 1141                        return PCI_TPH_BASE_SIZEOF + round_up(sts * 2, 4);
+> >
+> > This is CID 714665.
+> 
+> I think "dword" was probably intended instead of "byte".  Changing
+> that would also fix CID 715156:
+> 
+> 1136                if ((dword & PCI_TPH_CAP_LOC_MASK) == PCI_TPH_LOC_CAP) {
+> 1137                        int sts;
+> 1138
+>     CID 714665: Uninitialized scalar variable (UNINIT) [select issue]
+> 
+> CID 715156 (#1 of 1): Operands don't affect result (CONSTANT_EXPRESSION_RESULT)
+> result_independent_of_operands: byte & 0x7ff0000 is always 0
+> regardless of the values of its operands. This occurs as the operand
+> of assignment.
+> 1139                        sts = byte & PCI_TPH_CAP_ST_MASK;
 
-> -----Original Message-----
-> From: Alexander Gordeev [mailto:agordeev@redhat.com]
-> Sent: Friday, April 25, 2014 1:36 PM
-> To: linux-kernel
-> Cc: Alexander Gordeev; Shahed Shaikh; Dept-HSG Linux NIC Dev; netdev;
-> linux-pci
-> Subject: [PATCH net-next 2/2] qlcnic: Use pci_enable_msix_exact() instead
-> of pci_enable_msix()
->=20
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers using these two
-> interfaces need to be updated to use the new pci_enable_msi_range()  or
-> pci_enable_msi_exact() and pci_enable_msix_range() or
-> pci_enable_msix_exact() interfaces.
->=20
-> Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
-> Cc: Dept-HSGLinuxNICDev@qlogic.com
-> Cc: netdev@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
->=20
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-> b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-> index dbf7539..26f022b 100644
-> --- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-> +++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-> @@ -690,8 +690,8 @@ int qlcnic_setup_tss_rss_intr(struct qlcnic_adapter
-> *adapter)
->  		adapter->msix_entries[vector].entry =3D vector;
->=20
->  restore:
-> -	err =3D pci_enable_msix(pdev, adapter->msix_entries, num_msix);
-> -	if (err > 0) {
-> +	err =3D pci_enable_msix_exact(pdev, adapter->msix_entries,
-> num_msix);
-> +	if (err =3D=3D -ENOSPC) {
->  		if (!adapter->drv_tss_rings && !adapter->drv_rss_rings)
->  			return -ENOSPC;
+Yes, using byte looks like a cut-n-paste error, it should have been
+dword.  The size calculation also looks wrong since the field is an N-1
+value but we don't seem to be incrementing it.  I'll post a patch that
+fixes both.  Thanks,
 
-I think, it would be good if we return "err" instead of "-ENOSPC" .
- =20
-                if (!adapter->drv_tss_rings && !adapter->drv_rss_rings)
--                       return -ENOSPC;
-+                       return err;
+Alex
 
-Thanks,
-Shahed
-
-
---_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EE54avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-vqMQGZ1uAN0BD1QCAAAAgFMAaABhAGgAZQBkACAAUwBoAGEAaQBrAGgAAABTAE0AVABQAAAAcwBo
-AGEAaABlAGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADIA
-AABzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwDl
-XwEAAAA6AAAAcwBpAHAAOgBzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBpAGMA
-LgBjAG8AbQAAAAAAHwAaDAEAAAAcAAAAUwBoAGEAaABlAGQAIABTAGgAYQBpAGsAaAAAAB8AHwwB
-AAAAMgAAAHMAaABhAGgAZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
-AAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9U
-AgAAAIBTAGgAYQBoAGUAZAAgAFMAaABhAGkAawBoAAAAUwBNAFQAUAAAAHMAaABhAGgAZQBkAC4A
-cwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAAyAAAAcwBoAGEAaABl
-AGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A+D8BAAAAHAAAAFMA
-aABhAGgAZQBkACAAUwBoAGEAaQBrAGgAAAAfACNAAQAAADIAAABzAGgAYQBoAGUAZAAuAHMAaABh
-AGkAawBoAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAA
-AgH5PwEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBoAGEAaABlAGQAIABTAGgAYQBp
-AGsAaAAAAFMATQBUAFAAAABzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBpAGMA
-LgBjAG8AbQAAAB8ACV0BAAAAMgAAAHMAaABhAGgAZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAAAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAA
-HwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAAC
-AQswAQAAABAAAACE3vS1VIUBSJab9l29eOWuAwAXAAEAAABAADkAANsiGGNgzwFAAAgw58l2GGNg
-zwELACkAAAAAAAsAIwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0
-AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAA
-AAAARgAAAAAGhQAAAAAAAB8ANwABAAAAtAAAAFIARQA6ACAAWwBQAEEAVABDAEgAIABuAGUAdAAt
-AG4AZQB4AHQAIAAyAC8AMgBdACAAcQBsAGMAbgBpAGMAOgAgAFUAcwBlACAAcABjAGkAXwBlAG4A
-YQBiAGwAZQBfAG0AcwBpAHgAXwBlAHgAYQBjAHQAKAApACAAaQBuAHMAdABlAGEAZAAgAG8AZgAg
-AHAAYwBpAF8AZQBuAGEAYgBsAGUAXwBtAHMAaQB4ACgAKQAAAB8APQABAAAACgAAAFIARQA6ACAA
-AAAAAAMANgAAAAAAAwAuAAAAAAAfAEIQAQAAAJwAAAA8ADAAYQAwAGQANQBmADUAYwAzADMAZAA4
-ADYAZQAzADcANwA3AGMAMgAyAGMAMwBjADEAYgBiAGQAOAAxADAAMwA1ADYANgAwAGQANQA3AGMA
-LgAxADMAOQA4ADQAMQAyADAAMQA1AC4AZwBpAHQALgBhAGcAbwByAGQAZQBlAHYAQAByAGUAZABo
-AGEAdAAuAGMAbwBtAD4AAAACAXEAAQAAABsAAAABAc9gXRgBFke9Um4UQ5jAnOoETbbZmyIDjkAA
-HwBwAAEAAACsAAAAWwBQAEEAVABDAEgAIABuAGUAdAAtAG4AZQB4AHQAIAAyAC8AMgBdACAAcQBs
-AGMAbgBpAGMAOgAgAFUAcwBlACAAcABjAGkAXwBlAG4AYQBiAGwAZQBfAG0AcwBpAHgAXwBlAHgA
-YQBjAHQAKAApACAAaQBuAHMAdABlAGEAZAAgAG8AZgAgAHAAYwBpAF8AZQBuAGEAYgBsAGUAXwBt
-AHMAaQB4ACgAKQAAAB8ANRABAAAAeAAAADwAMgA2ADIAQwBCADMANwAzAEEANgBEADEARgAxADQA
-RgA5AEIAOAAxAEUAOAAyAEYANwA0AEYANwA3AEQANQBBADQANgBGADkARQBFADUANABAAGEAdgBt
-AGIAMgAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAA8gAAADwAYwBvAHYAZQByAC4A
-MQAzADkAOAA0ADEAMgAwADEANQAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABh
-AHQALgBjAG8AbQA+ACAAPAAwAGEAMABkADUAZgA1AGMAMwAzAGQAOAA2AGUAMwA3ADcANwBjADIA
-MgBjADMAYwAxAGIAYgBkADgAMQAwADMANQA2ADYAMABkADUANwBjAC4AMQAzADkAOAA0ADEAMgAw
-ADEANQAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+AAAA
-AAADAN4/n04AAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAOFAAAAAAAAAwAAgAggBgAAAAAAwAAA
-AAAAAEYAAAAAAYUAAAAAAAADAIAQ/////0AABzCn3EoXY2DPAQsAAgABAAAAAwAmAAAAAAALACsA
-AAAAAAIBRwABAAAALwAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjItMTQwNDI1MDg0ODE0Wi0x
-NjU3MDkAAAIBEDABAAAARgAAAAAAAACvPIKkfhGKQbi6Ht+YpY1gBwBahG++9b7/Trf2hn64jhl8
-ABpraDblAACusyjlAk3gSIgLit3xNWjzAEt2/YWoAAAAAB8A+j8BAAAAHAAAAFMAaABhAGgAZQBk
-ACAAUwBoAGEAaQBrAGgAAAADAAlZAQAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABCFAAAAAAAA
-CwAAgAggBgAAAAAAwAAAAAAAAEYAAAAADoUAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAY
-hQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAIKFAAAAAAAAQAAAgAggBgAAAAAAwAAAAAAA
-AEYAAAAAv4UAAPC3KfRiYM8BHwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA2IUAAAEAAAASAAAASQBQ
-AE0ALgBOAG8AdABlAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0A
-bQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAA
-AABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsA
-MQAwAC4AMQAuADQALgAxADAAXQAAAAaW
-
---_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EE54avmb2qlogicorg_--
