@@ -1,66 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:42981 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758617AbaDJP44 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 11:56:56 -0400
-Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 5DCD5212ED
-	for <linux-pci@vger.kernel.org>; Thu, 10 Apr 2014 11:56:54 -0400 (EDT)
-Date: Thu, 10 Apr 2014 08:59:27 -0700
-From: "greg@kroah.com" <greg@kroah.com>
-To: Narasimharao Bolisetti <narasimharao.b@hcl.com>
-Cc: Willy Tarreau <w@1wt.eu>,
-	narasimharo bolisetti <nrbolisetti@yahoo.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernelnewbies@nl.linux.org" <kernelnewbies@nl.linux.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>,
-	"nrbolisetti@gmail.com" <nrbolisetti@gmail.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
-Subject: Re: system hang
-Message-ID: <20140410155927.GB10958@kroah.com>
-References: <62C418AB752FEF4D931AB8E89E46539F02878DFC@chn-hclt-mbs06.HCLT.CORP.HCL.IN>
- <1397113552.75117.YahooMailBasic@web160504.mail.bf1.yahoo.com>
- <20140410075539.GB25198@1wt.eu>
- <62C418AB752FEF4D931AB8E89E46539F02878EC8@chn-hclt-mbs06.HCLT.CORP.HCL.IN>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:36552 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759AbaDCQcW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 12:32:22 -0400
+Received: by mail-ie0-f175.google.com with SMTP id to1so2083428ieb.34
+        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 09:32:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <62C418AB752FEF4D931AB8E89E46539F02878EC8@chn-hclt-mbs06.HCLT.CORP.HCL.IN>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 3 Apr 2014 10:32:01 -0600
+Message-ID: <CAErSpo7u4_gmOpuqTuXkWesMVYBzMQYVcpwTLd4wBU5HCk8-Og@mail.gmail.com>
+Subject: Coverity CIDs 1011624, 1011625: mei/pci-me.c doesn't check
+ pci_enable_msi() return value
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 07:59:38AM +0000, Narasimharao Bolisetti wrote:
-> 
-> Hi,
-> 
-> I have checked the same in the recent kernel versions also. Issue is still remain.
+Coverity complains that mei_me_probe() and mei_me_pci_resume() call
+pci_enable_msi() without checking the result.  They do check
+indirectly, by testing pci_dev_msi_enabled(), but it would be nicer to
+check the pci_enable_msi() result directly:
 
-What versions have you tried, and what are the logs from those versions?
+CID 1011625 (#1 of 1): Unchecked return value (CHECKED_RETURN)
+9. check_return: Calling pci_enable_msi_block without checking return
+value (as is done elsewhere 88 out of 105 times).
+173        pci_enable_msi(pdev);
+174
+175         /* request and enable interrupt */
+176        if (pci_dev_msi_enabled(pdev))
 
-> ::DISCLAIMER::
-> ----------------------------------------------------------------------------------------------------------------------------------------------------
-> 
-> The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only.
-> E-mail transmission is not guaranteed to be secure or error-free as information could be intercepted, corrupted,
-> lost, destroyed, arrive late or incomplete, or may contain viruses in transmission. The e mail and its contents
-> (with or without referred errors) shall therefore not attach any liability on the originator or HCL or its affiliates.
-> Views or opinions, if any, presented in this email are solely those of the author and may not necessarily reflect the
-> views or opinions of HCL or its affiliates. Any form of reproduction, dissemination, copying, disclosure, modification,
-> distribution and / or publication of this message without the prior written consent of authorized representative of
-> HCL is strictly prohibited. If you have received this email in error please delete it and notify the sender immediately.
-> Before opening any email and/or attachments, please check them for viruses and other defects.
-> 
-> ----------------------------------------------------------------------------------------------------------------------------------------------------
+These are CIDs 1011624 and 1011625.
 
-
-Oops, sorry, nope, I'm not allowed to respond to anyone with such an
-email footer, it's not compatible with Linux kernel development (Linux
-is not confidential.)
-
-Best of luck, I suggest you work with the vendor who is forcing you to
-stick with such an old kernel version.
-
-greg k-h
+Bjorn
