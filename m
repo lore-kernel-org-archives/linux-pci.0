@@ -1,63 +1,36 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 17 Apr 2014 16:53:55 -0400
-From: Dave Jones <davej@redhat.com>
-To: Borislav Petkov <bp@alien8.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"Zhang, Rui" <rui.zhang@intel.com>,
-	"Lu, Aaron" <aaron.lu@intel.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Stephane Eranian <eranian@google.com>,
-	"Yan, Zheng Z" <zheng.z.yan@intel.com>, daniel.vetter@ffwll.ch
-Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
-Message-ID: <20140417205355.GA22191@redhat.com>
-References: <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
- <20140416190404.GA7070@pd.tnic>
- <20140416203138.GA17661@google.com>
- <20140416223122.GA2767@redhat.com>
- <20140416225600.GA23781@google.com>
- <20140417104533.GB8215@pd.tnic>
- <20140417182637.GA2098@google.com>
- <20140417195240.GA18876@redhat.com>
- <20140417200127.GH4321@pd.tnic>
- <20140417200352.GB18876@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:54048 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752665AbaDCQ2n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 12:28:43 -0400
+Received: by mail-ie0-f169.google.com with SMTP id to1so2102566ieb.28
+        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 09:28:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140417200352.GB18876@redhat.com>
-Sender: linux-acpi-owner@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 3 Apr 2014 10:28:23 -0600
+Message-ID: <CAErSpo6z4D2e633umvWoSPX2BjKY5g5CAhOeqhFo27xGghncLA@mail.gmail.com>
+Subject: Coverity CIDs 1195199, 1195200: mei/pci-txe.c doesn't check
+ pci_enable_msi() return value
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 17, 2014 at 04:03:52PM -0400, Dave Jones wrote:
- > On Thu, Apr 17, 2014 at 10:01:27PM +0200, Borislav Petkov wrote:
- >  > On Thu, Apr 17, 2014 at 03:52:40PM -0400, Dave Jones wrote:
- >  > > Just as X starts up, I see this in dmesg..
- >  > > 
- >  > > [   42.879049] [drm:cpt_serr_int_handler] *ERROR* PCH transcoder A FIFO underrun
- >  > 
- >  > FWIW, I have that too. It should be something i915-related:
- >  > 
- >  > [    0.617673] [drm] Memory usable by graphics device = 2048M
- >  > [    0.694445] i915 0000:00:02.0: irq 42 for MSI/MSI-X
- >  > [    0.694549] [drm] Supports vblank timestamp caching Rev 2 (21.10.2013).
- >  > [    0.694631] [drm] Driver supports precise vblank timestamp query.
- >  > [    0.695313] vgaarb: device changed decodes: PCI:0000:00:02.0,olddecodes=io+mem,decodes=io+mem:owns=io+mem
- >  > [    0.788300] [drm] GMBUS [i915 gmbus dpb] timed out, falling back to bit banging on pin 5
- >  > [    0.799829] fbcon: inteldrmfb (fb0) is primary device
- >  > [    1.176845] [drm:cpt_serr_int_handler] *ERROR* PCH transcoder A FIFO underrun
- > 
- > Can you send me your .config off-list ?
- > I wonder if this is something config specific that's causing me to see
- > this, and you not, given we've apparently got similar machines.
+Coverity complains that mei_txe_probe() and mei_txe_pci_resume() call
+pci_enable_msi() without checking the result.  They do check
+indirectly, by testing pci_dev_msi_enabled(), but it would be nicer to
+check the pci_enable_msi() result directly:
 
-ok, with your config I get back to a console after the modesetting
-switch, but then it hangs in USB init.
+112        pci_enable_msi(pdev);
+113
+114        /* clear spurious interrupts */
+115        mei_clear_interrupts(dev);
+116
+117        /* request and enable interrupt  */
+118        if (pci_dev_msi_enabled(pdev))
 
-Hrmm.
+These are CIDs 1195199 and 1195200.
 
-	Dave
-
+Bjorn
