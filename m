@@ -1,120 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:35098 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505AbaDDXcB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 19:32:01 -0400
-Received: by mail-pa0-f41.google.com with SMTP id fa1so4116274pad.14
-        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 16:32:00 -0700 (PDT)
-Date: Fri, 4 Apr 2014 17:31:57 -0600
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:55275 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753382AbaDCWHQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 18:07:16 -0400
+Received: by mail-ie0-f176.google.com with SMTP id rd18so2485091iec.7
+        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 15:07:15 -0700 (PDT)
+Date: Thu, 3 Apr 2014 16:07:13 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 1/2] PCI: rename pci_is_bridge() to pci_has_subordinate()
-Message-ID: <20140404233157.GA15806@google.com>
-References: <1394789889-11500-1-git-send-email-wangyijing@huawei.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	Liviu.Dudau@arm.com, linux-pci@vger.kernel.org, mohit.kumar@st.com
+Subject: Re: [PATCH 0/3] ARM: PCI: implement virtual PCI host controller
+Message-ID: <20140403220713.GA23545@google.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394789889-11500-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 05:38:09PM +0800, Yijing Wang wrote:
-> pci_is_bridge() return true only when the device subordinate
-> is not equal to NULL. This confuses people. PCI device is a
-> bridge means header type(bit 0 through 6) is 0x1(PCI bridge) or 
-> 0x2(CardBus bridge).
+On Tue, Feb 04, 2014 at 04:53:01PM +0000, Will Deacon wrote:
+> Hello,
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/pci-acpi.c   |    5 -----
->  drivers/pci/pci-driver.c |    8 ++++----
->  drivers/pci/pci.h        |    2 +-
->  3 files changed, 5 insertions(+), 10 deletions(-)
+> This small set of patches brings PCI support to mach-virt based upon an
+> idealised host controller (see patch 2 for more details).
 > 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index f49abef..4bc7971 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -309,11 +309,6 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
->  	bool check_children;
->  	u64 addr;
->  
-> -	/*
-> -	 * pci_is_bridge() is not suitable here, because pci_dev->subordinate
-> -	 * is set only after acpi_pci_find_device() has been called for the
-> -	 * given device.
-> -	 */
-
-This hunk shouldn't be here.  My guess is that you intended to replace
-the code below with the new pci_is_bridge() that you introduced in
-patch [2/2].  That new pci_is_bridge() is never used, and it does the
-same hdr_type test as the code below.  But you apparently forgot to
-change this code to use it?
-
->  	check_children = pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE
->  			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
->  	/* Please ref to ACPI spec for the syntax of _ADR */
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 25f0bc6..019dcb2 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -580,14 +580,14 @@ static void pci_pm_default_resume(struct pci_dev *pci_dev)
->  {
->  	pci_fixup_device(pci_fixup_resume, pci_dev);
->  
-> -	if (!pci_is_bridge(pci_dev))
-> +	if (!pci_has_subordinate(pci_dev))
-
-The rest of this is a simple rename and looks fine to me.
-
->  		pci_enable_wake(pci_dev, PCI_D0, false);
->  }
->  
->  static void pci_pm_default_suspend(struct pci_dev *pci_dev)
->  {
->  	/* Disable non-bridge devices without PM support */
-> -	if (!pci_is_bridge(pci_dev))
-> +	if (!pci_has_subordinate(pci_dev))
->  		pci_disable_enabled_device(pci_dev);
->  }
->  
-> @@ -711,7 +711,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
->  
->  	if (!pci_dev->state_saved) {
->  		pci_save_state(pci_dev);
-> -		if (!pci_is_bridge(pci_dev))
-> +		if (!pci_has_subordinate(pci_dev))
->  			pci_prepare_to_sleep(pci_dev);
->  	}
->  
-> @@ -954,7 +954,7 @@ static int pci_pm_poweroff_noirq(struct device *dev)
->  			return error;
->  	}
->  
-> -	if (!pci_dev->state_saved && !pci_is_bridge(pci_dev))
-> +	if (!pci_dev->state_saved && !pci_has_subordinate(pci_dev))
->  		pci_prepare_to_sleep(pci_dev);
->  
->  	/*
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 4df38df..a3b9cc1 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -79,7 +79,7 @@ static inline void pci_wakeup_event(struct pci_dev *dev)
->  	pm_wakeup_event(&dev->dev, 100);
->  }
->  
-> -static inline bool pci_is_bridge(struct pci_dev *pci_dev)
-> +static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
->  {
->  	return !!(pci_dev->subordinate);
->  }
-> -- 
-> 1.7.1
+> This has been tested with kvmtool, for which I have a corresponding set
+> of patches which you can find in my kvmtool/pci branch at:
 > 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/will/kvmtool.git
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Once the arm64 PCI patches from Liviu have stabilised, I plan to port
+> this host controller to work there as well.
+> 
+> The main issue I can see with this code is how to describe configuration
+> space in the device-tree. I'm following the ePAPR PCI bindings (SS == 0)
+> , but this adds an ugly 'case 0:' line in the pci range parser, which
+> also exists in mainline for the pcie-designware.c driver.
+
+There was a long discussion about this (especially 2/3), and I didn't
+follow it closely enough to get the resolution, and I don't think I
+picked up the patches.
+
+Can you post them again if they're still applicable?
+
+Thanks,
+  Bjorn
