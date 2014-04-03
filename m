@@ -1,214 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:36690 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751924AbaDVMyP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 08:54:15 -0400
-Date: Tue, 22 Apr 2014 13:54:12 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [RFC PATCH 1/2] PCI: designware: Add ARM64 PCI support
-Message-ID: <20140422125412.GF865@e106497-lin.cambridge.arm.com>
-References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
- <000901cf592e$563bc8c0$02b35a40$%han@samsung.com>
- <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
- <16730530.rJ9T0MsYmt@wuerfel>
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:36865 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932550AbaDCBvh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Apr 2014 21:51:37 -0400
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 3 Apr 2014 07:21:34 +0530
+Date: Thu, 3 Apr 2014 09:51:30 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	netdev <netdev@vger.kernel.org>, yevgenyp@mellanox.com,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Amir Vadai <amirv@mellanox.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] net/mlx4_core: match pci_device_id including dynids
+Message-ID: <20140403015130.GA6151@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1396326961-20395-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <CAErSpo4yj+31puKhnxJ9Dns4c-1cWoUxxQt+OTDQDCGuuksOAw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <16730530.rJ9T0MsYmt@wuerfel>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4yj+31puKhnxJ9Dns4c-1cWoUxxQt+OTDQDCGuuksOAw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 16, 2014 at 07:26:15PM +0100, Arnd Bergmann wrote:
-> On Wednesday 16 April 2014 17:57:24 Liviu Dudau wrote:
-> > Jingoo,
-> > 
-> > Thanks for taking a stab at trying to convert a host bridge
-> > driver to use the new generic host bridge code.
-> > 
-> > I do however have concerns on the direction you took. You have split
-> > your driver in two, depending on whether it was CONFIG_ARM or CONFIG_ARM64,
-> > even if (with my series) it should be no reason why the host bridge
-> > driver should not work on other architectures as well once they are
-> > converted.
-> 
-> Right.
-> 
-> > Also, some of the functions that you use have identical names but different
-> > signatures depending on what arch you have selected. This is really bad
-> > in my books!
-> 
-> It's only the sys_to_pcie() function, right?
+On Wed, Apr 02, 2014 at 12:28:46PM -0600, Bjorn Helgaas wrote:
+>On Mon, Mar 31, 2014 at 10:36 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> Fix issue introduced by commit: 97a5221 "net/mlx4_core: pass
+>> pci_device_id.driver_data to __mlx4_init_one during reset".
+>>
+>> pci_match_id() just match the static pci_device_id, which may return NULL if
+>> someone binds the driver to a device manually using
+>> /sys/bus/pci/drivers/.../new_id.
+>>
+>> This patch match pci_device_id with pci_match_device() to cover both dynids
+>> and static id_table.
+>>
+>> Thanks to Bjorn finding this issue.
+>
+>I didn't actually find it; I just passed along an issue found by
+>Coverity.  I usually include "Found by Coverity (CID 1194947)" in the
+>changelog in case anybody is trying to manage those issues.
+>
+>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Amir Vadai <amirv@mellanox.com>
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> Acked-by: Amir Vadai <amirv@mellanox.com>
+>> ---
+>>  drivers/net/ethernet/mellanox/mlx4/main.c |    4 +++-
+>>  drivers/pci/pci-driver.c                  |    3 ++-
+>>  include/linux/pci.h                       |    2 ++
+>>  3 files changed, 7 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+>> index aa54ef7..b0edb5c 100644
+>> --- a/drivers/net/ethernet/mellanox/mlx4/main.c
+>> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+>> @@ -2673,7 +2673,9 @@ static pci_ers_result_t mlx4_pci_slot_reset(struct pci_dev *pdev)
+>>         const struct pci_device_id *id;
+>>         int ret;
+>>
+>> -       id = pci_match_id(mlx4_pci_table, pdev);
+>> +       id = pci_match_device(pci_dev_driver(pdev), pdev);
+>> +       BUG_ON(!id);
+>
+>This doesn't seem like the best solution to me, because it basically
+>duplicates part of __pci_device_probe() in the driver.  And of course,
+>I'd rather not export pci_match_device() if we can avoid it (I don't
+>have a specific objection; just the general "don't export more than
+>necessary" rule, and something with a single user always makes me look
+>twice).
 
-Right.
+Agree, we should be careful to export a function.
 
-> 
-> You can probably simplify that to take a void pointer and have only one line
-> difference.
-> 
-> > What about creating functions that use my series directly if CONFIG_ARM64 is
-> > defined (or any CONFIG_ you want to create for your driver that you select
-> > from CONFIG_ARM64) and otherwise implement the CONFIG_ARM version? That
-> > way your driver will call only one API without any #ifdef and when arm code
-> > gets converted you drop your adaptation functions. Or (better yet), have a
-> > stab at converting bios32 (Rob Herring has already provided some hints on
-> > how to do it for arch/arm).
-> 
-> That would of course be best.
-> 
-> > To give an example on how things are not going well in your version (not obvious
-> > from your patch, but you can see it once you apply it): dw_pcie_host_init()
-> > will still carry the handcoded version of DT parsing and that is not guarded
-> > against CONFIG_ARM64 being defined, where the parsing will happen again
-> > when you call of_create_pci_host_bridge().
-> 
-> How about making the generic DT parsing code from of_create_pci_host_bridge()
-> an exported function that can be called by drivers that don't use
-> of_create_pci_host_bridge?
+>
+>I looked at all the .error_detected() methods in the tree, and I think
+>mlx4_pci_err_detected() is the only one that actually throws away the
+>pci_drvdata().  Most drivers just do pci_disable_device() and some
+>other housekeeping.  Can you do something similar?
 
-Yes, I guess that should ease the transition to the new code even if the function
-should not be needed for the users of the framework.
+Change mlx4_remove_one() to have just pci_disable_device() is a big decisioin.
+I believe Or and Amir will have better ideas.
 
-> 
-> > Speaking of the handcoded DT parsing of resources: you are using restype == 0
-> > as a way of selecting config space, *and then split the range size into two
-> > halves*. From what Jason Gunthorpe and Arnd were saying, config ranges in the DT
-> > tree should only be used for ECAM space, so no split is allowed.
-> > 
-> > Arnd, are you allowing this non-standard use to creep in the bindings?
-> 
-> I fear it's too late to change that now. In retrospect we probably shoulnd't
-> have defined the binding like that.
+>
+>The mlx4 approach of completely tearing down and rebuilding the device
+>*is* sort of appealing because I'm a little dubious of assuming that
+>any driver setup done before the reset is still valid afterwards.  But
+>maybe you could at least hang onto the pci_device_id.driver_data
+>value?  As far as the PCI core is concerned, it supplied that to the
+>.probe() function, and nothing has changed since then, so there's no
+>reason for a driver to request it again.
 
-OK, but I'm going to NAK the driver using the same tricks for arm64. Jingoo will
-need to come up with an upgrade path where he has the config space described in
-the reg property and parses that if CONFIG_ARM64 is enabled.
+Hmm... so you suggest every driver better do what mlx4_core does? Clear/Reset
+the device? This is reasonable to me, while one case comes into my mind --
+SRIOV. For example this PF triggers an error and be reported the error. If we
+tear down the PF, we should remove all the VFs too. This means once the PF
+gets into an error, all the PF and VFs should be cleared/reset, no matter
+whether the VFs are healthy or not. So there is no chance to isolate PF and
+VFs. I guess this is not what we want to achieve for SRIOV. Is my
+understanding correct?
 
-> 
-> Overall, my impression of the patch is that it should be possible to do
-> the same with much fewer #ifdefs by first rearranging the code in one patch
-> and then doing another patch on top to add the generic arm64 support.
+Come back to the issue in this patch, one quick fix in my mind is after tear
+down the device and release the driver_data, we build another one and save the
+pci_dev_data in it again. Will send this version for comments.
 
-Agree.
-
-Best regards,
-Liviu
-
-> 
-> > > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > > index 6d23d8c..fac0440 100644
-> > > --- a/drivers/pci/host/pcie-designware.c
-> > > +++ b/drivers/pci/host/pcie-designware.c
-> > > @@ -65,14 +65,27 @@
-> > >  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
-> > >  #define PCIE_ATU_UPPER_TARGET		0x91C
-> > >  
-> > > +#ifdef CONFIG_ARM
-> > >  static struct hw_pci dw_pci;
-> > > +#endif
-> > >  
-> > >  static unsigned long global_io_offset;
-> > >  
-> > > +#ifdef CONFIG_ARM
-> > >  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
-> > >  {
-> > >  	return sys->private_data;
-> > >  }
-> > > +#endif
-> > > +
-> > > +#ifdef CONFIG_ARM64
-> > > +static inline struct pcie_port *sys_to_pcie(struct pcie_port *pp)
-> > > +{
-> > > +	return pp;
-> > > +}
-> > > +
-> > > +static struct pci_ops dw_pcie_ops;
-> > > +#endif
-> > >  
-> > >  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
-> > >  {
-> > > @@ -381,7 +394,9 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
-> > >  {
-> > >  	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
-> > >  	irq_set_chip_data(irq, domain->host_data);
-> > > +#ifdef CONFIG_ARM
-> > >  	set_irq_flags(irq, IRQF_VALID);
-> > > +#endif
-> > >  
-> > >  	return 0;
-> > >  }
-> > > @@ -397,6 +412,10 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> > >  	struct of_pci_range_parser parser;
-> > >  	u32 val;
-> > >  	int i;
-> > > +#ifdef CONFIG_ARM64
-> > > +	struct pci_host_bridge *bridge;
-> > > +	resource_size_t lastbus;
-> > > +#endif
-> > >  
-> > >  	if (of_pci_range_parser_init(&parser, np)) {
-> > >  		dev_err(pp->dev, "missing ranges property\n");
-> > > @@ -489,6 +508,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> > >  	val |= PORT_LOGIC_SPEED_CHANGE;
-> > >  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-> > >  
-> > > +#ifdef CONFIG_ARM
-> > >  	dw_pci.nr_controllers = 1;
-> > >  	dw_pci.private_data = (void **)&pp;
-> > >  
-> > > @@ -497,6 +517,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> > >  #ifdef CONFIG_PCI_DOMAINS
-> > >  	dw_pci.domain++;
-> > >  #endif
-> > > +#endif
-> > > +
-> > > +#ifdef CONFIG_ARM64
-> > > +	bridge = of_create_pci_host_bridge(pp->dev, &dw_pcie_ops, pp);
-> > > +	if (IS_ERR_OR_NULL(bridge))
-> > > +		return PTR_ERR(bridge);
-> > > +
-> > > +	lastbus = pci_rescan_bus(bridge->bus);
-> > > +	pci_bus_update_busn_res_end(bridge->bus, lastbus);
-> > > +#endif
-> > >  
-> > >  	return 0;
-> > >  }
-> > > @@ -695,6 +725,7 @@ static struct pci_ops dw_pcie_ops = {
-> > >  	.write = dw_pcie_wr_conf,
-> > >  };
-> > >  
-> > > +#ifdef CONFIG_ARM
-> > >  static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> > >  {
-> > >  	struct pcie_port *pp;
-> > > @@ -758,6 +789,7 @@ static struct hw_pci dw_pci = {
-> > >  	.map_irq	= dw_pcie_map_irq,
-> > >  	.add_bus	= dw_pcie_add_bus,
-> > >  };
-> > > +#endif /* CONFIG_ARM */
-> > >  
-> > >  void dw_pcie_setup_rc(struct pcie_port *pp)
-> 
-> 
-> 
-> 
-> 
+>
+>Bjorn
+>
+>>         ret = __mlx4_init_one(pdev, id->driver_data);
+>>
+>>         return ret ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 25f0bc6..1ee26a1 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -225,7 +225,7 @@ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
+>>   * system is in its list of supported devices.  Returns the matching
+>>   * pci_device_id structure or %NULL if there is no match.
+>>   */
+>> -static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
+>> +const struct pci_device_id *pci_match_device(struct pci_driver *drv,
+>>                                                     struct pci_dev *dev)
+>>  {
+>>         struct pci_dynid *dynid;
+>> @@ -1355,6 +1355,7 @@ postcore_initcall(pci_driver_init);
+>>
+>>  EXPORT_SYMBOL_GPL(pci_add_dynid);
+>>  EXPORT_SYMBOL(pci_match_id);
+>> +EXPORT_SYMBOL(pci_match_device);
+>>  EXPORT_SYMBOL(__pci_register_driver);
+>>  EXPORT_SYMBOL(pci_unregister_driver);
+>>  EXPORT_SYMBOL(pci_dev_driver);
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 44f6883..8ede1b5 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1134,6 +1134,8 @@ int pci_add_dynid(struct pci_driver *drv,
+>>                   unsigned long driver_data);
+>>  const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
+>>                                          struct pci_dev *dev);
+>> +const struct pci_device_id *pci_match_device(struct pci_driver *drv,
+>> +                                                   struct pci_dev *dev);
+>>  int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+>>                     int pass);
+>>
+>> --
+>> 1.7.9.5
+>>
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Richard Yang
+Help you, Help me
 
