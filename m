@@ -1,53 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16058 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752822AbaDCQzZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Apr 2014 12:55:25 -0400
-Message-ID: <1396544123.3215.8.camel@ul30vt.home>
-Subject: Re: Coverity CID 714665: vfio_ext_cap_len() use of uninitialized
- variable
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 03 Apr 2014 10:55:23 -0600
-In-Reply-To: <CAErSpo4-sW3Ge55oAzz=Xm1rbU1UZWQ=jBKUtL28yeTx-YOapw@mail.gmail.com>
-References: <CAErSpo79w7n=kOUM7D+USA7tHGJ50Sggndun=LwTkeirVqKfvg@mail.gmail.com>
-	 <CAErSpo4-sW3Ge55oAzz=Xm1rbU1UZWQ=jBKUtL28yeTx-YOapw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:61976 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751577AbaDCWgN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 18:36:13 -0400
+Received: by mail-ig0-f182.google.com with SMTP id uy17so196250igb.15
+        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 15:36:13 -0700 (PDT)
+Date: Thu, 3 Apr 2014 16:36:09 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Andrew Murray <amurray@embedded-bits.co.uk>
+Cc: linux-pci@vger.kernel.org, mohit.kumar@st.com, jg1.han@samsung.com
+Subject: Re: [PATCH] PCI: designware: Remove unnecessary use of 'conf_lock'
+ spinlock
+Message-ID: <20140403223609.GC23545@google.com>
+References: <1392932494-21630-1-git-send-email-amurray@embedded-bits.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392932494-21630-1-git-send-email-amurray@embedded-bits.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-04-03 at 10:48 -0600, Bjorn Helgaas wrote:
-> On Thu, Apr 3, 2014 at 9:53 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > Coverity complains that "byte" is used uninitialized in
-> > drivers/vfio/pci/vfio_pci_config.c in vfio_ext_cap_len():
-> >
-> > 1139                        sts = byte & PCI_TPH_CAP_ST_MASK;
-> > 1140                        sts >>= PCI_TPH_CAP_ST_SHIFT;
-> > 1141                        return PCI_TPH_BASE_SIZEOF + round_up(sts * 2, 4);
-> >
-> > This is CID 714665.
+On Thu, Feb 20, 2014 at 09:41:34PM +0000, Andrew Murray wrote:
+> Serialization of configuration accesses is provided by 'pci_lock' in
+> drivers/pci/access.c thus making the driver's 'conf_lock' superfluous.
 > 
-> I think "dword" was probably intended instead of "byte".  Changing
-> that would also fix CID 715156:
+> Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
+
+Applied with Jingoo and Richard's acks to my pci/pending branch for v3.16.
+After v3.15-rc1, I'll sort it into pci/host-mvebu as usual.  Thanks!
+
+> ---
+>  drivers/pci/host/pci-exynos.c      | 1 -
+>  drivers/pci/host/pci-imx6.c        | 1 -
+>  drivers/pci/host/pcie-designware.c | 6 ------
+>  drivers/pci/host/pcie-designware.h | 1 -
+>  4 files changed, 9 deletions(-)
 > 
-> 1136                if ((dword & PCI_TPH_CAP_LOC_MASK) == PCI_TPH_LOC_CAP) {
-> 1137                        int sts;
-> 1138
->     CID 714665: Uninitialized scalar variable (UNINIT) [select issue]
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index 3de6bfb..32c6d56 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -546,7 +546,6 @@ static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+>  	pp->root_bus_nr = -1;
+>  	pp->ops = &exynos_pcie_host_ops;
+>  
+> -	spin_lock_init(&pp->conf_lock);
+>  	ret = dw_pcie_host_init(pp);
+>  	if (ret) {
+>  		dev_err(&pdev->dev, "failed to initialize host\n");
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index e8663a8..77588f1 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -480,7 +480,6 @@ static int imx6_add_pcie_port(struct pcie_port *pp,
+>  	pp->root_bus_nr = -1;
+>  	pp->ops = &imx6_pcie_host_ops;
+>  
+> -	spin_lock_init(&pp->conf_lock);
+>  	ret = dw_pcie_host_init(pp);
+>  	if (ret) {
+>  		dev_err(&pdev->dev, "failed to initialize host\n");
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 17ce88f..b25adb8 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -640,7 +640,6 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>  			int size, u32 *val)
+>  {
+>  	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+> -	unsigned long flags;
+>  	int ret;
+>  
+>  	if (!pp) {
+> @@ -653,13 +652,11 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
+>  	}
+>  
+> -	spin_lock_irqsave(&pp->conf_lock, flags);
+>  	if (bus->number != pp->root_bus_nr)
+>  		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
+>  						where, size, val);
+>  	else
+>  		ret = dw_pcie_rd_own_conf(pp, where, size, val);
+> -	spin_unlock_irqrestore(&pp->conf_lock, flags);
+>  
+>  	return ret;
+>  }
+> @@ -668,7 +665,6 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+>  			int where, int size, u32 val)
+>  {
+>  	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+> -	unsigned long flags;
+>  	int ret;
+>  
+>  	if (!pp) {
+> @@ -679,13 +675,11 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
+>  
+> -	spin_lock_irqsave(&pp->conf_lock, flags);
+>  	if (bus->number != pp->root_bus_nr)
+>  		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
+>  						where, size, val);
+>  	else
+>  		ret = dw_pcie_wr_own_conf(pp, where, size, val);
+> -	spin_unlock_irqrestore(&pp->conf_lock, flags);
+>  
+>  	return ret;
+>  }
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index 3063b35..a10747d 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -41,7 +41,6 @@ struct pcie_port {
+>  	void __iomem		*va_cfg1_base;
+>  	u64			io_base;
+>  	u64			mem_base;
+> -	spinlock_t		conf_lock;
+>  	struct resource		cfg;
+>  	struct resource		io;
+>  	struct resource		mem;
+> -- 
+> 1.8.3.2
 > 
-> CID 715156 (#1 of 1): Operands don't affect result (CONSTANT_EXPRESSION_RESULT)
-> result_independent_of_operands: byte & 0x7ff0000 is always 0
-> regardless of the values of its operands. This occurs as the operand
-> of assignment.
-> 1139                        sts = byte & PCI_TPH_CAP_ST_MASK;
-
-Yes, using byte looks like a cut-n-paste error, it should have been
-dword.  The size calculation also looks wrong since the field is an N-1
-value but we don't seem to be incrementing it.  I'll post a patch that
-fixes both.  Thanks,
-
-Alex
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
