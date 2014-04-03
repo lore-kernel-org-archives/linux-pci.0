@@ -1,54 +1,34 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 29 Apr 2014 21:16:03 +0200
-From: Borislav Petkov <bp@suse.de>
-To: Myron Stowe <myron.stowe@gmail.com>
-Cc: Myron Stowe <myron.stowe@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	kim.naru@amd.com, daniel@numascale.com,
-	Thomas Gleixner <tglx@linutronix.de>, mingo@redhat.com,
-	hpa@zytor.com, x86 <x86@kernel.org>, sp@numascale.com,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 4/5] ACPI/PCI: Warn if we have to "guess" host bridge
- node information
-Message-ID: <20140429191603.GC4726@pd.tnic>
-References: <20140419025308.2408.51252.stgit@amt.stowe>
- <20140419025339.2408.17866.stgit@amt.stowe>
- <20140420102105.GA19676@pd.tnic>
- <CAL-B5D1MRjOGZJ-1PmDmkmqD2nG4+xhwWWsfib_E4-PFuKEkhw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:39086 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751175AbaDCUnZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 16:43:25 -0400
+Received: by mail-ig0-f175.google.com with SMTP id ur14so79242igb.2
+        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 13:43:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAL-B5D1MRjOGZJ-1PmDmkmqD2nG4+xhwWWsfib_E4-PFuKEkhw@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 3 Apr 2014 14:43:05 -0600
+Message-ID: <CAErSpo6JNDFiV6tmDKKDdnod+skBHx6T-+JGvjCRRLsL98h_uQ@mail.gmail.com>
+Subject: Coverity CID 142811: pci_set_vga_state() operands don't affect result
+To: Dave Airlie <airlied@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 28, 2014 at 03:24:39PM -0600, Myron Stowe wrote:
-> >> @@ -489,8 +489,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-> >>       }
-> >>
-> >>       node = acpi_get_node(device->handle);
-> >> -     if (node == NUMA_NO_NODE)
-> >> +     if (node == NUMA_NO_NODE) {
-> >>               node = x86_pci_root_bus_node(busnum);
-> >> +             if (node != NUMA_NO_NODE)
-> >> +                     dev_info(&device->dev, FW_BUG "No _PXM; guessing node number %x\n",
-> >
-> > Hmm, I'm not really convinced this message is user-friendly enough. Can
-> > we be more descriptive here please?
-> >
-> 
-> How about -
->   dev_info(&device->dev, FW_BUG "no _PXM; falling back to node %d from
-> hardware (may be inconsistent with ACPI node numbers)\n", node);
+Coverity complains about this in drivers/pci/pci.c:
 
-Yep, better.
+CID 142811 (#1 of 1): Operands don't affect result (CONSTANT_EXPRESSION_RESULT)
+result_independent_of_operands: flags & (2U /* 1 << 1 */) &
+(command_bits & 4294967292U /* ~(1 | 2) */) is always 0 regardless of
+the values of its operands. This occurs as the logical operand of if.
 
--- 
-Regards/Gruss,
-    Boris.
+4128        WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) &
+(command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+This is a result of 3448a19da479 "vgaarb: use bridges to control VGA
+routing where possible."
+
+I wonder if that middle "&" was intended to be "&&"?
+
+Bjorn
