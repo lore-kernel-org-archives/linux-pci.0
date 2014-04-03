@@ -1,105 +1,27 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:46390 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989AbaDZGBf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 Apr 2014 02:01:35 -0400
-Date: Sat, 26 Apr 2014 08:01:30 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, David Airlie <airlied@linux.ie>,
-	Bodo Eggert <7eggert@gmx.de>, x86@kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] x86/gart: Tidy messages and add bridge device info
-Message-ID: <20140426060130.GA1698@gmail.com>
-References: <20140425171144.312.9601.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140425171655.312.97511.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:35303 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752626AbaDCPxo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 11:53:44 -0400
+Received: by mail-ig0-f175.google.com with SMTP id ur14so7942030igb.8
+        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 08:53:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140425171655.312.97511.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 3 Apr 2014 09:53:23 -0600
+Message-ID: <CAErSpo79w7n=kOUM7D+USA7tHGJ50Sggndun=LwTkeirVqKfvg@mail.gmail.com>
+Subject: Coverity CID 714665: vfio_ext_cap_len() use of uninitialized variable
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Coverity complains that "byte" is used uninitialized in
+drivers/vfio/pci/vfio_pci_config.c in vfio_ext_cap_len():
 
-* Bjorn Helgaas <bhelgaas@google.com> wrote:
+1139                        sts = byte & PCI_TPH_CAP_ST_MASK;
+1140                        sts >>= PCI_TPH_CAP_ST_SHIFT;
+1141                        return PCI_TPH_BASE_SIZEOF + round_up(sts * 2, 4);
 
-> Print the AGP bridge info the same way as the rest of the kernel, e.g.,
-> "0000:00:04.0" instead of "00:04:00".
-> 
-> Also print the AGP aperture address range the same way we print resources,
-> and label it explicitly as a bus address range.
-> 
-> No functional change.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/x86/kernel/aperture_64.c |   20 ++++++++++++--------
->  1 file changed, 12 insertions(+), 8 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/aperture_64.c b/arch/x86/kernel/aperture_64.c
-> index 9fa8aa051f54..4dd76d3df056 100644
-> --- a/arch/x86/kernel/aperture_64.c
-> +++ b/arch/x86/kernel/aperture_64.c
-> @@ -126,10 +126,12 @@ static u32 __init read_agp(int bus, int slot, int func, int cap, u32 *order)
->  	u64 aper;
->  	u32 old_order;
->  
-> -	printk(KERN_INFO "AGP bridge at %02x:%02x:%02x\n", bus, slot, func);
-> +	printk(KERN_INFO "pci 0000:%02x:%02x.%d: AGP bridge\n", bus, slot,
-> +	       func);
-
-Please leave it on a single line - checkpatch warning nonwithstanding. 
-pr_info() is also useful.
-
->  	apsizereg = read_pci_config_16(bus, slot, func, cap + 0x14);
->  	if (apsizereg == 0xffffffff) {
-> -		printk(KERN_ERR "APSIZE in AGP bridge unreadable\n");
-> +		printk(KERN_ERR "pci 0000:%02x:%02x.%d: APSIZE unreadable\n",
-> +		       bus, slot, func);
-
-Here too you can also use pr_err() to shorten the line.
-
->  		return 0;
->  	}
->  
-> @@ -153,16 +155,18 @@ static u32 __init read_agp(int bus, int slot, int func, int cap, u32 *order)
->  	 * On some sick chips, APSIZE is 0. It means it wants 4G
->  	 * so let double check that order, and lets trust AMD NB settings:
->  	 */
-> -	printk(KERN_INFO "Aperture from AGP @ %Lx old size %u MB\n",
-> -			aper, 32 << old_order);
-> +	printk(KERN_INFO "pci 0000:%02x:%02x.%d: AGP aperture [bus %Lx-%Lx] old size %u MB\n",
-> +	       bus, slot, func, aper, aper + (32 << old_order) - 1,
-> +	       32 << old_order);
->  	if (aper + (32ULL<<(20 + *order)) > 0x100000000ULL) {
-> -		printk(KERN_INFO "Aperture size %u MB (APSIZE %x) is not right, using settings from NB\n",
-> -				32 << *order, apsizereg);
-> +		printk(KERN_INFO "pci 0000:%02x:%02x.%d: AGP aperture size %u MB (APSIZE %x) is not right, using settings from NB\n",
-> +		       bus, slot, func, 32 << *order, apsizereg);
->  		*order = old_order;
->  	}
->  
-> -	printk(KERN_INFO "Aperture from AGP @ %Lx size %u MB (APSIZE %x)\n",
-> -			aper, 32 << *order, apsizereg);
-> +	printk(KERN_INFO "pci 0000:%02x:%02x.%d: AGP aperture [bus %Lx-%Lx] size %u MB (APSIZE %x)\n",
-> +	       bus, slot, func, aper, aper + (32 << *order) - 1, 32 << *order,
-> +	       apsizereg);
->  
->  	if (!aperture_valid(aper, (32*1024*1024) << *order, 32<<20))
->  		return 0;
-
-Also, you could add:
-
-#define PREFIX "PCI/gart: "
-
-or something like that, to define a standard prefix for these 
-messages.
-
-Btw., this file could be moved to arch/x86/pci/?
-
-Otherwise:
-
-  Acked-by: Ingo Molnar <mingo@kernel.org>
-
-Thanks,
-
-	Ingo
+This is CID 714665.
