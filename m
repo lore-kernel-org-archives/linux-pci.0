@@ -1,65 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Rui Wang <rui.y.wang@intel.com>
-To: bhelgaas@google.com, tony.luck@intel.com,
-	rafael.j.wysocki@intel.com
-Cc: ruiv.wang@gmail.com, chaohong.guo@intel.com, dave.hansen@intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Rui Wang <rui.y.wang@intel.com>
-Subject: [PATCH v3 0/5] I/O Hook: Trace h/w access and emulate h/w events
-Date: Tue, 15 Apr 2014 21:48:06 +0800
-Message-Id: <1397569691-24691-1-git-send-email-rui.y.wang@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:53089 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752679AbaDCQsw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 12:48:52 -0400
+Received: by mail-ig0-f177.google.com with SMTP id ur14so2059336igb.10
+        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 09:48:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo79w7n=kOUM7D+USA7tHGJ50Sggndun=LwTkeirVqKfvg@mail.gmail.com>
+References: <CAErSpo79w7n=kOUM7D+USA7tHGJ50Sggndun=LwTkeirVqKfvg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 3 Apr 2014 10:48:32 -0600
+Message-ID: <CAErSpo4-sW3Ge55oAzz=Xm1rbU1UZWQ=jBKUtL28yeTx-YOapw@mail.gmail.com>
+Subject: Re: Coverity CID 714665: vfio_ext_cap_len() use of uninitialized variable
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
-This is the 3rd version of I/O Hook, a patch set aimed at intercepting
-h/w access by the OS. Some examples of how it can be used:
-        1) To emulate h/w events (e.g. hotplug)
-        2) To inject h/w errors to the kernel
-        3) To trace h/w access by the OS for performance tuning or debugging.
-Details of the examples can be found in Documentation/PCI/iohook.txt.
+On Thu, Apr 3, 2014 at 9:53 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Coverity complains that "byte" is used uninitialized in
+> drivers/vfio/pci/vfio_pci_config.c in vfio_ext_cap_len():
+>
+> 1139                        sts = byte & PCI_TPH_CAP_ST_MASK;
+> 1140                        sts >>= PCI_TPH_CAP_ST_SHIFT;
+> 1141                        return PCI_TPH_BASE_SIZEOF + round_up(sts * 2, 4);
+>
+> This is CID 714665.
 
-A set of user space tools using I/O Hook for various use cases will be hosted
-on https://github.com/iohook. It initially contains inject-aer which takes the
-trace event output of /sys/kernel/debug/tracing/events/ras/aer_event/ and
-regenerate the same PCIE AER event so that PCIE AER can be easily tested.
+I think "dword" was probably intended instead of "byte".  Changing
+that would also fix CID 715156:
 
-Changes since v2:
-        - Added the hook for MSRs (can specify a cpu number)
-        - Can trigger IPI by a vector (so that exceptions can be emulated)
-        - Defined iohook_event as the trace event to trace h/w access. A new
-          attribute 'tc' can be defined for any Register Override for tracing
-          purpose.
+1136                if ((dword & PCI_TPH_CAP_LOC_MASK) == PCI_TPH_LOC_CAP) {
+1137                        int sts;
+1138
+    CID 714665: Uninitialized scalar variable (UNINIT) [select issue]
 
-Rui Wang (5):
-  I/O Hook: core functions and Register Override
-  I/O Hook: Help functions to manage the hook
-  I/O Hook: sysfs interface to emulate h/w events
-  I/O Hook: Override MSRs while triggering MCEs
-  IO Hook: Tracing hw access
+CID 715156 (#1 of 1): Operands don't affect result (CONSTANT_EXPRESSION_RESULT)
+result_independent_of_operands: byte & 0x7ff0000 is always 0
+regardless of the values of its operands. This occurs as the operand
+of assignment.
+1139                        sts = byte & PCI_TPH_CAP_ST_MASK;
 
- Documentation/PCI/iohook.txt      |  353 ++++++++++
- arch/Kconfig                      |   10 +
- arch/x86/boot/compressed/Makefile |    1 +
- arch/x86/include/asm/io.h         |   57 ++-
- arch/x86/include/asm/msr.h        |  100 +++-
- arch/x86/lib/msr-smp.c            |   31 +
- arch/x86/vdso/Makefile            |    2 +
- drivers/misc/Makefile             |    1 +
- drivers/misc/iohook/Makefile      |    1 +
- drivers/misc/iohook/iohook.c      | 1367 +++++++++++++++++++++++++++++++++++++
- drivers/misc/iohook/iohook.h      |    6 +
- drivers/pci/access.c              |   66 ++
- include/linux/reg_ovrd.h          |   55 ++
- include/trace/events/iohook.h     |   58 ++
- 14 files changed, 2101 insertions(+), 7 deletions(-)
- create mode 100644 Documentation/PCI/iohook.txt
- create mode 100644 drivers/misc/iohook/Makefile
- create mode 100644 drivers/misc/iohook/iohook.c
- create mode 100644 drivers/misc/iohook/iohook.h
- create mode 100644 include/linux/reg_ovrd.h
- create mode 100644 include/trace/events/iohook.h
-
--- 
-1.7.5.4
-
+Bjorn
