@@ -1,181 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:35542 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754349AbaDVI6a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 04:58:30 -0400
-Received: by mail-wg0-f44.google.com with SMTP id m15so3559152wgh.15
-        for <linux-pci@vger.kernel.org>; Tue, 22 Apr 2014 01:58:29 -0700 (PDT)
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:52773 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751577AbaDCWeb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 18:34:31 -0400
+Received: by mail-ie0-f179.google.com with SMTP id lx4so2484201iec.24
+        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 15:34:30 -0700 (PDT)
+Date: Thu, 3 Apr 2014 16:34:26 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Andrew Murray <amurray@embedded-bits.co.uk>
+Cc: linux-pci@vger.kernel.org, thomas.petazzoni@free-electrons.com,
+	jason@lakedaemon.net
+Subject: Re: [PATCH] PCI: mvebu: Remove unnecessary use of 'conf_lock'
+ spinlock
+Message-ID: <20140403223426.GB23545@google.com>
+References: <1392931935-21313-1-git-send-email-amurray@embedded-bits.co.uk>
 MIME-Version: 1.0
-In-Reply-To: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
-Date: Tue, 22 Apr 2014 14:28:28 +0530
-Message-ID: <CA+b37P3HqMFU6kGA+GH3YpGM_Z=TwNXL6jKu+ConR3kCk-Tp4g@mail.gmail.com>
-Subject: Re: [PATCH v7 0/3] Add support for PCI in AArch64
-From: Sandeepa Prabhu <sandeepa.prabhu@linaro.org>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392931935-21313-1-git-send-email-amurray@embedded-bits.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14 March 2014 21:04, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> Hi,
->
-> This patch adds support for PCI to AArch64. It is based on my v7 patch
-> that adds support for creating generic host bridge structure from
-> device tree. With that in place, I was able to boot a platform that
-> has PCIe host bridge support and use a PCIe network card.
-Hi Liviu,
+On Thu, Feb 20, 2014 at 09:32:15PM +0000, Andrew Murray wrote:
+> Serialization of configuration accesses is provided by 'pci_lock' in
+> drivers/pci/access.c thus making the driver's 'conf_lock' superfluous.
+> 
+> Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
 
-Are these patches (including your other patchset for device tree host
-bridge support ) available on a public git repo I can checkout from?
+Applied with Jason's ack to my pci/pending branch for v3.16.  After
+v3.15-rc1, I'll sort it into pci/host-mvebu as usual.  Thanks!
 
-Thanks,
-~Sandeepa
-
->
-> I have dropped the RFC tag from the subject as I now have the ambitious goal
-> of trying to get it mainlined.
->
-> Changes from v6:
->   - Guard the pci_domain_nr() inline implementation with #ifdef CONFIG_PCI as
->     to avoid conflict with default empty version present in include/linux/pci.h.
->     Thanks to Jingoo Han for catching this.
->
-> Changes from v5:
->   - Removed pcibios_fixup_bridge_ranges() as the week default version is fine.
->   - Removed the ALIGN() call in pcibios_align_resource()
->   - Stopped exporting pcibios_align_resource()
->
-> Changes from v4:
->   - Fixed the pci_domain_nr() implementation for arm64. Now we use
->     find_pci_host_bride() to find the host bridge before we retrieve
->     the domain number.
->
-> Changes from v3:
->   - Added Acks accumulated so far ;)
->   - Still carrying Catalin's patch for moving the PCI_IO_BASE until it
->     lands in linux-next or mainline, in order to ease applying the series
->
-> Changes from v2:
->   - Implement an arch specific version of pci_register_io_range() and
->     pci_address_to_pio().
->   - Return 1 from pci_proc_domain().
->
-> Changes from v1:
->   - Added Catalin's patch for moving the PCI_IO_BASE location and extend
->     its size to 16MB
->   - Integrated Arnd's version of pci_ioremap_io that uses a bitmap for
->     keeping track of assigned IO space and returns an io_offset. At the
->     moment the code is added in arch/arm64 but it can be moved in drivers/pci.
->   - Added a fix for the generic ioport_map() function when !CONFIG_GENERIC_IOMAP
->     as suggested by Arnd.
->
-> v6 thread here: https://lkml.org/lkml/2014/3/5/41
-> v5 thread here: https://lkml.org/lkml/2014/3/4/307
-> v4 thread here: https://lkml.org/lkml/2014/3/3/298
-> v3 thread here: https://lkml.org/lkml/2014/2/28/211
-> v2 thread here: https://lkml.org/lkml/2014/2/27/255
-> v1 thread here: https://lkml.org/lkml/2014/2/3/389
->
->
-> The API used is different from the one used by ARM architecture. There is
-> no pci_common_init_dev() function and no hw_pci structure, as that is no
-> longer needed. Once the last signature is added to the legal agreement, I
-> will post the host bridge driver code that I am using. Meanwhile, here
-> is an example of what the probe function looks like, posted as an example:
->
-> static int myhostbridge_probe(struct platform_device *pdev)
-> {
->         int err;
->         struct device_node *dev;
->         struct pci_host_bridge *bridge;
->         struct myhostbridge_port *pp;
->         resource_size_t lastbus;
->
->         dev = pdev->dev.of_node;
->
->         if (!of_device_is_available(dev)) {
->                 pr_warn("%s: disabled\n", dev->full_name);
->                 return -ENODEV;
->         }
->
->         pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
->         if (!pp)
->                 return -ENOMEM;
->
->         bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
->         if (IS_ERR(bridge)) {
->                 err = PTR_ERR(bridge);
->                 goto bridge_create_fail;
->         }
->
->         err = myhostbridge_setup(bridge->bus);
->         if (err)
->                 goto bridge_setup_fail;
->
->         /* We always enable PCI domains and we keep domain 0 backward
->          * compatible in /proc for video cards
->          */
->         pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
->         pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
->
->         lastbus = pci_scan_child_bus(bridge->bus);
->         pci_bus_update_busn_res_end(bridge->bus, lastbus);
->
->         pci_assign_unassigned_bus_resources(bridge->bus);
->
->         pci_bus_add_devices(bridge->bus);
->
->         return 0;
->
-> bridge_setup_fail:
->         put_device(&bridge->dev);
->         device_unregister(&bridge->dev);
-> bridge_create_fail:
->         kfree(pp);
->         return err;
-> }
->
-> Best regards,
-> Liviu
->
->
-> Catalin Marinas (1):
->   arm64: Extend the PCI I/O space to 16MB
->
-> Liviu Dudau (2):
->   Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
->   arm64: Add architecture support for PCI
->
->  Documentation/arm64/memory.txt |  16 +--
->  arch/arm64/Kconfig             |  19 +++-
->  arch/arm64/include/asm/Kbuild  |   1 +
->  arch/arm64/include/asm/io.h    |   5 +-
->  arch/arm64/include/asm/pci.h   |  51 +++++++++
->  arch/arm64/kernel/Makefile     |   1 +
->  arch/arm64/kernel/pci.c        | 173 +++++++++++++++++++++++++++++++
->  include/asm-generic/io.h       |   2 +-
->  8 files changed, 258 insertions(+), 10 deletions(-)
->  create mode 100644 arch/arm64/include/asm/pci.h
->  create mode 100644 arch/arm64/kernel/pci.c
->
+> ---
+>  drivers/pci/host/pci-mvebu.c | 8 --------
+>  1 file changed, 8 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 13478ec..1d61182 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -119,7 +119,6 @@ struct mvebu_pcie {
+>  struct mvebu_pcie_port {
+>  	char *name;
+>  	void __iomem *base;
+> -	spinlock_t conf_lock;
+>  	u32 port;
+>  	u32 lane;
+>  	int devfn;
+> @@ -590,7 +589,6 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+>  {
+>  	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
+>  	struct mvebu_pcie_port *port;
+> -	unsigned long flags;
+>  	int ret;
+>  
+>  	port = mvebu_pcie_find_port(pcie, bus, devfn);
+> @@ -616,10 +614,8 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
+>  
+>  	/* Access the real PCIe interface */
+> -	spin_lock_irqsave(&port->conf_lock, flags);
+>  	ret = mvebu_pcie_hw_wr_conf(port, bus, devfn,
+>  				    where, size, val);
+> -	spin_unlock_irqrestore(&port->conf_lock, flags);
+>  
+>  	return ret;
+>  }
+> @@ -630,7 +626,6 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>  {
+>  	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
+>  	struct mvebu_pcie_port *port;
+> -	unsigned long flags;
+>  	int ret;
+>  
+>  	port = mvebu_pcie_find_port(pcie, bus, devfn);
+> @@ -662,10 +657,8 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>  	}
+>  
+>  	/* Access the real PCIe interface */
+> -	spin_lock_irqsave(&port->conf_lock, flags);
+>  	ret = mvebu_pcie_hw_rd_conf(port, bus, devfn,
+>  				    where, size, val);
+> -	spin_unlock_irqrestore(&port->conf_lock, flags);
+>  
+>  	return ret;
+>  }
+> @@ -985,7 +978,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+>  		mvebu_pcie_set_local_dev_nr(port, 1);
+>  
+>  		port->dn = child;
+> -		spin_lock_init(&port->conf_lock);
+>  		mvebu_sw_pci_bridge_init(port);
+>  		i++;
+>  	}
+> -- 
+> 1.8.3.2
+> 
 > --
-> 1.9.0
->
->
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
