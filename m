@@ -1,56 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42090 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750878AbaDNIEF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 04:04:05 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jayamohan Kallickal <jayamohan.kallickal@emulex.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 01/23] be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:25 +0200
-Message-Id: <e0864211a693608a8aef6590d3c720f28cea02e5.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:33599 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754393AbaDDAC4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 20:02:56 -0400
+Received: by mail-ie0-f171.google.com with SMTP id ar20so2697408iec.30
+        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 17:02:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo7uQtRXcxC-9oAS8PJ6Vi3H8Z1fVB2wQR-uxGjyoLDkCQ@mail.gmail.com>
+References: <CAErSpo7uQtRXcxC-9oAS8PJ6Vi3H8Z1fVB2wQR-uxGjyoLDkCQ@mail.gmail.com>
+Date: Thu, 3 Apr 2014 17:02:55 -0700
+Message-ID: <CAE9FiQV_ww7VAHaqhe4PuTA2WoxCaZ2vfAbr09xH0w5UkbenWw@mail.gmail.com>
+Subject: Re: Coverity CIDs 138749, 138750: cnb20le_res() unintended sign extension
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Ira W. Snyder" <iws@ovro.caltech.edu>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Thu, Apr 3, 2014 at 1:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Coverity complains about unintended sign extension in cnb20le_res() in
+> arch/x86/pci/broadcom_bus.c here:
+>
+> 60        word1 = read_pci_config_16(bus, slot, func, 0xc4);
+>  61        word2 = read_pci_config_16(bus, slot, func, 0xc6);
+>  62        if (word1 != word2) {
+>
+> CID 138749 (#1 of 2): Unintended sign extension (SIGN_EXTENSION)
+> sign_extension: Suspicious implicit sign extension: word1 with type
+> unsigned short (16 bits, unsigned) is promoted in (word1 << 16) | 0 to
+> type int (32 bits, signed), then sign-extended to type unsigned long
+> long (64 bits, unsigned). If (word1 << 16) | 0 is greater than
+> 0x7FFFFFFF, the upper bits of the result will all be 1.
+>  63                res.start = (word1 << 16) | 0x0000;
+>     CID 138750: Unintended sign extension (SIGN_EXTENSION) [select issue]
+>  64                res.end   = (word2 << 16) | 0xffff;
+>  65                res.flags = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+>  66                update_res(info, res.start, res.end, res.flags, 0);
+>  67        }
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
----
- drivers/scsi/be2iscsi/be_main.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+could just add (resource_size_t) cast for word1 word2.
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 0d82229..279b2f9 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -5282,12 +5282,10 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
- 	for (i = 0; i <= phba->num_cpus; i++)
- 		phba->msix_entries[i].entry = i;
- 
--	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
--				 (phba->num_cpus + 1));
-+	status = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
-+				       phba->num_cpus + 1);
- 	if (!status)
- 		phba->msix_enabled = true;
--
--	return;
- }
- 
- /*
--- 
-1.7.7.6
+Thanks
 
+Yinghai
