@@ -1,152 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:17361 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753033AbaDYJnt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 05:43:49 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s3P9UFQZ008847
-	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 02:43:49 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1kbkf6ac1g-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 02:43:48 -0700
-Content-Type: multipart/mixed;
-	boundary="_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EF49avmb2qlogicorg_"
-From: Shahed Shaikh <shahed.shaikh@qlogic.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: linux-kernel <linux-kernel@vger.kernel.org>,
-	Dept-HSG Linux NIC Dev <Dept-HSGLinuxNICDev@qlogic.com>,
-	netdev <netdev@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v2 net-next 2/2] qlcnic: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Date: Fri, 25 Apr 2014 09:43:46 +0000
-Message-ID: <262CB373A6D1F14F9B81E82F74F77D5A46F9EF49@avmb2.qlogic.org>
-References: <cover.1398412015.git.agordeev@redhat.com>
- <0a0d5f5c33d86e3777c22c3c1bbd81035660d57c.1398412015.git.agordeev@redhat.com>
- <262CB373A6D1F14F9B81E82F74F77D5A46F9EE54@avmb2.qlogic.org>
- <20140425090029.GA2500@dhcp-26-207.brq.redhat.com>
- <262CB373A6D1F14F9B81E82F74F77D5A46F9EEA2@avmb2.qlogic.org>
- <20140425094349.GA6397@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20140425094349.GA6397@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
+Received: from mailout4.samsung.com ([203.254.224.34]:52557 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750891AbaDDCbh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 22:31:37 -0400
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N3H00D0BJ0MW530@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Fri, 04 Apr 2014 11:31:35 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Richard Zhu' <Hong-Xing.Zhu@freescale.com>,
+	'Marek Vasut' <marex@denx.de>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	'Pratyush ANAND' <pratyush.anand@st.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <000801cf4d95$64322ef0$2c968cd0$%han@samsung.com>
+ <2CC2A0A4A178534D93D5159BF3BCB66189FEC4809B@EAPEX1MAIL1.st.com>
+ <533BA157.6030004@ti.com> <201404021234.48134.marex@denx.de>
+ <65debfc7f79a4a27a58bd7c64382881f@BLUPR03MB136.namprd03.prod.outlook.com>
+In-reply-to: <65debfc7f79a4a27a58bd7c64382881f@BLUPR03MB136.namprd03.prod.outlook.com>
+Subject: Re: [PATCH] PCI: designware: Remove unnecessary RC BAR setting
+Date: Fri, 04 Apr 2014 11:31:34 +0900
+Message-id: <000001cf4fad$ff227ae0$fd6770a0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EF49avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Wednesday, April 02, 2014 8:59 PM, Richard Zhu wrote:
+> Wednesday, April 02, 2014 6:35 PM, Marek Vasut wrote:
+> > On Wednesday, April 02, 2014 at 07:34:15 AM, Kishon Vijay Abraham I wrote:
+> > > On Wednesday 02 April 2014 11:03 AM, Mohit KUMAR DCG wrote:
+> > > > Wednesday, April 02, 2014 10:53 AM, Jingoo Han wrote:
+> > > >> On Wednesday, April 02, 2014 1:57 PM, Mohit KUMAR DCG wrote:
+> > > >>> On Tuesday, April 01, 2014 4:00 PM, Jingoo Han wrote:
+> > > >>>> According to the spec, the synopsys core does not implement the
+> > > >>>> optional BARs such as BAR0/1. This is based on the assumption
+> > > >>>> that the RC host probably has registers on some other internal
+> > > >>>> bus and has knowledge and setup access to these registers already.
+> > > >>>> So, remove unnecessary RC BAR setting.
+> > > >>>
+> > > >>> - Normally BARs in RC are not used but somehow available in the
+> > > >>> design. One possible BAR use can be if RC has some memory
+> > > >>> connected to
+> > > >>
+> > > >> the BAR that needs to be accessed through link.
+> > > >>
+> > > >>> Otherwise we can ignore BARs setup here.
+> > > >>
+> > > >> Hi Mohit KUMAR DCG,
+> > > >>
+> > > >> Thank you for your feedback.
+> > > >>
+> > > >> I want to know whether or not other SoCs such as ST, Freescale, TI
+> > > >> support BAR0/BAR1. If no SoC supports BAR0/BAR1, the unnecessary RC
+> > > >> BAR setting code should  be removed.
+> > > >
+> > > > - We are not currently using RC's BAR0/1 in any application but no
+> > > > such restriction from HW as ST SoCs support BARs in HW design.
+> > >
+> > > Neither do we in DRA7xx.
+> >
+> > I suspect that means we should keep the code to make sure the registers are
+> > configured correctly, no?
+> >
+> > Richard, can you comment on MX6 please ?
+> 
+>  [Richard] Sorry to reply late. I'm engaged in another stuff in the past days.
+> i.MX6 pcie doesn't use RC's BAR0/1 in applications either.
+> >
 
-> -----Original Message-----
-> From: Alexander Gordeev [mailto:agordeev@redhat.com]
-> Sent: Friday, April 25, 2014 3:14 PM
-> To: Shahed Shaikh
-> Cc: linux-kernel; Dept-HSG Linux NIC Dev; netdev; linux-pci
-> Subject: [PATCH v2 net-next 2/2] qlcnic: Use pci_enable_msix_exact()
-> instead of pci_enable_msix()
->=20
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers using these two
-> interfaces need to be updated to use the new pci_enable_msi_range()  or
-> pci_enable_msi_exact() and pci_enable_msix_range() or
-> pci_enable_msix_exact() interfaces.
->=20
-> Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
-> Cc: Dept-HSGLinuxNICDev@qlogic.com
-> Cc: netdev@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
->=20
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: Shahed Shaikh <shahed.shaikh@qlogic.com>
+Thank you all for your comments!
 
-Thanks,
-Shahed
+I noticed that Synopsys PCIe "Dual mode" can support BAR0/BAR1.
+The bits[3:0] of BAR0 is RO(CS), which means Read-Only, but writable
+from the local application through the DBI.
 
---_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EF49avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+So, the BAR0/1 setting might be necessary, in order to ensure the
+BAR0/1 setting is written properly.
 
-eJ8+Ig4cAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEJGMDA2RjAz
-OEU4NkZGNDM4ODRFMTU5MjI1NDY3MDlEABQHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HBAAZAAkA
-KwAuAAUAaQEBIIADAA4AAADeBwQAGQAJACsALgAFAGkBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAF0AAABSRTogW1BBVENIIHYyIG5ldC1uZXh0IDIvMl0gcWxjbmljOiBV
-c2UgcGNpX2VuYWJsZV9tc2l4X2V4YWN0KCkgaW5zdGVhZCBvZiBwY2lfZW5hYmxlX21zaXgoKQCf
-HwEDkAYAxBAAAD8AAAACAX8AAQAAADwAAAA8MjYyQ0IzNzNBNkQxRjE0RjlCODFFODJGNzRGNzdE
-NUE0NkY5RUY0OUBhdm1iMi5xbG9naWMub3JnPgALAB8OAQAAAAIBCRABAAAAJAMAACADAABYBQAA
-TFpGdTf9dwNhAApmYmlkBAAAY2PAcGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdt
-AoMAUBFNMgqABrQCgJZ9CoAIyDsJYjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOi
-bwGAIEV4EcFuGDBdBlJ2BJAXtgIQcgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sL
-gGQ1HVME8AdADRdwMApxF/Jia21rBnMBkAAgIEJNX0LgRUdJTn0K/AHxC/FQID4gLSHCTwUQZ88L
-gAdABdAHkHNhGDAhw7RcbAuAZQqAIaBGA2FoOiBBHnB4AHAEgSCGRwWwAQBldiBbAMDbAxAYkDoi
-4CUEQAlxEdDkdC4FoG1dI2cGYAIwRyQwI/AN0GF5LCRAcB8FEAMgDqAogAHQMTQgpDM6KWFQTSNn
-VCXQGwYAEdBoHFEq0WlraBkjZ0NjJDAjcXV4LYprBJFlAnAgRGUFMMAtSFNHIEwsggewtElDLUF2
-LTAYUHQBADMuoSx0cGMAoCdHdWIGagWQJ/FbUEFUQ9BIIHYyLsItGFAQQAEo8C8yXSBxbGOrAwAs
-QVUSACAvsV8J8NMBoB5wX20AkHgzcCSAOTDAKCkjZwuAH2BlYd8cYBkwMz40mSNnQQQgCXD8c3Ul
-sDWyAQAosAWQGIAOaQIgNbIF4EktWC89OeEgM4QHgAIwHHB1bt8wwDlxDgAjdjX/ICSRMz2iXwJg
-b2NrPUJsAyDuZAUQGjEEIHUAkBnAHMBjKwAzEXR3bzS5G6FmnwDQB5EYUBxRGJAgYhng/HVwKFAc
-QkJhP+BAgSsAfy7BB+A9vRhwGcE9QTWwcv87zz41NEU9bzQCRSZFvzOvHUFZLjcPLCMq2yA8c60q
-4y5OwStxQDKAbyJA+mMm4j4rqy1WLeMuQS6BJ0+ZK6su1EB2GDByLvUs1C4FsGcrry+TVD9MjyZT
-IjAYUGQtGTBmLWxieSQ/JUE8Jf9QKEF/PtBY8VliTd9O70/7I2VU+xmhH1AsI2Uq1CNlFUJicB8A
-QgABAAAAHAAAAFMAaABhAGgAZQBkACAAUwBoAGEAaQBrAGgAAAAfAGUAAQAAADIAAABzAGgAYQBo
-AGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEAAAAKAAAA
-UwBNAFQAUAAAAAAAAgFBAAEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBoAGEAaABl
-AGQAIABTAGgAYQBpAGsAaAAAAFMATQBUAFAAAABzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAA
-cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAAMgAAAHMAaABhAGgAZQBkAC4AcwBoAGEAaQBr
-AGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAADoAAABzAGkAcAA6AHMAaABhAGgA
-ZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAABwAAABT
-AGgAYQBoAGUAZAAgAFMAaABhAGkAawBoAAAAHwAfDAEAAAAyAAAAcwBoAGEAaABlAGQALgBzAGgA
-YQBpAGsAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAA
-AAIBGQwBAAAAcAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAaABhAGgAZQBkACAAUwBoAGEA
-aQBrAGgAAABTAE0AVABQAAAAcwBoAGEAaABlAGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAfAAFdAQAAADIAAABzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAcAAAAUwBoAGEAaABlAGQAIABTAGgAYQBpAGsAaAAA
-AB8AI0ABAAAAMgAAAHMAaABhAGgAZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMA
-bwBtAAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHAAAAAAAAAAgSsfpL6jEBmd
-bgDdAQ9UAgAAAIBTAGgAYQBoAGUAZAAgAFMAaABhAGkAawBoAAAAUwBNAFQAUAAAAHMAaABhAGgA
-ZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAyAAAAcwBo
-AGEAaABlAGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AMUABAAAA
-AgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0
-AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAL8AbwOOhv9DiE4VkiVG
-cJ0DABcAAQAAAEAAOQAAtSnaamDPAUAACDDHsi/aamDPAQsAKQAAAAAACwAjAAAAAAAfAACAhgMC
-AAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAA
-DAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAAC6
-AAAAUgBFADoAIABbAFAAQQBUAEMASAAgAHYAMgAgAG4AZQB0AC0AbgBlAHgAdAAgADIALwAyAF0A
-IABxAGwAYwBuAGkAYwA6ACAAVQBzAGUAIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeABf
-AGUAeABhAGMAdAAoACkAIABpAG4AcwB0AGUAYQBkACAAbwBmACAAcABjAGkAXwBlAG4AYQBiAGwA
-ZQBfAG0AcwBpAHgAKAApAAAAAAAfAD0AAQAAAAoAAABSAEUAOgAgAAAAAAADADYAAAAAAAMALgAA
-AAAAHwBCEAEAAABmAAAAPAAyADAAMQA0ADAANAAyADUAMAA5ADQAMwA0ADkALgBHAEEANgAzADkA
-NwBAAGQAaABjAHAALQAyADYALQAyADAANwAuAGIAcgBxAC4AcgBlAGQAaABhAHQALgBjAG8AbQA+
-AAAAAAACAXEAAQAAABsAAAABAc9gaqpMVYUOnQtmTpYpfxoAflKImyIUlUAAHwBwAAEAAACyAAAA
-WwBQAEEAVABDAEgAIAB2ADIAIABuAGUAdAAtAG4AZQB4AHQAIAAyAC8AMgBdACAAcQBsAGMAbgBp
-AGMAOgAgAFUAcwBlACAAcABjAGkAXwBlAG4AYQBiAGwAZQBfAG0AcwBpAHgAXwBlAHgAYQBjAHQA
-KAApACAAaQBuAHMAdABlAGEAZAAgAG8AZgAgAHAAYwBpAF8AZQBuAGEAYgBsAGUAXwBtAHMAaQB4
-ACgAKQAAAAAAHwA1EAEAAAB4AAAAPAAyADYAMgBDAEIAMwA3ADMAQQA2AEQAMQBGADEANABGADkA
-QgA4ADEARQA4ADIARgA3ADQARgA3ADcARAA1AEEANAA2AEYAOQBFAEYANAA5AEAAYQB2AG0AYgAy
-AC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAHwA5EAEAAACuAgAAPABjAG8AdgBlAHIALgAxADMA
-OQA4ADQAMQAyADAAMQA1AC4AZwBpAHQALgBhAGcAbwByAGQAZQBlAHYAQAByAGUAZABoAGEAdAAu
-AGMAbwBtAD4AIAA8ADAAYQAwAGQANQBmADUAYwAzADMAZAA4ADYAZQAzADcANwA3AGMAMgAyAGMA
-MwBjADEAYgBiAGQAOAAxADAAMwA1ADYANgAwAGQANQA3AGMALgAxADMAOQA4ADQAMQAyADAAMQA1
-AC4AZwBpAHQALgBhAGcAbwByAGQAZQBlAHYAQAByAGUAZABoAGEAdAAuAGMAbwBtAD4AIAA8ADIA
-NgAyAEMAQgAzADcAMwBBADYARAAxAEYAMQA0AEYAOQBCADgAMQBFADgAMgBGADcANABGADcANwBE
-ADUAQQA0ADYARgA5AEUARQA1ADQAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4A
-IAA8ADIAMAAxADQAMAA0ADIANQAwADkAMAAwADIAOQAuAEcAQQAyADUAMAAwAEAAZABoAGMAcAAt
-ADIANgAtADIAMAA3AC4AYgByAHEALgByAGUAZABoAGEAdAAuAGMAbwBtAD4AIAA8ADIANgAyAEMA
-QgAzADcAMwBBADYARAAxAEYAMQA0AEYAOQBCADgAMQBFADgAMgBGADcANABGADcANwBEADUAQQA0
-ADYARgA5AEUARQBBADIAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AIAA8ADIA
-MAAxADQAMAA0ADIANQAwADkANAAzADQAOQAuAEcAQQA2ADMAOQA3AEAAZABoAGMAcAAtADIANgAt
-ADIAMAA3AC4AYgByAHEALgByAGUAZABoAGEAdAAuAGMAbwBtAD4AAAAAAAMA3j+fTgAACwAAgAgg
-BgAAAAAAwAAAAAAAAEYAAAAAA4UAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAABhQAAAAAA
-AAMAgBD/////QAAHMIfxT9lqYM8BCwACAAEAAAADACYAAAAAAAsAKwAAAAAAAgFHAAEAAAAvAAAA
-Yz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMi0xNDA0MjUwOTQzNDZaLTE2NTcyNAAAAgEQMAEAAABG
-AAAAAAAAAK88gqR+EYpBuLoe35iljWAHAFqEb771vv9Ot/aGfriOGXwAGmtoNuUAAK6zKOUCTeBI
-iAuK3fE1aPMAS3b9hasAAAAAHwD6PwEAAAAcAAAAUwBoAGEAaABlAGQAIABTAGgAYQBpAGsAaAAA
-AAMACVkBAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAEIUAAAAAAAALAACACCAGAAAAAADAAAAA
-AAAARgAAAAAOhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABiFAAAAAAAACwAAgAggBgAA
-AAAAwAAAAAAAAEYAAAAAgoUAAAAAAAAfAACACCAGAAAAAADAAAAAAAAARgAAAADYhQAAAQAAABIA
-AABJAFAATQAuAE4AbwB0AGUAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAA
-AHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAA
-wAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAY
-AAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAxgo=
+But, when BAR0/1 are implemented, the bits[3:0] of BAR0 is decided
+by hardware configuration parameters. So, this BAR0/1 setting looks
+unnecessary.
 
---_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EF49avmb2qlogicorg_--
+How about others' opinions?
+
+1. Necessary: in order to ensure the BAR0/BAR1 setting, even though
+                   BAR0/BAR1 were already set as hardware default values
+
+2. Unnecessary: the BAR0/BAR1 setting code is dummy, because BAR0/BAR1
+                      were already set as hardware default values
+
+For example, in the case of Exynos5440, BAR0/BAR1 are not implemented;
+thus, even though BAR0 is written as 0x4, BAR0 can be always read as 0.
+So, there is not side effect, but just unnecessary code is executed
+during boot time.
+
+Thank you. :-)
+
+Best regards,
+Jingoo Han
+
