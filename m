@@ -1,70 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:34270 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752133AbaDDXjw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 19:39:52 -0400
-Received: by mail-pd0-f170.google.com with SMTP id v10so4011520pde.1
-        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 16:39:52 -0700 (PDT)
-Date: Fri, 4 Apr 2014 17:39:48 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 5/6] pci: Export find_pci_host_bridge() function.
-Message-ID: <20140404233948.GC15806@google.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <1394811272-1547-6-git-send-email-Liviu.Dudau@arm.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:4371 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751175AbaDDBtM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 21:49:12 -0400
+Message-ID: <533E0F84.1050302@huawei.com>
+Date: Fri, 4 Apr 2014 09:48:52 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394811272-1547-6-git-send-email-Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jon Mason <jdmason@kudzu.us>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Coverity CID 146454: pcie_bus_configure_settings() use of uninitialized
+ variable
+References: <CAErSpo7OVbiZ=W1N0Zfb=p3KDsDCkq7Xq1CqzQTeANfvWWZ9yw@mail.gmail.com>
+In-Reply-To: <CAErSpo7OVbiZ=W1N0Zfb=p3KDsDCkq7Xq1CqzQTeANfvWWZ9yw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 03:34:31PM +0000, Liviu Dudau wrote:
-> This is a useful function and we should make it visible outside the
-> generic PCI code. Export it as a GPL symbol.
-> 
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  drivers/pci/host-bridge.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 06ace62..8708b652 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -17,12 +17,13 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->  	return bus;
->  }
->  
-> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->  {
->  	struct pci_bus *root_bus = find_pci_root_bus(bus);
->  
->  	return to_pci_host_bridge(root_bus->bridge);
->  }
-> +EXPORT_SYMBOL_GPL(find_pci_host_bridge);
+Hi Bjorn,
+   Jon seems to send a patch to fix this long ago. Link: http://patchwork.ozlabs.org/patch/191054/
+But this patch cannot be applied now. I think we can just set smpss = 0 in this function as the default value.
 
-Do you have a place where you actually need to use find_pci_host_bridge()?
-I'd rather not export it, even as _GPL, unless we have a user.
+Thanks!
+Yijing.
 
-If we *do* export it, I'd like it to have a more conventional name, e.g.,
-something starting with "pci_".
-
->  
->  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
->  				 void (*release_fn)(struct pci_host_bridge *),
-> -- 
-> 1.9.0
+On 2014/4/4 0:09, Bjorn Helgaas wrote:
+> Coverity complains that "smpss" is used uninitialized in
+> drivers/pci/probe.c in pcie_bus_configure_settings() when calling
+> pcie_bus_configure_set():
 > 
+> 1642        pcie_bus_configure_set(bus->self, &smpss);
+> 1643        pci_walk_bus(bus, pcie_bus_configure_set, &smpss);
+> 
+> "smpss" may be uninitialized, and pcie_bus_configure_set()
+> dereferences the pointer it receives.
+> 
+> This is CID 146454.
+> 
+> Bjorn
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
+
