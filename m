@@ -1,129 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:46927 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754083AbaDMLFz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Apr 2014 07:05:55 -0400
-Received: by mail-la0-f49.google.com with SMTP id mc6so4728795lab.8
-        for <linux-pci@vger.kernel.org>; Sun, 13 Apr 2014 04:05:53 -0700 (PDT)
-Message-ID: <534A6FA2.90800@cogentembedded.com>
-Date: Sun, 13 Apr 2014 15:06:10 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:34270 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752133AbaDDXjw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 19:39:52 -0400
+Received: by mail-pd0-f170.google.com with SMTP id v10so4011520pde.1
+        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 16:39:52 -0700 (PDT)
+Date: Fri, 4 Apr 2014 17:39:48 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 5/6] pci: Export find_pci_host_bridge() function.
+Message-ID: <20140404233948.GC15806@google.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811272-1547-6-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, davem@davemloft.net
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Amir Vadai <amirv@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Or Gerlitz <ogerlitz@mellanox.com>
-Subject: Re: [PATCH V2 net] net/mlx4_core: Preserve pci_dev_data after __mlx4_remove_one()
-References: <1397359333-8378-1-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1397359333-8378-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1394811272-1547-6-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+On Fri, Mar 14, 2014 at 03:34:31PM +0000, Liviu Dudau wrote:
+> This is a useful function and we should make it visible outside the
+> generic PCI code. Export it as a GPL symbol.
+> 
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> ---
+>  drivers/pci/host-bridge.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 06ace62..8708b652 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -17,12 +17,13 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+>  	return bus;
+>  }
+>  
+> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+>  {
+>  	struct pci_bus *root_bus = find_pci_root_bus(bus);
+>  
+>  	return to_pci_host_bridge(root_bus->bridge);
+>  }
+> +EXPORT_SYMBOL_GPL(find_pci_host_bridge);
 
-On 13-04-2014 7:22, Wei Yang wrote:
+Do you have a place where you actually need to use find_pci_host_bridge()?
+I'd rather not export it, even as _GPL, unless we have a user.
 
-> pci_match_id() just match the static pci_device_id, which may return NULL if
-> someone binds the driver to a device manually using
-> /sys/bus/pci/drivers/.../new_id.
+If we *do* export it, I'd like it to have a more conventional name, e.g.,
+something starting with "pci_".
 
-> This patch wrap up a helper function __mlx4_remove_one() which does the tear
-> down function but preserve the drv_data. Functions like
-> mlx4_pci_err_detected() and mlx4_restart_one() will call this one with out
-> releasing drvdata.
-
-> Fixes: 97a5221 "net/mlx4_core: pass pci_device_id.driver_data to __mlx4_init_one during reset".
-
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Amir Vadai <amirv@mellanox.com>
-> CC: Jack Morgenstein <jackm@dev.mellanox.co.il>
-> CC: Or Gerlitz <ogerlitz@mellanox.com>
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Acked-by: Jack Morgenstein <jackm@dev.mellanox.co.il>
-
-[...]
-
-> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
-> index f0ae95f..b6d60e2 100644
-> --- a/drivers/net/ethernet/mellanox/mlx4/main.c
-> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-[...]
-> @@ -2604,85 +2598,112 @@ err_disable_pdev:
->
->   static int mlx4_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
->   {
-> +	struct mlx4_priv *priv;
-> +	struct mlx4_dev *dev;
-> +
->   	printk_once(KERN_INFO "%s", mlx4_version);
->
-> +	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
-> +	if (!priv) {
-> +		return -ENOMEM;
-> +	}
-
-    {} not needed here.
-
-[...]
-> +	/* in SRIOV it is not allowed to unload the pf's
-> +	 * driver while there are alive vf's */
-> +	if (mlx4_is_master(dev)) {
-> +		if (mlx4_how_many_lives_vf(dev))
-
-    Could be folded into single *if*.
-
-> +			printk(KERN_ERR "Removing PF when there are assigned VF's !!!\n");
-> +	}
-> +	mlx4_stop_sense(dev);
-> +	mlx4_unregister_device(dev);
-[...]
-> +	for (p = 1; p <= dev->caps.num_ports; p++) {
-> +		mlx4_cleanup_port_info(&priv->port[p]);
-> +		mlx4_CLOSE_PORT(dev, p);
-> +	}
-> +
-> +	if (mlx4_is_master(dev))
-> +		mlx4_free_resource_tracker(dev,
-> +				   RES_TR_FREE_SLAVES_ONLY);
-
-    Please re-align this line so that it starts right under 'dev'.
-
-[...]
->
-> -		if (!mlx4_is_slave(dev))
-> -			mlx4_free_ownership(dev);
-> +	if (mlx4_is_master(dev))
-> +		mlx4_free_resource_tracker(dev,
-> +				   RES_TR_FREE_STRUCTS_ONLY);
-
-    Likewise.
-
-[...]
-> @@ -2755,11 +2776,13 @@ static pci_ers_result_t mlx4_pci_err_detected(struct pci_dev *pdev,
->
->   static pci_ers_result_t mlx4_pci_slot_reset(struct pci_dev *pdev)
->   {
-> -	const struct pci_device_id *id;
-> -	int ret;
-> +	struct mlx4_dev	 *dev  = pci_get_drvdata(pdev);
-> +	struct mlx4_priv *priv = mlx4_priv(dev);
-> +	int		  pci_dev_data;
-
-    Doesn't seem that this variable is necessary.
-
-> +	int               ret;
->
-> -	id = pci_match_id(mlx4_pci_table, pdev);
-> -	ret = __mlx4_init_one(pdev, id->driver_data);
-> +	pci_dev_data = priv->pci_dev_data;
-> +	ret = __mlx4_init_one(pdev, pci_dev_data);
->
->   	return ret ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
->   }
-[...]
-
-WBR, Sergei
-
+>  
+>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+>  				 void (*release_fn)(struct pci_host_bridge *),
+> -- 
+> 1.9.0
+> 
