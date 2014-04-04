@@ -1,156 +1,258 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:43444 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756882AbaDQDau (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 23:30:50 -0400
-Received: by mail-ie0-f171.google.com with SMTP id ar20so11484271iec.30
-        for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2014 20:30:50 -0700 (PDT)
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:14031 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753595AbaDDOuP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 10:50:15 -0400
+From: Thierry Reding <treding@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: [RFC 3/5] PCI: tegra: Implement accurate power supply scheme
+Date: Fri, 4 Apr 2014 16:49:27 +0200
+Message-ID: <1396622969-17837-4-git-send-email-treding@nvidia.com>
+In-Reply-To: <1396622969-17837-1-git-send-email-treding@nvidia.com>
+References: <1396622969-17837-1-git-send-email-treding@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6mLmzFOy4kqBCSTVrbT2_OqfuugZh7bA-kywwSnYto_A@mail.gmail.com>
-References: <CAE9FiQXzRQ9S0mwwb58R2icBTtHHJ6NMVFMaxEgtVNP9mZVjZw@mail.gmail.com>
-	<1394222924-28886-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo6r16va7oBpaDcTXw0Y0igc=NbXy9G7c27X+P0UM7fh8g@mail.gmail.com>
-	<20140408025738.GA3198@yanx>
-	<CAErSpo4JSrjSn4dXC9Pzfz2Aho+W4Gq9uKc+kAFbqTERcRAJ+w@mail.gmail.com>
-	<20140409075215.GA3173@yanx>
-	<CAErSpo4aGU_rmNSiv=HS-pDVsfKk798zLQW8Kx5huHe8jwdghw@mail.gmail.com>
-	<20140415115450.GA7792@yanx>
-	<CAErSpo63LKffb4DH+cSfBnvtAoPy06u22e7CUhRuKr-PHNWZMw@mail.gmail.com>
-	<CAE9FiQUv7yfUDsTa_N=FFARRYFmrCxRVN-vCp3NikSf+ARkPdA@mail.gmail.com>
-	<CAErSpo6mLmzFOy4kqBCSTVrbT2_OqfuugZh7bA-kywwSnYto_A@mail.gmail.com>
-Date: Wed, 16 Apr 2014 20:30:50 -0700
-Message-ID: <CAE9FiQUKYMPvXLsk84o-gH-j0-wiJGL0Wt1aTW2o4FPSm0PvbQ@mail.gmail.com>
-Subject: Re: [PATCH v7] PCI: Try best to allocate pref mmio 64bit above 4g
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Amir Vadai <amirv@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Eugenia Emantayev <eugenia@mellanox.com>, talal@mellanox.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=047d7bd76d1ede8c2104f734a8b9
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7bd76d1ede8c2104f734a8b9
-Content-Type: text/plain; charset=UTF-8
+The current description of power supplies doesn't match the hardware.
+Instead it's designed to support the needs of current designs, which
+will break as soon as a new design appears that cannot be described
+using the current assumptions.
 
-On Wed, Apr 16, 2014 at 10:06 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> I think we should stop putting PCI_PREF_RANGE_TYPE_64 in res->flags.
-> I don't think we ever test for PCI_PREF_RANGE_TYPE_64 today, except
-> for the trivial usage in pci_read_bridge_mmio_pref(), which can be
-> easily removed.
->
-> Everywhere else, we use IORESOURCE_MEM, IORESOURCE_MEM_64, and
-> IORESOURCE_PREFETCH to keep track of the properties of the hardware
-> underlying the struct resource, i.e., the BAR.  Why shouldn't we do
-> the same for bridge windows?
->
-> The struct resource flags should tell us the *possible* properties of
-> the window, e.g., what the bridge can support.  These properties are
-> fixed by the bridge hardware, regardless of what devices happen to be
-> below the bridge.  We discover those properties at enumeration-time,
-> and we shouldn't change them afterwards.
+In order to fully support all possible future designs, all power supply
+inputs to the PCIe block need to be accurately described and separately
+configurable.
 
-After this patch (we check exact type with 64bit pref), actually bridge flags
-IORESOURCE_MEM_64 would not get cleared.
-so we don't check that in pbus_size_mem anymore.
-
-Following patch could be applied later.
-
-Subject: [PATCH] PCI: don't update bridge resource flags according to children
-
-After  PCI: Try best to allocate pref mmio 64bit above 4g
-We don't need to check if children support 64bit, and update
-bridge resource flags anymore.
-As the code size and assign according exact type already.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/pci/setup-bus.c |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/pci/host/pci-tegra.c | 146 ++++++++++++++++++++++++++-----------------
+ 1 file changed, 87 insertions(+), 59 deletions(-)
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -926,7 +926,6 @@ static int pbus_size_mem(struct pci_bus
-     int order, max_order;
-     struct resource *b_res = find_free_bus_resource(bus,
-                      mask | IORESOURCE_PREFETCH, type);
--    unsigned int mem64_mask = 0;
-     resource_size_t children_add_size = 0;
-
-     if (!b_res)
-@@ -936,9 +935,6 @@ static int pbus_size_mem(struct pci_bus
-     max_order = 0;
-     size = 0;
-
--    mem64_mask = b_res->flags & IORESOURCE_MEM_64;
--    b_res->flags &= ~IORESOURCE_MEM_64;
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 5f334e69e608..2be7b9bce12e 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -234,7 +234,6 @@ struct tegra_pcie_soc_data {
+ 	bool has_pex_clkreq_en;
+ 	bool has_pex_bias_ctrl;
+ 	bool has_intr_prsnt_sense;
+-	bool has_avdd_supply;
+ 	bool has_cml_clk;
+ };
+ 
+@@ -275,9 +274,8 @@ struct tegra_pcie {
+ 	unsigned int num_ports;
+ 	u32 xbar_config;
+ 
+-	struct regulator *pex_clk_supply;
+-	struct regulator *vdd_supply;
+-	struct regulator *avdd_supply;
++	struct regulator_bulk_data *supplies;
++	unsigned int num_supplies;
+ 
+ 	const struct tegra_pcie_soc_data *soc_data;
+ 	struct dentry *debugfs;
+@@ -919,7 +917,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 
+ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+ {
+-	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
+ 	int err;
+ 
+ 	/* TODO: disable and unprepare clocks? */
+@@ -930,23 +927,9 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+ 
+ 	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+ 
+-	if (soc->has_avdd_supply) {
+-		err = regulator_disable(pcie->avdd_supply);
+-		if (err < 0)
+-			dev_warn(pcie->dev,
+-				 "failed to disable AVDD regulator: %d\n",
+-				 err);
+-	}
 -
-     list_for_each_entry(dev, &bus->devices, bus_list) {
-         int i;
+-	err = regulator_disable(pcie->pex_clk_supply);
++	err = regulator_bulk_disable(pcie->num_supplies, pcie->supplies);
+ 	if (err < 0)
+-		dev_warn(pcie->dev, "failed to disable pex-clk regulator: %d\n",
+-			 err);
+-
+-	err = regulator_disable(pcie->vdd_supply);
+-	if (err < 0)
+-		dev_warn(pcie->dev, "failed to disable VDD regulator: %d\n",
+-			 err);
++		dev_warn(pcie->dev, "failed to enable regulators: %d\n", err);
+ }
+ 
+ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
+@@ -961,28 +944,9 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
+ 	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+ 
+ 	/* enable regulators */
+-	err = regulator_enable(pcie->vdd_supply);
+-	if (err < 0) {
+-		dev_err(pcie->dev, "failed to enable VDD regulator: %d\n", err);
+-		return err;
+-	}
+-
+-	err = regulator_enable(pcie->pex_clk_supply);
+-	if (err < 0) {
+-		dev_err(pcie->dev, "failed to enable pex-clk regulator: %d\n",
+-			err);
+-		return err;
+-	}
+-
+-	if (soc->has_avdd_supply) {
+-		err = regulator_enable(pcie->avdd_supply);
+-		if (err < 0) {
+-			dev_err(pcie->dev,
+-				"failed to enable AVDD regulator: %d\n",
+-				err);
+-			return err;
+-		}
+-	}
++	err = regulator_bulk_enable(pcie->num_supplies, pcie->supplies);
++	if (err < 0)
++		dev_err(pcie->dev, "failed to enable regulators: %d\n", err);
+ 
+ 	err = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_PCIE,
+ 						pcie->pex_clk,
+@@ -1419,6 +1383,82 @@ static int tegra_pcie_get_xbar_config(struct tegra_pcie *pcie, u32 lanes,
+ 	return -EINVAL;
+ }
+ 
++/*
++ * Obtains the list of regulators required for a particular generation of the
++ * IP block.
++ *
++ * This would've been nice to do simply by providing static tables for use
++ * with the regulator_bulk_*() API, but unfortunately Tegra30 is a bit quirky
++ * in that it has two pairs or AVDD_PEX and VDD_PEX supplies (PEXA and PEXB)
++ * and either seems to be optional depending on which ports are being used.
++ */
++static int tegra_pcie_get_regulators(struct tegra_pcie *pcie)
++{
++	struct device_node *np = pcie->dev->of_node;
++	unsigned int i = 0;
++
++	if (of_device_is_compatible(np, "nvidia,tegra30-pcie")) {
++		bool need_pexa = false, need_pexb = false;
++		struct tegra_pcie_port *port;
++
++		list_for_each_entry(port, &pcie->ports, list) {
++			dev_info(pcie->dev, "port %u enabled\n", port->index);
++
++			switch (port->index) {
++			case 0:
++				need_pexa = true;
++				break;
++
++			case 1:
++			case 2:
++				need_pexb = true;
++				break;
++			}
++		}
++
++		pcie->num_supplies = 4 + (need_pexa ? 2 : 0) +
++					 (need_pexb ? 2 : 0);
++
++		pcie->supplies = devm_kcalloc(pcie->dev, pcie->num_supplies,
++					      sizeof(*pcie->supplies),
++					      GFP_KERNEL);
++		if (!pcie->supplies)
++			return -ENOMEM;
++
++		pcie->supplies[i++].supply = "avdd-pex-pll";
++		pcie->supplies[i++].supply = "hvdd-pex";
++		pcie->supplies[i++].supply = "vddio-pex-ctl";
++		pcie->supplies[i++].supply = "avdd-plle";
++
++		if (need_pexa) {
++			pcie->supplies[i++].supply = "avdd-pexa";
++			pcie->supplies[i++].supply = "vdd-pexa";
++		}
++
++		if (need_pexb) {
++			pcie->supplies[i++].supply = "avdd-pexb";
++			pcie->supplies[i++].supply = "vdd-pexb";
++		}
++	} else if (of_device_is_compatible(np, "nvidia,tegra20-pcie")) {
++		pcie->num_supplies = 5;
++
++		pcie->supplies = devm_kcalloc(pcie->dev, pcie->num_supplies,
++					      sizeof(*pcie->supplies),
++					      GFP_KERNEL);
++		if (!pcie->supplies)
++			return -ENOMEM;
++
++		pcie->supplies[0].supply = "avdd-pex";
++		pcie->supplies[1].supply = "vdd-pex";
++		pcie->supplies[2].supply = "avdd-pex-pll";
++		pcie->supplies[3].supply = "avdd-plle";
++		pcie->supplies[4].supply = "vddio-pex-clk";
++	}
++
++	return devm_regulator_bulk_get(pcie->dev, pcie->num_supplies,
++				       pcie->supplies);
++}
++
+ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+ {
+ 	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
+@@ -1440,20 +1480,6 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+ 		return -EINVAL;
+ 	}
+ 
+-	pcie->vdd_supply = devm_regulator_get(pcie->dev, "vdd");
+-	if (IS_ERR(pcie->vdd_supply))
+-		return PTR_ERR(pcie->vdd_supply);
+-
+-	pcie->pex_clk_supply = devm_regulator_get(pcie->dev, "pex-clk");
+-	if (IS_ERR(pcie->pex_clk_supply))
+-		return PTR_ERR(pcie->pex_clk_supply);
+-
+-	if (soc->has_avdd_supply) {
+-		pcie->avdd_supply = devm_regulator_get(pcie->dev, "avdd");
+-		if (IS_ERR(pcie->avdd_supply))
+-			return PTR_ERR(pcie->avdd_supply);
+-	}
+-
+ 	for_each_of_pci_range(&parser, &range) {
+ 		of_pci_range_to_resource(&range, np, &res);
+ 
+@@ -1563,6 +1589,10 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+ 		return err;
+ 	}
+ 
++	err = tegra_pcie_get_regulators(pcie);
++	if (err < 0)
++		return err;
++
+ 	return 0;
+ }
+ 
+@@ -1658,7 +1688,6 @@ static const struct tegra_pcie_soc_data tegra20_pcie_data = {
+ 	.has_pex_clkreq_en = false,
+ 	.has_pex_bias_ctrl = false,
+ 	.has_intr_prsnt_sense = false,
+-	.has_avdd_supply = false,
+ 	.has_cml_clk = false,
+ };
+ 
+@@ -1670,7 +1699,6 @@ static const struct tegra_pcie_soc_data tegra30_pcie_data = {
+ 	.has_pex_clkreq_en = true,
+ 	.has_pex_bias_ctrl = true,
+ 	.has_intr_prsnt_sense = true,
+-	.has_avdd_supply = true,
+ 	.has_cml_clk = true,
+ };
+ 
+-- 
+1.9.1
 
-@@ -980,7 +976,6 @@ static int pbus_size_mem(struct pci_bus
-                 aligns[order] += align;
-             if (order > max_order)
-                 max_order = order;
--            mem64_mask &= r->flags & IORESOURCE_MEM_64;
-
-             if (realloc_head)
-                 children_add_size += get_res_add_size(realloc_head, r);
-@@ -1005,7 +1000,7 @@ static int pbus_size_mem(struct pci_bus
-     }
-     b_res->start = min_align;
-     b_res->end = size0 + min_align - 1;
--    b_res->flags |= IORESOURCE_STARTALIGN | mem64_mask;
-+    b_res->flags |= IORESOURCE_STARTALIGN;
-     if (size1 > size0 && realloc_head) {
-         add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
-         dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
-
---047d7bd76d1ede8c2104f734a8b9
-Content-Type: text/x-patch; charset=US-ASCII; name="remove_mmio64_check.patch"
-Content-Disposition: attachment; filename="remove_mmio64_check.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hu3ht8od0
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IGRvbid0IHVwZGF0ZSBicmlkZ2UgcmVzb3VyY2UgZmxhZ3Mg
-YWNjb3JkaW5nIHRvIGNoaWxkcmVuCgpBZnRlciAgUENJOiBUcnkgYmVzdCB0byBhbGxvY2F0ZSBw
-cmVmIG1taW8gNjRiaXQgYWJvdmUgNGcKV2UgZG9uJ3QgbmVlZCB0byBjaGVjayBpZiBjaGlsZHJl
-biBzdXBwb3J0IDY0Yml0LCBhbmQgdXBkYXRlCmJyaWRnZSByZXNvdXJjZSBmbGFncyBhbnltb3Jl
-LgpBcyB0aGUgY29kZSBzaXplIGFuZCBhc3NpZ24gYWNjb3JkaW5nIGV4YWN0IHR5cGUgYWxyZWFk
-eS4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQog
-ZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgfCAgICA3ICstLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAx
-IGluc2VydGlvbigrKSwgNiBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9w
-Y2kvc2V0dXAtYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kv
-c2V0dXAtYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtOTI2
-LDcgKzkyNiw2IEBAIHN0YXRpYyBpbnQgcGJ1c19zaXplX21lbShzdHJ1Y3QgcGNpX2J1cwogCWlu
-dCBvcmRlciwgbWF4X29yZGVyOwogCXN0cnVjdCByZXNvdXJjZSAqYl9yZXMgPSBmaW5kX2ZyZWVf
-YnVzX3Jlc291cmNlKGJ1cywKIAkJCQkJIG1hc2sgfCBJT1JFU09VUkNFX1BSRUZFVENILCB0eXBl
-KTsKLQl1bnNpZ25lZCBpbnQgbWVtNjRfbWFzayA9IDA7CiAJcmVzb3VyY2Vfc2l6ZV90IGNoaWxk
-cmVuX2FkZF9zaXplID0gMDsKIAogCWlmICghYl9yZXMpCkBAIC05MzYsOSArOTM1LDYgQEAgc3Rh
-dGljIGludCBwYnVzX3NpemVfbWVtKHN0cnVjdCBwY2lfYnVzCiAJbWF4X29yZGVyID0gMDsKIAlz
-aXplID0gMDsKIAotCW1lbTY0X21hc2sgPSBiX3Jlcy0+ZmxhZ3MgJiBJT1JFU09VUkNFX01FTV82
-NDsKLQliX3Jlcy0+ZmxhZ3MgJj0gfklPUkVTT1VSQ0VfTUVNXzY0OwotCiAJbGlzdF9mb3JfZWFj
-aF9lbnRyeShkZXYsICZidXMtPmRldmljZXMsIGJ1c19saXN0KSB7CiAJCWludCBpOwogCkBAIC05
-ODAsNyArOTc2LDYgQEAgc3RhdGljIGludCBwYnVzX3NpemVfbWVtKHN0cnVjdCBwY2lfYnVzCiAJ
-CQkJYWxpZ25zW29yZGVyXSArPSBhbGlnbjsKIAkJCWlmIChvcmRlciA+IG1heF9vcmRlcikKIAkJ
-CQltYXhfb3JkZXIgPSBvcmRlcjsKLQkJCW1lbTY0X21hc2sgJj0gci0+ZmxhZ3MgJiBJT1JFU09V
-UkNFX01FTV82NDsKIAogCQkJaWYgKHJlYWxsb2NfaGVhZCkKIAkJCQljaGlsZHJlbl9hZGRfc2l6
-ZSArPSBnZXRfcmVzX2FkZF9zaXplKHJlYWxsb2NfaGVhZCwgcik7CkBAIC0xMDA1LDcgKzEwMDAs
-NyBAQCBzdGF0aWMgaW50IHBidXNfc2l6ZV9tZW0oc3RydWN0IHBjaV9idXMKIAl9CiAJYl9yZXMt
-PnN0YXJ0ID0gbWluX2FsaWduOwogCWJfcmVzLT5lbmQgPSBzaXplMCArIG1pbl9hbGlnbiAtIDE7
-Ci0JYl9yZXMtPmZsYWdzIHw9IElPUkVTT1VSQ0VfU1RBUlRBTElHTiB8IG1lbTY0X21hc2s7CisJ
-Yl9yZXMtPmZsYWdzIHw9IElPUkVTT1VSQ0VfU1RBUlRBTElHTjsKIAlpZiAoc2l6ZTEgPiBzaXpl
-MCAmJiByZWFsbG9jX2hlYWQpIHsKIAkJYWRkX3RvX2xpc3QocmVhbGxvY19oZWFkLCBidXMtPnNl
-bGYsIGJfcmVzLCBzaXplMS1zaXplMCwgbWluX2FsaWduKTsKIAkJZGV2X3ByaW50ayhLRVJOX0RF
-QlVHLCAmYnVzLT5zZWxmLT5kZXYsICJicmlkZ2Ugd2luZG93ICIK
---047d7bd76d1ede8c2104f734a8b9--
