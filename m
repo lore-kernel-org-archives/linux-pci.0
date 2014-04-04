@@ -1,102 +1,390 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59097 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751495AbaDAVWv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Apr 2014 17:22:51 -0400
-From: Bandan Das <bsd@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] PCI: rework new_id interface for known vendor/device values
-Date: Tue, 01 Apr 2014 17:22:47 -0400
-Message-ID: <jpgeh1gpwwo.fsf@nelium.bos.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:40585 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752248AbaDDIyP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 04:54:15 -0400
+Message-ID: <1396601603.5625.0.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH v7 02/10] PCI: host: rcar: Add MSI support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Date: Fri, 04 Apr 2014 10:53:23 +0200
+In-Reply-To: <1396261856-22465-3-git-send-email-phil.edworthy@renesas.com>
+References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+	 <1396261856-22465-3-git-send-email-phil.edworthy@renesas.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Am Montag, den 31.03.2014, 11:30 +0100 schrieb Phil Edworthy:
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> 
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+> v6:
+>  - Don't check MSI irq number is valid, as upper level checks this
+>  - Change "Unexpected MSI" msg to debug level
+>  - Reword "Unexpected MSI" comment so that it's one line
+> 
+> v5:
+>  - Return IRQ_NONE from MSI isr when there is no pending MSI
+>  - Add additional interrupt bindings
+> ---
+>  drivers/pci/host/pcie-rcar.c | 238 ++++++++++++++++++++++++++++++++++++++++++-
+>  drivers/pci/host/pcie-rcar.h |   5 +
+>  2 files changed, 242 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index c22c896..e3ce3d1 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -15,8 +15,11 @@
+>  #include <linux/clk.h>
+>  #include <linux/delay.h>
+>  #include <linux/interrupt.h>
+> +#include <linux/irq.h>
+> +#include <linux/irqdomain.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+> +#include <linux/msi.h>
+>  #include <linux/of_address.h>
+>  #include <linux/of_irq.h>
+>  #include <linux/of_pci.h>
+> @@ -28,6 +31,8 @@
+>  
+>  #define DRV_NAME "rcar-pcie"
+>  
+> +#define INT_PCI_MSI_NR	32
+> +
+>  #define RCONF(x)	(PCICONF(0)+(x))
+>  #define RPMCAP(x)	(PMCAP(0)+(x))
+>  #define REXPCAP(x)	(EXPCAP(0)+(x))
+> @@ -40,6 +45,21 @@
+>  #define PCI_MAX_RESOURCES 4
+>  #define MAX_NR_INBOUND_MAPS 6
+>  
+> +struct rcar_msi {
+> +	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+> +	struct irq_domain *domain;
+> +	struct msi_chip chip;
+> +	unsigned long pages;
+> +	struct mutex lock;
+> +	int irq1;
+> +	int irq2;
+> +};
+> +
+> +static inline struct rcar_msi *to_rcar_msi(struct msi_chip *chip)
+> +{
+> +	return container_of(chip, struct rcar_msi, chip);
+> +}
+> +
+>  /* Structure representing the PCIe interface */
+>  struct rcar_pcie {
+>  	struct device		*dev;
+> @@ -48,6 +68,7 @@ struct rcar_pcie {
+>  	u8			root_bus_nr;
+>  	struct clk		*clk;
+>  	struct clk		*bus_clk;
+> +	struct			rcar_msi msi;
+>  };
+>  
+>  static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
+> @@ -292,6 +313,15 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
+>  	return 1;
+>  }
+>  
+> +static void rcar_pcie_add_bus(struct pci_bus *bus)
+> +{
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
+> +
+> +		bus->msi = &pcie->msi.chip;
+> +	}
+> +}
+> +
+>  static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
+>  {
+>  	struct platform_device *pdev = to_platform_device(pcie->dev);
+> @@ -301,6 +331,7 @@ static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
+>  		.setup          = rcar_pcie_setup,
+>  		.map_irq        = of_irq_parse_and_map_pci,
+>  		.ops            = &rcar_pcie_ops,
+> +		.add_bus        = rcar_pcie_add_bus,
+>  	};
+>  
+>  	pci_common_init_dev(&pdev->dev, &hw);
+> @@ -408,6 +439,10 @@ static int __init rcar_pcie_hw_init(struct rcar_pcie *pcie)
+>  	/* Enable MAC data scrambling. */
+>  	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
+>  
+> +	/* Enable MSI */
+> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+> +		pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
+> +
+>  	/* Finish initialization - establish a PCI Express link */
+>  	pci_write_reg(pcie, CFINIT, PCIETCTLR);
+>  
+> @@ -461,11 +496,186 @@ static int __init rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
+>  	return -ETIMEDOUT;
+>  }
+>  
+> +static int rcar_msi_alloc(struct rcar_msi *chip)
+> +{
+> +	int msi;
+> +
+> +	mutex_lock(&chip->lock);
+> +
+> +	msi = find_first_zero_bit(chip->used, INT_PCI_MSI_NR);
+> +	if (msi < INT_PCI_MSI_NR)
+> +		set_bit(msi, chip->used);
+> +	else
+> +		msi = -ENOSPC;
+> +
+> +	mutex_unlock(&chip->lock);
+> +
+> +	return msi;
+> +}
+> +
+> +static void rcar_msi_free(struct rcar_msi *chip, unsigned long irq)
+> +{
+> +	struct device *dev = chip->chip.dev;
+> +
+> +	mutex_lock(&chip->lock);
+> +	clear_bit(irq, chip->used);
+> +	mutex_unlock(&chip->lock);
+> +}
+> +
+> +static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
+> +{
+> +	struct rcar_pcie *pcie = data;
+> +	struct rcar_msi *msi = &pcie->msi;
+> +	unsigned long reg;
+> +
+> +	reg = pci_read_reg(pcie, PCIEMSIFR);
+> +
+> +	/* MSI & INTx share an interrupt - we only handle MSI here */
+> +	if (!reg)
+> +		return IRQ_NONE;
+> +
+> +	while (reg) {
+> +		unsigned int index = find_first_bit(&reg, 32);
+> +		unsigned int irq;
+> +
+> +		/* clear the interrupt */
+> +		pci_write_reg(pcie, 1 << index, PCIEMSIFR);
+> +
+> +		irq = irq_find_mapping(msi->domain, index);
+> +		if (irq) {
+> +			if (test_bit(index, msi->used))
+> +				generic_handle_irq(irq);
+> +			else
+> +				dev_info(pcie->dev, "unhandled MSI\n");
+> +		} else {
+> +			/* Unknown MSI, just clear it */
+> +			dev_dbg(pcie->dev, "unexpected MSI\n");
+> +		}
+> +
+> +		/* see if there's any more pending in this vector */
+> +		reg = pci_read_reg(pcie, PCIEMSIFR);
+> +	}
+> +
+> +	return IRQ_HANDLED;
+> +}
+> +
+> +static int rcar_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+> +			       struct msi_desc *desc)
+> +{
+> +	struct rcar_msi *msi = to_rcar_msi(chip);
+> +	struct rcar_pcie *pcie = container_of(chip, struct rcar_pcie, msi.chip);
+> +	struct msi_msg msg;
+> +	unsigned int irq;
+> +	int hwirq;
+> +
+> +	hwirq = rcar_msi_alloc(msi);
+> +	if (hwirq < 0)
+> +		return hwirq;
+> +
+> +	irq = irq_create_mapping(msi->domain, hwirq);
+> +	if (!irq) {
+> +		rcar_msi_free(msi, hwirq);
+> +		return -EINVAL;
+> +	}
+> +
+> +	irq_set_msi_desc(irq, desc);
+> +
+> +	msg.address_lo = pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
+> +	msg.address_hi = pci_read_reg(pcie, PCIEMSIAUR);
+> +	msg.data = hwirq;
+> +
+> +	write_msi_msg(irq, &msg);
+> +
+> +	return 0;
+> +}
+> +
+> +static void rcar_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
+> +{
+> +	struct rcar_msi *msi = to_rcar_msi(chip);
+> +	struct irq_data *d = irq_get_irq_data(irq);
+> +
+> +	rcar_msi_free(msi, d->hwirq);
+> +}
+> +
+> +static struct irq_chip rcar_msi_irq_chip = {
+> +	.name = "R-Car PCIe MSI",
+> +	.irq_enable = unmask_msi_irq,
+> +	.irq_disable = mask_msi_irq,
+> +	.irq_mask = mask_msi_irq,
+> +	.irq_unmask = unmask_msi_irq,
+> +};
+> +
+> +static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
+> +			 irq_hw_number_t hwirq)
+> +{
+> +	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
+> +	irq_set_chip_data(irq, domain->host_data);
+> +	set_irq_flags(irq, IRQF_VALID);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct irq_domain_ops msi_domain_ops = {
+> +	.map = rcar_msi_map,
+> +};
+> +
+> +static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+> +{
+> +	struct platform_device *pdev = to_platform_device(pcie->dev);
+> +	struct rcar_msi *msi = &pcie->msi;
+> +	unsigned long base;
+> +	int err;
+> +
+> +	mutex_init(&msi->lock);
+> +
+> +	msi->chip.dev = pcie->dev;
+> +	msi->chip.setup_irq = rcar_msi_setup_irq;
+> +	msi->chip.teardown_irq = rcar_msi_teardown_irq;
+> +
+> +	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
+> +					    &msi_domain_ops, &msi->chip);
+> +	if (!msi->domain) {
+> +		dev_err(&pdev->dev, "failed to create IRQ domain\n");
+> +		return -ENOMEM;
+> +	}
+> +
+> +	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
+> +	err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
+> +			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
+> +	if (err < 0) {
+> +		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
+> +		goto err;
+> +	}
+> +
+> +	err = devm_request_irq(&pdev->dev, msi->irq2, rcar_pcie_msi_irq,
+> +			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
+> +	if (err < 0) {
+> +		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
+> +		goto err;
+> +	}
+> +
+> +	/* setup MSI data target */
+> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> +	base = virt_to_phys((void *)msi->pages);
+> +
+> +	pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
+> +	pci_write_reg(pcie, 0, PCIEMSIAUR);
+> +
+> +	/* enable all MSI interrupts */
+> +	pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
+> +
+> +	return 0;
+> +
+> +err:
+> +	irq_domain_remove(msi->domain);
+> +	return err;
+> +}
+> +
+>  static int __init rcar_pcie_get_resources(struct platform_device *pdev,
+>  	struct rcar_pcie *pcie)
+>  {
+>  	struct resource res;
+> -	int err;
+> +	int err, i;
+>  
+>  	err = of_address_to_resource(pdev->dev.of_node, 0, &res);
+>  	if (err)
+> @@ -490,6 +700,22 @@ static int __init rcar_pcie_get_resources(struct platform_device *pdev,
+>  	if (err)
+>  		goto err_map_reg;
+>  
+> +	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
+> +	if (i < 0) {
+> +		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
+> +		err = -ENOENT;
+> +		goto err_map_reg;
+> +	}
+> +	pcie->msi.irq1 = i;
+> +
+> +	i = irq_of_parse_and_map(pdev->dev.of_node, 1);
+> +	if (i < 0) {
+> +		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
+> +		err = -ENOENT;
+> +		goto err_map_reg;
+> +	}
+> +	pcie->msi.irq2 = i;
+> +
+>  	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
+>  	if (IS_ERR(pcie->base)) {
+>  		err = PTR_ERR(pcie->base);
+> @@ -657,6 +883,16 @@ static int __init rcar_pcie_probe(struct platform_device *pdev)
+>  	 if (err)
+>  		return err;
+>  
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		err = rcar_pcie_enable_msi(pcie);
+> +		if (err < 0) {
+> +			dev_err(&pdev->dev,
+> +				"failed to enable MSI support: %d\n",
+> +				err);
+> +			return err;
+> +		}
+> +	}
+> +
+>  	of_id = of_match_device(rcar_pcie_of_match, pcie->dev);
+>  	if (!of_id || !of_id->data)
+>  		return -EINVAL;
+> diff --git a/drivers/pci/host/pcie-rcar.h b/drivers/pci/host/pcie-rcar.h
+> index 3dc026b..4f0c678 100644
+> --- a/drivers/pci/host/pcie-rcar.h
+> +++ b/drivers/pci/host/pcie-rcar.h
+> @@ -13,6 +13,7 @@
+>  #define PCIEMSR			0x000028
+>  #define PCIEINTXR		0x000400
+>  #define PCIEPHYSR		0x0007f0
+> +#define PCIEMSITXR		0x000840
+>  
+>  /* Transfer control */
+>  #define PCIETCTLR		0x02000
+> @@ -28,6 +29,10 @@
+>  #define PCIEPMSR		0x02034
+>  #define PCIEPMSCIER		0x02038
+>  #define PCIEMSIFR		0x02044
+> +#define PCIEMSIALR		0x02048
+> +#define  MSIFE			1
+> +#define PCIEMSIAUR		0x0204c
+> +#define PCIEMSIIER		0x02050
+>  
+>  /* root port address */
+>  #define PCIEPRAR(x)		(0x02080 + ((x) * 0x4))
 
-While using the new_id interface, the user can unintentionally feed
-incorrect values if the driver static table has a matching entry.
-This is possible since only the device and vendor fields are
-mandatory and the rest are optional. As a result, store_new_id
-will fill in default values that are then passed on to the driver
-and can have unintended consequences.
-
-As an example, consider the ixgbe driver and the 82599EB network card :
-echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
-
-This will pass a driver_data value of 0 to the driver whereas
-the index 0 in ixgbe actually points to a different set of card
-operations.
-
-This change returns an error if the user attempts to add a dynid for
-a vendor/device combination for which a static entry already exists.
-However, if the user intentionally wants a different set of values,
-she must provide all the 7 fields and that will be accepted.
-
-In KVM/device assignment scenario, the user might want 
-to bind a device back to the host driver by writing to new_id
-and trip on a possible null pointer dereference.
-
-Signed-off-by: Bandan Das <bsd@redhat.com>
----
-v2:
-1. Return error if there is a matching static entry
-and change commit message to reflect this behavior
-3. Fill in a pdev and call pci_match_id instead of creating
-a new matching function
-4. Change commit message to reflect that libvirt does not
-depend on this behavior
-
- drivers/pci/pci-driver.c | 23 ++++++++++++++++++++++-
- 1 file changed, 22 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 25f0bc6..493514e 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -103,11 +103,12 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
- {
- 	struct pci_driver *pdrv = to_pci_driver(driver);
- 	const struct pci_device_id *ids = pdrv->id_table;
-+	struct pci_dev *pdev;
- 	__u32 vendor, device, subvendor=PCI_ANY_ID,
- 		subdevice=PCI_ANY_ID, class=0, class_mask=0;
- 	unsigned long driver_data=0;
- 	int fields=0;
--	int retval;
-+	int retval = 0;
- 
- 	fields = sscanf(buf, "%x %x %x %x %x %x %lx",
- 			&vendor, &device, &subvendor, &subdevice,
-@@ -115,6 +116,26 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
- 	if (fields < 2)
- 		return -EINVAL;
- 
-+	if (fields != 7) {
-+		pdev = kzalloc(sizeof(*pdev), GFP_KERNEL);
-+		if (!pdev)
-+			return -ENOMEM;
-+
-+		pdev->vendor = vendor;
-+		pdev->device = device;
-+		pdev->subsystem_vendor = subvendor;
-+		pdev->subsystem_device = subdevice;
-+		pdev->class = class;
-+
-+		if (pci_match_id(pdrv->id_table, pdev))
-+			retval = -EEXIST;
-+
-+		kfree(pdev);
-+
-+		if (retval)
-+			return retval;
-+	}
-+
- 	/* Only accept driver_data values that match an existing id_table
- 	   entry */
- 	if (ids) {
 -- 
-1.8.3.1
+Pengutronix e.K.                           | Lucas Stach                 |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
 
