@@ -1,44 +1,34 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAOULuOaUke-W1W0o=1rhhk43Fy_RAYLdfhXQjdhy2xjHxP0oWA@mail.gmail.com>
-References: <CAOULuOY5eryuH1KgaqiuGXyYiQd2h=TZoPe2M2+juts9XuzW6Q@mail.gmail.com>
- <CAE9FiQXmO_sSCnd-0NvXKmyeLP0m4XGRRkAgqSiMkfeTcvXs+A@mail.gmail.com>
- <CAOULuOaeBPpuiYc_Aru+awBDf=Ahbok-UjgY9o7gfO4VMctoqg@mail.gmail.com>
- <CAE9FiQWpprkp_dzviD8wRpqosJq5Oe+8UTwhL87fbzFm3OknUw@mail.gmail.com>
- <CA+55aFx_zAO0iJVi==4X-bYFTopgaOCopCdUBbqUwKfOrXRYqw@mail.gmail.com>
- <20140329171903.GA10551@google.com> <CAOULuOaUke-W1W0o=1rhhk43Fy_RAYLdfhXQjdhy2xjHxP0oWA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 10 Apr 2014 13:50:01 -0600
-Message-ID: <CAErSpo6XjtrzSJE6n5aCMzketKv+rPt5eVvrzOQgUnviiRTWnA@mail.gmail.com>
-Subject: Re: BAR 14: can't assign mem (size 0x200000)
-To: Parag Warudkar <parag.lkml@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ryan Desfosses <ryan@desfo.org>
+To: trivial@kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Ryan Desfosses <ryan@desfo.org>
+Subject: [PATCH 2/2] pci: added space before the open parenthesis
+Date: Fri,  4 Apr 2014 14:18:10 -0400
+Message-Id: <1396635490-3630-1-git-send-email-ryan@desfo.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 29, 2014 at 6:14 PM, Parag Warudkar <parag.lkml@gmail.com> wrote:
->> On Sat, Mar 29, 2014 at 09:41:20AM -0700, Linus Torvalds wrote:
->
->>> Parag, can you add a WARN_ON_ONCE() to that message, so that we see
->>> what the call chain is for it.
+change made to resolve checkpatch.pl error
 
-Parag, did you ever try this?
+Signed-off-by: Ryan Desfosses <ryan@desfo.org>
+---
+ drivers/pci/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ...
-> Not sure if Ubuntu includes any patches on top of 3.11 mainline that
-> make a difference to this issue - but in case they don't this might be
-> a regression.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index fdbc294..56acb63 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -114,7 +114,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus* bus)
+ 	max = bus->busn_res.end;
+ 	list_for_each(tmp, &bus->children) {
+ 		n = pci_bus_max_busnr(pci_bus_b(tmp));
+-		if(n > max)
++		if (n > max)
+ 			max = n;
+ 	}
+ 	return max;
+-- 
+1.9.1
 
-I doubt that Ubuntu includes any patches relevant to this issue.
-
-Even though it doesn't seem to cause any problems, we're going to get
-a lot of complaints about these scary-looking messages when resuming,
-so I think we should figure this out and fix it.
-
-Bjorn
