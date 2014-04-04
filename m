@@ -1,94 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:39988 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933466AbaD3OTS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 10:19:18 -0400
-Received: by mail-wg0-f45.google.com with SMTP id b13so1806237wgh.16
-        for <linux-pci@vger.kernel.org>; Wed, 30 Apr 2014 07:19:17 -0700 (PDT)
-Message-ID: <5361065E.80304@monstr.eu>
-Date: Wed, 30 Apr 2014 16:19:10 +0200
-From: Michal Simek <monstr@monstr.eu>
-Reply-To: monstr@monstr.eu
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:63511 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751688AbaDDUjk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 16:39:40 -0400
+Received: by mail-pb0-f47.google.com with SMTP id up15so3959140pbc.34
+        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 13:39:40 -0700 (PDT)
+Date: Fri, 4 Apr 2014 14:39:36 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ryan Desfosses <ryan@desfo.org>
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] pci: added space before the open parenthesis
+Message-ID: <20140404203936.GA13931@google.com>
+References: <1396635490-3630-1-git-send-email-ryan@desfo.org>
 MIME-Version: 1.0
-To: Srikanth Thokala <sthokal@xilinx.com>, bhelgaas@google.com
-CC: grant.likely@linaro.org, robh+dt@kernel.org,
-	jgunthorpe@obsidianresearch.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v3] pcie: Add Xilinx PCIe Host Bridge IP driver
-References: <1397561911-11647-1-git-send-email-sthokal@xilinx.com>
-In-Reply-To: <1397561911-11647-1-git-send-email-sthokal@xilinx.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="RRHm6IoEN7DfJnpVAh13IietsX9aHf5dv"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1396635490-3630-1-git-send-email-ryan@desfo.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---RRHm6IoEN7DfJnpVAh13IietsX9aHf5dv
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Fri, Apr 04, 2014 at 02:18:10PM -0400, Ryan Desfosses wrote:
+> change made to resolve checkpatch.pl error
+> 
+> Signed-off-by: Ryan Desfosses <ryan@desfo.org>
 
-Hi Bjorn,
+Hi Ryan,
 
-On 04/15/2014 01:38 PM, Srikanth Thokala wrote:
-> This is the driver for Xilinx AXI PCIe Host Bridge Soft IP
->=20
-> Signed-off-by: Srikanth Thokala <sthokal@xilinx.com>
-> ---
-> Changes in v3:
-> - Rebased on v3.15.0-rc1
-> - Added support for interrupt-map DT functionality.
-> - Removed map_irq() wrapper, instead using of_irq_parse_and_map_pci().
-> - Modified resource mapping logic as per the series
->   "PCI: ARM: add support for generic PCI host controller"
-> - Modified devicetree binding documentation to update with interrupt-
->   map properties.
-> - Use devm calls wherever applicable.
-> - Fixed minor comments from Jason
-> - Thanks Jason for the review and suggestions.
->=20
-> Changes in v2:
-> - Rebased on v3.14.0-rc8
-> - Removed IP specific DT properties like include-rc, axibar-num etc.,
->   as suggested by Jason and Bjorn, Thanks
-> ---
->  .../devicetree/bindings/pci/xilinx-pcie.txt        |   62 ++
->  drivers/pci/host/Kconfig                           |    7 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-xilinx.c                      |  999 ++++++++++++=
-++++++++
->  4 files changed, 1069 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/xilinx-pcie.t=
-xt
->  create mode 100644 drivers/pci/host/pci-xilinx.c
+Thanks for this and your previous fix.  This "Signed-off-by" looks good.
+Would you mind reposting the "pci_bus*" fix with a similar "Signed-off-by"?
+It's a small fix, but strictly speaking, I need the "Signed-off-by" before
+I can apply a patch.
 
-Any comment on this patch?
+We normally write the changelog so it can stand alone, i.e., you shouldn't
+have to read the summary in addition to the changelog for it to make sense.
+It might be useful to browse other changelogs, e.g., with "git log
+--no-merges drivers/pci".  I do often fix capitalization, spelling, and
+other errors because I think consistency makes it easier to read the
+history.
 
-Thanks,
-Michal
+The "[2/2]" notation suggests that there's another patch labeled "[1/2]"
+(and probably an overall summary labeled "[0/2]"), and that all were posted
+together.  In this case, I think you intended your "pci_bus*" patch to be
+[1/2], but since they weren't posted together, it's a bit harder for me to
+keep track of them as a group.
 
---=20
-Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
-w: www.monstr.eu p: +42-0-721842854
-Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
-Maintainer of Linux kernel - Xilinx Zynq ARM architecture
-Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
+If you don't mind, I'll collect up this and your previous fix (and any
+future ones you find) and squash them into a single "whitespace fixes" sort
+of patch to reduce the number of commits for obviously-correct changes.
+
+Thanks again, and welcome to Linux kernel development!
+
+Oh, and I applied the patch below to my pending/misc branch (and I'll
+update it with the other one when you post it).  I have a few other things
+I hope to ask Linus to put in v3.15 yet, and I'll include this.
+
+Bjorn
 
 
 
---RRHm6IoEN7DfJnpVAh13IietsX9aHf5dv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+From: Ryan Desfosses <ryan@desfo.org>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+PCI: Fix whitespace issues
 
-iEYEARECAAYFAlNhBl8ACgkQykllyylKDCH49wCfWE9bLKJgU6Lc/gbyIX3o9pJT
-WuoAniVKqqaWYKicccMgCkg8MSz8En7u
-=t95h
------END PGP SIGNATURE-----
+Resolve whitespace issues that checkpatch.pl complained about.
 
---RRHm6IoEN7DfJnpVAh13IietsX9aHf5dv--
+No functional change.
+
+Signed-off-by: Ryan Desfosses <ryan@desfo.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7325d43bf030..1f0bf2eec127 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -114,7 +114,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus* bus)
+ 	max = bus->busn_res.end;
+ 	list_for_each_entry(tmp, &bus->children, node) {
+ 		n = pci_bus_max_busnr(tmp);
+-		if(n > max)
++		if (n > max)
+ 			max = n;
+ 	}
+ 	return max;
