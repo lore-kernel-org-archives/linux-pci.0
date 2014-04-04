@@ -1,86 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 7 Apr 2014 09:35:50 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
- function.
-Message-ID: <20140407083550.GF17163@e106497-lin.cambridge.arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com>
- <20140405001953.GE15806@google.com>
- <1396777793.3671.15.camel@pasglop>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:38136 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751781AbaDDGOi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 02:14:38 -0400
+Received: by mail-oa0-f49.google.com with SMTP id o6so3080223oag.22
+        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 23:14:37 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1396777793.3671.15.camel@pasglop>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1396538590.3215.6.camel@ul30vt.home>
+References: <CAHH3p5LwsWqtK_RhaYNKi_HeNYH3EHrgXV21SbRTA4mm2Vyjwg@mail.gmail.com>
+	<1396538590.3215.6.camel@ul30vt.home>
+Date: Fri, 4 Apr 2014 11:44:37 +0530
+Message-ID: <CAHH3p5L6BO0PfXG_pB18-Tt1waLEL6bDV_=-1wR+afeQXHGh=g@mail.gmail.com>
+Subject: Re: Writing to BARs of PCIE device
+From: shiv prakash Agarwal <chhotu.shiv@gmail.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 06, 2014 at 10:49:53AM +0100, Benjamin Herrenschmidt wrote:
-> On Fri, 2014-04-04 at 18:19 -0600, Bjorn Helgaas wrote:
-> > > Introduce a pci_register_io_range() helper function that can be used
-> > > by the architecture code to keep track of the I/O ranges described by the
-> > > PCI bindings. If the PCI_IOBASE macro is not defined that signals
-> > > lack of support for PCI and we return an error.
-> > 
-> > I don't quite see how you intend to use this, because this series doesn't
-> > include any non-stub implementation of pci_register_io_range().
-> > 
-> > Is this anything like the ia64 strategy I mentioned above?  If so, it would
-> > be really nice to unify some of this stuff.
-> 
-> We also use two different strategies on ppc32 and ppc64
-> 
->  - On ppc32, inb/outb turn into an MMIO access to _IO_BASE + port
-> 
-> That _IO_BASE is a variable which is initialized to the ioremapped address
-> of the IO space MMIO aperture of the first bridge we discover. Then port
-> numbers are "fixed up" on all other bridges so that the addition _IO_BASE + port
-> fits the ioremapped address of the IO space on that bridge. A bit messy... and breaks
-> whenever drivers copy port numbers into variables of the wrong type such as shorts.
-> 
->  - On ppc64, we have more virtual space, so instead we reserve a range
-> of address space (fixed) for IO space, it's always the same. Bridges IO spaces
-> are then mapped into that range, so we always have a positive offset from _IO_BASE
-> which makes things a bit more robust and less "surprising" than ppc32. Additionally,
-> the first 64k are reserved. They are only mapped if we see an ISA bridge (which some
-> older machines have). Otherwise it's left unmapped, so crappy drivers trying to
-> hard code x86 IO ports will blow up immediately which I deem better than silently
-> whacking the wrong hardware. In addition, we have a mechanism we use on powernv to
-> re-route accesses to that first 64k to the power8 built-in LPC bus which can
-> have some legacy IOs on it such as a UART or a RTC.
-> 
-> Cheers,
-> Ben.
-> 
+Thanks Alex,
 
-Hi Benjamin,
+1. I am not concerned about device functionality but need to verify
+PCIE interface only by stressing it.
 
-Thanks for the summary, is really useful as I was recently looking into code in that
-area. One thing I was trying to understand is why ppc needs _IO_BASE at all rather
-than using the generic PCI_IOBASE? 
+2. But I don't see writes getting reflected for most of addresses.
 
-Best regards,
-Liviu
- 
+3. Also very often, it hangs in middle with CPU soft lockup and rcu
+preempt failures as below:
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+[ 9732.090081] BUG: soft lockup- CPU#0 stuck for 22s! [update-notifier:1319]
+[ 9742.108839] INFO: rcu_preempt self-detected stall on CPU
+[ 9742.108848] INFO: rcu_preempt detected stalls on CPUs/tasks: { 0}
+(detected by 3, t=366016 jiffies, g=88556, c=88555, q=2037)
 
+4. So query is why above 2 issues? I know it will affect device
+functionality but at least stress write test suite should work, right?
+
+On Thu, Apr 3, 2014 at 8:53 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Thu, 2014-04-03 at 20:38 +0530, shiv prakash Agarwal wrote:
+>> Hi All,
+>>
+>> I have a stress test which write a specific 4B pattern to whole BAR
+>> space for all BARs of a pcie device.
+>>
+>> Query is:
+>>
+>> 1. Is it allowed? Or will it have any side-effects?
+>> 2. If No, is it not allowed for all BARs or some BARs only like BAR0?
+>
+> Of course it will have side-effects, it's conceptually the same as
+> 'cat /dev/random > /dev/mem', but for a device instead of the kernel.
+> What you're overwriting is device dependent, but in any case you're
+> trashing something.  The test sounds completely invalid to me.  Thanks,
+>
+> Alex
+>
