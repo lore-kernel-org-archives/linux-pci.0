@@ -1,68 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:41445 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756222AbaDHQyW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 12:54:22 -0400
-Received: by mail-ie0-f171.google.com with SMTP id ar20so1214152iec.16
-        for <linux-pci@vger.kernel.org>; Tue, 08 Apr 2014 09:54:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4778371.oH3kIlbD0f@wuerfel>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
- <20140408095038.GT17163@e106497-lin.cambridge.arm.com> <4778371.oH3kIlbD0f@wuerfel>
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:57045 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752651AbaDDRFX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 13:05:23 -0400
+Received: by mail-pd0-f169.google.com with SMTP id fp1so3608278pdb.28
+        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 10:05:22 -0700 (PDT)
+Date: Fri, 4 Apr 2014 11:05:17 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 8 Apr 2014 10:54:01 -0600
-Message-ID: <CAErSpo4RtEovyRXw=UXxBSz_hD4kfayBOkaKH_4Qk_s+hsEAxg@mail.gmail.com>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Content-Type: text/plain; charset=UTF-8
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	Simon Horman <horms@verge.net.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Ben Dooks <ben-linux@fluff.org>, linux-tegra@vger.kernel.org,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>, kernel@pengutronix.de
+Subject: Re: [PATCH v2 6/6] PCI: designware: use new OF interrupt mapping
+ when possible
+Message-ID: <20140404170517.GH9007@google.com>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+ <1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
+ <20140305184219.GA29903@obsidianresearch.com>
+ <20140404170341.GG9007@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140404170341.GG9007@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 8, 2014 at 4:22 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Tuesday 08 April 2014 10:50:39 Liviu Dudau wrote:
->> On Mon, Apr 07, 2014 at 06:58:24PM +0100, Bjorn Helgaas wrote:
->> > On Mon, Apr 7, 2014 at 5:36 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->> >
->> > > I think migrating other architectures to use the same code should be
->> > > a separate effort from adding a generic implementation that can be
->> > > used by arm64. It's probably a good idea to have patches to convert
->> > > arm32 and/or microblaze.
->> >
->> > Let me reiterate that I am 100% in favor of replacing arch-specific
->> > code with more generic implementations.
->> >
->> > However, I am not 100% in favor of doing it as separate efforts
->> > (although maybe I could be convinced).  The reasons I hesitate are
->> > that (1) if only one architecture uses a new "generic" implementation,
->> > we really don't know whether it is generic enough, (2) until I see the
->> > patches to convert other architectures, I have to assume that I'm the
->> > one who will write them, and (3) as soon as we add the code to
->> > drivers/pci, it becomes partly my headache to maintain it, even if
->> > only one arch benefits from it.
->
-> Fair enough.
->
-> My approach to the asm-generic infrastruction has mostly been to ensure
-> that whoever adds a new architecture has to make things easier for the
-> next person.
+On Fri, Apr 04, 2014 at 11:03:41AM -0600, Bjorn Helgaas wrote:
+> On Wed, Mar 05, 2014 at 11:42:19AM -0700, Jason Gunthorpe wrote:
+> > On Wed, Mar 05, 2014 at 02:25:51PM +0100, Lucas Stach wrote:
+> > > -	return pp->irq;
+> > > +	irq = of_irq_parse_and_map_pci(dev, slot, pin);
+> > > +	if (!irq)
+> > > +		irq = pp->irq;
+> > 
+> > In light of the two bugs that Tim found, it might be wise to throw a
+> > 'dev_warn(FW_BUG "Missing DT interrupt mapping")' in the fall back
+> > path, so it doesn't continue to silently cover up errors on the OF/DT
+> > side..
+> 
+> This sounds like a reasonable thing to do, but I didn't see a response to
+> this comment.  Should I merge it as-is, or do you want to add the message?
 
-That's a good rule.  But if we add a generic implementation used only
-by one architecture, the overall complexity has increased (we added
-new unshared code), so the next person has to look at N+1 existing
-implementations.  If we even convert one existing arch, that seems
-like an improvement: we have N implementations with one being used by
-at least two arches.
-
-Bjorn
+Oh, and I suppose the same question applies to the other host drivers in
+this series (tegra, rcar)?
