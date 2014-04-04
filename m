@@ -1,122 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:40907 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755334AbaDVNB2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 09:01:28 -0400
-Date: Tue, 22 Apr 2014 14:01:22 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Arnd Bergmann' <arnd@arndb.de>,
-	'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Marek Vasut' <marex@denx.de>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Byungho An' <bh74.an@samsung.com>,
-	'Rob Herring' <robherring2@gmail.com>
-Subject: Re: [RFC PATCH 1/2] PCI: designware: Add ARM64 PCI support
-Message-ID: <20140422130122.GH865@e106497-lin.cambridge.arm.com>
-References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
- <000901cf592e$563bc8c0$02b35a40$%han@samsung.com>
- <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
- <16730530.rJ9T0MsYmt@wuerfel>
- <000001cf5d04$982a6000$c87f2000$%han@samsung.com>
- <000501cf5d48$4cf707c0$e6e51740$%han@samsung.com>
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:36556 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752486AbaDDXcy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 19:32:54 -0400
+Received: by mail-pd0-f173.google.com with SMTP id z10so3968907pdj.4
+        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 16:32:54 -0700 (PDT)
+Date: Fri, 4 Apr 2014 17:32:51 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 2/2] PCI: Refactor pci_is_bridge()
+Message-ID: <20140404233251.GB15806@google.com>
+References: <1394789926-11912-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <000501cf5d48$4cf707c0$e6e51740$%han@samsung.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1394789926-11912-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 21, 2014 at 10:58:52AM +0100, Jingoo Han wrote:
-> On Monday, April 21, 2014 10:54 AM, Jingoo Han wrote:
-> > On Thursday, April 17, 2014 3:26 AM, Arnd Bergmann wrote:
-> > > On Wednesday 16 April 2014 17:57:24 Liviu Dudau wrote:
-> > > > Jingoo,
-> > > >
-> > > > Thanks for taking a stab at trying to convert a host bridge
-> > > > driver to use the new generic host bridge code.
-> > > >
-> > > > I do however have concerns on the direction you took. You have split
-> > > > your driver in two, depending on whether it was CONFIG_ARM or CONFIG_ARM64,
-> > > > even if (with my series) it should be no reason why the host bridge
-> > > > driver should not work on other architectures as well once they are
-> > > > converted.
-> > >
-> > > Right.
-> > >
-> > > > Also, some of the functions that you use have identical names but different
-> > > > signatures depending on what arch you have selected. This is really bad
-> > > > in my books!
+On Fri, Mar 14, 2014 at 05:38:46PM +0800, Yijing Wang wrote:
+> Refactor pci_is_bridge(), check pci device
+> hdr_type instead, and move it in include/linux/pci.h
 > 
-> [.....]
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  include/linux/pci.h |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
 > 
-> > > > What about creating functions that use my series directly if CONFIG_ARM64 is
-> > > > defined (or any CONFIG_ you want to create for your driver that you select
-> > > > from CONFIG_ARM64) and otherwise implement the CONFIG_ARM version? That
-> > > > way your driver will call only one API without any #ifdef and when arm code
-> > > > gets converted you drop your adaptation functions. Or (better yet), have a
-> > > > stab at converting bios32 (Rob Herring has already provided some hints on
-> > > > how to do it for arch/arm).
-> > 
-> > To: Liviu Dudau
-> > 
-> > Sorry, but I will not implement this.
-> > At first, you had to think the compatibility with ARM32 PCIe.
-> > Why do you want other engineers to take this load?
-> 
-> (+cc Rob Herring)
-> 
-> Um, I am looking at Rob Herring's patchset for Versatile PCI. [1]
-> Then, do you mean the following?
-> 
-> 1. Add Rob Herring's patch converting bios32. [2]
-> 2. Reference Rob Herring's patch in order to know how to
->     handle "of_create_pci_host_bridge()" directly in ARM32. [3]
-> 3. Use of_create_pci_host_bridge() for the designware PCIe
->     driver in ARM32.
-> 4. Also, use of_create_pci_host_bridge() for the designware PCIe
->     driver in "ARM64".
-> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 33aa2ca..22370c4 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1649,6 +1649,12 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
+>  	return pci_pcie_cap(dev);
+>  }
+>  
+> +static inline bool pci_is_bridge(struct pci_dev *dev)
+> +{
+> +	return dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+> +		dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+> +}
 
-Sounds like a good plan. 3 and 4 should be one and the same in my opinion, but
-there might be more things in designware driver that I am missing right now.
+There's no point in adding this unless somebody uses it (but I assume
+you probably meant to use it in acpi_pci_find_companion() as I mentioned).
 
-Best regards,
-Liviu
-
-> 
-> [1] http://www.spinics.net/lists/linux-pci/msg30084.html
-> [2] http://www.spinics.net/lists/linux-pci/msg30083.html
-> [3] http://www.spinics.net/lists/linux-pci/msg30086.html
-> 
-> Best regards,
-> Jingoo Han
-> 
-> > 
-> > >
-> > > That would of course be best.
-> > >
-> 
-> [.....]
+>  /**
+>   * pcie_caps_reg - get the PCIe Capabilities Register
+>   * @dev: PCI device
+> -- 
+> 1.7.1
 > 
 > 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
