@@ -1,103 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35233 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752105AbaDXVfk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 17:35:40 -0400
-Received: by mail-pa0-f43.google.com with SMTP id rd3so522767pab.30
-        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 14:35:39 -0700 (PDT)
-Date: Thu, 24 Apr 2014 15:35:37 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Richard Zhu' <Hong-Xing.Zhu@freescale.com>,
-	'Marek Vasut' <marex@denx.de>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	linux-pci@vger.kernel.org, 'Pratyush ANAND' <pratyush.anand@st.com>
-Subject: Re: [PATCH] PCI: designware: Remove unnecessary RC BAR setting
-Message-ID: <20140424213537.GJ29593@google.com>
-References: <000801cf4d95$64322ef0$2c968cd0$%han@samsung.com>
- <2CC2A0A4A178534D93D5159BF3BCB66189FEC4809B@EAPEX1MAIL1.st.com>
- <533BA157.6030004@ti.com>
- <201404021234.48134.marex@denx.de>
- <65debfc7f79a4a27a58bd7c64382881f@BLUPR03MB136.namprd03.prod.outlook.com>
- <000001cf4fad$ff227ae0$fd6770a0$%han@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <000001cf4fad$ff227ae0$fd6770a0$%han@samsung.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:57701 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751713AbaDDJJC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 05:09:02 -0400
+Message-ID: <1396602492.5625.4.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH v7 05/10] dt-bindings: pci: rcar pcie device tree
+ bindings
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-sh@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Date: Fri, 04 Apr 2014 11:08:12 +0200
+In-Reply-To: <1396261856-22465-6-git-send-email-phil.edworthy@renesas.com>
+References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+	 <1396261856-22465-6-git-send-email-phil.edworthy@renesas.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 04, 2014 at 11:31:34AM +0900, Jingoo Han wrote:
-> On Wednesday, April 02, 2014 8:59 PM, Richard Zhu wrote:
-> > Wednesday, April 02, 2014 6:35 PM, Marek Vasut wrote:
-> > > On Wednesday, April 02, 2014 at 07:34:15 AM, Kishon Vijay Abraham I wrote:
-> > > > On Wednesday 02 April 2014 11:03 AM, Mohit KUMAR DCG wrote:
-> > > > > Wednesday, April 02, 2014 10:53 AM, Jingoo Han wrote:
-> > > > >> On Wednesday, April 02, 2014 1:57 PM, Mohit KUMAR DCG wrote:
-> > > > >>> On Tuesday, April 01, 2014 4:00 PM, Jingoo Han wrote:
-> > > > >>>> According to the spec, the synopsys core does not implement the
-> > > > >>>> optional BARs such as BAR0/1. This is based on the assumption
-> > > > >>>> that the RC host probably has registers on some other internal
-> > > > >>>> bus and has knowledge and setup access to these registers already.
-> > > > >>>> So, remove unnecessary RC BAR setting.
-> > > > >>>
-> > > > >>> - Normally BARs in RC are not used but somehow available in the
-> > > > >>> design. One possible BAR use can be if RC has some memory
-> > > > >>> connected to
-> > > > >>
-> > > > >> the BAR that needs to be accessed through link.
-> > > > >>
-> > > > >>> Otherwise we can ignore BARs setup here.
-> > > > >>
-> > > > >> Hi Mohit KUMAR DCG,
-> > > > >>
-> > > > >> Thank you for your feedback.
-> > > > >>
-> > > > >> I want to know whether or not other SoCs such as ST, Freescale, TI
-> > > > >> support BAR0/BAR1. If no SoC supports BAR0/BAR1, the unnecessary RC
-> > > > >> BAR setting code should  be removed.
-> > > > >
-> > > > > - We are not currently using RC's BAR0/1 in any application but no
-> > > > > such restriction from HW as ST SoCs support BARs in HW design.
-> > > >
-> > > > Neither do we in DRA7xx.
-> > >
-> > > I suspect that means we should keep the code to make sure the registers are
-> > > configured correctly, no?
-> > >
-> > > Richard, can you comment on MX6 please ?
-> > 
-> >  [Richard] Sorry to reply late. I'm engaged in another stuff in the past days.
-> > i.MX6 pcie doesn't use RC's BAR0/1 in applications either.
-> > >
+Am Montag, den 31.03.2014, 11:30 +0100 schrieb Phil Edworthy:
+> This patch adds the bindings for the R-Car PCIe driver. The driver
+> resides under drivers/pci/host/pcie-rcar.c
 > 
-> Thank you all for your comments!
-> 
-> I noticed that Synopsys PCIe "Dual mode" can support BAR0/BAR1.
-> The bits[3:0] of BAR0 is RO(CS), which means Read-Only, but writable
-> from the local application through the DBI.
-> 
-> So, the BAR0/1 setting might be necessary, in order to ensure the
-> BAR0/1 setting is written properly.
-> 
-> But, when BAR0/1 are implemented, the bits[3:0] of BAR0 is decided
-> by hardware configuration parameters. So, this BAR0/1 setting looks
-> unnecessary.
-> 
-> How about others' opinions?
-> 
-> 1. Necessary: in order to ensure the BAR0/BAR1 setting, even though
->                    BAR0/BAR1 were already set as hardware default values
-> 
-> 2. Unnecessary: the BAR0/BAR1 setting code is dummy, because BAR0/BAR1
->                       were already set as hardware default values
-> 
-> For example, in the case of Exynos5440, BAR0/BAR1 are not implemented;
-> thus, even though BAR0 is written as 0x4, BAR0 can be always read as 0.
-> So, there is not side effect, but just unnecessary code is executed
-> during boot time.
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 
-I don't sense a clear consensus that we should apply this, so I'll drop
-it for now.  Please repost with appropriate acks if we do need it.
+Another nitpick below, otherwise:
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
-Bjorn
+If you decide to roll another version with just this changed, feel free
+to carry over the my tag.
+> 
+> v7:
+>  - Change binding description of clocks to 'clock specifiers'
+> 
+> v6:
+>  - Correct DT bindings description for reg and clocks
+> 
+> v5:
+>  - Add PCIe bus clock reference
+>  - Add additional interrupt bindings
+>  - Use dma-ranges property to specify inbound memory regions
+> ---
+>  Documentation/devicetree/bindings/pci/rcar-pci.txt | 45 ++++++++++++++++++++++
+>  1 file changed, 45 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> new file mode 100644
+> index 0000000..789bd46
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> @@ -0,0 +1,45 @@
+> +* Renesas RCar PCIe interface
+> +
+> +Required properties:
+> +- compatible: should contain one of the following
+> +	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
+> +- reg: base address and length of the pcie controller registers.
+> +- #address-cells: set to <3>
+> +- #size-cells: set to <2>
+> +- device_type: set to "pci"
+> +- ranges: ranges for the PCI memory and I/O regions.
+> +- dma-ranges: ranges for the inbound memory regions.
+> +- interrupts: two interrupt sources for MSI interrupts, followed by interrupt
+> +	source for hardware related interrupts (e.g. link speed change).
+> +- #interrupt-cells: set to <1>
+> +- interrupt-map-mask and interrupt-map: standard PCI properties
+> +	to define the mapping of the PCIe interface to interrupt
+> +	numbers.
+> +- clocks: from common clock binding: clock specifiers for the PCIe controller
+> +	and PCIe bus clocks.
+> +- clock-names: from common clock binding: should be "pcie" and "pcie_bus".
+> +
+> +Example:
+> +
+> +SoC specific DT Entry:
+> +
+> +	pcie: pcie@fe000000 {
+> +		compatible = "renesas,pcie-r8a7791";
+> +		reg = <0 0xfe000000 0 0x80000>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
+> +			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
+> +			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
+> +			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
+> +		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000
+> +			      0x42000000 2 0x00000000 2 0x00000000 0 0x40000000>;
+> +		interrupts = <0 116 4 0 117 4 0 118 4>;
+
+I think this is confusing, I would rather like to see them in separate
+cells, like
+	interrupts = <0 116 4>, <0 117 4>, <0 118 4>;
+
+Same would be true for the ranges properties, but there it isn't as
+confusing, so I don't really care.
+
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0 0 0 0>;
+> +		interrupt-map = <0 0 0 0 &gic 0 116 4>;
+> +		clocks = <&mstp3_clks R8A7791_CLK_PCIE>, <&pcie_bus_clk>;
+> +		clock-names = "pcie", "pcie_bus";
+> +		status = "disabled";
+> +	};
+
+-- 
+Pengutronix e.K.                           | Lucas Stach                 |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+
