@@ -1,144 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:11627 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752780AbaDDOuO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 10:50:14 -0400
-From: Thierry Reding <treding@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>
-Subject: [RFC 2/5] ARM: tegra: Add new PCIe regulator properties
-Date: Fri, 4 Apr 2014 16:49:26 +0200
-Message-ID: <1396622969-17837-3-git-send-email-treding@nvidia.com>
-In-Reply-To: <1396622969-17837-1-git-send-email-treding@nvidia.com>
-References: <1396622969-17837-1-git-send-email-treding@nvidia.com>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:35098 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505AbaDDXcB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 19:32:01 -0400
+Received: by mail-pa0-f41.google.com with SMTP id fa1so4116274pad.14
+        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 16:32:00 -0700 (PDT)
+Date: Fri, 4 Apr 2014 17:31:57 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 1/2] PCI: rename pci_is_bridge() to pci_has_subordinate()
+Message-ID: <20140404233157.GA15806@google.com>
+References: <1394789889-11500-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1394789889-11500-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These new properties more accurately reflect the real connections of the
-boards and therefore make it easier to match them up with schematics.
+On Fri, Mar 14, 2014 at 05:38:09PM +0800, Yijing Wang wrote:
+> pci_is_bridge() return true only when the device subordinate
+> is not equal to NULL. This confuses people. PCI device is a
+> bridge means header type(bit 0 through 6) is 0x1(PCI bridge) or 
+> 0x2(CardBus bridge).
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/pci-acpi.c   |    5 -----
+>  drivers/pci/pci-driver.c |    8 ++++----
+>  drivers/pci/pci.h        |    2 +-
+>  3 files changed, 5 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index f49abef..4bc7971 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -309,11 +309,6 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+>  	bool check_children;
+>  	u64 addr;
+>  
+> -	/*
+> -	 * pci_is_bridge() is not suitable here, because pci_dev->subordinate
+> -	 * is set only after acpi_pci_find_device() has been called for the
+> -	 * given device.
+> -	 */
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- arch/arm/boot/dts/tegra20-harmony.dts   | 10 +++++++++-
- arch/arm/boot/dts/tegra20-tamonten.dtsi |  7 +++++++
- arch/arm/boot/dts/tegra20-trimslice.dts |  8 ++++++++
- arch/arm/boot/dts/tegra30-beaver.dts    | 11 +++++++++++
- arch/arm/boot/dts/tegra30-cardhu.dtsi   | 10 ++++++++++
- 5 files changed, 45 insertions(+), 1 deletion(-)
+This hunk shouldn't be here.  My guess is that you intended to replace
+the code below with the new pci_is_bridge() that you introduced in
+patch [2/2].  That new pci_is_bridge() is never used, and it does the
+same hdr_type test as the code below.  But you apparently forgot to
+change this code to use it?
 
-diff --git a/arch/arm/boot/dts/tegra20-harmony.dts b/arch/arm/boot/dts/tegra20-harmony.dts
-index 3fb1f50f6d46..7d5d0aa1778a 100644
---- a/arch/arm/boot/dts/tegra20-harmony.dts
-+++ b/arch/arm/boot/dts/tegra20-harmony.dts
-@@ -561,9 +561,17 @@
- 	};
- 
- 	pcie-controller@80003000 {
-+		status = "okay";
-+
-+		avdd-pex-supply = <&pci_vdd_reg>;
-+		vdd-pex-supply = <&pci_vdd_reg>;
-+		avdd-pex-pll-supply = <&pci_vdd_reg>;
-+		avdd-plle-supply = <&pci_vdd_reg>;
-+		vddio-pex-clk-supply = <&pci_clk_reg>;
-+
-+		/* deprecated */
- 		pex-clk-supply = <&pci_clk_reg>;
- 		vdd-supply = <&pci_vdd_reg>;
--		status = "okay";
- 
- 		pci@1,0 {
- 			status = "okay";
-diff --git a/arch/arm/boot/dts/tegra20-tamonten.dtsi b/arch/arm/boot/dts/tegra20-tamonten.dtsi
-index a1b0d965757f..0e33577750ae 100644
---- a/arch/arm/boot/dts/tegra20-tamonten.dtsi
-+++ b/arch/arm/boot/dts/tegra20-tamonten.dtsi
-@@ -473,6 +473,13 @@
- 	};
- 
- 	pcie-controller@80003000 {
-+		avdd-pex-supply = <&pci_vdd_reg>;
-+		vdd-pex-supply = <&pci_vdd_reg>;
-+		avdd-pex-pll-supply = <&pci_vdd_reg>;
-+		avdd-plle-supply = <&pci_vdd_reg>;
-+		vddio-pex-clk-supply = <&pci_clk_reg>;
-+
-+		/* deprecated */
- 		pex-clk-supply = <&pci_clk_reg>;
- 		vdd-supply = <&pci_vdd_reg>;
- 	};
-diff --git a/arch/arm/boot/dts/tegra20-trimslice.dts b/arch/arm/boot/dts/tegra20-trimslice.dts
-index 216fa6d50c65..401b32e44369 100644
---- a/arch/arm/boot/dts/tegra20-trimslice.dts
-+++ b/arch/arm/boot/dts/tegra20-trimslice.dts
-@@ -318,6 +318,14 @@
- 
- 	pcie-controller@80003000 {
- 		status = "okay";
-+
-+		avdd-pex-supply = <&pci_vdd_reg>;
-+		vdd-pex-supply = <&pci_vdd_reg>;
-+		avdd-pex-pll-supply = <&pci_vdd_reg>;
-+		avdd-plle-supply = <&pci_vdd_reg>;
-+		vddio-pex-clk-supply = <&pci_clk_reg>;
-+
-+		/* deprecated */
- 		pex-clk-supply = <&pci_clk_reg>;
- 		vdd-supply = <&pci_vdd_reg>;
- 
-diff --git a/arch/arm/boot/dts/tegra30-beaver.dts b/arch/arm/boot/dts/tegra30-beaver.dts
-index e93fe45b7803..b434ec1f278a 100644
---- a/arch/arm/boot/dts/tegra30-beaver.dts
-+++ b/arch/arm/boot/dts/tegra30-beaver.dts
-@@ -17,6 +17,17 @@
- 
- 	pcie-controller@00003000 {
- 		status = "okay";
-+
-+		avdd-pexa-supply = <&ldo1_reg>;
-+		vdd-pexa-supply = <&ldo1_reg>;
-+		avdd-pexb-supply = <&ldo1_reg>;
-+		vdd-pexb-supply = <&ldo1_reg>;
-+		avdd-pex-pll-supply = <&ldo1_reg>;
-+		avdd-plle-supply = <&ldo1_reg>;
-+		vddio-pex-ctl-supply = <&sys_3v3_reg>;
-+		hvdd-pex-supply = <&sys_3v3_pexs_reg>;
-+
-+		/* deprecated */
- 		pex-clk-supply = <&sys_3v3_pexs_reg>;
- 		vdd-supply = <&ldo1_reg>;
- 		avdd-supply = <&ldo2_reg>;
-diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
-index 0cf0848a82d8..55051a808ced 100644
---- a/arch/arm/boot/dts/tegra30-cardhu.dtsi
-+++ b/arch/arm/boot/dts/tegra30-cardhu.dtsi
-@@ -38,6 +38,16 @@
- 
- 	pcie-controller@00003000 {
- 		status = "okay";
-+
-+		/* AVDD_PEXA and VDD_PEXA are grounded on Cardhu. */
-+		avdd-pexb-supply = <&ldo1_reg>;
-+		vdd-pexb-supply = <&ldo1_reg>;
-+		avdd-pex-pll-supply = <&ldo1_reg>;
-+		hvdd-pex-supply = <&pex_hvdd_3v3_reg>;
-+		vddio-pex-ctl-supply = <&sys_3v3_reg>;
-+		avdd-plle-supply = <&ldo2_reg>;
-+
-+		/* deprecated */
- 		pex-clk-supply = <&pex_hvdd_3v3_reg>;
- 		vdd-supply = <&ldo1_reg>;
- 		avdd-supply = <&ldo2_reg>;
--- 
-1.9.1
+>  	check_children = pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE
+>  			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+>  	/* Please ref to ACPI spec for the syntax of _ADR */
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 25f0bc6..019dcb2 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -580,14 +580,14 @@ static void pci_pm_default_resume(struct pci_dev *pci_dev)
+>  {
+>  	pci_fixup_device(pci_fixup_resume, pci_dev);
+>  
+> -	if (!pci_is_bridge(pci_dev))
+> +	if (!pci_has_subordinate(pci_dev))
 
+The rest of this is a simple rename and looks fine to me.
+
+>  		pci_enable_wake(pci_dev, PCI_D0, false);
+>  }
+>  
+>  static void pci_pm_default_suspend(struct pci_dev *pci_dev)
+>  {
+>  	/* Disable non-bridge devices without PM support */
+> -	if (!pci_is_bridge(pci_dev))
+> +	if (!pci_has_subordinate(pci_dev))
+>  		pci_disable_enabled_device(pci_dev);
+>  }
+>  
+> @@ -711,7 +711,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+>  
+>  	if (!pci_dev->state_saved) {
+>  		pci_save_state(pci_dev);
+> -		if (!pci_is_bridge(pci_dev))
+> +		if (!pci_has_subordinate(pci_dev))
+>  			pci_prepare_to_sleep(pci_dev);
+>  	}
+>  
+> @@ -954,7 +954,7 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+>  			return error;
+>  	}
+>  
+> -	if (!pci_dev->state_saved && !pci_is_bridge(pci_dev))
+> +	if (!pci_dev->state_saved && !pci_has_subordinate(pci_dev))
+>  		pci_prepare_to_sleep(pci_dev);
+>  
+>  	/*
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 4df38df..a3b9cc1 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -79,7 +79,7 @@ static inline void pci_wakeup_event(struct pci_dev *dev)
+>  	pm_wakeup_event(&dev->dev, 100);
+>  }
+>  
+> -static inline bool pci_is_bridge(struct pci_dev *pci_dev)
+> +static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
+>  {
+>  	return !!(pci_dev->subordinate);
+>  }
+> -- 
+> 1.7.1
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
