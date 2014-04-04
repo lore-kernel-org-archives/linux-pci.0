@@ -1,63 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Faerbit <faerbit@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: Hibernation problem with 3.14 kernel
-Date: Sun, 20 Apr 2014 01:26:13 +0200
-Message-ID: <1438736.ANSVkEtpCM@vostro.rjw.lan>
-In-Reply-To: <534EEE4D.7070203@gmail.com>
-References: <534EEE4D.7070203@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor2.renesas.com ([210.160.252.172]:32505 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750888AbaDDIWf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Apr 2014 04:22:35 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	"Geert Uytterhoeven" <geert@linux-m68k.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v7 00/10] R-Car Gen2 PCIe host driver
+Date: Fri, 4 Apr 2014 08:22:30 +0000
+Message-ID: <d0a11d072b1a44829e3e977d643f7087@HKXPR06MB168.apcprd06.prod.outlook.com>
+References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+In-Reply-To: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, April 16, 2014 10:55:41 PM Faerbit wrote:
-> Hi everyone,
+Hi Arnd, Ben, Sergei, Simon, Lucas, Geert, Jason,
 
-Hi,
+Thank you for all your comments - is there anything else, or can I get your reviewed-by on these patches (or at least those that you have looked at)?
 
-> I hope I am posting in the right section.
-> Since the upgrade to kernel 3.14 I am unable to hibernate.
-> I am using Archlinux.
-> I am hibernating with "systemctl hibernate".
-> It always fails to freeze device 00:08:
+Thanks
+Phil
+
+On: 31 March 2014 11:31, Phil wrote:
+> Subject: [PATCH v7 00/10] R-Car Gen2 PCIe host driver
 > 
-> journalctl tells me:
-> kernel: serial 00:08: disable failed
-> kernel: dpm_run_callback(): pnp_bus_freeze+0x0/0x20 returns -5
-> kernel: PM: Device 00:08 failed to freeze: error -5
+> This is version 7 of a PCIe Host driver for the R-Car Gen2 devices, i.e. R-Car H2
+> (r8a7790) and R-Car M2 (r8a7791).
 > 
-> lspci -v tells me:
+> v7:
+>  - Change binding description of clocks to 'clock specifiers'
 > 
-> 0:08.0 PCI bridge: NVIDIA Corporation MCP78S [GeForce 8200] PCI Bridge
-> (rev a1) (prog-if 01 [Subtractive decode])
->     Flags: bus master, 66MHz, fast devsel, latency 0
->     Bus: primary=00, secondary=01, subordinate=01, sec-latency=64
->     Capabilities: [b8] Subsystem: ASUSTeK Computer Inc. Device 82e7
->     Capabilities: [8c] HyperTransport: MSI Mapping Enable+ Fixed-
+> v6:
+>  - Correct DT bindings description for reg and clocks
+>  - Split device and board DT changes
+>  - Add shmobile to subject for shmobile DT patches
+>  - Don't check MSI irq number is valid, as upper level checks this
+>  - Change "Unexpected MSI" msg to debug level
+>  - Reword "Unexpected MSI" comment so that it's one line
+>  - Remove patch that adds HAVE_ARM_ARCH_TIMER to koelsch defconfig as
+> not needed
 > 
-> My mainboard is a ASUS M4N98TD EVO.
-
-It's not that device, what fails is a serial drvier.
-
-> What does error code -5 mean?
-
-This is an error code returned by the driver, I'm not sure what it means
-for pnp_bus_freeze() from the top of my head (will check later).
-
-> How do I debug this further?
-
-If that's 100% reproducible, you can try to bisect.
-
-> Should I file a bug?
-
-Yes, please.  At bugzilla.kernel.org, against power management (hibernation/suspend).
-
-Thanks!
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> v5:
+>  - Use module_platform_driver instead of subsys_initcall
+>  - Use the of_device_id data field for HW init function
+>  - Init hw_pci struct in declaration
+>  - Renesas SoC compatible string has peripheral before device name
+>  - Add PCIe bus clock reference
+>  - Use dma-ranges property to specify inbound memory regions
+>  - Support multiple IO windows and correct resources
+>  - Return IRQ_NONE from MSI isr when there is no pending MSI
+>  - Add additional interrupt bindings
+> 
+> v4:
+>  - Use runtime PM properly
+> 
+> Phil Edworthy (10):
+>   PCI: host: rcar: Add Renesas R-Car PCIe driver
+>   PCI: host: rcar: Add MSI support
+>   ARM: shmobile: r8a7790: Add PCIe clock device tree nodes
+>   ARM: shmobile: r8a7791: Add PCIe clock device tree nodes
+>   dt-bindings: pci: rcar pcie device tree bindings
+>   ARM: shmobile: r8a7790: Add PCIe device nodes
+>   ARM: shmobile: lager: Add PCIe device nodes
+>   ARM: shmobile: r8a7791: Add PCIe device nodes
+>   ARM: shmobile: koelsch: Add PCIe device nodes
+>   ARM: shmobile: koelsch: Add PCIe to defconfig
+> 
+>  Documentation/devicetree/bindings/pci/rcar-pci.txt |  45 +
+>  arch/arm/boot/dts/r8a7790-lager.dts                |  10 +
+>  arch/arm/boot/dts/r8a7790.dtsi                     |  31 +-
+>  arch/arm/boot/dts/r8a7791-koelsch.dts              |  14 +
+>  arch/arm/boot/dts/r8a7791.dtsi                     |  31 +-
+>  arch/arm/configs/koelsch_defconfig                 |   3 +
+>  drivers/pci/host/Kconfig                           |   6 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pcie-rcar.c                       | 929 +++++++++++++++++++++
+>  drivers/pci/host/pcie-rcar.h                       |  87 ++
+>  include/dt-bindings/clock/r8a7790-clock.h          |   1 +
+>  include/dt-bindings/clock/r8a7791-clock.h          |   1 +
+>  12 files changed, 1154 insertions(+), 5 deletions(-)  create mode 100644
+> Documentation/devicetree/bindings/pci/rcar-pci.txt
+>  create mode 100644 drivers/pci/host/pcie-rcar.c  create mode 100644
+> drivers/pci/host/pcie-rcar.h
+> 
+> --
+> 1.9.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-sh" in the body
+> of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
