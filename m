@@ -1,175 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:52849
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932147AbaDIBw3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 21:52:29 -0400
-Date: Tue, 8 Apr 2014 20:47:26 -0500
-From: Kim Phillips <kim.phillips@freescale.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	<gregkh@linuxfoundation.org>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<kvm@vger.kernel.org>, <konrad.wilk@oracle.com>,
-	<stuart.yoder@freescale.com>, <libvir-list@redhat.com>,
-	<iommu@lists.linux-foundation.org>, <tech@virtualopensystems.com>,
-	<kvmarm@lists.cs.columbia.edu>, <linux-kernel@vger.kernel.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	<christoffer.dall@linaro.org>
-Subject: [PATCH] driver core: platform: add device binding path
- 'driver_override'
-Message-ID: <20140408204726.7a8f4cd6fbd05d0464720b30@freescale.com>
-In-Reply-To: <20140404201818.14389.86188.stgit@bling.home>
-References: <20140404201818.14389.86188.stgit@bling.home>
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:42396 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753616AbaDDPrs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 11:47:48 -0400
+Received: by mail-pb0-f52.google.com with SMTP id rr13so3629497pbb.39
+        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 08:47:48 -0700 (PDT)
+Date: Fri, 4 Apr 2014 09:47:44 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Dave Airlie <airlied@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Coverity CID 142811: pci_set_vga_state() operands don't affect
+ result
+Message-ID: <20140404154744.GA8549@google.com>
+References: <CAErSpo6JNDFiV6tmDKKDdnod+skBHx6T-+JGvjCRRLsL98h_uQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6JNDFiV6tmDKKDdnod+skBHx6T-+JGvjCRRLsL98h_uQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Needed by platform device drivers, such as the vfio-platform driver [1],
-in order to bypass the existing OF, ACPI, id_table and name string matches,
-and successfully be able to be bound to any device, like so:
+On Thu, Apr 03, 2014 at 02:43:05PM -0600, Bjorn Helgaas wrote:
+> Coverity complains about this in drivers/pci/pci.c:
+> 
+> CID 142811 (#1 of 1): Operands don't affect result (CONSTANT_EXPRESSION_RESULT)
+> result_independent_of_operands: flags & (2U /* 1 << 1 */) &
+> (command_bits & 4294967292U /* ~(1 | 2) */) is always 0 regardless of
+> the values of its operands. This occurs as the logical operand of if.
+> 
+> 4128        WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) &
+> (command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
+> 
+> This is a result of 3448a19da479 "vgaarb: use bridges to control VGA
+> routing where possible."
+> 
+> I wonder if that middle "&" was intended to be "&&"?
 
-echo vfio-platform > /sys/bus/platform/devices/fff51000.ethernet/driver_override
-echo fff51000.ethernet > /sys/bus/platform/devices/fff51000.ethernet/driver/unbind
-echo fff51000.ethernet > /sys/bus/platform/drivers_probe
+I propose the following patch for this.  Unless there's objection, I'll
+queue this for v3.16.  I took the liberty of interpreting your email
+responses as acks.
 
-This mimics "PCI: Introduce new device binding path using
-pci_dev.driver_override" [2], which is an interface enhancement
-for more deterministic PCI device binding, e.g., when in the
-presence of hotplug.
 
-[1] http://lkml.iu.edu/hypermail/linux/kernel/1402.1/00177.html
-[2] http://lists-archives.com/linux-kernel/28030441-pci-introduce-new-device-binding-path-using-pci_dev-driver_override.html
+PCI: Fix incorrect vgaarb conditional in WARN_ON()
 
-Suggested-by: Alex Williamson <alex.williamson@redhat.com>
-Signed-off-by: Kim Phillips <kim.phillips@freescale.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+
+3448a19da479 "vgaarb: use bridges to control VGA routing where possible"
+added the "flags & PCI_VGA_STATE_CHANGE_DECODES" condition to an existing
+WARN_ON(), but used bitwise AND (&) instead of logical AND (&&), so the
+condition is never true.  Replace with logical AND.
+
+Found by Coverity (CID 142811).
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: David Airlie <airlied@redhat.com>
 ---
-changes since RFC:
-- fixed message Subject to properly reflect a new platform device
-patch (instead of leaving it as a reply to the PCI version)
-- addressed Guenter Roeck's comment
-- updated [2] with link to later (Apr.4th) revision of the PCI patch
-- updated documentation to address Christoffer Dall's comments to
-  previous version of [2]
-- added a Suggested-by, and re-posted as a reply to the PCI patch,
-  should they be applied together
+ drivers/pci/pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- Documentation/ABI/testing/sysfs-bus-platform | 20 ++++++++++++
- drivers/base/platform.c                      | 46 ++++++++++++++++++++++++++++
- include/linux/platform_device.h              |  1 +
- 3 files changed, 67 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-bus-platform
-
-diff --git a/Documentation/ABI/testing/sysfs-bus-platform b/Documentation/ABI/testing/sysfs-bus-platform
-new file mode 100644
-index 0000000..5172a61
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-bus-platform
-@@ -0,0 +1,20 @@
-+What:		/sys/bus/platform/devices/.../driver_override
-+Date:		April 2014
-+Contact:	Kim Phillips <kim.phillips@freescale.com>
-+Description:
-+		This file allows the driver for a device to be specified which
-+		will override standard OF, ACPI, ID table, and name matching.
-+		When specified, only a driver with a name matching the value
-+		written to driver_override will have an opportunity to bind
-+		to the device.  The override is specified by writing a string
-+		to the driver_override file (echo vfio-platform > \
-+		driver_override) and may be cleared with an empty string
-+		(echo > driver_override).  This returns the device to standard
-+		matching rules binding.  Writing to driver_override does not
-+		automatically unbind the device from its current driver or make
-+		any attempt to automatically load the specified driver.  If no
-+		driver with a matching name is currently loaded in the kernel,
-+		the device will not bind to any driver.  This also allows
-+		devices to opt-out of driver binding using a driver_override
-+		name such as "none".  Only a single driver may be specified in
-+		the override, there is no support for parsing delimiters.
-diff --git a/drivers/base/platform.c b/drivers/base/platform.c
-index e714709..a0909cb 100644
---- a/drivers/base/platform.c
-+++ b/drivers/base/platform.c
-@@ -22,6 +22,7 @@
- #include <linux/pm_runtime.h>
- #include <linux/idr.h>
- #include <linux/acpi.h>
-+#include <linux/limits.h>
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7325d43bf030..39012831867e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4125,7 +4125,7 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+ 	u16 cmd;
+ 	int rc;
  
- #include "base.h"
- #include "power/power.h"
-@@ -690,8 +691,49 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *a,
- }
- static DEVICE_ATTR_RO(modalias);
+-	WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) & (command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
++	WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) && (command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
  
-+static ssize_t driver_override_store(struct device *dev,
-+				     struct device_attribute *attr,
-+				     const char *buf, size_t count)
-+{
-+	struct platform_device *pdev = to_platform_device(dev);
-+	char *driver_override, *old = pdev->driver_override, *cp;
-+
-+	if (count > PATH_MAX)
-+		return -EINVAL;
-+
-+	driver_override = kstrndup(buf, count, GFP_KERNEL);
-+	if (!driver_override)
-+		return -ENOMEM;
-+
-+	cp = strchr(driver_override, '\n');
-+	if (cp)
-+		*cp = '\0';
-+
-+	if (strlen(driver_override)) {
-+		pdev->driver_override = driver_override;
-+	} else {
-+		kfree(driver_override);
-+		pdev->driver_override = NULL;
-+	}
-+
-+	kfree(old);
-+
-+	return count;
-+}
-+
-+static ssize_t driver_override_show(struct device *dev,
-+				    struct device_attribute *attr, char *buf)
-+{
-+	struct platform_device *pdev = to_platform_device(dev);
-+
-+	return sprintf(buf, "%s\n", pdev->driver_override);
-+}
-+static DEVICE_ATTR_RW(driver_override);
-+
-+
- static struct attribute *platform_dev_attrs[] = {
- 	&dev_attr_modalias.attr,
-+	&dev_attr_driver_override.attr,
- 	NULL,
- };
- ATTRIBUTE_GROUPS(platform_dev);
-@@ -747,6 +789,10 @@ static int platform_match(struct device *dev, struct device_driver *drv)
- 	struct platform_device *pdev = to_platform_device(dev);
- 	struct platform_driver *pdrv = to_platform_driver(drv);
- 
-+	/* When driver_override is set, only bind to the matching driver */
-+	if (pdev->driver_override)
-+		return !strcmp(pdev->driver_override, drv->name);
-+
- 	/* Attempt an OF style match first */
- 	if (of_driver_match_device(dev, drv))
- 		return 1;
-diff --git a/include/linux/platform_device.h b/include/linux/platform_device.h
-index 16f6654..153d303 100644
---- a/include/linux/platform_device.h
-+++ b/include/linux/platform_device.h
-@@ -28,6 +28,7 @@ struct platform_device {
- 	struct resource	*resource;
- 
- 	const struct platform_device_id	*id_entry;
-+	char *driver_override; /* Driver name to force a match */
- 
- 	/* MFD cell pointer */
- 	struct mfd_cell *mfd_cell;
--- 
-1.9.1
-
+ 	/* ARCH specific VGA enables */
+ 	rc = pci_set_vga_state_arch(dev, decode, command_bits, flags);
