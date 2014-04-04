@@ -1,67 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:51547 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529AbaDQULo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Apr 2014 16:11:44 -0400
-Message-ID: <53503577.1020809@pengutronix.de>
-Date: Thu, 17 Apr 2014 22:11:35 +0200
-From: Marc Kleine-Budde <mkl@pengutronix.de>
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:63467 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286AbaDDRBJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 13:01:09 -0400
+Received: by mail-pb0-f52.google.com with SMTP id rr13so3723506pbb.39
+        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 10:01:09 -0700 (PDT)
+Date: Fri, 4 Apr 2014 11:01:03 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	Simon Horman <horms@verge.net.au>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
+Subject: Re: [PATCH v2 3/6] PCI: rcar: use new OF interrupt mapping when
+ possible
+Message-ID: <20140404170103.GF9007@google.com>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+ <1394025951-32438-4-git-send-email-l.stach@pengutronix.de>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Wolfgang Grandegger <wg@grandegger.com>
-CC: Alexander Gordeev <agordeev@redhat.com>, linux-can@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Coverity CID 712278: c_can_pci_probe() doesn't check pci_enable_msi()
- return value
-References: <CAErSpo4hujoq8Ni7sSrNQv61rf4Xz4s3GjYxNQR6TDLDm0N-Jw@mail.gmail.com>
-In-Reply-To: <CAErSpo4hujoq8Ni7sSrNQv61rf4Xz4s3GjYxNQR6TDLDm0N-Jw@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="HtBa9ro3lce0XPLNlUrHVoSiMwPqoFTME"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1394025951-32438-4-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---HtBa9ro3lce0XPLNlUrHVoSiMwPqoFTME
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Wed, Mar 05, 2014 at 02:25:48PM +0100, Lucas Stach wrote:
+> This is the recommended method of doing the IRQ
+> mapping. Still fall back to the old method in order
+> to not break the just submitted board files.
 
-On 04/03/2014 06:53 PM, Bjorn Helgaas wrote:
-> Coverity complains that c_can_pci_probe() calls pci_enable_msi()
-> without checking the result:
->=20
->=20
-> CID 712278 (#1 of 1): Unchecked return value (CHECKED_RETURN)
-> 3. check_return: Calling pci_enable_msi_block without checking return
-> value (as is done elsewhere 88 out of 105 times).
->  88        pci_enable_msi(pdev);
->=20
-> This is CID 712278.
+Hi Lucas, can you rebase this to Linus' current tree?  This doesn't apply
+anymore because of conflicts with 546cadda3575 ("PCI: rcar: Register each
+instance independently").  Thanks!
 
-Thanks, I've applied Wolfgang's patch ("can: c_can_pci: enable PCI bus
-master only for MSI"), which fixes this problem.
-
-Marc
-
---=20
-Pengutronix e.K.                  | Marc Kleine-Budde           |
-Industrial Linux Solutions        | Phone: +49-231-2826-924     |
-Vertretung West/Dortmund          | Fax:   +49-5121-206917-5555 |
-Amtsgericht Hildesheim, HRA 2686  | http://www.pengutronix.de   |
-
-
---HtBa9ro3lce0XPLNlUrHVoSiMwPqoFTME
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: Using GnuPG with Icedove - http://www.enigmail.net/
-
-iEYEARECAAYFAlNQNXcACgkQjTAFq1RaXHOkrACbBXeshhOVEv3QMHwTO5hdmznq
-3GcAn3jNNsZiA7G8y7PjpUet+lLZBO2M
-=d69i
------END PGP SIGNATURE-----
-
---HtBa9ro3lce0XPLNlUrHVoSiMwPqoFTME--
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+> v2: pass in parent device to pci_common_init(), to
+>     make DT parsing work.
+> ---
+>  drivers/pci/host/pci-rcar-gen2.c | 12 +++++++++---
+>  1 file changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+> index ceec147baec3..3a0914163ad0 100644
+> --- a/drivers/pci/host/pci-rcar-gen2.c
+> +++ b/drivers/pci/host/pci-rcar-gen2.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/io.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+> +#include <linux/of_pci.h>
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/pm_runtime.h>
+> @@ -160,8 +161,13 @@ static int __init rcar_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+>  {
+>  	struct pci_sys_data *sys = dev->bus->sysdata;
+>  	struct rcar_pci_priv *priv = sys->private_data;
+> +	int irq;
+> +
+> +	irq = of_irq_parse_and_map_pci(dev, slot, pin);
+> +	if (!irq)
+> +		irq = priv->irq;
+>  
+> -	return priv->irq;
+> +	return irq;
+>  }
+>  
+>  /* PCI host controller setup */
+> @@ -249,6 +255,8 @@ static int __init rcar_pci_add_controller(struct rcar_pci_priv *priv)
+>  	void **private_data;
+>  	int count;
+>  
+> +	pci_common_init_dev(priv->dev, &rcar_hw_pci);
+> +
+>  	if (rcar_hw_pci.nr_controllers < rcar_pci_count)
+>  		goto add_priv;
+>  
+> @@ -322,8 +330,6 @@ static int __init rcar_pci_init(void)
+>  	int retval;
+>  
+>  	retval = platform_driver_probe(&rcar_pci_driver, rcar_pci_probe);
+> -	if (!retval)
+> -		pci_common_init(&rcar_hw_pci);
+>  
+>  	/* Private data pointer array is not needed any more */
+>  	kfree(rcar_hw_pci.private_data);
+> -- 
+> 1.9.0
+> 
