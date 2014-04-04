@@ -1,116 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 11 Apr 2014 10:22:25 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
- pci_host_bridge.
-Message-ID: <20140411092225.GW985@e106497-lin.cambridge.arm.com>
-References: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
- <6144916.rD76jOL8sv@wuerfel>
- <20140410145304.GS985@e106497-lin.cambridge.arm.com>
- <6459805.ygy4tBNDNz@wuerfel>
-MIME-Version: 1.0
-In-Reply-To: <6459805.ygy4tBNDNz@wuerfel>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:27350 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750891AbaDDCwe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Apr 2014 22:52:34 -0400
+Message-ID: <1396579914.3215.36.camel@ul30vt.home>
+Subject: Re: [RFC PATCH v2 1/2] pci: Create PCIe requester ID interface
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Andrew Cooks <acooks@gmail.com>,
+	Don Dutile <ddutile@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	George Spelvin <linux@horizon.com>
+Date: Thu, 03 Apr 2014 20:51:54 -0600
+In-Reply-To: <CAErSpo5p+6yt8ZyVuLnJTiKAWZWq9ixQQu78nD-bNFkw4ntWmw@mail.gmail.com>
+References: <20130711204439.1701.90503.stgit@bling.home>
+	 <20130711210326.1701.56478.stgit@bling.home>
+	 <20130723223533.GB19765@google.com> <1374621703.15429.98.camel@ul30vt.home>
+	 <CAErSpo6bcGCjqdxn-bz_vjo+HsAiOxDu=--mD7veEZ9f7k+gyA@mail.gmail.com>
+	 <1374689548.5208.62.camel@ul30vt.home> <20130724232427.GA9272@google.com>
+	 <1374775016.2642.116.camel@ul30vt.home> <20130726215435.GB20021@google.com>
+	 <1375113975.2642.208.camel@ul30vt.home>
+	 <CAErSpo7pfCtTm5Cq=VixPTKMpM4VQpDr+ZmS5qMw32z6ABu0xQ@mail.gmail.com>
+	 <1375137140.2642.349.camel@ul30vt.home>
+	 <CAErSpo5+-r3qMca1_Kvt3jJ6OP6Q7--4VmTo3fWJ0y4CPewgEQ@mail.gmail.com>
+	 <1375462795.31262.327.camel@ul30vt.home>
+	 <CAErSpo5p+6yt8ZyVuLnJTiKAWZWq9ixQQu78nD-bNFkw4ntWmw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 09:46:36PM +0100, Arnd Bergmann wrote:
-> On Thursday 10 April 2014 15:53:04 Liviu Dudau wrote:
-> > On Thu, Apr 10, 2014 at 03:07:44PM +0100, Arnd Bergmann wrote:
+On Thu, 2014-04-03 at 15:48 -0600, Bjorn Helgaas wrote:
+> [+cc George]
 > 
-> > > This mirrors how we treat devices: a pci_device has an embedded device,
-> > > and so on, in other subsystems we can have multiple layers.
-> > > 
-> > > In this example, the tegra pcie driver then allocates its own tegra_pcie
-> > > structure, fills out the fields it needs, and registers it with the
-> > > ARM architecture code, passing just the pci_sys_data pointer. That function
-> > > in turn passes a pointer to the embedded pci_host_bridge down to the
-> > > generic code. Ideally we should try to eliminate the architecture specific
-> > > portion here, but that is a later step.
-> > 
-> > So Arnd seems to agree with me: we should try to get out of architecture specific
-> > pci_sys_data and link the host bridge driver straight into the PCI core. The
-> > core then can call into arch code via pcibios_*() functions.
-> > 
-> > Arnd, am I reading correctly into what you are saying?
+> On Fri, Aug 2, 2013 at 10:59 AM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > ...
+> > Great!  I'm still trying to figure out how to handle the quirk around
+> > Intel PCI-to-PCI bridge on the root complex as just another quirk.  I
+> > respin another version once I have that worked out.  Thanks,
 > 
-> Half of it ;-)
+> Is anything happening here?  These buggy IOMMU/DMA source problems,
+> e.g., [1], have been lingering a long time, and I don't know if we're
+> stuck because I haven't been giving them enough attention, or if we
+> don't really have a good solution yet.
 > 
-> I think it would be better to not have an architecture specific data
-> structure, just like it would be better not to have architecture specific
-> pcibios_* functions that get called by the PCI core. Note that the
-> architecture specific functions are the ones that rely on the architecture
-> specific data structures as well. If they only use the common fields,
-> it should also be possible to share the code.
+> [1] https://bugzilla.kernel.org/show_bug.cgi?id=42679
 
-While I've come to like the pcibios_*() interface (and yes, it could be
-formalised and abstracted into a pci_xxxx_ops structure) I don't like the fact
-that those functions use architectural data in order to function. I know it
-might sound strange, as they *are* supposed to be implemented by the arches,
-but in my mind the link between generic code and arch code for PCI should be
-done by the host bridge driver. That's how PCI spec describes it, and I see no
-reason why we should not be able to adopt the same view.
+Sorry, no.  This has completely dropped off my radar.  I'll try to
+resurrect it and figure out how to move forward.  Thanks,
 
-To be more precise, what I would like to happen in the case of some functions
-would be for the PCI core code to call a pci_host_bridge_ops method which
-in turn will call the arch specific code if it needs to. Why I think that would
-be better? Because otherwise you put in the architectural side code to cope
-with a certain host bridge, then another host bridge comes in and you add
-more architectural code, but then when you port host bridge X to arch B you
-discover that you need to add code there as well for X. And it all ends up in
-the mess we currently have where the drivers in drivers/pci/host are not capable
-of being ported to a different architecture because they rely on infrastructure
-only present in arm32 that is not properly documented.
-
-> 
-> I also don't realistically think we can get there on a lot of architectures
-> any time soon. Note that most architectures only have one PCI host
-> implementation, so the architecture structure is the same as the host
-> driver structure anyway.
-> 
-> For architectures like powerpc and arm that have people actively working
-> on them, we have a chance to clean up that code in the way we want it
-> (if we can agree on the direction), but it's still not trivial to do.
-> 
-> Speaking of arm32 in particular, I think we will end up with a split
-> approach: modern platforms (multiplatform, possibly all DT based) using
-> PCI core infrastructure directly and no architecture specific PCI
-> code on the one side, and a variation of today's code for the legacy
-> platforms on the other.
-
-Actually, if we could come up with a compromise for the pci_fixup_*() functions
-(are they still used by functional hardware?) then I think we could convert
-most of the arm32 arch code to re-direct the calls to the infrastructure code.
-But yes, there might be a lot of resistance to change due to lack of resources
-when changing old platforms.
-
-Best regards,
-Liviu
-
-> 
-> 	Arnd
-> 
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Alex
 
