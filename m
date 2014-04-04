@@ -1,62 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:33080 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752123AbaDRMUF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 08:20:05 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>
-Cc: Tawfik Bayouk <tawfik@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Neil Greatorex <neil@fatboyfat.co.uk>,
-	Willy Tarreau <w@1wt.eu>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 6/7] bus: mvebu-mbus: allow several windows with the same target/attribute
-Date: Fri, 18 Apr 2014 14:19:52 +0200
-Message-Id: <1397823593-1932-7-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:41214 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752483AbaDDVoP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 17:44:15 -0400
+Received: by mail-pb0-f43.google.com with SMTP id um1so4017799pbc.16
+        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 14:44:14 -0700 (PDT)
+Date: Fri, 4 Apr 2014 15:44:10 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ryan Desfosses <ryan@desfo.org>
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: changed '...pci_bus* bus' to '...pci_bus *bus'
+Message-ID: <20140404214410.GB13931@google.com>
+References: <1396646614-6458-1-git-send-email-ryan@desfo.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1396646614-6458-1-git-send-email-ryan@desfo.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Having multiple windows with the same target and attribute is actually
-legal, and can be useful for PCIe windows, when PCIe BARs have a size
-that isn't a power of two, and we therefore need to create several
-MBus windows to cover the PCIe BAR for a given PCIe interface.
+On Fri, Apr 04, 2014 at 05:23:34PM -0400, Ryan Desfosses wrote:
+> change made to resolve following checkpatch message:
+>     drivers/pci/pci.c:109: ERROR: "foo* bar" should be "foo *bar"
+> branch: Linux 3.14-rc8
+> 
+> Signed-off-by: Ryan Desfosses <ryan@desfo.org>
 
-Fixes: fddddb52a6c4e2438f4514ed979183653ca0732a ('bus: introduce an Marvell EBU MBus driver')
-Cc: <stable@vger.kernel.org> # v3.10+
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Tested-by: Neil Greatorex <neil@fatboyfat.co.uk>
----
- drivers/bus/mvebu-mbus.c | 6 ------
- 1 file changed, 6 deletions(-)
+Applied (folded into your other patch), thanks!
 
-diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
-index afee0f7..00b7344 100644
---- a/drivers/bus/mvebu-mbus.c
-+++ b/drivers/bus/mvebu-mbus.c
-@@ -223,12 +223,6 @@ static int mvebu_mbus_window_conflicts(struct mvebu_mbus_state *mbus,
- 		 */
- 		if ((u64)base < wend && end > wbase)
- 			return 0;
--
--		/*
--		 * Check if target/attribute conflicts
--		 */
--		if (target == wtarget && attr == wattr)
--			return 0;
- 	}
- 
- 	return 1;
--- 
-1.9.2
-
+> ---
+>  drivers/pci/pci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index fdbc294..a50d542 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -106,7 +106,7 @@ static bool pcie_ari_disabled;
+>   * Given a PCI bus, returns the highest PCI bus number present in the set
+>   * including the given PCI bus and its list of child PCI buses.
+>   */
+> -unsigned char pci_bus_max_busnr(struct pci_bus* bus)
+> +unsigned char pci_bus_max_busnr(struct pci_bus *bus)
+>  {
+>  	struct list_head *tmp;
+>  	unsigned char max, n;
+> -- 
+> 1.9.1
+> 
