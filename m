@@ -1,44 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs04.intra2net.com ([85.214.66.2]:37928 "EHLO
-	rs04.intra2net.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758756AbaDKNmW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Apr 2014 09:42:22 -0400
-From: Thomas Jarosch <thomas.jarosch@intra2net.com>
-To: Greg KH <greg@kroah.com>
-Cc: linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>,
-	stable@vger.kernel.org
-Subject: Re: Re: [PATCH] PCI: Add new PCI id for Intel GPU interrupt quirk
-Date: Fri, 11 Apr 2014 15:42:19 +0200
-Message-ID: <4526630.rVkY1qSQns@storm>
-In-Reply-To: <20140407165808.GC7119@kroah.com>
-References: <3185796.STv3LRO1j8@storm> <20140407165808.GC7119@kroah.com>
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:59368 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752683AbaDDQGX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 12:06:23 -0400
+Received: by mail-pb0-f44.google.com with SMTP id rp16so3645252pbb.31
+        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 09:06:22 -0700 (PDT)
+Date: Fri, 4 Apr 2014 10:06:18 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Mohit Kumar <mohit.kumar@st.com>
+Cc: Jingoo Han <jg1.han@samsung.com>, spear-devel@list.st.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2 0/2] PCI: dessignware: fixes and cleanup
+Message-ID: <20140404160618.GA9007@google.com>
+References: <cover.1392904207.git.mohit.kumar@st.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1392904207.git.mohit.kumar@st.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Greg,
-
-On Monday, 7. April 2014 09:58:08 Greg KH wrote:
-> On Mon, Apr 07, 2014 at 03:10:32PM +0200, Thomas Jarosch wrote:
-> > After a CPU upgrade while keeping the same mainboard,
-> > we faced "spurious interrupt" problems again.
-> ..
-
-> <formletter>
+On Thu, Feb 27, 2014 at 11:31:26AM +0530, Mohit Kumar wrote:
+> This patchset fixes iATU programming sequence and correct some comments.
 > 
-> This is not the correct way to submit patches for inclusion in the
-> stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-> for how to do this properly.
+> Changes ssince v1:
+> 	- Change ssubject line with proper spacing 
 > 
-> </formletter>
+> Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: spear-devel@list.st.com
+> Cc: linux-pci@vger.kernel.org
+> 
+> Mohit Kumar (2):
+>   PCI: designware: Fix comment for setting number of lanes
+>   PCI: designware: Fix iATU programming for cfg1, io and mem viewport
+> 
+>  drivers/pci/host/pcie-designware.c |    8 ++++----
+>  1 files changed, 4 insertions(+), 4 deletions(-)
 
-sorry 'bout that :) 
-
-I had on my mind I should CC: stable@ and then the patch will be picked up 
-automatically once / if it gets applied to the normal git tree or lost
-in space if it gets rejected. Guess that was wishful thinking :)
-
-Have a nice weekend,
-Thomas
-
+I applied both to my pending/host-designware branch, which will be rebased
+and renamed after v3.15-rc1.  Thanks!
