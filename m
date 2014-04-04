@@ -1,78 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41447 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753276AbaDNIEJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 04:04:09 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:28 +0200
-Message-Id: <7db0ca73195c7a4b41ec8263e23ffaeb7ff4dce2.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:35351 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753879AbaDDAGd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 20:06:33 -0400
+Received: by mail-ie0-f171.google.com with SMTP id ar20so2665754iec.2
+        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 17:06:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6JNDFiV6tmDKKDdnod+skBHx6T-+JGvjCRRLsL98h_uQ@mail.gmail.com>
+References: <CAErSpo6JNDFiV6tmDKKDdnod+skBHx6T-+JGvjCRRLsL98h_uQ@mail.gmail.com>
+Date: Thu, 3 Apr 2014 17:06:32 -0700
+Message-ID: <CAE9FiQUHC4jPJttUpChAALd6zubbQQEZ9wRc329Lv5QAXGOUKw@mail.gmail.com>
+Subject: Re: Coverity CID 142811: pci_set_vga_state() operands don't affect result
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Airlie <airlied@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Thu, Apr 3, 2014 at 1:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Coverity complains about this in drivers/pci/pci.c:
+>
+> CID 142811 (#1 of 1): Operands don't affect result (CONSTANT_EXPRESSION_RESULT)
+> result_independent_of_operands: flags & (2U /* 1 << 1 */) &
+> (command_bits & 4294967292U /* ~(1 | 2) */) is always 0 regardless of
+> the values of its operands. This occurs as the logical operand of if.
+>
+> 4128        WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) &
+> (command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
+>
+> This is a result of 3448a19da479 "vgaarb: use bridges to control VGA
+> routing where possible."
+>
+> I wonder if that middle "&" was intended to be "&&"?
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/bfa/bfad.c |   20 ++++++--------------
- 1 files changed, 6 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index e7e4774..839c81c 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1234,29 +1234,21 @@ bfad_setup_intr(struct bfad_s *bfad)
- 	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
- 	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
- 
--		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
-+		error = pci_enable_msix_exact(bfad->pcidev,
-+					      msix_entries, bfad->nvec);
- 		/* In CT1 & CT2, try to allocate just one vector */
--		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
-+		if (error == -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
- 			printk(KERN_WARNING "bfa %s: trying one msix "
- 			       "vector failed to allocate %d[%d]\n",
- 			       bfad->pci_name, bfad->nvec, error);
- 			bfad->nvec = 1;
--			error = pci_enable_msix(bfad->pcidev,
--						msix_entries, bfad->nvec);
-+			error = pci_enable_msix_exact(bfad->pcidev,
-+						      msix_entries, 1);
- 		}
- 
--		/*
--		 * Only error number of vector is available.
--		 * We don't have a mechanism to map multiple
--		 * interrupts into one vector, so even if we
--		 * can try to request less vectors, we don't
--		 * know how to associate interrupt events to
--		 *  vectors. Linux doesn't duplicate vectors
--		 * in the MSIX table for this case.
--		 */
- 		if (error) {
- 			printk(KERN_WARNING "bfad%d: "
--			       "pci_enable_msix failed (%d), "
-+			       "pci_enable_msix_exact failed (%d), "
- 			       "use line based.\n",
- 				bfad->inst_no, error);
- 			goto line_based;
--- 
-1.7.7.6
-
+must be. otherwise always get 0.
