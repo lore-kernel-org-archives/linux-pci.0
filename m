@@ -1,17 +1,17 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:44084 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753505AbaDGJbe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Apr 2014 05:31:34 -0400
-Message-ID: <1396862058.3671.40.camel@pasglop>
-Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
- pci_host_bridge.
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:40598 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752662AbaDEAAM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 20:00:12 -0400
+Received: by mail-pb0-f44.google.com with SMTP id rp16so4163722pbb.3
+        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 17:00:11 -0700 (PDT)
+Date: Fri, 4 Apr 2014 18:00:07 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
 To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	linaro-kernel <linaro-kernel@lists.linaro.org>,
 	Arnd Bergmann <arnd@arndb.de>,
 	LKML <linux-kernel@vger.kernel.org>,
@@ -19,30 +19,171 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
 	Tanmay Inamdar <tinamdar@apm.com>,
 	Grant Likely <grant.likely@secretlab.ca>
-Date: Mon, 07 Apr 2014 19:14:18 +1000
-In-Reply-To: <20140407084623.GG17163@e106497-lin.cambridge.arm.com>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140405000007.GD15806@google.com>
 References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
-	 <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
-	 <20140405000007.GD15806@google.com>
-	 <20140407084623.GG17163@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+ <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2014-04-07 at 09:46 +0100, Liviu Dudau wrote:
+On Fri, Mar 14, 2014 at 03:34:30PM +0000, Liviu Dudau wrote:
+> Make it easier to discover the domain number of a bus by storing
+> the number in pci_host_bridge for the root bus. Several architectures
+> have their own way of storing this information, so it makes sense
+> to try to unify the code. 
+
+I like the idea of unifying the way we handle the domain number.  But 
+I'd like to see more of the strategy before committing to this approach.
+
+This patch adds struct pci_host_bridge.domain_nr, but of course
+pci_domain_nr() doesn't use it.  It can't today, because
+pci_create_root_bus() relies on pci_domain_nr() to fill in
+pci_host_bridge.domain_nr.
+
+But I suppose the intent is that someday we can make pci_domain_nr()
+arch-independent somehow.  I'd just like to see more of the path to
+that happening.
+
+> While at this, add a new function that
+> creates a root bus in a given domain and make pci_create_root_bus()
+> a wrapper around this function.
+
+I'm a little concerned about adding a new "create root bus" interface,
+partly because we have quite a few already, and I'd like to reduce the
+number of them instead of adding more.  And I think there might be other
+similar opportunities for unification, so I could easily see us adding new
+functions in the future to unify NUMA node info, ECAM info, etc.
+
+I wonder if we need some sort of descriptor structure that the arch could
+fill in and pass to the PCI core.  Then we could add new members without
+having to create new interfaces each time.
+
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> ---
+>  drivers/pci/probe.c | 41 +++++++++++++++++++++++++++++++++--------
+>  include/linux/pci.h |  4 ++++
+>  2 files changed, 37 insertions(+), 8 deletions(-)
 > 
-> *My* strategy is to get rid of pci_domain_nr(). I don't see why we need
-> to have arch specific way of providing the number, specially after looking
-> at the existing implementations that return a value from a variable that
-> is never touched or incremented. My guess is that pci_domain_nr() was
-> created to work around the fact that there was no domain_nr maintainance in
-> the generic code.
-
-Well, there was no generic host bridge structure. There is one now, it should
-go there.
-
-Cheers,
-Ben.
- 
-
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index fd11c12..172c615 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1714,8 +1714,9 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+>  {
+>  }
+>  
+> -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> +struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
+> +		int domain, int bus, struct pci_ops *ops, void *sysdata,
+> +		struct list_head *resources)
+>  {
+>  	int error;
+>  	struct pci_host_bridge *bridge;
+> @@ -1728,30 +1729,34 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  
+>  	bridge = pci_alloc_host_bridge();
+>  	if (!bridge)
+> -		return NULL;
+> +		return ERR_PTR(-ENOMEM);
+>  
+>  	bridge->dev.parent = parent;
+>  	bridge->dev.release = pci_release_host_bridge_dev;
+> +	bridge->domain_nr = domain;
+>  	error = pcibios_root_bridge_prepare(bridge);
+>  	if (error)
+>  		goto err_out;
+>  
+>  	b = pci_alloc_bus();
+> -	if (!b)
+> +	if (!b) {
+> +		error = -ENOMEM;
+>  		goto err_out;
+> +	}
+>  
+>  	b->sysdata = sysdata;
+>  	b->ops = ops;
+>  	b->number = b->busn_res.start = bus;
+> -	b2 = pci_find_bus(pci_domain_nr(b), bus);
+> +	b2 = pci_find_bus(bridge->domain_nr, bus);
+>  	if (b2) {
+>  		/* If we already got to this bus through a different bridge, ignore it */
+>  		dev_dbg(&b2->dev, "bus already known\n");
+> +		error = -EEXIST;
+>  		goto err_bus_out;
+>  	}
+>  
+>  	bridge->bus = b;
+> -	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> +	dev_set_name(&bridge->dev, "pci%04x:%02x", bridge->domain_nr, bus);
+>  	error = device_register(&bridge->dev);
+>  	if (error) {
+>  		put_device(&bridge->dev);
+> @@ -1766,7 +1771,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  
+>  	b->dev.class = &pcibus_class;
+>  	b->dev.parent = b->bridge;
+> -	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
+> +	dev_set_name(&b->dev, "%04x:%02x", bridge->domain_nr, bus);
+>  	error = device_register(&b->dev);
+>  	if (error)
+>  		goto class_dev_reg_err;
+> @@ -1816,7 +1821,27 @@ err_bus_out:
+>  	kfree(b);
+>  err_out:
+>  	kfree(bridge);
+> -	return NULL;
+> +	return ERR_PTR(error);
+> +}
+> +
+> +struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> +		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> +{
+> +	int domain_nr;
+> +	struct pci_bus *b = pci_alloc_bus();
+> +	if (!b)
+> +		return NULL;
+> +
+> +	b->sysdata = sysdata;
+> +	domain_nr = pci_domain_nr(b);
+> +	kfree(b);
+> +
+> +	b = pci_create_root_bus_in_domain(parent, domain_nr, bus,
+> +				ops, sysdata, resources);
+> +	if (IS_ERR(b))
+> +		return NULL;
+> +
+> +	return b;
+>  }
+>  
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 33aa2ca..1eed009 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -394,6 +394,7 @@ struct pci_host_bridge_window {
+>  struct pci_host_bridge {
+>  	struct device dev;
+>  	struct pci_bus *bus;		/* root bus */
+> +	int domain_nr;
+>  	struct list_head windows;	/* pci_host_bridge_windows */
+>  	void (*release_fn)(struct pci_host_bridge *);
+>  	void *release_data;
+> @@ -747,6 +748,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  				    struct pci_ops *ops, void *sysdata,
+>  				    struct list_head *resources);
+> +struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
+> +			int domain, int bus, struct pci_ops *ops,
+> +			void *sysdata, struct list_head *resources);
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+>  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+>  void pci_bus_release_busn_res(struct pci_bus *b);
+> -- 
+> 1.9.0
+> 
