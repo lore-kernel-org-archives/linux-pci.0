@@ -1,57 +1,176 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39701 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932086AbaDTICJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 20 Apr 2014 04:02:09 -0400
-Date: Sun, 20 Apr 2014 10:02:03 +0200
-From: Borislav Petkov <bp@suse.de>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
-	kim.naru@amd.com, daniel@numascale.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, bp@suse.de,
-	sp@numascale.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 3/5] x86/PCI: Miscellaneous code clean up for
- early_fillup_mp_bus_info
-Message-ID: <20140420080203.GB19672@pd.tnic>
-References: <20140419025308.2408.51252.stgit@amt.stowe>
- <20140419025331.2408.40589.stgit@amt.stowe>
+Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:57965
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753034AbaDEBkU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 21:40:20 -0400
+Date: Fri, 4 Apr 2014 20:35:12 -0500
+From: Kim Phillips <kim.phillips@freescale.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Kim Phillips <kim.phillips@linaro.org>,
+	<gregkh@linuxfoundation.org>, <stuart.yoder@freescale.com>,
+	<kvm@vger.kernel.org>, <jan.kiszka@siemens.com>,
+	<will.deacon@arm.com>, <linux-kernel@vger.kernel.org>,
+	<mhocko@suse.cz>, <bhelgaas@google.com>,
+	<Varun.Sethi@freescale.com>, <kvmarm@lists.cs.columbia.edu>,
+	<rafael.j.wysocki@intel.com>, <agraf@suse.de>,
+	<linux-pci@vger.kernel.org>, <linux@roeck-us.net>,
+	<konrad.wilk@oracle.com>, <d.kasatkin@samsung.com>,
+	<tj@kernel.org>, <scottwood@freescale.com>,
+	<a.motakis@virtualopensystems.com>, <tech@virtualopensystems.com>,
+	<Bharat.Bhushan@freescale.com>, <toshi.kani@hp.com>,
+	<a.rigo@virtualopensystems.com>,
+	<iommu@lists.linux-foundation.org>, <joe@perches.com>,
+	<christoffer.dall@linaro.org>
+Subject: Re: [RFC PATCH] PCI: Introduce new device binding path using
+ pci_dev.driver_override
+Message-ID: <20140404203512.5b5ac8a134a71065518712c3@freescale.com>
+In-Reply-To: <1396479728.476.410.camel@ul30vt.home>
+References: <20140401161851.18815.31108.stgit@bling.home>
+	<20140401185212.7229f2c114c7e95089f00e90@linaro.org>
+	<20140402002324.GA2662@kroah.com>
+	<20140402170638.51745f5c231a7632422e4cc5@linaro.org>
+	<1396479728.476.410.camel@ul30vt.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140419025331.2408.40589.stgit@amt.stowe>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 18, 2014 at 08:53:31PM -0600, Myron Stowe wrote:
-> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-> 
-> * Refactoring of the early_fill_mp_bus_info function into multiple helper
->   functions since it is getting long, and difficult to follow.
+Needed by platform device drivers, such as the vfio-platform driver [1],
+in order to bypass the existing OF, ACPI, id_table and name string matches,
+and successfully be able to be bound to any device, like so:
 
-Much better.
+echo vfio-platform > /sys/bus/platform/devices/fff51000.ethernet/driver_override
+echo fff51000.ethernet > /sys/bus/platform/devices/fff51000.ethernet/driver/unbind
+echo fff51000.ethernet > /sys/bus/platform/drivers_probe
 
-> * Merge early_fill_mp_bus_info into amd_postcore_init as there is no need to
->   have this as a separate function.
-> 
-> * Use pr_xxx instead of printk
+This mimics "PCI: Introduce new device binding path using
+pci_dev.driver_override" [2], which is an interface enhancement
+for more deterministic PCI device binding, e.g., when in the
+presence of hotplug.
 
-You can convert the printk(KERN_CONT -> pr_cont( too, while at it.
-Although, this would prepend the fmt thing on every line ...
+[1] http://lkml.iu.edu/hypermail/linux/kernel/1402.1/00177.html
+[2] http://thread.gmane.org/gmane.linux.kernel.iommu/4605
 
-> * Prepend "AMD-Bus" for each print.
+Signed-off-by: Kim Phillips <kim.phillips@freescale.com>
+---
+if this looks ok, should it be included in the next version of the
+vfio-platform submission series, like last time ([1] above)?
 
-That's done with pr_fmt
+ Documentation/ABI/testing/sysfs-bus-platform | 17 ++++++++++
+ drivers/base/platform.c                      | 46 ++++++++++++++++++++++++++++
+ include/linux/platform_device.h              |  1 +
+ 3 files changed, 64 insertions(+)
+ create mode 100644 Documentation/ABI/testing/sysfs-bus-platform
 
-> * The current code is using "fam10h_mmconf_*" in several place.  As this
->   file is no longer specific to family10h systems, this patch changes
->   such occurrances to "amd_mmconf_*" instead for clarity.
-
-...
-
+diff --git a/Documentation/ABI/testing/sysfs-bus-platform b/Documentation/ABI/testing/sysfs-bus-platform
+new file mode 100644
+index 0000000..6b14a6a
+--- /dev/null
++++ b/Documentation/ABI/testing/sysfs-bus-platform
+@@ -0,0 +1,17 @@
++What:		/sys/bus/platform/devices/.../driver_override
++Date:		April 2014
++Contact:	Kim Phillips <kim.phillips@freescale.com>
++Description:
++		This file allows the driver for a device to be specified
++		which will override standard OF, ACPI, ID table, and name
++		matching.  When specified, only a driver with a name matching
++		the value written to driver_override will have an opportunity
++		to bind to the device.  The override may be cleared by
++		writing an empty string (ex. echo > driver_override), returning
++		the device to standard matching rules binding.  Writing to
++		driver_override does not automatically unbind the device from
++		its current driver or make any attempt to automatically load
++		the specified driver name.  If no driver with a matching name
++		is currently loaded in the kernel, no match will be found.
++		This also allows devices to opt-out of driver binding using
++		a driver_override name such as "none".
+diff --git a/drivers/base/platform.c b/drivers/base/platform.c
+index e714709..ded1db1 100644
+--- a/drivers/base/platform.c
++++ b/drivers/base/platform.c
+@@ -22,6 +22,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/idr.h>
+ #include <linux/acpi.h>
++#include <linux/limits.h>
+ 
+ #include "base.h"
+ #include "power/power.h"
+@@ -690,8 +691,49 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *a,
+ }
+ static DEVICE_ATTR_RO(modalias);
+ 
++static ssize_t driver_override_store(struct device *dev,
++				     struct device_attribute *attr,
++				     const char *buf, size_t count)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	char *driver_override, *old = pdev->driver_override;
++
++	if (count > PATH_MAX)
++		return -EINVAL;
++
++	driver_override = kstrndup(buf, count, GFP_KERNEL);
++	if (!driver_override)
++		return -ENOMEM;
++
++	while (strlen(driver_override) &&
++	       driver_override[strlen(driver_override) - 1] == '\n')
++		driver_override[strlen(driver_override) - 1] = '\0';
++
++	if (strlen(driver_override)) {
++		pdev->driver_override = driver_override;
++	} else {
++		kfree(driver_override);
++		pdev->driver_override = NULL;
++	}
++
++	kfree(old);
++
++	return count;
++}
++
++static ssize_t driver_override_show(struct device *dev,
++				    struct device_attribute *attr, char *buf)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++
++	return sprintf(buf, "%s\n", pdev->driver_override);
++}
++static DEVICE_ATTR_RW(driver_override);
++
++
+ static struct attribute *platform_dev_attrs[] = {
+ 	&dev_attr_modalias.attr,
++	&dev_attr_driver_override.attr,
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(platform_dev);
+@@ -747,6 +789,10 @@ static int platform_match(struct device *dev, struct device_driver *drv)
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	struct platform_driver *pdrv = to_platform_driver(drv);
+ 
++	/* When driver_override is set, only bind to the matching driver */
++	if (pdev->driver_override)
++		return !strcmp(pdev->driver_override, drv->name);
++
+ 	/* Attempt an OF style match first */
+ 	if (of_driver_match_device(dev, drv))
+ 		return 1;
+diff --git a/include/linux/platform_device.h b/include/linux/platform_device.h
+index 16f6654..153d303 100644
+--- a/include/linux/platform_device.h
++++ b/include/linux/platform_device.h
+@@ -28,6 +28,7 @@ struct platform_device {
+ 	struct resource	*resource;
+ 
+ 	const struct platform_device_id	*id_entry;
++	char *driver_override; /* Driver name to force a match */
+ 
+ 	/* MFD cell pointer */
+ 	struct mfd_cell *mfd_cell;
 -- 
-Regards/Gruss,
-    Boris.
+1.9.1
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+
