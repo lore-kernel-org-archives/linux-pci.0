@@ -1,61 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:45059 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752440AbaDDPA2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 11:00:28 -0400
-Received: by mail-ig0-f174.google.com with SMTP id h18so1033640igc.7
-        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 08:00:28 -0700 (PDT)
+Received: from mail.active-venture.com ([67.228.131.205]:49765 "EHLO
+	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751662AbaDECHh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 22:07:37 -0400
+Message-ID: <533F6561.2090205@roeck-us.net>
+Date: Fri, 04 Apr 2014 19:07:29 -0700
+From: Guenter Roeck <linux@roeck-us.net>
 MIME-Version: 1.0
-In-Reply-To: <1396579914.3215.36.camel@ul30vt.home>
-References: <20130711204439.1701.90503.stgit@bling.home> <20130711210326.1701.56478.stgit@bling.home>
- <20130723223533.GB19765@google.com> <1374621703.15429.98.camel@ul30vt.home>
- <CAErSpo6bcGCjqdxn-bz_vjo+HsAiOxDu=--mD7veEZ9f7k+gyA@mail.gmail.com>
- <1374689548.5208.62.camel@ul30vt.home> <20130724232427.GA9272@google.com>
- <1374775016.2642.116.camel@ul30vt.home> <20130726215435.GB20021@google.com>
- <1375113975.2642.208.camel@ul30vt.home> <CAErSpo7pfCtTm5Cq=VixPTKMpM4VQpDr+ZmS5qMw32z6ABu0xQ@mail.gmail.com>
- <1375137140.2642.349.camel@ul30vt.home> <CAErSpo5+-r3qMca1_Kvt3jJ6OP6Q7--4VmTo3fWJ0y4CPewgEQ@mail.gmail.com>
- <1375462795.31262.327.camel@ul30vt.home> <CAErSpo5p+6yt8ZyVuLnJTiKAWZWq9ixQQu78nD-bNFkw4ntWmw@mail.gmail.com>
- <1396579914.3215.36.camel@ul30vt.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Apr 2014 09:00:07 -0600
-Message-ID: <CAErSpo4_WUXTXbte+coJ+Q5yboFYKkE-WAVM5SDUxH7c=w0orQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 1/2] pci: Create PCIe requester ID interface
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Andrew Cooks <acooks@gmail.com>,
-	Don Dutile <ddutile@redhat.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	George Spelvin <linux@horizon.com>
-Content-Type: text/plain; charset=UTF-8
+To: Kim Phillips <kim.phillips@freescale.com>,
+	Alex Williamson <alex.williamson@redhat.com>
+CC: Kim Phillips <kim.phillips@linaro.org>, gregkh@linuxfoundation.org,
+	stuart.yoder@freescale.com, kvm@vger.kernel.org,
+	jan.kiszka@siemens.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, mhocko@suse.cz, bhelgaas@google.com,
+	Varun.Sethi@freescale.com, kvmarm@lists.cs.columbia.edu,
+	rafael.j.wysocki@intel.com, agraf@suse.de,
+	linux-pci@vger.kernel.org, konrad.wilk@oracle.com,
+	d.kasatkin@samsung.com, tj@kernel.org, scottwood@freescale.com,
+	a.motakis@virtualopensystems.com, tech@virtualopensystems.com,
+	Bharat.Bhushan@freescale.com, toshi.kani@hp.com,
+	a.rigo@virtualopensystems.com, iommu@lists.linux-foundation.org,
+	joe@perches.com, christoffer.dall@linaro.org
+Subject: Re: [RFC PATCH] PCI: Introduce new device binding path using pci_dev.driver_override
+References: <20140401161851.18815.31108.stgit@bling.home>	<20140401185212.7229f2c114c7e95089f00e90@linaro.org>	<20140402002324.GA2662@kroah.com>	<20140402170638.51745f5c231a7632422e4cc5@linaro.org>	<1396479728.476.410.camel@ul30vt.home> <20140404203512.5b5ac8a134a71065518712c3@freescale.com>
+In-Reply-To: <20140404203512.5b5ac8a134a71065518712c3@freescale.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 3, 2014 at 8:51 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Thu, 2014-04-03 at 15:48 -0600, Bjorn Helgaas wrote:
->> [+cc George]
->>
->> On Fri, Aug 2, 2013 at 10:59 AM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > ...
->> > Great!  I'm still trying to figure out how to handle the quirk around
->> > Intel PCI-to-PCI bridge on the root complex as just another quirk.  I
->> > respin another version once I have that worked out.  Thanks,
->>
->> Is anything happening here?  These buggy IOMMU/DMA source problems,
->> e.g., [1], have been lingering a long time, and I don't know if we're
->> stuck because I haven't been giving them enough attention, or if we
->> don't really have a good solution yet.
->>
->> [1] https://bugzilla.kernel.org/show_bug.cgi?id=42679
+On 04/04/2014 06:35 PM, Kim Phillips wrote:
+> Needed by platform device drivers, such as the vfio-platform driver [1],
+> in order to bypass the existing OF, ACPI, id_table and name string matches,
+> and successfully be able to be bound to any device, like so:
 >
-> Sorry, no.  This has completely dropped off my radar.  I'll try to
-> resurrect it and figure out how to move forward.  Thanks,
+> echo vfio-platform > /sys/bus/platform/devices/fff51000.ethernet/driver_override
+> echo fff51000.ethernet > /sys/bus/platform/devices/fff51000.ethernet/driver/unbind
+> echo fff51000.ethernet > /sys/bus/platform/drivers_probe
+>
+> This mimics "PCI: Introduce new device binding path using
+> pci_dev.driver_override" [2], which is an interface enhancement
+> for more deterministic PCI device binding, e.g., when in the
+> presence of hotplug.
+>
+> [1] http://lkml.iu.edu/hypermail/linux/kernel/1402.1/00177.html
+> [2] http://thread.gmane.org/gmane.linux.kernel.iommu/4605
+>
+> Signed-off-by: Kim Phillips <kim.phillips@freescale.com>
+> ---
+> if this looks ok, should it be included in the next version of the
+> vfio-platform submission series, like last time ([1] above)?
+>
+>   Documentation/ABI/testing/sysfs-bus-platform | 17 ++++++++++
+>   drivers/base/platform.c                      | 46 ++++++++++++++++++++++++++++
+>   include/linux/platform_device.h              |  1 +
+>   3 files changed, 64 insertions(+)
+>   create mode 100644 Documentation/ABI/testing/sysfs-bus-platform
+>
+> diff --git a/Documentation/ABI/testing/sysfs-bus-platform b/Documentation/ABI/testing/sysfs-bus-platform
+> new file mode 100644
+> index 0000000..6b14a6a
+> --- /dev/null
+> +++ b/Documentation/ABI/testing/sysfs-bus-platform
+> @@ -0,0 +1,17 @@
+> +What:		/sys/bus/platform/devices/.../driver_override
+> +Date:		April 2014
+> +Contact:	Kim Phillips <kim.phillips@freescale.com>
+> +Description:
+> +		This file allows the driver for a device to be specified
+> +		which will override standard OF, ACPI, ID table, and name
+> +		matching.  When specified, only a driver with a name matching
+> +		the value written to driver_override will have an opportunity
+> +		to bind to the device.  The override may be cleared by
+> +		writing an empty string (ex. echo > driver_override), returning
+> +		the device to standard matching rules binding.  Writing to
+> +		driver_override does not automatically unbind the device from
+> +		its current driver or make any attempt to automatically load
+> +		the specified driver name.  If no driver with a matching name
+> +		is currently loaded in the kernel, no match will be found.
+> +		This also allows devices to opt-out of driver binding using
+> +		a driver_override name such as "none".
+> diff --git a/drivers/base/platform.c b/drivers/base/platform.c
+> index e714709..ded1db1 100644
+> --- a/drivers/base/platform.c
+> +++ b/drivers/base/platform.c
+> @@ -22,6 +22,7 @@
+>   #include <linux/pm_runtime.h>
+>   #include <linux/idr.h>
+>   #include <linux/acpi.h>
+> +#include <linux/limits.h>
+>
+>   #include "base.h"
+>   #include "power/power.h"
+> @@ -690,8 +691,49 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *a,
+>   }
+>   static DEVICE_ATTR_RO(modalias);
+>
+> +static ssize_t driver_override_store(struct device *dev,
+> +				     struct device_attribute *attr,
+> +				     const char *buf, size_t count)
+> +{
+> +	struct platform_device *pdev = to_platform_device(dev);
+> +	char *driver_override, *old = pdev->driver_override;
+> +
+> +	if (count > PATH_MAX)
+> +		return -EINVAL;
+> +
+> +	driver_override = kstrndup(buf, count, GFP_KERNEL);
+> +	if (!driver_override)
+> +		return -ENOMEM;
+> +
+> +	while (strlen(driver_override) &&
+> +	       driver_override[strlen(driver_override) - 1] == '\n')
+> +		driver_override[strlen(driver_override) - 1] = '\0';
+> +
 
-Not a problem; I'm just way behind on processing patches, so I'm
-trying to clean up my backlog and take care of things that are waiting
-on me.
+Seems to me that something like
 
-Bjorn
+	cp = strchr(driver_override, '\n');
+	if (cp)
+		*cp = '\0';
+
+would be much simpler.
+
+Guenter
+
