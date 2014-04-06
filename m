@@ -1,50 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f176.google.com ([209.85.160.176]:53241 "EHLO
-	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755190AbaD1Kvg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 06:51:36 -0400
-Received: by mail-yk0-f176.google.com with SMTP id 19so5485190ykq.21
-        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 03:51:35 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: thomas.petazzoni@free-electrons.com
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH] pci: pci-mvebu: Use '%pa' for printing 'phys_addr_t' type
-Date: Mon, 28 Apr 2014 07:51:21 -0300
-Message-Id: <1398682281-18772-1-git-send-email-festevam@gmail.com>
+Received: from gate.crashing.org ([63.228.1.57]:43418 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753448AbaDFJuw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 6 Apr 2014 05:50:52 -0400
+Message-ID: <1396777793.3671.15.camel@pasglop>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
+ function.
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Date: Sun, 06 Apr 2014 19:49:53 +1000
+In-Reply-To: <20140405001953.GE15806@google.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+	 <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com>
+	 <20140405001953.GE15806@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+On Fri, 2014-04-04 at 18:19 -0600, Bjorn Helgaas wrote:
+> > Introduce a pci_register_io_range() helper function that can be used
+> > by the architecture code to keep track of the I/O ranges described by the
+> > PCI bindings. If the PCI_IOBASE macro is not defined that signals
+> > lack of support for PCI and we return an error.
+> 
+> I don't quite see how you intend to use this, because this series doesn't
+> include any non-stub implementation of pci_register_io_range().
+> 
+> Is this anything like the ia64 strategy I mentioned above?  If so, it would
+> be really nice to unify some of this stuff.
 
-Fix the following build warning that happens when building multi_v7_defconfig
-with CONFIG_ARM_LPAE=y:
+We also use two different strategies on ppc32 and ppc64
 
-drivers/pci/host/pci-mvebu.c:334:5: warning: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'phys_addr_t' [-Wformat=]
+ - On ppc32, inb/outb turn into an MMIO access to _IO_BASE + port
 
-While at it, also use '%zx' for printing 'size_t'. 
+That _IO_BASE is a variable which is initialized to the ioremapped address
+of the IO space MMIO aperture of the first bridge we discover. Then port
+numbers are "fixed up" on all other bridges so that the addition _IO_BASE + port
+fits the ioremapped address of the IO space on that bridge. A bit messy... and breaks
+whenever drivers copy port numbers into variables of the wrong type such as shorts.
 
-Reported-by: Olof's autobuilder <build@lixom.net>
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
----
- drivers/pci/host/pci-mvebu.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ - On ppc64, we have more virtual space, so instead we reserve a range
+of address space (fixed) for IO space, it's always the same. Bridges IO spaces
+are then mapped into that range, so we always have a positive offset from _IO_BASE
+which makes things a bit more robust and less "surprising" than ppc32. Additionally,
+the first 64k are reserved. They are only mapped if we see an ISA bridge (which some
+older machines have). Otherwise it's left unmapped, so crappy drivers trying to
+hard code x86 IO ports will blow up immediately which I deem better than silently
+whacking the wrong hardware. In addition, we have a mechanism we use on powernv to
+re-route accesses to that first 64k to the power8 built-in LPC bus which can
+have some legacy IOs on it such as a UART or a RTC.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index e384e25..572a7b5 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -330,8 +330,8 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
- 							sz, remap);
- 		if (ret) {
- 			dev_err(&port->pcie->pdev->dev,
--				"Could not create MBus window at 0x%x, size 0x%x: %d\n",
--				base, sz, ret);
-+				"Could not create MBus window at %pa, size 0x%zx: %d\n",
-+				&base, sz, ret);
- 			mvebu_pcie_del_windows(port, base - size_mapped,
- 					       size_mapped);
- 			return;
--- 
-1.8.3.2
+Cheers,
+Ben.
+
 
