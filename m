@@ -1,35 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 10 Apr 2014 09:55:39 +0200
-From: Willy Tarreau <w@1wt.eu>
-To: narasimharo bolisetti <nrbolisetti@yahoo.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernelnewbies@nl.linux.org" <kernelnewbies@nl.linux.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>,
-	"greg@kroah.com" <greg@kroah.com>,
-	Narasimharao Bolisetti <narasimharao.b@hcl.com>,
-	"nrbolisetti@gmail.com" <nrbolisetti@gmail.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
-Subject: Re: system hang
-Message-ID: <20140410075539.GB25198@1wt.eu>
-References: <62C418AB752FEF4D931AB8E89E46539F02878DFC@chn-hclt-mbs06.HCLT.CORP.HCL.IN> <1397113552.75117.YahooMailBasic@web160504.mail.bf1.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1397113552.75117.YahooMailBasic@web160504.mail.bf1.yahoo.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:13114 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754790AbaDGJNW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 05:13:22 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lucas Stach' <l.stach@pengutronix.de>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: 'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	kernel@pengutronix.de, 'Arnd Bergmann' <arnd@arndb.de>,
+	'Stephen Warren' <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-tegra@vger.kernel.org, 'Simon Horman' <horms@verge.net.au>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Ben Dooks' <ben-linux@fluff.org>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	linux-arm-kernel@lists.infradead.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+ <1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
+ <20140305184219.GA29903@obsidianresearch.com>
+ <20140404170341.GG9007@google.com> <20140404170517.GH9007@google.com>
+ <1396859929.4553.2.camel@weser.hi.pengutronix.de>
+In-reply-to: <1396859929.4553.2.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH v2 6/6] PCI: designware: use new OF interrupt mapping when
+ possible
+Date: Mon, 07 Apr 2014 18:13:20 +0900
+Message-id: <002601cf5241$9e819cc0$db84d640$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 12:05:52AM -0700, narasimharo bolisetti wrote:
->  My kernel version is:
->  2.6.35.6-45.fc14.i686 
+On Monday, April 07, 2014 5:39 PM, Lucas Stach wrote:
+> Am Freitag, den 04.04.2014, 11:05 -0600 schrieb Bjorn Helgaas:
+> > On Fri, Apr 04, 2014 at 11:03:41AM -0600, Bjorn Helgaas wrote:
+> > > On Wed, Mar 05, 2014 at 11:42:19AM -0700, Jason Gunthorpe wrote:
+> > > > On Wed, Mar 05, 2014 at 02:25:51PM +0100, Lucas Stach wrote:
+> > > > > -	return pp->irq;
+> > > > > +	irq = of_irq_parse_and_map_pci(dev, slot, pin);
+> > > > > +	if (!irq)
+> > > > > +		irq = pp->irq;
+> > > >
+> > > > In light of the two bugs that Tim found, it might be wise to throw a
+> > > > 'dev_warn(FW_BUG "Missing DT interrupt mapping")' in the fall back
+> > > > path, so it doesn't continue to silently cover up errors on the OF/DT
+> > > > side..
+> > >
+> > > This sounds like a reasonable thing to do, but I didn't see a response to
+> > > this comment.  Should I merge it as-is, or do you want to add the message?
+> >
+> > Oh, and I suppose the same question applies to the other host drivers in
+> > this series (tegra, rcar)?
+> 
+> Please apply as-is. of_irq_parse_and_map_pci() already prints an error
+> message if it isn't able to establish the mapping, thus right before we
+> fall into the fallback path. So any the warning would be redundant.
 
-Maintenance for this kernel has been dropped years ago, so it very
-likely contains many bugs that were fixed in more recent ones. You
-should definitely upgrade.
++1
 
-Hoping this helps,
-Willy
+I agree with Lucas Stach's opinion. of_irq_parse_and_map_pci() already
+prints an error as below. So, additional warning message of host controller
+looks superfluous.
+
+	ret = of_irq_parse_pci(dev, &oirq);
+	if (ret) {
+		dev_err(&dev->dev, "of_irq_parse_pci() failed with rc=%d\n", ret);
+		return 0; /* Proper return code 0 == NO_IRQ */
+
+
+Best regards,
+Jingoo Han
 
