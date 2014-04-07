@@ -1,27 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:35303 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752626AbaDCPxo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 11:53:44 -0400
-Received: by mail-ig0-f175.google.com with SMTP id ur14so7942030igb.8
-        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 08:53:43 -0700 (PDT)
-MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 3 Apr 2014 09:53:23 -0600
-Message-ID: <CAErSpo79w7n=kOUM7D+USA7tHGJ50Sggndun=LwTkeirVqKfvg@mail.gmail.com>
-Subject: Coverity CID 714665: vfio_ext_cap_len() use of uninitialized variable
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from gate.crashing.org ([63.228.1.57]:33339 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755054AbaDGJid (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Apr 2014 05:38:33 -0400
+Message-ID: <1396862008.3671.39.camel@pasglop>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
+ function.
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Date: Mon, 07 Apr 2014 19:13:28 +1000
+In-Reply-To: <20140407083550.GF17163@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+	 <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com>
+	 <20140405001953.GE15806@google.com> <1396777793.3671.15.camel@pasglop>
+	 <20140407083550.GF17163@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Coverity complains that "byte" is used uninitialized in
-drivers/vfio/pci/vfio_pci_config.c in vfio_ext_cap_len():
+On Mon, 2014-04-07 at 09:35 +0100, Liviu Dudau wrote:
+> Thanks for the summary, is really useful as I was recently looking
+> into code in that
+> area. One thing I was trying to understand is why ppc needs _IO_BASE
+> at all rather
+> than using the generic PCI_IOBASE? 
 
-1139                        sts = byte & PCI_TPH_CAP_ST_MASK;
-1140                        sts >>= PCI_TPH_CAP_ST_SHIFT;
-1141                        return PCI_TPH_BASE_SIZEOF + round_up(sts * 2, 4);
+Perhaps because our code predates it ? :-) I haven't looked much into
+the semantics of PCI_IOBASE yet...
 
-This is CID 714665.
+Cheers,
+Ben.
+
+
