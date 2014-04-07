@@ -1,92 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 02/23] bfa: Do not call pci_enable_msix() after it failed once
-Date: Mon, 14 Apr 2014 10:05:26 +0200
-Message-Id: <f9c36a94438cfb19e45f95111877f6e140b98089.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.130]:61990 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754274AbaDGLRi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 07:17:38 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
+Date: Mon, 07 Apr 2014 13:16:56 +0200
+Message-ID: <4164782.o9VMXFGud6@wuerfel>
+In-Reply-To: <1396862008.3671.39.camel@pasglop>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <20140407083550.GF17163@e106497-lin.cambridge.arm.com> <1396862008.3671.39.camel@pasglop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function pci_enable_msix() should not be called in case
-it threw a negative errno from a previous call.
+On Monday 07 April 2014 19:13:28 Benjamin Herrenschmidt wrote:
+> On Mon, 2014-04-07 at 09:35 +0100, Liviu Dudau wrote:
+> > Thanks for the summary, is really useful as I was recently looking
+> > into code in that
+> > area. One thing I was trying to understand is why ppc needs _IO_BASE
+> > at all rather
+> > than using the generic PCI_IOBASE? 
+> 
+> Perhaps because our code predates it ?  I haven't looked much into
+> the semantics of PCI_IOBASE yet...
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
----
- drivers/scsi/bfa/bfad.c |   48 ++++++++++++++++++++++------------------------
- 1 files changed, 23 insertions(+), 25 deletions(-)
+Yes, I'm pretty sure that's all there is to it. PCI_IOBASE just
+happened to be an identifier we picked for asm-generic, but the
+use on PowerPC is much older than the generic file.
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index cc0fbcd..972ff8d 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1235,33 +1235,31 @@ bfad_setup_intr(struct bfad_s *bfad)
- 	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
- 
- 		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
--		if (error) {
--			/* In CT1 & CT2, try to allocate just one vector */
--			if (bfa_asic_id_ctc(pdev->device)) {
--				printk(KERN_WARNING "bfa %s: trying one msix "
--				       "vector failed to allocate %d[%d]\n",
--				       bfad->pci_name, bfad->nvec, error);
--				bfad->nvec = 1;
--				error = pci_enable_msix(bfad->pcidev,
-+		/* In CT1 & CT2, try to allocate just one vector */
-+		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
-+			printk(KERN_WARNING "bfa %s: trying one msix "
-+			       "vector failed to allocate %d[%d]\n",
-+			       bfad->pci_name, bfad->nvec, error);
-+			bfad->nvec = 1;
-+			error = pci_enable_msix(bfad->pcidev,
- 						msix_entries, bfad->nvec);
--			}
-+		}
- 
--			/*
--			 * Only error number of vector is available.
--			 * We don't have a mechanism to map multiple
--			 * interrupts into one vector, so even if we
--			 * can try to request less vectors, we don't
--			 * know how to associate interrupt events to
--			 *  vectors. Linux doesn't duplicate vectors
--			 * in the MSIX table for this case.
--			 */
--			if (error) {
--				printk(KERN_WARNING "bfad%d: "
--				       "pci_enable_msix failed (%d), "
--				       "use line based.\n",
--					bfad->inst_no, error);
--				goto line_based;
--			}
-+		/*
-+		 * Only error number of vector is available.
-+		 * We don't have a mechanism to map multiple
-+		 * interrupts into one vector, so even if we
-+		 * can try to request less vectors, we don't
-+		 * know how to associate interrupt events to
-+		 *  vectors. Linux doesn't duplicate vectors
-+		 * in the MSIX table for this case.
-+		 */
-+		if (error) {
-+			printk(KERN_WARNING "bfad%d: "
-+			       "pci_enable_msix failed (%d), "
-+			       "use line based.\n",
-+				bfad->inst_no, error);
-+			goto line_based;
- 		}
- 
- 		/* Disable INTX in MSI-X mode */
--- 
-1.7.7.6
-
+	Arnd
