@@ -1,58 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 16 Apr 2014 18:31:22 -0400
-From: Dave Jones <davej@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Borislav Petkov <bp@alien8.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"Zhang, Rui" <rui.zhang@intel.com>,
-	"Lu, Aaron" <aaron.lu@intel.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Stephane Eranian <eranian@google.com>,
-	"Yan, Zheng Z" <zheng.z.yan@intel.com>
-Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
-Message-ID: <20140416223122.GA2767@redhat.com>
-References: <20140224162400.GE16457@pd.tnic>
- <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
- <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
- <1558044.S1G2VU7srO@vostro.rjw.lan>
- <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
- <20140416190404.GA7070@pd.tnic>
- <20140416203138.GA17661@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:36768 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754790AbaDGKHU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 06:07:20 -0400
+Date: Mon, 7 Apr 2014 11:07:15 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140407100715.GI17163@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
+ <20140405000007.GD15806@google.com>
+ <20140407084623.GG17163@e106497-lin.cambridge.arm.com>
+ <1396862058.3671.40.camel@pasglop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140416203138.GA17661@google.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1396862058.3671.40.camel@pasglop>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 16, 2014 at 02:31:38PM -0600, Bjorn Helgaas wrote:
- > On Wed, Apr 16, 2014 at 09:04:04PM +0200, Borislav Petkov wrote:
- > > On Thu, Mar 20, 2014 at 02:48:30PM -0600, Bjorn Helgaas wrote:
- > > > Right.  Even if we had this long-term solution, we'd still have
- > > > Stephane's current problem, because the PNP0C02 _CRS is still wrong.
- > > > 
- > > > We do have a drivers/pnp/quirks.c where we could conceivably adjust
- > > > the PNP resource if we found the matching PCI device and MCHBAR.  That
- > > > should solve Stephane's problem even with the current
- > > > drivers/pnp/system.c.
- > > 
- > > Guys, this still triggers in -rc1. Do we have a fix or something
- > > testable at least?
- > 
- > Hi Boris,
- > 
- > Can you try the patch below?
+On Mon, Apr 07, 2014 at 10:14:18AM +0100, Benjamin Herrenschmidt wrote:
+> On Mon, 2014-04-07 at 09:46 +0100, Liviu Dudau wrote:
+> > 
+> > *My* strategy is to get rid of pci_domain_nr(). I don't see why we need
+> > to have arch specific way of providing the number, specially after looking
+> > at the existing implementations that return a value from a variable that
+> > is never touched or incremented. My guess is that pci_domain_nr() was
+> > created to work around the fact that there was no domain_nr maintainance in
+> > the generic code.
+> 
+> Well, there was no generic host bridge structure. There is one now, it should
+> go there.
 
-I'm seeing the exact same message on my thinkpad t430s.
-When I try your patch, modesetting no longer works. When it tries
-to change to the framebuffer I get a black screen and lockup.
-If I boot with nomodeset it locks up when it gets to X.
-It all scrolls by too fast to read, but it looks like there's still
-a backtrace present.
+Exactly! Hence my patch. After it gets accepted I will go through architectures
+and remove their version of pci_domain_nr().
 
-	Dave
+Best regards,
+Liviu
+
+> 
+> Cheers,
+> Ben.
+>  
+> 
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
