@@ -1,67 +1,86 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 28 Apr 2014 23:40:36 +0200
-From: Borislav Petkov <bp@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Robert Richter <rric@kernel.org>, herrmann.der.user@gmail.com
-Cc: Myron Stowe <myron.stowe@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	kim.naru@amd.com, Daniel J Blueman <daniel@numascale.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86 <x86@kernel.org>,
-	Steffen Persvold <sp@numascale.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Robert Richter <rric@kernel.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range
- capabilities
-Message-ID: <20140428214036.GA32143@pd.tnic>
-References: <20140419025308.2408.51252.stgit@amt.stowe>
- <20140419025323.2408.88764.stgit@amt.stowe>
- <20140419135219.GC8109@pd.tnic>
- <20140420075936.GA19672@pd.tnic>
- <CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com>
- <20140426091031.GA10166@pd.tnic>
- <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:58820 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755591AbaDGWpM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 18:45:12 -0400
+Received: by mail-ig0-f182.google.com with SMTP id uy17so324094igb.3
+        for <linux-pci@vger.kernel.org>; Mon, 07 Apr 2014 15:45:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20140407100715.GI17163@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com> <20140405000007.GD15806@google.com>
+ <20140407084623.GG17163@e106497-lin.cambridge.arm.com> <1396862058.3671.40.camel@pasglop>
+ <20140407100715.GI17163@e106497-lin.cambridge.arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 7 Apr 2014 16:44:51 -0600
+Message-ID: <CAErSpo7h+Yew2hBztzkOzcHU5r4OQebxFbcZGkNUwJwfTFsbfg@mail.gmail.com>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for pci_host_bridge.
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 28, 2014 at 02:50:29PM -0600, Bjorn Helgaas wrote:
-> This I/O ECS thing seems likely to cause future problems.  My
-> understanding (based on sec 2.8 of [1]) is that enable_pci_io_ecs()
-> and pci_enable_pci_io_ecs() are there to enable access to extended
-> config space (offsets 256-4095) via the 0xcf8/0xcfc I/O ports.
-> 
-> Per sec 4.1.1 of [2], we should be using ECAM (the memory-mapped
-> enhanced configuration mechanism, i.e., MMCONFIG) to access extended
-> config space, and the BIOS should supply an MCFG table.
-> 
-> So why do we need to enable I/O access to ECS on AMD chips at all?  Is
-> this a workaround for a broken BIOS that doesn't supply an MCFG table?
+On Mon, Apr 7, 2014 at 4:07 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Mon, Apr 07, 2014 at 10:14:18AM +0100, Benjamin Herrenschmidt wrote:
+>> On Mon, 2014-04-07 at 09:46 +0100, Liviu Dudau wrote:
+>> >
+>> > *My* strategy is to get rid of pci_domain_nr(). I don't see why we need
+>> > to have arch specific way of providing the number, specially after looking
+>> > at the existing implementations that return a value from a variable that
+>> > is never touched or incremented. My guess is that pci_domain_nr() was
+>> > created to work around the fact that there was no domain_nr maintainance in
+>> > the generic code.
+>>
+>> Well, there was no generic host bridge structure. There is one now, it should
+>> go there.
+>
+> Exactly! Hence my patch. After it gets accepted I will go through architectures
+> and remove their version of pci_domain_nr().
 
-That's a good question. 831d991821dae doesn't say but I have a hunch
-Andreas and/or Robert should know. I seem to vaguely remember it
-might've been because of a missing MCFG but have flushed it out of the
-cache long time ago.
+Currently the arch has to supply pci_domain_nr() because that's the
+only way for the generic code to learn the domain.  After you add
+pci_create_root_bus_in_domain(), the arch can supply the domain that
+way, and we won't need the arch-specific pci_domain_nr().  Right?
+That makes more sense to me; thanks for the explanation.
 
-Let's ask them.
+Let me try to explain my concern about the
+pci_create_root_bus_in_domain() interface.  We currently have these
+interfaces:
 
-Andreas, Robert, guys, do you remember why we did the PCI IO ECS access?
-B0rked BIOSes?
+  pci_scan_root_bus()
+  pci_scan_bus()
+  pci_scan_bus_parented()
+  pci_create_root_bus()
 
-Thanks.
+pci_scan_root_bus() is a higher-level interface than
+pci_create_root_bus(), so I'm trying to migrate toward it because it
+lets us remove a little code from the arch, e.g., pci_scan_child_bus()
+and pci_bus_add_devices().
 
--- 
-Regards/Gruss,
-    Boris.
+I think we can only remove the arch-specific pci_domain_nr() if that
+arch uses pci_create_root_bus_in_domain().  When we convert an arch
+from using scan_bus interfaces to using
+pci_create_root_bus_in_domain(), we will have to move the rest of the
+scan_bus code (pci_scan_child_bus(), pci_bus_add_devices()) back into
+the arch code.
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+One alternative is to add an _in_domain() variant of each of these
+interfaces, but that doesn't seem very convenient either.  My idea of
+passing in a structure would also require adding variants, so there's
+not really an advantage there, but I am thinking of the next
+unification effort, e.g., for NUMA node info.  I don't really want to
+have to change all the _in_domain() interfaces to also take yet
+another parameter for the node number.
+
+Bjorn
