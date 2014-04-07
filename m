@@ -1,15 +1,11 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:59682 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868AbaDHJti convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 05:49:38 -0400
-Date: Tue, 8 Apr 2014 10:49:33 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 7 Apr 2014 09:35:50 +0100
 From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	linaro-kernel <linaro-kernel@lists.linaro.org>,
 	Arnd Bergmann <arnd@arndb.de>,
 	LKML <linux-kernel@vger.kernel.org>,
@@ -19,102 +15,64 @@ Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Grant Likely <grant.likely@secretlab.ca>
 Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
  function.
-Message-ID: <20140408094933.GS17163@e106497-lin.cambridge.arm.com>
+Message-ID: <20140407083550.GF17163@e106497-lin.cambridge.arm.com>
 References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
  <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com>
- <CAErSpo6S49qNuJQB-XXEfJ1Nkz=4gZ5_hE93=gb_yGZesA1H9Q@mail.gmail.com>
+ <20140405001953.GE15806@google.com>
+ <1396777793.3671.15.camel@pasglop>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6S49qNuJQB-XXEfJ1Nkz=4gZ5_hE93=gb_yGZesA1H9Q@mail.gmail.com>
+In-Reply-To: <1396777793.3671.15.camel@pasglop>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 08, 2014 at 12:21:51AM +0100, Bjorn Helgaas wrote:
-> On Fri, Mar 14, 2014 at 9:34 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > Some architectures do not share x86 simple view of the PCI I/O space
-> > and instead use a range of addresses that map to bus addresses. For
-> > some architectures these ranges will be expressed by OF bindings
-> > in a device tree file.
-> >
-> > Introduce a pci_register_io_range() helper function that can be used
-> > by the architecture code to keep track of the I/O ranges described by the
-> > PCI bindings. If the PCI_IOBASE macro is not defined that signals
-> > lack of support for PCI and we return an error.
-> >
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > Acked-by: Grant Likely <grant.likely@linaro.org>
-> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> > ---
-> >  drivers/of/address.c       | 9 +++++++++
-> >  include/linux/of_address.h | 1 +
-> >  2 files changed, 10 insertions(+)
-> >
-> > diff --git a/drivers/of/address.c b/drivers/of/address.c
-> > index 1a54f1f..be958ed 100644
-> > --- a/drivers/of/address.c
-> > +++ b/drivers/of/address.c
-> > @@ -619,6 +619,15 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
-> >  }
-> >  EXPORT_SYMBOL(of_get_address);
-> >
-> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> > +{
-> > +#ifndef PCI_IOBASE
-> > +       return -EINVAL;
-> > +#else
-> > +       return 0;
-> > +#endif
-> > +}
+On Sun, Apr 06, 2014 at 10:49:53AM +0100, Benjamin Herrenschmidt wrote:
+> On Fri, 2014-04-04 at 18:19 -0600, Bjorn Helgaas wrote:
+> > > Introduce a pci_register_io_range() helper function that can be used
+> > > by the architecture code to keep track of the I/O ranges described by the
+> > > PCI bindings. If the PCI_IOBASE macro is not defined that signals
+> > > lack of support for PCI and we return an error.
+> > 
+> > I don't quite see how you intend to use this, because this series doesn't
+> > include any non-stub implementation of pci_register_io_range().
+> > 
+> > Is this anything like the ia64 strategy I mentioned above?  If so, it would
+> > be really nice to unify some of this stuff.
 > 
-> This isn't PCI code, so I'm fine with it in that sense, but I'm not
-> sure the idea of a PCI_IOBASE #define is really what we need.  It's
-> not really determined by the processor architecture, it's determined
-> by the platform.  And a single address isn't enough in general,
-> either, because if there are multiple host bridges, there's no reason
-> the apertures that generate PCI I/O transactions need to be contiguous
-> on the CPU side.
-
-It should not be only platform's choice if the architecture doesn't support it.
-To my mind PCI_IOBASE means "I support MMIO operations and this is the
-start of the virtual address where my I/O ranges are mapped." It's the
-same as ppc's _IO_BASE. And pci_address_to_pio() will take care to give
-you the correct io_offset in the presence of multiple host bridges,
-while keeping the io resource in the range [0 .. host_bridge_io_range_size - 1]
-
+> We also use two different strategies on ppc32 and ppc64
 > 
-> That's just a long way of saying that if we ever came up with a more
-> generic way to handle I/O port spaces, PCI_IOBASE might go away.  And
-> I guess part of that rework could be changing this use of it along
-> with the others.
+>  - On ppc32, inb/outb turn into an MMIO access to _IO_BASE + port
+> 
+> That _IO_BASE is a variable which is initialized to the ioremapped address
+> of the IO space MMIO aperture of the first bridge we discover. Then port
+> numbers are "fixed up" on all other bridges so that the addition _IO_BASE + port
+> fits the ioremapped address of the IO space on that bridge. A bit messy... and breaks
+> whenever drivers copy port numbers into variables of the wrong type such as shorts.
+> 
+>  - On ppc64, we have more virtual space, so instead we reserve a range
+> of address space (fixed) for IO space, it's always the same. Bridges IO spaces
+> are then mapped into that range, so we always have a positive offset from _IO_BASE
+> which makes things a bit more robust and less "surprising" than ppc32. Additionally,
+> the first 64k are reserved. They are only mapped if we see an ISA bridge (which some
+> older machines have). Otherwise it's left unmapped, so crappy drivers trying to
+> hard code x86 IO ports will blow up immediately which I deem better than silently
+> whacking the wrong hardware. In addition, we have a mechanism we use on powernv to
+> re-route accesses to that first 64k to the power8 built-in LPC bus which can
+> have some legacy IOs on it such as a UART or a RTC.
+> 
+> Cheers,
+> Ben.
+> 
 
-And I have a patch series that #defines PCI_IOBASE only in those architectures
-that support MMIO, where this macro makes sense. Also notice that the
-arm64 series has a patch that I'm going to roll into this one where ioport_map()
-gets fixed to include PCI_IOBASE when !CONFIG_GENERIC_MAP.
+Hi Benjamin,
+
+Thanks for the summary, is really useful as I was recently looking into code in that
+area. One thing I was trying to understand is why ppc needs _IO_BASE at all rather
+than using the generic PCI_IOBASE? 
 
 Best regards,
 Liviu
-
-> 
-> >  unsigned long __weak pci_address_to_pio(phys_addr_t address)
-> >  {
-> >         if (address > IO_SPACE_LIMIT)
-> > diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> > index 5f6ed6b..40c418d 100644
-> > --- a/include/linux/of_address.h
-> > +++ b/include/linux/of_address.h
-> > @@ -56,6 +56,7 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
-> >  extern const __be32 *of_get_address(struct device_node *dev, int index,
-> >                            u64 *size, unsigned int *flags);
-> >
-> > +extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
-> >  extern unsigned long pci_address_to_pio(phys_addr_t addr);
-> >
-> >  extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
-> > --
-> > 1.9.0
-> >
-> 
+ 
 
 -- 
 ====================
