@@ -1,64 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay4-d.mail.gandi.net ([217.70.183.196]:35639 "EHLO
-	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754582AbaDSAOe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 20:14:34 -0400
-From: Ryan Desfosses <ryan@desfo.org>
-To: bhelgaas@google.com
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
-Subject: [PATCH 2/8] bus: moved EXPORT_SYMBOL so that it immediately followed its function/variable
-Date: Fri, 18 Apr 2014 20:13:47 -0400
-Message-Id: <1397866433-21119-3-git-send-email-ryan@desfo.org>
-In-Reply-To: <1397866433-21119-1-git-send-email-ryan@desfo.org>
-References: <1397866433-21119-1-git-send-email-ryan@desfo.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 7 Apr 2014 14:42:50 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140407134250.GL17163@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140405001953.GE15806@google.com>
+ <20140407083120.GE17163@e106497-lin.cambridge.arm.com>
+ <5183143.FxBNM0xTAV@wuerfel>
+MIME-Version: 1.0
+In-Reply-To: <5183143.FxBNM0xTAV@wuerfel>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-change made to resolve following checkpatch message:
-  WARNING: EXPORT_SYMBOL(foo); should immediately follow its function/variable
-branch: Linux 3.15-rc1
+On Mon, Apr 07, 2014 at 12:36:15PM +0100, Arnd Bergmann wrote:
+> On Monday 07 April 2014 09:31:20 Liviu Dudau wrote:
+> > On Sat, Apr 05, 2014 at 01:19:53AM +0100, Bjorn Helgaas wrote:
+> >
+> > > Host bridges on x86 could have MMIO apertures that turn CPU memory accesses
+> > > into PCI port accesses.  We could implement any number of I/O port spaces
+> > > this way, by making the kernel inb()/outb()/etc. interfaces smart enough to
+> > > use the memory-mapped space instead of (or in addition to) the
+> > > INB/OUTB/etc. instructions.
+> 
+> PowerPC actually has this already, as CONFIG_PPC_INDIRECT_PIO meaning that
+> access to PIO registers is bus specific, and there is also CONFIG_PPC_INDIRECT_MMIO
+> for the case where MMIO access is not native.
+>  
+> > Right, sorry for my ignorance then: how does *currently* the device driver do
+> > the I/O transfer transparent of the implementation mechanism? Or they have
+> > intimate knowledge of wether the device is behind a host bridge and can do MMIO
+> > or is on an ISA or CF bus and then it needs INB/OUTB ? And if we make inb/outb
+> > smarter, does that mean that we need to change the drivers?
+> 
+> The idea of that would be to not change drivers.
+> 
+> My preference here would be to only have a generic function for those
+> architectures that have the simple MMIO access all the time.
+> 
+> > > ia64 does this (see arch/ia64/include/asm/io.h for a little description)
+> > > and I think maybe one or two other arches have something similar.
+> > > 
+> > > > Introduce a pci_register_io_range() helper function that can be used
+> > > > by the architecture code to keep track of the I/O ranges described by the
+> > > > PCI bindings. If the PCI_IOBASE macro is not defined that signals
+> > > > lack of support for PCI and we return an error.
+> > > 
+> > > I don't quite see how you intend to use this, because this series doesn't
+> > > include any non-stub implementation of pci_register_io_range().
+> > > 
+> > > Is this anything like the ia64 strategy I mentioned above?  If so, it would
+> > > be really nice to unify some of this stuff.
+> > 
+> > After discussions with Arnd and Catalin I know have a new series that moves
+> > some of the code from arm64 series into this one. I am putting it through
+> > testing right know as I am going to have to depend on another series that
+> > makes PCI_IOBASE defined only for architectures that do MMIO in order to
+> > choose the correct default implementation for these functions. My hope is
+> > that I will be able to send the series this week.
+> 
+> I think migrating other architectures to use the same code should be
+> a separate effort from adding a generic implementation that can be
+> used by arm64. It's probably a good idea to have patches to convert
+> arm32 and/or microblaze.
 
-Signed-off-by: Ryan Desfosses <ryan@desfo.org>
----
- drivers/pci/bus.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Agree. My updated series only moves the arm64 code into framework to make the
+arm64 part a noop.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index fb8aed3..2164d29 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -227,6 +227,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 					 type_mask, alignf, alignf_data,
- 					 &pci_32_bit);
- }
-+EXPORT_SYMBOL(pci_bus_alloc_resource);
- 
- void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
- 
-@@ -256,6 +257,7 @@ int pci_bus_add_device(struct pci_dev *dev)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(pci_bus_add_device);
- 
- /**
-  * pci_bus_add_devices - start driver for PCI devices
-@@ -286,6 +288,7 @@ void pci_bus_add_devices(const struct pci_bus *bus)
- 			pci_bus_add_devices(child);
- 	}
- }
-+EXPORT_SYMBOL(pci_bus_add_devices);
- 
- /** pci_walk_bus - walk devices on/under bus, calling callback.
-  *  @top      bus whose devices should be walked
-@@ -351,6 +354,3 @@ void pci_bus_put(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pci_bus_put);
- 
--EXPORT_SYMBOL(pci_bus_alloc_resource);
--EXPORT_SYMBOL_GPL(pci_bus_add_device);
--EXPORT_SYMBOL(pci_bus_add_devices);
+Liviu
+
+> 
+> 	Arnd
+> 
+> 
+
 -- 
-1.9.1
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
