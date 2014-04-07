@@ -1,26 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:34615 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970AbaDRCrw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Apr 2014 22:47:52 -0400
-Date: Thu, 17 Apr 2014 19:47:58 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Sebastian Ott <sebott@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: remove pcibios_add_platform_entries
-Message-ID: <20140418024758.GB10084@kroah.com>
-References: <alpine.LFD.2.11.1404171947150.1588@denkbrett>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LFD.2.11.1404171947150.1588@denkbrett>
+Received: from gate.crashing.org ([63.228.1.57]:44084 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753505AbaDGJbe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Apr 2014 05:31:34 -0400
+Message-ID: <1396862058.3671.40.camel@pasglop>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
+ pci_host_bridge.
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Date: Mon, 07 Apr 2014 19:14:18 +1000
+In-Reply-To: <20140407084623.GG17163@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+	 <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
+	 <20140405000007.GD15806@google.com>
+	 <20140407084623.GG17163@e106497-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 17, 2014 at 07:48:07PM +0200, Sebastian Ott wrote:
-> Remove pcibios_add_platform_entries. Architecture specific attributes
-> can be achieved by setting pdev->dev.groups .
+On Mon, 2014-04-07 at 09:46 +0100, Liviu Dudau wrote:
 > 
-> Link: https://lkml.kernel.org/r/alpine.LFD.2.11.1404141101500.1529@denkbrett
-> Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+> *My* strategy is to get rid of pci_domain_nr(). I don't see why we need
+> to have arch specific way of providing the number, specially after looking
+> at the existing implementations that return a value from a variable that
+> is never touched or incremented. My guess is that pci_domain_nr() was
+> created to work around the fact that there was no domain_nr maintainance in
+> the generic code.
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Well, there was no generic host bridge structure. There is one now, it should
+go there.
+
+Cheers,
+Ben.
+ 
+
