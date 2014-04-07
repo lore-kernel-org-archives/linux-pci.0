@@ -1,35 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:51203 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750760AbaEAAGx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 20:06:53 -0400
-Date: Wed, 30 Apr 2014 17:07:50 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>,
-	linux-kernel@vger.kernel.org,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	linux-doc@vger.kernel.org
-Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU
- address to phys_addr_t
-Message-ID: <20140501000750.GB21775@kroah.com>
-References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from rs04.intra2net.com ([85.214.66.2]:36313 "EHLO
+	rs04.intra2net.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754760AbaDGNjp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 09:39:45 -0400
+From: Thomas Jarosch <thomas.jarosch@intra2net.com>
+To: linux-pci@vger.kernel.org
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, stable@vger.kernel.org
+Subject: [PATCH] PCI: Add new PCI id for Intel GPU interrupt quirk
+Date: Mon, 07 Apr 2014 15:10:32 +0200
+Message-ID: <3185796.STv3LRO1j8@storm>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 30, 2014 at 02:33:21PM -0600, Bjorn Helgaas wrote:
-> dma_declare_coherent_memory() takes two addresses for a region of memory: a
-> "bus_addr" and a "device_addr".  I think the intent is that "bus_addr" is
-> the physical address a *CPU* would use to access the region, and
-> "device_addr" is the bus address the *device* would use to address the
-> region.
-> 
-> Rename "bus_addr" to "phys_addr" and change its type to phys_addr_t.
+After a CPU upgrade while keeping the same mainboard,
+we faced "spurious interrupt" problems again.
 
-Isn't this going to cause problems with the callers of this function?
-You aren't changing them...
+It turned out that the new CPU also featured a
+new GPU with a different PCI id.
 
-greg k-h
+-> Add this PCI id to the quirk table. Probably all other
+Intel GPU PCI ids are affected, too, but I don't want
+to add them without a test system.
+
+Signed-off-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Tested-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
+---
+ drivers/pci/quirks.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e729206..0feb4a3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2954,6 +2954,7 @@ static void disable_igfx_irq(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0152, disable_igfx_irq);
+ 
+ /*
+  * PCI devices which are on Intel chips can skip the 10ms delay
+-- 
+1.8.1.4
+
