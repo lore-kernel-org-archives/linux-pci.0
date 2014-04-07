@@ -1,114 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp11.uk.ibm.com ([195.75.94.107]:36235 "EHLO
-	e06smtp11.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997AbaDWJAh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Apr 2014 05:00:37 -0400
-Received: from /spool/local
-	by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
-	Wed, 23 Apr 2014 10:00:35 +0100
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-	by d06dlp01.portsmouth.uk.ibm.com (Postfix) with ESMTP id CFA2C17D8062
-	for <linux-pci@vger.kernel.org>; Wed, 23 Apr 2014 10:01:31 +0100 (BST)
-Received: from d06av05.portsmouth.uk.ibm.com (d06av05.portsmouth.uk.ibm.com [9.149.37.229])
-	by b06cxnps3075.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s3N90Wbg56688766
-	for <linux-pci@vger.kernel.org>; Wed, 23 Apr 2014 09:00:32 GMT
-Received: from d06av05.portsmouth.uk.ibm.com (localhost [127.0.0.1])
-	by d06av05.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s3N90V5g031882
-	for <linux-pci@vger.kernel.org>; Wed, 23 Apr 2014 03:00:32 -0600
-Date: Wed, 23 Apr 2014 11:00:29 +0200 (CEST)
-From: Sebastian Ott <sebott@linux.vnet.ibm.com>
-To: Michal Simek <monstr@monstr.eu>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Mackerras <paulus@samba.org>
-Subject: Re: [Resend] pcibios_add_platform_entries usage
-In-Reply-To: <5357623F.7080805@monstr.eu>
-Message-ID: <alpine.LFD.2.11.1404231059370.1615@denkbrett>
-References: <alpine.LFD.2.11.1403281931410.1516@denkbrett> <alpine.LFD.2.11.1404141101500.1529@denkbrett> <20140414173541.GA4417@google.com> <alpine.LFD.2.11.1404141958120.1561@denkbrett> <alpine.LFD.2.11.1404171938190.1588@denkbrett> <1397768575.32730.70.camel@pasglop>
- <alpine.LFD.2.11.1404181154450.1609@denkbrett> <1397856690.32730.110.camel@pasglop> <alpine.LFD.2.11.1404221024550.1607@denkbrett> <5357623F.7080805@monstr.eu>
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:50291 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755556AbaDGXWM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 19:22:12 -0400
+Received: by mail-ig0-f176.google.com with SMTP id uy17so4351749igb.3
+        for <linux-pci@vger.kernel.org>; Mon, 07 Apr 2014 16:22:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463805518-376787632-1398243631=:1615"
+In-Reply-To: <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 7 Apr 2014 17:21:51 -0600
+Message-ID: <CAErSpo6S49qNuJQB-XXEfJ1Nkz=4gZ5_hE93=gb_yGZesA1H9Q@mail.gmail.com>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Fri, Mar 14, 2014 at 9:34 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> Some architectures do not share x86 simple view of the PCI I/O space
+> and instead use a range of addresses that map to bus addresses. For
+> some architectures these ranges will be expressed by OF bindings
+> in a device tree file.
+>
+> Introduce a pci_register_io_range() helper function that can be used
+> by the architecture code to keep track of the I/O ranges described by the
+> PCI bindings. If the PCI_IOBASE macro is not defined that signals
+> lack of support for PCI and we return an error.
+>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Acked-by: Grant Likely <grant.likely@linaro.org>
+> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> ---
+>  drivers/of/address.c       | 9 +++++++++
+>  include/linux/of_address.h | 1 +
+>  2 files changed, 10 insertions(+)
+>
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 1a54f1f..be958ed 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -619,6 +619,15 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+>  }
+>  EXPORT_SYMBOL(of_get_address);
+>
+> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> +{
+> +#ifndef PCI_IOBASE
+> +       return -EINVAL;
+> +#else
+> +       return 0;
+> +#endif
+> +}
 
----1463805518-376787632-1398243631=:1615
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+This isn't PCI code, so I'm fine with it in that sense, but I'm not
+sure the idea of a PCI_IOBASE #define is really what we need.  It's
+not really determined by the processor architecture, it's determined
+by the platform.  And a single address isn't enough in general,
+either, because if there are multiple host bridges, there's no reason
+the apertures that generate PCI I/O transactions need to be contiguous
+on the CPU side.
 
+That's just a long way of saying that if we ever came up with a more
+generic way to handle I/O port spaces, PCI_IOBASE might go away.  And
+I guess part of that rework could be changing this use of it along
+with the others.
 
-
-On Wed, 23 Apr 2014, Michal Simek wrote:
-
-> On 04/22/2014 10:26 AM, Sebastian Ott wrote:
-> > On Sat, 19 Apr 2014, Benjamin Herrenschmidt wrote:
-> >> On Fri, 2014-04-18 at 12:10 +0200, Sebastian Ott wrote:
-> >>> On Fri, 18 Apr 2014, Benjamin Herrenschmidt wrote:
-> >>>> On Thu, 2014-04-17 at 19:46 +0200, Sebastian Ott wrote:
-> >>>>
-> >>>>> pci: move open fabric devspec attribute to pci common code
-> >>>>>
-> >>>>> Move the devspec OF attribute to pci common code's set of device
-> >>>>> attributes since it's not architecture dependent.
-> >>>>> As a side effect microblaze and powerpc no longer need to use
-> >>>>> pcibios_add_platform_entries.
-> >>>>>
-> >>>>> Link: https://lkml.kernel.org/r/alpine.LFD.2.11.1404141101500.1529@denkbrett
-> >>>>> Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
-> >>>>
-> >>>> Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> >>>>
-> >>>> (Pending you've compile tested it on powerpc, I'm on vacation and
-> >>>> haven't done it :)
-> >>>
-> >>> I did:
-> >>> make ARCH=powerpc CROSS_COMPILE=powerpc64-4.3.2- g5_defconfig
-> >>> make ARCH=powerpc CROSS_COMPILE=powerpc64-4.3.2-
-> >>>
-> >>> and failed with:
-> >>>   CC      arch/powerpc/lib/xor_vmx.o
-> >>> In file included from include/linux/list.h:4,
-> >>>                  from include/linux/preempt.h:10,
-> >>>                  from arch/powerpc/lib/xor_vmx.c:22:
-> >>> include/linux/types.h:29: error: both ‘unsigned’ and ‘_Bool’ in declaration specifiers
-> >>> cc1: warnings being treated as errors
-> >>> include/linux/types.h:29: error: useless type name in empty declaration
-> >>
-> >> Not sure what's up here, did you try with a more recent compiler ? 4.3
-> >> is pretty ancient by kernel standards.
-> >>
-> >> You can find cross compilers there:
-> >>
-> >> https://www.kernel.org/pub/tools/crosstool/
-> >>
-> >> They aren't the newest either but they should work.
-> > 
-> > Yes. That did the trick.
-> 
-> Hope that you did the same for microblaze or just push the repo/branch with these
-> patches to zero-day testing system and you got the results.
-
-Yes, I compile-tested microblaze too.
-
-Regards,
-Sebastian
-> 
-> Thanks,
-> Michal
-> 
-> 
-> -- 
-> Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
-> w: www.monstr.eu p: +42-0-721842854
-> Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
-> Maintainer of Linux kernel - Xilinx Zynq ARM architecture
-> Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
-> 
-> 
-> 
----1463805518-376787632-1398243631=:1615--
-
+>  unsigned long __weak pci_address_to_pio(phys_addr_t address)
+>  {
+>         if (address > IO_SPACE_LIMIT)
+> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+> index 5f6ed6b..40c418d 100644
+> --- a/include/linux/of_address.h
+> +++ b/include/linux/of_address.h
+> @@ -56,6 +56,7 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+>  extern const __be32 *of_get_address(struct device_node *dev, int index,
+>                            u64 *size, unsigned int *flags);
+>
+> +extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+>  extern unsigned long pci_address_to_pio(phys_addr_t addr);
+>
+>  extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+> --
+> 1.9.0
+>
