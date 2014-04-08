@@ -1,140 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37313 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752537AbaDVHHi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Apr 2014 03:07:38 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Received: from service87.mimecast.com ([91.220.42.44]:45389 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756369AbaDHNJ0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 09:09:26 -0400
+Date: Tue, 8 Apr 2014 14:09:20 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 22/22] iommu/vt-d: fix bug in computing domain's iommu_snooping flag
-Date: Tue, 22 Apr 2014 15:07:33 +0800
-Message-Id: <1398150453-28141-23-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH v7 6/6] pci: Add support for creating a generic
+ host_bridge from device tree
+Message-ID: <20140408130920.GY17163@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811272-1547-7-git-send-email-Liviu.Dudau@arm.com>
+ <5343F252.2050708@linaro.org>
+MIME-Version: 1.0
+In-Reply-To: <5343F252.2050708@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IOMMU units may dynamically attached to/detached from domains,
-so we should scan all active IOMMU units when computing iommu_snooping
-flag for a domain instead of only scanning IOMMU units associated
-with the domain.
+Hi Hanjun,
 
-Also check snooping and superpage capabilities when hot-adding DMAR units.
+On Tue, Apr 08, 2014 at 01:57:54PM +0100, Hanjun Guo wrote:
+> Hi Liviu,
+> 
+> On 2014-3-14 23:34, Liviu Dudau wrote:
+> > Several platforms use a rather generic version of parsing
+> > the device tree to find the host bridge ranges. Move the common code
+> > into the generic PCI code and use it to create a pci_host_bridge
+> > structure that can be used by arch code.
+> > 
+> > Based on early attempts by Andrew Murray to unify the code.
+> > Used powerpc and microblaze PCI code as starting point.
+> > 
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> > ---
+> >  drivers/pci/host-bridge.c | 158 ++++++++++++++++++++++++++++++++++++
+> >  include/linux/pci.h       |  13 +++
+> >  2 files changed, 171 insertions(+)
+> > 
+> > diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> > index 8708b652..7cda90b 100644
+> > --- a/drivers/pci/host-bridge.c
+> > +++ b/drivers/pci/host-bridge.c
+> > @@ -6,9 +6,14 @@
+> >  #include <linux/init.h>
+> >  #include <linux/pci.h>
+> >  #include <linux/module.h>
+> > +#include <linux/of_address.h>
+> > +#include <linux/of_pci.h>
+> > +#include <linux/slab.h>
+> >  
+> >  #include "pci.h"
+> >  
+> > +static atomic_t domain_nr = ATOMIC_INIT(-1);
+> 
+> domain_nr will only be used inside the #ifdef CONFIG_OF,
+> and this will lead to compile warning which complains that
+> 'domain_nr' defined but not used when CONFIG_OF=n (for example
+> on x86).
+> 
+> How about moving the definition to --->
+> 
+> > +
+> >  static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+> >  {
+> >  	while (bus->parent)
+> > @@ -92,3 +97,156 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+> >  	res->end = region->end + offset;
+> >  }
+> >  EXPORT_SYMBOL(pcibios_bus_to_resource);
+> > +
+> > +#ifdef CONFIG_OF
+> 
+> here?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   54 ++++++++++++++++++++++++++++---------------
- 1 file changed, 36 insertions(+), 18 deletions(-)
+I've already moved the definition there in my refresh.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 6d5b94aaac6e..9c39cab62cc1 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -626,50 +626,56 @@ static void domain_update_iommu_coherency(struct dmar_domain *domain)
- 	rcu_read_unlock();
- }
- 
--static void domain_update_iommu_snooping(struct dmar_domain *domain)
-+static int domain_update_iommu_snooping(struct intel_iommu *skip)
- {
--	int i;
--
--	domain->iommu_snooping = 1;
-+	struct dmar_drhd_unit *drhd;
-+	struct intel_iommu *iommu;
-+	int ret = 1;
- 
--	for_each_set_bit(i, domain->iommu_bmp, g_num_of_iommus) {
--		if (!ecap_sc_support(g_iommus[i]->ecap)) {
--			domain->iommu_snooping = 0;
--			break;
-+	rcu_read_lock();
-+	for_each_active_iommu(iommu, drhd) {
-+		if (iommu != skip) {
-+			if (!ecap_sc_support(iommu->ecap)) {
-+				ret = 0;
-+				break;
-+			}
- 		}
- 	}
-+	rcu_read_unlock();
-+
-+	return ret;
- }
- 
--static void domain_update_iommu_superpage(struct dmar_domain *domain)
-+static int domain_update_iommu_superpage(struct intel_iommu *skip)
- {
- 	struct dmar_drhd_unit *drhd;
--	struct intel_iommu *iommu = NULL;
-+	struct intel_iommu *iommu;
- 	int mask = 0xf;
- 
- 	if (!intel_iommu_superpage) {
--		domain->iommu_superpage = 0;
--		return;
-+		return 0;
- 	}
- 
- 	/* set iommu_superpage to the smallest common denominator */
- 	rcu_read_lock();
- 	for_each_active_iommu(iommu, drhd) {
--		mask &= cap_super_page_val(iommu->cap);
--		if (!mask) {
--			break;
-+		if (iommu != skip) {
-+			mask &= cap_super_page_val(iommu->cap);
-+			if (!mask)
-+				break;
- 		}
- 	}
- 	rcu_read_unlock();
- 
--	domain->iommu_superpage = fls(mask);
-+	return fls(mask);
- }
- 
- /* Some capabilities may be different across iommus */
- static void domain_update_iommu_cap(struct dmar_domain *domain)
- {
- 	domain_update_iommu_coherency(domain);
--	domain_update_iommu_snooping(domain);
--	domain_update_iommu_superpage(domain);
-+	domain->iommu_snooping = domain_update_iommu_snooping(NULL);
-+	domain->iommu_superpage = domain_update_iommu_superpage(NULL);
- }
- 
- static struct intel_iommu *device_to_iommu(struct device *dev, u8 *bus, u8 *devfn)
-@@ -3793,6 +3799,18 @@ static int intel_iommu_add(struct dmar_drhd_unit *dmaru)
- 			iommu->name);
- 		return -ENXIO;
- 	}
-+	if (!ecap_sc_support(iommu->ecap) &&
-+	    domain_update_iommu_snooping(iommu)) {
-+		pr_warn("IOMMU: %s doesn't support snooping.\n",
-+			iommu->name);
-+		return -ENXIO;
-+	}
-+	if ((cap_super_page_val(iommu->cap) &
-+	    (1 << domain_update_iommu_superpage(iommu))) == 0) {
-+		pr_warn("IOMMU: %s doesn't support large page.\n",
-+			iommu->name);
-+		return -ENXIO;
-+	}
- 
- 	/*
- 	 * Disable translation if already enabled prior to OS handover.
+Thanks for reviewing the code,
+Liviu
+
+> 
+> Thanks
+> Hanjun
+> 
+
 -- 
-1.7.10.4
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
