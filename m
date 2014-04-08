@@ -1,154 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:52612 "EHLO mail.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965099AbaDJHPk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Apr 2014 03:15:40 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id 6FAB312B0F3
-	for <linux-pci@vger.kernel.org>; Thu, 10 Apr 2014 09:15:38 +0200 (CEST)
-Date: Thu, 10 Apr 2014 09:15:35 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Davidlohr Bueso <davidlohr@hp.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	James Bottomley <James.Bottomley@hansenpartnership.com>,
-	Baoquan He <bhe@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	David Woodhouse <David.Woodhouse@intel.com>
-Subject: Re: hpsa driver bug crack kernel down!
-Message-ID: <20140410071535.GX13491@8bytes.org>
-References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
- <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
- <1397084904.9519.62.camel@dabdike>
- <1397085044.9519.63.camel@dabdike>
- <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
- <1397087425.9519.67.camel@dabdike>
- <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
- <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
- <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:49620 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932519AbaDHQ27 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 12:28:59 -0400
+Received: by mail-ie0-f177.google.com with SMTP id rl12so1123071iec.8
+        for <linux-pci@vger.kernel.org>; Tue, 08 Apr 2014 09:28:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
+In-Reply-To: <20140408102043.GV17163@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com> <20140405000007.GD15806@google.com>
+ <20140407084623.GG17163@e106497-lin.cambridge.arm.com> <1396862058.3671.40.camel@pasglop>
+ <20140407100715.GI17163@e106497-lin.cambridge.arm.com> <CAErSpo7h+Yew2hBztzkOzcHU5r4OQebxFbcZGkNUwJwfTFsbfg@mail.gmail.com>
+ <20140408102043.GV17163@e106497-lin.cambridge.arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 8 Apr 2014 10:28:39 -0600
+Message-ID: <CAErSpo4anYBmaRbJEFE9kAXSmnvfqud=w1QA=mSSsTUamM4kSw@mail.gmail.com>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for pci_host_bridge.
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+ David, VT-d maintainer ]
+On Tue, Apr 8, 2014 at 4:20 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Mon, Apr 07, 2014 at 11:44:51PM +0100, Bjorn Helgaas wrote:
 
-Jiang, David, can you please have a look into this issue?
+>> Let me try to explain my concern about the
+>> pci_create_root_bus_in_domain() interface.  We currently have these
+>> interfaces:
+>>
+>>   pci_scan_root_bus()
+>>   pci_scan_bus()
+>>   pci_scan_bus_parented()
+>>   pci_create_root_bus()
+>> ...
 
-Thanks,
+>> One alternative is to add an _in_domain() variant of each of these
+>> interfaces, but that doesn't seem very convenient either.  My idea of
+>> passing in a structure would also require adding variants, so there's
+>> not really an advantage there, but I am thinking of the next
+>> unification effort, e.g., for NUMA node info.  I don't really want to
+>> have to change all the _in_domain() interfaces to also take yet
+>> another parameter for the node number.
+>
+> OK, what about this: all the functions that you have mentioned take a
+> void *sysdata parameter. Should we convert this opaque pointer into a
+> specific structure that holds the domain_nr and (in future) the NUMA
+> node info?
 
-	Joerg
+I doubt if we can make sysdata itself generic because I suspect we
+need a way to have *some* arch-specific data.  But maybe the arch
+could supply a structure containing a struct device *, domain, struct
+pci_ops *, list of resources, aperture info, etc.  I wonder if struct
+pci_host_bridge would be a reasonable place to put this stuff, e.g.,
+something like this:
 
-On Wed, Apr 09, 2014 at 11:32:37PM -0700, Davidlohr Bueso wrote:
-> On Wed, 2014-04-09 at 22:03 -0600, Bjorn Helgaas wrote:
-> > [+cc Joerg, iommu list]
-> > 
-> > On Wed, Apr 9, 2014 at 6:19 PM, Davidlohr Bueso <davidlohr@hp.com> wrote:
-> > > On Wed, 2014-04-09 at 16:50 -0700, James Bottomley wrote:
-> > >> On Wed, 2014-04-09 at 16:40 -0700, Davidlohr Bueso wrote:
-> > >> > On Wed, 2014-04-09 at 16:10 -0700, James Bottomley wrote:
-> > >> > > On Wed, 2014-04-09 at 16:08 -0700, James Bottomley wrote:
-> > >> > > > [+linux-scsi]
-> > >> > > > On Wed, 2014-04-09 at 15:49 -0700, Davidlohr Bueso wrote:
-> > >> > > > > On Wed, 2014-04-09 at 10:39 +0800, Baoquan He wrote:
-> > >> > > > > > Hi,
-> > >> > > > > >
-> > >> > > > > > The kernel is 3.14.0+ which is pulled just now.
-> > >> > > > >
-> > >> > > > > Cc'ing more people.
-> > >> > > > >
-> > >> > > > > While the hpsa driver appears to be involved in some way, I'm sure if
-> > >> > > > > this is a related issue, but as of today's pull I'm getting another
-> > >> > > > > problem that causes my DL980 not to come up.
-> > >> > > > >
-> > >> > > > > *Massive* amounts of:
-> > >> > > > >
-> > >> > > > > DMAR:[fault reason 02] Present bit in context entry is clear
-> > >> > > > > dmar: DRHD: handling fault status reg 602
-> > >> > > > > dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7f61e000
-> > >> > > > >
-> > >> > > > > Then:
-> > >> > > > >
-> > >> > > > > hpsa 0000:03:00.0: Controller lockup detected: 0xffff0000
-> > >> > > > > ...
-> > >> > > > > Workqueue: events hpsa_monitor_ctlr_worker [hpsa]
-> > >> > > > > ...
-> > >> > > > >
-> > >> > > > > Screenshot of the actual LOCKUP:
-> > >> > > > > http://stgolabs.net/hpsa-hard-lockup-3.14+.png
-> > >> > > > >
-> > >> > > > > While I haven't bisected, things worked fine until at least until commit
-> > >> > > > > 39de65aa2c3e (April 2nd).
-> > >> > > > >
-> > >> > > > > Any ideas?
-> > >> > > >
-> > >> > > > Well, it's either a DMA remapping issue or a hpsa one.  Your assertion
-> > >> > > > that everything worked fine until 39de65aa2c3e would tend to vindicate
-> > >> > > > hpsa,
-> > >> >
-> > >> > Hmm here you mean DMA, right?
-> > >>
-> > >> No, it vindicates the hpsa changes ... they don't seem to be causing
-> > >> problems until something goes wrong with dma remapping.
-> > >>
-> > >> > > because all the hpsa changes went in before that under
-> > >> > > Missing crucial info:
-> > >> > >
-> > >> > > commit 1a0b6abaea78f73d9bc0a2f6df2d9e4c917cade1
-> > >> > >
-> > >> > > > Merge: 3e75c6d b2bff6c
-> > >> > > > Author: Linus Torvalds <torvalds@linux-foundation.org>
-> > >> > > > Date:   Tue Apr 1 18:49:04 2014 -0700
-> > >> > > >
-> > >> > > >     Merge tag 'scsi-misc' of
-> > >> > > > git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi
-> > >> > > >
-> > >> > > > can you revalidate that this commit works OK just to make sure?
-> > >> >
-> > >> > Ok so I don't see those DMA messages and system starts just fine. I'm
-> > >> > thinking perhaps something broke after the IO mmu stuff in commit
-> > >> > 3f583bc21977a608908b83d03ee2250426a5695c... could this be indirectly
-> > >> > causing the CPU stalls and just blame hpsa in the path as a side effect?
-> > >> >
-> > >> > /me goes out to try the commit.
-> > >>
-> > >> That's my guess.  The DMAR messages are DMA remapping issues caused in
-> > >> the IOMMU.  If I had to guess, I'd say the DMAR fault message is
-> > >> indicating the IOMMU is calling for a mapping address before it can
-> > >> satisfy the driver read request, which is causing the hang apparently in
-> > >> the hpsa driver.
-> > >>
-> > >> I've added linux-pci to the cc; I think they deal with iommu issues on
-> > >> x86.
-> > >
-> > > So that merge commit appears to be the culprit, I see both the DMA
-> > > messages and the lockup blaming hpsa...
-> > 
-> > My understanding so far (please correct me if I'm wrong):
-> > 
-> > 39de65aa2c3e OK ("Merge branch 'i2c/for-next'")
-> > 1a0b6abaea78 OK ("Merge tag 'scsi-misc'")
-> > 3f583bc21977 BAD ("Merge tag 'iommu-updates-v3.15'")
-> 
-> Yes, specifically (finally done bisecting):
-> 
-> commit 2e45528930388658603ea24d49cf52867b928d3e
-> Author: Jiang Liu <jiang.liu@linux.intel.com>
-> Date:   Wed Feb 19 14:07:36 2014 +0800
-> 
->     iommu/vt-d: Unify the way to process DMAR device scope array
->     
->     Now we have a PCI bus notification based mechanism to update DMAR
->     device scope array, we could extend the mechanism to support boot
->     time initialization too, which will help to unify and simplify
->     the implementation.
->     
->     Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->     Signed-off-by: Joerg Roedel <joro@8bytes.org>
-> 
+  struct pci_host_bridge {
+    int domain;
+    int node;
+    struct device *dev;
+    struct pci_ops *ops;
+    struct list_head resources;
+    void *sysdata;
+    struct pci_bus *bus;  /* filled in by core, not by arch */
+    ... /* other existing contents managed by core */
+  };
 
+  struct pci_bus *pci_scan_host_bridge(struct pci_host_bridge *bridge);
