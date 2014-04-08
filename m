@@ -1,13 +1,17 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 4 Apr 2014 18:19:53 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:33969 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756549AbaDHJun convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 05:50:43 -0400
+Date: Tue, 8 Apr 2014 10:50:39 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
 	LKML <linux-kernel@vger.kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
@@ -15,86 +19,59 @@ Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Grant Likely <grant.likely@secretlab.ca>
 Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
  function.
-Message-ID: <20140405001953.GE15806@google.com>
+Message-ID: <20140408095038.GT17163@e106497-lin.cambridge.arm.com>
 References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com>
+ <20140405001953.GE15806@google.com>
+ <20140407083120.GE17163@e106497-lin.cambridge.arm.com>
+ <5183143.FxBNM0xTAV@wuerfel>
+ <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 03:34:27PM +0000, Liviu Dudau wrote:
-> Some architectures do not share x86 simple view of the PCI I/O space
-> and instead use a range of addresses that map to bus addresses. For
-> some architectures these ranges will be expressed by OF bindings
-> in a device tree file.
-
-It's true that the current Linux "x86 view of PCI I/O space" is pretty
-simple and limited.  But I don't think that's a fundamental x86 limitation
-(other than the fact that the actual INB/OUTB/etc. CPU instructions
-themselves are limited to a single 64K I/O port space).
-
-Host bridges on x86 could have MMIO apertures that turn CPU memory accesses
-into PCI port accesses.  We could implement any number of I/O port spaces
-this way, by making the kernel inb()/outb()/etc. interfaces smart enough to
-use the memory-mapped space instead of (or in addition to) the
-INB/OUTB/etc. instructions.
-
-ia64 does this (see arch/ia64/include/asm/io.h for a little description)
-and I think maybe one or two other arches have something similar.
-
-> Introduce a pci_register_io_range() helper function that can be used
-> by the architecture code to keep track of the I/O ranges described by the
-> PCI bindings. If the PCI_IOBASE macro is not defined that signals
-> lack of support for PCI and we return an error.
-
-I don't quite see how you intend to use this, because this series doesn't
-include any non-stub implementation of pci_register_io_range().
-
-Is this anything like the ia64 strategy I mentioned above?  If so, it would
-be really nice to unify some of this stuff.
-
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Acked-by: Grant Likely <grant.likely@linaro.org>
-> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  drivers/of/address.c       | 9 +++++++++
->  include/linux/of_address.h | 1 +
->  2 files changed, 10 insertions(+)
+On Mon, Apr 07, 2014 at 06:58:24PM +0100, Bjorn Helgaas wrote:
+> On Mon, Apr 7, 2014 at 5:36 AM, Arnd Bergmann <arnd@arndb.de> wrote:
 > 
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 1a54f1f..be958ed 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -619,6 +619,15 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
->  }
->  EXPORT_SYMBOL(of_get_address);
->  
-> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> +{
-> +#ifndef PCI_IOBASE
-> +	return -EINVAL;
-> +#else
-> +	return 0;
-> +#endif
-> +}
-> +
->  unsigned long __weak pci_address_to_pio(phys_addr_t address)
->  {
->  	if (address > IO_SPACE_LIMIT)
-> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> index 5f6ed6b..40c418d 100644
-> --- a/include/linux/of_address.h
-> +++ b/include/linux/of_address.h
-> @@ -56,6 +56,7 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
->  extern const __be32 *of_get_address(struct device_node *dev, int index,
->  			   u64 *size, unsigned int *flags);
->  
-> +extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
->  extern unsigned long pci_address_to_pio(phys_addr_t addr);
->  
->  extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
-> -- 
-> 1.9.0
+> > I think migrating other architectures to use the same code should be
+> > a separate effort from adding a generic implementation that can be
+> > used by arm64. It's probably a good idea to have patches to convert
+> > arm32 and/or microblaze.
 > 
+> Let me reiterate that I am 100% in favor of replacing arch-specific
+> code with more generic implementations.
+> 
+> However, I am not 100% in favor of doing it as separate efforts
+> (although maybe I could be convinced).  The reasons I hesitate are
+> that (1) if only one architecture uses a new "generic" implementation,
+> we really don't know whether it is generic enough, (2) until I see the
+> patches to convert other architectures, I have to assume that I'm the
+> one who will write them, and (3) as soon as we add the code to
+> drivers/pci, it becomes partly my headache to maintain it, even if
+> only one arch benefits from it.
+> 
+> Please don't think I'm questioning anyone's intent or good will.  It's
+> just that I understand the business pressures, and I know how hard it
+> can be to justify this sort of work to one's management, especially
+> after the immediate problem has been solved.
+
+I understand your concern. I guess the only way to prove my good intentions
+is to shut up and show the code.
+
+Liviu
+
+> 
+> Bjorn
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
