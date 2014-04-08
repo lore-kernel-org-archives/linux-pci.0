@@ -1,50 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:55237 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754019AbaDDAMr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 20:12:47 -0400
-Date: Thu, 3 Apr 2014 20:12:44 -0400 (EDT)
-From: David Airlie <airlied@redhat.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Message-ID: <1888467261.2661221.1396570364156.JavaMail.zimbra@redhat.com>
-In-Reply-To: <CAE9FiQUHC4jPJttUpChAALd6zubbQQEZ9wRc329Lv5QAXGOUKw@mail.gmail.com>
-References: <CAErSpo6JNDFiV6tmDKKDdnod+skBHx6T-+JGvjCRRLsL98h_uQ@mail.gmail.com> <CAE9FiQUHC4jPJttUpChAALd6zubbQQEZ9wRc329Lv5QAXGOUKw@mail.gmail.com>
-Subject: Re: Coverity CID 142811: pci_set_vga_state() operands don't affect
- result
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
+Date: Tue, 08 Apr 2014 12:22:13 +0200
+Message-ID: <4778371.oH3kIlbD0f@wuerfel>
+In-Reply-To: <20140408095038.GT17163@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com> <20140408095038.GT17163@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tuesday 08 April 2014 10:50:39 Liviu Dudau wrote:
+> On Mon, Apr 07, 2014 at 06:58:24PM +0100, Bjorn Helgaas wrote:
+> > On Mon, Apr 7, 2014 at 5:36 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > 
+> > > I think migrating other architectures to use the same code should be
+> > > a separate effort from adding a generic implementation that can be
+> > > used by arm64. It's probably a good idea to have patches to convert
+> > > arm32 and/or microblaze.
+> > 
+> > Let me reiterate that I am 100% in favor of replacing arch-specific
+> > code with more generic implementations.
+> > 
+> > However, I am not 100% in favor of doing it as separate efforts
+> > (although maybe I could be convinced).  The reasons I hesitate are
+> > that (1) if only one architecture uses a new "generic" implementation,
+> > we really don't know whether it is generic enough, (2) until I see the
+> > patches to convert other architectures, I have to assume that I'm the
+> > one who will write them, and (3) as soon as we add the code to
+> > drivers/pci, it becomes partly my headache to maintain it, even if
+> > only one arch benefits from it.
 
+Fair enough.
 
------ Original Message -----
-> From: "Yinghai Lu" <yinghai@kernel.org>
-> To: "Bjorn Helgaas" <bhelgaas@google.com>
-> Cc: "Dave Airlie" <airlied@redhat.com>, linux-pci@vger.kernel.org
-> Sent: Friday, 4 April, 2014 10:06:32 AM
-> Subject: Re: Coverity CID 142811: pci_set_vga_state() operands don't affect result
+My approach to the asm-generic infrastruction has mostly been to ensure
+that whoever adds a new architecture has to make things easier for the
+next person. For the PCI code it's clearly your call to pick whatever
+works best for you.
+
+> > Please don't think I'm questioning anyone's intent or good will.  It's
+> > just that I understand the business pressures, and I know how hard it
+> > can be to justify this sort of work to one's management, especially
+> > after the immediate problem has been solved.
 > 
-> On Thu, Apr 3, 2014 at 1:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > Coverity complains about this in drivers/pci/pci.c:
-> >
-> > CID 142811 (#1 of 1): Operands don't affect result
-> > (CONSTANT_EXPRESSION_RESULT)
-> > result_independent_of_operands: flags & (2U /* 1 << 1 */) &
-> > (command_bits & 4294967292U /* ~(1 | 2) */) is always 0 regardless of
-> > the values of its operands. This occurs as the logical operand of if.
-> >
-> > 4128        WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) &
-> > (command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
-> >
-> > This is a result of 3448a19da479 "vgaarb: use bridges to control VGA
-> > routing where possible."
-> >
-> > I wonder if that middle "&" was intended to be "&&"?
-> 
-> must be. otherwise always get 0.
+> I understand your concern. I guess the only way to prove my good intentions
+> is to shut up and show the code.
 
-Yeah I'd agree :-)
+I'd suggest looking at architectures in this order then:
 
-Dave.
+* microblaze (this one is easy and wants to share code with us)
+* arm32-multiplatform (obviously interesting, but not as easy as microblaze)
+* powerpc64 (they are keen on sharing, code is similar to what you have)
+* mips (this is really platform specific, some want to share drivers with
+  arm32, others should keep their current code. Note that platform selection
+  on mips is compile-time only, they don't have to do it all the same way)
+* powerpc32 (their code is currently different, might not be worth it)
+
+My preference would be to have only the first two done initially and leave
+the other ones up to architecture maintainers, but Bjorn should say
+how much he wants to see get done.
+
+	Arnd
