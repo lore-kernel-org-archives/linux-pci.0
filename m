@@ -1,125 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:46995 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbaDYOim (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 10:38:42 -0400
-Received: by mail-ie0-f179.google.com with SMTP id lx4so3746064iec.24
-        for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 07:38:41 -0700 (PDT)
+Received: from eu1sys200aog103.obsmtp.com ([207.126.144.115]:34609 "EHLO
+	eu1sys200aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756036AbaDHGym (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 02:54:42 -0400
+Message-ID: <53439BBE.4070708@mellanox.com>
+Date: Tue, 8 Apr 2014 09:48:30 +0300
+From: Or Gerlitz <ogerlitz@mellanox.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHH3p5+xTwMaDW-k-0UUZ+21EhCCt2voWXP2jZf_PbRqOdukiA@mail.gmail.com>
-References: <CAHH3p5+9VCYwS6JdB8aFJ0i4JLcFTMgSgiKOaE2GMnhfWM1bWA@mail.gmail.com>
- <CAErSpo7cDPa0vujMmppWV2RM3vn6=WJ7MCcP8CvwhT4Zn==MwA@mail.gmail.com>
- <CAHH3p5+qEeYaNKm-L4_RmnkmXeA2030u4t3D+J2wUwBEWiPBPQ@mail.gmail.com>
- <CAErSpo6+_Tnh9+r50_qK-v0ubpv_pqTcnS7DhMiNi8GbWmsgJA@mail.gmail.com> <CAHH3p5+xTwMaDW-k-0UUZ+21EhCCt2voWXP2jZf_PbRqOdukiA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 25 Apr 2014 08:38:21 -0600
-Message-ID: <CAErSpo7jd2smdoju31r7SWVp4KjNmN+qDAxSUxmVCnUSUOfKTw@mail.gmail.com>
-Subject: Re: Intel NIC testing on ARM
-To: shiv prakash Agarwal <chhotu.shiv@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: David Miller <davem@davemloft.net>, <weiyang@linux.vnet.ibm.com>
+CC: <yevgenyp@mellanox.com>, <amirv@mellanox.com>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<netdev@vger.kernel.org>
+Subject: Re: [Patch net-next] net/mlx4_core: match pci_device_id including
+ dynids
+References: <1396750050-7183-1-git-send-email-weiyang@linux.vnet.ibm.com> <20140407.144340.688537373203786487.davem@davemloft.net>
+In-Reply-To: <20140407.144340.688537373203786487.davem@davemloft.net>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 24, 2014 at 11:40 PM, shiv prakash Agarwal
-<chhotu.shiv@gmail.com> wrote:
-> Thanks Bjorn,
+On 07/04/2014 21:43, David Miller wrote:
+> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Date: Sun,  6 Apr 2014 10:07:30 +0800
 >
-> On furthur debug, I found that this hang happens on enabling Bus Master
-> Enable bit(bit 2) of command register (offset 0x4) in config space of
-> device. On disabling this bit, no hang occurs.
->
-> Any idea on this behaviour?
+>> Fix issue introduced by commit: 97a5221 "net/mlx4_core: pass
+>> pci_device_id.driver_data to __mlx4_init_one during reset".
+>>
+>> pci_match_id() just match the static pci_device_id, which may return NULL if
+>> someone binds the driver to a device manually using
+>> /sys/bus/pci/drivers/.../new_id.
+>>
+>> This patch wrap up a helper function __mlx4_remove_one() which does the tear
+>> down function but preserve the drv_data. Functions like
+>> mlx4_pci_err_detected() and mlx4_restart_one() will call this one with out
+>> releasing drvdata.
+>>
+>> Tested on ConnectX-3.
+>>
+>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Amir Vadai <amirv@mellanox.com>
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Please resubmit this when the net-next tree opens back up, thanks.
 
-It'd  be easier if you gave a few more details.  Where exactly did you
-remove the Bus Master enable?  The PCI core should not enable Bus
-Master for an endpoint at all unless the driver requests it, and based
-on the dmesg fragment you posted, I don't think the driver is involved
-yet.
+Dave, this patch is for net, since it fixes an issue in the current code 
+(actually it relates to a patch
+that was merged after 3.14-rc7, so it would eventually might go to 
+-stable too). The author wasn't very
+familiar with the exact differences/nature of net vs. net-next, so it 
+might created some confusion here, I'v
+sent him few private notes to explain how things go...
 
-Bus mastering affects transactions originated by the device, of
-course.  So if the hang only happens if Bus Master is enabled, it
-sounds like the hang happens when the device performs a DMA or other
-transaction.  But if the driver hasn't claimed the device yet, the
-device shouldn't be doing anything at all, even if Bus Master is
-enabled.
-
-There might be more clues if you would post the *entire* dmesg log
-instead of just a fragment.
-
-> On Thu, Apr 24, 2014 at 10:07 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> On Thu, Apr 24, 2014 at 1:47 AM, shiv prakash Agarwal
->> <chhotu.shiv@gmail.com> wrote:
->> > Hi Bjorn,
->> >
->> > Below is the hang:
->> >
->> >
->> > PCI host bridge to bus 0000:00
->> >
->> > pci_bus 0000:00: root bus resource [mem 0x32100000-0x3fffffff]
->> >
->> > pci_bus 0000:00: root bus resource [mem 0x12100000-0x320fffff pref]
->> >
->> > pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
->> >
->> > pci_bus 0000:00: No busn resource found for root bus, will use [bus
->> > 00-ff]
->> >
->> > pci 0000:00:00.0: [10de:0e12] type 01 class 0x060400
->> >
->> > pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot D3cold
->> >
->> > PCI: bus0: Fast back to back transfers disabled
->> >
->> > pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]),
->> > reconfiguring
->> >
->> > pci 0000:01:00.0: [8086:1533] type 00 class 0x020000
->> >
->> > pci 0000:01:00.0: reg 10: [mem 0x00000000-0x000fffff]
->> >
->> > Unhandled fault: imprecise external abort (0x1406) at 0x00000000
->> >
->> > Internal error: : 1406 [#1] PREEMPT SMP ARM
->> >
->> > Modules linked in:
->> >
->> > CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.10.24 #2
->> >
->> > task: ef06fa40 ti: ef0b2000 task.ti: ef0b2000
->>
->> This looks like it's happening before the igb driver is involved.
->> There must be a bridge from bus 0000:00 to bus 0000:01.  It looks like
->> 0000:00:00.0 might be the bridge, but we haven't finished enumerating
->> it yet.  So it seems likely that this is happening in the PCI core.
->>
->> Can you get a backtrace at the point of the fault?  Maybe add a
->> dump_stack() there?
->>
->> The 01:00.0 BAR contains zero, which is not itself a problem.  Zero is
->> what you'd expect after power-up if no firmware or anything had
->> programmed it.  The PCI core should notice that this is invalid (it's
->> not inside any of the root bus resources) and reprogram it, but we
->> haven't gotten that far yet.
->>
->> > On Tue, Apr 22, 2014 at 9:31 PM, Bjorn Helgaas <bhelgaas@google.com>
->> > wrote:
->> >> On Tue, Apr 22, 2014 at 3:50 AM, shiv prakash Agarwal
->> >> <chhotu.shiv@gmail.com> wrote:
->> >>> Hi All,
->> >>>
->> >>> Has anybody tested below Intel I210 NIC card using igb driver on ARM?
->> >>>
->> >>>
->> >>> http://www.intel.com/content/www/us/en/ethernet-controllers/ethernet-controller-i210-i211-family.html
->> >>>
->> >>> It hangs during configuration stage for me. Actually it shows BAR0
->> >>> requirement as 0 which is non-zero for x86.
->> >>
->> >> Can you give any more details about this, e.g., a complete dmesg log,
->> >> which should contain details about enumeration and resource
->> >> allocation?
->
->
+Or.
