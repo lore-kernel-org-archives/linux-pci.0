@@ -1,106 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ryan Desfosses <ryan@desfo.org>
-To: bhelgaas@google.com
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
-Subject: [PATCH 7/8] pci-driver: moved EXPORT_SYMBOL so that it immediately followed its function/variable
-Date: Fri, 18 Apr 2014 20:13:52 -0400
-Message-Id: <1397866433-21119-8-git-send-email-ryan@desfo.org>
-In-Reply-To: <1397866433-21119-1-git-send-email-ryan@desfo.org>
-References: <1397866433-21119-1-git-send-email-ryan@desfo.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog124.obsmtp.com ([207.126.144.157]:56165 "EHLO
+	eu1sys200aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756165AbaDHGz4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 02:55:56 -0400
+Message-ID: <53439C98.8090202@mellanox.com>
+Date: Tue, 8 Apr 2014 09:52:08 +0300
+From: Or Gerlitz <ogerlitz@mellanox.com>
+MIME-Version: 1.0
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+CC: <yevgenyp@mellanox.com>, <amirv@mellanox.com>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <davem@davemloft.net>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>
+Subject: Re: [Patch net-next] net/mlx4_core: match pci_device_id including
+ dynids
+References: <1396750050-7183-1-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1396750050-7183-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-change made to resolve following checkpatch message:
-        WARNING: EXPORT_SYMBOL(foo); should immediately follow
-        its function/aariable
-branch: Linux 3.15-rc1
+On 06/04/2014 05:07, Wei Yang wrote:
+> Fix issue introduced by commit: 97a5221 "net/mlx4_core: pass
+> pci_device_id.driver_data to __mlx4_init_one during reset".
+>
+> pci_match_id() just match the static pci_device_id, which may return NULL if
+> someone binds the driver to a device manually using
+> /sys/bus/pci/drivers/.../new_id.
+>
+> This patch wrap up a helper function __mlx4_remove_one() which does the tear
+> down function but preserve the drv_data. Functions like
+> mlx4_pci_err_detected() and mlx4_restart_one() will call this one with out
+> releasing drvdata.
+>
+> Tested on ConnectX-3.
+>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Amir Vadai <amirv@mellanox.com>
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> ---
+>   drivers/net/ethernet/mellanox/mlx4/main.c |  165 +++++++++++++++--------------
+>   1 file changed, 88 insertions(+), 77 deletions(-)
+>
+> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+> index aa54ef7..9dd23e0 100644
+> --- a/drivers/net/ethernet/mellanox/mlx4/main.c
+> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+> @@ -2268,13 +2268,8 @@ static int __mlx4_init_one(struct pci_dev *pdev, int pci_dev_data)
+>   	/* Allow large DMA segments, up to the firmware limit of 1 GB */
+>   	dma_set_max_seg_size(&pdev->dev, 1024 * 1024 * 1024);
+>   
+> -	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
+> -	if (!priv) {
+> -		err = -ENOMEM;
+> -		goto err_release_regions;
+> -	}
+> -
+> -	dev       = &priv->dev;
+> +	dev       = pci_get_drvdata(pdev);
+> +	priv      = mlx4_priv(dev);
+>   	dev->pdev = pdev;
+>   	INIT_LIST_HEAD(&priv->ctx_list);
+>   	spin_lock_init(&priv->ctx_lock);
 
-Signed-off-by: Ryan Desfosses <ryan@desfo.org>
----
- drivers/pci/pci-driver.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Here are some comments from Jack, please make sure to CC Jack 
+Morgenstein <jackm@dev.mellanox.co.il>
+on V2 of the patch -->
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 821efe2..2c921a2 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -77,6 +77,7 @@ int pci_add_dynid(struct pci_driver *drv,
- 
- 	return retval;
- }
-+EXPORT_SYMBOL_GPL(pci_add_dynid);
- 
- static void pci_free_dynids(struct pci_driver *drv)
- {
-@@ -242,6 +243,7 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
- 
- 	return pci_match_id(drv->id_table, dev);
- }
-+EXPORT_SYMBOL(pci_match_id);
- 
- struct drv_dev_and_id {
- 	struct pci_driver *drv;
-@@ -1216,6 +1218,7 @@ int __pci_register_driver(struct pci_driver *drv, struct module *owner,
- 	/* register with core */
- 	return driver_register(&drv->driver);
- }
-+EXPORT_SYMBOL(__pci_register_driver);
- 
- /**
-  * pci_unregister_driver - unregister a pci driver
-@@ -1233,6 +1236,7 @@ pci_unregister_driver(struct pci_driver *drv)
- 	driver_unregister(&drv->driver);
- 	pci_free_dynids(drv);
- }
-+EXPORT_SYMBOL(pci_unregister_driver);
- 
- static struct pci_driver pci_compat_driver = {
- 	.name = "compat"
-@@ -1258,6 +1262,7 @@ pci_dev_driver(const struct pci_dev *dev)
- 	}
- 	return NULL;
- }
-+EXPORT_SYMBOL(pci_dev_driver);
- 
- /**
-  * pci_bus_match - Tell if a PCI device structure has a matching PCI device id structure
-@@ -1303,6 +1308,7 @@ struct pci_dev *pci_dev_get(struct pci_dev *dev)
- 		get_device(&dev->dev);
- 	return dev;
- }
-+EXPORT_SYMBOL(pci_dev_get);
- 
- /**
-  * pci_dev_put - release a use of the pci device structure
-@@ -1316,6 +1322,7 @@ void pci_dev_put(struct pci_dev *dev)
- 	if (dev)
- 		put_device(&dev->dev);
- }
-+EXPORT_SYMBOL(pci_dev_put);
- 
- static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
- {
-@@ -1362,6 +1369,7 @@ struct bus_type pci_bus_type = {
- 	.drv_groups	= pci_drv_groups,
- 	.pm		= PCI_PM_OPS_PTR,
- };
-+EXPORT_SYMBOL(pci_bus_type);
- 
- static int __init pci_driver_init(void)
- {
-@@ -1370,11 +1378,3 @@ static int __init pci_driver_init(void)
- 
- postcore_initcall(pci_driver_init);
- 
--EXPORT_SYMBOL_GPL(pci_add_dynid);
--EXPORT_SYMBOL(pci_match_id);
--EXPORT_SYMBOL(__pci_register_driver);
--EXPORT_SYMBOL(pci_unregister_driver);
--EXPORT_SYMBOL(pci_dev_driver);
--EXPORT_SYMBOL(pci_bus_type);
--EXPORT_SYMBOL(pci_dev_get);
--EXPORT_SYMBOL(pci_dev_put);
--- 
-1.9.1
+There is a change in behavior here, which I am concerned about.
+Before this patch, __mlx4_init_one() allocated a zeroed-out structure
+for priv, in all circumstances.
+
+Now, this structure is passed "dirty" to __mlx4_init_one from some
+flows (e.g., mlx4_restart_one).
+There may, in fact, be fields in the structure which should be "zeroed
+out" and are not, because previously there was no reason to be strict
+about this.
+
+Add a line with
+
+memset(priv, 0, sizeof(*priv));
+
+
+after setting the priv variable above
+
+and also do NOT remove the following line:
+
+- priv->pci_dev_data = pci_dev_data;
+
 
