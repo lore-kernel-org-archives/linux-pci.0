@@ -1,58 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:36890 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964975AbaD3WGD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 18:06:03 -0400
-Received: by mail-ig0-f178.google.com with SMTP id r10so753056igi.17
-        for <linux-pci@vger.kernel.org>; Wed, 30 Apr 2014 15:06:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7aWM_BjXqEqgTk0uT4RbpZSqjGJOgOH_hWreoQicMU_A@mail.gmail.com>
-References: <1398893606-22712-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo7aWM_BjXqEqgTk0uT4RbpZSqjGJOgOH_hWreoQicMU_A@mail.gmail.com>
-Date: Wed, 30 Apr 2014 15:06:01 -0700
-Message-ID: <CAE9FiQW1yFmgZRCWrhi5ccwxWfDZdR0vbQ1bA7zz-5Fa8TfN5A@mail.gmail.com>
-Subject: Re: [PATCH v3] pciehp: only wait command complete for real hotplug control
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.131]:52492 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756234AbaDHHNT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 03:13:19 -0400
+From: Arnd Bergmann <arnd@arndb.de>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
+Date: Tue, 08 Apr 2014 09:12:50 +0200
+Message-ID: <4845032.VeNZmbvuW3@wuerfel>
+In-Reply-To: <CAErSpo6S49qNuJQB-XXEfJ1Nkz=4gZ5_hE93=gb_yGZesA1H9Q@mail.gmail.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com> <CAErSpo6S49qNuJQB-XXEfJ1Nkz=4gZ5_hE93=gb_yGZesA1H9Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 30, 2014 at 2:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Apr 30, 2014 at 3:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On system with 16 PCI express hotplug slots, customer complain every slot
->> will report "Command not completed in 1000 msec" during initialization.
->>
->> Intel says that we should only wait command complete only for
->>            Electromechanical Interlock Control
->>            Power Controller Control
->>            Power Indicator Control
->>            Attention Indicator Control
->>
->> System with AMD/Nvidia chipset have same problem.
->
-> Do you have a datasheet reference for any of these parts?  Do we have
-> any way of identifying the affected parts?  Is it *all* Intel parts,
-> *all* AMD parts, *all* Nvidia parts?
+On Monday 07 April 2014 17:21:51 Bjorn Helgaas wrote:
+> On Fri, Mar 14, 2014 at 9:34 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > Some architectures do not share x86 simple view of the PCI I/O space
+> > and instead use a range of addresses that map to bus addresses. For
+> > some architectures these ranges will be expressed by OF bindings
+> > in a device tree file.
+> >
+> > Introduce a pci_register_io_range() helper function that can be used
+> > by the architecture code to keep track of the I/O ranges described by the
+> > PCI bindings. If the PCI_IOBASE macro is not defined that signals
+> > lack of support for PCI and we return an error.
+> >
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > Acked-by: Grant Likely <grant.likely@linaro.org>
+> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> > ---
+> >  drivers/of/address.c       | 9 +++++++++
+> >  include/linux/of_address.h | 1 +
+> >  2 files changed, 10 insertions(+)
+> >
+> > diff --git a/drivers/of/address.c b/drivers/of/address.c
+> > index 1a54f1f..be958ed 100644
+> > --- a/drivers/of/address.c
+> > +++ b/drivers/of/address.c
+> > @@ -619,6 +619,15 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+> >  }
+> >  EXPORT_SYMBOL(of_get_address);
+> >
+> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> > +{
+> > +#ifndef PCI_IOBASE
+> > +       return -EINVAL;
+> > +#else
+> > +       return 0;
+> > +#endif
+> > +}
+> 
+> This isn't PCI code, so I'm fine with it in that sense, but I'm not
+> sure the idea of a PCI_IOBASE #define is really what we need.  It's
+> not really determined by the processor architecture, it's determined
+> by the platform.  And a single address isn't enough in general,
+> either, because if there are multiple host bridges, there's no reason
+> the apertures that generate PCI I/O transactions need to be contiguous
+> on the CPU side.
+> 
+> That's just a long way of saying that if we ever came up with a more
+> generic way to handle I/O port spaces, PCI_IOBASE might go away.  And
+> I guess part of that rework could be changing this use of it along
+> with the others.
 
-For intel: Nehalem, westmere, sndbridge, ivybridge.
+I'd rather not add a generic implementation of this at all, but
+keep it all within the host resource scanning code.
 
-For nvidia, only according to boot log for old systems with chipset:
-ck804 and mcp55.
+If we do add a generic implementation, my preference would be
+to use the version introduced for arm64, with a fallback of
+returning -EINVAL if the architecture doesn't implement it.
 
->
-> I want to have a comment in the code because we basically have two
-> strategies for dealing with Command Complete.  Both are legal
-> according to the PCIe spec, and you're changing from strategy A to
-> strategy B because B works better on these parts.  We need a hint in
-> the code that tells us not to change from B back to A and why.
-> Otherwise some future programmer is likely to change back to A, which
-> will break your box again.
+There is no way ever that returning '0' makes sense here: Either
+the architecture supports memory mapped I/O spaces and then we
+should be able to find an appropriate io_offset for it, or it
+doesn't support memory mapped I/O spaces and we should never
+even call this function.
 
-ok, will try to add comment about the change.
-
-Thanks
-
-Yinghai
+	Arnd
