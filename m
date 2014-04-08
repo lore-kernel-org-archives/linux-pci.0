@@ -1,279 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:61934 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753602AbaDCVM6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 17:12:58 -0400
-Received: by mail-ie0-f171.google.com with SMTP id ar20so2488836iec.2
-        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 14:12:58 -0700 (PDT)
-Date: Thu, 3 Apr 2014 15:12:54 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: netdev <netdev@vger.kernel.org>, yevgenyp@mellanox.com,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Amir Vadai <amirv@mellanox.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] net/mlx4_core: match pci_device_id including dynids
-Message-ID: <20140403211254.GA21931@google.com>
-References: <1396326961-20395-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo4yj+31puKhnxJ9Dns4c-1cWoUxxQt+OTDQDCGuuksOAw@mail.gmail.com>
- <20140403015130.GA6151@richard>
- <CAErSpo749gfvcJmwjCw6c6H07S9cvaX2kz4jw1AwUZzbDN6Afw@mail.gmail.com>
- <20140403065432.GA18045@richard>
+Received: from service87.mimecast.com ([91.220.42.44]:59682 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868AbaDHJti convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 05:49:38 -0400
+Date: Tue, 8 Apr 2014 10:49:33 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140408094933.GS17163@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com>
+ <CAErSpo6S49qNuJQB-XXEfJ1Nkz=4gZ5_hE93=gb_yGZesA1H9Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140403065432.GA18045@richard>
+In-Reply-To: <CAErSpo6S49qNuJQB-XXEfJ1Nkz=4gZ5_hE93=gb_yGZesA1H9Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 03, 2014 at 02:54:32PM +0800, Wei Yang wrote:
-> Here is another one based on your comment, which split mlx4_remove_one into
-> two and named a helper __mlx4_remove_one(). mlx4_pci_err_detected() will just
-> call __mlx4_remove_one(), which will not release drvdata.
+On Tue, Apr 08, 2014 at 12:21:51AM +0100, Bjorn Helgaas wrote:
+> On Fri, Mar 14, 2014 at 9:34 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > Some architectures do not share x86 simple view of the PCI I/O space
+> > and instead use a range of addresses that map to bus addresses. For
+> > some architectures these ranges will be expressed by OF bindings
+> > in a device tree file.
+> >
+> > Introduce a pci_register_io_range() helper function that can be used
+> > by the architecture code to keep track of the I/O ranges described by the
+> > PCI bindings. If the PCI_IOBASE macro is not defined that signals
+> > lack of support for PCI and we return an error.
+> >
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > Acked-by: Grant Likely <grant.likely@linaro.org>
+> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> > ---
+> >  drivers/of/address.c       | 9 +++++++++
+> >  include/linux/of_address.h | 1 +
+> >  2 files changed, 10 insertions(+)
+> >
+> > diff --git a/drivers/of/address.c b/drivers/of/address.c
+> > index 1a54f1f..be958ed 100644
+> > --- a/drivers/of/address.c
+> > +++ b/drivers/of/address.c
+> > @@ -619,6 +619,15 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+> >  }
+> >  EXPORT_SYMBOL(of_get_address);
+> >
+> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> > +{
+> > +#ifndef PCI_IOBASE
+> > +       return -EINVAL;
+> > +#else
+> > +       return 0;
+> > +#endif
+> > +}
 > 
-> BTW, this is not tested, just want to make sure my understanding is correct.
+> This isn't PCI code, so I'm fine with it in that sense, but I'm not
+> sure the idea of a PCI_IOBASE #define is really what we need.  It's
+> not really determined by the processor architecture, it's determined
+> by the platform.  And a single address isn't enough in general,
+> either, because if there are multiple host bridges, there's no reason
+> the apertures that generate PCI I/O transactions need to be contiguous
+> on the CPU side.
 
-A couple minor comments below, but in general, yes, this is what I was
-thinking.
+It should not be only platform's choice if the architecture doesn't support it.
+To my mind PCI_IOBASE means "I support MMIO operations and this is the
+start of the virtual address where my I/O ranges are mapped." It's the
+same as ppc's _IO_BASE. And pci_address_to_pio() will take care to give
+you the correct io_offset in the presence of multiple host bridges,
+while keeping the io resource in the range [0 .. host_bridge_io_range_size - 1]
 
-> From 84a5a9df0604cbea9b70c74b0709258841637946 Mon Sep 17 00:00:00 2001
-> From: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Date: Mon, 31 Mar 2014 11:34:57 +0800
-> Subject: [PATCH] net/mlx4_core: match pci_device_id including dynids
 > 
-> Fix issue introduced by commit: 97a5221 "net/mlx4_core: pass
-> pci_device_id.driver_data to __mlx4_init_one during reset".
-> 
-> pci_match_id() just match the static pci_device_id, which may return NULL if
-> someone binds the driver to a device manually using
-> /sys/bus/pci/drivers/.../new_id.
-> 
-> This patch wrap up a helper function __mlx4_remove_one() which does the tear
-> down function but preserve the drv_data. Functions like
-> mlx4_pci_err_detected() and mlx4_restart_one() will call this one with out
-> releasing drvdata.
-> 
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Amir Vadai <amirv@mellanox.com>
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Acked-by: Amir Vadai <amirv@mellanox.com>
-> ---
->  drivers/net/ethernet/mellanox/mlx4/main.c |  149 ++++++++++++++++-------------
->  1 file changed, 80 insertions(+), 69 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
-> index aa54ef7..fd1f288 100644
-> --- a/drivers/net/ethernet/mellanox/mlx4/main.c
-> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-> @@ -2268,7 +2268,12 @@ static int __mlx4_init_one(struct pci_dev *pdev, int pci_dev_data)
->  	/* Allow large DMA segments, up to the firmware limit of 1 GB */
->  	dma_set_max_seg_size(&pdev->dev, 1024 * 1024 * 1024);
->  
-> -	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
-> +	dev = pci_get_drvdata(pdev);
-> +	if (!dev)
-> +		priv = kzalloc(sizeof(*priv), GFP_KERNEL);
-> +	else
-> +		priv = mlx4_priv(dev);
+> That's just a long way of saying that if we ever came up with a more
+> generic way to handle I/O port spaces, PCI_IOBASE might go away.  And
+> I guess part of that rework could be changing this use of it along
+> with the others.
 
-Why don't you move the priv kzalloc into mlx4_init_one()?  Then it would be
-symmetric -- you alloc and call pci_set_drvdata() in mlx4_init_one(), and
-you call pci_set_drvdata(NULL) and free it in mlx4_remove_one().  And you
-wouldn't need the test here.
+And I have a patch series that #defines PCI_IOBASE only in those architectures
+that support MMIO, where this macro makes sense. Also notice that the
+arm64 series has a patch that I'm going to roll into this one where ioport_map()
+gets fixed to include PCI_IOBASE when !CONFIG_GENERIC_MAP.
 
-> +
->  	if (!priv) {
->  		err = -ENOMEM;
->  		goto err_release_regions;
-> @@ -2525,77 +2530,81 @@ static int mlx4_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
->  	return __mlx4_init_one(pdev, id->driver_data);
->  }
->  
-> -static void mlx4_remove_one(struct pci_dev *pdev)
-> +static void __mlx4_remove_one(struct mlx4_dev *dev)
->  {
-> -	struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
-> -	struct mlx4_priv *priv = mlx4_priv(dev);
-> -	int p;
-> +	/* in SRIOV it is not allowed to unload the pf's
-> +	 * driver while there are alive vf's */
-> +	if (mlx4_is_master(dev)) {
-> +		if (mlx4_how_many_lives_vf(dev))
-> +			printk(KERN_ERR "Removing PF when there are assigned VF's !!!\n");
-> +	}
-> +	mlx4_stop_sense(dev);
-> +	mlx4_unregister_device(dev);
->  
-> -	if (dev) {
-> -		/* in SRIOV it is not allowed to unload the pf's
-> -		 * driver while there are alive vf's */
-> -		if (mlx4_is_master(dev)) {
-> -			if (mlx4_how_many_lives_vf(dev))
-> -				printk(KERN_ERR "Removing PF when there are assigned VF's !!!\n");
-> -		}
-> -		mlx4_stop_sense(dev);
-> -		mlx4_unregister_device(dev);
-> +	for (p = 1; p <= dev->caps.num_ports; p++) {
-> +		mlx4_cleanup_port_info(&priv->port[p]);
-> +		mlx4_CLOSE_PORT(dev, p);
-> +	}
->  
-> -		for (p = 1; p <= dev->caps.num_ports; p++) {
-> -			mlx4_cleanup_port_info(&priv->port[p]);
-> -			mlx4_CLOSE_PORT(dev, p);
-> -		}
-> +	if (mlx4_is_master(dev))
-> +		mlx4_free_resource_tracker(dev,
-> +					   RES_TR_FREE_SLAVES_ONLY);
->  
-> -		if (mlx4_is_master(dev))
-> -			mlx4_free_resource_tracker(dev,
-> -						   RES_TR_FREE_SLAVES_ONLY);
-> -
-> -		mlx4_cleanup_counters_table(dev);
-> -		mlx4_cleanup_qp_table(dev);
-> -		mlx4_cleanup_srq_table(dev);
-> -		mlx4_cleanup_cq_table(dev);
-> -		mlx4_cmd_use_polling(dev);
-> -		mlx4_cleanup_eq_table(dev);
-> -		mlx4_cleanup_mcg_table(dev);
-> -		mlx4_cleanup_mr_table(dev);
-> -		mlx4_cleanup_xrcd_table(dev);
-> -		mlx4_cleanup_pd_table(dev);
-> +	mlx4_cleanup_counters_table(dev);
-> +	mlx4_cleanup_qp_table(dev);
-> +	mlx4_cleanup_srq_table(dev);
-> +	mlx4_cleanup_cq_table(dev);
-> +	mlx4_cmd_use_polling(dev);
-> +	mlx4_cleanup_eq_table(dev);
-> +	mlx4_cleanup_mcg_table(dev);
-> +	mlx4_cleanup_mr_table(dev);
-> +	mlx4_cleanup_xrcd_table(dev);
-> +	mlx4_cleanup_pd_table(dev);
->  
-> -		if (mlx4_is_master(dev))
-> -			mlx4_free_resource_tracker(dev,
-> -						   RES_TR_FREE_STRUCTS_ONLY);
-> -
-> -		iounmap(priv->kar);
-> -		mlx4_uar_free(dev, &priv->driver_uar);
-> -		mlx4_cleanup_uar_table(dev);
-> -		if (!mlx4_is_slave(dev))
-> -			mlx4_clear_steering(dev);
-> -		mlx4_free_eq_table(dev);
-> -		if (mlx4_is_master(dev))
-> -			mlx4_multi_func_cleanup(dev);
-> -		mlx4_close_hca(dev);
-> -		if (mlx4_is_slave(dev))
-> -			mlx4_multi_func_cleanup(dev);
-> -		mlx4_cmd_cleanup(dev);
-> -
-> -		if (dev->flags & MLX4_FLAG_MSI_X)
-> -			pci_disable_msix(pdev);
-> -		if (dev->flags & MLX4_FLAG_SRIOV) {
-> -			mlx4_warn(dev, "Disabling SR-IOV\n");
-> -			pci_disable_sriov(pdev);
-> -		}
-> +	if (mlx4_is_master(dev))
-> +		mlx4_free_resource_tracker(dev,
-> +					   RES_TR_FREE_STRUCTS_ONLY);
->  
-> -		if (!mlx4_is_slave(dev))
-> -			mlx4_free_ownership(dev);
-> +	iounmap(priv->kar);
-> +	mlx4_uar_free(dev, &priv->driver_uar);
-> +	mlx4_cleanup_uar_table(dev);
-> +	if (!mlx4_is_slave(dev))
-> +		mlx4_clear_steering(dev);
-> +	mlx4_free_eq_table(dev);
-> +	if (mlx4_is_master(dev))
-> +		mlx4_multi_func_cleanup(dev);
-> +	mlx4_close_hca(dev);
-> +	if (mlx4_is_slave(dev))
-> +		mlx4_multi_func_cleanup(dev);
-> +	mlx4_cmd_cleanup(dev);
-> +
-> +	if (dev->flags & MLX4_FLAG_MSI_X)
-> +		pci_disable_msix(pdev);
-> +	if (dev->flags & MLX4_FLAG_SRIOV) {
-> +		mlx4_warn(dev, "Disabling SR-IOV\n");
-> +		pci_disable_sriov(pdev);
-> +	}
-> +
-> +	if (!mlx4_is_slave(dev))
-> +		mlx4_free_ownership(dev);
-> +
-> +	kfree(dev->caps.qp0_tunnel);
-> +	kfree(dev->caps.qp0_proxy);
-> +	kfree(dev->caps.qp1_tunnel);
-> +	kfree(dev->caps.qp1_proxy);
-> +	pci_release_regions(pdev);
-> +	pci_disable_device(pdev);
-> +}
->  
-> -		kfree(dev->caps.qp0_tunnel);
-> -		kfree(dev->caps.qp0_proxy);
-> -		kfree(dev->caps.qp1_tunnel);
-> -		kfree(dev->caps.qp1_proxy);
-> +static void mlx4_remove_one(struct pci_dev *pdev)
-> +{
-> +	struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
-> +	struct mlx4_priv *priv = mlx4_priv(dev);
-> +	int p;
->  
-> +	if (dev) {
+Best regards,
+Liviu
 
-I don't think you should test "dev" here.  What scenario is there where
-mlx4_remove_one() would be called with a pci_dev that has no drvdata?
+> 
+> >  unsigned long __weak pci_address_to_pio(phys_addr_t address)
+> >  {
+> >         if (address > IO_SPACE_LIMIT)
+> > diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+> > index 5f6ed6b..40c418d 100644
+> > --- a/include/linux/of_address.h
+> > +++ b/include/linux/of_address.h
+> > @@ -56,6 +56,7 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+> >  extern const __be32 *of_get_address(struct device_node *dev, int index,
+> >                            u64 *size, unsigned int *flags);
+> >
+> > +extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+> >  extern unsigned long pci_address_to_pio(phys_addr_t addr);
+> >
+> >  extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+> > --
+> > 1.9.0
+> >
+> 
 
-> +		__mlx4_remove_one(dev);
->  		kfree(priv);
-> -		pci_release_regions(pdev);
-> -		pci_disable_device(pdev);
->  		pci_set_drvdata(pdev, NULL);
->  	}
->  }
-> @@ -2607,7 +2616,7 @@ int mlx4_restart_one(struct pci_dev *pdev)
->  	int		  pci_dev_data;
->  
->  	pci_dev_data = priv->pci_dev_data;
-> -	mlx4_remove_one(pdev);
-> +	__mlx4_remove_one(pdev);
->  	return __mlx4_init_one(pdev, pci_dev_data);
->  }
->  
-> @@ -2662,7 +2671,7 @@ MODULE_DEVICE_TABLE(pci, mlx4_pci_table);
->  static pci_ers_result_t mlx4_pci_err_detected(struct pci_dev *pdev,
->  					      pci_channel_state_t state)
->  {
-> -	mlx4_remove_one(pdev);
-> +	__mlx4_remove_one(pdev);
->  
->  	return state == pci_channel_io_perm_failure ?
->  		PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_NEED_RESET;
-> @@ -2670,11 +2679,13 @@ static pci_ers_result_t mlx4_pci_err_detected(struct pci_dev *pdev,
->  
->  static pci_ers_result_t mlx4_pci_slot_reset(struct pci_dev *pdev)
->  {
-> -	const struct pci_device_id *id;
-> -	int ret;
-> +	struct mlx4_dev	 *dev  = pci_get_drvdata(pdev);
-> +	struct mlx4_priv *priv = mlx4_priv(dev);
-> +	int		  pci_dev_data;
-> +	int               ret;
->  
-> -	id = pci_match_id(mlx4_pci_table, pdev);
-> -	ret = __mlx4_init_one(pdev, id->driver_data);
-> +	pci_dev_data = priv->pci_dev_data;
-> +	ret = __mlx4_init_one(pdev, pci_dev_data);
->  
->  	return ret ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
->  }
-> -- 
-> 1.7.9.5
-> 
-> 
-> -- 
-> Richard Yang
-> Help you, Help me
-> 
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
