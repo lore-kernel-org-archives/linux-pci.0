@@ -1,191 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:40549 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030285AbaDJSB5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 14:01:57 -0400
-Date: Thu, 10 Apr 2014 20:01:53 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Neil Greatorex <neil@fatboyfat.co.uk>, Willy Tarreau <w@1wt.eu>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: Fixing PCIe issues on Armada XP
-Message-ID: <20140410200153.46669e0c@skate>
-In-Reply-To: <20140410165733.GB23104@obsidianresearch.com>
-References: <20140410181953.50ccfcc3@skate>
-	<20140410165733.GB23104@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from szxga02-in.huawei.com ([119.145.14.65]:45906 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515AbaDHJX0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 05:23:26 -0400
+Message-ID: <5343BFBC.1030208@huawei.com>
+Date: Tue, 8 Apr 2014 17:22:04 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 1/2] PCI: rename pci_is_bridge() to pci_has_subordinate()
+References: <1394789889-11500-1-git-send-email-wangyijing@huawei.com> <20140404233157.GA15806@google.com>
+In-Reply-To: <20140404233157.GA15806@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
-
-On Thu, 10 Apr 2014 10:57:33 -0600, Jason Gunthorpe wrote:
-
-> > At
-> > https://github.com/MISL-EBU-System-SW/mainline-public/commits/3.14/pci-debug,
-> > I've pushed a branch based on top of v3.14 that contains:
+>>  
+>> -	/*
+>> -	 * pci_is_bridge() is not suitable here, because pci_dev->subordinate
+>> -	 * is set only after acpi_pci_find_device() has been called for the
+>> -	 * given device.
+>> -	 */
 > 
-> mvebu_pcie_del_windows / mvebu_pcie_add_windows I wonder if these
-> functions should be dropped into the mbus driver.. They are pretty
-> generic.
-
-Yes. I must say I hesitated quite a bit of time between having them in
-pci-mvebu or in mvebu-mbus. I settled on pci-mvebu because PCI is so
-far the only user of this functionality. But this is not a strong
-opinion.
-
-> 'bus: mvebu-mbus: Avoid setting an undefined window size' and
-> 'pci: mvebu: fix off-by-one in the computed size of the mbus windows'
-> need to be swapped in order to maintain bisect-ability.
-
-They could, indeed, but on the other hand, PCI and bus are handled by
-different maintainers, so they will flow through distinct branches, so
-I'm not sure it's going to be easy to guarantee the bisectability here.
-
-Unless we get the Acks from both maintainers, so that Jason Cooper can
-carry the patches and maintain the right order.
-
-I'll reorder them when posting the patch series anyway.
-
-> > Can you test this stack of patches on your system and configuration, and
-> > let me know if that works for you? 
+> This hunk shouldn't be here.  My guess is that you intended to replace
+> the code below with the new pci_is_bridge() that you introduced in
+> patch [2/2].  That new pci_is_bridge() is never used, and it does the
+> same hdr_type test as the code below.  But you apparently forgot to
+> change this code to use it?
 > 
-> Continues to work as expected here, and I see the new error message:
-> 
-> mvebu_mbus: cannot add window '4:e8', conflicts with another window
-> mvebu-pcie pex.1: Could not create MBus window at 0xe0000000, size 0x100000: -22
-> 
-> (this is due to the PEX window being in the DT mbus ranges already)
+>>  	check_children = pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE
+>>  			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+>>  	/* Please ref to ACPI spec for the syntax of _ADR */
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
 
-I'm not sure to understand here: you have hardcoded in your DT the
-necessary PEX window? If so, then yes, it's expected.
 
-> Tested-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Hi Bjorn, I noticed the kernel compare (pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) directly
+to identify bridge device. But the pci_is_brdge() helper function(which seems to do this) actually
+only check the device whether has subordinate bus. This maybe confuses people.
+
+So I think we should rename current pci_is_brdge(), and refactor a new pci_is_bridge() helper function.
+This can make code more readable, also there are a lot of codes using (pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) directly compare.
+If you think this make sense, we can replace them by the new pci_is_bridge().
+
+eg. in acpiphp:
+
+enable_device()
+    ......
+    	for (pass = 0; pass < 2; pass++) {
+		list_for_each_entry(dev, &bus->devices, bus_list) {
+			if (PCI_SLOT(dev->devfn) != slot->device)
+				continue;
+			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+				max = pci_scan_bridge(bus, dev, max, pass);
+				if (pass && dev->subordinate)
+					pci_bus_size_bridges(dev->subordinate);
+			}
+		}
+	}
+    ......
+
+and in PCI core code
+
+pci_rescan_bus()
+    .......
+    	down_read(&pci_bus_sem);
+	list_for_each_entry(dev, &bus->devices, bus_list)
+		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
+			if (dev->subordinate)
+				__pci_bus_size_bridges(dev->subordinate,
+							 &add_list);
+	up_read(&pci_bus_sem);
+    ..........
+
 
 Thanks!
+Yijing.
 
-> >  * The link up problem. Unfortunately, I tried to reproduce it today,
-> >    and didn't manage to. It's weird, because I'm sure I was able to
-> >    produce it in the past, but I'm no longer able to, I don't know.
-> >    Therefore, it's not easy for me to work on this topic. Neil, Jason,
-> >    do you think this is a topic you could potentially handle?
+
+
+
+
+>> index 25f0bc6..019dcb2 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -580,14 +580,14 @@ static void pci_pm_default_resume(struct pci_dev *pci_dev)
+>>  {
+>>  	pci_fixup_device(pci_fixup_resume, pci_dev);
+>>  
+>> -	if (!pci_is_bridge(pci_dev))
+>> +	if (!pci_has_subordinate(pci_dev))
 > 
-> You said you had a system that sometimes required the udelay?
-
-Yes, and I tried to reproduce it today, and I didn't manage to
-reproduce the problem, even on this platform, in the same conditions.
-I'll try again tomorrow.
-
-> Can you
-> run Neil's patch and see if your system behaves the same? Specifically
-> that the link eventually goes down after mvebu_pcie_set_local_dev_nr ?
+> The rest of this is a simple rename and looks fine to me.
 > 
-> I couldn't find any case where the BDF leaks below the TLP layer, and
-> the spec is very clear that the assigned BDF can change at run time,
-> so I don't have an explanation for why the link reset is happening.
-> Do you have a contact at Marvell that might shed some light on that
-> behavior?
-
-There was a potential explanation about the mvebu-soc-id driver that
-enables the clock and then disables it, before the pci-mvebu driver.
-This is different that what was happening before, where the pci-mvebu
-driver was the only one to enable the clock, which was already enabled
-by the bootloader. So if the clock takes some time to stabilize, the
-introduction of mvebu-soc-id may lead to problems.
-
-But I'm not entirely convinced by this, because in my testing, I saw:
-
- * Enable the clock
- * Values in the PCI configuration space are correct (like
-   vendor/product ID)
- * mvebu_pcie_set_local_dev_nr()
- * Values in the PCI configuration space are no longer correct, unless
-   you wait a little bit.
-
-> >  * On my Armada XP DB board, if I plug 5 PCIe cards, the IGB card for
-> >    some reason isn't able to read data from its non-volatile memory. So
-> >    the window points to something, but it doesn't seem to patch what
-> >    the igb driver expects. I've double checked the MBus windows, and
-> >    they look correct. I haven't tested this PCIe configuration with the
-> >    Marvell LSP though, so maybe I'm hitting an unrelated hardware
-> >    problem or something.
+>>  		pci_enable_wake(pci_dev, PCI_D0, false);
+>>  }
+>>  
+>>  static void pci_pm_default_suspend(struct pci_dev *pci_dev)
+>>  {
+>>  	/* Disable non-bridge devices without PM support */
+>> -	if (!pci_is_bridge(pci_dev))
+>> +	if (!pci_has_subordinate(pci_dev))
+>>  		pci_disable_enabled_device(pci_dev);
+>>  }
+>>  
+>> @@ -711,7 +711,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+>>  
+>>  	if (!pci_dev->state_saved) {
+>>  		pci_save_state(pci_dev);
+>> -		if (!pci_is_bridge(pci_dev))
+>> +		if (!pci_has_subordinate(pci_dev))
+>>  			pci_prepare_to_sleep(pci_dev);
+>>  	}
+>>  
+>> @@ -954,7 +954,7 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+>>  			return error;
+>>  	}
+>>  
+>> -	if (!pci_dev->state_saved && !pci_is_bridge(pci_dev))
+>> +	if (!pci_dev->state_saved && !pci_has_subordinate(pci_dev))
+>>  		pci_prepare_to_sleep(pci_dev);
+>>  
+>>  	/*
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index 4df38df..a3b9cc1 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -79,7 +79,7 @@ static inline void pci_wakeup_event(struct pci_dev *dev)
+>>  	pm_wakeup_event(&dev->dev, 100);
+>>  }
+>>  
+>> -static inline bool pci_is_bridge(struct pci_dev *pci_dev)
+>> +static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
+>>  {
+>>  	return !!(pci_dev->subordinate);
+>>  }
+>> -- 
+>> 1.7.1
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> Certainly troubling.. And the IGB works if it is the only card in the
-> system?
+> 
 
-Yes, the IGB card works fine when plugged as the only card. It also
-works when plugged with 3 other PCIe cards. But when I plug the five
-PCIe cards I have, the IGB stops working.
 
-However, note that some interfaces are x1, some other x4, and maybe
-there was a mismatch/incompatibility with the PCIe cards I was plugging
-in the board.
-
-> That does sound like more mbus troubles.
-
-Interestingly, the problem occurred when I was plugging a SATA PCIe
-card. And regardless of whether the SATA PCIe card is present or not,
-the MBus mappings for the IGB are exactly the same.
-
-Here is a dump of the MBus windows with 4 PCIe cards (including the IGB
-one) :
-
-[00] 00000000ffe30000 - 00000000ffe40000 : 0004:00f0 (remap 0000000000030000)
-[01] disabled
-[02] disabled
-[03] disabled
-[04] disabled
-[05] disabled
-[06] disabled
-[07] disabled
-[08] 00000000fff00000 - 0000000100000000 : 0001:001d -> bootrom
-[09] 00000000f0000000 - 00000000f1000000 : 0001:002f -> NOR flash
-[10] 00000000f8000000 - 00000000f8100000 : 0004:00e8 -> some other PCIe card
-[11] 00000000f8800000 - 00000000f9000000 : 0004:00f8 -> this is the IGB
-[12] 00000000f9000000 - 00000000f9100000 : 0004:00f8 -> this is the IGB
-[13] disabled
-[14] disabled
-[15] disabled
-[16] disabled
-[17] disabled
-[18] disabled
-[19] disabled
-
-And now, with the SATA card plugged in:
-
-[00] 00000000ffe40000 - 00000000ffe50000 : 0008:00f0 (remap 0000000000040000)
-[01] 00000000ffe30000 - 00000000ffe40000 : 0004:00f0 (remap 0000000000030000)
-[02] disabled
-[03] disabled
-[04] disabled
-[05] disabled
-[06] disabled
-[07] disabled
-[08] 00000000fff00000 - 0000000100000000 : 0001:001d	=> bootrom
-[09] 00000000f0000000 - 00000000f1000000 : 0001:002f	=> NOR flash
-[10] 00000000f8000000 - 00000000f8100000 : 0004:00e8	=> port 0.0 mem
-[11] 00000000f8400000 - 00000000f8600000 : 0008:00f8	=> port 3.0 mem (SATA)
-[12] 00000000f8800000 - 00000000f9000000 : 0004:00f8	=> port 2.0 mem (igb)
-[13] 00000000f9000000 - 00000000f9100000 : 0004:00f8	=> port 2.0 mem (igb)
-[14] disabled
-[15] disabled
-[16] disabled
-[17] disabled
-[18] disabled
-[19] disabled
-
-Thomas
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Thanks!
+Yijing
+
