@@ -1,45 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:55732 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613AbaDYUGk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 16:06:40 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	horms@verge.net.au, devicetree@vger.kernel.org, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	magnus.damm@gmail.com, linux@arm.linux.org.uk,
-	linux-arm-kernel@lists.infradead.org, ben.dooks@codethink.co.uk,
-	linux-doc@vger.kernel.org, rob@landley.net, grant.likely@linaro.org
-Subject: Re: [PATCH] pci-rcar-gen2: add device tree support
-Date: Fri, 25 Apr 2014 22:05:50 +0200
-Message-ID: <23319337.TNDCodMgFf@wuerfel>
-In-Reply-To: <20140425174535.GF32246@google.com>
-References: <201404080141.21605.sergei.shtylyov@cogentembedded.com> <20140425174535.GF32246@google.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:63195 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756079AbaDHWWn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 18:22:43 -0400
+Received: by mail-ie0-f173.google.com with SMTP id rl12so1653251iec.18
+        for <linux-pci@vger.kernel.org>; Tue, 08 Apr 2014 15:22:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 8 Apr 2014 16:22:23 -0600
+Message-ID: <CAErSpo5oGensBcGx-z+WuauRL87mjYbNRzSuhucUmpzef9LSJg@mail.gmail.com>
+Subject: Bridge secondary latency not preserved across suspend/resume
+To: Parag Warudkar <parag.lkml@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 25 April 2014 11:45:35 Bjorn Helgaas wrote:
-> > +This is the bridge used internally to connect the USB controllers to the
-> > +AHB. There is one bridge instance per USB port connected to the internal
-> > +OHCI and EHCI controllers.
-> > +
-> > +Required properties:
-> > +- compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
-> > +           "renesas,pci-r8a7791" for the R8A7791 SoC.
-> > +- reg:       A list of physical regions to access the device: the first is
-> > +     the operational registers for the OHCI/EHCI controllers and the
-> > +     second is for the bridge configuration and control registers.
-> > +- interrupts: interrupt for the device.
-> > +- clocks: The reference to the device clock.
-> > +- bus-range: The PCI bus number range; as this is a single bus, the range
-> > +           should be specified as the same value twice.
+Hi Parag,
 
-Actually, this doesn't conform to the generic PCI binding, which requires
-a number of additional properties.
+You reported in [1] that a bridge secondary latency setting changed
+after a suspend/resume.  As far as I know you're not seeing any ill
+effects from this change, but I opened this bugzilla:
+https://bugzilla.kernel.org/show_bug.cgi?id=73701 for it.
 
-	Arnd
+The bugzilla is not high on my priority list, so it's mostly just for
+documentation at this point, and as a little project for somebody who
+wants to do something useful in PCI.
+
+But you could help by attaching a complete dmesg log and two "lspci
+-vvv" dumps (one before the suspend and one after the resume) to the
+bugzilla.
+
+Bjorn
+
+[1] http://lkml.kernel.org/r/CAOULuOY5eryuH1KgaqiuGXyYiQd2h=TZoPe2M2+juts9XuzW6Q@mail.gmail.com
