@@ -1,144 +1,404 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:32993 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750857AbaDRMT4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 08:19:56 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>
-Cc: Tawfik Bayouk <tawfik@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Neil Greatorex <neil@fatboyfat.co.uk>,
-	Willy Tarreau <w@1wt.eu>,
-	Matthew Minter <matthew_minter@xyratex.com>
-Subject: [PATCH 0/7] Fixes for Armada 370/XP PCIe
-Date: Fri, 18 Apr 2014 14:19:46 +0200
-Message-Id: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from service87.mimecast.com ([91.220.42.44]:41014 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014AbaDHJwu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 05:52:50 -0400
+Date: Tue, 8 Apr 2014 10:52:46 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
+Message-ID: <20140408095246.GU17163@e106497-lin.cambridge.arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
+ <20140407235830.GA9959@google.com>
+MIME-Version: 1.0
+In-Reply-To: <20140407235830.GA9959@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Tue, Apr 08, 2014 at 12:58:30AM +0100, Bjorn Helgaas wrote:
+> On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
+> > Use the generic host bridge functions to provide support for
+> > PCI Express on arm64. There is no support for ISA memory.
+> >
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> > ---
+> >  arch/arm64/Kconfig            |  19 +++-
+> >  arch/arm64/include/asm/Kbuild |   1 +
+> >  arch/arm64/include/asm/io.h   |   3 +-
+> >  arch/arm64/include/asm/pci.h  |  51 ++++++++++
+> >  arch/arm64/kernel/Makefile    |   1 +
+> >  arch/arm64/kernel/pci.c       | 173 ++++++++++++++++++++++++++++++++
+> >  6 files changed, 246 insertions(+), 2 deletions(-)
+> >  create mode 100644 arch/arm64/include/asm/pci.h
+> >  create mode 100644 arch/arm64/kernel/pci.c
+> >
+> > diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> > index 27bbcfc..d1c8568 100644
+> > --- a/arch/arm64/Kconfig
+> > +++ b/arch/arm64/Kconfig
+> > @@ -62,7 +62,7 @@ config MMU
+> >       def_bool y
+> >
+> >  config NO_IOPORT
+> > -     def_bool y
+> > +     def_bool y if !PCI
+> >
+> >  config STACKTRACE_SUPPORT
+> >       def_bool y
+> > @@ -134,6 +134,23 @@ menu "Bus support"
+> >  config ARM_AMBA
+> >       bool
+> >
+> > +config PCI
+> > +     bool "PCI support"
+> > +     help
+> > +       This feature enables support for PCIe bus system. If you say Y
+> > +       here, the kernel will include drivers and infrastructure code
+> > +       to support PCIe bus devices.
+> > +
+> > +config PCI_DOMAINS
+> > +     def_bool PCI
+> > +
+> > +config PCI_SYSCALL
+> > +     def_bool PCI
+> > +
+> > +source "drivers/pci/Kconfig"
+> > +source "drivers/pci/pcie/Kconfig"
+> > +source "drivers/pci/hotplug/Kconfig"
+> > +
+> >  endmenu
+> >
+> >  menu "Kernel Features"
+> > diff --git a/arch/arm64/include/asm/Kbuild b/arch/arm64/include/asm/Kbuild
+> > index 71c53ec..46924bc 100644
+> > --- a/arch/arm64/include/asm/Kbuild
+> > +++ b/arch/arm64/include/asm/Kbuild
+> > @@ -26,6 +26,7 @@ generic-y += mman.h
+> >  generic-y += msgbuf.h
+> >  generic-y += mutex.h
+> >  generic-y += pci.h
+> > +generic-y += pci-bridge.h
+> >  generic-y += poll.h
+> >  generic-y += posix_types.h
+> >  generic-y += resource.h
+> > diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+> > index 7846a6b..67463a5 100644
+> > --- a/arch/arm64/include/asm/io.h
+> > +++ b/arch/arm64/include/asm/io.h
+> > @@ -120,7 +120,8 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+> >  /*
+> >   *  I/O port access primitives.
+> >   */
+> > -#define IO_SPACE_LIMIT               0xffff
+> > +#define arch_has_dev_port()  (1)
+> > +#define IO_SPACE_LIMIT               0x1ffffff
+> >  #define PCI_IOBASE           ((void __iomem *)(MODULES_VADDR - SZ_32M))
+> >
+> >  static inline u8 inb(unsigned long addr)
+> > diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+> > new file mode 100644
+> > index 0000000..d93576f
+> > --- /dev/null
+> > +++ b/arch/arm64/include/asm/pci.h
+> > @@ -0,0 +1,51 @@
+> > +#ifndef __ASM_PCI_H
+> > +#define __ASM_PCI_H
+> > +#ifdef __KERNEL__
+> > +
+> > +#include <linux/types.h>
+> > +#include <linux/slab.h>
+> > +#include <linux/dma-mapping.h>
+> > +
+> > +#include <asm/io.h>
+> > +#include <asm-generic/pci-bridge.h>
+> > +#include <asm-generic/pci-dma-compat.h>
+> > +
+> > +#define PCIBIOS_MIN_IO               0x1000
+> > +#define PCIBIOS_MIN_MEM              0
+> > +
+> > +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
+> > +
+> > +/*
+> > + * Set to 1 if the kernel should re-assign all PCI bus numbers
+> > + */
+> > +#define pcibios_assign_all_busses() \
+> > +     (pci_has_flag(PCI_REASSIGN_ALL_BUS))
+> > +
+> > +/*
+> > + * PCI address space differs from physical memory address space
+> > + */
+> > +#define PCI_DMA_BUS_IS_PHYS  (0)
+> > +
+> > +extern int isa_dma_bridge_buggy;
+> > +
+> > +#ifdef CONFIG_PCI
+> > +static inline int pci_domain_nr(struct pci_bus *bus)
+> > +{
+> > +     struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+> > +
+> > +     if (bridge)
+> > +             return bridge->domain_nr;
+> > +
+> > +     return 0;
+> > +}
+> > +
+> > +static inline int pci_proc_domain(struct pci_bus *bus)
+> > +{
+> > +     return 1;
+> > +}
+> > +#endif
+> > +
+> > +extern unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr);
+> > +
+> > +#endif  /* __KERNEL__ */
+> > +#endif  /* __ASM_PCI_H */
+> > diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
+> > index 2d4554b..64fc479 100644
+> > --- a/arch/arm64/kernel/Makefile
+> > +++ b/arch/arm64/kernel/Makefile
+> > @@ -20,6 +20,7 @@ arm64-obj-$(CONFIG_HAVE_HW_BREAKPOINT)+= hw_breakpoint.o
+> >  arm64-obj-$(CONFIG_EARLY_PRINTK)     += early_printk.o
+> >  arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)        += sleep.o suspend.o
+> >  arm64-obj-$(CONFIG_JUMP_LABEL)               += jump_label.o
+> > +arm64-obj-$(CONFIG_PCI)                      += pci.o
+> >
+> >  obj-y                                        += $(arm64-obj-y) vdso/
+> >  obj-m                                        += $(arm64-obj-m)
+> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > new file mode 100644
+> > index 0000000..9f29c9a
+> > --- /dev/null
+> > +++ b/arch/arm64/kernel/pci.c
+> > @@ -0,0 +1,173 @@
+> > +/*
+> > + * Code borrowed from powerpc/kernel/pci-common.c
+> > + *
+> > + * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
+> > + * Copyright (C) 2014 ARM Ltd.
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License
+> > + * version 2 as published by the Free Software Foundation.
+> > + *
+> > + */
+> > +
+> > +#include <linux/init.h>
+> > +#include <linux/io.h>
+> > +#include <linux/kernel.h>
+> > +#include <linux/mm.h>
+> > +#include <linux/of_pci.h>
+> > +#include <linux/of_platform.h>
+> > +#include <linux/slab.h>
+> > +
+> > +#include <asm/pci-bridge.h>
+> > +
+> > +struct ioresource {
+> > +     struct list_head list;
+> > +     phys_addr_t start;
+> > +     resource_size_t size;
+> > +};
+> > +
+> > +static LIST_HEAD(io_list);
+> > +
+> > +int pci_register_io_range(phys_addr_t address, resource_size_t size)
+> > +{
+> > +     struct ioresource *res;
+> > +     resource_size_t allocated_size = 0;
+> > +
+> > +     /* find if the range has not been already allocated */
+> > +     list_for_each_entry(res, &io_list, list) {
+> > +             if (address >= res->start &&
+> > +                     address + size <= res->start + size)
+> > +                     return 0;
+> > +             allocated_size += res->size;
+> > +     }
+> > +
+> > +     /* range not already registered, check for space */
+> > +     if (allocated_size + size > IO_SPACE_LIMIT)
+> > +             return -E2BIG;
+> > +
+> > +     /* add the range in the list */
+> > +     res = kzalloc(sizeof(*res), GFP_KERNEL);
+> > +     if (!res)
+> > +             return -ENOMEM;
+> > +     res->start = address;
+> > +     res->size = size;
+> > +
+> > +     list_add_tail(&res->list, &io_list);
+> > +
+> > +     return 0;
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_register_io_range);
+> > +
+> > +unsigned long pci_address_to_pio(phys_addr_t address)
+> > +{
+> > +     struct ioresource *res;
+> > +
+> > +     list_for_each_entry(res, &io_list, list) {
+> > +             if (address >= res->start &&
+> > +                     address < res->start + res->size) {
+> > +                     return res->start - address;
+> > +             }
+> > +     }
+> > +
+> > +     return (unsigned long)-1;
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_address_to_pio);
+> > +
+> > +/*
+> > + * Called after each bus is probed, but before its children are examined
+> > + */
+> > +void pcibios_fixup_bus(struct pci_bus *bus)
+> > +{
+> > +     struct pci_dev *dev;
+> > +     struct resource *res;
+> > +     int i;
+> > +
+> > +     if (!pci_is_root_bus(bus)) {
+> > +             pci_read_bridge_bases(bus);
+> > +
+> > +             pci_bus_for_each_resource(bus, res, i) {
+> > +                     if (!res || !res->flags || res->parent)
+> > +                             continue;
+> > +
+> > +                     /*
+> > +                      * If we are going to reassign everything, we can
+> > +                      * shrink the P2P resource to have zero size to
+> > +                      * save space
+> > +                      */
+> > +                     if (pci_has_flag(PCI_REASSIGN_ALL_RSRC)) {
+> > +                             res->flags |= IORESOURCE_UNSET;
+> > +                             res->start = 0;
+> > +                             res->end = -1;
+> > +                             continue;
+> > +                     }
+> > +             }
+> > +     }
+> 
+> Is there any other place we can put this?  I'm trying to nuke
+> pcibios_fixup_bus() because things like hotplug work better if we can do
+> them in a per-device way rather than a per-bus way.
 
-This set of commits fixes a number of problems in the PCIe support of
-the Armada 370 and Armada XP SoCs, allowing to use PCIe devices that
-were not properly supported until now.
+That's good. I'm all for removing this one, will give it a go.
 
-Due to the interaction of PCIe with other subsystems, the fixes are
-not limited to drivers/pci, but also touch drivers/bus and
-drivers/irqchip.
+> 
+> > +
+> > +     list_for_each_entry(dev, &bus->devices, bus_list) {
+> > +             /* Ignore fully discovered devices */
+> > +             if (dev->is_added)
+> > +                     continue;
+> > +
+> > +             set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+> 
+> Do you really need this?  pci_device_add() already contains the same line.
 
-Here are the details of the patches:
+OK.
 
- * The first three patches are fixes in the MSI handling. They fix
-   problems with PCIe device drivers trying to use MSI-X (which we
-   don't support), and incorrect freeing of MSIs causing kernel panics
-   when PCIe device drivers try to allocate/free MSIs several times.
+> 
+> > +
+> > +             /* Read default IRQs and fixup if necessary */
+> > +             dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> 
+> Could this be done in pcibios_add_device() or someplace similar?
 
-   They touch drivers/irqchip/ only, and they are independent from the
-   rest of the series, both from a build and a runtime point of view.
+Will do.
 
-   These bugs exist since the MSI support was added, in v3.13. The
-   commits carry the necessary Fixes and Cc to stable informations.
+> 
+> > +     }
+> > +}
+> > +EXPORT_SYMBOL(pcibios_fixup_bus);
+> > +
+> > +/*
+> > + * We don't have to worry about legacy ISA devices, so nothing to do here
+> > + */
+> > +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> > +                             resource_size_t size, resource_size_t align)
+> > +{
+> > +     return res->start;
+> > +}
+> > +
+> > +int pcibios_enable_device(struct pci_dev *dev, int mask)
+> > +{
+> > +     return pci_enable_resources(dev, mask);
+> > +}
+> 
+> There is already a weak default implementation of pcibios_enable_device()
+> that does this, so you should be able to just drop this.
 
- * The fourth patch fixes an off-by-one in the computed size of MBus
-   windows. This only worked because the mvebu-mbus driver was
-   silently accepting invalid sizes. I've marked it for stable because
-   it really is bug, but even though it's not visible by itself, it is
-   needed for other patches in the series.
+OK.
 
-   This patch touches drivers/pci/host, and should probably be taken
-   by the mvebu maintainers, with the Ack of the PCI maintainer, as it
-   is a runtime dependency for the next patch.
+Thanks for reviewing the series!
 
-   This patch is marked for stable all the way to when the PCI driver
-   was introduced.
+Liviu
 
- * The fifth patch make the mvebu-mbus driver check (and loudly
-   complain) if it is asked to create invalid regions (whose base
-   address or size are not compatible with the documented MBus
-   requirements).
-
-   This patch touches drivers/bus, and should probably be taken by the
-   mvebu maintainers. As explained above, it is mandatory to have
-   PATCH 4 applied before PATCH 5: there is a runtime dependency
-   between the two (but no build time dependency).
-
-   This patch is not marked for stable, as it only adds some
-   additional debugging information, which while very useful, is not
-   technically stable material.
-
- * The sixth patch relaxes a check in mvebu-mbus driver about
-   conflicting windows, which is necessary
-
-   This patch touches drivers/bus, and should probably be taken by the
-   mvebu maintainers. It is not a fix by itself, but it is required
-   for the last patch, which is a fix. Therefore, it is marked for
-   stable, all the way to when the mvebu-mbus driver was introduced.
-
- * The seventh patch improves the pci-mvebu driver to allow the
-   creation of multiple MBus windows when the PCI BAR calculated by
-   the Linux PCI core has a non power-of-two size. This is needed
-   because MBus windows can only have power-of-two sizes. Until now,
-   we were configuring invalid MBus windows, which with certain PCIe
-   devices, was either causing kernel panics at boot time or
-   misfunction of the device.
-
-These patches have been tested by Neil Greatorex
-<neil@fatboyfat.co.uk> who initially reported the issues, have also
-been tested by Willy Tarreau and Matthew Winter (even though they
-didn't give their formal Tested-by [1] [2]), and have been heavily
-discussed with Jason Gunthorpe.
-
-Note that there are still two known issues in the mvebu PCIe handling:
-
- 1/ When earlyprintk is disabled, we have a timing / PHY reset issue
-    which leads to the PCIe device connected on the first interface to
-    not be detected. We already have patches floating around, but
-    nothing that we are all happy with yet.
-
- 2/ When a PCI IGB card is plugged with many other PCI devices in a
-    system, the IGB card initialization doesn't work ('igb
-    0000:01:00.0: The NVM Checksum Is Not Valid'). We are still
-    working on this issue.
-
-These two issues will be handled separately.
-
-Thanks,
-
-Thomas
-
-[1] http://www.spinics.net/lists/linux-pci/msg30406.html
-[2] http://www.spinics.net/lists/linux-pci/msg30444.html
-
-Jason Gunthorpe (1):
-  bus: mvebu-mbus: Avoid setting an undefined window size
-
-Neil Greatorex (1):
-  irqchip: armada-370-xp: Fix releasing of MSIs
-
-Thomas Petazzoni (4):
-  irqchip: armada-370-xp: fix invalid cast of signed value into unsigned
-    variable
-  irqchip: armada-370-xp: implement the ->check_device() msi_chip
-    operation
-  bus: mvebu-mbus: allow several windows with the same target/attribute
-  pci: pci-mvebu: split PCIe BARs into multiple MBus windows when needed
-
-Willy Tarreau (1):
-  pci: mvebu: fix off-by-one in the computed size of the mbus windows
-
- drivers/bus/mvebu-mbus.c            | 22 ++++++---
- drivers/irqchip/irq-armada-370-xp.c | 17 +++++--
- drivers/pci/host/pci-mvebu.c        | 92 ++++++++++++++++++++++++++++++-------
- 3 files changed, 106 insertions(+), 25 deletions(-)
+> 
+> > +#define IO_SPACE_PAGES       ((IO_SPACE_LIMIT + 1) / PAGE_SIZE)
+> > +static DECLARE_BITMAP(pci_iospace, IO_SPACE_PAGES);
+> > +
+> > +unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr)
+> > +{
+> > +     unsigned long start, len, virt_start;
+> > +     int err;
+> > +
+> > +     if (res->end > IO_SPACE_LIMIT)
+> > +             return -EINVAL;
+> > +
+> > +     /*
+> > +      * try finding free space for the whole size first,
+> > +      * fall back to 64K if not available
+> > +      */
+> > +     len = resource_size(res);
+> > +     start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
+> > +                             res->start / PAGE_SIZE, len / PAGE_SIZE, 0);
+> > +     if (start == IO_SPACE_PAGES && len > SZ_64K) {
+> > +             len = SZ_64K;
+> > +             start = 0;
+> > +             start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
+> > +                                     start, len / PAGE_SIZE, 0);
+> > +     }
+> > +
+> > +     /* no 64K area found */
+> > +     if (start == IO_SPACE_PAGES)
+> > +             return -ENOMEM;
+> > +
+> > +     /* ioremap physical aperture to virtual aperture */
+> > +     virt_start = start * PAGE_SIZE + (unsigned long)PCI_IOBASE;
+> > +     err = ioremap_page_range(virt_start, virt_start + len,
+> > +                             phys_addr, __pgprot(PROT_DEVICE_nGnRE));
+> > +     if (err)
+> > +             return err;
+> > +
+> > +     bitmap_set(pci_iospace, start, len / PAGE_SIZE);
+> > +
+> > +     /* return io_offset */
+> > +     return start * PAGE_SIZE - res->start;
+> > +}
+> > --
+> > 1.9.0
+> >
+> 
 
 -- 
-1.9.2
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
