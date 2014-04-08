@@ -1,89 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	Arvind Bhushan <arvindb@chelsio.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 06/23] csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:30 +0200
-Message-Id: <eff3d7370c0f3c9c9183bd304a5d5c9eb70f0bd6.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:10355 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756222AbaDHTzh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 15:55:37 -0400
+Date: Tue, 8 Apr 2014 21:54:42 +0200
+From: Thierry Reding <treding@nvidia.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"Ian Campbell" <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [RFC 2/5] ARM: tegra: Add new PCIe regulator properties
+Message-ID: <20140408195442.GB21978@ulmo.nvidia.com>
+References: <1396622969-17837-1-git-send-email-treding@nvidia.com>
+ <1396622969-17837-3-git-send-email-treding@nvidia.com>
+ <53444B2D.8050209@wwwdotorg.org>
+MIME-Version: 1.0
+In-Reply-To: <53444B2D.8050209@wwwdotorg.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="f2QGlHpHGjS2mn6Y"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+--f2QGlHpHGjS2mn6Y
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: Arvind Bhushan <arvindb@chelsio.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/csiostor/csio_hw.h  |    2 +-
- drivers/scsi/csiostor/csio_isr.c |   22 +++++++++-------------
- 2 files changed, 10 insertions(+), 14 deletions(-)
+On Tue, Apr 08, 2014 at 09:17:01PM +0200, Stephen Warren wrote:
+> On 04/04/2014 08:49 AM, Thierry Reding wrote:
+> > These new properties more accurately reflect the real connections of the
+> > boards and therefore make it easier to match them up with schematics.
+>=20
+> > diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/=
+tegra30-cardhu.dtsi
+>=20
+> >  	pcie-controller@00003000 {
+> >  		status =3D "okay";
+> > +
+> > +		/* AVDD_PEXA and VDD_PEXA are grounded on Cardhu. */
+>=20
+> Perhaps add the word "inputs" before "are"?
 
-diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
-index 49b1daa..5db2d85 100644
---- a/drivers/scsi/csiostor/csio_hw.h
-+++ b/drivers/scsi/csiostor/csio_hw.h
-@@ -94,7 +94,7 @@ enum {
- };
- 
- struct csio_msix_entries {
--	unsigned short	vector;		/* Vector assigned by pci_enable_msix */
-+	unsigned short	vector;		/* Assigned MSI-X vector */
- 	void		*dev_id;	/* Priv object associated w/ this msix*/
- 	char		desc[24];	/* Description of this vector */
- };
-diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
-index 91ba91d..a8c748a 100644
---- a/drivers/scsi/csiostor/csio_isr.c
-+++ b/drivers/scsi/csiostor/csio_isr.c
-@@ -499,7 +499,7 @@ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
- static int
- csio_enable_msix(struct csio_hw *hw)
- {
--	int rv, i, j, k, n, min, cnt;
-+	int i, j, k, n, min, cnt;
- 	struct csio_msix_entries *entryp;
- 	struct msix_entry *entries;
- 	int extra = CSIO_EXTRA_VECS;
-@@ -521,19 +521,15 @@ csio_enable_msix(struct csio_hw *hw)
- 
- 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
- 
--	while ((rv = pci_enable_msix(hw->pdev, entries, cnt)) >= min)
--		cnt = rv;
--	if (!rv) {
--		if (cnt < (hw->num_sqsets + extra)) {
--			csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
--			csio_reduce_sqsets(hw, cnt - extra);
--		}
--	} else {
--		if (rv > 0)
--			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
--
-+	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
-+	if (cnt < 0) {
- 		kfree(entries);
--		return -ENOMEM;
-+		return cnt;
-+	}
-+
-+	if (cnt < (hw->num_sqsets + extra)) {
-+		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
-+		csio_reduce_sqsets(hw, cnt - extra);
- 	}
- 
- 	/* Save off vectors */
--- 
-1.7.7.6
+Done. Thanks,
 
+Thierry
+
+--f2QGlHpHGjS2mn6Y
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTRFQCAAoJEN0jrNd/PrOhqFwP+QGKyQg9Dp/eqINyGpUKlEqs
+XzCf7Bs5ZlYqlLpEmFtKRv1xsTC3k7nlb9a4lrj1CNMnVZBIXerDvF0Dzt0DE89g
+sqccl86mR4lpprYZV2doHjA1+ASv2qbwfd9BXwUvFoo9F3re4bHlFZ/bwVAoswnA
+tzDigrGmysF9cyxBxaHrpZdlK3GxQm4RW7riIeeY3Fv4LJa7RGcrFOkJ29bujSLD
+gbgMOCzOgfGmSAxhhDa2KDV2xTu03HoNteI90OYONWsWbuNnSLLeQx/2fob+9r/c
+tmwIlruvhNb89xXStlwHu8DvwuFFt2uIyA5oG9fPLLRfz9Xyvc7ar5ofeW4J5qRO
+dzDoWjuGKsiaXc0dAfLBVHmJI2WsXHKqJA95l2oJTVFKivBiqegOXyTiQbFXMFBs
+40TDMgA1alHheRSyzfgUSNVjaMMudUaEjQdjnnDFm26HCfb8Pz4JVl0OGdG361l5
+Fq6gsIFC3N9dc6ytXMYaiDecTjmo3utJvpCMrc/UFedmf3ALyXLuGweZnq1ftM53
+L7pW1TMm2FsgB67egthNw/J9141GGZBEZH6Owe94fVBZQgeIAIUdek9skvVDnE25
+bqcXTgLLNrFqATKbFWOeKC0Q7PslyPU34rZWiJHuczgJIjUp2rNSHGddxDAzs3lk
+1cjHK0GuXyKZjNEO3hyV
+=w+ep
+-----END PGP SIGNATURE-----
+
+--f2QGlHpHGjS2mn6Y--
