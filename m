@@ -1,85 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 21 Apr 2014 14:28:41 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bounine, Alexandre" <Alexandre.Bounine@idt.com>
-Subject: Re: [PATCH v2 RESEND 3/4] tsi721: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Message-ID: <20140421132841.GA25116@dhcp-26-169.brq.redhat.com>
-References: <cover.1394128952.git.agordeev@redhat.com>
- <d21563117d14900b2c094847198ff9a99e2e3dfa.1394128952.git.agordeev@redhat.com>
- <8D983423E7EDF846BB3056827B8CC5D15CC440A6@corpmail1.na.ads.idt.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:57956 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757463AbaDHTPw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 15:15:52 -0400
+Message-ID: <53444AE3.6030603@wwwdotorg.org>
+Date: Tue, 08 Apr 2014 13:15:47 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8D983423E7EDF846BB3056827B8CC5D15CC440A6@corpmail1.na.ads.idt.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thierry Reding <treding@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>
+CC: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
+Subject: Re: [RFC 1/5] PCI: tegra: Overhaul regulator usage
+References: <1396622969-17837-1-git-send-email-treding@nvidia.com> <1396622969-17837-2-git-send-email-treding@nvidia.com>
+In-Reply-To: <1396622969-17837-2-git-send-email-treding@nvidia.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 07, 2014 at 01:35:34PM +0000, Bounine, Alexandre wrote:
-> > From: Alexander Gordeev [mailto:agordeev@redhat.com]
-> > Sent: Thursday, March 06, 2014 3:11 PM
-> > To: linux-kernel@vger.kernel.org
-> > Cc: Alexander Gordeev; Matt Porter; Bounine, Alexandre; linux-
-> > pci@vger.kernel.org
-> > Subject: [PATCH v2 RESEND 3/4] tsi721: Use pci_enable_msix_exact()
-> > instead of pci_enable_msix()
-> > 
-> > As result of deprecation of MSI-X/MSI enablement functions
-> > pci_enable_msix() and pci_enable_msi_block() all drivers
-> > using these two interfaces need to be updated to use the
-> > new pci_enable_msi_range()  or pci_enable_msi_exact()
-> > and pci_enable_msix_range() or pci_enable_msix_exact()
-> > interfaces.
-> 
-> 
-> Acked-by: Alexandre Bounine <alexandre.bounine@idt.com>
-> 
-> Andrew, please pick up this patch for the -next tree.
+On 04/04/2014 08:49 AM, Thierry Reding wrote:
+> The current usage of regulators for the Tegra PCIe block is wrong. It
+> doesn't accurately reflect the actual supply inputs of the IP block and
+> therefore isn't as flexible as it should be. Rectify this by describing
+> all possible supply inputs in the device tree binding documentation and
+> deprecate the old supply properties.
 
-Hi Andrew,
+> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
 
-Could you please pick up this patch?
+> +Power supplies for Tegra30:
+...
+> +- Optional:
+> +  - If port 0 is enabled:
+> +    - avdd-pexa-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
+> +    - vdd-pexa-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
+> +  - If at least one of ports 1 and 2 is enabled:
+> +    - avdd-pexb-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
+> +    - vdd-pexb-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
 
-Thanks!
-
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > Cc: Matt Porter <mporter@kernel.crashing.org>
-> > Cc: Alexandre Bounine <alexandre.bounine@idt.com>
-> > Cc: linux-pci@vger.kernel.org
-> > ---
-> >  drivers/rapidio/devices/tsi721.c |   11 +++--------
-> >  1 files changed, 3 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/drivers/rapidio/devices/tsi721.c
-> > b/drivers/rapidio/devices/tsi721.c
-> > index ff7cbf2..ce08e8d 100644
-> > --- a/drivers/rapidio/devices/tsi721.c
-> > +++ b/drivers/rapidio/devices/tsi721.c
-> > @@ -768,15 +768,10 @@ static int tsi721_enable_msix(struct
-> > tsi721_device *priv)
-> >  	}
-> >  #endif /* CONFIG_RAPIDIO_DMA_ENGINE */
-> > 
-> > -	err = pci_enable_msix(priv->pdev, entries, ARRAY_SIZE(entries));
-> > +	err = pci_enable_msix_exact(priv->pdev, entries,
-> > ARRAY_SIZE(entries));
-> >  	if (err) {
-> > -		if (err > 0)
-> > -			dev_info(&priv->pdev->dev,
-> > -				 "Only %d MSI-X vectors available, "
-> > -				 "not using MSI-X\n", err);
-> > -		else
-> > -			dev_err(&priv->pdev->dev,
-> > -				"Failed to enable MSI-X (err=%d)\n", err);
-> > +		dev_err(&priv->pdev->dev,
-> > +			"Failed to enable MSI-X (err=%d)\n", err);
-> >  		return err;
-> >  	}
-> > 
-> > --
-> > 1.7.7.6
-> 
+Did you get confirmation from HW/... that the mapping from pexa/b to
+PCIe ports you document above is correct? IIRC the two supplies might be
+related to lanes rather than ports?
