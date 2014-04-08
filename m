@@ -1,72 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog101.obsmtp.com ([207.126.144.111]:33521 "EHLO
+	eu1sys200aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754698AbaDHHUS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 03:20:18 -0400
+Message-ID: <5343A2D8.20803@mellanox.com>
+Date: Tue, 8 Apr 2014 10:18:48 +0300
+From: Or Gerlitz <ogerlitz@mellanox.com>
 MIME-Version: 1.0
-In-Reply-To: <6228807.4v9ZRtib77@wuerfel>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <CAErSpo6S49qNuJQB-XXEfJ1Nkz=4gZ5_hE93=gb_yGZesA1H9Q@mail.gmail.com>
- <20140408094933.GS17163@e106497-lin.cambridge.arm.com> <6228807.4v9ZRtib77@wuerfel>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 8 Apr 2014 10:48:18 -0600
-Message-ID: <CAErSpo4nZiEcTth5W6ZhcRSne80T8VWTWR2zm0yN7ogFR0Norw@mail.gmail.com>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
+To: Guo Chao <yan@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Amir Vadai <amirv@mellanox.com>,
+	Eugenia Emantayev <eugenia@mellanox.com>, <talal@mellanox.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v7] PCI: Try best to allocate pref mmio 64bit above 4g
+References: <CAE9FiQXzRQ9S0mwwb58R2icBTtHHJ6NMVFMaxEgtVNP9mZVjZw@mail.gmail.com> <1394222924-28886-1-git-send-email-yinghai@kernel.org> <CAErSpo6r16va7oBpaDcTXw0Y0igc=NbXy9G7c27X+P0UM7fh8g@mail.gmail.com> <20140408025738.GA3198@yanx>
+In-Reply-To: <20140408025738.GA3198@yanx>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 8, 2014 at 4:11 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+On 08/04/2014 05:57, Guo Chao wrote:
+> On Fri, Apr 04, 2014 at 04:43:27PM -0600, Bjorn Helgaas wrote:
+>> On Fri, Mar 7, 2014 at 1:08 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> When one of children resources does not support MEM_64, MEM_64 for
+>>> bridge get reset, so pull down whole pref resource on the bridge under 4G.
+>>>
+>>> If the bridge support pref mem 64, will only allocate that with pref mem64 to
+>>> children that support it.
+>>> For children resources if they only support pref mem 32, will allocate them
+>>> from non pref mem instead.
+>>>
+>>> If the bridge only support 32bit pref mmio, will still have all children pref
+>>> mmio under that.
+>>>
+>>> -v2: Add release bridge res support with bridge mem res for pref_mem children res.
+>>> -v3: refresh and make it can be applied early before for_each_dev_res patchset.
+>>> -v4: fix non-pref mmio 64bit support found by Guo Chao.
+>>> -v7: repost as ibm's powerpc system work again when
+>>>      1. petiboot boot kernel have this patch.
+>>>      2. or mellanox driver added new .shutdown member.
+>>>      discussion could be found at:
+>>>           http://marc.info/?t=138968064500001&r=1&w=2
+>> I think this fixes some sort of bug, and I suppose if I spent a few
+>> hours decoding the discussion you mention (the 44 message-long
+>> "mlx4_core probe error after applying Yinghai's patch" discussion), I
+>> might be able to figure out what it is.
+>>
+> The result of 44 message-long discussion is: the Mellanox card's failure is
+> due to a bug in its driver instead of this patch.
 
-> There is a wide range of implementations across architectures:
+
+So just to make sure we're on the same page -- fixing the bug is carried 
+out through netdev, e.g this 3.14-rc8
+upstream commit 97a5221 "net/mlx4_core: pass pci_device_id.driver_data 
+to __mlx4_init_one during reset"
+and now this one more fix which is under discussion 
+http://marc.info/?l=linux-pci&m=139675010015646&w=2, right?
+
+
+
 >
-> a) no access to I/O ports at all (tile, s390, ...)
-> b) access to I/O ports only through special instructions (x86, ...)
-> c) all MMIO is mapped virtual contiguous to PCI_IOBASE or _IO_BASE
->    (most ppc64, arm32 with MMU, arm64, ...)
-> d) only one PCI host can have an I/O space (mips, microblaze, ...)
-> e) each host controller can have its own method (ppc64 with indirect pio)
-> f) PIO token equals virtual address plus offset (some legacy ARM platforms,
->    probably some other architectures), or physical address (sparc)
-> g) PIO token encodes address space number plus offset (ia64)
->
-> a) and b) are trivially handled by any implementation that falls
-> back to 'return -EINVAL'.
-> I believe that c) is the most appropriate solution and we should be
-> able to adopt it by most of the architectures that have an MMU and
-> make it the default implementation.
-> d) seems like a good fallback for noMMU architectures: While we do
-> need to support I/O spaces, we need to support multiple PCI domains,
-> and we need to support noMMU, the combination of all three should
-> be extremely rare, and I'd leave it up to the architecture to support
-> that if there is a real use case, rather than trying to put that into
-> common code.
-> Anything that currently requires e), f) or g) I think should keep
-> doing that and not try to use the generic implementation.
+> The patch refines the logic of using prefetchable window, so that 64-bit
+> prefetchable BARs have a chance to be really prefetchable. It does not fix
+> any bugs, instead, it exposes one.
 
-Thanks for the nice summary.  That's way more than I had figured out myself.
-
-I don't know whether it'd be worth it, especially for something that's
-so close to obsolete, but it seems like it should be *possible* to
-generalize and unify this somewhat.  I would argue that g) (which I
-wrote, so I know it better than the others) could fairly easily
-subsume c), d), and f), since it maps an ioport number to a virtual
-address for an MMIO access, but it doesn't assume that all the MMIO
-spaces are contiguous.
-
-b), e), and maybe a) could be handled with an exception, e.g., inside
-inb(), look up the struct io_space (e.g., similar to what ia64 does in
-__ia64_mk_io_addr()), and if that struct contains a non-zero ops
-pointer, use that instead of doing the MMIO access.  The ops pointer
-functions could use the x86 INB instruction or do the indirect PIO
-thing or whatever.
-
-Bjorn
