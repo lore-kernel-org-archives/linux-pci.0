@@ -1,76 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:38203 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378AbaDDQ4G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 12:56:06 -0400
-Received: by mail-pd0-f173.google.com with SMTP id z10so3572096pdj.18
-        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 09:56:05 -0700 (PDT)
-Date: Fri, 4 Apr 2014 10:55:59 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Simon Horman <horms@verge.net.au>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ben Dooks <ben-linux@fluff.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
-Subject: Re: [PATCH v2 2/6] PCI: tegra: use new OF interrupt mapping when
- possible
-Message-ID: <20140404165559.GE9007@google.com>
-References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
- <1394025951-32438-3-git-send-email-l.stach@pengutronix.de>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:56875 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757529AbaDHS1h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 14:27:37 -0400
+Received: by mail-ig0-f182.google.com with SMTP id uy17so1423209igb.3
+        for <linux-pci@vger.kernel.org>; Tue, 08 Apr 2014 11:27:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394025951-32438-3-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <5344251D.7040805@pobox.com>
+References: <5344251D.7040805@pobox.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 8 Apr 2014 12:27:16 -0600
+Message-ID: <CAErSpo6KuYLaoEsxR4jJQ98P23kNEMzMcu_-RyM3nWd6YRxgag@mail.gmail.com>
+Subject: Re: driver skip pci_set_master, fix it? No.
+To: Mark Lord <mlord@pobox.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Theodore Ts'o" <tytso@mit.edu>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 05, 2014 at 02:25:47PM +0100, Lucas Stach wrote:
-> This is the recommended method of doing the IRQ
-> mapping. For old devicetrees we fall back to the
-> previous practice.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
+[+cc Ben, linux-pci]
 
-Applied with Stephen's Tested-by to my pending/host-tegra branch.  I'll
-rebase and rename it after v3.15-rc1, and I think we can squeeze it into
-v3.15 shortly after that.  Thanks.
+On Tue, Apr 8, 2014 at 10:34 AM, Mark Lord <mlord@pobox.com> wrote:
+> I am working a couple of drivers for chips that perform extensive bus-mastering ops.
+> These including full SRIOV support, and allow assigning virtual functions to virtual machines, etc.
+>
+> One thing the driver (still in development) does for safety,
+> is defer the call to pci_set_master() until *after* it has mapped
+> the MMIO space of the chips, so it can reset/flush the DMA engines
+> before giving them permission to scribble over host RAM.
+>
+> But a recent patch to the kernel has removed this from the driver's control.
+> The core PCI now does pci_set_master() immediately on pci_enable_device().
 
-> ---
->  drivers/pci/host/pci-tegra.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 330f7e3a32dd..083cf37ca047 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -639,10 +639,15 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
->  static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
->  {
->  	struct tegra_pcie *pcie = sys_to_pcie(pdev->bus->sysdata);
-> +	int irq;
->  
->  	tegra_cpuidle_pcie_irqs_in_use();
->  
-> -	return pcie->irq;
-> +	irq = of_irq_parse_and_map_pci(pdev, slot, pin);
-> +	if (!irq)
-> +		irq = pcie->irq;
-> +
-> +	return irq;
->  }
->  
->  static void tegra_pcie_add_bus(struct pci_bus *bus)
-> -- 
-> 1.9.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I assume you're talking about the one added by cf3e1feba7f9 ("PCI:
+Workaround missing pci_set_master in pci drivers"), but as far as I
+can tell, it only calls pci_set_master() for *bridge* devices.  What
+am I missing?  Is pci_set_master() being called for your endpoint?
+What path is that?
+
+Bjorn
