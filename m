@@ -1,92 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.131]:52492 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756234AbaDHHNT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 03:13:19 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
-Date: Tue, 08 Apr 2014 09:12:50 +0200
-Message-ID: <4845032.VeNZmbvuW3@wuerfel>
-In-Reply-To: <CAErSpo6S49qNuJQB-XXEfJ1Nkz=4gZ5_hE93=gb_yGZesA1H9Q@mail.gmail.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com> <CAErSpo6S49qNuJQB-XXEfJ1Nkz=4gZ5_hE93=gb_yGZesA1H9Q@mail.gmail.com>
+Received: from mail1.start.ca ([64.140.120.57]:43235 "EHLO mail1.start.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932866AbaDIOTD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Apr 2014 10:19:03 -0400
+Message-ID: <534556CF.1010800@pobox.com>
+Date: Wed, 09 Apr 2014 10:18:55 -0400
+From: Mark Lord <mlord@pobox.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Theodore Ts'o" <tytso@mit.edu>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: driver skip pci_set_master, fix it? No.
+References: <5344251D.7040805@pobox.com>	 <CAErSpo6KuYLaoEsxR4jJQ98P23kNEMzMcu_-RyM3nWd6YRxgag@mail.gmail.com>	 <5344679E.1030008@pobox.com> <1397011868.3671.94.camel@pasglop> <53454660.5090603@pobox.com> <5345555A.20108@pobox.com>
+In-Reply-To: <5345555A.20108@pobox.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 07 April 2014 17:21:51 Bjorn Helgaas wrote:
-> On Fri, Mar 14, 2014 at 9:34 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > Some architectures do not share x86 simple view of the PCI I/O space
-> > and instead use a range of addresses that map to bus addresses. For
-> > some architectures these ranges will be expressed by OF bindings
-> > in a device tree file.
-> >
-> > Introduce a pci_register_io_range() helper function that can be used
-> > by the architecture code to keep track of the I/O ranges described by the
-> > PCI bindings. If the PCI_IOBASE macro is not defined that signals
-> > lack of support for PCI and we return an error.
-> >
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > Acked-by: Grant Likely <grant.likely@linaro.org>
-> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> > ---
-> >  drivers/of/address.c       | 9 +++++++++
-> >  include/linux/of_address.h | 1 +
-> >  2 files changed, 10 insertions(+)
-> >
-> > diff --git a/drivers/of/address.c b/drivers/of/address.c
-> > index 1a54f1f..be958ed 100644
-> > --- a/drivers/of/address.c
-> > +++ b/drivers/of/address.c
-> > @@ -619,6 +619,15 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
-> >  }
-> >  EXPORT_SYMBOL(of_get_address);
-> >
-> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> > +{
-> > +#ifndef PCI_IOBASE
-> > +       return -EINVAL;
-> > +#else
-> > +       return 0;
-> > +#endif
-> > +}
+On 14-04-09 10:12 AM, Mark Lord wrote:
+> On 14-04-09 09:08 AM, Mark Lord wrote:
+>> On 14-04-08 10:51 PM, Benjamin Herrenschmidt wrote:
+>>> On Tue, 2014-04-08 at 17:18 -0400, Mark Lord wrote:
+>>>>> I assume you're talking about the one added by cf3e1feba7f9 ("PCI:
+>>>>> Workaround missing pci_set_master in pci drivers"), but as far as I
+>>>>> can tell, it only calls pci_set_master() for *bridge* devices.  What
+>>>>> am I missing?  Is pci_set_master() being called for your endpoint?
+>>>>> What path is that?
+>>>>
+>>>> Yes, it is being called during execution of the _probe() function in my driver,
+>>>> as evidenced by the annoying (and wrong) message it produces.
+>>>>
+>>>> Next time I've got the hardware at hand, I'll put a "dump_stack()" into there
+>>>> to see the exact calling path.
+>>>
+>>> Note that one of the reason we want to do it early on bridges is that without it,
+>>> we may also not get the PCIe error messages.
+>>
+>> Sure, for bridges.
+>>
+>> I'll get a stack trace later today, but what I suspect is happening
+>> is that this multi-function card is being treated by the PCI layers
+>> as a "bridge" for purposes of the multiple virtual functions it implements.
+>>
+>> We will probably need to distinguish this kind of device from real bridges here.
 > 
-> This isn't PCI code, so I'm fine with it in that sense, but I'm not
-> sure the idea of a PCI_IOBASE #define is really what we need.  It's
-> not really determined by the processor architecture, it's determined
-> by the platform.  And a single address isn't enough in general,
-> either, because if there are multiple host bridges, there's no reason
-> the apertures that generate PCI I/O transactions need to be contiguous
-> on the CPU side.
+> Here's the call trace, all the way back to k7_probe(),
+> the driver's PCI "probe" function, and beyond:
 > 
-> That's just a long way of saying that if we ever came up with a more
-> generic way to handle I/O port spaces, PCI_IOBASE might go away.  And
-> I guess part of that rework could be changing this use of it along
-> with the others.
+> [   30.481454] k7: loading driver version 0.80
+> [   30.485561] pcieport 0000:00:1c.0: driver skip pci_set_master, fix it!
+> [   30.485580] CPU: 2 PID: 4401 Comm: insmod Tainted: G           O 3.12.14 #3
+> [   30.485583] Hardware name: Supermicro X9SCI/X9SCA/X9SCI/X9SCA, BIOS 2.0b 09/17/2012
+> [   30.485590]  0000000000000300 ffff88041c11b9b8 ffffffff8156c40b 0000000000000000
+> [   30.485598]  ffff88041d2b7000 ffff88041c11b9d8 ffffffff812dc493 0000000000000300
+> [   30.485603]  ffff88041d399000 ffff88041c11ba08 ffffffff812dc50d 0000000000001000
+> [   30.485607] Call Trace:
+> [   30.485616]  [<ffffffff8156c40b>] dump_stack+0x4f/0x84
+> [   30.485622]  [<ffffffff812dc493>] pci_enable_bridge+0x93/0xa0
+> [   30.485627]  [<ffffffff812dc50d>] pci_enable_device_flags+0x6d/0xe0
+> [   30.485631]  [<ffffffff812dc58e>] pci_enable_device+0xe/0x10
+> [   30.485641]  [<ffffffffa0469c0d>] k7_enable_device+0x3d/0xa30 [k7]
+> [   30.485649]  [<ffffffffa0462d72>] ? k7_devmem_alloc+0x32/0x140 [k7]
+> [   30.485654]  [<ffffffff81572ab6>] ? _raw_spin_lock+0x16/0x40
+> [   30.485658]  [<ffffffff81572721>] ? _raw_spin_unlock+0x11/0x40
+> [   30.485666]  [<ffffffffa046aee8>] k7_probe+0x458/0x630 [k7]
+> 
+> [   30.485682]  [<ffffffff812de3d6>] local_pci_probe+0x46/0x80
+> [   30.485696]  [<ffffffff812de6f1>] pci_device_probe+0x101/0x110
+> [   30.485702]  [<ffffffff813941d6>] driver_probe_device+0x76/0x240
+> [   30.485705]  [<ffffffff8139443b>] __driver_attach+0x9b/0xa0
+> [   30.485709]  [<ffffffff813943a0>] ? driver_probe_device+0x240/0x240
+> [   30.485713]  [<ffffffff81392385>] bus_for_each_dev+0x55/0x90
+> [   30.485717]  [<ffffffff81393ce9>] driver_attach+0x19/0x20
+> [   30.485720]  [<ffffffff81393814>] bus_add_driver+0x104/0x290
+> [   30.485724]  [<ffffffff81394abf>] driver_register+0x5f/0xf0
+> [   30.485728]  [<ffffffff812dd3f6>] __pci_register_driver+0x46/0x50
+> [   30.485736]  [<ffffffffa024c16e>] k7_init+0x16e/0x1000 [k7]
+> [   30.485746]  [<ffffffffa024c000>] ? 0xffffffffa024bfff
+> [   30.485765]  [<ffffffff81000302>] do_one_initcall+0x112/0x160
+> [   30.485779]  [<ffffffff81038143>] ? set_memory_nx+0x43/0x50
+> [   30.485785]  [<ffffffff810abbe1>] load_module+0x1e51/0x2480
+> [   30.485789]  [<ffffffff810a8b10>] ? show_initstate+0x50/0x50
+> [   30.485794]  [<ffffffff810ac2ae>] SyS_init_module+0x9e/0xc0
+> [   30.485799]  [<ffffffff8157389b>] tracesys+0xdd/0xe
+> 
 
-I'd rather not add a generic implementation of this at all, but
-keep it all within the host resource scanning code.
+The e1000e network driver is suffering from this as well in 3.12.14.
 
-If we do add a generic implementation, my preference would be
-to use the version introduced for arm64, with a fallback of
-returning -EINVAL if the architecture doesn't implement it.
-
-There is no way ever that returning '0' makes sense here: Either
-the architecture supports memory mapped I/O spaces and then we
-should be able to find an appropriate io_offset for it, or it
-doesn't support memory mapped I/O spaces and we should never
-even call this function.
-
-	Arnd
