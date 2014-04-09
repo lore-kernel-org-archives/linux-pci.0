@@ -1,74 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:45084 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754011AbaDKKXT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Apr 2014 06:23:19 -0400
-Date: Fri, 11 Apr 2014 12:23:14 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Neil Greatorex <neil@fatboyfat.co.uk>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Willy Tarreau <w@1wt.eu>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: Fixing PCIe issues on Armada XP
-Message-ID: <20140411122314.220614bf@skate>
-In-Reply-To: <alpine.DEB.2.10.1404102206090.28003@vroombuntu>
-References: <20140410181953.50ccfcc3@skate>
-	<20140410165733.GB23104@obsidianresearch.com>
-	<20140410200153.46669e0c@skate>
-	<20140410201201.GA12661@obsidianresearch.com>
-	<alpine.DEB.2.10.1404102206090.28003@vroombuntu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from service87.mimecast.com ([91.220.42.44]:45990 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932932AbaDIMHz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Apr 2014 08:07:55 -0400
+Date: Wed, 9 Apr 2014 13:07:50 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140409120750.GN985@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
+ <20140405000007.GD15806@google.com>
+ <20140407084623.GG17163@e106497-lin.cambridge.arm.com>
+ <1396862058.3671.40.camel@pasglop>
+ <20140407100715.GI17163@e106497-lin.cambridge.arm.com>
+ <CAErSpo7h+Yew2hBztzkOzcHU5r4OQebxFbcZGkNUwJwfTFsbfg@mail.gmail.com>
+ <20140408102043.GV17163@e106497-lin.cambridge.arm.com>
+ <CAErSpo4anYBmaRbJEFE9kAXSmnvfqud=w1QA=mSSsTUamM4kSw@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4anYBmaRbJEFE9kAXSmnvfqud=w1QA=mSSsTUamM4kSw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Neil Greatorex,
-
-On Thu, 10 Apr 2014 22:56:00 +0100 (BST), Neil Greatorex wrote:
-> > In any event, turning on the clock should almost certainly be
-> > accompanied by a phy reset sequence to get both link ends on the same
-> > page.
-> >
-> > Attached is a rough, untested patch along those lines.
-> >
+On Tue, Apr 08, 2014 at 05:28:39PM +0100, Bjorn Helgaas wrote:
+> On Tue, Apr 8, 2014 at 4:20 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > On Mon, Apr 07, 2014 at 11:44:51PM +0100, Bjorn Helgaas wrote:
 > 
-> I took your attached patch and extended it a bit to print out how long it 
-> took. The delays also need to be much longer for me. I also fixed a small 
-> typo you made where the bit wasn't being set again to bring the link back 
-> up. I've attached the diff to your patch, as well as the combined patch 
-> (hope that makes sense).
+> >> Let me try to explain my concern about the
+> >> pci_create_root_bus_in_domain() interface.  We currently have these
+> >> interfaces:
+> >>
+> >>   pci_scan_root_bus()
+> >>   pci_scan_bus()
+> >>   pci_scan_bus_parented()
+> >>   pci_create_root_bus()
+> >> ...
+> 
+> >> One alternative is to add an _in_domain() variant of each of these
+> >> interfaces, but that doesn't seem very convenient either.  My idea of
+> >> passing in a structure would also require adding variants, so there's
+> >> not really an advantage there, but I am thinking of the next
+> >> unification effort, e.g., for NUMA node info.  I don't really want to
+> >> have to change all the _in_domain() interfaces to also take yet
+> >> another parameter for the node number.
+> >
+> > OK, what about this: all the functions that you have mentioned take a
+> > void *sysdata parameter. Should we convert this opaque pointer into a
+> > specific structure that holds the domain_nr and (in future) the NUMA
+> > node info?
+> 
+> I doubt if we can make sysdata itself generic because I suspect we
+> need a way to have *some* arch-specific data.  But maybe the arch
+> could supply a structure containing a struct device *, domain, struct
+> pci_ops *, list of resources, aperture info, etc.  I wonder if struct
+> pci_host_bridge would be a reasonable place to put this stuff, e.g.,
+> something like this:
+> 
+>   struct pci_host_bridge {
+>     int domain;
+>     int node;
+>     struct device *dev;
+>     struct pci_ops *ops;
+>     struct list_head resources;
+>     void *sysdata;
+>     struct pci_bus *bus;  /* filled in by core, not by arch */
+>     ... /* other existing contents managed by core */
+>   };
+> 
+>   struct pci_bus *pci_scan_host_bridge(struct pci_host_bridge *bridge);
 
-I managed to reproduce the problem of the PCIe device not being
-detected on Mirabox when earlyprintk is disabled.
+I'm really reluctant to give the arches more rope to hang themselves. I
+really dislike the use of xxxx_initcall() to do PCI initialisation ordering
+that is currently in widespread use through the arch code. As I hope to
+have proven with my arm64 code, you can have PCI support for an architecture
+without having to provide any arch specific code. We have enough correct
+code in the PCI framework, what would the architectures provide to the generic
+code that we cannot get by following the standard?
 
-However, the proposed patch doesn't seem to work:
+Of course, there are always arch specific corners and they need their data
+structures to make sense of those, but rather than having architectures
+fill in a structure *before* we can setup host bridges I think we need
+to reverse the order. Using your example structure, I don't think is
+the arch's job to provide the list of resources or the domain number
+before we can scan the host bridge. We should be able to get those from
+somewhere else (like adding by default the ioport_resource and
+iomem_resource and managing domain numbers inside the core framework).
 
-mvebu-pcie pcie-controller.3: PCIe0.0: performing link reset
-mvebu-pcie pcie-controller.3: PCIe0.0: link went down after 100 tries
-mvebu-pcie pcie-controller.3: PCIe0.0: link came back up after 0 tries
+Best regards,
+Liviu
 
-It waits hundred times for the link to go down, but it never goes down,
-and then it doesn't wait at all to go up... because it never went down.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Moreover, I am not entirely convinced that a PHY reset is needed here.
-In my tests, doing just a wait after setting the local dev number was
-sufficient. The fact is works with earlyprintk also indicates that we
-don't need to do any specific action with the PHY, just to wait a bit
-of time. I am worried that resetting the PHY might actually take more
-time than what is needed, and may have other consequences that we don't
-necessarily understand at this point.
-
-Thomas
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
