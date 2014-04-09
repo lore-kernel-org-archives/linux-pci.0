@@ -1,66 +1,44 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20140420105419.GB19676@pd.tnic>
-References: <20140419025308.2408.51252.stgit@amt.stowe>
-	<20140419025345.2408.99229.stgit@amt.stowe>
-	<20140420105419.GB19676@pd.tnic>
-Date: Mon, 28 Apr 2014 15:28:43 -0600
-Message-ID: <CAL-B5D23T3fSr=s=2T2LN-CaJn0u5rUaUxPOq+xdSdTU5KqE6Q@mail.gmail.com>
-Subject: Re: [PATCH v2 5/5] PCI: Remove redundant 'quirk_amd_nb_node'
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Borislav Petkov <bp@suse.de>
-Cc: Myron Stowe <myron.stowe@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	kim.naru@amd.com, daniel@numascale.com,
-	Thomas Gleixner <tglx@linutronix.de>, mingo@redhat.com,
-	hpa@zytor.com, x86 <x86@kernel.org>, sp@numascale.com,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:51205 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756659AbaDICvm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Apr 2014 22:51:42 -0400
+Message-ID: <1397011868.3671.94.camel@pasglop>
+Subject: Re: driver skip pci_set_master, fix it? No.
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Mark Lord <mlord@pobox.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Theodore Ts'o" <tytso@mit.edu>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 09 Apr 2014 12:51:08 +1000
+In-Reply-To: <5344679E.1030008@pobox.com>
+References: <5344251D.7040805@pobox.com>
+	 <CAErSpo6KuYLaoEsxR4jJQ98P23kNEMzMcu_-RyM3nWd6YRxgag@mail.gmail.com>
+	 <5344679E.1030008@pobox.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 20, 2014 at 4:54 AM, Borislav Petkov <bp@suse.de> wrote:
-> On Fri, Apr 18, 2014 at 08:53:46PM -0600, Myron Stowe wrote:
->> With the amd_bus.c updates to support additional AMD processors (11h, 12h,
->> 14h 15h  and 16h) 'quirk_amd_nb_node' seems to be redundant.  This patch
->> removes it.
->>
->> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
->
-> Good idea. Has this been tested, though? There are a bunch of places
-> using dev_to_node() which this quirk corrects, especially 'local_cpus'
-> in a bunch of sysfs nodes in the PCI hierarchy /sys/devices/pci*.
+On Tue, 2014-04-08 at 17:18 -0400, Mark Lord wrote:
+> > I assume you're talking about the one added by cf3e1feba7f9 ("PCI:
+> > Workaround missing pci_set_master in pci drivers"), but as far as I
+> > can tell, it only calls pci_set_master() for *bridge* devices.  What
+> > am I missing?  Is pci_set_master() being called for your endpoint?
+> > What path is that?
+> 
+> Yes, it is being called during execution of the _probe() function in my driver,
+> as evidenced by the annoying (and wrong) message it produces.
+> 
+> Next time I've got the hardware at hand, I'll put a "dump_stack()" into there
+> to see the exact calling path.
 
-My testing was related to the PCI hierarchy /sys/devices/pci* as this
-was the root issue I'm trying to get resolved.
+Note that one of the reason we want to do it early on bridges is that without it,
+we may also not get the PCIe error messages.
 
-Daniel also responded - Thanks Dan! - indicating that the changes are
-ok related to his concerns.
+Cheers,
+Ben.
 
->
-> We want to make sure this doesn't break that and other dev_to_node()
-> callsites.
 
-Agreed, which is at least in part why this is a separate patch.
-
-I'm going to run some more testing and then post with most of your
-comments incorporated.  Thanks again for the review.
-
-Myron
->
-> Thanks.
->
-> --
-> Regards/Gruss,
->     Boris.
->
-> Sent from a fat crate under my desk. Formatting is fine.
-> --
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
