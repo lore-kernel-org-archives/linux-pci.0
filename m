@@ -1,82 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48169 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753022AbaDNIF3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 04:05:29 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-	iss_storagedev@hp.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 10/23] hpsa: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:34 +0200
-Message-Id: <6e17ab33b0ddbe49f72bf0d9c5fd3019acf6d6ca.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
+Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:52849
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932147AbaDIBw3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 21:52:29 -0400
+Date: Tue, 8 Apr 2014 20:47:26 -0500
+From: Kim Phillips <kim.phillips@freescale.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	<gregkh@linuxfoundation.org>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<kvm@vger.kernel.org>, <konrad.wilk@oracle.com>,
+	<stuart.yoder@freescale.com>, <libvir-list@redhat.com>,
+	<iommu@lists.linux-foundation.org>, <tech@virtualopensystems.com>,
+	<kvmarm@lists.cs.columbia.edu>, <linux-kernel@vger.kernel.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	<christoffer.dall@linaro.org>
+Subject: [PATCH] driver core: platform: add device binding path
+ 'driver_override'
+Message-ID: <20140408204726.7a8f4cd6fbd05d0464720b30@freescale.com>
+In-Reply-To: <20140404201818.14389.86188.stgit@bling.home>
+References: <20140404201818.14389.86188.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Needed by platform device drivers, such as the vfio-platform driver [1],
+in order to bypass the existing OF, ACPI, id_table and name string matches,
+and successfully be able to be bound to any device, like so:
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: iss_storagedev@hp.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+echo vfio-platform > /sys/bus/platform/devices/fff51000.ethernet/driver_override
+echo fff51000.ethernet > /sys/bus/platform/devices/fff51000.ethernet/driver/unbind
+echo fff51000.ethernet > /sys/bus/platform/drivers_probe
+
+This mimics "PCI: Introduce new device binding path using
+pci_dev.driver_override" [2], which is an interface enhancement
+for more deterministic PCI device binding, e.g., when in the
+presence of hotplug.
+
+[1] http://lkml.iu.edu/hypermail/linux/kernel/1402.1/00177.html
+[2] http://lists-archives.com/linux-kernel/28030441-pci-introduce-new-device-binding-path-using-pci_dev-driver_override.html
+
+Suggested-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Kim Phillips <kim.phillips@freescale.com>
 ---
- drivers/scsi/hpsa.c |   29 +++++++++++++----------------
- 1 files changed, 13 insertions(+), 16 deletions(-)
+changes since RFC:
+- fixed message Subject to properly reflect a new platform device
+patch (instead of leaving it as a reply to the PCI version)
+- addressed Guenter Roeck's comment
+- updated [2] with link to later (Apr.4th) revision of the PCI patch
+- updated documentation to address Christoffer Dall's comments to
+  previous version of [2]
+- added a Suggested-by, and re-posted as a reply to the PCI patch,
+  should they be applied together
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3284edb..36bb1e4 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -6144,26 +6144,23 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 		goto default_int_mode;
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
- 		dev_info(&h->pdev->dev, "MSIX\n");
--		h->msix_vector = MAX_REPLY_QUEUES;
--		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
--				      h->msix_vector);
--		if (err > 0) {
-+		err = pci_enable_msix_range(h->pdev, hpsa_msix_entries,
-+					    1, MAX_REPLY_QUEUES);
-+		if (err < 0) {
-+			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
-+			h->msix_vector = 0;
-+			goto single_msi_mode;
-+		} else if (err < MAX_REPLY_QUEUES) {
- 			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
- 			       "available\n", err);
--			h->msix_vector = err;
--			err = pci_enable_msix(h->pdev, hpsa_msix_entries,
--					      h->msix_vector);
--		}
--		if (!err) {
--			for (i = 0; i < h->msix_vector; i++)
--				h->intr[i] = hpsa_msix_entries[i].vector;
--			return;
--		} else {
--			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
--			       err);
--			h->msix_vector = 0;
- 		}
+ Documentation/ABI/testing/sysfs-bus-platform | 20 ++++++++++++
+ drivers/base/platform.c                      | 46 ++++++++++++++++++++++++++++
+ include/linux/platform_device.h              |  1 +
+ 3 files changed, 67 insertions(+)
+ create mode 100644 Documentation/ABI/testing/sysfs-bus-platform
+
+diff --git a/Documentation/ABI/testing/sysfs-bus-platform b/Documentation/ABI/testing/sysfs-bus-platform
+new file mode 100644
+index 0000000..5172a61
+--- /dev/null
++++ b/Documentation/ABI/testing/sysfs-bus-platform
+@@ -0,0 +1,20 @@
++What:		/sys/bus/platform/devices/.../driver_override
++Date:		April 2014
++Contact:	Kim Phillips <kim.phillips@freescale.com>
++Description:
++		This file allows the driver for a device to be specified which
++		will override standard OF, ACPI, ID table, and name matching.
++		When specified, only a driver with a name matching the value
++		written to driver_override will have an opportunity to bind
++		to the device.  The override is specified by writing a string
++		to the driver_override file (echo vfio-platform > \
++		driver_override) and may be cleared with an empty string
++		(echo > driver_override).  This returns the device to standard
++		matching rules binding.  Writing to driver_override does not
++		automatically unbind the device from its current driver or make
++		any attempt to automatically load the specified driver.  If no
++		driver with a matching name is currently loaded in the kernel,
++		the device will not bind to any driver.  This also allows
++		devices to opt-out of driver binding using a driver_override
++		name such as "none".  Only a single driver may be specified in
++		the override, there is no support for parsing delimiters.
+diff --git a/drivers/base/platform.c b/drivers/base/platform.c
+index e714709..a0909cb 100644
+--- a/drivers/base/platform.c
++++ b/drivers/base/platform.c
+@@ -22,6 +22,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/idr.h>
+ #include <linux/acpi.h>
++#include <linux/limits.h>
+ 
+ #include "base.h"
+ #include "power/power.h"
+@@ -690,8 +691,49 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *a,
+ }
+ static DEVICE_ATTR_RO(modalias);
+ 
++static ssize_t driver_override_store(struct device *dev,
++				     struct device_attribute *attr,
++				     const char *buf, size_t count)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	char *driver_override, *old = pdev->driver_override, *cp;
 +
-+		h->msix_vector = err;
-+		for (i = 0; i < h->msix_vector; i++)
-+			h->intr[i] = hpsa_msix_entries[i].vector;
-+		return;
- 	}
-+single_msi_mode:
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
- 		dev_info(&h->pdev->dev, "MSI\n");
- 		if (!pci_enable_msi(h->pdev))
++	if (count > PATH_MAX)
++		return -EINVAL;
++
++	driver_override = kstrndup(buf, count, GFP_KERNEL);
++	if (!driver_override)
++		return -ENOMEM;
++
++	cp = strchr(driver_override, '\n');
++	if (cp)
++		*cp = '\0';
++
++	if (strlen(driver_override)) {
++		pdev->driver_override = driver_override;
++	} else {
++		kfree(driver_override);
++		pdev->driver_override = NULL;
++	}
++
++	kfree(old);
++
++	return count;
++}
++
++static ssize_t driver_override_show(struct device *dev,
++				    struct device_attribute *attr, char *buf)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++
++	return sprintf(buf, "%s\n", pdev->driver_override);
++}
++static DEVICE_ATTR_RW(driver_override);
++
++
+ static struct attribute *platform_dev_attrs[] = {
+ 	&dev_attr_modalias.attr,
++	&dev_attr_driver_override.attr,
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(platform_dev);
+@@ -747,6 +789,10 @@ static int platform_match(struct device *dev, struct device_driver *drv)
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	struct platform_driver *pdrv = to_platform_driver(drv);
+ 
++	/* When driver_override is set, only bind to the matching driver */
++	if (pdev->driver_override)
++		return !strcmp(pdev->driver_override, drv->name);
++
+ 	/* Attempt an OF style match first */
+ 	if (of_driver_match_device(dev, drv))
+ 		return 1;
+diff --git a/include/linux/platform_device.h b/include/linux/platform_device.h
+index 16f6654..153d303 100644
+--- a/include/linux/platform_device.h
++++ b/include/linux/platform_device.h
+@@ -28,6 +28,7 @@ struct platform_device {
+ 	struct resource	*resource;
+ 
+ 	const struct platform_device_id	*id_entry;
++	char *driver_override; /* Driver name to force a match */
+ 
+ 	/* MFD cell pointer */
+ 	struct mfd_cell *mfd_cell;
 -- 
-1.7.7.6
+1.9.1
 
