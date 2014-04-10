@@ -1,68 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3971 "EHLO mx1.redhat.com"
+Received: from 1wt.eu ([62.212.114.60]:3945 "EHLO 1wt.eu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752418AbaDYJmZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 Apr 2014 05:42:25 -0400
-Date: Fri, 25 Apr 2014 11:43:50 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Shahed Shaikh <shahed.shaikh@qlogic.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	Dept-HSG Linux NIC Dev <Dept-HSGLinuxNICDev@qlogic.com>,
-	netdev <netdev@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: [PATCH v2 net-next 2/2] qlcnic: Use pci_enable_msix_exact() instead
- of pci_enable_msix()
-Message-ID: <20140425094349.GA6397@dhcp-26-207.brq.redhat.com>
-References: <cover.1398412015.git.agordeev@redhat.com>
- <0a0d5f5c33d86e3777c22c3c1bbd81035660d57c.1398412015.git.agordeev@redhat.com>
- <262CB373A6D1F14F9B81E82F74F77D5A46F9EE54@avmb2.qlogic.org>
- <20140425090029.GA2500@dhcp-26-207.brq.redhat.com>
- <262CB373A6D1F14F9B81E82F74F77D5A46F9EEA2@avmb2.qlogic.org>
-MIME-Version: 1.0
+	id S1758712AbaDJRKr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Apr 2014 13:10:47 -0400
+Date: Thu, 10 Apr 2014 19:10:00 +0200
+From: Willy Tarreau <w@1wt.eu>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Neil Greatorex <neil@fatboyfat.co.uk>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory =?iso-8859-1?Q?Cl=E9ment?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: Fixing PCIe issues on Armada XP
+Message-ID: <20140410171000.GF25890@1wt.eu>
+References: <20140410181953.50ccfcc3@skate>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <262CB373A6D1F14F9B81E82F74F77D5A46F9EEA2@avmb2.qlogic.org>
+In-Reply-To: <20140410181953.50ccfcc3@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Hi Thomas,
 
-Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
-Cc: Dept-HSGLinuxNICDev@qlogic.com
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+On Thu, Apr 10, 2014 at 06:19:53PM +0200, Thomas Petazzoni wrote:
+> Hello all,
+> 
+> This is an e-mail that attempts to summarize the situation in terms of
+> Armada XP PCIe issues.
+> 
+> At
+> https://github.com/MISL-EBU-System-SW/mainline-public/commits/3.14/pci-debug,
+> I've pushed a branch based on top of v3.14 that contains:
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Thanks for putting all this online.
 
-diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-index dbf7539..73f908a 100644
---- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-+++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-@@ -690,10 +690,10 @@ int qlcnic_setup_tss_rss_intr(struct qlcnic_adapter *adapter)
- 		adapter->msix_entries[vector].entry = vector;
- 
- restore:
--	err = pci_enable_msix(pdev, adapter->msix_entries, num_msix);
--	if (err > 0) {
-+	err = pci_enable_msix_exact(pdev, adapter->msix_entries, num_msix);
-+	if (err == -ENOSPC) {
- 		if (!adapter->drv_tss_rings && !adapter->drv_rss_rings)
--			return -ENOSPC;
-+			return err;
- 
- 		netdev_info(adapter->netdev,
- 			    "Unable to allocate %d MSI-X vectors, Available vectors %d\n",
--- 
-1.7.7.6
+I have a minor comment below :
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+>  * 2 patches on the pci-mvebu driver. One from Willy Tarreau to fix the
+>    off by one on the sizes. And another one from me which splits the
+>    PCI BAR into power-of-two sized chunks, in order to create valid
+>    MBus windows.
+
+As suggested by Jason, this one should be merged before his that's just
+before, to ensure that it will not cause a regression.
+
+> I've tested this with my IGB card which needs a 9 MB
+>    BAR (so 8 MB + 1 MB needed), and I've also faked the code to code to
+>    simulate a 11.5 MB BAR (so 8 + 2 + 1 + 0.5 MB), and it worked. I
+>    also checked that if we have an error when creating one of the
+>    windows, then all the previous windows needed for the current BAR
+>    are properly removed.
+
+Really cool, I'm going to test that on a few PCIe cards and will report
+the results here. How can we check the number of mbus windows in use ?
+
+Thanks,
+Willy
+
