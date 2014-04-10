@@ -1,83 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:51154 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932945AbaD2RFT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 13:05:19 -0400
-Message-ID: <535FDA81.3020508@wwwdotorg.org>
-Date: Tue, 29 Apr 2014 10:59:45 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:37979 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753715AbaDJXkX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Apr 2014 19:40:23 -0400
+Date: Thu, 10 Apr 2014 17:40:00 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Willy Tarreau <w@1wt.eu>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Neil Greatorex <neil@fatboyfat.co.uk>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory =?iso-8859-1?Q?Cl=E9ment?=
+	<gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: Fixing PCIe issues on Armada XP
+Message-ID: <20140410234000.GA18443@obsidianresearch.com>
+References: <20140410181953.50ccfcc3@skate>
+ <20140410171000.GF25890@1wt.eu>
+ <20140410200222.27cab16e@skate>
+ <20140410231336.GC30855@1wt.eu>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	shiv prakash Agarwal <chhotu.shiv@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux NICS <linux.nics@intel.com>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-Subject: Re: Intel NIC testing on ARM
-References: <CAHH3p5+9VCYwS6JdB8aFJ0i4JLcFTMgSgiKOaE2GMnhfWM1bWA@mail.gmail.com> <CAErSpo7cDPa0vujMmppWV2RM3vn6=WJ7MCcP8CvwhT4Zn==MwA@mail.gmail.com> <CAHH3p5+qEeYaNKm-L4_RmnkmXeA2030u4t3D+J2wUwBEWiPBPQ@mail.gmail.com> <CAErSpo6+_Tnh9+r50_qK-v0ubpv_pqTcnS7DhMiNi8GbWmsgJA@mail.gmail.com> <CAHH3p5+xTwMaDW-k-0UUZ+21EhCCt2voWXP2jZf_PbRqOdukiA@mail.gmail.com> <CAErSpo7jd2smdoju31r7SWVp4KjNmN+qDAxSUxmVCnUSUOfKTw@mail.gmail.com> <CAHH3p5LKay-1gcgCn1fatM0hOL1Tc+a81Za+ePVjJ6oPo8+6rg@mail.gmail.com> <CAErSpo5VWnAG3xnhn0zgpyC22Eum=ZVR=BM8j2Rvt+=i7LZgjA@mail.gmail.com> <CAHH3p5+aRDq3j_au2Kou6Ef9L+iLaCUVV7hwZPhmD_HU6TxzqQ@mail.gmail.com> <CAHH3p5KYoPdRO-SEBGMwEPC5dhRd0j_nq_jDz+Z2WMuzOPKREA@mail.gmail.com> <CAErSpo7gtOoh_swzOtSyzkjRXUuZvLWwWpBeqHgy-9J4oB6b7g@mail.gmail.com>
-In-Reply-To: <CAErSpo7gtOoh_swzOtSyzkjRXUuZvLWwWpBeqHgy-9J4oB6b7g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140410231336.GC30855@1wt.eu>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/29/2014 10:21 AM, Bjorn Helgaas wrote:
-> [+cc igb, tegra folks]
+On Fri, Apr 11, 2014 at 01:13:36AM +0200, Willy Tarreau wrote:
+
+> So the areas are well covered, though #11 seems larger than needed
+> but I seem to remember that they're all rounded up by 1 MB anyway,
+> then if so, that's OK.
+
+Right, PCI bridge windows are 1MB aligned
+
+> root@xpgp:~# grep -v disabled /sys/kernel/debug/mvebu-mbus/devices
+> [00] 00000000e8010000 - 00000000e8020000 : 0004:00f0 (remap 0000000000010000)
+> [08] 00000000fff00000 - 0000000100000000 : 0001:001d
+> [09] 00000000f0000000 - 00000000f1000000 : 0001:002f
+> [10] 00000000e1800000 - 00000000e1a00000 : 0004:00f8
+> [11] 00000000e1a00000 - 00000000e1b00000 : 0004:00f8
+> [12] 00000000e0000000 - 00000000e1000000 : 0008:00f8
+> [13] 00000000e1000000 - 00000000e1800000 : 0008:00f8
 > 
-> On Tue, Apr 29, 2014 at 9:25 AM, shiv prakash Agarwal
-> <chhotu.shiv@gmail.com> wrote:
->> Also if I disable enabling bus master from igb driver, then ethernet
->> functionality does not work due to below issue:
-> 
-> This looks like an igb or (more likely) a tegra host bridge driver
-> issue, so hopefully somebody there can help you.
-> 
->> root@tegra-ubuntu:~# dhclient eth0
+> I noticed above that both igb ports share the same window #11. So I
+> tried to rmmod igb, remove both PCI devices, check mbus again (which
+> did not change), rescan PCI and modprobe igb again, and everything is
+> still operational with the same windows. I don't know if it is normal
+> that they're not unregistered when the device goes away (maybe there's
+> no refcount) ?
 
-Are you running mainline Linux, or NVIDIA's "Linux4Tegra"? IIRC, that
-shell prompt is the L4T default, and I think kernel version 3.10
-(mentioned in some of your logs) is the current L4T kernel version.
+The windows are tied to the PCI core, not to the using driver
+module. So they will only changed based on rescan an dynamic resource
+assignment in the PCI core. PCI rescan has a 'memory' of the last
+bridge windows and won't make dramtic changes, so expect the windows
+to fairly sticky.
 
-If you're running L4T, you should contact the NVIDIA L4T team for
-support (linux-tegra-bugs@nvidia.com).
+> If we have to keep them forever, then maybe a further improvement
+> will consist in merging adjacent windows which sum up as a power of
+> two (eg: #10 and #11 may be merged).
 
-If you can reproduce this issue on a recent mainline Linux (say 3.14,
-3.15-rc* or or linux-next), we can continue this conversation here. In
-this case, I'd like to see:
+0x1b00000 - 0x1800000 = 0x300000 which is not a power of two..
 
-* Details re: which HW/board you're running on, how you're plugging in
-the PCIe device, etc.
+> I tried to add a 3rd NIC in the mix (broadcom tg3), which caused the
+> myri10ge to fail to load for an obscure reason after loading igb
+> properly :
 
-* U-Boot version/commit ID, so we can check any setup it's doing.
+Oh, this looks a lot like what Thomas reported with his 5 NICs.
 
-* Link to source tree, so we can double-check the driver code you're
-running. It would be best to try a more recent source tree.
+I really wonder what could be going on here.....
 
-Then perhaps we'll be able to try and repro this problem, although I
-don't have that NIC so that might be hard...
+> Ah, interestingly if I load the NICs in the opposite order, they all load
+> properly (myri10ge, igb, r8169) :
 
->> [   82.642468] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
->> [   86.741124] igb: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control:
->> RX
->> [   86.763938] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
->> [   96.748110] ------------[ cut here ]------------
->> [   96.756653] WARNING: at
->> /home/shiv/kernel_builds/linux/kernel/net/sched/sch_generic.c:255
->> dev_watchdog+0x264/0
->> x284()
->> [   96.775062] NETDEV WATCHDOG: eth0 (igb): transmit queue 0 timed out
-...
->> [  259.740507] igb 0000:01:00.0 eth0: Reset adapter
->> [  263.738512] igb: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control:
->> RX
->> [  278.749107] igb 0000:01:00.0 eth0: Reset adapter
->> [  282.739504] igb: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control:
->> RX
->> ------------------------CONTINUES for
->> EVER---------------------------------------------------
+Load the NICs means insmod the driver ?
 
-Hmmm. This is a completely different problem than the first one or two
-in this thread, which were about an external abort while enabling the
-device's bus-master access... I assume there's no longer a problem with
-enabling bus-master?
+That is repeatable?
+
+Certainly spooky, and suggests a kernel bug.....
+
+It would be interesting to see what register values the driver is
+getting back, is it all 0xF? 
+
+I wonder if something is going wrong with the config write to enable
+the memory decoder. That is triggered by the driver...
+
+> So overall, it's a big Ack from my side considering the huge
+> improvements, let's retry tomorrow with the link up workaround/fix
+> to see if the detection issue is related. Great work!
+
+Seems very likely to me, if the modified patch from Neil fixes it for
+you too then we need to get that into mergable shape too!
+
+Regards,
+Jason
