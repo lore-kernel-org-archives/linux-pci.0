@@ -1,127 +1,304 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:18146 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964832AbaDJIeO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Apr 2014 04:34:14 -0400
-Message-ID: <53465781.4010904@linux.intel.com>
-Date: Thu, 10 Apr 2014 16:34:09 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Davidlohr Bueso <davidlohr@hp.com>, Baoquan He <bhe@redhat.com>
-CC: James Bottomley <James.Bottomley@hansenpartnership.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>
-Subject: Re: hpsa driver bug crack kernel down!
-References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com> <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net> <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike> <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net> <1397087425.9519.67.camel@dabdike> <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net> <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
-In-Reply-To: <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:37019 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933057AbaDJJZq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 05:25:46 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 10 Apr 2014 19:25:44 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	davem@davemloft.net
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Amir Vadai <amirv@mellanox.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Or Gerlitz <ogerlitz@mellanox.com>
+Subject: [PATCH V1 net] net/mlx4_core: Preserve pci_dev_data after __mlx4_remove_one()
+Date: Thu, 10 Apr 2014 17:25:24 +0800
+Message-Id: <1397121924-14813-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Baoquan,
-	Could you please help to give output of "lspci -vvvv"?
-Is device "hpsa 0000:03:00.0" a legacy PCI device(non-PCIe)?
-It may have relationship with IOMMU driver.
-Thanks!
-Gerry
+pci_match_id() just match the static pci_device_id, which may return NULL if
+someone binds the driver to a device manually using
+/sys/bus/pci/drivers/.../new_id.
 
-On 2014/4/10 12:03, Bjorn Helgaas wrote:
-> [+cc Joerg, iommu list]
-> 
-> On Wed, Apr 9, 2014 at 6:19 PM, Davidlohr Bueso <davidlohr@hp.com> wrote:
->> On Wed, 2014-04-09 at 16:50 -0700, James Bottomley wrote:
->>> On Wed, 2014-04-09 at 16:40 -0700, Davidlohr Bueso wrote:
->>>> On Wed, 2014-04-09 at 16:10 -0700, James Bottomley wrote:
->>>>> On Wed, 2014-04-09 at 16:08 -0700, James Bottomley wrote:
->>>>>> [+linux-scsi]
->>>>>> On Wed, 2014-04-09 at 15:49 -0700, Davidlohr Bueso wrote:
->>>>>>> On Wed, 2014-04-09 at 10:39 +0800, Baoquan He wrote:
->>>>>>>> Hi,
->>>>>>>>
->>>>>>>> The kernel is 3.14.0+ which is pulled just now.
->>>>>>>
->>>>>>> Cc'ing more people.
->>>>>>>
->>>>>>> While the hpsa driver appears to be involved in some way, I'm sure if
->>>>>>> this is a related issue, but as of today's pull I'm getting another
->>>>>>> problem that causes my DL980 not to come up.
->>>>>>>
->>>>>>> *Massive* amounts of:
->>>>>>>
->>>>>>> DMAR:[fault reason 02] Present bit in context entry is clear
->>>>>>> dmar: DRHD: handling fault status reg 602
->>>>>>> dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7f61e000
->>>>>>>
->>>>>>> Then:
->>>>>>>
->>>>>>> hpsa 0000:03:00.0: Controller lockup detected: 0xffff0000
->>>>>>> ...
->>>>>>> Workqueue: events hpsa_monitor_ctlr_worker [hpsa]
->>>>>>> ...
->>>>>>>
->>>>>>> Screenshot of the actual LOCKUP:
->>>>>>> http://stgolabs.net/hpsa-hard-lockup-3.14+.png
->>>>>>>
->>>>>>> While I haven't bisected, things worked fine until at least until commit
->>>>>>> 39de65aa2c3e (April 2nd).
->>>>>>>
->>>>>>> Any ideas?
->>>>>>
->>>>>> Well, it's either a DMA remapping issue or a hpsa one.  Your assertion
->>>>>> that everything worked fine until 39de65aa2c3e would tend to vindicate
->>>>>> hpsa,
->>>>
->>>> Hmm here you mean DMA, right?
->>>
->>> No, it vindicates the hpsa changes ... they don't seem to be causing
->>> problems until something goes wrong with dma remapping.
->>>
->>>>> because all the hpsa changes went in before that under
->>>>> Missing crucial info:
->>>>>
->>>>> commit 1a0b6abaea78f73d9bc0a2f6df2d9e4c917cade1
->>>>>
->>>>>> Merge: 3e75c6d b2bff6c
->>>>>> Author: Linus Torvalds <torvalds@linux-foundation.org>
->>>>>> Date:   Tue Apr 1 18:49:04 2014 -0700
->>>>>>
->>>>>>     Merge tag 'scsi-misc' of
->>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi
->>>>>>
->>>>>> can you revalidate that this commit works OK just to make sure?
->>>>
->>>> Ok so I don't see those DMA messages and system starts just fine. I'm
->>>> thinking perhaps something broke after the IO mmu stuff in commit
->>>> 3f583bc21977a608908b83d03ee2250426a5695c... could this be indirectly
->>>> causing the CPU stalls and just blame hpsa in the path as a side effect?
->>>>
->>>> /me goes out to try the commit.
->>>
->>> That's my guess.  The DMAR messages are DMA remapping issues caused in
->>> the IOMMU.  If I had to guess, I'd say the DMAR fault message is
->>> indicating the IOMMU is calling for a mapping address before it can
->>> satisfy the driver read request, which is causing the hang apparently in
->>> the hpsa driver.
->>>
->>> I've added linux-pci to the cc; I think they deal with iommu issues on
->>> x86.
->>
->> So that merge commit appears to be the culprit, I see both the DMA
->> messages and the lockup blaming hpsa...
-> 
-> My understanding so far (please correct me if I'm wrong):
-> 
-> 39de65aa2c3e OK ("Merge branch 'i2c/for-next'")
-> 1a0b6abaea78 OK ("Merge tag 'scsi-misc'")
-> 3f583bc21977 BAD ("Merge tag 'iommu-updates-v3.15'")
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+This patch wrap up a helper function __mlx4_remove_one() which does the tear
+down function but preserve the drv_data. Functions like
+mlx4_pci_err_detected() and mlx4_restart_one() will call this one with out
+releasing drvdata.
+
+Fixes: 97a5221 "net/mlx4_core: pass pci_device_id.driver_data to __mlx4_init_one during reset".
+
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Amir Vadai <amirv@mellanox.com>
+CC: Jack Morgenstein <jackm@dev.mellanox.co.il>
+CC: Or Gerlitz <ogerlitz@mellanox.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+
+---
+V0 --> V1:
+   1. zero the mlx4_priv at the end of __mlx4_remove_one
+   2. add a flag in mlx4_priv to mark it is released or not
+---
+ drivers/net/ethernet/mellanox/mlx4/main.c |  176 ++++++++++++++++-------------
+ drivers/net/ethernet/mellanox/mlx4/mlx4.h |    1 +
+ 2 files changed, 100 insertions(+), 77 deletions(-)
+
+diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+index aa54ef7..28661e4 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/main.c
++++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+@@ -2268,13 +2268,8 @@ static int __mlx4_init_one(struct pci_dev *pdev, int pci_dev_data)
+ 	/* Allow large DMA segments, up to the firmware limit of 1 GB */
+ 	dma_set_max_seg_size(&pdev->dev, 1024 * 1024 * 1024);
+ 
+-	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
+-	if (!priv) {
+-		err = -ENOMEM;
+-		goto err_release_regions;
+-	}
+-
+-	dev       = &priv->dev;
++	dev       = pci_get_drvdata(pdev);
++	priv      = mlx4_priv(dev);
+ 	dev->pdev = pdev;
+ 	INIT_LIST_HEAD(&priv->ctx_list);
+ 	spin_lock_init(&priv->ctx_lock);
+@@ -2452,9 +2447,7 @@ slave_start:
+ 
+ 	mlx4_sense_init(dev);
+ 	mlx4_start_sense(dev);
+-
+-	priv->pci_dev_data = pci_dev_data;
+-	pci_set_drvdata(pdev, dev);
++	priv->removed = 0;
+ 
+ 	return 0;
+ 
+@@ -2520,84 +2513,111 @@ err_disable_pdev:
+ 
+ static int mlx4_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
++	struct mlx4_priv *priv;
++	struct mlx4_dev *dev;
++
+ 	printk_once(KERN_INFO "%s", mlx4_version);
+ 
++	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
++	if (!priv) {
++		return -ENOMEM;
++	}
++
++	dev       = &priv->dev;
++	pci_set_drvdata(pdev, dev);
++	priv->pci_dev_data = id->driver_data;
++
+ 	return __mlx4_init_one(pdev, id->driver_data);
+ }
+ 
+-static void mlx4_remove_one(struct pci_dev *pdev)
++static void __mlx4_remove_one(struct pci_dev *pdev)
+ {
+ 	struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
+ 	struct mlx4_priv *priv = mlx4_priv(dev);
++	int		  pci_dev_data;
+ 	int p;
+ 
+-	if (dev) {
+-		/* in SRIOV it is not allowed to unload the pf's
+-		 * driver while there are alive vf's */
+-		if (mlx4_is_master(dev)) {
+-			if (mlx4_how_many_lives_vf(dev))
+-				printk(KERN_ERR "Removing PF when there are assigned VF's !!!\n");
+-		}
+-		mlx4_stop_sense(dev);
+-		mlx4_unregister_device(dev);
++	if (priv->removed)
++		return;
+ 
+-		for (p = 1; p <= dev->caps.num_ports; p++) {
+-			mlx4_cleanup_port_info(&priv->port[p]);
+-			mlx4_CLOSE_PORT(dev, p);
+-		}
++	pci_dev_data = priv->pci_dev_data;
+ 
+-		if (mlx4_is_master(dev))
+-			mlx4_free_resource_tracker(dev,
+-						   RES_TR_FREE_SLAVES_ONLY);
+-
+-		mlx4_cleanup_counters_table(dev);
+-		mlx4_cleanup_qp_table(dev);
+-		mlx4_cleanup_srq_table(dev);
+-		mlx4_cleanup_cq_table(dev);
+-		mlx4_cmd_use_polling(dev);
+-		mlx4_cleanup_eq_table(dev);
+-		mlx4_cleanup_mcg_table(dev);
+-		mlx4_cleanup_mr_table(dev);
+-		mlx4_cleanup_xrcd_table(dev);
+-		mlx4_cleanup_pd_table(dev);
++	/* in SRIOV it is not allowed to unload the pf's
++	 * driver while there are alive vf's */
++	if (mlx4_is_master(dev)) {
++		if (mlx4_how_many_lives_vf(dev))
++			printk(KERN_ERR "Removing PF when there are assigned VF's !!!\n");
++	}
++	mlx4_stop_sense(dev);
++	mlx4_unregister_device(dev);
+ 
+-		if (mlx4_is_master(dev))
+-			mlx4_free_resource_tracker(dev,
+-						   RES_TR_FREE_STRUCTS_ONLY);
+-
+-		iounmap(priv->kar);
+-		mlx4_uar_free(dev, &priv->driver_uar);
+-		mlx4_cleanup_uar_table(dev);
+-		if (!mlx4_is_slave(dev))
+-			mlx4_clear_steering(dev);
+-		mlx4_free_eq_table(dev);
+-		if (mlx4_is_master(dev))
+-			mlx4_multi_func_cleanup(dev);
+-		mlx4_close_hca(dev);
+-		if (mlx4_is_slave(dev))
+-			mlx4_multi_func_cleanup(dev);
+-		mlx4_cmd_cleanup(dev);
+-
+-		if (dev->flags & MLX4_FLAG_MSI_X)
+-			pci_disable_msix(pdev);
+-		if (dev->flags & MLX4_FLAG_SRIOV) {
+-			mlx4_warn(dev, "Disabling SR-IOV\n");
+-			pci_disable_sriov(pdev);
+-		}
++	for (p = 1; p <= dev->caps.num_ports; p++) {
++		mlx4_cleanup_port_info(&priv->port[p]);
++		mlx4_CLOSE_PORT(dev, p);
++	}
++
++	if (mlx4_is_master(dev))
++		mlx4_free_resource_tracker(dev,
++					   RES_TR_FREE_SLAVES_ONLY);
++
++	mlx4_cleanup_counters_table(dev);
++	mlx4_cleanup_qp_table(dev);
++	mlx4_cleanup_srq_table(dev);
++	mlx4_cleanup_cq_table(dev);
++	mlx4_cmd_use_polling(dev);
++	mlx4_cleanup_eq_table(dev);
++	mlx4_cleanup_mcg_table(dev);
++	mlx4_cleanup_mr_table(dev);
++	mlx4_cleanup_xrcd_table(dev);
++	mlx4_cleanup_pd_table(dev);
+ 
+-		if (!mlx4_is_slave(dev))
+-			mlx4_free_ownership(dev);
++	if (mlx4_is_master(dev))
++		mlx4_free_resource_tracker(dev,
++					   RES_TR_FREE_STRUCTS_ONLY);
+ 
+-		kfree(dev->caps.qp0_tunnel);
+-		kfree(dev->caps.qp0_proxy);
+-		kfree(dev->caps.qp1_tunnel);
+-		kfree(dev->caps.qp1_proxy);
++	iounmap(priv->kar);
++	mlx4_uar_free(dev, &priv->driver_uar);
++	mlx4_cleanup_uar_table(dev);
++	if (!mlx4_is_slave(dev))
++		mlx4_clear_steering(dev);
++	mlx4_free_eq_table(dev);
++	if (mlx4_is_master(dev))
++		mlx4_multi_func_cleanup(dev);
++	mlx4_close_hca(dev);
++	if (mlx4_is_slave(dev))
++		mlx4_multi_func_cleanup(dev);
++	mlx4_cmd_cleanup(dev);
+ 
+-		kfree(priv);
+-		pci_release_regions(pdev);
+-		pci_disable_device(pdev);
+-		pci_set_drvdata(pdev, NULL);
++	if (dev->flags & MLX4_FLAG_MSI_X)
++		pci_disable_msix(pdev);
++	if (dev->flags & MLX4_FLAG_SRIOV) {
++		mlx4_warn(dev, "Disabling SR-IOV\n");
++		pci_disable_sriov(pdev);
+ 	}
++
++	if (!mlx4_is_slave(dev))
++		mlx4_free_ownership(dev);
++
++	kfree(dev->caps.qp0_tunnel);
++	kfree(dev->caps.qp0_proxy);
++	kfree(dev->caps.qp1_tunnel);
++	kfree(dev->caps.qp1_proxy);
++	pci_release_regions(pdev);
++	pci_disable_device(pdev);
++
++	memset(priv, 0, sizeof(*priv));
++	priv->pci_dev_data = pci_dev_data;
++	priv->removed = 1;
++}
++
++static void mlx4_remove_one(struct pci_dev *pdev)
++{
++	struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
++	struct mlx4_priv *priv = mlx4_priv(dev);
++
++	__mlx4_remove_one(pdev);
++	kfree(priv);
++	pci_set_drvdata(pdev, NULL);
+ }
+ 
+ int mlx4_restart_one(struct pci_dev *pdev)
+@@ -2607,7 +2627,7 @@ int mlx4_restart_one(struct pci_dev *pdev)
+ 	int		  pci_dev_data;
+ 
+ 	pci_dev_data = priv->pci_dev_data;
+-	mlx4_remove_one(pdev);
++	__mlx4_remove_one(pdev);
+ 	return __mlx4_init_one(pdev, pci_dev_data);
+ }
+ 
+@@ -2662,7 +2682,7 @@ MODULE_DEVICE_TABLE(pci, mlx4_pci_table);
+ static pci_ers_result_t mlx4_pci_err_detected(struct pci_dev *pdev,
+ 					      pci_channel_state_t state)
+ {
+-	mlx4_remove_one(pdev);
++	__mlx4_remove_one(pdev);
+ 
+ 	return state == pci_channel_io_perm_failure ?
+ 		PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_NEED_RESET;
+@@ -2670,11 +2690,13 @@ static pci_ers_result_t mlx4_pci_err_detected(struct pci_dev *pdev,
+ 
+ static pci_ers_result_t mlx4_pci_slot_reset(struct pci_dev *pdev)
+ {
+-	const struct pci_device_id *id;
+-	int ret;
++	struct mlx4_dev	 *dev  = pci_get_drvdata(pdev);
++	struct mlx4_priv *priv = mlx4_priv(dev);
++	int		  pci_dev_data;
++	int               ret;
+ 
+-	id = pci_match_id(mlx4_pci_table, pdev);
+-	ret = __mlx4_init_one(pdev, id->driver_data);
++	pci_dev_data = priv->pci_dev_data;
++	ret = __mlx4_init_one(pdev, pci_dev_data);
+ 
+ 	return ret ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
+ }
+diff --git a/drivers/net/ethernet/mellanox/mlx4/mlx4.h b/drivers/net/ethernet/mellanox/mlx4/mlx4.h
+index 6b65f77..4037a10 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/mlx4.h
++++ b/drivers/net/ethernet/mellanox/mlx4/mlx4.h
+@@ -796,6 +796,7 @@ struct mlx4_priv {
+ 	spinlock_t		ctx_lock;
+ 
+ 	int			pci_dev_data;
++	int                     removed;
+ 
+ 	struct list_head        pgdir_list;
+ 	struct mutex            pgdir_mutex;
+-- 
+1.7.9.5
+
