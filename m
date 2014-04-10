@@ -1,114 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57229 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:48023 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751453AbaDAWcD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Apr 2014 18:32:03 -0400
-From: Bandan Das <bsd@redhat.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: rework new_id interface for known vendor/device values
-References: <jpgeh1gpwwo.fsf@nelium.bos.redhat.com>
-	<1396388707.476.188.camel@ul30vt.home>
-Date: Tue, 01 Apr 2014 18:00:08 -0400
-In-Reply-To: <1396388707.476.188.camel@ul30vt.home> (Alex Williamson's message
-	of "Tue, 01 Apr 2014 15:45:07 -0600")
-Message-ID: <jpgr45gk8wn.fsf@nelium.bos.redhat.com>
+	id S1758773AbaDJQ6L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Apr 2014 12:58:11 -0400
+Date: Thu, 10 Apr 2014 10:57:33 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Neil Greatorex <neil@fatboyfat.co.uk>, Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory =?iso-8859-1?Q?Cl=E9ment?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: Fixing PCIe issues on Armada XP
+Message-ID: <20140410165733.GB23104@obsidianresearch.com>
+References: <20140410181953.50ccfcc3@skate>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140410181953.50ccfcc3@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson <alex.williamson@redhat.com> writes:
+On Thu, Apr 10, 2014 at 06:19:53PM +0200, Thomas Petazzoni wrote:
 
-> On Tue, 2014-04-01 at 17:22 -0400, Bandan Das wrote:
->> While using the new_id interface, the user can unintentionally feed
->> incorrect values if the driver static table has a matching entry.
->> This is possible since only the device and vendor fields are
->> mandatory and the rest are optional. As a result, store_new_id
->> will fill in default values that are then passed on to the driver
->> and can have unintended consequences.
->> 
->> As an example, consider the ixgbe driver and the 82599EB network card :
->> echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
->> 
->> This will pass a driver_data value of 0 to the driver whereas
->> the index 0 in ixgbe actually points to a different set of card
->> operations.
->> 
->> This change returns an error if the user attempts to add a dynid for
->> a vendor/device combination for which a static entry already exists.
->> However, if the user intentionally wants a different set of values,
->> she must provide all the 7 fields and that will be accepted.
->> 
->> In KVM/device assignment scenario, the user might want 
->> to bind a device back to the host driver by writing to new_id
->> and trip on a possible null pointer dereference.
->> 
->> Signed-off-by: Bandan Das <bsd@redhat.com>
->> ---
->> v2:
->> 1. Return error if there is a matching static entry
->> and change commit message to reflect this behavior
->> 3. Fill in a pdev and call pci_match_id instead of creating
->> a new matching function
->> 4. Change commit message to reflect that libvirt does not
->> depend on this behavior
->> 
->>  drivers/pci/pci-driver.c | 23 ++++++++++++++++++++++-
->>  1 file changed, 22 insertions(+), 1 deletion(-)
->> 
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> index 25f0bc6..493514e 100644
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->> @@ -103,11 +103,12 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
->>  {
->>  	struct pci_driver *pdrv = to_pci_driver(driver);
->>  	const struct pci_device_id *ids = pdrv->id_table;
->> +	struct pci_dev *pdev;
->>  	__u32 vendor, device, subvendor=PCI_ANY_ID,
->>  		subdevice=PCI_ANY_ID, class=0, class_mask=0;
->>  	unsigned long driver_data=0;
->>  	int fields=0;
->> -	int retval;
->> +	int retval = 0;
->>  
->>  	fields = sscanf(buf, "%x %x %x %x %x %x %lx",
->>  			&vendor, &device, &subvendor, &subdevice,
->> @@ -115,6 +116,26 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
->>  	if (fields < 2)
->>  		return -EINVAL;
->>  
->> +	if (fields != 7) {
->
-> nit, pdev could be declared within this scope.
+> This is an e-mail that attempts to summarize the situation in terms of
+> Armada XP PCIe issues.
+> 
+> At
+> https://github.com/MISL-EBU-System-SW/mainline-public/commits/3.14/pci-debug,
+> I've pushed a branch based on top of v3.14 that contains:
 
-Ok, will spin a new one.
+mvebu_pcie_del_windows / mvebu_pcie_add_windows I wonder if these
+functions should be dropped into the mbus driver.. They are pretty
+generic.
 
->> +		pdev = kzalloc(sizeof(*pdev), GFP_KERNEL);
->> +		if (!pdev)
->> +			return -ENOMEM;
->> +
->> +		pdev->vendor = vendor;
->> +		pdev->device = device;
->> +		pdev->subsystem_vendor = subvendor;
->> +		pdev->subsystem_device = subdevice;
->> +		pdev->class = class;
->
-> Why not class_mask?
-pdev->class_mask isn't used anywhere.
+'bus: mvebu-mbus: Avoid setting an undefined window size' and
+'pci: mvebu: fix off-by-one in the computed size of the mbus windows'
+need to be swapped in order to maintain bisect-ability.
 
->> +
->> +		if (pci_match_id(pdrv->id_table, pdev))
->> +			retval = -EEXIST;
->> +
->> +		kfree(pdev);
->> +
->> +		if (retval)
->> +			return retval;
->> +	}
->> +
->>  	/* Only accept driver_data values that match an existing id_table
->>  	   entry */
->>  	if (ids) {
+> Can you test this stack of patches on your system and configuration, and
+> let me know if that works for you? 
+
+Continues to work as expected here, and I see the new error message:
+
+mvebu_mbus: cannot add window '4:e8', conflicts with another window
+mvebu-pcie pex.1: Could not create MBus window at 0xe0000000, size 0x100000: -22
+
+(this is due to the PEX window being in the DT mbus ranges already)
+
+Tested-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+
+> 
+>  * The link up problem. Unfortunately, I tried to reproduce it today,
+>    and didn't manage to. It's weird, because I'm sure I was able to
+>    produce it in the past, but I'm no longer able to, I don't know.
+>    Therefore, it's not easy for me to work on this topic. Neil, Jason,
+>    do you think this is a topic you could potentially handle?
+
+You said you had a system that sometimes required the udelay? Can you
+run Neil's patch and see if your system behaves the same? Specifically
+that the link eventually goes down after mvebu_pcie_set_local_dev_nr ?
+
+I couldn't find any case where the BDF leaks below the TLP layer, and
+the spec is very clear that the assigned BDF can change at run time,
+so I don't have an explanation for why the link reset is happening.
+Do you have a contact at Marvell that might shed some light on that
+behavior?
+
+>  * On my Armada XP DB board, if I plug 5 PCIe cards, the IGB card for
+>    some reason isn't able to read data from its non-volatile memory. So
+>    the window points to something, but it doesn't seem to patch what
+>    the igb driver expects. I've double checked the MBus windows, and
+>    they look correct. I haven't tested this PCIe configuration with the
+>    Marvell LSP though, so maybe I'm hitting an unrelated hardware
+>    problem or something.
+
+Certainly troubling.. And the IGB works if it is the only card in the
+system?
+
+That does sound like more mbus troubles.
+
+Regrads,
+Jason
