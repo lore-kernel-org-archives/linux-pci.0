@@ -1,140 +1,79 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 24 Apr 2014 15:31:06 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: Re: [PATCH] pci/pciehp: Allow polling/irq mode to be decided on a
- per-port basis
-Message-ID: <20140424213106.GI29593@google.com>
-References: <5339FF99.2050200@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5339FF99.2050200@gmail.com>
+In-Reply-To: <1397119587.19944.14.camel@shinybook.infradead.org>
+References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
+ <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net> <1397084904.9519.62.camel@dabdike>
+ <1397085044.9519.63.camel@dabdike> <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
+ <1397087425.9519.67.camel@dabdike> <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
+ <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
+ <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net> <20140410071535.GX13491@8bytes.org>
+ <1397119587.19944.14.camel@shinybook.infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 10 Apr 2014 09:14:59 -0600
+Message-ID: <CAErSpo6EORf02WS1UqP8EMWfHij7W2J5B3ZOoBT90txV85uZZw@mail.gmail.com>
+Subject: Re: hpsa driver bug crack kernel down!
+To: "Woodhouse, David" <david.woodhouse@intel.com>
+Cc: "joro@8bytes.org" <joro@8bytes.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"bhe@redhat.com" <bhe@redhat.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"James.Bottomley@hansenpartnership.com"
+	<James.Bottomley@hansenpartnership.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>,
+	"davidlohr@hp.com" <davidlohr@hp.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 31, 2014 at 04:51:53PM -0700, Rajat Jain wrote:
-> Today, there is a global pciehp_poll_mode module parameter using which
-> either _all_ the hot-pluggable ports are to use polling, or _all_ the
-> ports are to use interrupts.
-> 
-> In a system where a certain port has IRQ issues, today the only option
-> is to use the parameter that converts ALL the ports to use polling mode.
-> This is not good, and hence this patch intruduces a bit field that can
-> be set using a PCI quirk that indicates that polling should always be
-> used for this particular PCIe port. The remaining ports can still
-> hoose to continue to operate in whatever mode they wish to.
-> 
-> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+On Thu, Apr 10, 2014 at 2:46 AM, Woodhouse, David
+<david.woodhouse@intel.com> wrote:
 
-I'm willing to merge this, but I'd prefer to merge it along with a quirk
-that actually sets dev->hotplug_polling.  Otherwise it's dead code and I'll
-have no way to tell whether we need to keep it.
+>> > > >> > > > > DMAR:[fault reason 02] Present bit in context entry is clear
+>> > > >> > > > > dmar: DRHD: handling fault status reg 602
+>> > > >> > > > > dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7f61e000
+>
+> That "Present bit in context entry is clear" fault means that we have
+> not set up *any* mappings for this PCI device… on this IOMMU.
+>
+>> > Yes, specifically (finally done bisecting):
+>> >
+>> > commit 2e45528930388658603ea24d49cf52867b928d3e
+>> > Author: Jiang Liu <jiang.liu@linux.intel.com>
+>> > Date:   Wed Feb 19 14:07:36 2014 +0800
+>> >
+>> >     iommu/vt-d: Unify the way to process DMAR device scope array
+>
+> This commit is about how we decide which IOMMU a given PCI device is
+> attached to.
+>
+> Thus, my first guess would be that we are quite happily setting up the
+> requested DMA maps on the *wrong* IOMMU, and then taking faults when the
+> device actually tries to do DMA.
+>
+> However, I'm not 100% convinced of that. The fault address looks
+> suspiciously like a true physical address, not a virtual bus address of
+> the type that we'd normally allocate for a dma_map_* operation. Those
+> would start at 0xfffff000 and work downwards, typically.
+
+I like the "wrong IOMMU (or no IOMMU at all)" theory.  If we didn't
+connect the device with an IOMMU at all, that would explain the device
+DMAing directly to a physical address, wouldn't it?
+
+> Do you have 'iommu=pt' on the kernel command line? Can I see the full
+> dmesg as this system boots, and also a copy of the DMAR table?
+>
+> We should also rate-limit DMA faults, which would avoid the lockup
+> failure mode. Bjorn, what should an IOMMU driver *do* when it detects
+> that a device is creating an endless stream of DMA faults and isn't
+> aborting the transaction?
+
+You mentioned that POWER with EEH does something intelligent in this
+case, but I'm not familiar with that code.  We have AER support, which
+can result in resetting a device, but I think DMA faults are reported
+differently, and I don't think there's any nice existing way for PCI
+to deal with them.  Maybe there should be, though.
 
 Bjorn
-
-> ---
->  drivers/pci/hotplug/pciehp.h     |    1 +
->  drivers/pci/hotplug/pciehp_hpc.c |   16 ++++++++++------
->  include/linux/pci.h              |    1 +
->  3 files changed, 12 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index d208791..753a3b4 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -98,6 +98,7 @@ struct controller {
->  	unsigned int no_cmd_complete:1;
->  	unsigned int link_active_reporting:1;
->  	unsigned int notification_enabled:1;
-> +	unsigned int use_polling:1;	/* Always uses polling for this slot */
->  	unsigned int power_fault_detected;
->  };
->  
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index d7d058f..d210d23 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -82,7 +82,7 @@ static inline int pciehp_request_irq(struct controller *ctrl)
->  	int retval, irq = ctrl->pcie->irq;
->  
->  	/* Install interrupt polling timer. Start with 10 sec delay */
-> -	if (pciehp_poll_mode) {
-> +	if (ctrl->use_polling) {
->  		init_timer(&ctrl->poll_timer);
->  		start_int_poll_timer(ctrl, 10);
->  		return 0;
-> @@ -98,7 +98,7 @@ static inline int pciehp_request_irq(struct controller *ctrl)
->  
->  static inline void pciehp_free_irq(struct controller *ctrl)
->  {
-> -	if (pciehp_poll_mode)
-> +	if (ctrl->use_polling)
->  		del_timer_sync(&ctrl->poll_timer);
->  	else
->  		free_irq(ctrl->pcie->irq, ctrl);
-> @@ -131,7 +131,7 @@ static int pcie_poll_cmd(struct controller *ctrl)
->  
->  static void pcie_wait_cmd(struct controller *ctrl, int poll)
->  {
-> -	unsigned int msecs = pciehp_poll_mode ? 2500 : 1000;
-> +	unsigned int msecs = ctrl->use_polling ? 2500 : 1000;
->  	unsigned long timeout = msecs_to_jiffies(msecs);
->  	int rc;
->  
-> @@ -595,7 +595,7 @@ void pcie_enable_notification(struct controller *ctrl)
->  		cmd |= PCI_EXP_SLTCTL_PDCE;
->  	if (MRL_SENS(ctrl))
->  		cmd |= PCI_EXP_SLTCTL_MRLSCE;
-> -	if (!pciehp_poll_mode)
-> +	if (!ctrl->use_polling)
->  		cmd |= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE;
->  
->  	mask = (PCI_EXP_SLTCTL_PDCE | PCI_EXP_SLTCTL_ABPE |
-> @@ -642,14 +642,14 @@ int pciehp_reset_slot(struct slot *slot, int probe)
->  	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
->  
->  	pcie_write_cmd(ctrl, 0, ctrl_mask);
-> -	if (pciehp_poll_mode)
-> +	if (ctrl->use_polling)
->  		del_timer_sync(&ctrl->poll_timer);
->  
->  	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
->  
->  	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
->  	pcie_write_cmd(ctrl, ctrl_mask, ctrl_mask);
-> -	if (pciehp_poll_mode)
-> +	if (ctrl->use_polling)
->  		int_poll_timeout(ctrl->poll_timer.data);
->  
->  	return 0;
-> @@ -789,6 +789,10 @@ struct controller *pcie_init(struct pcie_device *dev)
->                  ctrl_dbg(ctrl, "Link Active Reporting supported\n");
->                  ctrl->link_active_reporting = 1;
->          }
-> +	if (pciehp_poll_mode || dev->port->hotplug_polling) {
-> +		ctrl_info(ctrl, "will use polling\n");
-> +		ctrl->use_polling = 1;
-> +	}
->  
->  	/* Clear all remaining event bits in Slot Status register */
->  	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index a13d682..b2ec72e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -336,6 +336,7 @@ struct pci_dev {
->  	unsigned int	is_virtfn:1;
->  	unsigned int	reset_fn:1;
->  	unsigned int    is_hotplug_bridge:1;
-> +	unsigned int    hotplug_polling:1; /* Port uses polling for hotplug */
->  	unsigned int    __aer_firmware_first_valid:1;
->  	unsigned int	__aer_firmware_first:1;
->  	unsigned int	broken_intx_masking:1;
-> -- 
-> 1.7.9.5
-> 
