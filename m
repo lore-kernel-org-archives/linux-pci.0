@@ -1,90 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:59647 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbaDYAg7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 20:36:59 -0400
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com,
-	jerry.hoemann@hp.com
-Subject: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy DMA/IO
-Date: Thu, 24 Apr 2014 18:36:30 -0600
-Message-Id: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for pci_host_bridge.
+Date: Thu, 10 Apr 2014 16:07:44 +0200
+Message-ID: <6144916.rD76jOL8sv@wuerfel>
+In-Reply-To: <CAErSpo6u7kr+QdnhAXBo20izg-DNHR4zHT+kRvq34whp68RJCQ@mail.gmail.com>
+References: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com> <4506772.YFSM2m1eaP@wuerfel> <CAErSpo6u7kr+QdnhAXBo20izg-DNHR4zHT+kRvq34whp68RJCQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following series implements a fix for:
-A kdump problem about DMA that has been discussed for a long time.
-That is, when a kernel panics and boots into the kdump kernel, DMA that was
-started by the panicked kernel is not stopped before the kdump kernel is booted;
-and the kdump kernel disables the IOMMU while this DMA continues.
-This causes the IOMMU to stop translating the DMA addresses as IOVAs and
-begin to treat them as physical memory addresses -- which causes the DMA to either:
-1. generate DMAR errors or
-2. generate PCI SERR errors or
-3. transfer data to or from incorrect areas of memory.
-Often this causes the dump to fail.
+On Thursday 10 April 2014 07:50:52 Bjorn Helgaas wrote:
+> On Thu, Apr 10, 2014 at 2:00 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Wednesday 09 April 2014 21:48:14 Bjorn Helgaas wrote:
+> >> On Wed, Apr 9, 2014 at 7:27 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+> >> > On Wed, Apr 09, 2014 at 08:02:41AM -0600, Bjorn Helgaas wrote:
+> >> >> >>   struct pci_host_bridge {
+> >> >> >>     int domain;
+> >> >> >>     int node;
+> >> >> >>     struct device *dev;
+> >> >> >>     struct pci_ops *ops;
+> >> >> >>     struct list_head resources;
+> >> >> >>     void *sysdata;
+> >> >> >>     struct pci_bus *bus;  /* filled in by core, not by arch */
+> >> >> >>     ... /* other existing contents managed by core */
+> >> >> >>   };
+> >> >> >>
+> >> >> >>   struct pci_bus *pci_scan_host_bridge(struct pci_host_bridge *bridge);
+> >> >> >
+> 
+> I'm not sure I'm following you; you mean the arch-specific sysdata
+> structure would contain a pointer to struct pci_host_bridge?
+> 
+> I have to admit that I'm not up on how other subsystems handle this
+> sort of abstraction.  Do you have any pointers to good examples that I
+> can study?
 
-This patch set modifies the behavior of the Intel iommu in the crashdump kernel: 
-1. to accept the iommu hardware in an active state,
-2. to leave the current translations in-place so that legacy DMA will continue
-   using its current buffers until the device drivers in the crashdump kernel
-   initialize and initialize their devices,
-3. to use different portions of the iova address ranges for the device drivers
-   in the crashdump kernel than the iova ranges that were in-use at the time
-   of the panic.  
+What I mean is like this:
 
-Advantages of this approach:
-1. All manipulation of the IO-device is done by the Linux device-driver
-   for that device.
-2. This approach behaves in a manner very similar to operation without an
-   active iommu.
-3. Any activity between the IO-device and its RMRR areas is handled by the
-   device-driver in the same manner as during a non-kdump boot.
-4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
-   This supports the practice of creating a special kdump kernel without
-   drivers for any devices that are not required for taking a crashdump. 
-5. Minimal code-changes among the existing mainline intel-iommu code.
+/* generic structure */
+struct pci_host_bridge {
+        int domain;
+        int node;
+        struct device *dev;
+        struct pci_ops *ops; 
+        struct list_head resources;
+        struct pci_bus *bus;  /* filled in by core, not by arch */
+        ... /* other existing contents managed by core */
+};
 
-Summary of changes in this patch set:
-1. Updated to a more current top-of-tree and merged the code with the
-   large number of changes that were recently taken-in to intel-iommu.c
-2. Returned to the structure of a patch-set
-3. Enabled the intel-iommu driver to consist of multiple *.c files
-   by moving many of the #defines, prototypes, and inline functions
-   into a new file: intel-iommu-private.h (First three patches implement
-   only this enhancement -- could be applied independent of the last 5)
-4. Moved the new "crashdump fix" code into a new file: intel-iommu-kdump.c 
-5. Removed the pr_debug constructs from the new code that implements the
-   "crashdump fix" -- making the code much cleaner and easier to read.
-6. Miscellaneous cleanups such as enum-values for return-codes.
-7. Simplified the code that retrieves the values needed to initialize a new
-   domain by using the linked-list of previously-collected values
-   instead of stepping back into the tree of translation tables.
+/* arm specific structure */
+struct pci_sys_data {
+        char            io_res_name[12];
+                                        /* Bridge swizzling                     */
+        u8              (*swizzle)(struct pci_dev *, u8 *);
+                                        /* IRQ mapping                          */
+        int             (*map_irq)(const struct pci_dev *, u8, u8);
+                                        /* Resource alignement requirements     */
+        void            (*add_bus)(struct pci_bus *bus);
+        void            (*remove_bus)(struct pci_bus *bus);
+        void            *private_data;  /* platform controller private data     */
 
-Bill Sumner (8):
-  Fix a few existing lines for checkpatch.pl
-  Consolidate lines for a new private header
-  Create intel-iommu-private.h
-  Update iommu_attach_domain() and its callers
-  Add Items needed for fixing crashdump to private header
-  Create intel-iommu-kdump.c
-  Add domain-id functions to intel-iommu-kdump.c
-  Add remaining changes to intel-iommu.c to fix crashdump
+	/* not a pointer: */
+	struct pci_host_bridge bridge;
+};
+static inline struct pci_sys_data *to_pci_sys_data(struct pci_host_bridge *bridge)
+{
+	return container_of(bridge, struct pci_sys_data, bridge);
+}
 
- drivers/iommu/Makefile              |   2 +-
- drivers/iommu/intel-iommu-kdump.c   | 629 ++++++++++++++++++++++++++++++++++++
- drivers/iommu/intel-iommu-private.h | 457 ++++++++++++++++++++++++++
- drivers/iommu/intel-iommu.c         | 512 ++++++++---------------------
- 4 files changed, 1229 insertions(+), 371 deletions(-)
- create mode 100644 drivers/iommu/intel-iommu-kdump.c
- create mode 100644 drivers/iommu/intel-iommu-private.h
+/* arm specific, driver specific structure */
+struct tegra_pcie {
+        void __iomem *pads;
+        void __iomem *afi;
 
--- 
-Bill Sumner <bill.sumner@hp.com>
+        struct clk *pex_clk;
+        struct clk *afi_clk;
+        struct clk *pll_e;
+        struct clk *cml_clk;
 
+        struct tegra_msi msi;
+
+        struct list_head ports;
+        unsigned int num_ports;
+
+	struct pci_sys_data sysdata;
+};
+static inline struct tegra_pcie *to_tegra_pcie(struct pci_sys_data *sysdata)
+{
+	return container_of(sysdata, struct tegra_pcie, sysdata);
+}
+
+This mirrors how we treat devices: a pci_device has an embedded device,
+and so on, in other subsystems we can have multiple layers.
+
+In this example, the tegra pcie driver then allocates its own tegra_pcie
+structure, fills out the fields it needs, and registers it with the
+ARM architecture code, passing just the pci_sys_data pointer. That function
+in turn passes a pointer to the embedded pci_host_bridge down to the
+generic code. Ideally we should try to eliminate the architecture specific
+portion here, but that is a later step.
+
+	Arnd
