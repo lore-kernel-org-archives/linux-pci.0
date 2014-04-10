@@ -1,122 +1,240 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:48705 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752184AbaD1CO2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Apr 2014 22:14:28 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Lucas Stach' <l.stach@pengutronix.de>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	'Pratyush ANAND' <pratyush.anand@st.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	'Sean Cross' <xobs@kosagi.com>, 'Marek Vasut' <marex@denx.de>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Shawn Guo' <shawn.guo@linaro.org>,
-	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
-	'Mark Rutland' <mark.rutland@arm.com>,
-	'Pawel Moll' <pawel.moll@arm.com>,
-	'Rob Herring' <robh+dt@kernel.org>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Tim Harvey' <tharvey@gateworks.com>, kernel@pengutronix.de,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
- <1396025579-14344-8-git-send-email-l.stach@pengutronix.de>
-In-reply-to: <1396025579-14344-8-git-send-email-l.stach@pengutronix.de>
-Subject: Re: [PATCH 7/8] PCI: designware: make MSI isr shared irq aware
-Date: Mon, 28 Apr 2014 11:14:25 +0900
-Message-id: <004601cf6287$93cf7f30$bb6e7d90$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:42765 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753612AbaDJUxv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 16:53:51 -0400
+Received: by mail-ie0-f176.google.com with SMTP id rd18so4366632iec.7
+        for <linux-pci@vger.kernel.org>; Thu, 10 Apr 2014 13:53:51 -0700 (PDT)
+MIME-Version: 1.0
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 10 Apr 2014 14:53:30 -0600
+Message-ID: <CAErSpo725yFakFa4v7zJk5UQ4evQgobn=kOtn6zqcYg=j3S_JQ@mail.gmail.com>
+Subject: hpsa NULL pointer in hpsa_enter_performant_mode()
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: Davidlohr Bueso <davidlohr@hp.com>,
+	James Bottomley <James.Bottomley@hansenpartnership.com>,
+	Baoquan He <bhe@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, March 29, 2014 1:53 AM, Lucas Stach wrote:
-> 
-> On i.MX6 the host controller MSI irq is shared
-> with PCI legacy INTD. Make sure we don't bail too
-> early from the irq handler.
-> 
-> The issue is fairly theoretical as it would require
-> a system setup with a PCIe switch where one connected
-> device is using legacy INTD and another one using
-> MSI, but better fix it now.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+[subject changed]
 
-(+cc Mohit KUMAR DCG, Pratyush ANAND)
+On Thu, Apr 10, 2014 at 2:45 PM,  <scameron@beardog.cce.hp.com> wrote:
+> On Wed, Apr 09, 2014 at 11:32:37PM -0700, Davidlohr Bueso wrote:
+>> On Wed, 2014-04-09 at 22:03 -0600, Bjorn Helgaas wrote:
+>> > [+cc Joerg, iommu list]
+>> >
+>> > On Wed, Apr 9, 2014 at 6:19 PM, Davidlohr Bueso <davidlohr@hp.com> wrote:
+>> > > On Wed, 2014-04-09 at 16:50 -0700, James Bottomley wrote:
+>> > >> On Wed, 2014-04-09 at 16:40 -0700, Davidlohr Bueso wrote:
+>> > >> > On Wed, 2014-04-09 at 16:10 -0700, James Bottomley wrote:
+>> > >> > > On Wed, 2014-04-09 at 16:08 -0700, James Bottomley wrote:
+>> > >> > > > [+linux-scsi]
+>> > >> > > > On Wed, 2014-04-09 at 15:49 -0700, Davidlohr Bueso wrote:
+>> > >> > > > > On Wed, 2014-04-09 at 10:39 +0800, Baoquan He wrote:
+>> > >> > > > > > Hi,
+>> > >> > > > > >
+>> > >> > > > > > The kernel is 3.14.0+ which is pulled just now.
+>> > >> > > > >
+>> > >> > > > > Cc'ing more people.
+>> > >> > > > >
+>> > >> > > > > While the hpsa driver appears to be involved in some way, I'm sure if
+>> > >> > > > > this is a related issue, but as of today's pull I'm getting another
+>> > >> > > > > problem that causes my DL980 not to come up.
+>> > >> > > > >
+>> > >> > > > > *Massive* amounts of:
+>> > >> > > > >
+>> > >> > > > > DMAR:[fault reason 02] Present bit in context entry is clear
+>> > >> > > > > dmar: DRHD: handling fault status reg 602
+>> > >> > > > > dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7f61e000
+>> > >> > > > >
+>> > >> > > > > Then:
+>> > >> > > > >
+>> > >> > > > > hpsa 0000:03:00.0: Controller lockup detected: 0xffff0000
+>> > >> > > > > ...
+>> > >> > > > > Workqueue: events hpsa_monitor_ctlr_worker [hpsa]
+>> > >> > > > > ...
+>> > >> > > > >
+>> > >> > > > > Screenshot of the actual LOCKUP:
+>> > >> > > > > http://stgolabs.net/hpsa-hard-lockup-3.14+.png
+>> > >> > > > >
+>> > >> > > > > While I haven't bisected, things worked fine until at least until commit
+>> > >> > > > > 39de65aa2c3e (April 2nd).
+>> > >> > > > >
+>> > >> > > > > Any ideas?
+>> > >> > > >
+>> > >> > > > Well, it's either a DMA remapping issue or a hpsa one.  Your assertion
+>> > >> > > > that everything worked fine until 39de65aa2c3e would tend to vindicate
+>> > >> > > > hpsa,
+>> > >> >
+>> > >> > Hmm here you mean DMA, right?
+>> > >>
+>> > >> No, it vindicates the hpsa changes ... they don't seem to be causing
+>> > >> problems until something goes wrong with dma remapping.
+>> > >>
+>> > >> > > because all the hpsa changes went in before that under
+>> > >> > > Missing crucial info:
+>> > >> > >
+>> > >> > > commit 1a0b6abaea78f73d9bc0a2f6df2d9e4c917cade1
+>> > >> > >
+>> > >> > > > Merge: 3e75c6d b2bff6c
+>> > >> > > > Author: Linus Torvalds <torvalds@linux-foundation.org>
+>> > >> > > > Date:   Tue Apr 1 18:49:04 2014 -0700
+>> > >> > > >
+>> > >> > > >     Merge tag 'scsi-misc' of
+>> > >> > > > git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi
+>> > >> > > >
+>> > >> > > > can you revalidate that this commit works OK just to make sure?
+>> > >> >
+>> > >> > Ok so I don't see those DMA messages and system starts just fine. I'm
+>> > >> > thinking perhaps something broke after the IO mmu stuff in commit
+>> > >> > 3f583bc21977a608908b83d03ee2250426a5695c... could this be indirectly
+>> > >> > causing the CPU stalls and just blame hpsa in the path as a side effect?
+>> > >> >
+>> > >> > /me goes out to try the commit.
+>> > >>
+>> > >> That's my guess.  The DMAR messages are DMA remapping issues caused in
+>> > >> the IOMMU.  If I had to guess, I'd say the DMAR fault message is
+>> > >> indicating the IOMMU is calling for a mapping address before it can
+>> > >> satisfy the driver read request, which is causing the hang apparently in
+>> > >> the hpsa driver.
+>> > >>
+>> > >> I've added linux-pci to the cc; I think they deal with iommu issues on
+>> > >> x86.
+>> > >
+>> > > So that merge commit appears to be the culprit, I see both the DMA
+>> > > messages and the lockup blaming hpsa...
+>> >
+>> > My understanding so far (please correct me if I'm wrong):
+>> >
+>> > 39de65aa2c3e OK ("Merge branch 'i2c/for-next'")
+>> > 1a0b6abaea78 OK ("Merge tag 'scsi-misc'")
+>
+> ^^^ this one, 1a0b6abaea78, did not work for me, crashing in
+> hpsa_enter_performant mode() which was surprsing to me as I am
+> pretty sure I tried on this very same machine I'm using now
+> (DL360p with P420, P430 and P420i) with 3.14-rc-something plus
+> all the hpsa patches that I thought were merged in.
 
-Acked-by: Jingoo Han <jg1.han@samsung.com>
+I think we have to completely different issues mixed together in this
+thread, so I changed the subject here.
 
-Best regards,
-Jingoo Han
+The reports above for 39de65aa2c3e, 1a0b6abaea78, were for a DMA fault.
 
-> ---
->  drivers/pci/host/pci-exynos.c      | 4 +---
->  drivers/pci/host/pcie-designware.c | 6 +++++-
->  drivers/pci/host/pcie-designware.h | 2 +-
->  3 files changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index 3de6bfbbe8e9..b616d34922d8 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -415,9 +415,7 @@ static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
->  {
->  	struct pcie_port *pp = arg;
-> 
-> -	dw_handle_msi_irq(pp);
-> -
-> -	return IRQ_HANDLED;
-> +	return dw_handle_msi_irq(pp);
->  }
-> 
->  static void exynos_pcie_msi_init(struct pcie_port *pp)
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 98c118e04dba..cbce9b04b13d 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -156,15 +156,17 @@ static struct irq_chip dw_msi_irq_chip = {
->  };
-> 
->  /* MSI int handler */
-> -void dw_handle_msi_irq(struct pcie_port *pp)
-> +irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->  {
->  	unsigned long val;
->  	int i, pos, irq;
-> +	irqreturn_t ret = IRQ_NONE;
-> 
->  	for (i = 0; i < MAX_MSI_CTRLS; i++) {
->  		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
->  				(u32 *)&val);
->  		if (val) {
-> +			ret = IRQ_HANDLED;
->  			pos = 0;
->  			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
->  				irq = irq_find_mapping(pp->irq_domain,
-> @@ -177,6 +179,8 @@ void dw_handle_msi_irq(struct pcie_port *pp)
->  			}
->  		}
->  	}
-> +
-> +	return ret;
->  }
-> 
->  void dw_pcie_msi_init(struct pcie_port *pp)
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index 3063b3594d88..a169d22d517e 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -68,7 +68,7 @@ struct pcie_host_ops {
-> 
->  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
->  int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
-> -void dw_handle_msi_irq(struct pcie_port *pp);
-> +irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
->  void dw_pcie_msi_init(struct pcie_port *pp);
->  int dw_pcie_link_up(struct pcie_port *pp);
->  void dw_pcie_setup_rc(struct pcie_port *pp);
-> --
-> 1.9.0
+The original message from Baoquan He was for a NULL pointer
+dereference in hpsa_enter_performant_mode(), which is very likely the
+same problem you're seeing, Steve.
 
+I changed the subject to "hpsa NULL pointer in
+hpsa_enter_performant_mode()", so hopefully we can chase the NULL
+pointer issue there and leave the original, already long thread, for
+the DMA fault issue.
+
+> But now I am seeing:
+>
+>  [<ffffffffa0002bd0>] hpsa_enter_performant_mode+0x4c0/0x540 [hpsa]
+> RSP: 0018:ffff88042c515a78  EFLAGS: 00010297
+> RAX: 0000000000000000 RBX: ffff88042c650000 RCX: 0000000000000004
+> RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000000
+> RBP: ffff88042c515b48 R08: 0000000000000000 R09: 000000008af03cc0
+> R10: 0000000000000000 R11: 0000000000000001 R12: ffff88042c515a98
+> R13: 0000000060000104 R14: ffff88042c515ad8 R15: ffffffffa0001630
+> FS:  00007f86f7a38700(0000) GS:ffff88043f560000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> usb 1-1.6: new low-speed USB device number 3 using ehci-pci
+> CR2: 0000000000000000 CR3: 000000042c4c3000 CR4: 00000000000407e0
+> Stack:
+>  0000000000008024 ffffffffa00000c0 ffffffffa0000be0 0000000000000000
+>  0000000600000005 0000000800000007 0000000a00000009 0000000c0000000b
+>  0000000e0000000d 000000100000000f 0000001200000011 0000000400000013
+> Call Trace:
+>  [<ffffffffa00000c0>] ? SA5_fifo_full+0x20/0x20 [hpsa]
+>  [<ffffffffa0000be0>] ? SA5_ioaccel_mode1_completed+0xd0/0xd0 [hpsa]
+>  [<ffffffffa000aab6>] hpsa_put_ctlr_into_performant_mode+0x186/0x320 [hpsa]
+>  [<ffffffffa0005132>] ? hpsa_allocate_sg_chain_blocks+0xa2/0xd0 [hpsa]
+>  [<ffffffffa000b08b>] hpsa_init_one+0x43b/0x7d0 [hpsa]
+>  [<ffffffff812bc34c>] local_pci_probe+0x4c/0xb0
+>  [<ffffffff812bc439>] pci_call_probe+0x89/0xb0
+>  [<ffffffff812bb074>] ? pci_match_device+0xc4/0xd0
+>  [<ffffffff812bc719>] pci_device_probe+0x79/0xa0
+>  [<ffffffff8138edd2>] ? driver_sysfs_add+0x82/0xb0
+>  [<ffffffff8138f03c>] really_probe+0x6c/0x320
+> usb 1-1.6: New USB device found, idVendor=0624, idProduct=0341
+> usb 1-1.6: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+> usb 1-1.6: Product: HP 336047-B21
+> usb 1-1.6: Manufacturer: Avocent
+> input: Avocent HP 336047-B21 as
+> /devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.64
+> hid-generic 0003:0624:0341.0001: input,hidraw0: USB HID v1.10 Keyboard
+> [Avocent0
+> input: Avocent HP 336047-B21 as
+> /devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1.65
+> hid-generic 0003:0624:0341.0002: input,hidraw1: USB HID v1.10 Mouse [Avocent
+> HP1
+>  [<ffffffff8138f337>] driver_probe_device+0x47/0xa0
+>  [<ffffffff8138f43b>] __driver_attach+0xab/0xb0
+>  [<ffffffff8138f390>] ? driver_probe_device+0xa0/0xa0
+>  [<ffffffff8138f390>] ? driver_probe_device+0xa0/0xa0
+>  [<ffffffff8138d1d4>] bus_for_each_dev+0x94/0xb0
+>  [<ffffffff8138ecfe>] driver_attach+0x1e/0x20
+>  [<ffffffff8138e6e0>] bus_add_driver+0x1b0/0x250
+> usb 2-1.3: new high-speed USB device number 3 using ehci-pci
+>  [<ffffffffa0016000>] ? 0xffffffffa0015fff
+>  [<ffffffff8138f9d4>] driver_register+0x64/0xf0
+>  [<ffffffffa0016000>] ? 0xffffffffa0015fff
+>  [<ffffffff812bc80c>] __pci_register_driver+0x4c/0x50
+>  [<ffffffffa001601e>] hpsa_init+0x1e/0x20 [hpsa]
+>  [<ffffffff810002a2>] do_one_initcall+0xd2/0x180
+>  [<ffffffff810771a5>] ? __blocking_notifier_call_chain+0x65/0x80
+>  [<ffffffff810c8154>] do_init_module+0x44/0x1b0
+>  [<ffffffff810ca7c8>] load_module+0x5a8/0x6f0
+>  [<ffffffff810c7a30>] ? __unlink_module+0x30/0x30
+>  [<ffffffff81164c35>] ? __vmalloc_node+0x35/0x40
+>  [<ffffffff810c7120>] ? module_sect_show+0x30/0x30
+>  [<ffffffff810caa96>] SyS_init_module+0x96/0xc0
+>  [<ffffffff81590d52>] system_call_fastpath+0x16/0x1b
+> Code: 89 45 8c 78 2c 31 f6 8d 4e 04 4c 89 e2 31 c0 0f 1f 40 00 39 0a 7d 0c usb
+> 0
+> usb 2-1.3: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+> hub 2-1.3:1.0: USB hub found
+> hub 2-1.3:1.0: 2 ports detected
+>
+> 83 c0 01 48 83 c2 04 83 f8 10 75 f0 48 63 d6 83 c6 01 39 f7 <41> 89 04 90 7d
+> d6
+> RIP  [<ffffffffa0002bd0>] hpsa_enter_performant_mode+0x4c0/0x540 [hpsa]
+>  RSP <ffff88042c515a78>
+> CR2: 0000000000000000
+> ---[ end trace ab56f106199a4971 ]---
+>
+>
+>> > 3f583bc21977 BAD ("Merge tag 'iommu-updates-v3.15'")
+>>
+>> Yes, specifically (finally done bisecting):
+>>
+>> commit 2e45528930388658603ea24d49cf52867b928d3e
+>> Author: Jiang Liu <jiang.liu@linux.intel.com>
+>> Date:   Wed Feb 19 14:07:36 2014 +0800
+>>
+>>     iommu/vt-d: Unify the way to process DMAR device scope array
+>>
+>>     Now we have a PCI bus notification based mechanism to update DMAR
+>>     device scope array, we could extend the mechanism to support boot
+>>     time initialization too, which will help to unify and simplify
+>>     the implementation.
+>>
+>>     Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>     Signed-off-by: Joerg Roedel <joro@8bytes.org>
+>
+> My git bisect appears to be converging on something else, something
+> within the hpsa patches that I sent up recently, unfortunately for
+> me.  Will let you all know when it converges.
+>
+> -- steve
+>
