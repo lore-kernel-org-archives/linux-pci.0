@@ -1,65 +1,147 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:40559 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161030AbaDJSCZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 14:02:25 -0400
-Date: Thu, 10 Apr 2014 20:02:22 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Willy Tarreau <w@1wt.eu>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Neil Greatorex <neil@fatboyfat.co.uk>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: Fixing PCIe issues on Armada XP
-Message-ID: <20140410200222.27cab16e@skate>
-In-Reply-To: <20140410171000.GF25890@1wt.eu>
-References: <20140410181953.50ccfcc3@skate>
-	<20140410171000.GF25890@1wt.eu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 10 Apr 2014 15:53:04 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140410145304.GS985@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
+ <4506772.YFSM2m1eaP@wuerfel>
+ <CAErSpo6u7kr+QdnhAXBo20izg-DNHR4zHT+kRvq34whp68RJCQ@mail.gmail.com>
+ <6144916.rD76jOL8sv@wuerfel>
+MIME-Version: 1.0
+In-Reply-To: <6144916.rD76jOL8sv@wuerfel>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Willy Tarreau,
-
-On Thu, 10 Apr 2014 19:10:00 +0200, Willy Tarreau wrote:
-
-> Thanks for putting all this online.
+On Thu, Apr 10, 2014 at 03:07:44PM +0100, Arnd Bergmann wrote:
+> On Thursday 10 April 2014 07:50:52 Bjorn Helgaas wrote:
+> > On Thu, Apr 10, 2014 at 2:00 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > > On Wednesday 09 April 2014 21:48:14 Bjorn Helgaas wrote:
+> > >> On Wed, Apr 9, 2014 at 7:27 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+> > >> > On Wed, Apr 09, 2014 at 08:02:41AM -0600, Bjorn Helgaas wrote:
+> > >> >> >>   struct pci_host_bridge {
+> > >> >> >>     int domain;
+> > >> >> >>     int node;
+> > >> >> >>     struct device *dev;
+> > >> >> >>     struct pci_ops *ops;
+> > >> >> >>     struct list_head resources;
+> > >> >> >>     void *sysdata;
+> > >> >> >>     struct pci_bus *bus;  /* filled in by core, not by arch */
+> > >> >> >>     ... /* other existing contents managed by core */
+> > >> >> >>   };
+> > >> >> >>
+> > >> >> >>   struct pci_bus *pci_scan_host_bridge(struct pci_host_bridge *bridge);
+> > >> >> >
+> > 
+> > I'm not sure I'm following you; you mean the arch-specific sysdata
+> > structure would contain a pointer to struct pci_host_bridge?
+> > 
+> > I have to admit that I'm not up on how other subsystems handle this
+> > sort of abstraction.  Do you have any pointers to good examples that I
+> > can study?
 > 
-> I have a minor comment below :
+> What I mean is like this:
 > 
-> >  * 2 patches on the pci-mvebu driver. One from Willy Tarreau to fix the
-> >    off by one on the sizes. And another one from me which splits the
-> >    PCI BAR into power-of-two sized chunks, in order to create valid
-> >    MBus windows.
+> /* generic structure */
+> struct pci_host_bridge {
+>         int domain;
+>         int node;
+>         struct device *dev;
+>         struct pci_ops *ops; 
+>         struct list_head resources;
+>         struct pci_bus *bus;  /* filled in by core, not by arch */
+>         ... /* other existing contents managed by core */
+> };
 > 
-> As suggested by Jason, this one should be merged before his that's just
-> before, to ensure that it will not cause a regression.
-
-Ok, will change this, thanks.
-
-> > I've tested this with my IGB card which needs a 9 MB
-> >    BAR (so 8 MB + 1 MB needed), and I've also faked the code to code to
-> >    simulate a 11.5 MB BAR (so 8 + 2 + 1 + 0.5 MB), and it worked. I
-> >    also checked that if we have an error when creating one of the
-> >    windows, then all the previous windows needed for the current BAR
-> >    are properly removed.
+> /* arm specific structure */
+> struct pci_sys_data {
+>         char            io_res_name[12];
+>                                         /* Bridge swizzling                     */
+>         u8              (*swizzle)(struct pci_dev *, u8 *);
+>                                         /* IRQ mapping                          */
+>         int             (*map_irq)(const struct pci_dev *, u8, u8);
+>                                         /* Resource alignement requirements     */
+>         void            (*add_bus)(struct pci_bus *bus);
+>         void            (*remove_bus)(struct pci_bus *bus);
+>         void            *private_data;  /* platform controller private data     */
 > 
-> Really cool, I'm going to test that on a few PCIe cards and will report
-> the results here. How can we check the number of mbus windows in use ?
+> 	/* not a pointer: */
+> 	struct pci_host_bridge bridge;
+> };
+> static inline struct pci_sys_data *to_pci_sys_data(struct pci_host_bridge *bridge)
+> {
+> 	return container_of(bridge, struct pci_sys_data, bridge);
+> }
+> 
+> /* arm specific, driver specific structure */
+> struct tegra_pcie {
+>         void __iomem *pads;
+>         void __iomem *afi;
+> 
+>         struct clk *pex_clk;
+>         struct clk *afi_clk;
+>         struct clk *pll_e;
+>         struct clk *cml_clk;
+> 
+>         struct tegra_msi msi;
+> 
+>         struct list_head ports;
+>         unsigned int num_ports;
+> 
+> 	struct pci_sys_data sysdata;
+> };
+> static inline struct tegra_pcie *to_tegra_pcie(struct pci_sys_data *sysdata)
+> {
+> 	return container_of(sysdata, struct tegra_pcie, sysdata);
+> }
+> 
+> This mirrors how we treat devices: a pci_device has an embedded device,
+> and so on, in other subsystems we can have multiple layers.
+> 
+> In this example, the tegra pcie driver then allocates its own tegra_pcie
+> structure, fills out the fields it needs, and registers it with the
+> ARM architecture code, passing just the pci_sys_data pointer. That function
+> in turn passes a pointer to the embedded pci_host_bridge down to the
+> generic code. Ideally we should try to eliminate the architecture specific
+> portion here, but that is a later step.
 
-# cat /sys/kernel/debug/mvebu-mbus/devices
+So Arnd seems to agree with me: we should try to get out of architecture specific
+pci_sys_data and link the host bridge driver straight into the PCI core. The
+core then can call into arch code via pcibios_*() functions.
 
-Thomas
+Arnd, am I reading correctly into what you are saying?
+
+Liviu
+
+> 
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
