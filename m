@@ -1,74 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:52440 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021AbaDDPk1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 11:40:27 -0400
-Received: by mail-pa0-f49.google.com with SMTP id lj1so3617650pab.36
-        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 08:40:26 -0700 (PDT)
-Date: Fri, 4 Apr 2014 09:40:23 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Ira W. Snyder" <iws@ovro.caltech.edu>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Coverity CIDs 138749, 138750: cnb20le_res() unintended sign
- extension
-Message-ID: <20140404154023.GA5367@google.com>
-References: <CAErSpo7uQtRXcxC-9oAS8PJ6Vi3H8Z1fVB2wQR-uxGjyoLDkCQ@mail.gmail.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:46164 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964944AbaDJSUl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 14:20:41 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hi2so11184116wib.5
+        for <linux-pci@vger.kernel.org>; Thu, 10 Apr 2014 11:20:39 -0700 (PDT)
+Date: Thu, 10 Apr 2014 19:20:37 +0100 (BST)
+From: Neil Greatorex <neil@fatboyfat.co.uk>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	=?ISO-8859-15?Q?Gregory_Cl=E9ment?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: Fixing PCIe issues on Armada XP
+In-Reply-To: <20140410181953.50ccfcc3@skate>
+Message-ID: <alpine.DEB.2.10.1404101849270.1578@vroombuntu>
+References: <20140410181953.50ccfcc3@skate>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7uQtRXcxC-9oAS8PJ6Vi3H8Z1fVB2wQR-uxGjyoLDkCQ@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 03, 2014 at 02:56:26PM -0600, Bjorn Helgaas wrote:
-> Coverity complains about unintended sign extension in cnb20le_res() in
-> arch/x86/pci/broadcom_bus.c here:
-> 
-> 60        word1 = read_pci_config_16(bus, slot, func, 0xc4);
->  61        word2 = read_pci_config_16(bus, slot, func, 0xc6);
->  62        if (word1 != word2) {
-> 
-> CID 138749 (#1 of 2): Unintended sign extension (SIGN_EXTENSION)
-> sign_extension: Suspicious implicit sign extension: word1 with type
-> unsigned short (16 bits, unsigned) is promoted in (word1 << 16) | 0 to
-> type int (32 bits, signed), then sign-extended to type unsigned long
-> long (64 bits, unsigned). If (word1 << 16) | 0 is greater than
-> 0x7FFFFFFF, the upper bits of the result will all be 1.
->  63                res.start = (word1 << 16) | 0x0000;
->     CID 138750: Unintended sign extension (SIGN_EXTENSION) [select issue]
+Thomas,
 
-I propose the following patch for this.  Unless there's objection, I'll
-queue this for v3.16.
+On Thu, 10 Apr 2014, Thomas Petazzoni wrote:
 
+> Can you test this stack of patches on your system and configuration, and
+> let me know if that works for you? Of course, please do not include any
+> other PCI related fix: the goal is to be aware of *all* the issues, and
+> fix them in mainline.
 
-x86/PCI: Fix Broadcom CNB20LE unintended sign extension
+I have tested this branch on my Mirabox. I still get the link up problem 
+but if I work around that (see below) the igb driver works flawlessly.
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Tested-by: Neil Greatorex <neil@fatboyfat.co.uk>
 
-In the expression "word1 << 16", word1 starts as u16, but is promoted to
-a signed int, then sign-extended to resource_size_t, which is probably
-not what was intended.  Cast to resource_size_t to avoid the sign
-extension.
+> Remaining issues:
+>
+> * The link up problem. Unfortunately, I tried to reproduce it today,
+>   and didn't manage to. It's weird, because I'm sure I was able to
+>   produce it in the past, but I'm no longer able to, I don't know.
+>   Therefore, it's not easy for me to work on this topic. Neil, Jason,
+>   do you think this is a topic you could potentially handle?
 
-Found by Coverity (CID 138749, 138750).
+Do you have earlyprintk enabled? I've found that if I have earlyprintk in 
+my bootargs / command line then I don't get the issue. I assume that is 
+because of timing, but it could be something else?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/pci/broadcom_bus.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/arch/x86/pci/broadcom_bus.c b/arch/x86/pci/broadcom_bus.c
-index 614392ced7d6..bb461cfd01ab 100644
---- a/arch/x86/pci/broadcom_bus.c
-+++ b/arch/x86/pci/broadcom_bus.c
-@@ -60,8 +60,8 @@ static void __init cnb20le_res(u8 bus, u8 slot, u8 func)
- 	word1 = read_pci_config_16(bus, slot, func, 0xc4);
- 	word2 = read_pci_config_16(bus, slot, func, 0xc6);
- 	if (word1 != word2) {
--		res.start = (word1 << 16) | 0x0000;
--		res.end   = (word2 << 16) | 0xffff;
-+		res.start = ((resource_size_t) word1 << 16) | 0x0000;
-+		res.end   = ((resource_size_t) word2 << 16) | 0xffff;
- 		res.flags = IORESOURCE_MEM | IORESOURCE_PREFETCH;
- 		update_res(info, res.start, res.end, res.flags, 0);
- 	}
+Cheers,
+Neil
