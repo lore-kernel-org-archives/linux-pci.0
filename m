@@ -1,274 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:43947 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422791AbaDKAZz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 20:25:55 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Daniel J Blueman <daniel@quora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v2 13/14] thunderbolt: Read switch uid from EEPROM
-Date: Fri, 11 Apr 2014 02:25:00 +0200
-Message-Id: <1397175901-4023-14-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
-References: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
+Received: from 8bytes.org ([85.214.48.195]:52612 "EHLO mail.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965099AbaDJHPk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Apr 2014 03:15:40 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.8bytes.org (Postfix) with SMTP id 6FAB312B0F3
+	for <linux-pci@vger.kernel.org>; Thu, 10 Apr 2014 09:15:38 +0200 (CEST)
+Date: Thu, 10 Apr 2014 09:15:35 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Davidlohr Bueso <davidlohr@hp.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	James Bottomley <James.Bottomley@hansenpartnership.com>,
+	Baoquan He <bhe@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	David Woodhouse <David.Woodhouse@intel.com>
+Subject: Re: hpsa driver bug crack kernel down!
+Message-ID: <20140410071535.GX13491@8bytes.org>
+References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
+ <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
+ <1397084904.9519.62.camel@dabdike>
+ <1397085044.9519.63.camel@dabdike>
+ <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
+ <1397087425.9519.67.camel@dabdike>
+ <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
+ <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
+ <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add eeprom access code and read the uid during switch initialization.
-The UID will be used to check device identity after suspend.
+[+ David, VT-d maintainer ]
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/Makefile |   2 +-
- drivers/thunderbolt/eeprom.c | 189 +++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/switch.c |   5 ++
- drivers/thunderbolt/tb.h     |   3 +
- 4 files changed, 198 insertions(+), 1 deletion(-)
- create mode 100644 drivers/thunderbolt/eeprom.c
+Jiang, David, can you please have a look into this issue?
 
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 0122ca6..5d1053c 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
- obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
--thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o
-+thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
- 
-diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
-new file mode 100644
-index 0000000..d1ae1e4
---- /dev/null
-+++ b/drivers/thunderbolt/eeprom.c
-@@ -0,0 +1,189 @@
-+/*
-+ * Thunderbolt Cactus Ridge driver - eeprom access
-+ *
-+ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-+ */
-+
-+#include "tb.h"
-+
-+/**
-+ * tb_eeprom_ctl_write() - write control word
-+ */
-+static int tb_eeprom_ctl_write(struct tb_switch *sw, struct tb_eeprom_ctl *ctl)
-+{
-+	return tb_sw_write(sw, ctl, TB_CFG_SWITCH, sw->cap_plug_events + 4, 1);
-+}
-+
-+/**
-+ * tb_eeprom_ctl_write() - read control word
-+ */
-+static int tb_eeprom_ctl_read(struct tb_switch *sw, struct tb_eeprom_ctl *ctl)
-+{
-+	return tb_sw_read(sw, ctl, TB_CFG_SWITCH, sw->cap_plug_events + 4, 1);
-+}
-+
-+enum tb_eeprom_transfer {
-+	TB_EEPROM_IN,
-+	TB_EEPROM_OUT,
-+};
-+
-+/**
-+ * tb_eeprom_active - enable rom access
-+ *
-+ * WARNING: Always disable access after usage. Otherwise the controller will
-+ * fail to reprobe.
-+ */
-+static int tb_eeprom_active(struct tb_switch *sw, bool enable)
-+{
-+	struct tb_eeprom_ctl ctl;
-+	int res = tb_eeprom_ctl_read(sw, &ctl);
-+	if (res)
-+		return res;
-+	if (enable) {
-+		ctl.access_high = 1;
-+		res = tb_eeprom_ctl_write(sw, &ctl);
-+		if (res)
-+			return res;
-+		ctl.access_low = 0;
-+		return tb_eeprom_ctl_write(sw, &ctl);
-+	} else {
-+		ctl.access_low = 1;
-+		res = tb_eeprom_ctl_write(sw, &ctl);
-+		if (res)
-+			return res;
-+		ctl.access_high = 0;
-+		return tb_eeprom_ctl_write(sw, &ctl);
-+	}
-+}
-+
-+/**
-+ * tb_eeprom_transfer - transfer one bit
-+ *
-+ * If TB_EEPROM_IN is passed, then the bit can be retrieved from ctl->data_in.
-+ * IF TB_EEPROM_OUT is passed, then ctl->data_out will be written.
-+ */
-+static int tb_eeprom_transfer(struct tb_switch *sw, struct tb_eeprom_ctl *ctl,
-+			      enum tb_eeprom_transfer direction)
-+{
-+	int res;
-+	if (direction == TB_EEPROM_OUT) {
-+		res = tb_eeprom_ctl_write(sw, ctl);
-+		if (res)
-+			return res;
-+	}
-+	ctl->clock = 1;
-+	res = tb_eeprom_ctl_write(sw, ctl);
-+	if (res)
-+		return res;
-+	if (direction == TB_EEPROM_IN) {
-+		res = tb_eeprom_ctl_read(sw, ctl);
-+		if (res)
-+			return res;
-+	}
-+	ctl->clock = 0;
-+	return tb_eeprom_ctl_write(sw, ctl);
-+}
-+
-+/**
-+ * tb_eeprom_out - write one byte to the bus
-+ */
-+static int tb_eeprom_out(struct tb_switch *sw, u8 val)
-+{
-+	struct tb_eeprom_ctl ctl;
-+	int i;
-+	int res = tb_eeprom_ctl_read(sw, &ctl);
-+	if (res)
-+		return res;
-+	for (i = 0; i < 8; i++) {
-+		ctl.data_out = val & 0x80;
-+		res = tb_eeprom_transfer(sw, &ctl, TB_EEPROM_OUT);
-+		if (res)
-+			return res;
-+		val <<= 1;
-+	}
-+	return 0;
-+}
-+
-+/**
-+ * tb_eeprom_in - read one byte from the bus
-+ */
-+static int tb_eeprom_in(struct tb_switch *sw, u8 *val)
-+{
-+	struct tb_eeprom_ctl ctl;
-+	int i;
-+	int res = tb_eeprom_ctl_read(sw, &ctl);
-+	if (res)
-+		return res;
-+	*val = 0;
-+	for (i = 0; i < 8; i++) {
-+		*val <<= 1;
-+		res = tb_eeprom_transfer(sw, &ctl, TB_EEPROM_IN);
-+		if (res)
-+			return res;
-+		*val |= ctl.data_in;
-+	}
-+	return 0;
-+}
-+
-+/**
-+ * tb_eeprom_read_n - read count bytes from offset into val
-+ */
-+static int tb_eeprom_read_n(struct tb_switch *sw, u16 offset, u8 *val,
-+		size_t count)
-+{
-+	int i, res;
-+	res = tb_eeprom_active(sw, true);
-+	if (res)
-+		return res;
-+	res = tb_eeprom_out(sw, 3);
-+	if (res)
-+		return res;
-+	res = tb_eeprom_out(sw, offset >> 8);
-+	if (res)
-+		return res;
-+	res = tb_eeprom_out(sw, offset);
-+	if (res)
-+		return res;
-+	for (i = 0; i < count; i++) {
-+		res = tb_eeprom_in(sw, val + i);
-+		if (res)
-+			return res;
-+	}
-+	return tb_eeprom_active(sw, false);
-+}
-+
-+int tb_eeprom_read_uid(struct tb_switch *sw, u64 *uid)
-+{
-+	u8 data[9];
-+	struct tb_cap_plug_events cap;
-+	int res;
-+	if (!sw->cap_plug_events) {
-+		tb_sw_warn(sw, "no TB_CAP_PLUG_EVENTS, cannot read eeprom\n");
-+		return -ENOSYS;
-+	}
-+	res = tb_sw_read(sw, &cap, TB_CFG_SWITCH, sw->cap_plug_events,
-+			     sizeof(cap) / 4);
-+	if (res)
-+		return res;
-+	if (!cap.eeprom_ctl.present || cap.eeprom_ctl.not_present) {
-+		tb_sw_warn(sw, "no NVM\n");
-+		return -ENOSYS;
-+	}
-+
-+	if (cap.drom_offset > 0xffff) {
-+		tb_sw_warn(sw, "drom offset is larger than 0xffff: %#x\n",
-+				cap.drom_offset);
-+		return -ENXIO;
-+	}
-+
-+	/* read uid */
-+	res = tb_eeprom_read_n(sw, cap.drom_offset, data, 9);
-+	if (res)
-+		return res;
-+	/* TODO: check checksum in data[0] */
-+	*uid = *(u64 *)(data+1);
-+	return 0;
-+}
-+
-+
-+
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index a6968cc..eef5f1c 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -370,6 +370,11 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
- 	}
- 	sw->cap_plug_events = cap;
- 
-+	if (tb_eeprom_read_uid(sw, &sw->uid))
-+		tb_sw_warn(sw, "could not read uid from eeprom\n");
-+	else
-+		tb_sw_info(sw, "uid: %#llx\n", sw->uid);
-+
- 	if (tb_plug_events_active(sw, true))
- 		goto err;
- 
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 455e75f..05c6ff5 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -19,6 +19,7 @@ struct tb_switch {
- 	struct tb_regs_switch_header config;
- 	struct tb_port *ports;
- 	struct tb *tb;
-+	u64 uid;
- 	int cap_plug_events; /* offset, zero if not found */
- 	bool is_unplugged; /* unplugged, will go away */
- };
-@@ -231,6 +232,8 @@ int tb_path_activate(struct tb_path *path);
- void tb_path_deactivate(struct tb_path *path);
- bool tb_path_is_invalid(struct tb_path *path);
- 
-+int tb_eeprom_read_uid(struct tb_switch *sw, u64 *uid);
-+
- 
- static inline int tb_route_length(u64 route)
- {
--- 
-1.9.2
+Thanks,
+
+	Joerg
+
+On Wed, Apr 09, 2014 at 11:32:37PM -0700, Davidlohr Bueso wrote:
+> On Wed, 2014-04-09 at 22:03 -0600, Bjorn Helgaas wrote:
+> > [+cc Joerg, iommu list]
+> > 
+> > On Wed, Apr 9, 2014 at 6:19 PM, Davidlohr Bueso <davidlohr@hp.com> wrote:
+> > > On Wed, 2014-04-09 at 16:50 -0700, James Bottomley wrote:
+> > >> On Wed, 2014-04-09 at 16:40 -0700, Davidlohr Bueso wrote:
+> > >> > On Wed, 2014-04-09 at 16:10 -0700, James Bottomley wrote:
+> > >> > > On Wed, 2014-04-09 at 16:08 -0700, James Bottomley wrote:
+> > >> > > > [+linux-scsi]
+> > >> > > > On Wed, 2014-04-09 at 15:49 -0700, Davidlohr Bueso wrote:
+> > >> > > > > On Wed, 2014-04-09 at 10:39 +0800, Baoquan He wrote:
+> > >> > > > > > Hi,
+> > >> > > > > >
+> > >> > > > > > The kernel is 3.14.0+ which is pulled just now.
+> > >> > > > >
+> > >> > > > > Cc'ing more people.
+> > >> > > > >
+> > >> > > > > While the hpsa driver appears to be involved in some way, I'm sure if
+> > >> > > > > this is a related issue, but as of today's pull I'm getting another
+> > >> > > > > problem that causes my DL980 not to come up.
+> > >> > > > >
+> > >> > > > > *Massive* amounts of:
+> > >> > > > >
+> > >> > > > > DMAR:[fault reason 02] Present bit in context entry is clear
+> > >> > > > > dmar: DRHD: handling fault status reg 602
+> > >> > > > > dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7f61e000
+> > >> > > > >
+> > >> > > > > Then:
+> > >> > > > >
+> > >> > > > > hpsa 0000:03:00.0: Controller lockup detected: 0xffff0000
+> > >> > > > > ...
+> > >> > > > > Workqueue: events hpsa_monitor_ctlr_worker [hpsa]
+> > >> > > > > ...
+> > >> > > > >
+> > >> > > > > Screenshot of the actual LOCKUP:
+> > >> > > > > http://stgolabs.net/hpsa-hard-lockup-3.14+.png
+> > >> > > > >
+> > >> > > > > While I haven't bisected, things worked fine until at least until commit
+> > >> > > > > 39de65aa2c3e (April 2nd).
+> > >> > > > >
+> > >> > > > > Any ideas?
+> > >> > > >
+> > >> > > > Well, it's either a DMA remapping issue or a hpsa one.  Your assertion
+> > >> > > > that everything worked fine until 39de65aa2c3e would tend to vindicate
+> > >> > > > hpsa,
+> > >> >
+> > >> > Hmm here you mean DMA, right?
+> > >>
+> > >> No, it vindicates the hpsa changes ... they don't seem to be causing
+> > >> problems until something goes wrong with dma remapping.
+> > >>
+> > >> > > because all the hpsa changes went in before that under
+> > >> > > Missing crucial info:
+> > >> > >
+> > >> > > commit 1a0b6abaea78f73d9bc0a2f6df2d9e4c917cade1
+> > >> > >
+> > >> > > > Merge: 3e75c6d b2bff6c
+> > >> > > > Author: Linus Torvalds <torvalds@linux-foundation.org>
+> > >> > > > Date:   Tue Apr 1 18:49:04 2014 -0700
+> > >> > > >
+> > >> > > >     Merge tag 'scsi-misc' of
+> > >> > > > git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi
+> > >> > > >
+> > >> > > > can you revalidate that this commit works OK just to make sure?
+> > >> >
+> > >> > Ok so I don't see those DMA messages and system starts just fine. I'm
+> > >> > thinking perhaps something broke after the IO mmu stuff in commit
+> > >> > 3f583bc21977a608908b83d03ee2250426a5695c... could this be indirectly
+> > >> > causing the CPU stalls and just blame hpsa in the path as a side effect?
+> > >> >
+> > >> > /me goes out to try the commit.
+> > >>
+> > >> That's my guess.  The DMAR messages are DMA remapping issues caused in
+> > >> the IOMMU.  If I had to guess, I'd say the DMAR fault message is
+> > >> indicating the IOMMU is calling for a mapping address before it can
+> > >> satisfy the driver read request, which is causing the hang apparently in
+> > >> the hpsa driver.
+> > >>
+> > >> I've added linux-pci to the cc; I think they deal with iommu issues on
+> > >> x86.
+> > >
+> > > So that merge commit appears to be the culprit, I see both the DMA
+> > > messages and the lockup blaming hpsa...
+> > 
+> > My understanding so far (please correct me if I'm wrong):
+> > 
+> > 39de65aa2c3e OK ("Merge branch 'i2c/for-next'")
+> > 1a0b6abaea78 OK ("Merge tag 'scsi-misc'")
+> > 3f583bc21977 BAD ("Merge tag 'iommu-updates-v3.15'")
+> 
+> Yes, specifically (finally done bisecting):
+> 
+> commit 2e45528930388658603ea24d49cf52867b928d3e
+> Author: Jiang Liu <jiang.liu@linux.intel.com>
+> Date:   Wed Feb 19 14:07:36 2014 +0800
+> 
+>     iommu/vt-d: Unify the way to process DMAR device scope array
+>     
+>     Now we have a PCI bus notification based mechanism to update DMAR
+>     device scope array, we could extend the mechanism to support boot
+>     time initialization too, which will help to unify and simplify
+>     the implementation.
+>     
+>     Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>     Signed-off-by: Joerg Roedel <joro@8bytes.org>
+> 
 
