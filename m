@@ -1,52 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:42366 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754283AbaD3Jve (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 05:51:34 -0400
-Date: Wed, 30 Apr 2014 11:51:29 +0200
-From: Robert Richter <rric@kernel.org>
-To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Cc: Myron Stowe <myron.stowe@gmail.com>,
-	Borislav Petkov <bp@alien8.de>, Borislav Petkov <bp@suse.de>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>, kim.naru@amd.com,
-	Daniel J Blueman <daniel@numascale.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86 <x86@kernel.org>,
-	Steffen Persvold <sp@numascale.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range
- capabilities
-Message-ID: <20140430095129.GP32718@rric.localhost>
-References: <20140426091031.GA10166@pd.tnic>
- <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
- <20140428214036.GA32143@pd.tnic>
- <20140429073309.GE10997@alberich>
- <20140429102013.GA4726@pd.tnic>
- <535FC269.2000808@amd.com>
- <20140429191454.GB4726@pd.tnic>
- <CAL-B5D2Z7AvJZ3G2JLY6ZOZBRe4DGgO27RVJ_HHotGrnKL7Y1A@mail.gmail.com>
- <20140430070042.GN32718@rric.localhost>
- <5360AB3D.3020401@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5360AB3D.3020401@amd.com>
+Received: from top.free-electrons.com ([176.31.233.9]:40559 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161030AbaDJSCZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 14:02:25 -0400
+Date: Thu, 10 Apr 2014 20:02:22 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Willy Tarreau <w@1wt.eu>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Neil Greatorex <neil@fatboyfat.co.uk>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: Fixing PCIe issues on Armada XP
+Message-ID: <20140410200222.27cab16e@skate>
+In-Reply-To: <20140410171000.GF25890@1wt.eu>
+References: <20140410181953.50ccfcc3@skate>
+	<20140410171000.GF25890@1wt.eu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30.04.14 02:50:21, Suravee Suthikulpanit wrote:
-> Actually, if ECS is needed by IBS, then wouldn't this still be needed for
-> every family since 10h and later (except family11h).
+Dear Willy Tarreau,
 
-Yes, but you have stated that pci mmconfig should work on families >
-10h. Thus, ECS would work there out-of-the-box (at least after the
-system brought pci up, ibs is initialized after pci setup).
+On Thu, 10 Apr 2014 19:10:00 +0200, Willy Tarreau wrote:
 
--Robert
+> Thanks for putting all this online.
+> 
+> I have a minor comment below :
+> 
+> >  * 2 patches on the pci-mvebu driver. One from Willy Tarreau to fix the
+> >    off by one on the sizes. And another one from me which splits the
+> >    PCI BAR into power-of-two sized chunks, in order to create valid
+> >    MBus windows.
+> 
+> As suggested by Jason, this one should be merged before his that's just
+> before, to ensure that it will not cause a regression.
+
+Ok, will change this, thanks.
+
+> > I've tested this with my IGB card which needs a 9 MB
+> >    BAR (so 8 MB + 1 MB needed), and I've also faked the code to code to
+> >    simulate a 11.5 MB BAR (so 8 + 2 + 1 + 0.5 MB), and it worked. I
+> >    also checked that if we have an error when creating one of the
+> >    windows, then all the previous windows needed for the current BAR
+> >    are properly removed.
+> 
+> Really cool, I'm going to test that on a few PCIe cards and will report
+> the results here. How can we check the number of mbus windows in use ?
+
+# cat /sys/kernel/debug/mvebu-mbus/devices
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
