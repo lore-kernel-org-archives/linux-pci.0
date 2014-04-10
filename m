@@ -1,375 +1,191 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 14/22] iommu/vt-d: enhance intel_irq_remapping driver to support DMAR unit hotplug
-Date: Tue, 22 Apr 2014 15:07:25 +0800
-Message-Id: <1398150453-28141-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:40549 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030285AbaDJSB5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 14:01:57 -0400
+Date: Thu, 10 Apr 2014 20:01:53 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Neil Greatorex <neil@fatboyfat.co.uk>, Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: Fixing PCIe issues on Armada XP
+Message-ID: <20140410200153.46669e0c@skate>
+In-Reply-To: <20140410165733.GB23104@obsidianresearch.com>
+References: <20140410181953.50ccfcc3@skate>
+	<20140410165733.GB23104@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement required callback functions for intel_irq_remapping driver
-to support DMAR unit hotplug.
+Dear Jason Gunthorpe,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |  222 ++++++++++++++++++++++++++---------
- 1 file changed, 169 insertions(+), 53 deletions(-)
+On Thu, 10 Apr 2014 10:57:33 -0600, Jason Gunthorpe wrote:
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index aa309a8e4d3a..9f1c86566452 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -36,7 +36,6 @@ struct hpet_scope {
- 
- static struct ioapic_scope ir_ioapic[MAX_IO_APICS];
- static struct hpet_scope ir_hpet[MAX_HPET_TBS];
--static int ir_ioapic_num, ir_hpet_num;
- 
- /*
-  * Lock ordering:
-@@ -320,7 +319,7 @@ static int set_ioapic_sid(struct irte *irte, int apic)
- 
- 	down_read(&dmar_global_lock);
- 	for (i = 0; i < MAX_IO_APICS; i++) {
--		if (ir_ioapic[i].id == apic) {
-+		if (ir_ioapic[i].iommu && ir_ioapic[i].id == apic) {
- 			sid = (ir_ioapic[i].bus << 8) | ir_ioapic[i].devfn;
- 			break;
- 		}
-@@ -347,7 +346,7 @@ static int set_hpet_sid(struct irte *irte, u8 id)
- 
- 	down_read(&dmar_global_lock);
- 	for (i = 0; i < MAX_HPET_TBS; i++) {
--		if (ir_hpet[i].id == id) {
-+		if (ir_hpet[i].iommu && ir_hpet[i].id == id) {
- 			sid = (ir_hpet[i].bus << 8) | ir_hpet[i].devfn;
- 			break;
- 		}
-@@ -446,17 +445,17 @@ static void iommu_set_irq_remapping(struct intel_iommu *iommu, int mode)
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
- }
- 
--
--static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
-+static int intel_setup_irq_remapping(struct intel_iommu *iommu)
- {
- 	struct ir_table *ir_table;
- 	struct page *pages;
- 	unsigned long *bitmap;
- 
--	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
--					     GFP_ATOMIC);
-+	if (iommu->ir_table)
-+		return 0;
- 
--	if (!iommu->ir_table)
-+	ir_table = kzalloc(sizeof(struct ir_table), GFP_ATOMIC);
-+	if (!ir_table)
- 		return -ENOMEM;
- 
- 	pages = alloc_pages_node(iommu->node, GFP_ATOMIC | __GFP_ZERO,
-@@ -465,7 +464,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
- 	if (!pages) {
- 		pr_err("IR%d: failed to allocate pages of order %d\n",
- 		       iommu->seq_id, INTR_REMAP_PAGE_ORDER);
--		kfree(iommu->ir_table);
-+		kfree(ir_table);
- 		return -ENOMEM;
- 	}
- 
-@@ -480,11 +479,22 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
- 
- 	ir_table->base = page_address(pages);
- 	ir_table->bitmap = bitmap;
-+	iommu->ir_table = ir_table;
- 
--	iommu_set_irq_remapping(iommu, mode);
- 	return 0;
- }
- 
-+static void intel_teardown_irq_remapping(struct intel_iommu *iommu)
-+{
-+	if (iommu && iommu->ir_table) {
-+		free_pages((unsigned long)iommu->ir_table->base,
-+			   INTR_REMAP_PAGE_ORDER);
-+		kfree(iommu->ir_table->bitmap);
-+		kfree(iommu->ir_table);
-+		iommu->ir_table = NULL;
-+	}
-+}
-+
- /*
-  * Disable Interrupt Remapping.
-  */
-@@ -639,9 +649,10 @@ static int __init intel_enable_irq_remapping(void)
- 		if (!ecap_ir_support(iommu->ecap))
- 			continue;
- 
--		if (intel_setup_irq_remapping(iommu, eim))
-+		if (intel_setup_irq_remapping(iommu))
- 			goto error;
- 
-+		iommu_set_irq_remapping(iommu, eim);
- 		setup = 1;
- 	}
- 
-@@ -672,12 +683,13 @@ error:
- 	return -1;
- }
- 
--static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
--				      struct intel_iommu *iommu)
-+static int ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
-+				   struct intel_iommu *iommu,
-+				   struct acpi_dmar_hardware_unit *drhd)
- {
- 	struct acpi_dmar_pci_path *path;
- 	u8 bus;
--	int count;
-+	int count, free = -1;
- 
- 	bus = scope->bus;
- 	path = (struct acpi_dmar_pci_path *)(scope + 1);
-@@ -693,19 +705,36 @@ static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
- 					   PCI_SECONDARY_BUS);
- 		path++;
- 	}
--	ir_hpet[ir_hpet_num].bus   = bus;
--	ir_hpet[ir_hpet_num].devfn = PCI_DEVFN(path->device, path->function);
--	ir_hpet[ir_hpet_num].iommu = iommu;
--	ir_hpet[ir_hpet_num].id    = scope->enumeration_id;
--	ir_hpet_num++;
-+
-+	for (count = 0; count < MAX_HPET_TBS; count++) {
-+		if (ir_hpet[count].iommu == iommu &&
-+		    ir_hpet[count].id == scope->enumeration_id)
-+			return 0;
-+		else if (ir_hpet[count].iommu == NULL && free == -1)
-+			free = count;
-+	}
-+	if (free == -1) {
-+		pr_warn("Exceeded Max HPET blocks\n");
-+		return -ENOSPC;
-+	}
-+
-+	ir_hpet[free].iommu = iommu;
-+	ir_hpet[free].id    = scope->enumeration_id;
-+	ir_hpet[free].bus   = bus;
-+	ir_hpet[free].devfn = PCI_DEVFN(path->device, path->function);
-+	pr_info("HPET id %d under DRHD base 0x%Lx\n",
-+		scope->enumeration_id, drhd->address);
-+
-+	return 0;
- }
- 
--static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
--				      struct intel_iommu *iommu)
-+static int ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
-+				     struct intel_iommu *iommu,
-+				     struct acpi_dmar_hardware_unit *drhd)
- {
- 	struct acpi_dmar_pci_path *path;
- 	u8 bus;
--	int count;
-+	int count, free = -1;
- 
- 	bus = scope->bus;
- 	path = (struct acpi_dmar_pci_path *)(scope + 1);
-@@ -722,54 +751,63 @@ static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
- 		path++;
- 	}
- 
--	ir_ioapic[ir_ioapic_num].bus   = bus;
--	ir_ioapic[ir_ioapic_num].devfn = PCI_DEVFN(path->device, path->function);
--	ir_ioapic[ir_ioapic_num].iommu = iommu;
--	ir_ioapic[ir_ioapic_num].id    = scope->enumeration_id;
--	ir_ioapic_num++;
-+	for (count = 0; count < MAX_IO_APICS; count++) {
-+		if (ir_ioapic[count].iommu == iommu &&
-+		    ir_ioapic[count].id == scope->enumeration_id)
-+			return 0;
-+		else if (ir_ioapic[count].iommu == NULL && free == -1)
-+			free = count;
-+	}
-+	if (free == -1) {
-+		pr_warn("Exceeded Max IO APICS\n");
-+		return -ENOSPC;
-+	}
-+
-+	ir_ioapic[free].bus   = bus;
-+	ir_ioapic[free].devfn = PCI_DEVFN(path->device, path->function);
-+	ir_ioapic[free].iommu = iommu;
-+	ir_ioapic[free].id    = scope->enumeration_id;
-+	pr_info("IOAPIC id %d under DRHD base  0x%Lx IOMMU %d\n",
-+		scope->enumeration_id, drhd->address, iommu->seq_id);
-+
-+	return 0;
- }
- 
- static int ir_parse_ioapic_hpet_scope(struct acpi_dmar_header *header,
- 				      struct intel_iommu *iommu)
- {
-+	int ret = 0;
- 	struct acpi_dmar_hardware_unit *drhd;
- 	struct acpi_dmar_device_scope *scope;
- 	void *start, *end;
- 
- 	drhd = (struct acpi_dmar_hardware_unit *)header;
--
- 	start = (void *)(drhd + 1);
- 	end = ((void *)drhd) + header->length;
- 
--	while (start < end) {
-+	while (start < end && ret == 0) {
- 		scope = start;
--		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC) {
--			if (ir_ioapic_num == MAX_IO_APICS) {
--				printk(KERN_WARNING "Exceeded Max IO APICS\n");
--				return -1;
--			}
--
--			printk(KERN_INFO "IOAPIC id %d under DRHD base "
--			       " 0x%Lx IOMMU %d\n", scope->enumeration_id,
--			       drhd->address, iommu->seq_id);
-+		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC)
-+			ret = ir_parse_one_ioapic_scope(scope, iommu, drhd);
-+		else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET)
-+			ret = ir_parse_one_hpet_scope(scope, iommu, drhd);
-+		start += scope->length;
-+	}
- 
--			ir_parse_one_ioapic_scope(scope, iommu);
--		} else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET) {
--			if (ir_hpet_num == MAX_HPET_TBS) {
--				printk(KERN_WARNING "Exceeded Max HPET blocks\n");
--				return -1;
--			}
-+	return ret;
-+}
- 
--			printk(KERN_INFO "HPET id %d under DRHD base"
--			       " 0x%Lx\n", scope->enumeration_id,
--			       drhd->address);
-+static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
-+{
-+	int i;
- 
--			ir_parse_one_hpet_scope(scope, iommu);
--		}
--		start += scope->length;
--	}
-+	for (i = 0; i < MAX_HPET_TBS; i++)
-+		if (ir_hpet[i].iommu == iommu)
-+			ir_hpet[i].iommu = NULL;
- 
--	return 0;
-+	for (i = 0; i < MAX_IO_APICS; i++)
-+		if (ir_ioapic[i].iommu == iommu)
-+			ir_ioapic[i].iommu = NULL;
- }
- 
- /*
-@@ -1145,7 +1183,85 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.setup_hpet_msi		= intel_setup_hpet_msi,
- };
- 
-+/*
-+ * Support of Interrupt Remapping Unit Hotplug
-+ */
-+static int dmar_ir_add(struct dmar_drhd_unit *dmaru, struct intel_iommu *iommu)
-+{
-+	int ret;
-+	int eim = x2apic_enabled();
-+
-+	if (eim && !ecap_eim_support(iommu->ecap)) {
-+		pr_info("DRHD %Lx: EIM not supported by DRHD, ecap %Lx\n",
-+			iommu->reg_phys, iommu->ecap);
-+		return -ENODEV;
-+	}
-+
-+	if (ir_parse_ioapic_hpet_scope(dmaru->hdr, iommu)) {
-+		pr_warn("DRHD %Lx: failed to parse managed IOAPIC/HPET\n",
-+			iommu->reg_phys);
-+		return -ENODEV;
-+	}
-+
-+	/* TODO: check all IOAPICs are covered by IOMMU */
-+
-+	/* Setup Interrupt-remapping now. */
-+	ret = intel_setup_irq_remapping(iommu);
-+	if (ret) {
-+		pr_err("DRHD %Lx: failed to allocate resource\n",
-+		       iommu->reg_phys);
-+		ir_remove_ioapic_hpet_scope(iommu);
-+		return ret;
-+	}
-+
-+	if (!iommu->qi) {
-+		/* Clear previous faults. */
-+		dmar_fault(-1, iommu);
-+		iommu_disable_irq_remapping(iommu);
-+		dmar_disable_qi(iommu);
-+	}
-+
-+	/* Enable queued invalidation */
-+	ret = dmar_enable_qi(iommu);
-+	if (!ret) {
-+		iommu_set_irq_remapping(iommu, eim);
-+	} else {
-+		pr_err("DRHD %Lx: failed to enable queued invalidation, ecap %Lx, ret %d\n",
-+		       iommu->reg_phys, iommu->ecap, ret);
-+		intel_teardown_irq_remapping(iommu);
-+		ir_remove_ioapic_hpet_scope(iommu);
-+	}
-+
-+	return ret;
-+}
-+
- int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
- {
--	return irq_remapping_enabled ? -ENOSYS : 0;
-+	int ret = 0;
-+	struct intel_iommu *iommu = dmaru->iommu;
-+
-+	if (!irq_remapping_enabled)
-+		return 0;
-+	if (iommu == NULL)
-+		return -EINVAL;
-+	if (!ecap_ir_support(iommu->ecap))
-+		return 0;
-+
-+	if (insert) {
-+		if (!iommu->ir_table)
-+			ret = dmar_ir_add(dmaru, iommu);
-+	} else {
-+		if (iommu->ir_table) {
-+			if (!bitmap_empty(iommu->ir_table->bitmap,
-+					  INTR_REMAP_TABLE_ENTRIES)) {
-+				ret = -EBUSY;
-+			} else {
-+				iommu_disable_irq_remapping(iommu);
-+				intel_teardown_irq_remapping(iommu);
-+				ir_remove_ioapic_hpet_scope(iommu);
-+			}
-+		}
-+	}
-+
-+	return ret;
- }
+> > At
+> > https://github.com/MISL-EBU-System-SW/mainline-public/commits/3.14/pci-debug,
+> > I've pushed a branch based on top of v3.14 that contains:
+> 
+> mvebu_pcie_del_windows / mvebu_pcie_add_windows I wonder if these
+> functions should be dropped into the mbus driver.. They are pretty
+> generic.
+
+Yes. I must say I hesitated quite a bit of time between having them in
+pci-mvebu or in mvebu-mbus. I settled on pci-mvebu because PCI is so
+far the only user of this functionality. But this is not a strong
+opinion.
+
+> 'bus: mvebu-mbus: Avoid setting an undefined window size' and
+> 'pci: mvebu: fix off-by-one in the computed size of the mbus windows'
+> need to be swapped in order to maintain bisect-ability.
+
+They could, indeed, but on the other hand, PCI and bus are handled by
+different maintainers, so they will flow through distinct branches, so
+I'm not sure it's going to be easy to guarantee the bisectability here.
+
+Unless we get the Acks from both maintainers, so that Jason Cooper can
+carry the patches and maintain the right order.
+
+I'll reorder them when posting the patch series anyway.
+
+> > Can you test this stack of patches on your system and configuration, and
+> > let me know if that works for you? 
+> 
+> Continues to work as expected here, and I see the new error message:
+> 
+> mvebu_mbus: cannot add window '4:e8', conflicts with another window
+> mvebu-pcie pex.1: Could not create MBus window at 0xe0000000, size 0x100000: -22
+> 
+> (this is due to the PEX window being in the DT mbus ranges already)
+
+I'm not sure to understand here: you have hardcoded in your DT the
+necessary PEX window? If so, then yes, it's expected.
+
+> Tested-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+
+Thanks!
+
+> >  * The link up problem. Unfortunately, I tried to reproduce it today,
+> >    and didn't manage to. It's weird, because I'm sure I was able to
+> >    produce it in the past, but I'm no longer able to, I don't know.
+> >    Therefore, it's not easy for me to work on this topic. Neil, Jason,
+> >    do you think this is a topic you could potentially handle?
+> 
+> You said you had a system that sometimes required the udelay?
+
+Yes, and I tried to reproduce it today, and I didn't manage to
+reproduce the problem, even on this platform, in the same conditions.
+I'll try again tomorrow.
+
+> Can you
+> run Neil's patch and see if your system behaves the same? Specifically
+> that the link eventually goes down after mvebu_pcie_set_local_dev_nr ?
+> 
+> I couldn't find any case where the BDF leaks below the TLP layer, and
+> the spec is very clear that the assigned BDF can change at run time,
+> so I don't have an explanation for why the link reset is happening.
+> Do you have a contact at Marvell that might shed some light on that
+> behavior?
+
+There was a potential explanation about the mvebu-soc-id driver that
+enables the clock and then disables it, before the pci-mvebu driver.
+This is different that what was happening before, where the pci-mvebu
+driver was the only one to enable the clock, which was already enabled
+by the bootloader. So if the clock takes some time to stabilize, the
+introduction of mvebu-soc-id may lead to problems.
+
+But I'm not entirely convinced by this, because in my testing, I saw:
+
+ * Enable the clock
+ * Values in the PCI configuration space are correct (like
+   vendor/product ID)
+ * mvebu_pcie_set_local_dev_nr()
+ * Values in the PCI configuration space are no longer correct, unless
+   you wait a little bit.
+
+> >  * On my Armada XP DB board, if I plug 5 PCIe cards, the IGB card for
+> >    some reason isn't able to read data from its non-volatile memory. So
+> >    the window points to something, but it doesn't seem to patch what
+> >    the igb driver expects. I've double checked the MBus windows, and
+> >    they look correct. I haven't tested this PCIe configuration with the
+> >    Marvell LSP though, so maybe I'm hitting an unrelated hardware
+> >    problem or something.
+> 
+> Certainly troubling.. And the IGB works if it is the only card in the
+> system?
+
+Yes, the IGB card works fine when plugged as the only card. It also
+works when plugged with 3 other PCIe cards. But when I plug the five
+PCIe cards I have, the IGB stops working.
+
+However, note that some interfaces are x1, some other x4, and maybe
+there was a mismatch/incompatibility with the PCIe cards I was plugging
+in the board.
+
+> That does sound like more mbus troubles.
+
+Interestingly, the problem occurred when I was plugging a SATA PCIe
+card. And regardless of whether the SATA PCIe card is present or not,
+the MBus mappings for the IGB are exactly the same.
+
+Here is a dump of the MBus windows with 4 PCIe cards (including the IGB
+one) :
+
+[00] 00000000ffe30000 - 00000000ffe40000 : 0004:00f0 (remap 0000000000030000)
+[01] disabled
+[02] disabled
+[03] disabled
+[04] disabled
+[05] disabled
+[06] disabled
+[07] disabled
+[08] 00000000fff00000 - 0000000100000000 : 0001:001d -> bootrom
+[09] 00000000f0000000 - 00000000f1000000 : 0001:002f -> NOR flash
+[10] 00000000f8000000 - 00000000f8100000 : 0004:00e8 -> some other PCIe card
+[11] 00000000f8800000 - 00000000f9000000 : 0004:00f8 -> this is the IGB
+[12] 00000000f9000000 - 00000000f9100000 : 0004:00f8 -> this is the IGB
+[13] disabled
+[14] disabled
+[15] disabled
+[16] disabled
+[17] disabled
+[18] disabled
+[19] disabled
+
+And now, with the SATA card plugged in:
+
+[00] 00000000ffe40000 - 00000000ffe50000 : 0008:00f0 (remap 0000000000040000)
+[01] 00000000ffe30000 - 00000000ffe40000 : 0004:00f0 (remap 0000000000030000)
+[02] disabled
+[03] disabled
+[04] disabled
+[05] disabled
+[06] disabled
+[07] disabled
+[08] 00000000fff00000 - 0000000100000000 : 0001:001d	=> bootrom
+[09] 00000000f0000000 - 00000000f1000000 : 0001:002f	=> NOR flash
+[10] 00000000f8000000 - 00000000f8100000 : 0004:00e8	=> port 0.0 mem
+[11] 00000000f8400000 - 00000000f8600000 : 0008:00f8	=> port 3.0 mem (SATA)
+[12] 00000000f8800000 - 00000000f9000000 : 0004:00f8	=> port 2.0 mem (igb)
+[13] 00000000f9000000 - 00000000f9100000 : 0004:00f8	=> port 2.0 mem (igb)
+[14] disabled
+[15] disabled
+[16] disabled
+[17] disabled
+[18] disabled
+[19] disabled
+
+Thomas
 -- 
-1.7.10.4
-
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
