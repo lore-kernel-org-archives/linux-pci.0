@@ -1,61 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45517 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750736AbaDQUEW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Apr 2014 16:04:22 -0400
-Date: Thu, 17 Apr 2014 16:03:52 -0400
-From: Dave Jones <davej@redhat.com>
-To: Borislav Petkov <bp@alien8.de>
+Received: from moutng.kundenserver.de ([212.227.126.131]:55340 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934020AbaDJUrA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 16:47:00 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"Zhang, Rui" <rui.zhang@intel.com>,
-	"Lu, Aaron" <aaron.lu@intel.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Stephane Eranian <eranian@google.com>,
-	"Yan, Zheng Z" <zheng.z.yan@intel.com>, daniel.vetter@ffwll.ch
-Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
-Message-ID: <20140417200352.GB18876@redhat.com>
-References: <1558044.S1G2VU7srO@vostro.rjw.lan>
- <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
- <20140416190404.GA7070@pd.tnic>
- <20140416203138.GA17661@google.com>
- <20140416223122.GA2767@redhat.com>
- <20140416225600.GA23781@google.com>
- <20140417104533.GB8215@pd.tnic>
- <20140417182637.GA2098@google.com>
- <20140417195240.GA18876@redhat.com>
- <20140417200127.GH4321@pd.tnic>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for pci_host_bridge.
+Date: Thu, 10 Apr 2014 22:46:36 +0200
+Message-ID: <6459805.ygy4tBNDNz@wuerfel>
+In-Reply-To: <20140410145304.GS985@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com> <6144916.rD76jOL8sv@wuerfel> <20140410145304.GS985@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140417200127.GH4321@pd.tnic>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 17, 2014 at 10:01:27PM +0200, Borislav Petkov wrote:
- > On Thu, Apr 17, 2014 at 03:52:40PM -0400, Dave Jones wrote:
- > > Just as X starts up, I see this in dmesg..
- > > 
- > > [   42.879049] [drm:cpt_serr_int_handler] *ERROR* PCH transcoder A FIFO underrun
- > 
- > FWIW, I have that too. It should be something i915-related:
- > 
- > [    0.617673] [drm] Memory usable by graphics device = 2048M
- > [    0.694445] i915 0000:00:02.0: irq 42 for MSI/MSI-X
- > [    0.694549] [drm] Supports vblank timestamp caching Rev 2 (21.10.2013).
- > [    0.694631] [drm] Driver supports precise vblank timestamp query.
- > [    0.695313] vgaarb: device changed decodes: PCI:0000:00:02.0,olddecodes=io+mem,decodes=io+mem:owns=io+mem
- > [    0.788300] [drm] GMBUS [i915 gmbus dpb] timed out, falling back to bit banging on pin 5
- > [    0.799829] fbcon: inteldrmfb (fb0) is primary device
- > [    1.176845] [drm:cpt_serr_int_handler] *ERROR* PCH transcoder A FIFO underrun
+On Thursday 10 April 2014 15:53:04 Liviu Dudau wrote:
+> On Thu, Apr 10, 2014 at 03:07:44PM +0100, Arnd Bergmann wrote:
 
-Can you send me your .config off-list ?
-I wonder if this is something config specific that's causing me to see
-this, and you not, given we've apparently got similar machines.
+> > This mirrors how we treat devices: a pci_device has an embedded device,
+> > and so on, in other subsystems we can have multiple layers.
+> > 
+> > In this example, the tegra pcie driver then allocates its own tegra_pcie
+> > structure, fills out the fields it needs, and registers it with the
+> > ARM architecture code, passing just the pci_sys_data pointer. That function
+> > in turn passes a pointer to the embedded pci_host_bridge down to the
+> > generic code. Ideally we should try to eliminate the architecture specific
+> > portion here, but that is a later step.
+> 
+> So Arnd seems to agree with me: we should try to get out of architecture specific
+> pci_sys_data and link the host bridge driver straight into the PCI core. The
+> core then can call into arch code via pcibios_*() functions.
+> 
+> Arnd, am I reading correctly into what you are saying?
 
-	Dave
+Half of it ;-)
 
+I think it would be better to not have an architecture specific data
+structure, just like it would be better not to have architecture specific
+pcibios_* functions that get called by the PCI core. Note that the
+architecture specific functions are the ones that rely on the architecture
+specific data structures as well. If they only use the common fields,
+it should also be possible to share the code.
+
+I also don't realistically think we can get there on a lot of architectures
+any time soon. Note that most architectures only have one PCI host
+implementation, so the architecture structure is the same as the host
+driver structure anyway.
+
+For architectures like powerpc and arm that have people actively working
+on them, we have a chance to clean up that code in the way we want it
+(if we can agree on the direction), but it's still not trivial to do.
+
+Speaking of arm32 in particular, I think we will end up with a split
+approach: modern platforms (multiplatform, possibly all DT based) using
+PCI core infrastructure directly and no architecture specific PCI
+code on the one side, and a variation of today's code for the legacy
+platforms on the other.
+
+	Arnd
