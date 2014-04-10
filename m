@@ -1,51 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:37181 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757242AbaDVP5w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 11:57:52 -0400
-Received: by mail-ie0-f180.google.com with SMTP id as1so5450717iec.11
-        for <linux-pci@vger.kernel.org>; Tue, 22 Apr 2014 08:57:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <7174f4a8.23ad7.14589360cb2.Coremail.liaohengquan1986@163.com>
-References: <1397000541-1085-1-git-send-email-keith.busch@intel.com>
- <1397000541-1085-2-git-send-email-keith.busch@intel.com> <CAP8+hKWcybw5u_m5M4c1p4eUAaTq4x+kO+tnegwD2ciDMEFNCw@mail.gmail.com>
- <alpine.LRH.2.03.1404211935510.5490@AMR> <1E05E2AB-198E-473A-8AA5-87DA2E9910B8@gmail.com>
- <CAP8+hKUEygoeEv=LvY2ccp6cepnXEpi4WGVSaCnRw+zN7BUE_Q@mail.gmail.com>
- <B8DB29EA17EB2742AC3405C31A9B9EE961457B96@ORSMSX111.amr.corp.intel.com>
- <CAP8+hKV_-OqAOWHC2tZqYmt1O9pjTtauXECU=R+48rb0A3EfQA@mail.gmail.com> <7174f4a8.23ad7.14589360cb2.Coremail.liaohengquan1986@163.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 22 Apr 2014 09:57:31 -0600
-Message-ID: <CAErSpo526WATQKU9DZ4YjTTL9ot_1soGnjcs=ipgyqt2XNQ-fA@mail.gmail.com>
-Subject: Re: Wheather the NVMe driver has been tried on the IBM or Lenovo server?
-To: liaohengquan1986 <liaohengquan1986@163.com>
-Cc: Learner Study <learner.study@gmail.com>,
-	"Mayes, Barrett N" <barrett.n.mayes@intel.com>,
-	"Busch, Keith" <keith.busch@intel.com>,
-	linux-nvme <linux-nvme@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:51115 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161061AbaDJWhm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 18:37:42 -0400
+Message-ID: <1397169459.2608.61.camel@buesod1.americas.hpqcorp.net>
+Subject: Re: [PATCH] hpsa: fix uninitialized trans_support in
+ hpsa_put_ctlr_into_performant_mode()
+From: Davidlohr Bueso <davidlohr@hp.com>
+To: scameron@beardog.cce.hp.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Baoquan He <bhe@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Date: Thu, 10 Apr 2014 15:37:39 -0700
+In-Reply-To: <20140410221704.GA22465@beardog.cce.hp.com>
+References: <20140410221704.GA22465@beardog.cce.hp.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 22, 2014 at 5:33 AM, liaohengquan1986
-<liaohengquan1986@163.com> wrote:
->
-> Hi, everyone,
->             I want to ask that weather the NVMe driver has been tried on the
-> IBM or Lenovo server?
->             I use it on IBM(Lenovo) server with suse 11 SP3, but the MSI-X
-> irq is always could not be got by cpu(may be it is masked).
->             Has anyone got this kind of problem?
+On Thu, 2014-04-10 at 17:17 -0500, scameron@beardog.cce.hp.com wrote:
+> Without this, you'll see a null pointer dereference in
+> hpsa_enter_performant_mode().
 
-I think your original email contained non-plain text, so it won't
-appear on the mailing list, and some recipients may auto-discard it as
-well.  See http://vger.kernel.org/majordomo-info.html
+So I'm not surprised that this patch doesn't solve the problem I am
+seeing with DMAR and the hpsa driver hard lockup.
 
-If you can reproduce the problem with an upstream kernel, this is the
-right place to debug it.  We'd need a complete dmesg log and "lspci
--vv" output to start with.
+In any case it should address Baoquan's original report, so it confirms
+that it is in fact two different sets of issues.
 
-If the problem only happens with SUSE, then you'd want to work with
-SUSE to figure it out.
-
-Bjorn
