@@ -1,108 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:53903 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676AbaD2Xld (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 19:41:33 -0400
-Received: by mail-ie0-f176.google.com with SMTP id rd18so1090612iec.35
-        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 16:41:33 -0700 (PDT)
-Date: Tue, 29 Apr 2014 17:41:30 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Bandan Das <bsd@redhat.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: rework new_id interface for known vendor/device
- values
-Message-ID: <20140429234130.GC9912@google.com>
-References: <jpgbnwkplbo.fsf@nelium.bos.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <jpgbnwkplbo.fsf@nelium.bos.redhat.com>
+Received: from mail-we0-f181.google.com ([74.125.82.181]:60224 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030531AbaDJMdz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 08:33:55 -0400
+Received: by mail-we0-f181.google.com with SMTP id q58so3799024wes.40
+        for <linux-pci@vger.kernel.org>; Thu, 10 Apr 2014 05:33:54 -0700 (PDT)
+Date: Thu, 10 Apr 2014 15:33:55 +0300
+From: Jack Morgenstein <jackm@dev.mellanox.co.il>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	davem@davemloft.net, Bjorn Helgaas <bhelgaas@google.com>,
+	Amir Vadai <amirv@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>
+Subject: Re: [PATCH V1 net] net/mlx4_core: Preserve pci_dev_data after
+ __mlx4_remove_one()
+Message-ID: <20140410153355.0ca4348f@jpm-OptiPlex-GX620>
+In-Reply-To: <1397121924-14813-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1397121924-14813-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 01, 2014 at 09:32:59PM -0400, Bandan Das wrote:
-> 
-> While using the new_id interface, the user can unintentionally feed
-> incorrect values if the driver static table has a matching entry.
-> This is possible since only the device and vendor fields are
-> mandatory and the rest are optional. As a result, store_new_id
-> will fill in default values that are then passed on to the driver
-> and can have unintended consequences.
-> 
-> As an example, consider the ixgbe driver and the 82599EB network card :
-> echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
-> 
-> This will pass a driver_data value of 0 to the driver whereas
-> the index 0 in ixgbe actually points to a different set of card
-> operations.
-> 
-> This change returns an error if the user attempts to add a dynid for
-> a vendor/device combination for which a static entry already exists.
-> However, if the user intentionally wants a different set of values,
-> she must provide all the 7 fields and that will be accepted.
-> 
-> In KVM/device assignment scenario, the user might want 
-> to bind a device back to the host driver by writing to new_id
-> and trip on a possible null pointer dereference.
-> 
-> Signed-off-by: Bandan Das <bsd@redhat.com>
+On Thu, 10 Apr 2014 17:25:24 +0800
+Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
 
-Applied with Alex's ack to pci/misc for v3.16, thanks!
+> pci_match_id() just match the static pci_device_id, which may return
+> NULL if someone binds the driver to a device manually using
+> /sys/bus/pci/drivers/.../new_id.
+> 
+> This patch wrap up a helper function __mlx4_remove_one() which does
+> the tear down function but preserve the drv_data. Functions like
+> mlx4_pci_err_detected() and mlx4_restart_one() will call this one
+> with out releasing drvdata.
+> 
+> Fixes: 97a5221 "net/mlx4_core: pass pci_device_id.driver_data to
+> __mlx4_init_one during reset".
+> 
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Amir Vadai <amirv@mellanox.com>
+> CC: Jack Morgenstein <jackm@dev.mellanox.co.il>
+> CC: Or Gerlitz <ogerlitz@mellanox.com>
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-> ---
-> v3:
-> relocate pdev decl
-> v2:
-> 1. Return error if there is a matching static entry
-> and change commit message to reflect this behavior
-> 3. Fill in a pdev and call pci_match_id instead of creating
-> a new matching function
-> 4. Change commit message to reflect that libvirt does not
-> depend on this behavior
-> 
->  drivers/pci/pci-driver.c | 22 +++++++++++++++++++++-
->  1 file changed, 21 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 25f0bc6..a65a014 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -107,7 +107,7 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
->  		subdevice=PCI_ANY_ID, class=0, class_mask=0;
->  	unsigned long driver_data=0;
->  	int fields=0;
-> -	int retval;
-> +	int retval = 0;
->  
->  	fields = sscanf(buf, "%x %x %x %x %x %x %lx",
->  			&vendor, &device, &subvendor, &subdevice,
-> @@ -115,6 +115,26 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
->  	if (fields < 2)
->  		return -EINVAL;
->  
-> +	if (fields != 7) {
-> +		struct pci_dev *pdev = kzalloc(sizeof(*pdev), GFP_KERNEL);
-> +		if (!pdev)
-> +			return -ENOMEM;
-> +
-> +		pdev->vendor = vendor;
-> +		pdev->device = device;
-> +		pdev->subsystem_vendor = subvendor;
-> +		pdev->subsystem_device = subdevice;
-> +		pdev->class = class;
-> +
-> +		if (pci_match_id(pdrv->id_table, pdev))
-> +			retval = -EEXIST;
-> +
-> +		kfree(pdev);
-> +
-> +		if (retval)
-> +			return retval;
-> +	}
-> +
->  	/* Only accept driver_data values that match an existing id_table
->  	   entry */
->  	if (ids) {
-> -- 
-> 1.8.3.1
-> 
+  Acked-by: Jack Morgenstein <jackm@dev.mellanox.co.il>
