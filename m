@@ -1,44 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51205 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756659AbaDICvm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Apr 2014 22:51:42 -0400
-Message-ID: <1397011868.3671.94.camel@pasglop>
-Subject: Re: driver skip pci_set_master, fix it? No.
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Mark Lord <mlord@pobox.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mail-bl2lp0210.outbound.protection.outlook.com ([207.46.163.210]:17331
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030242AbaDJUDb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 16:03:31 -0400
+From: Stuart Yoder <stuart.yoder@freescale.com>
+To: Kim Phillips <Kim.Phillips@freescale.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+	"libvir-list@redhat.com" <libvir-list@redhat.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"tech@virtualopensystems.com" <tech@virtualopensystems.com>,
+	"kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Theodore Ts'o" <tytso@mit.edu>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Wed, 09 Apr 2014 12:51:08 +1000
-In-Reply-To: <5344679E.1030008@pobox.com>
-References: <5344251D.7040805@pobox.com>
-	 <CAErSpo6KuYLaoEsxR4jJQ98P23kNEMzMcu_-RyM3nWd6YRxgag@mail.gmail.com>
-	 <5344679E.1030008@pobox.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Guenter Roeck <linux@roeck-us.net>,
+	"christoffer.dall@linaro.org" <christoffer.dall@linaro.org>
+Subject: RE: [PATCH] driver core: platform: add device binding path
+ 'driver_override'
+Date: Thu, 10 Apr 2014 20:03:15 +0000
+Message-ID: <52375b57e4b8493a8563aca98b7ba041@DM2PR03MB352.namprd03.prod.outlook.com>
+References: <20140404201818.14389.86188.stgit@bling.home>
+ <20140408204726.7a8f4cd6fbd05d0464720b30@freescale.com>
+In-Reply-To: <20140408204726.7a8f4cd6fbd05d0464720b30@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-04-08 at 17:18 -0400, Mark Lord wrote:
-> > I assume you're talking about the one added by cf3e1feba7f9 ("PCI:
-> > Workaround missing pci_set_master in pci drivers"), but as far as I
-> > can tell, it only calls pci_set_master() for *bridge* devices.  What
-> > am I missing?  Is pci_set_master() being called for your endpoint?
-> > What path is that?
+
+
+> -----Original Message-----
+> From: Kim Phillips [mailto:kim.phillips@freescale.com]
+> Sent: Tuesday, April 08, 2014 8:47 PM
+> To: Alex Williamson; gregkh@linuxfoundation.org
+> Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; kvm@vger.kernel.org;
+> konrad.wilk@oracle.com; Yoder Stuart-B08248; libvir-list@redhat.com;
+> iommu@lists.linux-foundation.org; tech@virtualopensystems.com;
+> kvmarm@lists.cs.columbia.edu; linux-kernel@vger.kernel.org; Guenter
+> Roeck; christoffer.dall@linaro.org
+> Subject: [PATCH] driver core: platform: add device binding path
+> 'driver_override'
 > 
-> Yes, it is being called during execution of the _probe() function in my driver,
-> as evidenced by the annoying (and wrong) message it produces.
+> Needed by platform device drivers, such as the vfio-platform driver [1],
+> in order to bypass the existing OF, ACPI, id_table and name string
+> matches,
+> and successfully be able to be bound to any device, like so:
 > 
-> Next time I've got the hardware at hand, I'll put a "dump_stack()" into there
-> to see the exact calling path.
+> echo vfio-platform >
+> /sys/bus/platform/devices/fff51000.ethernet/driver_override
+> echo fff51000.ethernet >
+> /sys/bus/platform/devices/fff51000.ethernet/driver/unbind
+> echo fff51000.ethernet > /sys/bus/platform/drivers_probe
+> 
+> This mimics "PCI: Introduce new device binding path using
+> pci_dev.driver_override" [2], which is an interface enhancement
+> for more deterministic PCI device binding, e.g., when in the
+> presence of hotplug.
+> 
+> [1] http://lkml.iu.edu/hypermail/linux/kernel/1402.1/00177.html
+> [2] http://lists-archives.com/linux-kernel/28030441-pci-introduce-new-
+> device-binding-path-using-pci_dev-driver_override.html
+> 
+> Suggested-by: Alex Williamson <alex.williamson@redhat.com>
+> Signed-off-by: Kim Phillips <kim.phillips@freescale.com>
+> ---
 
-Note that one of the reason we want to do it early on bridges is that without it,
-we may also not get the PCIe error messages.
-
-Cheers,
-Ben.
-
-
+Reviewed-by: Stuart Yoder <stuart.yoder@freescale.com>
