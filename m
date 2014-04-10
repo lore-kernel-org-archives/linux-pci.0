@@ -1,58 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:36556 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752486AbaDDXcy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 19:32:54 -0400
-Received: by mail-pd0-f173.google.com with SMTP id z10so3968907pdj.4
-        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 16:32:54 -0700 (PDT)
-Date: Fri, 4 Apr 2014 17:32:51 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 2/2] PCI: Refactor pci_is_bridge()
-Message-ID: <20140404233251.GB15806@google.com>
-References: <1394789926-11912-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Stuart Yoder <stuart.yoder@freescale.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "agraf@suse.de" <agraf@suse.de>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+	"kim.phillips@linaro.org" <kim.phillips@linaro.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"libvir-list@redhat.com" <libvir-list@redhat.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"tech@virtualopensystems.com" <tech@virtualopensystems.com>,
+	"kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>,
+	"christoffer.dall@linaro.org" <christoffer.dall@linaro.org>
+Subject: RE: [PATCH] PCI: Introduce new device binding path using
+ pci_dev.driver_override
+Date: Thu, 10 Apr 2014 19:30:32 +0000
+Message-ID: <81d2e04877f04deeb15e6d0e57244385@DM2PR03MB352.namprd03.prod.outlook.com>
+References: <20140404201818.14389.86188.stgit@bling.home>
+In-Reply-To: <20140404201818.14389.86188.stgit@bling.home>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394789926-11912-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 14, 2014 at 05:38:46PM +0800, Yijing Wang wrote:
-> Refactor pci_is_bridge(), check pci device
-> hdr_type instead, and move it in include/linux/pci.h
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  include/linux/pci.h |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 33aa2ca..22370c4 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1649,6 +1649,12 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
->  	return pci_pcie_cap(dev);
->  }
->  
-> +static inline bool pci_is_bridge(struct pci_dev *dev)
-> +{
-> +	return dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
-> +		dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
-> +}
-
-There's no point in adding this unless somebody uses it (but I assume
-you probably meant to use it in acpi_pci_find_companion() as I mentioned).
-
->  /**
->   * pcie_caps_reg - get the PCIe Capabilities Register
->   * @dev: PCI device
-> -- 
-> 1.7.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxleCBXaWxsaWFtc29u
+IFttYWlsdG86YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb21dDQo+IFNlbnQ6IEZyaWRheSwgQXBy
+aWwgMDQsIDIwMTQgMzoxOSBQTQ0KPiBUbzogYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXgtcGNp
+QHZnZXIua2VybmVsLm9yZw0KPiBDYzogYWdyYWZAc3VzZS5kZTsga3ZtQHZnZXIua2VybmVsLm9y
+Zzsga29ucmFkLndpbGtAb3JhY2xlLmNvbTsNCj4ga2ltLnBoaWxsaXBzQGxpbmFyby5vcmc7IGdy
+ZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBZb2RlciBTdHVhcnQtQjA4MjQ4Ow0KPiBsaW51eC1r
+ZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaWJ2aXItbGlzdEByZWRoYXQuY29tOyBpb21tdUBsaXN0
+cy5saW51eC0NCj4gZm91bmRhdGlvbi5vcmc7IHRlY2hAdmlydHVhbG9wZW5zeXN0ZW1zLmNvbTsN
+Cj4ga3ZtYXJtQGxpc3RzLmNzLmNvbHVtYmlhLmVkdTsgY2hyaXN0b2ZmZXIuZGFsbEBsaW5hcm8u
+b3JnDQo+IFN1YmplY3Q6IFtQQVRDSF0gUENJOiBJbnRyb2R1Y2UgbmV3IGRldmljZSBiaW5kaW5n
+IHBhdGggdXNpbmcNCj4gcGNpX2Rldi5kcml2ZXJfb3ZlcnJpZGUNCj4gDQo+IFRoZSBkcml2ZXJf
+b3ZlcnJpZGUgZmllbGQgYWxsb3dzIHVzIHRvIHNwZWNpZnkgdGhlIGRyaXZlciBmb3IgYSBkZXZp
+Y2UNCj4gcmF0aGVyIHRoYW4gcmVseWluZyBvbiB0aGUgZHJpdmVyIHRvIHByb3ZpZGUgYSBwb3Np
+dGl2ZSBtYXRjaCBvZiB0aGUNCj4gZGV2aWNlLiAgVGhpcyBzaG9ydGN1dHMgdGhlIGV4aXN0aW5n
+IHByb2Nlc3Mgb2YgbG9va2luZyB1cCB0aGUgdmVuZG9yDQo+IGFuZCBkZXZpY2UgSUQsIGFkZGlu
+ZyB0aGVtIHRvIHRoZSBkcml2ZXIgbmV3X2lkLCBiaW5kaW5nIHRoZSBkZXZpY2UsDQo+IHRoZW4g
+cmVtb3ZpbmcgdGhlIElELCBidXQgaXQgYWxzbyBwcm92aWRlcyBhIGNvdXBsZSBhZHZhbnRhZ2Vz
+Lg0KPiANCj4gRmlyc3QsIHRoZSBhYm92ZSBleGlzdGluZyBwcm9jZXNzIGFsbG93cyB0aGUgZHJp
+dmVyIHRvIGJpbmQgdG8gYW55DQo+IGRldmljZSBtYXRjaGluZyB0aGUgbmV3X2lkIGZvciB0aGUg
+d2luZG93IHdoZXJlIGl0J3MgZW5hYmxlZC4gIFRoaXMgaXMNCj4gb2Z0ZW4gbm90IGRlc2lyZWQs
+IHN1Y2ggYXMgdGhlIGNhc2Ugb2YgdHJ5aW5nIHRvIGJpbmQgYSBzaW5nbGUgZGV2aWNlDQo+IHRv
+IGEgbWV0YSBkcml2ZXIgbGlrZSBwY2ktc3R1YiBvciB2ZmlvLXBjaS4gIFVzaW5nIGRyaXZlcl9v
+dmVycmlkZSB3ZQ0KPiBjYW4gZG8gdGhpcyBkZXRlcm1pbmlzdGljYWxseSB1c2luZzoNCj4gDQo+
+IGVjaG8gcGNpLXN0dWIgPiAvc3lzL2J1cy9wY2kvZGV2aWNlcy8wMDAwOjAzOjAwLjAvZHJpdmVy
+X292ZXJyaWRlDQo+IGVjaG8gMDAwMDowMzowMC4wID4gL3N5cy9idXMvcGNpL2RldmljZXMvMDAw
+MDowMzowMC4wL2RyaXZlci91bmJpbmQNCj4gZWNobyAwMDAwOjAzOjAwLjAgPiAvc3lzL2J1cy9w
+Y2kvZHJpdmVyc19wcm9iZQ0KPiANCj4gUHJldmlvdXNseSB3ZSBjb3VsZCBub3QgaW52b2tlIGRy
+aXZlcnNfcHJvYmUgYWZ0ZXIgYWRkaW5nIGEgZGV2aWNlDQo+IHRvIG5ld19pZCBmb3IgYSBkcml2
+ZXIgYXMgd2UgZ2V0IG5vbi1kZXRlcm1pbmlzdGljIGJlaGF2aW9yIHdoZXRoZXINCj4gdGhlIGRy
+aXZlciB3ZSBpbnRlbmQgb3IgdGhlIHN0YW5kYXJkIGRyaXZlciB3aWxsIGNsYWltIHRoZSBkZXZp
+Y2UuDQo+IE5vdyBpdCBiZWNvbWVzIGEgZGV0ZXJtaW5pc3RpYyBwcm9jZXNzLCBvbmx5IHRoZSBk
+cml2ZXIgbWF0Y2hpbmcNCj4gZHJpdmVyX292ZXJyaWRlIHdpbGwgcHJvYmUgdGhlIGRldmljZS4N
+Cj4gDQo+IFRvIHJldHVybiB0aGUgZGV2aWNlIHRvIHRoZSBzdGFuZGFyZCBkcml2ZXIsIHdlIHNp
+bXBseSBjbGVhciB0aGUNCj4gZHJpdmVyX292ZXJyaWRlIGFuZCByZXByb2JlIHRoZSBkZXZpY2U6
+DQo+IA0KPiBlY2hvID4gL3N5cy9idXMvcGNpL2RldmljZXMvMDAwMDowMzowMC4wL3ByZWZlcnJl
+ZF9kcml2ZXINCj4gZWNobyAwMDAwOjAzOjAwLjAgPiAvc3lzL2J1cy9wY2kvZGV2aWNlcy8wMDAw
+OjAzOjAwLjAvZHJpdmVyL3VuYmluZA0KPiBlY2hvIDAwMDA6MDM6MDAuMCA+IC9zeXMvYnVzL3Bj
+aS9kcml2ZXJzX3Byb2JlDQo+IA0KPiBBbm90aGVyIGFkdmFudGFnZSB0byB0aGlzIGFwcHJvYWNo
+IGlzIHRoYXQgd2UgY2FuIHNwZWNpZnkgYSBkcml2ZXINCj4gb3ZlcnJpZGUgdG8gZm9yY2UgYSBz
+cGVjaWZpYyBiaW5kaW5nIG9yIHByZXZlbnQgYW55IGJpbmRpbmcuICBGb3INCj4gaW5zdGFuY2Ug
+d2hlbiBhbiBJT01NVSBncm91cCBpcyBleHBvc2VkIHRvIHVzZXJzcGFjZSB0aHJvdWdoIFZGSU8N
+Cj4gd2UgcmVxdWlyZSB0aGF0IGFsbCBkZXZpY2VzIHdpdGhpbiB0aGF0IGdyb3VwIGFyZSBvd25l
+ZCBieSBWRklPLg0KPiBIb3dldmVyLCBkZXZpY2VzIGNhbiBiZSBob3QtYWRkZWQgaW50byBhbiBJ
+T01NVSBncm91cCwgaW4gd2hpY2ggY2FzZQ0KPiB3ZSB3YW50IHRvIHByZXZlbnQgdGhlIGRldmlj
+ZSBmcm9tIGJpbmRpbmcgdG8gYW55IGRyaXZlciAocHJlZmVycmVkDQo+IGRyaXZlciA9ICJub25l
+Iikgb3IgcGVyaGFwcyBoYXZlIGl0IGF1dG9tYXRpY2FsbHkgYmluZCB0byB2ZmlvLXBjaS4NCj4g
+V2l0aCBkcml2ZXJfb3ZlcnJpZGUgaXQncyBhIHNpbXBsZSBtYXR0ZXIgZm9yIHRoaXMgZmllbGQg
+dG8gYmUgc2V0DQo+IGludGVybmFsbHkgd2hlbiB0aGUgZGV2aWNlIGlzIGZpcnN0IGRpc2NvdmVy
+ZWQgdG8gcHJldmVudCBkcml2ZXINCj4gbWF0Y2hlcy4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEFs
+ZXggV2lsbGlhbXNvbiA8YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb20+DQo+IC0tLQ0KDQpSZXZp
+ZXdlZC1ieTogU3R1YXJ0IFlvZGVyIDxzdHVhcnQueW9kZXJAZnJlZXNjYWxlLmNvbT4NCg==
