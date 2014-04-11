@@ -1,195 +1,254 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:64523 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753811AbaDKAZy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 20:25:54 -0400
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:48115 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422768AbaDKAZu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 20:25:50 -0400
 From: Andreas Noever <andreas.noever@gmail.com>
 To: linux-kernel@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
 Cc: Daniel J Blueman <daniel@quora.org>,
 	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v2 12/14] pci: Suspend/resume support for appel thunderbolt
-Date: Fri, 11 Apr 2014 02:24:59 +0200
-Message-Id: <1397175901-4023-13-git-send-email-andreas.noever@gmail.com>
+Subject: [PATCH v2 08/14] thunderbolt: Scan for downstream switches
+Date: Fri, 11 Apr 2014 02:24:55 +0200
+Message-Id: <1397175901-4023-9-git-send-email-andreas.noever@gmail.com>
 In-Reply-To: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
 References: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch makes changes to the pcieport driver to support thunderbolt
-suspend/resume on apple systems. We need to perform two different
-actions during suspend and resume:
-
-The whole controller has to be powered down before suspend. If this is
-not done then the NHI device will be gone after resume if a thunderbolt
-device was plugged in while suspending. The controller represents itself
-as multiple PCI devices/bridges. To power it down we hook into the
-upstream bridge of the controller and call the magic ACPI methods. Power
-will be restored automatically during resume (by the firmware
-presumably).
-
-During resume we have to wait for the NHI do reestablish all pci
-tunnels. Since there is no parent-child relationship between the NHI
-and the bridges we have to explicitly wait for them using
-device_pm_wait_for_dev. We do this in the resume_noirq phase of the
-downstream bridges of the controller (which lead into the thunderbolt
-tunnels).
+Add utility methods tb_port_state and tb_wait_for_port. Add
+tb_scan_switch which recursively checks for downstream switches.
 
 Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- drivers/pci/pcie/portdrv_pci.c | 117 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 117 insertions(+)
+ drivers/thunderbolt/switch.c | 97 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.c     | 44 ++++++++++++++++++++
+ drivers/thunderbolt/tb.h     | 16 ++++++++
+ 3 files changed, 157 insertions(+)
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 0d8fdc4..6d33666 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -17,6 +17,9 @@
- #include <linux/aer.h>
- #include <linux/dmi.h>
- #include <linux/pci-aspm.h>
-+#include <linux/delay.h>
-+#include <linux/dmi.h>
-+#include <linux/acpi.h>
- 
- #include "portdrv.h"
- #include "aer/aerdrv.h"
-@@ -79,6 +82,114 @@ static int pcie_portdrv_restore_config(struct pci_dev *dev)
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index 21457cc..279b9c5 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -53,6 +53,92 @@ static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
  }
  
- #ifdef CONFIG_PM
-+
-+#if defined(CONFIG_THUNDERBOLT) || defined(CONFIG_THUNDERBOLT_MODULE)
-+
-+bool is_thunderbolt(struct pci_dev *pdev)
+ /**
++ * tb_port_state() - get connectedness state of a port
++ *
++ * The port must have a TB_CAP_PHY (i.e. it should be a real port).
++ *
++ * Return: Returns an enum tb_port_state on success or an error code on failure.
++ */
++static int tb_port_state(struct tb_port *port)
 +{
-+	if (!dmi_match(DMI_PRODUCT_NAME, "MacBookPro10,1"))
-+		return false;
-+	return pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x1547;
++	struct tb_cap_phy phy;
++	int res;
++	if (port->cap_phy == 0) {
++		tb_port_WARN(port, "does not have a PHY\n");
++		return -EINVAL;
++	}
++	res = tb_port_read(port, &phy, TB_CFG_PORT, port->cap_phy, 2);
++	if (res)
++		return res;
++	return phy.state;
 +}
 +
-+static void shutdown_thunderbolt_controller(struct pci_dev *pdev)
++/**
++ * tb_wait_for_port() - wait for a port to become ready
++ *
++ * Wait up to 1 second for a port to reach state TB_PORT_UP. If
++ * wait_if_unplugged is set then we also wait if the port is in state
++ * TB_PORT_UNPLUGGED (it takes a while for the device to be registered after
++ * switch resume). Otherwise we only wait if a device is registered but the link
++ * has not yet been established.
++ *
++ * Return: Returns an error code on failure. Returns 0 if the port is not
++ * connected or failed to reach state TB_PORT_UP within one second. Returns 1
++ * if the port is connected and in state TB_PORT_UP.
++ */
++int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged)
 +{
-+	/*
-+	 * The thunderbolt controller consists of a pcie switch with downstream
-+	 * bridges leading to the NHI (native host interface) and to the tunnel
-+	 * pci bridges.
-+	 *
-+	 * Without the following quirk the NHI will not resume if a tb device was
-+	 * plugged in before suspend.
-+	 *
-+	 * This quirk cuts power to the whole chip. Therefore we have to apply it
-+	 * during suspend_noirq of the upstream bridge.
-+	 *
-+	 * Power is automagically restored before resume. No action is needed.
-+	 */
-+	acpi_handle bridge, SXIO, SXFP, SXLV;
-+	if (!is_thunderbolt(pdev))
-+		return;
-+	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_UPSTREAM)
-+		return;
-+	bridge = ACPI_HANDLE(&pdev->dev);
-+	if (!bridge)
-+		return;
-+	/*
-+	 * TB bridges in external devices might have the same device id as those
-+	 * on the host, but they will not have the associated ACPI methods. This
-+	 * implicitly checks that we are at the right bridge.
-+	 */
-+	if (ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXIO", &SXIO))
-+		|| ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXFP", &SXFP))
-+		|| ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXLV", &SXLV)))
-+		return;
-+	dev_info(&pdev->dev, "cutting power to thunderbolt controller...\n");
++	int retries = 10;
++	int state;
++	if (!port->cap_phy) {
++		tb_port_WARN(port, "does not have PHY\n");
++		return -EINVAL;
++	}
++	if (tb_is_upstream_port(port)) {
++		tb_port_WARN(port, "is the upstream port\n");
++		return -EINVAL;
++	}
 +
-+	/* save registers manually, the pci core won't be able to do later */
-+	pci_save_state(pdev);
-+	pci_prepare_to_sleep(pdev);
++	while (retries--) {
++		state = tb_port_state(port);
++		if (state < 0)
++			return state;
++		if (state == TB_PORT_DISABLED) {
++			tb_port_info(port, "is disabled (state: 0)\n");
++			return 0;
++		}
++		if (state == TB_PORT_UNPLUGGED) {
++			if (wait_if_unplugged) {
++				/* used during resume */
++				tb_port_info(port,
++					     "is unplugged (state: 7), retrying...\n");
++				msleep(100);
++				continue;
++			}
++			tb_port_info(port, "is unplugged (state: 7)\n");
++			return 0;
++		}
++		if (state == TB_PORT_UP) {
++			tb_port_info(port,
++				     "is connected, link is up (state: 2)\n");
++			return 1;
++		}
 +
-+	/* magic sequence */
-+	acpi_execute_simple_method(SXIO, NULL, 1);
-+	acpi_execute_simple_method(SXFP, NULL, 0);
-+	msleep(300);
-+	acpi_execute_simple_method(SXLV, NULL, 0);
-+	acpi_execute_simple_method(SXIO, NULL, 0);
-+	acpi_execute_simple_method(SXLV, NULL, 0);
-+}
-+
-+static void wait_for_thunderbolt_controller(struct pci_dev *pdev)
-+{
-+	struct pci_dev *sibling = NULL;
-+	struct pci_dev *nhi = NULL;
-+	/*
-+	 * During suspend the thunderbolt controller is reset and all pci
-+	 * tunnels are lost. The NHI driver will try to reestablish all tunnels
-+	 * during resume. We have to manually wait for the NHI since there is
-+	 * no parent child relationship between the NHI and the tunneled
-+	 * bridges.
-+	 */
-+	if (!is_thunderbolt(pdev))
-+		return;
-+	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM)
-+		return;
-+	/*
-+	 * Find the NHI and confirm that we are a bridge on the tb host
-+	 * controller and not on a tb endpoint.
-+	 */
-+	sibling = pci_get_slot(pdev->bus, 0x0);
-+	if (sibling == pdev)
-+		goto out; /* we are the downstream bridge to the NHI */
-+	if (!sibling || !sibling->subordinate)
-+		goto out;
-+	nhi = pci_get_slot(sibling->subordinate, 0x0);
-+	if (!nhi)
-+		goto out;
-+	if (nhi->vendor != PCI_VENDOR_ID_INTEL || nhi->device != 0x1547
-+			|| nhi->subsystem_vendor != 0x2222
-+			|| nhi->subsystem_device != 0x1111)
-+		goto out;
-+	dev_info(&pdev->dev, "wating for thunderbolt to reestablish pci tunnels...\n");
-+	device_pm_wait_for_dev(&pdev->dev, &nhi->dev);
-+out:
-+	pci_dev_put(sibling);
-+	pci_dev_put(nhi);
-+}
-+
-+#else
-+
-+static void shutdown_thunderbolt_controller(struct pci_dev *pdev) { }
-+static void wait_for_thunderbolt_controller(struct pci_dev *pdev) { }
-+
-+#endif
-+
-+int pcie_port_suspend_noirq(struct device *dev)
-+{
-+	shutdown_thunderbolt_controller(to_pci_dev(dev));
++		/*
++		 * After plug-in the state is TB_PORT_CONNECTING. Give it some
++		 * time.
++		 */
++		tb_port_info(port,
++			     "is connected, link is not up (state: %d), retrying...\n",
++			     state);
++		msleep(100);
++	}
++	tb_port_warn(port,
++		     "failed to reach state TB_PORT_UP. Ignoring port...\n");
 +	return 0;
 +}
 +
- static int pcie_port_resume_noirq(struct device *dev)
++/**
+  * tb_init_port() - initialize a port
+  *
+  * This is a helper method for tb_switch_alloc. Does not check or initialize
+@@ -63,6 +149,7 @@ static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
+ static int tb_init_port(struct tb_switch *sw, u8 port_nr)
  {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-@@ -90,6 +201,9 @@ static int pcie_port_resume_noirq(struct device *dev)
- 	 */
- 	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
- 		pcie_clear_root_pme_status(pdev);
+ 	int res;
++	int cap;
+ 	struct tb_port *port = &sw->ports[port_nr];
+ 	port->sw = sw;
+ 	port->port = port_nr;
+@@ -71,6 +158,16 @@ static int tb_init_port(struct tb_switch *sw, u8 port_nr)
+ 	if (res)
+ 		return res;
+ 
++	/* Port 0 is the switch itself and has no PHY. */
++	if (port->config.type == TB_TYPE_PORT && port_nr != 0) {
++		cap = tb_find_cap(port, TB_CFG_PORT, TB_CAP_PHY);
 +
-+	wait_for_thunderbolt_controller(pdev);
++		if (cap > 0)
++			port->cap_phy = cap;
++		else
++			tb_port_WARN(port, "non switch port without a PHY\n");
++	}
 +
- 	return 0;
+ 	tb_dump_port(sw->tb, &port->config);
+ 
+ 	/* TODO: Read dual link port, DP port and more from EEPROM. */
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index f1b6100..3b716fd 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -11,6 +11,47 @@
+ #include "tb.h"
+ #include "tb_regs.h"
+ 
++
++/* enumeration & hot plug handling */
++
++
++static void tb_scan_port(struct tb_port *port);
++
++/**
++ * tb_scan_switch() - scan for and initialize downstream switches
++ */
++static void tb_scan_switch(struct tb_switch *sw)
++{
++	int i;
++	for (i = 1; i <= sw->config.max_port_number; i++)
++		tb_scan_port(&sw->ports[i]);
++}
++
++/**
++ * tb_scan_port() - check for and initialize switches below port
++ */
++static void tb_scan_port(struct tb_port *port)
++{
++	struct tb_switch *sw;
++	if (tb_is_upstream_port(port))
++		return;
++	if (port->config.type != TB_TYPE_PORT)
++		return;
++	if (tb_wait_for_port(port, false) <= 0)
++		return;
++	if (port->remote) {
++		tb_port_WARN(port, "port already has a remote!\n");
++		return;
++	}
++	sw = tb_switch_alloc(port->sw->tb, tb_downstream_route(port));
++	if (!sw)
++		return;
++	port->remote = tb_upstream_port(sw);
++	tb_upstream_port(sw)->remote = port;
++	tb_scan_switch(sw);
++}
++
++
+ /* hotplug handling */
+ 
+ struct tb_hotplug_event {
+@@ -134,6 +175,9 @@ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
+ 	if (!tb->root_switch)
+ 		goto err_locked;
+ 
++	/* Full scan to discover devices added before the driver was loaded. */
++	tb_scan_switch(tb->root_switch);
++
+ 	/* Allow tb_handle_hotplug to progress events */
+ 	tb->hotplug_active = true;
+ 	mutex_unlock(&tb->lock);
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index feb6c7a..7e7b3fe 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -29,6 +29,7 @@ struct tb_port {
+ 	struct tb_regs_port_header config;
+ 	struct tb_switch *sw;
+ 	struct tb_port *remote; /* remote port, NULL if not connected */
++	int cap_phy; /* offset, zero if not found */
+ 	u8 port; /* port number on switch */
+ };
+ 
+@@ -160,6 +161,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
+ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
+ void tb_switch_free(struct tb_switch *sw);
+ 
++int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
++
+ int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
+ 
+ 
+@@ -173,4 +176,17 @@ static inline bool tb_is_upstream_port(struct tb_port *port)
+ 	return port == tb_upstream_port(port->sw);
  }
  
-@@ -171,7 +285,10 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.thaw		= pcie_port_device_resume,
- 	.poweroff	= pcie_port_device_suspend,
- 	.restore	= pcie_port_device_resume,
-+	.suspend_noirq  = pcie_port_suspend_noirq,
- 	.resume_noirq	= pcie_port_resume_noirq,
-+	.poweroff_noirq = pcie_port_suspend_noirq,
-+	.restore_noirq  = pcie_port_resume_noirq,
- 	.runtime_suspend = pcie_port_runtime_suspend,
- 	.runtime_resume = pcie_port_runtime_resume,
- 	.runtime_idle	= pcie_port_runtime_idle,
++/**
++ * tb_downstream_route() - get route to downstream switch
++ *
++ * Port must not be the upstream port (otherwise a loop is created).
++ *
++ * Return: Returns a route to the switch behind @port.
++ */
++static inline u64 tb_downstream_route(struct tb_port *port)
++{
++	return tb_route(port->sw)
++	       | ((u64) port->port << (port->sw->config.depth * 8));
++}
++
+ #endif
 -- 
 1.9.2
 
