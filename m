@@ -1,33 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46231 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751061AbaDXXn3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 19:43:29 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-CC: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] pci: Use designated initialization in PCI_VDEVICE
-Date: Thu, 24 Apr 2014 23:43:27 +0000
-Message-ID: <8514B09D-4F10-4B14-940D-9237425C32BB@intel.com>
-References: <1396303119-16766-1-git-send-email-jeffrey.t.kirsher@intel.com>
- <5339E746.4030503@cogentembedded.com> <20140424212246.GG29593@google.com>
- <512BF6D5-D529-4605-B1AB-A6DB7D153E14@intel.com>
-In-Reply-To: <512BF6D5-D529-4605-B1AB-A6DB7D153E14@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:38260 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754045AbaDKP5M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Apr 2014 11:57:12 -0400
+Received: by mail-wg0-f51.google.com with SMTP id k14so5530157wgh.34
+        for <linux-pci@vger.kernel.org>; Fri, 11 Apr 2014 08:57:11 -0700 (PDT)
+Date: Fri, 11 Apr 2014 16:57:04 +0100 (BST)
+From: Neil Greatorex <neil@fatboyfat.co.uk>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Tawfik Bayouk <tawfik@marvell.com>, linux-pci@vger.kernel.org,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	=?ISO-8859-15?Q?Gregory_Cl=E9ment?=
+	<gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: Fixing PCIe issues on Armada XP
+In-Reply-To: <20140411163228.4214645c@skate>
+Message-ID: <alpine.DEB.2.10.1404111653030.24288@vroombuntu>
+References: <20140410181953.50ccfcc3@skate> <20140411163228.4214645c@skate>
 MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Apr 24, 2014, at 4:15 PM, Rustad, Mark D <mark.d.rustad@intel.com> wrote:
+Thomas,
 
-<snip>
-> Adding the missing field in all of those places would also silence the message, but it seemed reasonable to have require that.
+On Fri, 11 Apr 2014, Thomas Petazzoni wrote:
 
-I meant "it seemed reasonable to *not* have to require that". Hopefully that helps it make some sense.
+> Can everybody test these patches, and confirm that they solve all the
+> outstanding problems?
 
--- 
-Mark Rustad, Networking Division, Intel Corporation
+PCIe now works well for me on my Mirabox / i350 combination with this 
+patch set. Thanks!
 
+Tested-by: Neil Greatorex <neil@fatboyfat.co.uk>
+
+Cheers,
+Neil
