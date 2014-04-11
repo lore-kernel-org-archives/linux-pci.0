@@ -1,86 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:33304 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751111AbaDRM6v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 08:58:51 -0400
-Date: Fri, 18 Apr 2014 14:58:47 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Neil Greatorex <neil@fatboyfat.co.uk>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Willy Tarreau <w@1wt.eu>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: Fixing PCIe issues on Armada XP
-Message-ID: <20140418145847.709b29ce@skate>
-In-Reply-To: <alpine.DEB.2.10.1404102206090.28003@vroombuntu>
-References: <20140410181953.50ccfcc3@skate>
-	<20140410165733.GB23104@obsidianresearch.com>
-	<20140410200153.46669e0c@skate>
-	<20140410201201.GA12661@obsidianresearch.com>
-	<alpine.DEB.2.10.1404102206090.28003@vroombuntu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx1.redhat.com ([209.132.183.28]:26432 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753294AbaDKBg7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Apr 2014 21:36:59 -0400
+Date: Fri, 11 Apr 2014 09:34:22 +0800
+From: Baoquan He <bhe@redhat.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Davidlohr Bueso <davidlohr@hp.com>,
+	James Bottomley <James.Bottomley@hansenpartnership.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>
+Subject: Re: hpsa driver bug crack kernel down!
+Message-ID: <20140411013422.GL11839@dhcp-16-105.nay.redhat.com>
+References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
+ <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
+ <1397084904.9519.62.camel@dabdike>
+ <1397085044.9519.63.camel@dabdike>
+ <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
+ <1397087425.9519.67.camel@dabdike>
+ <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
+ <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
+ <53465781.4010904@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53465781.4010904@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Neil, Jason,
+On 04/10/14 at 04:34pm, Jiang Liu wrote:
+> Hi Baoquan,
+> 	Could you please help to give output of "lspci -vvvv"?
+> Is device "hpsa 0000:03:00.0" a legacy PCI device(non-PCIe)?
+> It may have relationship with IOMMU driver.
+> Thanks!
+> Gerry
 
-On Thu, 10 Apr 2014 22:56:00 +0100 (BST), Neil Greatorex wrote:
+Hi,
 
-> I took your attached patch and extended it a bit to print out how long it 
-> took. The delays also need to be much longer for me. I also fixed a small 
-> typo you made where the bit wasn't being set again to bring the link back 
-> up. I've attached the diff to your patch, as well as the combined patch 
-> (hope that makes sense).
+I just saw your mail now. Do you still need the output of "lspci -vvvv"
+on my test machine? 
 
-Unfortunately here your patch doesn't work (and neither does the patch
-from Jason Gunthorpe). On Armada 370 DB, without the patch, the e1000e
-NIC is detected when earlyprintk is enabled, and not detected when
-earlyprintk is disabled. With the patch applied, the e1000e is no
-longer detected *at all*, even if earlyprintk is enabled.
+In fact, I didn't see the DMAR error related to intel vt-d issues.
 
-Extract from a boot log:
+If the output is helpful, I can make a latest build to do this.
 
-Linux version 3.15.0-rc1-00007-gedf643a-dirty (thomas@skate) (gcc version 4.8.1 (Ubuntu/Linaro 4.8.1-10ubuntu7) ) #317 SMP Fri Apr 18 14:54:13 CEST 2014
-[...]
-Kernel command line: console=ttyS0,115200 earlyprintk loglevel=8 root=/dev/nfs nfsroot=192.168.1.22:/home/thomas/nfsroot ip=192.168.1.142:192.168.1.22:192.168.1.1:255.255.255.0:devboard:eth0:on
-[...]
-mvebu-pcie pcie-controller.2: PCIe0.0: performing link reset
-mvebu-pcie pcie-controller.2: PCIe0.0: link went down after 20 tries
-mvebu-pcie pcie-controller.2: PCIe0.0: link came back up after 100 tries
-mvebu-pcie pcie-controller.2: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x1000-0xfffff]
-pci_bus 0000:00: root bus resource [mem 0xf8000000-0xffdfffff]
-pci_bus 0000:00: root bus resource [bus 00-ff]
-pci 0000:00:01.0: [11ab:6710] type 01 class 0x060400
-pci 0000:00:02.0: [11ab:6710] type 01 class 0x060400
-PCI: bus0: Fast back to back transfers disabled
-pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:00:02.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-PCI: bus1: Fast back to back transfers enabled
-pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-PCI: bus2: Fast back to back transfers enabled
-pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to 02
-pci 0000:00:01.0: PCI bridge to [bus 01]
-pci 0000:00:02.0: PCI bridge to [bus 02]
-[...]
-# /usr/sbin/lspci 
-00:01.0 PCI bridge: Marvell Technology Group Ltd. Device 6710
-00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 6710
-#
+Thanks
+Baoquan
 
-Any idea?
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+> 
+> On 2014/4/10 12:03, Bjorn Helgaas wrote:
+> > [+cc Joerg, iommu list]
+> > 
+> > On Wed, Apr 9, 2014 at 6:19 PM, Davidlohr Bueso <davidlohr@hp.com> wrote:
+> >> On Wed, 2014-04-09 at 16:50 -0700, James Bottomley wrote:
+> >>> On Wed, 2014-04-09 at 16:40 -0700, Davidlohr Bueso wrote:
+> >>>> On Wed, 2014-04-09 at 16:10 -0700, James Bottomley wrote:
+> >>>>> On Wed, 2014-04-09 at 16:08 -0700, James Bottomley wrote:
+> >>>>>> [+linux-scsi]
+> >>>>>> On Wed, 2014-04-09 at 15:49 -0700, Davidlohr Bueso wrote:
+> >>>>>>> On Wed, 2014-04-09 at 10:39 +0800, Baoquan He wrote:
+> >>>>>>>> Hi,
+> >>>>>>>>
+> >>>>>>>> The kernel is 3.14.0+ which is pulled just now.
+> >>>>>>>
+> >>>>>>> Cc'ing more people.
+> >>>>>>>
+> >>>>>>> While the hpsa driver appears to be involved in some way, I'm sure if
+> >>>>>>> this is a related issue, but as of today's pull I'm getting another
+> >>>>>>> problem that causes my DL980 not to come up.
+> >>>>>>>
+> >>>>>>> *Massive* amounts of:
+> >>>>>>>
+> >>>>>>> DMAR:[fault reason 02] Present bit in context entry is clear
+> >>>>>>> dmar: DRHD: handling fault status reg 602
+> >>>>>>> dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7f61e000
+> >>>>>>>
+> >>>>>>> Then:
+> >>>>>>>
+> >>>>>>> hpsa 0000:03:00.0: Controller lockup detected: 0xffff0000
+> >>>>>>> ...
+> >>>>>>> Workqueue: events hpsa_monitor_ctlr_worker [hpsa]
+> >>>>>>> ...
+> >>>>>>>
+> >>>>>>> Screenshot of the actual LOCKUP:
+> >>>>>>> http://stgolabs.net/hpsa-hard-lockup-3.14+.png
+> >>>>>>>
+> >>>>>>> While I haven't bisected, things worked fine until at least until commit
+> >>>>>>> 39de65aa2c3e (April 2nd).
+> >>>>>>>
+> >>>>>>> Any ideas?
+> >>>>>>
+> >>>>>> Well, it's either a DMA remapping issue or a hpsa one.  Your assertion
+> >>>>>> that everything worked fine until 39de65aa2c3e would tend to vindicate
+> >>>>>> hpsa,
+> >>>>
+> >>>> Hmm here you mean DMA, right?
+> >>>
+> >>> No, it vindicates the hpsa changes ... they don't seem to be causing
+> >>> problems until something goes wrong with dma remapping.
+> >>>
+> >>>>> because all the hpsa changes went in before that under
+> >>>>> Missing crucial info:
+> >>>>>
+> >>>>> commit 1a0b6abaea78f73d9bc0a2f6df2d9e4c917cade1
+> >>>>>
+> >>>>>> Merge: 3e75c6d b2bff6c
+> >>>>>> Author: Linus Torvalds <torvalds@linux-foundation.org>
+> >>>>>> Date:   Tue Apr 1 18:49:04 2014 -0700
+> >>>>>>
+> >>>>>>     Merge tag 'scsi-misc' of
+> >>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi
+> >>>>>>
+> >>>>>> can you revalidate that this commit works OK just to make sure?
+> >>>>
+> >>>> Ok so I don't see those DMA messages and system starts just fine. I'm
+> >>>> thinking perhaps something broke after the IO mmu stuff in commit
+> >>>> 3f583bc21977a608908b83d03ee2250426a5695c... could this be indirectly
+> >>>> causing the CPU stalls and just blame hpsa in the path as a side effect?
+> >>>>
+> >>>> /me goes out to try the commit.
+> >>>
+> >>> That's my guess.  The DMAR messages are DMA remapping issues caused in
+> >>> the IOMMU.  If I had to guess, I'd say the DMAR fault message is
+> >>> indicating the IOMMU is calling for a mapping address before it can
+> >>> satisfy the driver read request, which is causing the hang apparently in
+> >>> the hpsa driver.
+> >>>
+> >>> I've added linux-pci to the cc; I think they deal with iommu issues on
+> >>> x86.
+> >>
+> >> So that merge commit appears to be the culprit, I see both the DMA
+> >> messages and the lockup blaming hpsa...
+> > 
+> > My understanding so far (please correct me if I'm wrong):
+> > 
+> > 39de65aa2c3e OK ("Merge branch 'i2c/for-next'")
+> > 1a0b6abaea78 OK ("Merge tag 'scsi-misc'")
+> > 3f583bc21977 BAD ("Merge tag 'iommu-updates-v3.15'")
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+> > 
