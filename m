@@ -1,88 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:48299 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756664AbaDHM6M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 08:58:12 -0400
-Received: by mail-pd0-f176.google.com with SMTP id r10so968250pdi.21
-        for <linux-pci@vger.kernel.org>; Tue, 08 Apr 2014 05:58:12 -0700 (PDT)
-Message-ID: <5343F252.2050708@linaro.org>
-Date: Tue, 08 Apr 2014 20:57:54 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Received: from gate.crashing.org ([63.228.1.57]:50151 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751018AbaDKFCN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Apr 2014 01:02:13 -0400
+Message-ID: <1397192469.19518.11.camel@pasglop>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
+ pci_host_bridge.
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>
-CC: Grant Likely <grant.likely@secretlab.ca>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH v7 6/6] pci: Add support for creating a generic host_bridge
- from device tree
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <1394811272-1547-7-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1394811272-1547-7-git-send-email-Liviu.Dudau@arm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Date: Fri, 11 Apr 2014 15:01:09 +1000
+In-Reply-To: <6459805.ygy4tBNDNz@wuerfel>
+References: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
+	 <6144916.rD76jOL8sv@wuerfel>
+	 <20140410145304.GS985@e106497-lin.cambridge.arm.com>
+	 <6459805.ygy4tBNDNz@wuerfel>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Liviu,
+On Thu, 2014-04-10 at 22:46 +0200, Arnd Bergmann wrote:
 
-On 2014-3-14 23:34, Liviu Dudau wrote:
-> Several platforms use a rather generic version of parsing
-> the device tree to find the host bridge ranges. Move the common code
-> into the generic PCI code and use it to create a pci_host_bridge
-> structure that can be used by arch code.
+> Half of it ;-)
 > 
-> Based on early attempts by Andrew Murray to unify the code.
-> Used powerpc and microblaze PCI code as starting point.
+> I think it would be better to not have an architecture specific data
+> structure, just like it would be better not to have architecture specific
+> pcibios_* functions that get called by the PCI core. Note that the
+> architecture specific functions are the ones that rely on the architecture
+> specific data structures as well. If they only use the common fields,
+> it should also be possible to share the code.
+
+I don't understand... we'll never get rid of architecture specific hooks
+in one form or another.
+
+We'll always need to some things in an architecture or host-bridge
+specific way. Now if you don't want to call them arch hooks, then call
+them host bridge ops, but they are needed and thus they will need some
+kind of architecture specific extension to the base host bridge 
+structure.
+
+EEH is one big nasty example on powerpc.
+
+Another random one that happens to be hot in my brain right now because
+we just finished debugging it: On powernv, we are just fixing a series
+of bugs caused by the generic code trying to do hot resets on PCIe "by
+hand" by directly toggling the secondary reset register in bridges.
+
+Well, on our root complexes, this triggers a link loss which triggers
+a fatal EEH "ER_all" interrupt which we escalate into a fence and all
+hell breaks loose.
+
+We need to mask some error traps in the hardware before doing something
+that can cause an intentional link loss... and unmask them when done.
+(Among other things, there are other issues on P7 with hot reset).
+
+So hot reset must be an architecture hook.
+
+PERST (fundamental reset) can *only* be a hook. The way to generate a
+PERST is not specified. In fact, on our machines, we have special GPIOs
+we can use to generate PERST on individual slots below a PLX bridge
+and a different methods for slots directly on a PHB.
+
+Eventually most of those hooks land into firmware, and as such it's akin
+to ACPI which also keeps a separate state structure and a pile of hooks.
+
+> I also don't realistically think we can get there on a lot of architectures
+> any time soon. Note that most architectures only have one PCI host
+> implementation, so the architecture structure is the same as the host
+> driver structure anyway.
 > 
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  drivers/pci/host-bridge.c | 158 ++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h       |  13 +++
->  2 files changed, 171 insertions(+)
+> For architectures like powerpc and arm that have people actively working
+> on them, we have a chance to clean up that code in the way we want it
+> (if we can agree on the direction), but it's still not trivial to do.
 > 
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 8708b652..7cda90b 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -6,9 +6,14 @@
->  #include <linux/init.h>
->  #include <linux/pci.h>
->  #include <linux/module.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/slab.h>
->  
->  #include "pci.h"
->  
-> +static atomic_t domain_nr = ATOMIC_INIT(-1);
+> Speaking of arm32 in particular, I think we will end up with a split
+> approach: modern platforms (multiplatform, possibly all DT based) using
+> PCI core infrastructure directly and no architecture specific PCI
+> code on the one side, and a variation of today's code for the legacy
+> platforms on the other.
+> 
+> 	Arnd
 
-domain_nr will only be used inside the #ifdef CONFIG_OF,
-and this will lead to compile warning which complains that
-'domain_nr' defined but not used when CONFIG_OF=n (for example
-on x86).
 
-How about moving the definition to --->
-
-> +
->  static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->  {
->  	while (bus->parent)
-> @@ -92,3 +97,156 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
->  	res->end = region->end + offset;
->  }
->  EXPORT_SYMBOL(pcibios_bus_to_resource);
-> +
-> +#ifdef CONFIG_OF
-
-here?
-
-Thanks
-Hanjun
