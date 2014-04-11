@@ -1,70 +1,116 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Neela Syam Kolli <megaraidlinux@lsi.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 14/23] megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:38 +0200
-Message-Id: <4c833c2a7120915767c71c3262dada8896723e7b.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
+Date: Fri, 11 Apr 2014 10:22:25 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140411092225.GW985@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
+ <6144916.rD76jOL8sv@wuerfel>
+ <20140410145304.GS985@e106497-lin.cambridge.arm.com>
+ <6459805.ygy4tBNDNz@wuerfel>
+MIME-Version: 1.0
+In-Reply-To: <6459805.ygy4tBNDNz@wuerfel>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Thu, Apr 10, 2014 at 09:46:36PM +0100, Arnd Bergmann wrote:
+> On Thursday 10 April 2014 15:53:04 Liviu Dudau wrote:
+> > On Thu, Apr 10, 2014 at 03:07:44PM +0100, Arnd Bergmann wrote:
+> 
+> > > This mirrors how we treat devices: a pci_device has an embedded device,
+> > > and so on, in other subsystems we can have multiple layers.
+> > > 
+> > > In this example, the tegra pcie driver then allocates its own tegra_pcie
+> > > structure, fills out the fields it needs, and registers it with the
+> > > ARM architecture code, passing just the pci_sys_data pointer. That function
+> > > in turn passes a pointer to the embedded pci_host_bridge down to the
+> > > generic code. Ideally we should try to eliminate the architecture specific
+> > > portion here, but that is a later step.
+> > 
+> > So Arnd seems to agree with me: we should try to get out of architecture specific
+> > pci_sys_data and link the host bridge driver straight into the PCI core. The
+> > core then can call into arch code via pcibios_*() functions.
+> > 
+> > Arnd, am I reading correctly into what you are saying?
+> 
+> Half of it ;-)
+> 
+> I think it would be better to not have an architecture specific data
+> structure, just like it would be better not to have architecture specific
+> pcibios_* functions that get called by the PCI core. Note that the
+> architecture specific functions are the ones that rely on the architecture
+> specific data structures as well. If they only use the common fields,
+> it should also be possible to share the code.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/megaraid/megaraid_sas_base.c |   20 +++++++-------------
- 1 files changed, 7 insertions(+), 13 deletions(-)
+While I've come to like the pcibios_*() interface (and yes, it could be
+formalised and abstracted into a pci_xxxx_ops structure) I don't like the fact
+that those functions use architectural data in order to function. I know it
+might sound strange, as they *are* supposed to be implemented by the arches,
+but in my mind the link between generic code and arch code for PCI should be
+done by the host bridge driver. That's how PCI spec describes it, and I see no
+reason why we should not be able to adopt the same view.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 2df717c..26f89d4 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4106,17 +4106,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 					     (unsigned int)num_online_cpus());
- 		for (i = 0; i < instance->msix_vectors; i++)
- 			instance->msixentry[i].entry = i;
--		i = pci_enable_msix(instance->pdev, instance->msixentry,
--				    instance->msix_vectors);
--		if (i >= 0) {
--			if (i) {
--				if (!pci_enable_msix(instance->pdev,
--						     instance->msixentry, i))
--					instance->msix_vectors = i;
--				else
--					instance->msix_vectors = 0;
--			}
--		} else
-+		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
-+					  1, instance->msix_vectors);
-+		if (i)
-+			instance->msix_vectors = i;
-+		else
- 			instance->msix_vectors = 0;
- 
- 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
-@@ -5136,8 +5130,8 @@ megasas_resume(struct pci_dev *pdev)
- 
- 	/* Now re-enable MSI-X */
- 	if (instance->msix_vectors &&
--	    pci_enable_msix(instance->pdev, instance->msixentry,
--			    instance->msix_vectors))
-+	    pci_enable_msix_exact(instance->pdev, instance->msixentry,
-+				  instance->msix_vectors))
- 		goto fail_reenable_msix;
- 
- 	switch (instance->pdev->device) {
+To be more precise, what I would like to happen in the case of some functions
+would be for the PCI core code to call a pci_host_bridge_ops method which
+in turn will call the arch specific code if it needs to. Why I think that would
+be better? Because otherwise you put in the architectural side code to cope
+with a certain host bridge, then another host bridge comes in and you add
+more architectural code, but then when you port host bridge X to arch B you
+discover that you need to add code there as well for X. And it all ends up in
+the mess we currently have where the drivers in drivers/pci/host are not capable
+of being ported to a different architecture because they rely on infrastructure
+only present in arm32 that is not properly documented.
+
+> 
+> I also don't realistically think we can get there on a lot of architectures
+> any time soon. Note that most architectures only have one PCI host
+> implementation, so the architecture structure is the same as the host
+> driver structure anyway.
+> 
+> For architectures like powerpc and arm that have people actively working
+> on them, we have a chance to clean up that code in the way we want it
+> (if we can agree on the direction), but it's still not trivial to do.
+> 
+> Speaking of arm32 in particular, I think we will end up with a split
+> approach: modern platforms (multiplatform, possibly all DT based) using
+> PCI core infrastructure directly and no architecture specific PCI
+> code on the one side, and a variation of today's code for the legacy
+> platforms on the other.
+
+Actually, if we could come up with a compromise for the pci_fixup_*() functions
+(are they still used by functional hardware?) then I think we could convert
+most of the arm32 arch code to re-direct the calls to the infrastructure code.
+But yes, there might be a lot of resistance to change due to lack of resources
+when changing old platforms.
+
+Best regards,
+Liviu
+
+> 
+> 	Arnd
+> 
+> 
+
 -- 
-1.7.7.6
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
