@@ -1,83 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15907 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:61438 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754902AbaDSCxx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Apr 2014 22:53:53 -0400
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH v2 4/5] ACPI/PCI: Warn if we have to "guess" host bridge node
-	information
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
-	kim.naru@amd.com, andreas.herrmann3@amd.com, daniel@numascale.com,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	x86@kernel.org, bp@suse.de, sp@numascale.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 18 Apr 2014 20:53:39 -0600
-Message-ID: <20140419025339.2408.17866.stgit@amt.stowe>
-In-Reply-To: <20140419025308.2408.51252.stgit@amt.stowe>
-References: <20140419025308.2408.51252.stgit@amt.stowe>
+	id S1751104AbaDKDOE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Apr 2014 23:14:04 -0400
+Date: Fri, 11 Apr 2014 11:11:31 +0800
+From: Baoquan He <bhe@redhat.com>
+To: scameron@beardog.cce.hp.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Davidlohr Bueso <davidlohr@hp.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH] hpsa: fix uninitialized trans_support in
+ hpsa_put_ctlr_into_performant_mode()
+Message-ID: <20140411031131.GN11839@dhcp-16-105.nay.redhat.com>
+References: <20140410221704.GA22465@beardog.cce.hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140410221704.GA22465@beardog.cce.hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The vast majority of platforms are not supplying ACPI _PXM (proximity)
-information corresponding to host bridge (PNP0A03/PNP0A08) devices
-resulting in sysfs "numa_node" values of -1 (NUMA_NO_NODE) [1]:
-  # for i in /sys/devices/pci0000\:00/*/numa_node; do cat $i; done | uniq
-  -1
+This patch works for me.
 
-  # find /sys/ -name "numa_node" | while read fname; do cat $fname; \
-    done | uniq
-  -1
+Tested-by: Baoquan He <bhe@redhat.com>
 
-AMD based platforms provide a fall-back for this situation via amd_bus.c.
-These platforms snoop out the information by directly reading specific
-registers from the Northbridge and caching them via 'alloc_pci_root_info'.
+Thanks
+Baoquan
 
-Later during boot processing when host bridges are discovered -
-'pci_acpi_scan_root' - the kernel looks for their corresponding ACPI _PXM
-method - drivers/acpi/numa.c::acpi_get_node().  If the BIOS supplied a
-_PXM method then that node (proximity) value is associated.  If the BIOS
-did not supply a _PXM method *and* the platform is AMD based, the
-fall-back cached values obtained directly from the Northbridge are used;
-otherwise, "NUMA_NO_NODE" is associated.
-
-There are a number of issues with this fall-back mechanism the most
-notable being that amd_bus.c extracts a 3-bit number from a CPU register
-and uses it as the node number.  The node numbers used by Linux are
-logical and there's no reason they need to be identical to settings in the
-CPU registers.  So if we have some node information obtained in the normal
-way (from _PXM, SLIT, SRAT, etc.) and some from amd_bus.c, there's no
-reason to believe they will be compatible.
-
-This patch warns when this situation occurs:
-  pci_root PNP0A08:00: [Firmware Bug]: No _PXM; guessing node number 0
-
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=72051
-
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
-
- arch/x86/pci/acpi.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
-
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 01edac6..80c09ba 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -489,8 +489,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	}
- 
- 	node = acpi_get_node(device->handle);
--	if (node == NUMA_NO_NODE)
-+	if (node == NUMA_NO_NODE) {
- 		node = x86_pci_root_bus_node(busnum);
-+		if (node != NUMA_NO_NODE)
-+			dev_info(&device->dev, FW_BUG "No _PXM; guessing node number %x\n",
-+				node);
-+	}
- 
- 	if (node != NUMA_NO_NODE && !node_online(node))
- 		node = NUMA_NO_NODE;
-
+On 04/10/14 at 05:17pm, scameron@beardog.cce.hp.com wrote:
+> 
+> Without this, you'll see a null pointer dereference in
+> hpsa_enter_performant_mode().
+> 
+> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> ---
+>  drivers/scsi/hpsa.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 8cf4a0c..ef4dfdd 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -7463,6 +7463,10 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+>  	if (hpsa_simple_mode)
+>  		return;
+>  
+> +	trans_support = readl(&(h->cfgtable->TransportSupport));
+> +	if (!(trans_support & PERFORMANT_MODE))
+> +		return;
+> +
+>  	/* Check for I/O accelerator mode support */
+>  	if (trans_support & CFGTBL_Trans_io_accel1) {
+>  		transMethod |= CFGTBL_Trans_io_accel1 |
+> -- 
+> 1.7.1
+> 
