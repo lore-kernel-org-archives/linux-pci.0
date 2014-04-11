@@ -1,91 +1,273 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog124.obsmtp.com ([207.126.144.157]:56165 "EHLO
-	eu1sys200aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756165AbaDHGz4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 02:55:56 -0400
-Message-ID: <53439C98.8090202@mellanox.com>
-Date: Tue, 8 Apr 2014 09:52:08 +0300
-From: Or Gerlitz <ogerlitz@mellanox.com>
-MIME-Version: 1.0
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-CC: <yevgenyp@mellanox.com>, <amirv@mellanox.com>,
-	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <davem@davemloft.net>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>
-Subject: Re: [Patch net-next] net/mlx4_core: match pci_device_id including
- dynids
-References: <1396750050-7183-1-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1396750050-7183-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Daniel J Blueman <daniel@quora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v2 04/14] thunderbolt: Add tb_regs.h
+Date: Fri, 11 Apr 2014 02:24:51 +0200
+Message-Id: <1397175901-4023-5-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
+References: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/04/2014 05:07, Wei Yang wrote:
-> Fix issue introduced by commit: 97a5221 "net/mlx4_core: pass
-> pci_device_id.driver_data to __mlx4_init_one during reset".
->
-> pci_match_id() just match the static pci_device_id, which may return NULL if
-> someone binds the driver to a device manually using
-> /sys/bus/pci/drivers/.../new_id.
->
-> This patch wrap up a helper function __mlx4_remove_one() which does the tear
-> down function but preserve the drv_data. Functions like
-> mlx4_pci_err_detected() and mlx4_restart_one() will call this one with out
-> releasing drvdata.
->
-> Tested on ConnectX-3.
->
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Amir Vadai <amirv@mellanox.com>
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> ---
->   drivers/net/ethernet/mellanox/mlx4/main.c |  165 +++++++++++++++--------------
->   1 file changed, 88 insertions(+), 77 deletions(-)
->
-> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
-> index aa54ef7..9dd23e0 100644
-> --- a/drivers/net/ethernet/mellanox/mlx4/main.c
-> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-> @@ -2268,13 +2268,8 @@ static int __mlx4_init_one(struct pci_dev *pdev, int pci_dev_data)
->   	/* Allow large DMA segments, up to the firmware limit of 1 GB */
->   	dma_set_max_seg_size(&pdev->dev, 1024 * 1024 * 1024);
->   
-> -	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
-> -	if (!priv) {
-> -		err = -ENOMEM;
-> -		goto err_release_regions;
-> -	}
-> -
-> -	dev       = &priv->dev;
-> +	dev       = pci_get_drvdata(pdev);
-> +	priv      = mlx4_priv(dev);
->   	dev->pdev = pdev;
->   	INIT_LIST_HEAD(&priv->ctx_list);
->   	spin_lock_init(&priv->ctx_lock);
+Every thunderbolt device consists (logically) of a switch with multiple
+ports. Every port contains up to four config regions (HOPS, PORT,
+SWITCH, COUNTERS) which are used to configure the device.
 
-Here are some comments from Jack, please make sure to CC Jack 
-Morgenstein <jackm@dev.mellanox.co.il>
-on V2 of the patch -->
+The tb_regs.h file contains all known registers and capabilities from
+these config regions.
 
-There is a change in behavior here, which I am concerned about.
-Before this patch, __mlx4_init_one() allocated a zeroed-out structure
-for priv, in all circumstances.
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+---
+ drivers/thunderbolt/tb.c      |   5 +
+ drivers/thunderbolt/tb_regs.h | 213 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 218 insertions(+)
+ create mode 100644 drivers/thunderbolt/tb_regs.h
 
-Now, this structure is passed "dirty" to __mlx4_init_one from some
-flows (e.g., mlx4_restart_one).
-There may, in fact, be fields in the structure which should be "zeroed
-out" and are not, because previously there was no reason to be strict
-about this.
-
-Add a line with
-
-memset(priv, 0, sizeof(*priv));
-
-
-after setting the priv variable above
-
-and also do NOT remove the following line:
-
-- priv->pci_dev_data = pci_dev_data;
-
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 6920979..164dea0 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -9,6 +9,7 @@
+ #include <linux/delay.h>
+ 
+ #include "tb.h"
++#include "tb_regs.h"
+ 
+ /* hotplug handling */
+ 
+@@ -100,6 +101,10 @@ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
+ {
+ 	struct tb *tb;
+ 
++	BUILD_BUG_ON(sizeof(struct tb_regs_switch_header) != 5 * 4);
++	BUILD_BUG_ON(sizeof(struct tb_regs_port_header) != 8 * 4);
++	BUILD_BUG_ON(sizeof(struct tb_regs_hop) != 2 * 4);
++
+ 	tb = kzalloc(sizeof(*tb), GFP_KERNEL);
+ 	if (!tb)
+ 		return NULL;
+diff --git a/drivers/thunderbolt/tb_regs.h b/drivers/thunderbolt/tb_regs.h
+new file mode 100644
+index 0000000..6577af7
+--- /dev/null
++++ b/drivers/thunderbolt/tb_regs.h
+@@ -0,0 +1,213 @@
++/*
++ * Thunderbolt Cactus Ridge driver - Port/Switch config area registers
++ *
++ * Every thunderbolt device consists (logically) of a switch with multiple
++ * ports. Every port contains up to four config regions (HOPS, PORT, SWITCH,
++ * COUNTERS) which are used to configure the device.
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#ifndef _TB_REGS
++#define _TB_REGS
++
++#include <linux/types.h>
++
++
++#define TB_ROUTE_SHIFT 8  /* number of bits in a port entry of a route */
++
++
++/*
++ * TODO: should be 63? But we do not know how to receive frames larger than 256
++ * bytes at the frame level. (header + checksum = 16, 60*4 = 240)
++ */
++#define TB_MAX_CONFIG_RW_LENGTH 60
++
++enum tb_cap {
++	TB_CAP_PHY		= 0x0001,
++	TB_CAP_TIME1		= 0x0003,
++	TB_CAP_PCIE		= 0x0004,
++	TB_CAP_I2C		= 0x0005,
++	TB_CAP_PLUG_EVENTS	= 0x0105, /* also EEPROM */
++	TB_CAP_TIME2		= 0x0305,
++	TB_CAL_IECS		= 0x0405,
++	TB_CAP_LINK_CONTROLLER	= 0x0605, /* also IECS */
++};
++
++enum tb_port_state {
++	TB_PORT_DISABLED	= 0, /* tb_cap_phy.disable == 1 */
++	TB_PORT_CONNECTING	= 1, /* retry */
++	TB_PORT_UP		= 2,
++	TB_PORT_UNPLUGGED	= 7,
++};
++
++/* capability headers */
++
++struct tb_cap_basic {
++	u8 next;
++	/* enum tb_cap cap:8; prevent "narrower than values of its type" */
++	u8 cap; /* if cap == 0x05 then we have a extended capability */
++} __packed;
++
++struct tb_cap_extended_short {
++	u8 next; /* if next and length are zero then we have a long cap */
++	enum tb_cap cap:16;
++	u8 length;
++} __packed;
++
++struct tb_cap_extended_long {
++	u8 zero1;
++	enum tb_cap cap:16;
++	u8 zero2;
++	u16 next;
++	u16 length;
++} __packed;
++
++/* capabilities */
++
++struct tb_cap_link_controller {
++	struct tb_cap_extended_long cap_header;
++	u32 count:4; /* number of link controllers */
++	u32 unknown1:4;
++	u32 base_offset:8; /*
++			    * offset (into this capability) of the configuration
++			    * area of the first link controller
++			    */
++	u32 length:12; /* link controller configuration area length */
++	u32 unknown2:4; /* TODO check that length is correct */
++} __packed;
++
++struct tb_cap_phy {
++	struct tb_cap_basic cap_header;
++	u32 unknown1:16;
++	u32 unknown2:14;
++	bool disable:1;
++	u32 unknown3:11;
++	enum tb_port_state state:4;
++	u32 unknown4:2;
++} __packed;
++
++struct tb_eeprom_ctl {
++	bool clock:1; /* send pulse to transfer one bit */
++	bool access_low:1; /* set to 0 before access */
++	bool data_out:1; /* to eeprom */
++	bool data_in:1; /* from eeprom */
++	bool access_high:1; /* set to 1 before access */
++	bool not_present:1; /* should be 0 */
++	bool unknown1:1;
++	bool present:1; /* should be 1 */
++	u32 unknown2:24;
++} __packed;
++
++struct tb_cap_plug_events {
++	struct tb_cap_extended_short cap_header;
++	u32 __unknown1:2;
++	u32 plug_events:5;
++	u32 __unknown2:25;
++	u32 __unknown3;
++	u32 __unknown4;
++	struct tb_eeprom_ctl eeprom_ctl;
++	u32 __unknown5[7];
++	u32 drom_offset; /* 32 bit register, but eeprom addresses are 16 bit */
++} __packed;
++
++/* device headers */
++
++/* Present on port 0 in TB_CFG_SWITCH at address zero. */
++struct tb_regs_switch_header {
++	/* DWORD 0 */
++	u16 vendor_id;
++	u16 device_id;
++	/* DWORD 1 */
++	u32 first_cap_offset:8;
++	u32 upstream_port_number:6;
++	u32 max_port_number:6;
++	u32 depth:3;
++	u32 __unknown1:1;
++	u32 revision:8;
++	/* DWORD 2 */
++	u32 route_lo;
++	/* DWORD 3 */
++	u32 route_hi:31;
++	bool enabled:1;
++	/* DWORD 4 */
++	u32 plug_events_delay:8; /*
++				  * RW, pause between plug events in
++				  * milliseconds. Writing 0x00 is interpreted
++				  * as 255ms.
++				  */
++	u32 __unknown4:16;
++	u32 thunderbolt_version:8;
++} __packed;
++
++enum tb_port_type {
++	TB_TYPE_INACTIVE	= 0x000000,
++	TB_TYPE_PORT		= 0x000001,
++	TB_TYPE_NHI		= 0x000002,
++	/* TB_TYPE_ETHERNET	= 0x020000, lower order bits are not known */
++	/* TB_TYPE_SATA		= 0x080000, lower order bits are not known */
++	TB_TYPE_DP_HDMI_IN	= 0x0e0101,
++	TB_TYPE_DP_HDMI_OUT	= 0x0e0102,
++	TB_TYPE_PCIE_DOWN	= 0x100101,
++	TB_TYPE_PCIE_UP		= 0x100102,
++	/* TB_TYPE_USB		= 0x200000, lower order bits are not known */
++};
++
++/* Present on every port in TB_CF_PORT at address zero. */
++struct tb_regs_port_header {
++	/* DWORD 0 */
++	u16 vendor_id;
++	u16 device_id;
++	/* DWORD 1 */
++	u32 first_cap_offset:8;
++	u32 max_counters:11;
++	u32 __unknown1:5;
++	u32 revision:8;
++	/* DWORD 2 */
++	enum tb_port_type type:24;
++	u32 thunderbolt_version:8;
++	/* DWORD 3 */
++	u32 __unknown2:20;
++	u32 port_number:6;
++	u32 __unknown3:6;
++	/* DWORD 4 */
++	u32 nfc_credits;
++	/* DWORD 5 */
++	u32 max_in_hop_id:11;
++	u32 max_out_hop_id:11;
++	u32 __unkown4:10;
++	/* DWORD 6 */
++	u32 __unknown5;
++	/* DWORD 7 */
++	u32 __unknown6;
++
++} __packed;
++
++/* Hop register from TB_CFG_HOPS. 8 byte per entry. */
++struct tb_regs_hop {
++	/* DWORD 0 */
++	u32 next_hop:11; /*
++			  * hop to take after sending the packet through
++			  * out_port (on the incoming port of the next switch)
++			  */
++	u32 out_port:6; /* next port of the path (on the same switch) */
++	u32 initial_credits:8;
++	u32 unknown1:6; /* set to zero */
++	bool enable:1;
++
++	/* DWORD 1 */
++	u32 weight:4;
++	u32 unknown2:4; /* set to zero */
++	u32 priority:3;
++	bool drop_packages:1;
++	u32 counter:11; /* index into TB_CFG_COUNTERS on this port */
++	bool counter_enable:1;
++	bool ingress_fc:1;
++	bool egress_fc:1;
++	bool ingress_shared_buffer:1;
++	bool egress_shared_buffer:1;
++	u32 unknown3:4; /* set to zero */
++} __packed;
++
++
++#endif
+-- 
+1.9.2
 
