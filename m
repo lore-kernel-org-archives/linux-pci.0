@@ -1,49 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:54278 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754500AbaD3BAB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 21:00:01 -0400
-Received: by mail-ie0-f173.google.com with SMTP id rp18so1147389iec.18
-        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 18:00:00 -0700 (PDT)
-Subject: [PATCH 3/7] PCI: Don't convert BAR address to resource if
- dma_addr_t is too small
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Tue, 29 Apr 2014 18:59:59 -0600
-Message-ID: <20140430005958.13138.17945.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from cn.fujitsu.com ([59.151.112.132]:4836 "EHLO
+	heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751177AbaDKH7P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Apr 2014 03:59:15 -0400
+From: Duan Jiong <duanj.fnst@cn.fujitsu.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+	<swarren@wwwdotorg.org>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Duan Jiong <duanj.fnst@cn.fujitsu.com>
+Subject: [PATCH] ARM: tegra: replace IS_ERR and PTR_ERR with PTR_ERR_OR_ZERO
+Date: Fri, 11 Apr 2014 15:56:40 +0800
+Message-ID: <1397203000-16586-1-git-send-email-duanj.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If dma_addr_t is too small to represent the BAR value,
-pcibios_bus_to_resource() will fail, so just remember the BAR size directly
-in the resource.  The resource is already marked UNSET, so we know the
-address isn't valid anyway.
+This patch fixes coccinelle error regarding usage of IS_ERR and
+PTR_ERR instead of PTR_ERR_OR_ZERO.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Duan Jiong <duanj.fnst@cn.fujitsu.com>
 ---
- drivers/pci/probe.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/pci/host/pci-tegra.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index afae3bf405fa..82cd75f6118a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -258,9 +258,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			pci_write_config_dword(dev, pos, 0);
- 			pci_write_config_dword(dev, pos + 4, 0);
- 			res->flags |= IORESOURCE_UNSET;
--			region.start = 0;
--			region.end = sz64;
-+			res->start = 0;
-+			res->end = sz64;
- 			bar_disabled = true;
-+			goto out;
- 		} else {
- 			region.start = l64;
- 			region.end = l64 + sz64;
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 330f7e3..e06ffa4 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1024,10 +1024,7 @@ static int tegra_pcie_resets_get(struct tegra_pcie *pcie)
+ 		return PTR_ERR(pcie->afi_rst);
+ 
+ 	pcie->pcie_xrst = devm_reset_control_get(pcie->dev, "pcie_x");
+-	if (IS_ERR(pcie->pcie_xrst))
+-		return PTR_ERR(pcie->pcie_xrst);
+-
+-	return 0;
++	return PTR_ERR_OR_ZERO(pcie->pcie_xrst);
+ }
+ 
+ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+-- 
+1.8.3.1
 
