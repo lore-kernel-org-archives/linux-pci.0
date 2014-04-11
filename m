@@ -1,339 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:43161 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925AbaDPWLQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 18:11:16 -0400
-Received: by mail-ig0-f175.google.com with SMTP id ur14so1591763igb.14
-        for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2014 15:11:16 -0700 (PDT)
-Date: Wed, 16 Apr 2014 16:11:13 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	amirv@mellanox.com, Or Gerlitz <ogerlitz@mellanox.com>,
-	eugenia@mellanox.com, Guo Chao <yan@linux.vnet.ibm.com>,
-	talal@mellanox.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7] PCI: Try best to allocate pref mmio 64bit above 4g
-Message-ID: <20140416221113.GA14709@google.com>
-References: <CAE9FiQXzRQ9S0mwwb58R2icBTtHHJ6NMVFMaxEgtVNP9mZVjZw@mail.gmail.com>
- <1394222924-28886-1-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394222924-28886-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:54933 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422748AbaDKAZv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 20:25:51 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Daniel J Blueman <daniel@quora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v2 09/14] thunderbolt: Handle hotplug events
+Date: Fri, 11 Apr 2014 02:24:56 +0200
+Message-Id: <1397175901-4023-10-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
+References: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[-cc Gavin (addr is bouncing)]
+We reveive a plug event callback whenever a thunderbolt device is added
+or removed. This patch fills in the tb_handle_hotplug method and starts
+reacting to these events by adding/removing switches from the hierarchy.
 
-On Fri, Mar 07, 2014 at 12:08:44PM -0800, Yinghai Lu wrote:
-> When one of children resources does not support MEM_64, MEM_64 for
-> bridge get reset, so pull down whole pref resource on the bridge under 4G.
-> 
-> If the bridge support pref mem 64, will only allocate that with pref mem64 to
-> children that support it.
-> For children resources if they only support pref mem 32, will allocate them
-> from non pref mem instead.
-> 
-> If the bridge only support 32bit pref mmio, will still have all children pref
-> mmio under that.
-> 
-> -v2: Add release bridge res support with bridge mem res for pref_mem children res.
-> -v3: refresh and make it can be applied early before for_each_dev_res patchset.
-> -v4: fix non-pref mmio 64bit support found by Guo Chao.
-> -v7: repost as ibm's powerpc system work again when
->     1. petiboot boot kernel have this patch.
->     2. or mellanox driver added new .shutdown member.
->     discussion could be found at:
-> 	 http://marc.info/?t=138968064500001&r=1&w=2
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Tested-by: Guo Chao <yan@linux.vnet.ibm.com>
-> Tested-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> 
-> ---
->  drivers/pci/setup-bus.c |  138 ++++++++++++++++++++++++++++++++----------------
->  drivers/pci/setup-res.c |   20 ++++++
->  2 files changed, 111 insertions(+), 47 deletions(-)
-> 
-> Index: linux-2.6/drivers/pci/setup-bus.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/setup-bus.c
-> +++ linux-2.6/drivers/pci/setup-bus.c
-> @@ -713,12 +713,11 @@ static void pci_bridge_check_ranges(stru
->     bus resource of a given type. Note: we intentionally skip
->     the bus resources which have already been assigned (that is,
->     have non-NULL parent resource). */
-> -static struct resource *find_free_bus_resource(struct pci_bus *bus, unsigned long type)
-> +static struct resource *find_free_bus_resource(struct pci_bus *bus,
-> +			 unsigned long type_mask, unsigned long type)
->  {
->  	int i;
->  	struct resource *r;
-> -	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> -				  IORESOURCE_PREFETCH;
->  
->  	pci_bus_for_each_resource(bus, r, i) {
->  		if (r == &ioport_resource || r == &iomem_resource)
-> @@ -815,7 +814,8 @@ static void pbus_size_io(struct pci_bus
->  		resource_size_t add_size, struct list_head *realloc_head)
->  {
->  	struct pci_dev *dev;
-> -	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
-> +	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
-> +							IORESOURCE_IO);
->  	resource_size_t size = 0, size0 = 0, size1 = 0;
->  	resource_size_t children_add_size = 0;
->  	resource_size_t min_align, align;
-> @@ -915,15 +915,17 @@ static inline resource_size_t calculate_
->   * guarantees that all child resources fit in this size.
->   */
->  static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
-> -			 unsigned long type, resource_size_t min_size,
-> -			resource_size_t add_size,
-> -			struct list_head *realloc_head)
-> +			 unsigned long type, unsigned long type2,
-> +			 unsigned long type3,
-> +			 resource_size_t min_size, resource_size_t add_size,
-> +			 struct list_head *realloc_head)
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+---
+ drivers/thunderbolt/switch.c | 42 +++++++++++++++++++++++++++++++++++++++-
+ drivers/thunderbolt/tb.c     | 46 +++++++++++++++++++++++++++++++++++++++++++-
+ drivers/thunderbolt/tb.h     |  3 +++
+ 3 files changed, 89 insertions(+), 2 deletions(-)
 
-This no longer matches the function documentation above, but it doesn't
-really matter, because this interface, with a mask plus three type
-parameters, is just way too complicated.
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index 279b9c5..c092f7c 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -195,6 +195,24 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
+ 		sw->__unknown1, sw->__unknown4);
+ }
+ 
++struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route)
++{
++	u8 next_port = route; /*
++			       * Routes use a stride of 8 bits,
++			       * eventhough a port index has 6 bits at most.
++			       * */
++	if (route == 0)
++		return sw;
++	if (next_port > sw->config.max_port_number)
++		return 0;
++	if (tb_is_upstream_port(&sw->ports[next_port]))
++		return 0;
++	if (!sw->ports[next_port].remote)
++		return 0;
++	return get_switch_at_route(sw->ports[next_port].remote->sw,
++				   route >> TB_ROUTE_SHIFT);
++}
++
+ /**
+  * tb_plug_events_active() - enable/disable plug events on a switch
+  *
+@@ -243,7 +261,8 @@ void tb_switch_free(struct tb_switch *sw)
+ 		sw->ports[i].remote = NULL;
+ 	}
+ 
+-	tb_plug_events_active(sw, false);
++	if (!sw->is_unplugged)
++		tb_plug_events_active(sw, false);
+ 
+ 	kfree(sw->ports);
+ 	kfree(sw);
+@@ -327,3 +346,24 @@ err:
+ 	return NULL;
+ }
+ 
++/**
++ * tb_sw_set_unpplugged() - set is_unplugged on switch and downstream switches
++ */
++void tb_sw_set_unpplugged(struct tb_switch *sw)
++{
++	int i;
++	if (sw == sw->tb->root_switch) {
++		tb_sw_WARN(sw, "cannot unplug root switch\n");
++		return;
++	}
++	if (sw->is_unplugged) {
++		tb_sw_WARN(sw, "is_unplugged already set\n");
++		return;
++	}
++	sw->is_unplugged = true;
++	for (i = 0; i <= sw->config.max_port_number; i++) {
++		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
++			tb_sw_set_unpplugged(sw->ports[i].remote->sw);
++	}
++}
++
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 3b716fd..1efcacc 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -71,11 +71,55 @@ static void tb_handle_hotplug(struct work_struct *work)
+ {
+ 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
+ 	struct tb *tb = ev->tb;
++	struct tb_switch *sw;
++	struct tb_port *port;
+ 	mutex_lock(&tb->lock);
+ 	if (!tb->hotplug_active)
+ 		goto out; /* during init, suspend or shutdown */
+ 
+-	/* do nothing for now */
++	sw = get_switch_at_route(tb->root_switch, ev->route);
++	if (!sw) {
++		tb_warn(tb,
++			"hotplug event from non existent switch %llx:%x (unplug: %d)\n",
++			ev->route, ev->port, ev->unplug);
++		goto out;
++	}
++	if (ev->port > sw->config.max_port_number) {
++		tb_warn(tb,
++			"hotplug event from non existent port %llx:%x (unplug: %d)\n",
++			ev->route, ev->port, ev->unplug);
++		goto out;
++	}
++	port = &sw->ports[ev->port];
++	if (tb_is_upstream_port(port)) {
++		tb_warn(tb,
++			"hotplug event for upstream port %llx:%x (unplug: %d)\n",
++			ev->route, ev->port, ev->unplug);
++		goto out;
++	}
++	if (ev->unplug) {
++		if (port->remote) {
++			tb_port_info(port, "unplugged\n");
++			tb_sw_set_unpplugged(port->remote->sw);
++			tb_switch_free(port->remote->sw);
++			port->remote = NULL;
++		} else {
++			tb_port_info(port,
++				     "got unplug event for disconnected port, ignoring\n");
++		}
++	} else if (port->remote) {
++		tb_port_info(port,
++			     "got plug event for connected port, ignoring\n");
++	} else {
++		tb_port_info(port, "hotplug: scanning\n");
++		tb_scan_port(port);
++		if (!port->remote) {
++			tb_port_info(port, "hotplug: no switch found\n");
++		} else if (port->remote->sw->config.depth > 1) {
++			tb_sw_warn(port->remote->sw,
++				   "hotplug: chaining not supported\n");
++		}
++	}
+ out:
+ 	mutex_unlock(&tb->lock);
+ 	kfree(ev);
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 7e7b3fe..3b83510 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -20,6 +20,7 @@ struct tb_switch {
+ 	struct tb_port *ports;
+ 	struct tb *tb;
+ 	int cap_plug_events; /* offset, zero if not found */
++	bool is_unplugged; /* unplugged, will go away */
+ };
+ 
+ /**
+@@ -160,6 +161,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
+ 
+ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
+ void tb_switch_free(struct tb_switch *sw);
++void tb_sw_set_unpplugged(struct tb_switch *sw);
++struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
+ 
+ int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
+ 
+-- 
+1.9.2
 
->  {
->  	struct pci_dev *dev;
->  	resource_size_t min_align, align, size, size0, size1;
->  	resource_size_t aligns[12];	/* Alignments from 1Mb to 2Gb */
->  	int order, max_order;
-> -	struct resource *b_res = find_free_bus_resource(bus, type);
-> +	struct resource *b_res = find_free_bus_resource(bus,
-> +					 mask | IORESOURCE_PREFETCH, type);
->  	unsigned int mem64_mask = 0;
->  	resource_size_t children_add_size = 0;
->  
-> @@ -944,7 +946,9 @@ static int pbus_size_mem(struct pci_bus
->  			struct resource *r = &dev->resource[i];
->  			resource_size_t r_size;
->  
-> -			if (r->parent || (r->flags & mask) != type)
-> +			if (r->parent || ((r->flags & mask) != type &&
-> +					  (r->flags & mask) != type2 &&
-> +					  (r->flags & mask) != type3))
->  				continue;
->  			r_size = resource_size(r);
->  #ifdef CONFIG_PCI_IOV
-> @@ -1117,8 +1121,9 @@ void __ref __pci_bus_size_bridges(struct
->  			struct list_head *realloc_head)
->  {
->  	struct pci_dev *dev;
-> -	unsigned long mask, prefmask;
-> +	unsigned long mask, prefmask, type2 = 0, type3 = 0;
->  	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-> +	struct resource *b_res;
->  
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
->  		struct pci_bus *b = dev->subordinate;
-> @@ -1163,15 +1168,34 @@ void __ref __pci_bus_size_bridges(struct
->  		   has already been allocated by arch code, try
->  		   non-prefetchable range for both types of PCI memory
->  		   resources. */
-> +		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
->  		mask = IORESOURCE_MEM;
->  		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
-> -		if (pbus_size_mem(bus, prefmask, prefmask,
-> +		if (b_res[2].flags & IORESOURCE_MEM_64) {
-> +			prefmask |= IORESOURCE_MEM_64;
-> +			if (pbus_size_mem(bus, prefmask, prefmask,
-> +				  prefmask, prefmask,
->  				  realloc_head ? 0 : additional_mem_size,
-> -				  additional_mem_size, realloc_head))
-> -			mask = prefmask; /* Success, size non-prefetch only. */
-> -		else
-> -			additional_mem_size += additional_mem_size;
-> -		pbus_size_mem(bus, mask, IORESOURCE_MEM,
-> +				  additional_mem_size, realloc_head)) {
-> +					/* Success, size non-pref64 only. */
-> +					mask = prefmask;
-> +					type2 = prefmask & ~IORESOURCE_MEM_64;
-> +					type3 = prefmask & ~IORESOURCE_PREFETCH;
-> +			}
-> +		}
-> +		if (!type2) {
-> +			prefmask &= ~IORESOURCE_MEM_64;
-> +			if (pbus_size_mem(bus, prefmask, prefmask,
-> +					 prefmask, prefmask,
-> +					 realloc_head ? 0 : additional_mem_size,
-> +					 additional_mem_size, realloc_head)) {
-> +				/* Success, size non-prefetch only. */
-> +				mask = prefmask;
-> +			} else
-> +				additional_mem_size += additional_mem_size;
-> +			type2 = type3 = IORESOURCE_MEM;
-> +		}
-> +		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
->  				realloc_head ? 0 : additional_mem_size,
->  				additional_mem_size, realloc_head);
-
-I spent quite a bit of time trying to understand this code yesterday, but
-I failed.  Comments might help, but more importantly, it needs to be
-simplified so the code makes sense even without comments.
-
->  		break;
-> @@ -1257,42 +1281,66 @@ static void __ref __pci_bridge_assign_re
->  static void pci_bridge_release_resources(struct pci_bus *bus,
->  					  unsigned long type)
->  {
-> -	int idx;
-> -	bool changed = false;
-> -	struct pci_dev *dev;
-> +	struct pci_dev *dev = bus->self;
->  	struct resource *r;
->  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> -				  IORESOURCE_PREFETCH;
-> +				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
-> +	unsigned old_flags = 0;
-> +	struct resource *b_res;
-> +	int idx = 1;
->  
-> -	dev = bus->self;
-> -	for (idx = PCI_BRIDGE_RESOURCES; idx <= PCI_BRIDGE_RESOURCE_END;
-> -	     idx++) {
-> -		r = &dev->resource[idx];
-> -		if ((r->flags & type_mask) != type)
-> -			continue;
-> -		if (!r->parent)
-> -			continue;
-> -		/*
-> -		 * if there are children under that, we should release them
-> -		 *  all
-> -		 */
-> -		release_child_resources(r);
-> -		if (!release_resource(r)) {
-> -			dev_printk(KERN_DEBUG, &dev->dev,
-> -				 "resource %d %pR released\n", idx, r);
-> -			/* keep the old size */
-> -			r->end = resource_size(r) - 1;
-> -			r->start = 0;
-> -			r->flags = 0;
-> -			changed = true;
-> -		}
-> -	}
-> +	b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
-> +
-> +	/*
-> +	 *     1. if there is io port assign fail, will release bridge
-> +	 *	  io port.
-> +	 *     2. if there is non pref mmio assign fail, release bridge
-> +	 *	  nonpref mmio.
-> +	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
-> +	 *	  is 64bit, release bridge pref mmio.
-> +	 *     4. if there is pref mmio assign fail, and bridge pref is
-> +	 *	  32bit mmio, release bridge pref mmio
-> +	 *     5. if there is pref mmio assign fail, and bridge pref is not
-> +	 *	  assigned, release bridge nonpref mmio.
-> +	 */
-> +	if (type & IORESOURCE_IO)
-> +		idx = 0;
-> +	else if (!(type & IORESOURCE_PREFETCH))
-> +		idx = 1;
-> +	else if ((type & IORESOURCE_MEM_64) &&
-> +		 (b_res[2].flags & IORESOURCE_MEM_64))
-> +		idx = 2;
-> +	else if (!(b_res[2].flags & IORESOURCE_MEM_64) &&
-> +		 (b_res[2].flags & IORESOURCE_PREFETCH))
-> +		idx = 2;
-> +	else
-> +		idx = 1;
-
-This is pretty hard to figure out.  Is there any way we can just pass in
-the bridge window identifier directly, e.g., 0 == I/O window, 1 ==
-non-prefetchable MEM window, 2 == prefetchable window?  It seems like way
-up in pci_assign_unassigned_root_bus_resources(), we ought to know which
-window failed, and we could just pass that in somehow instead of having to
-derive it here.
-
-> +
-> +	r = &b_res[idx];
-> +
-> +	if (!r->parent)
-> +		return;
-> +
-> +	/*
-> +	 * if there are children under that, we should release them
-> +	 *  all
-> +	 */
-> +	release_child_resources(r);
-> +	if (!release_resource(r)) {
-> +		type = old_flags = r->flags & type_mask;
-> +		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
-> +					PCI_BRIDGE_RESOURCES + idx, r);
-> +		/* keep the old size */
-> +		r->end = resource_size(r) - 1;
-> +		r->start = 0;
-> +		r->flags = 0;
->  
-> -	if (changed) {
->  		/* avoiding touch the one without PREF */
->  		if (type & IORESOURCE_PREFETCH)
->  			type = IORESOURCE_PREFETCH;
->  		__pci_setup_bridge(bus, type);
-> +		/* for next child res under same bridge */
-> +		r->flags = old_flags;
->  	}
->  }
->  
-> @@ -1471,7 +1519,7 @@ void pci_assign_unassigned_root_bus_reso
->  	LIST_HEAD(fail_head);
->  	struct pci_dev_resource *fail_res;
->  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> -				  IORESOURCE_PREFETCH;
-> +				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
->  	int pci_try_num = 1;
->  	enum enable_type enable_local;
->  
-> Index: linux-2.6/drivers/pci/setup-res.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/setup-res.c
-> +++ linux-2.6/drivers/pci/setup-res.c
-> @@ -208,15 +208,31 @@ static int __pci_assign_resource(struct
->  
->  	/* First, try exact prefetching match.. */
->  	ret = pci_bus_alloc_resource(bus, res, size, align, min,
-> -				     IORESOURCE_PREFETCH,
-> +				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
->  				     pcibios_align_resource, dev);
->  
-> -	if (ret < 0 && (res->flags & IORESOURCE_PREFETCH)) {
-> +	if (ret < 0 &&
-> +	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
-> +	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
-> +		/*
-> +		 * That failed.
-> +		 *
-> +		 * Try below 4g pref
-> +		 */
-> +		ret = pci_bus_alloc_resource(bus, res, size, align, min,
-> +					     IORESOURCE_PREFETCH,
-> +					     pcibios_align_resource, dev);
-> +	}
-
-pci_bus_alloc_from_region() already has a mechanism for restricting
-allocation to certain bus addresses.  I don't like this second mechanism of
-also using IORESOURCE_MEM_64.  There's too much implicit state -- I think
-there's a dependency here on how we manage the IORESOURCE_MEM_64 bit in the
-bridge window resources.  That makes this code hard to understand.
-
-> +
-> +	if (ret < 0 &&
-> +	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))) {
->  		/*
->  		 * That failed.
->  		 *
->  		 * But a prefetching area can handle a non-prefetching
->  		 * window (it will just not perform as well).
-> +		 *
-> +		 * Also can put 64bit under 32bit range. (below 4g).
->  		 */
->  		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
->  					     pcibios_align_resource, dev);
