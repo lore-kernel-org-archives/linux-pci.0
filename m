@@ -1,178 +1,173 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:33332 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751682AbaDPW4E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 18:56:04 -0400
-Received: by mail-ie0-f182.google.com with SMTP id y20so11172928ier.41
-        for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2014 15:56:03 -0700 (PDT)
-Date: Wed, 16 Apr 2014 16:56:00 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Dave Jones <davej@redhat.com>, Borislav Petkov <bp@alien8.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"Zhang, Rui" <rui.zhang@intel.com>,
-	"Lu, Aaron" <aaron.lu@intel.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Stephane Eranian <eranian@google.com>,
-	"Yan, Zheng Z" <zheng.z.yan@intel.com>
-Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
-Message-ID: <20140416225600.GA23781@google.com>
-References: <20140224162400.GE16457@pd.tnic>
- <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
- <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
- <1558044.S1G2VU7srO@vostro.rjw.lan>
- <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
- <20140416190404.GA7070@pd.tnic>
- <20140416203138.GA17661@google.com>
- <20140416223122.GA2767@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140416223122.GA2767@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Daniel J Blueman <daniel@quora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v2 06/14] thunderbolt: Add thunderbolt capability handling
+Date: Fri, 11 Apr 2014 02:24:53 +0200
+Message-Id: <1397175901-4023-7-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
+References: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 16, 2014 at 06:31:22PM -0400, Dave Jones wrote:
-> On Wed, Apr 16, 2014 at 02:31:38PM -0600, Bjorn Helgaas wrote:
->  > On Wed, Apr 16, 2014 at 09:04:04PM +0200, Borislav Petkov wrote:
->  > > On Thu, Mar 20, 2014 at 02:48:30PM -0600, Bjorn Helgaas wrote:
->  > > > Right.  Even if we had this long-term solution, we'd still have
->  > > > Stephane's current problem, because the PNP0C02 _CRS is still wrong.
->  > > > 
->  > > > We do have a drivers/pnp/quirks.c where we could conceivably adjust
->  > > > the PNP resource if we found the matching PCI device and MCHBAR.  That
->  > > > should solve Stephane's problem even with the current
->  > > > drivers/pnp/system.c.
->  > > 
->  > > Guys, this still triggers in -rc1. Do we have a fix or something
->  > > testable at least?
->  > 
->  > Hi Boris,
->  > 
->  > Can you try the patch below?
-> 
-> I'm seeing the exact same message on my thinkpad t430s.
-> When I try your patch, modesetting no longer works. When it tries
-> to change to the framebuffer I get a black screen and lockup.
-> If I boot with nomodeset it locks up when it gets to X.
-> It all scrolls by too fast to read, but it looks like there's still
-> a backtrace present.
+Thunderbolt config areas contain capability lists similar to those found
+on pci devices. This patch introduces a tb_find_cap utility method to
+search for capabilities.
 
-Ouch, sorry about that.  I do see a bug in my patch (fixed below), but I
-don't see how that could cause what you're seeing.  Maybe I could figure
-out something from this info (this can be from a kernel without my patch):
-
-    - dmesg log
-    - output of "find /sys/devices/pnp0 -name id -o -name resources | xargs grep ."
-    - output of "sudo lspci -s00:00.0 -xxx"
-
-
-
-PNP: Work around Haswell BIOS defect in MCH area reporting
-
-From: Bjorn Helgaas <bhelgaas@google.com>
-
-Work around a Haswell BIOS defect that causes part of the MCH area to be
-unreported.
-
-MCHBAR is not an architected PCI BAR, so MCH space is usually reported as a
-PNP0C02 resource.  The MCH space was 16KB prior to Haswell, but it is 32KB
-in Haswell.  Some Haswell BIOSes still report a PNP0C02 resource that is
-only 16KB, which means the rest of the MCH space is consumed but
-unreported.
-
-This can cause resource map sanity check warnings or (theoretically) a
-device conflict if we assigned the unreported space to another device.
-
-The Intel perf event uncore driver tripped over this when it claimed the
-MCH region:
-
-  resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
-  Info: mapping multiple BARs. Your kernel is fine.
-
-To prevent this, if we find a PNP0C02 resource that covers part of the MCH
-space, extend it to cover the entire space.
-
-Link: http://lkml.kernel.org/r/20140224162400.GE16457@pd.tnic
-Reported-by: Borislav Petkov <bp@alien8.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- drivers/pnp/quirks.c |   55 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
+ drivers/thunderbolt/Makefile |   2 +-
+ drivers/thunderbolt/cap.c    | 116 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.h     |   2 +
+ 3 files changed, 119 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/thunderbolt/cap.c
 
-diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
-index 258fef272ea7..8402088d4145 100644
---- a/drivers/pnp/quirks.c
-+++ b/drivers/pnp/quirks.c
-@@ -334,6 +334,60 @@ static void quirk_amd_mmconfig_area(struct pnp_dev *dev)
- }
- #endif
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 4ac18d9..617b314 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+ obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
+-thunderbolt-objs := nhi.o ctl.o tb.o switch.o
++thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o
  
-+static void quirk_intel_haswell_mch(struct pnp_dev *dev)
+diff --git a/drivers/thunderbolt/cap.c b/drivers/thunderbolt/cap.c
+new file mode 100644
+index 0000000..a7b47e7
+--- /dev/null
++++ b/drivers/thunderbolt/cap.c
+@@ -0,0 +1,116 @@
++/*
++ * Thunderbolt Cactus Ridge driver - capabilities lookup
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#include <linux/slab.h>
++#include <linux/errno.h>
++
++#include "tb.h"
++
++
++struct tb_cap_any {
++	union {
++		struct tb_cap_basic basic;
++		struct tb_cap_extended_short extended_short;
++		struct tb_cap_extended_long extended_long;
++	};
++} __packed;
++
++static bool tb_cap_is_basic(struct tb_cap_any *cap)
 +{
-+	struct pci_dev *host;
-+	u32 addr_lo, addr_hi;
-+	struct pci_bus_region region;
-+	struct resource mch;
-+	struct pnp_resource *pnp_res;
-+	struct resource *res;
-+
-+	host = pci_get_device(PCI_VENDOR_ID_INTEL, 0x0c00, NULL);
-+	if (!host)
-+		return;
-+
-+	/*
-+	 * MCHBAR is not an architected PCI BAR, so MCH space is usually
-+	 * reported as a PNP0C02 resource.  The MCH space was 16KB prior to
-+	 * Haswell, but it is 32KB in Haswell.  Some Haswell BIOSes still
-+	 * report a PNP0C02 resource that is only 16KB, which means the
-+	 * rest of the MCH space is consumed but unreported.
-+	 */
-+
-+	/*
-+	 * Read MCHBAR for Host Member Mapped Register Range Base
-+	 * https://www-ssl.intel.com/content/www/us/en/processors/core/4th-gen-core-family-desktop-vol-2-datasheet
-+	 * Sec 3.1.12.
-+	 */
-+	pci_read_config_dword(host, 0x48, &addr_lo);
-+	region.start = addr_lo & ~0x7fff;
-+	pci_read_config_dword(host, 0x4c, &addr_hi);
-+	region.start |= (dma_addr_t) addr_hi << 32;
-+	region.end = region.start + 32*1024 - 1 ;
-+
-+	memset(&mch, 0, sizeof(mch));
-+	mch.flags = IORESOURCE_MEM;
-+	pcibios_bus_to_resource(host->bus, &mch, &region);
-+
-+	list_for_each_entry(pnp_res, &dev->resources, list) {
-+		res = &pnp_res->res;
-+		if (res->end < mch.start || res->start > mch.end)
-+			continue;	/* no overlap */
-+		if (res->start == mch.start && res->end == mch.end)
-+			continue;	/* exact match */
-+
-+		dev_info(&dev->dev, FW_BUG
-+			 "%pR covers only part of Intel Haswell MCH; extending to %pR\n",
-+			 res, &mch);
-+		res->start = mch.start;
-+		res->end = mch.end;
-+		break;
-+	}
-+
-+	pci_dev_put(host);
++	/* basic.cap is u8. This checks only the lower 8 bit of cap. */
++	return cap->basic.cap != 5;
 +}
 +
- /*
-  *  PnP Quirks
-  *  Cards or devices that need some tweaking due to incomplete resource info
-@@ -364,6 +418,7 @@ static struct pnp_fixup pnp_fixups[] = {
- #ifdef CONFIG_AMD_NB
- 	{"PNP0c01", quirk_amd_mmconfig_area},
- #endif
-+	{"PNP0c02", quirk_intel_haswell_mch},
- 	{""}
- };
++static bool tb_cap_is_long(struct tb_cap_any *cap)
++{
++	return !tb_cap_is_basic(cap)
++	       && cap->extended_short.next == 0
++	       && cap->extended_short.length == 0;
++}
++
++static enum tb_cap tb_cap(struct tb_cap_any *cap)
++{
++	if (tb_cap_is_basic(cap))
++		return cap->basic.cap;
++	else
++		/* extended_short/long have cap at the same offset. */
++		return cap->extended_short.cap;
++}
++
++static u32 tb_cap_next(struct tb_cap_any *cap, u32 offset)
++{
++	int next;
++	if (offset == 1) {
++		/*
++		 * The first pointer is part of the switch header and always
++		 * a simple pointer.
++		 */
++		next = cap->basic.next;
++	} else {
++		/*
++		 * Somehow Intel decided to use 3 different types of capability
++		 * headers. It is not like anyone could have predicted that
++		 * single byte offsets are not enough...
++		 */
++		if (tb_cap_is_basic(cap))
++			next = cap->basic.next;
++		else if (!tb_cap_is_long(cap))
++			next = cap->extended_short.next;
++		else
++			next = cap->extended_long.next;
++	}
++	/*
++	 * "Hey, we could terminate some capability lists with a null offset
++	 *  and others with a pointer to the last element." - "Great idea!"
++	 */
++	if (next == offset)
++		return 0;
++	return next;
++}
++
++/**
++ * tb_find_cap() - find a capability
++ *
++ * Return: Returns a positive offset if the capability was found and 0 if not.
++ * Returns an error code on failure.
++ */
++int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, enum tb_cap cap)
++{
++	u32 offset = 1;
++	struct tb_cap_any header;
++	int res;
++	int retries = 10;
++	while (retries--) {
++		res = tb_port_read(port, &header, space, offset, 1);
++		if (res) {
++			/* Intel needs some help with linked lists. */
++			if (space == TB_CFG_PORT && offset == 0xa
++			    && port->config.type == TB_TYPE_DP_HDMI_OUT) {
++				offset = 0x39;
++				continue;
++			}
++			return res;
++		}
++		if (offset != 1) {
++			if (tb_cap(&header) == cap)
++				return offset;
++			if (tb_cap_is_long(&header)) {
++				/* tb_cap_extended_long is 2 dwords */
++				res = tb_port_read(port, &header, space,
++						   offset, 2);
++				if (res)
++					return res;
++			}
++		}
++		offset = tb_cap_next(&header, offset);
++		if (!offset)
++			return 0;
++	}
++	tb_port_WARN(port,
++		     "run out of retries while looking for cap %#x in config space %d, last offset: %#x\n",
++		     cap, space, offset);
++	return -EIO;
++}
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 9f01800..e620f1b 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -159,6 +159,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
+ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
+ void tb_switch_free(struct tb_switch *sw);
  
++int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
++
+ 
+ static inline int tb_route_length(u64 route)
+ {
+-- 
+1.9.2
+
