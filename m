@@ -1,404 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:41014 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014AbaDHJwu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 05:52:50 -0400
-Date: Tue, 8 Apr 2014 10:52:46 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 3/3] arm64: Add architecture support for PCI
-Message-ID: <20140408095246.GU17163@e106497-lin.cambridge.arm.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
- <1394811258-1500-4-git-send-email-Liviu.Dudau@arm.com>
- <20140407235830.GA9959@google.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:56037 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754296AbaDKQc0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Apr 2014 12:32:26 -0400
+Date: Fri, 11 Apr 2014 10:31:29 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Neil Greatorex <neil@fatboyfat.co.uk>, Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory =?iso-8859-1?Q?Cl=E9ment?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: Fixing PCIe issues on Armada XP
+Message-ID: <20140411163129.GA20565@obsidianresearch.com>
+References: <20140410181953.50ccfcc3@skate>
+ <20140410165733.GB23104@obsidianresearch.com>
+ <20140410200153.46669e0c@skate>
+ <20140410201201.GA12661@obsidianresearch.com>
+ <alpine.DEB.2.10.1404102206090.28003@vroombuntu>
+ <20140411122314.220614bf@skate>
 MIME-Version: 1.0
-In-Reply-To: <20140407235830.GA9959@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140411122314.220614bf@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 08, 2014 at 12:58:30AM +0100, Bjorn Helgaas wrote:
-> On Fri, Mar 14, 2014 at 03:34:18PM +0000, Liviu Dudau wrote:
-> > Use the generic host bridge functions to provide support for
-> > PCI Express on arm64. There is no support for ISA memory.
-> >
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> > ---
-> >  arch/arm64/Kconfig            |  19 +++-
-> >  arch/arm64/include/asm/Kbuild |   1 +
-> >  arch/arm64/include/asm/io.h   |   3 +-
-> >  arch/arm64/include/asm/pci.h  |  51 ++++++++++
-> >  arch/arm64/kernel/Makefile    |   1 +
-> >  arch/arm64/kernel/pci.c       | 173 ++++++++++++++++++++++++++++++++
-> >  6 files changed, 246 insertions(+), 2 deletions(-)
-> >  create mode 100644 arch/arm64/include/asm/pci.h
-> >  create mode 100644 arch/arm64/kernel/pci.c
-> >
-> > diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> > index 27bbcfc..d1c8568 100644
-> > --- a/arch/arm64/Kconfig
-> > +++ b/arch/arm64/Kconfig
-> > @@ -62,7 +62,7 @@ config MMU
-> >       def_bool y
-> >
-> >  config NO_IOPORT
-> > -     def_bool y
-> > +     def_bool y if !PCI
-> >
-> >  config STACKTRACE_SUPPORT
-> >       def_bool y
-> > @@ -134,6 +134,23 @@ menu "Bus support"
-> >  config ARM_AMBA
-> >       bool
-> >
-> > +config PCI
-> > +     bool "PCI support"
-> > +     help
-> > +       This feature enables support for PCIe bus system. If you say Y
-> > +       here, the kernel will include drivers and infrastructure code
-> > +       to support PCIe bus devices.
-> > +
-> > +config PCI_DOMAINS
-> > +     def_bool PCI
-> > +
-> > +config PCI_SYSCALL
-> > +     def_bool PCI
-> > +
-> > +source "drivers/pci/Kconfig"
-> > +source "drivers/pci/pcie/Kconfig"
-> > +source "drivers/pci/hotplug/Kconfig"
-> > +
-> >  endmenu
-> >
-> >  menu "Kernel Features"
-> > diff --git a/arch/arm64/include/asm/Kbuild b/arch/arm64/include/asm/Kbuild
-> > index 71c53ec..46924bc 100644
-> > --- a/arch/arm64/include/asm/Kbuild
-> > +++ b/arch/arm64/include/asm/Kbuild
-> > @@ -26,6 +26,7 @@ generic-y += mman.h
-> >  generic-y += msgbuf.h
-> >  generic-y += mutex.h
-> >  generic-y += pci.h
-> > +generic-y += pci-bridge.h
-> >  generic-y += poll.h
-> >  generic-y += posix_types.h
-> >  generic-y += resource.h
-> > diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-> > index 7846a6b..67463a5 100644
-> > --- a/arch/arm64/include/asm/io.h
-> > +++ b/arch/arm64/include/asm/io.h
-> > @@ -120,7 +120,8 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
-> >  /*
-> >   *  I/O port access primitives.
-> >   */
-> > -#define IO_SPACE_LIMIT               0xffff
-> > +#define arch_has_dev_port()  (1)
-> > +#define IO_SPACE_LIMIT               0x1ffffff
-> >  #define PCI_IOBASE           ((void __iomem *)(MODULES_VADDR - SZ_32M))
-> >
-> >  static inline u8 inb(unsigned long addr)
-> > diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-> > new file mode 100644
-> > index 0000000..d93576f
-> > --- /dev/null
-> > +++ b/arch/arm64/include/asm/pci.h
-> > @@ -0,0 +1,51 @@
-> > +#ifndef __ASM_PCI_H
-> > +#define __ASM_PCI_H
-> > +#ifdef __KERNEL__
-> > +
-> > +#include <linux/types.h>
-> > +#include <linux/slab.h>
-> > +#include <linux/dma-mapping.h>
-> > +
-> > +#include <asm/io.h>
-> > +#include <asm-generic/pci-bridge.h>
-> > +#include <asm-generic/pci-dma-compat.h>
-> > +
-> > +#define PCIBIOS_MIN_IO               0x1000
-> > +#define PCIBIOS_MIN_MEM              0
-> > +
-> > +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
-> > +
-> > +/*
-> > + * Set to 1 if the kernel should re-assign all PCI bus numbers
-> > + */
-> > +#define pcibios_assign_all_busses() \
-> > +     (pci_has_flag(PCI_REASSIGN_ALL_BUS))
-> > +
-> > +/*
-> > + * PCI address space differs from physical memory address space
-> > + */
-> > +#define PCI_DMA_BUS_IS_PHYS  (0)
-> > +
-> > +extern int isa_dma_bridge_buggy;
-> > +
-> > +#ifdef CONFIG_PCI
-> > +static inline int pci_domain_nr(struct pci_bus *bus)
-> > +{
-> > +     struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-> > +
-> > +     if (bridge)
-> > +             return bridge->domain_nr;
-> > +
-> > +     return 0;
-> > +}
-> > +
-> > +static inline int pci_proc_domain(struct pci_bus *bus)
-> > +{
-> > +     return 1;
-> > +}
-> > +#endif
-> > +
-> > +extern unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr);
-> > +
-> > +#endif  /* __KERNEL__ */
-> > +#endif  /* __ASM_PCI_H */
-> > diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
-> > index 2d4554b..64fc479 100644
-> > --- a/arch/arm64/kernel/Makefile
-> > +++ b/arch/arm64/kernel/Makefile
-> > @@ -20,6 +20,7 @@ arm64-obj-$(CONFIG_HAVE_HW_BREAKPOINT)+= hw_breakpoint.o
-> >  arm64-obj-$(CONFIG_EARLY_PRINTK)     += early_printk.o
-> >  arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)        += sleep.o suspend.o
-> >  arm64-obj-$(CONFIG_JUMP_LABEL)               += jump_label.o
-> > +arm64-obj-$(CONFIG_PCI)                      += pci.o
-> >
-> >  obj-y                                        += $(arm64-obj-y) vdso/
-> >  obj-m                                        += $(arm64-obj-m)
-> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > new file mode 100644
-> > index 0000000..9f29c9a
-> > --- /dev/null
-> > +++ b/arch/arm64/kernel/pci.c
-> > @@ -0,0 +1,173 @@
-> > +/*
-> > + * Code borrowed from powerpc/kernel/pci-common.c
-> > + *
-> > + * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
-> > + * Copyright (C) 2014 ARM Ltd.
-> > + *
-> > + * This program is free software; you can redistribute it and/or
-> > + * modify it under the terms of the GNU General Public License
-> > + * version 2 as published by the Free Software Foundation.
-> > + *
-> > + */
-> > +
-> > +#include <linux/init.h>
-> > +#include <linux/io.h>
-> > +#include <linux/kernel.h>
-> > +#include <linux/mm.h>
-> > +#include <linux/of_pci.h>
-> > +#include <linux/of_platform.h>
-> > +#include <linux/slab.h>
-> > +
-> > +#include <asm/pci-bridge.h>
-> > +
-> > +struct ioresource {
-> > +     struct list_head list;
-> > +     phys_addr_t start;
-> > +     resource_size_t size;
-> > +};
-> > +
-> > +static LIST_HEAD(io_list);
-> > +
-> > +int pci_register_io_range(phys_addr_t address, resource_size_t size)
-> > +{
-> > +     struct ioresource *res;
-> > +     resource_size_t allocated_size = 0;
-> > +
-> > +     /* find if the range has not been already allocated */
-> > +     list_for_each_entry(res, &io_list, list) {
-> > +             if (address >= res->start &&
-> > +                     address + size <= res->start + size)
-> > +                     return 0;
-> > +             allocated_size += res->size;
-> > +     }
-> > +
-> > +     /* range not already registered, check for space */
-> > +     if (allocated_size + size > IO_SPACE_LIMIT)
-> > +             return -E2BIG;
-> > +
-> > +     /* add the range in the list */
-> > +     res = kzalloc(sizeof(*res), GFP_KERNEL);
-> > +     if (!res)
-> > +             return -ENOMEM;
-> > +     res->start = address;
-> > +     res->size = size;
-> > +
-> > +     list_add_tail(&res->list, &io_list);
-> > +
-> > +     return 0;
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_register_io_range);
-> > +
-> > +unsigned long pci_address_to_pio(phys_addr_t address)
-> > +{
-> > +     struct ioresource *res;
-> > +
-> > +     list_for_each_entry(res, &io_list, list) {
-> > +             if (address >= res->start &&
-> > +                     address < res->start + res->size) {
-> > +                     return res->start - address;
-> > +             }
-> > +     }
-> > +
-> > +     return (unsigned long)-1;
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_address_to_pio);
-> > +
-> > +/*
-> > + * Called after each bus is probed, but before its children are examined
-> > + */
-> > +void pcibios_fixup_bus(struct pci_bus *bus)
-> > +{
-> > +     struct pci_dev *dev;
-> > +     struct resource *res;
-> > +     int i;
-> > +
-> > +     if (!pci_is_root_bus(bus)) {
-> > +             pci_read_bridge_bases(bus);
-> > +
-> > +             pci_bus_for_each_resource(bus, res, i) {
-> > +                     if (!res || !res->flags || res->parent)
-> > +                             continue;
-> > +
-> > +                     /*
-> > +                      * If we are going to reassign everything, we can
-> > +                      * shrink the P2P resource to have zero size to
-> > +                      * save space
-> > +                      */
-> > +                     if (pci_has_flag(PCI_REASSIGN_ALL_RSRC)) {
-> > +                             res->flags |= IORESOURCE_UNSET;
-> > +                             res->start = 0;
-> > +                             res->end = -1;
-> > +                             continue;
-> > +                     }
-> > +             }
-> > +     }
+On Fri, Apr 11, 2014 at 12:23:14PM +0200, Thomas Petazzoni wrote:
+
+> On Thu, 10 Apr 2014 22:56:00 +0100 (BST), Neil Greatorex wrote:
+> > > In any event, turning on the clock should almost certainly be
+> > > accompanied by a phy reset sequence to get both link ends on the same
+> > > page.
+> > >
+> > > Attached is a rough, untested patch along those lines.
+> > >
+> > 
+> > I took your attached patch and extended it a bit to print out how long it 
+> > took. The delays also need to be much longer for me. I also fixed a small 
+> > typo you made where the bit wasn't being set again to bring the link back 
+> > up. I've attached the diff to your patch, as well as the combined patch 
+> > (hope that makes sense).
 > 
-> Is there any other place we can put this?  I'm trying to nuke
-> pcibios_fixup_bus() because things like hotplug work better if we can do
-> them in a per-device way rather than a per-bus way.
-
-That's good. I'm all for removing this one, will give it a go.
-
+> I managed to reproduce the problem of the PCIe device not being
+> detected on Mirabox when earlyprintk is disabled.
 > 
-> > +
-> > +     list_for_each_entry(dev, &bus->devices, bus_list) {
-> > +             /* Ignore fully discovered devices */
-> > +             if (dev->is_added)
-> > +                     continue;
-> > +
-> > +             set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+> However, the proposed patch doesn't seem to work:
 > 
-> Do you really need this?  pci_device_add() already contains the same line.
-
-OK.
-
+> mvebu-pcie pcie-controller.3: PCIe0.0: performing link reset
+> mvebu-pcie pcie-controller.3: PCIe0.0: link went down after 100 tries
+> mvebu-pcie pcie-controller.3: PCIe0.0: link came back up after 0 tries
 > 
-> > +
-> > +             /* Read default IRQs and fixup if necessary */
-> > +             dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> 
-> Could this be done in pcibios_add_device() or someplace similar?
+> It waits hundred times for the link to go down, but it never goes down,
+> and then it doesn't wait at all to go up... because it never went down.
 
-Will do.
+I wonder if bit 30 only disables link training, but doesn't force the
+link down. There may be another bit that is required here.
 
-> 
-> > +     }
-> > +}
-> > +EXPORT_SYMBOL(pcibios_fixup_bus);
-> > +
-> > +/*
-> > + * We don't have to worry about legacy ISA devices, so nothing to do here
-> > + */
-> > +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> > +                             resource_size_t size, resource_size_t align)
-> > +{
-> > +     return res->start;
-> > +}
-> > +
-> > +int pcibios_enable_device(struct pci_dev *dev, int mask)
-> > +{
-> > +     return pci_enable_resources(dev, mask);
-> > +}
-> 
-> There is already a weak default implementation of pcibios_enable_device()
-> that does this, so you should be able to just drop this.
+Alternatively, are you seeing a different problem? If you apply the
+hack to the socid does your symptom go away as well?
 
-OK.
+> Moreover, I am not entirely convinced that a PHY reset is needed here.
+> In my tests, doing just a wait after setting the local dev number was
+> sufficient. The fact is works with earlyprintk also indicates that we
+> don't need to do any specific action with the PHY, just to wait a bit
+> of time. I am worried that resetting the PHY might actually take more
+> time than what is needed, and may have other consequences that we don't
+> necessarily understand at this point.
 
-Thanks for reviewing the series!
+I really disagree - clearly the fundamental problem is suspending one
+side of the PEX link while the other remains operating. That isn't
+specified to work and really shouldn't work.
 
-Liviu
+If you suspend one side of the PEX you *MUST* reset the
+link. Absolutely. No Doubt In My Mind.
 
-> 
-> > +#define IO_SPACE_PAGES       ((IO_SPACE_LIMIT + 1) / PAGE_SIZE)
-> > +static DECLARE_BITMAP(pci_iospace, IO_SPACE_PAGES);
-> > +
-> > +unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr)
-> > +{
-> > +     unsigned long start, len, virt_start;
-> > +     int err;
-> > +
-> > +     if (res->end > IO_SPACE_LIMIT)
-> > +             return -EINVAL;
-> > +
-> > +     /*
-> > +      * try finding free space for the whole size first,
-> > +      * fall back to 64K if not available
-> > +      */
-> > +     len = resource_size(res);
-> > +     start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-> > +                             res->start / PAGE_SIZE, len / PAGE_SIZE, 0);
-> > +     if (start == IO_SPACE_PAGES && len > SZ_64K) {
-> > +             len = SZ_64K;
-> > +             start = 0;
-> > +             start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-> > +                                     start, len / PAGE_SIZE, 0);
-> > +     }
-> > +
-> > +     /* no 64K area found */
-> > +     if (start == IO_SPACE_PAGES)
-> > +             return -ENOMEM;
-> > +
-> > +     /* ioremap physical aperture to virtual aperture */
-> > +     virt_start = start * PAGE_SIZE + (unsigned long)PCI_IOBASE;
-> > +     err = ioremap_page_range(virt_start, virt_start + len,
-> > +                             phys_addr, __pgprot(PROT_DEVICE_nGnRE));
-> > +     if (err)
-> > +             return err;
-> > +
-> > +     bitmap_set(pci_iospace, start, len / PAGE_SIZE);
-> > +
-> > +     /* return io_offset */
-> > +     return start * PAGE_SIZE - res->start;
-> > +}
-> > --
-> > 1.9.0
-> >
-> 
+Remember, PCI-E is a serial shared state protocol. The two sides must
+remain in sync or a link reset is required to recover the shared
+state. Halting one side obviously destroys this invariant.
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+I think in many cases the reset happens autonomously. The remote side
+will force it to happen. This is what the debugging from Neil shows -
+the link just resets at some inconvenient point. Now we know why.
 
+The timing sensitivity also makes sense, if you suspend for a very
+short time window the other side might not notice. If you suspend for
+longer the other side will reset the link autonomously and your local
+side will quickly notice the reset once it comes back.
+
+If you suspend for a little bit the link might not retrain immediately
+but the shared state can become corrupted (eg sequence number
+mismatch) this will eventually trigger a reset, after the local PEX
+has been operating again.
+
+The LinkUp bit after resume is also clearly a lie - most likely the
+PEX takes some time to detect the change in remote state to trigger a
+link down. After all, it was suspended while the remote was busy
+trying to recover.
+
+The fundamental problem here is the clock driver. It should not be
+gating PEX clocks so naively. A PEX suspend needs to be sequenced to
+ensure the link is cleanly brought down before the PEX is put to
+sleep. That way it can cleanly and unambiguously be started up when it
+resumes. No risk of glitching/corrupting the far side with some kind
+of crap on the serial bus.
+
+In any event, the most important required patch here is one that fixes
+socid. It must not turn off the PEX clock. Then we can talk about how
+to fix pci-mvebu to work as a module...
+
+Jason
