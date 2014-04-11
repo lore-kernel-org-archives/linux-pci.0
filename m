@@ -1,36 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:63195 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756079AbaDHWWn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 18:22:43 -0400
-Received: by mail-ie0-f173.google.com with SMTP id rl12so1653251iec.18
-        for <linux-pci@vger.kernel.org>; Tue, 08 Apr 2014 15:22:43 -0700 (PDT)
-MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 8 Apr 2014 16:22:23 -0600
-Message-ID: <CAErSpo5oGensBcGx-z+WuauRL87mjYbNRzSuhucUmpzef9LSJg@mail.gmail.com>
-Subject: Bridge secondary latency not preserved across suspend/resume
-To: Parag Warudkar <parag.lkml@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from relay4-d.mail.gandi.net ([217.70.183.196]:52431 "EHLO
+	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753AbaDKFru (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Apr 2014 01:47:50 -0400
+From: Ryan Desfosses <ryan@desfo.org>
+To: bhelgaas@google.com
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
+Subject: [PATCHv2] pci: added or removed a space to resolve checkpatch message
+Date: Fri, 11 Apr 2014 01:47:20 -0400
+Message-Id: <1397195240-4894-1-git-send-email-ryan@desfo.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Parag,
+changes made to resolve following messages:
+  WARNING: please, no spaces at the start of a line
+  ERROR: space prohibited after that '!' (ctx:BxW)
+  ERROR: space required before the open parenthesis '('
 
-You reported in [1] that a bridge secondary latency setting changed
-after a suspend/resume.  As far as I know you're not seeing any ill
-effects from this change, but I opened this bugzilla:
-https://bugzilla.kernel.org/show_bug.cgi?id=73701 for it.
+Signed-off-by: Ryan Desfosses <ryan@desfo.org>
+---
+ drivers/pci/pci.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-The bugzilla is not high on my priority list, so it's mostly just for
-documentation at this point, and as a little project for somebody who
-wants to do something useful in PCI.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index fdbc294..20bcb1a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -114,7 +114,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus* bus)
+ 	max = bus->busn_res.end;
+ 	list_for_each(tmp, &bus->children) {
+ 		n = pci_bus_max_busnr(pci_bus_b(tmp));
+-		if(n > max)
++		if (n > max)
+ 			max = n;
+ 	}
+ 	return max;
+@@ -489,7 +489,7 @@ static inline bool platform_pci_power_manageable(struct pci_dev *dev)
+ }
+ 
+ static inline int platform_pci_set_power_state(struct pci_dev *dev,
+-                                                pci_power_t t)
++					       pci_power_t t)
+ {
+ 	return pci_platform_pm ? pci_platform_pm->set_state(dev, t) : -ENOSYS;
+ }
+@@ -1431,7 +1431,7 @@ void pcim_pin_device(struct pci_dev *pdev)
+  * devices are added. This is the default implementation. Architecture
+  * implementations can override this.
+  */
+-int __weak pcibios_add_device (struct pci_dev *dev)
++int __weak pcibios_add_device(struct pci_dev *dev)
+ {
+ 	return 0;
+ }
+@@ -1454,7 +1454,7 @@ void __weak pcibios_release_device(struct pci_dev *dev) {}
+  * is the default implementation. Architecture implementations can
+  * override this.
+  */
+-void __weak pcibios_disable_device (struct pci_dev *dev) {}
++void __weak pcibios_disable_device(struct pci_dev *dev) {}
+ 
+ static void do_pci_disable_device(struct pci_dev *dev)
+ {
+@@ -2565,7 +2565,7 @@ static int __pci_request_selected_regions(struct pci_dev *pdev, int bars,
+ 	return 0;
+ 
+ err_out:
+-	while(--i >= 0)
++	while (--i >= 0)
+ 		if (bars & (1 << i))
+ 			pci_release_region(pdev, i);
+ 
+@@ -2798,7 +2798,7 @@ pci_set_mwi(struct pci_dev *dev)
+ 		return rc;
+ 
+ 	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+-	if (! (cmd & PCI_COMMAND_INVALIDATE)) {
++	if (!(cmd & PCI_COMMAND_INVALIDATE)) {
+ 		dev_dbg(&dev->dev, "enabling Mem-Wr-Inval\n");
+ 		cmd |= PCI_COMMAND_INVALIDATE;
+ 		pci_write_config_word(dev, PCI_COMMAND, cmd);
+-- 
+1.9.1
 
-But you could help by attaching a complete dmesg log and two "lspci
--vvv" dumps (one before the suspend and one after the resume) to the
-bugzilla.
-
-Bjorn
-
-[1] http://lkml.kernel.org/r/CAOULuOY5eryuH1KgaqiuGXyYiQd2h=TZoPe2M2+juts9XuzW6Q@mail.gmail.com
