@@ -1,47 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:55354 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754266AbaD2Fqs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 01:46:48 -0400
-Date: Tue, 29 Apr 2014 07:45:59 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	jg1.han@samsung.com, Fabio Estevam <fabio.estevam@freescale.com>
-Subject: Re: [PATCH v2] pci: pci-mvebu: Use '%pa' for printing 'phys_addr_t'
- type
-Message-ID: <20140429074559.5c6970fd@skate>
-In-Reply-To: <1398741896-5953-1-git-send-email-festevam@gmail.com>
-References: <1398741896-5953-1-git-send-email-festevam@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ryan Desfosses <ryan@desfo.org>
+To: bhelgaas@google.com
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
+Subject: [PATCHv2] pci: changed "foo* bar" to "foo *bar"
+Date: Fri, 11 Apr 2014 01:01:53 -0400
+Message-Id: <1397192513-4498-1-git-send-email-ryan@desfo.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Fabio Estevam,
+change made to resolve following checkpatch message:
+    drivers/pci/pci.c:109: ERROR: "foo* bar" should be "foo *bar"
+branch: Linux 3.14-rc8
 
-On Tue, 29 Apr 2014 00:24:56 -0300, Fabio Estevam wrote:
+Signed-off-by: Ryan Desfosses <ryan@desfo.org>
+---
+ drivers/pci/pci.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
->  		if (ret) {
->  			dev_err(&port->pcie->pdev->dev,
-> -				"Could not create MBus window at 0x%x, size 0x%x: %d\n",
-> -				base, sz, ret);
-> +				"Could not create MBus window at [mem %pa - %pa] :%d\n",
-> +				&base, &base + sz, ret);
-
-Are you sure '&base + sz' works here? %pa needs a reference as
-argument, so &base looks good. But '&base + sz' means you will print
-the value which is at the address of base, to which 'sz' is added,
-which is not what we want here. Probably you need something like:
-
-	phys_addr_t end = base + sz;
-
-and then use '&end'.
-
-Or I am missing something?
-
-Thomas
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index fdbc294..4070a60 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -106,7 +106,7 @@ static bool pcie_ari_disabled;
+  * Given a PCI bus, returns the highest PCI bus number present in the set
+  * including the given PCI bus and its list of child PCI buses.
+  */
+-unsigned char pci_bus_max_busnr(struct pci_bus* bus)
++unsigned char pci_bus_max_busnr(struct pci_bus *bus)
+ {
+ 	struct list_head *tmp;
+ 	unsigned char max, n;
+@@ -1359,7 +1359,7 @@ static void pcim_release(struct device *gendev, void *res)
+ 		pci_disable_device(dev);
+ }
+ 
+-static struct pci_devres * get_pci_dr(struct pci_dev *pdev)
++static struct pci_devres *get_pci_dr(struct pci_dev *pdev)
+ {
+ 	struct pci_devres *dr, *new_dr;
+ 
+@@ -1373,7 +1373,7 @@ static struct pci_devres * get_pci_dr(struct pci_dev *pdev)
+ 	return devres_get(&pdev->dev, new_dr, NULL, NULL);
+ }
+ 
+-static struct pci_devres * find_pci_dr(struct pci_dev *pdev)
++static struct pci_devres *find_pci_dr(struct pci_dev *pdev)
+ {
+ 	if (pci_is_managed(pdev))
+ 		return devres_find(&pdev->dev, pcim_release, NULL, NULL);
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+1.9.1
+
