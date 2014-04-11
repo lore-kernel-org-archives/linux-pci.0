@@ -1,387 +1,394 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:39433 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964913AbaD3Tmb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 15:42:31 -0400
-Received: by mail-ig0-f169.google.com with SMTP id h18so7748669igc.0
-        for <linux-pci@vger.kernel.org>; Wed, 30 Apr 2014 12:42:31 -0700 (PDT)
-Subject: [PATCH] DMA-API: Clarify physical/bus address distinction
-To: Randy Dunlap <rdunlap@infradead.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	linux-doc@vger.kernel.org
-Date: Wed, 30 Apr 2014 13:42:29 -0600
-Message-ID: <20140430194229.8155.98965.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:34796 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422778AbaDKAZw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 20:25:52 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Daniel J Blueman <daniel@quora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v2 10/14] thunderbolt: Add path setup code.
+Date: Fri, 11 Apr 2014 02:24:57 +0200
+Message-Id: <1397175901-4023-11-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
+References: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The DMA-API documentation sometimes refers to "physical addresses" when it
-really means "bus addresses."  Historically these were often the same, but
-they may be different if the bridge leading to the bus performs address
-transaction.  Update the documentation to use "bus address" when
-appropriate.
+A thunderbolt path is a unidirectional channel between two thunderbolt
+ports. Two such paths are needed to establish a pci tunnel.
 
-Also, consistently capitalize "DMA" and reword a few sections to improve
-clarity.
+This patch introduces struct tb_path as well as a set of tb_path_*
+methods which are used do activate & deactive paths.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- Documentation/DMA-API-HOWTO.txt |   26 ++++------
- Documentation/DMA-API.txt       |  103 +++++++++++++++++++--------------------
- Documentation/DMA-ISA-LPC.txt   |    4 +-
- 3 files changed, 64 insertions(+), 69 deletions(-)
+ drivers/thunderbolt/Makefile |   2 +-
+ drivers/thunderbolt/path.c   | 215 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/switch.c |  34 +++++++
+ drivers/thunderbolt/tb.h     |  62 +++++++++++++
+ 4 files changed, 312 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/thunderbolt/path.c
 
-diff --git a/Documentation/DMA-API-HOWTO.txt b/Documentation/DMA-API-HOWTO.txt
-index 5e983031cc11..fe1f710c3882 100644
---- a/Documentation/DMA-API-HOWTO.txt
-+++ b/Documentation/DMA-API-HOWTO.txt
-@@ -9,16 +9,14 @@ This is a guide to device driver writers on how to use the DMA API
- with example pseudo-code.  For a concise description of the API, see
- DMA-API.txt.
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 617b314..3532f36 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+ obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
+-thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o
++thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o
  
--Most of the 64bit platforms have special hardware that translates bus
-+Most 64bit platforms have special IOMMU hardware that translates bus
- addresses (DMA addresses) into physical addresses.  This is similar to
- how page tables and/or a TLB translates virtual addresses to physical
- addresses on a CPU.  This is needed so that e.g. PCI devices can
- access with a Single Address Cycle (32bit DMA address) any page in the
- 64bit physical address space.  Previously in Linux those 64bit
- platforms had to set artificial limits on the maximum RAM size in the
--system, so that the virt_to_bus() static scheme works (the DMA address
--translation tables were simply filled on bootup to map each bus
--address to the physical page __pa(bus_to_virt())).
-+system so devices could address all physical memory.
- 
- So that Linux can use the dynamic DMA mapping, it needs some help from the
- drivers, namely it has to take into account that DMA addresses should be
-@@ -30,7 +28,7 @@ hardware exists.
- 
- Note that the DMA API works with any bus independent of the underlying
- microprocessor architecture. You should use the DMA API rather than
--the bus specific DMA API (e.g. pci_dma_*).
-+the bus-specific DMA API (e.g. pci_dma_*).
- 
- First of all, you should make sure
- 
-@@ -347,7 +345,7 @@ dma_alloc_coherent returns two values: the virtual address which you
- can use to access it from the CPU and dma_handle which you pass to the
- card.
- 
--The cpu return address and the DMA bus master address are both
-+The CPU virtual address and the DMA bus address are both
- guaranteed to be aligned to the smallest PAGE_SIZE order which
- is greater than or equal to the requested size.  This invariant
- exists (for example) to guarantee that if you allocate a chunk
-@@ -383,7 +381,7 @@ pass 0 for alloc; passing 4096 says memory allocated from this pool
- must not cross 4KByte boundaries (but at that time it may be better to
- go for dma_alloc_coherent directly instead).
- 
--Allocate memory from a dma pool like this:
-+Allocate memory from a DMA pool like this:
- 
- 	cpu_addr = dma_pool_alloc(pool, flags, &dma_handle);
- 
-@@ -489,14 +487,14 @@ and to unmap it:
- 	dma_unmap_single(dev, dma_handle, size, direction);
- 
- You should call dma_mapping_error() as dma_map_single() could fail and return
--error. Not all dma implementations support dma_mapping_error() interface.
-+error. Not all DMA implementations support the dma_mapping_error() interface.
- However, it is a good practice to call dma_mapping_error() interface, which
- will invoke the generic mapping error check interface. Doing so will ensure
--that the mapping code will work correctly on all dma implementations without
-+that the mapping code will work correctly on all DMA implementations without
- any dependency on the specifics of the underlying implementation. Using the
- returned address without checking for errors could result in failures ranging
- from panics to silent data corruption. A couple of examples of incorrect ways
--to check for errors that make assumptions about the underlying dma
-+to check for errors that make assumptions about the underlying DMA
- implementation are as follows and these are applicable to dma_map_page() as
- well.
- 
-@@ -589,14 +587,12 @@ PLEASE NOTE:  The 'nents' argument to the dma_unmap_sg call must be
-               dma_map_sg call.
- 
- Every dma_map_{single,sg} call should have its dma_unmap_{single,sg}
--counterpart, because the bus address space is a shared resource (although
--in some ports the mapping is per each BUS so less devices contend for the
--same bus address space) and you could render the machine unusable by eating
--all bus addresses.
-+counterpart, because the bus address space is a shared resource and
-+you could render the machine unusable by consuming all bus addresses.
- 
- If you need to use the same streaming DMA region multiple times and touch
- the data in between the DMA transfers, the buffer needs to be synced
--properly in order for the cpu and device to see the most uptodate and
-+properly in order for the cpu and device to see the most up-to-date and
- correct copy of the DMA buffer.
- 
- So, firstly, just map it with dma_map_{single,sg}, and after each DMA
-diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
-index e865279cec58..0371ad0f37e7 100644
---- a/Documentation/DMA-API.txt
-+++ b/Documentation/DMA-API.txt
-@@ -4,14 +4,13 @@
-         James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
- 
- This document describes the DMA API.  For a more gentle introduction
--of the API (and actual examples) see
--Documentation/DMA-API-HOWTO.txt.
-+of the API (and actual examples), see Documentation/DMA-API-HOWTO.txt.
- 
--This API is split into two pieces.  Part I describes the API.  Part II
--describes the extensions to the API for supporting non-consistent
--memory machines.  Unless you know that your driver absolutely has to
--support non-consistent platforms (this is usually only legacy
--platforms) you should only use the API described in part I.
-+This API is split into two pieces.  Part I describes the basic API.
-+Part II describes extensions for supporting non-consistent memory
-+machines.  Unless you know that your driver absolutely has to support
-+non-consistent platforms (this is usually only legacy platforms) you
-+should only use the API described in part I.
- 
- Part I - dma_ API
- -------------------------------------
-@@ -19,7 +18,7 @@ Part I - dma_ API
- To get the dma_ API, you must #include <linux/dma-mapping.h>
- 
- 
--Part Ia - Using large dma-coherent buffers
-+Part Ia - Using large DMA-coherent buffers
- ------------------------------------------
- 
- void *
-@@ -34,8 +33,8 @@ devices to read that memory.)
- 
- This routine allocates a region of <size> bytes of consistent memory.
- It also returns a <dma_handle> which may be cast to an unsigned
--integer the same width as the bus and used as the physical address
--base of the region.
-+integer the same width as the bus and used as the bus address base
-+of the region.
- 
- Returns: a pointer to the allocated region (in the processor's virtual
- address space) or NULL if the allocation failed.
-@@ -70,15 +69,15 @@ Note that unlike their sibling allocation calls, these routines
- may only be called with IRQs enabled.
- 
- 
--Part Ib - Using small dma-coherent buffers
-+Part Ib - Using small DMA-coherent buffers
- ------------------------------------------
- 
- To get this part of the dma_ API, you must #include <linux/dmapool.h>
- 
--Many drivers need lots of small dma-coherent memory regions for DMA
-+Many drivers need lots of small DMA-coherent memory regions for DMA
- descriptors or I/O buffers.  Rather than allocating in units of a page
- or more using dma_alloc_coherent(), you can use DMA pools.  These work
--much like a struct kmem_cache, except that they use the dma-coherent allocator,
-+much like a struct kmem_cache, except that they use the DMA-coherent allocator,
- not __get_free_pages().  Also, they understand common hardware constraints
- for alignment, like queue heads needing to be aligned on N-byte boundaries.
- 
-@@ -87,7 +86,7 @@ for alignment, like queue heads needing to be aligned on N-byte boundaries.
- 	dma_pool_create(const char *name, struct device *dev,
- 			size_t size, size_t align, size_t alloc);
- 
--The pool create() routines initialize a pool of dma-coherent buffers
-+The pool create() routines initialize a pool of DMA-coherent buffers
- for use with a given device.  It must be called in a context which
- can sleep.
- 
-@@ -102,19 +101,20 @@ from this pool must not cross 4KByte boundaries.
- 	void *dma_pool_alloc(struct dma_pool *pool, gfp_t gfp_flags,
- 			dma_addr_t *dma_handle);
- 
--This allocates memory from the pool; the returned memory will meet the size
--and alignment requirements specified at creation time.  Pass GFP_ATOMIC to
--prevent blocking, or if it's permitted (not in_interrupt, not holding SMP locks),
--pass GFP_KERNEL to allow blocking.  Like dma_alloc_coherent(), this returns
--two values:  an address usable by the cpu, and the dma address usable by the
--pool's device.
-+This allocates memory from the pool; the returned memory will meet the
-+size and alignment requirements specified at creation time.  Pass
-+GFP_ATOMIC to prevent blocking, or if it's permitted (not
-+in_interrupt, not holding SMP locks), pass GFP_KERNEL to allow
-+blocking.  Like dma_alloc_coherent(), this returns two values:  an
-+address usable by the cpu, and the DMA address usable by the pool's
-+device.
- 
- 
- 	void dma_pool_free(struct dma_pool *pool, void *vaddr,
- 			dma_addr_t addr);
- 
- This puts memory back into the pool.  The pool is what was passed to
--the pool allocation routine; the cpu (vaddr) and dma addresses are what
-+the pool allocation routine; the cpu (vaddr) and DMA addresses are what
- were returned when that routine allocated the memory being freed.
- 
- 
-@@ -187,9 +187,9 @@ dma_map_single(struct device *dev, void *cpu_addr, size_t size,
- 		      enum dma_data_direction direction)
- 
- Maps a piece of processor virtual memory so it can be accessed by the
--device and returns the physical handle of the memory.
-+device and returns the bus address of the memory.
- 
--The direction for both api's may be converted freely by casting.
-+The direction for both APIs may be converted freely by casting.
- However the dma_ API uses a strongly typed enumerator for its
- direction:
- 
-@@ -198,31 +198,30 @@ DMA_TO_DEVICE		data is going from the memory to the device
- DMA_FROM_DEVICE		data is coming from the device to the memory
- DMA_BIDIRECTIONAL	direction isn't known
- 
--Notes:  Not all memory regions in a machine can be mapped by this
--API.  Further, regions that appear to be physically contiguous in
--kernel virtual space may not be contiguous as physical memory.  Since
--this API does not provide any scatter/gather capability, it will fail
--if the user tries to map a non-physically contiguous piece of memory.
--For this reason, it is recommended that memory mapped by this API be
--obtained only from sources which guarantee it to be physically contiguous
--(like kmalloc).
--
--Further, the physical address of the memory must be within the
--dma_mask of the device (the dma_mask represents a bit mask of the
--addressable region for the device.  I.e., if the physical address of
--the memory anded with the dma_mask is still equal to the physical
--address, then the device can perform DMA to the memory).  In order to
-+Notes:  Not all memory regions in a machine can be mapped by this API.
-+Further, contiguous kernel virtual space may not be contiguous as
-+physical memory.  Since this API does not provide any scatter/gather
-+capability, it will fail if the user tries to map a non-physically
-+contiguous piece of memory.  For this reason, memory to be mapped by
-+this API should be obtained from sources which guarantee it to be
-+physically contiguous (like kmalloc).
+diff --git a/drivers/thunderbolt/path.c b/drivers/thunderbolt/path.c
+new file mode 100644
+index 0000000..8fcf8a7
+--- /dev/null
++++ b/drivers/thunderbolt/path.c
+@@ -0,0 +1,215 @@
++/*
++ * Thunderbolt Cactus Ridge driver - path/tunnel functionality
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
 +
-+Further, the bus address of the memory must be within the
-+dma_mask of the device (the dma_mask is a bit mask of the
-+addressable region for the device, i.e., if the bus address of
-+the memory ANDed with the dma_mask is still equal to the bus
-+address, then the device can perform DMA to the memory).  To
- ensure that the memory allocated by kmalloc is within the dma_mask,
- the driver may specify various platform-dependent flags to restrict
--the physical memory range of the allocation (e.g. on x86, GFP_DMA
--guarantees to be within the first 16Mb of available physical memory,
-+the bus address range of the allocation (e.g., on x86, GFP_DMA
-+guarantees to be within the first 16MB of available bus addresses,
- as required by ISA devices).
++#include <linux/slab.h>
++#include <linux/errno.h>
++
++#include "tb.h"
++
++
++static void tb_dump_hop(struct tb_port *port, struct tb_regs_hop *hop)
++{
++	tb_port_info(port, " Hop through port %d to hop %d (%s)\n",
++		     hop->out_port, hop->next_hop,
++		     hop->enable ? "enabled" : "disabled");
++	tb_port_info(port, "  Weight: %d Priority: %d Credits: %d Drop: %d\n",
++		     hop->weight, hop->priority,
++		     hop->initial_credits, hop->drop_packages);
++	tb_port_info(port, "   Counter enabled: %d Counter index: %d\n",
++		     hop->counter_enable, hop->counter);
++	tb_port_info(port, "  Flow Control (In/Eg): %d/%d Shared Buffer (In/Eg): %d/%d\n",
++		     hop->ingress_fc, hop->egress_fc,
++		     hop->ingress_shared_buffer, hop->egress_shared_buffer);
++	tb_port_info(port, "  Unknown1: %#x Unknown2: %#x Unknown3: %#x\n",
++		     hop->unknown1, hop->unknown2, hop->unknown3);
++}
++
++/**
++ * tb_path_alloc() - allocate a thunderbolt path
++ *
++ * Return: Returns a tb_path on success or NULL on failure.
++ */
++struct tb_path *tb_path_alloc(struct tb *tb, int num_hops)
++{
++	struct tb_path *path = kzalloc(sizeof(*path), GFP_KERNEL);
++	if (!path)
++		return NULL;
++	path->hops = kcalloc(num_hops, sizeof(*path->hops), GFP_KERNEL);
++	if (!path->hops) {
++		kfree(path);
++		return NULL;
++	}
++	path->tb = tb;
++	path->path_length = num_hops;
++	return path;
++}
++
++/**
++ * tb_path_free() - free a deactivated path
++ */
++void tb_path_free(struct tb_path *path)
++{
++	if (path->activated) {
++		tb_WARN(path->tb, "trying to free an activated path\n")
++		return;
++	}
++	kfree(path->hops);
++	kfree(path);
++}
++
++static void __tb_path_deallocate_nfc(struct tb_path *path, int first_hop)
++{
++	int i, res;
++	for (i = first_hop; i < path->path_length; i++) {
++		res = tb_port_add_nfc_credits(path->hops[i].in_port,
++					      -path->nfc_credits);
++		if (res)
++			tb_port_warn(path->hops[i].in_port,
++				     "nfc credits deallocation failed for hop %d\n",
++				     i);
++	}
++}
++
++static void __tb_path_deactivate_hops(struct tb_path *path, int first_hop)
++{
++	int i, res;
++	struct tb_regs_hop hop = { };
++	for (i = first_hop; i < path->path_length; i++) {
++		res = tb_port_write(path->hops[i].in_port, &hop, TB_CFG_HOPS,
++				    2 * path->hops[i].in_hop_index, 2);
++		if (res)
++			tb_port_warn(path->hops[i].in_port,
++				     "hop deactivation failed for hop %d, index %d\n",
++				     i, path->hops[i].in_hop_index);
++	}
++}
++
++void tb_path_deactivate(struct tb_path *path)
++{
++	if (!path->activated) {
++		tb_WARN(path->tb, "trying to deactivate an inactive path\n");
++		return;
++	}
++	tb_info(path->tb,
++		"deactivating path from %llx:%x to %llx:%x\n",
++		tb_route(path->hops[0].in_port->sw),
++		path->hops[0].in_port->port,
++		tb_route(path->hops[path->path_length - 1].out_port->sw),
++		path->hops[path->path_length - 1].out_port->port);
++	__tb_path_deactivate_hops(path, 0);
++	__tb_path_deallocate_nfc(path, 0);
++	path->activated = false;
++}
++
++/**
++ * tb_path_activate() - activate a path
++ *
++ * Activate a path starting with the last hop and iterating backwards. The
++ * caller must fill path->hops before calling tb_path_activate().
++ *
++ * Return: Returns 0 on success or an error code on failure.
++ */
++int tb_path_activate(struct tb_path *path)
++{
++	int i, res;
++	enum tb_path_port out_mask, in_mask;
++	if (path->activated) {
++		tb_WARN(path->tb, "trying to activate already activated path\n");
++		return -EINVAL;
++	}
++
++	tb_info(path->tb,
++		"activating path from %llx:%x to %llx:%x\n",
++		tb_route(path->hops[0].in_port->sw),
++		path->hops[0].in_port->port,
++		tb_route(path->hops[path->path_length - 1].out_port->sw),
++		path->hops[path->path_length - 1].out_port->port);
++
++	/* Clear counters. */
++	for (i = path->path_length - 1; i >= 0; i--) {
++		if (path->hops[i].in_counter_index == -1)
++			continue;
++		res = tb_port_clear_counter(path->hops[i].in_port,
++					    path->hops[i].in_counter_index);
++		if (res)
++			goto err;
++	}
++
++	/* Add non flow controlled credits. */
++	for (i = path->path_length - 1; i >= 0; i--) {
++		res = tb_port_add_nfc_credits(path->hops[i].in_port,
++					      path->nfc_credits);
++		if (res) {
++			__tb_path_deallocate_nfc(path, i);
++			goto err;
++		}
++	}
++
++	/* Activate hops. */
++	for (i = path->path_length - 1; i >= 0; i--) {
++		struct tb_regs_hop hop;
++
++		/* dword 0 */
++		hop.next_hop = path->hops[i].next_hop_index;
++		hop.out_port = path->hops[i].out_port->port;
++		/* TODO: figure out why these are good values */
++		hop.initial_credits = (i == path->path_length - 1) ? 16 : 7;
++		hop.unknown1 = 0;
++		hop.enable = 1;
++
++		/* dword 1 */
++		out_mask = (i == path->path_length - 1) ?
++				TB_PATH_DESTINATION : TB_PATH_INTERNAL;
++		in_mask = (i == 0) ? TB_PATH_SOURCE : TB_PATH_INTERNAL;
++		hop.weight = path->weight;
++		hop.unknown2 = 0;
++		hop.priority = path->priority;
++		hop.drop_packages = path->drop_packages;
++		hop.counter = path->hops[i].in_counter_index;
++		hop.counter_enable = path->hops[i].in_counter_index != -1;
++		hop.ingress_fc = path->ingress_fc_enable & in_mask;
++		hop.egress_fc = path->egress_fc_enable & out_mask;
++		hop.ingress_shared_buffer = path->ingress_shared_buffer
++					    & in_mask;
++		hop.egress_shared_buffer = path->egress_shared_buffer
++					    & out_mask;
++		hop.unknown3 = 0;
++
++		tb_port_info(path->hops[i].in_port, "Writing hop %d, index %d",
++			     i, path->hops[i].in_hop_index);
++		tb_dump_hop(path->hops[i].in_port, &hop);
++		res = tb_port_write(path->hops[i].in_port, &hop, TB_CFG_HOPS,
++				    2 * path->hops[i].in_hop_index, 2);
++		if (res) {
++			__tb_path_deactivate_hops(path, i);
++			__tb_path_deallocate_nfc(path, 0);
++			goto err;
++		}
++	}
++	path->activated = true;
++	tb_info(path->tb, "path activation complete\n");
++	return 0;
++err:
++	tb_WARN(path->tb, "path activation failed\n");
++	return res;
++}
++
++/**
++ * tb_path_is_invalid() - check whether any ports on the path are invalid
++ *
++ * Return: Returns true if the path is invalid, false otherwise.
++ */
++bool tb_path_is_invalid(struct tb_path *path)
++{
++	int i = 0;
++	for (i = 0; i < path->path_length; i++) {
++		if (path->hops[i].in_port->sw->is_unplugged)
++			return true;
++		if (path->hops[i].out_port->sw->is_unplugged)
++			return true;
++	}
++	return false;
++}
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index c092f7c..a6968cc 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -139,6 +139,40 @@ int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged)
+ }
  
- Note also that the above constraints on physical contiguity and
- dma_mask may not apply if the platform has an IOMMU (a device which
--supplies a physical to virtual mapping between the I/O memory bus and
--the device).  However, to be portable, device driver writers may *not*
--assume that such an IOMMU exists.
-+maps an I/O bus address to a physical memory address).  However, to be
-+portable, device driver writers may *not* assume that such an IOMMU
-+exists.
+ /**
++ * tb_port_add_nfc_credits() - add/remove non flow controlled credits to port
++ *
++ * Change the number of NFC credits allocated to @port by @credits. To remove
++ * NFC credits pass a negative amount of credits.
++ *
++ * Return: Returns 0 on success or an error code on failure.
++ */
++int tb_port_add_nfc_credits(struct tb_port *port, int credits)
++{
++	if (credits == 0)
++		return 0;
++	tb_port_info(port,
++		     "adding %#x NFC credits (%#x -> %#x)",
++		     credits,
++		     port->config.nfc_credits,
++		     port->config.nfc_credits + credits);
++	port->config.nfc_credits += credits;
++	return tb_port_write(port, &port->config.nfc_credits,
++			     TB_CFG_PORT, 4, 1);
++}
++
++/**
++ * tb_port_clear_counter() - clear a counter in TB_CFG_COUNTER
++ *
++ * Return: Returns 0 on success or an error code on failure.
++ */
++int tb_port_clear_counter(struct tb_port *port, int counter)
++{
++	u32 zero[3] = { 0, 0, 0 };
++	tb_port_info(port, "clearing counter %d\n", counter);
++	return tb_port_write(port, zero, TB_CFG_COUNTERS, 3 * counter, 3);
++}
++
++/**
+  * tb_init_port() - initialize a port
+  *
+  * This is a helper method for tb_switch_alloc. Does not check or initialize
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 3b83510..99968d3 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -35,6 +35,60 @@ struct tb_port {
+ };
  
- Warnings:  Memory coherency operates at a granularity called the cache
- line width.  In order for memory mapped by this API to operate
-@@ -283,7 +282,7 @@ dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
+ /**
++ * struct tb_path_hop - routing information for a tb_path
++ *
++ * Hop configuration is always done on the IN port of a switch.
++ * in_port and out_port have to be on the same switch. Packets arriving on
++ * in_port with "hop" = in_hop_index will get routed to through out_port. The
++ * next hop to take (on out_port->remote) is determined by next_hop_index.
++ *
++ * in_counter_index is the index of a counter (in TB_CFG_COUNTERS) on the in
++ * port.
++ */
++struct tb_path_hop {
++	struct tb_port *in_port;
++	struct tb_port *out_port;
++	int in_hop_index;
++	int in_counter_index; /* write -1 to disable counters for this hop. */
++	int next_hop_index;
++};
++
++/**
++ * enum tb_path_port - path options mask
++ */
++enum tb_path_port {
++	TB_PATH_NONE = 0,
++	TB_PATH_SOURCE = 1, /* activate on the first hop (out of src) */
++	TB_PATH_INTERNAL = 2, /* activate on other hops (not the first/last) */
++	TB_PATH_DESTINATION = 4, /* activate on the last hop (into dst) */
++	TB_PATH_ALL = 7,
++};
++
++/**
++ * struct tb_path - a unidirectional path between two ports
++ *
++ * A path consists of a number of hops (see tb_path_hop). To establish a PCIe
++ * tunnel two paths have to be created between the two PCIe ports.
++ *
++ */
++struct tb_path {
++	struct tb *tb;
++	int nfc_credits; /* non flow controlled credits */
++	enum tb_path_port ingress_shared_buffer;
++	enum tb_path_port egress_shared_buffer;
++	enum tb_path_port ingress_fc_enable;
++	enum tb_path_port egress_fc_enable;
++
++	int priority:3;
++	int weight:4;
++	bool drop_packages;
++	bool activated;
++	struct tb_path_hop *hops;
++	int path_length; /* number of hops */
++};
++
++
++/**
+  * struct tb - main thunderbolt bus structure
+  */
+ struct tb {
+@@ -165,9 +219,17 @@ void tb_sw_set_unpplugged(struct tb_switch *sw);
+ struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
  
- In some circumstances dma_map_single and dma_map_page will fail to create
- a mapping. A driver can check for these errors by testing the returned
--dma address with dma_mapping_error(). A non-zero return value means the mapping
-+DMA address with dma_mapping_error(). A non-zero return value means the mapping
- could not be created and the driver should take appropriate action (e.g.
- reduce current DMA mapping usage or delay and try again later).
+ int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
++int tb_port_add_nfc_credits(struct tb_port *port, int credits);
++int tb_port_clear_counter(struct tb_port *port, int counter);
  
-@@ -291,7 +290,7 @@ reduce current DMA mapping usage or delay and try again later).
- 	dma_map_sg(struct device *dev, struct scatterlist *sg,
- 		int nents, enum dma_data_direction direction)
+ int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
  
--Returns: the number of physical segments mapped (this may be shorter
-+Returns: the number of bus address segments mapped (this may be shorter
- than <nents> passed in if some elements of the scatter/gather list are
- physically or virtually adjacent and an IOMMU maps them with a single
- entry).
-@@ -335,7 +334,7 @@ must be the same as those and passed in to the scatter/gather mapping
- API.
++struct tb_path *tb_path_alloc(struct tb *tb, int num_hops);
++void tb_path_free(struct tb_path *path);
++int tb_path_activate(struct tb_path *path);
++void tb_path_deactivate(struct tb_path *path);
++bool tb_path_is_invalid(struct tb_path *path);
++
  
- Note: <nents> must be the number you passed in, *not* the number of
--physical entries returned.
-+bus address entries returned.
- 
- void
- dma_sync_single_for_cpu(struct device *dev, dma_addr_t dma_handle, size_t size,
-@@ -391,10 +390,10 @@ The four functions above are just like the counterpart functions
- without the _attrs suffixes, except that they pass an optional
- struct dma_attrs*.
- 
--struct dma_attrs encapsulates a set of "dma attributes". For the
-+struct dma_attrs encapsulates a set of "DMA attributes". For the
- definition of struct dma_attrs see linux/dma-attrs.h.
- 
--The interpretation of dma attributes is architecture-specific, and
-+The interpretation of DMA attributes is architecture-specific, and
- each attribute should be documented in Documentation/DMA-attributes.txt.
- 
- If struct dma_attrs* is NULL, the semantics of each of these
-@@ -458,7 +457,7 @@ Note: where the platform can return consistent memory, it will
- guarantee that the sync points become nops.
- 
- Warning:  Handling non-consistent memory is a real pain.  You should
--only ever use this API if you positively know your driver will be
-+only use this API if you positively know your driver will be
- required to work on one of the rare (usually non-PCI) architectures
- that simply cannot make consistent memory.
- 
-@@ -503,13 +502,13 @@ bus_addr is the physical address to which the memory is currently
- assigned in the bus responding region (this will be used by the
- platform to perform the mapping).
- 
--device_addr is the physical address the device needs to be programmed
-+device_addr is the bus address the device needs to be programmed
- with actually to address this memory (this will be handed out as the
- dma_addr_t in dma_alloc_coherent()).
- 
- size is the size of the area (must be multiples of PAGE_SIZE).
- 
--flags can be or'd together and are:
-+flags can be ORed together and are:
- 
- DMA_MEMORY_MAP - request that the memory returned from
- dma_alloc_coherent() be directly writable.
-@@ -690,11 +689,11 @@ architectural default.
- void debug_dmap_mapping_error(struct device *dev, dma_addr_t dma_addr);
- 
- dma-debug interface debug_dma_mapping_error() to debug drivers that fail
--to check dma mapping errors on addresses returned by dma_map_single() and
-+to check DMA mapping errors on addresses returned by dma_map_single() and
- dma_map_page() interfaces. This interface clears a flag set by
- debug_dma_map_page() to indicate that dma_mapping_error() has been called by
- the driver. When driver does unmap, debug_dma_unmap() checks the flag and if
- this flag is still set, prints warning message that includes call trace that
- leads up to the unmap. This interface can be called from dma_mapping_error()
--routines to enable dma mapping error check debugging.
-+routines to enable DMA mapping error check debugging.
- 
-diff --git a/Documentation/DMA-ISA-LPC.txt b/Documentation/DMA-ISA-LPC.txt
-index e767805b4182..b1a19835e907 100644
---- a/Documentation/DMA-ISA-LPC.txt
-+++ b/Documentation/DMA-ISA-LPC.txt
-@@ -16,7 +16,7 @@ To do ISA style DMA you need to include two headers:
- #include <asm/dma.h>
- 
- The first is the generic DMA API used to convert virtual addresses to
--physical addresses (see Documentation/DMA-API.txt for details).
-+bus addresses (see Documentation/DMA-API.txt for details).
- 
- The second contains the routines specific to ISA DMA transfers. Since
- this is not present on all platforms make sure you construct your
-@@ -50,7 +50,7 @@ early as possible and not release it until the driver is unloaded.)
- Part III - Address translation
- ------------------------------
- 
--To translate the virtual address to a physical use the normal DMA
-+To translate the virtual address to a bus address, use the normal DMA
- API. Do _not_ use isa_virt_to_phys() even though it does the same
- thing. The reason for this is that the function isa_virt_to_phys()
- will require a Kconfig dependency to ISA, not just ISA_DMA_API which
+ static inline int tb_route_length(u64 route)
+ {
+-- 
+1.9.2
 
