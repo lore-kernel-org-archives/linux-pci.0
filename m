@@ -1,43 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:39020 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754451AbaD3A7y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 20:59:54 -0400
-Received: by mail-ie0-f175.google.com with SMTP id rl12so1126466iec.34
-        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 17:59:54 -0700 (PDT)
-Subject: [PATCH 2/7] PCI: Reject BAR above 4GB if dma_addr_t is too small
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Tue, 29 Apr 2014 18:59:51 -0600
-Message-ID: <20140430005951.13138.13740.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-la0-f43.google.com ([209.85.215.43]:62479 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750842AbaDKRlC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Apr 2014 13:41:02 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1394127555.4582.1.camel@weser.hi.pengutronix.de>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+	<1394025951-32438-3-git-send-email-l.stach@pengutronix.de>
+	<5318B232.2020507@wwwdotorg.org>
+	<1394127555.4582.1.camel@weser.hi.pengutronix.de>
+Date: Fri, 11 Apr 2014 23:10:59 +0530
+Message-ID: <CA+mB=1JCjDMzTuctvSQgjNhBnkyUPC2ooAzJOX_PC5L1gAau8w@mail.gmail.com>
+Subject: Re: [PATCH v2 2/6] PCI: tegra: use new OF interrupt mapping when possible
+From: Srikanth Thokala <sriku.linux@gmail.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, linux-sh@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	devicetree@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can only handle BARs above 4GB if dma_addr_t (not resource_size_t) is 64
-bits wide.  If we have a 64-bit resource_size_t and a 32-bit dma_addr_t,
-we can't deal with BARs above 4GB.
+Hi Lucas/Tanmay,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Thu, Mar 6, 2014 at 11:09 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Am Donnerstag, den 06.03.2014, 10:36 -0700 schrieb Stephen Warren:
+>> On 03/05/2014 06:25 AM, Lucas Stach wrote:
+>> > This is the recommended method of doing the IRQ
+>> > mapping. For old devicetrees we fall back to the
+>> > previous practice.
+>>
+>> Tested-by: Stephen Warren <swarren@nvidia.com>
+>>
+>> I tested both with and without patch 1/6, and the PCIe-based NIC on
+>> Beaver worked fine either way. Without patch 1/6, I do see:
+>>
+>> pci 0000:00:01.0: of_irq_parse_pci() failed with rc=-22
+>>
+>> ... but that seems reasonable given that the DT that of_irq_parse_pci()
+>> parses is missing, and did correctly trigger the fallback path, so
+>> everything still worked.
+>
+> Yes, this should be normal. It spits this error for old DTs, but keeps
+> doing the right thing. I'm not sure if we should downgrade this to info
+> or dbg.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c7f8b717c2e7..afae3bf405fa 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -253,7 +253,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			goto out;
- 		}
- 
--		if ((sizeof(resource_size_t) < 8) && l) {
-+		if ((sizeof(dma_addr_t) < 8) && l) {
- 			/* Address above 32-bit boundary; disable the BAR */
- 			pci_write_config_dword(dev, pos, 0);
- 			pci_write_config_dword(dev, pos + 4, 0);
+I see this error too on my setup (Xilinx PCIe Root Complex Driver),
+https://lkml.org/lkml/2014/3/3/183
 
+After digging into it, I see I need to override the API
+pcibios_get_phb_of_node()
+to pass my device node.  Is this the only possible way?
+
+>From the discussion in this thread, I feel am missing something in the dt node.
+Below is my dt node, please let me know if you see any issues.
+
++++++++++++++++++++++++
+pcie{
+   reg = <XXXX>;
+   ranges = <YYYY>;
+   interrupts = <0 52 4>;
+
+   pcie_intc: interrupt-controller {
+       interrupt-controller;
+       #address-cells = <0>;
+       #interrupt-cells = <1>;
+   }
+
+   interrupt-map-mask = <0 0 0 7>;
+   interrupt-map = <0 0 0 1 &pcie_intc 1>,
+                          <0 0 0 2 &pcie_intc 2>,
+                          <0 0 0 3 &pcie_intc 3>,
+                          <0 0 0 4 &pcie_intc 4>;
+};
+
+Thanks in advance,
+Srikanth.
+
+>
+> Regards,
+> Lucas
+> --
+> Pengutronix e.K.                           | Lucas Stach                 |
+> Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+> Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
+> Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
