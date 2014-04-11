@@ -1,87 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f47.google.com ([209.85.160.47]:63511 "EHLO
-	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688AbaDDUjk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 16:39:40 -0400
-Received: by mail-pb0-f47.google.com with SMTP id up15so3959140pbc.34
-        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 13:39:40 -0700 (PDT)
-Date: Fri, 4 Apr 2014 14:39:36 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ryan Desfosses <ryan@desfo.org>
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] pci: added space before the open parenthesis
-Message-ID: <20140404203936.GA13931@google.com>
-References: <1396635490-3630-1-git-send-email-ryan@desfo.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1396635490-3630-1-git-send-email-ryan@desfo.org>
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:37577 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753811AbaDKAZa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 20:25:30 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Daniel J Blueman <daniel@quora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: [Patch v2 00/14] Thunderbolt support for Apple MBP
+Date: Fri, 11 Apr 2014 02:24:47 +0200
+Message-Id: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 04, 2014 at 02:18:10PM -0400, Ryan Desfosses wrote:
-> change made to resolve checkpatch.pl error
-> 
-> Signed-off-by: Ryan Desfosses <ryan@desfo.org>
+Hi
 
-Hi Ryan,
+This is version 2 of my Thunderbolt driver for Apple hardware (see [1] for v1).
+The short story is that Apple decided to implement hotplug support in a driver
+instead of the firmware. The firmware will only initialize coldplugged devices.
+Hotplugged devices do not work.
 
-Thanks for this and your previous fix.  This "Signed-off-by" looks good.
-Would you mind reposting the "pci_bus*" fix with a similar "Signed-off-by"?
-It's a small fix, but strictly speaking, I need the "Signed-off-by" before
-I can apply a patch.
+This series adds support for single device hotplug (no chaining) for the Cactus
+Ridge C4 Thunderbolt controller (device id 0x1547, present on MacBookPro10,1).
+As far as I can tell newer generations work quite similar and it should be
+possible to add support for more controllers with some work.
 
-We normally write the changelog so it can stand alone, i.e., you shouldn't
-have to read the summary in addition to the changelog for it to make sense.
-It might be useful to browse other changelogs, e.g., with "git log
---no-merges drivers/pci".  I do often fix capitalization, spelling, and
-other errors because I think consistency makes it easier to read the
-history.
+Changes from v1:
+ - suspend/hibernate support (yeah)
+ - general cleanups and refactoring
 
-The "[2/2]" notation suggests that there's another patch labeled "[1/2]"
-(and probably an overall summary labeled "[0/2]"), and that all were posted
-together.  In this case, I think you intended your "pci_bus*" patch to be
-[1/2], but since they weren't posted together, it's a bit harder for me to
-keep track of them as a group.
+>From my perspective the driver is working quite well and is ready for merging
+(maybe someone can tell me whom I should ask to get a review?). I have taken
+some care to not stomp on tunnels setup by the firmware for coldplugged
+devices. If this works as intendend then there should be no regressions
+(coldplugged devices continue to work and simple hotplugged devices will start
+working). In particular the Apple Ethernet adapter works very well (and this is
+probably the most used TB device out there).
 
-If you don't mind, I'll collect up this and your previous fix (and any
-future ones you find) and squash them into a single "whitespace fixes" sort
-of patch to reduce the number of commits for obviously-correct changes.
+Some notes:
+ - The patch requires Matthew's acpi_osi fix [2]
+ - @pci, Bjorn: I hope patch 12 is acceptable. If there is a better way to do
+   this please let me know.
+ - Thunderbolt displays: I have a pretty good idea on how they should work, but
+   I did not yet write any code to support them. Also judging by the replies I
+got for v1 of the patch it seems that there are some graphics driver problems
+even with coldplugged tb displays (at least on MBP models with discrete
+graphics cards).
+ - Hibernate gotcha: The amount of available memory reported by the firmware
+   depends on whether a tb device is connected. This makes Linux refuse to
+restore the saved image. This has nothing to do with this driver, but you might
+run into it during testing.
 
-Thanks again, and welcome to Linux kernel development!
-
-Oh, and I applied the patch below to my pending/misc branch (and I'll
-update it with the other one when you post it).  I have a few other things
-I hope to ask Linus to put in v3.15 yet, and I'll include this.
-
-Bjorn
+Thanks,
+Andreas
 
 
+Andreas Noever (14):
+  thunderbolt: Add initial cactus ridge NHI support
+  thunderbolt: Add control channel interface
+  thunderbolt: Setup control channel
+  thunderbolt: Add tb_regs.h
+  thunderbolt: Initialize root switch and ports
+  thunderbolt: Add thunderbolt capability handling
+  thunderbolt: Enable plug events
+  thunderbolt: Scan for downstream switches
+  thunderbolt: Handle hotplug events
+  thunderbolt: Add path setup code.
+  thunderbolt: Add support for simple pci tunnels.
+  pci: Suspend/resume support for appel thunderbolt
+  thunderbolt: Read switch uid from EEPROM
+  thunderbolt: Add suspend/hibernate support
 
-From: Ryan Desfosses <ryan@desfo.org>
+ drivers/Kconfig                  |   2 +
+ drivers/Makefile                 |   1 +
+ drivers/pci/pcie/portdrv_pci.c   | 117 +++++++
+ drivers/thunderbolt/Kconfig      |  12 +
+ drivers/thunderbolt/Makefile     |   3 +
+ drivers/thunderbolt/cap.c        | 116 +++++++
+ drivers/thunderbolt/ctl.c        | 731 +++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/ctl.h        |  75 ++++
+ drivers/thunderbolt/eeprom.c     | 189 ++++++++++
+ drivers/thunderbolt/nhi.c        | 671 +++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/nhi.h        | 114 ++++++
+ drivers/thunderbolt/nhi_regs.h   | 101 ++++++
+ drivers/thunderbolt/path.c       | 215 ++++++++++++
+ drivers/thunderbolt/switch.c     | 492 ++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.c         | 431 +++++++++++++++++++++++
+ drivers/thunderbolt/tb.h         | 266 ++++++++++++++
+ drivers/thunderbolt/tb_regs.h    | 213 ++++++++++++
+ drivers/thunderbolt/tunnel_pci.c | 232 +++++++++++++
+ drivers/thunderbolt/tunnel_pci.h |  30 ++
+ 19 files changed, 4011 insertions(+)
+ create mode 100644 drivers/thunderbolt/Kconfig
+ create mode 100644 drivers/thunderbolt/Makefile
+ create mode 100644 drivers/thunderbolt/cap.c
+ create mode 100644 drivers/thunderbolt/ctl.c
+ create mode 100644 drivers/thunderbolt/ctl.h
+ create mode 100644 drivers/thunderbolt/eeprom.c
+ create mode 100644 drivers/thunderbolt/nhi.c
+ create mode 100644 drivers/thunderbolt/nhi.h
+ create mode 100644 drivers/thunderbolt/nhi_regs.h
+ create mode 100644 drivers/thunderbolt/path.c
+ create mode 100644 drivers/thunderbolt/switch.c
+ create mode 100644 drivers/thunderbolt/tb.c
+ create mode 100644 drivers/thunderbolt/tb.h
+ create mode 100644 drivers/thunderbolt/tb_regs.h
+ create mode 100644 drivers/thunderbolt/tunnel_pci.c
+ create mode 100644 drivers/thunderbolt/tunnel_pci.h
 
-PCI: Fix whitespace issues
+-- 
+1.9.2
 
-Resolve whitespace issues that checkpatch.pl complained about.
-
-No functional change.
-
-Signed-off-by: Ryan Desfosses <ryan@desfo.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7325d43bf030..1f0bf2eec127 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -114,7 +114,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus* bus)
- 	max = bus->busn_res.end;
- 	list_for_each_entry(tmp, &bus->children, node) {
- 		n = pci_bus_max_busnr(tmp);
--		if(n > max)
-+		if (n > max)
- 			max = n;
- 	}
- 	return max;
