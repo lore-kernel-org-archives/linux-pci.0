@@ -1,113 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:56231 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756824AbaD2QyZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 12:54:25 -0400
-Received: by mail-ig0-f179.google.com with SMTP id hl10so556878igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 09:54:22 -0700 (PDT)
-Date: Tue, 29 Apr 2014 10:54:19 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Fabio Estevam <fabio.estevam@freescale.com>
-Cc: thomas.petazzoni@free-electrons.com, linux-pci@vger.kernel.org,
-	jg1.han@samsung.com, Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH v3] pci: pci-mvebu: Use '%pa' for printing 'phys_addr_t'
- type
-Message-ID: <20140429165419.GA13735@google.com>
-References: <1398776287-14229-1-git-send-email-fabio.estevam@freescale.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 11 Apr 2014 14:06:39 -0700
+From: Greg KH <greg@kroah.com>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Daniel J Blueman <daniel@quora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [Patch v2 00/14] Thunderbolt support for Apple MBP
+Message-ID: <20140411210639.GA22760@kroah.com>
+References: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1398776287-14229-1-git-send-email-fabio.estevam@freescale.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jason]
-
-On Tue, Apr 29, 2014 at 09:58:07AM -0300, Fabio Estevam wrote:
-> Fix the following build warning that happens when building multi_v7_defconfig
-> with CONFIG_ARM_LPAE=y:
+On Fri, Apr 11, 2014 at 02:24:47AM +0200, Andreas Noever wrote:
+> Hi
 > 
-> drivers/pci/host/pci-mvebu.c:334:5: warning: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'phys_addr_t' [-Wformat=]
+> This is version 2 of my Thunderbolt driver for Apple hardware (see [1] for v1).
+> The short story is that Apple decided to implement hotplug support in a driver
+> instead of the firmware. The firmware will only initialize coldplugged devices.
+> Hotplugged devices do not work.
 > 
-> Fix the warning by using '%pa' to printing 'phys_addr_t' type. While at it,
-> also use the more standard notation [mem 0x - 0x] for memory region.
+> This series adds support for single device hotplug (no chaining) for the Cactus
+> Ridge C4 Thunderbolt controller (device id 0x1547, present on MacBookPro10,1).
+> As far as I can tell newer generations work quite similar and it should be
+> possible to add support for more controllers with some work.
 > 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> ---
-> Changes since v2:
-> - Introduce variable 'end' for printing the memory range
+> Changes from v1:
+>  - suspend/hibernate support (yeah)
+>  - general cleanups and refactoring
 > 
-> Changes since v1:
-> - use the [mem 0x - 0x] notation
+> >From my perspective the driver is working quite well and is ready for merging
+> (maybe someone can tell me whom I should ask to get a review?). I have taken
+> some care to not stomp on tunnels setup by the firmware for coldplugged
+> devices. If this works as intendend then there should be no regressions
+> (coldplugged devices continue to work and simple hotplugged devices will start
+> working). In particular the Apple Ethernet adapter works very well (and this is
+> probably the most used TB device out there).
 > 
->  drivers/pci/host/pci-mvebu.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index e384e25..8329592 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -329,9 +329,11 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
->  		ret = mvebu_mbus_add_window_remap_by_id(target, attribute, base,
->  							sz, remap);
->  		if (ret) {
-> +			phys_addr_t end = base + sz;
+> Some notes:
+>  - The patch requires Matthew's acpi_osi fix [2]
+>  - @pci, Bjorn: I hope patch 12 is acceptable. If there is a better way to do
+>    this please let me know.
+>  - Thunderbolt displays: I have a pretty good idea on how they should work, but
+>    I did not yet write any code to support them. Also judging by the replies I
+> got for v1 of the patch it seems that there are some graphics driver problems
+> even with coldplugged tb displays (at least on MBP models with discrete
+> graphics cards).
+>  - Hibernate gotcha: The amount of available memory reported by the firmware
+>    depends on whether a tb device is connected. This makes Linux refuse to
+> restore the saved image. This has nothing to do with this driver, but you might
+> run into it during testing.
 
-This needs to be "base + sz - 1" because we print inclusive ranges.
+Very nice work with all of this, I never thought I would ever see this
+happen for Linux.  Of course, I now can't find my thunderbolt ethernet
+device around here anymore to test this out, I'll go get another one
+soon...
 
-> +
->  			dev_err(&port->pcie->pdev->dev,
-> -				"Could not create MBus window at 0x%x, size 0x%x: %d\n",
-> -				base, sz, ret);
-> +				"Could not create MBus window at [mem %pa - %pa] :%d\n",
+thanks,
 
-I removed the extra spaces (relative to %pR) here.
-
-> +				&base, &end, ret);
->  			mvebu_pcie_del_windows(port, base - size_mapped,
->  					       size_mapped);
->  			return;
-
-
-I'm ready to merge the following, given an ack from Thomas or Jason.
-Jingoo, I added your reviewed-by, since this is essentially what you
-reviewed before.
-
-Bjorn
-
-
-commit 5bbf2f268b9001c2e46aff6ff17cee0e8a6b8fb8
-Author: Fabio Estevam <fabio.estevam@freescale.com>
-Date:   Tue Apr 29 09:58:07 2014 -0300
-
-    PCI: mvebu: Use '%pa' for printing 'phys_addr_t' type
-    
-    Fix the following build warning that happens when building
-    multi_v7_defconfig with CONFIG_ARM_LPAE=y:
-    
-      drivers/pci/host/pci-mvebu.c:334:5: warning: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'phys_addr_t' [-Wformat=]
-    
-    Fix the warning by using '%pa' to printing 'phys_addr_t' type.  While at
-    it, also use the more standard notation [mem 0x-0x] for memory region.
-    
-    Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Reviewed-by: Jingoo Han <jg1.han@samsung.com>
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 29d64c9efa85..7f450322f397 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -328,9 +328,11 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
- 		ret = mvebu_mbus_add_window_remap_by_id(target, attribute, base,
- 							sz, remap);
- 		if (ret) {
-+			phys_addr_t end = base + sz - 1;
-+
- 			dev_err(&port->pcie->pdev->dev,
--				"Could not create MBus window at 0x%x, size 0x%x: %d\n",
--				base, sz, ret);
-+				"Could not create MBus window at [mem %pa-%pa]: %d\n",
-+				&base, &end, ret);
- 			mvebu_pcie_del_windows(port, base - size_mapped,
- 					       size_mapped);
- 			return;
+greg k-h
