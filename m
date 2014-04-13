@@ -1,99 +1,308 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63287 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753950AbaDNI56 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 04:57:58 -0400
-Message-ID: <534BA30B.5040102@linux.intel.com>
-Date: Mon, 14 Apr 2014 16:57:47 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Davidlohr Bueso <davidlohr@hp.com>,
-	"Woodhouse, David" <david.woodhouse@intel.com>
-CC: "joro@8bytes.org" <joro@8bytes.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhe@redhat.com" <bhe@redhat.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"James.Bottomley@hansenpartnership.com"
-	<James.Bottomley@hansenpartnership.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
-Subject: Re: hpsa driver bug crack kernel down!
-References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>	 <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike>	 <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>	 <1397087425.9519.67.camel@dabdike>	 <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>	 <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>	 <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>	 <20140410071535.GX13491@8bytes.org>	 <1397119587.19944.14.camel@shinybook.infradead.org> <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
-In-Reply-To: <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:43248 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751548AbaDMDXK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Apr 2014 23:23:10 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Sun, 13 Apr 2014 13:23:08 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	davem@davemloft.net
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Amir Vadai <amirv@mellanox.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Or Gerlitz <ogerlitz@mellanox.com>
+Subject: [PATCH V2 net] net/mlx4_core: Preserve pci_dev_data after __mlx4_remove_one()
+Date: Sun, 13 Apr 2014 11:22:13 +0800
+Message-Id: <1397359333-8378-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
-	I guess I found the root cause. It's a bug in matching
-device scope, variable 'level' should be decreased when walking up PCI
-topology.
-	Could you please help to test following patch?
-Thanks!
-Gerry
+pci_match_id() just match the static pci_device_id, which may return NULL if
+someone binds the driver to a device manually using
+/sys/bus/pci/drivers/.../new_id.
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index f445c10..1f8308c 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -152,7 +152,7 @@ dmar_alloc_pci_notify_info(struct pci_dev *dev,
-unsigned long event)
-        info->seg = pci_domain_nr(dev->bus);
-        info->level = level;
-        if (event == BUS_NOTIFY_ADD_DEVICE) {
--               for (tmp = dev, level--; tmp; tmp = tmp->bus->self) {
-+               for (tmp = dev, level--; tmp; level--, tmp =
-tmp->bus->self) {
-                        info->path[level].device = PCI_SLOT(tmp->devfn);
-                        info->path[level].function = PCI_FUNC(tmp->devfn);
-                        if (pci_is_root_bus(tmp->bus))
+This patch wrap up a helper function __mlx4_remove_one() which does the tear
+down function but preserve the drv_data. Functions like
+mlx4_pci_err_detected() and mlx4_restart_one() will call this one with out
+releasing drvdata.
 
+Fixes: 97a5221 "net/mlx4_core: pass pci_device_id.driver_data to __mlx4_init_one during reset".
 
-On 2014/4/11 0:19, Davidlohr Bueso wrote:
-> On Thu, 2014-04-10 at 08:46 +0000, Woodhouse, David wrote:
->> On Thu, 2014-04-10 at 09:15 +0200, Joerg Roedel wrote:
->>> [+ David, VT-d maintainer ]
->>>
->>> Jiang, David, can you please have a look into this issue?
->>>
->>
->>>>>>>>>>> DMAR:[fault reason 02] Present bit in context entry is clear
->>>>>>>>>>> dmar: DRHD: handling fault status reg 602
->>>>>>>>>>> dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7f61e000
->>
->> That "Present bit in context entry is clear" fault means that we have
->> not set up *any* mappings for this PCI device… on this IOMMU.
->>
->>>> Yes, specifically (finally done bisecting):
->>>>
->>>> commit 2e45528930388658603ea24d49cf52867b928d3e
->>>> Author: Jiang Liu <jiang.liu@linux.intel.com>
->>>> Date:   Wed Feb 19 14:07:36 2014 +0800
->>>>
->>>>     iommu/vt-d: Unify the way to process DMAR device scope array
->>
->> This commit is about how we decide which IOMMU a given PCI device is
->> attached to.
->>
->> Thus, my first guess would be that we are quite happily setting up the
->> requested DMA maps on the *wrong* IOMMU, and then taking faults when the
->> device actually tries to do DMA.
->>
->> However, I'm not 100% convinced of that. The fault address looks
->> suspiciously like a true physical address, not a virtual bus address of
->> the type that we'd normally allocate for a dma_map_* operation. Those
->> would start at 0xfffff000 and work downwards, typically.
->>
->> Do you have 'iommu=pt' on the kernel command line? 
-> 
-> No.
-> 
->> Can I see the full
->> dmesg as this system boots, and also a copy of the DMAR table?
-> 
-> Attaching a dmesg from one of the kernels that boots. It doesn't appear
-> to have much of the related information... is there any debug config
-> option I can enable that might give you more data?
-> 
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Amir Vadai <amirv@mellanox.com>
+CC: Jack Morgenstein <jackm@dev.mellanox.co.il>
+CC: Or Gerlitz <ogerlitz@mellanox.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Jack Morgenstein <jackm@dev.mellanox.co.il>
+
+---
+V0 --> V1:
+   1. zero the mlx4_priv at the end of __mlx4_remove_one
+   2. add a flag in mlx4_priv to mark it is released or not
+V1 --> V2:
+   1. rebase it on latest net tree
+---
+ drivers/net/ethernet/mellanox/mlx4/main.c |  177 ++++++++++++++++-------------
+ drivers/net/ethernet/mellanox/mlx4/mlx4.h |    1 +
+ 2 files changed, 101 insertions(+), 77 deletions(-)
+
+diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+index f0ae95f..b6d60e2 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/main.c
++++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+@@ -2301,13 +2301,8 @@ static int __mlx4_init_one(struct pci_dev *pdev, int pci_dev_data)
+ 	/* Allow large DMA segments, up to the firmware limit of 1 GB */
+ 	dma_set_max_seg_size(&pdev->dev, 1024 * 1024 * 1024);
+ 
+-	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
+-	if (!priv) {
+-		err = -ENOMEM;
+-		goto err_release_regions;
+-	}
+-
+-	dev       = &priv->dev;
++	dev       = pci_get_drvdata(pdev);
++	priv      = mlx4_priv(dev);
+ 	dev->pdev = pdev;
+ 	INIT_LIST_HEAD(&priv->ctx_list);
+ 	spin_lock_init(&priv->ctx_lock);
+@@ -2535,8 +2530,7 @@ slave_start:
+ 	mlx4_sense_init(dev);
+ 	mlx4_start_sense(dev);
+ 
+-	priv->pci_dev_data = pci_dev_data;
+-	pci_set_drvdata(pdev, dev);
++	priv->removed = 0;
+ 
+ 	return 0;
+ 
+@@ -2604,85 +2598,112 @@ err_disable_pdev:
+ 
+ static int mlx4_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
++	struct mlx4_priv *priv;
++	struct mlx4_dev *dev;
++
+ 	printk_once(KERN_INFO "%s", mlx4_version);
+ 
++	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
++	if (!priv) {
++		return -ENOMEM;
++	}
++
++	dev       = &priv->dev;
++	pci_set_drvdata(pdev, dev);
++	priv->pci_dev_data = id->driver_data;
++
+ 	return __mlx4_init_one(pdev, id->driver_data);
+ }
+ 
+-static void mlx4_remove_one(struct pci_dev *pdev)
++static void __mlx4_remove_one(struct pci_dev *pdev)
+ {
+ 	struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
+ 	struct mlx4_priv *priv = mlx4_priv(dev);
++	int               pci_dev_data;
+ 	int p;
+ 
+-	if (dev) {
+-		/* in SRIOV it is not allowed to unload the pf's
+-		 * driver while there are alive vf's */
+-		if (mlx4_is_master(dev)) {
+-			if (mlx4_how_many_lives_vf(dev))
+-				printk(KERN_ERR "Removing PF when there are assigned VF's !!!\n");
+-		}
+-		mlx4_stop_sense(dev);
+-		mlx4_unregister_device(dev);
++	if (priv->removed)
++		return;
+ 
+-		for (p = 1; p <= dev->caps.num_ports; p++) {
+-			mlx4_cleanup_port_info(&priv->port[p]);
+-			mlx4_CLOSE_PORT(dev, p);
+-		}
++	pci_dev_data = priv->pci_dev_data;
+ 
+-		if (mlx4_is_master(dev))
+-			mlx4_free_resource_tracker(dev,
+-						   RES_TR_FREE_SLAVES_ONLY);
+-
+-		mlx4_cleanup_counters_table(dev);
+-		mlx4_cleanup_qp_table(dev);
+-		mlx4_cleanup_srq_table(dev);
+-		mlx4_cleanup_cq_table(dev);
+-		mlx4_cmd_use_polling(dev);
+-		mlx4_cleanup_eq_table(dev);
+-		mlx4_cleanup_mcg_table(dev);
+-		mlx4_cleanup_mr_table(dev);
+-		mlx4_cleanup_xrcd_table(dev);
+-		mlx4_cleanup_pd_table(dev);
++	/* in SRIOV it is not allowed to unload the pf's
++	 * driver while there are alive vf's */
++	if (mlx4_is_master(dev)) {
++		if (mlx4_how_many_lives_vf(dev))
++			printk(KERN_ERR "Removing PF when there are assigned VF's !!!\n");
++	}
++	mlx4_stop_sense(dev);
++	mlx4_unregister_device(dev);
+ 
+-		if (mlx4_is_master(dev))
+-			mlx4_free_resource_tracker(dev,
+-						   RES_TR_FREE_STRUCTS_ONLY);
+-
+-		iounmap(priv->kar);
+-		mlx4_uar_free(dev, &priv->driver_uar);
+-		mlx4_cleanup_uar_table(dev);
+-		if (!mlx4_is_slave(dev))
+-			mlx4_clear_steering(dev);
+-		mlx4_free_eq_table(dev);
+-		if (mlx4_is_master(dev))
+-			mlx4_multi_func_cleanup(dev);
+-		mlx4_close_hca(dev);
+-		if (mlx4_is_slave(dev))
+-			mlx4_multi_func_cleanup(dev);
+-		mlx4_cmd_cleanup(dev);
+-
+-		if (dev->flags & MLX4_FLAG_MSI_X)
+-			pci_disable_msix(pdev);
+-		if (dev->flags & MLX4_FLAG_SRIOV) {
+-			mlx4_warn(dev, "Disabling SR-IOV\n");
+-			pci_disable_sriov(pdev);
+-		}
++	for (p = 1; p <= dev->caps.num_ports; p++) {
++		mlx4_cleanup_port_info(&priv->port[p]);
++		mlx4_CLOSE_PORT(dev, p);
++	}
++
++	if (mlx4_is_master(dev))
++		mlx4_free_resource_tracker(dev,
++				   RES_TR_FREE_SLAVES_ONLY);
++
++	mlx4_cleanup_counters_table(dev);
++	mlx4_cleanup_qp_table(dev);
++	mlx4_cleanup_srq_table(dev);
++	mlx4_cleanup_cq_table(dev);
++	mlx4_cmd_use_polling(dev);
++	mlx4_cleanup_eq_table(dev);
++	mlx4_cleanup_mcg_table(dev);
++	mlx4_cleanup_mr_table(dev);
++	mlx4_cleanup_xrcd_table(dev);
++	mlx4_cleanup_pd_table(dev);
+ 
+-		if (!mlx4_is_slave(dev))
+-			mlx4_free_ownership(dev);
++	if (mlx4_is_master(dev))
++		mlx4_free_resource_tracker(dev,
++				   RES_TR_FREE_STRUCTS_ONLY);
+ 
+-		kfree(dev->caps.qp0_tunnel);
+-		kfree(dev->caps.qp0_proxy);
+-		kfree(dev->caps.qp1_tunnel);
+-		kfree(dev->caps.qp1_proxy);
+-		kfree(dev->dev_vfs);
++	iounmap(priv->kar);
++	mlx4_uar_free(dev, &priv->driver_uar);
++	mlx4_cleanup_uar_table(dev);
++	if (!mlx4_is_slave(dev))
++		mlx4_clear_steering(dev);
++	mlx4_free_eq_table(dev);
++	if (mlx4_is_master(dev))
++		mlx4_multi_func_cleanup(dev);
++	mlx4_close_hca(dev);
++	if (mlx4_is_slave(dev))
++		mlx4_multi_func_cleanup(dev);
++	mlx4_cmd_cleanup(dev);
+ 
+-		kfree(priv);
+-		pci_release_regions(pdev);
+-		pci_disable_device(pdev);
+-		pci_set_drvdata(pdev, NULL);
++	if (dev->flags & MLX4_FLAG_MSI_X)
++		pci_disable_msix(pdev);
++	if (dev->flags & MLX4_FLAG_SRIOV) {
++		mlx4_warn(dev, "Disabling SR-IOV\n");
++		pci_disable_sriov(pdev);
+ 	}
++
++	if (!mlx4_is_slave(dev))
++		mlx4_free_ownership(dev);
++
++	kfree(dev->caps.qp0_tunnel);
++	kfree(dev->caps.qp0_proxy);
++	kfree(dev->caps.qp1_tunnel);
++	kfree(dev->caps.qp1_proxy);
++	kfree(dev->dev_vfs);
++
++	pci_release_regions(pdev);
++	pci_disable_device(pdev);
++	memset(priv, 0, sizeof(*priv));
++	priv->pci_dev_data = pci_dev_data;
++	priv->removed = 1;
++}
++
++static void mlx4_remove_one(struct pci_dev *pdev)
++{
++	struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
++	struct mlx4_priv *priv = mlx4_priv(dev);
++
++	__mlx4_remove_one(pdev);
++	kfree(priv);
++	pci_set_drvdata(pdev, NULL);
+ }
+ 
+ int mlx4_restart_one(struct pci_dev *pdev)
+@@ -2692,7 +2713,7 @@ int mlx4_restart_one(struct pci_dev *pdev)
+ 	int		  pci_dev_data;
+ 
+ 	pci_dev_data = priv->pci_dev_data;
+-	mlx4_remove_one(pdev);
++	__mlx4_remove_one(pdev);
+ 	return __mlx4_init_one(pdev, pci_dev_data);
+ }
+ 
+@@ -2747,7 +2768,7 @@ MODULE_DEVICE_TABLE(pci, mlx4_pci_table);
+ static pci_ers_result_t mlx4_pci_err_detected(struct pci_dev *pdev,
+ 					      pci_channel_state_t state)
+ {
+-	mlx4_remove_one(pdev);
++	__mlx4_remove_one(pdev);
+ 
+ 	return state == pci_channel_io_perm_failure ?
+ 		PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_NEED_RESET;
+@@ -2755,11 +2776,13 @@ static pci_ers_result_t mlx4_pci_err_detected(struct pci_dev *pdev,
+ 
+ static pci_ers_result_t mlx4_pci_slot_reset(struct pci_dev *pdev)
+ {
+-	const struct pci_device_id *id;
+-	int ret;
++	struct mlx4_dev	 *dev  = pci_get_drvdata(pdev);
++	struct mlx4_priv *priv = mlx4_priv(dev);
++	int		  pci_dev_data;
++	int               ret;
+ 
+-	id = pci_match_id(mlx4_pci_table, pdev);
+-	ret = __mlx4_init_one(pdev, id->driver_data);
++	pci_dev_data = priv->pci_dev_data;
++	ret = __mlx4_init_one(pdev, pci_dev_data);
+ 
+ 	return ret ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
+ }
+diff --git a/drivers/net/ethernet/mellanox/mlx4/mlx4.h b/drivers/net/ethernet/mellanox/mlx4/mlx4.h
+index cf8be41..f9c4651 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/mlx4.h
++++ b/drivers/net/ethernet/mellanox/mlx4/mlx4.h
+@@ -800,6 +800,7 @@ struct mlx4_priv {
+ 	spinlock_t		ctx_lock;
+ 
+ 	int			pci_dev_data;
++	int                     removed;
+ 
+ 	struct list_head        pgdir_list;
+ 	struct mutex            pgdir_mutex;
+-- 
+1.7.9.5
+
