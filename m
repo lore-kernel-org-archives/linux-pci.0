@@ -1,98 +1,185 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:59080 "EHLO quartz.orcorp.ca"
+Received: from mx1.redhat.com ([209.132.183.28]:7685 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751159AbaDQBYs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Apr 2014 21:24:48 -0400
-Date: Wed, 16 Apr 2014 19:24:34 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Rob Herring <robherring2@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"patches@apm.com" <patches@apm.com>,
-	"jcm@redhat.com" <jcm@redhat.com>
-Subject: Re: [PATCH v5 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
-Message-ID: <20140417012434.GA8734@obsidianresearch.com>
-References: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
- <1395270762-6055-3-git-send-email-tinamdar@apm.com>
- <CAL_Jsq+XxAtUeNKFi0hH=ehb_fhFvkM0U1Zm_j1LdtQZbvSzfA@mail.gmail.com>
- <20140416170545.GD4858@bart>
- <20140416212104.GA3469@obsidianresearch.com>
- <20140417002041.GE4858@bart>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140417002041.GE4858@bart>
+	id S1751239AbaDNHMk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Apr 2014 03:12:40 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 2/2] PCI/MSI: Phase out pci_enable_msi_block()
+Date: Mon, 14 Apr 2014 09:14:07 +0200
+Message-Id: <0b08613dc17cd608c1babc1f42b8919f60e1093f.1397458024.git.agordeev@redhat.com>
+In-Reply-To: <cover.1397458024.git.agordeev@redhat.com>
+References: <cover.1397458024.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 17, 2014 at 01:20:42AM +0100, Liviu Dudau wrote:
+There are no users of pci_enable_msi_block() function have
+left. Obsolete it in favor of pci_enable_msi_range() and
+pci_enable_msi_exact() functions.
 
-> > No spec says you can put config space into the ranges at all, nobody
-> > should be doing that today, obviously some cases were missed during
-> > review..
-> 
-> ePAPR documents allows that when ss == 00.
+Up until now, when enabling MSI mode for a device, a single
+successful call to arch_msi_check_device() was followed by
+a single call to arch_setup_msi_irqs() function.
 
-Which do you mean? The 'PCI Bus Binding' spec has fairly specific
-language on how ranges should be used and interpreted, and it
-precludes doing anything meaningful with config space (like requiring
-b,d,f and r to be zeroed when doing compares against ranges, requiring
-the ranges to represent the bridge windows, etc).
+Yet, if arch_msi_check_device() returned success we should be
+able to call arch_setup_msi_irqs() multiple times - while it
+returns a number of MSI vectors that could have been allocated
+(a third state).
 
-There is certainly room to invent something (like ECAM mapping) but
-nothing is specified in that document.
+This update makes use of the assumption described above. It
+could have broke things had the architectures done any pre-
+allocations or switch to some state in a call to function
+arch_msi_check_device(). But because arch_msi_check_device()
+is expected stateless and MSI resources are allocated in a
+follow-up call to arch_setup_msi_irqs() we should be fine.
 
-The ePAPR document I have doesn't talk about PCI..
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-mips@linux-mips.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-s390@vger.kernel.org
+Cc: x86@kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/msi.c   |   79 +++++++++++++++++++++-----------------------------
+ include/linux/pci.h |    5 +--
+ 2 files changed, 34 insertions(+), 50 deletions(-)
 
-If you've found a document that defines how it works then that changes
-things.. ;)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 955ab79..fc669ab 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -883,50 +883,6 @@ int pci_msi_vec_count(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_msi_vec_count);
+ 
+-/**
+- * pci_enable_msi_block - configure device's MSI capability structure
+- * @dev: device to configure
+- * @nvec: number of interrupts to configure
+- *
+- * Allocate IRQs for a device with the MSI capability.
+- * This function returns a negative errno if an error occurs.  If it
+- * is unable to allocate the number of interrupts requested, it returns
+- * the number of interrupts it might be able to allocate.  If it successfully
+- * allocates at least the number of interrupts requested, it returns 0 and
+- * updates the @dev's irq member to the lowest new interrupt number; the
+- * other interrupt numbers allocated to this device are consecutive.
+- */
+-int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+-{
+-	int status, maxvec;
+-
+-	if (dev->current_state != PCI_D0)
+-		return -EINVAL;
+-
+-	maxvec = pci_msi_vec_count(dev);
+-	if (maxvec < 0)
+-		return maxvec;
+-	if (nvec > maxvec)
+-		return maxvec;
+-
+-	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
+-	if (status)
+-		return status;
+-
+-	WARN_ON(!!dev->msi_enabled);
+-
+-	/* Check whether driver already requested MSI-X irqs */
+-	if (dev->msix_enabled) {
+-		dev_info(&dev->dev, "can't enable MSI "
+-			 "(MSI-X already enabled)\n");
+-		return -EINVAL;
+-	}
+-
+-	status = msi_capability_init(dev, nvec);
+-	return status;
+-}
+-EXPORT_SYMBOL(pci_enable_msi_block);
+-
+ void pci_msi_shutdown(struct pci_dev *dev)
+ {
+ 	struct msi_desc *desc;
+@@ -1132,14 +1088,45 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+  **/
+ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ {
+-	int nvec = maxvec;
++	int nvec;
+ 	int rc;
+ 
++	if (dev->current_state != PCI_D0)
++		return -EINVAL;
++
++	WARN_ON(!!dev->msi_enabled);
++
++	/* Check whether driver already requested MSI-X irqs */
++	if (dev->msix_enabled) {
++		dev_info(&dev->dev,
++			 "can't enable MSI (MSI-X already enabled)\n");
++		return -EINVAL;
++	}
++
+ 	if (maxvec < minvec)
+ 		return -ERANGE;
+ 
++	nvec = pci_msi_vec_count(dev);
++	if (nvec < 0)
++		return nvec;
++	else if (nvec < minvec)
++		return -EINVAL;
++	else if (nvec > maxvec)
++		nvec = maxvec;
++
++	do {
++		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
++		if (rc < 0) {
++			return rc;
++		} else if (rc > 0) {
++			if (rc < minvec)
++				return -ENOSPC;
++			nvec = rc;
++		}
++	} while (rc);
++
+ 	do {
+-		rc = pci_enable_msi_block(dev, nvec);
++		rc = msi_capability_init(dev, nvec);
+ 		if (rc < 0) {
+ 			return rc;
+ 		} else if (rc > 0) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aab57b4..d8104f4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1158,7 +1158,6 @@ struct msix_entry {
+ 
+ #ifdef CONFIG_PCI_MSI
+ int pci_msi_vec_count(struct pci_dev *dev);
+-int pci_enable_msi_block(struct pci_dev *dev, int nvec);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_vec_count(struct pci_dev *dev);
+@@ -1188,8 +1187,6 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
+ }
+ #else
+ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+-static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+-{ return -ENOSYS; }
+ static inline void pci_msi_shutdown(struct pci_dev *dev) { }
+ static inline void pci_disable_msi(struct pci_dev *dev) { }
+ static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+@@ -1244,7 +1241,7 @@ static inline void pcie_set_ecrc_checking(struct pci_dev *dev) { }
+ static inline void pcie_ecrc_get_policy(char *str) { }
+ #endif
+ 
+-#define pci_enable_msi(pdev)	pci_enable_msi_block(pdev, 1)
++#define pci_enable_msi(pdev)	pci_enable_msi_range(pdev, 1, 1)
+ 
+ #ifdef CONFIG_HT_IRQ
+ /* The functions a driver should call */
+-- 
+1.7.7.6
 
-> > The comment about ECAM was intended as a general guidance on what
-> > config space in ranges could/should be used for.
-> > 
-> > Right now config space shouldn't propagate out side any driver, so you
-> > can probably just filter it in your generic code, and make it very hard
-> > and obviously wrong for a driver to parse ranges for config space, so
-> > we don't get more usages.
-> 
-> OK, this goes slightly against your email from 26th March:
-> 
-> "When we talked about this earlier on the DT bindings list the
-> consensus seemed to be that configuration MMIO ranges should only be
-> used if the underlying memory was exactly ECAM, and was not to be used
-> for random configuration related register blocks.
-> 
-> The rational being that generic code, upon seeing that ranges entry,
-> could just go ahead and assume ECAM mapping."
-> 
-> What I'm saying is that the only code that will see this ranges entry will
-> be the parsing code as if we try to create a resource out of the range
-> and add it to the host bridge structure (not driver) we will confuse the
-> rest of the pci_host_bridge API. So we cannot do any ECAM accesses (yet?).
-
-Sorry if this seems unclear, what you quoted was from a specification
-standpoint - someday defining config space ranges to be the ECAM
-window makes the most sense. This is from the direction of precluding
-drivers from using it for random purposes.
-
->From a Linux standpoint, there is simply no infrastructure for generic
-config access outside the driver, so config space must remain
-contained in the driver, and shouldn't leak into the host bridge or
-other core structures.
-
-I think the shared code you are working on should simply ignore config
-ss ranges entirely, they have no defined meaning..
-
-Regards,
-Jason
