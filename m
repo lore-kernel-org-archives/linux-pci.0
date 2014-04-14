@@ -1,62 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61438 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:22100 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751104AbaDKDOE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Apr 2014 23:14:04 -0400
-Date: Fri, 11 Apr 2014 11:11:31 +0800
-From: Baoquan He <bhe@redhat.com>
-To: scameron@beardog.cce.hp.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Davidlohr Bueso <davidlohr@hp.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH] hpsa: fix uninitialized trans_support in
- hpsa_put_ctlr_into_performant_mode()
-Message-ID: <20140411031131.GN11839@dhcp-16-105.nay.redhat.com>
-References: <20140410221704.GA22465@beardog.cce.hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140410221704.GA22465@beardog.cce.hp.com>
+	id S1754064AbaDNIES (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Apr 2014 04:04:18 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Hiral Patel <hiralpat@cisco.com>,
+	Suma Ramars <sramars@cisco.com>,
+	Brian Uchino <buchino@cisco.com>, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 07/23] fnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:31 +0200
+Message-Id: <faa0100d9f97cbc3a97fddd6d723274df34df979.1397461652.git.agordeev@redhat.com>
+In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
+References: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch works for me.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Tested-by: Baoquan He <bhe@redhat.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Hiral Patel <hiralpat@cisco.com>
+Cc: Suma Ramars <sramars@cisco.com>
+Cc: Brian Uchino <buchino@cisco.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/fnic/fnic_isr.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Thanks
-Baoquan
+diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
+index 7d9b54a..a0dd1b6 100644
+--- a/drivers/scsi/fnic/fnic_isr.c
++++ b/drivers/scsi/fnic/fnic_isr.c
+@@ -257,8 +257,8 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 	    fnic->raw_wq_count >= m &&
+ 	    fnic->wq_copy_count >= o &&
+ 	    fnic->cq_count >= n + m + o) {
+-		if (!pci_enable_msix(fnic->pdev, fnic->msix_entry,
+-				    n + m + o + 1)) {
++		if (!pci_enable_msix_exact(fnic->pdev, fnic->msix_entry,
++					   n + m + o + 1)) {
+ 			fnic->rq_count = n;
+ 			fnic->raw_wq_count = m;
+ 			fnic->wq_copy_count = o;
+-- 
+1.7.7.6
 
-On 04/10/14 at 05:17pm, scameron@beardog.cce.hp.com wrote:
-> 
-> Without this, you'll see a null pointer dereference in
-> hpsa_enter_performant_mode().
-> 
-> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> ---
->  drivers/scsi/hpsa.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 8cf4a0c..ef4dfdd 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -7463,6 +7463,10 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
->  	if (hpsa_simple_mode)
->  		return;
->  
-> +	trans_support = readl(&(h->cfgtable->TransportSupport));
-> +	if (!(trans_support & PERFORMANT_MODE))
-> +		return;
-> +
->  	/* Check for I/O accelerator mode support */
->  	if (trans_support & CFGTBL_Trans_io_accel1) {
->  		transMethod |= CFGTBL_Trans_io_accel1 |
-> -- 
-> 1.7.1
-> 
