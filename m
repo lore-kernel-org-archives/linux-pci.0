@@ -1,118 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:48160 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932898AbaDIPwv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Apr 2014 11:52:51 -0400
-Received: by mail-ie0-f178.google.com with SMTP id lx4so2612693iec.37
-        for <linux-pci@vger.kernel.org>; Wed, 09 Apr 2014 08:52:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <534556CF.1010800@pobox.com>
-References: <5344251D.7040805@pobox.com> <CAErSpo6KuYLaoEsxR4jJQ98P23kNEMzMcu_-RyM3nWd6YRxgag@mail.gmail.com>
- <5344679E.1030008@pobox.com> <1397011868.3671.94.camel@pasglop>
- <53454660.5090603@pobox.com> <5345555A.20108@pobox.com> <534556CF.1010800@pobox.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Apr 2014 09:52:30 -0600
-Message-ID: <CAErSpo63gcBZKBvF3XRjgg2jWYhTOs4Tj6yptBvdX6-_NP3VeA@mail.gmail.com>
-Subject: Re: driver skip pci_set_master, fix it? No.
-To: Mark Lord <mlord@pobox.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Theodore Ts'o" <tytso@mit.edu>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:41447 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753276AbaDNIEJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Apr 2014 04:04:09 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Anil Gurumurthy <agurumur@brocade.com>,
+	Vijaya Mohan Guvva <vmohan@brocade.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:28 +0200
+Message-Id: <7db0ca73195c7a4b41ec8263e23ffaeb7ff4dce2.1397461652.git.agordeev@redhat.com>
+In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
+References: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 9, 2014 at 8:18 AM, Mark Lord <mlord@pobox.com> wrote:
-> On 14-04-09 10:12 AM, Mark Lord wrote:
->> On 14-04-09 09:08 AM, Mark Lord wrote:
->>> On 14-04-08 10:51 PM, Benjamin Herrenschmidt wrote:
->>>> On Tue, 2014-04-08 at 17:18 -0400, Mark Lord wrote:
->>>>>> I assume you're talking about the one added by cf3e1feba7f9 ("PCI:
->>>>>> Workaround missing pci_set_master in pci drivers"), but as far as I
->>>>>> can tell, it only calls pci_set_master() for *bridge* devices.  What
->>>>>> am I missing?  Is pci_set_master() being called for your endpoint?
->>>>>> What path is that?
->>>>>
->>>>> Yes, it is being called during execution of the _probe() function in my driver,
->>>>> as evidenced by the annoying (and wrong) message it produces.
->>>>>
->>>>> Next time I've got the hardware at hand, I'll put a "dump_stack()" into there
->>>>> to see the exact calling path.
->>>>
->>>> Note that one of the reason we want to do it early on bridges is that without it,
->>>> we may also not get the PCIe error messages.
->>>
->>> Sure, for bridges.
->>>
->>> I'll get a stack trace later today, but what I suspect is happening
->>> is that this multi-function card is being treated by the PCI layers
->>> as a "bridge" for purposes of the multiple virtual functions it implements.
->>>
->>> We will probably need to distinguish this kind of device from real bridges here.
->>
->> Here's the call trace, all the way back to k7_probe(),
->> the driver's PCI "probe" function, and beyond:
->>
->> [   30.481454] k7: loading driver version 0.80
->> [   30.485561] pcieport 0000:00:1c.0: driver skip pci_set_master, fix it!
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-This message says we're enabling bus mastering for a PCIe Root Port,
-which I think is the expected behavior and shouldn't cause trouble for
-your device (correct me if I'm wrong).
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Anil Gurumurthy <agurumur@brocade.com>
+Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/bfa/bfad.c |   20 ++++++--------------
+ 1 files changed, 6 insertions(+), 14 deletions(-)
 
-I don't know the system topology, but I'm guessing the k7 device is
-below that Root Port.  We might be enabling bus mastering for the k7
-device, too, but that's not what this message is about, and we'd have
-to look at the k7 command register to know for sure whether we did
-anything to it.
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index e7e4774..839c81c 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1234,29 +1234,21 @@ bfad_setup_intr(struct bfad_s *bfad)
+ 	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
+ 	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
+ 
+-		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
++		error = pci_enable_msix_exact(bfad->pcidev,
++					      msix_entries, bfad->nvec);
+ 		/* In CT1 & CT2, try to allocate just one vector */
+-		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
++		if (error == -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
+ 			printk(KERN_WARNING "bfa %s: trying one msix "
+ 			       "vector failed to allocate %d[%d]\n",
+ 			       bfad->pci_name, bfad->nvec, error);
+ 			bfad->nvec = 1;
+-			error = pci_enable_msix(bfad->pcidev,
+-						msix_entries, bfad->nvec);
++			error = pci_enable_msix_exact(bfad->pcidev,
++						      msix_entries, 1);
+ 		}
+ 
+-		/*
+-		 * Only error number of vector is available.
+-		 * We don't have a mechanism to map multiple
+-		 * interrupts into one vector, so even if we
+-		 * can try to request less vectors, we don't
+-		 * know how to associate interrupt events to
+-		 *  vectors. Linux doesn't duplicate vectors
+-		 * in the MSIX table for this case.
+-		 */
+ 		if (error) {
+ 			printk(KERN_WARNING "bfad%d: "
+-			       "pci_enable_msix failed (%d), "
++			       "pci_enable_msix_exact failed (%d), "
+ 			       "use line based.\n",
+ 				bfad->inst_no, error);
+ 			goto line_based;
+-- 
+1.7.7.6
 
->> [   30.485580] CPU: 2 PID: 4401 Comm: insmod Tainted: G           O 3.12.14 #3
->> [   30.485583] Hardware name: Supermicro X9SCI/X9SCA/X9SCI/X9SCA, BIOS 2.0b 09/17/2012
->> [   30.485590]  0000000000000300 ffff88041c11b9b8 ffffffff8156c40b 0000000000000000
->> [   30.485598]  ffff88041d2b7000 ffff88041c11b9d8 ffffffff812dc493 0000000000000300
->> [   30.485603]  ffff88041d399000 ffff88041c11ba08 ffffffff812dc50d 0000000000001000
->> [   30.485607] Call Trace:
->> [   30.485616]  [<ffffffff8156c40b>] dump_stack+0x4f/0x84
->> [   30.485622]  [<ffffffff812dc493>] pci_enable_bridge+0x93/0xa0
->> [   30.485627]  [<ffffffff812dc50d>] pci_enable_device_flags+0x6d/0xe0
->> [   30.485631]  [<ffffffff812dc58e>] pci_enable_device+0xe/0x10
->> [   30.485641]  [<ffffffffa0469c0d>] k7_enable_device+0x3d/0xa30 [k7]
->> [   30.485649]  [<ffffffffa0462d72>] ? k7_devmem_alloc+0x32/0x140 [k7]
->> [   30.485654]  [<ffffffff81572ab6>] ? _raw_spin_lock+0x16/0x40
->> [   30.485658]  [<ffffffff81572721>] ? _raw_spin_unlock+0x11/0x40
->> [   30.485666]  [<ffffffffa046aee8>] k7_probe+0x458/0x630 [k7]
->>
->> [   30.485682]  [<ffffffff812de3d6>] local_pci_probe+0x46/0x80
->> [   30.485696]  [<ffffffff812de6f1>] pci_device_probe+0x101/0x110
->> [   30.485702]  [<ffffffff813941d6>] driver_probe_device+0x76/0x240
->> [   30.485705]  [<ffffffff8139443b>] __driver_attach+0x9b/0xa0
->> [   30.485709]  [<ffffffff813943a0>] ? driver_probe_device+0x240/0x240
->> [   30.485713]  [<ffffffff81392385>] bus_for_each_dev+0x55/0x90
->> [   30.485717]  [<ffffffff81393ce9>] driver_attach+0x19/0x20
->> [   30.485720]  [<ffffffff81393814>] bus_add_driver+0x104/0x290
->> [   30.485724]  [<ffffffff81394abf>] driver_register+0x5f/0xf0
->> [   30.485728]  [<ffffffff812dd3f6>] __pci_register_driver+0x46/0x50
->> [   30.485736]  [<ffffffffa024c16e>] k7_init+0x16e/0x1000 [k7]
->> [   30.485746]  [<ffffffffa024c000>] ? 0xffffffffa024bfff
->> [   30.485765]  [<ffffffff81000302>] do_one_initcall+0x112/0x160
->> [   30.485779]  [<ffffffff81038143>] ? set_memory_nx+0x43/0x50
->> [   30.485785]  [<ffffffff810abbe1>] load_module+0x1e51/0x2480
->> [   30.485789]  [<ffffffff810a8b10>] ? show_initstate+0x50/0x50
->> [   30.485794]  [<ffffffff810ac2ae>] SyS_init_module+0x9e/0xc0
->> [   30.485799]  [<ffffffff8157389b>] tracesys+0xdd/0xe
->>
->
-> The e1000e network driver is suffering from this as well in 3.12.14.
-
-I'll look at this more closely, in 3.12.14 in particular (I was
-looking at 3.14 before).  Can you collect "lspci -vv" output for one
-or both of these systems (the whole system, not just the device in
-question)?
-
-Maybe you could read the PCI command register after the
-pci_enable_device() and verify that bus mastering is actually being
-enabled when you didn't expect it?
-
-Bjorn
