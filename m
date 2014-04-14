@@ -1,79 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:35927 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752526AbaDVHHY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Apr 2014 03:07:24 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 21/22] iommu/vt-d: introduce helper function iova_size() to improve code readability
-Date: Tue, 22 Apr 2014 15:07:32 +0800
-Message-Id: <1398150453-28141-22-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:31427 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753471AbaDNPxq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Apr 2014 11:53:46 -0400
+Date: Mon, 14 Apr 2014 10:52:41 -0500
+From: scameron@beardog.cce.hp.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Davidlohr Bueso <davidlohr@hp.com>,
+	Baoquan He <bhe@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	scameron@beardog.cce.hp.com
+Subject: Re: [PATCH] hpsa: fix uninitialized trans_support in hpsa_put_ctlr_into_performant_mode()
+Message-ID: <20140414155241.GC21686@beardog.cce.hp.com>
+References: <20140410221704.GA22465@beardog.cce.hp.com> <1397490316.2207.23.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1397490316.2207.23.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |    7 +++----
- include/linux/iova.h        |    5 +++++
- 2 files changed, 8 insertions(+), 4 deletions(-)
+On Mon, Apr 14, 2014 at 08:45:16AM -0700, James Bottomley wrote:
+> Your subject line is very tame.  It should be the one line summary of
+> why we apply the patch, so it should read something like
+> 
+>  hpsa: fix NULL deref in performant mode
+> 
+> On Thu, 2014-04-10 at 17:17 -0500, scameron@beardog.cce.hp.com wrote:
+> > Without this, you'll see a null pointer dereference in
+> > hpsa_enter_performant_mode().
+> 
+> The description should be more comprehensible.
+> 
+> I'm clear that the use before initialisation is a bug ... I'm less clear
+> on why it causes an oops.
+> 
+> > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > ---
+> >  drivers/scsi/hpsa.c |    4 ++++
+> >  1 files changed, 4 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> > index 8cf4a0c..ef4dfdd 100644
+> > --- a/drivers/scsi/hpsa.c
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -7463,6 +7463,10 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+> >  	if (hpsa_simple_mode)
+> >  		return;
+> >  
+> > +	trans_support = readl(&(h->cfgtable->TransportSupport));
+> > +	if (!(trans_support & PERFORMANT_MODE))
+> > +		return;
+> > +
+> >  	/* Check for I/O accelerator mode support */
+> >  	if (trans_support & CFGTBL_Trans_io_accel1) {
+> >  		transMethod |= CFGTBL_Trans_io_accel1 |
+> 
+> Shouldn't you be moving this check from its previous location, rather
+> than adding a new one that makes the original obsolete?
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index c4bca2d814c8..6d5b94aaac6e 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3114,10 +3114,10 @@ static void flush_unmaps(void)
- 			/* On real hardware multiple invalidations are expensive */
- 			if (cap_caching_mode(iommu->cap))
- 				iommu_flush_iotlb_psi(iommu, domain->id,
--					iova->pfn_lo, iova->pfn_hi - iova->pfn_lo + 1,
-+					iova->pfn_lo, iova_size(iova),
- 					!deferred_flush[i].freelist[j], 0);
- 			else {
--				mask = ilog2(mm_to_dma_pfn(iova->pfn_hi - iova->pfn_lo + 1));
-+				mask = ilog2(mm_to_dma_pfn(iova_size(iova)));
- 				iommu_flush_dev_iotlb(deferred_flush[i].domain[j],
- 						(uint64_t)iova->pfn_lo << PAGE_SHIFT, mask);
- 			}
-@@ -4061,8 +4061,7 @@ static int intel_iommu_memory_notifier(struct notifier_block *nb,
- 			rcu_read_lock();
- 			for_each_active_iommu(iommu, drhd)
- 				iommu_flush_iotlb_psi(iommu, si_domain->id,
--					iova->pfn_lo,
--					iova->pfn_hi - iova->pfn_lo + 1,
-+					iova->pfn_lo, iova_size(iova),
- 					!freelist, 0);
- 			rcu_read_unlock();
- 			dma_free_pagelist(freelist);
-diff --git a/include/linux/iova.h b/include/linux/iova.h
-index 3277f4711349..19e81d5ccb6d 100644
---- a/include/linux/iova.h
-+++ b/include/linux/iova.h
-@@ -34,6 +34,11 @@ struct iova_domain {
- 	unsigned long	dma_32bit_pfn;
- };
- 
-+static inline unsigned long iova_size(struct iova *iova)
-+{
-+	return iova->pfn_hi - iova->pfn_lo + 1;
-+}
-+
- struct iova *alloc_iova_mem(void);
- void free_iova_mem(struct iova *iova);
- void free_iova(struct iova_domain *iovad, unsigned long pfn);
--- 
-1.7.10.4
+Oh... I didn't notice that.   So that's what happened to that hunk.
+Yes, that is what should be done.
 
+I will resend the patch after fixing up this and the commit message.
+
+-- steve
+
+
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 8cf4a0c..9a6e4a2 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -7463,6 +7463,10 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+>  	if (hpsa_simple_mode)
+>  		return;
+>  
+> +	trans_support = readl(&(h->cfgtable->TransportSupport));
+> +	if (!(trans_support & PERFORMANT_MODE))
+> +		return;
+> +
+>  	/* Check for I/O accelerator mode support */
+>  	if (trans_support & CFGTBL_Trans_io_accel1) {
+>  		transMethod |= CFGTBL_Trans_io_accel1 |
+> @@ -7479,10 +7483,6 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+>  	}
+>  
+>  	/* TODO, check that this next line h->nreply_queues is correct */
+> -	trans_support = readl(&(h->cfgtable->TransportSupport));
+> -	if (!(trans_support & PERFORMANT_MODE))
+> -		return;
+> -
+>  	h->nreply_queues = h->msix_vector > 0 ? h->msix_vector : 1;
+>  	hpsa_get_max_perf_mode_cmds(h);
+>  	/* Performant mode ring buffer and supporting data structures */
+> 
