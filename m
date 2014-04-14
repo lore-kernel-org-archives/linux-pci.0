@@ -1,82 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:61902 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996AbaDYRVu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 13:21:50 -0400
-Received: by mail-pa0-f51.google.com with SMTP id fb1so2742981pad.24
-        for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 10:21:50 -0700 (PDT)
-Date: Fri, 25 Apr 2014 11:21:45 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Dave Airlie <airlied@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Coverity CID 142811: pci_set_vga_state() operands don't affect
- result
-Message-ID: <20140425172145.GC32246@google.com>
-References: <CAErSpo6JNDFiV6tmDKKDdnod+skBHx6T-+JGvjCRRLsL98h_uQ@mail.gmail.com>
- <20140404154744.GA8549@google.com>
+Received: from mga02.intel.com ([134.134.136.20]:63287 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753950AbaDNI56 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Apr 2014 04:57:58 -0400
+Message-ID: <534BA30B.5040102@linux.intel.com>
+Date: Mon, 14 Apr 2014 16:57:47 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140404154744.GA8549@google.com>
+To: Davidlohr Bueso <davidlohr@hp.com>,
+	"Woodhouse, David" <david.woodhouse@intel.com>
+CC: "joro@8bytes.org" <joro@8bytes.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"bhe@redhat.com" <bhe@redhat.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"James.Bottomley@hansenpartnership.com"
+	<James.Bottomley@hansenpartnership.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
+Subject: Re: hpsa driver bug crack kernel down!
+References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>	 <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike>	 <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>	 <1397087425.9519.67.camel@dabdike>	 <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>	 <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>	 <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>	 <20140410071535.GX13491@8bytes.org>	 <1397119587.19944.14.camel@shinybook.infradead.org> <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
+In-Reply-To: <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 04, 2014 at 09:47:44AM -0600, Bjorn Helgaas wrote:
-> On Thu, Apr 03, 2014 at 02:43:05PM -0600, Bjorn Helgaas wrote:
-> > Coverity complains about this in drivers/pci/pci.c:
-> > 
-> > CID 142811 (#1 of 1): Operands don't affect result (CONSTANT_EXPRESSION_RESULT)
-> > result_independent_of_operands: flags & (2U /* 1 << 1 */) &
-> > (command_bits & 4294967292U /* ~(1 | 2) */) is always 0 regardless of
-> > the values of its operands. This occurs as the logical operand of if.
-> > 
-> > 4128        WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) &
-> > (command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
-> > 
-> > This is a result of 3448a19da479 "vgaarb: use bridges to control VGA
-> > routing where possible."
-> > 
-> > I wonder if that middle "&" was intended to be "&&"?
-> 
-> I propose the following patch for this.  Unless there's objection, I'll
-> queue this for v3.16.  I took the liberty of interpreting your email
-> responses as acks.
-> 
-> 
-> PCI: Fix incorrect vgaarb conditional in WARN_ON()
-> 
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> 3448a19da479 "vgaarb: use bridges to control VGA routing where possible"
-> added the "flags & PCI_VGA_STATE_CHANGE_DECODES" condition to an existing
-> WARN_ON(), but used bitwise AND (&) instead of logical AND (&&), so the
-> condition is never true.  Replace with logical AND.
-> 
-> Found by Coverity (CID 142811).
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Acked-by: Yinghai Lu <yinghai@kernel.org>
-> Acked-by: David Airlie <airlied@redhat.com>
+Hi all,
+	I guess I found the root cause. It's a bug in matching
+device scope, variable 'level' should be decreased when walking up PCI
+topology.
+	Could you please help to test following patch?
+Thanks!
+Gerry
 
-I applied this to pci/misc for v3.16.
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index f445c10..1f8308c 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -152,7 +152,7 @@ dmar_alloc_pci_notify_info(struct pci_dev *dev,
+unsigned long event)
+        info->seg = pci_domain_nr(dev->bus);
+        info->level = level;
+        if (event == BUS_NOTIFY_ADD_DEVICE) {
+-               for (tmp = dev, level--; tmp; tmp = tmp->bus->self) {
++               for (tmp = dev, level--; tmp; level--, tmp =
+tmp->bus->self) {
+                        info->path[level].device = PCI_SLOT(tmp->devfn);
+                        info->path[level].function = PCI_FUNC(tmp->devfn);
+                        if (pci_is_root_bus(tmp->bus))
 
-I didn't mark it for stable because the only effect of backporting it would
-be to cause warnings in some new cases, without actually fixing any
-problems.
 
-> ---
->  drivers/pci/pci.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On 2014/4/11 0:19, Davidlohr Bueso wrote:
+> On Thu, 2014-04-10 at 08:46 +0000, Woodhouse, David wrote:
+>> On Thu, 2014-04-10 at 09:15 +0200, Joerg Roedel wrote:
+>>> [+ David, VT-d maintainer ]
+>>>
+>>> Jiang, David, can you please have a look into this issue?
+>>>
+>>
+>>>>>>>>>>> DMAR:[fault reason 02] Present bit in context entry is clear
+>>>>>>>>>>> dmar: DRHD: handling fault status reg 602
+>>>>>>>>>>> dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7f61e000
+>>
+>> That "Present bit in context entry is clear" fault means that we have
+>> not set up *any* mappings for this PCI device… on this IOMMU.
+>>
+>>>> Yes, specifically (finally done bisecting):
+>>>>
+>>>> commit 2e45528930388658603ea24d49cf52867b928d3e
+>>>> Author: Jiang Liu <jiang.liu@linux.intel.com>
+>>>> Date:   Wed Feb 19 14:07:36 2014 +0800
+>>>>
+>>>>     iommu/vt-d: Unify the way to process DMAR device scope array
+>>
+>> This commit is about how we decide which IOMMU a given PCI device is
+>> attached to.
+>>
+>> Thus, my first guess would be that we are quite happily setting up the
+>> requested DMA maps on the *wrong* IOMMU, and then taking faults when the
+>> device actually tries to do DMA.
+>>
+>> However, I'm not 100% convinced of that. The fault address looks
+>> suspiciously like a true physical address, not a virtual bus address of
+>> the type that we'd normally allocate for a dma_map_* operation. Those
+>> would start at 0xfffff000 and work downwards, typically.
+>>
+>> Do you have 'iommu=pt' on the kernel command line? 
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7325d43bf030..39012831867e 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4125,7 +4125,7 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
->  	u16 cmd;
->  	int rc;
->  
-> -	WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) & (command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
-> +	WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) && (command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
->  
->  	/* ARCH specific VGA enables */
->  	rc = pci_set_vga_state_arch(dev, decode, command_bits, flags);
+> No.
+> 
+>> Can I see the full
+>> dmesg as this system boots, and also a copy of the DMAR table?
+> 
+> Attaching a dmesg from one of the kernels that boots. It doesn't appear
+> to have much of the related information... is there any debug config
+> option I can enable that might give you more data?
+> 
