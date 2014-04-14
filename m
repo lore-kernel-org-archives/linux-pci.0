@@ -1,148 +1,154 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:33624 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601AbaD1TIU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 15:08:20 -0400
-Received: by mail-ie0-f175.google.com with SMTP id rl12so902760iec.34
-        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 12:08:20 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Woodhouse, David" <david.woodhouse@intel.com>
+To: Davidlohr Bueso <davidlohr@hp.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"bhe@redhat.com" <bhe@redhat.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"James.Bottomley@hansenpartnership.com"
+	<James.Bottomley@hansenpartnership.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
+Subject: Re: hpsa driver bug crack kernel down!
+Date: Mon, 14 Apr 2014 17:03:51 +0000
+Message-ID: <1397495030.19944.198.camel@shinybook.infradead.org>
+References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
+	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
+	 <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike>
+	 <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
+	 <1397087425.9519.67.camel@dabdike>
+	 <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
+	 <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
+	 <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
+	 <20140410071535.GX13491@8bytes.org>
+	 <1397119587.19944.14.camel@shinybook.infradead.org>
+	 <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
+	 <1397207932.19944.58.camel@shinybook.infradead.org>
+	 <1397490358.31076.6.camel@buesod1.americas.hpqcorp.net>
+	 <534C0AA9.5080909@linux.intel.com>
+	 <1397493858.31076.8.camel@buesod1.americas.hpqcorp.net>
+	 <1397494069.31076.9.camel@buesod1.americas.hpqcorp.net>
+In-Reply-To: <1397494069.31076.9.camel@buesod1.americas.hpqcorp.net>
+Content-Type: multipart/signed; micalg=sha-1;
+	protocol="application/x-pkcs7-signature"; boundary="=-eL3B1t8JUWdQ6i0kdbKt"
 MIME-Version: 1.0
-In-Reply-To: <CAHH3p5LKay-1gcgCn1fatM0hOL1Tc+a81Za+ePVjJ6oPo8+6rg@mail.gmail.com>
-References: <CAHH3p5+9VCYwS6JdB8aFJ0i4JLcFTMgSgiKOaE2GMnhfWM1bWA@mail.gmail.com>
- <CAErSpo7cDPa0vujMmppWV2RM3vn6=WJ7MCcP8CvwhT4Zn==MwA@mail.gmail.com>
- <CAHH3p5+qEeYaNKm-L4_RmnkmXeA2030u4t3D+J2wUwBEWiPBPQ@mail.gmail.com>
- <CAErSpo6+_Tnh9+r50_qK-v0ubpv_pqTcnS7DhMiNi8GbWmsgJA@mail.gmail.com>
- <CAHH3p5+xTwMaDW-k-0UUZ+21EhCCt2voWXP2jZf_PbRqOdukiA@mail.gmail.com>
- <CAErSpo7jd2smdoju31r7SWVp4KjNmN+qDAxSUxmVCnUSUOfKTw@mail.gmail.com> <CAHH3p5LKay-1gcgCn1fatM0hOL1Tc+a81Za+ePVjJ6oPo8+6rg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 28 Apr 2014 12:00:16 -0600
-Message-ID: <CAErSpo5VWnAG3xnhn0zgpyC22Eum=ZVR=BM8j2Rvt+=i7LZgjA@mail.gmail.com>
-Subject: Re: Intel NIC testing on ARM
-To: shiv prakash Agarwal <chhotu.shiv@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 26, 2014 at 12:09 PM, shiv prakash Agarwal
-<chhotu.shiv@gmail.com> wrote:
-> Thanks Bjorn,
->
-> 1. I see PCI core setting this bit while enumeration.
-> 2. Avoiding this setting allows successful enumeration, otherwise hang
-> occurs in any subsequent device config space write.
-> 3. Yes, no dma operation happening but hang happens on device config space
-> write.
+--=-eL3B1t8JUWdQ6i0kdbKt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-OK, let me know when you figure out where the core is turning on Bus
-Master and what config access we're doing when the hang occurs.
+On Mon, 2014-04-14 at 09:47 -0700, Davidlohr Bueso wrote:
+> On Mon, 2014-04-14 at 09:44 -0700, Davidlohr Bueso wrote:
+> > On Tue, 2014-04-15 at 00:19 +0800, Jiang Liu wrote:
+> > > Hi Davidlohr,
+> > > 	Thanks for providing the DMAR table. According to the DMAR
+> > > table, one bug in the iommu driver fails to handle this entry:
+> > > [1D2h 0466   1]      Device Scope Entry Type : 01
+> > > [1D3h 0467   1]                 Entry Length : 0A
+> > > [1D4h 0468   2]                     Reserved : 0000
+> > > [1D6h 0470   1]               Enumeration ID : 00
+> > > [1D7h 0471   1]               PCI Bus Number : 00
+> > > [1D8h 0472   2]                     PCI Path : 1C,04
+> > > [1DAh 0474   2]                     PCI Path : 00,02
+> > >=20
+> > > 	And the patch sent out by me should fix this bug. Could you please h=
+elp
+> > > to have a try?
+> >=20
+> > Sorry, I am unable to find any patches from you regarding this issue...
+> > I must be missing something. Could you please point me to the lkml link=
+?
+>=20
+> Never mind, I got it internally. I'll let you know  as soon as I can
+> test it later today.
 
-> On Fri, Apr 25, 2014 at 8:08 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> On Thu, Apr 24, 2014 at 11:40 PM, shiv prakash Agarwal
->> <chhotu.shiv@gmail.com> wrote:
->> > Thanks Bjorn,
->> >
->> > On furthur debug, I found that this hang happens on enabling Bus Master
->> > Enable bit(bit 2) of command register (offset 0x4) in config space of
->> > device. On disabling this bit, no hang occurs.
->> >
->> > Any idea on this behaviour?
->>
->> It'd  be easier if you gave a few more details.  Where exactly did you
->> remove the Bus Master enable?  The PCI core should not enable Bus
->> Master for an endpoint at all unless the driver requests it, and based
->> on the dmesg fragment you posted, I don't think the driver is involved
->> yet.
->>
->> Bus mastering affects transactions originated by the device, of
->> course.  So if the hang only happens if Bus Master is enabled, it
->> sounds like the hang happens when the device performs a DMA or other
->> transaction.  But if the driver hasn't claimed the device yet, the
->> device shouldn't be doing anything at all, even if Bus Master is
->> enabled.
->>
->> There might be more clues if you would post the *entire* dmesg log
->> instead of just a fragment.
->>
->> > On Thu, Apr 24, 2014 at 10:07 PM, Bjorn Helgaas <bhelgaas@google.com>
->> > wrote:
->> >>
->> >> On Thu, Apr 24, 2014 at 1:47 AM, shiv prakash Agarwal
->> >> <chhotu.shiv@gmail.com> wrote:
->> >> > Hi Bjorn,
->> >> >
->> >> > Below is the hang:
->> >> >
->> >> >
->> >> > PCI host bridge to bus 0000:00
->> >> >
->> >> > pci_bus 0000:00: root bus resource [mem 0x32100000-0x3fffffff]
->> >> >
->> >> > pci_bus 0000:00: root bus resource [mem 0x12100000-0x320fffff pref]
->> >> >
->> >> > pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
->> >> >
->> >> > pci_bus 0000:00: No busn resource found for root bus, will use [bus
->> >> > 00-ff]
->> >> >
->> >> > pci 0000:00:00.0: [10de:0e12] type 01 class 0x060400
->> >> >
->> >> > pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot D3cold
->> >> >
->> >> > PCI: bus0: Fast back to back transfers disabled
->> >> >
->> >> > pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]),
->> >> > reconfiguring
->> >> >
->> >> > pci 0000:01:00.0: [8086:1533] type 00 class 0x020000
->> >> >
->> >> > pci 0000:01:00.0: reg 10: [mem 0x00000000-0x000fffff]
->> >> >
->> >> > Unhandled fault: imprecise external abort (0x1406) at 0x00000000
->> >> >
->> >> > Internal error: : 1406 [#1] PREEMPT SMP ARM
->> >> >
->> >> > Modules linked in:
->> >> >
->> >> > CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.10.24 #2
->> >> >
->> >> > task: ef06fa40 ti: ef0b2000 task.ti: ef0b2000
->> >>
->> >> This looks like it's happening before the igb driver is involved.
->> >> There must be a bridge from bus 0000:00 to bus 0000:01.  It looks like
->> >> 0000:00:00.0 might be the bridge, but we haven't finished enumerating
->> >> it yet.  So it seems likely that this is happening in the PCI core.
->> >>
->> >> Can you get a backtrace at the point of the fault?  Maybe add a
->> >> dump_stack() there?
->> >>
->> >> The 01:00.0 BAR contains zero, which is not itself a problem.  Zero is
->> >> what you'd expect after power-up if no firmware or anything had
->> >> programmed it.  The PCI core should notice that this is invalid (it's
->> >> not inside any of the root bus resources) and reprogram it, but we
->> >> haven't gotten that far yet.
->> >>
->> >> > On Tue, Apr 22, 2014 at 9:31 PM, Bjorn Helgaas <bhelgaas@google.com>
->> >> > wrote:
->> >> >> On Tue, Apr 22, 2014 at 3:50 AM, shiv prakash Agarwal
->> >> >> <chhotu.shiv@gmail.com> wrote:
->> >> >>> Hi All,
->> >> >>>
->> >> >>> Has anybody tested below Intel I210 NIC card using igb driver on
->> >> >>> ARM?
->> >> >>>
->> >> >>>
->> >> >>>
->> >> >>> http://www.intel.com/content/www/us/en/ethernet-controllers/ethernet-controller-i210-i211-family.html
->> >> >>>
->> >> >>> It hangs during configuration stage for me. Actually it shows BAR0
->> >> >>> requirement as 0 which is non-zero for x86.
->> >> >>
->> >> >> Can you give any more details about this, e.g., a complete dmesg
->> >> >> log,
->> >> >> which should contain details about enumeration and resource
->> >> >> allocation?
->> >
->> >
->
->
+Thanks.
+
+Jiang, if you can then let me have a copy with a signed-off-by I'll
+shepherd it upstream along with your other patch which is already in my
+iommu-2.6.git tree.
+
+--=20
+                  Sent with Evolution's ActiveSync support.
+
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
+
+
+
+
+
+--=-eL3B1t8JUWdQ6i0kdbKt
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+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
+kiW8/Nj6KITQvHqz7x/Es0IRJCc9/zBES7yMeD+fgJKHAEv/uTcFfGM9HIWxPQIDAQABo4IC6jCC
+AuYwHQYDVR0OBBYEFGK1Mey+kPYGHowHJ0YXtQU4NmbSMB8GA1UdIwQYMBaAFB5pKrTcKP5HGE4h
+Cz+8rBEv8Jj1MIHJBgNVHR8EgcEwgb4wgbuggbiggbWGVGh0dHA6Ly93d3cuaW50ZWwuY29tL3Jl
+cG9zaXRvcnkvQ1JML0ludGVsJTIwRXh0ZXJuYWwlMjBCYXNpYyUyMElzc3VpbmclMjBDQSUyMDRB
+LmNybIZdaHR0cDovL2NlcnRpZmljYXRlcy5pbnRlbC5jb20vcmVwb3NpdG9yeS9DUkwvSW50ZWwl
+MjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENBJTIwNEEuY3JsMIHvBggrBgEFBQcBAQSB
+4jCB3zBpBggrBgEFBQcwAoZdaHR0cDovL3d3dy5pbnRlbC5jb20vcmVwb3NpdG9yeS9jZXJ0aWZp
+Y2F0ZXMvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENBJTIwNEEuY3J0MHIG
+CCsGAQUFBzAChmZodHRwOi8vY2VydGlmaWNhdGVzLmludGVsLmNvbS9yZXBvc2l0b3J5L2NlcnRp
+ZmljYXRlcy9JbnRlbCUyMEV4dGVybmFsJTIwQmFzaWMlMjBJc3N1aW5nJTIwQ0ElMjA0QS5jcnQw
+CwYDVR0PBAQDAgeAMDwGCSsGAQQBgjcVBwQvMC0GJSsGAQQBgjcVCIbDjHWEmeVRg/2BKIWOn1OC
+kcAJZ4HevTmV8EMCAWQCAQgwHwYDVR0lBBgwFgYIKwYBBQUHAwQGCisGAQQBgjcKAwwwKQYJKwYB
+BAGCNxUKBBwwGjAKBggrBgEFBQcDBDAMBgorBgEEAYI3CgMMME8GA1UdEQRIMEagKQYKKwYBBAGC
+NxQCA6AbDBlkYXZpZC53b29kaG91c2VAaW50ZWwuY29tgRlkYXZpZC53b29kaG91c2VAaW50ZWwu
+Y29tMA0GCSqGSIb3DQEBBQUAA4IBAQBCQ4UH3yybC+PzPo7W4PQJQwIDkKfD2i20i/DosQ7+Yeof
+KF7qDASe9eoJGXbINBx1u648uOnaMBsxgUUamJo7pdt1ZnsetRtCQrJIsrsJA3Q2MOsrv7xHkzqn
+DF99KHEbO2yKvyjJVDznHUWh8M1OFmdoziyWE/VPdqTwXwS/UKO81XaTtWUDGO716HHVlfT9yPle
+Ukg2MTcIhhNWmlS8gDUayhteIAlPci71f/oXzXxBiGiO6FVZUEx+rZBQB84Ey0S0Tfm7hiGzoegg
+ra0hfiiMOKMio+n0r4NUn03Z+VRUTbdjHIA6Lkozwpadvs9/uK8dIGqfcgxYgk9qdjFPMYICDjCC
+AgoCAQEwgYcweTELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtTYW50YSBDbGFy
+YTEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJh
+c2ljIElzc3VpbmcgQ0EgNEECCmJiMmoAAAAATKAwCQYFKw4DAhoFAKBdMBgGCSqGSIb3DQEJAzEL
+BgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE0MDQxNDE3MDM1MFowIwYJKoZIhvcNAQkEMRYE
+FIZfNjzUVnVaHgL1wQIF2AqEEauhMA0GCSqGSIb3DQEBAQUABIIBAFSFPHKceRkG+DvQu8/XIDbF
+MC9zvh1fclijx0CtTxVg5KHHwWsQI9gXl4ddjxXMedPAVc7eIYzqqyK1mNyNztyYhJx2QFosiDyN
+D+QZ2WXFmDBJkxLVlmoOIwCIXmLqy2ljfg1jvnWONT6wLpVft2oQUX4HprBf1gIKd0K4JjVpffx7
+OnfNRNw/rrEuakGO2yEydbR+sDEBDh0eLiKiv5fq97mArrUg4gAFfvcLqz8+qweyYphheRDJzjlT
+WrBPzz5wZIo4F6oTivzciuyLpymlGE87tTDNU4+60ROvhoV2BCnS2pAtRTouidb/TagwNdub/XMF
+1ai7WwQz8JO2oA8AAAAAAAA=
+
+
+--=-eL3B1t8JUWdQ6i0kdbKt--
