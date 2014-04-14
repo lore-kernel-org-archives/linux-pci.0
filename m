@@ -1,69 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:48515 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752000AbaDYSTQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 14:19:16 -0400
-Received: by mail-pd0-f178.google.com with SMTP id fp1so1257275pdb.9
-        for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 11:19:16 -0700 (PDT)
-Date: Fri, 25 Apr 2014 12:19:11 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Frank Haverkamp <haver@linux.vnet.ibm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] GenWQE: Use pci_enable_msi_exact() instead of
- pci_enable_msi_block()
-Message-ID: <20140425181911.GI32246@google.com>
-References: <cover.1397458024.git.agordeev@redhat.com>
- <6e4ebc84c90c5f8e49a931e915ec373576ad416a.1397458024.git.agordeev@redhat.com>
-MIME-Version: 1.0
+Received: from g6t1526.atlanta.hp.com ([15.193.200.69]:24772 "EHLO
+	g6t1526.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754255AbaDNTCE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Apr 2014 15:02:04 -0400
+Date: Mon, 14 Apr 2014 14:01:09 -0500
+From: scameron@beardog.cce.hp.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Davidlohr Bueso <davidlohr@hp.com>,
+	Baoquan He <bhe@redhat.com>, linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	scameron@beardog.cce.hp.com
+Subject: [PATCH] hpsa: fix NULL dereference in hpsa_put_ctlr_into_performant_mode()
+Message-ID: <20140414190109.GD21686@beardog.cce.hp.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6e4ebc84c90c5f8e49a931e915ec373576ad416a.1397458024.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 14, 2014 at 09:14:06AM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: linux-pci@vger.kernel.org
-> Acked-by: Frank Haverkamp <haver@linux.vnet.ibm.com>
 
-Greg, since you acked this rather than saying you applied it, I applied
-this to my pci/msi branch.  If you'd rather take it yourself, just let me
-know.
+Initialize local variable trans_support before it is used rather
+than after.  It is supposed to contain the value of a register on the
+controller containing bits that describe which transport modes the
+controller supports (e.g. "performant", "ioaccel1",  "ioaccel2").  A
+NULL pointer dereference will almost certainly occur if trans_support
+is not initialized at the right point.  If for example the uninitialized
+trans_support value does not have the bit set for ioaccel2 support when it
+should be, then ioaccel2_alloc_cmds_and_bft() will not get called as it
+should be and the h->ioaccel2_blockFetchTable array will remain NULL
+instead of being allocated.  Too late, trans_support finally gets
+initialized with the correct value with ioaccel2 mode bit set,
+which later causes calc_bucket_map() to be called to fill in
+h->ioaccel2_blockFetchTable[].  However h->ioaccel2_blockFetchTable
+is NULL because it didn't get allocated because earlier trans_support
+wasn't initialized at the right point.
 
-Bjorn
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ drivers/scsi/hpsa.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-> ---
->  drivers/misc/genwqe/card_utils.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/misc/genwqe/card_utils.c b/drivers/misc/genwqe/card_utils.c
-> index 6b1a6ef..294f667 100644
-> --- a/drivers/misc/genwqe/card_utils.c
-> +++ b/drivers/misc/genwqe/card_utils.c
-> @@ -628,7 +628,7 @@ int genwqe_set_interrupt_capability(struct genwqe_dev *cd, int count)
->  	int rc;
->  	struct pci_dev *pci_dev = cd->pci_dev;
->  
-> -	rc = pci_enable_msi_block(pci_dev, count);
-> +	rc = pci_enable_msi_exact(pci_dev, count);
->  	if (rc == 0)
->  		cd->flags |= GENWQE_FLAG_MSI_ENABLED;
->  	return rc;
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 8cf4a0c..9a6e4a2 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -7463,6 +7463,10 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+ 	if (hpsa_simple_mode)
+ 		return;
+ 
++	trans_support = readl(&(h->cfgtable->TransportSupport));
++	if (!(trans_support & PERFORMANT_MODE))
++		return;
++
+ 	/* Check for I/O accelerator mode support */
+ 	if (trans_support & CFGTBL_Trans_io_accel1) {
+ 		transMethod |= CFGTBL_Trans_io_accel1 |
+@@ -7479,10 +7483,6 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+ 	}
+ 
+ 	/* TODO, check that this next line h->nreply_queues is correct */
+-	trans_support = readl(&(h->cfgtable->TransportSupport));
+-	if (!(trans_support & PERFORMANT_MODE))
+-		return;
+-
+ 	h->nreply_queues = h->msix_vector > 0 ? h->msix_vector : 1;
+ 	hpsa_get_max_perf_mode_cmds(h);
+ 	/* Performant mode ring buffer and supporting data structures */
+-- 
+1.7.1
+
