@@ -1,66 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:3945 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758712AbaDJRKr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Apr 2014 13:10:47 -0400
-Date: Thu, 10 Apr 2014 19:10:00 +0200
-From: Willy Tarreau <w@1wt.eu>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Neil Greatorex <neil@fatboyfat.co.uk>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?iso-8859-1?Q?Cl=E9ment?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: Fixing PCIe issues on Armada XP
-Message-ID: <20140410171000.GF25890@1wt.eu>
-References: <20140410181953.50ccfcc3@skate>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140410181953.50ccfcc3@skate>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Anil Gurumurthy <agurumur@brocade.com>,
+	Vijaya Mohan Guvva <vmohan@brocade.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 02/23] bfa: Do not call pci_enable_msix() after it failed once
+Date: Mon, 14 Apr 2014 10:05:26 +0200
+Message-Id: <f9c36a94438cfb19e45f95111877f6e140b98089.1397461652.git.agordeev@redhat.com>
+In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
+References: <cover.1397461652.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
+Function pci_enable_msix() should not be called in case
+it threw a negative errno from a previous call.
 
-On Thu, Apr 10, 2014 at 06:19:53PM +0200, Thomas Petazzoni wrote:
-> Hello all,
-> 
-> This is an e-mail that attempts to summarize the situation in terms of
-> Armada XP PCIe issues.
-> 
-> At
-> https://github.com/MISL-EBU-System-SW/mainline-public/commits/3.14/pci-debug,
-> I've pushed a branch based on top of v3.14 that contains:
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Anil Gurumurthy <agurumur@brocade.com>
+Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+---
+ drivers/scsi/bfa/bfad.c |   48 ++++++++++++++++++++++------------------------
+ 1 files changed, 23 insertions(+), 25 deletions(-)
 
-Thanks for putting all this online.
-
-I have a minor comment below :
-
->  * 2 patches on the pci-mvebu driver. One from Willy Tarreau to fix the
->    off by one on the sizes. And another one from me which splits the
->    PCI BAR into power-of-two sized chunks, in order to create valid
->    MBus windows.
-
-As suggested by Jason, this one should be merged before his that's just
-before, to ensure that it will not cause a regression.
-
-> I've tested this with my IGB card which needs a 9 MB
->    BAR (so 8 MB + 1 MB needed), and I've also faked the code to code to
->    simulate a 11.5 MB BAR (so 8 + 2 + 1 + 0.5 MB), and it worked. I
->    also checked that if we have an error when creating one of the
->    windows, then all the previous windows needed for the current BAR
->    are properly removed.
-
-Really cool, I'm going to test that on a few PCIe cards and will report
-the results here. How can we check the number of mbus windows in use ?
-
-Thanks,
-Willy
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index cc0fbcd..972ff8d 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1235,33 +1235,31 @@ bfad_setup_intr(struct bfad_s *bfad)
+ 	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
+ 
+ 		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
+-		if (error) {
+-			/* In CT1 & CT2, try to allocate just one vector */
+-			if (bfa_asic_id_ctc(pdev->device)) {
+-				printk(KERN_WARNING "bfa %s: trying one msix "
+-				       "vector failed to allocate %d[%d]\n",
+-				       bfad->pci_name, bfad->nvec, error);
+-				bfad->nvec = 1;
+-				error = pci_enable_msix(bfad->pcidev,
++		/* In CT1 & CT2, try to allocate just one vector */
++		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
++			printk(KERN_WARNING "bfa %s: trying one msix "
++			       "vector failed to allocate %d[%d]\n",
++			       bfad->pci_name, bfad->nvec, error);
++			bfad->nvec = 1;
++			error = pci_enable_msix(bfad->pcidev,
+ 						msix_entries, bfad->nvec);
+-			}
++		}
+ 
+-			/*
+-			 * Only error number of vector is available.
+-			 * We don't have a mechanism to map multiple
+-			 * interrupts into one vector, so even if we
+-			 * can try to request less vectors, we don't
+-			 * know how to associate interrupt events to
+-			 *  vectors. Linux doesn't duplicate vectors
+-			 * in the MSIX table for this case.
+-			 */
+-			if (error) {
+-				printk(KERN_WARNING "bfad%d: "
+-				       "pci_enable_msix failed (%d), "
+-				       "use line based.\n",
+-					bfad->inst_no, error);
+-				goto line_based;
+-			}
++		/*
++		 * Only error number of vector is available.
++		 * We don't have a mechanism to map multiple
++		 * interrupts into one vector, so even if we
++		 * can try to request less vectors, we don't
++		 * know how to associate interrupt events to
++		 *  vectors. Linux doesn't duplicate vectors
++		 * in the MSIX table for this case.
++		 */
++		if (error) {
++			printk(KERN_WARNING "bfad%d: "
++			       "pci_enable_msix failed (%d), "
++			       "use line based.\n",
++				bfad->inst_no, error);
++			goto line_based;
+ 		}
+ 
+ 		/* Disable INTX in MSI-X mode */
+-- 
+1.7.7.6
 
