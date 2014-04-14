@@ -1,108 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:47690 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754554AbaCQQgs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Mar 2014 12:36:48 -0400
-Received: by mail-ie0-f174.google.com with SMTP id rp18so5732974iec.19
-        for <linux-pci@vger.kernel.org>; Mon, 17 Mar 2014 09:36:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMxnaaUSs2KXL9=VKLpM=+vyb0RZ4iWPp4WawfFaw+kNbWfNSg@mail.gmail.com>
-References: <CAMxnaaXd9-VbxSYa9q1YVT+fwfDFYKGG2Hq-1jkc-awLX-HwtQ@mail.gmail.com>
- <CAErSpo5fkaFNq_qTZ+gTDMV554f4diOXQ7_4bsHqj06iAGTpHg@mail.gmail.com>
- <CAE9FiQVNFqTw+92qy8zcwG1haiSZzU+KE3oh4YnjNc_aE6KUnA@mail.gmail.com>
- <20140308010456.GA30660@google.com> <CAMxnaaVfpJCW7e-b80y4wmVWcRDK5t7qY+pNn71CsLPRN2ojnA@mail.gmail.com>
- <CAErSpo4MQsAer7FM0kU5mMOGRok0oFMWX1FqFijmswutjyNoRg@mail.gmail.com>
- <CAMxnaaWr0z1zbpFQPX6UvYbnxhfA+3aj4ffhCBpp1i4ZLsGTPg@mail.gmail.com>
- <20140311001003.GA14367@google.com> <CAMxnaaUSs2KXL9=VKLpM=+vyb0RZ4iWPp4WawfFaw+kNbWfNSg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 17 Mar 2014 10:36:27 -0600
-Message-ID: <CAErSpo6APp4QufzfXUxx6vf4iQk60dmoW-t=OP503uH5P96LHg@mail.gmail.com>
-Subject: Re: [Bug] PCI: Enable INTx if BIOS left them disabled - triggers
- during rescan
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1397494069.31076.9.camel@buesod1.americas.hpqcorp.net>
+Subject: Re: hpsa driver bug crack kernel down!
+From: Davidlohr Bueso <davidlohr@hp.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Woodhouse, David" <david.woodhouse@intel.com>,
+	"joro@8bytes.org" <joro@8bytes.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"bhe@redhat.com" <bhe@redhat.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"James.Bottomley@hansenpartnership.com"
+	<James.Bottomley@hansenpartnership.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	"scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
+Date: Mon, 14 Apr 2014 09:47:49 -0700
+In-Reply-To: <1397493858.31076.8.camel@buesod1.americas.hpqcorp.net>
+References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
+	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
+	 <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike>
+	 <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
+	 <1397087425.9519.67.camel@dabdike>
+	 <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
+	 <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
+	 <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
+	 <20140410071535.GX13491@8bytes.org>
+	 <1397119587.19944.14.camel@shinybook.infradead.org>
+	 <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
+	 <1397207932.19944.58.camel@shinybook.infradead.org>
+	 <1397490358.31076.6.camel@buesod1.americas.hpqcorp.net>
+	 <534C0AA9.5080909@linux.intel.com>
+	 <1397493858.31076.8.camel@buesod1.americas.hpqcorp.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 11, 2014 at 6:52 AM, Andreas Noever
-<andreas.noever@gmail.com> wrote:
-> On Tue, Mar 11, 2014 at 1:10 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Mar 11, 2014 at 12:10:02AM +0100, Andreas Noever wrote:
->>> On Mon, Mar 10, 2014 at 9:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> > On Sat, Mar 8, 2014 at 2:55 AM, Andreas Noever <andreas.noever@gmail.com> wrote:
->>> >> On Sat, Mar 8, 2014 at 2:04 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> >
->>> >>> If we did that, INTX_DISABLE would be cleared by the first
->>> >>> pci_enable_device() and pci_reenable_device() wouldn't do anything,
->>> >>> leaving it cleared.  The resulting state (cleared) would be the same,
->>> >>> but the transitions would be gone, and maybe those are important.
->>> >> Just a quick note: With pci_intx_for_msi removed no hotplug events are
->>> >> ever delivered. Everything else still works though. So it is either a
->>> >> problem specific to Thunderbolt bridges or maybe it just affects
->>> >> hotplug (and PME?) interrupts.
->>> >
->>> > Interesting.  This is on a MacBook, isn't it?  If you have Mac OS on
->>> > it, is there a way you can do the equivalent of lspci on it?  I'm
->>> > curious about whether it sets INTx_DISABLE when it enables MSI.
->>>
->>> lspci -vv and lspci -vv -xxxx attached (yes, someone made a port).
->>>
->>> It looks like Mac OS sets DisINTx for all devices that have MSI
->>> enabled. The only exception is the Thunderbolt controller (no
->>> idea...). But the hotplug bridges all have DisINTx+.
->>
->> OK, thanks.  I don't know what to make of that.
->>
->> Here's a possible patch; can you try it out?
->>
->>
->> PCI: Do not enable INTx in pci_reenable_device()
->>
->> From: Bjorn Helgaas <bhelgaas@google.com>
->>
->> Previously we cleared the Interrupt Disable bit in do_pci_enable_device(),
->> which is used by both pci_enable_device() and pci_reenable_device().  But
->> we use pci_reenable_device() after the driver may have enabled MSI or
->> MSI-X, and we *set* Interrupt Disable as part of enabling MSI/MSI-X.
->>
->> The pciehp hot-plug path uses pci_reenable_device() on the hotplug bridge,
->> and clearing its Interrupt Disable bit makes its hotplug event-reporting
->> MSI stop working.
->>
->> Fixes: 1f42db786b14 PCI: Enable INTx if BIOS left them disabled
->> Link: https://bugzilla.kernel.org/show_bug.cgi?id=71691
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> ---
->>  drivers/pci/pci.c |    3 +++
->>  1 file changed, 3 insertions(+)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 8dc3e701ec57..79fc89c6c3f3 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -1192,6 +1192,9 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
->>                 return err;
->>         pci_fixup_device(pci_fixup_enable, dev);
->>
->> +       if (dev->msi_enabled || dev->msix_enabled)
->> +               return 0;
->> +
->>         pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->>         if (pin) {
->>                 pci_read_config_word(dev, PCI_COMMAND, &cmd);
->
-> That fixes it.
+On Mon, 2014-04-14 at 09:44 -0700, Davidlohr Bueso wrote:
+> On Tue, 2014-04-15 at 00:19 +0800, Jiang Liu wrote:
+> > Hi Davidlohr,
+> > 	Thanks for providing the DMAR table. According to the DMAR
+> > table, one bug in the iommu driver fails to handle this entry:
+> > [1D2h 0466   1]      Device Scope Entry Type : 01
+> > [1D3h 0467   1]                 Entry Length : 0A
+> > [1D4h 0468   2]                     Reserved : 0000
+> > [1D6h 0470   1]               Enumeration ID : 00
+> > [1D7h 0471   1]               PCI Bus Number : 00
+> > [1D8h 0472   2]                     PCI Path : 1C,04
+> > [1DAh 0474   2]                     PCI Path : 00,02
+> > 
+> > 	And the patch sent out by me should fix this bug. Could you please help
+> > to have a try?
+> 
+> Sorry, I am unable to find any patches from you regarding this issue...
+> I must be missing something. Could you please point me to the lkml link?
 
-Thanks for testing this, Andreas.  I merged it and it's in Linus' tree now.
+Never mind, I got it internally. I'll let you know  as soon as I can
+test it later today.
 
-Would you mind booting with "pci=earlydump" sometime and attaching the
-dmesg to the bugzilla?  Your lspci output shows that INTx_DISABLE is
-set, and I'm curious about whether it was set by the BIOS or by Mac
-OS.
-
-Bjorn
