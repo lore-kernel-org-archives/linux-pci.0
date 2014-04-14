@@ -1,181 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:49819 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754437AbaDRVcG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Apr 2014 17:32:06 -0400
-Message-ID: <1397856690.32730.110.camel@pasglop>
-Subject: Re: [Resend] pcibios_add_platform_entries usage
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Sebastian Ott <sebott@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Michal Simek <monstr@monstr.eu>,
-	Paul Mackerras <paulus@samba.org>
-Date: Sat, 19 Apr 2014 07:31:30 +1000
-In-Reply-To: <alpine.LFD.2.11.1404181154450.1609@denkbrett>
-References: <alpine.LFD.2.11.1403281931410.1516@denkbrett>
-	 <alpine.LFD.2.11.1404141101500.1529@denkbrett>
-	 <20140414173541.GA4417@google.com>
-	 <alpine.LFD.2.11.1404141958120.1561@denkbrett>
-	 <alpine.LFD.2.11.1404171938190.1588@denkbrett>
-	 <1397768575.32730.70.camel@pasglop>
-	 <alpine.LFD.2.11.1404181154450.1609@denkbrett>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:49320 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753732AbaDNRNS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Apr 2014 13:13:18 -0400
+Date: Mon, 14 Apr 2014 18:13:00 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"arnd@arndb.de" <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>
+Subject: Re: [PATCH 0/3] ARM: PCI: implement virtual PCI host controller
+Message-ID: <20140414171300.GL12916@arm.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <20140403220713.GA23545@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140403220713.GA23545@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-04-18 at 12:10 +0200, Sebastian Ott wrote:
-> On Fri, 18 Apr 2014, Benjamin Herrenschmidt wrote:
-> > On Thu, 2014-04-17 at 19:46 +0200, Sebastian Ott wrote:
+Hi Bjorn,
+
+(apologies for the delay, I've been away for a month)
+
+On Thu, Apr 03, 2014 at 11:07:13PM +0100, Bjorn Helgaas wrote:
+> On Tue, Feb 04, 2014 at 04:53:01PM +0000, Will Deacon wrote:
+> > Hello,
 > > 
-> > > pci: move open fabric devspec attribute to pci common code
-> > > 
-> > > Move the devspec OF attribute to pci common code's set of device
-> > > attributes since it's not architecture dependent.
-> > > As a side effect microblaze and powerpc no longer need to use
-> > > pcibios_add_platform_entries.
-> > > 
-> > > Link: https://lkml.kernel.org/r/alpine.LFD.2.11.1404141101500.1529@denkbrett
-> > > Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+> > This small set of patches brings PCI support to mach-virt based upon an
+> > idealised host controller (see patch 2 for more details).
 > > 
-> > Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> > This has been tested with kvmtool, for which I have a corresponding set
+> > of patches which you can find in my kvmtool/pci branch at:
 > > 
-> > (Pending you've compile tested it on powerpc, I'm on vacation and
-> > haven't done it :)
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/will/kvmtool.git
+> > 
+> > Once the arm64 PCI patches from Liviu have stabilised, I plan to port
+> > this host controller to work there as well.
+> > 
+> > The main issue I can see with this code is how to describe configuration
+> > space in the device-tree. I'm following the ePAPR PCI bindings (SS == 0)
+> > , but this adds an ugly 'case 0:' line in the pci range parser, which
+> > also exists in mainline for the pcie-designware.c driver.
 > 
-> I did:
-> make ARCH=powerpc CROSS_COMPILE=powerpc64-4.3.2- g5_defconfig
-> make ARCH=powerpc CROSS_COMPILE=powerpc64-4.3.2-
+> There was a long discussion about this (especially 2/3), and I didn't
+> follow it closely enough to get the resolution, and I don't think I
+> picked up the patches.
 > 
-> and failed with:
->   CC      arch/powerpc/lib/xor_vmx.o
-> In file included from include/linux/list.h:4,
->                  from include/linux/preempt.h:10,
->                  from arch/powerpc/lib/xor_vmx.c:22:
-> include/linux/types.h:29: error: both ‘unsigned’ and ‘_Bool’ in declaration specifiers
-> cc1: warnings being treated as errors
-> include/linux/types.h:29: error: useless type name in empty declaration
+> Can you post them again if they're still applicable?
 
-Not sure what's up here, did you try with a more recent compiler ? 4.3
-is pretty ancient by kernel standards.
+I ended up at v5 of the series:
 
-You can find cross compilers there:
+  http://lists.infradead.org/pipermail/linux-arm-kernel/2014-March/237540.html
 
-https://www.kernel.org/pub/tools/crosstool/
+which hasn't received any feedback. My plan is to get the driver working
+with arm64 once Liviu's series is merged, but I'd be happy to see this
+merged for 32-bit ARM before then.
 
-They aren't the newest either but they should work.
+Arnd: Is there anything more you'd like me to do with this series? Given
+that it would be targetting 3.16, there's still plenty of time to make
+changes (we talked about extracting some library functions in the past).
 
-Ben.
-
-> 
-> make ARCH=powerpc CROSS_COMPILE=powerpc64-4.3.2- arch/powerpc/kernel/ drivers/pci/
-> 
-> worked just fine.
-> 
-> Regards,
-> Sebastian
-> 
-> > 
-> > > ---
-> > >  arch/microblaze/pci/pci-common.c |   20 --------------------
-> > >  arch/powerpc/kernel/pci-common.c |   20 --------------------
-> > >  drivers/pci/pci-sysfs.c          |   17 +++++++++++++++++
-> > >  3 files changed, 17 insertions(+), 40 deletions(-)
-> > > 
-> > > --- a/arch/microblaze/pci/pci-common.c
-> > > +++ b/arch/microblaze/pci/pci-common.c
-> > > @@ -168,26 +168,6 @@ struct pci_controller *pci_find_hose_for
-> > >  	return NULL;
-> > >  }
-> > >  
-> > > -static ssize_t pci_show_devspec(struct device *dev,
-> > > -		struct device_attribute *attr, char *buf)
-> > > -{
-> > > -	struct pci_dev *pdev;
-> > > -	struct device_node *np;
-> > > -
-> > > -	pdev = to_pci_dev(dev);
-> > > -	np = pci_device_to_OF_node(pdev);
-> > > -	if (np == NULL || np->full_name == NULL)
-> > > -		return 0;
-> > > -	return sprintf(buf, "%s", np->full_name);
-> > > -}
-> > > -static DEVICE_ATTR(devspec, S_IRUGO, pci_show_devspec, NULL);
-> > > -
-> > > -/* Add sysfs properties */
-> > > -int pcibios_add_platform_entries(struct pci_dev *pdev)
-> > > -{
-> > > -	return device_create_file(&pdev->dev, &dev_attr_devspec);
-> > > -}
-> > > -
-> > >  void pcibios_set_master(struct pci_dev *dev)
-> > >  {
-> > >  	/* No special bus mastering setup handling */
-> > > --- a/arch/powerpc/kernel/pci-common.c
-> > > +++ b/arch/powerpc/kernel/pci-common.c
-> > > @@ -201,26 +201,6 @@ struct pci_controller* pci_find_hose_for
-> > >  	return NULL;
-> > >  }
-> > >  
-> > > -static ssize_t pci_show_devspec(struct device *dev,
-> > > -		struct device_attribute *attr, char *buf)
-> > > -{
-> > > -	struct pci_dev *pdev;
-> > > -	struct device_node *np;
-> > > -
-> > > -	pdev = to_pci_dev (dev);
-> > > -	np = pci_device_to_OF_node(pdev);
-> > > -	if (np == NULL || np->full_name == NULL)
-> > > -		return 0;
-> > > -	return sprintf(buf, "%s", np->full_name);
-> > > -}
-> > > -static DEVICE_ATTR(devspec, S_IRUGO, pci_show_devspec, NULL);
-> > > -
-> > > -/* Add sysfs properties */
-> > > -int pcibios_add_platform_entries(struct pci_dev *pdev)
-> > > -{
-> > > -	return device_create_file(&pdev->dev, &dev_attr_devspec);
-> > > -}
-> > > -
-> > >  /*
-> > >   * Reads the interrupt pin to determine if interrupt is use by card.
-> > >   * If the interrupt is used, then gets the interrupt line from the
-> > > --- a/drivers/pci/pci-sysfs.c
-> > > +++ b/drivers/pci/pci-sysfs.c
-> > > @@ -416,6 +416,20 @@ static ssize_t d3cold_allowed_show(struc
-> > >  static DEVICE_ATTR_RW(d3cold_allowed);
-> > >  #endif
-> > >  
-> > > +#ifdef CONFIG_OF
-> > > +static ssize_t devspec_show(struct device *dev,
-> > > +			    struct device_attribute *attr, char *buf)
-> > > +{
-> > > +	struct pci_dev *pdev = to_pci_dev(dev);
-> > > +	struct device_node *np = pci_device_to_OF_node(pdev);
-> > > +
-> > > +	if (np == NULL || np->full_name == NULL)
-> > > +		return 0;
-> > > +	return sprintf(buf, "%s", np->full_name);
-> > > +}
-> > > +static DEVICE_ATTR_RO(devspec);
-> > > +#endif
-> > > +
-> > >  #ifdef CONFIG_PCI_IOV
-> > >  static ssize_t sriov_totalvfs_show(struct device *dev,
-> > >  				   struct device_attribute *attr,
-> > > @@ -521,6 +535,9 @@ static struct attribute *pci_dev_attrs[]
-> > >  #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
-> > >  	&dev_attr_d3cold_allowed.attr,
-> > >  #endif
-> > > +#ifdef CONFIG_OF
-> > > +	&dev_attr_devspec.attr,
-> > > +#endif
-> > >  	NULL,
-> > >  };
-> > >  
-> > 
-> > 
-> > 
-
-
+Will
