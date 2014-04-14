@@ -1,98 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay3-d.mail.gandi.net ([217.70.183.195]:43918 "EHLO
-	relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314AbaDLH5T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Apr 2014 03:57:19 -0400
-From: Ryan Desfosses <ryan@desfo.org>
-To: trivial@kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Ryan Desfosses <ryan@desfo.org>
-Subject: [PATCH] access: moved trailing statements and added spaces after ','
-Date: Sat, 12 Apr 2014 03:56:27 -0400
-Message-Id: <1397289387-4440-1-git-send-email-ryan@desfo.org>
+Received: from mx1.redhat.com ([209.132.183.28]:11398 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754371AbaDNIEb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Apr 2014 04:04:31 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
+	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 16/23] mpt3sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:40 +0200
+Message-Id: <61614c11c0d4cc24c1bcaab611f9622fb26ed06b.1397461652.git.agordeev@redhat.com>
+In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
+References: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-changes made to resolve following checkpatch messages:
-  ERROR: space required after that ',' (ctx:VxV)
-  ERROR: trailing statements should be on next line
-branch: 3.14
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Signed-off-by: Ryan Desfosses <ryan@desfo.org>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: support@lsi.com
+Cc: DL-MPTFusionLinux@lsi.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/access.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 7f8b78c..5d8d0b4 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -25,14 +25,15 @@ DEFINE_RAW_SPINLOCK(pci_lock);
- #define PCI_word_BAD (pos & 1)
- #define PCI_dword_BAD (pos & 3)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 0cf4f70..7b65ec2 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1747,10 +1747,10 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
+ 	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
+ 		a->entry = i;
  
--#define PCI_OP_READ(size,type,len) \
-+#define PCI_OP_READ(size, type, len) \
- int pci_bus_read_config_##size \
- 	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
- {									\
- 	int res;							\
- 	unsigned long flags;						\
- 	u32 data = 0;							\
--	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
-+	if (PCI_##size##_BAD)						\
-+	return PCIBIOS_BAD_REGISTER_NUMBER;				\
- 	raw_spin_lock_irqsave(&pci_lock, flags);			\
- 	res = bus->ops->read(bus, devfn, pos, len, &data);		\
- 	*value = (type)data;						\
-@@ -40,16 +41,17 @@ int pci_bus_read_config_##size \
- 	return res;							\
- }
- 
--#define PCI_OP_WRITE(size,type,len) \
-+#define PCI_OP_WRITE(size, type, len)		\
- int pci_bus_write_config_##size \
- 	(struct pci_bus *bus, unsigned int devfn, int pos, type value)	\
- {									\
- 	int res;							\
- 	unsigned long flags;						\
--	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
-+	if (PCI_##size##_BAD)						\
-+	return PCIBIOS_BAD_REGISTER_NUMBER;				\
- 	raw_spin_lock_irqsave(&pci_lock, flags);			\
- 	res = bus->ops->write(bus, devfn, pos, len, value);		\
--	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
-+	raw_spin_unlock_irqrestore(&pci_lock, flags);			\
- 	return res;							\
- }
- 
-@@ -144,7 +146,7 @@ static noinline void pci_wait_cfg(struct pci_dev *dev)
- }
- 
- /* Returns 0 on success, negative values indicate error. */
--#define PCI_USER_READ_CONFIG(size,type)					\
-+#define PCI_USER_READ_CONFIG(size, type)				\
- int pci_user_read_config_##size						\
- 	(struct pci_dev *dev, int pos, type *val)			\
- {									\
-@@ -152,7 +154,7 @@ int pci_user_read_config_##size						\
- 	u32 data = -1;							\
- 	if (PCI_##size##_BAD)						\
- 		return -EINVAL;						\
--	raw_spin_lock_irq(&pci_lock);				\
-+	raw_spin_lock_irq(&pci_lock);					\
- 	if (unlikely(dev->block_cfg_access))				\
- 		pci_wait_cfg(dev);					\
- 	ret = dev->bus->ops->read(dev->bus, dev->devfn,			\
-@@ -166,7 +168,7 @@ int pci_user_read_config_##size						\
- EXPORT_SYMBOL_GPL(pci_user_read_config_##size);
- 
- /* Returns 0 on success, negative values indicate error. */
--#define PCI_USER_WRITE_CONFIG(size,type)				\
-+#define PCI_USER_WRITE_CONFIG(size, type)				\
- int pci_user_write_config_##size					\
- 	(struct pci_dev *dev, int pos, type val)			\
- {									\
+-	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
++	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
+ 	if (r) {
+ 		dfailprintk(ioc, pr_info(MPT3SAS_FMT
+-			"pci_enable_msix failed (r=%d) !!!\n",
++			"pci_enable_msix_exact failed (r=%d) !!!\n",
+ 			ioc->name, r));
+ 		kfree(entries);
+ 		goto try_ioapic;
 -- 
-1.9.1
+1.7.7.6
 
