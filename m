@@ -1,80 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:64084 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755874AbaD2XGP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 19:06:15 -0400
-Received: by mail-ie0-f176.google.com with SMTP id rd18so1001240iec.7
-        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 16:06:15 -0700 (PDT)
-Date: Tue, 29 Apr 2014 17:06:12 -0600
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:63539 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755207AbaDNRfr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Apr 2014 13:35:47 -0400
+Received: by mail-ig0-f171.google.com with SMTP id c1so3642644igq.16
+        for <linux-pci@vger.kernel.org>; Mon, 14 Apr 2014 10:35:47 -0700 (PDT)
+Date: Mon, 14 Apr 2014 11:35:41 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Coverity CID 146454: pcie_bus_configure_settings() use of
- uninitialized variable
-Message-ID: <20140429230612.GA9795@google.com>
-References: <CAErSpo7OVbiZ=W1N0Zfb=p3KDsDCkq7Xq1CqzQTeANfvWWZ9yw@mail.gmail.com>
- <533E0F84.1050302@huawei.com>
+To: Sebastian Ott <sebott@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [Resend] pcibios_add_platform_entries usage
+Message-ID: <20140414173541.GA4417@google.com>
+References: <alpine.LFD.2.11.1403281931410.1516@denkbrett>
+ <alpine.LFD.2.11.1404141101500.1529@denkbrett>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <533E0F84.1050302@huawei.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <alpine.LFD.2.11.1404141101500.1529@denkbrett>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 04, 2014 at 09:48:52AM +0800, Yijing Wang wrote:
-> Hi Bjorn,
->    Jon seems to send a patch to fix this long ago. Link: http://patchwork.ozlabs.org/patch/191054/
-> But this patch cannot be applied now. I think we can just set smpss = 0 in this function as the default value.
+[+cc Greg]
 
-Yep.  It's ugly, but I don't have time to try to make it prettier.  I'll
-apply the patch below.
+On Mon, Apr 14, 2014 at 11:03:42AM +0200, Sebastian Ott wrote:
+> Hello Bjorn,
+> 
+> for pci on s390 we currently use pcibios_add_platform_entries to add
+> some arch specific attributes to pdevs. This has 2 downsides - it will
+> race with userspace which is triggered by udev events and expecting
+> these attributes (but that's a theoretical issue). More important to
+> me is that one cannot use attribute_groups with this. Both issues could
+> be addressed by using pdev->dev.groups and let the driver core handle
+> attribute creation.
+> 
+> So would it be ok if we set pdev->dev.groups in pcibios_add_device?
+> (It should be since it's not used by pci common code which uses bus_type,
+> dev_type, and class groups).
 
-> On 2014/4/4 0:09, Bjorn Helgaas wrote:
-> > Coverity complains that "smpss" is used uninitialized in
-> > drivers/pci/probe.c in pcie_bus_configure_settings() when calling
-> > pcie_bus_configure_set():
-> > 
-> > 1642        pcie_bus_configure_set(bus->self, &smpss);
-> > 1643        pci_walk_bus(bus, pcie_bus_configure_set, &smpss);
-> > 
-> > "smpss" may be uninitialized, and pcie_bus_configure_set()
-> > dereferences the pointer it receives.
-> > 
-> > This is CID 146454.
-> > 
-> > Bjorn
+Hi Sebastian,
 
+Sorry, I meant to respond to this earlier, but forgot.  This sounds
+reasonable to me, but Greg can give you a much better answer than I can.
 
-PCI: Fix use of uninitialized MPS value
+Documentation/driver-model/device.txt says the dev->groups pointer
+should be set before calling device_register().  PCI calls
+device_initialize() and device_add() instead of using device_register(),
+and pcibios_add_device() looks like it happens at the right time:
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+    pci_scan_root_bus
+      pci_scan_child_bus
+        pci_scan_slot
+          pci_scan_single_device
+            pci_device_add
+              device_initialize
+              pcibios_add_device                # <---
+              device_add
+      pci_bus_add_devices
+        pci_bus_add_device
+          pci_create_sysfs_dev_files
+            pcibios_add_platform_entries        # 8d4cd0833107 (benh)
+          device_attach
 
-If "pcie_bus_config == PCIE_BUS_PERFORMANCE", we don't initialize "smpss",
-so we pass a pointer to garbage into pcie_bus_configure_set(), where we
-compute "mps" based on the garbage.  We then pass the garbage "mps" to
-pcie_write_mps(), which ignores it in the PCIE_BUS_PERFORMANCE case.
+I'm not sure why pci_create_sysfs_dev_files() is done later.  It seems
+like that should be done before device_add() as well.  Maybe it's
+because BARs might not be valid yet (that doesn't seem like a very good
+excuse, but it's all I can think of).
 
-Coverity isn't smart enough to deduce that we ignore the garbage (it's a
-lot to expect from a human, too), so initialize "smpss" to a safe value in
-all cases.
+I assume that if you change s390, you'll also change microblaze and
+powerpc?  They look structurally similar to s390.
 
-Found by Coverity (CID 146454).
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index fe89a982a3da..490031fd2108 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1617,7 +1617,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
-  */
- void pcie_bus_configure_settings(struct pci_bus *bus)
- {
--	u8 smpss;
-+	u8 smpss = 0;
- 
- 	if (!bus->self)
- 		return;
+Bjorn
