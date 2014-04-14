@@ -1,79 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:35394 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933149AbaDJNvO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 09:51:14 -0400
-Received: by mail-ie0-f176.google.com with SMTP id rd18so3928443iec.21
-        for <linux-pci@vger.kernel.org>; Thu, 10 Apr 2014 06:51:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4506772.YFSM2m1eaP@wuerfel>
-References: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
- <20140410012715.GA1328@bart> <CAErSpo7egL2T_W_OCJw2kPHFDqspwOHXtZJw8JyjWU=56ofFKQ@mail.gmail.com>
- <4506772.YFSM2m1eaP@wuerfel>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 10 Apr 2014 07:50:52 -0600
-Message-ID: <CAErSpo6u7kr+QdnhAXBo20izg-DNHR4zHT+kRvq34whp68RJCQ@mail.gmail.com>
-Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for pci_host_bridge.
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Content-Type: text/plain; charset=UTF-8
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:41496 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823AbaDNSIh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Apr 2014 14:08:37 -0400
+Message-ID: <1397498902.31076.15.camel@buesod1.americas.hpqcorp.net>
+Subject: Re: hpsa driver bug crack kernel down!
+From: Davidlohr Bueso <davidlohr@hp.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Woodhouse, David" <david.woodhouse@intel.com>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"bhe@redhat.com" <bhe@redhat.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"James.Bottomley@hansenpartnership.com"
+	<James.Bottomley@hansenpartnership.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>,
+	Linda Knippers <linda.knippers@hp.com>, aswin@hp.com
+Date: Mon, 14 Apr 2014 11:08:22 -0700
+In-Reply-To: <534BA30B.5040102@linux.intel.com>
+References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
+	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
+	 <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike>
+	 <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
+	 <1397087425.9519.67.camel@dabdike>
+	 <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
+	 <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
+	 <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
+	 <20140410071535.GX13491@8bytes.org>
+	 <1397119587.19944.14.camel@shinybook.infradead.org>
+	 <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
+	 <534BA30B.5040102@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 2:00 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wednesday 09 April 2014 21:48:14 Bjorn Helgaas wrote:
->> On Wed, Apr 9, 2014 at 7:27 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
->> > On Wed, Apr 09, 2014 at 08:02:41AM -0600, Bjorn Helgaas wrote:
->> >> >>   struct pci_host_bridge {
->> >> >>     int domain;
->> >> >>     int node;
->> >> >>     struct device *dev;
->> >> >>     struct pci_ops *ops;
->> >> >>     struct list_head resources;
->> >> >>     void *sysdata;
->> >> >>     struct pci_bus *bus;  /* filled in by core, not by arch */
->> >> >>     ... /* other existing contents managed by core */
->> >> >>   };
->> >> >>
->> >> >>   struct pci_bus *pci_scan_host_bridge(struct pci_host_bridge *bridge);
->> >> >
->> >> > I'm really reluctant to give the arches more rope to hang themselves.
->> >>
->> >> If you mean the sysdata pointer is rope to hang themselves, I think it
->> >> would be great it we didn't need sysdata at all.  But I think it would
->> >> be a huge amount of work to get rid of it completely, and keeping it
->> >> would let us work at that incrementally.
->> >
->> > Agree. But then your suggestion was to wrap sysdata inside another structure,
->> > which to me constitutes additional rope.
->>
->> I'll ponder this more, but I don't see your point here yet.  The arch
->> already supplies a sysdata pointer to pci_scan_root_bus(), and we
->> stash it in every struct pci_bus already.  My idea was just to pass it
->> in differently, as a structure member rather than a separate argument.
->>  (And I'm not completely attached to my proposal; it was only to
->> illustrate my concern about the explosion of interfaces if we have to
->> add *_domain(), *_node(), etc.)
->
-> As a minor variation of your suggestion, how about passing in a pointer
-> to struct pci_host_bridge, and embed that within its own private
-> structure? I think this is closer to how a lot of other subsystems
-> do the abstraction.
+On Mon, 2014-04-14 at 16:57 +0800, Jiang Liu wrote:
+> Hi all,
+> 	I guess I found the root cause. It's a bug in matching
+> device scope, variable 'level' should be decreased when walking up PCI
+> topology.
+> 	Could you please help to test following patch?
+> Thanks!
+> Gerry
 
-I'm not sure I'm following you; you mean the arch-specific sysdata
-structure would contain a pointer to struct pci_host_bridge?
+Worked like a charm -- I no longer see all those DMAR messages and the
+hpsa hard lockup is gone, thanks. Feel free to add my:
 
-I have to admit that I'm not up on how other subsystems handle this
-sort of abstraction.  Do you have any pointers to good examples that I
-can study?
+Reported-and-tested-by: Davidlohr Bueso <davidlohr@hp.com>
 
-Bjorn
