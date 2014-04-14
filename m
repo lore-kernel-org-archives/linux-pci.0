@@ -1,97 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:63467 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753286AbaDDRBJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 13:01:09 -0400
-Received: by mail-pb0-f52.google.com with SMTP id rr13so3723506pbb.39
-        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 10:01:09 -0700 (PDT)
-Date: Fri, 4 Apr 2014 11:01:03 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Simon Horman <horms@verge.net.au>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ben Dooks <ben-linux@fluff.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
-Subject: Re: [PATCH v2 3/6] PCI: rcar: use new OF interrupt mapping when
- possible
-Message-ID: <20140404170103.GF9007@google.com>
-References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
- <1394025951-32438-4-git-send-email-l.stach@pengutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1394025951-32438-4-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 14/23] megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:38 +0200
+Message-Id: <4c833c2a7120915767c71c3262dada8896723e7b.1397461652.git.agordeev@redhat.com>
+In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
+References: <cover.1397461652.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 05, 2014 at 02:25:48PM +0100, Lucas Stach wrote:
-> This is the recommended method of doing the IRQ
-> mapping. Still fall back to the old method in order
-> to not break the just submitted board files.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Hi Lucas, can you rebase this to Linus' current tree?  This doesn't apply
-anymore because of conflicts with 546cadda3575 ("PCI: rcar: Register each
-instance independently").  Thanks!
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c |   20 +++++++-------------
+ 1 files changed, 7 insertions(+), 13 deletions(-)
 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
-> v2: pass in parent device to pci_common_init(), to
->     make DT parsing work.
-> ---
->  drivers/pci/host/pci-rcar-gen2.c | 12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-> index ceec147baec3..3a0914163ad0 100644
-> --- a/drivers/pci/host/pci-rcar-gen2.c
-> +++ b/drivers/pci/host/pci-rcar-gen2.c
-> @@ -15,6 +15,7 @@
->  #include <linux/io.h>
->  #include <linux/kernel.h>
->  #include <linux/module.h>
-> +#include <linux/of_pci.h>
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/pm_runtime.h>
-> @@ -160,8 +161,13 @@ static int __init rcar_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
->  {
->  	struct pci_sys_data *sys = dev->bus->sysdata;
->  	struct rcar_pci_priv *priv = sys->private_data;
-> +	int irq;
-> +
-> +	irq = of_irq_parse_and_map_pci(dev, slot, pin);
-> +	if (!irq)
-> +		irq = priv->irq;
->  
-> -	return priv->irq;
-> +	return irq;
->  }
->  
->  /* PCI host controller setup */
-> @@ -249,6 +255,8 @@ static int __init rcar_pci_add_controller(struct rcar_pci_priv *priv)
->  	void **private_data;
->  	int count;
->  
-> +	pci_common_init_dev(priv->dev, &rcar_hw_pci);
-> +
->  	if (rcar_hw_pci.nr_controllers < rcar_pci_count)
->  		goto add_priv;
->  
-> @@ -322,8 +330,6 @@ static int __init rcar_pci_init(void)
->  	int retval;
->  
->  	retval = platform_driver_probe(&rcar_pci_driver, rcar_pci_probe);
-> -	if (!retval)
-> -		pci_common_init(&rcar_hw_pci);
->  
->  	/* Private data pointer array is not needed any more */
->  	kfree(rcar_hw_pci.private_data);
-> -- 
-> 1.9.0
-> 
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 2df717c..26f89d4 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4106,17 +4106,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 					     (unsigned int)num_online_cpus());
+ 		for (i = 0; i < instance->msix_vectors; i++)
+ 			instance->msixentry[i].entry = i;
+-		i = pci_enable_msix(instance->pdev, instance->msixentry,
+-				    instance->msix_vectors);
+-		if (i >= 0) {
+-			if (i) {
+-				if (!pci_enable_msix(instance->pdev,
+-						     instance->msixentry, i))
+-					instance->msix_vectors = i;
+-				else
+-					instance->msix_vectors = 0;
+-			}
+-		} else
++		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
++					  1, instance->msix_vectors);
++		if (i)
++			instance->msix_vectors = i;
++		else
+ 			instance->msix_vectors = 0;
+ 
+ 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
+@@ -5136,8 +5130,8 @@ megasas_resume(struct pci_dev *pdev)
+ 
+ 	/* Now re-enable MSI-X */
+ 	if (instance->msix_vectors &&
+-	    pci_enable_msix(instance->pdev, instance->msixentry,
+-			    instance->msix_vectors))
++	    pci_enable_msix_exact(instance->pdev, instance->msixentry,
++				  instance->msix_vectors))
+ 		goto fail_reenable_msix;
+ 
+ 	switch (instance->pdev->device) {
+-- 
+1.7.7.6
+
