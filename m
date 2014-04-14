@@ -1,138 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:3413 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752133AbaDVHHV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Apr 2014 03:07:21 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 19/22] iommu/vt-d: simplify intel_unmap_sg() and kill duplicated code
-Date: Tue, 22 Apr 2014 15:07:30 +0800
-Message-Id: <1398150453-28141-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, iss_storagedev@hp.com,
+	intel-linux-scu@intel.com, support@lsi.com,
+	DL-MPTFusionLinux@lsi.com, qla2xxx-upstream@qlogic.com,
+	iscsi-driver@qlogic.com, pv-drivers@vmware.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 00/23] scsi: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:24 +0200
+Message-Id: <cover.1397461652.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify intel_unmap_sg() by calling intel_unmap_page() and
-kill duplicated code, no functionality changes.
+Hello,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   63 +++++++++++++------------------------------
- 1 file changed, 18 insertions(+), 45 deletions(-)
+This series is against 3.15-rc1.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index f2143b59ad68..4738e64fe097 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -979,6 +979,8 @@ static void dma_pte_free_pagetable(struct dmar_domain *domain,
- 	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
- 	BUG_ON(start_pfn > last_pfn);
- 
-+	dma_pte_clear_range(domain, start_pfn, last_pfn);
-+
- 	/* We don't need lock here; nobody else touches the iova range */
- 	dma_pte_free_level(domain, agaw_to_level(domain->agaw),
- 			   domain->pgd, 0, start_pfn, last_pfn);
-@@ -2031,12 +2033,14 @@ static int __domain_mapping(struct dmar_domain *domain, unsigned long iov_pfn,
- 			/* It is large page*/
- 			if (largepage_lvl > 1) {
- 				pteval |= DMA_PTE_LARGE_PAGE;
--				/* Ensure that old small page tables are removed to make room
--				   for superpage, if they exist. */
--				dma_pte_clear_range(domain, iov_pfn,
--						    iov_pfn + lvl_to_nr_pages(largepage_lvl) - 1);
-+				lvl_pages = lvl_to_nr_pages(largepage_lvl);
-+				/*
-+				 * Ensure that old small page tables are
-+				 * removed to make room for superpage,
-+				 * if they exist.
-+				 */
- 				dma_pte_free_pagetable(domain, iov_pfn,
--						       iov_pfn + lvl_to_nr_pages(largepage_lvl) - 1);
-+						       iov_pfn + lvl_pages - 1);
- 			} else {
- 				pteval &= ~(uint64_t)DMA_PTE_LARGE_PAGE;
- 			}
-@@ -3256,43 +3260,17 @@ static void intel_unmap_sg(struct device *dev, struct scatterlist *sglist,
- 			   int nelems, enum dma_data_direction dir,
- 			   struct dma_attrs *attrs)
- {
--	struct dmar_domain *domain;
--	unsigned long start_pfn, last_pfn;
--	struct iova *iova;
--	struct intel_iommu *iommu;
--	struct page *freelist;
--
--	if (iommu_no_mapping(dev))
--		return;
--
--	domain = find_domain(dev);
--	BUG_ON(!domain);
--
--	iommu = domain_get_iommu(domain);
--
--	iova = find_iova(&domain->iovad, IOVA_PFN(sglist[0].dma_address));
--	if (WARN_ONCE(!iova, "Driver unmaps unmatched sglist at PFN %llx\n",
--		      (unsigned long long)sglist[0].dma_address))
--		return;
--
--	start_pfn = mm_to_dma_pfn(iova->pfn_lo);
--	last_pfn = mm_to_dma_pfn(iova->pfn_hi + 1) - 1;
-+	size_t size = 0;
-+#if 0
-+	/* current the third argument of intel_unmap_page is unsued */
-+	int i;
-+	struct scatterlist *sg;
- 
--	freelist = domain_unmap(domain, start_pfn, last_pfn);
-+	for_each_sg(sglist, sg, nelems, i)
-+		size += sg->length;
-+#endif
- 
--	if (intel_iommu_strict) {
--		iommu_flush_iotlb_psi(iommu, domain->id, start_pfn,
--				      last_pfn - start_pfn + 1, !freelist, 0);
--		/* free iova */
--		__free_iova(&domain->iovad, iova);
--		dma_free_pagelist(freelist);
--	} else {
--		add_unmap(domain, iova, freelist);
--		/*
--		 * queue up the release of the unmap to save the 1/6th of the
--		 * cpu used up by the iotlb flush operation...
--		 */
--	}
-+	intel_unmap_page(dev, sglist[0].dma_address, size, dir, attrs);
- }
- 
- static int intel_nontranslate_map_sg(struct device *hddev,
-@@ -3356,13 +3334,8 @@ static int intel_map_sg(struct device *dev, struct scatterlist *sglist, int nele
- 
- 	ret = domain_sg_mapping(domain, start_vpfn, sglist, size, prot);
- 	if (unlikely(ret)) {
--		/*  clear the page */
--		dma_pte_clear_range(domain, start_vpfn,
--				    start_vpfn + size - 1);
--		/* free page tables */
- 		dma_pte_free_pagetable(domain, start_vpfn,
- 				       start_vpfn + size - 1);
--		/* free iova */
- 		__free_iova(&domain->iovad, iova);
- 		return 0;
- 	}
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
+
+There are no major changes in this series since I posted
+it last time.
+
+Thanks!
+
+Cc: iss_storagedev@hp.com
+Cc: intel-linux-scu@intel.com
+Cc: support@lsi.com
+Cc: DL-MPTFusionLinux@lsi.com
+Cc: qla2xxx-upstream@qlogic.com
+Cc: iscsi-driver@qlogic.com
+Cc: pv-drivers@vmware.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+
+
+Alexander Gordeev (23):
+  be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  bfa: Do not call pci_enable_msix() after it failed once
+  bfa: Cleanup bfad_setup_intr() function
+  bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  csiostor: Remove superfluous call to pci_disable_msix()
+  csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
+  fnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  hpsa: Fallback to MSI rather than to INTx if MSI-X failed
+  hpsa: Use pci_enable_msix_range() instead of pci_enable_msix()
+  lpfc: Remove superfluous call to pci_disable_msix()
+  lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
+  megaraid: Fail resume if MSI-X re-initialization failed
+  megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
+  mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  mpt3sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  pm8001: Fix invalid return when request_irq() failed
+  pm8001: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  pmcraid: Get rid of a redundant assignment
+  pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
+  qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
+  qla4xxx: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
+
+ drivers/scsi/be2iscsi/be_main.c           |    6 +--
+ drivers/scsi/bfa/bfad.c                   |   62 ++++++++++++-----------------
+ drivers/scsi/csiostor/csio_hw.h           |    2 +-
+ drivers/scsi/csiostor/csio_isr.c          |   24 ++++-------
+ drivers/scsi/fnic/fnic_isr.c              |    4 +-
+ drivers/scsi/hpsa.c                       |   30 ++++++--------
+ drivers/scsi/isci/init.c                  |    2 +-
+ drivers/scsi/lpfc/lpfc_init.c             |   47 +++++++++++-----------
+ drivers/scsi/megaraid/megaraid_sas_base.c |   24 +++++------
+ drivers/scsi/mpt2sas/mpt2sas_base.c       |    6 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c       |    4 +-
+ drivers/scsi/pm8001/pm8001_init.c         |   44 +++++++++++----------
+ drivers/scsi/pmcraid.c                    |   14 +------
+ drivers/scsi/qla2xxx/qla_isr.c            |   27 +++++-------
+ drivers/scsi/qla4xxx/ql4_nx.c             |    2 +-
+ drivers/scsi/vmw_pvscsi.c                 |    2 +-
+ 16 files changed, 129 insertions(+), 171 deletions(-)
+
 -- 
-1.7.10.4
+1.7.7.6
 
