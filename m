@@ -1,82 +1,193 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52995 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:4715 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753472AbaDXXPh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 19:15:37 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-CC: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] pci: Use designated initialization in PCI_VDEVICE
-Date: Thu, 24 Apr 2014 23:15:35 +0000
-Message-ID: <512BF6D5-D529-4605-B1AB-A6DB7D153E14@intel.com>
-References: <1396303119-16766-1-git-send-email-jeffrey.t.kirsher@intel.com>
- <5339E746.4030503@cogentembedded.com> <20140424212246.GG29593@google.com>
-In-Reply-To: <20140424212246.GG29593@google.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1751644AbaDNN04 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Apr 2014 09:26:56 -0400
+Date: Mon, 14 Apr 2014 15:28:35 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	linux-s390@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 2/2] PCI/MSI: Phase out pci_enable_msi_block()
+Message-ID: <20140414132834.GA9164@dhcp-26-207.brq.redhat.com>
+References: <cover.1397458024.git.agordeev@redhat.com>
+ <0b08613dc17cd608c1babc1f42b8919f60e1093f.1397458024.git.agordeev@redhat.com>
+ <20140414120921.GA32132@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140414120921.GA32132@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, Sergei,
+There are no users of pci_enable_msi_block() function have
+left. Obsolete it in favor of pci_enable_msi_range() and
+pci_enable_msi_exact() functions.
 
-On Apr 24, 2014, at 2:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+Up until now, when enabling MSI mode for a device a single
+successful call to arch_msi_check_device() was followed by
+a single call to arch_setup_msi_irqs() function.
 
-> On Tue, Apr 01, 2014 at 02:08:06AM +0400, Sergei Shtylyov wrote:
->> Hello.
->> 
->> On 04/01/2014 01:58 AM, Jeff Kirsher wrote:
->> 
->>> From: Mark Rustad <mark.d.rustad@intel.com>
->> 
->>> By using designated initialization in PCI_VDEVICE, like other
->>> similar macros, many "missing initializer" warnings that appear
->>> when compiling with W=2 can be silenced.
->> 
->>> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
->>> Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
->>> Tested-by: Aaron Brown <aaron.f.brown@intel.com>
->>> Tested-by: Kavindya Deegala <kavindya.s.deegala@intel.com>
->>> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
->>> ---
->>> include/linux/pci.h | 10 +++++-----
->>> 1 file changed, 5 insertions(+), 5 deletions(-)
->> 
->>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>> index fb57c89..49455f9 100644
->>> --- a/include/linux/pci.h
->>> +++ b/include/linux/pci.h
->> [...]
->>> @@ -689,9 +689,9 @@ struct pci_driver {
->>>  * private data.
->>>  */
->>> 
->>> -#define PCI_VDEVICE(vendor, device)		\
->>> -	PCI_VENDOR_ID_##vendor, (device),	\
->>> -	PCI_ANY_ID, PCI_ANY_ID, 0, 0
->>> +#define PCI_VDEVICE(vend, dev) \
->>> +	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
->>> +	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
->> 
->>   Initializing the fields to 0 is pointless, as 0 is what should be
->> put into them anyway by the compiler. Also, it doesn't look right
->> when you mix designated and anonymous initializers.
+Yet, if arch_msi_check_device() returned success we should be
+able to call arch_setup_msi_irqs() multiple times - while it
+returns a number of MSI vectors that could have been allocated
+(a third state).
 
-The zeros can't be dropped because the macro needs to initialize the same number of fields as the previous macro. Callers of this macro do use undesignated initialization and will rely on how that aligns. This macro does that.
+This update makes use of the assumption described above. It
+could have broke things had the architectures done any pre-
+allocations or switch to some state in a call to function
+arch_msi_check_device(). But because arch_msi_check_device()
+is expected stateless and MSI resources are allocated in a
+follow-up call to arch_setup_msi_irqs() we should be fine.
 
-> I'm certainly willing to apply this, but I can't reproduce the benefit.  I
-> tried "make W=2 drivers/net/ethernet/intel/e1000e/netdev.o" and didn't see
-> any change before and after this patch (I'm using Ubuntu gcc 4.6.3 if it
-> matters).
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-mips@linux-mips.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-s390@vger.kernel.org
+Cc: x86@kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/msi.c   |   79 +++++++++++++++++++++-----------------------------
+ include/linux/pci.h |    5 +--
+ 2 files changed, 34 insertions(+), 50 deletions(-)
 
-The ixgbe driver throws a lot of warnings because it does not provide the final field after the macro call, allowing it default to zero. I think I saw a few other instances around the kernel, but the largest number are in ixgbe.
-
-> What am I missing?  And do we need the zeroes?
-
-If you build ixgbe with W=2, I think you'll see the noise. And the zeros are needed for the reason given above. The zeros could also be moved to designated initialization, but the C standard is pretty clear on how it works, and many callers of the macro will be using undesignated initialization for the final field anyway. That is, with the new macro, many initializations will effectively have a mixed form. If that really bothers you, then I guess you should drop the patch. I was just trying to silence a bunch of noise in a simple, direct way. Adding the missing field in all of those places would also silence the message, but it seemed reasonable to have require that.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 955ab79..fc669ab 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -883,50 +883,6 @@ int pci_msi_vec_count(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_msi_vec_count);
+ 
+-/**
+- * pci_enable_msi_block - configure device's MSI capability structure
+- * @dev: device to configure
+- * @nvec: number of interrupts to configure
+- *
+- * Allocate IRQs for a device with the MSI capability.
+- * This function returns a negative errno if an error occurs.  If it
+- * is unable to allocate the number of interrupts requested, it returns
+- * the number of interrupts it might be able to allocate.  If it successfully
+- * allocates at least the number of interrupts requested, it returns 0 and
+- * updates the @dev's irq member to the lowest new interrupt number; the
+- * other interrupt numbers allocated to this device are consecutive.
+- */
+-int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+-{
+-	int status, maxvec;
+-
+-	if (dev->current_state != PCI_D0)
+-		return -EINVAL;
+-
+-	maxvec = pci_msi_vec_count(dev);
+-	if (maxvec < 0)
+-		return maxvec;
+-	if (nvec > maxvec)
+-		return maxvec;
+-
+-	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
+-	if (status)
+-		return status;
+-
+-	WARN_ON(!!dev->msi_enabled);
+-
+-	/* Check whether driver already requested MSI-X irqs */
+-	if (dev->msix_enabled) {
+-		dev_info(&dev->dev, "can't enable MSI "
+-			 "(MSI-X already enabled)\n");
+-		return -EINVAL;
+-	}
+-
+-	status = msi_capability_init(dev, nvec);
+-	return status;
+-}
+-EXPORT_SYMBOL(pci_enable_msi_block);
+-
+ void pci_msi_shutdown(struct pci_dev *dev)
+ {
+ 	struct msi_desc *desc;
+@@ -1132,14 +1088,45 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+  **/
+ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ {
+-	int nvec = maxvec;
++	int nvec;
+ 	int rc;
+ 
++	if (dev->current_state != PCI_D0)
++		return -EINVAL;
++
++	WARN_ON(!!dev->msi_enabled);
++
++	/* Check whether driver already requested MSI-X irqs */
++	if (dev->msix_enabled) {
++		dev_info(&dev->dev,
++			 "can't enable MSI (MSI-X already enabled)\n");
++		return -EINVAL;
++	}
++
+ 	if (maxvec < minvec)
+ 		return -ERANGE;
+ 
++	nvec = pci_msi_vec_count(dev);
++	if (nvec < 0)
++		return nvec;
++	else if (nvec < minvec)
++		return -EINVAL;
++	else if (nvec > maxvec)
++		nvec = maxvec;
++
++	do {
++		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
++		if (rc < 0) {
++			return rc;
++		} else if (rc > 0) {
++			if (rc < minvec)
++				return -ENOSPC;
++			nvec = rc;
++		}
++	} while (rc);
++
+ 	do {
+-		rc = pci_enable_msi_block(dev, nvec);
++		rc = msi_capability_init(dev, nvec);
+ 		if (rc < 0) {
+ 			return rc;
+ 		} else if (rc > 0) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aab57b4..499755e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1158,7 +1158,6 @@ struct msix_entry {
+ 
+ #ifdef CONFIG_PCI_MSI
+ int pci_msi_vec_count(struct pci_dev *dev);
+-int pci_enable_msi_block(struct pci_dev *dev, int nvec);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_vec_count(struct pci_dev *dev);
+@@ -1188,8 +1187,6 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
+ }
+ #else
+ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+-static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+-{ return -ENOSYS; }
+ static inline void pci_msi_shutdown(struct pci_dev *dev) { }
+ static inline void pci_disable_msi(struct pci_dev *dev) { }
+ static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+@@ -1244,7 +1241,7 @@ static inline void pcie_set_ecrc_checking(struct pci_dev *dev) { }
+ static inline void pcie_ecrc_get_policy(char *str) { }
+ #endif
+ 
+-#define pci_enable_msi(pdev)	pci_enable_msi_block(pdev, 1)
++#define pci_enable_msi(pdev)	pci_enable_msi_exact(pdev, 1)
+ 
+ #ifdef CONFIG_HT_IRQ
+ /* The functions a driver should call */
+-- 
+1.7.7.6
 
 -- 
-Mark Rustad, Networking Division, Intel Corporation
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
