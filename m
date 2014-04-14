@@ -1,82 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:52317 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932542AbaDILc0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Apr 2014 07:32:26 -0400
-Received: by mail-ob0-f169.google.com with SMTP id va2so2527887obc.28
-        for <linux-pci@vger.kernel.org>; Wed, 09 Apr 2014 04:32:25 -0700 (PDT)
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:47932 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755283AbaDNXry (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Apr 2014 19:47:54 -0400
+Received: by mail-ig0-f176.google.com with SMTP id uy17so4000457igb.15
+        for <linux-pci@vger.kernel.org>; Mon, 14 Apr 2014 16:47:54 -0700 (PDT)
+Date: Mon, 14 Apr 2014 17:47:52 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ryan Desfosses <ryan@desfo.org>
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCHv2] pci: changed "foo* bar" to "foo *bar"
+Message-ID: <20140414234752.GA16058@google.com>
+References: <1397192513-4498-1-git-send-email-ryan@desfo.org>
 MIME-Version: 1.0
-In-Reply-To: <CAPcvp5GwigUPS_x+aq6BSWDQF_J6wthPL1H8FrVx_DR03rdmOA@mail.gmail.com>
-References: <CAHH3p5LwsWqtK_RhaYNKi_HeNYH3EHrgXV21SbRTA4mm2Vyjwg@mail.gmail.com>
-	<1396538590.3215.6.camel@ul30vt.home>
-	<CAHH3p5L6BO0PfXG_pB18-Tt1waLEL6bDV_=-1wR+afeQXHGh=g@mail.gmail.com>
-	<CAPcvp5GwigUPS_x+aq6BSWDQF_J6wthPL1H8FrVx_DR03rdmOA@mail.gmail.com>
-Date: Wed, 9 Apr 2014 17:02:25 +0530
-Message-ID: <CAHH3p5JzELcCam0EvauS1qouC9hhAa5zhin8=vG81G3-Us1_vQ@mail.gmail.com>
-Subject: Re: Writing to BARs of PCIE device
-From: shiv prakash Agarwal <chhotu.shiv@gmail.com>
-To: Andrew Murray <amurray@embedded-bits.co.uk>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1397192513-4498-1-git-send-email-ryan@desfo.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks Andrew,
+On Fri, Apr 11, 2014 at 01:01:53AM -0400, Ryan Desfosses wrote:
+> change made to resolve following checkpatch message:
+>     drivers/pci/pci.c:109: ERROR: "foo* bar" should be "foo *bar"
+> branch: Linux 3.14-rc8
+> 
+> Signed-off-by: Ryan Desfosses <ryan@desfo.org>
 
-1. I am looking for some kind of stress test which will stress pcie
-interface links independent of device so that no device driver
-required.
-2. Stress Writes(which write whole BARs space) has above issues and
-seems invalid.
-3. Will Stress Reads fulfill my purpose? Or any other ways?
+Applied to pci/misc, thanks!
 
-On Fri, Apr 4, 2014 at 5:27 PM, Andrew Murray
-<amurray@embedded-bits.co.uk> wrote:
-> On 4 April 2014 07:14, shiv prakash Agarwal <chhotu.shiv@gmail.com> wrote:
->> Thanks Alex,
->>
->> 1. I am not concerned about device functionality but need to verify
->> PCIE interface only by stressing it.
->>
->> 2. But I don't see writes getting reflected for most of addresses.
->
-> That's probably to be expected - You are treating the address space
-> provided by the BARs as RAM, rather than MMIO. It's entirely up to the
-> endpoint vendor to determine how this address space responds to reads
-> and writes. You'll find that the address space probably consists of
-> registers, some of which will likely be read only.
->
->>
->> 3. Also very often, it hangs in middle with CPU soft lockup and rcu
->> preempt failures as below:
->
-> This may also be expected. The endpoint may consider some of your
-> reads/writes to be invalid, e.g. writing to a read-only register,
-> writing/reading at an incorrect time/location. This may result in the
-> endpoint raising error messages or even failing to respond to read
-> requests. (How do you know that you're not telling the endpoint to
-> stop responding to subsequent reads?)
->
->>
->> [ 9732.090081] BUG: soft lockup- CPU#0 stuck for 22s! [update-notifier:1319]
->> [ 9742.108839] INFO: rcu_preempt self-detected stall on CPU
->> [ 9742.108848] INFO: rcu_preempt detected stalls on CPUs/tasks: { 0}
->> (detected by 3, t=366016 jiffies, g=88556, c=88555, q=2037)
->>
->> 4. So query is why above 2 issues? I know it will affect device
->> functionality but at least stress write test suite should work, right?
->
-> Only where you know that the BAR memory for your particular endpoint
-> is designed to support such behavior. I can't imagine that any off the
-> shelf device would.
->
-> A better stress test would be to plug in a load of network / SATA
-> cards and heavily use them.
->
-> Thanks,
->
-> Andrew Murray
+> ---
+>  drivers/pci/pci.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index fdbc294..4070a60 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -106,7 +106,7 @@ static bool pcie_ari_disabled;
+>   * Given a PCI bus, returns the highest PCI bus number present in the set
+>   * including the given PCI bus and its list of child PCI buses.
+>   */
+> -unsigned char pci_bus_max_busnr(struct pci_bus* bus)
+> +unsigned char pci_bus_max_busnr(struct pci_bus *bus)
+>  {
+>  	struct list_head *tmp;
+>  	unsigned char max, n;
+> @@ -1359,7 +1359,7 @@ static void pcim_release(struct device *gendev, void *res)
+>  		pci_disable_device(dev);
+>  }
+>  
+> -static struct pci_devres * get_pci_dr(struct pci_dev *pdev)
+> +static struct pci_devres *get_pci_dr(struct pci_dev *pdev)
+>  {
+>  	struct pci_devres *dr, *new_dr;
+>  
+> @@ -1373,7 +1373,7 @@ static struct pci_devres * get_pci_dr(struct pci_dev *pdev)
+>  	return devres_get(&pdev->dev, new_dr, NULL, NULL);
+>  }
+>  
+> -static struct pci_devres * find_pci_dr(struct pci_dev *pdev)
+> +static struct pci_devres *find_pci_dr(struct pci_dev *pdev)
+>  {
+>  	if (pci_is_managed(pdev))
+>  		return devres_find(&pdev->dev, pcim_release, NULL, NULL);
+> -- 
+> 1.9.1
+> 
