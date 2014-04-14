@@ -1,78 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:42132 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753612AbaDJVE6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 17:04:58 -0400
-Date: Thu, 10 Apr 2014 23:04:54 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Neil Greatorex <neil@fatboyfat.co.uk>, Willy Tarreau <w@1wt.eu>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: Fixing PCIe issues on Armada XP
-Message-ID: <20140410230454.3f761715@skate>
-In-Reply-To: <20140410201201.GA12661@obsidianresearch.com>
-References: <20140410181953.50ccfcc3@skate>
-	<20140410165733.GB23104@obsidianresearch.com>
-	<20140410200153.46669e0c@skate>
-	<20140410201201.GA12661@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from e06smtp10.uk.ibm.com ([195.75.94.106]:37193 "EHLO
+	e06smtp10.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790AbaDNJDq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Apr 2014 05:03:46 -0400
+Received: from /spool/local
+	by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
+	Mon, 14 Apr 2014 10:03:45 +0100
+Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
+	by d06dlp03.portsmouth.uk.ibm.com (Postfix) with ESMTP id 12EF21B08072
+	for <linux-pci@vger.kernel.org>; Mon, 14 Apr 2014 10:03:45 +0100 (BST)
+Received: from d06av09.portsmouth.uk.ibm.com (d06av09.portsmouth.uk.ibm.com [9.149.37.250])
+	by b06cxnps4075.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s3E93h8O63242258
+	for <linux-pci@vger.kernel.org>; Mon, 14 Apr 2014 09:03:43 GMT
+Received: from d06av09.portsmouth.uk.ibm.com (localhost [127.0.0.1])
+	by d06av09.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s3E93hFZ023647
+	for <linux-pci@vger.kernel.org>; Mon, 14 Apr 2014 03:03:43 -0600
+Date: Mon, 14 Apr 2014 11:03:42 +0200 (CEST)
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: linux-pci@vger.kernel.org
+Subject: [Resend] pcibios_add_platform_entries usage
+In-Reply-To: <alpine.LFD.2.11.1403281931410.1516@denkbrett>
+Message-ID: <alpine.LFD.2.11.1404141101500.1529@denkbrett>
+References: <alpine.LFD.2.11.1403281931410.1516@denkbrett>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+Hello Bjorn,
 
-On Thu, 10 Apr 2014 14:12:01 -0600, Jason Gunthorpe wrote:
+for pci on s390 we currently use pcibios_add_platform_entries to add
+some arch specific attributes to pdevs. This has 2 downsides - it will
+race with userspace which is triggered by udev events and expecting
+these attributes (but that's a theoretical issue). More important to
+me is that one cannot use attribute_groups with this. Both issues could
+be addressed by using pdev->dev.groups and let the driver core handle
+attribute creation.
 
-> > But I'm not entirely convinced by this, because in my testing, I saw:
-> > 
-> >  * Enable the clock
-> >  * Values in the PCI configuration space are correct (like
-> >    vendor/product ID)
-> >  * mvebu_pcie_set_local_dev_nr()
-> >  * Values in the PCI configuration space are no longer correct, unless
-> >    you wait a little bit.
-> 
-> Were you reading the configuation space through the MMIO mapping or
-> through the configuration indirection?
+So would it be ok if we set pdev->dev.groups in pcibios_add_device?
+(It should be since it's not used by pci common code which uses bus_type,
+dev_type, and class groups).
 
-I was simply calling the mvebu_pcie_hw_rd_conf() function, so I guess
-it goes through what you call the "configuration indirection".
+Regards,
+Sebastian
 
-> In any event, turning on the clock should almost certainly be
-> accompanied by a phy reset sequence to get both link ends on the same
-> page.
-> 
-> Attached is a rough, untested patch along those lines.
-
-I'll try tomorrow, if I manage to reproduce the initial bug to start
-with.
-
-> > > That does sound like more mbus troubles.
-> > 
-> > Interestingly, the problem occurred when I was plugging a SATA PCIe
-> > card. And regardless of whether the SATA PCIe card is present or not,
-> > the MBus mappings for the IGB are exactly the same.
-> 
-> Maybe something wrong with mbus window index 13?
-> 
-> Any change if you use other windows?
-
-Don't know, will try tomorrow and report back :-)
-
-Thanks for the suggestions!
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
