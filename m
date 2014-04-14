@@ -1,107 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52942 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751959AbaDBBmA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Apr 2014 21:42:00 -0400
-Message-ID: <1396402918.476.231.camel@ul30vt.home>
-Subject: Re: [PATCH v3] PCI: rework new_id interface for known vendor/device
- values
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bandan Das <bsd@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Tue, 01 Apr 2014 19:41:58 -0600
-In-Reply-To: <jpgbnwkplbo.fsf@nelium.bos.redhat.com>
-References: <jpgbnwkplbo.fsf@nelium.bos.redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:57373 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754368AbaDNXvH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Apr 2014 19:51:07 -0400
+Received: by mail-ig0-f181.google.com with SMTP id h18so4014620igc.14
+        for <linux-pci@vger.kernel.org>; Mon, 14 Apr 2014 16:51:06 -0700 (PDT)
+Date: Mon, 14 Apr 2014 17:51:03 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ryan Desfosses <ryan@desfo.org>
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] access: moved trailing statements and added spaces after
+ ','
+Message-ID: <20140414235103.GC16058@google.com>
+References: <1397289387-4440-1-git-send-email-ryan@desfo.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1397289387-4440-1-git-send-email-ryan@desfo.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-04-01 at 21:32 -0400, Bandan Das wrote:
-> While using the new_id interface, the user can unintentionally feed
-> incorrect values if the driver static table has a matching entry.
-> This is possible since only the device and vendor fields are
-> mandatory and the rest are optional. As a result, store_new_id
-> will fill in default values that are then passed on to the driver
-> and can have unintended consequences.
+On Sat, Apr 12, 2014 at 03:56:27AM -0400, Ryan Desfosses wrote:
+> changes made to resolve following checkpatch messages:
+>   ERROR: space required after that ',' (ctx:VxV)
+>   ERROR: trailing statements should be on next line
+> branch: 3.14
 > 
-> As an example, consider the ixgbe driver and the 82599EB network card :
-> echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
-> 
-> This will pass a driver_data value of 0 to the driver whereas
-> the index 0 in ixgbe actually points to a different set of card
-> operations.
-> 
-> This change returns an error if the user attempts to add a dynid for
-> a vendor/device combination for which a static entry already exists.
-> However, if the user intentionally wants a different set of values,
-> she must provide all the 7 fields and that will be accepted.
-> 
-> In KVM/device assignment scenario, the user might want 
-> to bind a device back to the host driver by writing to new_id
-> and trip on a possible null pointer dereference.
-> 
-> Signed-off-by: Bandan Das <bsd@redhat.com>
+> Signed-off-by: Ryan Desfosses <ryan@desfo.org>
 
-Looks ok to me
-
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+Applied to pci/misc, thanks!
 
 > ---
-> v3:
-> relocate pdev decl
-> v2:
-> 1. Return error if there is a matching static entry
-> and change commit message to reflect this behavior
-> 3. Fill in a pdev and call pci_match_id instead of creating
-> a new matching function
-> 4. Change commit message to reflect that libvirt does not
-> depend on this behavior
+>  drivers/pci/access.c | 18 ++++++++++--------
+>  1 file changed, 10 insertions(+), 8 deletions(-)
 > 
->  drivers/pci/pci-driver.c | 22 +++++++++++++++++++++-
->  1 file changed, 21 insertions(+), 1 deletion(-)
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 7f8b78c..5d8d0b4 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -25,14 +25,15 @@ DEFINE_RAW_SPINLOCK(pci_lock);
+>  #define PCI_word_BAD (pos & 1)
+>  #define PCI_dword_BAD (pos & 3)
+>  
+> -#define PCI_OP_READ(size,type,len) \
+> +#define PCI_OP_READ(size, type, len) \
+>  int pci_bus_read_config_##size \
+>  	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
+>  {									\
+>  	int res;							\
+>  	unsigned long flags;						\
+>  	u32 data = 0;							\
+> -	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
+> +	if (PCI_##size##_BAD)						\
+> +	return PCIBIOS_BAD_REGISTER_NUMBER;				\
+>  	raw_spin_lock_irqsave(&pci_lock, flags);			\
+>  	res = bus->ops->read(bus, devfn, pos, len, &data);		\
+>  	*value = (type)data;						\
+> @@ -40,16 +41,17 @@ int pci_bus_read_config_##size \
+>  	return res;							\
+>  }
+>  
+> -#define PCI_OP_WRITE(size,type,len) \
+> +#define PCI_OP_WRITE(size, type, len)		\
+>  int pci_bus_write_config_##size \
+>  	(struct pci_bus *bus, unsigned int devfn, int pos, type value)	\
+>  {									\
+>  	int res;							\
+>  	unsigned long flags;						\
+> -	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
+> +	if (PCI_##size##_BAD)						\
+> +	return PCIBIOS_BAD_REGISTER_NUMBER;				\
+>  	raw_spin_lock_irqsave(&pci_lock, flags);			\
+>  	res = bus->ops->write(bus, devfn, pos, len, value);		\
+> -	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
+> +	raw_spin_unlock_irqrestore(&pci_lock, flags);			\
+>  	return res;							\
+>  }
+>  
+> @@ -144,7 +146,7 @@ static noinline void pci_wait_cfg(struct pci_dev *dev)
+>  }
+>  
+>  /* Returns 0 on success, negative values indicate error. */
+> -#define PCI_USER_READ_CONFIG(size,type)					\
+> +#define PCI_USER_READ_CONFIG(size, type)				\
+>  int pci_user_read_config_##size						\
+>  	(struct pci_dev *dev, int pos, type *val)			\
+>  {									\
+> @@ -152,7 +154,7 @@ int pci_user_read_config_##size						\
+>  	u32 data = -1;							\
+>  	if (PCI_##size##_BAD)						\
+>  		return -EINVAL;						\
+> -	raw_spin_lock_irq(&pci_lock);				\
+> +	raw_spin_lock_irq(&pci_lock);					\
+>  	if (unlikely(dev->block_cfg_access))				\
+>  		pci_wait_cfg(dev);					\
+>  	ret = dev->bus->ops->read(dev->bus, dev->devfn,			\
+> @@ -166,7 +168,7 @@ int pci_user_read_config_##size						\
+>  EXPORT_SYMBOL_GPL(pci_user_read_config_##size);
+>  
+>  /* Returns 0 on success, negative values indicate error. */
+> -#define PCI_USER_WRITE_CONFIG(size,type)				\
+> +#define PCI_USER_WRITE_CONFIG(size, type)				\
+>  int pci_user_write_config_##size					\
+>  	(struct pci_dev *dev, int pos, type val)			\
+>  {									\
+> -- 
+> 1.9.1
 > 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 25f0bc6..a65a014 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -107,7 +107,7 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
->  		subdevice=PCI_ANY_ID, class=0, class_mask=0;
->  	unsigned long driver_data=0;
->  	int fields=0;
-> -	int retval;
-> +	int retval = 0;
->  
->  	fields = sscanf(buf, "%x %x %x %x %x %x %lx",
->  			&vendor, &device, &subvendor, &subdevice,
-> @@ -115,6 +115,26 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
->  	if (fields < 2)
->  		return -EINVAL;
->  
-> +	if (fields != 7) {
-> +		struct pci_dev *pdev = kzalloc(sizeof(*pdev), GFP_KERNEL);
-> +		if (!pdev)
-> +			return -ENOMEM;
-> +
-> +		pdev->vendor = vendor;
-> +		pdev->device = device;
-> +		pdev->subsystem_vendor = subvendor;
-> +		pdev->subsystem_device = subdevice;
-> +		pdev->class = class;
-> +
-> +		if (pci_match_id(pdrv->id_table, pdev))
-> +			retval = -EEXIST;
-> +
-> +		kfree(pdev);
-> +
-> +		if (retval)
-> +			return retval;
-> +	}
-> +
->  	/* Only accept driver_data values that match an existing id_table
->  	   entry */
->  	if (ids) {
-
-
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
