@@ -1,75 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:60087 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755497AbaD3BAI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 21:00:08 -0400
-Received: by mail-ig0-f181.google.com with SMTP id h18so1124599igc.14
-        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 18:00:07 -0700 (PDT)
-Subject: [PATCH 4/7] PCI: Don't set BAR to zero if dma_addr_t is too small
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Tue, 29 Apr 2014 19:00:05 -0600
-Message-ID: <20140430010005.13138.18200.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:42090 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750878AbaDNIEF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Apr 2014 04:04:05 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jayamohan Kallickal <jayamohan.kallickal@emulex.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 01/23] be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:25 +0200
+Message-Id: <e0864211a693608a8aef6590d3c720f28cea02e5.1397461652.git.agordeev@redhat.com>
+In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
+References: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If a BAR is above 4GB and our dma_addr_t is too small, don't clear the BAR
-to zero: that doesn't disable the BAR, and it makes it more likely that the
-BAR will conflict with things if we turn on the memory enable bit (as we
-will at "out:" if the BIOS left it enabled).
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-We should also print the BAR info and its original size so we can see what
-happens when we try to assign space to it.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/pci/probe.c |   13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 82cd75f6118a..dd710b12d34c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -174,7 +174,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 	u64 l64, sz64, mask64;
- 	u16 orig_cmd;
- 	struct pci_bus_region region, inverted_region;
--	bool bar_too_big = false, bar_disabled = false;
-+	bool bar_too_big = false, bar_too_high = false;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 0d82229..279b2f9 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -5282,12 +5282,10 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
+ 	for (i = 0; i <= phba->num_cpus; i++)
+ 		phba->msix_entries[i].entry = i;
  
- 	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
+-	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
+-				 (phba->num_cpus + 1));
++	status = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
++				       phba->num_cpus + 1);
+ 	if (!status)
+ 		phba->msix_enabled = true;
+-
+-	return;
+ }
  
-@@ -254,13 +254,11 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		}
- 
- 		if ((sizeof(dma_addr_t) < 8) && l) {
--			/* Address above 32-bit boundary; disable the BAR */
--			pci_write_config_dword(dev, pos, 0);
--			pci_write_config_dword(dev, pos + 4, 0);
-+			/* Above 32-bit boundary; try to reallocate */
- 			res->flags |= IORESOURCE_UNSET;
- 			res->start = 0;
- 			res->end = sz64;
--			bar_disabled = true;
-+			bar_too_high = true;
- 			goto out;
- 		} else {
- 			region.start = l64;
-@@ -311,7 +309,10 @@ out:
- 	if (bar_too_big)
- 		dev_err(&dev->dev, "reg 0x%x: can't handle BAR larger than 4GB (size %#010llx)\n",
- 			pos, (unsigned long long) sz64);
--	if (res->flags && !bar_disabled)
-+	if (bar_too_high)
-+		dev_info(&dev->dev, "reg 0x%x: can't handle BAR above 4G (bus address %#010llx)\n",
-+			 pos, (unsigned long long) l64);
-+	if (res->flags)
- 		dev_printk(KERN_DEBUG, &dev->dev, "reg 0x%x: %pR\n", pos, res);
- 
- 	return (res->flags & IORESOURCE_MEM_64) ? 1 : 0;
+ /*
+-- 
+1.7.7.6
 
