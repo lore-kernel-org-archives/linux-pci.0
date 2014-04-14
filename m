@@ -1,92 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20140417194853.GG4321@pd.tnic>
-References: <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
- <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
- <1558044.S1G2VU7srO@vostro.rjw.lan> <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
- <20140416190404.GA7070@pd.tnic> <20140416203138.GA17661@google.com>
- <20140416223122.GA2767@redhat.com> <20140416225600.GA23781@google.com>
- <20140417104533.GB8215@pd.tnic> <20140417182637.GA2098@google.com> <20140417194853.GG4321@pd.tnic>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 17 Apr 2014 14:10:54 -0600
-Message-ID: <CAErSpo47rmmVMQs7gOcpFpGzH+13x0aYjsLYOSQWVKUE+ikUSw@mail.gmail.com>
-Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
-To: Borislav Petkov <bp@alien8.de>
-Cc: Dave Jones <davej@redhat.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"Zhang, Rui" <rui.zhang@intel.com>,
-	"Lu, Aaron" <aaron.lu@intel.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Stephane Eranian <eranian@google.com>,
-	"Yan, Zheng Z" <zheng.z.yan@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Naresh Kumar Inna <naresh@chelsio.com>,
+	Arvind Bhushan <arvindb@chelsio.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 06/23] csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:30 +0200
+Message-Id: <eff3d7370c0f3c9c9183bd304a5d5c9eb70f0bd6.1397461652.git.agordeev@redhat.com>
+In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
+References: <cover.1397461652.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 17, 2014 at 1:48 PM, Borislav Petkov <bp@alien8.de> wrote:
-> On Thu, Apr 17, 2014 at 12:26:37PM -0600, Bjorn Helgaas wrote:
->> Thanks a lot for testing this out and debugging my issues.
->>
->> Here's a new version that looks for both device IDs I know about.
->>
->> I'm still nervous about the modeset problem Dave is seeing.  Since the
->> original patch wouldn't find an 8086:0c00 device on Dave's system, it
->> should have done nothing.  But since it caused a modesetting problem,
->> there's something else doing on that I don't understand.
->
-> Yeah, this is strange, to put it mildly. This quirk wouldnt've done
-> anything besides the iteration over the pci devices with pci_get_device.
-> Which wouldn't do anything (refcount increment or so) if it didn't find
-> the device, right?
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Right.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: Arvind Bhushan <arvindb@chelsio.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/csiostor/csio_hw.h  |    2 +-
+ drivers/scsi/csiostor/csio_isr.c |   22 +++++++++-------------
+ 2 files changed, 10 insertions(+), 14 deletions(-)
 
-> Bah, today is the day of the strange bugs. :-\
->
->> PNP: Work around BIOS defects in Intel MCH area reporting
->>
->> From: Bjorn Helgaas <bhelgaas@google.com>
->>
->> Work around BIOSes that don't report the entire Intel MCH area.
->>
->> MCHBAR is not an architected PCI BAR, so MCH space is usually reported as a
->> PNP0C02 resource.  The MCH space was once 16KB, but is 32KB in newer parts.
->> Some BIOSes still report a PNP0C02 resource that is only 16KB, which means
->> the rest of the MCH space is consumed but unreported.
->>
->> This can cause resource map sanity check warnings or (theoretically) a
->> device conflict if we assigned the unreported space to another device.
->>
->> The Intel perf event uncore driver tripped over this when it claimed the
->> MCH region:
->>
->>   resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
->>   Info: mapping multiple BARs. Your kernel is fine.
->>
->> To prevent this, if we find a PNP0C02 resource that covers part of the MCH
->> space, extend it to cover the entire space.
->>
->> Link: http://lkml.kernel.org/r/20140224162400.GE16457@pd.tnic
->> Reported-by: Borislav Petkov <bp@alien8.de>
->
-> Yep, this one works fine:
->
-> [    0.403855] pnp 00:01: [Firmware Bug]: PNP resource [mem 0xfed10000-0xfed13fff] covers only part of 0000:00:00.0 Intel MCH; extending to [mem 0xfed10000-0xfed17fff]
->
-> Acked-by: Borislav Petkov <bp@suse.de>
-> Tested-by: Borislav Petkov <bp@suse.de>
+diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
+index 49b1daa..5db2d85 100644
+--- a/drivers/scsi/csiostor/csio_hw.h
++++ b/drivers/scsi/csiostor/csio_hw.h
+@@ -94,7 +94,7 @@ enum {
+ };
+ 
+ struct csio_msix_entries {
+-	unsigned short	vector;		/* Vector assigned by pci_enable_msix */
++	unsigned short	vector;		/* Assigned MSI-X vector */
+ 	void		*dev_id;	/* Priv object associated w/ this msix*/
+ 	char		desc[24];	/* Description of this vector */
+ };
+diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+index 91ba91d..a8c748a 100644
+--- a/drivers/scsi/csiostor/csio_isr.c
++++ b/drivers/scsi/csiostor/csio_isr.c
+@@ -499,7 +499,7 @@ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
+ static int
+ csio_enable_msix(struct csio_hw *hw)
+ {
+-	int rv, i, j, k, n, min, cnt;
++	int i, j, k, n, min, cnt;
+ 	struct csio_msix_entries *entryp;
+ 	struct msix_entry *entries;
+ 	int extra = CSIO_EXTRA_VECS;
+@@ -521,19 +521,15 @@ csio_enable_msix(struct csio_hw *hw)
+ 
+ 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
+ 
+-	while ((rv = pci_enable_msix(hw->pdev, entries, cnt)) >= min)
+-		cnt = rv;
+-	if (!rv) {
+-		if (cnt < (hw->num_sqsets + extra)) {
+-			csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
+-			csio_reduce_sqsets(hw, cnt - extra);
+-		}
+-	} else {
+-		if (rv > 0)
+-			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
+-
++	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
++	if (cnt < 0) {
+ 		kfree(entries);
+-		return -ENOMEM;
++		return cnt;
++	}
++
++	if (cnt < (hw->num_sqsets + extra)) {
++		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
++		csio_reduce_sqsets(hw, cnt - extra);
+ 	}
+ 
+ 	/* Save off vectors */
+-- 
+1.7.7.6
 
->> +     region.end = region.start + 32*1024 - 1 ;
-
-> checkpatch complains about a trailing space before the semicolon.
-
-Thanks!  I hate typos like that.
-
-I'll fix this, add your tested-by and ack, and send to Rafael.
-
-Bjorn
