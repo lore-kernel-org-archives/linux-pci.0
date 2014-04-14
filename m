@@ -1,31 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:30520 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933393AbaDISOf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Apr 2014 14:14:35 -0400
-From: Rajat Jain <rajatjain@juniper.net>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	"rajatxjain@gmail.com" <rajatxjain@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: RE: Debugging "Completion Timeout" errors as reported by AER
-Date: Wed, 9 Apr 2014 18:14:23 +0000
-Message-ID: <8866b20235964890a6aee25f21e43ca3@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <CAA93t1rN_av-KBUxLtaYX00T1FyQhEaLGme_P7DaR=pd4eELPA@mail.gmail.com>
- <1397066100.3215.305.camel@ul30vt.home>
-In-Reply-To: <1397066100.3215.305.camel@ul30vt.home>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:42894 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753557AbaDNIEW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Apr 2014 04:04:22 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	James Smart <james.smart@emulex.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 11/23] lpfc: Remove superfluous call to pci_disable_msix()
+Date: Mon, 14 Apr 2014 10:05:35 +0200
+Message-Id: <ba0ef012ee339cf014780eba1d3272fc216a1e01.1397461652.git.agordeev@redhat.com>
+In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
+References: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiA+DQo+ID4gICAgICAgICBjcGxkID0gKHU4ICopc2FtLT5tZW1iYXNlOw0KPiA+ICAgICAgICAg
-Zm9yIChpID0gMDsgaSA8IDB4NDA7IGkrKykgew0KPiA+ICAgICAgICAgICAgICAgICAgICAgICAg
-IHByX2VtZXJnKCIgJTAyWCIsIGNwbGRbaV0pOw0KPiA+ICAgICAgICAgfQ0KPiA+DQo+ID4NCj4g
-PiBNeSBxdWVzdGlvbnM6DQo+IA0KPiBNYXliZSBhIHNpbGx5IHF1ZXN0aW9uLCBidXQgZG9lcyB0
-aGUgZGV2aWNlIHN1cHBvcnQgYnl0ZS13aWR0aCBhY2Nlc3MgdG8gdGhpcw0KPiBzcGFjZT8gIFRo
-YW5rcywNCj4gDQoNClZvaWxhISEhISEgVGhhdCB3YXMgdGhlIGlzc3VlIC0gdGhlIGRldmljZSBv
-bmx5IHN1cHBvcnRzIDRieXRlIGFjY2Vzc2VzLg0KDQpUaGFua3MgYSBsb3QgQWxleCENCg0KSSBm
-ZWVsIHNvIHN0dXBpZC4gU29tZXRpbWVzIHRoZSBtb3N0IHNpbGx5IGl0ZW1zIGdldCBvdmVybG9v
-a2VkLg0KDQpUaGFua3MgYWdhaW4sDQoNClJhamF0DQo=
+There is no need to call pci_disable_msix() in case
+the previous call to pci_enable_msix() failed
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: James Smart <james.smart@emulex.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: James Smart <james.smart@emulex.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 635eeb3..7163f37 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8131,7 +8131,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+ 	if (rc) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0420 PCI enable MSI-X failed (%d)\n", rc);
+-		goto msi_fail_out;
++		goto vec_fail_out;
+ 	}
+ 	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+@@ -8209,6 +8209,8 @@ irq_fail_out:
+ msi_fail_out:
+ 	/* Unconfigure MSI-X capability structure */
+ 	pci_disable_msix(phba->pcidev);
++
++vec_fail_out:
+ 	return rc;
+ }
+ 
+@@ -8701,7 +8703,7 @@ enable_msix_vectors:
+ 	} else if (rc) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0484 PCI enable MSI-X failed (%d)\n", rc);
+-		goto msi_fail_out;
++		goto vec_fail_out;
+ 	}
+ 
+ 	/* Log MSI-X vector assignment */
+@@ -8764,9 +8766,10 @@ cfg_fail_out:
+ 			 &phba->sli4_hba.fcp_eq_hdl[index]);
+ 	}
+ 
+-msi_fail_out:
+ 	/* Unconfigure MSI-X capability structure */
+ 	pci_disable_msix(phba->pcidev);
++
++vec_fail_out:
+ 	return rc;
+ }
+ 
+-- 
+1.7.7.6
 
