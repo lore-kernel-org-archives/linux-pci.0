@@ -1,43 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:52912 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757094AbaDKPqo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Apr 2014 11:46:44 -0400
-Message-ID: <53480E5D.1060809@wwwdotorg.org>
-Date: Fri, 11 Apr 2014 09:46:37 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Duan Jiong <duanj.fnst@cn.fujitsu.com>, thierry.reding@gmail.com,
-	bhelgaas@google.com
-CC: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] ARM: tegra: replace IS_ERR and PTR_ERR with PTR_ERR_OR_ZERO
-References: <1397203000-16586-1-git-send-email-duanj.fnst@cn.fujitsu.com>
-In-Reply-To: <1397203000-16586-1-git-send-email-duanj.fnst@cn.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <alpine.DEB.2.02.1401182225170.776@be1.lrz>
+References: <alpine.DEB.2.02.1401182225170.776@be1.lrz>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 14 Apr 2014 15:34:16 -0600
+Message-ID: <CAErSpo7LCx_eakiiOjOcQwojQnFEcvJfeDUVFfMCGN-vbrSdSg@mail.gmail.com>
+Subject: Re: [Bug 68591] - Please help debugging
+To: 7eggert@gmx.de
+Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/11/2014 01:56 AM, Duan Jiong wrote:
-> This patch fixes coccinelle error regarding usage of IS_ERR and
-> PTR_ERR instead of PTR_ERR_OR_ZERO.
+On Sat, Jan 18, 2014 at 3:59 PM,  <7eggert@gmx.de> wrote:
+> Hi,
+>
+> I need some help debugging and possibly fixing this bug. E.g. "do
+> bisecting in spite of the big version difference" or "use these debugging
+> parameters".
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=68591
+> "Regression: Asrock M3A UCC does not boot without acpi=off or pci=noacpi"
+>
+> thanks in advance
+>         Bodo Eggert
 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+Hi Bodo,
 
-> @@ -1024,10 +1024,7 @@ static int tegra_pcie_resets_get(struct tegra_pcie *pcie)
->  		return PTR_ERR(pcie->afi_rst);
->  
->  	pcie->pcie_xrst = devm_reset_control_get(pcie->dev, "pcie_x");
-> -	if (IS_ERR(pcie->pcie_xrst))
-> -		return PTR_ERR(pcie->pcie_xrst);
-> -
-> -	return 0;
-> +	return PTR_ERR_OR_ZERO(pcie->pcie_xrst);
->  }
+Any chance you could try the patch attached to that bugzilla?
+(https://bugzilla.kernel.org/attachment.cgi?id=130681)
 
-To be honest, I prefer the existing code. If we needed to add some more
-code between the call to devm_reset_control_get() and the return
-statement, the diff would be much cleaner if the error-handling path and
-the regular return path were kept separate, as they are today.
+I think it should fix the problem you're seeing.
 
-Why is coccinelle throwing an error? The compiler likely makes identical
-code for both source representations.
+Bjorn
