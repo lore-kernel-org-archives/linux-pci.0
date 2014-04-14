@@ -1,128 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:53314 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754553AbaDXXUD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 19:20:03 -0400
-Received: by mail-pd0-f179.google.com with SMTP id g10so2430852pdj.24
-        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 16:20:02 -0700 (PDT)
-Date: Thu, 24 Apr 2014 17:20:00 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, liviu.dudau@arm.com,
-	linus.walleij@linaro.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH 1/3] ARM: hackup pcibios support for commmon bridge code
-Message-ID: <20140424232000.GN29593@google.com>
-References: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
- <1395960398-4238-2-git-send-email-robherring2@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1395960398-4238-2-git-send-email-robherring2@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:61326 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753972AbaDNIEU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Apr 2014 04:04:20 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Lukasz Dorau <lukasz.dorau@intel.com>,
+	Maciej Patelczyk <maciej.patelczyk@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>, intel-linux-scu@intel.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND 08/23] isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 14 Apr 2014 10:05:32 +0200
+Message-Id: <8a203f9f8b7844e46676d526188965e877751edb.1397461652.git.agordeev@redhat.com>
+In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
+References: <cover.1397461652.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 27, 2014 at 05:46:36PM -0500, Rob Herring wrote:
-> From: Rob Herring <robh@kernel.org>
-> 
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> ---
->  arch/arm/kernel/bios32.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 63 insertions(+)
-> 
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index 317da88..31ec14a 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -11,6 +11,7 @@
->  #include <linux/slab.h>
->  #include <linux/init.h>
->  #include <linux/io.h>
-> +#include <linux/of_pci.h>
->  
->  #include <asm/mach-types.h>
->  #include <asm/mach/map.h>
-> @@ -337,6 +338,15 @@ void pcibios_fixup_bus(struct pci_bus *bus)
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
->  		u16 cmd;
->  
-> +		/* Ignore fully discovered devices */
-> +		if (dev->is_added)
-> +			continue;
-> +
-> +		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-We already do this in pci_device_add(); why do we need it here, too?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: intel-linux-scu@intel.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/isci/init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> +		/* Read default IRQs and fixup if necessary */
-> +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 695b34e..4198e45 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -356,7 +356,7 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
+ 	for (i = 0; i < num_msix; i++)
+ 		pci_info->msix_entries[i].entry = i;
+ 
+-	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
++	err = pci_enable_msix_exact(pdev, pci_info->msix_entries, num_msix);
+ 	if (err)
+ 		goto intx;
+ 
+-- 
+1.7.7.6
 
-Could this be done in pcibios_enable_device() or some other per-device
-interface()?  I'd like to get rid of pcibios_fixup_bus() eventually.
-
->  		pci_read_config_word(dev, PCI_COMMAND, &cmd);
->  		cmd |= features;
->  		pci_write_config_word(dev, PCI_COMMAND, cmd);
-> @@ -681,3 +691,56 @@ void __init pci_map_io_early(unsigned long pfn)
->  	pci_io_desc.pfn = pfn;
->  	iotable_init(&pci_io_desc, 1);
->  }
-> +
-> +struct ioresource {
-> +	struct list_head list;
-> +	phys_addr_t start;
-> +	resource_size_t size;
-> +};
-> +
-> +static LIST_HEAD(io_list);
-> +
-> +int pci_register_io_range(phys_addr_t address, resource_size_t size)
-> +{
-> +	struct ioresource *res;
-> +	resource_size_t allocated_size = 0;
-> +
-> +	/* find if the range has not been already allocated */
-> +	list_for_each_entry(res, &io_list, list) {
-> +		if (address >= res->start &&
-> +			address + size <= res->start + size)
-> +			return 0;
-> +		allocated_size += res->size;
-> +	}
-> +
-> +	/* range not already registered, check for space */
-> +	if (allocated_size + size > IO_SPACE_LIMIT)
-> +		return -E2BIG;
-> +
-> +	/* add the range in the list */
-> +	res = kzalloc(sizeof(*res), GFP_KERNEL);
-> +	if (!res)
-> +		return -ENOMEM;
-> +	res->start = address;
-> +	res->size = size;
-> +
-> +	list_add_tail(&res->list, &io_list);
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_register_io_range);
-> +
-> +unsigned long pci_address_to_pio(phys_addr_t address)
-> +{
-> +	struct ioresource *res;
-> +
-> +	list_for_each_entry(res, &io_list, list) {
-> +		if (address >= res->start &&
-> +			address < res->start + res->size) {
-> +			return res->start - address;
-> +		}
-> +	}
-> +
-> +	return (unsigned long)-1;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_address_to_pio);
-
-ISTR some discussion about this, so maybe this has already been addressed,
-but it doesn't seem right to export generically-named symbols like these
-from the ARM arch code.  And they don't look very ARM-specific.
-
-Bjorn
