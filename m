@@ -1,100 +1,219 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:37979 "EHLO quartz.orcorp.ca"
+Received: from mga09.intel.com ([134.134.136.24]:27346 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753715AbaDJXkX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Apr 2014 19:40:23 -0400
-Date: Thu, 10 Apr 2014 17:40:00 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Willy Tarreau <w@1wt.eu>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Neil Greatorex <neil@fatboyfat.co.uk>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Gregory =?iso-8859-1?Q?Cl=E9ment?=
-	<gregory.clement@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: Fixing PCIe issues on Armada XP
-Message-ID: <20140410234000.GA18443@obsidianresearch.com>
-References: <20140410181953.50ccfcc3@skate>
- <20140410171000.GF25890@1wt.eu>
- <20140410200222.27cab16e@skate>
- <20140410231336.GC30855@1wt.eu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140410231336.GC30855@1wt.eu>
+	id S1754426AbaDON7U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Apr 2014 09:59:20 -0400
+From: Rui Wang <rui.y.wang@intel.com>
+To: bhelgaas@google.com, tony.luck@intel.com,
+	rafael.j.wysocki@intel.com
+Cc: ruiv.wang@gmail.com, chaohong.guo@intel.com, dave.hansen@intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Rui Wang <rui.y.wang@intel.com>
+Subject: [PATCH v3 2/5] I/O Hook: Help functions to manage the hook
+Date: Tue, 15 Apr 2014 21:48:08 +0800
+Message-Id: <1397569691-24691-3-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1397569691-24691-1-git-send-email-rui.y.wang@intel.com>
+References: <1397569691-24691-1-git-send-email-rui.y.wang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 11, 2014 at 01:13:36AM +0200, Willy Tarreau wrote:
+Add the following kernel helper functions used to add/delete/query Register
+Overrides, and to start/stop the I/O Hook:
+        iohook_add_ovrd
+        iohook_query_ovrd
+        iohook_cleanup_ovrd
+        iohook_start_ovrd
+        iohook_stop_ovrd
+        iohook_get_status
 
-> So the areas are well covered, though #11 seems larger than needed
-> but I seem to remember that they're all rounded up by 1 MB anyway,
-> then if so, that's OK.
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/misc/iohook/iohook.c |  151 ++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 151 insertions(+), 0 deletions(-)
 
-Right, PCI bridge windows are 1MB aligned
+diff --git a/drivers/misc/iohook/iohook.c b/drivers/misc/iohook/iohook.c
+index e6a626f..d8c41d0 100644
+--- a/drivers/misc/iohook/iohook.c
++++ b/drivers/misc/iohook/iohook.c
+@@ -6,6 +6,7 @@
+ #include "iohook.h"
+ 
+ static DEFINE_RAW_SPINLOCK(io_hook_lock);
++static DEFINE_RAW_SPINLOCK(engine_lock);
+ 
+ LIST_HEAD(ovrd_io_reg_map);
+ LIST_HEAD(ovrd_mem_reg_map);
+@@ -14,6 +15,150 @@ LIST_HEAD(ovrd_pci_conf_reg_map);
+ struct static_key ovrdhw_enabled = STATIC_KEY_INIT_FALSE;
+ EXPORT_SYMBOL(ovrdhw_enabled);
+ 
++int	g_ovrd_on;
++/* query a Register Override given spaceid and index */
++struct reg_ovrd *iohook_query_ovrd(int spaceid, int idx)
++{
++	struct list_head *reg_ovrd;
++	struct reg_ovrd *ovrdreg, *regentry;
++	unsigned long lock_flags = 0;
++	int n = 0;
++
++	if (spaceid == OVRD_SPACE_MEM)
++		reg_ovrd = &ovrd_mem_reg_map;
++	else if (spaceid == OVRD_SPACE_IO)
++		reg_ovrd = &ovrd_io_reg_map;
++	else
++		reg_ovrd = &ovrd_pci_conf_reg_map;
++
++	regentry = NULL;
++	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
++	list_for_each_entry(ovrdreg, reg_ovrd, node) {
++		if (n++ >= idx) {
++			regentry = ovrdreg;
++			break;
++		}
++	}
++	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
++
++	pr_info("iohook_query_ovrd() returns %p, idx=%d\n",
++		regentry, idx);
++	return regentry;
++
++}
++
++/* delete all Register Overrides from one space (IO/mem/pciconf) */
++void iohook_cleanup_ovrd(int spaceid)
++{
++	struct list_head *tmp, *next, *ovrd_list;
++
++	if (spaceid == OVRD_SPACE_MEM)
++		ovrd_list = &ovrd_mem_reg_map;
++	else if (spaceid == OVRD_SPACE_IO)
++		ovrd_list = &ovrd_io_reg_map;
++	else
++		ovrd_list = &ovrd_pci_conf_reg_map;
++
++	list_for_each_safe(tmp, next, ovrd_list) {
++		struct reg_ovrd *ovrdreg =
++		    list_entry(tmp, struct reg_ovrd, node);
++		list_del(tmp);
++		kfree(ovrdreg);
++	}
++}
++
++/* for pci config space, address is encoded per PCI_ENCODE_ADDR() */
++void iohook_add_ovrd(int spaceid, u64 address, u64 value, u64 mask,
++		u32 length, u8 attrib)
++{
++	struct list_head *reg_ovrd;
++	struct reg_ovrd *ovrdreg;
++	unsigned long lock_flags = 0;
++
++	if (spaceid == OVRD_SPACE_MEM)
++		reg_ovrd = &ovrd_mem_reg_map;
++	else if (spaceid == OVRD_SPACE_IO)
++		reg_ovrd = &ovrd_io_reg_map;
++	else
++		reg_ovrd = &ovrd_pci_conf_reg_map;
++
++	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
++	list_for_each_entry(ovrdreg, reg_ovrd, node) {
++		if (ovrdreg->address == address &&
++			ovrdreg->attrib == attrib &&
++			ovrdreg->length == length) {
++			/* if already added the address, just change the bits */
++			ovrdreg->bit_mask |= mask;
++			ovrdreg->val |= value;
++			pr_info("iohook_add_ovrd(): 0x%llx already added, changed to 0x%llx, mask:0x%llx, attrib:0x%x\n",
++				address, ovrdreg->val, ovrdreg->bit_mask,
++				attrib);
++			goto out;
++		} else if (address >= ovrdreg->address &&
++			address < ovrdreg->address + ovrdreg->length) {
++			pr_info("iohook_add_ovrd(): conflicting reg at 0x%llx, length:%llx, mask:0x%llx, attrib:0x%x\n",
++				address, ovrdreg->val, ovrdreg->bit_mask,
++				attrib);
++			goto out;
++		}
++	}
++
++	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
++
++	ovrdreg = kmalloc(sizeof(struct reg_ovrd), GFP_ATOMIC);
++	if (!ovrdreg) {
++		pr_info("failed to alloc Reg Override!\n");
++		return;
++	}
++
++	ovrdreg->address = address;
++	ovrdreg->val = value;
++	ovrdreg->length = length;
++	ovrdreg->bit_mask = mask;
++	ovrdreg->attrib = attrib;
++	raw_spin_lock_irqsave(&io_hook_lock, lock_flags);
++	list_add_tail(&ovrdreg->node, reg_ovrd);
++out:
++	raw_spin_unlock_irqrestore(&io_hook_lock, lock_flags);
++
++}
++
++/* to start the hook */
++void iohook_start_ovrd(void)
++{
++	unsigned long lock_flags = 0;
++
++	raw_spin_lock_irqsave(&engine_lock, lock_flags);
++	if (g_ovrd_on)
++		goto done;
++
++	static_key_slow_inc(&ovrdhw_enabled);
++	g_ovrd_on = 1;
++done:
++	raw_spin_unlock_irqrestore(&engine_lock, lock_flags);
++
++}
++
++/* to stop the hook */
++void iohook_stop_ovrd(void)
++{
++	unsigned long lock_flags = 0;
++
++	raw_spin_lock_irqsave(&engine_lock, lock_flags);
++	if (!g_ovrd_on)
++		goto done;
++	g_ovrd_on = 0;
++	static_key_slow_dec(&ovrdhw_enabled);
++done:
++	raw_spin_unlock_irqrestore(&engine_lock, lock_flags);
++
++}
++
++int iohook_get_status(void)
++{
++	return g_ovrd_on;
++}
++
+ /* len should only be 1, 2, 4, 8 */
+ static int mem_read(u64 address, int len, void *data)
+ {
+@@ -170,6 +315,9 @@ int read_ovrd_common(int spaceid, u64 address, int len, void *value, void *bus)
+ 
+ 	ret = -EINVAL;
+ 
++	if (!g_ovrd_on)
++		return ret;
++
+ 	if (spaceid == OVRD_SPACE_MEM) {
+ 		/* in the case of memory, 'address' is virtual */
+ 		vaddr = address;
+@@ -300,6 +448,9 @@ int write_ovrd_common(int spaceid, u64 address, int len, void *data, void *bus)
+ 
+ 	ret = -EINVAL;
+ 
++	if (!g_ovrd_on)
++		return ret;
++
+ 	if (spaceid == OVRD_SPACE_MEM) {
+ 		/* in the case of memory, 'address' is virtual */
+ 		vaddr = address;
+-- 
+1.7.5.4
 
-> root@xpgp:~# grep -v disabled /sys/kernel/debug/mvebu-mbus/devices
-> [00] 00000000e8010000 - 00000000e8020000 : 0004:00f0 (remap 0000000000010000)
-> [08] 00000000fff00000 - 0000000100000000 : 0001:001d
-> [09] 00000000f0000000 - 00000000f1000000 : 0001:002f
-> [10] 00000000e1800000 - 00000000e1a00000 : 0004:00f8
-> [11] 00000000e1a00000 - 00000000e1b00000 : 0004:00f8
-> [12] 00000000e0000000 - 00000000e1000000 : 0008:00f8
-> [13] 00000000e1000000 - 00000000e1800000 : 0008:00f8
-> 
-> I noticed above that both igb ports share the same window #11. So I
-> tried to rmmod igb, remove both PCI devices, check mbus again (which
-> did not change), rescan PCI and modprobe igb again, and everything is
-> still operational with the same windows. I don't know if it is normal
-> that they're not unregistered when the device goes away (maybe there's
-> no refcount) ?
-
-The windows are tied to the PCI core, not to the using driver
-module. So they will only changed based on rescan an dynamic resource
-assignment in the PCI core. PCI rescan has a 'memory' of the last
-bridge windows and won't make dramtic changes, so expect the windows
-to fairly sticky.
-
-> If we have to keep them forever, then maybe a further improvement
-> will consist in merging adjacent windows which sum up as a power of
-> two (eg: #10 and #11 may be merged).
-
-0x1b00000 - 0x1800000 = 0x300000 which is not a power of two..
-
-> I tried to add a 3rd NIC in the mix (broadcom tg3), which caused the
-> myri10ge to fail to load for an obscure reason after loading igb
-> properly :
-
-Oh, this looks a lot like what Thomas reported with his 5 NICs.
-
-I really wonder what could be going on here.....
-
-> Ah, interestingly if I load the NICs in the opposite order, they all load
-> properly (myri10ge, igb, r8169) :
-
-Load the NICs means insmod the driver ?
-
-That is repeatable?
-
-Certainly spooky, and suggests a kernel bug.....
-
-It would be interesting to see what register values the driver is
-getting back, is it all 0xF? 
-
-I wonder if something is going wrong with the config write to enable
-the memory decoder. That is triggered by the driver...
-
-> So overall, it's a big Ack from my side considering the huge
-> improvements, let's retry tomorrow with the link up workaround/fix
-> to see if the detection issue is related. Great work!
-
-Seems very likely to me, if the modified patch from Neil fixes it for
-you too then we need to get that into mergable shape too!
-
-Regards,
-Jason
