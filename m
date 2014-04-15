@@ -1,50 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:55585 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758570AbaD3KTG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 06:19:06 -0400
-Message-ID: <1398853076.4653.5.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH 3/8] ARM: dts: imx6: update pcie to bring in line with
- new binding
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Shawn Guo <shawn.guo@linaro.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
-	Richard Zhu <r65037@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
-Date: Wed, 30 Apr 2014 12:17:56 +0200
-In-Reply-To: <20140430060208.GA16727@dragon>
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
-	 <1396025579-14344-4-git-send-email-l.stach@pengutronix.de>
-	 <20140430060208.GA16727@dragon>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:57077 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752074AbaDOLuq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 07:50:46 -0400
+From: Mohit Kumar <mohit.kumar@st.com>
+To: <spear-devel@list.st.com>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Mohit Kumar <mohit.kumar@st.com>, <stable@vger.kernel.org>
+Subject: [PATCH V8 2/9] SPEAr13XX: Fix static mapping table
+Date: Tue, 15 Apr 2014 17:19:44 +0530
+Message-ID: <d6886e0f97dff12932cf89cb33721ac86c3a8e8b.1397555158.git.mohit.kumar@st.com>
+In-Reply-To: <cover.1397555158.git.mohit.kumar@st.com>
+References: <cover.1397555158.git.mohit.kumar@st.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, den 30.04.2014, 14:02 +0800 schrieb Shawn Guo:
-> On Fri, Mar 28, 2014 at 05:52:54PM +0100, Lucas Stach wrote:
-> > The new bindings drops one clock, renames the others and
-> > drops the old interrupt mapping.
-> > 
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> 
-> It does not apply on my branch, and I had to apply it manually.  Please
-> check my imx/dt branch to see if I did it right.
-> 
-The diff as applied in your imx/dt looks good to me.
+From: Pratyush Anand <pratyush.anand@st.com>
 
-Regards,
-Lucas
+SPEAr13XX was using virtual address space 0xFE000000 to map physical address
+space 0xB3000000. pci_remap_io uses 0xFEE00000 as virtual address. So
+change 0xFE000000 to 0xF9000000.
+
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Cc: spear-devel@list.st.com
+Cc: stable@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+---
+ arch/arm/mach-spear/include/mach/spear.h |    4 ++--
+ arch/arm/mach-spear/spear13xx.c          |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/mach-spear/include/mach/spear.h b/arch/arm/mach-spear/include/mach/spear.h
+index 5cdc53d..f2d6a01 100644
+--- a/arch/arm/mach-spear/include/mach/spear.h
++++ b/arch/arm/mach-spear/include/mach/spear.h
+@@ -52,10 +52,10 @@
+ #ifdef CONFIG_ARCH_SPEAR13XX
+ 
+ #define PERIP_GRP2_BASE				UL(0xB3000000)
+-#define VA_PERIP_GRP2_BASE			IOMEM(0xFE000000)
++#define VA_PERIP_GRP2_BASE			IOMEM(0xF9000000)
+ #define MCIF_SDHCI_BASE				UL(0xB3000000)
+ #define SYSRAM0_BASE				UL(0xB3800000)
+-#define VA_SYSRAM0_BASE				IOMEM(0xFE800000)
++#define VA_SYSRAM0_BASE				IOMEM(0xF9800000)
+ #define SYS_LOCATION				(VA_SYSRAM0_BASE + 0x600)
+ 
+ #define PERIP_GRP1_BASE				UL(0xE0000000)
+diff --git a/arch/arm/mach-spear/spear13xx.c b/arch/arm/mach-spear/spear13xx.c
+index 7aa6e8c..89212ff 100644
+--- a/arch/arm/mach-spear/spear13xx.c
++++ b/arch/arm/mach-spear/spear13xx.c
+@@ -52,7 +52,7 @@ void __init spear13xx_l2x0_init(void)
+ /*
+  * Following will create 16MB static virtual/physical mappings
+  * PHYSICAL		VIRTUAL
+- * 0xB3000000		0xFE000000
++ * 0xB3000000		0xF9000000
+  * 0xE0000000		0xFD000000
+  * 0xEC000000		0xFC000000
+  * 0xED000000		0xFB000000
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.0.1
 
