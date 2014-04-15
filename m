@@ -1,118 +1,209 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:61966 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755328AbaDVJd3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 05:33:29 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Len Brown <lenb@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Patch Part3 V1 17/22] pci, ACPI, iommu: enhance pci_root to support DMAR device hotplug
-Date: Tue, 22 Apr 2014 11:49:48 +0200
-Message-ID: <2370777.I1hYvaFUEg@vostro.rjw.lan>
-In-Reply-To: <1398150453-28141-18-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com> <1398150453-28141-18-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 15 Apr 2014 11:37:58 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Daniel J Blueman <daniel@quora.org>,
+	linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH v2 12/14] pci: Suspend/resume support for appel
+ thunderbolt
+Message-ID: <20140415173758.GG16058@google.com>
+References: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
+ <1397175901-4023-13-git-send-email-andreas.noever@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1397175901-4023-13-git-send-email-andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, April 22, 2014 03:07:28 PM Jiang Liu wrote:
-> Finally enhance pci_root driver to support DMAR device hotplug when
-> hot-plugging PCI host bridges.
+[+cc Rafael]
+
+On Fri, Apr 11, 2014 at 02:24:59AM +0200, Andreas Noever wrote:
+> This patch makes changes to the pcieport driver to support thunderbolt
+> suspend/resume on apple systems. We need to perform two different
+> actions during suspend and resume:
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> The whole controller has to be powered down before suspend. If this is
+> not done then the NHI device will be gone after resume if a thunderbolt
+> device was plugged in while suspending. The controller represents itself
+> as multiple PCI devices/bridges. To power it down we hook into the
+> upstream bridge of the controller and call the magic ACPI methods. Power
+> will be restored automatically during resume (by the firmware
+> presumably).
+> 
+> During resume we have to wait for the NHI do reestablish all pci
+> tunnels. Since there is no parent-child relationship between the NHI
+> and the bridges we have to explicitly wait for them using
+> device_pm_wait_for_dev. We do this in the resume_noirq phase of the
+> downstream bridges of the controller (which lead into the thunderbolt
+> tunnels).
+> 
+> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 > ---
->  drivers/acpi/pci_root.c |   16 ++++++++++++++--
->  1 file changed, 14 insertions(+), 2 deletions(-)
+>  drivers/pci/pcie/portdrv_pci.c | 117 +++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 117 insertions(+)
 > 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index d388f13d48b4..aa8f549869f3 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -33,6 +33,7 @@
->  #include <linux/pci.h>
->  #include <linux/pci-acpi.h>
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index 0d8fdc4..6d33666 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -17,6 +17,9 @@
+>  #include <linux/aer.h>
+>  #include <linux/dmi.h>
 >  #include <linux/pci-aspm.h>
-> +#include <linux/dmar.h>
->  #include <linux/acpi.h>
->  #include <linux/slab.h>
->  #include <acpi/apei.h>	/* for acpi_hest_init() */
-> @@ -511,6 +512,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	struct acpi_pci_root *root;
->  	acpi_handle handle = device->handle;
->  	int no_aspm = 0, clear_aspm = 0;
-> +	bool hotadd = (system_state != SYSTEM_BOOTING);
-
-The parens are not necessary in the above instruction.
-
->  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
->  	if (!root)
-> @@ -557,6 +559,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->  	device->driver_data = root;
+> +#include <linux/delay.h>
+> +#include <linux/dmi.h>
+> +#include <linux/acpi.h>
 >  
-> +	if (hotadd && dmar_device_hotplug(handle, true)) {
-> +		result = -ENXIO;
-> +		goto end;
-> +	}
+>  #include "portdrv.h"
+>  #include "aer/aerdrv.h"
+> @@ -79,6 +82,114 @@ static int pcie_portdrv_restore_config(struct pci_dev *dev)
+>  }
+>  
+>  #ifdef CONFIG_PM
 > +
->  	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
->  	       acpi_device_name(device), acpi_device_bid(device),
->  	       root->segment, &root->secondary);
-> @@ -583,7 +590,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  			root->segment, (unsigned int)root->secondary.start);
->  		device->driver_data = NULL;
->  		result = -ENODEV;
-> -		goto end;
-> +		goto remove_dmar;
->  	}
->  
->  	if (clear_aspm) {
-> @@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	if (device->wakeup.flags.run_wake)
->  		device_set_run_wake(root->bus->bridge, true);
->  
-> -	if (system_state != SYSTEM_BOOTING) {
-> +	if (hotadd) {
->  		pcibios_resource_survey_bus(root->bus);
->  		pci_assign_unassigned_root_bus_resources(root->bus);
->  	}
-> @@ -607,6 +614,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	pci_unlock_rescan_remove();
->  	return 1;
->  
-> +remove_dmar:
-> +	if (hotadd)
-> +		dmar_device_hotplug(handle, false);
-
-I suppose that works if dmar_device_hotplug() returned false before?
-
->  end:
->  	kfree(root);
->  	return result;
-> @@ -625,6 +635,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
->  
->  	pci_remove_root_bus(root->bus);
->  
-> +	dmar_device_hotplug(device->handle, false);
+> +#if defined(CONFIG_THUNDERBOLT) || defined(CONFIG_THUNDERBOLT_MODULE)
 > +
->  	pci_unlock_rescan_remove();
+> +bool is_thunderbolt(struct pci_dev *pdev)
+> +{
+> +	if (!dmi_match(DMI_PRODUCT_NAME, "MacBookPro10,1"))
+> +		return false;
+> +	return pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x1547;
+> +}
+> +
+> +static void shutdown_thunderbolt_controller(struct pci_dev *pdev)
+> +{
+> +	/*
+> +	 * The thunderbolt controller consists of a pcie switch with downstream
+> +	 * bridges leading to the NHI (native host interface) and to the tunnel
+> +	 * pci bridges.
+> +	 *
+> +	 * Without the following quirk the NHI will not resume if a tb device was
+> +	 * plugged in before suspend.
+> +	 *
+> +	 * This quirk cuts power to the whole chip. Therefore we have to apply it
+> +	 * during suspend_noirq of the upstream bridge.
+> +	 *
+> +	 * Power is automagically restored before resume. No action is needed.
+> +	 */
+> +	acpi_handle bridge, SXIO, SXFP, SXLV;
+> +	if (!is_thunderbolt(pdev))
+> +		return;
+> +	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_UPSTREAM)
+> +		return;
+> +	bridge = ACPI_HANDLE(&pdev->dev);
+> +	if (!bridge)
+> +		return;
+> +	/*
+> +	 * TB bridges in external devices might have the same device id as those
+> +	 * on the host, but they will not have the associated ACPI methods. This
+> +	 * implicitly checks that we are at the right bridge.
+> +	 */
+> +	if (ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXIO", &SXIO))
+> +		|| ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXFP", &SXFP))
+> +		|| ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXLV", &SXLV)))
+> +		return;
+
+Hmm, this is pretty ugly because the ACPI names are up to the BIOS writer
+so we can't really rely on them.
+
+You could put this sort of thing in a quirk, but I wouldn't be happy
+about putting it in a generic place like this.  Same with the magic
+sequence below.
+
+Maybe a quirk that sets function pointers that we could call here?
+
+> +	dev_info(&pdev->dev, "cutting power to thunderbolt controller...\n");
+> +
+> +	/* save registers manually, the pci core won't be able to do later */
+> +	pci_save_state(pdev);
+> +	pci_prepare_to_sleep(pdev);
+> +
+> +	/* magic sequence */
+> +	acpi_execute_simple_method(SXIO, NULL, 1);
+> +	acpi_execute_simple_method(SXFP, NULL, 0);
+> +	msleep(300);
+> +	acpi_execute_simple_method(SXLV, NULL, 0);
+> +	acpi_execute_simple_method(SXIO, NULL, 0);
+> +	acpi_execute_simple_method(SXLV, NULL, 0);
+> +}
+> +
+> +static void wait_for_thunderbolt_controller(struct pci_dev *pdev)
+> +{
+> +	struct pci_dev *sibling = NULL;
+> +	struct pci_dev *nhi = NULL;
+> +	/*
+> +	 * During suspend the thunderbolt controller is reset and all pci
+> +	 * tunnels are lost. The NHI driver will try to reestablish all tunnels
+> +	 * during resume. We have to manually wait for the NHI since there is
+> +	 * no parent child relationship between the NHI and the tunneled
+> +	 * bridges.
+> +	 */
+> +	if (!is_thunderbolt(pdev))
+> +		return;
+> +	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM)
+> +		return;
+> +	/*
+> +	 * Find the NHI and confirm that we are a bridge on the tb host
+> +	 * controller and not on a tb endpoint.
+> +	 */
+> +	sibling = pci_get_slot(pdev->bus, 0x0);
+> +	if (sibling == pdev)
+> +		goto out; /* we are the downstream bridge to the NHI */
+> +	if (!sibling || !sibling->subordinate)
+> +		goto out;
+> +	nhi = pci_get_slot(sibling->subordinate, 0x0);
+> +	if (!nhi)
+> +		goto out;
+> +	if (nhi->vendor != PCI_VENDOR_ID_INTEL || nhi->device != 0x1547
+> +			|| nhi->subsystem_vendor != 0x2222
+> +			|| nhi->subsystem_device != 0x1111)
+> +		goto out;
+> +	dev_info(&pdev->dev, "wating for thunderbolt to reestablish pci tunnels...\n");
+> +	device_pm_wait_for_dev(&pdev->dev, &nhi->dev);
+> +out:
+> +	pci_dev_put(sibling);
+> +	pci_dev_put(nhi);
+> +}
+> +
+> +#else
+> +
+> +static void shutdown_thunderbolt_controller(struct pci_dev *pdev) { }
+> +static void wait_for_thunderbolt_controller(struct pci_dev *pdev) { }
+> +
+> +#endif
+> +
+> +int pcie_port_suspend_noirq(struct device *dev)
+> +{
+> +	shutdown_thunderbolt_controller(to_pci_dev(dev));
+> +	return 0;
+> +}
+> +
+>  static int pcie_port_resume_noirq(struct device *dev)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> @@ -90,6 +201,9 @@ static int pcie_port_resume_noirq(struct device *dev)
+>  	 */
+>  	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
+>  		pcie_clear_root_pme_status(pdev);
+> +
+> +	wait_for_thunderbolt_controller(pdev);
+> +
+>  	return 0;
+>  }
 >  
->  	kfree(root);
+> @@ -171,7 +285,10 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>  	.thaw		= pcie_port_device_resume,
+>  	.poweroff	= pcie_port_device_suspend,
+>  	.restore	= pcie_port_device_resume,
+> +	.suspend_noirq  = pcie_port_suspend_noirq,
+>  	.resume_noirq	= pcie_port_resume_noirq,
+> +	.poweroff_noirq = pcie_port_suspend_noirq,
+> +	.restore_noirq  = pcie_port_resume_noirq,
+>  	.runtime_suspend = pcie_port_runtime_suspend,
+>  	.runtime_resume = pcie_port_runtime_resume,
+>  	.runtime_idle	= pcie_port_runtime_idle,
+> -- 
+> 1.9.2
 > 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
