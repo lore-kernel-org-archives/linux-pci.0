@@ -1,110 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:14001 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:23840 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752329AbaDVHHS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Apr 2014 03:07:18 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part3 V1 17/22] pci, ACPI, iommu: enhance pci_root to support DMAR device hotplug
-Date: Tue, 22 Apr 2014 15:07:28 +0800
-Message-Id: <1398150453-28141-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1750918AbaDOHw5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Apr 2014 03:52:57 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH] crypto/ccp: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 15 Apr 2014 09:54:31 +0200
+Message-Id: <1397548471-24441-1-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Finally enhance pci_root driver to support DMAR device hotplug when
-hot-plugging PCI host bridges.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Tom Lendacky <thomas.lendacky@amd.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-crypto@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/acpi/pci_root.c |   16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ drivers/crypto/ccp/ccp-pci.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index d388f13d48b4..aa8f549869f3 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -33,6 +33,7 @@
- #include <linux/pci.h>
- #include <linux/pci-acpi.h>
- #include <linux/pci-aspm.h>
-+#include <linux/dmar.h>
- #include <linux/acpi.h>
- #include <linux/slab.h>
- #include <acpi/apei.h>	/* for acpi_hest_init() */
-@@ -511,6 +512,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	struct acpi_pci_root *root;
- 	acpi_handle handle = device->handle;
- 	int no_aspm = 0, clear_aspm = 0;
-+	bool hotadd = (system_state != SYSTEM_BOOTING);
+diff --git a/drivers/crypto/ccp/ccp-pci.c b/drivers/crypto/ccp/ccp-pci.c
+index 93319f9..0d74623 100644
+--- a/drivers/crypto/ccp/ccp-pci.c
++++ b/drivers/crypto/ccp/ccp-pci.c
+@@ -48,12 +48,11 @@ static int ccp_get_msix_irqs(struct ccp_device *ccp)
+ 	for (v = 0; v < ARRAY_SIZE(msix_entry); v++)
+ 		msix_entry[v].entry = v;
  
- 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
- 	if (!root)
-@@ -557,6 +559,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
- 	device->driver_data = root;
+-	while ((ret = pci_enable_msix(pdev, msix_entry, v)) > 0)
+-		v = ret;
+-	if (ret)
++	ret = pci_enable_msix_range(pdev, msix_entry, 1, v);
++	if (ret < 0)
+ 		return ret;
  
-+	if (hotadd && dmar_device_hotplug(handle, true)) {
-+		result = -ENXIO;
-+		goto end;
-+	}
-+
- 	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
- 	       acpi_device_name(device), acpi_device_bid(device),
- 	       root->segment, &root->secondary);
-@@ -583,7 +590,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 			root->segment, (unsigned int)root->secondary.start);
- 		device->driver_data = NULL;
- 		result = -ENODEV;
--		goto end;
-+		goto remove_dmar;
- 	}
- 
- 	if (clear_aspm) {
-@@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	if (device->wakeup.flags.run_wake)
- 		device_set_run_wake(root->bus->bridge, true);
- 
--	if (system_state != SYSTEM_BOOTING) {
-+	if (hotadd) {
- 		pcibios_resource_survey_bus(root->bus);
- 		pci_assign_unassigned_root_bus_resources(root->bus);
- 	}
-@@ -607,6 +614,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	pci_unlock_rescan_remove();
- 	return 1;
- 
-+remove_dmar:
-+	if (hotadd)
-+		dmar_device_hotplug(handle, false);
- end:
- 	kfree(root);
- 	return result;
-@@ -625,6 +635,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
- 
- 	pci_remove_root_bus(root->bus);
- 
-+	dmar_device_hotplug(device->handle, false);
-+
- 	pci_unlock_rescan_remove();
- 
- 	kfree(root);
+-	ccp_pci->msix_count = v;
++	ccp_pci->msix_count = ret;
+ 	for (v = 0; v < ccp_pci->msix_count; v++) {
+ 		/* Set the interrupt names and request the irqs */
+ 		snprintf(ccp_pci->msix[v].name, name_len, "ccp-%u", v);
 -- 
-1.7.10.4
+1.7.7.6
 
