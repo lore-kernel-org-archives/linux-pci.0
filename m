@@ -1,47 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:41975 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753008AbaDDRDr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 13:03:47 -0400
-Received: by mail-pb0-f44.google.com with SMTP id rp16so3717319pbb.31
-        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 10:03:47 -0700 (PDT)
-Date: Fri, 4 Apr 2014 11:03:41 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ben Dooks <ben-linux@fluff.org>, linux-tegra@vger.kernel.org,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>, kernel@pengutronix.de
-Subject: Re: [PATCH v2 6/6] PCI: designware: use new OF interrupt mapping
- when possible
-Message-ID: <20140404170341.GG9007@google.com>
-References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
- <1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
- <20140305184219.GA29903@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140305184219.GA29903@obsidianresearch.com>
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:49995 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751748AbaDOXJd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 19:09:33 -0400
+From: Bill Sumner <bill.sumner@hp.com>
+To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org
+Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com
+Subject: [PATCH 5/8] Add new definitions & prototypes to intel-iommu-private.h
+Date: Tue, 15 Apr 2014 17:09:06 -0600
+Message-Id: <1397603349-30930-6-git-send-email-bill.sumner@hp.com>
+In-Reply-To: <1397603349-30930-1-git-send-email-bill.sumner@hp.com>
+References: <1397603349-30930-1-git-send-email-bill.sumner@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 05, 2014 at 11:42:19AM -0700, Jason Gunthorpe wrote:
-> On Wed, Mar 05, 2014 at 02:25:51PM +0100, Lucas Stach wrote:
-> > -	return pp->irq;
-> > +	irq = of_irq_parse_and_map_pci(dev, slot, pin);
-> > +	if (!irq)
-> > +		irq = pp->irq;
-> 
-> In light of the two bugs that Tim found, it might be wise to throw a
-> 'dev_warn(FW_BUG "Missing DT interrupt mapping")' in the fall back
-> path, so it doesn't continue to silently cover up errors on the OF/DT
-> side..
+Items needed for fixing crashdump.
 
-This sounds like a reasonable thing to do, but I didn't see a response to
-this comment.  Should I merge it as-is, or do you want to add the message?
+
+Signed-off-by: Bill Sumner <bill.sumner@hp.com>
+---
+ drivers/iommu/intel-iommu-private.h | 92 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 92 insertions(+)
+
+diff --git a/drivers/iommu/intel-iommu-private.h b/drivers/iommu/intel-iommu-private.h
+index 73dabec..b436cd8 100644
+--- a/drivers/iommu/intel-iommu-private.h
++++ b/drivers/iommu/intel-iommu-private.h
+@@ -349,3 +349,95 @@ static inline void free_pgtable_page(void *vaddr)
+ 	free_page((unsigned long)vaddr);
+ }
+ 
++#ifdef CONFIG_CRASH_DUMP
++/*
++ * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
++ *
++ * Fixes the crashdump kernel to deal with an active iommu and legacy
++ * DMA from the (old) panicked kernel in a manner similar to how legacy
++ * DMA is handled when no hardware iommu was in use by the old kernel --
++ * allow the legacy DMA to continue into its current buffers.
++ *
++ * In the crashdump kernel, this code:
++ * 1. skips disabling the IOMMU's translating of IO Virtual Addresses (IOVA)
++ * 2. leaves the current translations in-place so that legacy DMA will
++ *    continue to use its current buffers,
++ * 3. allocates to the device drivers in the crashdump kernel
++ *    portions of the iova address ranges that are different
++ *    from the iova address ranges that were being used by the old kernel
++ *    at the time of the panic.
++ *
++ */
++
++struct domain_values_entry {
++	struct list_head link;		/* link entries into a list */
++	struct iova_domain iovad;	/* iova's that belong to this domain */
++	struct dma_pte	*pgd;		/* virtual address */
++	int    did;			/* domain id */
++	int    gaw;			/* max guest address width */
++	int    iommu_superpage;		/* Level of superpages supported:
++					   0 == 4KiB (no superpages), 1 == 2MiB,
++					   2 == 1GiB, 3 == 512GiB, 4 == 1TiB */
++};
++
++
++
++/* ------------------------------------------------------------------------
++ * Prototypes of interface functions
++ * ------------------------------------------------------------------------
++ */
++
++extern int
++intel_iommu_copy_translation_tables(struct dmar_drhd_unit *drhd,
++	struct root_entry **root_old_p, struct root_entry **root_new_p,
++	int g_num_of_iommus);
++
++extern int
++intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
++
++extern struct domain_values_entry *
++intel_iommu_did_to_domain_values_entry(int did, struct intel_iommu *iommu);
++
++
++/* ------------------------------------------------------------------------
++ * Utility functions for accessing the iommu Translation Tables
++ * ------------------------------------------------------------------------
++ */
++
++static inline struct context_entry *
++get_context_phys_from_root(struct root_entry *root)
++{
++	return (struct context_entry *)
++		(root_present(root) ? (void *) (root->val & VTD_PAGE_MASK)
++				    : NULL);
++}
++
++static inline int
++context_get_p(struct context_entry *c)    {return((c->lo >> 0) & 0x1); }
++
++static inline int
++context_get_fpdi(struct context_entry *c) {return((c->lo >> 1) & 0x1); }
++
++static inline int
++context_get_t(struct context_entry *c)    {return((c->lo >> 2) & 0x3); }
++
++static inline u64
++context_get_asr(struct context_entry *c)  {return((c->lo >> 12));      }
++
++static inline int
++context_get_aw(struct context_entry *c)   {return((c->hi >> 0) & 0x7); }
++
++static inline int
++context_get_aval(struct context_entry *c) {return((c->hi >> 3) & 0xf); }
++
++static inline int
++context_get_did(struct context_entry *c)  {return((c->hi >> 8) & 0xffff); }
++
++static inline void
++context_put_asr(struct context_entry *c, unsigned long asr)
++{
++	c->lo &= (~VTD_PAGE_MASK);
++	c->lo |= (asr << VTD_PAGE_SHIFT);
++}
++
++#endif	/* CONFIG_CRASH_DUMP */
+-- 
+Bill Sumner <bill.sumner@hp.com>
+
