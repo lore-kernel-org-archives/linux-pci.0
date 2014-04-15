@@ -1,68 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:49381 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116AbaDXV0N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 17:26:13 -0400
-Received: by mail-pa0-f52.google.com with SMTP id kx10so2383757pab.11
-        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 14:26:12 -0700 (PDT)
-Date: Thu, 24 Apr 2014 15:26:10 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: Re: [PATCH v2] pci: Allow hotplug service drivers to operate in
- polling mode
-Message-ID: <20140424212610.GH29593@google.com>
-References: <5339FF7B.4020904@gmail.com>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:60146 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750893AbaDOOru (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 10:47:50 -0400
+Date: Tue, 15 Apr 2014 15:47:35 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>
+Subject: Re: [PATCH 0/3] ARM: PCI: implement virtual PCI host controller
+Message-ID: <20140415144735.GM17408@arm.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <20140403220713.GA23545@google.com>
+ <20140414171300.GL12916@arm.com>
+ <21141977.8ucQJzlJts@wuerfel>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5339FF7B.4020904@gmail.com>
+In-Reply-To: <21141977.8ucQJzlJts@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 31, 2014 at 04:51:23PM -0700, Rajat Jain wrote:
-> Today the PCIe port bus driver disables the Hot-plug service if the
-> port device does not have the capability to generate interrupts.
-> However, a user must be able to use the "pciehp_poll_mode" parameter
-> to use the pciehp in polling method in such a case. Today it is not
-> possible.
-> 
-> This patch allows a hotplug service driver to decide whether or not
-> it would like to continue in absense of interrupts.
-> 
-> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+Hi Arnd,
 
-Applied to pci/hotplug for v3.16, thanks!
+On Mon, Apr 14, 2014 at 07:48:17PM +0100, Arnd Bergmann wrote:
+> On Monday 14 April 2014 18:13:00 Will Deacon wrote:
+> > Arnd: Is there anything more you'd like me to do with this series? Given
+> > that it would be targetting 3.16, there's still plenty of time to make
+> > changes (we talked about extracting some library functions in the past).
+> 
+> I don't remember the latest status of your patch set, but you might want
+> to read the discussions we had about Liviu's patches last week.
 
-> ---
-> v2: Drop the extra debug msg in pciehp
->     (and just retain the changes in portdrv_core.c)
-> 
->  drivers/pci/pcie/portdrv_core.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 0b6e766..ba31deb 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -377,10 +377,13 @@ int pcie_port_device_register(struct pci_dev *dev)
->  	/*
->  	 * Initialize service irqs. Don't use service devices that
->  	 * require interrupts if there is no way to generate them.
-> +	 * However, some drivers may have a polling mode (e.g pciehp_poll_mode)
-> +	 * that can be used in absense of irqs. Allow them to determine
-> +	 * if that is to be used.
->  	 */
->  	status = init_service_irqs(dev, irqs, capabilities);
->  	if (status) {
-> -		capabilities &= PCIE_PORT_SERVICE_VC;
-> +		capabilities &= PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_HP;
->  		if (!capabilities)
->  			goto error_disable;
->  	}
-> -- 
-> 1.7.9.5
-> 
+The latest status (v5) was that I had something working (I got hung up on
+the I/O offset handing), with all feedback addressed. The next step was to
+try and move parts into library code, but it looks like Liviu is handling a
+lot of that with his arm64 stuff.
+
+> We still haven't figured out exactly how to handle I/O space in the common
+> code, but I think we are making progress.
+
+The discussions certainly seem to be making progress.
+
+> We also have discussed some ideas about how to restructure the PCI
+> code layer to make it easier to share host drivers across architectures
+> and clean up the interfaces in the process.
+
+Ok. Whilst this all sounds good from an arm64 perspective (with Liviu
+currently doing the work), it's not clear to me where that leaves my 32-bit
+ARM kvmtool code. That was the main reason for me writing this driver, and it
+seems a shame to have to wait for all the generic code to be sorted out
+before it can be used on AArch32, where there is already a functional
+pcibios implementation. The discussions mention things like generic
+pci_host_bridge_ops, but having that for arch/arm/ doesn't sound like
+something that is imminent.
+
+Of course, I plan to port my driver to the new infrastructure when it lands
+(since I want to support arm64), but it would be good to have something for
+AArch32 in the meantime.
+
+Will
