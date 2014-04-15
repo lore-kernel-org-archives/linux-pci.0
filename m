@@ -1,110 +1,65 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 24 Apr 2014 11:09:03 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	James Bottomley <jbottomley@parallels.com>
-Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com,
-	intel-linux-scu@intel.com, support@lsi.com,
-	DL-MPTFusionLinux@lsi.com, qla2xxx-upstream@qlogic.com,
-	iscsi-driver@qlogic.com, pv-drivers@vmware.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 00/23] scsi: Use pci_enable_msix_range()
- instead of pci_enable_msix()
-Message-ID: <20140424170903.GA29593@google.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Woodhouse, David" <david.woodhouse@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Davidlohr Bueso <davidlohr@hp.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-kernel@vger.kernel.org, "bhe@redhat.com" <bhe@redhat.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	James.Bottomley@hansenpartnership.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, scameron@beardog.cce.hp.com,
+	Linda Knippers <linda.knippers@hp.com>, aswin@hp.com
+Subject: [PATCH] iommu/vt-d: fix bug in matching PCI devices with DRHD/RMRR descriptors
+Date: Tue, 15 Apr 2014 10:35:35 +0800
+Message-Id: <1397529335-4834-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 14, 2014 at 10:05:24AM +0200, Alexander Gordeev wrote:
-> Hello,
-> 
-> This series is against 3.15-rc1.
-> 
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+Commit "59ce0515cdaf iommu/vt-d: Update DRHD/RMRR/ATSR device scope
+caches when PCI hotplug happens" introduces a bug, which fails to
+match PCI devices with DMAR device scope entries if PCI path array
+in the entry has more than one level.
 
-Hi James,
+For example, it fails to handle
+[1D2h 0466   1]      Device Scope Entry Type : 01
+[1D3h 0467   1]                 Entry Length : 0A
+[1D4h 0468   2]                     Reserved : 0000
+[1D6h 0470   1]               Enumeration ID : 00
+[1D7h 0471   1]               PCI Bus Number : 00
+[1D8h 0472   2]                     PCI Path : 1C,04
+[1DAh 0474   2]                     PCI Path : 00,02
 
-These depend on f7fc32c, which appeared in v3.15-rc1.  I had intended
-to merge these scsi updates at the same time, but I failed.  Would you
-like to take them now that f7fc32c is upstream?
+And cause DMA failure on HP DL980 as:
+DMAR:[fault reason 02] Present bit in context entry is clear
+dmar: DRHD: handling fault status reg 602
+dmar: DMAR:[DMA Read] Request device [02:00.2] fault addr 7f61e000
 
-If not, I'd still be glad to do it, but it might avoid some conflicts
-if you took them.
+Reported-and-tested-by: Davidlohr Bueso <davidlohr@hp.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+Hi David and Davidlohr,
+	I have made minor syntax change to the patch, but there should be no
+functional change.
+Thanks!
+Gerry
+---
+ drivers/iommu/dmar.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Bjorn
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index f445c10df8df..39f8b717fe84 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -152,7 +152,8 @@ dmar_alloc_pci_notify_info(struct pci_dev *dev, unsigned long event)
+ 	info->seg = pci_domain_nr(dev->bus);
+ 	info->level = level;
+ 	if (event == BUS_NOTIFY_ADD_DEVICE) {
+-		for (tmp = dev, level--; tmp; tmp = tmp->bus->self) {
++		for (tmp = dev; tmp; tmp = tmp->bus->self) {
++			level--;
+ 			info->path[level].device = PCI_SLOT(tmp->devfn);
+ 			info->path[level].function = PCI_FUNC(tmp->devfn);
+ 			if (pci_is_root_bus(tmp->bus))
+-- 
+1.7.10.4
 
-> There are no major changes in this series since I posted
-> it last time.
-> 
-> Thanks!
-> 
-> Cc: iss_storagedev@hp.com
-> Cc: intel-linux-scu@intel.com
-> Cc: support@lsi.com
-> Cc: DL-MPTFusionLinux@lsi.com
-> Cc: qla2xxx-upstream@qlogic.com
-> Cc: iscsi-driver@qlogic.com
-> Cc: pv-drivers@vmware.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> 
-> 
-> Alexander Gordeev (23):
->   be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   bfa: Do not call pci_enable_msix() after it failed once
->   bfa: Cleanup bfad_setup_intr() function
->   bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   csiostor: Remove superfluous call to pci_disable_msix()
->   csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
->   fnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   hpsa: Fallback to MSI rather than to INTx if MSI-X failed
->   hpsa: Use pci_enable_msix_range() instead of pci_enable_msix()
->   lpfc: Remove superfluous call to pci_disable_msix()
->   lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
->   megaraid: Fail resume if MSI-X re-initialization failed
->   megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
->   mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   mpt3sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   pm8001: Fix invalid return when request_irq() failed
->   pm8001: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   pmcraid: Get rid of a redundant assignment
->   pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
->   qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
->   qla4xxx: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-> 
->  drivers/scsi/be2iscsi/be_main.c           |    6 +--
->  drivers/scsi/bfa/bfad.c                   |   62 ++++++++++++-----------------
->  drivers/scsi/csiostor/csio_hw.h           |    2 +-
->  drivers/scsi/csiostor/csio_isr.c          |   24 ++++-------
->  drivers/scsi/fnic/fnic_isr.c              |    4 +-
->  drivers/scsi/hpsa.c                       |   30 ++++++--------
->  drivers/scsi/isci/init.c                  |    2 +-
->  drivers/scsi/lpfc/lpfc_init.c             |   47 +++++++++++-----------
->  drivers/scsi/megaraid/megaraid_sas_base.c |   24 +++++------
->  drivers/scsi/mpt2sas/mpt2sas_base.c       |    6 +-
->  drivers/scsi/mpt3sas/mpt3sas_base.c       |    4 +-
->  drivers/scsi/pm8001/pm8001_init.c         |   44 +++++++++++----------
->  drivers/scsi/pmcraid.c                    |   14 +------
->  drivers/scsi/qla2xxx/qla_isr.c            |   27 +++++-------
->  drivers/scsi/qla4xxx/ql4_nx.c             |    2 +-
->  drivers/scsi/vmw_pvscsi.c                 |    2 +-
->  16 files changed, 129 insertions(+), 171 deletions(-)
-> 
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
