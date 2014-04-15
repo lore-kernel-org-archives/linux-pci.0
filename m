@@ -1,50 +1,112 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Mitch Williams <mitch.a.williams@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Shahed Shaikh <shahed.shaikh@qlogic.com>,
-	Linux NICS <linux.nics@intel.com>,
-	e1000-devel@lists.sourceforge.net, Dept-HSGLinuxNICDev@qlogic.com,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH net-next 0/2] Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Fri, 25 Apr 2014 10:06:23 +0200
-Message-Id: <cover.1398412015.git.agordeev@redhat.com>
+From: Mohit Kumar <mohit.kumar@st.com>
+To: <spear-devel@list.st.com>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Cc: Mohit Kumar <mohit.kumar@st.com>
+Subject: [PATCH V8 0/9] PCI: Add SPEAr13xx PCie support
+Date: Tue, 15 Apr 2014 17:19:42 +0530
+Message-ID: <cover.1397555158.git.mohit.kumar@st.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Patch# 1 and 2: Improvement and fixes for SPEAr13xx support.
+Patch# 3,4 and 6: Add DT bindings for spear1310/40-miphy, misc and pcie node
+Patch# 5: Add spear1310/40-miphy driver and support for spear1310/40 
+miphy wrapper.
+Patch# 7-9: Add SPEAr13xx PCIe driver and dt support.
 
-The series completes converison of network drivers to the new
-MSI initialization API.
+These pathes are tested with linux-3.15 tag of arm-soc tree.
+Tested with SPEAr1310 evaluation board with:
+	- INTEL PRO 100/100 EP card
+	- USB xhci gen2 card
+ 	- Above cards connected through LeCROY PTC switch
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Modifications for SATA are tested with SPEAr1340-evb board
 
-Thanks!
+Changes since v7:
+- Rebase over for-linus-3.15 tag of arm-soc tree so that complete patch series
+ can be applied cleanly.
+- Incorporated few comments on comment style and superfluous comments
+Changes since v6:
+- Split miphy driver for SPEAr1310 and SPEAr1340
+- Some cleanup and incorporated other minor comments
+Changes since v5:
+- Split DT bindings for misc, miphy-40lp and pcie node into sepearte patches
+- Merge config options PCIE_SPEAR13XX and PCI_MSI into defconfig patch 
+- Incorporated other minor comments
+Changes since v4:
+- Uses per device function pointers passed from .data field to
+  the of_device_id instead of of_device_is_compatible.
+- Incorporated other minor comments from v4
 
-Cc: Mitch Williams <mitch.a.williams@intel.com>
-Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
-Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
-Cc: Linux NICS <linux.nics@intel.com>
-Cc: e1000-devel@lists.sourceforge.net
-Cc: Dept-HSGLinuxNICDev@qlogic.com
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Changes since v3:
+- Phy driver renamed to phy-miphy40lp
+- ahci phy hook patch used as suggested by Arnd
+- Incorporated other minor comments from v3
 
-Alexander Gordeev (2):
-  i40evf: Use pci_enable_msix_range() instead of pci_enable_msix()
-  qlcnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Changes since v2:
+- Incorporated comments to move SPEAr13xx PCIe and SATA phy specific routines to
+  the phy framework
+- Modify ahci driver to include phy hooks
+- phy-core driver modifications for subsys_initcall() 
+ 
+Changes since v1:
+- Few patches of the series are already accepted and applied to mainline e.g.
+ pcie designware driver improvements,fixes for IO translation bug, PCIe dw
+ driver maintainer. So dropped these from v2.
+- Incorporated comment to move the common/reset PCIe code to the seperate driver
+- PCIe and SATA share common PHY configuration registers, so move SATA
+ platform code to the system config driver
+Fourth patch is improves pcie designware driver and fixes the IO
+translation bug. IO translation bug fix leads to the working of PCIe EP devices
+connected to RC through switch.
 
- drivers/net/ethernet/intel/i40evf/i40evf_main.c  |   31 ++++++++--------------
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |    4 +-
- 2 files changed, 13 insertions(+), 22 deletions(-)
+Mohit Kumar (1):
+  SPEAr13xx: defconfig: Update
 
--- 
-1.7.7.6
+Pratyush Anand (8):
+  clk: SPEAr13XX: Fix pcie clock name
+  SPEAr13XX: Fix static mapping table
+  phy: SPEAr1310/40-miphy: Add binding information
+  SPEAr: misc: Add binding information
+  phy: SPEAr1310/40-miphy: Add phy driver for PCIe and SATA
+  SPEAr13XX: Add binding information for PCIe controller
+  SPEAr13XX: dts: Add PCIe node information
+  pcie: SPEAr13xx: Add designware wrapper support
+
+ .../devicetree/bindings/arm/spear-misc.txt         |    9 +
+ .../devicetree/bindings/pci/spear13xx-pcie.txt     |   14 +
+ .../devicetree/bindings/phy/st-spear1310-miphy.txt |   12 +
+ .../devicetree/bindings/phy/st-spear1340-miphy.txt |   11 +
+ MAINTAINERS                                        |    6 +
+ arch/arm/boot/dts/spear1310-evb.dts                |    4 +
+ arch/arm/boot/dts/spear1310.dtsi                   |   93 +++++-
+ arch/arm/boot/dts/spear1340-evb.dts                |    4 +
+ arch/arm/boot/dts/spear1340.dtsi                   |   30 ++-
+ arch/arm/boot/dts/spear13xx.dtsi                   |    9 +-
+ arch/arm/configs/spear13xx_defconfig               |   16 +
+ arch/arm/mach-spear/Kconfig                        |    4 +
+ arch/arm/mach-spear/include/mach/spear.h           |    4 +-
+ arch/arm/mach-spear/spear1340.c                    |  127 +------
+ arch/arm/mach-spear/spear13xx.c                    |    2 +-
+ drivers/clk/spear/spear1310_clock.c                |    6 +-
+ drivers/clk/spear/spear1340_clock.c                |    2 +-
+ drivers/pci/host/Kconfig                           |    8 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pcie-spear13xx.c                  |  407 ++++++++++++++++++++
+ drivers/phy/Kconfig                                |   12 +
+ drivers/phy/Makefile                               |    2 +
+ drivers/phy/phy-spear1310-miphy.c                  |  274 +++++++++++++
+ drivers/phy/phy-spear1340-miphy.c                  |  300 ++++++++++++++
+ 24 files changed, 1218 insertions(+), 139 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/arm/spear-misc.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
+ create mode 100644 Documentation/devicetree/bindings/phy/st-spear1340-miphy.txt
+ create mode 100644 drivers/pci/host/pcie-spear13xx.c
+ create mode 100644 drivers/phy/phy-spear1310-miphy.c
+ create mode 100644 drivers/phy/phy-spear1340-miphy.c
 
