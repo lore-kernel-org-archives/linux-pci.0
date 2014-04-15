@@ -1,48 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:51368 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752711AbaDCVtS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 17:49:18 -0400
-Received: by mail-ie0-f182.google.com with SMTP id y20so2500005ier.41
-        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 14:49:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1375462795.31262.327.camel@ul30vt.home>
-References: <20130711204439.1701.90503.stgit@bling.home> <20130711210326.1701.56478.stgit@bling.home>
- <20130723223533.GB19765@google.com> <1374621703.15429.98.camel@ul30vt.home>
- <CAErSpo6bcGCjqdxn-bz_vjo+HsAiOxDu=--mD7veEZ9f7k+gyA@mail.gmail.com>
- <1374689548.5208.62.camel@ul30vt.home> <20130724232427.GA9272@google.com>
- <1374775016.2642.116.camel@ul30vt.home> <20130726215435.GB20021@google.com>
- <1375113975.2642.208.camel@ul30vt.home> <CAErSpo7pfCtTm5Cq=VixPTKMpM4VQpDr+ZmS5qMw32z6ABu0xQ@mail.gmail.com>
- <1375137140.2642.349.camel@ul30vt.home> <CAErSpo5+-r3qMca1_Kvt3jJ6OP6Q7--4VmTo3fWJ0y4CPewgEQ@mail.gmail.com>
- <1375462795.31262.327.camel@ul30vt.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 3 Apr 2014 15:48:57 -0600
-Message-ID: <CAErSpo5p+6yt8ZyVuLnJTiKAWZWq9ixQQu78nD-bNFkw4ntWmw@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 1/2] pci: Create PCIe requester ID interface
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Andrew Cooks <acooks@gmail.com>,
-	Don Dutile <ddutile@redhat.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	George Spelvin <linux@horizon.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bill Sumner <bill.sumner@hp.com>
+To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org
+Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com
+Subject: [PATCH 4/8] Update iommu_attach_domain() and its callers
+Date: Tue, 15 Apr 2014 17:09:05 -0600
+Message-Id: <1397603349-30930-5-git-send-email-bill.sumner@hp.com>
+In-Reply-To: <1397603349-30930-1-git-send-email-bill.sumner@hp.com>
+References: <1397603349-30930-1-git-send-email-bill.sumner@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc George]
+ Allow specification of the domain-id for the new domain.
 
-On Fri, Aug 2, 2013 at 10:59 AM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> ...
-> Great!  I'm still trying to figure out how to handle the quirk around
-> Intel PCI-to-PCI bridge on the root complex as just another quirk.  I
-> respin another version once I have that worked out.  Thanks,
 
-Is anything happening here?  These buggy IOMMU/DMA source problems,
-e.g., [1], have been lingering a long time, and I don't know if we're
-stuck because I haven't been giving them enough attention, or if we
-don't really have a good solution yet.
+Signed-off-by: Bill Sumner <bill.sumner@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
 
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=42679
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 4352731..0c00c2d 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1003,7 +1003,8 @@ static struct dmar_domain *alloc_domain(void)
+ }
+ 
+ static int iommu_attach_domain(struct dmar_domain *domain,
+-			       struct intel_iommu *iommu)
++			       struct intel_iommu *iommu,
++			       int domain_number)
+ {
+ 	int num;
+ 	unsigned long ndomains;
+@@ -1013,12 +1014,15 @@ static int iommu_attach_domain(struct dmar_domain *domain,
+ 
+ 	spin_lock_irqsave(&iommu->lock, flags);
+ 
+-	num = find_first_zero_bit(iommu->domain_ids, ndomains);
+-	if (num >= ndomains) {
+-		spin_unlock_irqrestore(&iommu->lock, flags);
+-		printk(KERN_ERR "IOMMU: no free domain ids\n");
+-		return -ENOMEM;
+-	}
++	if (domain_number < 0) {
++		num = find_first_zero_bit(iommu->domain_ids, ndomains);
++		if (num >= ndomains) {
++			spin_unlock_irqrestore(&iommu->lock, flags);
++			pr_err("IOMMU: no free domain ids\n");
++			return -ENOMEM;
++		}
++	} else
++		num = domain_number;
+ 
+ 	domain->id = num;
+ 	set_bit(num, iommu->domain_ids);
+@@ -1629,6 +1633,7 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ 	int bus = 0, devfn = 0;
+ 	int segment;
+ 	int ret;
++	int did = -1;   /* Default to "no domain_id supplied" */
+ 
+ 	domain = find_domain(pdev);
+ 	if (domain)
+@@ -1675,7 +1680,7 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ 	}
+ 	iommu = drhd->iommu;
+ 
+-	ret = iommu_attach_domain(domain, iommu);
++	ret = iommu_attach_domain(domain, iommu, did);
+ 	if (ret) {
+ 		free_domain_mem(domain);
+ 		goto error;
+@@ -1894,7 +1899,7 @@ static int __init si_domain_init(int hw)
+ 		return -EFAULT;
+ 
+ 	for_each_active_iommu(iommu, drhd) {
+-		ret = iommu_attach_domain(si_domain, iommu);
++		ret = iommu_attach_domain(si_domain, iommu, (int) -1);
+ 		if (ret) {
+ 			domain_exit(si_domain);
+ 			return -EFAULT;
+-- 
+Bill Sumner <bill.sumner@hp.com>
+
