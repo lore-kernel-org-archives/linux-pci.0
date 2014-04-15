@@ -1,93 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-Id: <535F6B7F020000780000D2DB@nat28.tlf.novell.com>
-Date: Tue, 29 Apr 2014 08:06:07 +0100
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Bjorn Helgaas" <bhelgaas@google.com>
-Cc: "Aravind Gopalakrishnan" <aravind.gopalakrishnan@amd.com>,
-	<kim.naru@amd.com>,
-	"Suravee Suthikulpanit" <suravee.suthikulpanit@amd.com>,
-	"Myron Stowe" <myron.stowe@gmail.com>,
-	"Robert Richter" <rric@kernel.org>, "x86" <x86@kernel.org>,
-	"Yinghai Lu" <yinghai@kernel.org>,
-	"Thomas Gleixner" <tglx@linutronix.de>,
-	"Daniel J Blueman" <daniel@numascale.com>,
-	"Steffen Persvold" <sp@numascale.com>,
-	"Ingo Molnar" <mingo@redhat.com>,
-	"Myron Stowe" <myron.stowe@redhat.com>,
-	"Borislav Petkov" <bp@suse.de>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"LKML" <linux-kernel@vger.kernel.org>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range
- capabilities
-References: <20140419025308.2408.51252.stgit@amt.stowe>
- <20140419025323.2408.88764.stgit@amt.stowe>
- <20140419135219.GC8109@pd.tnic> <20140420075936.GA19672@pd.tnic>
- <CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com>
- <20140426091031.GA10166@pd.tnic>
- <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
-In-Reply-To: <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:37895 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010AbaDOKIk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 06:08:40 -0400
+Message-ID: <1397556454.4574.13.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH v2 2/6] PCI: tegra: use new OF interrupt mapping when
+ possible
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	Simon Horman <horms@verge.net.au>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
+Date: Tue, 15 Apr 2014 12:07:34 +0200
+In-Reply-To: <20140404165559.GE9007@google.com>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+	 <1394025951-32438-3-git-send-email-l.stach@pengutronix.de>
+	 <20140404165559.GE9007@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 28.04.14 at 22:50, <bhelgaas@google.com> wrote:
->>> > There's a enable_pci_io_ecs() which enables ECS through the NB_CFG MSR
->>> > which is called as part of the notifier *and* there's a PCI write to
->>> > that same bit in pci_enable_pci_io_ecs() which iterates over all NBs.
->>> >
->>> > So, AFAICT, we do it twice and the second time is not needed. Which
->>> > means, you probably can drop pci_enable_pci_io_ecs() completely and use
->>> > solely the notifier?
->>>
->>> It does look as if there is some duplication with respect to setting
->>> MSR_AMD64_NB_CFG's (which is aliased at D18F3x8c [1])
->>> ENABLE_CF8_EXT_CFG enable bit but there are at least a couple of
->>> differences.
->>>
->>> enable_pci_io_ecs() only sets the bit on one NB whereas
->>> pci_enable_pci_io_ecs iterates over all the NBs (as you mentioned
->>> above).  The other difference has something to do with Xen; see the
->>> origin of pci_enable_pci_io_ecs - commit 24d9b70b8.
+Hi Bjorn,
 
-As stated there - Xen Dom0 is running on virtual CPUs, i.e. which
-physical CPU the code gets executed on is unknown, and hence the
-MSR based approach just does not reliably work there.
-
-Of course, with (since then) grown needs to access extended config
-space in Xen itself, this enabling could be moved into the hypervisor.
-Back then the hypervisor didn't have much need for this, so it seemed
-more reasonable (albeit I'm rather certain Borislav is going to disagree
-with this) to augment the Dom0 side code.
-
-> This is probably obvious, but my interest here is to (1) make sure all
-> systems in the field run well (so we need quirks to work around BIOS
-> and other issues), and (2) eliminate the need for kernel changes to
-> support future systems.  So far we seem to be concentrating on (1) and
-> neglecting (2), which means we're always reacting to things that are
-> broken.
+Am Freitag, den 04.04.2014, 10:55 -0600 schrieb Bjorn Helgaas:
+> On Wed, Mar 05, 2014 at 02:25:47PM +0100, Lucas Stach wrote:
+> > This is the recommended method of doing the IRQ
+> > mapping. For old devicetrees we fall back to the
+> > previous practice.
+> > 
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > Acked-by: Arnd Bergmann <arnd@arndb.de>
 > 
-> This I/O ECS thing seems likely to cause future problems.  My
-> understanding (based on sec 2.8 of [1]) is that enable_pci_io_ecs()
-> and pci_enable_pci_io_ecs() are there to enable access to extended
-> config space (offsets 256-4095) via the 0xcf8/0xcfc I/O ports.
+> Applied with Stephen's Tested-by to my pending/host-tegra branch.  I'll
+> rebase and rename it after v3.15-rc1, and I think we can squeeze it into
+> v3.15 shortly after that.  Thanks.
 > 
-> Per sec 4.1.1 of [2], we should be using ECAM (the memory-mapped
-> enhanced configuration mechanism, i.e., MMCONFIG) to access extended
-> config space, and the BIOS should supply an MCFG table.
-> 
-> So why do we need to enable I/O access to ECS on AMD chips at all?  Is
-> this a workaround for a broken BIOS that doesn't supply an MCFG table?
 
-Yes. Rather than leaving such systems entirely without access to
-extended config space, it seemed (and still seems to me) better to
-at least have this fallback in place. If after this discussion you decide
-to drop this code here, it would be nice if you could let us know up
-front, so we can decide whether to add the code to the hypervisor
-instead or - just like on Intel systems - rely on MCFG being properly
-exposed by the firmware.
+Are you still planning to push this into 3.15, or has this slipped to
+3.16?
 
-Jan
+Regards,
+Lucas
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
