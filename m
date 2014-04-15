@@ -1,147 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:43050 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752394AbaDVHFt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Apr 2014 03:05:49 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 05/22] iommu/vt-d: only dynamically allocate domain id for virtual domains
-Date: Tue, 22 Apr 2014 15:07:16 +0800
-Message-Id: <1398150453-28141-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:6270 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751744AbaDOXJe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 19:09:34 -0400
+From: Bill Sumner <bill.sumner@hp.com>
+To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org
+Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com
+Subject: [PATCH 7/8] Add domain-id functions to intel-iommu-kdump.c
+Date: Tue, 15 Apr 2014 17:09:08 -0600
+Message-Id: <1397603349-30930-8-git-send-email-bill.sumner@hp.com>
+In-Reply-To: <1397603349-30930-1-git-send-email-bill.sumner@hp.com>
+References: <1397603349-30930-1-git-send-email-bill.sumner@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Check the same domain id is allocated for si_domain on each IOMMU,
-otherwise the IOTLB flush for si_domain will fail.
+ intel_iommu_did_to_domain_values_entry()
+ intel_iommu_get_dids_from_old_kernel()
 
-Now the rules to allocate and manage domain id are:
-1) For normal and static identity domains, domain id is allocated
-   when creating domain structure. And this id will be written into
-   context entry.
-2) For virtual machine domain, a virtual id is allocated when creating
-   domain. And when binding virtual machine domain to an iommu, a real
-   domain id is allocated on demand and this domain id will be written
-   into context entry. So domain->id for virtual machine domain may be
-   different from the domain id written into context entry(used by
-   hardware).
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Bill Sumner <bill.sumner@hp.com>
 ---
- drivers/iommu/intel-iommu.c |   46 ++++++++++++++++++++++++-------------------
- 1 file changed, 26 insertions(+), 20 deletions(-)
+ drivers/iommu/intel-iommu-kdump.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 29f613e7eea3..0ab0cd236b16 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1551,15 +1551,27 @@ static int iommu_attach_domain(struct dmar_domain *domain,
+diff --git a/drivers/iommu/intel-iommu-kdump.c b/drivers/iommu/intel-iommu-kdump.c
+index 4e653e048..f3c777e 100644
+--- a/drivers/iommu/intel-iommu-kdump.c
++++ b/drivers/iommu/intel-iommu-kdump.c
+@@ -53,6 +53,45 @@ static struct list_head *domain_values_list;
  
- 	spin_lock_irqsave(&iommu->lock, flags);
- 	num = __iommu_attach_domain(domain, iommu);
-+	spin_unlock_irqrestore(&iommu->lock, flags);
- 	if (num < 0)
- 		pr_err("IOMMU: no free domain ids\n");
--	else
--		domain->id = num;
--	spin_unlock_irqrestore(&iommu->lock, flags);
  
- 	return num;
- }
- 
-+static int iommu_attach_vm_domain(struct dmar_domain *domain,
-+				  struct intel_iommu *iommu)
+ /* ========================================================================
++ * Interfaces for when a new domain in the crashdump kernel needs some
++ * values from the panicked kernel's context entries
++ * ------------------------------------------------------------------------
++ */
++
++
++struct domain_values_entry *intel_iommu_did_to_domain_values_entry(int did,
++		struct intel_iommu *iommu)
 +{
-+	int num;
-+	unsigned long ndomains;
++	struct domain_values_entry *dve;	/* iterator */
 +
-+	ndomains = cap_ndoms(iommu->cap);
-+	for_each_set_bit(num, iommu->domain_ids, ndomains)
-+		if (iommu->domains[num] == domain)
-+			return num;
-+
-+	return __iommu_attach_domain(domain, iommu);
++	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link)
++		if (dve->did == did)
++			return dve;
++	return NULL;
 +}
 +
- static void iommu_detach_domain(struct dmar_domain *domain,
- 				struct intel_iommu *iommu)
- {
-@@ -1766,8 +1778,6 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 	struct context_entry *context;
- 	unsigned long flags;
- 	struct dma_pte *pgd;
--	unsigned long num;
--	unsigned long ndomains;
- 	int id;
- 	int agaw;
- 	struct device_domain_info *info = NULL;
-@@ -1792,20 +1802,8 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 	pgd = domain->pgd;
- 
- 	if (domain_type_is_vm_or_si(domain)) {
--		int found = 0;
--
--		/* find an available domain id for this device in iommu */
--		ndomains = cap_ndoms(iommu->cap);
--		for_each_set_bit(num, iommu->domain_ids, ndomains) {
--			if (iommu->domains[num] == domain) {
--				id = num;
--				found = 1;
--				break;
--			}
--		}
--
--		if (found == 0) {
--			id = __iommu_attach_domain(domain, iommu);
-+		if (domain_type_is_vm(domain)) {
-+			id = iommu_attach_vm_domain(domain, iommu);
- 			if (id < 0) {
- 				spin_unlock_irqrestore(&iommu->lock, flags);
- 				pr_err("IOMMU: no free domain ids\n");
-@@ -2281,7 +2279,8 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(0);
- 	if (!domain)
- 		goto error;
--	if (iommu_attach_domain(domain, iommu) < 0) {
-+	domain->id = iommu_attach_domain(domain, iommu);
-+	if (domain->id < 0) {
- 		free_domain_mem(domain);
- 		domain = NULL;
- 		goto error;
-@@ -2442,6 +2441,7 @@ static int __init si_domain_init(int hw)
- 	struct dmar_drhd_unit *drhd;
- 	struct intel_iommu *iommu;
- 	int nid, ret = 0;
-+	bool first = true;
- 
- 	si_domain = alloc_domain(DOMAIN_FLAG_STATIC_IDENTITY);
- 	if (!si_domain)
-@@ -2452,6 +2452,12 @@ static int __init si_domain_init(int hw)
- 		if (ret < 0) {
- 			domain_exit(si_domain);
- 			return -EFAULT;
-+		} else if (first) {
-+			si_domain->id = ret;
-+			first = false;
-+		} else if (si_domain->id != ret) {
-+			domain_exit(si_domain);
-+			return -EFAULT;
- 		}
- 		domain_attach_iommu(si_domain, iommu);
- 	}
++
++/* Mark domain-id's from old kernel as in-use on this iommu so that a new
++ * domain-id is allocated in the case where there is a device in the new kernel
++ * that was not in the old kernel -- and therefore a new domain-id is needed.
++ */
++int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu)
++{
++	struct domain_values_entry *dve;	/* iterator */
++
++	pr_info("IOMMU:%d Domain ids from panicked kernel:\n", iommu->seq_id);
++
++	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link) {
++		set_bit(dve->did, iommu->domain_ids);
++		pr_info("DID did:%d(0x%4.4x)\n", dve->did, dve->did);
++	}
++
++	pr_info("----------------------------------------\n");
++	return 0;
++}
++
++
++/* ========================================================================
+  * Copy iommu translation tables from old kernel into new  kernel.
+  * Entry to this set of functions is: intel_iommu_copy_translation_tables()
+  * ------------------------------------------------------------------------
 -- 
-1.7.10.4
+Bill Sumner <bill.sumner@hp.com>
 
