@@ -1,138 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:50263 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933287AbaDJGcu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 02:32:50 -0400
-Message-ID: <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
-Subject: Re: hpsa driver bug crack kernel down!
-From: Davidlohr Bueso <davidlohr@hp.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>,
-	Baoquan He <bhe@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Date: Wed, 09 Apr 2014 23:32:37 -0700
-In-Reply-To: <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
-References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
-	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
-	 <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike>
-	 <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
-	 <1397087425.9519.67.camel@dabdike>
-	 <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
-	 <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:62969 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751352AbaDOSaw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 14:30:52 -0400
+Received: by mail-ig0-f179.google.com with SMTP id hl10so103593igb.12
+        for <linux-pci@vger.kernel.org>; Tue, 15 Apr 2014 11:30:51 -0700 (PDT)
+Date: Tue, 15 Apr 2014 12:30:48 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	Simon Horman <horms@verge.net.au>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
+Subject: Re: [PATCH v2 2/6] PCI: tegra: use new OF interrupt mapping when
+ possible
+Message-ID: <20140415182651.GA17721@google.com>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+ <1394025951-32438-3-git-send-email-l.stach@pengutronix.de>
+ <20140404165559.GE9007@google.com>
+ <1397556454.4574.13.camel@weser.hi.pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1397556454.4574.13.camel@weser.hi.pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-04-09 at 22:03 -0600, Bjorn Helgaas wrote:
-> [+cc Joerg, iommu list]
+On Tue, Apr 15, 2014 at 12:07:34PM +0200, Lucas Stach wrote:
+> Hi Bjorn,
 > 
-> On Wed, Apr 9, 2014 at 6:19 PM, Davidlohr Bueso <davidlohr@hp.com> wrote:
-> > On Wed, 2014-04-09 at 16:50 -0700, James Bottomley wrote:
-> >> On Wed, 2014-04-09 at 16:40 -0700, Davidlohr Bueso wrote:
-> >> > On Wed, 2014-04-09 at 16:10 -0700, James Bottomley wrote:
-> >> > > On Wed, 2014-04-09 at 16:08 -0700, James Bottomley wrote:
-> >> > > > [+linux-scsi]
-> >> > > > On Wed, 2014-04-09 at 15:49 -0700, Davidlohr Bueso wrote:
-> >> > > > > On Wed, 2014-04-09 at 10:39 +0800, Baoquan He wrote:
-> >> > > > > > Hi,
-> >> > > > > >
-> >> > > > > > The kernel is 3.14.0+ which is pulled just now.
-> >> > > > >
-> >> > > > > Cc'ing more people.
-> >> > > > >
-> >> > > > > While the hpsa driver appears to be involved in some way, I'm sure if
-> >> > > > > this is a related issue, but as of today's pull I'm getting another
-> >> > > > > problem that causes my DL980 not to come up.
-> >> > > > >
-> >> > > > > *Massive* amounts of:
-> >> > > > >
-> >> > > > > DMAR:[fault reason 02] Present bit in context entry is clear
-> >> > > > > dmar: DRHD: handling fault status reg 602
-> >> > > > > dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7f61e000
-> >> > > > >
-> >> > > > > Then:
-> >> > > > >
-> >> > > > > hpsa 0000:03:00.0: Controller lockup detected: 0xffff0000
-> >> > > > > ...
-> >> > > > > Workqueue: events hpsa_monitor_ctlr_worker [hpsa]
-> >> > > > > ...
-> >> > > > >
-> >> > > > > Screenshot of the actual LOCKUP:
-> >> > > > > http://stgolabs.net/hpsa-hard-lockup-3.14+.png
-> >> > > > >
-> >> > > > > While I haven't bisected, things worked fine until at least until commit
-> >> > > > > 39de65aa2c3e (April 2nd).
-> >> > > > >
-> >> > > > > Any ideas?
-> >> > > >
-> >> > > > Well, it's either a DMA remapping issue or a hpsa one.  Your assertion
-> >> > > > that everything worked fine until 39de65aa2c3e would tend to vindicate
-> >> > > > hpsa,
-> >> >
-> >> > Hmm here you mean DMA, right?
-> >>
-> >> No, it vindicates the hpsa changes ... they don't seem to be causing
-> >> problems until something goes wrong with dma remapping.
-> >>
-> >> > > because all the hpsa changes went in before that under
-> >> > > Missing crucial info:
-> >> > >
-> >> > > commit 1a0b6abaea78f73d9bc0a2f6df2d9e4c917cade1
-> >> > >
-> >> > > > Merge: 3e75c6d b2bff6c
-> >> > > > Author: Linus Torvalds <torvalds@linux-foundation.org>
-> >> > > > Date:   Tue Apr 1 18:49:04 2014 -0700
-> >> > > >
-> >> > > >     Merge tag 'scsi-misc' of
-> >> > > > git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi
-> >> > > >
-> >> > > > can you revalidate that this commit works OK just to make sure?
-> >> >
-> >> > Ok so I don't see those DMA messages and system starts just fine. I'm
-> >> > thinking perhaps something broke after the IO mmu stuff in commit
-> >> > 3f583bc21977a608908b83d03ee2250426a5695c... could this be indirectly
-> >> > causing the CPU stalls and just blame hpsa in the path as a side effect?
-> >> >
-> >> > /me goes out to try the commit.
-> >>
-> >> That's my guess.  The DMAR messages are DMA remapping issues caused in
-> >> the IOMMU.  If I had to guess, I'd say the DMAR fault message is
-> >> indicating the IOMMU is calling for a mapping address before it can
-> >> satisfy the driver read request, which is causing the hang apparently in
-> >> the hpsa driver.
-> >>
-> >> I've added linux-pci to the cc; I think they deal with iommu issues on
-> >> x86.
-> >
-> > So that merge commit appears to be the culprit, I see both the DMA
-> > messages and the lockup blaming hpsa...
+> Am Freitag, den 04.04.2014, 10:55 -0600 schrieb Bjorn Helgaas:
+> > On Wed, Mar 05, 2014 at 02:25:47PM +0100, Lucas Stach wrote:
+> > > This is the recommended method of doing the IRQ
+> > > mapping. For old devicetrees we fall back to the
+> > > previous practice.
+> > > 
+> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > > Acked-by: Arnd Bergmann <arnd@arndb.de>
+> > 
+> > Applied with Stephen's Tested-by to my pending/host-tegra branch.  I'll
+> > rebase and rename it after v3.15-rc1, and I think we can squeeze it into
+> > v3.15 shortly after that.  Thanks.
+> > 
 > 
-> My understanding so far (please correct me if I'm wrong):
-> 
-> 39de65aa2c3e OK ("Merge branch 'i2c/for-next'")
-> 1a0b6abaea78 OK ("Merge tag 'scsi-misc'")
-> 3f583bc21977 BAD ("Merge tag 'iommu-updates-v3.15'")
+> Are you still planning to push this into 3.15, or has this slipped to
+> 3.16?
 
-Yes, specifically (finally done bisecting):
+Yes, I'm hoping to put them in v3.15.  I assume these actually
+fix something, e.g., we need these changes to boot with new devicetrees, or
+something?
 
-commit 2e45528930388658603ea24d49cf52867b928d3e
-Author: Jiang Liu <jiang.liu@linux.intel.com>
-Date:   Wed Feb 19 14:07:36 2014 +0800
+The changelogs don't make it clear that these are fixes, and I want to heed
+Linus' guidance: "Anyway, because -rc1 is already pretty darn big, I do
+*not* want to hear about 'sorry this missed the window, can I still sneak
+in'.  Fixes only."
 
-    iommu/vt-d: Unify the way to process DMAR device scope array
-    
-    Now we have a PCI bus notification based mechanism to update DMAR
-    device scope array, we could extend the mechanism to support boot
-    time initialization too, which will help to unify and simplify
-    the implementation.
-    
-    Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-    Signed-off-by: Joerg Roedel <joro@8bytes.org>
+I should have applied these sooner to make the merge window; I apologize
+for that.  Anyway, if you outline what these fix, I'll update the
+changelogs in my tree.
 
+Bjorn
