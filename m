@@ -1,95 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55443 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756235AbaDHXmZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Apr 2014 19:42:25 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-	bhelgaas@google.com
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 1/2] PCI: Device driver function reset notification
-Date: Tue,  8 Apr 2014 17:42:20 -0600
-Message-Id: <1397000541-1085-1-git-send-email-keith.busch@intel.com>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:57081 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750960AbaDOLuv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 07:50:51 -0400
+From: Mohit Kumar <mohit.kumar@st.com>
+To: <spear-devel@list.st.com>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Viresh Kumar <viresh.linux@gmail.com>
+Subject: [PATCH V8 6/9] SPEAr13XX: Add binding information for PCIe controller
+Date: Tue, 15 Apr 2014 17:19:48 +0530
+Message-ID: <6d35ffd2873453be8ccba8a53062f1830e367e5f.1397555158.git.mohit.kumar@st.com>
+In-Reply-To: <cover.1397555158.git.mohit.kumar@st.com>
+References: <cover.1397555158.git.mohit.kumar@st.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A user can issue a pci function level reset to a device using sysfs entry
-/sys/bus/pci/devices/.../reset. A kernel driver handling the pci device
-might like to know this reset is about to occur and when the reset attempt
-completes. This is so the driver has a chance to take appropriate device
-specific actions; for example, it may need to quiesce before the reset,
-and reinitialize the device after.
+From: Pratyush Anand <pratyush.anand@st.com>
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+SPEAr13XX uses designware PCIe controller. This patch adds information
+for the PCIe binding properties which are specific to SPEAr13XX SoC
+series.
+
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Mohit Kumar <mohit.kumar@st.com>
+Cc: Viresh Kumar <viresh.linux@gmail.com>
+Cc: spear-devel@list.st.com
+Cc: devicetree@vger.kernel.org
 ---
- drivers/pci/pci.c   |   13 +++++++++++++
- include/linux/pci.h |    3 +++
- 2 files changed, 16 insertions(+)
+ .../devicetree/bindings/pci/spear13xx-pcie.txt     |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index fdbc294..cb24bbe 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3320,6 +3320,15 @@ static int pci_dev_reset(struct pci_dev *dev, int probe)
- 
- 	return rc;
- }
+diff --git a/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt b/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
+new file mode 100644
+index 0000000..49ea76d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
+@@ -0,0 +1,14 @@
++SPEAr13XX PCIe DT detail:
++================================
 +
-+static void pci_reset_notify(struct pci_dev *dev, bool prepare)
-+{
-+	const struct pci_error_handlers *err_handler =
-+			dev->driver ? dev->driver->err_handler : NULL;
-+	if (err_handler && err_handler->reset_notify)
-+		err_handler->reset_notify(dev, prepare);
-+}
++SPEAr13XX uses synopsis designware PCIe controller and ST MiPHY as phy
++controller.
 +
- /**
-  * __pci_reset_function - reset a PCI device function
-  * @dev: PCI device to reset
-@@ -3408,11 +3417,13 @@ int pci_reset_function(struct pci_dev *dev)
- 	if (rc)
- 		return rc;
- 
-+	pci_reset_notify(dev, true);
- 	pci_dev_save_and_disable(dev);
- 
- 	rc = pci_dev_reset(dev, 0);
- 
- 	pci_dev_restore(dev);
-+	pci_reset_notify(dev, false);
- 
- 	return rc;
- }
-@@ -3432,6 +3443,7 @@ int pci_try_reset_function(struct pci_dev *dev)
- 	if (rc)
- 		return rc;
- 
-+	pci_reset_notify(dev, true);
- 	pci_dev_save_and_disable(dev);
- 
- 	if (pci_dev_trylock(dev)) {
-@@ -3441,6 +3453,7 @@ int pci_try_reset_function(struct pci_dev *dev)
- 		rc = -EAGAIN;
- 
- 	pci_dev_restore(dev);
-+	pci_reset_notify(dev, false);
- 
- 	return rc;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33aa2ca..d82dd3f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -603,6 +603,9 @@ struct pci_error_handlers {
- 	/* PCI slot has been reset */
- 	pci_ers_result_t (*slot_reset)(struct pci_dev *dev);
- 
-+	/* PCI function reset prepare or completed */
-+	void (*reset_notify)(struct pci_dev *dev, bool prepare);
++Required properties:
++- compatible : should be "st,spear1340-pcie", "snps,dw-pcie".
++- phys		    : phandle to phy node associated with pcie controller
++- phy-names	    : must be "pcie-phy"
++- All other definitions as per generic PCI bindings
 +
- 	/* Device driver may resume normal operations */
- 	void (*resume)(struct pci_dev *dev);
- };
++ Optional properties:
++- st,pcie-is-gen1 indicates that forced gen1 initialization is needed.
 -- 
-1.7.10.4
+1.7.0.1
 
