@@ -1,100 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:34855 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751867AbaDAQpF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Apr 2014 12:45:05 -0400
-Date: Tue, 1 Apr 2014 09:47:25 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: stuart.yoder@freescale.com, kvm@vger.kernel.org,
-	jan.kiszka@siemens.com, will.deacon@arm.com,
-	linux-kernel@vger.kernel.org, mhocko@suse.cz, bhelgaas@google.com,
-	Varun.Sethi@freescale.com, kvmarm@lists.cs.columbia.edu,
-	rafael.j.wysocki@intel.com, agraf@suse.de,
-	linux-pci@vger.kernel.org, linux@roeck-us.net,
-	konrad.wilk@oracle.com, d.kasatkin@samsung.com, tj@kernel.org,
-	scottwood@freescale.com, a.motakis@virtualopensystems.com,
-	tech@virtualopensystems.com, Bharat.Bhushan@freescale.com,
-	toshi.kani@hp.com, kim.phillips@linaro.org,
-	a.rigo@virtualopensystems.com, iommu@lists.linux-foundation.org,
-	joe@perches.com, christoffer.dall@linaro.org
-Subject: Re: [RFC PATCH] PCI: Introduce new device binding path using
- pci_dev.driver_override
-Message-ID: <20140401164725.GA4649@kroah.com>
-References: <20140401161851.18815.31108.stgit@bling.home>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:53077 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751111AbaDOLu4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 07:50:56 -0400
+From: Mohit Kumar <mohit.kumar@st.com>
+To: <spear-devel@list.st.com>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Viresh Kumar <viresh.linux@gmail.com>
+Subject: [PATCH V8 7/9] SPEAr13XX: dts: Add PCIe node information
+Date: Tue, 15 Apr 2014 17:19:49 +0530
+Message-ID: <fa5d8aabf3c6a6770462c33426787531cb69bd21.1397555158.git.mohit.kumar@st.com>
+In-Reply-To: <cover.1397555158.git.mohit.kumar@st.com>
+References: <cover.1397555158.git.mohit.kumar@st.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140401161851.18815.31108.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 01, 2014 at 10:28:54AM -0600, Alex Williamson wrote:
-> The driver_override field allows us to specify the driver for a device
-> rather than relying on the driver to provide a positive match of the
-> device.  This shortcuts the existing process of looking up the vendor
-> and device ID, adding them to the driver new_id, binding the device,
-> then removing the ID, but it also provides a couple advantages.
-> 
-> First, the above process allows the driver to bind to any device
-> matching the new_id for the window where it's enabled.  This is often
-> not desired, such as the case of trying to bind a single device to a
-> meta driver like pci-stub or vfio-pci.  Using driver_override we can
-> do this deterministically using:
-> 
-> echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
-> echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-> echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
-> 
-> Previously we could not invoke drivers_probe after adding a device
-> to new_id for a driver as we get non-deterministic behavior whether
-> the driver we intend or the standard driver will claim the device.
-> Now it becomes a deterministic process, only the driver matching
-> driver_override will probe the device.
-> 
-> To return the device to the standard driver, we simply clear the
-> driver_override and reprobe the device, ex:
-> 
-> echo > /sys/bus/pci/devices/0000:03:00.0/preferred_driver
-> echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-> echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
-> 
-> Another advantage to this approach is that we can specify a driver
-> override to force a specific binding or prevent any binding.  For
-> instance when an IOMMU group is exposed to userspace through VFIO
-> we require that all devices within that group are owned by VFIO.
-> However, devices can be hot-added into an IOMMU group, in which case
-> we want to prevent the device from binding to any driver (preferred
-> driver = "none") or perhaps have it automatically bind to vfio-pci.
-> With driver_override it's a simple matter for this field to be set
-> internally when the device is first discovered to prevent driver
-> matches.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
-> 
-> Apologies for the exceptionally long cc list, this is a follow-up to
-> Stuart's "Subject: mechanism to allow a driver to bind to any device"
-> thread.  This is effectively a v2 of the proof-of-concept patch I
-> posted in that thread.  This version changes to use a dummy id struct
-> to return on an "override" match, which removes the collateral damage
-> and greatly simplifies the patch.  This feels fairly well baked for
-> PCI and I would expect that platform drivers could do a similar
-> implementation.  From there perhaps we can discuss whether there's
-> any advantage to placing driver_override on struct device.  The logic
-> for incorporating it into the match still needs to happen per bus
-> driver, so it might only contribute to consistency of the show/store
-> sysfs attributes to move it up to struct device.  Please comment.
-> Thanks,
-> 
-> Alex
-> 
->  drivers/pci/pci-driver.c |   25 ++++++++++++++++++++++---
->  drivers/pci/pci-sysfs.c  |   40 ++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h      |    1 +
->  3 files changed, 63 insertions(+), 3 deletions(-)
+From: Pratyush Anand <pratyush.anand@st.com>
 
-No Documentation/ABI/ update to reflect the ABI you are creating?
+SPEAr1310 and SPEAr1340 supports 3 and 1 PCIe controller respectively.
+These controllers are based on synopsys designware controller.
 
-thanks,
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Mohit Kumar <mohit.kumar@st.com>
+Cc: Viresh Kumar <viresh.linux@gmail.com>
+Cc: spear-devel@list.st.com
+Cc: linux-arm-kernel@lists.infradead.org
+---
+ arch/arm/boot/dts/spear1310.dtsi |   48 ++++++++++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/spear1340.dtsi |   16 ++++++++++++
+ 2 files changed, 64 insertions(+), 0 deletions(-)
 
-greg k-h
+diff --git a/arch/arm/boot/dts/spear1310.dtsi b/arch/arm/boot/dts/spear1310.dtsi
+index 64e7dd5..53f73a2 100644
+--- a/arch/arm/boot/dts/spear1310.dtsi
++++ b/arch/arm/boot/dts/spear1310.dtsi
+@@ -83,6 +83,54 @@
+ 			status = "disabled";
+ 		};
+ 
++		pcie0: pcie@b1000000 {
++			compatible = "st,spear1340-pcie", "snps,dw-pcie";
++			reg = <0xb1000000 0x4000>;
++			interrupts = <0 68 0x4>;
++			interrupt-map-mask = <0 0 0 0>;
++			interrupt-map = <0x0 0 &gic 0 68 0x4>;
++			num-lanes = <1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
++				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
++				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
++			status = "disabled";
++		};
++
++		pcie1: pcie@b1800000 {
++			compatible = "st,spear1340-pcie", "snps,dw-pcie";
++			reg = <0xb1800000 0x4000>;
++			interrupts = <0 69 0x4>;
++			interrupt-map-mask = <0 0 0 0>;
++			interrupt-map = <0x0 0 &gic 0 69 0x4>;
++			num-lanes = <1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			ranges = <0x00000800 0 0x90000000 0x90000000 0 0x00020000   /* configuration space */
++				0x81000000 0 0  0x90020000 0 0x00010000   /* downstream I/O */
++				0x82000000 0 0x90030000 0x90030000 0 0x0ffd0000>; /* non-prefetchable memory */
++			status = "disabled";
++		};
++
++		pcie2: pcie@b4000000 {
++			compatible = "st,spear1340-pcie", "snps,dw-pcie";
++			reg = <0xb4000000 0x4000>;
++			interrupts = <0 70 0x4>;
++			interrupt-map-mask = <0 0 0 0>;
++			interrupt-map = <0x0 0 &gic 0 70 0x4>;
++			num-lanes = <1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			ranges = <0x00000800 0 0xc0000000 0xc0000000 0 0x00020000   /* configuration space */
++				0x81000000 0 0	 0xc0020000 0 0x00010000   /* downstream I/O */
++				0x82000000 0 0xc0030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
++			status = "disabled";
++		};
++
+ 		gmac1: eth@5c400000 {
+ 			compatible = "st,spear600-gmac";
+ 			reg = <0x5c400000 0x8000>;
+diff --git a/arch/arm/boot/dts/spear1340.dtsi b/arch/arm/boot/dts/spear1340.dtsi
+index b8b32c7..bc492f5 100644
+--- a/arch/arm/boot/dts/spear1340.dtsi
++++ b/arch/arm/boot/dts/spear1340.dtsi
+@@ -48,6 +48,22 @@
+ 			status = "disabled";
+ 		};
+ 
++		pcie0: pcie@b1000000 {
++			compatible = "st,spear1340-pcie", "snps,dw-pcie";
++			reg = <0xb1000000 0x4000>;
++			interrupts = <0 68 0x4>;
++			interrupt-map-mask = <0 0 0 0>;
++			interrupt-map = <0x0 0 &gic 0 68 0x4>;
++			num-lanes = <1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
++				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
++				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
++			status = "disabled";
++		};
++
+ 		i2s-play@b2400000 {
+ 			compatible = "snps,designware-i2s";
+ 			reg = <0xb2400000 0x10000>;
+-- 
+1.7.0.1
+
