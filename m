@@ -1,83 +1,226 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5345555A.20108@pobox.com>
-Date: Wed, 09 Apr 2014 10:12:42 -0400
-From: Mark Lord <mlord@pobox.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:4560 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750951AbaDOMHB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 08:07:01 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s3FC4aGm031621
+	for <linux-pci@vger.kernel.org>; Tue, 15 Apr 2014 05:07:01 -0700
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1k6kmxkxky-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 15 Apr 2014 05:07:00 -0700
+Content-Type: multipart/mixed;
+	boundary="_000_262CB373A6D1F14F9B81E82F74F77D5A46F910CFavmb2qlogicorg_"
+From: Shahed Shaikh <shahed.shaikh@qlogic.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+CC: Dept-HSG Linux NIC Dev <Dept-HSGLinuxNICDev@qlogic.com>,
+	netdev <netdev@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] qlcnic: Fix MSI-X initialization code
+Date: Tue, 15 Apr 2014 12:06:58 +0000
+Message-ID: <262CB373A6D1F14F9B81E82F74F77D5A46F910CF@avmb2.qlogic.org>
+References: <1397554634-26795-1-git-send-email-agordeev@redhat.com>
+In-Reply-To: <1397554634-26795-1-git-send-email-agordeev@redhat.com>
 MIME-Version: 1.0
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Theodore Ts'o" <tytso@mit.edu>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: driver skip pci_set_master, fix it? No.
-References: <5344251D.7040805@pobox.com>	 <CAErSpo6KuYLaoEsxR4jJQ98P23kNEMzMcu_-RyM3nWd6YRxgag@mail.gmail.com>	 <5344679E.1030008@pobox.com> <1397011868.3671.94.camel@pasglop> <53454660.5090603@pobox.com>
-In-Reply-To: <53454660.5090603@pobox.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14-04-09 09:08 AM, Mark Lord wrote:
-> On 14-04-08 10:51 PM, Benjamin Herrenschmidt wrote:
->> On Tue, 2014-04-08 at 17:18 -0400, Mark Lord wrote:
->>>> I assume you're talking about the one added by cf3e1feba7f9 ("PCI:
->>>> Workaround missing pci_set_master in pci drivers"), but as far as I
->>>> can tell, it only calls pci_set_master() for *bridge* devices.  What
->>>> am I missing?  Is pci_set_master() being called for your endpoint?
->>>> What path is that?
->>>
->>> Yes, it is being called during execution of the _probe() function in my driver,
->>> as evidenced by the annoying (and wrong) message it produces.
->>>
->>> Next time I've got the hardware at hand, I'll put a "dump_stack()" into there
->>> to see the exact calling path.
->>
->> Note that one of the reason we want to do it early on bridges is that without it,
->> we may also not get the PCIe error messages.
-> 
-> Sure, for bridges.
-> 
-> I'll get a stack trace later today, but what I suspect is happening
-> is that this multi-function card is being treated by the PCI layers
-> as a "bridge" for purposes of the multiple virtual functions it implements.
-> 
-> We will probably need to distinguish this kind of device from real bridges here.
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F910CFavmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Here's the call trace, all the way back to k7_probe(),
-the driver's PCI "probe" function, and beyond:
+> -----Original Message-----
+> From: Alexander Gordeev [mailto:agordeev@redhat.com]
+> Sent: Tuesday, April 15, 2014 3:07 PM
+> To: linux-kernel
+> Cc: Alexander Gordeev; Shahed Shaikh; Dept-HSG Linux NIC Dev; netdev;
+> linux-pci
+> Subject: [PATCH] qlcnic: Fix MSI-X initialization code
+>=20
+> Function qlcnic_setup_tss_rss_intr() might enter endless loop in case
+> pci_enable_msix() contiguously returns a positive number of MSI-Xs that
+> could have been allocated.
+> Besides, the function contains 'err =3D -EIO;' assignment that never coul=
+d be
+> reached. This update fixes the aforementioned issues.
+>=20
+> Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
+> Cc: Dept-HSGLinuxNICDev@qlogic.com
+> Cc: netdev@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+>=20
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 
-[   30.481454] k7: loading driver version 0.80
-[   30.485561] pcieport 0000:00:1c.0: driver skip pci_set_master, fix it!
-[   30.485580] CPU: 2 PID: 4401 Comm: insmod Tainted: G           O 3.12.14 #3
-[   30.485583] Hardware name: Supermicro X9SCI/X9SCA/X9SCI/X9SCA, BIOS 2.0b 09/17/2012
-[   30.485590]  0000000000000300 ffff88041c11b9b8 ffffffff8156c40b 0000000000000000
-[   30.485598]  ffff88041d2b7000 ffff88041c11b9d8 ffffffff812dc493 0000000000000300
-[   30.485603]  ffff88041d399000 ffff88041c11ba08 ffffffff812dc50d 0000000000001000
-[   30.485607] Call Trace:
-[   30.485616]  [<ffffffff8156c40b>] dump_stack+0x4f/0x84
-[   30.485622]  [<ffffffff812dc493>] pci_enable_bridge+0x93/0xa0
-[   30.485627]  [<ffffffff812dc50d>] pci_enable_device_flags+0x6d/0xe0
-[   30.485631]  [<ffffffff812dc58e>] pci_enable_device+0xe/0x10
-[   30.485641]  [<ffffffffa0469c0d>] k7_enable_device+0x3d/0xa30 [k7]
-[   30.485649]  [<ffffffffa0462d72>] ? k7_devmem_alloc+0x32/0x140 [k7]
-[   30.485654]  [<ffffffff81572ab6>] ? _raw_spin_lock+0x16/0x40
-[   30.485658]  [<ffffffff81572721>] ? _raw_spin_unlock+0x11/0x40
-[   30.485666]  [<ffffffffa046aee8>] k7_probe+0x458/0x630 [k7]
+Acked-by: Shahed Shaikh <shahed.shaikh@qlogic.com>
 
-[   30.485682]  [<ffffffff812de3d6>] local_pci_probe+0x46/0x80
-[   30.485696]  [<ffffffff812de6f1>] pci_device_probe+0x101/0x110
-[   30.485702]  [<ffffffff813941d6>] driver_probe_device+0x76/0x240
-[   30.485705]  [<ffffffff8139443b>] __driver_attach+0x9b/0xa0
-[   30.485709]  [<ffffffff813943a0>] ? driver_probe_device+0x240/0x240
-[   30.485713]  [<ffffffff81392385>] bus_for_each_dev+0x55/0x90
-[   30.485717]  [<ffffffff81393ce9>] driver_attach+0x19/0x20
-[   30.485720]  [<ffffffff81393814>] bus_add_driver+0x104/0x290
-[   30.485724]  [<ffffffff81394abf>] driver_register+0x5f/0xf0
-[   30.485728]  [<ffffffff812dd3f6>] __pci_register_driver+0x46/0x50
-[   30.485736]  [<ffffffffa024c16e>] k7_init+0x16e/0x1000 [k7]
-[   30.485746]  [<ffffffffa024c000>] ? 0xffffffffa024bfff
-[   30.485765]  [<ffffffff81000302>] do_one_initcall+0x112/0x160
-[   30.485779]  [<ffffffff81038143>] ? set_memory_nx+0x43/0x50
-[   30.485785]  [<ffffffff810abbe1>] load_module+0x1e51/0x2480
-[   30.485789]  [<ffffffff810a8b10>] ? show_initstate+0x50/0x50
-[   30.485794]  [<ffffffff810ac2ae>] SyS_init_module+0x9e/0xc0
-[   30.485799]  [<ffffffff8157389b>] tracesys+0xdd/0xe
+Thanks,
+Shahed
+> ---
+>  drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |   28 ++++++++++++----=
+---
+> --
+>  1 files changed, 16 insertions(+), 12 deletions(-)
+>=20
+> diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> index 309d056..2e615d5 100644
+> --- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> +++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> @@ -670,7 +670,7 @@ int qlcnic_setup_tss_rss_intr(struct qlcnic_adapter
+> *adapter)
+>  	else
+>  		num_msix +=3D adapter->drv_tx_rings;
+>=20
+> -	if (adapter->drv_rss_rings  > 0)
+> +	if (adapter->drv_rss_rings > 0)
+>  		num_msix +=3D adapter->drv_rss_rings;
+>  	else
+>  		num_msix +=3D adapter->drv_sds_rings;
+> @@ -686,19 +686,15 @@ int qlcnic_setup_tss_rss_intr(struct qlcnic_adapter
+> *adapter)
+>  			return -ENOMEM;
+>  	}
+>=20
+> -restore:
+>  	for (vector =3D 0; vector < num_msix; vector++)
+>  		adapter->msix_entries[vector].entry =3D vector;
+>=20
+> +restore:
+>  	err =3D pci_enable_msix(pdev, adapter->msix_entries, num_msix);
+> -	if (err =3D=3D 0) {
+> -		adapter->ahw->num_msix =3D num_msix;
+> -		if (adapter->drv_tss_rings > 0)
+> -			adapter->drv_tx_rings =3D adapter->drv_tss_rings;
+> +	if (err > 0) {
+> +		if (!adapter->drv_tss_rings && !adapter->drv_rss_rings)
+> +			return -ENOSPC;
+>=20
+> -		if (adapter->drv_rss_rings > 0)
+> -			adapter->drv_sds_rings =3D adapter->drv_rss_rings;
+> -	} else {
+>  		netdev_info(adapter->netdev,
+>  			    "Unable to allocate %d MSI-X vectors, Available
+> vectors %d\n",
+>  			    num_msix, err);
+> @@ -716,12 +712,20 @@ restore:
+>  			    "Restoring %d Tx, %d SDS rings for total %d
+> vectors.\n",
+>  			    adapter->drv_tx_rings, adapter->drv_sds_rings,
+>  			    num_msix);
+> -		goto restore;
+>=20
+> -		err =3D -EIO;
+> +		goto restore;
+> +	} else if (err < 0) {
+> +		return err;
+>  	}
+>=20
+> -	return err;
+> +	adapter->ahw->num_msix =3D num_msix;
+> +	if (adapter->drv_tss_rings > 0)
+> +		adapter->drv_tx_rings =3D adapter->drv_tss_rings;
+> +
+> +	if (adapter->drv_rss_rings > 0)
+> +		adapter->drv_sds_rings =3D adapter->drv_rss_rings;
+> +
+> +	return 0;
+>  }
+>=20
+>  int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
+> --
+> 1.7.7.6
+
+
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F910CFavmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+kiwiVTvjHMBvQYcgJc8cYDQEpARDIUF2JZE78ocjZ9a11hFcXG4i0y+/1DmVNiiQRMGw2X8CN2mA
+y5hgarAr3MAyLCFxfwF3q7/Z79TQUt3ziMHWElTz23HWIVNEBfCL5KOyGJD/AZADINjh1+1CINkf
+1Ay6z/+Iwq7JlovkH9pfsL+U1FnA/9Vh3eXGj7NaRMnEP+wfvdv/z6ax5qUwv0/FPETBn/+hD/+K
+FvUPjPe0H7Uvvb+3j8mP/7/s5d/M37zv/EX8H8iP/j///0/njwFfzh8Df58GpJCS2f/2v2JBmVk7
+2ps/nEKdByiQPHUzarDqZ2cvI8ExLmo3FFE2Wvx9F8EV0AAAHwBCAAEAAAAcAAAAUwBoAGEAaABl
+AGQAIABTAGgAYQBpAGsAaAAAAB8AZQABAAAAMgAAAHMAaABhAGgAZQBkAC4AcwBoAGEAaQBrAGgA
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAA
+AHAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBTAGgAYQBoAGUAZAAgAFMAaABhAGkAawBoAAAA
+UwBNAFQAUAAAAHMAaABhAGgAZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAHwACXQEAAAAyAAAAcwBoAGEAaABlAGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAAAB8A5V8BAAAAOgAAAHMAaQBwADoAcwBoAGEAaABlAGQALgBzAGgAYQBpAGsAaABA
+AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AGgwBAAAAHAAAAFMAaABhAGgAZQBkACAAUwBoAGEA
+aQBrAGgAAAAfAB8MAQAAADIAAABzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAABwAAAAAAAAAIEr
+H6S+oxAZnW4A3QEPVAIAAACAUwBoAGEAaABlAGQAIABTAGgAYQBpAGsAaAAAAFMATQBUAFAAAABz
+AGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAA
+MgAAAHMAaABhAGgAZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAf
+APg/AQAAABwAAABTAGgAYQBoAGUAZAAgAFMAaABhAGkAawBoAAAAHwAjQAEAAAAyAAAAcwBoAGEA
+aABlAGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAA
+AFMATQBUAFAAAAAAAAIB+T8BAAAAcAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAaABhAGgA
+ZQBkACAAUwBoAGEAaQBrAGgAAABTAE0AVABQAAAAcwBoAGEAaABlAGQALgBzAGgAYQBpAGsAaABA
+AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADIAAABzAGgAYQBoAGUAZAAuAHMAaABhAGkA
+awBoAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAw
+QAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6
+AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA0McSTGrqAU+tAzwE1GP1vgMAFwABAAAAQAA5AABdQzOj
+WM8BQAAIMAhJcDOjWM8BCwApAAAAAAALACMAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4A
+AABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAA
+gAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAGQAAABSAEUAOgAgAFsAUABBAFQA
+QwBIAF0AIABxAGwAYwBuAGkAYwA6ACAARgBpAHgAIABNAFMASQAtAFgAIABpAG4AaQB0AGkAYQBs
+AGkAegBhAHQAaQBvAG4AIABjAG8AZABlAAAAHwA9AAEAAAAKAAAAUgBFADoAIAAAAAAAAwA2AAAA
+AAADAC4AAAAAAB8AQhABAAAAcAAAADwAMQAzADkANwA1ADUANAA2ADMANAAtADIANgA3ADkANQAt
+ADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBhAGcAbwByAGQAZQBlAHYAQAByAGUA
+ZABoAGEAdAAuAGMAbwBtAD4AAAACAXEAAQAAABsAAAABAc9Yjg4+aPMU3w7DRpNM2Cebz8lpmxKT
+0sAAHwBwAAEAAABcAAAAWwBQAEEAVABDAEgAXQAgAHEAbABjAG4AaQBjADoAIABGAGkAeAAgAE0A
+UwBJAC0AWAAgAGkAbgBpAHQAaQBhAGwAaQB6AGEAdABpAG8AbgAgAGMAbwBkAGUAAAAfADUQAQAA
+AHgAAAA8ADIANgAyAEMAQgAzADcAMwBBADYARAAxAEYAMQA0AEYAOQBCADgAMQBFADgAMgBGADcA
+NABGADcANwBEADUAQQA0ADYARgA5ADEAMABDAEYAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAu
+AG8AcgBnAD4AAAAfADkQAQAAAHAAAAA8ADEAMwA5ADcANQA1ADQANgAzADQALQAyADYANwA5ADUA
+LQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AYQBnAG8AcgBkAGUAZQB2AEAAcgBl
+AGQAaABhAHQALgBjAG8AbQA+AAAAAwDeP59OAAALAACACCAGAAAAAADAAAAAAAAARgAAAAADhQAA
+AAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAGFAAAAAAAAAwCAEP////9AAAcw6F4SMqNYzwEL
+AAIAAQAAAAMAJgAAAAAACwArAAAAAAACAUcAAQAAAC8AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFW
+TUIyLTE0MDQxNTEyMDY1OFotMTU1NDY2AAACARAwAQAAAEYAAAAAAAAArzyCpH4RikG4uh7fmKWN
+YAcAWoRvvvW+/0639oZ+uI4ZfAAaa2g25QAArrMo5QJN4EiIC4rd8TVo8wBLdv2FfwAAAAAfAPo/
+AQAAABwAAABTAGgAYQBoAGUAZAAgAFMAaABhAGkAawBoAAAAAwAJWQEAAAADAACACCAGAAAAAADA
+AAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAA6FAAAAAAAAAwAAgAgg
+BgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAAAACChQAAAAAA
+AB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAA
+AwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0
+AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8A
+cgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4AMQAw
+AF0AAAC3Mg==
+
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F910CFavmb2qlogicorg_--
