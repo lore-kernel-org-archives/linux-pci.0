@@ -1,178 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:54933 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422748AbaDKAZv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 20:25:51 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Daniel J Blueman <daniel@quora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v2 09/14] thunderbolt: Handle hotplug events
-Date: Fri, 11 Apr 2014 02:24:56 +0200
-Message-Id: <1397175901-4023-10-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
-References: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
+Received: from gate.crashing.org ([63.228.1.57]:32779 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753644AbaDPGaz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Apr 2014 02:30:55 -0400
+Message-ID: <1397629816.32730.8.camel@pasglop>
+Subject: Re: [PATCH v7] PCI: Try best to allocate pref mmio 64bit above 4g
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>, Yinghai Lu <yinghai@kernel.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Amir Vadai <amirv@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Eugenia Emantayev <eugenia@mellanox.com>, talal@mellanox.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 16 Apr 2014 16:30:16 +1000
+In-Reply-To: <CAErSpo63LKffb4DH+cSfBnvtAoPy06u22e7CUhRuKr-PHNWZMw@mail.gmail.com>
+References: <CAE9FiQXzRQ9S0mwwb58R2icBTtHHJ6NMVFMaxEgtVNP9mZVjZw@mail.gmail.com>
+	 <1394222924-28886-1-git-send-email-yinghai@kernel.org>
+	 <CAErSpo6r16va7oBpaDcTXw0Y0igc=NbXy9G7c27X+P0UM7fh8g@mail.gmail.com>
+	 <20140408025738.GA3198@yanx>
+	 <CAErSpo4JSrjSn4dXC9Pzfz2Aho+W4Gq9uKc+kAFbqTERcRAJ+w@mail.gmail.com>
+	 <20140409075215.GA3173@yanx>
+	 <CAErSpo4aGU_rmNSiv=HS-pDVsfKk798zLQW8Kx5huHe8jwdghw@mail.gmail.com>
+	 <20140415115450.GA7792@yanx>
+	 <CAErSpo63LKffb4DH+cSfBnvtAoPy06u22e7CUhRuKr-PHNWZMw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We reveive a plug event callback whenever a thunderbolt device is added
-or removed. This patch fills in the tb_handle_hotplug method and starts
-reacting to these events by adding/removing switches from the hierarchy.
+On Tue, 2014-04-15 at 18:09 -0600, Bjorn Helgaas wrote:
+> 
+> Thanks for the example.  Please open a bug report at
+> http://bugzilla.kernel.org and attach the complete dmesg logs before
+> and after Yinghai's patch.
+> 
+> Having the complete logs helps me answer questions myself without
+> having to bother you, and it also helps me figure out whether we can
+> improve our logging to make it easier to diagnose problems like this.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/switch.c | 42 +++++++++++++++++++++++++++++++++++++++-
- drivers/thunderbolt/tb.c     | 46 +++++++++++++++++++++++++++++++++++++++++++-
- drivers/thunderbolt/tb.h     |  3 +++
- 3 files changed, 89 insertions(+), 2 deletions(-)
+Unfortunately, for a *little while* longer (hint !) we can't publish
+a complete log from a Power8 machine, but we should be able to include
+everything remotely related to PCI.
 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index 279b9c5..c092f7c 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -195,6 +195,24 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
- 		sw->__unknown1, sw->__unknown4);
- }
- 
-+struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route)
-+{
-+	u8 next_port = route; /*
-+			       * Routes use a stride of 8 bits,
-+			       * eventhough a port index has 6 bits at most.
-+			       * */
-+	if (route == 0)
-+		return sw;
-+	if (next_port > sw->config.max_port_number)
-+		return 0;
-+	if (tb_is_upstream_port(&sw->ports[next_port]))
-+		return 0;
-+	if (!sw->ports[next_port].remote)
-+		return 0;
-+	return get_switch_at_route(sw->ports[next_port].remote->sw,
-+				   route >> TB_ROUTE_SHIFT);
-+}
-+
- /**
-  * tb_plug_events_active() - enable/disable plug events on a switch
-  *
-@@ -243,7 +261,8 @@ void tb_switch_free(struct tb_switch *sw)
- 		sw->ports[i].remote = NULL;
- 	}
- 
--	tb_plug_events_active(sw, false);
-+	if (!sw->is_unplugged)
-+		tb_plug_events_active(sw, false);
- 
- 	kfree(sw->ports);
- 	kfree(sw);
-@@ -327,3 +346,24 @@ err:
- 	return NULL;
- }
- 
-+/**
-+ * tb_sw_set_unpplugged() - set is_unplugged on switch and downstream switches
-+ */
-+void tb_sw_set_unpplugged(struct tb_switch *sw)
-+{
-+	int i;
-+	if (sw == sw->tb->root_switch) {
-+		tb_sw_WARN(sw, "cannot unplug root switch\n");
-+		return;
-+	}
-+	if (sw->is_unplugged) {
-+		tb_sw_WARN(sw, "is_unplugged already set\n");
-+		return;
-+	}
-+	sw->is_unplugged = true;
-+	for (i = 0; i <= sw->config.max_port_number; i++) {
-+		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
-+			tb_sw_set_unpplugged(sw->ports[i].remote->sw);
-+	}
-+}
-+
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index 3b716fd..1efcacc 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -71,11 +71,55 @@ static void tb_handle_hotplug(struct work_struct *work)
- {
- 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
- 	struct tb *tb = ev->tb;
-+	struct tb_switch *sw;
-+	struct tb_port *port;
- 	mutex_lock(&tb->lock);
- 	if (!tb->hotplug_active)
- 		goto out; /* during init, suspend or shutdown */
- 
--	/* do nothing for now */
-+	sw = get_switch_at_route(tb->root_switch, ev->route);
-+	if (!sw) {
-+		tb_warn(tb,
-+			"hotplug event from non existent switch %llx:%x (unplug: %d)\n",
-+			ev->route, ev->port, ev->unplug);
-+		goto out;
-+	}
-+	if (ev->port > sw->config.max_port_number) {
-+		tb_warn(tb,
-+			"hotplug event from non existent port %llx:%x (unplug: %d)\n",
-+			ev->route, ev->port, ev->unplug);
-+		goto out;
-+	}
-+	port = &sw->ports[ev->port];
-+	if (tb_is_upstream_port(port)) {
-+		tb_warn(tb,
-+			"hotplug event for upstream port %llx:%x (unplug: %d)\n",
-+			ev->route, ev->port, ev->unplug);
-+		goto out;
-+	}
-+	if (ev->unplug) {
-+		if (port->remote) {
-+			tb_port_info(port, "unplugged\n");
-+			tb_sw_set_unpplugged(port->remote->sw);
-+			tb_switch_free(port->remote->sw);
-+			port->remote = NULL;
-+		} else {
-+			tb_port_info(port,
-+				     "got unplug event for disconnected port, ignoring\n");
-+		}
-+	} else if (port->remote) {
-+		tb_port_info(port,
-+			     "got plug event for connected port, ignoring\n");
-+	} else {
-+		tb_port_info(port, "hotplug: scanning\n");
-+		tb_scan_port(port);
-+		if (!port->remote) {
-+			tb_port_info(port, "hotplug: no switch found\n");
-+		} else if (port->remote->sw->config.depth > 1) {
-+			tb_sw_warn(port->remote->sw,
-+				   "hotplug: chaining not supported\n");
-+		}
-+	}
- out:
- 	mutex_unlock(&tb->lock);
- 	kfree(ev);
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 7e7b3fe..3b83510 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -20,6 +20,7 @@ struct tb_switch {
- 	struct tb_port *ports;
- 	struct tb *tb;
- 	int cap_plug_events; /* offset, zero if not found */
-+	bool is_unplugged; /* unplugged, will go away */
- };
- 
- /**
-@@ -160,6 +161,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
- 
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
- void tb_switch_free(struct tb_switch *sw);
-+void tb_sw_set_unpplugged(struct tb_switch *sw);
-+struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
- 
- int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
- 
--- 
-1.9.2
+> > | pci 0003:05:00.0: reg 0x10: [mem 0x3d05801000000-0x3d058010fffff 64bit]
+> > | pci 0003:05:00.0: reg 0x18: [mem 0x3d05010000000-0x3d05017ffffff 64bit pref]
+> > | pci 0003:05:00.0: reg 0x30: [mem 0x00000000-0x000fffff pref]
+> > | pci 0003:05:00.0: reg 0x134: [mem 0x3d05018000000-0x3d0501fffffff 64bit pref]
+> >
+> > This is printed at enumeration phase. This device has a SRIOV BAR with
+> > size of 0x7ffffff (128M). That's the size of a signle VF BAR. The device
+> > supports 63 VFs so we need near 8G space in total. Apparanlty we need
+> > exploit 64-bit space.
+> 
+> Yes.  Do we print a hint anywhere about how many VFs there are?  In
+> other words, can you deduce the number "63" from the dmesg, or do you
+> have to figure that out some other way?  It'd be nice if that
+> information were somewhere in dmesg.
+>
+> > | PCI host bridge to bus 0003:00
+> > | pci_bus 0003:00: root bus resource [mem 0x3d05800000000-0x3d0587ffeffff] (bus address [0x80000000-0xfffeffff])
+> > | pci_bus 0003:00: root bus resource [mem 0x3d05008000000-0x3d057ffffffff 64bit pref]
+> >
+> > And we do have a huge (32G) 64-bit prefetchable window supply. We expect
+> > everything to work fine, but:
+> >
+> > | pci 0003:00:00.0: BAR 15: can't assign mem pref (size 0x206000000)
+> > | pci 0003:00:00.0: BAR 14: assigned [mem 0x3d05800000000-0x3d05802ffffff]
+> > | pci 0003:00:00.0: BAR 13: can't assign io (size 0x4000)
+> >
+> > It went wrong at the beginning. Note the error message never considers
+> > 64-bit or not, but BAR 15 here has it MEM_64 flag cleared.
+> 
+> BAR 15 is a bridge window.  I think its resource flags should reflect
+> the capability of the *window*, even if we disable the window or we
+> happen to assign addresses that are under 4GB.  So I think it's wrong
+> that we clear the MEM_64 flag  in pbus_size_mem() and the IO flag in
+> pbus_size_io().
+> 
+> > It first
+> > tried to find a 32-bit prefetchable window, but we only supply a 64-bit one.
+> > So it fall back to (32-bit) non-prefetchable window, but there is no enough
+> > room there. At last it went into complicated steps (not show here) of
+> > allocating requested resource first, then try best for the optional ones, etc..
+> >
+> > Why is BAR 15 (prefetchable) 32 bit instead of 64? Because PCI core favours
+> > 32-bit prefetchable BARs and we have some. This is one of them:
+> >
+> > | pci 0003:05:00.0: reg 0x30: [mem 0x00000000-0x000fffff pref]
+> >
+> > PCI core decides to let them enjoy the benefition of prefetch. They can't
+> > bear the risk of getting 4G-above address, so its parent, its parent's parent,
+> > its parent's parent's parent, finally the root bridge (00:00.0) must have their
+> > MEM_64 flag of prefetchable resource (BAR 15) clear.
+> 
+> It sounds like we're tracking the resource requirements
+> (prefetchability and BAR width) by using the flags on bridge windows.
+> If that's the case, I think it's wrong.  We should preserve the bridge
+> window flags, because those express the bridge hardware capabilities,
+> and we should explicitly keep track of what's required by devices
+> below the bridge in some other way.
+> 
+> > In the end nobody
+> > is eligible to use the 64-bit (prefetchable) space even we have huge
+> > supply !
+> >
+> > Note even the resource is small and successfully fall back into 32-bit
+> > non-prefetchable window, that's still not OK for us because we need
+> > SRIOV resource be at 64-bit prefetchable space to do platform
+> > configuration.
+> >
+> > With Yinghai's patch, when 64-bit prefetchable BARs found, they're more
+> > favoured than the 32-bit prefetchable ones (if any), so all upstream bridges'
+> > prefetchable windows have their MEM_64 flag reserved and the huge 64-bit
+> > prefetchable space will be exploited:
+> >
+> > | pci 0003:00:00.0: BAR 15: assigned [mem 0x3d05008000000-0x3d0521fffffff 64bit pref]
+> > | pci 0003:00:00.0: BAR 14: assigned [mem 0x3d05800000000-0x3d05802ffffff]
+> > | pci 0003:00:00.0: BAR 13: can't assign io (size 0x4000)
+> >
+> > (The IO resource error here is due to we do not provide IO window)
+> 
+> Yes.  The lack of I/O space is just a constraint of the platform.
+> It'd be nice if we printed a more meaningful error message in this
+> case.  One really has to be a PCI expert to distinguish this from a
+> real problem that we need to fix.
+> 
+> Bjorn
+
 
