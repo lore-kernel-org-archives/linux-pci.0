@@ -1,106 +1,199 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:33345 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751034AbaDRNCr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 09:02:47 -0400
-Date: Fri, 18 Apr 2014 15:02:44 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Neil Greatorex <neil@fatboyfat.co.uk>, Willy Tarreau <w@1wt.eu>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: Fixing PCIe issues on Armada XP
-Message-ID: <20140418150244.4b3d5229@skate>
-In-Reply-To: <20140411163129.GA20565@obsidianresearch.com>
-References: <20140410181953.50ccfcc3@skate>
-	<20140410165733.GB23104@obsidianresearch.com>
-	<20140410200153.46669e0c@skate>
-	<20140410201201.GA12661@obsidianresearch.com>
-	<alpine.DEB.2.10.1404102206090.28003@vroombuntu>
-	<20140411122314.220614bf@skate>
-	<20140411163129.GA20565@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from avcashub2.qlogic.com ([198.70.193.116]:16494 "EHLO
+	avcashub1.qlogic.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751329AbaDPMMM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 08:12:12 -0400
+Content-Type: multipart/mixed;
+	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59F8280Aavmb2qlogicorg_"
+From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+CC: linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v2 RESEND 03/23] bfa: Cleanup bfad_setup_intr() function
+Date: Wed, 16 Apr 2014 09:05:51 +0000
+Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59F8280A@avmb2.qlogic.org>
+References: <cover.1397461652.git.agordeev@redhat.com>
+ <29a53def04235be5b589838a851df8f90788247a.1397461652.git.agordeev@redhat.com>
+In-Reply-To: <29a53def04235be5b589838a851df8f90788247a.1397461652.git.agordeev@redhat.com>
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F8280Aavmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, 11 Apr 2014 10:31:29 -0600, Jason Gunthorpe wrote:
+Patch look good.
+Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 
-> > Moreover, I am not entirely convinced that a PHY reset is needed here.
-> > In my tests, doing just a wait after setting the local dev number was
-> > sufficient. The fact is works with earlyprintk also indicates that we
-> > don't need to do any specific action with the PHY, just to wait a bit
-> > of time. I am worried that resetting the PHY might actually take more
-> > time than what is needed, and may have other consequences that we don't
-> > necessarily understand at this point.
-> 
-> I really disagree - clearly the fundamental problem is suspending one
-> side of the PEX link while the other remains operating. That isn't
-> specified to work and really shouldn't work.
-> 
-> If you suspend one side of the PEX you *MUST* reset the
-> link. Absolutely. No Doubt In My Mind.
-> 
-> Remember, PCI-E is a serial shared state protocol. The two sides must
-> remain in sync or a link reset is required to recover the shared
-> state. Halting one side obviously destroys this invariant.
-> 
-> I think in many cases the reset happens autonomously. The remote side
-> will force it to happen. This is what the debugging from Neil shows -
-> the link just resets at some inconvenient point. Now we know why.
-> 
-> The timing sensitivity also makes sense, if you suspend for a very
-> short time window the other side might not notice. If you suspend for
-> longer the other side will reset the link autonomously and your local
-> side will quickly notice the reset once it comes back.
-> 
-> If you suspend for a little bit the link might not retrain immediately
-> but the shared state can become corrupted (eg sequence number
-> mismatch) this will eventually trigger a reset, after the local PEX
-> has been operating again.
-> 
-> The LinkUp bit after resume is also clearly a lie - most likely the
-> PEX takes some time to detect the change in remote state to trigger a
-> link down. After all, it was suspended while the remote was busy
-> trying to recover.
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel=
+.org] On Behalf Of Alexander Gordeev
+Sent: 14 April 2014 13:35
+To: linux-kernel
+Cc: Alexander Gordeev; Anil Gurumurthy; Vijaya Mohan Guvva; linux-scsi; lin=
+ux-pci
+Subject: [PATCH v2 RESEND 03/23] bfa: Cleanup bfad_setup_intr() function
 
-Ok, fair enough. However, Neil's patch (which is basically your patch
-with longer delays) isn't working here, as I just reported in a
-separate e-mail.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Anil Gurumurthy <agurumur@brocade.com>
+Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+---
+ drivers/scsi/bfa/bfad.c |   18 ++++++++----------
+ 1 files changed, 8 insertions(+), 10 deletions(-)
 
-So we don't have a solution right now. Do you have another proposal to
-try ?
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c index 972ff8=
+d..e7e4774 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1219,7 +1219,7 @@ bfad_install_msix_handler(struct bfad_s *bfad)  int  =
+bfad_setup_intr(struct bfad_s *bfad)  {
+-       int error =3D 0;
++       int error;
+        u32 mask =3D 0, i, num_bit =3D 0, max_bit =3D 0;
+        struct msix_entry msix_entries[MAX_MSIX_ENTRY];
+        struct pci_dev *pdev =3D bfad->pcidev;
+@@ -1279,20 +1279,18 @@ bfad_setup_intr(struct bfad_s *bfad)
 
-> The fundamental problem here is the clock driver. It should not be
-> gating PEX clocks so naively. A PEX suspend needs to be sequenced to
-> ensure the link is cleanly brought down before the PEX is put to
-> sleep. That way it can cleanly and unambiguously be started up when it
-> resumes. No risk of glitching/corrupting the far side with some kind
-> of crap on the serial bus.
-> 
-> In any event, the most important required patch here is one that fixes
-> socid. It must not turn off the PEX clock. Then we can talk about how
-> to fix pci-mvebu to work as a module...
+                bfad->bfad_flags |=3D BFAD_MSIX_ON;
 
-I don't really understand this: all clocks are gated at boot time, so
-regardless of mvebu-soc-id behavior, the PCIe driver should take care
-of doing all the necessary initialization without making the
-assumptions that the clocks were left turned on from the bootloader
-time. This is needed if we want to support pci-mvebu as a module, so I
-don't see why hacking mvebu-soc-id is going to solve this.
+-               return error;
++               return 0;
+        }
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+ line_based:
+-       error =3D 0;
+-       if (request_irq
+-           (bfad->pcidev->irq, (irq_handler_t) bfad_intx, BFAD_IRQ_FLAGS,
+-            BFAD_DRIVER_NAME, bfad) !=3D 0) {
+-               /* Enable interrupt handler failed */
+-               return 1;
+-       }
++       error =3D request_irq(bfad->pcidev->irq, (irq_handler_t)bfad_intx,
++                           BFAD_IRQ_FLAGS, BFAD_DRIVER_NAME, bfad);
++       if (error)
++               return error;
++
+        bfad->bfad_flags |=3D BFAD_INTX_ON;
+
+-       return error;
++       return 0;
+ }
+
+ void
+--
+1.7.7.6
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in th=
+e body of a message to majordomo@vger.kernel.org More majordomo info at  ht=
+tp://vger.kernel.org/majordomo-info.html
+
+________________________________
+
+This message and any attached documents contain information from QLogic Cor=
+poration or its wholly-owned subsidiaries that may be confidential. If you =
+are not the intended recipient, you may not read, copy, distribute, or use =
+this information. If you have received this transmission in error, please n=
+otify the sender immediately by reply e-mail and then delete this message.
+
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F8280Aavmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+EQIhC3HPvYMbAj4BHHRRTCXiPAB9BbBwBbDH5AWxWiAEIHfyaAbwbHks8xxgtTIN0f8KwHURthG9
+4QDATyC1oRvhj1XQAQACMAcxLiBJLvDOeQhgYAC8wW5vBUC3It+W0i+RHGAJcDkgcAiQAjD/VqDN
+oswiziIJcDywVqAFoJxweVagDeF08WJ1ECD7VqAFsXUSALYUx4nNVxHQ+xowzyJlYpG3ArZBPWAA
+cf5tBAHIArlBifNWoAtQPDD/0mHOIQaQTyC3IrbSG7EHcP8HgMtRECDKcDuwTyAJcAtQ/08gKJAr
+4sVDtyEDoFgD0nUPulUilhVC3JAAAB8AQgABAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQBy
+AHQAaAB5AAAAHwBlAAEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHgAAAAA
+AAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMA
+TQBUAFAAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBv
+AG0AAAAfAAJdAQAAADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAAAAB8A5V8BAAAAPgAAAHMAaQBwADoAYQBuAGkAbAAuAGcAdQByAHUAbQB1
+AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAACAAAABBAG4AaQBsACAA
+RwB1AHIAdQBtAHUAcgB0AGgAeQAAAB8AHwwBAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQBy
+AHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAA
+AgEZDAEAAAB4AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUAbQB1
+AHIAdABoAHkAAABTAE0AVABQAAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABo
+AHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAPg/AQAAACAAAABBAG4AaQBsACAARwB1AHIA
+dQBtAHUAcgB0AGgAeQAAAB8AI0ABAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEA
+AAB4AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABo
+AHkAAABTAE0AVABQAAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAHwAJXQEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABx
+AGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIA
+AAAAAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9
+P+QEAAACAQswAQAAABAAAACxkytoID7bQY52elg0zWE9AwAXAAEAAABAADkAgIFwEFNZzwFAAAgw
+7IeSEFNZzwELACkAAAAAAAsAIwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBj
+AGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAA
+AADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAiAAAAFIARQA6ACAAWwBQAEEAVABDAEgAIAB2
+ADIAIABSAEUAUwBFAE4ARAAgADAAMwAvADIAMwBdACAAYgBmAGEAOgAgAEMAbABlAGEAbgB1AHAA
+IABiAGYAYQBkAF8AcwBlAHQAdQBwAF8AaQBuAHQAcgAoACkAIABmAHUAbgBjAHQAaQBvAG4AAAAf
+AD0AAQAAAAoAAABSAEUAOgAgAAAAAAADADYAAAAAAAMALgAAAAAAHwBCEAEAAACcAAAAPAAyADkA
+YQA1ADMAZABlAGYAMAA0ADIAMwA1AGIAZQA1AGIANQA4ADkAOAAzADgAYQA4ADUAMQBkAGYAOABm
+ADkAMAA3ADgAOAAyADQANwBhAC4AMQAzADkANwA0ADYAMQA2ADUAMgAuAGcAaQB0AC4AYQBnAG8A
+cgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+AAAAAgFxAAEAAAAbAAAAAQHPV7wwi26b
+mf1X8U+WXnJqkpGj9JsT9phgAB8AcAABAAAAgAAAAFsAUABBAFQAQwBIACAAdgAyACAAUgBFAFMA
+RQBOAEQAIAAwADMALwAyADMAXQAgAGIAZgBhADoAIABDAGwAZQBhAG4AdQBwACAAYgBmAGEAZABf
+AHMAZQB0AHUAcABfAGkAbgB0AHIAKAApACAAZgB1AG4AYwB0AGkAbwBuAAAAHwA1EAEAAAB0AAAA
+PAAyADAAQgAxAEEAMwBDAEIARAA5ADgARgAzADgANAA1AEIAMwBGADUARgA1ADYARAA4ADUAOQA3
+AEUARgA1ADkARgA4ADIAOAAwAEEAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4A
+AAAfADkQAQAAAPIAAAA8AGMAbwB2AGUAcgAuADEAMwA5ADcANAA2ADEANgA1ADIALgBnAGkAdAAu
+AGEAZwBvAHIAZABlAGUAdgBAAHIAZQBkAGgAYQB0AC4AYwBvAG0APgAgADwAMgA5AGEANQAzAGQA
+ZQBmADAANAAyADMANQBiAGUANQBiADUAOAA5ADgAMwA4AGEAOAA1ADEAZABmADgAZgA5ADAANwA4
+ADgAMgA0ADcAYQAuADEAMwA5ADcANAA2ADEANgA1ADIALgBnAGkAdAAuAGEAZwBvAHIAZABlAGUA
+dgBAAHIAZQBkAGgAYQB0AC4AYwBvAG0APgAAAAAAAwDeP59OAAALAACACCAGAAAAAADAAAAAAAAA
+RgAAAAADhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAGFAAAAAAAAAwCAEP////9AAAcw
+zLNaD1NZzwELAAIAAQAAAAMAJgAAAAAACwArAAAAAAACAUcAAQAAAC8AAABjPVVTO2E9IDtwPVFM
+b2dpYztsPUFWTUIyLTE0MDQxNjA5MDU1MVotMTg5NTUzAAACARAwAQAAAEYAAAAAAAAApfa6WPiU
+nECXquZDOkRWvwcAILGjy9mPOEWz9fVthZfvWQAAAPSNGAAAZwQxjMtxokilXd7HughfeQBLeqWN
+mgAAAAAfAPo/AQAAACAAAABBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAAMACVkBAAAA
+AwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAEIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAO
+hQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABiFAAAAAAAACwAAgAggBgAAAAAAwAAAAAAA
+AEYAAAAAgoUAAAAAAAAfAACACCAGAAAAAADAAAAAAAAARgAAAADYhQAAAQAAABIAAABJAFAATQAu
+AE4AbwB0AGUAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMA
+LQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
+AAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAA
+LgAxAC4ANAAuADEAMABdAAAAEUA=
+
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F8280Aavmb2qlogicorg_--
