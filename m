@@ -1,63 +1,292 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:44507 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933495AbaDIXu4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Apr 2014 19:50:56 -0400
-Message-ID: <1397087391.3671.153.camel@pasglop>
-Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
- pci_host_bridge.
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Date: Thu, 10 Apr 2014 09:49:51 +1000
-In-Reply-To: <CAErSpo4BmoYzf6GxOPRni=q563zhON57s7=5Hz=2Cf-X2ft-1A@mail.gmail.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
-	 <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
-	 <20140405000007.GD15806@google.com>
-	 <20140407084623.GG17163@e106497-lin.cambridge.arm.com>
-	 <1396862058.3671.40.camel@pasglop>
-	 <20140407100715.GI17163@e106497-lin.cambridge.arm.com>
-	 <CAErSpo7h+Yew2hBztzkOzcHU5r4OQebxFbcZGkNUwJwfTFsbfg@mail.gmail.com>
-	 <20140408102043.GV17163@e106497-lin.cambridge.arm.com>
-	 <CAErSpo4anYBmaRbJEFE9kAXSmnvfqud=w1QA=mSSsTUamM4kSw@mail.gmail.com>
-	 <20140409120750.GN985@e106497-lin.cambridge.arm.com>
-	 <CAErSpo4BmoYzf6GxOPRni=q563zhON57s7=5Hz=2Cf-X2ft-1A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mailout3.samsung.com ([203.254.224.33]:11357 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752308AbaDPEn2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 00:43:28 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	linaro-kernel@lists.linaro.org, linux-kernel@vger.kernel.org,
+	'Liviu Dudau' <Liviu.Dudau@arm.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
+In-reply-to: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
+Subject: [RFC PATCH 2/2] PCI: exynos: Add PCIe support for Samsung GH7 SoC
+Date: Wed, 16 Apr 2014 13:43:26 +0900
+Message-id: <000a01cf592e$67e592e0$37b0b8a0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-04-09 at 08:02 -0600, Bjorn Helgaas wrote:
-> It's possible we could manage domain numbers in the core.  On ACPI
-> systems, we currently we use the ACPI _SEG value as the domain.  In
-> some cases, e.g., on ia64, config space access is done via firmware
-> interfaces, and those interfaces expect the _SEG values.  We could
-> conceivably maintain a mapping between _SEG and domain, but I'm not
-> sure there's an advantage there.
+Samsung GH7 has four PCIe controllers which can be used as root
+complex for PCIe interface.
 
-I'd rather keep the ability for the architecture to assign domain
-numbers.
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/host/Kconfig      |    2 +-
+ drivers/pci/host/pci-exynos.c |  135 ++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 126 insertions(+), 11 deletions(-)
 
-I'm working on making them relate to the physical slot numbers
-on our new systems so we get predictable PCI IDs which helps with
-some stuff like the new network device naming scheme etc...
-
-Predictability is a good thing :-)
-
-> I probably don't understand what you intend by reversing the order.
-> Are you suggesting something like new pcibios_*() interfaces the arch
-> can use to get the host bridge apertures and domain number?
-
-Cheers,
-Ben.
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index a6f67ec..3be047c 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -11,7 +11,7 @@ config PCIE_DW
+ 
+ config PCI_EXYNOS
+ 	bool "Samsung Exynos PCIe controller"
+-	depends on SOC_EXYNOS5440
++	depends on SOC_EXYNOS5440 || ARCH_GH7
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 3de6bfb..6e845ca 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -57,6 +57,8 @@ struct exynos_pcie {
+ #define PCIE_NONSTICKY_RESET		0x024
+ #define PCIE_APP_INIT_RESET		0x028
+ #define PCIE_APP_LTSSM_ENABLE		0x02c
++#define PCIE_SYS_AUX_PWR_DET		0x038
++#define PCIE_SYS_AUX_PWR_ENABLE		(0x1 << 0)
+ #define PCIE_ELBI_RDLH_LINKUP		0x064
+ #define PCIE_ELBI_LTSSM_ENABLE		0x1
+ #define PCIE_ELBI_SLV_AWMISC		0x11c
+@@ -72,6 +74,23 @@ struct exynos_pcie {
+ #define PCIE_PHY_TRSVREG_RESET		0x020
+ #define PCIE_PHY_TRSV_RESET		0x024
+ 
++/* PCIe PHY glue registers */
++#define PCIE_PHY_GLUE_REG0		0x000
++#define PCIE_PHY_GLUE_GLOBAL_RESET	(0x1 << 0)
++#define PCIE_PHY_GLUE_COMMON_RESET	(0x1 << 1)
++#define PCIE_PHY_GLUE_MAC_RESET		(0x1 << 11)
++#define PCIE_PHY_GLUE_REG2		0x008
++#define PCIE_PHY_GLUE_CLK100M_DS_MAX	(0x7 << 0)
++#define PCIE_PHY_GLUE_CLK100M_RFCLK	(0x1 << 3)
++#define PCIE_PHY_GLUE_CLK100M_ENABLE	(0x1 << 4)
++#define PCIE_PHY_GLUE_PLL_BUF_ENABLE	(0x1 << 8)
++#define PCIE_PHY_GLUE_PLL_DIV_ENABLE	(0x1 << 9)
++#define PCIE_PHY_GLUE_REFCLK_IN(x)	(((x) & 0xf) << 10)
++#define PCIE_PHY_GLUE_REG3		0x00c
++#define PCIE_PHY_GLUE_REF_RATE_100MHZ	(0x2 << 0)
++#define PCIE_PHY_GLUE_REG4		0x010
++#define PCIE_PHY_GLUE_MODE_PCIE		(0x0 << 0)
++
+ /* PCIe PHY registers */
+ #define PCIE_PHY_IMPEDANCE		0x004
+ #define PCIE_PHY_PLL_DIV_0		0x008
+@@ -164,11 +183,45 @@ static void exynos_pcie_sideband_dbi_r_mode(struct pcie_port *pp, bool on)
+ 	}
+ }
+ 
++static void exynos_pcie_set_phy_mode(struct pcie_port *pp)
++{
++	u32 val;
++	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
++
++	if (!of_device_is_compatible(pp->dev->of_node, "samsung,gh7-pcie"))
++		return;
++
++	/* configure phy reference clock setting */
++	val = exynos_blk_readl(exynos_pcie, PCIE_PHY_GLUE_REG2);
++	val |= PCIE_PHY_GLUE_CLK100M_ENABLE | PCIE_PHY_GLUE_CLK100M_RFCLK |
++		PCIE_PHY_GLUE_CLK100M_DS_MAX;
++	exynos_blk_writel(exynos_pcie, val, PCIE_PHY_GLUE_REG2);
++
++	val = exynos_blk_readl(exynos_pcie, PCIE_PHY_GLUE_REG2);
++	val |= PCIE_PHY_GLUE_PLL_DIV_ENABLE | PCIE_PHY_GLUE_PLL_BUF_ENABLE;
++	exynos_blk_writel(exynos_pcie, val, PCIE_PHY_GLUE_REG2);
++
++	val = exynos_blk_readl(exynos_pcie, PCIE_PHY_GLUE_REG2);
++	val |= PCIE_PHY_GLUE_REFCLK_IN(6);
++	exynos_blk_writel(exynos_pcie, val, PCIE_PHY_GLUE_REG2);
++
++	/* set phy reference clock  */
++	exynos_blk_writel(exynos_pcie, PCIE_PHY_GLUE_REF_RATE_100MHZ,
++			  PCIE_PHY_GLUE_REG3);
++
++	/* set phy mode to pcie mode */
++	exynos_blk_writel(exynos_pcie, PCIE_PHY_GLUE_MODE_PCIE,
++			  PCIE_PHY_GLUE_REG4);
++}
++
+ static void exynos_pcie_assert_core_reset(struct pcie_port *pp)
+ {
+ 	u32 val;
+ 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+ 
++	if (of_device_is_compatible(pp->dev->of_node, "samsung,gh7-pcie"))
++		return;
++
+ 	val = exynos_elb_readl(exynos_pcie, PCIE_CORE_RESET);
+ 	val &= ~PCIE_CORE_RESET_ENABLE;
+ 	exynos_elb_writel(exynos_pcie, val, PCIE_CORE_RESET);
+@@ -190,27 +243,48 @@ static void exynos_pcie_deassert_core_reset(struct pcie_port *pp)
+ 	exynos_elb_writel(exynos_pcie, 1, PCIE_NONSTICKY_RESET);
+ 	exynos_elb_writel(exynos_pcie, 1, PCIE_APP_INIT_RESET);
+ 	exynos_elb_writel(exynos_pcie, 0, PCIE_APP_INIT_RESET);
+-	exynos_blk_writel(exynos_pcie, 1, PCIE_PHY_MAC_RESET);
++
++	if (of_device_is_compatible(pp->dev->of_node, "samsung,gh7-pcie")) {
++		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_GLUE_REG0);
++		val |= PCIE_PHY_GLUE_MAC_RESET;
++		exynos_blk_writel(exynos_pcie, val, PCIE_PHY_GLUE_REG0);
++	} else {
++		exynos_blk_writel(exynos_pcie, 1, PCIE_PHY_MAC_RESET);
++	}
+ }
+ 
+ static void exynos_pcie_assert_phy_reset(struct pcie_port *pp)
+ {
+ 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+ 
++	if (of_device_is_compatible(pp->dev->of_node, "samsung,gh7-pcie"))
++		return;
++
+ 	exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_MAC_RESET);
+ 	exynos_blk_writel(exynos_pcie, 1, PCIE_PHY_GLOBAL_RESET);
+ }
+ 
+ static void exynos_pcie_deassert_phy_reset(struct pcie_port *pp)
+ {
++	u32 val;
+ 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+ 
+-	exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_GLOBAL_RESET);
+-	exynos_elb_writel(exynos_pcie, 1, PCIE_PWR_RESET);
+-	exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_COMMON_RESET);
+-	exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_CMN_REG);
+-	exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_TRSVREG_RESET);
+-	exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_TRSV_RESET);
++	if (of_device_is_compatible(pp->dev->of_node, "samsung,gh7-pcie")) {
++		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_GLUE_REG0);
++		val |= PCIE_PHY_GLUE_GLOBAL_RESET;
++		exynos_blk_writel(exynos_pcie, val, PCIE_PHY_GLUE_REG0);
++		exynos_elb_writel(exynos_pcie, 1, PCIE_PWR_RESET);
++		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_GLUE_REG0);
++		val |= PCIE_PHY_GLUE_COMMON_RESET;
++		exynos_blk_writel(exynos_pcie, val, PCIE_PHY_GLUE_REG0);
++	} else {
++		exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_GLOBAL_RESET);
++		exynos_elb_writel(exynos_pcie, 1, PCIE_PWR_RESET);
++		exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_COMMON_RESET);
++		exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_CMN_REG);
++		exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_TRSVREG_RESET);
++		exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_TRSV_RESET);
++	}
+ }
+ 
+ static void exynos_pcie_power_on_phy(struct pcie_port *pp)
+@@ -269,6 +343,9 @@ static void exynos_pcie_init_phy(struct pcie_port *pp)
+ {
+ 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+ 
++	if (of_device_is_compatible(pp->dev->of_node, "samsung,gh7-pcie"))
++		return;
++
+ 	/* DCC feedback control off */
+ 	exynos_phy_writel(exynos_pcie, 0x29, PCIE_PHY_DCC_FEEDBACK);
+ 
+@@ -305,6 +382,26 @@ static void exynos_pcie_init_phy(struct pcie_port *pp)
+ 	exynos_phy_writel(exynos_pcie, 0xa0, PCIE_PHY_TRSV3_LVCC);
+ }
+ 
++static void exynos_pcie_pulse_common_reset(struct pcie_port *pp)
++{
++	u32 val;
++	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
++
++	if (of_device_is_compatible(pp->dev->of_node, "samsung,gh7-pcie")) {
++		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_GLUE_REG0);
++		val &= ~PCIE_PHY_GLUE_COMMON_RESET;
++		exynos_blk_writel(exynos_pcie, val, PCIE_PHY_GLUE_REG0);
++		udelay(500);
++		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_GLUE_REG0);
++		val |= PCIE_PHY_GLUE_COMMON_RESET;
++		exynos_blk_writel(exynos_pcie, val, PCIE_PHY_GLUE_REG0);
++	} else {
++		exynos_blk_writel(exynos_pcie, 1, PCIE_PHY_COMMON_RESET);
++		udelay(500);
++		exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_COMMON_RESET);
++	}
++}
++
+ static void exynos_pcie_assert_reset(struct pcie_port *pp)
+ {
+ 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+@@ -326,6 +423,9 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+ 		return 0;
+ 	}
+ 
++	/* set phy mode */
++	exynos_pcie_set_phy_mode(pp);
++
+ 	/* assert reset signals */
+ 	exynos_pcie_assert_core_reset(pp);
+ 	exynos_pcie_assert_phy_reset(pp);
+@@ -340,9 +440,7 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+ 	exynos_pcie_init_phy(pp);
+ 
+ 	/* pulse for common reset */
+-	exynos_blk_writel(exynos_pcie, 1, PCIE_PHY_COMMON_RESET);
+-	udelay(500);
+-	exynos_blk_writel(exynos_pcie, 0, PCIE_PHY_COMMON_RESET);
++	exynos_pcie_pulse_common_reset(pp);
+ 
+ 	/* de-assert core reset */
+ 	exynos_pcie_deassert_core_reset(pp);
+@@ -357,6 +455,12 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+ 	exynos_elb_writel(exynos_pcie, PCIE_ELBI_LTSSM_ENABLE,
+ 			  PCIE_APP_LTSSM_ENABLE);
+ 
++	if (of_device_is_compatible(pp->dev->of_node, "samsung,gh7-pcie")) {
++		/* supply auxiliary power */
++		exynos_elb_writel(exynos_pcie, PCIE_SYS_AUX_PWR_ENABLE,
++				  PCIE_SYS_AUX_PWR_DET);
++	}
++
+ 	/* check if the link is up or not */
+ 	while (!dw_pcie_link_up(pp)) {
+ 		mdelay(100);
+@@ -564,6 +668,7 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+ 	struct resource *elbi_base;
+ 	struct resource *phy_base;
+ 	struct resource *block_base;
++	 struct resource *dbi_base;
+ 	int ret;
+ 
+ 	exynos_pcie = devm_kzalloc(&pdev->dev, sizeof(*exynos_pcie),
+@@ -619,6 +724,15 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+ 		goto fail_bus_clk;
+ 	}
+ 
++	if (of_device_is_compatible(pdev->dev.of_node, "samsung,gh7-pcie")) {
++		dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 3);
++		pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
++		if (IS_ERR(pp->dbi_base)) {
++			ret = PTR_ERR(pp->dbi_base);
++			goto fail_bus_clk;
++		}
++	}
++
+ 	ret = add_pcie_port(pp, pdev);
+ 	if (ret < 0)
+ 		goto fail_bus_clk;
+@@ -645,6 +759,7 @@ static int __exit exynos_pcie_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id exynos_pcie_of_match[] = {
+ 	{ .compatible = "samsung,exynos5440-pcie", },
++	{ .compatible = "samsung,gh7-pcie", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, exynos_pcie_of_match);
+-- 
+1.7.10.4
 
 
