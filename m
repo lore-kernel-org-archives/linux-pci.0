@@ -1,408 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <535F0837.2020102@amd.com>
-Date: Mon, 28 Apr 2014 21:02:31 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:39036 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751285AbaDPQ3e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 12:29:34 -0400
+Received: by mail-ie0-f179.google.com with SMTP id lx4so10388493iec.24
+        for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2014 09:29:34 -0700 (PDT)
+Date: Wed, 16 Apr 2014 10:29:31 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	Simon Horman <horms@verge.net.au>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
+Subject: Re: [PATCH v2 2/6] PCI: tegra: use new OF interrupt mapping when
+ possible
+Message-ID: <20140416162931.GA13168@google.com>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+ <1394025951-32438-3-git-send-email-l.stach@pengutronix.de>
+ <20140404165559.GE9007@google.com>
+ <1397556454.4574.13.camel@weser.hi.pengutronix.de>
+ <20140415182651.GA17721@google.com>
+ <1397636445.5070.8.camel@weser.hi.pengutronix.de>
 MIME-Version: 1.0
-To: Daniel J Blueman <daniel@numascale.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Borislav Petkov <bp@suse.de>
-CC: Myron Stowe <myron.stowe@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	<kim.naru@amd.com>, Thomas Gleixner <tglx@linutronix.de>,
-	<mingo@redhat.com>, <hpa@zytor.com>, x86 <x86@kernel.org>,
-	<sp@numascale.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 5/5] PCI: Remove redundant 'quirk_amd_nb_node'
-References: <20140419025308.2408.51252.stgit@amt.stowe>
-	<20140419025345.2408.99229.stgit@amt.stowe>	<20140420105419.GB19676@pd.tnic>
- <CAL-B5D1_fns=mu7Cw6jeVHO0XPeKYakUrPv-JgO=ma1rjCoQvg@mail.gmail.com>
- <53554D27.1010803@numascale.com>
-In-Reply-To: <53554D27.1010803@numascale.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1397636445.5070.8.camel@weser.hi.pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/21/2014 11:53 AM, Daniel J Blueman wrote:
-> Hi Myron,
->
-> On 04/20/2014 09:44 PM, Myron Stowe wrote:
->> On Sun, Apr 20, 2014 at 4:54 AM, Borislav Petkov <bp@suse.de> wrote:
->>> On Fri, Apr 18, 2014 at 08:53:46PM -0600, Myron Stowe wrote:
->>>> With the amd_bus.c updates to support additional AMD processors
->>>> (11h, 12h,
->>>> 14h 15h  and 16h) 'quirk_amd_nb_node' seems to be redundant.  This
->>>> patch
->>>> removes it.
->>>>
->>>> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
->>>
->>> Good idea. Has this been tested, though? There are a bunch of places
->>> using dev_to_node() which this quirk corrects, especially 'local_cpus'
->>> in a bunch of sysfs nodes in the PCI hierarchy /sys/devices/pci*.
->>
->> Borislav:
->>
->> Thanks for the review, suggestions, and comments.
->>
->> Just and FYI - I'll be gone until late in this coming week on a
->> backpacking trip in remote Utah.  I'll work your suggestions when I
->> get back.
->>
->> With respect to this patch and testing.  Yes, I did test and it worked
->> for my situation.  I would like to hear from Daniel as I'm not exactly
->> sure what his last change was specific to.
->>
->> Daniel: with the previous patches in this series applied do you still
->> need this quirk for your situation?
->
-> It's fine enough for us, since we'll always emit a PXM method for any
-> PCI host bridges (but roots), which gets correctly preserved with your
-> patches [1]. I don't have reason to suspect northbridges at bus 0,
-> devices 0x19 and later in each PCI domain having the wrong NUMA node is
-> going to cause any issues.
->
-> We could improve things by changing probe_pci_hostbridge to iterate all
-> PCI bus domains, but it's probably not a big deal to bail with one
-> warning, as we currently see multiple (which would become a lot on most
-> of our systems):
->
-> [    3.155974] AMD-Bus: TOM: 00000000d8000000 aka 3456M
-> [    3.160003]
-> [    3.161496] AMD-Bus: WARNING: Failed to find root info for node 0x4,
-> link 0x0
-> [    3.168625]
-> [    3.170002]
-> [    3.171492] AMD-Bus: WARNING: Failed to find root info for node 0x4,
-> link 0x0
-> [    3.178614] AMD-Bus: WARNING: Failed to find root info for node 0x4,
-> link 0x0
-> [    3.180003] AMD-Bus: TOM2: 0000001900000000 aka 102400M
->
-> Thanks,
->    Daniel
->
-> -- [1] (two server NumaConnect system)
->
-> # lspci
-> 0000:00:00.0 Host bridge: Advanced Micro Devices, Inc. [AMD/ATI] RD890
-> Northbridge only dual slot (2x16) PCI-e GFX Hydra part (rev 02)
-> 0000:00:0d.0 PCI bridge: Advanced Micro Devices, Inc. [AMD/ATI] RD890
-> PCI to PCI bridge (external gfx1 port B)
-> 0000:00:11.0 SATA controller: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0/SB8x0/SB9x0 SATA Controller [IDE mode]
-> 0000:00:12.0 USB controller: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
-> 0000:00:12.1 USB controller: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0 USB OHCI1 Controller
-> 0000:00:12.2 USB controller: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0/SB8x0/SB9x0 USB EHCI Controller
-> 0000:00:13.0 USB controller: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
-> 0000:00:13.1 USB controller: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0 USB OHCI1 Controller
-> 0000:00:13.2 USB controller: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0/SB8x0/SB9x0 USB EHCI Controller
-> 0000:00:14.0 SMBus: Advanced Micro Devices, Inc. [AMD/ATI] SBx00 SMBus
-> Controller (rev 3d)
-> 0000:00:14.1 IDE interface: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0/SB8x0/SB9x0 IDE Controller
-> 0000:00:14.3 ISA bridge: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0/SB8x0/SB9x0 LPC host controller
-> 0000:00:14.4 PCI bridge: Advanced Micro Devices, Inc. [AMD/ATI] SBx00
-> PCI to PCI Bridge
-> 0000:00:14.5 USB controller: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0/SB8x0/SB9x0 USB OHCI2 Controller
-> 0000:00:18.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 0
-> 0000:00:18.1 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 1
-> 0000:00:18.2 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 2
-> 0000:00:18.3 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 3
-> 0000:00:18.4 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 4
-> 0000:00:18.5 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 5
-> 0000:00:19.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 0
-> 0000:00:19.1 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 1
-> 0000:00:19.2 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 2
-> 0000:00:19.3 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 3
-> 0000:00:19.4 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 4
-> 0000:00:19.5 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 5
-> 0000:00:1a.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 0
-> 0000:00:1a.1 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 1
-> 0000:00:1a.2 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 2
-> 0000:00:1a.3 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 3
-> 0000:00:1a.4 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 4
-> 0000:00:1a.5 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 5
-> 0000:00:1b.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 0
-> 0000:00:1b.1 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 1
-> 0000:00:1b.2 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 2
-> 0000:00:1b.3 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 3
-> 0000:00:1b.4 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 4
-> 0000:00:1b.5 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 5
-> 0000:00:1c.0 Host bridge: Numascale AS NumaChip N601 (rev 02)
-> 0000:00:1c.1 Host bridge: Numascale AS NumaChip N602 (rev 02)
-> 0000:01:04.0 VGA compatible controller: Matrox Electronics Systems Ltd.
-> MGA G200eW WPCM450 (rev 0a)
-> 0000:02:00.0 Ethernet controller: Intel Corporation 82576 Gigabit
-> Network Connection (rev 01)
-> 0000:02:00.1 Ethernet controller: Intel Corporation 82576 Gigabit
-> Network Connection (rev 01)
-> 0001:00:00.0 Host bridge: Advanced Micro Devices, Inc. [AMD/ATI] RD890
-> Northbridge only dual slot (2x16) PCI-e GFX Hydra part (rev 02)
-> 0001:00:0d.0 PCI bridge: Advanced Micro Devices, Inc. [AMD/ATI] RD890
-> PCI to PCI bridge (external gfx1 port B)
-> 0001:00:11.0 SATA controller: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0/SB8x0/SB9x0 SATA Controller [IDE mode]
-> 0001:00:14.0 ISA bridge: Advanced Micro Devices, Inc. [AMD/ATI] SBx00
-> SMBus Controller (rev 3d)
-> 0001:00:14.4 PCI bridge: Advanced Micro Devices, Inc. [AMD/ATI] SBx00
-> PCI to PCI Bridge
-> 0001:00:18.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 0
-> 0001:00:18.1 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 1
-> 0001:00:18.2 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 2
-> 0001:00:18.3 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 3
-> 0001:00:18.4 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 4
-> 0001:00:18.5 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 5
-> 0001:00:19.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 0
-> 0001:00:19.1 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 1
-> 0001:00:19.2 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 2
-> 0001:00:19.3 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 3
-> 0001:00:19.4 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 4
-> 0001:00:19.5 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 5
-> 0001:00:1a.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 0
-> 0001:00:1a.1 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 1
-> 0001:00:1a.2 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 2
-> 0001:00:1a.3 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 3
-> 0001:00:1a.4 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 4
-> 0001:00:1a.5 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 5
-> 0001:00:1b.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 0
-> 0001:00:1b.1 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 1
-> 0001:00:1b.2 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 2
-> 0001:00:1b.3 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 3
-> 0001:00:1b.4 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 4
-> 0001:00:1b.5 Host bridge: Advanced Micro Devices, Inc. [AMD] Family 15h
-> Processor Function 5
-> 0001:00:1c.0 Host bridge: Numascale AS NumaChip N601 (rev 02)
-> 0001:00:1c.1 Host bridge: Numascale AS NumaChip N602 (rev 02)
-> 0001:02:00.0 Ethernet controller: Intel Corporation 82576 Gigabit
-> Network Connection (rev 01)
-> 0001:02:00.1 Ethernet controller: Intel Corporation 82576 Gigabit
-> Network Connection (rev 01)
->
-> # find /sys/devices/pci* -name numa_node -print -exec cat {} \;
-> /sys/devices/pci0000:00/0000:00:00.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:11.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:12.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:12.1/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:12.2/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:13.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:13.1/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:13.2/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:14.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:14.1/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:14.3/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:14.4/0000:01:04.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:14.4/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:14.5/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:18.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:18.1/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:18.2/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:18.3/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:18.4/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:18.5/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:19.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:19.1/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:19.2/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:19.3/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:19.4/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:19.5/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:0d.0/0000:02:00.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:0d.0/0000:02:00.1/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:0d.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1a.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1a.1/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1a.2/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1a.3/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1a.4/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1a.5/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1b.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1b.1/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1b.2/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1b.3/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1b.4/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1b.5/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1c.0/numa_node
-> 0
-> /sys/devices/pci0000:00/0000:00:1c.1/numa_node
-> 0
-> /sys/devices/pci0001:00/0001:00:00.0/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:11.0/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:14.0/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:14.4/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:18.0/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:18.1/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:18.2/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:18.3/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:18.4/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:18.5/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:19.0/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:19.1/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:19.2/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:19.3/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:19.4/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:19.5/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:0d.0/0001:02:00.0/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:0d.0/0001:02:00.1/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:0d.0/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1a.0/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1a.1/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1a.2/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1a.3/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1a.4/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1a.5/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1b.0/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1b.1/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1b.2/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1b.3/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1b.4/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1b.5/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1c.0/numa_node
-> 4
-> /sys/devices/pci0001:00/0001:00:1c.1/numa_node
-> 4
+On Wed, Apr 16, 2014 at 10:20:45AM +0200, Lucas Stach wrote:
+> Am Dienstag, den 15.04.2014, 12:30 -0600 schrieb Bjorn Helgaas:
+> > On Tue, Apr 15, 2014 at 12:07:34PM +0200, Lucas Stach wrote:
+> > > Hi Bjorn,
+> > > 
+> > > Am Freitag, den 04.04.2014, 10:55 -0600 schrieb Bjorn Helgaas:
+> > > > On Wed, Mar 05, 2014 at 02:25:47PM +0100, Lucas Stach wrote:
+> > > > > This is the recommended method of doing the IRQ
+> > > > > mapping. For old devicetrees we fall back to the
+> > > > > previous practice.
+> > > > > 
+> > > > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > > > > Acked-by: Arnd Bergmann <arnd@arndb.de>
+> > > > 
+> > > > Applied with Stephen's Tested-by to my pending/host-tegra branch.  I'll
+> > > > rebase and rename it after v3.15-rc1, and I think we can squeeze it into
+> > > > v3.15 shortly after that.  Thanks.
+> > > > 
+> > > 
+> > > Are you still planning to push this into 3.15, or has this slipped to
+> > > 3.16?
+> > 
+> > Yes, I'm hoping to put them in v3.15.  I assume these actually
+> > fix something, e.g., we need these changes to boot with new devicetrees, or
+> > something?
+> > 
+> > The changelogs don't make it clear that these are fixes, and I want to heed
+> > Linus' guidance: "Anyway, because -rc1 is already pretty darn big, I do
+> > *not* want to hear about 'sorry this missed the window, can I still sneak
+> > in'.  Fixes only."
+> > 
+> > I should have applied these sooner to make the merge window; I apologize
+> > for that.  Anyway, if you outline what these fix, I'll update the
+> > changelogs in my tree.
+> > 
+> Actually they are a bit on the fence.
+> 
+> The i.MX and thus the designware patch actually fixes wrong behavior,
+> where all PCI legacy interrupts would be mapped to a single GIC
+> interrupt, which would leave INT B,C,D nonfunctional on i.MX.
+> 
+> The others only make DT interrupt mapping functional for all drivers, so
+> they would be useful if you need to remap interrupts across bridges or
+> something. But apparently nobody had the need to to this on platforms
+> other than i.MX until now, so those patches only fix a theoretical
+> issue.
 
-Sorry for late reply.  My concern is that removing the 
-"quirk_amd_nb_node()" will affect the value of "numa_node" of the host 
-bridge devices (i.e. X:00.[18|19|1a|1b|1c|1d|1e|1f].X).  I am not sure 
-if any code is using this information.  But in theory, these host-bridge 
-devices are not on the same node as where the PCI root complex lives 
-(e.g. 0 and 4 from the example above).
+It sounds like the others should fix real problems; it's just that nobody
+has actually tested relevant configurations yet.  I think that's fair game,
+so I updated the changelogs and put them in my for-linus branch for v3.15.
 
-If we want the "numa_node" to really representing the actual node, then 
-the quirk has to stay for now.  We might need to come up with a 
-different logic to replace the quirks here, which would automatically 
-determine the actual node value for these host-bridge devices.
+This includes the designware, rcar, and tegra patches.
 
-Suravee
-
-Suravee
-
+Bjorn
