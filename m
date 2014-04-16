@@ -1,141 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:32945 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750857AbaDRMJJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 08:09:09 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>
-Cc: Tawfik Bayouk <tawfik@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Neil Greatorex <neil@fatboyfat.co.uk>,
-	Willy Tarreau <w@1wt.eu>,
-	Matthew Minter <matthew_minter@xyratex.com>
-Subject: [PATCH 0/7] Fixes for Armada 370/XP PCIe
-Date: Fri, 18 Apr 2014 14:08:59 +0200
-Message-Id: <1397822946-28944-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:55733 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753049AbaDPUbl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 16:31:41 -0400
+Received: by mail-ie0-f176.google.com with SMTP id rd18so11043539iec.35
+        for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2014 13:31:41 -0700 (PDT)
+Date: Wed, 16 Apr 2014 14:31:38 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"Zhang, Rui" <rui.zhang@intel.com>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>,
+	"Yan, Zheng Z" <zheng.z.yan@intel.com>
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+Message-ID: <20140416203138.GA17661@google.com>
+References: <20140224162400.GE16457@pd.tnic>
+ <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
+ <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
+ <1558044.S1G2VU7srO@vostro.rjw.lan>
+ <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
+ <20140416190404.GA7070@pd.tnic>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140416190404.GA7070@pd.tnic>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Wed, Apr 16, 2014 at 09:04:04PM +0200, Borislav Petkov wrote:
+> On Thu, Mar 20, 2014 at 02:48:30PM -0600, Bjorn Helgaas wrote:
+> > Right.  Even if we had this long-term solution, we'd still have
+> > Stephane's current problem, because the PNP0C02 _CRS is still wrong.
+> > 
+> > We do have a drivers/pnp/quirks.c where we could conceivably adjust
+> > the PNP resource if we found the matching PCI device and MCHBAR.  That
+> > should solve Stephane's problem even with the current
+> > drivers/pnp/system.c.
+> 
+> Guys, this still triggers in -rc1. Do we have a fix or something
+> testable at least?
 
-This set of commits fixes a number of problems in the PCIe support of
-the Armada 370 and Armada XP SoCs. Due to the interaction of PCIe with
-other subsystems, the fixes are not limited to drivers/pci, but also
-touch drivers/bus and drivers/irqchip.
+Hi Boris,
 
-Here are the details of the patches:
+Can you try the patch below?
 
- * The first three patches are fixes in the MSI handling. They fix
-   problems with PCIe device drivers trying to use MSI-X (which we
-   don't support), and incorrect freeing of MSIs causing kernel panics
-   when PCIe device drivers try to allocate/free MSIs several times.
 
-   They touch drivers/irqchip/ only, and they are independent from the
-   rest of the series, both from a build and a runtime point of view.
 
-   These bugs exist since the MSI support was added, in v3.13. The
-   commits carry the necessary Fixes and Cc to stable informations.
+PNP: Work around Haswell BIOS defect in MCH area reporting
 
- * The fourth patch fixes an off-by-one in the computed size of MBus
-   windows. This only worked because the mvebu-mbus driver was
-   silently accepting invalid sizes. I've marked it for stable because
-   it really is bug, but even though it's not visible by itself, it is
-   needed for other patches in the series.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-   This patch touches drivers/pci/host, and should probably be taken
-   by the mvebu maintainers, with the Ack of the PCI maintainer, as it
-   is a runtime dependency for the next patch.
+Work around a Haswell BIOS defect that causes part of the MCH area to be
+unreported.
 
-   This patch is marked for stable all the way to when the PCI driver
-   was introduced.
+MCHBAR is not an architected PCI BAR, so MCH space is usually reported as a
+PNP0C02 resource.  The MCH space was 16KB prior to Haswell, but it is 32KB
+in Haswell.  Some Haswell BIOSes still report a PNP0C02 resource that is
+only 16KB, which means the rest of the MCH space is consumed but
+unreported.
 
- * The fifth patch make the mvebu-mbus driver check (and loudly
-   complain) if it is asked to create invalid regions (whose base
-   address or size are not compatible with the documented MBus
-   requirements).
+This can cause resource map sanity check warnings or (theoretically) a
+device conflict if we assigned the unreported space to another device.
 
-   This patch touches drivers/bus, and should probably be taken by the
-   mvebu maintainers. As explained above, it is mandatory to have
-   PATCH 4 applied before PATCH 5: there is a runtime dependency
-   between the two (but no build time dependency).
+The Intel perf event uncore driver tripped over this when it claimed the
+MCH region:
 
-   This patch is not marked for stable, as it only adds some
-   additional debugging information, which while very useful, is not
-   technically stable material.
+  resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
+  Info: mapping multiple BARs. Your kernel is fine.
 
- * The sixth patch relaxes a check in mvebu-mbus driver about
-   conflicting windows, which is necessary
+To prevent this, if we find a PNP0C02 resource that covers part of the MCH
+space, extend it to cover the entire space.
 
-   This patch touches drivers/bus, and should probably be taken by the
-   mvebu maintainers. It is not a fix by itself, but it is required
-   for the last patch, which is a fix. Therefore, it is marked for
-   stable, all the way to when the mvebu-mbus driver was introduced.
+Link: http://lkml.kernel.org/r/20140224162400.GE16457@pd.tnic
+Reported-by: Borislav Petkov <bp@alien8.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pnp/quirks.c |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
- * The seventh patch improves the pci-mvebu driver to allow the
-   creation of multiple MBus windows when the PCI BAR calculated by
-   the Linux PCI core has a non power-of-two size. This is needed
-   because MBus windows can only have power-of-two sizes. Until now,
-   we were configuring invalid MBus windows, which with certain PCIe
-   devices, was either causing kernel panics at boot time or
-   misfunction of the device.
-
-These patches have been tested by Neil Greatorex
-<neil@fatboyfat.co.uk> who initially reported the issues, have also
-been tested by Willy Tarreau and Matthew Winter (even though they
-didn't give their formal Tested-by [1] [2]), and have been heavily
-discussed with Jason Gunthorpe.
-
-Note that there are still two known issues in the mvebu PCIe handling:
-
- 1/ When earlyprintk is disabled, we have a timing / PHY reset issue
-    which leads to the PCIe device connected on the first interface to
-    not be detected. We already have patches floating around, but
-    nothing that we are all happy with yet.
-
- 2/ When a PCI IGB card is plugged with many other PCI devices in a
-    system, the IGB card initialization doesn't work ('igb
-    0000:01:00.0: The NVM Checksum Is Not Valid'). We are still
-    working on this issue.
-
-These two issues will be handled separately.
-
-Thanks,
-
-Thomas
-
-[1] http://www.spinics.net/lists/linux-pci/msg30406.html
-[2] http://www.spinics.net/lists/linux-pci/msg30444.html
-
-Jason Gunthorpe (1):
-  bus: mvebu-mbus: Avoid setting an undefined window size
-
-Neil Greatorex (1):
-  irqchip: armada-370-xp: Fix releasing of MSIs
-
-Thomas Petazzoni (4):
-  irqchip: armada-370-xp: fix invalid cast of signed value into unsigned
-    variable
-  irqchip: armada-370-xp: implement the ->check_device() msi_chip
-    operation
-  bus: mvebu-mbus: allow several windows with the same target/attribute
-  pci: pci-mvebu: split PCIe BARs into multiple MBus windows when needed
-
-Willy Tarreau (1):
-  pci: mvebu: fix off-by-one in the computed size of the mbus windows
-
- drivers/bus/mvebu-mbus.c            | 22 ++++++---
- drivers/irqchip/irq-armada-370-xp.c | 17 +++++--
- drivers/pci/host/pci-mvebu.c        | 92 ++++++++++++++++++++++++++++++-------
- 3 files changed, 106 insertions(+), 25 deletions(-)
-
--- 
-1.9.2
-
+diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
+index 258fef272ea7..023edf592371 100644
+--- a/drivers/pnp/quirks.c
++++ b/drivers/pnp/quirks.c
+@@ -334,6 +334,57 @@ static void quirk_amd_mmconfig_area(struct pnp_dev *dev)
+ }
+ #endif
+ 
++static void quirk_intel_haswell_mch(struct pnp_dev *dev)
++{
++	struct pci_dev *host;
++	u32 addr_lo, addr_hi;
++	struct pci_bus_region region;
++	struct resource mch;
++	struct pnp_resource *pnp_res;
++	struct resource *res;
++
++	host = pci_get_device(PCI_VENDOR_ID_INTEL, 0x0c00, NULL);
++	if (!host)
++		return;
++
++	/*
++	 * MCHBAR is not an architected PCI BAR, so MCH space is usually
++	 * reported as a PNP0C02 resource.  The MCH space was 16KB prior to
++	 * Haswell, but it is 32KB in Haswell.  Some Haswell BIOSes still
++	 * report a PNP0C02 resource that is only 16KB, which means the
++	 * rest of the MCH space is consumed but unreported.
++	 */
++
++	/*
++	 * Read MCHBAR for Host Member Mapped Register Range Base
++	 * https://www-ssl.intel.com/content/www/us/en/processors/core/4th-gen-core-family-desktop-vol-2-datasheet
++	 * Sec 3.1.12.
++	 */
++	pci_read_config_dword(host, 0x48, &addr_lo);
++	region.start = addr_lo & ~0x7fff;
++	pci_read_config_dword(host, 0x4c, &addr_hi);
++	region.start |= (dma_addr_t) addr_hi << 32;
++	region.end = region.start + 32*1024 - 1 ;
++	pcibios_bus_to_resource(host->bus, &mch, &region);
++
++	list_for_each_entry(pnp_res, &dev->resources, list) {
++		res = &pnp_res->res;
++		if (res->end < mch.start || res->start > mch.end)
++			continue;	/* no overlap */
++		if (res->start == mch.start && res->end == mch.end)
++			continue;	/* exact match */
++
++		dev_info(&dev->dev, FW_BUG
++			 "%pR covers only part of Intel Haswell MCH; extending to %pR\n",
++			 res, &mch);
++		res->start = mch.start;
++		res->end = mch.end;
++		break;
++	}
++
++	pci_dev_put(host);
++}
++
+ /*
+  *  PnP Quirks
+  *  Cards or devices that need some tweaking due to incomplete resource info
+@@ -364,6 +415,7 @@ static struct pnp_fixup pnp_fixups[] = {
+ #ifdef CONFIG_AMD_NB
+ 	{"PNP0c01", quirk_amd_mmconfig_area},
+ #endif
++	{"PNP0c02", quirk_intel_haswell_mch},
+ 	{""}
+ };
+ 
