@@ -1,85 +1,43 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 29 Apr 2014 19:17:20 +0200
-From: Robert Richter <rric@kernel.org>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
-	kim.naru@amd.com, andreas.herrmann3@amd.com, daniel@numascale.com,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	x86@kernel.org, bp@suse.de, sp@numascale.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range
- capabilities
-Message-ID: <20140429171720.GL32718@rric.localhost>
-References: <20140419025308.2408.51252.stgit@amt.stowe>
- <20140419025323.2408.88764.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140419025323.2408.88764.stgit@amt.stowe>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	linaro-kernel@lists.linaro.org, linux-kernel@vger.kernel.org,
+	'Liviu Dudau' <Liviu.Dudau@arm.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [RFC PATCH 0/2] Add support for Samsung GH7 PCIe controller
+Date: Wed, 16 Apr 2014 13:41:53 +0900
+Message-id: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In addition to Boris I have the following:
+This patch adds support for Samsung GH7 PCIe host controller.
+Samsung GH7 PCIe controller driver has dependency on the PCI arm64
+arch support. So, the Liviu Dudau's patcheset for creating generic
+host_bridge from device tree [1] and supporting PCI in AArch64 [2]
+are required.
 
-On 18.04.14 20:53:23, Myron Stowe wrote:
-> +#define AMD_PCIE_CF8(bus, dev, fn, reg) \
-> +			(0x80000000 | \
-> +			((reg & 0xF00) << 16) | \
-> +			((bus & 0xF) << 16) | \
-> +			((dev & 0x1F) << 11) | \
-> +			((fn & 0x7) << 8) | \
-> +			((reg & 0xFC)))
+This patch is marked as RFC, so any comment will be welcomed.
+Thank you.
 
-Make this a static function.
+[1] http://www.spinics.net/lists/linux-pci/msg29786.html
+[2] http://www.spinics.net/lists/linux-pci/msg29793.html
 
-> +/* This version of read_pci_config allows reading registers in the ECS area */
-> +static inline int _amd_read_pci_config(u8 bus, u8 slot, u8 fn, u32 offset)
+Jingoo Han (2)
+  PCI: designware: Add ARM64 PCI support
+  PCI: exynos: Add PCIe support for Samsung GH7 SoC
 
-No need to inline this, no need for a single tailing underscore.
+---
+ drivers/pci/host/Kconfig           |    2 +-
+ drivers/pci/host/pci-exynos.c      |  135 +++++++++++++++++++++++++++++++++---
+ drivers/pci/host/pcie-designware.c |   32 +++++++++
+ 3 files changed, 158 insertions(+), 11 deletions(-)
 
-> +{
-> +	u32 value;
-> +
-> +	if ((!amd_early_ecs_enabled) && (offset > 0xFF))
-> +		return -1;
-> +
-> +	outl(AMD_PCIE_CF8(bus, slot, fn, offset), 0xcf8);
-> +	value = inl(0xcfc);
-> +
-> +	return value;
+Best regards,
+Jingoo Han
 
-This design is broken. The return type does not match the functions
-return value and you can't do error checking as -1 can be a value too.
-
-Why reinventing this new instead of trying to reuse functions in
-arch/x86/pci/direct.c/early.c or so?
-
-Would an access via mmconfig space at this early stage possible? If so
-this code could be skipped as we wouln't need it for fam10h (no early
-access needed) nor fam15h or newer (mmconfig available).
-
-> +}
-> +
->  static struct pci_root_info __init *find_pci_root_info(int node, int link)
->  {
->  	struct pci_root_info *info;
-> @@ -48,6 +81,9 @@ static struct pci_root_info __init *find_pci_root_info(int node, int link)
->  		if (info->node == node && info->link == link)
->  			return info;
->  
-> +	pr_warn("AMD-Bus: WARNING: Failed to find root info for node %#x, link %#x\n",
-> +		node, link);
-
-As there might be (virtual) systems where this case is valid, I
-wouldn't print anything here. We should only print things that exist
-or error/warnings.
-
--Robert
-
-> +
->  	return NULL;
->  }
->  
-> @@ -118,6 +154,12 @@ static int __init early_fill_mp_bus_info(void)
->  
->  	pr_debug("Found AMD hostbridge at %x:%x.0\n", bus, slot);
