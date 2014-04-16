@@ -1,46 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11284 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753583AbaDNQQf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 12:16:35 -0400
-Date: Mon, 14 Apr 2014 18:18:23 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 2/4] portdrv: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Message-ID: <20140414161822.GA11804@dhcp-26-207.brq.redhat.com>
-References: <cover.1394128952.git.agordeev@redhat.com>
- <b1f560f01a176784ebfff28b84574d2850413729.1394128952.git.agordeev@redhat.com>
- <20140313035634.GA26657@google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Zhang, Rui" <rui.zhang@intel.com>
+To: Borislav Petkov <bp@alien8.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: "Lu, Aaron" <aaron.lu@intel.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>,
+	"Yan, Zheng Z" <zheng.z.yan@intel.com>
+Subject: RE: Info: mapping multiple BARs. Your kernel is fine.
+Date: Wed, 16 Apr 2014 20:24:56 +0000
+Message-ID: <744357E9AAD1214791ACBA4B0B9092630128A097@SHSMSX101.ccr.corp.intel.com>
+References: <20140224162400.GE16457@pd.tnic>
+ <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
+ <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
+ <1558044.S1G2VU7srO@vostro.rjw.lan>
+ <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
+ <20140416190404.GA7070@pd.tnic>
+In-Reply-To: <20140416190404.GA7070@pd.tnic>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140313035634.GA26657@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 12, 2014 at 09:56:34PM -0600, Bjorn Helgaas wrote:
-> On Thu, Mar 06, 2014 at 09:11:22PM +0100, Alexander Gordeev wrote:
-> > As result of deprecation of MSI-X/MSI enablement functions
-> > pci_enable_msix() and pci_enable_msi_block() all drivers
-> > using these two interfaces need to be updated to use the
-> > new pci_enable_msi_range()  or pci_enable_msi_exact()
-> > and pci_enable_msix_range() or pci_enable_msix_exact()
-> > interfaces.
-> > 
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: linux-pci@vger.kernel.org
-> 
-> Applied to pci/msi for v3.15, thanks!
-
-Hi Bjorn,
-
-If this one indeed applied?
-
-Thanks!
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQm9yaXNsYXYgUGV0a292
+IFttYWlsdG86YnBAYWxpZW44LmRlXQ0KPiBTZW50OiBXZWRuZXNkYXksIEFwcmlsIDE2LCAyMDE0
+IDEyOjA0IFBNDQo+IFRvOiBCam9ybiBIZWxnYWFzOyBSYWZhZWwgSi4gV3lzb2NraQ0KPiBDYzog
+WmhhbmcsIFJ1aTsgTHUsIEFhcm9uOyBsa21sOyB4ODZAa2VybmVsLm9yZzsgTGludXggUENJOyBB
+Q1BJIERldmVsDQo+IE1hbGluZyBMaXN0OyBZaW5naGFpIEx1OyBILiBQZXRlciBBbnZpbjsgU3Rl
+cGhhbmUgRXJhbmlhbjsgWWFuLCBaaGVuZyBaDQo+IFN1YmplY3Q6IFJlOiBJbmZvOiBtYXBwaW5n
+IG11bHRpcGxlIEJBUnMuIFlvdXIga2VybmVsIGlzIGZpbmUuDQo+IEltcG9ydGFuY2U6IEhpZ2gN
+Cj4gDQo+IE9uIFRodSwgTWFyIDIwLCAyMDE0IGF0IDAyOjQ4OjMwUE0gLTA2MDAsIEJqb3JuIEhl
+bGdhYXMgd3JvdGU6DQo+ID4gUmlnaHQuICBFdmVuIGlmIHdlIGhhZCB0aGlzIGxvbmctdGVybSBz
+b2x1dGlvbiwgd2UnZCBzdGlsbCBoYXZlDQo+ID4gU3RlcGhhbmUncyBjdXJyZW50IHByb2JsZW0s
+IGJlY2F1c2UgdGhlIFBOUDBDMDIgX0NSUyBpcyBzdGlsbCB3cm9uZy4NCj4gPg0KPiA+IFdlIGRv
+IGhhdmUgYSBkcml2ZXJzL3BucC9xdWlya3MuYyB3aGVyZSB3ZSBjb3VsZCBjb25jZWl2YWJseSBh
+ZGp1c3QNCj4gPiB0aGUgUE5QIHJlc291cmNlIGlmIHdlIGZvdW5kIHRoZSBtYXRjaGluZyBQQ0kg
+ZGV2aWNlIGFuZCBNQ0hCQVIuDQo+IFRoYXQNCj4gPiBzaG91bGQgc29sdmUgU3RlcGhhbmUncyBw
+cm9ibGVtIGV2ZW4gd2l0aCB0aGUgY3VycmVudA0KPiA+IGRyaXZlcnMvcG5wL3N5c3RlbS5jLg0K
+PiANCj4gR3V5cywgdGhpcyBzdGlsbCB0cmlnZ2VycyBpbiAtcmMxLiBEbyB3ZSBoYXZlIGEgZml4
+IG9yIHNvbWV0aGluZw0KPiB0ZXN0YWJsZSBhdCBsZWFzdD8NCj4gDQpDb3VsZCB5b3UgcGxlYXNl
+IGF0dGFjaCB0aGUgZG1lc2cgb3V0cHV0IGFmdGVyIGEgZnJlc2ggYm9vdCBpbiAtcmMxPw0KDQpU
+aGFua3MsDQpydWkNCj4gVGhhbmtzLg0KPiANCj4gLS0NCj4gUmVnYXJkcy9HcnVzcywNCj4gICAg
+IEJvcmlzLg0KPiANCj4gU2VudCBmcm9tIGEgZmF0IGNyYXRlIHVuZGVyIG15IGRlc2suIEZvcm1h
+dHRpbmcgaXMgZmluZS4NCj4gLS0NCg==
