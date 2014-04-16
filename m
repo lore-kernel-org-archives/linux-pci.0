@@ -1,111 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61357 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754268AbaDNIEY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 04:04:24 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	James Smart <james.smart@emulex.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 12/23] lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:36 +0200
-Message-Id: <dbaf436ce4c68bfa9cb72c9940287adbe16fc011.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 16 Apr 2014 18:31:22 -0400
+From: Dave Jones <davej@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Borislav Petkov <bp@alien8.de>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"Zhang, Rui" <rui.zhang@intel.com>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>,
+	"Yan, Zheng Z" <zheng.z.yan@intel.com>
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+Message-ID: <20140416223122.GA2767@redhat.com>
+References: <20140224162400.GE16457@pd.tnic>
+ <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
+ <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
+ <1558044.S1G2VU7srO@vostro.rjw.lan>
+ <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
+ <20140416190404.GA7070@pd.tnic>
+ <20140416203138.GA17661@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140416203138.GA17661@google.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Wed, Apr 16, 2014 at 02:31:38PM -0600, Bjorn Helgaas wrote:
+ > On Wed, Apr 16, 2014 at 09:04:04PM +0200, Borislav Petkov wrote:
+ > > On Thu, Mar 20, 2014 at 02:48:30PM -0600, Bjorn Helgaas wrote:
+ > > > Right.  Even if we had this long-term solution, we'd still have
+ > > > Stephane's current problem, because the PNP0C02 _CRS is still wrong.
+ > > > 
+ > > > We do have a drivers/pnp/quirks.c where we could conceivably adjust
+ > > > the PNP resource if we found the matching PCI device and MCHBAR.  That
+ > > > should solve Stephane's problem even with the current
+ > > > drivers/pnp/system.c.
+ > > 
+ > > Guys, this still triggers in -rc1. Do we have a fix or something
+ > > testable at least?
+ > 
+ > Hi Boris,
+ > 
+ > Can you try the patch below?
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/lpfc/lpfc_init.c |   38 +++++++++++++++++---------------------
- 1 files changed, 17 insertions(+), 21 deletions(-)
+I'm seeing the exact same message on my thinkpad t430s.
+When I try your patch, modesetting no longer works. When it tries
+to change to the framebuffer I get a black screen and lockup.
+If I boot with nomodeset it locks up when it gets to X.
+It all scrolls by too fast to read, but it looks like there's still
+a backtrace present.
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 7163f37..b109adc 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8100,9 +8100,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-3 interface specs. The kernel function pci_enable_msix() is
-- * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
-- * invoked, enables either all or nothing, depending on the current
-+ * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
-+ * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
-+ * once invoked, enables either all or nothing, depending on the current
-  * availability of PCI vector resources. The device driver is responsible
-  * for calling the individual request_irq() to register each MSI-X vector
-  * with a interrupt handler, which is done in this function. Note that
-@@ -8126,8 +8126,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
- 		phba->msix_entries[i].entry = i;
- 
- 	/* Configure MSI-X capability structure */
--	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
--				ARRAY_SIZE(phba->msix_entries));
-+	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
-+				   ARRAY_SIZE(phba->msix_entries));
- 	if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0420 PCI enable MSI-X failed (%d)\n", rc);
-@@ -8664,15 +8664,13 @@ out:
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
-- * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
-- * enables either all or nothing, depending on the current availability of
-- * PCI vector resources. The device driver is responsible for calling the
-- * individual request_irq() to register each MSI-X vector with a interrupt
-- * handler, which is done in this function. Note that later when device is
-- * unloading, the driver should always call free_irq() on all MSI-X vectors
-- * it has done request_irq() on before calling pci_disable_msix(). Failure
-- * to do so results in a BUG_ON() and a device will be left with MSI-X
-+ * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
-+ * is called to enable the MSI-X vectors. The device driver is responsible
-+ * for calling the individual request_irq() to register each MSI-X vector
-+ * with a interrupt handler, which is done in this function. Note that later
-+ * when device is unloading, the driver should always call free_irq() on all
-+ * MSI-X vectors it has done request_irq() on before calling pci_disable_msix()
-+ * Failure to do so results in a BUG_ON() and a device will be left with MSI-X
-  * enabled and leaks its vectors.
-  *
-  * Return codes
-@@ -8694,18 +8692,16 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- 		phba->sli4_hba.msix_entries[index].entry = index;
- 		vectors++;
- 	}
--enable_msix_vectors:
--	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
--			     vectors);
--	if (rc > 1) {
--		vectors = rc;
--		goto enable_msix_vectors;
--	} else if (rc) {
-+
-+	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
-+				   2, vectors);
-+	if (rc < 0) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
- 		goto vec_fail_out;
- 	}
- 
-+	vectors = rc;
- 	/* Log MSI-X vector assignment */
- 	for (index = 0; index < vectors; index++)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
--- 
-1.7.7.6
+	Dave
 
