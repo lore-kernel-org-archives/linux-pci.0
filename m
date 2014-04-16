@@ -1,65 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:60955 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753049AbaDPVVU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Apr 2014 17:21:20 -0400
-Date: Wed, 16 Apr 2014 15:21:04 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Rob Herring <robherring2@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"patches@apm.com" <patches@apm.com>,
-	"jcm@redhat.com" <jcm@redhat.com>
-Subject: Re: [PATCH v5 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
-Message-ID: <20140416212104.GA3469@obsidianresearch.com>
-References: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
- <1395270762-6055-3-git-send-email-tinamdar@apm.com>
- <CAL_Jsq+XxAtUeNKFi0hH=ehb_fhFvkM0U1Zm_j1LdtQZbvSzfA@mail.gmail.com>
- <20140416170545.GD4858@bart>
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [RFC PATCH 1/2] PCI: designware: Add ARM64 PCI support
+Date: Wed, 16 Apr 2014 20:26:15 +0200
+Message-ID: <16730530.rJ9T0MsYmt@wuerfel>
+In-Reply-To: <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
+References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com> <000901cf592e$563bc8c0$02b35a40$%han@samsung.com> <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140416170545.GD4858@bart>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 16, 2014 at 06:05:45PM +0100, Liviu Dudau wrote:
-
-> I have found out that we cannot pasd the config ranges from the DT into the
-> pci_host_bridge structure as the PCI framework doesn't have a resource type
-> for config resources. Leaving the translation between range flags and
-> resource type as is (filtered through the IORESOURCE_TYPE_BITS) will lead
-> to a resource type of value zero, which is not recognised by any resource
-> handling API so bridge configuration and bus scanning will barf.
+On Wednesday 16 April 2014 17:57:24 Liviu Dudau wrote:
+> Jingoo,
 > 
-> I'm looking for suggestions here, as Jason Gunthorpe suggested that we
-> should be able to parse config ranges if they conform to the ECAM part
-> of the PCI standard.
+> Thanks for taking a stab at trying to convert a host bridge
+> driver to use the new generic host bridge code.
+> 
+> I do however have concerns on the direction you took. You have split
+> your driver in two, depending on whether it was CONFIG_ARM or CONFIG_ARM64,
+> even if (with my series) it should be no reason why the host bridge
+> driver should not work on other architectures as well once they are
+> converted.
 
-The thinking here is the ranges should be well defined and general, it
-isn't a dumping ground for driver specific stuff.
+Right.
 
-No spec says you can put config space into the ranges at all, nobody
-should be doing that today, obviously some cases were missed during
-review..
+> Also, some of the functions that you use have identical names but different
+> signatures depending on what arch you have selected. This is really bad
+> in my books!
 
-The comment about ECAM was intended as a general guidance on what
-config space in ranges could/should be used for.
+It's only the sys_to_pcie() function, right?
 
-Right now config space shouldn't propagate out side any driver, so you
-can probably just filter it in your generic code, and make it very hard
-and obviously wrong for a driver to parse ranges for config space, so
-we don't get more usages.
+You can probably simplify that to take a void pointer and have only one line
+difference.
 
-Jason
+> What about creating functions that use my series directly if CONFIG_ARM64 is
+> defined (or any CONFIG_ you want to create for your driver that you select
+> from CONFIG_ARM64) and otherwise implement the CONFIG_ARM version? That
+> way your driver will call only one API without any #ifdef and when arm code
+> gets converted you drop your adaptation functions. Or (better yet), have a
+> stab at converting bios32 (Rob Herring has already provided some hints on
+> how to do it for arch/arm).
+
+That would of course be best.
+
+> To give an example on how things are not going well in your version (not obvious
+> from your patch, but you can see it once you apply it): dw_pcie_host_init()
+> will still carry the handcoded version of DT parsing and that is not guarded
+> against CONFIG_ARM64 being defined, where the parsing will happen again
+> when you call of_create_pci_host_bridge().
+
+How about making the generic DT parsing code from of_create_pci_host_bridge()
+an exported function that can be called by drivers that don't use
+of_create_pci_host_bridge?
+
+> Speaking of the handcoded DT parsing of resources: you are using restype == 0
+> as a way of selecting config space, *and then split the range size into two
+> halves*. From what Jason Gunthorpe and Arnd were saying, config ranges in the DT
+> tree should only be used for ECAM space, so no split is allowed.
+> 
+> Arnd, are you allowing this non-standard use to creep in the bindings?
+
+I fear it's too late to change that now. In retrospect we probably shoulnd't
+have defined the binding like that.
+
+Overall, my impression of the patch is that it should be possible to do
+the same with much fewer #ifdefs by first rearranging the code in one patch
+and then doing another patch on top to add the generic arm64 support.
+
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 6d23d8c..fac0440 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -65,14 +65,27 @@
+> >  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+> >  #define PCIE_ATU_UPPER_TARGET		0x91C
+> >  
+> > +#ifdef CONFIG_ARM
+> >  static struct hw_pci dw_pci;
+> > +#endif
+> >  
+> >  static unsigned long global_io_offset;
+> >  
+> > +#ifdef CONFIG_ARM
+> >  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+> >  {
+> >  	return sys->private_data;
+> >  }
+> > +#endif
+> > +
+> > +#ifdef CONFIG_ARM64
+> > +static inline struct pcie_port *sys_to_pcie(struct pcie_port *pp)
+> > +{
+> > +	return pp;
+> > +}
+> > +
+> > +static struct pci_ops dw_pcie_ops;
+> > +#endif
+> >  
+> >  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+> >  {
+> > @@ -381,7 +394,9 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+> >  {
+> >  	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
+> >  	irq_set_chip_data(irq, domain->host_data);
+> > +#ifdef CONFIG_ARM
+> >  	set_irq_flags(irq, IRQF_VALID);
+> > +#endif
+> >  
+> >  	return 0;
+> >  }
+> > @@ -397,6 +412,10 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >  	struct of_pci_range_parser parser;
+> >  	u32 val;
+> >  	int i;
+> > +#ifdef CONFIG_ARM64
+> > +	struct pci_host_bridge *bridge;
+> > +	resource_size_t lastbus;
+> > +#endif
+> >  
+> >  	if (of_pci_range_parser_init(&parser, np)) {
+> >  		dev_err(pp->dev, "missing ranges property\n");
+> > @@ -489,6 +508,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >  	val |= PORT_LOGIC_SPEED_CHANGE;
+> >  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> >  
+> > +#ifdef CONFIG_ARM
+> >  	dw_pci.nr_controllers = 1;
+> >  	dw_pci.private_data = (void **)&pp;
+> >  
+> > @@ -497,6 +517,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >  #ifdef CONFIG_PCI_DOMAINS
+> >  	dw_pci.domain++;
+> >  #endif
+> > +#endif
+> > +
+> > +#ifdef CONFIG_ARM64
+> > +	bridge = of_create_pci_host_bridge(pp->dev, &dw_pcie_ops, pp);
+> > +	if (IS_ERR_OR_NULL(bridge))
+> > +		return PTR_ERR(bridge);
+> > +
+> > +	lastbus = pci_rescan_bus(bridge->bus);
+> > +	pci_bus_update_busn_res_end(bridge->bus, lastbus);
+> > +#endif
+> >  
+> >  	return 0;
+> >  }
+> > @@ -695,6 +725,7 @@ static struct pci_ops dw_pcie_ops = {
+> >  	.write = dw_pcie_wr_conf,
+> >  };
+> >  
+> > +#ifdef CONFIG_ARM
+> >  static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> >  {
+> >  	struct pcie_port *pp;
+> > @@ -758,6 +789,7 @@ static struct hw_pci dw_pci = {
+> >  	.map_irq	= dw_pcie_map_irq,
+> >  	.add_bus	= dw_pcie_add_bus,
+> >  };
+> > +#endif /* CONFIG_ARM */
+> >  
+> >  void dw_pcie_setup_rc(struct pcie_port *pp)
+
+
+
