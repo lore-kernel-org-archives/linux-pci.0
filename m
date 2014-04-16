@@ -1,50 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:37314 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759763AbaD3XsM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 19:48:12 -0400
-Received: by mail-ig0-f173.google.com with SMTP id hn18so548577igb.6
-        for <linux-pci@vger.kernel.org>; Wed, 30 Apr 2014 16:48:11 -0700 (PDT)
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:41920 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082AbaDPRKm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 13:10:42 -0400
+Received: by mail-ig0-f175.google.com with SMTP id ur14so1280339igb.14
+        for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2014 10:10:41 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVRHAW3jXwnUSX96Jy3qbeQ8JcSGoPKANJjWYnNS1CTdw@mail.gmail.com>
-References: <1398893606-22712-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo7aWM_BjXqEqgTk0uT4RbpZSqjGJOgOH_hWreoQicMU_A@mail.gmail.com>
-	<CAE9FiQW1yFmgZRCWrhi5ccwxWfDZdR0vbQ1bA7zz-5Fa8TfN5A@mail.gmail.com>
-	<CAErSpo4K_duSr7Y5OHVm+KMhso2csG=nTZ9v1V=ATVK76Rj=QQ@mail.gmail.com>
-	<CAE9FiQVRHAW3jXwnUSX96Jy3qbeQ8JcSGoPKANJjWYnNS1CTdw@mail.gmail.com>
-Date: Wed, 30 Apr 2014 16:48:11 -0700
-Message-ID: <CAE9FiQW5O5ZXr3YnoR8q56AuLnOfeqSX3=FgSAw=S+twF7LCXQ@mail.gmail.com>
-Subject: Re: [PATCH v3] pciehp: only wait command complete for real hotplug control
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
+In-Reply-To: <CAE9FiQV2eJGNusy1M8jO7EMRwsU4C6809dRkzXAqEVH34y82ig@mail.gmail.com>
+References: <CAE9FiQXzRQ9S0mwwb58R2icBTtHHJ6NMVFMaxEgtVNP9mZVjZw@mail.gmail.com>
+ <1394222924-28886-1-git-send-email-yinghai@kernel.org> <CAErSpo6r16va7oBpaDcTXw0Y0igc=NbXy9G7c27X+P0UM7fh8g@mail.gmail.com>
+ <20140408025738.GA3198@yanx> <CAErSpo4JSrjSn4dXC9Pzfz2Aho+W4Gq9uKc+kAFbqTERcRAJ+w@mail.gmail.com>
+ <20140409075215.GA3173@yanx> <CAErSpo4aGU_rmNSiv=HS-pDVsfKk798zLQW8Kx5huHe8jwdghw@mail.gmail.com>
+ <20140415115450.GA7792@yanx> <CAErSpo63LKffb4DH+cSfBnvtAoPy06u22e7CUhRuKr-PHNWZMw@mail.gmail.com>
+ <CAE9FiQV2eJGNusy1M8jO7EMRwsU4C6809dRkzXAqEVH34y82ig@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 16 Apr 2014 11:10:21 -0600
+Message-ID: <CAErSpo5qwwq9zrRRusgaH_Pk-iCbm94CuBDEE9jxmGa2cmcP+g@mail.gmail.com>
+Subject: Re: [PATCH v7] PCI: Try best to allocate pref mmio 64bit above 4g
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Amir Vadai <amirv@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Eugenia Emantayev <eugenia@mellanox.com>, talal@mellanox.com,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 30, 2014 at 4:21 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Apr 30, 2014 at 3:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->>> For intel: Nehalem, westmere, sndbridge, ivybridge.
+On Tue, Apr 15, 2014 at 10:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Apr 15, 2014 at 5:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> It first
+>>> tried to find a 32-bit prefetchable window, but we only supply a 64-bit one.
+>>> So it fall back to (32-bit) non-prefetchable window, but there is no enough
+>>> room there. At last it went into complicated steps (not show here) of
+>>> allocating requested resource first, then try best for the optional ones, etc..
 >>>
->>> For nvidia, only according to boot log for old systems with chipset:
->>> ck804 and mcp55.
+>>> Why is BAR 15 (prefetchable) 32 bit instead of 64? Because PCI core favours
+>>> 32-bit prefetchable BARs and we have some. This is one of them:
+>>>
+>>> | pci 0003:05:00.0: reg 0x30: [mem 0x00000000-0x000fffff pref]
+>>>
+>>> PCI core decides to let them enjoy the benefition of prefetch. They can't
+>>> bear the risk of getting 4G-above address, so its parent, its parent's parent,
+>>> its parent's parent's parent, finally the root bridge (00:00.0) must have their
+>>> MEM_64 flag of prefetchable resource (BAR 15) clear.
 >>
->> I meant, do you have a reference to a section in the spec that talks
->> about how this works?
->>
->> So far all we have is folklore that was discovered by experimentation.
->>  It'd be nice to see the spec that says "CC is only used when changing
->> these listed bits."
+>> It sounds like we're tracking the resource requirements
+>> (prefetchability and BAR width) by using the flags on bridge windows.
+>> If that's the case, I think it's wrong.  We should preserve the bridge
+>> window flags, because those express the bridge hardware capabilities,
+>> and we should explicitly keep track of what's required by devices
+>> below the bridge in some other way.
 >
-> We will have doc from Intel about that. Hope it is not under NDA.
+> if the BAR support 64bit, then resource could be 64bit.
+> if the BAR does not support 64bit, then resource should be 32bit.
+>
+> That should be best guess to decide resource flag.
 
-Intel published that yesterday.
+We don't need to "decide" the resource flags.  The hardware tells us
+what it can support, and *that* should be reflected in the flags.  We
+do need to decide what addresses to assign and whether to put a
+prefetchable BAR in a prefetchable or non-prefetchable window.
 
-http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
-in section CF118.
-
-Thanks
-
-Yinghai
+Putting decision results in the resource flags obfuscates the whole process.
