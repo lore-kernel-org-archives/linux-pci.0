@@ -1,34 +1,28 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ryan Desfosses <ryan@desfo.org>
-To: trivial@kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Ryan Desfosses <ryan@desfo.org>
-Subject: [PATCH 2/2] pci: added space before the open parenthesis
-Date: Fri,  4 Apr 2014 14:18:10 -0400
-Message-Id: <1396635490-3630-1-git-send-email-ryan@desfo.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45658 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751461AbaDPUPk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 16:15:40 -0400
+Date: Wed, 16 Apr 2014 13:15:41 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Jean Delvare <jdelvare@suse.de>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jiri Slaby <jslaby@suse.cz>
+Subject: Re: [PATCH] pci_ids: Remove old serial device IDs
+Message-ID: <20140416201541.GA25148@kroah.com>
+References: <20140331151929.7bd3afef@endymion.delvare>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140331151929.7bd3afef@endymion.delvare>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-change made to resolve checkpatch.pl error
+On Mon, Mar 31, 2014 at 03:19:29PM +0200, Jean Delvare wrote:
+> These IDs are no longer referenced since kernel 3.1 so I suppose we
+> can remove them from pci_ids.h.
+> 
+> Signed-off-by: Jean Delvare <jdelvare@suse.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> ---
 
-Signed-off-by: Ryan Desfosses <ryan@desfo.org>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index fdbc294..56acb63 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -114,7 +114,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus* bus)
- 	max = bus->busn_res.end;
- 	list_for_each(tmp, &bus->children) {
- 		n = pci_bus_max_busnr(pci_bus_b(tmp));
--		if(n > max)
-+		if (n > max)
- 			max = n;
- 	}
- 	return max;
--- 
-1.9.1
-
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
