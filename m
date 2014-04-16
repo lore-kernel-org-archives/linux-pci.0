@@ -1,555 +1,339 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 12/22] iommu/vt-d: implement DMAR unit hotplug framework
-Date: Tue, 22 Apr 2014 15:07:23 +0800
-Message-Id: <1398150453-28141-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:43161 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925AbaDPWLQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 18:11:16 -0400
+Received: by mail-ig0-f175.google.com with SMTP id ur14so1591763igb.14
+        for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2014 15:11:16 -0700 (PDT)
+Date: Wed, 16 Apr 2014 16:11:13 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	amirv@mellanox.com, Or Gerlitz <ogerlitz@mellanox.com>,
+	eugenia@mellanox.com, Guo Chao <yan@linux.vnet.ibm.com>,
+	talal@mellanox.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v7] PCI: Try best to allocate pref mmio 64bit above 4g
+Message-ID: <20140416221113.GA14709@google.com>
+References: <CAE9FiQXzRQ9S0mwwb58R2icBTtHHJ6NMVFMaxEgtVNP9mZVjZw@mail.gmail.com>
+ <1394222924-28886-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1394222924-28886-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Intel platforms, an IO Hub (PCI/PCIe host bridge) may contain DMAR
-units, so we need to support DMAR hotplug when supporting PCI host
-bridge hotplug on Intel platforms.
+[-cc Gavin (addr is bouncing)]
 
-According to Section 8.8 "Remapping Hardware Unit Hot Plug" in "Intel
-Virtualization Technology for Directed IO Architecture Specification
-Rev 2.2", ACPI BIOS should implement ACPI _DSM method under the ACPI
-object for the PCI host bridge to support DMAR hotplug.
+On Fri, Mar 07, 2014 at 12:08:44PM -0800, Yinghai Lu wrote:
+> When one of children resources does not support MEM_64, MEM_64 for
+> bridge get reset, so pull down whole pref resource on the bridge under 4G.
+> 
+> If the bridge support pref mem 64, will only allocate that with pref mem64 to
+> children that support it.
+> For children resources if they only support pref mem 32, will allocate them
+> from non pref mem instead.
+> 
+> If the bridge only support 32bit pref mmio, will still have all children pref
+> mmio under that.
+> 
+> -v2: Add release bridge res support with bridge mem res for pref_mem children res.
+> -v3: refresh and make it can be applied early before for_each_dev_res patchset.
+> -v4: fix non-pref mmio 64bit support found by Guo Chao.
+> -v7: repost as ibm's powerpc system work again when
+>     1. petiboot boot kernel have this patch.
+>     2. or mellanox driver added new .shutdown member.
+>     discussion could be found at:
+> 	 http://marc.info/?t=138968064500001&r=1&w=2
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Tested-by: Guo Chao <yan@linux.vnet.ibm.com>
+> Tested-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> 
+> ---
+>  drivers/pci/setup-bus.c |  138 ++++++++++++++++++++++++++++++++----------------
+>  drivers/pci/setup-res.c |   20 ++++++
+>  2 files changed, 111 insertions(+), 47 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -713,12 +713,11 @@ static void pci_bridge_check_ranges(stru
+>     bus resource of a given type. Note: we intentionally skip
+>     the bus resources which have already been assigned (that is,
+>     have non-NULL parent resource). */
+> -static struct resource *find_free_bus_resource(struct pci_bus *bus, unsigned long type)
+> +static struct resource *find_free_bus_resource(struct pci_bus *bus,
+> +			 unsigned long type_mask, unsigned long type)
+>  {
+>  	int i;
+>  	struct resource *r;
+> -	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+> -				  IORESOURCE_PREFETCH;
+>  
+>  	pci_bus_for_each_resource(bus, r, i) {
+>  		if (r == &ioport_resource || r == &iomem_resource)
+> @@ -815,7 +814,8 @@ static void pbus_size_io(struct pci_bus
+>  		resource_size_t add_size, struct list_head *realloc_head)
+>  {
+>  	struct pci_dev *dev;
+> -	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
+> +	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+> +							IORESOURCE_IO);
+>  	resource_size_t size = 0, size0 = 0, size1 = 0;
+>  	resource_size_t children_add_size = 0;
+>  	resource_size_t min_align, align;
+> @@ -915,15 +915,17 @@ static inline resource_size_t calculate_
+>   * guarantees that all child resources fit in this size.
+>   */
+>  static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+> -			 unsigned long type, resource_size_t min_size,
+> -			resource_size_t add_size,
+> -			struct list_head *realloc_head)
+> +			 unsigned long type, unsigned long type2,
+> +			 unsigned long type3,
+> +			 resource_size_t min_size, resource_size_t add_size,
+> +			 struct list_head *realloc_head)
 
-This patch introduces interfaces to parse ACPI _DSM method for
-DMAR unit hotplug. It also implements state machines for DMAR unit
-hot-addition and hot-removal.
+This no longer matches the function documentation above, but it doesn't
+really matter, because this interface, with a mask plus three type
+parameters, is just way too complicated.
 
-The PCI host bridge hotplug driver should call dmar_hotplug_hotplug()
-before scanning PCI devices connected for hot-addition and after
-destroying all PCI devices for hot-removal.
+>  {
+>  	struct pci_dev *dev;
+>  	resource_size_t min_align, align, size, size0, size1;
+>  	resource_size_t aligns[12];	/* Alignments from 1Mb to 2Gb */
+>  	int order, max_order;
+> -	struct resource *b_res = find_free_bus_resource(bus, type);
+> +	struct resource *b_res = find_free_bus_resource(bus,
+> +					 mask | IORESOURCE_PREFETCH, type);
+>  	unsigned int mem64_mask = 0;
+>  	resource_size_t children_add_size = 0;
+>  
+> @@ -944,7 +946,9 @@ static int pbus_size_mem(struct pci_bus
+>  			struct resource *r = &dev->resource[i];
+>  			resource_size_t r_size;
+>  
+> -			if (r->parent || (r->flags & mask) != type)
+> +			if (r->parent || ((r->flags & mask) != type &&
+> +					  (r->flags & mask) != type2 &&
+> +					  (r->flags & mask) != type3))
+>  				continue;
+>  			r_size = resource_size(r);
+>  #ifdef CONFIG_PCI_IOV
+> @@ -1117,8 +1121,9 @@ void __ref __pci_bus_size_bridges(struct
+>  			struct list_head *realloc_head)
+>  {
+>  	struct pci_dev *dev;
+> -	unsigned long mask, prefmask;
+> +	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+>  	resource_size_t additional_mem_size = 0, additional_io_size = 0;
+> +	struct resource *b_res;
+>  
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>  		struct pci_bus *b = dev->subordinate;
+> @@ -1163,15 +1168,34 @@ void __ref __pci_bus_size_bridges(struct
+>  		   has already been allocated by arch code, try
+>  		   non-prefetchable range for both types of PCI memory
+>  		   resources. */
+> +		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+>  		mask = IORESOURCE_MEM;
+>  		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+> -		if (pbus_size_mem(bus, prefmask, prefmask,
+> +		if (b_res[2].flags & IORESOURCE_MEM_64) {
+> +			prefmask |= IORESOURCE_MEM_64;
+> +			if (pbus_size_mem(bus, prefmask, prefmask,
+> +				  prefmask, prefmask,
+>  				  realloc_head ? 0 : additional_mem_size,
+> -				  additional_mem_size, realloc_head))
+> -			mask = prefmask; /* Success, size non-prefetch only. */
+> -		else
+> -			additional_mem_size += additional_mem_size;
+> -		pbus_size_mem(bus, mask, IORESOURCE_MEM,
+> +				  additional_mem_size, realloc_head)) {
+> +					/* Success, size non-pref64 only. */
+> +					mask = prefmask;
+> +					type2 = prefmask & ~IORESOURCE_MEM_64;
+> +					type3 = prefmask & ~IORESOURCE_PREFETCH;
+> +			}
+> +		}
+> +		if (!type2) {
+> +			prefmask &= ~IORESOURCE_MEM_64;
+> +			if (pbus_size_mem(bus, prefmask, prefmask,
+> +					 prefmask, prefmask,
+> +					 realloc_head ? 0 : additional_mem_size,
+> +					 additional_mem_size, realloc_head)) {
+> +				/* Success, size non-prefetch only. */
+> +				mask = prefmask;
+> +			} else
+> +				additional_mem_size += additional_mem_size;
+> +			type2 = type3 = IORESOURCE_MEM;
+> +		}
+> +		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
+>  				realloc_head ? 0 : additional_mem_size,
+>  				additional_mem_size, realloc_head);
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c                |  257 +++++++++++++++++++++++++++++++++--
- drivers/iommu/intel-iommu.c         |   78 ++++++++++-
- drivers/iommu/intel_irq_remapping.c |    5 +
- include/linux/dmar.h                |   27 ++++
- 4 files changed, 353 insertions(+), 14 deletions(-)
+I spent quite a bit of time trying to understand this code yesterday, but
+I failed.  Comments might help, but more importantly, it needs to be
+simplified so the code makes sense even without comments.
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index d09ee0d55946..290b4bdcaa3a 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -74,7 +74,7 @@ static unsigned long dmar_seq_ids[BITS_TO_LONGS(DMAR_UNITS_SUPPORTED)];
- static int alloc_iommu(struct dmar_drhd_unit *drhd);
- static void free_iommu(struct intel_iommu *iommu);
- 
--static void __init dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
-+static void dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
- {
- 	/*
- 	 * add INCLUDE_ALL at the tail, so scan the list will find it at
-@@ -335,24 +335,45 @@ static struct notifier_block dmar_pci_bus_nb = {
- 	.priority = INT_MIN,
- };
- 
-+static struct dmar_drhd_unit *
-+dmar_find_dmaru(struct acpi_dmar_hardware_unit *drhd)
-+{
-+	struct dmar_drhd_unit *dmaru;
-+
-+	list_for_each_entry_rcu(dmaru, &dmar_drhd_units, list)
-+		if (dmaru->segment == drhd->segment &&
-+		    dmaru->reg_base_addr == drhd->address)
-+			return dmaru;
-+
-+	return NULL;
-+}
-+
- /**
-  * dmar_parse_one_drhd - parses exactly one DMA remapping hardware definition
-  * structure which uniquely represent one DMA remapping hardware unit
-  * present in the platform
-  */
--static int __init
--dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
-+static int dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_hardware_unit *drhd;
- 	struct dmar_drhd_unit *dmaru;
- 	int ret = 0;
- 
- 	drhd = (struct acpi_dmar_hardware_unit *)header;
--	dmaru = kzalloc(sizeof(*dmaru), GFP_KERNEL);
-+	dmaru = dmar_find_dmaru(drhd);
-+	if (dmaru)
-+		goto out;
-+
-+	dmaru = kzalloc(sizeof(*dmaru) + header->length, GFP_KERNEL);
- 	if (!dmaru)
- 		return -ENOMEM;
- 
--	dmaru->hdr = header;
-+	/*
-+	 * If header is allocated from slab by ACPI _DSM method, we need to
-+	 * copy the content because the memory buffer will be freed on return.
-+	 */
-+	dmaru->hdr = (void *)(dmaru + 1);
-+	memcpy(dmaru->hdr, header, header->length);
- 	dmaru->reg_base_addr = drhd->address;
- 	dmaru->segment = drhd->segment;
- 	dmaru->include_all = drhd->flags & 0x1; /* BIT0: INCLUDE_ALL */
-@@ -373,6 +394,7 @@ dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
- 	}
- 	dmar_register_drhd_unit(dmaru);
- 
-+out:
- 	if (arg)
- 		(*(int *)arg)++;
- 
-@@ -409,8 +431,7 @@ static int __init dmar_parse_one_andd(struct acpi_dmar_header *header, void *arg
- }
- 
- #ifdef CONFIG_ACPI_NUMA
--static int __init
--dmar_parse_one_rhsa(struct acpi_dmar_header *header, void *arg)
-+static int dmar_parse_one_rhsa(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_rhsa *rhsa;
- 	struct dmar_drhd_unit *drhd;
-@@ -804,14 +825,22 @@ dmar_validate_one_drhd(struct acpi_dmar_header *entry, void *arg)
- 		return -EINVAL;
- 	}
- 
--	addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
-+	if (arg)
-+		addr = ioremap(drhd->address, VTD_PAGE_SIZE);
-+	else
-+		addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
- 	if (!addr) {
- 		pr_warn("IOMMU: can't validate: %llx\n", drhd->address);
- 		return -EINVAL;
- 	}
-+
- 	cap = dmar_readq(addr + DMAR_CAP_REG);
- 	ecap = dmar_readq(addr + DMAR_ECAP_REG);
--	early_iounmap(addr, VTD_PAGE_SIZE);
-+
-+	if (arg)
-+		iounmap(addr);
-+	else
-+		early_iounmap(addr, VTD_PAGE_SIZE);
- 
- 	if (cap == (uint64_t)-1 && ecap == (uint64_t)-1) {
- 		warn_invalid_dmar(drhd->address, " returns all ones");
-@@ -1680,12 +1709,17 @@ int __init dmar_ir_support(void)
- 	return dmar->flags & 0x1;
- }
- 
-+/* Check whether DMAR units are in use */
-+static inline bool dmar_in_use(void)
-+{
-+	return irq_remapping_enabled || intel_iommu_enabled;
-+}
-+
- static int __init dmar_free_unused_resources(void)
- {
- 	struct dmar_drhd_unit *dmaru, *dmaru_n;
- 
--	/* DMAR units are in use */
--	if (irq_remapping_enabled || intel_iommu_enabled)
-+	if (dmar_in_use())
- 		return 0;
- 
- 	if (dmar_dev_scope_status != 1 && !list_empty(&dmar_drhd_units))
-@@ -1703,3 +1737,204 @@ static int __init dmar_free_unused_resources(void)
- 
- late_initcall(dmar_free_unused_resources);
- IOMMU_INIT_POST(detect_intel_iommu);
-+
-+/*
-+ * DMAR Hotplug Support
-+ * For more details, please refer to Intel(R) Virtualization Technology
-+ * for Directed-IO Architecture Specifiction, Rev 2.2, Section 8.8
-+ * "Remapping Hardware Unit Hot Plug".
-+ */
-+static u8 dmar_hp_uuid[] = {
-+	/* 0000 */    0xA6, 0xA3, 0xC1, 0xD8, 0x9B, 0xBE, 0x9B, 0x4C,
-+	/* 0008 */    0x91, 0xBF, 0xC3, 0xCB, 0x81, 0xFC, 0x5D, 0xAF
-+};
-+
-+/*
-+ * Currently there's only one revision and BIOS will not check the revision id,
-+ * so use 0 for safety.
-+ */
-+#define	DMAR_DSM_REV_ID			0
-+#define	DMAR_DSM_FUNC_DRHD		1
-+#define	DMAR_DSM_FUNC_ATSR		2
-+#define	DMAR_DSM_FUNC_RHSA		3
-+
-+static inline bool dmar_detect_dsm(acpi_handle handle, int func)
-+{
-+	return acpi_check_dsm(handle, dmar_hp_uuid, DMAR_DSM_REV_ID, 1 << func);
-+}
-+
-+static int dmar_walk_dsm_resource(acpi_handle handle, int func,
-+				  dmar_res_handler_t handler, void *arg)
-+{
-+	int ret = -ENODEV;
-+	union acpi_object *obj;
-+	struct acpi_dmar_header *start;
-+	struct dmar_res_callback callback;
-+	static int res_type[] = {
-+		[DMAR_DSM_FUNC_DRHD] = ACPI_DMAR_TYPE_HARDWARE_UNIT,
-+		[DMAR_DSM_FUNC_ATSR] = ACPI_DMAR_TYPE_ATSR,
-+		[DMAR_DSM_FUNC_RHSA] = ACPI_DMAR_HARDWARE_AFFINITY,
-+	};
-+
-+	if (!dmar_detect_dsm(handle, func))
-+		return 0;
-+
-+	obj = acpi_evaluate_dsm_typed(handle, dmar_hp_uuid, DMAR_DSM_REV_ID,
-+				      func, NULL, ACPI_TYPE_BUFFER);
-+	if (!obj)
-+		return -ENODEV;
-+
-+	memset(&callback, 0, sizeof(callback));
-+	callback.cb[res_type[func]] = handler;
-+	callback.arg[res_type[func]] = arg;
-+	start = (struct acpi_dmar_header *)obj->buffer.pointer;
-+	ret = dmar_walk_resources(start, obj->buffer.length, &callback);
-+
-+	ACPI_FREE(obj);
-+
-+	return ret;
-+}
-+
-+static int dmar_hp_add_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	int ret;
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (!dmaru)
-+		return -ENODEV;
-+
-+	ret = dmar_ir_hotplug(dmaru, true);
-+	if (ret == 0)
-+		ret = dmar_iommu_hotplug(dmaru, true);
-+
-+	return ret;
-+}
-+
-+static int dmar_hp_remove_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	int i, ret;
-+	struct device *dev;
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (!dmaru)
-+		return 0;
-+
-+	/*
-+	 * All PCI devices managed by this unit should have been destroyed.
-+	 */
-+	if (!dmaru->include_all && dmaru->devices && dmaru->devices_cnt)
-+		for_each_active_dev_scope(dmaru->devices,
-+					  dmaru->devices_cnt, i, dev)
-+			return -EBUSY;
-+
-+	ret = dmar_ir_hotplug(dmaru, false);
-+	if (ret == 0)
-+		ret = dmar_iommu_hotplug(dmaru, false);
-+
-+	return ret;
-+}
-+
-+static int dmar_hp_release_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (dmaru) {
-+		list_del_rcu(&dmaru->list);
-+		synchronize_rcu();
-+		dmar_free_drhd(dmaru);
-+	}
-+
-+	return 0;
-+}
-+
-+static int dmar_hotplug_insert(acpi_handle handle)
-+{
-+	int ret;
-+	int drhd_count = 0;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_validate_one_drhd, (void *)1);
-+	if (ret)
-+		goto out;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_parse_one_drhd, (void *)&drhd_count);
-+	if (ret == 0 && drhd_count == 0) {
-+		pr_warn(FW_BUG "No DRHD structures in buffer returned by _DSM method\n");
-+		goto out;
-+	} else if (ret) {
-+		goto release_drhd;
-+	}
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_RHSA,
-+				     &dmar_parse_one_rhsa, NULL);
-+	if (ret)
-+		goto release_drhd;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+				     &dmar_parse_one_atsr, NULL);
-+	if (ret)
-+		goto release_atsr;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_hp_add_drhd, NULL);
-+	if (!ret)
-+		return 0;
-+
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+			       &dmar_hp_remove_drhd, NULL);
-+release_atsr:
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+			       &dmar_release_one_atsr, NULL);
-+release_drhd:
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+			       &dmar_hp_release_drhd, NULL);
-+out:
-+	return ret;
-+}
-+
-+static int dmar_hotplug_remove(acpi_handle handle)
-+{
-+	int ret;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+				     &dmar_check_one_atsr, NULL);
-+	if (ret)
-+		return ret;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_hp_remove_drhd, NULL);
-+	if (ret == 0) {
-+		WARN_ON(dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+					       &dmar_release_one_atsr, NULL));
-+		WARN_ON(dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+					       &dmar_hp_release_drhd, NULL));
-+	} else {
-+		dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				       &dmar_hp_add_drhd, NULL);
-+	}
-+
-+	return ret;
-+}
-+
-+int dmar_device_hotplug(acpi_handle handle, bool insert)
-+{
-+	int ret;
-+
-+	if (!dmar_in_use())
-+		return 0;
-+	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
-+		return 0;
-+
-+	down_write(&dmar_global_lock);
-+	if (insert)
-+		ret = dmar_hotplug_insert(handle);
-+	else
-+		ret = dmar_hotplug_remove(handle);
-+	up_write(&dmar_global_lock);
-+
-+	return ret;
-+}
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 35139602f7a7..33e636c246a6 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3700,17 +3700,48 @@ int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg)
- 	return 0;
- }
- 
--int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr, void *arg)
-+static struct dmar_atsr_unit *dmar_find_atsr(struct acpi_dmar_atsr *atsr)
-+{
-+	struct dmar_atsr_unit *atsru;
-+	struct acpi_dmar_atsr *tmp;
-+
-+	list_for_each_entry_rcu(atsru, &dmar_atsr_units, list) {
-+		tmp = (struct acpi_dmar_atsr *)atsru->hdr;
-+		if (atsr->segment != tmp->segment)
-+			continue;
-+		if (atsr->header.length != tmp->header.length)
-+			continue;
-+		if (memcmp(atsr, tmp, atsr->header.length) == 0)
-+			return atsru;
-+	}
-+
-+	return NULL;
-+}
-+
-+int dmar_parse_one_atsr(struct acpi_dmar_header *hdr, void *arg)
- {
- 	struct acpi_dmar_atsr *atsr;
- 	struct dmar_atsr_unit *atsru;
- 
-+	if (system_state != SYSTEM_BOOTING && !intel_iommu_enabled)
-+		return 0;
-+
- 	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
--	atsru = kzalloc(sizeof(*atsru), GFP_KERNEL);
-+	atsru = dmar_find_atsr(atsr);
-+	if (atsru)
-+		return 0;
-+
-+	atsru = kzalloc(sizeof(*atsru) + hdr->length, GFP_KERNEL);
- 	if (!atsru)
- 		return -ENOMEM;
- 
--	atsru->hdr = hdr;
-+	/*
-+	 * If memory is allocated from slab by ACPI _DSM method, we need to
-+	 * copy the memory content because the memory buffer will be freed
-+	 * on return.
-+	 */
-+	atsru->hdr = (void *)(atsru + 1);
-+	memcpy(atsru->hdr, hdr, hdr->length);
- 	atsru->include_all = atsr->flags & 0x1;
- 	if (!atsru->include_all) {
- 		atsru->devices = dmar_alloc_dev_scope((void *)(atsr + 1),
-@@ -3733,6 +3764,47 @@ static void intel_iommu_free_atsr(struct dmar_atsr_unit *atsru)
- 	kfree(atsru);
- }
- 
-+int dmar_release_one_atsr(struct acpi_dmar_header *hdr, void *arg)
-+{
-+	struct acpi_dmar_atsr *atsr;
-+	struct dmar_atsr_unit *atsru;
-+
-+	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
-+	atsru = dmar_find_atsr(atsr);
-+	if (atsru) {
-+		list_del_rcu(&atsru->list);
-+		synchronize_rcu();
-+		intel_iommu_free_atsr(atsru);
-+	}
-+
-+	return 0;
-+}
-+
-+int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg)
-+{
-+	int i;
-+	struct device *dev;
-+	struct acpi_dmar_atsr *atsr;
-+	struct dmar_atsr_unit *atsru;
-+
-+	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
-+	atsru = dmar_find_atsr(atsr);
-+	if (!atsru)
-+		return 0;
-+
-+	if (!atsru->include_all && atsru->devices && atsru->devices_cnt)
-+		for_each_active_dev_scope(atsru->devices, atsru->devices_cnt,
-+					  i, dev)
-+			return -EBUSY;
-+
-+	return 0;
-+}
-+
-+int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return intel_iommu_enabled ? -ENOSYS : 0;
-+}
-+
- static void intel_iommu_free_dmars(void)
- {
- 	struct dmar_rmrr_unit *rmrru, *rmrr_n;
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 9b174893f0f5..aa309a8e4d3a 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -1144,3 +1144,8 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.msi_setup_irq		= intel_msi_setup_irq,
- 	.setup_hpet_msi		= intel_setup_hpet_msi,
- };
-+
-+int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return irq_remapping_enabled ? -ENOSYS : 0;
-+}
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index c8a576bc3a98..86da14d6e3b8 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -120,6 +120,7 @@ extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
- /* Intel IOMMU detection */
- extern int detect_intel_iommu(void);
- extern int enable_drhd_fault_handling(void);
-+extern int dmar_device_hotplug(acpi_handle handle, bool insert);
- 
- static inline int dmar_res_noop(struct acpi_dmar_header *hdr, void *arg)
- {
-@@ -131,17 +132,43 @@ extern int iommu_detected, no_iommu;
- extern int intel_iommu_init(void);
- extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg);
- extern int dmar_parse_one_atsr(struct acpi_dmar_header *header, void *arg);
-+extern int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg);
-+extern int dmar_release_one_atsr(struct acpi_dmar_header *hdr, void *arg);
-+extern int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert);
- extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
- #else /* !CONFIG_INTEL_IOMMU: */
- static inline int intel_iommu_init(void) { return -ENODEV; }
-+
- #define	dmar_parse_one_rmrr		dmar_res_noop
- #define	dmar_parse_one_atsr		dmar_res_noop
-+#define	dmar_check_one_atsr		dmar_res_noop
-+#define	dmar_release_one_atsr		dmar_res_noop
-+
- static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
- {
- 	return 0;
- }
-+
-+static inline int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_INTEL_IOMMU */
- 
-+#ifdef CONFIG_IRQ_REMAP
-+extern int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert);
-+#else  /* CONFIG_IRQ_REMAP */
-+static inline int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{ return 0; }
-+#endif /* CONFIG_IRQ_REMAP */
-+
-+#else /* CONFIG_DMAR_TABLE */
-+
-+static inline int dmar_device_hotplug(acpi_handle handle, bool insert)
-+{
-+	return 0;
-+}
-+
- #endif /* CONFIG_DMAR_TABLE */
- 
- struct irte {
--- 
-1.7.10.4
+>  		break;
+> @@ -1257,42 +1281,66 @@ static void __ref __pci_bridge_assign_re
+>  static void pci_bridge_release_resources(struct pci_bus *bus,
+>  					  unsigned long type)
+>  {
+> -	int idx;
+> -	bool changed = false;
+> -	struct pci_dev *dev;
+> +	struct pci_dev *dev = bus->self;
+>  	struct resource *r;
+>  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+> -				  IORESOURCE_PREFETCH;
+> +				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+> +	unsigned old_flags = 0;
+> +	struct resource *b_res;
+> +	int idx = 1;
+>  
+> -	dev = bus->self;
+> -	for (idx = PCI_BRIDGE_RESOURCES; idx <= PCI_BRIDGE_RESOURCE_END;
+> -	     idx++) {
+> -		r = &dev->resource[idx];
+> -		if ((r->flags & type_mask) != type)
+> -			continue;
+> -		if (!r->parent)
+> -			continue;
+> -		/*
+> -		 * if there are children under that, we should release them
+> -		 *  all
+> -		 */
+> -		release_child_resources(r);
+> -		if (!release_resource(r)) {
+> -			dev_printk(KERN_DEBUG, &dev->dev,
+> -				 "resource %d %pR released\n", idx, r);
+> -			/* keep the old size */
+> -			r->end = resource_size(r) - 1;
+> -			r->start = 0;
+> -			r->flags = 0;
+> -			changed = true;
+> -		}
+> -	}
+> +	b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
+> +
+> +	/*
+> +	 *     1. if there is io port assign fail, will release bridge
+> +	 *	  io port.
+> +	 *     2. if there is non pref mmio assign fail, release bridge
+> +	 *	  nonpref mmio.
+> +	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
+> +	 *	  is 64bit, release bridge pref mmio.
+> +	 *     4. if there is pref mmio assign fail, and bridge pref is
+> +	 *	  32bit mmio, release bridge pref mmio
+> +	 *     5. if there is pref mmio assign fail, and bridge pref is not
+> +	 *	  assigned, release bridge nonpref mmio.
+> +	 */
+> +	if (type & IORESOURCE_IO)
+> +		idx = 0;
+> +	else if (!(type & IORESOURCE_PREFETCH))
+> +		idx = 1;
+> +	else if ((type & IORESOURCE_MEM_64) &&
+> +		 (b_res[2].flags & IORESOURCE_MEM_64))
+> +		idx = 2;
+> +	else if (!(b_res[2].flags & IORESOURCE_MEM_64) &&
+> +		 (b_res[2].flags & IORESOURCE_PREFETCH))
+> +		idx = 2;
+> +	else
+> +		idx = 1;
 
+This is pretty hard to figure out.  Is there any way we can just pass in
+the bridge window identifier directly, e.g., 0 == I/O window, 1 ==
+non-prefetchable MEM window, 2 == prefetchable window?  It seems like way
+up in pci_assign_unassigned_root_bus_resources(), we ought to know which
+window failed, and we could just pass that in somehow instead of having to
+derive it here.
+
+> +
+> +	r = &b_res[idx];
+> +
+> +	if (!r->parent)
+> +		return;
+> +
+> +	/*
+> +	 * if there are children under that, we should release them
+> +	 *  all
+> +	 */
+> +	release_child_resources(r);
+> +	if (!release_resource(r)) {
+> +		type = old_flags = r->flags & type_mask;
+> +		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
+> +					PCI_BRIDGE_RESOURCES + idx, r);
+> +		/* keep the old size */
+> +		r->end = resource_size(r) - 1;
+> +		r->start = 0;
+> +		r->flags = 0;
+>  
+> -	if (changed) {
+>  		/* avoiding touch the one without PREF */
+>  		if (type & IORESOURCE_PREFETCH)
+>  			type = IORESOURCE_PREFETCH;
+>  		__pci_setup_bridge(bus, type);
+> +		/* for next child res under same bridge */
+> +		r->flags = old_flags;
+>  	}
+>  }
+>  
+> @@ -1471,7 +1519,7 @@ void pci_assign_unassigned_root_bus_reso
+>  	LIST_HEAD(fail_head);
+>  	struct pci_dev_resource *fail_res;
+>  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+> -				  IORESOURCE_PREFETCH;
+> +				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+>  	int pci_try_num = 1;
+>  	enum enable_type enable_local;
+>  
+> Index: linux-2.6/drivers/pci/setup-res.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-res.c
+> +++ linux-2.6/drivers/pci/setup-res.c
+> @@ -208,15 +208,31 @@ static int __pci_assign_resource(struct
+>  
+>  	/* First, try exact prefetching match.. */
+>  	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+> -				     IORESOURCE_PREFETCH,
+> +				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
+>  				     pcibios_align_resource, dev);
+>  
+> -	if (ret < 0 && (res->flags & IORESOURCE_PREFETCH)) {
+> +	if (ret < 0 &&
+> +	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
+> +	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+> +		/*
+> +		 * That failed.
+> +		 *
+> +		 * Try below 4g pref
+> +		 */
+> +		ret = pci_bus_alloc_resource(bus, res, size, align, min,
+> +					     IORESOURCE_PREFETCH,
+> +					     pcibios_align_resource, dev);
+> +	}
+
+pci_bus_alloc_from_region() already has a mechanism for restricting
+allocation to certain bus addresses.  I don't like this second mechanism of
+also using IORESOURCE_MEM_64.  There's too much implicit state -- I think
+there's a dependency here on how we manage the IORESOURCE_MEM_64 bit in the
+bridge window resources.  That makes this code hard to understand.
+
+> +
+> +	if (ret < 0 &&
+> +	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))) {
+>  		/*
+>  		 * That failed.
+>  		 *
+>  		 * But a prefetching area can handle a non-prefetching
+>  		 * window (it will just not perform as well).
+> +		 *
+> +		 * Also can put 64bit under 32bit range. (below 4g).
+>  		 */
+>  		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+>  					     pcibios_align_resource, dev);
