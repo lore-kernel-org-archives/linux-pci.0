@@ -1,45 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([59.151.112.132]:4836 "EHLO
-	heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751177AbaDKH7P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Apr 2014 03:59:15 -0400
-From: Duan Jiong <duanj.fnst@cn.fujitsu.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-	<swarren@wwwdotorg.org>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Duan Jiong <duanj.fnst@cn.fujitsu.com>
-Subject: [PATCH] ARM: tegra: replace IS_ERR and PTR_ERR with PTR_ERR_OR_ZERO
-Date: Fri, 11 Apr 2014 15:56:40 +0800
-Message-ID: <1397203000-16586-1-git-send-email-duanj.fnst@cn.fujitsu.com>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:37234 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161077AbaDPOBB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 10:01:01 -0400
+Date: Wed, 16 Apr 2014 14:58:50 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>
+Subject: Re: [PATCH 0/3] ARM: PCI: implement virtual PCI host controller
+Message-ID: <20140416135849.GA2005@arm.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <21141977.8ucQJzlJts@wuerfel>
+ <20140415144735.GM17408@arm.com>
+ <10739949.AxKDLcKlhj@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <10739949.AxKDLcKlhj@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes coccinelle error regarding usage of IS_ERR and
-PTR_ERR instead of PTR_ERR_OR_ZERO.
+On Tue, Apr 15, 2014 at 04:26:39PM +0100, Arnd Bergmann wrote:
+> On Tuesday 15 April 2014 15:47:35 Will Deacon wrote:
+> > > We also have discussed some ideas about how to restructure the PCI
+> > > code layer to make it easier to share host drivers across architectures
+> > > and clean up the interfaces in the process.
+> > 
+> > Ok. Whilst this all sounds good from an arm64 perspective (with Liviu
+> > currently doing the work), it's not clear to me where that leaves my 32-bit
+> > ARM kvmtool code. That was the main reason for me writing this driver, and it
+> > seems a shame to have to wait for all the generic code to be sorted out
+> > before it can be used on AArch32, where there is already a functional
+> > pcibios implementation. The discussions mention things like generic
+> > pci_host_bridge_ops, but having that for arch/arm/ doesn't sound like
+> > something that is imminent.
+> > 
+> > Of course, I plan to port my driver to the new infrastructure when it lands
+> > (since I want to support arm64), but it would be good to have something for
+> > AArch32 in the meantime.
+> 
+> Agreed. You'll probably have to add a few #ifdef until we have the
+> infrastructure in place. However, I'd prefer not having to do that for
+> a lot of other drivers. It's only a matter of time until someone wants
+> one of the existing arm32 drivers to work on arm64, and we really
+> shouldn't have to duplicate a lot of #ifdef logic across them, just
+> to deal with the architectures being different.
 
-Signed-off-by: Duan Jiong <duanj.fnst@cn.fujitsu.com>
----
- drivers/pci/host/pci-tegra.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+Ok, cheers Arnd. I'll repost the patches sometime next week.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 330f7e3..e06ffa4 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -1024,10 +1024,7 @@ static int tegra_pcie_resets_get(struct tegra_pcie *pcie)
- 		return PTR_ERR(pcie->afi_rst);
- 
- 	pcie->pcie_xrst = devm_reset_control_get(pcie->dev, "pcie_x");
--	if (IS_ERR(pcie->pcie_xrst))
--		return PTR_ERR(pcie->pcie_xrst);
--
--	return 0;
-+	return PTR_ERR_OR_ZERO(pcie->pcie_xrst);
- }
- 
- static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
--- 
-1.8.3.1
-
+Will
