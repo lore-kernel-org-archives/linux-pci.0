@@ -1,204 +1,92 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20140419113111.GA8109@pd.tnic>
-References: <20140419025308.2408.51252.stgit@amt.stowe>
-	<20140419025316.2408.29771.stgit@amt.stowe>
-	<20140419113111.GA8109@pd.tnic>
-Date: Mon, 28 Apr 2014 15:10:55 -0600
-Message-ID: <CAL-B5D0j8JXPTC87wsaArHVGPJxKphW8i0LCMYHR_2ck2S7AXA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/5] x86/PCI: Add support for generic AMD hostbridges
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Borislav Petkov <bp@suse.de>
-Cc: Myron Stowe <myron.stowe@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	kim.naru@amd.com, daniel@numascale.com,
-	Thomas Gleixner <tglx@linutronix.de>, mingo@redhat.com,
-	hpa@zytor.com, x86 <x86@kernel.org>, sp@numascale.com,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <20140417194853.GG4321@pd.tnic>
+References: <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
+ <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
+ <1558044.S1G2VU7srO@vostro.rjw.lan> <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
+ <20140416190404.GA7070@pd.tnic> <20140416203138.GA17661@google.com>
+ <20140416223122.GA2767@redhat.com> <20140416225600.GA23781@google.com>
+ <20140417104533.GB8215@pd.tnic> <20140417182637.GA2098@google.com> <20140417194853.GG4321@pd.tnic>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 17 Apr 2014 14:10:54 -0600
+Message-ID: <CAErSpo47rmmVMQs7gOcpFpGzH+13x0aYjsLYOSQWVKUE+ikUSw@mail.gmail.com>
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+To: Borislav Petkov <bp@alien8.de>
+Cc: Dave Jones <davej@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"Zhang, Rui" <rui.zhang@intel.com>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>,
+	"Yan, Zheng Z" <zheng.z.yan@intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 19, 2014 at 5:31 AM, Borislav Petkov <bp@suse.de> wrote:
-> On Fri, Apr 18, 2014 at 08:53:16PM -0600, Myron Stowe wrote:
->> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+On Thu, Apr 17, 2014 at 1:48 PM, Borislav Petkov <bp@alien8.de> wrote:
+> On Thu, Apr 17, 2014 at 12:26:37PM -0600, Bjorn Helgaas wrote:
+>> Thanks a lot for testing this out and debugging my issues.
 >>
->> AMD hostbridges gnenerally show up as PCI device 0:18.0.  This patch adds
->> logic to automatically probe the device at this location and check PCI
->> device class code.
+>> Here's a new version that looks for both device IDs I know about.
 >>
->> This patch supports platforms with the following AMD hostbridge types:
->> (K8, family10h, 11h, 12h, 14h 15h  and 16h processors).
->>
->> Reference(s):
->>   https://bugzilla.kernel.org/show_bug.cgi?id=72051
->>   Advanced Micro Devices (AMD), "BIOS and Kernel Developer's
->>   Guide (BKDG) for AMD Family 15h Models 00h-0fh Processors."  Section
->>   3.4 Device [1F:18]h Function 1 Configuration Registers; D18F1x[EC:E0]
->>   Configuration Map, 42301 Rev 3.12 - October 11, 2012.
->>
->> Signed-off-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
->> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
->> Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
->> ---
->>
->>  arch/x86/pci/amd_bus.c |   71 ++++++++++++++++++++++++++++++++----------------
->>  1 files changed, 47 insertions(+), 24 deletions(-)
->>
->> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
->> index e88f4c5..c8cd75c 100644
->> --- a/arch/x86/pci/amd_bus.c
->> +++ b/arch/x86/pci/amd_bus.c
->> @@ -11,27 +11,34 @@
->>
->>  #include "bus_numa.h"
->>
->> +#define AMD_NB_F0_NODE_ID                    0x60
->> +#define AMD_NB_F0_UNIT_ID                    0x64
->> +#define AMD_NB_F1_CONFIG_MAP_REG             0xe0
->> +
->> +#define RANGE_NUM                            16
->> +#define AMD_NB_F1_CONFIG_MAP_RANGES          4
->> +
->>  /*
->> - * This discovers the pcibus <-> node mapping on AMD K8.
->> - * also get peer root bus resource for io,mmio
->> + * This discovers the pcibus <-> node mapping on AMD K8, Family 10h, 12h,
->> + * 14h, 15h, and 16h processor based systems.  This also gets peer root bus
->> + * resources corresponding to I/O and MMIO addresses.
->>   */
->>
->> -struct pci_hostbridge_probe {
->> +struct amd_hostbridge {
->>       u32 bus;
->>       u32 slot;
->> -     u32 vendor;
->>       u32 device;
->>  };
->>
->> -static struct pci_hostbridge_probe pci_probes[] __initdata = {
->> -     { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 },
->> -     { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 },
->> -     { 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 },
->> -     { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
->> +static struct amd_hostbridge hb_probes[] __initdata = {
->> +     /* Standard AMD Hostbriges are at bus 0x0 slot 0x18.
->> +      * In case of PCI_ANY_ID, the logic will try matching
->> +      * PCI_CLASS_BRIDGE_HOST instead.
->> +      */
+>> I'm still nervous about the modeset problem Dave is seeing.  Since the
+>> original patch wouldn't find an 8086:0c00 device on Dave's system, it
+>> should have done nothing.  But since it caused a modesetting problem,
+>> there's something else doing on that I don't understand.
 >
-> Standard kernel comment style:
->
-> /*
->  * Something interesting for the code below.
->  * This is the second comment line.
->  */
->
+> Yeah, this is strange, to put it mildly. This quirk wouldnt've done
+> anything besides the iteration over the pci devices with pci_get_device.
+> Which wouldn't do anything (refcount increment or so) if it didn't find
+> the device, right?
 
-I went ahead and made this change in patch 1/5 (even though most
-non-functional changes are in patch 3/5) as it seems to belong here.
+Right.
 
->> +     { 0x0 , 0x18, PCI_ANY_ID },
->> +     { 0xff, 0   , PCI_DEVICE_ID_AMD_10H_NB_HT },
->>  };
+> Bah, today is the day of the strange bugs. :-\
+>
+>> PNP: Work around BIOS defects in Intel MCH area reporting
 >>
->> -#define RANGE_NUM 16
->> -
->>  static struct pci_root_info __init *find_pci_root_info(int node, int link)
->>  {
->>       struct pci_root_info *info;
->> @@ -75,31 +82,47 @@ static int __init early_fill_mp_bus_info(void)
->
-> Btw, this function is huuuge. It could use a splitup some day.
->
-
-Yes, Suravee did split this up in patch 3/5
-
->>               return -1;
+>> From: Bjorn Helgaas <bhelgaas@google.com>
 >>
->>       found = false;
->> -     for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
->> +     for (i = 0; i < ARRAY_SIZE(hb_probes); i++) {
->>               u32 id;
->>               u16 device;
->>               u16 vendor;
->> +             u32 class;
+>> Work around BIOSes that don't report the entire Intel MCH area.
 >>
->> -             bus = pci_probes[i].bus;
->> -             slot = pci_probes[i].slot;
->> +             bus = hb_probes[i].bus;
->> +             slot = hb_probes[i].slot;
->>               id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
->> -
->>               vendor = id & 0xffff;
->>               device = (id>>16) & 0xffff;
->> -             if (pci_probes[i].vendor == vendor &&
->> -                 pci_probes[i].device == device) {
->> -                     found = true;
->> -                     break;
->> +             class = read_pci_config(bus, slot, 0,
->> +                     PCI_CLASS_REVISION) >> 16;
->> +
->> +             if (PCI_VENDOR_ID_AMD == vendor) {
->
-> Flip comparison:
->
->                 if (vendor == PCI_VENDOR_ID_AMD)
->
-> and then save yourself another indentation level:
->
->                 if (vendor != PCI_VENDOR_ID_AMD)
->                         continue;
->
-
-Yes, much better
-
->> +                     if (hb_probes[i].device == device) {
->> +                             found = true;
->> +                             break;
->> +                     }
->> +
->> +                     if ((hb_probes[i].device == PCI_ANY_ID) &&
->> +                         (class == PCI_CLASS_BRIDGE_HOST)) {
->> +                             hb_probes[i].device = device;
->> +                             found = true;
->> +                             break;
->> +                     }
->>               }
->>       }
+>> MCHBAR is not an architected PCI BAR, so MCH space is usually reported as a
+>> PNP0C02 resource.  The MCH space was once 16KB, but is 32KB in newer parts.
+>> Some BIOSes still report a PNP0C02 resource that is only 16KB, which means
+>> the rest of the MCH space is consumed but unreported.
 >>
->> -     if (!found)
->> +     if (!found) {
->> +             pr_warn("AMD hostbridge not found\n");
->>               return 0;
->> +     }
->
-> I guess this should return a negative value... Not that it matters much
-> from looking at the call site in the amd_postcore_init initcall.
->
-
-Patch 3/5 cleans this up.
-
+>> This can cause resource map sanity check warnings or (theoretically) a
+>> device conflict if we assigned the unreported space to another device.
 >>
->> -     for (i = 0; i < 4; i++) {
->> +     pr_debug("Found AMD hostbridge at %x:%x.0\n", bus, slot);
+>> The Intel perf event uncore driver tripped over this when it claimed the
+>> MCH region:
+>>
+>>   resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
+>>   Info: mapping multiple BARs. Your kernel is fine.
+>>
+>> To prevent this, if we find a PNP0C02 resource that covers part of the MCH
+>> space, extend it to cover the entire space.
+>>
+>> Link: http://lkml.kernel.org/r/20140224162400.GE16457@pd.tnic
+>> Reported-by: Borislav Petkov <bp@alien8.de>
 >
-> Why not pr_info? I think this is useful info we want to print out at
-> default level.
+> Yep, this one works fine:
+>
+> [    0.403855] pnp 00:01: [Firmware Bug]: PNP resource [mem 0xfed10000-0xfed13fff] covers only part of 0000:00:00.0 Intel MCH; extending to [mem 0xfed10000-0xfed17fff]
+>
+> Acked-by: Borislav Petkov <bp@suse.de>
+> Tested-by: Borislav Petkov <bp@suse.de>
 
-Sure, ok  ;)
->
-> --
-> Regards/Gruss,
->     Boris.
->
-> Sent from a fat crate under my desk. Formatting is fine.
-> --
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> +     region.end = region.start + 32*1024 - 1 ;
+
+> checkpatch complains about a trailing space before the semicolon.
+
+Thanks!  I hate typos like that.
+
+I'll fix this, add your tested-by and ack, and send to Rafael.
+
+Bjorn
