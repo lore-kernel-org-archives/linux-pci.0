@@ -1,102 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:60398 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757983AbaD3KdO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Apr 2014 06:33:14 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v7 01/10] PCI: host: rcar: Add Renesas R-Car PCIe driver
-Date: Wed, 30 Apr 2014 10:33:08 +0000
-Message-ID: <ac795ce3bb6349708e2e96686e19d24f@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
- <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
- <20140424191901.GE29593@google.com>
- <9b8bedae9d604383ac7ec22fd0f62fdb@HKXPR06MB168.apcprd06.prod.outlook.com>
- <CAErSpo6Autto4n4A4wHtXQNJzD3RKevkVcLZHUods-2-eiRDYQ@mail.gmail.com>
- <20140428203501.GA3016@obsidianresearch.com>
-In-Reply-To: <20140428203501.GA3016@obsidianresearch.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.skyhub.de ([78.46.96.112]:34460 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751173AbaDQTs5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Apr 2014 15:48:57 -0400
+Date: Thu, 17 Apr 2014 21:48:53 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Jones <davej@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"Zhang, Rui" <rui.zhang@intel.com>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>,
+	"Yan, Zheng Z" <zheng.z.yan@intel.com>
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+Message-ID: <20140417194853.GG4321@pd.tnic>
+References: <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
+ <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
+ <1558044.S1G2VU7srO@vostro.rjw.lan>
+ <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
+ <20140416190404.GA7070@pd.tnic>
+ <20140416203138.GA17661@google.com>
+ <20140416223122.GA2767@redhat.com>
+ <20140416225600.GA23781@google.com>
+ <20140417104533.GB8215@pd.tnic>
+ <20140417182637.GA2098@google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140417182637.GA2098@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jason,
+On Thu, Apr 17, 2014 at 12:26:37PM -0600, Bjorn Helgaas wrote:
+> Thanks a lot for testing this out and debugging my issues.
+> 
+> Here's a new version that looks for both device IDs I know about.
+> 
+> I'm still nervous about the modeset problem Dave is seeing.  Since the
+> original patch wouldn't find an 8086:0c00 device on Dave's system, it
+> should have done nothing.  But since it caused a modesetting problem,
+> there's something else doing on that I don't understand.
 
-On 28 April 2014 21:35, Jason wrote:
-> On Mon, Apr 28, 2014 at 01:11:08PM -0600, Bjorn Helgaas wrote:
-> 
-> > >> That bus number should be a property of the host bridge, i.e.,
-> > >> it's either hard-wired into the bridge, or it's programmable somewhere.
-> > >> But root_bus_nr comes from sys->busnr, which is apparently from
-> some
-> > >> generic code that knows nothing about this particular host bridge.
-> 
-> > > The manual for this hardware says that the HW doesn't care what the bus
-> number
-> > > is set to. The only thing the HW needs to know is that when sending
-> config
-> > > accesses, we need to indicate whether it's a TYPE0 or TYPE1 header; so
-> we use
-> > > root_bus_nr to determine this. The generic code that sets up sys->busnr
-> (ARM
-> > > bios32 in this case), just increments bus number for each controller.
-> 
-> I went back and looked at the lspci posted for this hardware and this
-> use of busnr is kinda sketch..
-> 
-> You should use use bus 0 as the root complex integrated bus number and
-> ensure every instance of your driver creates a new PCI domain, and
-> generally use 0-> FF as the subordinate bus number range.
-> 
-> FWIW, your HW does care, and does have a programmable field for
-> this.
-> 
-> You set the value of the integrated bus based on the bus number in the
-> TYPE0 accesses the driver performs and it shows up in the PCI config
-> space of the root port bridge:
-> 
-> root@koelsch:~# lspci -vv
-> 00:00.0 PCI bridge: Renesas Technology Corp. Device 001f (prog-if 00
-> [Normal decode])
->         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-> 
-> The value here will be also be exported on-the-wire in certain PCI-E
-> TLPs.
-> 
-> So it is important, and must be set properly.
-I am not so sure about this... 
+Yeah, this is strange, to put it mildly. This quirk wouldnt've done
+anything besides the iteration over the pci devices with pci_get_device.
+Which wouldn't do anything (refcount increment or so) if it didn't find
+the device, right?
 
-There are three things we need to consider:
-1) talking to the host bridge itself
-2) talking to immediate device (connected directly to host bridge)
-3) talking to other devices
+Bah, today is the day of the strange bugs. :-\
 
-The PCI standard tells us we use type 1's for 3) and type 0's for 2). The driver uses root_bus_nr to make this decision.
-For 1), there is a note in the driver that the hardware cannot target itself. The driver has code in rcar_pcie_config_access() to check if it's an access to the host bridge, and if so, use I/O (readl/writel) to perform the config access.
+> PNP: Work around BIOS defects in Intel MCH area reporting
+> 
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Work around BIOSes that don't report the entire Intel MCH area.
+> 
+> MCHBAR is not an architected PCI BAR, so MCH space is usually reported as a
+> PNP0C02 resource.  The MCH space was once 16KB, but is 32KB in newer parts.
+> Some BIOSes still report a PNP0C02 resource that is only 16KB, which means
+> the rest of the MCH space is consumed but unreported.
+> 
+> This can cause resource map sanity check warnings or (theoretically) a
+> device conflict if we assigned the unreported space to another device.
+> 
+> The Intel perf event uncore driver tripped over this when it claimed the
+> MCH region:
+> 
+>   resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
+>   Info: mapping multiple BARs. Your kernel is fine.
+> 
+> To prevent this, if we find a PNP0C02 resource that covers part of the MCH
+> space, extend it to cover the entire space.
+> 
+> Link: http://lkml.kernel.org/r/20140224162400.GE16457@pd.tnic
+> Reported-by: Borislav Petkov <bp@alien8.de>
 
-> > Yeah, I guess.  If the HW really doesn't look at the bus number at
-> > all, it sounds like the range is effectively 00-ff, and each host
-> > bridge should be in its own domain.
-> 
-> This is where some of the other implementations have used some SW to
-> route config space in a single domain to the proper controller
-> per-port register set.
-> 
-> But, IMHO, that is mainly worth doing if the HW can implement the PCI
-> bridge windows according to the spec, and it looks like rcar requires
-> a 128MB alignment on the bridge windows, which makes it fairly
-> pointless.
-> 
-> Jason
+Yep, this one works fine:
 
-Thanks
-Phil
+[    0.403855] pnp 00:01: [Firmware Bug]: PNP resource [mem 0xfed10000-0xfed13fff] covers only part of 0000:00:00.0 Intel MCH; extending to [mem 0xfed10000-0xfed17fff]
+
+Acked-by: Borislav Petkov <bp@suse.de>
+Tested-by: Borislav Petkov <bp@suse.de>
+
+Just a minor nitpick below.
+
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pnp/quirks.c |   74 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 74 insertions(+)
+> 
+> diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
+> index 258fef272ea7..403bd5c42ed1 100644
+> --- a/drivers/pnp/quirks.c
+> +++ b/drivers/pnp/quirks.c
+> @@ -334,6 +334,79 @@ static void quirk_amd_mmconfig_area(struct pnp_dev *dev)
+>  }
+>  #endif
+>  
+> +/* Device IDs of parts that have 32KB MCH space */
+> +static const unsigned int mch_quirk_devices[] = {
+> +	0x0154,	/* Ivy Bridge */
+> +	0x0c00,	/* Haswell */
+> +};
+> +
+> +static struct pci_dev *get_intel_host(void)
+> +{
+> +	int i;
+> +	struct pci_dev *host;
+> +
+> +	for (i = 0; i < ARRAY_SIZE(mch_quirk_devices); i++) {
+> +		host = pci_get_device(PCI_VENDOR_ID_INTEL, mch_quirk_devices[i],
+> +				      NULL);
+> +		if (host)
+> +			return host;
+> +	}
+> +	return NULL;
+> +}
+> +
+> +static void quirk_intel_mch(struct pnp_dev *dev)
+> +{
+> +	struct pci_dev *host;
+> +	u32 addr_lo, addr_hi;
+> +	struct pci_bus_region region;
+> +	struct resource mch;
+> +	struct pnp_resource *pnp_res;
+> +	struct resource *res;
+> +
+> +	host = get_intel_host();
+> +	if (!host)
+> +		return;
+> +
+> +	/*
+> +	 * MCHBAR is not an architected PCI BAR, so MCH space is usually
+> +	 * reported as a PNP0C02 resource.  The MCH space was originally
+> +	 * 16KB, but is 32KB in newer parts.  Some BIOSes still report a
+> +	 * PNP0C02 resource that is only 16KB, which means the rest of the
+> +	 * MCH space is consumed but unreported.
+> +	 */
+> +
+> +	/*
+> +	 * Read MCHBAR for Host Member Mapped Register Range Base
+> +	 * https://www-ssl.intel.com/content/www/us/en/processors/core/4th-gen-core-family-desktop-vol-2-datasheet
+> +	 * Sec 3.1.12.
+> +	 */
+> +	pci_read_config_dword(host, 0x48, &addr_lo);
+> +	region.start = addr_lo & ~0x7fff;
+> +	pci_read_config_dword(host, 0x4c, &addr_hi);
+> +	region.start |= (dma_addr_t) addr_hi << 32;
+> +	region.end = region.start + 32*1024 - 1 ;
+
+checkpatch complains about a trailing space before the semicolon.
+
+> +
+> +	memset(&mch, 0, sizeof(mch));
+> +	mch.flags = IORESOURCE_MEM;
+> +	pcibios_bus_to_resource(host->bus, &mch, &region);
+> +
+> +	list_for_each_entry(pnp_res, &dev->resources, list) {
+> +		res = &pnp_res->res;
+> +		if (res->end < mch.start || res->start > mch.end)
+> +			continue;	/* no overlap */
+> +		if (res->start == mch.start && res->end == mch.end)
+> +			continue;	/* exact match */
+> +
+> +		dev_info(&dev->dev, FW_BUG "PNP resource %pR covers only part of %s Intel MCH; extending to %pR\n",
+> +			 res, pci_name(host), &mch);
+> +		res->start = mch.start;
+> +		res->end = mch.end;
+> +		break;
+> +	}
+> +
+> +	pci_dev_put(host);
+> +}
+> +
+>  /*
+>   *  PnP Quirks
+>   *  Cards or devices that need some tweaking due to incomplete resource info
+> @@ -364,6 +437,7 @@ static struct pnp_fixup pnp_fixups[] = {
+>  #ifdef CONFIG_AMD_NB
+>  	{"PNP0c01", quirk_amd_mmconfig_area},
+>  #endif
+> +	{"PNP0c02", quirk_intel_mch},
+>  	{""}
+>  };
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
