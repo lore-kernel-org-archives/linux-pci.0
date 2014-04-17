@@ -1,77 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp12.uk.ibm.com ([195.75.94.108]:43321 "EHLO
-	e06smtp12.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbaDQRsN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Apr 2014 13:48:13 -0400
-Received: from /spool/local
-	by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
-	Thu, 17 Apr 2014 18:48:11 +0100
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-	by d06dlp03.portsmouth.uk.ibm.com (Postfix) with ESMTP id 6D9931B08051
-	for <linux-pci@vger.kernel.org>; Thu, 17 Apr 2014 18:48:12 +0100 (BST)
-Received: from d06av09.portsmouth.uk.ibm.com (d06av09.portsmouth.uk.ibm.com [9.149.37.250])
-	by b06cxnps3074.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s3HHm9F161407378
-	for <linux-pci@vger.kernel.org>; Thu, 17 Apr 2014 17:48:09 GMT
-Received: from d06av09.portsmouth.uk.ibm.com (localhost [127.0.0.1])
-	by d06av09.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s3HHm8dE013504
-	for <linux-pci@vger.kernel.org>; Thu, 17 Apr 2014 11:48:09 -0600
-Date: Thu, 17 Apr 2014 19:48:07 +0200 (CEST)
-From: Sebastian Ott <sebott@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-cc: linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH] pci: remove pcibios_add_platform_entries
-Message-ID: <alpine.LFD.2.11.1404171947150.1588@denkbrett>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 17 Apr 2014 16:53:55 -0400
+From: Dave Jones <davej@redhat.com>
+To: Borislav Petkov <bp@alien8.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"Zhang, Rui" <rui.zhang@intel.com>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>,
+	"Yan, Zheng Z" <zheng.z.yan@intel.com>, daniel.vetter@ffwll.ch
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+Message-ID: <20140417205355.GA22191@redhat.com>
+References: <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
+ <20140416190404.GA7070@pd.tnic>
+ <20140416203138.GA17661@google.com>
+ <20140416223122.GA2767@redhat.com>
+ <20140416225600.GA23781@google.com>
+ <20140417104533.GB8215@pd.tnic>
+ <20140417182637.GA2098@google.com>
+ <20140417195240.GA18876@redhat.com>
+ <20140417200127.GH4321@pd.tnic>
+ <20140417200352.GB18876@redhat.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140417200352.GB18876@redhat.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove pcibios_add_platform_entries. Architecture specific attributes
-can be achieved by setting pdev->dev.groups .
+On Thu, Apr 17, 2014 at 04:03:52PM -0400, Dave Jones wrote:
+ > On Thu, Apr 17, 2014 at 10:01:27PM +0200, Borislav Petkov wrote:
+ >  > On Thu, Apr 17, 2014 at 03:52:40PM -0400, Dave Jones wrote:
+ >  > > Just as X starts up, I see this in dmesg..
+ >  > > 
+ >  > > [   42.879049] [drm:cpt_serr_int_handler] *ERROR* PCH transcoder A FIFO underrun
+ >  > 
+ >  > FWIW, I have that too. It should be something i915-related:
+ >  > 
+ >  > [    0.617673] [drm] Memory usable by graphics device = 2048M
+ >  > [    0.694445] i915 0000:00:02.0: irq 42 for MSI/MSI-X
+ >  > [    0.694549] [drm] Supports vblank timestamp caching Rev 2 (21.10.2013).
+ >  > [    0.694631] [drm] Driver supports precise vblank timestamp query.
+ >  > [    0.695313] vgaarb: device changed decodes: PCI:0000:00:02.0,olddecodes=io+mem,decodes=io+mem:owns=io+mem
+ >  > [    0.788300] [drm] GMBUS [i915 gmbus dpb] timed out, falling back to bit banging on pin 5
+ >  > [    0.799829] fbcon: inteldrmfb (fb0) is primary device
+ >  > [    1.176845] [drm:cpt_serr_int_handler] *ERROR* PCH transcoder A FIFO underrun
+ > 
+ > Can you send me your .config off-list ?
+ > I wonder if this is something config specific that's causing me to see
+ > this, and you not, given we've apparently got similar machines.
 
-Link: https://lkml.kernel.org/r/alpine.LFD.2.11.1404141101500.1529@denkbrett
-Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
----
- drivers/pci/pci-sysfs.c |   10 ----------
- include/linux/pci.h     |    1 -
- 2 files changed, 11 deletions(-)
+ok, with your config I get back to a console after the modesetting
+switch, but then it hangs in USB init.
 
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1272,11 +1272,6 @@ static struct bin_attribute pcie_config_
- 	.write = pci_write_config,
- };
- 
--int __weak pcibios_add_platform_entries(struct pci_dev *dev)
--{
--	return 0;
--}
--
- static ssize_t reset_store(struct device *dev,
- 			   struct device_attribute *attr, const char *buf,
- 			   size_t count)
-@@ -1392,11 +1387,6 @@ int __must_check pci_create_sysfs_dev_fi
- 		pdev->rom_attr = attr;
- 	}
- 
--	/* add platform-specific attributes */
--	retval = pcibios_add_platform_entries(pdev);
--	if (retval)
--		goto err_rom_file;
--
- 	/* add sysfs entries for various capabilities */
- 	retval = pci_create_capabilities_sysfs(pdev);
- 	if (retval)
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1572,7 +1572,6 @@ extern unsigned long pci_hotplug_io_size
- extern unsigned long pci_hotplug_mem_size;
- 
- /* Architecture-specific versions may override these (weak) */
--int pcibios_add_platform_entries(struct pci_dev *dev);
- void pcibios_disable_device(struct pci_dev *dev);
- void pcibios_set_master(struct pci_dev *dev);
- int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+Hrmm.
+
+	Dave
 
