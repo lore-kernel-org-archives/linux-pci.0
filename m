@@ -1,280 +1,132 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 17 Apr 2014 12:45:33 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dave Jones <davej@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"Zhang, Rui" <rui.zhang@intel.com>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 04/22] iommu/vt-d: introduce helper functions to make code symmetric for readability
-Date: Tue, 22 Apr 2014 15:07:15 +0800
-Message-Id: <1398150453-28141-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>,
+	"Yan, Zheng Z" <zheng.z.yan@intel.com>
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+Message-ID: <20140417104533.GB8215@pd.tnic>
+References: <20140224162400.GE16457@pd.tnic>
+ <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
+ <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
+ <1558044.S1G2VU7srO@vostro.rjw.lan>
+ <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
+ <20140416190404.GA7070@pd.tnic>
+ <20140416203138.GA17661@google.com>
+ <20140416223122.GA2767@redhat.com>
+ <20140416225600.GA23781@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140416225600.GA23781@google.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce domain_attach_iommu()/domain_detach_iommu() and refine
-iommu_attach_domain()/iommu_detach_domain() to make code symmetric
-and improve readability.
+Hi Bjorn,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |  146 ++++++++++++++++++++++++-------------------
- 1 file changed, 80 insertions(+), 66 deletions(-)
+thanks for the patch, a couple of notes below:
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 63f351a39c63..29f613e7eea3 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1525,32 +1525,39 @@ static struct dmar_domain *alloc_domain(int flags)
- 	return domain;
- }
- 
--static int iommu_attach_domain(struct dmar_domain *domain,
--			       struct intel_iommu *iommu)
-+static int __iommu_attach_domain(struct dmar_domain *domain,
-+				 struct intel_iommu *iommu)
- {
- 	int num;
- 	unsigned long ndomains;
--	unsigned long flags;
- 
- 	ndomains = cap_ndoms(iommu->cap);
--
--	spin_lock_irqsave(&iommu->lock, flags);
--
- 	num = find_first_zero_bit(iommu->domain_ids, ndomains);
--	if (num >= ndomains) {
--		spin_unlock_irqrestore(&iommu->lock, flags);
--		printk(KERN_ERR "IOMMU: no free domain ids\n");
--		return -ENOMEM;
-+	if (num < ndomains) {
-+		set_bit(num, iommu->domain_ids);
-+		iommu->domains[num] = domain;
-+	} else {
-+		num = -ENOSPC;
- 	}
- 
--	domain->id = num;
--	domain->iommu_count++;
--	set_bit(num, iommu->domain_ids);
--	set_bit(iommu->seq_id, domain->iommu_bmp);
--	iommu->domains[num] = domain;
-+	return num;
-+}
-+
-+static int iommu_attach_domain(struct dmar_domain *domain,
-+			       struct intel_iommu *iommu)
-+{
-+	int num;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&iommu->lock, flags);
-+	num = __iommu_attach_domain(domain, iommu);
-+	if (num < 0)
-+		pr_err("IOMMU: no free domain ids\n");
-+	else
-+		domain->id = num;
- 	spin_unlock_irqrestore(&iommu->lock, flags);
- 
--	return 0;
-+	return num;
- }
- 
- static void iommu_detach_domain(struct dmar_domain *domain,
-@@ -1560,17 +1567,53 @@ static void iommu_detach_domain(struct dmar_domain *domain,
- 	int num, ndomains;
- 
- 	spin_lock_irqsave(&iommu->lock, flags);
--	ndomains = cap_ndoms(iommu->cap);
--	for_each_set_bit(num, iommu->domain_ids, ndomains) {
--		if (iommu->domains[num] == domain) {
--			clear_bit(num, iommu->domain_ids);
--			iommu->domains[num] = NULL;
--			break;
-+	if (domain_type_is_vm_or_si(domain)) {
-+		ndomains = cap_ndoms(iommu->cap);
-+		for_each_set_bit(num, iommu->domain_ids, ndomains) {
-+			if (iommu->domains[num] == domain) {
-+				clear_bit(num, iommu->domain_ids);
-+				iommu->domains[num] = NULL;
-+				break;
-+			}
- 		}
-+	} else {
-+		clear_bit(domain->id, iommu->domain_ids);
-+		iommu->domains[domain->id] = NULL;
- 	}
- 	spin_unlock_irqrestore(&iommu->lock, flags);
- }
- 
-+static void domain_attach_iommu(struct dmar_domain *domain,
-+			       struct intel_iommu *iommu)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&domain->iommu_lock, flags);
-+	if (!test_and_set_bit(iommu->seq_id, domain->iommu_bmp)) {
-+		domain->iommu_count++;
-+		if (domain->iommu_count == 1)
-+			domain->nid = iommu->node;
-+		domain_update_iommu_cap(domain);
-+	}
-+	spin_unlock_irqrestore(&domain->iommu_lock, flags);
-+}
-+
-+static int domain_detach_iommu(struct dmar_domain *domain,
-+			       struct intel_iommu *iommu)
-+{
-+	unsigned long flags;
-+	int count = INT_MAX;
-+
-+	spin_lock_irqsave(&domain->iommu_lock, flags);
-+	if (test_and_clear_bit(iommu->seq_id, domain->iommu_bmp)) {
-+		count = --domain->iommu_count;
-+		domain_update_iommu_cap(domain);
-+	}
-+	spin_unlock_irqrestore(&domain->iommu_lock, flags);
-+
-+	return count;
-+}
-+
- static struct iova_domain reserved_iova_list;
- static struct lock_class_key reserved_rbtree_key;
- 
-@@ -1708,9 +1751,7 @@ static void domain_exit(struct dmar_domain *domain)
- 	/* clear attached or cached domains */
- 	rcu_read_lock();
- 	for_each_active_iommu(iommu, drhd)
--		if (domain_type_is_vm(domain) ||
--		    test_bit(iommu->seq_id, domain->iommu_bmp))
--			iommu_detach_domain(domain, iommu);
-+		iommu_detach_domain(domain, iommu);
- 	rcu_read_unlock();
- 
- 	dma_free_pagelist(freelist);
-@@ -1764,16 +1805,12 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 		}
- 
- 		if (found == 0) {
--			num = find_first_zero_bit(iommu->domain_ids, ndomains);
--			if (num >= ndomains) {
-+			id = __iommu_attach_domain(domain, iommu);
-+			if (id < 0) {
- 				spin_unlock_irqrestore(&iommu->lock, flags);
--				printk(KERN_ERR "IOMMU: no free domain ids\n");
-+				pr_err("IOMMU: no free domain ids\n");
- 				return -EFAULT;
- 			}
--
--			set_bit(num, iommu->domain_ids);
--			iommu->domains[num] = domain;
--			id = num;
- 		}
- 
- 		/* Skip top levels of page tables for
-@@ -1832,14 +1869,8 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 	iommu_enable_dev_iotlb(info);
- 	spin_unlock_irqrestore(&iommu->lock, flags);
- 
--	spin_lock_irqsave(&domain->iommu_lock, flags);
--	if (!test_and_set_bit(iommu->seq_id, domain->iommu_bmp)) {
--		domain->iommu_count++;
--		if (domain->iommu_count == 1)
--			domain->nid = iommu->node;
--		domain_update_iommu_cap(domain);
--	}
--	spin_unlock_irqrestore(&domain->iommu_lock, flags);
-+	domain_attach_iommu(domain, iommu);
-+
- 	return 0;
- }
- 
-@@ -2104,7 +2135,7 @@ static inline void unlink_domain_info(struct device_domain_info *info)
- static void domain_remove_dev_info(struct dmar_domain *domain)
- {
- 	struct device_domain_info *info;
--	unsigned long flags, flags2;
-+	unsigned long flags;
- 
- 	spin_lock_irqsave(&device_domain_lock, flags);
- 	while (!list_empty(&domain->devices)) {
-@@ -2118,16 +2149,7 @@ static void domain_remove_dev_info(struct dmar_domain *domain)
- 
- 		if (domain_type_is_vm(domain)) {
- 			iommu_detach_dependent_devices(info->iommu, info->dev);
--			/* clear this iommu in iommu_bmp, update iommu count
--			 * and capabilities
--			 */
--			spin_lock_irqsave(&domain->iommu_lock, flags2);
--			if (test_and_clear_bit(info->iommu->seq_id,
--					       domain->iommu_bmp)) {
--				domain->iommu_count--;
--				domain_update_iommu_cap(domain);
--			}
--			spin_unlock_irqrestore(&domain->iommu_lock, flags2);
-+			domain_detach_iommu(domain, info->iommu);
- 		}
- 
- 		free_devinfo_mem(info);
-@@ -2259,11 +2281,12 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(0);
- 	if (!domain)
- 		goto error;
--	if (iommu_attach_domain(domain, iommu)) {
-+	if (iommu_attach_domain(domain, iommu) < 0) {
- 		free_domain_mem(domain);
- 		domain = NULL;
- 		goto error;
- 	}
-+	domain_attach_iommu(domain, iommu);
- 	free = domain;
- 	if (domain_init(domain, gaw))
- 		goto error;
-@@ -2426,10 +2449,11 @@ static int __init si_domain_init(int hw)
- 
- 	for_each_active_iommu(iommu, drhd) {
- 		ret = iommu_attach_domain(si_domain, iommu);
--		if (ret) {
-+		if (ret < 0) {
- 			domain_exit(si_domain);
- 			return -EFAULT;
- 		}
-+		domain_attach_iommu(si_domain, iommu);
- 	}
- 
- 	if (md_domain_init(si_domain, DEFAULT_DOMAIN_ADDRESS_WIDTH)) {
-@@ -4099,19 +4123,9 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
- 	spin_unlock_irqrestore(&device_domain_lock, flags);
- 
- 	if (found == 0) {
--		unsigned long tmp_flags;
--		spin_lock_irqsave(&domain->iommu_lock, tmp_flags);
--		clear_bit(iommu->seq_id, domain->iommu_bmp);
--		domain->iommu_count--;
--		domain_update_iommu_cap(domain);
--		spin_unlock_irqrestore(&domain->iommu_lock, tmp_flags);
--
--		if (!domain_type_is_vm_or_si(domain)) {
--			spin_lock_irqsave(&iommu->lock, tmp_flags);
--			clear_bit(domain->id, iommu->domain_ids);
--			iommu->domains[domain->id] = NULL;
--			spin_unlock_irqrestore(&iommu->lock, tmp_flags);
--		}
-+		domain_detach_iommu(domain, iommu);
-+		if (!domain_type_is_vm_or_si(domain))
-+			iommu_detach_domain(domain, iommu);
- 	}
- }
- 
+On Wed, Apr 16, 2014 at 04:56:00PM -0600, Bjorn Helgaas wrote:
+> PNP: Work around Haswell BIOS defect in MCH area reporting
+> 
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Work around a Haswell BIOS defect that causes part of the MCH area to be
+> unreported.
+
+Yep, what Stephane said, this is not HSW only.
+
+> MCHBAR is not an architected PCI BAR, so MCH space is usually reported as a
+> PNP0C02 resource.  The MCH space was 16KB prior to Haswell, but it is 32KB
+> in Haswell.  Some Haswell BIOSes still report a PNP0C02 resource that is
+> only 16KB, which means the rest of the MCH space is consumed but
+> unreported.
+> 
+> This can cause resource map sanity check warnings or (theoretically) a
+> device conflict if we assigned the unreported space to another device.
+> 
+> The Intel perf event uncore driver tripped over this when it claimed the
+> MCH region:
+> 
+>   resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
+>   Info: mapping multiple BARs. Your kernel is fine.
+> 
+> To prevent this, if we find a PNP0C02 resource that covers part of the MCH
+> space, extend it to cover the entire space.
+> 
+> Link: http://lkml.kernel.org/r/20140224162400.GE16457@pd.tnic
+> Reported-by: Borislav Petkov <bp@alien8.de>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pnp/quirks.c |   55 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 55 insertions(+)
+> 
+> diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
+> index 258fef272ea7..8402088d4145 100644
+> --- a/drivers/pnp/quirks.c
+> +++ b/drivers/pnp/quirks.c
+> @@ -334,6 +334,60 @@ static void quirk_amd_mmconfig_area(struct pnp_dev *dev)
+>  }
+>  #endif
+>  
+> +static void quirk_intel_haswell_mch(struct pnp_dev *dev)
+> +{
+> +	struct pci_dev *host;
+> +	u32 addr_lo, addr_hi;
+> +	struct pci_bus_region region;
+> +	struct resource mch;
+> +	struct pnp_resource *pnp_res;
+> +	struct resource *res;
+> +
+> +	host = pci_get_device(PCI_VENDOR_ID_INTEL, 0x0c00, NULL);
+
+And because it is not HSW only, this PCI device ID doesn't match on my
+IVB system. On mine the hostbridge is
+
+00:00.0 Host bridge: Intel Corporation 3rd Gen Core processor DRAM Controller (rev 09)
+        Subsystem: Lenovo Device 21fa
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ >SERR- <PERR- INTx-
+        Latency: 0
+        Capabilities: <access denied>
+        Kernel driver in use: ivb_uncore
+00: 86 80 54 01 06 00 90 20 09 00 00 06 00 00 00 00
+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 aa 17 fa 21
+30: 00 00 00 00 e0 00 00 00 00 00 00 00 00 00 00 00
+
+and from looking at Dave's, it is the same one, so PCI device ID is
+0x154.
+
+With that changed to
+
+	host = pci_get_device(PCI_VENDOR_ID_INTEL, 0x0154, NULL);
+
+and a bit of debugging code, it says now:
+
+[    0.235739] quirk_intel_haswell_mch: entry
+[    0.235800] quirk_intel_haswell_mch: got host: 0x0
+[    0.235860] quirk_intel_haswell_mch: mch: [mem 0xfed10000-0xfed17fff]
+[    0.235930] quirk_intel_haswell_mch: res: [mem 0xfed10000-0xfed13fff]
+[    0.235990] pnp 00:01: [Firmware Bug]: [mem 0xfed10000-0xfed13fff] covers only part of Intel Haswell MCH; extending to [mem 0xfed10000-0xfed17fff]
+
+So you probably want to have a list of hostbridge pci ids in the quirk
+or so.
+
+Thanks.
+
 -- 
-1.7.10.4
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
