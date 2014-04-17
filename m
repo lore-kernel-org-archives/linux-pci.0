@@ -1,233 +1,205 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:37231 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754182AbaDGIq1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 04:46:27 -0400
-Date: Mon, 7 Apr 2014 09:46:23 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
+Received: from e06smtp13.uk.ibm.com ([195.75.94.109]:59431 "EHLO
+	e06smtp13.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342AbaDQRqY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Apr 2014 13:46:24 -0400
+Received: from /spool/local
+	by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
+	Thu, 17 Apr 2014 18:46:23 +0100
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
+	by d06dlp03.portsmouth.uk.ibm.com (Postfix) with ESMTP id DDB8E1B08051
+	for <linux-pci@vger.kernel.org>; Thu, 17 Apr 2014 18:46:22 +0100 (BST)
+Received: from d06av04.portsmouth.uk.ibm.com (d06av04.portsmouth.uk.ibm.com [9.149.37.216])
+	by b06cxnps3074.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s3HHkK8m26738868
+	for <linux-pci@vger.kernel.org>; Thu, 17 Apr 2014 17:46:20 GMT
+Received: from d06av04.portsmouth.uk.ibm.com (localhost [127.0.0.1])
+	by d06av04.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s3HHkIde024960
+	for <linux-pci@vger.kernel.org>; Thu, 17 Apr 2014 11:46:19 -0600
+Date: Thu, 17 Apr 2014 19:46:15 +0200 (CEST)
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
+cc: linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Michal Simek <monstr@monstr.eu>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
- pci_host_bridge.
-Message-ID: <20140407084623.GG17163@e106497-lin.cambridge.arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
- <20140405000007.GD15806@google.com>
+	Paul Mackerras <paulus@samba.org>
+Subject: Re: [Resend] pcibios_add_platform_entries usage
+In-Reply-To: <alpine.LFD.2.11.1404141958120.1561@denkbrett>
+Message-ID: <alpine.LFD.2.11.1404171938190.1588@denkbrett>
+References: <alpine.LFD.2.11.1403281931410.1516@denkbrett> <alpine.LFD.2.11.1404141101500.1529@denkbrett> <20140414173541.GA4417@google.com> <alpine.LFD.2.11.1404141958120.1561@denkbrett>
 MIME-Version: 1.0
-In-Reply-To: <20140405000007.GD15806@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463805518-1966309307-1397756777=:1588"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 05, 2014 at 01:00:07AM +0100, Bjorn Helgaas wrote:
-> On Fri, Mar 14, 2014 at 03:34:30PM +0000, Liviu Dudau wrote:
-> > Make it easier to discover the domain number of a bus by storing
-> > the number in pci_host_bridge for the root bus. Several architectures
-> > have their own way of storing this information, so it makes sense
-> > to try to unify the code. 
-> 
-> I like the idea of unifying the way we handle the domain number.  But 
-> I'd like to see more of the strategy before committing to this approach.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-*My* strategy is to get rid of pci_domain_nr(). I don't see why we need
-to have arch specific way of providing the number, specially after looking
-at the existing implementations that return a value from a variable that
-is never touched or incremented. My guess is that pci_domain_nr() was
-created to work around the fact that there was no domain_nr maintainance in
-the generic code.
+---1463805518-1966309307-1397756777=:1588
+Content-Type: TEXT/PLAIN; charset=iso-8859-1
+Content-Transfer-Encoding: 8BIT
 
-> 
-> This patch adds struct pci_host_bridge.domain_nr, but of course
-> pci_domain_nr() doesn't use it.  It can't today, because
-> pci_create_root_bus() relies on pci_domain_nr() to fill in
-> pci_host_bridge.domain_nr.
-> 
-> But I suppose the intent is that someday we can make pci_domain_nr()
-> arch-independent somehow.  I'd just like to see more of the path to
-> that happening.
-
-The path would be to send a patch that removes all existing pci_domain_nr()
-macros/inline functions and rely on the generic function.
-
-> 
-> > While at this, add a new function that
-> > creates a root bus in a given domain and make pci_create_root_bus()
-> > a wrapper around this function.
-> 
-> I'm a little concerned about adding a new "create root bus" interface,
-> partly because we have quite a few already, and I'd like to reduce the
-> number of them instead of adding more.  And I think there might be other
-> similar opportunities for unification, so I could easily see us adding new
-> functions in the future to unify NUMA node info, ECAM info, etc.
-
-The reason for creating the wrapper function was to allow for explicit passing
-of domain_nr. If we find architectures where generic allocation of domain_nr
-doesn't work for them, we can make them use this wrapper to pass the domain_nr
-into the host bridge when creating the root bus.
-
-> 
-> I wonder if we need some sort of descriptor structure that the arch could
-> fill in and pass to the PCI core.  Then we could add new members without
-> having to create new interfaces each time.
-
-I'm trying to reduce the number of variables being passed between architectures
-and generic code. host_bridge (with the associated root bus), domain_nr those
-are needed. Is there anything else that you have in your mind that needs to
-be shared?
-
-My approach would be in sharing of the data: PCI is a standard, and the core
-framework implements it. What is so broken in your architecture that you need
-to work around the core code? And I'm not talking about drivers and quirks,
-but architectural level support.
-
-Best regards,
-Liviu
-
-> 
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> > ---
-> >  drivers/pci/probe.c | 41 +++++++++++++++++++++++++++++++++--------
-> >  include/linux/pci.h |  4 ++++
-> >  2 files changed, 37 insertions(+), 8 deletions(-)
+On Mon, 14 Apr 2014, Sebastian Ott wrote:
+> On Mon, 14 Apr 2014, Bjorn Helgaas wrote:
+> > On Mon, Apr 14, 2014 at 11:03:42AM +0200, Sebastian Ott wrote:
+> > > for pci on s390 we currently use pcibios_add_platform_entries to add
+> > > some arch specific attributes to pdevs. This has 2 downsides - it will
+> > > race with userspace which is triggered by udev events and expecting
+> > > these attributes (but that's a theoretical issue). More important to
+> > > me is that one cannot use attribute_groups with this. Both issues could
+> > > be addressed by using pdev->dev.groups and let the driver core handle
+> > > attribute creation.
+> > > 
+> > > So would it be ok if we set pdev->dev.groups in pcibios_add_device?
+> > > (It should be since it's not used by pci common code which uses bus_type,
+> > > dev_type, and class groups).
 > > 
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index fd11c12..172c615 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -1714,8 +1714,9 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
-> >  {
-> >  }
-> >  
-> > -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> > -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> > +struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
-> > +		int domain, int bus, struct pci_ops *ops, void *sysdata,
-> > +		struct list_head *resources)
-> >  {
-> >  	int error;
-> >  	struct pci_host_bridge *bridge;
-> > @@ -1728,30 +1729,34 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >  
-> >  	bridge = pci_alloc_host_bridge();
-> >  	if (!bridge)
-> > -		return NULL;
-> > +		return ERR_PTR(-ENOMEM);
-> >  
-> >  	bridge->dev.parent = parent;
-> >  	bridge->dev.release = pci_release_host_bridge_dev;
-> > +	bridge->domain_nr = domain;
-> >  	error = pcibios_root_bridge_prepare(bridge);
-> >  	if (error)
-> >  		goto err_out;
-> >  
-> >  	b = pci_alloc_bus();
-> > -	if (!b)
-> > +	if (!b) {
-> > +		error = -ENOMEM;
-> >  		goto err_out;
-> > +	}
-> >  
-> >  	b->sysdata = sysdata;
-> >  	b->ops = ops;
-> >  	b->number = b->busn_res.start = bus;
-> > -	b2 = pci_find_bus(pci_domain_nr(b), bus);
-> > +	b2 = pci_find_bus(bridge->domain_nr, bus);
-> >  	if (b2) {
-> >  		/* If we already got to this bus through a different bridge, ignore it */
-> >  		dev_dbg(&b2->dev, "bus already known\n");
-> > +		error = -EEXIST;
-> >  		goto err_bus_out;
-> >  	}
-> >  
-> >  	bridge->bus = b;
-> > -	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> > +	dev_set_name(&bridge->dev, "pci%04x:%02x", bridge->domain_nr, bus);
-> >  	error = device_register(&bridge->dev);
-> >  	if (error) {
-> >  		put_device(&bridge->dev);
-> > @@ -1766,7 +1771,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >  
-> >  	b->dev.class = &pcibus_class;
-> >  	b->dev.parent = b->bridge;
-> > -	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
-> > +	dev_set_name(&b->dev, "%04x:%02x", bridge->domain_nr, bus);
-> >  	error = device_register(&b->dev);
-> >  	if (error)
-> >  		goto class_dev_reg_err;
-> > @@ -1816,7 +1821,27 @@ err_bus_out:
-> >  	kfree(b);
-> >  err_out:
-> >  	kfree(bridge);
-> > -	return NULL;
-> > +	return ERR_PTR(error);
-> > +}
-> > +
-> > +struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> > +		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> > +{
-> > +	int domain_nr;
-> > +	struct pci_bus *b = pci_alloc_bus();
-> > +	if (!b)
-> > +		return NULL;
-> > +
-> > +	b->sysdata = sysdata;
-> > +	domain_nr = pci_domain_nr(b);
-> > +	kfree(b);
-> > +
-> > +	b = pci_create_root_bus_in_domain(parent, domain_nr, bus,
-> > +				ops, sysdata, resources);
-> > +	if (IS_ERR(b))
-> > +		return NULL;
-> > +
-> > +	return b;
-> >  }
-> >  
-> >  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 33aa2ca..1eed009 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -394,6 +394,7 @@ struct pci_host_bridge_window {
-> >  struct pci_host_bridge {
-> >  	struct device dev;
-> >  	struct pci_bus *bus;		/* root bus */
-> > +	int domain_nr;
-> >  	struct list_head windows;	/* pci_host_bridge_windows */
-> >  	void (*release_fn)(struct pci_host_bridge *);
-> >  	void *release_data;
-> > @@ -747,6 +748,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
-> >  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >  				    struct pci_ops *ops, void *sysdata,
-> >  				    struct list_head *resources);
-> > +struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
-> > +			int domain, int bus, struct pci_ops *ops,
-> > +			void *sysdata, struct list_head *resources);
-> >  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
-> >  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
-> >  void pci_bus_release_busn_res(struct pci_bus *b);
-> > -- 
-> > 1.9.0
+> > Hi Sebastian,
 > > 
+> > Sorry, I meant to respond to this earlier, but forgot. �This sounds
+> > reasonable to me, but Greg can give you a much better answer than I can.
+> > 
+> > Documentation/driver-model/device.txt says the dev->groups pointer
+> > should be set before calling device_register().  PCI calls
+> > device_initialize() and device_add() instead of using device_register(),
+> > and pcibios_add_device() looks like it happens at the right time:
+> > 
+> >     pci_scan_root_bus
+> >       pci_scan_child_bus
+> >         pci_scan_slot
+> >           pci_scan_single_device
+> >             pci_device_add
+> >               device_initialize
+> >               pcibios_add_device                # <---
+> >               device_add
+> >       pci_bus_add_devices
+> >         pci_bus_add_device
+> >           pci_create_sysfs_dev_files
+> >             pcibios_add_platform_entries        # 8d4cd0833107 (benh)
+> >           device_attach
+> > 
+> > I'm not sure why pci_create_sysfs_dev_files() is done later.  It seems
+> > like that should be done before device_add() as well.  Maybe it's
+> > because BARs might not be valid yet (that doesn't seem like a very good
+> > excuse, but it's all I can think of).
+> > 
+> > I assume that if you change s390, you'll also change microblaze and
+> > powerpc?  They look structurally similar to s390.
 > 
+> Yes, that sounds like a plan - this way we can get rid of
+> pcibios_add_platform_entries altogether. I'll send these patches soon.
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Hm, pcibios_add_platform_entries for microblaze and power is identical
+and this OF stuff seems not to be arch specific. How about the following
+patch?
+
+
+pci: move open fabric devspec attribute to pci common code
+
+Move the devspec OF attribute to pci common code's set of device
+attributes since it's not architecture dependent.
+As a side effect microblaze and powerpc no longer need to use
+pcibios_add_platform_entries.
+
+Link: https://lkml.kernel.org/r/alpine.LFD.2.11.1404141101500.1529@denkbrett
+Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+---
+ arch/microblaze/pci/pci-common.c |   20 --------------------
+ arch/powerpc/kernel/pci-common.c |   20 --------------------
+ drivers/pci/pci-sysfs.c          |   17 +++++++++++++++++
+ 3 files changed, 17 insertions(+), 40 deletions(-)
+
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -168,26 +168,6 @@ struct pci_controller *pci_find_hose_for
+ 	return NULL;
+ }
+ 
+-static ssize_t pci_show_devspec(struct device *dev,
+-		struct device_attribute *attr, char *buf)
+-{
+-	struct pci_dev *pdev;
+-	struct device_node *np;
+-
+-	pdev = to_pci_dev(dev);
+-	np = pci_device_to_OF_node(pdev);
+-	if (np == NULL || np->full_name == NULL)
+-		return 0;
+-	return sprintf(buf, "%s", np->full_name);
+-}
+-static DEVICE_ATTR(devspec, S_IRUGO, pci_show_devspec, NULL);
+-
+-/* Add sysfs properties */
+-int pcibios_add_platform_entries(struct pci_dev *pdev)
+-{
+-	return device_create_file(&pdev->dev, &dev_attr_devspec);
+-}
+-
+ void pcibios_set_master(struct pci_dev *dev)
+ {
+ 	/* No special bus mastering setup handling */
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -201,26 +201,6 @@ struct pci_controller* pci_find_hose_for
+ 	return NULL;
+ }
+ 
+-static ssize_t pci_show_devspec(struct device *dev,
+-		struct device_attribute *attr, char *buf)
+-{
+-	struct pci_dev *pdev;
+-	struct device_node *np;
+-
+-	pdev = to_pci_dev (dev);
+-	np = pci_device_to_OF_node(pdev);
+-	if (np == NULL || np->full_name == NULL)
+-		return 0;
+-	return sprintf(buf, "%s", np->full_name);
+-}
+-static DEVICE_ATTR(devspec, S_IRUGO, pci_show_devspec, NULL);
+-
+-/* Add sysfs properties */
+-int pcibios_add_platform_entries(struct pci_dev *pdev)
+-{
+-	return device_create_file(&pdev->dev, &dev_attr_devspec);
+-}
+-
+ /*
+  * Reads the interrupt pin to determine if interrupt is use by card.
+  * If the interrupt is used, then gets the interrupt line from the
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -416,6 +416,20 @@ static ssize_t d3cold_allowed_show(struc
+ static DEVICE_ATTR_RW(d3cold_allowed);
+ #endif
+ 
++#ifdef CONFIG_OF
++static ssize_t devspec_show(struct device *dev,
++			    struct device_attribute *attr, char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct device_node *np = pci_device_to_OF_node(pdev);
++
++	if (np == NULL || np->full_name == NULL)
++		return 0;
++	return sprintf(buf, "%s", np->full_name);
++}
++static DEVICE_ATTR_RO(devspec);
++#endif
++
+ #ifdef CONFIG_PCI_IOV
+ static ssize_t sriov_totalvfs_show(struct device *dev,
+ 				   struct device_attribute *attr,
+@@ -521,6 +535,9 @@ static struct attribute *pci_dev_attrs[]
+ #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
+ 	&dev_attr_d3cold_allowed.attr,
+ #endif
++#ifdef CONFIG_OF
++	&dev_attr_devspec.attr,
++#endif
+ 	NULL,
+ };
+ 
+---1463805518-1966309307-1397756777=:1588--
 
