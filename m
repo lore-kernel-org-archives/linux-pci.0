@@ -1,36 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 24 Apr 2014 16:45:12 -0400 (EDT)
-From: Paolo Bonzini <pbonzini@redhat.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Gleb Natapov <gleb@kernel.org>,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Message-ID: <1917070890.8703765.1398372312996.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20140421133848.GC25116@dhcp-26-169.brq.redhat.com>
-References: <1392804931-30671-11-git-send-email-agordeev@redhat.com> <20140221170504.GN17353@dhcp-26-207.brq.redhat.com> <530788C1.6030109@redhat.com> <20140221185620.GA18725@dhcp-26-207.brq.redhat.com> <5307C6D9.4030503@redhat.com> <20140222085030.GA26794@dhcp-26-207.brq.redhat.com> <530866A2.7080804@redhat.com> <20140421133848.GC25116@dhcp-26-169.brq.redhat.com>
-Subject: Re: [PATCH v2] kvm: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:45517 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750736AbaDQUEW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Apr 2014 16:04:22 -0400
+Date: Thu, 17 Apr 2014 16:03:52 -0400
+From: Dave Jones <davej@redhat.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"Zhang, Rui" <rui.zhang@intel.com>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>,
+	"Yan, Zheng Z" <zheng.z.yan@intel.com>, daniel.vetter@ffwll.ch
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+Message-ID: <20140417200352.GB18876@redhat.com>
+References: <1558044.S1G2VU7srO@vostro.rjw.lan>
+ <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
+ <20140416190404.GA7070@pd.tnic>
+ <20140416203138.GA17661@google.com>
+ <20140416223122.GA2767@redhat.com>
+ <20140416225600.GA23781@google.com>
+ <20140417104533.GB8215@pd.tnic>
+ <20140417182637.GA2098@google.com>
+ <20140417195240.GA18876@redhat.com>
+ <20140417200127.GH4321@pd.tnic>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140417200127.GH4321@pd.tnic>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > >>> So, do I have to pull something (which I'd rather not, since pulling
-> > >>> the wrong thing in a submaintainer tree will make Linus angry), or
-> > >>> should I do it in the next merge window after pci_enable_msix_exact
-> > >>> gets in?
-> > >So it is already in.
-> > 
-> > It is not, because maintainer branches are not rebased.  KVM
-> > development is based on 3.14-rc1, and will not get that commit until
-> > the first 3.15 pull request is sent to Linux.
-> > 
-> > No big deal, I'll include this patch in a second 3.15 pull request.
-> 
-> Hi Paolo,
-> 
-> I believe it is safe to pull it now?
+On Thu, Apr 17, 2014 at 10:01:27PM +0200, Borislav Petkov wrote:
+ > On Thu, Apr 17, 2014 at 03:52:40PM -0400, Dave Jones wrote:
+ > > Just as X starts up, I see this in dmesg..
+ > > 
+ > > [   42.879049] [drm:cpt_serr_int_handler] *ERROR* PCH transcoder A FIFO underrun
+ > 
+ > FWIW, I have that too. It should be something i915-related:
+ > 
+ > [    0.617673] [drm] Memory usable by graphics device = 2048M
+ > [    0.694445] i915 0000:00:02.0: irq 42 for MSI/MSI-X
+ > [    0.694549] [drm] Supports vblank timestamp caching Rev 2 (21.10.2013).
+ > [    0.694631] [drm] Driver supports precise vblank timestamp query.
+ > [    0.695313] vgaarb: device changed decodes: PCI:0000:00:02.0,olddecodes=io+mem,decodes=io+mem:owns=io+mem
+ > [    0.788300] [drm] GMBUS [i915 gmbus dpb] timed out, falling back to bit banging on pin 5
+ > [    0.799829] fbcon: inteldrmfb (fb0) is primary device
+ > [    1.176845] [drm:cpt_serr_int_handler] *ERROR* PCH transcoder A FIFO underrun
 
-Yup, vacation got in the way of doing this during the merge window but I
-can safely send this for -rc next week.  It was on my todo list.
+Can you send me your .config off-list ?
+I wonder if this is something config specific that's causing me to see
+this, and you not, given we've apparently got similar machines.
 
-Paolo
+	Dave
+
