@@ -1,111 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5342D47F.4010506@ti.com>
-Date: Mon, 7 Apr 2014 12:38:23 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:51547 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751529AbaDQULo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Apr 2014 16:11:44 -0400
+Message-ID: <53503577.1020809@pengutronix.de>
+Date: Thu, 17 Apr 2014 22:11:35 +0200
+From: Marc Kleine-Budde <mkl@pengutronix.de>
 MIME-Version: 1.0
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Richard Zhu <r65037@freescale.com>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [RESEND: RFC PATCH 3/3] pcie: keystone: add pcie driver based
- on designware core driver
-References: <1395707726-20437-1-git-send-email-m-karicheri2@ti.com> <1395707726-20437-4-git-send-email-m-karicheri2@ti.com> <235376049.yyfljDtinu@wuerfel> <20140325165421.GB30641@obsidianresearch.com>
-In-Reply-To: <20140325165421.GB30641@obsidianresearch.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Wolfgang Grandegger <wg@grandegger.com>
+CC: Alexander Gordeev <agordeev@redhat.com>, linux-can@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Coverity CID 712278: c_can_pci_probe() doesn't check pci_enable_msi()
+ return value
+References: <CAErSpo4hujoq8Ni7sSrNQv61rf4Xz4s3GjYxNQR6TDLDm0N-Jw@mail.gmail.com>
+In-Reply-To: <CAErSpo4hujoq8Ni7sSrNQv61rf4Xz4s3GjYxNQR6TDLDm0N-Jw@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="HtBa9ro3lce0XPLNlUrHVoSiMwPqoFTME"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/25/2014 12:54 PM, Jason Gunthorpe wrote:
-> On Tue, Mar 25, 2014 at 08:44:36AM +0100, Arnd Bergmann wrote:
->
->> I have no idea how this would work with the standard interrupt-map property,
->> since the legacy interrupt host is now the same device as the pci host.
->>
->> Maybe it's better to move the legacy irqchip handling entirely out of
->> the driver and use a separate device node for the registers so it can
->> come with its own #interrupt-cells, and then refer to this irqchip from
->> the interrupt-map.
-> The other DW PCI-E drivers are being fixed to use interrupt-map, so I
-> think this driver should be fixed before it goes in as well.
-Jason,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--HtBa9ro3lce0XPLNlUrHVoSiMwPqoFTME
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Could you send me a patch reference or branch that I can review to 
-better understand
-changes required in my driver to use the bindings you have described below?
+On 04/03/2014 06:53 PM, Bjorn Helgaas wrote:
+> Coverity complains that c_can_pci_probe() calls pci_enable_msi()
+> without checking the result:
+>=20
+>=20
+> CID 712278 (#1 of 1): Unchecked return value (CHECKED_RETURN)
+> 3. check_return: Calling pci_enable_msi_block without checking return
+> value (as is done elsewhere 88 out of 105 times).
+>  88        pci_enable_msi(pdev);
+>=20
+> This is CID 712278.
 
-Murali
-> Other PCI-E hosts have handled this particular problem with a
-> construction like this:
->
->         pcie@21800000 {
->                 compatible = "ti,keystone2-pcie";
->                 device_type = "pci";
->                 #address-cells = <3>;
->                 #size-cells = <2>;
->                 #interrupt-cells = <1>;
-> 	       reg = ..
->
->                 pcie_intc: interrupt-controller {
->                    interrupt-controller;
-> 		  #address-cells = <0>;
->                    #interrupt-cells = <1>;
->                 }
->
->                 interrupts =  ... enough to decode INTx;
->
-> 	       interrtup-map = <0 0 0 1 &pcie_intc 1>, // INT A
-> 	                       <0 0 0 2 &pcie_intc 2>, // INT B
->                                 <0 0 0 3 &pcie_intc 3>, // INT C
->                                 <0 0 0 4 &pcie_intc 4>; // INT D
->         }
->
-> When the legacy irq domain is created it should be bound to the
-> pcie_intc node, not to pcie node.
->
-> ks_pcie_map_irq should be removed.
-The latest dw core driver still had map_irq() being provided by the driver.
-So any patch reference will help me understand that you describe here.
+Thanks, I've applied Wolfgang's patch ("can: c_can_pci: enable PCI bus
+master only for MSI"), which fixes this problem.
 
-Thanks
+Marc
 
-Murali
->
->>> +#ifdef CONFIG_PCIE_KEYSTONE
->>> +/*
->>> + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
->>> + * Force this configuration for all EP including bridges.
->>> + */
->>> +static void quirk_limit_readrequest(struct pci_dev *dev)
->>> +{
->>> +	pcie_set_readrq(dev, 256);
->>> +}
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
->>> +#endif /* CONFIG_TI_KEYSTONE_PCIE */
->> You can't do this:
->>
->> A quirk for a specific hardware must not be enabled by compile-time options.
->> You have to find a different way to do this.
-> This configuration should happen automatically by the PCI core if the
-> config spaces are correct. See pcie_write_mrrs, pcie_write_mps,
-> pcie_bus_configure_settings, etc.
->
-> Your host will need to conform to the PCI spec and provide a root
-> port bridge header for this to work.
->
-> Also, even in the keystone case the MRRS should not be globally forced
-> like this, there may be other bridges in the system with a 128 byte
-> MPS.
->
-> Jason
+--=20
+Pengutronix e.K.                  | Marc Kleine-Budde           |
+Industrial Linux Solutions        | Phone: +49-231-2826-924     |
+Vertretung West/Dortmund          | Fax:   +49-5121-206917-5555 |
+Amtsgericht Hildesheim, HRA 2686  | http://www.pengutronix.de   |
 
+
+--HtBa9ro3lce0XPLNlUrHVoSiMwPqoFTME
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Icedove - http://www.enigmail.net/
+
+iEYEARECAAYFAlNQNXcACgkQjTAFq1RaXHOkrACbBXeshhOVEv3QMHwTO5hdmznq
+3GcAn3jNNsZiA7G8y7PjpUet+lLZBO2M
+=d69i
+-----END PGP SIGNATURE-----
+
+--HtBa9ro3lce0XPLNlUrHVoSiMwPqoFTME--
