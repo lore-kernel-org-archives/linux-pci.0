@@ -1,97 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49778 "EHLO mga01.intel.com"
+Received: from mail.skyhub.de ([78.46.96.112]:57463 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752990AbaDVHGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Apr 2014 03:06:14 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
+	id S1751163AbaDQUBa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Apr 2014 16:01:30 -0400
+Date: Thu, 17 Apr 2014 22:01:27 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Dave Jones <davej@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"Zhang, Rui" <rui.zhang@intel.com>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 09/22] iommu/vt-d: change iommu_enable/disable_translation to return void
-Date: Tue, 22 Apr 2014 15:07:20 +0800
-Message-Id: <1398150453-28141-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>,
+	"Yan, Zheng Z" <zheng.z.yan@intel.com>, daniel.vetter@ffwll.ch
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+Message-ID: <20140417200127.GH4321@pd.tnic>
+References: <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
+ <1558044.S1G2VU7srO@vostro.rjw.lan>
+ <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
+ <20140416190404.GA7070@pd.tnic>
+ <20140416203138.GA17661@google.com>
+ <20140416223122.GA2767@redhat.com>
+ <20140416225600.GA23781@google.com>
+ <20140417104533.GB8215@pd.tnic>
+ <20140417182637.GA2098@google.com>
+ <20140417195240.GA18876@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140417195240.GA18876@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify error handling path by changing iommu_{enable|disable}_translation
-to return void.
+On Thu, Apr 17, 2014 at 03:52:40PM -0400, Dave Jones wrote:
+> Just as X starts up, I see this in dmesg..
+> 
+> [   42.879049] [drm:cpt_serr_int_handler] *ERROR* PCH transcoder A FIFO underrun
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
+FWIW, I have that too. It should be something i915-related:
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 5e865c1265ad..75d7c5e3f77d 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1391,7 +1391,7 @@ static void iommu_disable_protect_mem_regions(struct intel_iommu *iommu)
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
- }
- 
--static int iommu_enable_translation(struct intel_iommu *iommu)
-+static void iommu_enable_translation(struct intel_iommu *iommu)
- {
- 	u32 sts;
- 	unsigned long flags;
-@@ -1405,10 +1405,9 @@ static int iommu_enable_translation(struct intel_iommu *iommu)
- 		      readl, (sts & DMA_GSTS_TES), sts);
- 
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
--	return 0;
- }
- 
--static int iommu_disable_translation(struct intel_iommu *iommu)
-+static void iommu_disable_translation(struct intel_iommu *iommu)
- {
- 	u32 sts;
- 	unsigned long flag;
-@@ -1422,7 +1421,6 @@ static int iommu_disable_translation(struct intel_iommu *iommu)
- 		      readl, (!(sts & DMA_GSTS_TES)), sts);
- 
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flag);
--	return 0;
- }
- 
- 
-@@ -2875,11 +2873,7 @@ static int __init init_dmars(void)
- 
- 		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
- 		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
--
--		ret = iommu_enable_translation(iommu);
--		if (ret)
--			goto free_iommu;
--
-+		iommu_enable_translation(iommu);
- 		iommu_disable_protect_mem_regions(iommu);
- 	}
- 
-@@ -3577,10 +3571,8 @@ static int init_iommu_hw(void)
- 
- 		iommu->flush.flush_context(iommu, 0, 0, 0,
- 					   DMA_CCMD_GLOBAL_INVL);
--		iommu->flush.flush_iotlb(iommu, 0, 0, 0,
--					 DMA_TLB_GLOBAL_FLUSH);
--		if (iommu_enable_translation(iommu))
--			return 1;
-+		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
-+		iommu_enable_translation(iommu);
- 		iommu_disable_protect_mem_regions(iommu);
- 	}
- 
+[    0.617673] [drm] Memory usable by graphics device = 2048M
+[    0.694445] i915 0000:00:02.0: irq 42 for MSI/MSI-X
+[    0.694549] [drm] Supports vblank timestamp caching Rev 2 (21.10.2013).
+[    0.694631] [drm] Driver supports precise vblank timestamp query.
+[    0.695313] vgaarb: device changed decodes: PCI:0000:00:02.0,olddecodes=io+mem,decodes=io+mem:owns=io+mem
+[    0.788300] [drm] GMBUS [i915 gmbus dpb] timed out, falling back to bit banging on pin 5
+[    0.799829] fbcon: inteldrmfb (fb0) is primary device
+[    1.176845] [drm:cpt_serr_int_handler] *ERROR* PCH transcoder A FIFO underrun
+
 -- 
-1.7.10.4
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
