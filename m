@@ -1,71 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog101.obsmtp.com ([207.126.144.111]:33521 "EHLO
-	eu1sys200aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754698AbaDHHUS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Apr 2014 03:20:18 -0400
-Message-ID: <5343A2D8.20803@mellanox.com>
-Date: Tue, 8 Apr 2014 10:18:48 +0300
-From: Or Gerlitz <ogerlitz@mellanox.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 17 Apr 2014 15:52:40 -0400
+From: Dave Jones <davej@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Borislav Petkov <bp@alien8.de>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"Zhang, Rui" <rui.zhang@intel.com>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Stephane Eranian <eranian@google.com>,
+	"Yan, Zheng Z" <zheng.z.yan@intel.com>, daniel.vetter@ffwll.ch
+Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
+Message-ID: <20140417195240.GA18876@redhat.com>
+References: <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
+ <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
+ <1558044.S1G2VU7srO@vostro.rjw.lan>
+ <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
+ <20140416190404.GA7070@pd.tnic>
+ <20140416203138.GA17661@google.com>
+ <20140416223122.GA2767@redhat.com>
+ <20140416225600.GA23781@google.com>
+ <20140417104533.GB8215@pd.tnic>
+ <20140417182637.GA2098@google.com>
 MIME-Version: 1.0
-To: Guo Chao <yan@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Amir Vadai <amirv@mellanox.com>,
-	Eugenia Emantayev <eugenia@mellanox.com>, <talal@mellanox.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v7] PCI: Try best to allocate pref mmio 64bit above 4g
-References: <CAE9FiQXzRQ9S0mwwb58R2icBTtHHJ6NMVFMaxEgtVNP9mZVjZw@mail.gmail.com> <1394222924-28886-1-git-send-email-yinghai@kernel.org> <CAErSpo6r16va7oBpaDcTXw0Y0igc=NbXy9G7c27X+P0UM7fh8g@mail.gmail.com> <20140408025738.GA3198@yanx>
-In-Reply-To: <20140408025738.GA3198@yanx>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140417182637.GA2098@google.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/04/2014 05:57, Guo Chao wrote:
-> On Fri, Apr 04, 2014 at 04:43:27PM -0600, Bjorn Helgaas wrote:
->> On Fri, Mar 7, 2014 at 1:08 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> When one of children resources does not support MEM_64, MEM_64 for
->>> bridge get reset, so pull down whole pref resource on the bridge under 4G.
->>>
->>> If the bridge support pref mem 64, will only allocate that with pref mem64 to
->>> children that support it.
->>> For children resources if they only support pref mem 32, will allocate them
->>> from non pref mem instead.
->>>
->>> If the bridge only support 32bit pref mmio, will still have all children pref
->>> mmio under that.
->>>
->>> -v2: Add release bridge res support with bridge mem res for pref_mem children res.
->>> -v3: refresh and make it can be applied early before for_each_dev_res patchset.
->>> -v4: fix non-pref mmio 64bit support found by Guo Chao.
->>> -v7: repost as ibm's powerpc system work again when
->>>      1. petiboot boot kernel have this patch.
->>>      2. or mellanox driver added new .shutdown member.
->>>      discussion could be found at:
->>>           http://marc.info/?t=138968064500001&r=1&w=2
->> I think this fixes some sort of bug, and I suppose if I spent a few
->> hours decoding the discussion you mention (the 44 message-long
->> "mlx4_core probe error after applying Yinghai's patch" discussion), I
->> might be able to figure out what it is.
->>
-> The result of 44 message-long discussion is: the Mellanox card's failure is
-> due to a bug in its driver instead of this patch.
+On Thu, Apr 17, 2014 at 12:26:37PM -0600, Bjorn Helgaas wrote:
+ > Thanks a lot for testing this out and debugging my issues.
+ > 
+ > Here's a new version that looks for both device IDs I know about.
 
+I can confirm this patch does fix the backtrace.
+I disabled lockdep, and now I can get to X each boot, but I still see
+a black screen rather than a console between modesetting becoming active, and X starting.
 
-So just to make sure we're on the same page -- fixing the bug is carried 
-out through netdev, e.g this 3.14-rc8
-upstream commit 97a5221 "net/mlx4_core: pass pci_device_id.driver_data 
-to __mlx4_init_one during reset"
-and now this one more fix which is under discussion 
-http://marc.info/?l=linux-pci&m=139675010015646&w=2, right?
+(The lockdep thing turned out to be a known XFS false positive, but for
+ some reason it actually caused X to lock up)
 
+ > I'm still nervous about the modeset problem Dave is seeing.  Since the
+ > original patch wouldn't find an 8086:0c00 device on Dave's system, it
+ > should have done nothing.  But since it caused a modesetting problem,
+ > there's something else doing on that I don't understand.
 
+I don't know if it's relevant, but this laptop (and I suspect many other
+thinkpads which seem affected) have dual gfx, both show up on the bus,
+even if though the nvidia isn't in use..
 
->
-> The patch refines the logic of using prefetchable window, so that 64-bit
-> prefetchable BARs have a chance to be really prefetchable. It does not fix
-> any bugs, instead, it exposes one.
+00:02.0 VGA compatible controller: Intel Corporation 3rd Gen Core processor Graphics Controller (rev 09) (prog-if 00 [VGA controller])
+        Subsystem: Lenovo Device 2200
+        Flags: bus master, fast devsel, latency 0, IRQ 44
+        Memory at f1000000 (64-bit, non-prefetchable) [size=4M]
+        Memory at e0000000 (64-bit, prefetchable) [size=256M]
+        I/O ports at 6000 [size=64]
+        Expansion ROM at <unassigned> [disabled]
+        Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
+        Capabilities: [d0] Power Management version 2
+        Capabilities: [a4] PCI Advanced Features
+        Kernel driver in use: i915
+
+01:00.0 3D controller: NVIDIA Corporation GF117M [GeForce 610M/710M/820M / GT 620M/625M/630M/720M] (rev a1)
+        Subsystem: Lenovo NVS 5200M
+        Flags: bus master, fast devsel, latency 0, IRQ 11
+        Memory at f0000000 (32-bit, non-prefetchable) [size=16M]
+        Memory at c0000000 (64-bit, prefetchable) [size=256M]
+        Memory at d0000000 (64-bit, prefetchable) [size=32M]
+        I/O ports at 5000 [size=128]
+        Expansion ROM at <ignored> [disabled]
+        Capabilities: [60] Power Management version 3
+        Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [78] Express Endpoint, MSI 00
+        Capabilities: [b4] Vendor Specific Information: Len=14 <?>
+        Capabilities: [100] Virtual Channel
+        Capabilities: [128] Power Budgeting <?>
+        Capabilities: [600] Vendor Specific Information: ID=0001 Rev=1 Len=024 <?>
+
+Just as X starts up, I see this in dmesg..
+
+[   42.879049] [drm:cpt_serr_int_handler] *ERROR* PCH transcoder A FIFO underrun
+
+	Dave
 
