@@ -1,57 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:32817 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752551AbaDPGdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Apr 2014 02:33:45 -0400
-Message-ID: <1397629987.32730.9.camel@pasglop>
-Subject: Re: [PATCH v7] PCI: Try best to allocate pref mmio 64bit above 4g
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>, Yinghai Lu <yinghai@kernel.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Amir Vadai <amirv@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Eugenia Emantayev <eugenia@mellanox.com>, talal@mellanox.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Wed, 16 Apr 2014 16:33:07 +1000
-In-Reply-To: <1397629816.32730.8.camel@pasglop>
-References: <CAE9FiQXzRQ9S0mwwb58R2icBTtHHJ6NMVFMaxEgtVNP9mZVjZw@mail.gmail.com>
-	 <1394222924-28886-1-git-send-email-yinghai@kernel.org>
-	 <CAErSpo6r16va7oBpaDcTXw0Y0igc=NbXy9G7c27X+P0UM7fh8g@mail.gmail.com>
-	 <20140408025738.GA3198@yanx>
-	 <CAErSpo4JSrjSn4dXC9Pzfz2Aho+W4Gq9uKc+kAFbqTERcRAJ+w@mail.gmail.com>
-	 <20140409075215.GA3173@yanx>
-	 <CAErSpo4aGU_rmNSiv=HS-pDVsfKk798zLQW8Kx5huHe8jwdghw@mail.gmail.com>
-	 <20140415115450.GA7792@yanx>
-	 <CAErSpo63LKffb4DH+cSfBnvtAoPy06u22e7CUhRuKr-PHNWZMw@mail.gmail.com>
-	 <1397629816.32730.8.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from top.free-electrons.com ([176.31.233.9]:33014 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751691AbaDRMUA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 08:20:00 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Cc: Tawfik Bayouk <tawfik@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Neil Greatorex <neil@fatboyfat.co.uk>,
+	Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 1/7] irqchip: armada-370-xp: fix invalid cast of signed value into unsigned variable
+Date: Fri, 18 Apr 2014 14:19:47 +0200
+Message-Id: <1397823593-1932-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-04-16 at 16:30 +1000, Benjamin Herrenschmidt wrote:
-> On Tue, 2014-04-15 at 18:09 -0600, Bjorn Helgaas wrote:
-> > 
-> > Thanks for the example.  Please open a bug report at
-> > http://bugzilla.kernel.org and attach the complete dmesg logs before
-> > and after Yinghai's patch.
-> > 
-> > Having the complete logs helps me answer questions myself without
-> > having to bother you, and it also helps me figure out whether we can
-> > improve our logging to make it easier to diagnose problems like this.
-> 
-> Unfortunately, for a *little while* longer (hint !) we can't publish
-> a complete log from a Power8 machine, but we should be able to include
-> everything remotely related to PCI.
+The armada_370_xp_alloc_msi() function returns a signed int, which is
+negative on error. However, we store the return value into an
+irq_hw_number_t, which is unsigned. Therefore, we actually never test
+if armada_370_xp_alloc_msi() returns an error or not, which may lead
+us to use hwirq numbers of as 0xffffffe4 (when
+armada_370_xp_alloc_msi() returns -ENOSPC).
 
-Hrm, actually, I'm not sure we can disclose the device details just yet,
-so let's just hide the vendor/device ID to make the lawyers happy and
-you can print all the rest.
+This commit fixes that by storing the return value of
+armada_370_xp_alloc_msi() in a signed variable.
 
-Cheers,
-Ben.
+Fixes: 31f614edb726fcc4d5aa0f2895fbdec9b04a3ca4 ('irqchip: armada-370-xp: implement MSI support')
+Cc: <stable@vger.kernel.org> # v3.13+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Neil Greatorex <neil@fatboyfat.co.uk>
+---
+ drivers/irqchip/irq-armada-370-xp.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index 41be897..3c8d89b 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -132,8 +132,7 @@ static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
+ 				       struct msi_desc *desc)
+ {
+ 	struct msi_msg msg;
+-	irq_hw_number_t hwirq;
+-	int virq;
++	int virq, hwirq;
+ 
+ 	hwirq = armada_370_xp_alloc_msi();
+ 	if (hwirq < 0)
+-- 
+1.9.2
 
