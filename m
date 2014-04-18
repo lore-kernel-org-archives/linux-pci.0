@@ -1,71 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:39771 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758006AbaDBKew (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Apr 2014 06:34:52 -0400
-From: Marek Vasut <marex@denx.de>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH] PCI: designware: Remove unnecessary RC BAR setting
-Date: Wed, 2 Apr 2014 12:34:47 +0200
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"'Richard Zhu'" <r65037@freescale.com>
-References: <000801cf4d95$64322ef0$2c968cd0$%han@samsung.com> <2CC2A0A4A178534D93D5159BF3BCB66189FEC4809B@EAPEX1MAIL1.st.com> <533BA157.6030004@ti.com>
-In-Reply-To: <533BA157.6030004@ti.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201404021234.48134.marex@denx.de>
+Received: from top.free-electrons.com ([176.31.233.9]:33304 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751111AbaDRM6v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 08:58:51 -0400
+Date: Fri, 18 Apr 2014 14:58:47 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Neil Greatorex <neil@fatboyfat.co.uk>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: Fixing PCIe issues on Armada XP
+Message-ID: <20140418145847.709b29ce@skate>
+In-Reply-To: <alpine.DEB.2.10.1404102206090.28003@vroombuntu>
+References: <20140410181953.50ccfcc3@skate>
+	<20140410165733.GB23104@obsidianresearch.com>
+	<20140410200153.46669e0c@skate>
+	<20140410201201.GA12661@obsidianresearch.com>
+	<alpine.DEB.2.10.1404102206090.28003@vroombuntu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, April 02, 2014 at 07:34:15 AM, Kishon Vijay Abraham I wrote:
-> On Wednesday 02 April 2014 11:03 AM, Mohit KUMAR DCG wrote:
-> > Hello Jingoo,
-> > 
-> >> -----Original Message-----
-> >> From: Jingoo Han [mailto:jg1.han@samsung.com]
-> >> Sent: Wednesday, April 02, 2014 10:53 AM
-> >> To: Mohit KUMAR DCG
-> >> Cc: 'Bjorn Helgaas'; linux-pci@vger.kernel.org; Pratyush ANAND; 'Marek
-> >> Vasut'; 'Richard Zhu'; 'Kishon Vijay Abraham I'
-> >> Subject: Re: [PATCH] PCI: designware: Remove unnecessary RC BAR setting
-> >> 
-> >> On Wednesday, April 02, 2014 1:57 PM, Mohit KUMAR DCG wrote:
-> >>> On Tuesday, April 01, 2014 4:00 PM, Jingoo Han wrote:
-> >>>> According to the spec, the synopsys core does not implement the
-> >>>> optional BARs such as BAR0/1. This is based on the assumption that
-> >>>> the RC host probably has registers on some other internal bus and
-> >>>> has knowledge and setup access to these registers already.
-> >>>> So, remove unnecessary RC BAR setting.
-> >>> 
-> >>> - Normally BARs in RC are not used but somehow available in the
-> >>> design. One possible BAR use can be if RC has some memory connected to
-> >> 
-> >> the BAR that needs to be accessed through link.
-> >> 
-> >>> Otherwise we can ignore BARs setup here.
-> >> 
-> >> Hi Mohit KUMAR DCG,
-> >> 
-> >> Thank you for your feedback.
-> >> 
-> >> I want to know whether or not other SoCs such as ST, Freescale, TI
-> >> support BAR0/BAR1. If no SoC supports BAR0/BAR1, the unnecessary RC BAR
-> >> setting code should  be removed.
-> > 
-> > - We are not currently using RC's BAR0/1 in any application but no such
-> > restriction from HW as ST SoCs support BARs in HW design.
-> 
-> Neither do we in DRA7xx.
+Neil, Jason,
 
-I suspect that means we should keep the code to make sure the registers are 
-configured correctly, no?
+On Thu, 10 Apr 2014 22:56:00 +0100 (BST), Neil Greatorex wrote:
 
-Richard, can you comment on MX6 please ?
+> I took your attached patch and extended it a bit to print out how long it 
+> took. The delays also need to be much longer for me. I also fixed a small 
+> typo you made where the bit wasn't being set again to bring the link back 
+> up. I've attached the diff to your patch, as well as the combined patch 
+> (hope that makes sense).
 
-Best regards,
-Marek Vasut
+Unfortunately here your patch doesn't work (and neither does the patch
+from Jason Gunthorpe). On Armada 370 DB, without the patch, the e1000e
+NIC is detected when earlyprintk is enabled, and not detected when
+earlyprintk is disabled. With the patch applied, the e1000e is no
+longer detected *at all*, even if earlyprintk is enabled.
+
+Extract from a boot log:
+
+Linux version 3.15.0-rc1-00007-gedf643a-dirty (thomas@skate) (gcc version 4.8.1 (Ubuntu/Linaro 4.8.1-10ubuntu7) ) #317 SMP Fri Apr 18 14:54:13 CEST 2014
+[...]
+Kernel command line: console=ttyS0,115200 earlyprintk loglevel=8 root=/dev/nfs nfsroot=192.168.1.22:/home/thomas/nfsroot ip=192.168.1.142:192.168.1.22:192.168.1.1:255.255.255.0:devboard:eth0:on
+[...]
+mvebu-pcie pcie-controller.2: PCIe0.0: performing link reset
+mvebu-pcie pcie-controller.2: PCIe0.0: link went down after 20 tries
+mvebu-pcie pcie-controller.2: PCIe0.0: link came back up after 100 tries
+mvebu-pcie pcie-controller.2: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x1000-0xfffff]
+pci_bus 0000:00: root bus resource [mem 0xf8000000-0xffdfffff]
+pci_bus 0000:00: root bus resource [bus 00-ff]
+pci 0000:00:01.0: [11ab:6710] type 01 class 0x060400
+pci 0000:00:02.0: [11ab:6710] type 01 class 0x060400
+PCI: bus0: Fast back to back transfers disabled
+pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+pci 0000:00:02.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+PCI: bus1: Fast back to back transfers enabled
+pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+PCI: bus2: Fast back to back transfers enabled
+pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to 02
+pci 0000:00:01.0: PCI bridge to [bus 01]
+pci 0000:00:02.0: PCI bridge to [bus 02]
+[...]
+# /usr/sbin/lspci 
+00:01.0 PCI bridge: Marvell Technology Group Ltd. Device 6710
+00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 6710
+#
+
+Any idea?
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
