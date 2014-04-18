@@ -1,105 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:6244 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751686AbaDOXJa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 19:09:30 -0400
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com
-Subject: [PATCH 0/8] Fix crashdump failure caused by legacy DMA/IO
-Date: Tue, 15 Apr 2014 17:09:01 -0600
-Message-Id: <1397603349-30930-1-git-send-email-bill.sumner@hp.com>
+Received: from top.free-electrons.com ([176.31.233.9]:32945 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750857AbaDRMJJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 08:09:09 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Cc: Tawfik Bayouk <tawfik@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Neil Greatorex <neil@fatboyfat.co.uk>,
+	Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>
+Subject: [PATCH 0/7] Fixes for Armada 370/XP PCIe
+Date: Fri, 18 Apr 2014 14:08:59 +0200
+Message-Id: <1397822946-28944-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following series implements a fix for:
-A kdump problem about DMA that has been discussed for a long time.
-That is, when a kernel panics and boots into the kdump kernel, DMA that was
-started by the panicked kernel is not stopped before the kdump kernel is booted;
-and the kdump kernel disables the IOMMU while this DMA continues.
-This causes the IOMMU to stop translating the DMA addresses as IOVAs and
-begin to treat them as physical memory addresses -- which causes the DMA to either:
-1. generate DMAR errors or
-2. generate PCI SERR errors or
-3. transfer data to or from incorrect areas of memory.
-Often this causes the dump to fail.
+Hello,
 
-This patch set modifies the behavior of the Intel iommu in the crashdump kernel: 
-1. to accept the iommu hardware in an active state,
-2. to leave the current translations in-place so that legacy DMA will continue
-   using its current buffers until the device drivers in the crashdump kernel
-   initialize and initialize their devices,
-3. to use different portions of the iova address ranges for the device drivers
-   in the crashdump kernel than the iova ranges that were in-use at the time
-   of the panic.  
+This set of commits fixes a number of problems in the PCIe support of
+the Armada 370 and Armada XP SoCs. Due to the interaction of PCIe with
+other subsystems, the fixes are not limited to drivers/pci, but also
+touch drivers/bus and drivers/irqchip.
 
-Advantages of this approach:
-1. All manipulation of the IO-device is done by the Linux device-driver
-   for that device.
-2. This approach behaves in a manner very similar to operation without an
-   active iommu.
-3. Any activity between the IO-device and its RMRR areas is handled by the
-   device-driver in the same manner as during a non-kdump boot.
-4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
-   This supports the practice of creating a special kdump kernel without
-   drivers for any devices that are not required for taking a crashdump. 
-5. Minimal code-changes among the existing mainline intel-iommu code.
+Here are the details of the patches:
 
-Summary of changes in this patch set since the previous posting:
-1. Returned to the structure of a patch-set
-2. Enabled the intel-iommu driver to consist of multiple *.c files
-   by moving many of the #defines, prototypes, and inline functions
-   into a new file: intel-iommu-private.h (First three patches implement
-   only this enhancement -- could be applied independent of the last 5)
-3. Moved the new "crashdump fix" code into a new file: intel-iommu-kdump.c 
-4. Removed the pr_debug constructs from the new code that implements the
-   "crashdump fix" -- making the code much cleaner and easier to read.
-5. Miscellaneous cleanups such as enum-values for return-codes.
-6. Simplified the code that retrieves the values needed to initialize a new
-   domain by using the linked-list of previously-collected values
-   instead of stepping back into the tree of translation tables.
+ * The first three patches are fixes in the MSI handling. They fix
+   problems with PCIe device drivers trying to use MSI-X (which we
+   don't support), and incorrect freeing of MSIs causing kernel panics
+   when PCIe device drivers try to allocate/free MSIs several times.
 
+   They touch drivers/irqchip/ only, and they are independent from the
+   rest of the series, both from a build and a runtime point of view.
 
-Bill Sumner (8):
-  Fix a few existing lines that checkpatch.pl will complain about
-    later.     #86: FILE: drivers/iommu/intel-iommu.c:390:     +static
-    int force_on = 0;
-  Consolidate all .h lines at front of intel-iommu.c file     In
-    intel-iommu.c, move downward the few lines near the front that
-    should     not move to an intel-iommu-private.h file (mostly
-    data-item definitions)     This leaves a consolidated block of the
-    lines that would move to an     intel-iommu-private.h file at the
-    front of the file.
-  Create intel-iommu-private.h     Move the single block of #define,
-    static inline ... ; struct definitions     to intel-iommu-private.h
-    from intel-iommu.c     Replace them with #include
-    "intel-iommu-private.h"
-  Update iommu_attach_domain() and its callers     Allow specification
-    of domain-id for the new domain.
-  Add new definitions & prototypes to intel-iommu-private.h     Items
-    needed for fixing crashdump.
-  Create intel-iommu-kdump.c     Populate with "Copy iommu translation
-    tables" function set.     Edit Makefile to add intel-iommu-kdump.o
-  Add domain-id functions to intel-iommu-kdump.c    
-    intel_iommu_did_to_domain_values_entry()    
-    intel_iommu_get_dids_from_old_kernel()
-  Add remaining changes to intel-iommu.c to fix crashdump     Add
-    "#include <linux/crash_dump.h>"     Chg device_to_domain_id     Chg
-    get_domain_for_dev     Chg init_dmars     Chg intel_iommu_init
+   These bugs exist since the MSI support was added, in v3.13. The
+   commits carry the necessary Fixes and Cc to stable informations.
 
- drivers/iommu/Makefile              |   2 +-
- drivers/iommu/intel-iommu-kdump.c   | 629 ++++++++++++++++++++++++++++++++++++
- drivers/iommu/intel-iommu-private.h | 443 +++++++++++++++++++++++++
- drivers/iommu/intel-iommu.c         | 565 ++++++++++----------------------
- 4 files changed, 1249 insertions(+), 390 deletions(-)
- create mode 100644 drivers/iommu/intel-iommu-kdump.c
- create mode 100644 drivers/iommu/intel-iommu-private.h
+ * The fourth patch fixes an off-by-one in the computed size of MBus
+   windows. This only worked because the mvebu-mbus driver was
+   silently accepting invalid sizes. I've marked it for stable because
+   it really is bug, but even though it's not visible by itself, it is
+   needed for other patches in the series.
+
+   This patch touches drivers/pci/host, and should probably be taken
+   by the mvebu maintainers, with the Ack of the PCI maintainer, as it
+   is a runtime dependency for the next patch.
+
+   This patch is marked for stable all the way to when the PCI driver
+   was introduced.
+
+ * The fifth patch make the mvebu-mbus driver check (and loudly
+   complain) if it is asked to create invalid regions (whose base
+   address or size are not compatible with the documented MBus
+   requirements).
+
+   This patch touches drivers/bus, and should probably be taken by the
+   mvebu maintainers. As explained above, it is mandatory to have
+   PATCH 4 applied before PATCH 5: there is a runtime dependency
+   between the two (but no build time dependency).
+
+   This patch is not marked for stable, as it only adds some
+   additional debugging information, which while very useful, is not
+   technically stable material.
+
+ * The sixth patch relaxes a check in mvebu-mbus driver about
+   conflicting windows, which is necessary
+
+   This patch touches drivers/bus, and should probably be taken by the
+   mvebu maintainers. It is not a fix by itself, but it is required
+   for the last patch, which is a fix. Therefore, it is marked for
+   stable, all the way to when the mvebu-mbus driver was introduced.
+
+ * The seventh patch improves the pci-mvebu driver to allow the
+   creation of multiple MBus windows when the PCI BAR calculated by
+   the Linux PCI core has a non power-of-two size. This is needed
+   because MBus windows can only have power-of-two sizes. Until now,
+   we were configuring invalid MBus windows, which with certain PCIe
+   devices, was either causing kernel panics at boot time or
+   misfunction of the device.
+
+These patches have been tested by Neil Greatorex
+<neil@fatboyfat.co.uk> who initially reported the issues, have also
+been tested by Willy Tarreau and Matthew Winter (even though they
+didn't give their formal Tested-by [1] [2]), and have been heavily
+discussed with Jason Gunthorpe.
+
+Note that there are still two known issues in the mvebu PCIe handling:
+
+ 1/ When earlyprintk is disabled, we have a timing / PHY reset issue
+    which leads to the PCIe device connected on the first interface to
+    not be detected. We already have patches floating around, but
+    nothing that we are all happy with yet.
+
+ 2/ When a PCI IGB card is plugged with many other PCI devices in a
+    system, the IGB card initialization doesn't work ('igb
+    0000:01:00.0: The NVM Checksum Is Not Valid'). We are still
+    working on this issue.
+
+These two issues will be handled separately.
+
+Thanks,
+
+Thomas
+
+[1] http://www.spinics.net/lists/linux-pci/msg30406.html
+[2] http://www.spinics.net/lists/linux-pci/msg30444.html
+
+Jason Gunthorpe (1):
+  bus: mvebu-mbus: Avoid setting an undefined window size
+
+Neil Greatorex (1):
+  irqchip: armada-370-xp: Fix releasing of MSIs
+
+Thomas Petazzoni (4):
+  irqchip: armada-370-xp: fix invalid cast of signed value into unsigned
+    variable
+  irqchip: armada-370-xp: implement the ->check_device() msi_chip
+    operation
+  bus: mvebu-mbus: allow several windows with the same target/attribute
+  pci: pci-mvebu: split PCIe BARs into multiple MBus windows when needed
+
+Willy Tarreau (1):
+  pci: mvebu: fix off-by-one in the computed size of the mbus windows
+
+ drivers/bus/mvebu-mbus.c            | 22 ++++++---
+ drivers/irqchip/irq-armada-370-xp.c | 17 +++++--
+ drivers/pci/host/pci-mvebu.c        | 92 ++++++++++++++++++++++++++++++-------
+ 3 files changed, 106 insertions(+), 25 deletions(-)
 
 -- 
-Bill Sumner <bill.sumner@hp.com>
+1.9.2
 
