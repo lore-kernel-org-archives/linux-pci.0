@@ -1,69 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:55450 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754440AbaD1LIJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 07:08:09 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N4Q00KTKMXKE020@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Mon, 28 Apr 2014 20:08:08 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Fabio Estevam' <festevam@gmail.com>
-Cc: thomas.petazzoni@free-electrons.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org,
-	'Fabio Estevam' <fabio.estevam@freescale.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1398682281-18772-1-git-send-email-festevam@gmail.com>
-In-reply-to: <1398682281-18772-1-git-send-email-festevam@gmail.com>
-Subject: Re: [PATCH] pci: pci-mvebu: Use '%pa' for printing 'phys_addr_t' type
-Date: Mon, 28 Apr 2014 20:08:07 +0900
-Message-id: <002301cf62d2$228cf0f0$67a6d2d0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from top.free-electrons.com ([176.31.233.9]:33057 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751197AbaDRMUD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 08:20:03 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Cc: Tawfik Bayouk <tawfik@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Neil Greatorex <neil@fatboyfat.co.uk>,
+	Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 4/7] pci: mvebu: fix off-by-one in the computed size of the mbus windows
+Date: Fri, 18 Apr 2014 14:19:50 +0200
+Message-Id: <1397823593-1932-5-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, April 28, 2014 7:51 PM, Fabio Estevam wrote:
-> 
-> From: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> Fix the following build warning that happens when building multi_v7_defconfig
-> with CONFIG_ARM_LPAE=y:
-> 
-> drivers/pci/host/pci-mvebu.c:334:5: warning: format '%x' expects argument of type 'unsigned int', but
-> argument 3 has type 'phys_addr_t' [-Wformat=]
-> 
-> While at it, also use '%zx' for printing 'size_t'.
-> 
-> Reported-by: Olof's autobuilder <build@lixom.net>
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+From: Willy Tarreau <w@1wt.eu>
 
-Reviewed-by: Jingoo Han <jg1.han@samsung.com>
+mvebu_pcie_handle_membase_change() and
+mvebu_pcie_handle_iobase_change() do not correctly compute the window
+size. PCI uses an inclusive start/end address pair, which requires a
++1 when converting to size.
 
-Best regards,
-Jingoo Han
+This only worked because a bug in the mbus driver allowed it to
+silently accept and round up bogus sizes.
 
-> ---
->  drivers/pci/host/pci-mvebu.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index e384e25..572a7b5 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -330,8 +330,8 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
->  							sz, remap);
->  		if (ret) {
->  			dev_err(&port->pcie->pdev->dev,
-> -				"Could not create MBus window at 0x%x, size 0x%x: %d\n",
-> -				base, sz, ret);
-> +				"Could not create MBus window at %pa, size 0x%zx: %d\n",
-> +				&base, sz, ret);
->  			mvebu_pcie_del_windows(port, base - size_mapped,
->  					       size_mapped);
->  			return;
-> --
-> 1.8.3.2
+Fix this by adding one to the computed size.
+
+Fixes: 45361a4fe4464180815157654aabbd2afb4848ad ('PCIe driver for Marvell Armada 370/XP systems')
+Cc: <stable@vger.kernel.org> # v3.11+
+Signed-off-by: Willy Tarreau <w@1wt.eu>
+Reviewed-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Neil Greatorex <neil@fatboyfat.co.uk>
+---
+ drivers/pci/host/pci-mvebu.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index d3d1cfd..4829921 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -331,7 +331,7 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
+ 	port->iowin_base = port->pcie->io.start + iobase;
+ 	port->iowin_size = ((0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
+ 			    (port->bridge.iolimitupper << 16)) -
+-			    iobase);
++			    iobase) + 1;
+ 
+ 	mvebu_mbus_add_window_remap_by_id(port->io_target, port->io_attr,
+ 					  port->iowin_base, port->iowin_size,
+@@ -364,7 +364,7 @@ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
+ 	port->memwin_base  = ((port->bridge.membase & 0xFFF0) << 16);
+ 	port->memwin_size  =
+ 		(((port->bridge.memlimit & 0xFFF0) << 16) | 0xFFFFF) -
+-		port->memwin_base;
++		port->memwin_base + 1;
+ 
+ 	mvebu_mbus_add_window_by_id(port->mem_target, port->mem_attr,
+ 				    port->memwin_base, port->memwin_size);
+-- 
+1.9.2
 
