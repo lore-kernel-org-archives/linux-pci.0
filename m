@@ -1,57 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:42414 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655AbaDYAGi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 20:06:38 -0400
-Received: by mail-ig0-f176.google.com with SMTP id uy17so1574360igb.3
-        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 17:06:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAL_JsqLsDge54k5v_R9rvaGTrPu2qhC5shgg3dNAqV3re+ZPxQ@mail.gmail.com>
-References: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
- <1395960398-4238-4-git-send-email-robherring2@gmail.com> <20140424232431.GO29593@google.com>
- <CAL_JsqLsDge54k5v_R9rvaGTrPu2qhC5shgg3dNAqV3re+ZPxQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 24 Apr 2014 18:06:17 -0600
-Message-ID: <CAErSpo6GjhhForKPbH9A34DvV9HuOH1oqA2EBNpDFWiQPd0PXA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] pci: add DT based ARM Versatile PCI host driver
-To: Rob Herring <robherring2@gmail.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from top.free-electrons.com ([176.31.233.9]:33027 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752005AbaDRMUB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 08:20:01 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Cc: Tawfik Bayouk <tawfik@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Neil Greatorex <neil@fatboyfat.co.uk>,
+	Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 2/7] irqchip: armada-370-xp: implement the ->check_device() msi_chip operation
+Date: Fri, 18 Apr 2014 14:19:48 +0200
+Message-Id: <1397823593-1932-3-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 24, 2014 at 5:37 PM, Rob Herring <robherring2@gmail.com> wrote:
-> On Thu, Apr 24, 2014 at 6:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Thu, Mar 27, 2014 at 05:46:38PM -0500, Rob Herring wrote:
->>> From: Rob Herring <robh@kernel.org>
->>>
->>> This converts the Versatile PCI host code to a platform driver using
->>> of_create_pci_host_bridge for parsing DT and setup.
->>>
->>> I think more of this setup could be done by the core code. There are
->>> accesses to the host's config space (accesses using local_pci_cfg_base)
->>> which seem like they could be done by the core code or using standard
->>> config space accessors. The problem is bridge->bus->self is needed, but
->>> it does not get setup. I'm not exactly sure how that should work.
->>>
->>> Signed-off-by: Rob Herring <robh@kernel.org>
->>> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>> ...
->
->>> +     bridge = of_create_pci_host_bridge(&pdev->dev, &pci_versatile_ops, &sys);
->>
->> Are we still relying on the PCI core to default to a bus number range of
->> 00-ff?  Can we not do that?
->
-> No, that comes from DT.
+Until now, we were leaving the ->check_device() msi_chip operation
+empty, which leads the PCI core to believe that we support both MSI
+and MSI-X. In fact, we do not support MSI-X, so we have to tell this
+to the PCI core by providing an implementation of this operation.
 
-Oh, good.  That's done inside of_create_pci_host_bridge(), then?  (I
-haven't looked at that code.)
+Fixes: 31f614edb726fcc4d5aa0f2895fbdec9b04a3ca4 ('irqchip: armada-370-xp: implement MSI support')
+Cc: <stable@vger.kernel.org> # v3.13+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Neil Greatorex <neil@fatboyfat.co.uk>
+---
+ drivers/irqchip/irq-armada-370-xp.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Bjorn
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index 3c8d89b..78b0ac9 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -162,6 +162,15 @@ static void armada_370_xp_teardown_msi_irq(struct msi_chip *chip,
+ 	armada_370_xp_free_msi(d->hwirq);
+ }
+ 
++static int armada_370_xp_check_msi_device(struct msi_chip *chip, struct pci_dev *dev,
++					  int nvec, int type)
++{
++	/* We support MSI, but not MSI-X */
++	if (type == PCI_CAP_ID_MSI)
++		return 0;
++	return -EINVAL;
++}
++
+ static struct irq_chip armada_370_xp_msi_irq_chip = {
+ 	.name = "armada_370_xp_msi_irq",
+ 	.irq_enable = unmask_msi_irq,
+@@ -200,6 +209,7 @@ static int armada_370_xp_msi_init(struct device_node *node,
+ 
+ 	msi_chip->setup_irq = armada_370_xp_setup_msi_irq;
+ 	msi_chip->teardown_irq = armada_370_xp_teardown_msi_irq;
++	msi_chip->check_device = armada_370_xp_check_msi_device;
+ 	msi_chip->of_node = node;
+ 
+ 	armada_370_xp_msi_domain =
+-- 
+1.9.2
+
