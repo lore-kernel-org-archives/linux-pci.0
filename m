@@ -1,115 +1,185 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for pci_host_bridge.
-Date: Thu, 10 Apr 2014 16:07:44 +0200
-Message-ID: <6144916.rD76jOL8sv@wuerfel>
-In-Reply-To: <CAErSpo6u7kr+QdnhAXBo20izg-DNHR4zHT+kRvq34whp68RJCQ@mail.gmail.com>
-References: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com> <4506772.YFSM2m1eaP@wuerfel> <CAErSpo6u7kr+QdnhAXBo20izg-DNHR4zHT+kRvq34whp68RJCQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e06smtp13.uk.ibm.com ([195.75.94.109]:58564 "EHLO
+	e06smtp13.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041AbaDRKKk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 06:10:40 -0400
+Received: from /spool/local
+	by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
+	Fri, 18 Apr 2014 11:10:38 +0100
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+	by d06dlp03.portsmouth.uk.ibm.com (Postfix) with ESMTP id 8E9A61B08069
+	for <linux-pci@vger.kernel.org>; Fri, 18 Apr 2014 11:10:40 +0100 (BST)
+Received: from d06av06.portsmouth.uk.ibm.com (d06av06.portsmouth.uk.ibm.com [9.149.37.217])
+	by b06cxnps3075.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s3IAAbLe1835386
+	for <linux-pci@vger.kernel.org>; Fri, 18 Apr 2014 10:10:37 GMT
+Received: from d06av06.portsmouth.uk.ibm.com (localhost [127.0.0.1])
+	by d06av06.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s3IBAaXD021574
+	for <linux-pci@vger.kernel.org>; Fri, 18 Apr 2014 05:10:37 -0600
+Date: Fri, 18 Apr 2014 12:10:34 +0200 (CEST)
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Michal Simek <monstr@monstr.eu>,
+	Paul Mackerras <paulus@samba.org>
+Subject: Re: [Resend] pcibios_add_platform_entries usage
+In-Reply-To: <1397768575.32730.70.camel@pasglop>
+Message-ID: <alpine.LFD.2.11.1404181154450.1609@denkbrett>
+References: <alpine.LFD.2.11.1403281931410.1516@denkbrett> <alpine.LFD.2.11.1404141101500.1529@denkbrett> <20140414173541.GA4417@google.com> <alpine.LFD.2.11.1404141958120.1561@denkbrett> <alpine.LFD.2.11.1404171938190.1588@denkbrett>
+ <1397768575.32730.70.camel@pasglop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463805518-2084778717-1397815835=:1609"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 10 April 2014 07:50:52 Bjorn Helgaas wrote:
-> On Thu, Apr 10, 2014 at 2:00 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Wednesday 09 April 2014 21:48:14 Bjorn Helgaas wrote:
-> >> On Wed, Apr 9, 2014 at 7:27 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> >> > On Wed, Apr 09, 2014 at 08:02:41AM -0600, Bjorn Helgaas wrote:
-> >> >> >>   struct pci_host_bridge {
-> >> >> >>     int domain;
-> >> >> >>     int node;
-> >> >> >>     struct device *dev;
-> >> >> >>     struct pci_ops *ops;
-> >> >> >>     struct list_head resources;
-> >> >> >>     void *sysdata;
-> >> >> >>     struct pci_bus *bus;  /* filled in by core, not by arch */
-> >> >> >>     ... /* other existing contents managed by core */
-> >> >> >>   };
-> >> >> >>
-> >> >> >>   struct pci_bus *pci_scan_host_bridge(struct pci_host_bridge *bridge);
-> >> >> >
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+---1463805518-2084778717-1397815835=:1609
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+
+On Fri, 18 Apr 2014, Benjamin Herrenschmidt wrote:
+> On Thu, 2014-04-17 at 19:46 +0200, Sebastian Ott wrote:
 > 
-> I'm not sure I'm following you; you mean the arch-specific sysdata
-> structure would contain a pointer to struct pci_host_bridge?
+> > pci: move open fabric devspec attribute to pci common code
+> > 
+> > Move the devspec OF attribute to pci common code's set of device
+> > attributes since it's not architecture dependent.
+> > As a side effect microblaze and powerpc no longer need to use
+> > pcibios_add_platform_entries.
+> > 
+> > Link: https://lkml.kernel.org/r/alpine.LFD.2.11.1404141101500.1529@denkbrett
+> > Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
 > 
-> I have to admit that I'm not up on how other subsystems handle this
-> sort of abstraction.  Do you have any pointers to good examples that I
-> can study?
+> Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> 
+> (Pending you've compile tested it on powerpc, I'm on vacation and
+> haven't done it :)
 
-What I mean is like this:
+I did:
+make ARCH=powerpc CROSS_COMPILE=powerpc64-4.3.2- g5_defconfig
+make ARCH=powerpc CROSS_COMPILE=powerpc64-4.3.2-
 
-/* generic structure */
-struct pci_host_bridge {
-        int domain;
-        int node;
-        struct device *dev;
-        struct pci_ops *ops; 
-        struct list_head resources;
-        struct pci_bus *bus;  /* filled in by core, not by arch */
-        ... /* other existing contents managed by core */
-};
+and failed with:
+  CC      arch/powerpc/lib/xor_vmx.o
+In file included from include/linux/list.h:4,
+                 from include/linux/preempt.h:10,
+                 from arch/powerpc/lib/xor_vmx.c:22:
+include/linux/types.h:29: error: both ‘unsigned’ and ‘_Bool’ in declaration specifiers
+cc1: warnings being treated as errors
+include/linux/types.h:29: error: useless type name in empty declaration
 
-/* arm specific structure */
-struct pci_sys_data {
-        char            io_res_name[12];
-                                        /* Bridge swizzling                     */
-        u8              (*swizzle)(struct pci_dev *, u8 *);
-                                        /* IRQ mapping                          */
-        int             (*map_irq)(const struct pci_dev *, u8, u8);
-                                        /* Resource alignement requirements     */
-        void            (*add_bus)(struct pci_bus *bus);
-        void            (*remove_bus)(struct pci_bus *bus);
-        void            *private_data;  /* platform controller private data     */
 
-	/* not a pointer: */
-	struct pci_host_bridge bridge;
-};
-static inline struct pci_sys_data *to_pci_sys_data(struct pci_host_bridge *bridge)
-{
-	return container_of(bridge, struct pci_sys_data, bridge);
-}
 
-/* arm specific, driver specific structure */
-struct tegra_pcie {
-        void __iomem *pads;
-        void __iomem *afi;
+make ARCH=powerpc CROSS_COMPILE=powerpc64-4.3.2- arch/powerpc/kernel/ drivers/pci/
 
-        struct clk *pex_clk;
-        struct clk *afi_clk;
-        struct clk *pll_e;
-        struct clk *cml_clk;
+worked just fine.
 
-        struct tegra_msi msi;
+Regards,
+Sebastian
 
-        struct list_head ports;
-        unsigned int num_ports;
+> 
+> > ---
+> >  arch/microblaze/pci/pci-common.c |   20 --------------------
+> >  arch/powerpc/kernel/pci-common.c |   20 --------------------
+> >  drivers/pci/pci-sysfs.c          |   17 +++++++++++++++++
+> >  3 files changed, 17 insertions(+), 40 deletions(-)
+> > 
+> > --- a/arch/microblaze/pci/pci-common.c
+> > +++ b/arch/microblaze/pci/pci-common.c
+> > @@ -168,26 +168,6 @@ struct pci_controller *pci_find_hose_for
+> >  	return NULL;
+> >  }
+> >  
+> > -static ssize_t pci_show_devspec(struct device *dev,
+> > -		struct device_attribute *attr, char *buf)
+> > -{
+> > -	struct pci_dev *pdev;
+> > -	struct device_node *np;
+> > -
+> > -	pdev = to_pci_dev(dev);
+> > -	np = pci_device_to_OF_node(pdev);
+> > -	if (np == NULL || np->full_name == NULL)
+> > -		return 0;
+> > -	return sprintf(buf, "%s", np->full_name);
+> > -}
+> > -static DEVICE_ATTR(devspec, S_IRUGO, pci_show_devspec, NULL);
+> > -
+> > -/* Add sysfs properties */
+> > -int pcibios_add_platform_entries(struct pci_dev *pdev)
+> > -{
+> > -	return device_create_file(&pdev->dev, &dev_attr_devspec);
+> > -}
+> > -
+> >  void pcibios_set_master(struct pci_dev *dev)
+> >  {
+> >  	/* No special bus mastering setup handling */
+> > --- a/arch/powerpc/kernel/pci-common.c
+> > +++ b/arch/powerpc/kernel/pci-common.c
+> > @@ -201,26 +201,6 @@ struct pci_controller* pci_find_hose_for
+> >  	return NULL;
+> >  }
+> >  
+> > -static ssize_t pci_show_devspec(struct device *dev,
+> > -		struct device_attribute *attr, char *buf)
+> > -{
+> > -	struct pci_dev *pdev;
+> > -	struct device_node *np;
+> > -
+> > -	pdev = to_pci_dev (dev);
+> > -	np = pci_device_to_OF_node(pdev);
+> > -	if (np == NULL || np->full_name == NULL)
+> > -		return 0;
+> > -	return sprintf(buf, "%s", np->full_name);
+> > -}
+> > -static DEVICE_ATTR(devspec, S_IRUGO, pci_show_devspec, NULL);
+> > -
+> > -/* Add sysfs properties */
+> > -int pcibios_add_platform_entries(struct pci_dev *pdev)
+> > -{
+> > -	return device_create_file(&pdev->dev, &dev_attr_devspec);
+> > -}
+> > -
+> >  /*
+> >   * Reads the interrupt pin to determine if interrupt is use by card.
+> >   * If the interrupt is used, then gets the interrupt line from the
+> > --- a/drivers/pci/pci-sysfs.c
+> > +++ b/drivers/pci/pci-sysfs.c
+> > @@ -416,6 +416,20 @@ static ssize_t d3cold_allowed_show(struc
+> >  static DEVICE_ATTR_RW(d3cold_allowed);
+> >  #endif
+> >  
+> > +#ifdef CONFIG_OF
+> > +static ssize_t devspec_show(struct device *dev,
+> > +			    struct device_attribute *attr, char *buf)
+> > +{
+> > +	struct pci_dev *pdev = to_pci_dev(dev);
+> > +	struct device_node *np = pci_device_to_OF_node(pdev);
+> > +
+> > +	if (np == NULL || np->full_name == NULL)
+> > +		return 0;
+> > +	return sprintf(buf, "%s", np->full_name);
+> > +}
+> > +static DEVICE_ATTR_RO(devspec);
+> > +#endif
+> > +
+> >  #ifdef CONFIG_PCI_IOV
+> >  static ssize_t sriov_totalvfs_show(struct device *dev,
+> >  				   struct device_attribute *attr,
+> > @@ -521,6 +535,9 @@ static struct attribute *pci_dev_attrs[]
+> >  #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
+> >  	&dev_attr_d3cold_allowed.attr,
+> >  #endif
+> > +#ifdef CONFIG_OF
+> > +	&dev_attr_devspec.attr,
+> > +#endif
+> >  	NULL,
+> >  };
+> >  
+> 
+> 
+> 
+---1463805518-2084778717-1397815835=:1609--
 
-	struct pci_sys_data sysdata;
-};
-static inline struct tegra_pcie *to_tegra_pcie(struct pci_sys_data *sysdata)
-{
-	return container_of(sysdata, struct tegra_pcie, sysdata);
-}
-
-This mirrors how we treat devices: a pci_device has an embedded device,
-and so on, in other subsystems we can have multiple layers.
-
-In this example, the tegra pcie driver then allocates its own tegra_pcie
-structure, fills out the fields it needs, and registers it with the
-ARM architecture code, passing just the pci_sys_data pointer. That function
-in turn passes a pointer to the embedded pci_host_bridge down to the
-generic code. Ideally we should try to eliminate the architecture specific
-portion here, but that is a later step.
-
-	Arnd
