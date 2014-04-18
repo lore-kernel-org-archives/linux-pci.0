@@ -1,83 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:57012 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752327AbaDYRQn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 13:16:43 -0400
-Received: by mail-pd0-f182.google.com with SMTP id y10so3382198pdj.27
-        for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 10:16:43 -0700 (PDT)
-Subject: [PATCH 2/4] x86/PCI: Mark HPET BAR as IORESOURCE_PCI_FIXED
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Airlie <airlied@linux.ie>, Bodo Eggert <7eggert@gmx.de>,
-	x86@kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 25 Apr 2014 11:16:39 -0600
-Message-ID: <20140425171639.312.28185.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140425171144.312.9601.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140425171144.312.9601.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from top.free-electrons.com ([176.31.233.9]:33080 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752123AbaDRMUF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 08:20:05 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Cc: Tawfik Bayouk <tawfik@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Neil Greatorex <neil@fatboyfat.co.uk>,
+	Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 6/7] bus: mvebu-mbus: allow several windows with the same target/attribute
+Date: Fri, 18 Apr 2014 14:19:52 +0200
+Message-Id: <1397823593-1932-7-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bodo reported that on the Asrock M3A UCC, v3.12.6 hangs during boot unless
-he uses "pci=nocrs".  This regression was caused by 7bc5e3f2be32 ("x86/PCI:
-use host bridge _CRS info by default on 2008 and newer machines"), which
-appeared in v2.6.34.
+Having multiple windows with the same target and attribute is actually
+legal, and can be useful for PCIe windows, when PCIe BARs have a size
+that isn't a power of two, and we therefore need to create several
+MBus windows to cover the PCIe BAR for a given PCIe interface.
 
-The reason is that the HPET address appears in a PCI device BAR, and this
-address is not contained in any of the host bridge windows.  Linux moves
-the PCI BAR into a window, but the original address was published via the
-HPET table and an ACPI device, so changing the BAR is a bad idea:
-
-  ACPI: HPET id: 0x43538301 base: 0xfed00000
-  pci_root PNP0A03:00: host bridge window [mem 0xd0000000-0xdfffffff]
-  pci_root PNP0A03:00: host bridge window [mem 0xf0000000-0xfebfffff]
-  pci 0000:00:14.0: [1002:4385] type 0 class 0x000c05
-  pci 0000:00:14.0: reg 14: [mem 0xfed00000-0xfed003ff]
-  hpet0: at MMIO 0xfed00000, IRQs 2, 8, 0, 0
-  pnp 00:06: Plug and Play ACPI device, IDs PNP0103 (active)
-  pnp 00:06: [mem 0xfed00000-0xfed003ff]
-
-This patch marks the BAR as IORESOURCE_PCI_FIXED to prevent Linux from
-moving it.  This depends on a previous patch ("x86/PCI: Don't try to move
-IORESOURCE_PCI_FIXED resources") to check for this flag when
-pci_claim_resource() fails.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=68591
-Reported-by: Bodo Eggert <7eggert@gmx.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Fixes: fddddb52a6c4e2438f4514ed979183653ca0732a ('bus: introduce an Marvell EBU MBus driver')
+Cc: <stable@vger.kernel.org> # v3.10+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Neil Greatorex <neil@fatboyfat.co.uk>
 ---
- arch/x86/pci/fixup.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/bus/mvebu-mbus.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 94ae9ae9574f..d4359f9d74b6 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -6,6 +6,7 @@
- #include <linux/dmi.h>
- #include <linux/pci.h>
- #include <linux/vgaarb.h>
-+#include <asm/hpet.h>
- #include <asm/pci_x86.h>
+diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
+index afee0f7..00b7344 100644
+--- a/drivers/bus/mvebu-mbus.c
++++ b/drivers/bus/mvebu-mbus.c
+@@ -223,12 +223,6 @@ static int mvebu_mbus_window_conflicts(struct mvebu_mbus_state *mbus,
+ 		 */
+ 		if ((u64)base < wend && end > wbase)
+ 			return 0;
+-
+-		/*
+-		 * Check if target/attribute conflicts
+-		 */
+-		if (target == wtarget && attr == wattr)
+-			return 0;
+ 	}
  
- static void pci_fixup_i450nx(struct pci_dev *d)
-@@ -526,6 +527,17 @@ static void sb600_disable_hpet_bar(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x4385, sb600_disable_hpet_bar);
- 
-+static void sb600_hpet_quirk(struct pci_dev *dev)
-+{
-+	struct resource *r = &dev->resource[0];
-+
-+	if (r->flags & IORESOURCE_MEM && r->start == hpet_address) {
-+		r->flags |= IORESOURCE_PCI_FIXED;
-+		dev_info(&dev->dev, "reg 0x10 contains HPET; making it immovable\n");
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATI, 0x4385, sb600_hpet_quirk);
-+
- /*
-  * Twinhead H12Y needs us to block out a region otherwise we map devices
-  * there and any access kills the box.
+ 	return 1;
+-- 
+1.9.2
 
