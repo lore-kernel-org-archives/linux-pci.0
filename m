@@ -1,304 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:37019 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933057AbaDJJZq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 05:25:46 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 10 Apr 2014 19:25:44 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-	davem@davemloft.net
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Amir Vadai <amirv@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Or Gerlitz <ogerlitz@mellanox.com>
-Subject: [PATCH V1 net] net/mlx4_core: Preserve pci_dev_data after __mlx4_remove_one()
-Date: Thu, 10 Apr 2014 17:25:24 +0800
-Message-Id: <1397121924-14813-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:64041 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754776AbaDSCxg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Apr 2014 22:53:36 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH v2 1/5] x86/PCI: Add support for generic AMD hostbridges
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
+	kim.naru@amd.com, andreas.herrmann3@amd.com, daniel@numascale.com,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	x86@kernel.org, bp@suse.de, sp@numascale.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 18 Apr 2014 20:53:16 -0600
+Message-ID: <20140419025316.2408.29771.stgit@amt.stowe>
+In-Reply-To: <20140419025308.2408.51252.stgit@amt.stowe>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_match_id() just match the static pci_device_id, which may return NULL if
-someone binds the driver to a device manually using
-/sys/bus/pci/drivers/.../new_id.
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 
-This patch wrap up a helper function __mlx4_remove_one() which does the tear
-down function but preserve the drv_data. Functions like
-mlx4_pci_err_detected() and mlx4_restart_one() will call this one with out
-releasing drvdata.
+AMD hostbridges gnenerally show up as PCI device 0:18.0.  This patch adds
+logic to automatically probe the device at this location and check PCI
+device class code.
 
-Fixes: 97a5221 "net/mlx4_core: pass pci_device_id.driver_data to __mlx4_init_one during reset".
+This patch supports platforms with the following AMD hostbridge types:
+(K8, family10h, 11h, 12h, 14h 15h  and 16h processors).
 
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Amir Vadai <amirv@mellanox.com>
-CC: Jack Morgenstein <jackm@dev.mellanox.co.il>
-CC: Or Gerlitz <ogerlitz@mellanox.com>
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Reference(s):
+  https://bugzilla.kernel.org/show_bug.cgi?id=72051
+  Advanced Micro Devices (AMD), "BIOS and Kernel Developer's
+  Guide (BKDG) for AMD Family 15h Models 00h-0fh Processors."  Section
+  3.4 Device [1F:18]h Function 1 Configuration Registers; D18F1x[EC:E0]
+  Configuration Map, 42301 Rev 3.12 - October 11, 2012.
 
+Signed-off-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
 ---
-V0 --> V1:
-   1. zero the mlx4_priv at the end of __mlx4_remove_one
-   2. add a flag in mlx4_priv to mark it is released or not
----
- drivers/net/ethernet/mellanox/mlx4/main.c |  176 ++++++++++++++++-------------
- drivers/net/ethernet/mellanox/mlx4/mlx4.h |    1 +
- 2 files changed, 100 insertions(+), 77 deletions(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
-index aa54ef7..28661e4 100644
---- a/drivers/net/ethernet/mellanox/mlx4/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-@@ -2268,13 +2268,8 @@ static int __mlx4_init_one(struct pci_dev *pdev, int pci_dev_data)
- 	/* Allow large DMA segments, up to the firmware limit of 1 GB */
- 	dma_set_max_seg_size(&pdev->dev, 1024 * 1024 * 1024);
+ arch/x86/pci/amd_bus.c |   71 ++++++++++++++++++++++++++++++++----------------
+ 1 files changed, 47 insertions(+), 24 deletions(-)
+
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index e88f4c5..c8cd75c 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -11,27 +11,34 @@
  
--	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
--	if (!priv) {
--		err = -ENOMEM;
--		goto err_release_regions;
--	}
+ #include "bus_numa.h"
+ 
++#define AMD_NB_F0_NODE_ID			0x60
++#define AMD_NB_F0_UNIT_ID			0x64
++#define AMD_NB_F1_CONFIG_MAP_REG		0xe0
++
++#define RANGE_NUM				16
++#define AMD_NB_F1_CONFIG_MAP_RANGES		4
++
+ /*
+- * This discovers the pcibus <-> node mapping on AMD K8.
+- * also get peer root bus resource for io,mmio
++ * This discovers the pcibus <-> node mapping on AMD K8, Family 10h, 12h,
++ * 14h, 15h, and 16h processor based systems.  This also gets peer root bus
++ * resources corresponding to I/O and MMIO addresses.
+  */
+ 
+-struct pci_hostbridge_probe {
++struct amd_hostbridge {
+ 	u32 bus;
+ 	u32 slot;
+-	u32 vendor;
+ 	u32 device;
+ };
+ 
+-static struct pci_hostbridge_probe pci_probes[] __initdata = {
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 },
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 },
+-	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 },
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
++static struct amd_hostbridge hb_probes[] __initdata = {
++	/* Standard AMD Hostbriges are at bus 0x0 slot 0x18.
++	 * In case of PCI_ANY_ID, the logic will try matching
++	 * PCI_CLASS_BRIDGE_HOST instead.
++	 */
++	{ 0x0 , 0x18, PCI_ANY_ID },
++	{ 0xff, 0   , PCI_DEVICE_ID_AMD_10H_NB_HT },
+ };
+ 
+-#define RANGE_NUM 16
 -
--	dev       = &priv->dev;
-+	dev       = pci_get_drvdata(pdev);
-+	priv      = mlx4_priv(dev);
- 	dev->pdev = pdev;
- 	INIT_LIST_HEAD(&priv->ctx_list);
- 	spin_lock_init(&priv->ctx_lock);
-@@ -2452,9 +2447,7 @@ slave_start:
- 
- 	mlx4_sense_init(dev);
- 	mlx4_start_sense(dev);
--
--	priv->pci_dev_data = pci_dev_data;
--	pci_set_drvdata(pdev, dev);
-+	priv->removed = 0;
- 
- 	return 0;
- 
-@@ -2520,84 +2513,111 @@ err_disable_pdev:
- 
- static int mlx4_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ static struct pci_root_info __init *find_pci_root_info(int node, int link)
  {
-+	struct mlx4_priv *priv;
-+	struct mlx4_dev *dev;
-+
- 	printk_once(KERN_INFO "%s", mlx4_version);
+ 	struct pci_root_info *info;
+@@ -75,31 +82,47 @@ static int __init early_fill_mp_bus_info(void)
+ 		return -1;
  
-+	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
-+	if (!priv) {
-+		return -ENOMEM;
-+	}
-+
-+	dev       = &priv->dev;
-+	pci_set_drvdata(pdev, dev);
-+	priv->pci_dev_data = id->driver_data;
-+
- 	return __mlx4_init_one(pdev, id->driver_data);
- }
+ 	found = false;
+-	for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
++	for (i = 0; i < ARRAY_SIZE(hb_probes); i++) {
+ 		u32 id;
+ 		u16 device;
+ 		u16 vendor;
++		u32 class;
  
--static void mlx4_remove_one(struct pci_dev *pdev)
-+static void __mlx4_remove_one(struct pci_dev *pdev)
- {
- 	struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
- 	struct mlx4_priv *priv = mlx4_priv(dev);
-+	int		  pci_dev_data;
- 	int p;
- 
--	if (dev) {
--		/* in SRIOV it is not allowed to unload the pf's
--		 * driver while there are alive vf's */
--		if (mlx4_is_master(dev)) {
--			if (mlx4_how_many_lives_vf(dev))
--				printk(KERN_ERR "Removing PF when there are assigned VF's !!!\n");
--		}
--		mlx4_stop_sense(dev);
--		mlx4_unregister_device(dev);
-+	if (priv->removed)
-+		return;
- 
--		for (p = 1; p <= dev->caps.num_ports; p++) {
--			mlx4_cleanup_port_info(&priv->port[p]);
--			mlx4_CLOSE_PORT(dev, p);
--		}
-+	pci_dev_data = priv->pci_dev_data;
- 
--		if (mlx4_is_master(dev))
--			mlx4_free_resource_tracker(dev,
--						   RES_TR_FREE_SLAVES_ONLY);
+-		bus = pci_probes[i].bus;
+-		slot = pci_probes[i].slot;
++		bus = hb_probes[i].bus;
++		slot = hb_probes[i].slot;
+ 		id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
 -
--		mlx4_cleanup_counters_table(dev);
--		mlx4_cleanup_qp_table(dev);
--		mlx4_cleanup_srq_table(dev);
--		mlx4_cleanup_cq_table(dev);
--		mlx4_cmd_use_polling(dev);
--		mlx4_cleanup_eq_table(dev);
--		mlx4_cleanup_mcg_table(dev);
--		mlx4_cleanup_mr_table(dev);
--		mlx4_cleanup_xrcd_table(dev);
--		mlx4_cleanup_pd_table(dev);
-+	/* in SRIOV it is not allowed to unload the pf's
-+	 * driver while there are alive vf's */
-+	if (mlx4_is_master(dev)) {
-+		if (mlx4_how_many_lives_vf(dev))
-+			printk(KERN_ERR "Removing PF when there are assigned VF's !!!\n");
-+	}
-+	mlx4_stop_sense(dev);
-+	mlx4_unregister_device(dev);
- 
--		if (mlx4_is_master(dev))
--			mlx4_free_resource_tracker(dev,
--						   RES_TR_FREE_STRUCTS_ONLY);
--
--		iounmap(priv->kar);
--		mlx4_uar_free(dev, &priv->driver_uar);
--		mlx4_cleanup_uar_table(dev);
--		if (!mlx4_is_slave(dev))
--			mlx4_clear_steering(dev);
--		mlx4_free_eq_table(dev);
--		if (mlx4_is_master(dev))
--			mlx4_multi_func_cleanup(dev);
--		mlx4_close_hca(dev);
--		if (mlx4_is_slave(dev))
--			mlx4_multi_func_cleanup(dev);
--		mlx4_cmd_cleanup(dev);
--
--		if (dev->flags & MLX4_FLAG_MSI_X)
--			pci_disable_msix(pdev);
--		if (dev->flags & MLX4_FLAG_SRIOV) {
--			mlx4_warn(dev, "Disabling SR-IOV\n");
--			pci_disable_sriov(pdev);
--		}
-+	for (p = 1; p <= dev->caps.num_ports; p++) {
-+		mlx4_cleanup_port_info(&priv->port[p]);
-+		mlx4_CLOSE_PORT(dev, p);
-+	}
+ 		vendor = id & 0xffff;
+ 		device = (id>>16) & 0xffff;
+-		if (pci_probes[i].vendor == vendor &&
+-		    pci_probes[i].device == device) {
+-			found = true;
+-			break;
++		class = read_pci_config(bus, slot, 0,
++			PCI_CLASS_REVISION) >> 16;
 +
-+	if (mlx4_is_master(dev))
-+		mlx4_free_resource_tracker(dev,
-+					   RES_TR_FREE_SLAVES_ONLY);
++		if (PCI_VENDOR_ID_AMD == vendor) {
++			if (hb_probes[i].device == device) {
++				found = true;
++				break;
++			}
 +
-+	mlx4_cleanup_counters_table(dev);
-+	mlx4_cleanup_qp_table(dev);
-+	mlx4_cleanup_srq_table(dev);
-+	mlx4_cleanup_cq_table(dev);
-+	mlx4_cmd_use_polling(dev);
-+	mlx4_cleanup_eq_table(dev);
-+	mlx4_cleanup_mcg_table(dev);
-+	mlx4_cleanup_mr_table(dev);
-+	mlx4_cleanup_xrcd_table(dev);
-+	mlx4_cleanup_pd_table(dev);
- 
--		if (!mlx4_is_slave(dev))
--			mlx4_free_ownership(dev);
-+	if (mlx4_is_master(dev))
-+		mlx4_free_resource_tracker(dev,
-+					   RES_TR_FREE_STRUCTS_ONLY);
- 
--		kfree(dev->caps.qp0_tunnel);
--		kfree(dev->caps.qp0_proxy);
--		kfree(dev->caps.qp1_tunnel);
--		kfree(dev->caps.qp1_proxy);
-+	iounmap(priv->kar);
-+	mlx4_uar_free(dev, &priv->driver_uar);
-+	mlx4_cleanup_uar_table(dev);
-+	if (!mlx4_is_slave(dev))
-+		mlx4_clear_steering(dev);
-+	mlx4_free_eq_table(dev);
-+	if (mlx4_is_master(dev))
-+		mlx4_multi_func_cleanup(dev);
-+	mlx4_close_hca(dev);
-+	if (mlx4_is_slave(dev))
-+		mlx4_multi_func_cleanup(dev);
-+	mlx4_cmd_cleanup(dev);
- 
--		kfree(priv);
--		pci_release_regions(pdev);
--		pci_disable_device(pdev);
--		pci_set_drvdata(pdev, NULL);
-+	if (dev->flags & MLX4_FLAG_MSI_X)
-+		pci_disable_msix(pdev);
-+	if (dev->flags & MLX4_FLAG_SRIOV) {
-+		mlx4_warn(dev, "Disabling SR-IOV\n");
-+		pci_disable_sriov(pdev);
++			if ((hb_probes[i].device == PCI_ANY_ID) &&
++			    (class == PCI_CLASS_BRIDGE_HOST)) {
++				hb_probes[i].device = device;
++				found = true;
++				break;
++			}
+ 		}
  	}
+ 
+-	if (!found)
++	if (!found) {
++		pr_warn("AMD hostbridge not found\n");
+ 		return 0;
++	}
+ 
+-	for (i = 0; i < 4; i++) {
++	pr_debug("Found AMD hostbridge at %x:%x.0\n", bus, slot);
 +
-+	if (!mlx4_is_slave(dev))
-+		mlx4_free_ownership(dev);
-+
-+	kfree(dev->caps.qp0_tunnel);
-+	kfree(dev->caps.qp0_proxy);
-+	kfree(dev->caps.qp1_tunnel);
-+	kfree(dev->caps.qp1_proxy);
-+	pci_release_regions(pdev);
-+	pci_disable_device(pdev);
-+
-+	memset(priv, 0, sizeof(*priv));
-+	priv->pci_dev_data = pci_dev_data;
-+	priv->removed = 1;
-+}
-+
-+static void mlx4_remove_one(struct pci_dev *pdev)
-+{
-+	struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
-+	struct mlx4_priv *priv = mlx4_priv(dev);
-+
-+	__mlx4_remove_one(pdev);
-+	kfree(priv);
-+	pci_set_drvdata(pdev, NULL);
- }
++	for (i = 0; i < AMD_NB_F1_CONFIG_MAP_RANGES; i++) {
+ 		int min_bus;
+ 		int max_bus;
+-		reg = read_pci_config(bus, slot, 1, 0xe0 + (i << 2));
++		reg = read_pci_config(bus, slot, 1,
++				AMD_NB_F1_CONFIG_MAP_REG + (i << 2));
  
- int mlx4_restart_one(struct pci_dev *pdev)
-@@ -2607,7 +2627,7 @@ int mlx4_restart_one(struct pci_dev *pdev)
- 	int		  pci_dev_data;
+ 		/* Check if that register is enabled for bus range */
+ 		if ((reg & 7) != 3)
+@@ -114,9 +137,9 @@ static int __init early_fill_mp_bus_info(void)
+ 	}
  
- 	pci_dev_data = priv->pci_dev_data;
--	mlx4_remove_one(pdev);
-+	__mlx4_remove_one(pdev);
- 	return __mlx4_init_one(pdev, pci_dev_data);
- }
+ 	/* get the default node and link for left over res */
+-	reg = read_pci_config(bus, slot, 0, 0x60);
++	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_NODE_ID);
+ 	def_node = (reg >> 8) & 0x07;
+-	reg = read_pci_config(bus, slot, 0, 0x64);
++	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_UNIT_ID);
+ 	def_link = (reg >> 8) & 0x03;
  
-@@ -2662,7 +2682,7 @@ MODULE_DEVICE_TABLE(pci, mlx4_pci_table);
- static pci_ers_result_t mlx4_pci_err_detected(struct pci_dev *pdev,
- 					      pci_channel_state_t state)
- {
--	mlx4_remove_one(pdev);
-+	__mlx4_remove_one(pdev);
- 
- 	return state == pci_channel_io_perm_failure ?
- 		PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_NEED_RESET;
-@@ -2670,11 +2690,13 @@ static pci_ers_result_t mlx4_pci_err_detected(struct pci_dev *pdev,
- 
- static pci_ers_result_t mlx4_pci_slot_reset(struct pci_dev *pdev)
- {
--	const struct pci_device_id *id;
--	int ret;
-+	struct mlx4_dev	 *dev  = pci_get_drvdata(pdev);
-+	struct mlx4_priv *priv = mlx4_priv(dev);
-+	int		  pci_dev_data;
-+	int               ret;
- 
--	id = pci_match_id(mlx4_pci_table, pdev);
--	ret = __mlx4_init_one(pdev, id->driver_data);
-+	pci_dev_data = priv->pci_dev_data;
-+	ret = __mlx4_init_one(pdev, pci_dev_data);
- 
- 	return ret ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
- }
-diff --git a/drivers/net/ethernet/mellanox/mlx4/mlx4.h b/drivers/net/ethernet/mellanox/mlx4/mlx4.h
-index 6b65f77..4037a10 100644
---- a/drivers/net/ethernet/mellanox/mlx4/mlx4.h
-+++ b/drivers/net/ethernet/mellanox/mlx4/mlx4.h
-@@ -796,6 +796,7 @@ struct mlx4_priv {
- 	spinlock_t		ctx_lock;
- 
- 	int			pci_dev_data;
-+	int                     removed;
- 
- 	struct list_head        pgdir_list;
- 	struct mutex            pgdir_mutex;
--- 
-1.7.9.5
+ 	memset(range, 0, sizeof(range));
 
