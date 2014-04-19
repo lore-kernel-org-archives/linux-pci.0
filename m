@@ -1,164 +1,529 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Woodhouse, David" <david.woodhouse@intel.com>
-To: "joro@8bytes.org" <joro@8bytes.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhe@redhat.com" <bhe@redhat.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"James.Bottomley@hansenpartnership.com"
-	<James.Bottomley@hansenpartnership.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>,
-	"davidlohr@hp.com" <davidlohr@hp.com>
-Subject: Re: hpsa driver bug crack kernel down!
-Date: Thu, 10 Apr 2014 08:46:28 +0000
-Message-ID: <1397119587.19944.14.camel@shinybook.infradead.org>
-References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
-	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
-	 <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike>
-	 <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
-	 <1397087425.9519.67.camel@dabdike>
-	 <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
-	 <CAErSpo4H=hcro8sMnt2MzDDVCROpASuUTQWBw37OxodHTyOfyw@mail.gmail.com>
-	 <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
-	 <20140410071535.GX13491@8bytes.org>
-In-Reply-To: <20140410071535.GX13491@8bytes.org>
-Content-Type: multipart/signed; micalg=sha-1;
-	protocol="application/x-pkcs7-signature"; boundary="=-Ht/Tf9zBi/x/pm1AbxZe"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:17997 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754778AbaDSCxq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Apr 2014 22:53:46 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH v2 3/5] x86/PCI: Miscellaneous code clean up for
+	early_fillup_mp_bus_info
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
+	kim.naru@amd.com, andreas.herrmann3@amd.com, daniel@numascale.com,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	x86@kernel.org, bp@suse.de, sp@numascale.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 18 Apr 2014 20:53:31 -0600
+Message-ID: <20140419025331.2408.40589.stgit@amt.stowe>
+In-Reply-To: <20140419025308.2408.51252.stgit@amt.stowe>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---=-Ht/Tf9zBi/x/pm1AbxZe
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 
-On Thu, 2014-04-10 at 09:15 +0200, Joerg Roedel wrote:
-> [+ David, VT-d maintainer ]
->=20
-> Jiang, David, can you please have a look into this issue?
->=20
+* Refactoring of the early_fill_mp_bus_info function into multiple helper
+  functions since it is getting long, and difficult to follow.
 
-> > > >> > > > > DMAR:[fault reason 02] Present bit in context entry is cle=
-ar
-> > > >> > > > > dmar: DRHD: handling fault status reg 602
-> > > >> > > > > dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr =
-7f61e000
+* Merge early_fill_mp_bus_info into amd_postcore_init as there is no need to
+  have this as a separate function.
 
-That "Present bit in context entry is clear" fault means that we have
-not set up *any* mappings for this PCI device=E2=80=A6 on this IOMMU.
+* Use pr_xxx instead of printk
 
-> > Yes, specifically (finally done bisecting):
-> >=20
-> > commit 2e45528930388658603ea24d49cf52867b928d3e
-> > Author: Jiang Liu <jiang.liu@linux.intel.com>
-> > Date:   Wed Feb 19 14:07:36 2014 +0800
-> >=20
-> >     iommu/vt-d: Unify the way to process DMAR device scope array
+* Prepend "AMD-Bus" for each print.
 
-This commit is about how we decide which IOMMU a given PCI device is
-attached to.
+* The current code is using "fam10h_mmconf_*" in several place.  As this
+  file is no longer specific to family10h systems, this patch changes
+  such occurrances to "amd_mmconf_*" instead for clarity.
 
-Thus, my first guess would be that we are quite happily setting up the
-requested DMA maps on the *wrong* IOMMU, and then taking faults when the
-device actually tries to do DMA.
+No functional changes.
 
-However, I'm not 100% convinced of that. The fault address looks
-suspiciously like a true physical address, not a virtual bus address of
-the type that we'd normally allocate for a dma_map_* operation. Those
-would start at 0xfffff000 and work downwards, typically.
+Signed-off-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+---
 
-Do you have 'iommu=3Dpt' on the kernel command line? Can I see the full
-dmesg as this system boots, and also a copy of the DMAR table?
+ arch/x86/pci/amd_bus.c |  284 ++++++++++++++++++++++++++----------------------
+ 1 files changed, 152 insertions(+), 132 deletions(-)
 
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index 1b2895e..c15add6 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -35,8 +35,6 @@
+ 
+ static bool amd_early_ecs_enabled;
+ 
+-static int __init pci_io_ecs_init(u8 bus, u8 slot);
+-
+ /*
+  * This discovers the pcibus <-> node mapping on AMD K8, Family 10h, 12h,
+  * 14h, 15h, and 16h processor based systems.  This also gets peer root bus
+@@ -87,86 +85,51 @@ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+ 	return NULL;
+ }
+ 
+-/**
+- * early_fill_mp_bus_to_node()
+- * called before pcibios_scan_root and pci_scan_bus
+- * fills the mp_bus_to_cpumask array based according to the LDT Bus Number
+- * Registers found in the K8 northbridge
+- */
+-static int __init early_fill_mp_bus_info(void)
++static struct amd_hostbridge * __init probe_pci_hostbridge(void)
+ {
+ 	int i;
+-	unsigned bus;
+-	unsigned slot;
+-	int node;
+-	int link;
+-	int def_node;
+-	int def_link;
+-	struct pci_root_info *info;
+-	u32 reg;
+-	u64 start;
+-	u64 end;
+-	struct range range[RANGE_NUM];
+-	u64 val;
+-	u32 address;
+-	bool found;
+-	struct resource fam10h_mmconf_res, *fam10h_mmconf;
+-	u64 fam10h_mmconf_start;
+-	u64 fam10h_mmconf_end;
+-
+-	if (!early_pci_allowed())
+-		return -1;
++	struct amd_hostbridge *hb = NULL;
+ 
+-	found = false;
+ 	for (i = 0; i < ARRAY_SIZE(hb_probes); i++) {
+ 		u32 id;
+ 		u16 device;
+ 		u16 vendor;
+ 		u32 class;
+ 
+-		bus = hb_probes[i].bus;
+-		slot = hb_probes[i].slot;
+-		id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
++		hb = &hb_probes[i];
++		id = read_pci_config(hb->bus, hb->slot, 0, PCI_VENDOR_ID);
+ 		vendor = id & 0xffff;
+ 		device = (id>>16) & 0xffff;
+-		class = read_pci_config(bus, slot, 0,
++		class = read_pci_config(hb->bus, hb->slot, 0,
+ 			PCI_CLASS_REVISION) >> 16;
+ 
+ 		if (PCI_VENDOR_ID_AMD == vendor) {
+-			if (hb_probes[i].device == device) {
+-				found = true;
++			if (hb->device == device)
+ 				break;
+-			}
+ 
+-			if ((hb_probes[i].device == PCI_ANY_ID) &&
++			if ((hb->device == PCI_ANY_ID) &&
+ 			    (class == PCI_CLASS_BRIDGE_HOST)) {
+-				hb_probes[i].device = device;
+-				found = true;
++				hb->device = device;
+ 				break;
+ 			}
+ 		}
++		hb = NULL;
+ 	}
+ 
+-	if (!found) {
+-		pr_warn("AMD hostbridge not found\n");
+-		return 0;
+-	}
+-
+-	pr_debug("Found AMD hostbridge at %x:%x.0\n", bus, slot);
++	return hb;
++}
+ 
+-	/* We enable ECS mode prior to probing MMIO as MMIO related registers
+-	 * are in the ECS area.
+-	 */
+-	pci_io_ecs_init(bus, slot);
++static int __init setup_pci_root_info(struct amd_hostbridge *hb)
++{
++	int i, min_bus, max_bus;
++	int node = 0, link = 0;
++	bool found = false;
+ 
+-	found = false;
+ 	for (i = 0; i < AMD_NB_F1_CONFIG_MAP_RANGES; i++) {
+-		int min_bus;
+-		int max_bus;
+-		reg = read_pci_config(bus, slot, 1,
+-				AMD_NB_F1_CONFIG_MAP_REG + (i << 2));
++		int offset = AMD_NB_F1_CONFIG_MAP_REG + (i << 2);
++		u32 reg = read_pci_config(hb->bus, hb->slot, 1, offset);
+ 
+-		/* Check if that register is enabled for bus range */
++		/* Check if register is enabled for bus range */
+ 		if ((reg & 7) != 3)
+ 			continue;
+ 
+@@ -176,34 +139,41 @@ static int __init early_fill_mp_bus_info(void)
+ 		node = (reg >> 4) & 0x07;
+ 		link = (reg >> 8) & 0x03;
+ 
+-		info = alloc_pci_root_info(min_bus, max_bus, node, link);
++		if (!alloc_pci_root_info(min_bus, max_bus, node, link))
++			return -ENOMEM;
+ 	}
+ 
+ 	if (!found) {
+-		/* In case there is no AMDNB_F1_CONFIG_MAP_REGs,
+-		 * we just use default to bus 0, node 0 link 0)
++		/* In case there are no AMDNB_F1_CONFIG_MAP_REGs, default
++		 * to bus 0, node 0 link 0.
+ 		 */
+-		info = alloc_pci_root_info(0, 0, 0, 0);
++		if (!alloc_pci_root_info(0, 0, 0, 0))
++			return -ENOMEM;
+ 	}
+ 
+-	/* get the default node and link for left over res */
+-	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_NODE_ID);
+-	def_node = (reg >> 8) & 0x07;
+-	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_UNIT_ID);
+-	def_link = (reg >> 8) & 0x03;
++	return 0;
++}
++
++static void __init probe_ioport_resource(struct amd_hostbridge *hb)
++{
++	int i, node, link;
++	u64 start, end;
++	u32 reg;
++	struct pci_root_info *info;
++	struct range range[RANGE_NUM];
+ 
+ 	memset(range, 0, sizeof(range));
+ 	add_range(range, RANGE_NUM, 0, 0, 0xffff + 1);
+ 
+-	/* io port resource */
++	/* I/O port resource */
+ 	for (i = 0; i < AMD_NB_F1_IOPORT_RANGES; i++) {
+-		reg = read_pci_config(bus, slot, 1,
++		reg = read_pci_config(hb->bus, hb->slot, 1,
+ 				AMD_NB_F1_IO_BASE_ADDR_REG + (i << 3));
+ 		if (!(reg & 3))
+ 			continue;
+ 
+ 		start = reg & 0xfff000;
+-		reg = read_pci_config(bus, slot, 1,
++		reg = read_pci_config(hb->bus, hb->slot, 1,
+ 				AMD_NB_F1_IO_LIMIT_ADDR_REG + (i << 3));
+ 		node = reg & 0x07;
+ 		link = (reg >> 4) & 0x03;
+@@ -213,19 +183,23 @@ static int __init early_fill_mp_bus_info(void)
+ 		if (!info)
+ 			continue; /* not found */
+ 
+-		printk(KERN_DEBUG "node %d link %d: io port [%llx, %llx]\n",
+-		       node, link, start, end);
++		pr_debug("AMD-Bus: index %d node %d link %d: io port [%llx, %llx]\n",
++		       i, node, link, start, end);
+ 
+-		/* kernel only handle 16 bit only */
++		/* Kernel handles 16 bit only */
+ 		if (end > 0xffff)
+ 			end = 0xffff;
+ 		update_res(info, start, end, IORESOURCE_IO, 1);
+ 		subtract_range(range, RANGE_NUM, start, end + 1);
+ 	}
+ 
+-	/* add left over io port range to def node/link, [0, 0xffff] */
+-	/* find the position */
+-	info = find_pci_root_info(def_node, def_link);
++	/* Add left over I/O port range to def node/link, [0, 0xffff] */
++	/* Find the position */
++	reg = read_pci_config(hb->bus, hb->slot, 0, AMD_NB_F0_NODE_ID);
++	node = (reg >> 8) & 0x07;
++	reg = read_pci_config(hb->bus, hb->slot, 0, AMD_NB_F0_UNIT_ID);
++	link = (reg >> 8) & 0x03;
++	info = find_pci_root_info(node, link);
+ 	if (info) {
+ 		for (i = 0; i < RANGE_NUM; i++) {
+ 			if (!range[i].end)
+@@ -235,36 +209,47 @@ static int __init early_fill_mp_bus_info(void)
+ 				   IORESOURCE_IO, 1);
+ 		}
+ 	}
++}
++
++static void __init probe_mmio_resource(struct amd_hostbridge *hb)
++{
++	int i, node, link;
++	u32 address, reg;
++	u64 start, end, val, amd_mmconf_start, amd_mmconf_end;
++	struct pci_root_info *info;
++	struct resource amd_mmconf_res, *amd_mmconf;
++	struct range range[RANGE_NUM];
+ 
+ 	memset(range, 0, sizeof(range));
++
+ 	/* 0xfd00000000-0xffffffffff for HT */
+ 	end = cap_resource((0xfdULL<<32) - 1);
+ 	end++;
+ 	add_range(range, RANGE_NUM, 0, 0, end);
+ 
+-	/* need to take out [0, TOM) for RAM*/
++	/* Need to take out [0, TOM] for RAM */
+ 	address = MSR_K8_TOP_MEM1;
+ 	rdmsrl(address, val);
+ 	end = (val & 0xffffff800000ULL);
+-	printk(KERN_INFO "TOM: %016llx aka %lldM\n", end, end>>20);
++	pr_info("AMD-Bus: TOM: %016llx aka %lldM\n", end, end>>20);
+ 	if (end < (1ULL<<32))
+ 		subtract_range(range, RANGE_NUM, 0, end);
+ 
+-	/* get mmconfig */
+-	fam10h_mmconf = amd_get_mmconfig_range(&fam10h_mmconf_res);
+-	/* need to take out mmconf range */
+-	if (fam10h_mmconf) {
+-		printk(KERN_DEBUG "Fam 10h mmconf %pR\n", fam10h_mmconf);
+-		fam10h_mmconf_start = fam10h_mmconf->start;
+-		fam10h_mmconf_end = fam10h_mmconf->end;
+-		subtract_range(range, RANGE_NUM, fam10h_mmconf_start,
+-				 fam10h_mmconf_end + 1);
++	/* Get mmconfig */
++	amd_mmconf = amd_get_mmconfig_range(&amd_mmconf_res);
++	/* Need to take out MMCONF range */
++	if (amd_mmconf) {
++		pr_debug("AMD-Bus: mmconf %pR\n", amd_mmconf);
++		amd_mmconf_start = amd_mmconf->start;
++		amd_mmconf_end = amd_mmconf->end;
++		subtract_range(range, RANGE_NUM, amd_mmconf_start,
++				 amd_mmconf_end + 1);
+ 	} else {
+-		fam10h_mmconf_start = 0;
+-		fam10h_mmconf_end = 0;
++		amd_mmconf_start = 0;
++		amd_mmconf_end = 0;
+ 	}
+ 
+-	/* mmio resource */
++	/* Probing MMIO base/limit regs */
+ 	for (i = 0; i < AMD_NB_F1_MMIO_RANGES; i++) {
+ 		u64 tmp;
+ 		u32 base = AMD_NB_F1_MMIO_BASE_REG + (i << 3);
+@@ -286,21 +271,21 @@ static int __init early_fill_mp_bus_info(void)
+ 		}
+ 
+ 		/* Base lo */
+-		reg = _amd_read_pci_config(bus, slot, 1, base);
++		reg = _amd_read_pci_config(hb->bus, hb->slot, 1, base);
+ 		if (!(reg & 3))
+ 			continue;
+ 
+ 		start = (reg & 0xffffff00UL) << 8;	/* 39:16 on 31:8 */
+ 
+ 		/* Limit lo */
+-		reg = _amd_read_pci_config(bus, slot, 1, limit);
++		reg = _amd_read_pci_config(hb->bus, hb->slot, 1, limit);
+ 		node = reg & 0x07;
+ 		link = (reg >> 4) & 0x03;
+ 		end = (reg & 0xffffff00UL) << 8;	/* 39:16 on 31:8 */
+ 		end |= 0xffffUL;
+ 
+ 		/* Base/Limit hi */
+-		tmp = _amd_read_pci_config(bus, slot, 1, base_limit_hi);
++		tmp = _amd_read_pci_config(hb->bus, hb->slot, 1, base_limit_hi);
+ 		start |= ((tmp & 0xffUL) << 40);
+ 		end |= ((tmp & (0xffUL << 16)) << 24);
+ 
+@@ -308,36 +293,38 @@ static int __init early_fill_mp_bus_info(void)
+ 		if (!info)
+ 			continue;
+ 
+-		printk(KERN_DEBUG "node %d link %d: mmio [%llx, %llx]",
+-		       node, link, start, end);
++		pr_debug("AMD-Bus: index %d node %d link %d: mmio [%llx, %llx]",
++		       i, node, link, start, end);
++
+ 		/*
+-		 * some sick allocation would have range overlap with fam10h
+-		 * mmconf range, so need to update start and end.
++		 * Some (sick) allocations have range overlapping with MMCONF
++		 * range, so need to update start and end.
+ 		 */
+-		if (fam10h_mmconf_end) {
++		if (amd_mmconf_end) {
+ 			int changed = 0;
+ 			u64 endx = 0;
+-			if (start >= fam10h_mmconf_start &&
+-			    start <= fam10h_mmconf_end) {
+-				start = fam10h_mmconf_end + 1;
++			if (start >= amd_mmconf_start &&
++			    start <= amd_mmconf_end) {
++				start = amd_mmconf_end + 1;
+ 				changed = 1;
+ 			}
+ 
+-			if (end >= fam10h_mmconf_start &&
+-			    end <= fam10h_mmconf_end) {
+-				end = fam10h_mmconf_start - 1;
++			if (end >= amd_mmconf_start &&
++			    end <= amd_mmconf_end) {
++				end = amd_mmconf_start - 1;
+ 				changed = 1;
+ 			}
+ 
+-			if (start < fam10h_mmconf_start &&
+-			    end > fam10h_mmconf_end) {
+-				/* we got a hole */
+-				endx = fam10h_mmconf_start - 1;
+-				update_res(info, start, endx, IORESOURCE_MEM, 0);
++			if (start < amd_mmconf_start &&
++			    end > amd_mmconf_end) {
++				/* We got a hole */
++				endx = amd_mmconf_start - 1;
++				update_res(info, start, endx,
++						IORESOURCE_MEM, 0);
+ 				subtract_range(range, RANGE_NUM, start,
+ 						 endx + 1);
+ 				printk(KERN_CONT " ==> [%llx, %llx]", start, endx);
+-				start = fam10h_mmconf_end + 1;
++				start = amd_mmconf_end + 1;
+ 				changed = 1;
+ 			}
+ 			if (changed) {
+@@ -356,25 +343,30 @@ static int __init early_fill_mp_bus_info(void)
+ 		printk(KERN_CONT "\n");
+ 	}
+ 
+-	/* need to take out [4G, TOM2) for RAM*/
++	/* Need to take out [4G, TOM2] for RAM */
+ 	/* SYS_CFG */
+ 	address = MSR_K8_SYSCFG;
+ 	rdmsrl(address, val);
+-	/* TOP_MEM2 is enabled? */
++	/* Is TOP_MEM2 enabled? */
+ 	if (val & (1<<21)) {
+ 		/* TOP_MEM2 */
+ 		address = MSR_K8_TOP_MEM2;
+ 		rdmsrl(address, val);
+ 		end = (val & 0xffffff800000ULL);
+-		printk(KERN_INFO "TOM2: %016llx aka %lldM\n", end, end>>20);
++		pr_info("AMD-Bus: TOM2: %016llx aka %lldM\n",
++			end, end>>20);
+ 		subtract_range(range, RANGE_NUM, 1ULL<<32, end);
+ 	}
+ 
+ 	/*
+-	 * add left over mmio range to def node/link ?
+-	 * that is tricky, just record range in from start_min to 4G
++	 * Add left over MMIO range to def node/link?
++	 * That is tricky, just record range from start_min to 4G.
+ 	 */
+-	info = find_pci_root_info(def_node, def_link);
++	reg = read_pci_config(hb->bus, hb->slot, 0, AMD_NB_F0_NODE_ID);
++	node = (reg >> 8) & 0x07;
++	reg = read_pci_config(hb->bus, hb->slot, 0, AMD_NB_F0_UNIT_ID);
++	link = (reg >> 8) & 0x03;
++	info = find_pci_root_info(node, link);
+ 	if (info) {
+ 		for (i = 0; i < RANGE_NUM; i++) {
+ 			if (!range[i].end)
+@@ -385,20 +377,6 @@ static int __init early_fill_mp_bus_info(void)
+ 				   IORESOURCE_MEM, 1);
+ 		}
+ 	}
+-
+-	list_for_each_entry(info, &pci_root_infos, list) {
+-		int busnum;
+-		struct pci_root_res *root_res;
+-
+-		busnum = info->busn.start;
+-		printk(KERN_DEBUG "bus: %pR on node %x link %x\n",
+-		       &info->busn, info->node, info->link);
+-		list_for_each_entry(root_res, &info->resources, list)
+-			printk(KERN_DEBUG "bus: %02x %pR\n",
+-				       busnum, &root_res->res);
+-	}
+-
+-	return 0;
+ }
+ 
+ #define ENABLE_CF8_EXT_CFG      (1ULL << 46)
+@@ -464,15 +442,15 @@ static void __init pci_enable_pci_io_ecs(u8 bus, u8 slot)
+ #endif
+ }
+ 
+-static int __init pci_io_ecs_init(u8 bus, u8 slot)
++static int __init pci_io_ecs_init(struct amd_hostbridge *hb)
+ {
+ 	int cpu;
+ 
+-	/* assume all cpus from fam10h have IO ECS */
++	/* Assume all CPUs from Family 10h onward have IO ECS */
+         if (boot_cpu_data.x86 < 0x10)
+ 		return 0;
+ 
+-	pci_enable_pci_io_ecs(bus, slot);
++	pci_enable_pci_io_ecs(hb->bus, hb->slot);
+ 
+ 	cpu_notifier_register_begin();
+ 	for_each_online_cpu(cpu)
+@@ -486,12 +464,54 @@ static int __init pci_io_ecs_init(u8 bus, u8 slot)
+ 	return 0;
+ }
+ 
++/**
++ * amd_postcore_init is called before pcibios_scan_root and pci_scan_bus.
++ */
+ static int __init amd_postcore_init(void)
+ {
++	struct pci_root_info *info;
++	struct amd_hostbridge *hb;
++
+ 	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
+ 		return 0;
+ 
+-	early_fill_mp_bus_info();
++	if (!early_pci_allowed())
++		return -1;
++
++	hb = probe_pci_hostbridge();
++	if (!hb) {
++		pr_warn("AMD-Bus: AMD hostbridge not found\n");
++		return -1;
++	}
++
++	pr_debug("AMD-Bus: Found hostbridge %x:%x.0 (device ID = %#x)\n",
++		hb->bus, hb->slot, hb->device);
++
++	/* Enable Extended Configuration Space (ECS) mode prior to probing
++	 * MMIO since the MMIO related registers are in the ECS area.
++	 */
++	pci_io_ecs_init(hb);
++
++	if (setup_pci_root_info(hb) != 0) {
++		pr_warn("AMD-Bus: Failed to setup pci root info.\n");
++		return -1;
++	}
++
++	probe_ioport_resource(hb);
++
++	probe_mmio_resource(hb);
++
++	list_for_each_entry(info, &pci_root_infos, list) {
++		int busnum;
++		struct pci_root_res *root_res;
++
++		busnum = info->busn.start;
++		pr_debug("AMD-Bus: bus: %pR on node %x link %x\n",
++			&info->busn, info->node, info->link);
++		list_for_each_entry(root_res, &info->resources, list)
++			pr_debug("AMD-Bus: bus: %02x %pR\n",
++					busnum, &root_res->res);
++	}
+ 
+ 	return 0;
+ }
 
-We should also rate-limit DMA faults, which would avoid the lockup
-failure mode. Bjorn, what should an IOMMU driver *do* when it detects
-that a device is creating an endless stream of DMA faults and isn't
-aborting the transaction?
-
-I can set it to silent so that it just stops *reporting* the DMA faults
-for that device... and I suppose I can re-enable them when I next see a
-DMA mapping for it (although actually it'd be better to have a hook to
-do that on FLR or something like that). But there must be a better
-answer than that, surely? And I don't want to hack it up locally in
-*one* specific IOMMU driver, any more than I have to.
-
-On a POWER system with EEH, the kernel would end up isolating the
-offending device completely, and subsequently resetting it...
-
---=20
-David Woodhouse                            Open Source Technology Centre
-David.Woodhouse@intel.com                              Intel Corporation
-
---=-Ht/Tf9zBi/x/pm1AbxZe
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-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
-kiW8/Nj6KITQvHqz7x/Es0IRJCc9/zBES7yMeD+fgJKHAEv/uTcFfGM9HIWxPQIDAQABo4IC6jCC
-AuYwHQYDVR0OBBYEFGK1Mey+kPYGHowHJ0YXtQU4NmbSMB8GA1UdIwQYMBaAFB5pKrTcKP5HGE4h
-Cz+8rBEv8Jj1MIHJBgNVHR8EgcEwgb4wgbuggbiggbWGVGh0dHA6Ly93d3cuaW50ZWwuY29tL3Jl
-cG9zaXRvcnkvQ1JML0ludGVsJTIwRXh0ZXJuYWwlMjBCYXNpYyUyMElzc3VpbmclMjBDQSUyMDRB
-LmNybIZdaHR0cDovL2NlcnRpZmljYXRlcy5pbnRlbC5jb20vcmVwb3NpdG9yeS9DUkwvSW50ZWwl
-MjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENBJTIwNEEuY3JsMIHvBggrBgEFBQcBAQSB
-4jCB3zBpBggrBgEFBQcwAoZdaHR0cDovL3d3dy5pbnRlbC5jb20vcmVwb3NpdG9yeS9jZXJ0aWZp
-Y2F0ZXMvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENBJTIwNEEuY3J0MHIG
-CCsGAQUFBzAChmZodHRwOi8vY2VydGlmaWNhdGVzLmludGVsLmNvbS9yZXBvc2l0b3J5L2NlcnRp
-ZmljYXRlcy9JbnRlbCUyMEV4dGVybmFsJTIwQmFzaWMlMjBJc3N1aW5nJTIwQ0ElMjA0QS5jcnQw
-CwYDVR0PBAQDAgeAMDwGCSsGAQQBgjcVBwQvMC0GJSsGAQQBgjcVCIbDjHWEmeVRg/2BKIWOn1OC
-kcAJZ4HevTmV8EMCAWQCAQgwHwYDVR0lBBgwFgYIKwYBBQUHAwQGCisGAQQBgjcKAwwwKQYJKwYB
-BAGCNxUKBBwwGjAKBggrBgEFBQcDBDAMBgorBgEEAYI3CgMMME8GA1UdEQRIMEagKQYKKwYBBAGC
-NxQCA6AbDBlkYXZpZC53b29kaG91c2VAaW50ZWwuY29tgRlkYXZpZC53b29kaG91c2VAaW50ZWwu
-Y29tMA0GCSqGSIb3DQEBBQUAA4IBAQBCQ4UH3yybC+PzPo7W4PQJQwIDkKfD2i20i/DosQ7+Yeof
-KF7qDASe9eoJGXbINBx1u648uOnaMBsxgUUamJo7pdt1ZnsetRtCQrJIsrsJA3Q2MOsrv7xHkzqn
-DF99KHEbO2yKvyjJVDznHUWh8M1OFmdoziyWE/VPdqTwXwS/UKO81XaTtWUDGO716HHVlfT9yPle
-Ukg2MTcIhhNWmlS8gDUayhteIAlPci71f/oXzXxBiGiO6FVZUEx+rZBQB84Ey0S0Tfm7hiGzoegg
-ra0hfiiMOKMio+n0r4NUn03Z+VRUTbdjHIA6Lkozwpadvs9/uK8dIGqfcgxYgk9qdjFPMYICDjCC
-AgoCAQEwgYcweTELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtTYW50YSBDbGFy
-YTEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJh
-c2ljIElzc3VpbmcgQ0EgNEECCmJiMmoAAAAATKAwCQYFKw4DAhoFAKBdMBgGCSqGSIb3DQEJAzEL
-BgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE0MDQxMDA4NDYyN1owIwYJKoZIhvcNAQkEMRYE
-FHk/+SMjSSfDm+Iw5SfE0gK5+wxBMA0GCSqGSIb3DQEBAQUABIIBAL65Uvxl4fEsse8q1cshNFe/
-t+oRfnFoEWRBDOxJ4SKcJQ7fU910qBmQSR3NP5r6bUUR16ZjgbrDvR+GtwNWBbjcCeZJSzaW5Rou
-u2ESTisQLs2Plft+cjwQmcB97d3TlqDxbrqeVazrkUkdKyay1NBMERBFP6JdAkc6okiHfc99jHLd
-sZUboJvuVmN/4Rfxe2pVvpzrnoJX6hMUDxNKqH91bTcyGpWHAzuIuG6Hdx3XT37je9l07wDoLGVF
-UIfKOKExdhX6ovtpyMPLcaWXsYiKRezTGjWoiyRa4IIKzTMdPiI6RC33vD4LKukKO/f8oLChwTJt
-n7lQ84T452enVEYAAAAAAAA=
-
-
---=-Ht/Tf9zBi/x/pm1AbxZe--
