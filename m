@@ -1,112 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <spear-devel@list.st.com>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Subject: [PATCH V8 0/9] PCI: Add SPEAr13xx PCie support
-Date: Tue, 15 Apr 2014 17:19:42 +0530
-Message-ID: <cover.1397555158.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:15907 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754902AbaDSCxx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Apr 2014 22:53:53 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH v2 4/5] ACPI/PCI: Warn if we have to "guess" host bridge node
+	information
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
+	kim.naru@amd.com, andreas.herrmann3@amd.com, daniel@numascale.com,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	x86@kernel.org, bp@suse.de, sp@numascale.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 18 Apr 2014 20:53:39 -0600
+Message-ID: <20140419025339.2408.17866.stgit@amt.stowe>
+In-Reply-To: <20140419025308.2408.51252.stgit@amt.stowe>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Patch# 1 and 2: Improvement and fixes for SPEAr13xx support.
-Patch# 3,4 and 6: Add DT bindings for spear1310/40-miphy, misc and pcie node
-Patch# 5: Add spear1310/40-miphy driver and support for spear1310/40 
-miphy wrapper.
-Patch# 7-9: Add SPEAr13xx PCIe driver and dt support.
+The vast majority of platforms are not supplying ACPI _PXM (proximity)
+information corresponding to host bridge (PNP0A03/PNP0A08) devices
+resulting in sysfs "numa_node" values of -1 (NUMA_NO_NODE) [1]:
+  # for i in /sys/devices/pci0000\:00/*/numa_node; do cat $i; done | uniq
+  -1
 
-These pathes are tested with linux-3.15 tag of arm-soc tree.
-Tested with SPEAr1310 evaluation board with:
-	- INTEL PRO 100/100 EP card
-	- USB xhci gen2 card
- 	- Above cards connected through LeCROY PTC switch
+  # find /sys/ -name "numa_node" | while read fname; do cat $fname; \
+    done | uniq
+  -1
 
-Modifications for SATA are tested with SPEAr1340-evb board
+AMD based platforms provide a fall-back for this situation via amd_bus.c.
+These platforms snoop out the information by directly reading specific
+registers from the Northbridge and caching them via 'alloc_pci_root_info'.
 
-Changes since v7:
-- Rebase over for-linus-3.15 tag of arm-soc tree so that complete patch series
- can be applied cleanly.
-- Incorporated few comments on comment style and superfluous comments
-Changes since v6:
-- Split miphy driver for SPEAr1310 and SPEAr1340
-- Some cleanup and incorporated other minor comments
-Changes since v5:
-- Split DT bindings for misc, miphy-40lp and pcie node into sepearte patches
-- Merge config options PCIE_SPEAR13XX and PCI_MSI into defconfig patch 
-- Incorporated other minor comments
-Changes since v4:
-- Uses per device function pointers passed from .data field to
-  the of_device_id instead of of_device_is_compatible.
-- Incorporated other minor comments from v4
+Later during boot processing when host bridges are discovered -
+'pci_acpi_scan_root' - the kernel looks for their corresponding ACPI _PXM
+method - drivers/acpi/numa.c::acpi_get_node().  If the BIOS supplied a
+_PXM method then that node (proximity) value is associated.  If the BIOS
+did not supply a _PXM method *and* the platform is AMD based, the
+fall-back cached values obtained directly from the Northbridge are used;
+otherwise, "NUMA_NO_NODE" is associated.
 
-Changes since v3:
-- Phy driver renamed to phy-miphy40lp
-- ahci phy hook patch used as suggested by Arnd
-- Incorporated other minor comments from v3
+There are a number of issues with this fall-back mechanism the most
+notable being that amd_bus.c extracts a 3-bit number from a CPU register
+and uses it as the node number.  The node numbers used by Linux are
+logical and there's no reason they need to be identical to settings in the
+CPU registers.  So if we have some node information obtained in the normal
+way (from _PXM, SLIT, SRAT, etc.) and some from amd_bus.c, there's no
+reason to believe they will be compatible.
 
-Changes since v2:
-- Incorporated comments to move SPEAr13xx PCIe and SATA phy specific routines to
-  the phy framework
-- Modify ahci driver to include phy hooks
-- phy-core driver modifications for subsys_initcall() 
+This patch warns when this situation occurs:
+  pci_root PNP0A08:00: [Firmware Bug]: No _PXM; guessing node number 0
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=72051
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
+
+ arch/x86/pci/acpi.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 01edac6..80c09ba 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -489,8 +489,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	}
  
-Changes since v1:
-- Few patches of the series are already accepted and applied to mainline e.g.
- pcie designware driver improvements,fixes for IO translation bug, PCIe dw
- driver maintainer. So dropped these from v2.
-- Incorporated comment to move the common/reset PCIe code to the seperate driver
-- PCIe and SATA share common PHY configuration registers, so move SATA
- platform code to the system config driver
-Fourth patch is improves pcie designware driver and fixes the IO
-translation bug. IO translation bug fix leads to the working of PCIe EP devices
-connected to RC through switch.
-
-Mohit Kumar (1):
-  SPEAr13xx: defconfig: Update
-
-Pratyush Anand (8):
-  clk: SPEAr13XX: Fix pcie clock name
-  SPEAr13XX: Fix static mapping table
-  phy: SPEAr1310/40-miphy: Add binding information
-  SPEAr: misc: Add binding information
-  phy: SPEAr1310/40-miphy: Add phy driver for PCIe and SATA
-  SPEAr13XX: Add binding information for PCIe controller
-  SPEAr13XX: dts: Add PCIe node information
-  pcie: SPEAr13xx: Add designware wrapper support
-
- .../devicetree/bindings/arm/spear-misc.txt         |    9 +
- .../devicetree/bindings/pci/spear13xx-pcie.txt     |   14 +
- .../devicetree/bindings/phy/st-spear1310-miphy.txt |   12 +
- .../devicetree/bindings/phy/st-spear1340-miphy.txt |   11 +
- MAINTAINERS                                        |    6 +
- arch/arm/boot/dts/spear1310-evb.dts                |    4 +
- arch/arm/boot/dts/spear1310.dtsi                   |   93 +++++-
- arch/arm/boot/dts/spear1340-evb.dts                |    4 +
- arch/arm/boot/dts/spear1340.dtsi                   |   30 ++-
- arch/arm/boot/dts/spear13xx.dtsi                   |    9 +-
- arch/arm/configs/spear13xx_defconfig               |   16 +
- arch/arm/mach-spear/Kconfig                        |    4 +
- arch/arm/mach-spear/include/mach/spear.h           |    4 +-
- arch/arm/mach-spear/spear1340.c                    |  127 +------
- arch/arm/mach-spear/spear13xx.c                    |    2 +-
- drivers/clk/spear/spear1310_clock.c                |    6 +-
- drivers/clk/spear/spear1340_clock.c                |    2 +-
- drivers/pci/host/Kconfig                           |    8 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pcie-spear13xx.c                  |  407 ++++++++++++++++++++
- drivers/phy/Kconfig                                |   12 +
- drivers/phy/Makefile                               |    2 +
- drivers/phy/phy-spear1310-miphy.c                  |  274 +++++++++++++
- drivers/phy/phy-spear1340-miphy.c                  |  300 ++++++++++++++
- 24 files changed, 1218 insertions(+), 139 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/arm/spear-misc.txt
- create mode 100644 Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
- create mode 100644 Documentation/devicetree/bindings/phy/st-spear1340-miphy.txt
- create mode 100644 drivers/pci/host/pcie-spear13xx.c
- create mode 100644 drivers/phy/phy-spear1310-miphy.c
- create mode 100644 drivers/phy/phy-spear1340-miphy.c
+ 	node = acpi_get_node(device->handle);
+-	if (node == NUMA_NO_NODE)
++	if (node == NUMA_NO_NODE) {
+ 		node = x86_pci_root_bus_node(busnum);
++		if (node != NUMA_NO_NODE)
++			dev_info(&device->dev, FW_BUG "No _PXM; guessing node number %x\n",
++				node);
++	}
+ 
+ 	if (node != NUMA_NO_NODE && !node_online(node))
+ 		node = NUMA_NO_NODE;
 
