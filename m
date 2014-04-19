@@ -1,64 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:48529 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751468AbaDXHU1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 03:20:27 -0400
-Date: Thu, 24 Apr 2014 09:20:21 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Stephane Eranian <eranian@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>, x86 <x86@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Zheng Z Yan <zheng.z.yan@intel.com>,
-	Dave Jones <davej@redhat.com>, Rui Zhang <rui.zhang@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 2] PNP: Work around BIOS defects in Intel MCH area
- reporting
-Message-ID: <20140424072021.GA3396@gmail.com>
-References: <20140421221721.26308.1891.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CABPqkBRVfajbeWeaZRmv6SSWcX7DAuGCxfmrHGiUTPkbfxVMWg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABPqkBRVfajbeWeaZRmv6SSWcX7DAuGCxfmrHGiUTPkbfxVMWg@mail.gmail.com>
+Received: from relay4-d.mail.gandi.net ([217.70.183.196]:54362 "EHLO
+	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754564AbaDSAOc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 20:14:32 -0400
+From: Ryan Desfosses <ryan@desfo.org>
+To: bhelgaas@google.com
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
+Subject: [PATCH 1/8] ats: removed parentheses after return
+Date: Fri, 18 Apr 2014 20:13:46 -0400
+Message-Id: <1397866433-21119-2-git-send-email-ryan@desfo.org>
+In-Reply-To: <1397866433-21119-1-git-send-email-ryan@desfo.org>
+References: <1397866433-21119-1-git-send-email-ryan@desfo.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+change made to resolve following checkpatch message:
+  ERROR: return is not a function, parentheses are not required
+branch: Linux 3.15-rc1
 
-* Stephane Eranian <eranian@google.com> wrote:
+Signed-off-by: Ryan Desfosses <ryan@desfo.org>
+---
+ drivers/pci/ats.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> On Tue, Apr 22, 2014 at 12:17 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > Work around BIOSes that don't report the entire Intel MCH area.
-> >
-> > MCHBAR is not an architected PCI BAR, so MCH space is usually reported as a
-> > PNP0C02 resource.  The MCH space was once 16KB, but is 32KB in newer parts.
-> > Some BIOSes still report a PNP0C02 resource that is only 16KB, which means
-> > the rest of the MCH space is consumed but unreported.
-> >
-> > This can cause resource map sanity check warnings or (theoretically) a
-> > device conflict if we assigned the unreported space to another device.
-> >
-> > The Intel perf event uncore driver tripped over this when it claimed the
-> > MCH region:
-> >
-> >   resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
-> >   Info: mapping multiple BARs. Your kernel is fine.
-> >
-> > To prevent this, if we find a PNP0C02 resource that covers part of the MCH
-> > space, extend it to cover the entire space.
-> >
-> Works for me on my Levono IvyBridge laptop.
-> Thanks for fixing this, Bjorn.
-> Acked-by: Stephane Eranian <eranian@google.com>
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index a8099d4..d653182 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -369,7 +369,7 @@ int pci_max_pasids(struct pci_dev *pdev)
+ 
+ 	supported = (supported & PASID_NUMBER_MASK) >> PASID_NUMBER_SHIFT;
+ 
+-	return (1 << supported);
++	return 1 << supported;
+ }
+ EXPORT_SYMBOL_GPL(pci_max_pasids);
+ #endif /* CONFIG_PCI_PASID */
+-- 
+1.9.1
 
-Just curious, what problems triggered on your laptop: only the 
-warnings, or did something get mapped to the undeclared area,
-causing other misbehavor?
-
-Thanks,
-
-	Ingo
