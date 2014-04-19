@@ -1,185 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7685 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751239AbaDNHMk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 03:12:40 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 2/2] PCI/MSI: Phase out pci_enable_msi_block()
-Date: Mon, 14 Apr 2014 09:14:07 +0200
-Message-Id: <0b08613dc17cd608c1babc1f42b8919f60e1093f.1397458024.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397458024.git.agordeev@redhat.com>
-References: <cover.1397458024.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sat, 19 Apr 2014 13:31:11 +0200
+From: Borislav Petkov <bp@suse.de>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
+	kim.naru@amd.com, andreas.herrmann3@amd.com, daniel@numascale.com,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	x86@kernel.org, bp@suse.de, sp@numascale.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/5] x86/PCI: Add support for generic AMD hostbridges
+Message-ID: <20140419113111.GA8109@pd.tnic>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+ <20140419025316.2408.29771.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140419025316.2408.29771.stgit@amt.stowe>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are no users of pci_enable_msi_block() function have
-left. Obsolete it in favor of pci_enable_msi_range() and
-pci_enable_msi_exact() functions.
+On Fri, Apr 18, 2014 at 08:53:16PM -0600, Myron Stowe wrote:
+> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+> 
+> AMD hostbridges gnenerally show up as PCI device 0:18.0.  This patch adds
+> logic to automatically probe the device at this location and check PCI
+> device class code.
+> 
+> This patch supports platforms with the following AMD hostbridge types:
+> (K8, family10h, 11h, 12h, 14h 15h  and 16h processors).
+> 
+> Reference(s):
+>   https://bugzilla.kernel.org/show_bug.cgi?id=72051
+>   Advanced Micro Devices (AMD), "BIOS and Kernel Developer's
+>   Guide (BKDG) for AMD Family 15h Models 00h-0fh Processors."  Section
+>   3.4 Device [1F:18]h Function 1 Configuration Registers; D18F1x[EC:E0]
+>   Configuration Map, 42301 Rev 3.12 - October 11, 2012.
+> 
+> Signed-off-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+> ---
+> 
+>  arch/x86/pci/amd_bus.c |   71 ++++++++++++++++++++++++++++++++----------------
+>  1 files changed, 47 insertions(+), 24 deletions(-)
+> 
+> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+> index e88f4c5..c8cd75c 100644
+> --- a/arch/x86/pci/amd_bus.c
+> +++ b/arch/x86/pci/amd_bus.c
+> @@ -11,27 +11,34 @@
+>  
+>  #include "bus_numa.h"
+>  
+> +#define AMD_NB_F0_NODE_ID			0x60
+> +#define AMD_NB_F0_UNIT_ID			0x64
+> +#define AMD_NB_F1_CONFIG_MAP_REG		0xe0
+> +
+> +#define RANGE_NUM				16
+> +#define AMD_NB_F1_CONFIG_MAP_RANGES		4
+> +
+>  /*
+> - * This discovers the pcibus <-> node mapping on AMD K8.
+> - * also get peer root bus resource for io,mmio
+> + * This discovers the pcibus <-> node mapping on AMD K8, Family 10h, 12h,
+> + * 14h, 15h, and 16h processor based systems.  This also gets peer root bus
+> + * resources corresponding to I/O and MMIO addresses.
+>   */
+>  
+> -struct pci_hostbridge_probe {
+> +struct amd_hostbridge {
+>  	u32 bus;
+>  	u32 slot;
+> -	u32 vendor;
+>  	u32 device;
+>  };
+>  
+> -static struct pci_hostbridge_probe pci_probes[] __initdata = {
+> -	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 },
+> -	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 },
+> -	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 },
+> -	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
+> +static struct amd_hostbridge hb_probes[] __initdata = {
+> +	/* Standard AMD Hostbriges are at bus 0x0 slot 0x18.
+> +	 * In case of PCI_ANY_ID, the logic will try matching
+> +	 * PCI_CLASS_BRIDGE_HOST instead.
+> +	 */
 
-Up until now, when enabling MSI mode for a device, a single
-successful call to arch_msi_check_device() was followed by
-a single call to arch_setup_msi_irqs() function.
+Standard kernel comment style:
 
-Yet, if arch_msi_check_device() returned success we should be
-able to call arch_setup_msi_irqs() multiple times - while it
-returns a number of MSI vectors that could have been allocated
-(a third state).
+/*
+ * Something interesting for the code below.
+ * This is the second comment line.
+ */
 
-This update makes use of the assumption described above. It
-could have broke things had the architectures done any pre-
-allocations or switch to some state in a call to function
-arch_msi_check_device(). But because arch_msi_check_device()
-is expected stateless and MSI resources are allocated in a
-follow-up call to arch_setup_msi_irqs() we should be fine.
+> +	{ 0x0 , 0x18, PCI_ANY_ID },
+> +	{ 0xff, 0   , PCI_DEVICE_ID_AMD_10H_NB_HT },
+>  };
+>  
+> -#define RANGE_NUM 16
+> -
+>  static struct pci_root_info __init *find_pci_root_info(int node, int link)
+>  {
+>  	struct pci_root_info *info;
+> @@ -75,31 +82,47 @@ static int __init early_fill_mp_bus_info(void)
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-mips@linux-mips.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-s390@vger.kernel.org
-Cc: x86@kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/msi.c   |   79 +++++++++++++++++++++-----------------------------
- include/linux/pci.h |    5 +--
- 2 files changed, 34 insertions(+), 50 deletions(-)
+Btw, this function is huuuge. It could use a splitup some day.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 955ab79..fc669ab 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -883,50 +883,6 @@ int pci_msi_vec_count(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_msi_vec_count);
- 
--/**
-- * pci_enable_msi_block - configure device's MSI capability structure
-- * @dev: device to configure
-- * @nvec: number of interrupts to configure
-- *
-- * Allocate IRQs for a device with the MSI capability.
-- * This function returns a negative errno if an error occurs.  If it
-- * is unable to allocate the number of interrupts requested, it returns
-- * the number of interrupts it might be able to allocate.  If it successfully
-- * allocates at least the number of interrupts requested, it returns 0 and
-- * updates the @dev's irq member to the lowest new interrupt number; the
-- * other interrupt numbers allocated to this device are consecutive.
-- */
--int pci_enable_msi_block(struct pci_dev *dev, int nvec)
--{
--	int status, maxvec;
--
--	if (dev->current_state != PCI_D0)
--		return -EINVAL;
--
--	maxvec = pci_msi_vec_count(dev);
--	if (maxvec < 0)
--		return maxvec;
--	if (nvec > maxvec)
--		return maxvec;
--
--	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
--	if (status)
--		return status;
--
--	WARN_ON(!!dev->msi_enabled);
--
--	/* Check whether driver already requested MSI-X irqs */
--	if (dev->msix_enabled) {
--		dev_info(&dev->dev, "can't enable MSI "
--			 "(MSI-X already enabled)\n");
--		return -EINVAL;
--	}
--
--	status = msi_capability_init(dev, nvec);
--	return status;
--}
--EXPORT_SYMBOL(pci_enable_msi_block);
--
- void pci_msi_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *desc;
-@@ -1132,14 +1088,45 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
-  **/
- int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
- {
--	int nvec = maxvec;
-+	int nvec;
- 	int rc;
- 
-+	if (dev->current_state != PCI_D0)
-+		return -EINVAL;
-+
-+	WARN_ON(!!dev->msi_enabled);
-+
-+	/* Check whether driver already requested MSI-X irqs */
-+	if (dev->msix_enabled) {
-+		dev_info(&dev->dev,
-+			 "can't enable MSI (MSI-X already enabled)\n");
-+		return -EINVAL;
-+	}
-+
- 	if (maxvec < minvec)
- 		return -ERANGE;
- 
-+	nvec = pci_msi_vec_count(dev);
-+	if (nvec < 0)
-+		return nvec;
-+	else if (nvec < minvec)
-+		return -EINVAL;
-+	else if (nvec > maxvec)
-+		nvec = maxvec;
-+
-+	do {
-+		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
-+		if (rc < 0) {
-+			return rc;
-+		} else if (rc > 0) {
-+			if (rc < minvec)
-+				return -ENOSPC;
-+			nvec = rc;
-+		}
-+	} while (rc);
-+
- 	do {
--		rc = pci_enable_msi_block(dev, nvec);
-+		rc = msi_capability_init(dev, nvec);
- 		if (rc < 0) {
- 			return rc;
- 		} else if (rc > 0) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..d8104f4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1158,7 +1158,6 @@ struct msix_entry {
- 
- #ifdef CONFIG_PCI_MSI
- int pci_msi_vec_count(struct pci_dev *dev);
--int pci_enable_msi_block(struct pci_dev *dev, int nvec);
- void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
- int pci_msix_vec_count(struct pci_dev *dev);
-@@ -1188,8 +1187,6 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
- }
- #else
- static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
--static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
--{ return -ENOSYS; }
- static inline void pci_msi_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msi(struct pci_dev *dev) { }
- static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
-@@ -1244,7 +1241,7 @@ static inline void pcie_set_ecrc_checking(struct pci_dev *dev) { }
- static inline void pcie_ecrc_get_policy(char *str) { }
- #endif
- 
--#define pci_enable_msi(pdev)	pci_enable_msi_block(pdev, 1)
-+#define pci_enable_msi(pdev)	pci_enable_msi_range(pdev, 1, 1)
- 
- #ifdef CONFIG_HT_IRQ
- /* The functions a driver should call */
+>  		return -1;
+>  
+>  	found = false;
+> -	for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
+> +	for (i = 0; i < ARRAY_SIZE(hb_probes); i++) {
+>  		u32 id;
+>  		u16 device;
+>  		u16 vendor;
+> +		u32 class;
+>  
+> -		bus = pci_probes[i].bus;
+> -		slot = pci_probes[i].slot;
+> +		bus = hb_probes[i].bus;
+> +		slot = hb_probes[i].slot;
+>  		id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
+> -
+>  		vendor = id & 0xffff;
+>  		device = (id>>16) & 0xffff;
+> -		if (pci_probes[i].vendor == vendor &&
+> -		    pci_probes[i].device == device) {
+> -			found = true;
+> -			break;
+> +		class = read_pci_config(bus, slot, 0,
+> +			PCI_CLASS_REVISION) >> 16;
+> +
+> +		if (PCI_VENDOR_ID_AMD == vendor) {
+
+Flip comparison:
+
+		if (vendor == PCI_VENDOR_ID_AMD)
+
+and then save yourself another indentation level:
+
+		if (vendor != PCI_VENDOR_ID_AMD)
+			continue;
+
+> +			if (hb_probes[i].device == device) {
+> +				found = true;
+> +				break;
+> +			}
+> +
+> +			if ((hb_probes[i].device == PCI_ANY_ID) &&
+> +			    (class == PCI_CLASS_BRIDGE_HOST)) {
+> +				hb_probes[i].device = device;
+> +				found = true;
+> +				break;
+> +			}
+>  		}
+>  	}
+>  
+> -	if (!found)
+> +	if (!found) {
+> +		pr_warn("AMD hostbridge not found\n");
+>  		return 0;
+> +	}
+
+I guess this should return a negative value... Not that it matters much
+from looking at the call site in the amd_postcore_init initcall.
+
+>  
+> -	for (i = 0; i < 4; i++) {
+> +	pr_debug("Found AMD hostbridge at %x:%x.0\n", bus, slot);
+
+Why not pr_info? I think this is useful info we want to print out at
+default level.
+
 -- 
-1.7.7.6
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
