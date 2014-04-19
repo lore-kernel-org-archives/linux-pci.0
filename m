@@ -1,193 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4715 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751644AbaDNN04 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 09:26:56 -0400
-Date: Mon, 14 Apr 2014 15:28:35 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 2/2] PCI/MSI: Phase out pci_enable_msi_block()
-Message-ID: <20140414132834.GA9164@dhcp-26-207.brq.redhat.com>
-References: <cover.1397458024.git.agordeev@redhat.com>
- <0b08613dc17cd608c1babc1f42b8919f60e1093f.1397458024.git.agordeev@redhat.com>
- <20140414120921.GA32132@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140414120921.GA32132@dhcp-26-207.brq.redhat.com>
+Received: from relay4-d.mail.gandi.net ([217.70.183.196]:56833 "EHLO
+	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754639AbaDSAOm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 20:14:42 -0400
+From: Ryan Desfosses <ryan@desfo.org>
+To: bhelgaas@google.com
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
+Subject: [PATCH 5/8] msi: merged quoted strings
+Date: Fri, 18 Apr 2014 20:13:50 -0400
+Message-Id: <1397866433-21119-6-git-send-email-ryan@desfo.org>
+In-Reply-To: <1397866433-21119-1-git-send-email-ryan@desfo.org>
+References: <1397866433-21119-1-git-send-email-ryan@desfo.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are no users of pci_enable_msi_block() function have
-left. Obsolete it in favor of pci_enable_msi_range() and
-pci_enable_msi_exact() functions.
+change made to resolve following checkpatch message:
+  WARNING: quoted string split across lines
+branch: Linux 3.15-rc1
 
-Up until now, when enabling MSI mode for a device a single
-successful call to arch_msi_check_device() was followed by
-a single call to arch_setup_msi_irqs() function.
-
-Yet, if arch_msi_check_device() returned success we should be
-able to call arch_setup_msi_irqs() multiple times - while it
-returns a number of MSI vectors that could have been allocated
-(a third state).
-
-This update makes use of the assumption described above. It
-could have broke things had the architectures done any pre-
-allocations or switch to some state in a call to function
-arch_msi_check_device(). But because arch_msi_check_device()
-is expected stateless and MSI resources are allocated in a
-follow-up call to arch_setup_msi_irqs() we should be fine.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-mips@linux-mips.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-s390@vger.kernel.org
-Cc: x86@kernel.org
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Ryan Desfosses <ryan@desfo.org>
 ---
- drivers/pci/msi.c   |   79 +++++++++++++++++++++-----------------------------
- include/linux/pci.h |    5 +--
- 2 files changed, 34 insertions(+), 50 deletions(-)
+ drivers/pci/msi.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 955ab79..fc669ab 100644
+index 955ab79..31ae0bb 100644
 --- a/drivers/pci/msi.c
 +++ b/drivers/pci/msi.c
-@@ -883,50 +883,6 @@ int pci_msi_vec_count(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_msi_vec_count);
+@@ -917,8 +917,7 @@ int pci_enable_msi_block(struct pci_dev *dev, int nvec)
  
--/**
-- * pci_enable_msi_block - configure device's MSI capability structure
-- * @dev: device to configure
-- * @nvec: number of interrupts to configure
-- *
-- * Allocate IRQs for a device with the MSI capability.
-- * This function returns a negative errno if an error occurs.  If it
-- * is unable to allocate the number of interrupts requested, it returns
-- * the number of interrupts it might be able to allocate.  If it successfully
-- * allocates at least the number of interrupts requested, it returns 0 and
-- * updates the @dev's irq member to the lowest new interrupt number; the
-- * other interrupt numbers allocated to this device are consecutive.
-- */
--int pci_enable_msi_block(struct pci_dev *dev, int nvec)
--{
--	int status, maxvec;
--
--	if (dev->current_state != PCI_D0)
--		return -EINVAL;
--
--	maxvec = pci_msi_vec_count(dev);
--	if (maxvec < 0)
--		return maxvec;
--	if (nvec > maxvec)
--		return maxvec;
--
--	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
--	if (status)
--		return status;
--
--	WARN_ON(!!dev->msi_enabled);
--
--	/* Check whether driver already requested MSI-X irqs */
--	if (dev->msix_enabled) {
+ 	/* Check whether driver already requested MSI-X irqs */
+ 	if (dev->msix_enabled) {
 -		dev_info(&dev->dev, "can't enable MSI "
 -			 "(MSI-X already enabled)\n");
--		return -EINVAL;
--	}
--
--	status = msi_capability_init(dev, nvec);
--	return status;
--}
--EXPORT_SYMBOL(pci_enable_msi_block);
--
- void pci_msi_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *desc;
-@@ -1132,14 +1088,45 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
-  **/
- int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
- {
--	int nvec = maxvec;
-+	int nvec;
- 	int rc;
++		dev_info(&dev->dev, "can't enable MSI (MSI-X already enabled)\n");
+ 		return -EINVAL;
+ 	}
  
-+	if (dev->current_state != PCI_D0)
-+		return -EINVAL;
-+
-+	WARN_ON(!!dev->msi_enabled);
-+
-+	/* Check whether driver already requested MSI-X irqs */
-+	if (dev->msix_enabled) {
-+		dev_info(&dev->dev,
-+			 "can't enable MSI (MSI-X already enabled)\n");
-+		return -EINVAL;
-+	}
-+
- 	if (maxvec < minvec)
- 		return -ERANGE;
+@@ -1029,8 +1028,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
  
-+	nvec = pci_msi_vec_count(dev);
-+	if (nvec < 0)
-+		return nvec;
-+	else if (nvec < minvec)
-+		return -EINVAL;
-+	else if (nvec > maxvec)
-+		nvec = maxvec;
-+
-+	do {
-+		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
-+		if (rc < 0) {
-+			return rc;
-+		} else if (rc > 0) {
-+			if (rc < minvec)
-+				return -ENOSPC;
-+			nvec = rc;
-+		}
-+	} while (rc);
-+
- 	do {
--		rc = pci_enable_msi_block(dev, nvec);
-+		rc = msi_capability_init(dev, nvec);
- 		if (rc < 0) {
- 			return rc;
- 		} else if (rc > 0) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..499755e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1158,7 +1158,6 @@ struct msix_entry {
- 
- #ifdef CONFIG_PCI_MSI
- int pci_msi_vec_count(struct pci_dev *dev);
--int pci_enable_msi_block(struct pci_dev *dev, int nvec);
- void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
- int pci_msix_vec_count(struct pci_dev *dev);
-@@ -1188,8 +1187,6 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
- }
- #else
- static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
--static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
--{ return -ENOSYS; }
- static inline void pci_msi_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msi(struct pci_dev *dev) { }
- static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
-@@ -1244,7 +1241,7 @@ static inline void pcie_set_ecrc_checking(struct pci_dev *dev) { }
- static inline void pcie_ecrc_get_policy(char *str) { }
- #endif
- 
--#define pci_enable_msi(pdev)	pci_enable_msi_block(pdev, 1)
-+#define pci_enable_msi(pdev)	pci_enable_msi_exact(pdev, 1)
- 
- #ifdef CONFIG_HT_IRQ
- /* The functions a driver should call */
+ 	/* Check whether driver already requested for MSI irq */
+ 	if (dev->msi_enabled) {
+-		dev_info(&dev->dev, "can't enable MSI-X "
+-		       "(MSI IRQ already assigned)\n");
++		dev_info(&dev->dev, "can't enable MSI-X (MSI IRQ already assigned)\n");
+ 		return -EINVAL;
+ 	}
+ 	status = msix_capability_init(dev, entries, nvec);
 -- 
-1.7.7.6
+1.9.1
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
