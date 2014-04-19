@@ -1,73 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49022 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751782AbaDSCxb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Apr 2014 22:53:31 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH v2 0/5] x86/PCI: Add AMD hostbridge support for newer AMD
+	systems
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
+	kim.naru@amd.com, andreas.herrmann3@amd.com, daniel@numascale.com,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	x86@kernel.org, bp@suse.de, sp@numascale.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 18 Apr 2014 20:53:08 -0600
+Message-ID: <20140419025308.2408.51252.stgit@amt.stowe>
+In-Reply-To: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <20140420105419.GB19676@pd.tnic>
-References: <20140419025308.2408.51252.stgit@amt.stowe>
-	<20140419025345.2408.99229.stgit@amt.stowe>
-	<20140420105419.GB19676@pd.tnic>
-Date: Sun, 20 Apr 2014 07:44:15 -0600
-Message-ID: <CAL-B5D1_fns=mu7Cw6jeVHO0XPeKYakUrPv-JgO=ma1rjCoQvg@mail.gmail.com>
-Subject: Re: [PATCH v2 5/5] PCI: Remove redundant 'quirk_amd_nb_node'
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Borislav Petkov <bp@suse.de>
-Cc: Myron Stowe <myron.stowe@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	kim.naru@amd.com, daniel@numascale.com,
-	Thomas Gleixner <tglx@linutronix.de>, mingo@redhat.com,
-	hpa@zytor.com, x86 <x86@kernel.org>, sp@numascale.com,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 20, 2014 at 4:54 AM, Borislav Petkov <bp@suse.de> wrote:
-> On Fri, Apr 18, 2014 at 08:53:46PM -0600, Myron Stowe wrote:
->> With the amd_bus.c updates to support additional AMD processors (11h, 12h,
->> 14h 15h  and 16h) 'quirk_amd_nb_node' seems to be redundant.  This patch
->> removes it.
->>
->> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
->
-> Good idea. Has this been tested, though? There are a bunch of places
-> using dev_to_node() which this quirk corrects, especially 'local_cpus'
-> in a bunch of sysfs nodes in the PCI hierarchy /sys/devices/pci*.
+Currently the kernel only supports AMD hostbridges up to Family 11h.
+This causes PCI numa_node information to be reported incorrectly
+for newer Families with multiple sockets.
 
-Borislav:
+This patch series augments the logic to discover newer AMD hostbridge types
+(Family 12h, 14h 15h and 16h).
 
-Thanks for the review, suggestions, and comments.
+Note:
+    * Patch 1 and 2 are functional changes for newer AMD Families
+    * Patch 3 is general clean up and restructuring
+    * Patch 4 warns when BIOS has not supplied an ACPI _PXM method for a
+      hostbridge and we "guess" a hostbridge's node value
+    * Patch 5 removes the now redundant 'quirk_amd_nb_node'
 
-Just and FYI - I'll be gone until late in this coming week on a
-backpacking trip in remote Utah.  I'll work your suggestions when I
-get back.
+-v2: This series was introduced by Suravee Suthikulanit but seems to have
+     stalled.  I would like to get this moving again and eventually pulled
+     upstream so I've taken Suravee's series and -
+       o  Rebased the original three patches to v3.15-rc1,
+       o  Added a warn if we "guess" a hostbridge's node value (patch 4),
+       o  I believe with the additional Family support that
+	  'quirk_amd_nb_node' is now redundant so I added patch 5 which
+          removes it.
 
-With respect to this patch and testing.  Yes, I did test and it worked
-for my situation.  I would like to hear from Daniel as I'm not exactly
-sure what his last change was specific to.
+Reference:
+  https://bugzilla.kernel.org/show_bug.cgi?id=72051
 
-Daniel: with the previous patches in this series applied do you still
-need this quirk for your situation?
+Myron Stowe (2):
+      PCI: Remove redundant 'quirk_amd_nb_node'
+      ACPI/PCI: Warn if we have to "guess" host bridge node information
 
-Thanks,
- Myron
->
-> We want to make sure this doesn't break that and other dev_to_node()
-> callsites.
+Suravee Suthikulpanit (3):
+      x86/PCI: Miscellaneous code clean up for early_fillup_mp_bus_info
+      x86/PCI: Support additional MMIO range capabilities
+      x86/PCI: Add support for generic AMD hostbridges
 
-Agreed
 
->
-> Thanks.
->
-> --
-> Regards/Gruss,
->     Boris.
->
-> Sent from a fat crate under my desk. Formatting is fine.
-> --
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.
+ arch/x86/kernel/quirks.c |   58 -------
+ arch/x86/pci/acpi.c      |    6 +
+ arch/x86/pci/amd_bus.c   |  409 ++++++++++++++++++++++++++++++----------------
+ 3 files changed, 271 insertions(+), 202 deletions(-)
+
+-- 
