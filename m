@@ -1,33 +1,42 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH v3] Intel MCH BIOS workaround
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, linux-pci@vger.kernel.org,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	Stephane Eranian <eranian@google.com>,
-	linux-acpi@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Zheng Z Yan <zheng.z.yan@intel.com>,
-	Dave Jones <davej@redhat.com>, Rui Zhang <rui.zhang@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Date: Wed, 23 Apr 2014 10:20:57 -0600
-Message-ID: <20140423161901.16088.46695.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relay4-d.mail.gandi.net ([217.70.183.196]:59156 "EHLO
+	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754662AbaDSAOw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 20:14:52 -0400
+From: Ryan Desfosses <ryan@desfo.org>
+To: bhelgaas@google.com
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
+Subject: [PATCH 8/8] pci-stub: added spaces around equal sign
+Date: Fri, 18 Apr 2014 20:13:53 -0400
+Message-Id: <1397866433-21119-9-git-send-email-ryan@desfo.org>
+In-Reply-To: <1397866433-21119-1-git-send-email-ryan@desfo.org>
+References: <1397866433-21119-1-git-send-email-ryan@desfo.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+change made to resolve following checkpatch message
+  ERROR: spaces required around that '=' (ctx:VxV)
+branch: Linux 3.15-rc1
 
-Relative to v2, this adds "#ifdef CONFIG_X86" around the quirk and adds
-Stephane's ack.  Either v2 or v3 is fine with me; whatever seems best to
-you.
-
+Signed-off-by: Ryan Desfosses <ryan@desfo.org>
 ---
+ drivers/pci/pci-stub.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bjorn Helgaas (1):
-      PNP: Work around BIOS defects in Intel MCH area reporting
+diff --git a/drivers/pci/pci-stub.c b/drivers/pci/pci-stub.c
+index 2ff7750..886fb35 100644
+--- a/drivers/pci/pci-stub.c
++++ b/drivers/pci/pci-stub.c
+@@ -55,7 +55,7 @@ static int __init pci_stub_init(void)
+ 	p = ids;
+ 	while ((id = strsep(&p, ","))) {
+ 		unsigned int vendor, device, subvendor = PCI_ANY_ID,
+-			subdevice = PCI_ANY_ID, class=0, class_mask=0;
++			subdevice = PCI_ANY_ID, class = 0, class_mask = 0;
+ 		int fields;
+ 
+ 		if (!strlen(id))
+-- 
+1.9.1
 
-
- drivers/pnp/quirks.c |   79 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 79 insertions(+)
