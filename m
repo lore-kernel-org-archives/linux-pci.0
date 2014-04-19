@@ -1,48 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.130]:61688 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbaDOP1K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 11:27:10 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>
-Subject: Re: [PATCH 0/3] ARM: PCI: implement virtual PCI host controller
-Date: Tue, 15 Apr 2014 17:26:39 +0200
-Message-ID: <10739949.AxKDLcKlhj@wuerfel>
-In-Reply-To: <20140415144735.GM17408@arm.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com> <21141977.8ucQJzlJts@wuerfel> <20140415144735.GM17408@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from relay4-d.mail.gandi.net ([217.70.183.196]:35639 "EHLO
+	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754582AbaDSAOe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 20:14:34 -0400
+From: Ryan Desfosses <ryan@desfo.org>
+To: bhelgaas@google.com
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
+Subject: [PATCH 2/8] bus: moved EXPORT_SYMBOL so that it immediately followed its function/variable
+Date: Fri, 18 Apr 2014 20:13:47 -0400
+Message-Id: <1397866433-21119-3-git-send-email-ryan@desfo.org>
+In-Reply-To: <1397866433-21119-1-git-send-email-ryan@desfo.org>
+References: <1397866433-21119-1-git-send-email-ryan@desfo.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 15 April 2014 15:47:35 Will Deacon wrote:
-> > We also have discussed some ideas about how to restructure the PCI
-> > code layer to make it easier to share host drivers across architectures
-> > and clean up the interfaces in the process.
-> 
-> Ok. Whilst this all sounds good from an arm64 perspective (with Liviu
-> currently doing the work), it's not clear to me where that leaves my 32-bit
-> ARM kvmtool code. That was the main reason for me writing this driver, and it
-> seems a shame to have to wait for all the generic code to be sorted out
-> before it can be used on AArch32, where there is already a functional
-> pcibios implementation. The discussions mention things like generic
-> pci_host_bridge_ops, but having that for arch/arm/ doesn't sound like
-> something that is imminent.
-> 
-> Of course, I plan to port my driver to the new infrastructure when it lands
-> (since I want to support arm64), but it would be good to have something for
-> AArch32 in the meantime.
+change made to resolve following checkpatch message:
+  WARNING: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+branch: Linux 3.15-rc1
 
-Agreed. You'll probably have to add a few #ifdef until we have the
-infrastructure in place. However, I'd prefer not having to do that for
-a lot of other drivers. It's only a matter of time until someone wants
-one of the existing arm32 drivers to work on arm64, and we really
-shouldn't have to duplicate a lot of #ifdef logic across them, just
-to deal with the architectures being different.
+Signed-off-by: Ryan Desfosses <ryan@desfo.org>
+---
+ drivers/pci/bus.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-	Arnd
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index fb8aed3..2164d29 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -227,6 +227,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 					 type_mask, alignf, alignf_data,
+ 					 &pci_32_bit);
+ }
++EXPORT_SYMBOL(pci_bus_alloc_resource);
+ 
+ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
+ 
+@@ -256,6 +257,7 @@ int pci_bus_add_device(struct pci_dev *dev)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_bus_add_device);
+ 
+ /**
+  * pci_bus_add_devices - start driver for PCI devices
+@@ -286,6 +288,7 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ 			pci_bus_add_devices(child);
+ 	}
+ }
++EXPORT_SYMBOL(pci_bus_add_devices);
+ 
+ /** pci_walk_bus - walk devices on/under bus, calling callback.
+  *  @top      bus whose devices should be walked
+@@ -351,6 +354,3 @@ void pci_bus_put(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL(pci_bus_put);
+ 
+-EXPORT_SYMBOL(pci_bus_alloc_resource);
+-EXPORT_SYMBOL_GPL(pci_bus_add_device);
+-EXPORT_SYMBOL(pci_bus_add_devices);
+-- 
+1.9.1
+
