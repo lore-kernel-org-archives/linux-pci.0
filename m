@@ -1,72 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.131]:55340 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934020AbaDJUrA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 16:47:00 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for pci_host_bridge.
-Date: Thu, 10 Apr 2014 22:46:36 +0200
-Message-ID: <6459805.ygy4tBNDNz@wuerfel>
-In-Reply-To: <20140410145304.GS985@e106497-lin.cambridge.arm.com>
-References: <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com> <6144916.rD76jOL8sv@wuerfel> <20140410145304.GS985@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ryan Desfosses <ryan@desfo.org>
+To: bhelgaas@google.com
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
+Subject: [PATCH 7/8] pci-driver: moved EXPORT_SYMBOL so that it immediately followed its function/variable
+Date: Fri, 18 Apr 2014 20:13:52 -0400
+Message-Id: <1397866433-21119-8-git-send-email-ryan@desfo.org>
+In-Reply-To: <1397866433-21119-1-git-send-email-ryan@desfo.org>
+References: <1397866433-21119-1-git-send-email-ryan@desfo.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 10 April 2014 15:53:04 Liviu Dudau wrote:
-> On Thu, Apr 10, 2014 at 03:07:44PM +0100, Arnd Bergmann wrote:
+change made to resolve following checkpatch message:
+        WARNING: EXPORT_SYMBOL(foo); should immediately follow
+        its function/aariable
+branch: Linux 3.15-rc1
 
-> > This mirrors how we treat devices: a pci_device has an embedded device,
-> > and so on, in other subsystems we can have multiple layers.
-> > 
-> > In this example, the tegra pcie driver then allocates its own tegra_pcie
-> > structure, fills out the fields it needs, and registers it with the
-> > ARM architecture code, passing just the pci_sys_data pointer. That function
-> > in turn passes a pointer to the embedded pci_host_bridge down to the
-> > generic code. Ideally we should try to eliminate the architecture specific
-> > portion here, but that is a later step.
-> 
-> So Arnd seems to agree with me: we should try to get out of architecture specific
-> pci_sys_data and link the host bridge driver straight into the PCI core. The
-> core then can call into arch code via pcibios_*() functions.
-> 
-> Arnd, am I reading correctly into what you are saying?
+Signed-off-by: Ryan Desfosses <ryan@desfo.org>
+---
+ drivers/pci/pci-driver.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Half of it ;-)
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 821efe2..2c921a2 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -77,6 +77,7 @@ int pci_add_dynid(struct pci_driver *drv,
+ 
+ 	return retval;
+ }
++EXPORT_SYMBOL_GPL(pci_add_dynid);
+ 
+ static void pci_free_dynids(struct pci_driver *drv)
+ {
+@@ -242,6 +243,7 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
+ 
+ 	return pci_match_id(drv->id_table, dev);
+ }
++EXPORT_SYMBOL(pci_match_id);
+ 
+ struct drv_dev_and_id {
+ 	struct pci_driver *drv;
+@@ -1216,6 +1218,7 @@ int __pci_register_driver(struct pci_driver *drv, struct module *owner,
+ 	/* register with core */
+ 	return driver_register(&drv->driver);
+ }
++EXPORT_SYMBOL(__pci_register_driver);
+ 
+ /**
+  * pci_unregister_driver - unregister a pci driver
+@@ -1233,6 +1236,7 @@ pci_unregister_driver(struct pci_driver *drv)
+ 	driver_unregister(&drv->driver);
+ 	pci_free_dynids(drv);
+ }
++EXPORT_SYMBOL(pci_unregister_driver);
+ 
+ static struct pci_driver pci_compat_driver = {
+ 	.name = "compat"
+@@ -1258,6 +1262,7 @@ pci_dev_driver(const struct pci_dev *dev)
+ 	}
+ 	return NULL;
+ }
++EXPORT_SYMBOL(pci_dev_driver);
+ 
+ /**
+  * pci_bus_match - Tell if a PCI device structure has a matching PCI device id structure
+@@ -1303,6 +1308,7 @@ struct pci_dev *pci_dev_get(struct pci_dev *dev)
+ 		get_device(&dev->dev);
+ 	return dev;
+ }
++EXPORT_SYMBOL(pci_dev_get);
+ 
+ /**
+  * pci_dev_put - release a use of the pci device structure
+@@ -1316,6 +1322,7 @@ void pci_dev_put(struct pci_dev *dev)
+ 	if (dev)
+ 		put_device(&dev->dev);
+ }
++EXPORT_SYMBOL(pci_dev_put);
+ 
+ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
+ {
+@@ -1362,6 +1369,7 @@ struct bus_type pci_bus_type = {
+ 	.drv_groups	= pci_drv_groups,
+ 	.pm		= PCI_PM_OPS_PTR,
+ };
++EXPORT_SYMBOL(pci_bus_type);
+ 
+ static int __init pci_driver_init(void)
+ {
+@@ -1370,11 +1378,3 @@ static int __init pci_driver_init(void)
+ 
+ postcore_initcall(pci_driver_init);
+ 
+-EXPORT_SYMBOL_GPL(pci_add_dynid);
+-EXPORT_SYMBOL(pci_match_id);
+-EXPORT_SYMBOL(__pci_register_driver);
+-EXPORT_SYMBOL(pci_unregister_driver);
+-EXPORT_SYMBOL(pci_dev_driver);
+-EXPORT_SYMBOL(pci_bus_type);
+-EXPORT_SYMBOL(pci_dev_get);
+-EXPORT_SYMBOL(pci_dev_put);
+-- 
+1.9.1
 
-I think it would be better to not have an architecture specific data
-structure, just like it would be better not to have architecture specific
-pcibios_* functions that get called by the PCI core. Note that the
-architecture specific functions are the ones that rely on the architecture
-specific data structures as well. If they only use the common fields,
-it should also be possible to share the code.
-
-I also don't realistically think we can get there on a lot of architectures
-any time soon. Note that most architectures only have one PCI host
-implementation, so the architecture structure is the same as the host
-driver structure anyway.
-
-For architectures like powerpc and arm that have people actively working
-on them, we have a chance to clean up that code in the way we want it
-(if we can agree on the direction), but it's still not trivial to do.
-
-Speaking of arm32 in particular, I think we will end up with a split
-approach: modern platforms (multiplatform, possibly all DT based) using
-PCI core infrastructure directly and no architecture specific PCI
-code on the one side, and a variation of today's code for the legacy
-platforms on the other.
-
-	Arnd
