@@ -1,105 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:51265 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932804AbaDJATn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Apr 2014 20:19:43 -0400
-Message-ID: <1397089180.2608.27.camel@buesod1.americas.hpqcorp.net>
-Subject: Re: hpsa driver bug crack kernel down!
-From: Davidlohr Bueso <davidlohr@hp.com>
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Baoquan He <bhe@redhat.com>, linux-kernel@vger.kernel.org,
-	scameron@beardog.cce.hp.com,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Date: Wed, 09 Apr 2014 17:19:40 -0700
-In-Reply-To: <1397087425.9519.67.camel@dabdike>
-References: <20140409023935.GE11839@dhcp-16-105.nay.redhat.com>
-	 <1397083799.2608.20.camel@buesod1.americas.hpqcorp.net>
-	 <1397084904.9519.62.camel@dabdike> <1397085044.9519.63.camel@dabdike>
-	 <1397086817.2608.25.camel@buesod1.americas.hpqcorp.net>
-	 <1397087425.9519.67.camel@dabdike>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 20 Apr 2014 09:59:37 +0200
+From: Borislav Petkov <bp@suse.de>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
+	kim.naru@amd.com, daniel@numascale.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, bp@suse.de,
+	sp@numascale.com, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range
+ capabilities
+Message-ID: <20140420075936.GA19672@pd.tnic>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+ <20140419025323.2408.88764.stgit@amt.stowe>
+ <20140419135219.GC8109@pd.tnic>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140419135219.GC8109@pd.tnic>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-04-09 at 16:50 -0700, James Bottomley wrote:
-> On Wed, 2014-04-09 at 16:40 -0700, Davidlohr Bueso wrote:
-> > On Wed, 2014-04-09 at 16:10 -0700, James Bottomley wrote:
-> > > On Wed, 2014-04-09 at 16:08 -0700, James Bottomley wrote:
-> > > > [+linux-scsi]
-> > > > On Wed, 2014-04-09 at 15:49 -0700, Davidlohr Bueso wrote:
-> > > > > On Wed, 2014-04-09 at 10:39 +0800, Baoquan He wrote:
-> > > > > > Hi,
-> > > > > > 
-> > > > > > The kernel is 3.14.0+ which is pulled just now. 
-> > > > > 
-> > > > > Cc'ing more people.
-> > > > > 
-> > > > > While the hpsa driver appears to be involved in some way, I'm sure if
-> > > > > this is a related issue, but as of today's pull I'm getting another
-> > > > > problem that causes my DL980 not to come up.
-> > > > > 
-> > > > > *Massive* amounts of:
-> > > > > 
-> > > > > DMAR:[fault reason 02] Present bit in context entry is clear
-> > > > > dmar: DRHD: handling fault status reg 602
-> > > > > dmar: DMAR:[DMA Read] Request device [02:00.0] fault addr 7f61e000
-> > > > > 
-> > > > > Then:
-> > > > > 
-> > > > > hpsa 0000:03:00.0: Controller lockup detected: 0xffff0000
-> > > > > ...
-> > > > > Workqueue: events hpsa_monitor_ctlr_worker [hpsa]
-> > > > > ...
-> > > > > 
-> > > > > Screenshot of the actual LOCKUP: 
-> > > > > http://stgolabs.net/hpsa-hard-lockup-3.14+.png
-> > > > > 
-> > > > > While I haven't bisected, things worked fine until at least until commit
-> > > > > 39de65aa2c3e (April 2nd).
-> > > > > 
-> > > > > Any ideas?
-> > > > 
-> > > > Well, it's either a DMA remapping issue or a hpsa one.  Your assertion
-> > > > that everything worked fine until 39de65aa2c3e would tend to vindicate
-> > > > hpsa, 
-> > 
-> > Hmm here you mean DMA, right?
-> 
-> No, it vindicates the hpsa changes ... they don't seem to be causing
-> problems until something goes wrong with dma remapping.
-> 
-> > > because all the hpsa changes went in before that under
-> > > Missing crucial info:
-> > > 
-> > > commit 1a0b6abaea78f73d9bc0a2f6df2d9e4c917cade1
-> > > 
-> > > > Merge: 3e75c6d b2bff6c
-> > > > Author: Linus Torvalds <torvalds@linux-foundation.org>
-> > > > Date:   Tue Apr 1 18:49:04 2014 -0700
-> > > > 
-> > > >     Merge tag 'scsi-misc' of
-> > > > git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi
-> > > > 
-> > > > can you revalidate that this commit works OK just to make sure?
-> > 
-> > Ok so I don't see those DMA messages and system starts just fine. I'm
-> > thinking perhaps something broke after the IO mmu stuff in commit 
-> > 3f583bc21977a608908b83d03ee2250426a5695c... could this be indirectly
-> > causing the CPU stalls and just blame hpsa in the path as a side effect?
-> > 
-> > /me goes out to try the commit.
-> 
-> That's my guess.  The DMAR messages are DMA remapping issues caused in
-> the IOMMU.  If I had to guess, I'd say the DMAR fault message is
-> indicating the IOMMU is calling for a mapping address before it can
-> satisfy the driver read request, which is causing the hang apparently in
-> the hpsa driver.
-> 
-> I've added linux-pci to the cc; I think they deal with iommu issues on
-> x86.
+Drop Andreas' old email address from CC as it keeps bouncing.
 
-So that merge commit appears to be the culprit, I see both the DMA
-messages and the lockup blaming hpsa...
+On Sat, Apr 19, 2014 at 03:52:20PM +0200, Borislav Petkov wrote:
+> > -static void __init pci_enable_pci_io_ecs(void)
+> > +static void __init pci_enable_pci_io_ecs(u8 bus, u8 slot)
+> >  {
+> >  #ifdef CONFIG_AMD_NB
+> >  	unsigned int i, n;
+> > +	u8 limit;
+> >  
+> >  	for (n = i = 0; !n && amd_nb_bus_dev_ranges[i].dev_limit; ++i) {
+> > -		u8 bus = amd_nb_bus_dev_ranges[i].bus;
+> > -		u8 slot = amd_nb_bus_dev_ranges[i].dev_base;
+> > -		u8 limit = amd_nb_bus_dev_ranges[i].dev_limit;
+> > +		/* Try matching for the bus range */
+> > +		if ((bus != amd_nb_bus_dev_ranges[i].bus) ||
+> > +		    (slot != amd_nb_bus_dev_ranges[i].dev_base))
+> > +			continue;
+> > +
+> > +		limit = amd_nb_bus_dev_ranges[i].dev_limit;
+> >  
+> > +		/* Setup all northbridges within the range */
+> >  		for (; slot < limit; ++slot) {
+> >  			u32 val = read_pci_config(bus, slot, 3, 0);
+> > -
+> > -			if (!early_is_amd_nb(val))
+> > +			if (!val)
+> >  				continue;
+> >  
+> >  			val = read_pci_config(bus, slot, 3, 0x8c);
+> > @@ -375,13 +457,14 @@ static void __init pci_enable_pci_io_ecs(void)
+> >  				val |= ENABLE_CF8_EXT_CFG >> 32;
+> 
+> What a fun shifting!
+> 
+> Maybe you should do
+> 
+> #define ENABLE_CF8_EXT_CFG	BIT(46 - 32)
+> 
+> to show exactly what you mean and how the bit is defined in MSR NB_CFG1
+> and also show how the high 32-bits are mapped into F3x8c, while at it.
+> 
+> And then you can drop the shifting at the call site.
 
+Ok, I see another fun with this ECS enabling:
+
+There's a enable_pci_io_ecs() which enables ECS through the NB_CFG MSR
+which is called as part of the notifier *and* there's a PCI write to
+that same bit in pci_enable_pci_io_ecs() which iterates over all NBs.
+
+So, AFAICT, we do it twice and the second time is not needed. Which
+means, you probably can drop pci_enable_pci_io_ecs() completely and use
+solely the notifier?
+
+Yes, no?
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
