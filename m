@@ -1,65 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20894 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758337AbaDBPSz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Apr 2014 11:18:55 -0400
-Date: Wed, 2 Apr 2014 17:20:44 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Mathias Nyman <mathias.nyman@intel.com>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
-	Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 RESEND 4/4] xhci: Use pci_enable_msix_exact() instead
- of pci_enable_msix()
-Message-ID: <20140402152044.GA13421@dhcp-26-207.brq.redhat.com>
-References: <cover.1394128952.git.agordeev@redhat.com>
- <606a52afdccf627b6273379b21daffc460b9559a.1394128952.git.agordeev@redhat.com>
- <20140306215646.GA23294@xanatos>
- <20140325142730.GA4518@dhcp-26-207.brq.redhat.com>
- <20140402114127.GA10007@dhcp-26-207.brq.redhat.com>
- <533C1919.3010506@intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 20 Apr 2014 12:21:05 +0200
+From: Borislav Petkov <bp@suse.de>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
+	kim.naru@amd.com, daniel@numascale.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, sp@numascale.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 4/5] ACPI/PCI: Warn if we have to "guess" host bridge
+ node information
+Message-ID: <20140420102105.GA19676@pd.tnic>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+ <20140419025339.2408.17866.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <533C1919.3010506@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140419025339.2408.17866.stgit@amt.stowe>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 02, 2014 at 05:05:13PM +0300, Mathias Nyman wrote:
-> On 04/02/2014 02:41 PM, Alexander Gordeev wrote:
-> >On Tue, Mar 25, 2014 at 03:27:30PM +0100, Alexander Gordeev wrote:
-> >>On Thu, Mar 06, 2014 at 01:56:46PM -0800, Sarah Sharp wrote:
-> >>>What do you mean by this sentence?  Are you fixing some bug in those two
-> >>>functions, or just cleaning up how they look?  Either way, this should
-> >>>really be two patches.
-> >>Hi Sarah,
-> >>
-> >>Any feedback on v2?
-> >
+On Fri, Apr 18, 2014 at 08:53:39PM -0600, Myron Stowe wrote:
+> The vast majority of platforms are not supplying ACPI _PXM (proximity)
+> information corresponding to host bridge (PNP0A03/PNP0A08) devices
+> resulting in sysfs "numa_node" values of -1 (NUMA_NO_NODE) [1]:
+>   # for i in /sys/devices/pci0000\:00/*/numa_node; do cat $i; done | uniq
+>   -1
 > 
-> Hi
-
-Thank you for the review, Mathias.
-
-> Thanks for the patches,
-> I'll  queue patch 2/2  for usb-linus once 3.15-rc1 comes out.
+>   # find /sys/ -name "numa_node" | while read fname; do cat $fname; \
+>     done | uniq
+>   -1
 > 
-> But I'm going to omit patch 1/2 because it doesn't really improve
-> code readability and doesn't change functionality.
-
-I fail to see how it does not improve the readability. It makes the
-way the result returned consistent with the rest of the code and
-explicitly returns succeess where it is known 'ret' contains zero.
-
-But it surely up to you :)
-
-> At this stage I'd like to avoid extra patches as much as possible.
-> And besides, it adds one extra line of code
+> AMD based platforms provide a fall-back for this situation via amd_bus.c.
+> These platforms snoop out the information by directly reading specific
+> registers from the Northbridge and caching them via 'alloc_pci_root_info'.
 > 
-> -Mathias
+> Later during boot processing when host bridges are discovered -
+> 'pci_acpi_scan_root' - the kernel looks for their corresponding ACPI _PXM
+> method - drivers/acpi/numa.c::acpi_get_node().  If the BIOS supplied a
+> _PXM method then that node (proximity) value is associated.  If the BIOS
+> did not supply a _PXM method *and* the platform is AMD based, the
+> fall-back cached values obtained directly from the Northbridge are used;
+> otherwise, "NUMA_NO_NODE" is associated.
+> 
+> There are a number of issues with this fall-back mechanism the most
+> notable being that amd_bus.c extracts a 3-bit number from a CPU register
+> and uses it as the node number.  The node numbers used by Linux are
+> logical and there's no reason they need to be identical to settings in the
+> CPU registers.  So if we have some node information obtained in the normal
+> way (from _PXM, SLIT, SRAT, etc.) and some from amd_bus.c, there's no
+> reason to believe they will be compatible.
+> 
+> This patch warns when this situation occurs:
+>   pci_root PNP0A08:00: [Firmware Bug]: No _PXM; guessing node number 0
+> 
+> [1] https://bugzilla.kernel.org/show_bug.cgi?id=72051
+> 
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> ---
+> 
+>  arch/x86/pci/acpi.c |    6 +++++-
+>  1 files changed, 5 insertions(+), 1 deletions(-)
+> 
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 01edac6..80c09ba 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -489,8 +489,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  	}
+>  
+>  	node = acpi_get_node(device->handle);
+> -	if (node == NUMA_NO_NODE)
+> +	if (node == NUMA_NO_NODE) {
+>  		node = x86_pci_root_bus_node(busnum);
+> +		if (node != NUMA_NO_NODE)
+> +			dev_info(&device->dev, FW_BUG "No _PXM; guessing node number %x\n",
+
+Hmm, I'm not really convinced this message is user-friendly enough. Can
+we be more descriptive here please?
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
