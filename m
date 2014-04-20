@@ -1,48 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, xjtuwjp@gmail.com,
-	lindar_liu@usish.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 17/23] pm8001: Fix invalid return when request_irq() failed
-Date: Mon, 14 Apr 2014 10:05:41 +0200
-Message-Id: <9b683169555723c3b38d523923d1e8f809de9493.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:39644 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755488AbaDTUEs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Apr 2014 16:04:48 -0400
+Date: Sun, 20 Apr 2014 16:04:09 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Lior Amsalem <alior@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Neil Greatorex <neil@fatboyfat.co.uk>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Willy Tarreau <w@1wt.eu>, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 0/7] Fixes for Armada 370/XP PCIe
+Message-ID: <20140420200409.GI28159@titan.lakedaemon.net>
+References: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a call to request_irq() failed pm8001_setup_msix()
-still returns the success. This udate fixes the described
-misbehaviour.
+Thomas,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: xjtuwjp@gmail.com
-Cc: lindar_liu@usish.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
----
- drivers/scsi/pm8001/pm8001_init.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+On Fri, Apr 18, 2014 at 02:19:46PM +0200, Thomas Petazzoni wrote:
+> Hello,
+> 
+> This set of commits fixes a number of problems in the PCIe support of
+> the Armada 370 and Armada XP SoCs, allowing to use PCIe devices that
+> were not properly supported until now.
+> 
+> Due to the interaction of PCIe with other subsystems, the fixes are
+> not limited to drivers/pci, but also touch drivers/bus and
+> drivers/irqchip.
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index c4f31b21..df421f5 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -740,9 +740,10 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
- 			pm8001_ha->irq_vector[i].irq_id = i;
- 			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
- 
--			if (request_irq(pm8001_ha->msix_entries[i].vector,
-+			rc = request_irq(pm8001_ha->msix_entries[i].vector,
- 				pm8001_interrupt_handler_msix, flag,
--				intr_drvname[i], &(pm8001_ha->irq_vector[i]))) {
-+				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
-+			if (rc) {
- 				for (j = 0; j < i; j++)
- 					free_irq(
- 					pm8001_ha->msix_entries[j].vector,
--- 
-1.7.7.6
+I've tentatively pulled this series as follows:
 
+  patches 1-3 into mvebu/drivers-irqchip-fixes
+
+  patches 4-7 into mvebu/drivers-mbus_pci-fixes
+
+with the latter depending on the former.  I'm going to hold them in
+-next for a bit.  At least until we get an Ack from Bjorn.  Then I'll
+send them their appropriate ways.
+
+thx,
+
+Jason.
