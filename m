@@ -1,38 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21688 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:21680 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753734AbaD3VRr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Apr 2014 17:17:47 -0400
-Date: Wed, 30 Apr 2014 23:19:03 +0200
+	id S1751376AbaDUPEp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 21 Apr 2014 11:04:45 -0400
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
-Cc: linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	linux-s390@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI/MSI: Phase out pci_enable_msi_block()
-Message-ID: <20140430211902.GA5550@dhcp-26-207.brq.redhat.com>
-References: <cover.1397458024.git.agordeev@redhat.com>
- <0b08613dc17cd608c1babc1f42b8919f60e1093f.1397458024.git.agordeev@redhat.com>
- <20140414120921.GA32132@dhcp-26-207.brq.redhat.com>
- <20140414132834.GA9164@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140414132834.GA9164@dhcp-26-207.brq.redhat.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND] portdrv: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 21 Apr 2014 17:06:06 +0200
+Message-Id: <1398092766-30078-1-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 14, 2014 at 03:28:34PM +0200, Alexander Gordeev wrote:
-> There are no users of pci_enable_msi_block() function have
-> left. Obsolete it in favor of pci_enable_msi_range() and
-> pci_enable_msi_exact() functions.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Hi Bjorn,
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/pcie/portdrv_core.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-How about this one?
-
-Thanks!
-
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 986f8ea..0b1efb2 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -99,7 +99,7 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
+ 	for (i = 0; i < nr_entries; i++)
+ 		msix_entries[i].entry = i;
+ 
+-	status = pci_enable_msix(dev, msix_entries, nr_entries);
++	status = pci_enable_msix_exact(dev, msix_entries, nr_entries);
+ 	if (status)
+ 		goto Exit;
+ 
+@@ -171,7 +171,7 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
+ 		pci_disable_msix(dev);
+ 
+ 		/* Now allocate the MSI-X vectors for real */
+-		status = pci_enable_msix(dev, msix_entries, nvec);
++		status = pci_enable_msix_exact(dev, msix_entries, nvec);
+ 		if (status)
+ 			goto Exit;
+ 	}
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.7.6
+
