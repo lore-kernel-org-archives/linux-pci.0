@@ -1,55 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:43623 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755421AbaD3BA2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 21:00:28 -0400
-Received: by mail-ie0-f170.google.com with SMTP id rd18so1140409iec.29
-        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 18:00:27 -0700 (PDT)
-Subject: [PATCH 7/7] PCI: Don't add disabled subtractive decode bus resources
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Tue, 29 Apr 2014 19:00:25 -0600
-Message-ID: <20140430010025.13138.79382.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Aaron Lu <aaron.lu@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Stephane Eranian <eranian@google.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Zheng Z Yan <zheng.z.yan@intel.com>,
+	Dave Jones <davej@redhat.com>, Rui Zhang <rui.zhang@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PNP: Work around BIOS defects in Intel MCH area reporting
+Date: Mon, 21 Apr 2014 23:40:22 +0200
+Message-ID: <5211225.3aS3KszjfE@vostro.rjw.lan>
+In-Reply-To: <CAErSpo4fvfXPJzC2=ixdXO_OO7_syBCC-hXQNRH4Cu-_EkV6Cg@mail.gmail.com>
+References: <20140417202033.7057.98414.stgit@bhelgaas-glaptop.roam.corp.google.com> <1702309.mG1EHfKp35@vostro.rjw.lan> <CAErSpo4fvfXPJzC2=ixdXO_OO7_syBCC-hXQNRH4Cu-_EkV6Cg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For a subtractive decode bridge, we previously added and printed all
-resources of the primary bus, even if they were not valid.  In the example
-below, the bridge 00:1c.3 has no windows enabled, so there are no valid
-resources on bus 02.  But since 02:00.0 is subtractive decode bridge, we
-add and print all those invalid resources, which don't really make sense:
+On Monday, April 21, 2014 02:57:20 PM Bjorn Helgaas wrote:
+> On Mon, Apr 21, 2014 at 2:44 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > Hi Bjorn,
+> >
+> > On Thursday, April 17, 2014 02:20:33 PM Bjorn Helgaas wrote:
+> >> Work around BIOSes that don't report the entire Intel MCH area.
+> >>
+> >> MCHBAR is not an architected PCI BAR, so MCH space is usually reported as a
+> >> PNP0C02 resource.  The MCH space was once 16KB, but is 32KB in newer parts.
+> >> Some BIOSes still report a PNP0C02 resource that is only 16KB, which means
+> >> the rest of the MCH space is consumed but unreported.
+> >>
+> >> This can cause resource map sanity check warnings or (theoretically) a
+> >> device conflict if we assigned the unreported space to another device.
+> >>
+> >> The Intel perf event uncore driver tripped over this when it claimed the
+> >> MCH region:
+> >>
+> >>   resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
+> >>   Info: mapping multiple BARs. Your kernel is fine.
+> >>
+> >> To prevent this, if we find a PNP0C02 resource that covers part of the MCH
+> >> space, extend it to cover the entire space.
+> >>
+> >> Link: http://lkml.kernel.org/r/20140224162400.GE16457@pd.tnic
+> >> Reported-by: Borislav Petkov <bp@alien8.de>
+> >> Tested-by: Borislav Petkov <bp@suse.de>
+> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >> Acked-by: Borislav Petkov <bp@suse.de>
+> >
+> > Do you want me to take this patch for PNP, or are you planning to take it
+> > into your tree?
+> 
+> I figured it was more of a PNP thing than a PCI thing, so I was
+> thinking you would take it.  But if you'd rather I take it, just let
+> me know.
 
-  pci 0000:00:1c.3: PCI bridge to [bus 02-03]
-  pci 0000:02:00.0: PCI bridge to [bus 03] (subtractive decode)
-  pci 0000:02:00.0:   bridge window [??? 0x00000000 flags 0x0] (subtractive decode)
+OK, I can apply it.  I'll have some more stuff for 3.15-rc anyway.
 
-Add and print the subtractively-decoded resources only if they are valid.
+Thanks!
 
-There's an example in the dmesg log attached to the bugzilla below (but
-this patch doesn't fix the bug reported there).
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=73141
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> >> ---
+> >>  drivers/pnp/quirks.c |   74 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >>  1 file changed, 74 insertions(+)
+> >>
+> >> diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
+> >> index 258fef272ea7..90b8c12c220d 100644
+> >> --- a/drivers/pnp/quirks.c
+> >> +++ b/drivers/pnp/quirks.c
+> >> @@ -334,6 +334,79 @@ static void quirk_amd_mmconfig_area(struct pnp_dev *dev)
+> >>  }
+> >>  #endif
+> >>
+> >> +/* Device IDs of parts that have 32KB MCH space */
+> >> +static const unsigned int mch_quirk_devices[] = {
+> >> +     0x0154, /* Ivy Bridge */
+> >> +     0x0c00, /* Haswell */
+> >> +};
+> >> +
+> >> +static struct pci_dev *get_intel_host(void)
+> >> +{
+> >> +     int i;
+> >> +     struct pci_dev *host;
+> >> +
+> >> +     for (i = 0; i < ARRAY_SIZE(mch_quirk_devices); i++) {
+> >> +             host = pci_get_device(PCI_VENDOR_ID_INTEL, mch_quirk_devices[i],
+> >> +                                   NULL);
+> >> +             if (host)
+> >> +                     return host;
+> >> +     }
+> >> +     return NULL;
+> >> +}
+> >> +
+> >> +static void quirk_intel_mch(struct pnp_dev *dev)
+> >> +{
+> >> +     struct pci_dev *host;
+> >> +     u32 addr_lo, addr_hi;
+> >> +     struct pci_bus_region region;
+> >> +     struct resource mch;
+> >> +     struct pnp_resource *pnp_res;
+> >> +     struct resource *res;
+> >> +
+> >> +     host = get_intel_host();
+> >> +     if (!host)
+> >> +             return;
+> >> +
+> >> +     /*
+> >> +      * MCHBAR is not an architected PCI BAR, so MCH space is usually
+> >> +      * reported as a PNP0C02 resource.  The MCH space was originally
+> >> +      * 16KB, but is 32KB in newer parts.  Some BIOSes still report a
+> >> +      * PNP0C02 resource that is only 16KB, which means the rest of the
+> >> +      * MCH space is consumed but unreported.
+> >> +      */
+> >> +
+> >> +     /*
+> >> +      * Read MCHBAR for Host Member Mapped Register Range Base
+> >> +      * https://www-ssl.intel.com/content/www/us/en/processors/core/4th-gen-core-family-desktop-vol-2-datasheet
+> >> +      * Sec 3.1.12.
+> >> +      */
+> >> +     pci_read_config_dword(host, 0x48, &addr_lo);
+> >> +     region.start = addr_lo & ~0x7fff;
+> >> +     pci_read_config_dword(host, 0x4c, &addr_hi);
+> >> +     region.start |= (dma_addr_t) addr_hi << 32;
+> >> +     region.end = region.start + 32*1024 - 1;
+> >> +
+> >> +     memset(&mch, 0, sizeof(mch));
+> >> +     mch.flags = IORESOURCE_MEM;
+> >> +     pcibios_bus_to_resource(host->bus, &mch, &region);
+> >> +
+> >> +     list_for_each_entry(pnp_res, &dev->resources, list) {
+> >> +             res = &pnp_res->res;
+> >> +             if (res->end < mch.start || res->start > mch.end)
+> >> +                     continue;       /* no overlap */
+> >> +             if (res->start == mch.start && res->end == mch.end)
+> >> +                     continue;       /* exact match */
+> >> +
+> >> +             dev_info(&dev->dev, FW_BUG "PNP resource %pR covers only part of %s Intel MCH; extending to %pR\n",
+> >> +                      res, pci_name(host), &mch);
+> >> +             res->start = mch.start;
+> >> +             res->end = mch.end;
+> >> +             break;
+> >> +     }
+> >> +
+> >> +     pci_dev_put(host);
+> >> +}
+> >> +
+> >>  /*
+> >>   *  PnP Quirks
+> >>   *  Cards or devices that need some tweaking due to incomplete resource info
+> >> @@ -364,6 +437,7 @@ static struct pnp_fixup pnp_fixups[] = {
+> >>  #ifdef CONFIG_AMD_NB
+> >>       {"PNP0c01", quirk_amd_mmconfig_area},
+> >>  #endif
+> >> +     {"PNP0c02", quirk_intel_mch},
+> >>       {""}
+> >>  };
+> >>
+> >>
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> > --
+> > I speak only for myself.
+> > Rafael J. Wysocki, Intel Open Source Technology Center.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3bc149b848a8..966514010974 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -475,7 +475,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 
- 	if (dev->transparent) {
- 		pci_bus_for_each_resource(child->parent, res, i) {
--			if (res) {
-+			if (res && res->flags) {
- 				pci_bus_add_resource(child, res,
- 						     PCI_SUBTRACTIVE_DECODE);
- 				dev_printk(KERN_DEBUG, &dev->dev,
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
