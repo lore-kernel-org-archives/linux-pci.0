@@ -1,399 +1,221 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 11/22] IOMMU/vt-d: introduce helper function dmar_walk_resources()
-Date: Tue, 22 Apr 2014 15:07:22 +0800
-Message-Id: <1398150453-28141-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Arnd Bergmann' <arnd@arndb.de>,
+	'Liviu Dudau' <Liviu.Dudau@arm.com>
+Cc: 'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-kernel@lists.linaro.org, linux-kernel@vger.kernel.org,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Jingoo Han' <jg1.han@samsung.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Marek Vasut' <marex@denx.de>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Byungho An' <bh74.an@samsung.com>
+References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
+ <000901cf592e$563bc8c0$02b35a40$%han@samsung.com>
+ <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
+ <16730530.rJ9T0MsYmt@wuerfel>
+In-reply-to: <16730530.rJ9T0MsYmt@wuerfel>
+Subject: Re: [RFC PATCH 1/2] PCI: designware: Add ARM64 PCI support
+Date: Mon, 21 Apr 2014 10:54:12 +0900
+Message-id: <000001cf5d04$982a6000$c87f2000$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce helper function dmar_walk_resources to walk resource entries
-in DMAR table and ACPI buffer object returned by ACPI _DSM method
-for IOMMU hot-plug.
+On Thursday, April 17, 2014 3:26 AM, Arnd Bergmann wrote:
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c        |  207 +++++++++++++++++++++++--------------------
- drivers/iommu/intel-iommu.c |    4 +-
- include/linux/dmar.h        |   19 ++--
- 3 files changed, 121 insertions(+), 109 deletions(-)
+(+cc Mohit KUMAR, Pratyush Anand, Marek Vasut, Richard Zhu,
+      Kishon Vijay Abraham I, Byungho An)
+> 
+> On Wednesday 16 April 2014 17:57:24 Liviu Dudau wrote:
+> > Jingoo,
+> >
+> > Thanks for taking a stab at trying to convert a host bridge
+> > driver to use the new generic host bridge code.
+> >
+> > I do however have concerns on the direction you took. You have split
+> > your driver in two, depending on whether it was CONFIG_ARM or CONFIG_ARM64,
+> > even if (with my series) it should be no reason why the host bridge
+> > driver should not work on other architectures as well once they are
+> > converted.
+> 
+> Right.
+> 
+> > Also, some of the functions that you use have identical names but different
+> > signatures depending on what arch you have selected. This is really bad
+> > in my books!
+> 
+> It's only the sys_to_pcie() function, right?
+> 
+> You can probably simplify that to take a void pointer and have only one line
+> difference.
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 3e4168cddc64..d09ee0d55946 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -43,6 +43,14 @@
- 
- #include "irq_remapping.h"
- 
-+typedef int (*dmar_res_handler_t)(struct acpi_dmar_header *, void *);
-+struct dmar_res_callback {
-+	dmar_res_handler_t	cb[ACPI_DMAR_TYPE_RESERVED];
-+	void			*arg[ACPI_DMAR_TYPE_RESERVED];
-+	bool			ignore_unhandled;
-+	bool			print_entry;
-+};
-+
- /*
-  * Assumptions:
-  * 1) The hotplug framework guarentees that DMAR unit will be hot-added
-@@ -333,7 +341,7 @@ static struct notifier_block dmar_pci_bus_nb = {
-  * present in the platform
-  */
- static int __init
--dmar_parse_one_drhd(struct acpi_dmar_header *header)
-+dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_hardware_unit *drhd;
- 	struct dmar_drhd_unit *dmaru;
-@@ -364,6 +372,10 @@ dmar_parse_one_drhd(struct acpi_dmar_header *header)
- 		return ret;
- 	}
- 	dmar_register_drhd_unit(dmaru);
-+
-+	if (arg)
-+		(*(int *)arg)++;
-+
- 	return 0;
- }
- 
-@@ -376,7 +388,7 @@ static void dmar_free_drhd(struct dmar_drhd_unit *dmaru)
- 	kfree(dmaru);
- }
- 
--static int __init dmar_parse_one_andd(struct acpi_dmar_header *header)
-+static int __init dmar_parse_one_andd(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_andd *andd = (void *)header;
- 
-@@ -398,7 +410,7 @@ static int __init dmar_parse_one_andd(struct acpi_dmar_header *header)
- 
- #ifdef CONFIG_ACPI_NUMA
- static int __init
--dmar_parse_one_rhsa(struct acpi_dmar_header *header)
-+dmar_parse_one_rhsa(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_rhsa *rhsa;
- 	struct dmar_drhd_unit *drhd;
-@@ -425,6 +437,8 @@ dmar_parse_one_rhsa(struct acpi_dmar_header *header)
- 
- 	return 0;
- }
-+#else
-+#define	dmar_parse_one_rhsa		dmar_res_noop
- #endif
- 
- static void __init
-@@ -486,6 +500,52 @@ static int __init dmar_table_detect(void)
- 	return (ACPI_SUCCESS(status) ? 1 : 0);
- }
- 
-+static int dmar_walk_resources(struct acpi_dmar_header *start, size_t len,
-+			       struct dmar_res_callback *cb)
-+{
-+	int ret = 0;
-+	struct acpi_dmar_header *iter, *next;
-+	struct acpi_dmar_header *end = ((void *)start) + len;
-+
-+	for (iter = start; iter < end && ret == 0; iter = next) {
-+		next = (void *)iter + iter->length;
-+		if (iter->length == 0) {
-+			/* Avoid looping forever on bad ACPI tables */
-+			pr_debug(FW_BUG "Invalid 0-length structure\n");
-+			break;
-+		} else if (next > end) {
-+			/* Avoid passing table end */
-+			pr_warn(FW_BUG "record passes table end\n");
-+			ret = -EINVAL;
-+			break;
-+		}
-+
-+		if (cb->print_entry)
-+			dmar_table_print_dmar_entry(iter);
-+
-+		if (iter->type >= ACPI_DMAR_TYPE_RESERVED) {
-+			/* continue for forward compatibility */
-+			pr_debug("Unknown DMAR structure type %d\n",
-+				 iter->type);
-+		} else if (cb->cb[iter->type]) {
-+			ret = cb->cb[iter->type](iter, cb->arg[iter->type]);
-+		} else if (!cb->ignore_unhandled) {
-+			pr_warn("No handler for DMAR structure type %d\n",
-+				iter->type);
-+			ret = -EINVAL;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
-+static inline int dmar_walk_dmar_table(struct acpi_table_dmar *dmar,
-+				       struct dmar_res_callback *cb)
-+{
-+	return dmar_walk_resources((struct acpi_dmar_header *)(dmar + 1),
-+				   dmar->header.length - sizeof(*dmar), cb);
-+}
-+
- /**
-  * parse_dmar_table - parses the DMA reporting table
-  */
-@@ -493,9 +553,18 @@ static int __init
- parse_dmar_table(void)
- {
- 	struct acpi_table_dmar *dmar;
--	struct acpi_dmar_header *entry_header;
- 	int ret = 0;
- 	int drhd_count = 0;
-+	struct dmar_res_callback cb = {
-+		.print_entry = true,
-+		.ignore_unhandled = true,
-+		.arg[ACPI_DMAR_TYPE_HARDWARE_UNIT] = &drhd_count,
-+		.cb[ACPI_DMAR_TYPE_HARDWARE_UNIT] = &dmar_parse_one_drhd,
-+		.cb[ACPI_DMAR_TYPE_RESERVED_MEMORY] = &dmar_parse_one_rmrr,
-+		.cb[ACPI_DMAR_TYPE_ATSR] = &dmar_parse_one_atsr,
-+		.cb[ACPI_DMAR_HARDWARE_AFFINITY] = &dmar_parse_one_rhsa,
-+		.cb[ACPI_DMAR_TYPE_ANDD] = &dmar_parse_one_andd,
-+	};
- 
- 	/*
- 	 * Do it again, earlier dmar_tbl mapping could be mapped with
-@@ -520,50 +589,10 @@ parse_dmar_table(void)
- 
- 	pr_info("Host address width %d\n", dmar->width + 1);
- 
--	entry_header = (struct acpi_dmar_header *)(dmar + 1);
--	while (((unsigned long)entry_header) <
--			(((unsigned long)dmar) + dmar_tbl->length)) {
--		/* Avoid looping forever on bad ACPI tables */
--		if (entry_header->length == 0) {
--			pr_warn("Invalid 0-length structure\n");
--			ret = -EINVAL;
--			break;
--		}
--
--		dmar_table_print_dmar_entry(entry_header);
--
--		switch (entry_header->type) {
--		case ACPI_DMAR_TYPE_HARDWARE_UNIT:
--			drhd_count++;
--			ret = dmar_parse_one_drhd(entry_header);
--			break;
--		case ACPI_DMAR_TYPE_RESERVED_MEMORY:
--			ret = dmar_parse_one_rmrr(entry_header);
--			break;
--		case ACPI_DMAR_TYPE_ATSR:
--			ret = dmar_parse_one_atsr(entry_header);
--			break;
--		case ACPI_DMAR_HARDWARE_AFFINITY:
--#ifdef CONFIG_ACPI_NUMA
--			ret = dmar_parse_one_rhsa(entry_header);
--#endif
--			break;
--		case ACPI_DMAR_TYPE_ANDD:
--			ret = dmar_parse_one_andd(entry_header);
--			break;
--		default:
--			pr_warn("Unknown DMAR structure type %d\n",
--				entry_header->type);
--			ret = 0; /* for forward compatibility */
--			break;
--		}
--		if (ret)
--			break;
--
--		entry_header = ((void *)entry_header + entry_header->length);
--	}
--	if (drhd_count == 0)
-+	ret = dmar_walk_dmar_table(dmar, &cb);
-+	if (ret == 0 && drhd_count == 0)
- 		pr_warn(FW_BUG "No DRHD structure found in DMAR table\n");
-+
- 	return ret;
- }
- 
-@@ -762,76 +791,60 @@ static void warn_invalid_dmar(u64 addr, const char *message)
- 		dmi_get_system_info(DMI_PRODUCT_VERSION));
- }
- 
--static int __init check_zero_address(void)
-+static int __ref
-+dmar_validate_one_drhd(struct acpi_dmar_header *entry, void *arg)
- {
--	struct acpi_table_dmar *dmar;
--	struct acpi_dmar_header *entry_header;
- 	struct acpi_dmar_hardware_unit *drhd;
-+	void __iomem *addr;
-+	u64 cap, ecap;
- 
--	dmar = (struct acpi_table_dmar *)dmar_tbl;
--	entry_header = (struct acpi_dmar_header *)(dmar + 1);
--
--	while (((unsigned long)entry_header) <
--			(((unsigned long)dmar) + dmar_tbl->length)) {
--		/* Avoid looping forever on bad ACPI tables */
--		if (entry_header->length == 0) {
--			pr_warn("Invalid 0-length structure\n");
--			return 0;
--		}
--
--		if (entry_header->type == ACPI_DMAR_TYPE_HARDWARE_UNIT) {
--			void __iomem *addr;
--			u64 cap, ecap;
--
--			drhd = (void *)entry_header;
--			if (!drhd->address) {
--				warn_invalid_dmar(0, "");
--				goto failed;
--			}
-+	drhd = (void *)entry;
-+	if (!drhd->address) {
-+		warn_invalid_dmar(0, "");
-+		return -EINVAL;
-+	}
- 
--			addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
--			if (!addr ) {
--				printk("IOMMU: can't validate: %llx\n", drhd->address);
--				goto failed;
--			}
--			cap = dmar_readq(addr + DMAR_CAP_REG);
--			ecap = dmar_readq(addr + DMAR_ECAP_REG);
--			early_iounmap(addr, VTD_PAGE_SIZE);
--			if (cap == (uint64_t)-1 && ecap == (uint64_t)-1) {
--				warn_invalid_dmar(drhd->address,
--						  " returns all ones");
--				goto failed;
--			}
--		}
-+	addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
-+	if (!addr) {
-+		pr_warn("IOMMU: can't validate: %llx\n", drhd->address);
-+		return -EINVAL;
-+	}
-+	cap = dmar_readq(addr + DMAR_CAP_REG);
-+	ecap = dmar_readq(addr + DMAR_ECAP_REG);
-+	early_iounmap(addr, VTD_PAGE_SIZE);
- 
--		entry_header = ((void *)entry_header + entry_header->length);
-+	if (cap == (uint64_t)-1 && ecap == (uint64_t)-1) {
-+		warn_invalid_dmar(drhd->address, " returns all ones");
-+		return -EINVAL;
- 	}
--	return 1;
- 
--failed:
- 	return 0;
- }
- 
- int __init detect_intel_iommu(void)
- {
- 	int ret;
-+	struct dmar_res_callback validate_drhd_cb = {
-+		.cb[ACPI_DMAR_TYPE_HARDWARE_UNIT] = &dmar_validate_one_drhd,
-+		.ignore_unhandled = true,
-+	};
- 
- 	down_write(&dmar_global_lock);
- 	ret = dmar_table_detect();
- 	if (ret)
--		ret = check_zero_address();
--	{
--		if (ret && !no_iommu && !iommu_detected && !dmar_disabled) {
--			iommu_detected = 1;
--			/* Make sure ACS will be enabled */
--			pci_request_acs();
--		}
-+		ret = !dmar_walk_dmar_table((struct acpi_table_dmar *)dmar_tbl,
-+					    &validate_drhd_cb);
-+	if (ret && !no_iommu && !iommu_detected && !dmar_disabled) {
-+		iommu_detected = 1;
-+		/* Make sure ACS will be enabled */
-+		pci_request_acs();
-+	}
- 
- #ifdef CONFIG_X86
--		if (ret)
--			x86_init.iommu.iommu_init = intel_iommu_init;
-+	if (ret)
-+		x86_init.iommu.iommu_init = intel_iommu_init;
- #endif
--	}
-+
- 	early_acpi_os_unmap_memory((void __iomem *)dmar_tbl, dmar_tbl_size);
- 	dmar_tbl = NULL;
- 	up_write(&dmar_global_lock);
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 92d7b276edb3..35139602f7a7 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3674,7 +3674,7 @@ static inline void init_iommu_pm_ops(void) {}
- #endif	/* CONFIG_PM */
- 
- 
--int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header)
-+int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_reserved_memory *rmrr;
- 	struct dmar_rmrr_unit *rmrru;
-@@ -3700,7 +3700,7 @@ int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header)
- 	return 0;
- }
- 
--int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr)
-+int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr, void *arg)
- {
- 	struct acpi_dmar_atsr *atsr;
- 	struct dmar_atsr_unit *atsru;
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 4aa8de0d1b97..c8a576bc3a98 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -121,22 +121,21 @@ extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
- extern int detect_intel_iommu(void);
- extern int enable_drhd_fault_handling(void);
- 
-+static inline int dmar_res_noop(struct acpi_dmar_header *hdr, void *arg)
-+{
-+	return 0;
-+}
-+
- #ifdef CONFIG_INTEL_IOMMU
- extern int iommu_detected, no_iommu;
- extern int intel_iommu_init(void);
--extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
--extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
-+extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg);
-+extern int dmar_parse_one_atsr(struct acpi_dmar_header *header, void *arg);
- extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
- #else /* !CONFIG_INTEL_IOMMU: */
- static inline int intel_iommu_init(void) { return -ENODEV; }
--static inline int dmar_parse_one_rmrr(struct acpi_dmar_header *header)
--{
--	return 0;
--}
--static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
--{
--	return 0;
--}
-+#define	dmar_parse_one_rmrr		dmar_res_noop
-+#define	dmar_parse_one_atsr		dmar_res_noop
- static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
- {
- 	return 0;
--- 
-1.7.10.4
+Do you mean the following?
+Would you give me more detailed advice?
+
+static inline struct pcie_port *sys_to_pcie(void *sys)
+{
+	struct pcie_port *pp
+
+#ifdef CONFIG_ARM
+	pp = ((struct pci_sys_data *)sys)->private_data;
+#else
+	pp = (struct pcie_port *)sys;
+#endif
+	return pp;
+}
+
+> 
+> > What about creating functions that use my series directly if CONFIG_ARM64 is
+> > defined (or any CONFIG_ you want to create for your driver that you select
+> > from CONFIG_ARM64) and otherwise implement the CONFIG_ARM version? That
+> > way your driver will call only one API without any #ifdef and when arm code
+> > gets converted you drop your adaptation functions. Or (better yet), have a
+> > stab at converting bios32 (Rob Herring has already provided some hints on
+> > how to do it for arch/arm).
+
+To: Liviu Dudau
+
+Sorry, but I will not implement this.
+At first, you had to think the compatibility with ARM32 PCIe.
+Why do you want other engineers to take this load?
+
+> 
+> That would of course be best.
+> 
+> > To give an example on how things are not going well in your version (not obvious
+> > from your patch, but you can see it once you apply it): dw_pcie_host_init()
+> > will still carry the handcoded version of DT parsing and that is not guarded
+> > against CONFIG_ARM64 being defined, where the parsing will happen again
+> > when you call of_create_pci_host_bridge().
+> 
+> How about making the generic DT parsing code from of_create_pci_host_bridge()
+> an exported function that can be called by drivers that don't use
+> of_create_pci_host_bridge?
+
+Do you mean that of_create_pci_host_bridge() should be used for both ARM32
+and ARM64 cases?
+
+> 
+> > Speaking of the handcoded DT parsing of resources: you are using restype == 0
+> > as a way of selecting config space, *and then split the range size into two
+> > halves*. From what Jason Gunthorpe and Arnd were saying, config ranges in the DT
+> > tree should only be used for ECAM space, so no split is allowed.
+> >
+> > Arnd, are you allowing this non-standard use to creep in the bindings?
+> 
+> I fear it's too late to change that now. In retrospect we probably shoulnd't
+> have defined the binding like that.
+> 
+> Overall, my impression of the patch is that it should be possible to do
+> the same with much fewer #ifdefs by first rearranging the code in one patch
+> and then doing another patch on top to add the generic arm64 support.
+
+I will try to reduce #ifdefs as possible.
+
+Best regards,
+Jingoo Han
+
+> 
+> > > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > > index 6d23d8c..fac0440 100644
+> > > --- a/drivers/pci/host/pcie-designware.c
+> > > +++ b/drivers/pci/host/pcie-designware.c
+> > > @@ -65,14 +65,27 @@
+> > >  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+> > >  #define PCIE_ATU_UPPER_TARGET		0x91C
+> > >
+> > > +#ifdef CONFIG_ARM
+> > >  static struct hw_pci dw_pci;
+> > > +#endif
+> > >
+> > >  static unsigned long global_io_offset;
+> > >
+> > > +#ifdef CONFIG_ARM
+> > >  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+> > >  {
+> > >  	return sys->private_data;
+> > >  }
+> > > +#endif
+> > > +
+> > > +#ifdef CONFIG_ARM64
+> > > +static inline struct pcie_port *sys_to_pcie(struct pcie_port *pp)
+> > > +{
+> > > +	return pp;
+> > > +}
+> > > +
+> > > +static struct pci_ops dw_pcie_ops;
+> > > +#endif
+> > >
+> > >  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+> > >  {
+> > > @@ -381,7 +394,9 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+> > >  {
+> > >  	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
+> > >  	irq_set_chip_data(irq, domain->host_data);
+> > > +#ifdef CONFIG_ARM
+> > >  	set_irq_flags(irq, IRQF_VALID);
+> > > +#endif
+> > >
+> > >  	return 0;
+> > >  }
+> > > @@ -397,6 +412,10 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> > >  	struct of_pci_range_parser parser;
+> > >  	u32 val;
+> > >  	int i;
+> > > +#ifdef CONFIG_ARM64
+> > > +	struct pci_host_bridge *bridge;
+> > > +	resource_size_t lastbus;
+> > > +#endif
+> > >
+> > >  	if (of_pci_range_parser_init(&parser, np)) {
+> > >  		dev_err(pp->dev, "missing ranges property\n");
+> > > @@ -489,6 +508,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> > >  	val |= PORT_LOGIC_SPEED_CHANGE;
+> > >  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> > >
+> > > +#ifdef CONFIG_ARM
+> > >  	dw_pci.nr_controllers = 1;
+> > >  	dw_pci.private_data = (void **)&pp;
+> > >
+> > > @@ -497,6 +517,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> > >  #ifdef CONFIG_PCI_DOMAINS
+> > >  	dw_pci.domain++;
+> > >  #endif
+> > > +#endif
+> > > +
+> > > +#ifdef CONFIG_ARM64
+> > > +	bridge = of_create_pci_host_bridge(pp->dev, &dw_pcie_ops, pp);
+> > > +	if (IS_ERR_OR_NULL(bridge))
+> > > +		return PTR_ERR(bridge);
+> > > +
+> > > +	lastbus = pci_rescan_bus(bridge->bus);
+> > > +	pci_bus_update_busn_res_end(bridge->bus, lastbus);
+> > > +#endif
+> > >
+> > >  	return 0;
+> > >  }
+> > > @@ -695,6 +725,7 @@ static struct pci_ops dw_pcie_ops = {
+> > >  	.write = dw_pcie_wr_conf,
+> > >  };
+> > >
+> > > +#ifdef CONFIG_ARM
+> > >  static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> > >  {
+> > >  	struct pcie_port *pp;
+> > > @@ -758,6 +789,7 @@ static struct hw_pci dw_pci = {
+> > >  	.map_irq	= dw_pcie_map_irq,
+> > >  	.add_bus	= dw_pcie_add_bus,
+> > >  };
+> > > +#endif /* CONFIG_ARM */
+> > >
+> > >  void dw_pcie_setup_rc(struct pcie_port *pp)
+> 
+
 
