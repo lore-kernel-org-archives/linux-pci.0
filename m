@@ -1,55 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:33012 "EHLO mail.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756203AbaDPNho (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Apr 2014 09:37:44 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id 6BC7712B211
-	for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2014 15:37:43 +0200 (CEST)
-Date: Wed, 16 Apr 2014 15:37:40 +0200
-From: "joro@8bytes.org" <joro@8bytes.org>
-To: "Woodhouse, David" <david.woodhouse@intel.com>
-Cc: Davidlohr Bueso <davidlohr@hp.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhe@redhat.com" <bhe@redhat.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"James.Bottomley@hansenpartnership.com"
-	<James.Bottomley@hansenpartnership.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
-Subject: Re: hpsa driver bug crack kernel down!
-Message-ID: <20140416133739.GB3577@8bytes.org>
-References: <1397111557.2608.29.camel@buesod1.americas.hpqcorp.net>
- <20140410071535.GX13491@8bytes.org>
- <1397119587.19944.14.camel@shinybook.infradead.org>
- <1397146781.2608.46.camel@buesod1.americas.hpqcorp.net>
- <1397207932.19944.58.camel@shinybook.infradead.org>
- <1397490358.31076.6.camel@buesod1.americas.hpqcorp.net>
- <534C0AA9.5080909@linux.intel.com>
- <1397493858.31076.8.camel@buesod1.americas.hpqcorp.net>
- <1397494069.31076.9.camel@buesod1.americas.hpqcorp.net>
- <1397495030.19944.198.camel@shinybook.infradead.org>
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:40365 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751985AbaDUQsA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Apr 2014 12:48:00 -0400
+Received: by mail-pb0-f54.google.com with SMTP id ma3so3924434pbc.13
+        for <linux-pci@vger.kernel.org>; Mon, 21 Apr 2014 09:47:59 -0700 (PDT)
+Date: Mon, 21 Apr 2014 10:47:54 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Neil Greatorex <neil@fatboyfat.co.uk>,
+	Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 4/7] pci: mvebu: fix off-by-one in the computed size of
+ the mbus windows
+Message-ID: <20140421164754.GA17260@google.com>
+References: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1397823593-1932-5-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1397495030.19944.198.camel@shinybook.infradead.org>
+In-Reply-To: <1397823593-1932-5-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey David,
+On Fri, Apr 18, 2014 at 02:19:50PM +0200, Thomas Petazzoni wrote:
+> From: Willy Tarreau <w@1wt.eu>
+> 
+> mvebu_pcie_handle_membase_change() and
+> mvebu_pcie_handle_iobase_change() do not correctly compute the window
+> size. PCI uses an inclusive start/end address pair, which requires a
+> +1 when converting to size.
+> 
+> This only worked because a bug in the mbus driver allowed it to
+> silently accept and round up bogus sizes.
+> 
+> Fix this by adding one to the computed size.
+> 
+> Fixes: 45361a4fe4464180815157654aabbd2afb4848ad ('PCIe driver for Marvell Armada 370/XP systems')
+> Cc: <stable@vger.kernel.org> # v3.11+
+> Signed-off-by: Willy Tarreau <w@1wt.eu>
+> Reviewed-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Tested-by: Neil Greatorex <neil@fatboyfat.co.uk>
 
-On Mon, Apr 14, 2014 at 05:03:51PM +0000, Woodhouse, David wrote:
-> Jiang, if you can then let me have a copy with a signed-off-by I'll
-> shepherd it upstream along with your other patch which is already in my
-> iommu-2.6.git tree.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-What is the state of these fixes? I plan to send out a pull-request
-before easter and hoped to include these fixes as well.
+If I were merging via my tree, I would tweak the subject capitalization
+so "git log --oneline drivers/pci/host/pci-mvebu.c" looks consistent.
 
-Thanks,
-
-	Joerg
-
-
+> ---
+>  drivers/pci/host/pci-mvebu.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index d3d1cfd..4829921 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -331,7 +331,7 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
+>  	port->iowin_base = port->pcie->io.start + iobase;
+>  	port->iowin_size = ((0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
+>  			    (port->bridge.iolimitupper << 16)) -
+> -			    iobase);
+> +			    iobase) + 1;
+>  
+>  	mvebu_mbus_add_window_remap_by_id(port->io_target, port->io_attr,
+>  					  port->iowin_base, port->iowin_size,
+> @@ -364,7 +364,7 @@ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
+>  	port->memwin_base  = ((port->bridge.membase & 0xFFF0) << 16);
+>  	port->memwin_size  =
+>  		(((port->bridge.memlimit & 0xFFF0) << 16) | 0xFFFFF) -
+> -		port->memwin_base;
+> +		port->memwin_base + 1;
+>  
+>  	mvebu_mbus_add_window_by_id(port->mem_target, port->mem_attr,
+>  				    port->memwin_base, port->memwin_size);
+> -- 
+> 1.9.2
+> 
