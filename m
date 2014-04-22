@@ -1,47 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 10 Apr 2014 18:51:18 -0400 (EDT)
-From: Parag Warudkar <parag.lkml@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-cc: Parag Warudkar <parag.lkml@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:6525 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751280AbaDVFCG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 01:02:06 -0400
+From: "Mayes, Barrett N" <barrett.n.mayes@intel.com>
+To: Learner Study <learner.study@gmail.com>,
+	"Busch, Keith" <keith.busch@intel.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: BAR 14: can't assign mem (size 0x200000)
-In-Reply-To: <CAErSpo6XjtrzSJE6n5aCMzketKv+rPt5eVvrzOQgUnviiRTWnA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.10.1404101846120.4929@parag-Z230>
-References: <CAOULuOY5eryuH1KgaqiuGXyYiQd2h=TZoPe2M2+juts9XuzW6Q@mail.gmail.com> <CAE9FiQXmO_sSCnd-0NvXKmyeLP0m4XGRRkAgqSiMkfeTcvXs+A@mail.gmail.com> <CAOULuOaeBPpuiYc_Aru+awBDf=Ahbok-UjgY9o7gfO4VMctoqg@mail.gmail.com> <CAE9FiQWpprkp_dzviD8wRpqosJq5Oe+8UTwhL87fbzFm3OknUw@mail.gmail.com>
- <CA+55aFx_zAO0iJVi==4X-bYFTopgaOCopCdUBbqUwKfOrXRYqw@mail.gmail.com> <20140329171903.GA10551@google.com> <CAOULuOaUke-W1W0o=1rhhk43Fy_RAYLdfhXQjdhy2xjHxP0oWA@mail.gmail.com> <CAErSpo6XjtrzSJE6n5aCMzketKv+rPt5eVvrzOQgUnviiRTWnA@mail.gmail.com>
+	linux-nvme <linux-nvme@lists.infradead.org>
+Subject: RE: [PATCH 2/2] NVMe: Implement PCI-e reset notification callback
+Date: Tue, 22 Apr 2014 05:02:02 +0000
+Message-ID: <B8DB29EA17EB2742AC3405C31A9B9EE961457B96@ORSMSX111.amr.corp.intel.com>
+References: <1397000541-1085-1-git-send-email-keith.busch@intel.com>
+ <1397000541-1085-2-git-send-email-keith.busch@intel.com>
+ <CAP8+hKWcybw5u_m5M4c1p4eUAaTq4x+kO+tnegwD2ciDMEFNCw@mail.gmail.com>
+ <alpine.LRH.2.03.1404211935510.5490@AMR>
+ <1E05E2AB-198E-473A-8AA5-87DA2E9910B8@gmail.com>
+ <CAP8+hKUEygoeEv=LvY2ccp6cepnXEpi4WGVSaCnRw+zN7BUE_Q@mail.gmail.com>
+In-Reply-To: <CAP8+hKUEygoeEv=LvY2ccp6cepnXEpi4WGVSaCnRw+zN7BUE_Q@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Section 8.5 of the NVMe 1.1 spec contains the following:  "While the details associated with implementing a controller that supports SR-IOV are outside the scope of this specification, such a controller shall implement fully compliant NVM Express Virtual Functions (VFs). This ensures that the same host software developed for non-virtualized environments is capable of running unmodified within an SI. No such requirement exists for the Physical Function (PF)."
 
+If a VF is a fully NVMe compliant device then it must at least act like it implements NVMe subsystem reset.  How the SR-IOV-capable controller actually implements this is left up to the vendor.  But the spec does not require that a reset of one VF initiate a reset of other VF.
 
-On Thu, 10 Apr 2014, Bjorn Helgaas wrote:
+-----Original Message-----
+From: Linux-nvme [mailto:linux-nvme-bounces@lists.infradead.org] On Behalf Of Learner Study
+Sent: Monday, April 21, 2014 8:34 PM
+To: Busch, Keith
+Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; linux-nvme
+Subject: Re: [PATCH 2/2] NVMe: Implement PCI-e reset notification callback
 
-> On Sat, Mar 29, 2014 at 6:14 PM, Parag Warudkar <parag.lkml@gmail.com> wrote:
-> >> On Sat, Mar 29, 2014 at 09:41:20AM -0700, Linus Torvalds wrote:
-> >
-> >>> Parag, can you add a WARN_ON_ONCE() to that message, so that we see
-> >>> what the call chain is for it.
-> 
-> Parag, did you ever try this?
+Per the spec, "When an NVM Subsystem Reset occurs, the entire NVM subsystem is reset"....so all VFs would get impacted, if a VF does a Reset. So, I think Reset kind of control should be in PF mode only.
 
-No I haven't so far - I assumed the call chain you posted initially was 
-the only possibility. I will give it a try.
+On Mon, Apr 21, 2014 at 7:45 PM, Learner <learner.study@gmail.com> wrote:
+> But Won't resetting from a VF impact functionality of other VFs?
+>
+> On Apr 21, 2014, at 6:57 PM, Keith Busch <keith.busch@intel.com> wrote:
+>
+>> On Mon, 21 Apr 2014, Learner Study wrote:
+>>> Hi Keith,
+>>>
+>>> I think NVMe Reset should apply to PF mode driver only, and not to 
+>>> VF mode driver.
+>>> Is that understanding correct? Does the NVMe driver know which mode 
+>>> its running in?
+>>
+>> Oh, this driver doesn't enable SR-IOV and has no PF/VF awareness. 
+>> Shame on us, I'll add it to my list unless someone beats me to it.
+>>
+>> Still, I think we'd like to be able to reset a VF if only because it 
+>> gets the queues back to a pristine state. A VF reset should not 
+>> affect any of the other functions.
 
-> I doubt that Ubuntu includes any patches relevant to this issue.
-> 
-> Even though it doesn't seem to cause any problems, we're going to get
-> a lot of complaints about these scary-looking messages when resuming,
-> so I think we should figure this out and fix it.
-
-Sure, since the resource assignments aren't an issue during fresh boot, it 
-might just be something worth fixing in the resume path.
-
-Thanks,
-Parag
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
