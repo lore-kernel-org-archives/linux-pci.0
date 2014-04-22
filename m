@@ -1,76 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:33057 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751197AbaDRMUD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 08:20:03 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>
-Cc: Tawfik Bayouk <tawfik@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Neil Greatorex <neil@fatboyfat.co.uk>,
-	Willy Tarreau <w@1wt.eu>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 4/7] pci: mvebu: fix off-by-one in the computed size of the mbus windows
-Date: Fri, 18 Apr 2014 14:19:50 +0200
-Message-Id: <1397823593-1932-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1397823593-1932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mga09.intel.com ([134.134.136.24]:2506 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752125AbaDVHHT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Apr 2014 03:07:19 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part3 V1 18/22] iommu/vt-d: update proximity information when a new node with memory available
+Date: Tue, 22 Apr 2014 15:07:29 +0800
+Message-Id: <1398150453-28141-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Willy Tarreau <w@1wt.eu>
+If node associated with a DMAR unit has no memory available, it uses -1
+as default NUMA node id. So when memory hot-addition adds new memory to
+an empty NUMA node, we should update the NUMA node id associated with
+the DMAR unit. This will help to optomize memory allocation.
 
-mvebu_pcie_handle_membase_change() and
-mvebu_pcie_handle_iobase_change() do not correctly compute the window
-size. PCI uses an inclusive start/end address pair, which requires a
-+1 when converting to size.
-
-This only worked because a bug in the mbus driver allowed it to
-silently accept and round up bogus sizes.
-
-Fix this by adding one to the computed size.
-
-Fixes: 45361a4fe4464180815157654aabbd2afb4848ad ('PCIe driver for Marvell Armada 370/XP systems')
-Cc: <stable@vger.kernel.org> # v3.11+
-Signed-off-by: Willy Tarreau <w@1wt.eu>
-Reviewed-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Tested-by: Neil Greatorex <neil@fatboyfat.co.uk>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pci-mvebu.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/iommu/dmar.c        |   50 ++++++++++++++++++++++++++++++++++++++++---
+ include/linux/intel-iommu.h |    1 +
+ 2 files changed, 48 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index d3d1cfd..4829921 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -331,7 +331,7 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
- 	port->iowin_base = port->pcie->io.start + iobase;
- 	port->iowin_size = ((0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
- 			    (port->bridge.iolimitupper << 16)) -
--			    iobase);
-+			    iobase) + 1;
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 7a7383858c34..d607691a6a80 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -38,6 +38,7 @@
+ #include <linux/tboot.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <linux/memory.h>
+ #include <asm/irq_remapping.h>
+ #include <asm/iommu_table.h>
  
- 	mvebu_mbus_add_window_remap_by_id(port->io_target, port->io_attr,
- 					  port->iowin_base, port->iowin_size,
-@@ -364,7 +364,7 @@ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
- 	port->memwin_base  = ((port->bridge.membase & 0xFFF0) << 16);
- 	port->memwin_size  =
- 		(((port->bridge.memlimit & 0xFFF0) << 16) | 0xFFFFF) -
--		port->memwin_base;
-+		port->memwin_base + 1;
+@@ -444,6 +445,7 @@ static int dmar_parse_one_rhsa(struct acpi_dmar_header *header, void *arg)
+ 			if (!node_online(node))
+ 				node = -1;
+ 			drhd->iommu->node = node;
++			drhd->iommu->proximity_domain = rhsa->proximity_domain;
+ 			return 0;
+ 		}
+ 	}
+@@ -458,8 +460,48 @@ static int dmar_parse_one_rhsa(struct acpi_dmar_header *header, void *arg)
  
- 	mvebu_mbus_add_window_by_id(port->mem_target, port->mem_attr,
- 				    port->memwin_base, port->memwin_size);
+ 	return 0;
+ }
++
++static int dmar_memory_notifier(struct notifier_block *nb,
++				unsigned long val, void *v)
++{
++	struct memory_notify *mhp = v;
++	struct dmar_drhd_unit *drhd;
++	struct intel_iommu *iommu;
++	int nid;
++
++	if (val != MEM_ONLINE)
++		return NOTIFY_OK;
++
++	if (mhp->status_change_nid < 0)
++		return NOTIFY_OK;
++
++	down_read(&dmar_global_lock);
++	for_each_iommu(iommu, drhd) {
++		if (iommu->node != -1)
++			continue;
++		nid = acpi_map_pxm_to_node(iommu->proximity_domain);
++		if (nid == mhp->status_change_nid)
++			iommu->node = nid;
++	}
++	up_read(&dmar_global_lock);
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block dmar_memory_nb = {
++	.notifier_call = dmar_memory_notifier,
++};
++
++static void dmar_register_memory_notifier(void)
++{
++	register_memory_notifier(&dmar_memory_nb);
++}
+ #else
+ #define	dmar_parse_one_rhsa		dmar_res_noop
++
++static void dmar_register_memory_notifier(void)
++{
++}
+ #endif
+ 
+ static void __init
+@@ -1715,12 +1757,14 @@ static inline bool dmar_in_use(void)
+ 	return irq_remapping_enabled || intel_iommu_enabled;
+ }
+ 
+-static int __init dmar_free_unused_resources(void)
++static int __init dmar_late_init(void)
+ {
+ 	struct dmar_drhd_unit *dmaru, *dmaru_n;
+ 
+-	if (dmar_in_use())
++	if (dmar_in_use()) {
++		dmar_register_memory_notifier();
+ 		return 0;
++	}
+ 
+ 	if (dmar_dev_scope_status != 1 && !list_empty(&dmar_drhd_units))
+ 		bus_unregister_notifier(&pci_bus_type, &dmar_pci_bus_nb);
+@@ -1735,7 +1779,7 @@ static int __init dmar_free_unused_resources(void)
+ 	return 0;
+ }
+ 
+-late_initcall(dmar_free_unused_resources);
++late_initcall(dmar_late_init);
+ IOMMU_INIT_POST(detect_intel_iommu);
+ 
+ /*
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index 0a2da5188217..eea52ccdbd8e 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -337,6 +337,7 @@ struct intel_iommu {
+ 	struct ir_table *ir_table;	/* Interrupt remapping info */
+ #endif
+ 	int		node;
++	int		proximity_domain;
+ };
+ 
+ static inline void __iommu_flush_cache(
 -- 
-1.9.2
+1.7.10.4
 
