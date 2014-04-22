@@ -1,101 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:54819 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751969AbaDWNAR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Apr 2014 09:00:17 -0400
-Date: Wed, 23 Apr 2014 14:00:12 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Kukjin Kim <kgene.kim@samsung.com>
-Cc: 'Arnd Bergmann' <arnd@arndb.de>,
-	'Jingoo Han' <jg1.han@samsung.com>,
-	'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	'Byungho An' <bh74.an@samsung.com>,
-	"ilho215.lee@samsung.com" <ilho215.lee@samsung.com>
-Subject: Re: [RFC PATCH 2/2] PCI: exynos: Add PCIe support for Samsung GH7 SoC
-Message-ID: <20140423130012.GL865@e106497-lin.cambridge.arm.com>
-References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
- <000a01cf592e$67e592e0$37b0b8a0$%han@samsung.com>
- <201404221611.40087.arnd@arndb.de>
- <031b01cf5ed5$21d536a0$657fa3e0$@samsung.com>
-MIME-Version: 1.0
-In-Reply-To: <031b01cf5ed5$21d536a0$657fa3e0$@samsung.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:49778 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752990AbaDVHGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Apr 2014 03:06:14 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part3 V1 09/22] iommu/vt-d: change iommu_enable/disable_translation to return void
+Date: Tue, 22 Apr 2014 15:07:20 +0800
+Message-Id: <1398150453-28141-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 23, 2014 at 10:19:30AM +0100, Kukjin Kim wrote:
-> Arnd Bergmann wrote:
-> > 
-> > On Wednesday 16 April 2014, Jingoo Han wrote:
-> > > Samsung GH7 has four PCIe controllers which can be used as root
-> > > complex for PCIe interface.
-> > >
-> > > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> > > ---
-> > >  drivers/pci/host/Kconfig      |    2 +-
-> > >  drivers/pci/host/pci-exynos.c |  135
-> > ++++++++++++++++++++++++++++++++++++++---
-> > >  2 files changed, 126 insertions(+), 11 deletions(-)
-> > 
-> + Byungho An, Ilho Lee
-> 
-> Hi Arnd,
-> 
-> > Can you explain how much the GH7 and Exynos front-ends actually have in
-> > common? Would it make sense to have a separate driver for gh7?
-> > 
-> Basically, ARMv8 based GH7 has same PCIe hardware IP with previous ARMv7
-> based exynos5440, several features in PCIe are different though. In other
-> words, basic functionalities for PCIe are same. So I think, would be nice if
-> we could use one PCIe device driver for both SoCs.
-> 
-> However, if we need to support the PCIe with each own device driver because
-> of difference of 32bit and 64bit, please kindly let us know. Honestly, I'm
-> not sure about that right now.
+Simplify error handling path by changing iommu_{enable|disable}_translation
+to return void.
 
-Hi Kukjin,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
 
-I will let Arnd offer his view as a maintainer of DT enabled platforms for 
-arch/arm, but in my understanding the goal is to convert individual host
-bridge drivers to use my patch series directly, as they intentionally don't
-depend on any arch specific code and then leave the existing bios32 code
-for the non-DT platforms and the ones that do not see the need to convert
-to the framework.
-
-Rob Herring has posted an example on how he can add support for a host
-bridge running under arm32 that uses my framework, so it is not an impossible
-task and can be used as an example for future conversions.
-
-Does that make sense?
-
-Best regards,
-Liviu
-
-> 
-> > Also, if gh7 is expected to run a full firmware, I think you should
-> > do all the setup in the firmware before booting Linux, and just
-> > do the required run-time operations in the driver itself.
-> > 
-> Well, we're expecting that all the setup should be done by the device driver
-> in kernel not firmware.
-> 
-> Thanks,
-> Kukjin
-> 
-> 
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 5e865c1265ad..75d7c5e3f77d 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1391,7 +1391,7 @@ static void iommu_disable_protect_mem_regions(struct intel_iommu *iommu)
+ 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
+ }
+ 
+-static int iommu_enable_translation(struct intel_iommu *iommu)
++static void iommu_enable_translation(struct intel_iommu *iommu)
+ {
+ 	u32 sts;
+ 	unsigned long flags;
+@@ -1405,10 +1405,9 @@ static int iommu_enable_translation(struct intel_iommu *iommu)
+ 		      readl, (sts & DMA_GSTS_TES), sts);
+ 
+ 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
+-	return 0;
+ }
+ 
+-static int iommu_disable_translation(struct intel_iommu *iommu)
++static void iommu_disable_translation(struct intel_iommu *iommu)
+ {
+ 	u32 sts;
+ 	unsigned long flag;
+@@ -1422,7 +1421,6 @@ static int iommu_disable_translation(struct intel_iommu *iommu)
+ 		      readl, (!(sts & DMA_GSTS_TES)), sts);
+ 
+ 	raw_spin_unlock_irqrestore(&iommu->register_lock, flag);
+-	return 0;
+ }
+ 
+ 
+@@ -2875,11 +2873,7 @@ static int __init init_dmars(void)
+ 
+ 		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
+ 		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
+-
+-		ret = iommu_enable_translation(iommu);
+-		if (ret)
+-			goto free_iommu;
+-
++		iommu_enable_translation(iommu);
+ 		iommu_disable_protect_mem_regions(iommu);
+ 	}
+ 
+@@ -3577,10 +3571,8 @@ static int init_iommu_hw(void)
+ 
+ 		iommu->flush.flush_context(iommu, 0, 0, 0,
+ 					   DMA_CCMD_GLOBAL_INVL);
+-		iommu->flush.flush_iotlb(iommu, 0, 0, 0,
+-					 DMA_TLB_GLOBAL_FLUSH);
+-		if (iommu_enable_translation(iommu))
+-			return 1;
++		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
++		iommu_enable_translation(iommu);
+ 		iommu_disable_protect_mem_regions(iommu);
+ 	}
+ 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.10.4
 
