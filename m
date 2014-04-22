@@ -1,298 +1,264 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 16/22] iommu/vt-d: enhance intel-iommu driver to support DMAR unit hotplug
-Date: Tue, 22 Apr 2014 15:07:27 +0800
-Message-Id: <1398150453-28141-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:38064 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751871AbaDVM74 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 08:59:56 -0400
+Date: Tue, 22 Apr 2014 13:59:50 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Arnd Bergmann' <arnd@arndb.de>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Marek Vasut' <marex@denx.de>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Byungho An' <bh74.an@samsung.com>
+Subject: Re: [RFC PATCH 1/2] PCI: designware: Add ARM64 PCI support
+Message-ID: <20140422125950.GG865@e106497-lin.cambridge.arm.com>
+References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
+ <000901cf592e$563bc8c0$02b35a40$%han@samsung.com>
+ <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
+ <16730530.rJ9T0MsYmt@wuerfel>
+ <000001cf5d04$982a6000$c87f2000$%han@samsung.com>
+MIME-Version: 1.0
+In-Reply-To: <000001cf5d04$982a6000$c87f2000$%han@samsung.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement required callback functions for intel-iommu driver
-to support DMAR unit hotplug.
+On Mon, Apr 21, 2014 at 02:54:12AM +0100, Jingoo Han wrote:
+> On Thursday, April 17, 2014 3:26 AM, Arnd Bergmann wrote:
+> 
+> (+cc Mohit KUMAR, Pratyush Anand, Marek Vasut, Richard Zhu,
+>       Kishon Vijay Abraham I, Byungho An)
+> > 
+> > On Wednesday 16 April 2014 17:57:24 Liviu Dudau wrote:
+> > > Jingoo,
+> > >
+> > > Thanks for taking a stab at trying to convert a host bridge
+> > > driver to use the new generic host bridge code.
+> > >
+> > > I do however have concerns on the direction you took. You have split
+> > > your driver in two, depending on whether it was CONFIG_ARM or CONFIG_ARM64,
+> > > even if (with my series) it should be no reason why the host bridge
+> > > driver should not work on other architectures as well once they are
+> > > converted.
+> > 
+> > Right.
+> > 
+> > > Also, some of the functions that you use have identical names but different
+> > > signatures depending on what arch you have selected. This is really bad
+> > > in my books!
+> > 
+> > It's only the sys_to_pcie() function, right?
+> > 
+> > You can probably simplify that to take a void pointer and have only one line
+> > difference.
+> 
+> Do you mean the following?
+> Would you give me more detailed advice?
+> 
+> static inline struct pcie_port *sys_to_pcie(void *sys)
+> {
+> 	struct pcie_port *pp
+> 
+> #ifdef CONFIG_ARM
+> 	pp = ((struct pci_sys_data *)sys)->private_data;
+> #else
+> 	pp = (struct pcie_port *)sys;
+> #endif
+> 	return pp;
+> }
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |  194 +++++++++++++++++++++++++++++++------------
- 1 file changed, 139 insertions(+), 55 deletions(-)
+Yes, that would be better.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 33e636c246a6..f2143b59ad68 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1116,8 +1116,11 @@ static int iommu_alloc_root_entry(struct intel_iommu *iommu)
- 	unsigned long flags;
- 
- 	root = (struct root_entry *)alloc_pgtable_page(iommu->node);
--	if (!root)
-+	if (!root) {
-+		pr_err("IOMMU: allocating root entry for %s failed\n",
-+			iommu->name);
- 		return -ENOMEM;
-+	}
- 
- 	__iommu_flush_cache(iommu, root, ROOT_SIZE);
- 
-@@ -1457,7 +1460,7 @@ static int iommu_init_domains(struct intel_iommu *iommu)
- 	return 0;
- }
- 
--static void free_dmar_iommu(struct intel_iommu *iommu)
-+static void disable_dmar_iommu(struct intel_iommu *iommu)
- {
- 	struct dmar_domain *domain;
- 	int i;
-@@ -1481,11 +1484,16 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
- 
- 	if (iommu->gcmd & DMA_GCMD_TE)
- 		iommu_disable_translation(iommu);
-+}
- 
--	kfree(iommu->domains);
--	kfree(iommu->domain_ids);
--	iommu->domains = NULL;
--	iommu->domain_ids = NULL;
-+static void free_dmar_iommu(struct intel_iommu *iommu)
-+{
-+	if ((iommu->domains) && (iommu->domain_ids)) {
-+		kfree(iommu->domains);
-+		kfree(iommu->domain_ids);
-+		iommu->domains = NULL;
-+		iommu->domain_ids = NULL;
-+	}
- 
- 	g_iommus[iommu->seq_id] = NULL;
- 
-@@ -2680,6 +2688,41 @@ static int __init iommu_prepare_static_identity_mapping(int hw)
- 	return 0;
- }
- 
-+static void intel_iommu_init_qi(struct intel_iommu *iommu)
-+{
-+	/*
-+	 * Start from the sane iommu hardware state.
-+	 * If the queued invalidation is already initialized by us
-+	 * (for example, while enabling interrupt-remapping) then
-+	 * we got the things already rolling from a sane state.
-+	 */
-+	if (!iommu->qi) {
-+		/*
-+		 * Clear any previous faults.
-+		 */
-+		dmar_fault(-1, iommu);
-+		/*
-+		 * Disable queued invalidation if supported and already enabled
-+		 * before OS handover.
-+		 */
-+		dmar_disable_qi(iommu);
-+	}
-+
-+	if (dmar_enable_qi(iommu)) {
-+		/*
-+		 * Queued Invalidate not enabled, use Register Based Invalidate
-+		 */
-+		iommu->flush.flush_context = __iommu_flush_context;
-+		iommu->flush.flush_iotlb = __iommu_flush_iotlb;
-+		pr_info("IOMMU: %s using Register based invalidation\n",
-+			iommu->name);
-+	} else {
-+		iommu->flush.flush_context = qi_flush_context;
-+		iommu->flush.flush_iotlb = qi_flush_iotlb;
-+		pr_info("IOMMU: %s using Queued invalidation\n", iommu->name);
-+	}
-+}
-+
- static int __init init_dmars(void)
- {
- 	struct dmar_drhd_unit *drhd;
-@@ -2708,6 +2751,10 @@ static int __init init_dmars(void)
- 			  DMAR_UNITS_SUPPORTED);
- 	}
- 
-+	/* Preallocate enough resources for IOMMU hot-addition */
-+	if (g_num_of_iommus < DMAR_UNITS_SUPPORTED)
-+		g_num_of_iommus = DMAR_UNITS_SUPPORTED;
-+
- 	g_iommus = kcalloc(g_num_of_iommus, sizeof(struct intel_iommu *),
- 			GFP_KERNEL);
- 	if (!g_iommus) {
-@@ -2736,58 +2783,14 @@ static int __init init_dmars(void)
- 		 * among all IOMMU's. Need to Split it later.
- 		 */
- 		ret = iommu_alloc_root_entry(iommu);
--		if (ret) {
--			printk(KERN_ERR "IOMMU: allocate root entry failed\n");
-+		if (ret)
- 			goto free_iommu;
--		}
- 		if (!ecap_pass_through(iommu->ecap))
- 			hw_pass_through = 0;
- 	}
- 
--	/*
--	 * Start from the sane iommu hardware state.
--	 */
--	for_each_active_iommu(iommu, drhd) {
--		/*
--		 * If the queued invalidation is already initialized by us
--		 * (for example, while enabling interrupt-remapping) then
--		 * we got the things already rolling from a sane state.
--		 */
--		if (iommu->qi)
--			continue;
--
--		/*
--		 * Clear any previous faults.
--		 */
--		dmar_fault(-1, iommu);
--		/*
--		 * Disable queued invalidation if supported and already enabled
--		 * before OS handover.
--		 */
--		dmar_disable_qi(iommu);
--	}
--
--	for_each_active_iommu(iommu, drhd) {
--		if (dmar_enable_qi(iommu)) {
--			/*
--			 * Queued Invalidate not enabled, use Register Based
--			 * Invalidate
--			 */
--			iommu->flush.flush_context = __iommu_flush_context;
--			iommu->flush.flush_iotlb = __iommu_flush_iotlb;
--			printk(KERN_INFO "IOMMU %d 0x%Lx: using Register based "
--			       "invalidation\n",
--				iommu->seq_id,
--			       (unsigned long long)drhd->reg_base_addr);
--		} else {
--			iommu->flush.flush_context = qi_flush_context;
--			iommu->flush.flush_iotlb = qi_flush_iotlb;
--			printk(KERN_INFO "IOMMU %d 0x%Lx: using Queued "
--			       "invalidation\n",
--				iommu->seq_id,
--			       (unsigned long long)drhd->reg_base_addr);
--		}
--	}
-+	for_each_active_iommu(iommu, drhd)
-+		intel_iommu_init_qi(iommu);
- 
- 	if (iommu_pass_through)
- 		iommu_identity_mapping |= IDENTMAP_ALL;
-@@ -2873,8 +2876,10 @@ static int __init init_dmars(void)
- 	return 0;
- 
- free_iommu:
--	for_each_active_iommu(iommu, drhd)
-+	for_each_active_iommu(iommu, drhd) {
-+		disable_dmar_iommu(iommu);
- 		free_dmar_iommu(iommu);
-+	}
- 	kfree(deferred_flush);
- free_g_iommus:
- 	kfree(g_iommus);
-@@ -3800,9 +3805,88 @@ int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg)
- 	return 0;
- }
- 
-+static int intel_iommu_add(struct dmar_drhd_unit *dmaru)
-+{
-+	int ret = 0;
-+	struct intel_iommu *iommu = dmaru->iommu;
-+
-+	if (g_iommus[iommu->seq_id])
-+		return 0;
-+
-+	if (hw_pass_through && !ecap_pass_through(iommu->ecap)) {
-+		pr_warn("IOMMU: %s doesn't support hardware pass through.\n",
-+			iommu->name);
-+		return -ENXIO;
-+	}
-+
-+	/*
-+	 * Disable translation if already enabled prior to OS handover.
-+	 */
-+	if (iommu->gcmd & DMA_GCMD_TE)
-+		iommu_disable_translation(iommu);
-+
-+	g_iommus[iommu->seq_id] = iommu;
-+	ret = iommu_init_domains(iommu);
-+	if (ret == 0)
-+		ret = iommu_alloc_root_entry(iommu);
-+	if (ret)
-+		goto out;
-+
-+	if (dmaru->ignored) {
-+		/*
-+		 * we always have to disable PMRs or DMA may fail on this device
-+		 */
-+		if (force_on)
-+			iommu_disable_protect_mem_regions(iommu);
-+		return 0;
-+	}
-+
-+	intel_iommu_init_qi(iommu);
-+	iommu_flush_write_buffer(iommu);
-+	ret = dmar_set_interrupt(iommu);
-+	if (ret)
-+		goto disable_iommu;
-+
-+	iommu_set_root_entry(iommu);
-+	iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
-+	iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
-+	iommu_enable_translation(iommu);
-+
-+	if (si_domain) {
-+		ret = iommu_attach_domain(si_domain, iommu);
-+		if (ret < 0 || si_domain->id != ret)
-+			goto disable_iommu;
-+		domain_attach_iommu(si_domain, iommu);
-+	}
-+
-+	iommu_disable_protect_mem_regions(iommu);
-+	return 0;
-+
-+disable_iommu:
-+	disable_dmar_iommu(iommu);
-+out:
-+	free_dmar_iommu(iommu);
-+	return ret;
-+}
-+
- int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
- {
--	return intel_iommu_enabled ? -ENOSYS : 0;
-+	int ret = 0;
-+	struct intel_iommu *iommu = dmaru->iommu;
-+
-+	if (!intel_iommu_enabled)
-+		return 0;
-+	if (iommu == NULL)
-+		return -EINVAL;
-+
-+	if (insert) {
-+		ret = intel_iommu_add(dmaru);
-+	} else {
-+		disable_dmar_iommu(iommu);
-+		free_dmar_iommu(iommu);
-+	}
-+
-+	return ret;
- }
- 
- static void intel_iommu_free_dmars(void)
+> 
+> > 
+> > > What about creating functions that use my series directly if CONFIG_ARM64 is
+> > > defined (or any CONFIG_ you want to create for your driver that you select
+> > > from CONFIG_ARM64) and otherwise implement the CONFIG_ARM version? That
+> > > way your driver will call only one API without any #ifdef and when arm code
+> > > gets converted you drop your adaptation functions. Or (better yet), have a
+> > > stab at converting bios32 (Rob Herring has already provided some hints on
+> > > how to do it for arch/arm).
+> 
+> To: Liviu Dudau
+> 
+> Sorry, but I will not implement this.
+> At first, you had to think the compatibility with ARM32 PCIe.
+
+I did. I've also looked at the other implementations and have realised how unique
+and baroque the arm32 version is. If I would've implemented that version for arm64
+(Will Deacon had a stab internally) I would have to remove all the quirks from
+the arch code and all that is left is something very similar to what you currently
+have. But that would've made that code only usable by ARM platforms and no one
+else. Why being so narrow?
+
+> Why do you want other engineers to take this load?
+
+I don't want to, but you are the first scratching that itch. This is your path to
+glory!
+
+> 
+> > 
+> > That would of course be best.
+> > 
+> > > To give an example on how things are not going well in your version (not obvious
+> > > from your patch, but you can see it once you apply it): dw_pcie_host_init()
+> > > will still carry the handcoded version of DT parsing and that is not guarded
+> > > against CONFIG_ARM64 being defined, where the parsing will happen again
+> > > when you call of_create_pci_host_bridge().
+> > 
+> > How about making the generic DT parsing code from of_create_pci_host_bridge()
+> > an exported function that can be called by drivers that don't use
+> > of_create_pci_host_bridge?
+> 
+> Do you mean that of_create_pci_host_bridge() should be used for both ARM32
+> and ARM64 cases?
+
+Yes, ultimately. 
+
+> 
+> > 
+> > > Speaking of the handcoded DT parsing of resources: you are using restype == 0
+> > > as a way of selecting config space, *and then split the range size into two
+> > > halves*. From what Jason Gunthorpe and Arnd were saying, config ranges in the DT
+> > > tree should only be used for ECAM space, so no split is allowed.
+> > >
+> > > Arnd, are you allowing this non-standard use to creep in the bindings?
+> > 
+> > I fear it's too late to change that now. In retrospect we probably shoulnd't
+> > have defined the binding like that.
+> > 
+> > Overall, my impression of the patch is that it should be possible to do
+> > the same with much fewer #ifdefs by first rearranging the code in one patch
+> > and then doing another patch on top to add the generic arm64 support.
+> 
+> I will try to reduce #ifdefs as possible.
+
+Thanks!
+
+Best regards,
+Liviu
+
+> 
+> Best regards,
+> Jingoo Han
+> 
+> > 
+> > > > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > > > index 6d23d8c..fac0440 100644
+> > > > --- a/drivers/pci/host/pcie-designware.c
+> > > > +++ b/drivers/pci/host/pcie-designware.c
+> > > > @@ -65,14 +65,27 @@
+> > > >  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+> > > >  #define PCIE_ATU_UPPER_TARGET		0x91C
+> > > >
+> > > > +#ifdef CONFIG_ARM
+> > > >  static struct hw_pci dw_pci;
+> > > > +#endif
+> > > >
+> > > >  static unsigned long global_io_offset;
+> > > >
+> > > > +#ifdef CONFIG_ARM
+> > > >  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+> > > >  {
+> > > >  	return sys->private_data;
+> > > >  }
+> > > > +#endif
+> > > > +
+> > > > +#ifdef CONFIG_ARM64
+> > > > +static inline struct pcie_port *sys_to_pcie(struct pcie_port *pp)
+> > > > +{
+> > > > +	return pp;
+> > > > +}
+> > > > +
+> > > > +static struct pci_ops dw_pcie_ops;
+> > > > +#endif
+> > > >
+> > > >  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+> > > >  {
+> > > > @@ -381,7 +394,9 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+> > > >  {
+> > > >  	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
+> > > >  	irq_set_chip_data(irq, domain->host_data);
+> > > > +#ifdef CONFIG_ARM
+> > > >  	set_irq_flags(irq, IRQF_VALID);
+> > > > +#endif
+> > > >
+> > > >  	return 0;
+> > > >  }
+> > > > @@ -397,6 +412,10 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> > > >  	struct of_pci_range_parser parser;
+> > > >  	u32 val;
+> > > >  	int i;
+> > > > +#ifdef CONFIG_ARM64
+> > > > +	struct pci_host_bridge *bridge;
+> > > > +	resource_size_t lastbus;
+> > > > +#endif
+> > > >
+> > > >  	if (of_pci_range_parser_init(&parser, np)) {
+> > > >  		dev_err(pp->dev, "missing ranges property\n");
+> > > > @@ -489,6 +508,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> > > >  	val |= PORT_LOGIC_SPEED_CHANGE;
+> > > >  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> > > >
+> > > > +#ifdef CONFIG_ARM
+> > > >  	dw_pci.nr_controllers = 1;
+> > > >  	dw_pci.private_data = (void **)&pp;
+> > > >
+> > > > @@ -497,6 +517,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> > > >  #ifdef CONFIG_PCI_DOMAINS
+> > > >  	dw_pci.domain++;
+> > > >  #endif
+> > > > +#endif
+> > > > +
+> > > > +#ifdef CONFIG_ARM64
+> > > > +	bridge = of_create_pci_host_bridge(pp->dev, &dw_pcie_ops, pp);
+> > > > +	if (IS_ERR_OR_NULL(bridge))
+> > > > +		return PTR_ERR(bridge);
+> > > > +
+> > > > +	lastbus = pci_rescan_bus(bridge->bus);
+> > > > +	pci_bus_update_busn_res_end(bridge->bus, lastbus);
+> > > > +#endif
+> > > >
+> > > >  	return 0;
+> > > >  }
+> > > > @@ -695,6 +725,7 @@ static struct pci_ops dw_pcie_ops = {
+> > > >  	.write = dw_pcie_wr_conf,
+> > > >  };
+> > > >
+> > > > +#ifdef CONFIG_ARM
+> > > >  static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> > > >  {
+> > > >  	struct pcie_port *pp;
+> > > > @@ -758,6 +789,7 @@ static struct hw_pci dw_pci = {
+> > > >  	.map_irq	= dw_pcie_map_irq,
+> > > >  	.add_bus	= dw_pcie_add_bus,
+> > > >  };
+> > > > +#endif /* CONFIG_ARM */
+> > > >
+> > > >  void dw_pcie_setup_rc(struct pcie_port *pp)
+> > 
+> 
+> 
+> 
+
 -- 
-1.7.10.4
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
