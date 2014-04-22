@@ -1,41 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:60442 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754724AbaD3X1E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 19:27:04 -0400
-Received: by mail-ig0-f180.google.com with SMTP id c1so2551354igq.1
-        for <linux-pci@vger.kernel.org>; Wed, 30 Apr 2014 16:27:02 -0700 (PDT)
+Received: from quartz.orcorp.ca ([184.70.90.242]:45445 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932983AbaDVReq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Apr 2014 13:34:46 -0400
+Date: Tue, 22 Apr 2014 11:34:06 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Neil Greatorex <neil@fatboyfat.co.uk>, Willy Tarreau <w@1wt.eu>,
+	Matthew Minter <matthew_minter@xyratex.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory =?iso-8859-1?Q?Cl=E9ment?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: Fixing PCIe issues on Armada XP
+Message-ID: <20140422173406.GC23955@obsidianresearch.com>
+References: <20140410181953.50ccfcc3@skate>
+ <20140410165733.GB23104@obsidianresearch.com>
+ <20140410200153.46669e0c@skate>
+ <20140410201201.GA12661@obsidianresearch.com>
+ <alpine.DEB.2.10.1404102206090.28003@vroombuntu>
+ <20140411122314.220614bf@skate>
+ <20140411163129.GA20565@obsidianresearch.com>
+ <20140418150244.4b3d5229@skate>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4K_duSr7Y5OHVm+KMhso2csG=nTZ9v1V=ATVK76Rj=QQ@mail.gmail.com>
-References: <1398893606-22712-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo7aWM_BjXqEqgTk0uT4RbpZSqjGJOgOH_hWreoQicMU_A@mail.gmail.com>
-	<CAE9FiQW1yFmgZRCWrhi5ccwxWfDZdR0vbQ1bA7zz-5Fa8TfN5A@mail.gmail.com>
-	<CAErSpo4K_duSr7Y5OHVm+KMhso2csG=nTZ9v1V=ATVK76Rj=QQ@mail.gmail.com>
-Date: Wed, 30 Apr 2014 16:21:30 -0700
-Message-ID: <CAE9FiQVRHAW3jXwnUSX96Jy3qbeQ8JcSGoPKANJjWYnNS1CTdw@mail.gmail.com>
-Subject: Re: [PATCH v3] pciehp: only wait command complete for real hotplug control
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140418150244.4b3d5229@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 30, 2014 at 3:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Fri, Apr 18, 2014 at 03:02:44PM +0200, Thomas Petazzoni wrote:
 
->> For intel: Nehalem, westmere, sndbridge, ivybridge.
->>
->> For nvidia, only according to boot log for old systems with chipset:
->> ck804 and mcp55.
->
-> I meant, do you have a reference to a section in the spec that talks
-> about how this works?
->
-> So far all we have is folklore that was discovered by experimentation.
->  It'd be nice to see the spec that says "CC is only used when changing
-> these listed bits."
+> > The LinkUp bit after resume is also clearly a lie - most likely the
+> > PEX takes some time to detect the change in remote state to trigger a
+> > link down. After all, it was suspended while the remote was busy
+> > trying to recover.
+> 
+> Ok, fair enough. However, Neil's patch (which is basically your patch
+> with longer delays) isn't working here, as I just reported in a
+> separate e-mail.
+> 
+> So we don't have a solution right now. Do you have another proposal to
+> try ?
 
-We will have doc from Intel about that. Hope it is not under NDA.
+Do you have time to see if we can isolate the difference on your
+system?
 
-Yinghai
+> > The fundamental problem here is the clock driver. It should not be
+> > gating PEX clocks so naively. A PEX suspend needs to be sequenced to
+> > ensure the link is cleanly brought down before the PEX is put to
+> > sleep. That way it can cleanly and unambiguously be started up when it
+> > resumes. No risk of glitching/corrupting the far side with some kind
+> > of crap on the serial bus.
+> > 
+> > In any event, the most important required patch here is one that fixes
+> > socid. It must not turn off the PEX clock. Then we can talk about how
+> > to fix pci-mvebu to work as a module...
+ 
+> I don't really understand this: all clocks are gated at boot time, so
+> regardless of mvebu-soc-id behavior, the PCIe driver should take care
+> of doing all the necessary initialization without making the
+> assumptions that the clocks were left turned on from the bootloader
+
+The current mvebu-soc-id makes it impossible to do a clean hand off of
+the boot loader PEX setup to the PEX driver. I think that is a
+problem. Certainly if we fix it non-modular PEX will start working
+reliably.
+
+Keep in mind the current driver cannot startup a PEX without
+bootloader support. It does not clear the set-at-reset
+Conf_TrainingDisable bit, and it doesn't wait for a link to come up
+after doing so.
+
+> time. This is needed if we want to support pci-mvebu as a module, so I
+> don't see why hacking mvebu-soc-id is going to solve this.
+
+I agree we should try to figure the modular case out, but it looks to
+me that suspending the PEX is a bigger job that just gating the
+clock..
+
+The automatic gating of the PEX clocks should be more clever. If there
+are no DT elements that reference the clock it can be disabled,
+otherwise we should probably leave it enabled and rely on the PEX
+driver to do power management once it gets loaded.
+
+So broadly, my thinking is the following largely orthogonal items:
+ 1) PEX's that are setup by the bootloader must be cleanly handed off
+    to the driver. The clocks must never gate.
+ 2) The driver should learn to turn on a PEX from either the
+    Conf_TrainingDisable=1 state or the clock gated state
+ 3) PEX clocks that are never used in DT can be safely shutoff,
+    otherwise they must remain on
+ 4) The PEX driver can learn to properly suspend the PEX for power
+    savings, via the normal Linux power management stuff.
+
+What do you think?
+
+Jason
