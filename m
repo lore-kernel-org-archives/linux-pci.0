@@ -1,48 +1,25 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 16 Apr 2014 21:04:04 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: "Zhang, Rui" <rui.zhang@intel.com>,
-	"Lu, Aaron" <aaron.lu@intel.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Stephane Eranian <eranian@google.com>,
-	"Yan, Zheng Z" <zheng.z.yan@intel.com>
-Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
-Message-ID: <20140416190404.GA7070@pd.tnic>
-References: <20140224162400.GE16457@pd.tnic>
- <744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
- <CAErSpo55DjkGQB=7ksow34BpCObnY+o3eNnt0n5oQEh6Lfw1pw@mail.gmail.com>
- <1558044.S1G2VU7srO@vostro.rjw.lan>
- <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:59121 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754155AbaDVJuH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 05:50:07 -0400
+Received: by mail-ob0-f173.google.com with SMTP id wn1so5484758obc.32
+        for <linux-pci@vger.kernel.org>; Tue, 22 Apr 2014 02:50:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAErSpo4pDYMhHo6e-1TN6XDRO0xy0u8H+=oucFnrEK+kbjZvzw@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Date: Tue, 22 Apr 2014 15:20:07 +0530
+Message-ID: <CAHH3p5+9VCYwS6JdB8aFJ0i4JLcFTMgSgiKOaE2GMnhfWM1bWA@mail.gmail.com>
+Subject: Intel NIC testing on ARM
+From: shiv prakash Agarwal <chhotu.shiv@gmail.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 20, 2014 at 02:48:30PM -0600, Bjorn Helgaas wrote:
-> Right.  Even if we had this long-term solution, we'd still have
-> Stephane's current problem, because the PNP0C02 _CRS is still wrong.
-> 
-> We do have a drivers/pnp/quirks.c where we could conceivably adjust
-> the PNP resource if we found the matching PCI device and MCHBAR.  That
-> should solve Stephane's problem even with the current
-> drivers/pnp/system.c.
+Hi All,
 
-Guys, this still triggers in -rc1. Do we have a fix or something
-testable at least?
+Has anybody tested below Intel I210 NIC card using igb driver on ARM?
 
-Thanks.
+http://www.intel.com/content/www/us/en/ethernet-controllers/ethernet-controller-i210-i211-family.html
 
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+It hangs during configuration stage for me. Actually it shows BAR0
+requirement as 0 which is non-zero for x86.
