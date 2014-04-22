@@ -1,423 +1,167 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Daniel J Blueman <daniel@quora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v2 05/14] thunderbolt: Initialize root switch and ports
-Date: Fri, 11 Apr 2014 02:24:52 +0200
-Message-Id: <1397175901-4023-6-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
-References: <1397175901-4023-1-git-send-email-andreas.noever@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:52102 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751343AbaDVHjD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 03:39:03 -0400
+Message-ID: <1398152333.723.27.camel@shinybook.infradead.org>
+Subject: Re: [Patch Part3 V1 19/22] iommu/vt-d: simplify intel_unmap_sg()
+ and kill duplicated code
+From: David Woodhouse <dwmw2@infradead.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>, Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Date: Tue, 22 Apr 2014 08:38:53 +0100
+In-Reply-To: <1398150453-28141-20-git-send-email-jiang.liu@linux.intel.com>
+References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+	 <1398150453-28141-20-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: multipart/signed; micalg="sha-1"; protocol="application/x-pkcs7-signature";
+	boundary="=-iq8cj1xSvAzp9OEz/P0v"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the structures tb_switch and tb_port as well as code to
-initialize the root switch.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/Makefile |   2 +-
- drivers/thunderbolt/switch.c | 186 +++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.c     |   8 ++
- drivers/thunderbolt/tb.h     | 138 ++++++++++++++++++++++++++++++++
- 4 files changed, 333 insertions(+), 1 deletion(-)
- create mode 100644 drivers/thunderbolt/switch.c
+--=-iq8cj1xSvAzp9OEz/P0v
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 1f996bb..4ac18d9 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
- obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
--thunderbolt-objs := nhi.o ctl.o tb.o
-+thunderbolt-objs := nhi.o ctl.o tb.o switch.o
- 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-new file mode 100644
-index 0000000..e89121f
---- /dev/null
-+++ b/drivers/thunderbolt/switch.c
-@@ -0,0 +1,186 @@
-+/*
-+ * Thunderbolt Cactus Ridge driver - switch/port utility functions
-+ *
-+ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-+ */
-+
-+#include <linux/delay.h>
-+
-+#include "tb.h"
-+
-+/* port utility functions */
-+
-+static const char *tb_port_type(struct tb_regs_port_header *port)
-+{
-+	switch (port->type >> 16) {
-+	case 0:
-+		switch ((u8) port->type) {
-+		case 0:
-+			return "Inactive";
-+		case 1:
-+			return "Port";
-+		case 2:
-+			return "NHI";
-+		default:
-+			return "unknown";
-+		}
-+	case 0x2:
-+		return "Ethernet";
-+	case 0x8:
-+		return "SATA";
-+	case 0xe:
-+		return "DP/HDMI";
-+	case 0x10:
-+		return "PCIe";
-+	case 0x20:
-+		return "USB";
-+	default:
-+		return "unknown";
-+	}
-+}
-+
-+static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
-+{
-+	tb_info(tb,
-+		" Port %d: %x:%x (Revision: %d, TB Version: %d, Type: %s (%#x))\n",
-+		port->port_number, port->vendor_id, port->device_id,
-+		port->revision, port->thunderbolt_version, tb_port_type(port),
-+		port->type);
-+	tb_info(tb, "  Max hop id (in/out): %d/%d\n",
-+		port->max_in_hop_id, port->max_out_hop_id);
-+	tb_info(tb, "  Max counters: %d\n", port->max_counters);
-+	tb_info(tb, "  NFC Credits: %#x\n", port->nfc_credits);
-+}
-+
-+/**
-+ * tb_init_port() - initialize a port
-+ *
-+ * This is a helper method for tb_switch_alloc. Does not check or initialize
-+ * any downstream switches.
-+ *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+static int tb_init_port(struct tb_switch *sw, u8 port_nr)
-+{
-+	int res;
-+	struct tb_port *port = &sw->ports[port_nr];
-+	port->sw = sw;
-+	port->port = port_nr;
-+	port->remote = NULL;
-+	res = tb_port_read(port, &port->config, TB_CFG_PORT, 0, 8);
-+	if (res)
-+		return res;
-+
-+	tb_dump_port(sw->tb, &port->config);
-+
-+	/* TODO: Read dual link port, DP port and more from EEPROM. */
-+	return 0;
-+
-+}
-+
-+/* switch utility functions */
-+
-+static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
-+{
-+	tb_info(tb,
-+		" Switch: %x:%x (Revision: %d, TB Version: %d)\n",
-+		sw->vendor_id, sw->device_id, sw->revision,
-+		sw->thunderbolt_version);
-+	tb_info(tb, "  Max Port Number: %d\n", sw->max_port_number);
-+	tb_info(tb, "  Config:\n");
-+	tb_info(tb,
-+		"   Upstream Port Number: %d Depth: %d Route String: %#llx Enabled: %d, PlugEventsDelay: %dms\n",
-+		sw->upstream_port_number, sw->depth,
-+		(((u64) sw->route_hi) << 32) | sw->route_lo,
-+		sw->enabled, sw->plug_events_delay);
-+	tb_info(tb,
-+		"   unknown1: %#x unknown4: %#x\n",
-+		sw->__unknown1, sw->__unknown4);
-+}
-+
-+/**
-+ * tb_switch_free() - free a tb_switch and all downstream switches
-+ */
-+void tb_switch_free(struct tb_switch *sw)
-+{
-+	int i;
-+	/* port 0 is the switch itself and never has a remote */
-+	for (i = 1; i <= sw->config.max_port_number; i++) {
-+		if (tb_is_upstream_port(&sw->ports[i]))
-+			continue;
-+		if (sw->ports[i].remote)
-+			tb_switch_free(sw->ports[i].remote->sw);
-+		sw->ports[i].remote = NULL;
-+	}
-+
-+	kfree(sw->ports);
-+	kfree(sw);
-+}
-+
-+/**
-+ * tb_switch_alloc() - allocate and initialize a switch
-+ *
-+ * Return: Returns a NULL on failure.
-+ */
-+struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
-+{
-+	int i;
-+	struct tb_switch *sw;
-+	int upstream_port = tb_cfg_get_upstream_port(tb->ctl, route);
-+	if (upstream_port < 0)
-+		return NULL;
-+
-+	sw = kzalloc(sizeof(*sw), GFP_KERNEL);
-+	if (!sw)
-+		return NULL;
-+
-+	sw->tb = tb;
-+	if (tb_cfg_read(tb->ctl, &sw->config, route, 0, 2, 0, 5))
-+		goto err;
-+	tb_info(tb,
-+		"initializing Switch at %#llx (depth: %d, up port: %d)\n",
-+		route, tb_route_length(route), upstream_port);
-+	tb_info(tb, "old switch config:\n");
-+	tb_dump_switch(tb, &sw->config);
-+
-+	/* configure switch */
-+	sw->config.upstream_port_number = upstream_port;
-+	sw->config.depth = tb_route_length(route);
-+	sw->config.route_lo = route;
-+	sw->config.route_hi = route >> 32;
-+	sw->config.enabled = 1;
-+	/* from here on we may use the tb_sw_* functions & macros */
-+
-+	if (sw->config.vendor_id != 0x8086)
-+		tb_sw_warn(sw, "unknown switch vendor id %#x\n",
-+			   sw->config.vendor_id);
-+
-+	if (sw->config.device_id != 0x1547 && sw->config.device_id != 0x1549)
-+		tb_sw_warn(sw, "unsupported switch device id %#x\n",
-+			   sw->config.device_id);
-+
-+	/* upload configuration */
-+	if (tb_sw_write(sw, 1 + (u32 *) &sw->config, TB_CFG_SWITCH, 1, 3))
-+		goto err;
-+
-+	/* initialize ports */
-+	sw->ports = kcalloc(sw->config.max_port_number + 1, sizeof(*sw->ports),
-+	GFP_KERNEL);
-+	if (!sw->ports)
-+		goto err;
-+
-+	for (i = 0; i <= sw->config.max_port_number; i++) {
-+		if (tb_init_port(sw, i))
-+			goto err;
-+		/* TODO: check if port is disabled (EEPROM) */
-+	}
-+
-+	/* TODO: I2C, IECS, EEPROM, link controller */
-+
-+	return sw;
-+err:
-+	kfree(sw->ports);
-+	kfree(sw);
-+	return NULL;
-+}
-+
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index 164dea0..f1b6100 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -71,6 +71,10 @@ void thunderbolt_shutdown_and_free(struct tb *tb)
- {
- 	mutex_lock(&tb->lock);
- 
-+	if (tb->root_switch)
-+		tb_switch_free(tb->root_switch);
-+	tb->root_switch = NULL;
-+
- 	if (tb->ctl) {
- 		tb_ctl_stop(tb->ctl);
- 		tb_ctl_free(tb->ctl);
-@@ -126,6 +130,10 @@ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
- 	 */
- 	tb_ctl_start(tb->ctl);
- 
-+	tb->root_switch = tb_switch_alloc(tb, 0);
-+	if (!tb->root_switch)
-+		goto err_locked;
-+
- 	/* Allow tb_handle_hotplug to progress events */
- 	tb->hotplug_active = true;
- 	mutex_unlock(&tb->lock);
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 19dace0..9f01800 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -7,9 +7,31 @@
- #ifndef TB_H_
- #define TB_H_
- 
-+#include <linux/pci.h>
-+
-+#include "tb_regs.h"
- #include "ctl.h"
- 
- /**
-+ * struct tb_switch - a thunderbolt switch
-+ */
-+struct tb_switch {
-+	struct tb_regs_switch_header config;
-+	struct tb_port *ports;
-+	struct tb *tb;
-+};
-+
-+/**
-+ * struct tb_port - a thunderbolt port, part of a tb_switch
-+ */
-+struct tb_port {
-+	struct tb_regs_port_header config;
-+	struct tb_switch *sw;
-+	struct tb_port *remote; /* remote port, NULL if not connected */
-+	u8 port; /* port number on switch */
-+};
-+
-+/**
-  * struct tb - main thunderbolt bus structure
-  */
- struct tb {
-@@ -20,6 +42,7 @@ struct tb {
- 	struct tb_nhi *nhi;
- 	struct tb_ctl *ctl;
- 	struct workqueue_struct *wq; /* ordered workqueue for plug events */
-+	struct tb_switch *root_switch;
- 	bool hotplug_active; /*
- 			      * tb_handle_hotplug will stop progressing plug
- 			      * events and exit if this is not seet (it needs to
-@@ -29,7 +52,122 @@ struct tb {
- 
- };
- 
-+/* helper functions & macros */
-+
-+/**
-+ * tb_upstream_port() - return the upstream port of a switch
-+ *
-+ * Every switch has an upstream port (for the root switch it is the NHI).
-+ *
-+ * During switch alloc/init tb_upstream_port()->remote may be NULL, even for
-+ * non root switches (on the NHI port remote is always NULL).
-+ *
-+ * Return: Returns the upstream port of the switch.
-+ */
-+static inline struct tb_port *tb_upstream_port(struct tb_switch *sw)
-+{
-+	return &sw->ports[sw->config.upstream_port_number];
-+}
-+
-+static inline u64 tb_route(struct tb_switch *sw)
-+{
-+	return ((u64) sw->config.route_hi) << 32 | sw->config.route_lo;
-+}
-+
-+static inline int tb_sw_read(struct tb_switch *sw, void *buffer,
-+			     enum tb_cfg_space space, u32 offset, u32 length)
-+{
-+	return tb_cfg_read(sw->tb->ctl,
-+			   buffer,
-+			   tb_route(sw),
-+			   0,
-+			   space,
-+			   offset,
-+			   length);
-+}
-+
-+static inline int tb_sw_write(struct tb_switch *sw, void *buffer,
-+			      enum tb_cfg_space space, u32 offset, u32 length)
-+{
-+	return tb_cfg_write(sw->tb->ctl,
-+			    buffer,
-+			    tb_route(sw),
-+			    0,
-+			    space,
-+			    offset,
-+			    length);
-+}
-+
-+static inline int tb_port_read(struct tb_port *port, void *buffer,
-+			       enum tb_cfg_space space, u32 offset, u32 length)
-+{
-+	return tb_cfg_read(port->sw->tb->ctl,
-+			   buffer,
-+			   tb_route(port->sw),
-+			   port->port,
-+			   space,
-+			   offset,
-+			   length);
-+}
-+
-+static inline int tb_port_write(struct tb_port *port, void *buffer,
-+				enum tb_cfg_space space, u32 offset, u32 length)
-+{
-+	return tb_cfg_write(port->sw->tb->ctl,
-+			    buffer,
-+			    tb_route(port->sw),
-+			    port->port,
-+			    space,
-+			    offset,
-+			    length);
-+}
-+
-+#define tb_err(tb, fmt, arg...) dev_err(&(tb)->nhi->pdev->dev, fmt, ## arg)
-+#define tb_WARN(tb, fmt, arg...) dev_WARN(&(tb)->nhi->pdev->dev, fmt, ## arg)
-+#define tb_warn(tb, fmt, arg...) dev_warn(&(tb)->nhi->pdev->dev, fmt, ## arg)
-+#define tb_info(tb, fmt, arg...) dev_info(&(tb)->nhi->pdev->dev, fmt, ## arg)
-+
-+
-+#define __TB_SW_PRINT(level, sw, fmt, arg...)           \
-+	do {                                            \
-+		struct tb_switch *__sw = (sw);          \
-+		level(__sw->tb, "%llx: " fmt,           \
-+		      tb_route(__sw), ## arg);          \
-+	} while (0)
-+#define tb_sw_WARN(sw, fmt, arg...) __TB_SW_PRINT(tb_WARN, sw, fmt, ##arg)
-+#define tb_sw_warn(sw, fmt, arg...) __TB_SW_PRINT(tb_warn, sw, fmt, ##arg)
-+#define tb_sw_info(sw, fmt, arg...) __TB_SW_PRINT(tb_info, sw, fmt, ##arg)
-+
-+
-+#define __TB_PORT_PRINT(level, _port, fmt, arg...)                      \
-+	do {                                                            \
-+		struct tb_port *__port = (_port);                       \
-+		level(__port->sw->tb, "%llx:%x: " fmt,                  \
-+		      tb_route(__port->sw), __port->port, ## arg);      \
-+	} while (0)
-+#define tb_port_WARN(port, fmt, arg...) \
-+	__TB_PORT_PRINT(tb_WARN, port, fmt, ##arg)
-+#define tb_port_warn(port, fmt, arg...) \
-+	__TB_PORT_PRINT(tb_warn, port, fmt, ##arg)
-+#define tb_port_info(port, fmt, arg...) \
-+	__TB_PORT_PRINT(tb_info, port, fmt, ##arg)
-+
-+
- struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi);
- void thunderbolt_shutdown_and_free(struct tb *tb);
- 
-+struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
-+void tb_switch_free(struct tb_switch *sw);
-+
-+
-+static inline int tb_route_length(u64 route)
-+{
-+	return (fls64(route) + TB_ROUTE_SHIFT - 1) / TB_ROUTE_SHIFT;
-+}
-+
-+static inline bool tb_is_upstream_port(struct tb_port *port)
-+{
-+	return port == tb_upstream_port(port->sw);
-+}
-+
- #endif
--- 
-1.9.2
+On Tue, 2014-04-22 at 15:07 +0800, Jiang Liu wrote:
+> +       size_t size =3D 0;
+> +#if 0
+> +       /* current the third argument of intel_unmap_page is unsued */
+> +       int i;
+> +       struct scatterlist *sg;
+> =20
+> -       freelist =3D domain_unmap(domain, start_pfn, last_pfn);
+> +       for_each_sg(sglist, sg, nelems, i)
+> +               size +=3D sg->length;
+> +#endif
+
+Please don't do that. If you want to rely on the fact that
+intel_unmap_page() currently just uses the size from the IOVA it finds,
+then split it out into a separate function which explicitly does
+precisely that. And call that new function from both intel_unmap_sg()
+and intel_unmap_page().
+
+--=20
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
+
+--=-iq8cj1xSvAzp9OEz/P0v
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIISxDCCBjQw
+ggQcoAMCAQICAR4wDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0
+Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxKTAn
+BgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3MTAyNDIxMDE1NVoX
+DTE3MTAyNDIxMDE1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSsw
+KQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFy
+dENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTCCASIwDQYJKoZIhvcN
+AQEBBQADggEPADCCAQoCggEBAMcJg8zOLdgasSmkLhOrlr6KMoOMpohBllVHrdRvEg/q6r8jR+EK
+75xCGhR8ToREoqe7zM9/UnC6TS2y9UKTpT1v7RSMzR0t6ndl0TWBuUr/UXBhPk+Kmy7bI4yW4urC
++y7P3/1/X7U8ocb8VpH/Clt+4iq7nirMcNh6qJR+xjOhV+VHzQMALuGYn5KZmc1NbJQYclsGkDxD
+z2UbFqE2+6vIZoL+jb9x4Pa5gNf1TwSDkOkikZB1xtB4ZqtXThaABSONdfmv/Z1pua3FYxnCFmdr
+/+N2JLKutIxMYqQOJebr/f/h5t95m4JgrM3Y/w7YX9d7YAL9jvN4SydHsU6n65cCAwEAAaOCAa0w
+ggGpMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRTcu2SnODaywFc
+fH6WNU7y1LhRgjAfBgNVHSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRa
+MFgwJwYIKwYBBQUHMAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYh
+aHR0cDovL3d3dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6
+Ly93d3cuc3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5j
+b20vc2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
+dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93d3cu
+c3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBAAqDCH14qywG
+XLhjjF6uHLkjd02hcdh9hrw+VUsv+q1eeQWB21jWj3kJ96AUlPCoEGZ/ynJNScWy6QMVQjbbMXlt
+UfO4n4bGGdKo3awPWp61tjAFgraLJgDk+DsSvUD6EowjMTNx25GQgyYJ5RPIzKKR9tQW8gGK+2+R
+HxkUCTbYFnL6kl8Ch507rUdPPipJ9CgJFws3kDS3gOS5WFMxcjO5DwKfKSETEPrHh7p5shuuNktv
+sv6hxHTLhiMKX893gxdT3XLS9OKmCv87vkINQcNEcIIoFWbP9HORz9v3vQwR4e3ksLc2JZOAFK+s
+sS5XMEoznzpihEP0PLc4dCBYjbvSD7kxgDwZ+Aj8Q9PkbvE9sIPP7ON0fz095HdThKjiVJe6vofq
++n6b1NBc8XdrQvBmunwxD5nvtTW4vtN6VY7mUCmxsCieuoBJ9OlqmsVWQvifIYf40dJPZkk9YgGT
+zWLpXDSfLSplbY2LL9C9U0ptvjcDjefLTvqSFc7tw1sEhF0n/qpA2r0GpvkLRDmcSwVyPvmjFBGq
+Up/pNy8ZuPGQmHwFi2/14+xeSUDG2bwnsYJQG2EdJCB6luQ57GEnTA/yKZSTKI8dDQa8Sd3zfXb1
+9mOgSF0bBdXbuKhEpuP9wirslFe6fQ1t5j5R0xi72MZ8ikMu1RQZKCyDbMwazlHiMIIGQjCCBSqg
+AwIBAgIDBoXOMA0GCSqGSIb3DQEBBQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRD
+b20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYG
+A1UEAxMvU3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcN
+MTMwNTAyMDYyMDQ2WhcNMTQwNTAzMTIxNDAyWjBdMRkwFwYDVQQNExBNd0k3ODIxNTRpV21lZVkw
+MRwwGgYDVQQDDBNkd213MkBpbmZyYWRlYWQub3JnMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZy
+YWRlYWQub3JnMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvWGuRDHiXVpOgaFkBaz8
+c3jQTfiEw7j0iKZnktCQi0xjY29QJ7GwL+fgQlbofXgYTm8E9fWERvw2tAy2BxHzAPguBzziS7JN
+hsGP9lf3L8hFJBvmdyyyj8b9A6Oi7s3JLtMRWIvyvE+DbuTkP+htuT4+XuTJr8Y5yIqd1WXr2gJk
+ANr77vTyjeNxceevP58Tqr0f+4v5g6+vNARO3bk3SaVQPDUTwGrpoPtLh3d+mQzZ4iiW3MwQS7Wr
+UVT3l2aTVHCpgtAaBs3zHWarvmIqhbWj8zdcnELNzwqTrOjaoWxuWY4k05GGfzmdjOBUiL7FDNvI
+ZwweJEPwJAQI72YhUwIDAQABo4IC2TCCAtUwCQYDVR0TBAIwADALBgNVHQ8EBAMCBLAwHQYDVR0l
+BBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMB0GA1UdDgQWBBSs0hZhUgQwqGVXzLuH6pJH0hMZwTAf
+BgNVHSMEGDAWgBRTcu2SnODaywFcfH6WNU7y1LhRgjAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRl
+YWQub3JnMIIBTAYDVR0gBIIBQzCCAT8wggE7BgsrBgEEAYG1NwECAzCCASowLgYIKwYBBQUHAgEW
+Imh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwgfcGCCsGAQUFBwICMIHqMCcWIFN0
+YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MAMCAQEagb5UaGlzIGNlcnRpZmljYXRlIHdh
+cyBpc3N1ZWQgYWNjb3JkaW5nIHRvIHRoZSBDbGFzcyAxIFZhbGlkYXRpb24gcmVxdWlyZW1lbnRz
+IG9mIHRoZSBTdGFydENvbSBDQSBwb2xpY3ksIHJlbGlhbmNlIG9ubHkgZm9yIHRoZSBpbnRlbmRl
+ZCBwdXJwb3NlIGluIGNvbXBsaWFuY2Ugb2YgdGhlIHJlbHlpbmcgcGFydHkgb2JsaWdhdGlvbnMu
+MDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9jcmwuc3RhcnRzc2wuY29tL2NydHUxLWNybC5jcmww
+gY4GCCsGAQUFBwEBBIGBMH8wOQYIKwYBBQUHMAGGLWh0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9z
+dWIvY2xhc3MxL2NsaWVudC9jYTBCBggrBgEFBQcwAoY2aHR0cDovL2FpYS5zdGFydHNzbC5jb20v
+Y2VydHMvc3ViLmNsYXNzMS5jbGllbnQuY2EuY3J0MCMGA1UdEgQcMBqGGGh0dHA6Ly93d3cuc3Rh
+cnRzc2wuY29tLzANBgkqhkiG9w0BAQUFAAOCAQEACFLDQnyO8+XA/TiTltjJ/ZAvM+qmBEKN43Vd
++Wio2lM/Wq/scJpkupXGHrl9CueobkDxMAogXbMxqLZYO13PvgjMh+PHxDPnQv8EGxOig+k/Hqvc
+qEdTlm9YEHcbXbWS6XB+zRO7VVIpGMYQ1f1qCOcukxmwIm6iMSHXbOr/7paQm4bO0ULptjBotfiO
+Zo6q8No6SroQlOSyc6v8FYSxTNIAXMaM2FYkjqrxgdnJmSIAfr11gROuF69WuOICxP0zTEjJle+7
+aO9lUWNaWMWPMyFSNCxF6kkRuvUCami7vlhLOTRC1kb+OMhx7keN9At3tdTI3rtuFeSB1Pa3VXVs
+0DCCBkIwggUqoAMCAQICAwaFzjANBgkqhkiG9w0BAQUFADCBjDELMAkGA1UEBhMCSUwxFjAUBgNV
+BAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
+Z25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xp
+ZW50IENBMB4XDTEzMDUwMjA2MjA0NloXDTE0MDUwMzEyMTQwMlowXTEZMBcGA1UEDRMQTXdJNzgy
+MTU0aVdtZWVZMDEcMBoGA1UEAwwTZHdtdzJAaW5mcmFkZWFkLm9yZzEiMCAGCSqGSIb3DQEJARYT
+ZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL1hrkQx
+4l1aToGhZAWs/HN40E34hMO49IimZ5LQkItMY2NvUCexsC/n4EJW6H14GE5vBPX1hEb8NrQMtgcR
+8wD4Lgc84kuyTYbBj/ZX9y/IRSQb5ncsso/G/QOjou7NyS7TEViL8rxPg27k5D/obbk+Pl7kya/G
+OciKndVl69oCZADa++708o3jcXHnrz+fE6q9H/uL+YOvrzQETt25N0mlUDw1E8Bq6aD7S4d3fpkM
+2eIoltzMEEu1q1FU95dmk1RwqYLQGgbN8x1mq75iKoW1o/M3XJxCzc8Kk6zo2qFsblmOJNORhn85
+nYzgVIi+xQzbyGcMHiRD8CQECO9mIVMCAwEAAaOCAtkwggLVMAkGA1UdEwQCMAAwCwYDVR0PBAQD
+AgSwMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQUrNIWYVIEMKhlV8y7
+h+qSR9ITGcEwHwYDVR0jBBgwFoAUU3Ltkpzg2ssBXHx+ljVO8tS4UYIwHgYDVR0RBBcwFYETZHdt
+dzJAaW5mcmFkZWFkLm9yZzCCAUwGA1UdIASCAUMwggE/MIIBOwYLKwYBBAGBtTcBAgMwggEqMC4G
+CCsGAQUFBwIBFiJodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9wb2xpY3kucGRmMIH3BggrBgEFBQcC
+AjCB6jAnFiBTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0
+aWZpY2F0ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJl
+cXVpcmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9saWN5LCByZWxpYW5jZSBvbmx5IGZvciB0
+aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNlIG9mIHRoZSByZWx5aW5nIHBhcnR5IG9i
+bGlnYXRpb25zLjA2BgNVHR8ELzAtMCugKaAnhiVodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9jcnR1
+MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsGAQUFBzABhi1odHRwOi8vb2NzcC5zdGFy
+dHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2EwQgYIKwYBBQUHMAKGNmh0dHA6Ly9haWEuc3Rh
+cnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xpZW50LmNhLmNydDAjBgNVHRIEHDAahhhodHRw
+Oi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEFBQADggEBAAhSw0J8jvPlwP04k5bYyf2Q
+LzPqpgRCjeN1XfloqNpTP1qv7HCaZLqVxh65fQrnqG5A8TAKIF2zMai2WDtdz74IzIfjx8Qz50L/
+BBsTooPpPx6r3KhHU5ZvWBB3G121kulwfs0Tu1VSKRjGENX9agjnLpMZsCJuojEh12zq/+6WkJuG
+ztFC6bYwaLX4jmaOqvDaOkq6EJTksnOr/BWEsUzSAFzGjNhWJI6q8YHZyZkiAH69dYETrhevVrji
+AsT9M0xIyZXvu2jvZVFjWljFjzMhUjQsRepJEbr1Ampou75YSzk0QtZG/jjIce5HjfQLd7XUyN67
+bhXkgdT2t1V1bNAxggNvMIIDawIBATCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0
+Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2
+BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMG
+hc4wCQYFKw4DAhoFAKCCAa8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUx
+DxcNMTQwNDIyMDczODUzWjAjBgkqhkiG9w0BCQQxFgQU+qOyXO0nB+T5Qstxot4HFCXVYI0wgaUG
+CSsGAQQBgjcQBDGBlzCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4x
+KzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0
+YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMGhc4wgacGCyqG
+SIb3DQEJEAILMYGXoIGUMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjEr
+MCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3Rh
+cnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAwaFzjANBgkqhkiG
+9w0BAQEFAASCAQAWPYduM0F+YuV+mqb7K40mgBTyOSNcEZi928dfaA91Wtx4/756LrxgZweA2/BN
+f2UtnjJQRqD4maK8fCDcnUz9R0oCyCSD7bdTgDfHyltp/Noy3n3l3bE9rDsMDMrGA4oaG47acQ7l
+ceQoCcUP2Dv99KRFqrmD+x7UHyGobOCAe7wmbtnmI3XkxRzQV2LYZ4cDD6iAnWi70bRmuw6nahxN
+boBp4qXaBhp4YAgg2mWIBi7N4aT45rkdVPhqo81gWbUIFw1+Pc3GfMds6vZH+JiHsNSdYQ6wK2iw
+OmK5JjNSjMb/qZ/BKvWMfpZ7WHH2flUh81g71zyy2h0FfJ6KkaPrAAAAAAAA
+
+
+--=-iq8cj1xSvAzp9OEz/P0v--
 
