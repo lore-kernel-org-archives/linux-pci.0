@@ -1,106 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:52557 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750891AbaDDCbh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 22:31:37 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N3H00D0BJ0MW530@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 04 Apr 2014 11:31:35 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Richard Zhu' <Hong-Xing.Zhu@freescale.com>,
-	'Marek Vasut' <marex@denx.de>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	'Pratyush ANAND' <pratyush.anand@st.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <000801cf4d95$64322ef0$2c968cd0$%han@samsung.com>
- <2CC2A0A4A178534D93D5159BF3BCB66189FEC4809B@EAPEX1MAIL1.st.com>
- <533BA157.6030004@ti.com> <201404021234.48134.marex@denx.de>
- <65debfc7f79a4a27a58bd7c64382881f@BLUPR03MB136.namprd03.prod.outlook.com>
-In-reply-to: <65debfc7f79a4a27a58bd7c64382881f@BLUPR03MB136.namprd03.prod.outlook.com>
-Subject: Re: [PATCH] PCI: designware: Remove unnecessary RC BAR setting
-Date: Fri, 04 Apr 2014 11:31:34 +0900
-Message-id: <000001cf4fad$ff227ae0$fd6770a0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:61059 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751280AbaDVDe2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Apr 2014 23:34:28 -0400
+Received: by mail-ob0-f182.google.com with SMTP id uy5so3887436obc.13
+        for <linux-pci@vger.kernel.org>; Mon, 21 Apr 2014 20:34:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1E05E2AB-198E-473A-8AA5-87DA2E9910B8@gmail.com>
+References: <1397000541-1085-1-git-send-email-keith.busch@intel.com>
+ <1397000541-1085-2-git-send-email-keith.busch@intel.com> <CAP8+hKWcybw5u_m5M4c1p4eUAaTq4x+kO+tnegwD2ciDMEFNCw@mail.gmail.com>
+ <alpine.LRH.2.03.1404211935510.5490@AMR> <1E05E2AB-198E-473A-8AA5-87DA2E9910B8@gmail.com>
+From: Learner Study <learner.study@gmail.com>
+Date: Mon, 21 Apr 2014 20:34:07 -0700
+Message-ID: <CAP8+hKUEygoeEv=LvY2ccp6cepnXEpi4WGVSaCnRw+zN7BUE_Q@mail.gmail.com>
+Subject: Re: [PATCH 2/2] NVMe: Implement PCI-e reset notification callback
+To: Keith Busch <keith.busch@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-nvme <linux-nvme@lists.infradead.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, April 02, 2014 8:59 PM, Richard Zhu wrote:
-> Wednesday, April 02, 2014 6:35 PM, Marek Vasut wrote:
-> > On Wednesday, April 02, 2014 at 07:34:15 AM, Kishon Vijay Abraham I wrote:
-> > > On Wednesday 02 April 2014 11:03 AM, Mohit KUMAR DCG wrote:
-> > > > Wednesday, April 02, 2014 10:53 AM, Jingoo Han wrote:
-> > > >> On Wednesday, April 02, 2014 1:57 PM, Mohit KUMAR DCG wrote:
-> > > >>> On Tuesday, April 01, 2014 4:00 PM, Jingoo Han wrote:
-> > > >>>> According to the spec, the synopsys core does not implement the
-> > > >>>> optional BARs such as BAR0/1. This is based on the assumption
-> > > >>>> that the RC host probably has registers on some other internal
-> > > >>>> bus and has knowledge and setup access to these registers already.
-> > > >>>> So, remove unnecessary RC BAR setting.
-> > > >>>
-> > > >>> - Normally BARs in RC are not used but somehow available in the
-> > > >>> design. One possible BAR use can be if RC has some memory
-> > > >>> connected to
-> > > >>
-> > > >> the BAR that needs to be accessed through link.
-> > > >>
-> > > >>> Otherwise we can ignore BARs setup here.
-> > > >>
-> > > >> Hi Mohit KUMAR DCG,
-> > > >>
-> > > >> Thank you for your feedback.
-> > > >>
-> > > >> I want to know whether or not other SoCs such as ST, Freescale, TI
-> > > >> support BAR0/BAR1. If no SoC supports BAR0/BAR1, the unnecessary RC
-> > > >> BAR setting code should  be removed.
-> > > >
-> > > > - We are not currently using RC's BAR0/1 in any application but no
-> > > > such restriction from HW as ST SoCs support BARs in HW design.
-> > >
-> > > Neither do we in DRA7xx.
-> >
-> > I suspect that means we should keep the code to make sure the registers are
-> > configured correctly, no?
-> >
-> > Richard, can you comment on MX6 please ?
-> 
->  [Richard] Sorry to reply late. I'm engaged in another stuff in the past days.
-> i.MX6 pcie doesn't use RC's BAR0/1 in applications either.
-> >
+Per the spec, "When an NVM Subsystem Reset occurs, the entire NVM
+subsystem is reset"....so all VFs would get impacted, if a VF does a
+Reset. So, I think Reset kind of control should be in PF mode only.
 
-Thank you all for your comments!
-
-I noticed that Synopsys PCIe "Dual mode" can support BAR0/BAR1.
-The bits[3:0] of BAR0 is RO(CS), which means Read-Only, but writable
-from the local application through the DBI.
-
-So, the BAR0/1 setting might be necessary, in order to ensure the
-BAR0/1 setting is written properly.
-
-But, when BAR0/1 are implemented, the bits[3:0] of BAR0 is decided
-by hardware configuration parameters. So, this BAR0/1 setting looks
-unnecessary.
-
-How about others' opinions?
-
-1. Necessary: in order to ensure the BAR0/BAR1 setting, even though
-                   BAR0/BAR1 were already set as hardware default values
-
-2. Unnecessary: the BAR0/BAR1 setting code is dummy, because BAR0/BAR1
-                      were already set as hardware default values
-
-For example, in the case of Exynos5440, BAR0/BAR1 are not implemented;
-thus, even though BAR0 is written as 0x4, BAR0 can be always read as 0.
-So, there is not side effect, but just unnecessary code is executed
-during boot time.
-
-Thank you. :-)
-
-Best regards,
-Jingoo Han
-
+On Mon, Apr 21, 2014 at 7:45 PM, Learner <learner.study@gmail.com> wrote:
+> But Won't resetting from a VF impact functionality of other VFs?
+>
+> On Apr 21, 2014, at 6:57 PM, Keith Busch <keith.busch@intel.com> wrote:
+>
+>> On Mon, 21 Apr 2014, Learner Study wrote:
+>>> Hi Keith,
+>>>
+>>> I think NVMe Reset should apply to PF mode driver only, and not to VF
+>>> mode driver.
+>>> Is that understanding correct? Does the NVMe driver know which mode
+>>> its running in?
+>>
+>> Oh, this driver doesn't enable SR-IOV and has no PF/VF awareness. Shame
+>> on us, I'll add it to my list unless someone beats me to it.
+>>
+>> Still, I think we'd like to be able to reset a VF if only because it
+>> gets the queues back to a pristine state. A VF reset should not affect
+>> any of the other functions.
