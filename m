@@ -1,71 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:39688 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbaDRPmY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 11:42:24 -0400
-Received: by mail-pd0-f179.google.com with SMTP id w10so1539804pde.24
-        for <linux-pci@vger.kernel.org>; Fri, 18 Apr 2014 08:42:24 -0700 (PDT)
-Date: Fri, 18 Apr 2014 09:42:20 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Mike Qiu <qiudayu@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: [GIT PULL] PCI updates for v3.15
-Message-ID: <20140418154220.GA20053@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga03.intel.com ([143.182.124.21]:49541 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752144AbaDVHFO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Apr 2014 03:05:14 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [RFC Patch Part3 V1 00/22] Enable Intel DMAR device hotplug
+Date: Tue, 22 Apr 2014 15:07:11 +0800
+Message-Id: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+When hot plugging a descrete IOH or a physical processor with embedded
+IIO, we need to handle DMAR(or IOMMU) unit in the PCIe host bridge if
+DMAR is in use. This patch set tries to enhance current DMAR/IOMMU/IR
+drivers to support hotplug and is based on latest mainstream kernel
+v3.15-rc2-36-gc089b229dfdd.
 
-These are fixes for a powerpc NULL pointer dereference, an OF
-interrupt mapping issue on some of the new host bridges, and a DesignWare
-iATU issue.
+Patch 1-9 are bugfixes and code improvement for current drivers.
+Patch 10-13 enhances DMAR framework to support hotplug
+Patch 14 enhances Intel interrupt remapping driver to support hotplug
+Patch 15 enhances error handling in Intel IR driver
+Patch 16 enhance Intel IOMMU to support hotplug
+Patch 17 enhance ACPI pci_root driver to handle DMAR units
+Patch 18-22 are bugfixes and code improvement again
 
-Bjorn
+This patch set has been tested on Intel development machine.
+Appreciate any comments and tests.
 
+Best Regards!
 
-The following changes since commit c9eaa447e77efe77b7fa4c953bd62de8297fd6c5:
+Jiang Liu (22):
+  iommu/vt-d: match segment number when searching for dev_iotlb capable
+    devices
+  iommu/vt-d: use correct domain id to flush virtual machine domains
+  iommu/vt-d: introduce helper functions to improve code readability
+  iommu/vt-d: introduce helper functions to make code symmetric for
+    readability
+  iommu/vt-d: only dynamically allocate domain id for virtual domains
+  iommu/vt-d: fix possible invalid memory access caused by
+    free_dmar_iommu()
+  iommu/vt-d: avoid freeing virtual machine domain in free_dmar_iommu()
+  iommu/VT-d: simplify include/linux/dmar.h
+  iommu/vt-d: change iommu_enable/disable_translation to return void
+  iommu/vt-d: dynamically allocate and free seq_id for DMAR units
+  IOMMU/vt-d: introduce helper function dmar_walk_resources()
+  iommu/vt-d: implement DMAR unit hotplug framework
+  iommu/vt-d: search _DSM method for DMAR hotplug
+  iommu/vt-d: enhance intel_irq_remapping driver to support DMAR unit
+    hotplug
+  iommu/vt-d: enhance error recovery in function
+    intel_enable_irq_remapping()
+  iommu/vt-d: enhance intel-iommu driver to support DMAR unit hotplug
+  pci, ACPI, iommu: enhance pci_root to support DMAR device hotplug
+  iommu/vt-d: update proximity information when a new node with memory
+    available
+  iommu/vt-d: simplify intel_unmap_sg() and kill duplicated code
+  iommu/vt-d: introduce helper domain_pfn_within_range() to simplify
+    code
+  iommu/vt-d: introduce helper function iova_size() to improve code
+    readability
+  iommu/vt-d: fix bug in computing domain's iommu_snooping flag
 
-  Linux 3.15-rc1 (2014-04-13 14:18:35 -0700)
+ drivers/acpi/pci_root.c             |   16 +-
+ drivers/iommu/dmar.c                |  568 ++++++++++++++++++++++------
+ drivers/iommu/intel-iommu.c         |  711 +++++++++++++++++++++--------------
+ drivers/iommu/intel_irq_remapping.c |  233 +++++++++---
+ include/linux/dmar.h                |   80 ++--
+ include/linux/intel-iommu.h         |    1 +
+ include/linux/iova.h                |    5 +
+ 7 files changed, 1133 insertions(+), 481 deletions(-)
 
-are available in the git repository at:
+-- 
+1.7.10.4
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-v3.15-fixes-1
-
-for you to fetch changes up to f5d3352b2751f8de7e06e23a04ac0b4c474075e9:
-
-  PCI: tegra: Use new OF interrupt mapping when possible (2014-04-16 10:24:32 -0600)
-
-----------------------------------------------------------------
-PCI updates for v3.15:
-
-  Host bridge drivers
-    - Fix OF interrupt mapping for DesignWare, R-Car, Tegra (Lucas Stach)
-    - Fix DesignWare iATU programming (Mohit Kumar)
-
-  Miscellaneous
-    - Fix powerpc NULL dereference from list_for_each_entry() update (Mike Qiu)
-
-----------------------------------------------------------------
-Lucas Stach (3):
-      PCI: designware: Use new OF interrupt mapping when possible
-      PCI: rcar: Use new OF interrupt mapping when possible
-      PCI: tegra: Use new OF interrupt mapping when possible
-
-Mike Qiu (1):
-      powerpc/PCI: Fix NULL dereference in sys_pciconfig_iobase() list traversal
-
-Mohit Kumar (2):
-      PCI: designware: Fix comment for setting number of lanes
-      PCI: designware: Fix iATU programming for cfg1, io and mem viewport
-
- arch/powerpc/kernel/pci_64.c       | 10 ++++++----
- drivers/pci/host/pci-rcar-gen2.c   |  8 +++++++-
- drivers/pci/host/pci-tegra.c       |  7 ++++++-
- drivers/pci/host/pcie-designware.c | 20 +++++++++++++-------
- 4 files changed, 32 insertions(+), 13 deletions(-)
