@@ -1,97 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp17.uk.ibm.com ([195.75.94.113]:40955 "EHLO
-	e06smtp17.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030615AbaDJNCW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 09:02:22 -0400
-Received: from /spool/local
-	by e06smtp17.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <ldufour@linux.vnet.ibm.com>;
-	Thu, 10 Apr 2014 14:02:21 +0100
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
-	by d06dlp02.portsmouth.uk.ibm.com (Postfix) with ESMTP id 33A18219005F
-	for <linux-pci@vger.kernel.org>; Thu, 10 Apr 2014 14:02:12 +0100 (BST)
-Received: from d06av02.portsmouth.uk.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
-	by b06cxnps4076.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s3AD2Eie62980192
-	for <linux-pci@vger.kernel.org>; Thu, 10 Apr 2014 13:02:14 GMT
-Received: from d06av02.portsmouth.uk.ibm.com (localhost [127.0.0.1])
-	by d06av02.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s3AD2FuP023505
-	for <linux-pci@vger.kernel.org>; Thu, 10 Apr 2014 07:02:17 -0600
-Subject: [PATCH] PCI/hotplug/rphahp: Fix endianess issues
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-From: Laurent Dufour <ldufour@linux.vnet.ibm.com>
-Cc: mdroth@linux.vnet.ibm.com
-Date: Thu, 10 Apr 2014 15:02:13 +0200
-Message-ID: <20140410130213.8435.16459.stgit@nimbus>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:37181 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757242AbaDVP5w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 11:57:52 -0400
+Received: by mail-ie0-f180.google.com with SMTP id as1so5450717iec.11
+        for <linux-pci@vger.kernel.org>; Tue, 22 Apr 2014 08:57:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <7174f4a8.23ad7.14589360cb2.Coremail.liaohengquan1986@163.com>
+References: <1397000541-1085-1-git-send-email-keith.busch@intel.com>
+ <1397000541-1085-2-git-send-email-keith.busch@intel.com> <CAP8+hKWcybw5u_m5M4c1p4eUAaTq4x+kO+tnegwD2ciDMEFNCw@mail.gmail.com>
+ <alpine.LRH.2.03.1404211935510.5490@AMR> <1E05E2AB-198E-473A-8AA5-87DA2E9910B8@gmail.com>
+ <CAP8+hKUEygoeEv=LvY2ccp6cepnXEpi4WGVSaCnRw+zN7BUE_Q@mail.gmail.com>
+ <B8DB29EA17EB2742AC3405C31A9B9EE961457B96@ORSMSX111.amr.corp.intel.com>
+ <CAP8+hKV_-OqAOWHC2tZqYmt1O9pjTtauXECU=R+48rb0A3EfQA@mail.gmail.com> <7174f4a8.23ad7.14589360cb2.Coremail.liaohengquan1986@163.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 22 Apr 2014 09:57:31 -0600
+Message-ID: <CAErSpo526WATQKU9DZ4YjTTL9ot_1soGnjcs=ipgyqt2XNQ-fA@mail.gmail.com>
+Subject: Re: Wheather the NVMe driver has been tried on the IBM or Lenovo server?
+To: liaohengquan1986 <liaohengquan1986@163.com>
+Cc: Learner Study <learner.study@gmail.com>,
+	"Mayes, Barrett N" <barrett.n.mayes@intel.com>,
+	"Busch, Keith" <keith.busch@intel.com>,
+	linux-nvme <linux-nvme@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Numerical values stored in the device tree are encoded in Big Endian and
-should be byte swapped when running in Little Endian.
+On Tue, Apr 22, 2014 at 5:33 AM, liaohengquan1986
+<liaohengquan1986@163.com> wrote:
+>
+> Hi, everyone,
+>             I want to ask that weather the NVMe driver has been tried on the
+> IBM or Lenovo server?
+>             I use it on IBM(Lenovo) server with suse 11 SP3, but the MSI-X
+> irq is always could not be got by cpu(may be it is masked).
+>             Has anyone got this kind of problem?
 
-RPA hot plug module should convert those values as well.
+I think your original email contained non-plain text, so it won't
+appear on the mailing list, and some recipients may auto-discard it as
+well.  See http://vger.kernel.org/majordomo-info.html
 
-Note that in rpaphp_get_drc_props the comparison between indexes[i+1] and
-*index is done using the BE values (whatever is the current endianess).
-This doesn't matter since we are checking for equality here. This way only
-the returned value is byte swapped.
+If you can reproduce the problem with an upstream kernel, this is the
+right place to debug it.  We'd need a complete dmesg log and "lspci
+-vv" output to start with.
 
-RPA also made RTAS calls which implies BE values to be used. According to
-the patch done in RTAS (http://patchwork.ozlabs.org/patch/336865), no
-additional conversion is required in RPA.
+If the problem only happens with SUSE, then you'd want to work with
+SUSE to figure it out.
 
-Signed-off-by: Laurent Dufour <ldufour@linux.vnet.ibm.com>
----
- drivers/pci/hotplug/rpaphp_core.c |   15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-index 4796c15..984d708 100644
---- a/drivers/pci/hotplug/rpaphp_core.c
-+++ b/drivers/pci/hotplug/rpaphp_core.c
-@@ -223,16 +223,16 @@ int rpaphp_get_drc_props(struct device_node *dn, int *drc_index,
- 	type_tmp = (char *) &types[1];
- 
- 	/* Iterate through parent properties, looking for my-drc-index */
--	for (i = 0; i < indexes[0]; i++) {
-+	for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
- 		if ((unsigned int) indexes[i + 1] == *my_index) {
- 			if (drc_name)
- 				*drc_name = name_tmp;
- 			if (drc_type)
- 				*drc_type = type_tmp;
- 			if (drc_index)
--				*drc_index = *my_index;
-+				*drc_index = be32_to_cpu(*my_index);
- 			if (drc_power_domain)
--				*drc_power_domain = domains[i+1];
-+				*drc_power_domain = be32_to_cpu(domains[i+1]);
- 			return 0;
- 		}
- 		name_tmp += (strlen(name_tmp) + 1);
-@@ -321,16 +321,19 @@ int rpaphp_add_slot(struct device_node *dn)
- 	/* register PCI devices */
- 	name = (char *) &names[1];
- 	type = (char *) &types[1];
--	for (i = 0; i < indexes[0]; i++) {
-+	for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
-+		int index;
- 
--		slot = alloc_slot_struct(dn, indexes[i + 1], name, power_domains[i + 1]);
-+		index = be32_to_cpu(indexes[i + 1]);
-+		slot = alloc_slot_struct(dn, index, name,
-+					 be32_to_cpu(power_domains[i + 1]));
- 		if (!slot)
- 			return -ENOMEM;
- 
- 		slot->type = simple_strtoul(type, NULL, 10);
- 
- 		dbg("Found drc-index:0x%x drc-name:%s drc-type:%s\n",
--				indexes[i + 1], name, type);
-+				index, name, type);
- 
- 		retval = rpaphp_enable_slot(slot);
- 		if (!retval)
-
+Bjorn
