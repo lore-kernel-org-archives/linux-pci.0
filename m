@@ -1,67 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:58336 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753317AbaDGIjx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 04:39:53 -0400
-Message-ID: <1396859929.4553.2.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH v2 6/6] PCI: designware: use new OF interrupt mapping
- when possible
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	kernel@pengutronix.de, Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-tegra@vger.kernel.org, Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ben Dooks <ben-linux@fluff.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	linux-arm-kernel@lists.infradead.org
-Date: Mon, 07 Apr 2014 10:38:49 +0200
-In-Reply-To: <20140404170517.GH9007@google.com>
-References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
-	 <1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
-	 <20140305184219.GA29903@obsidianresearch.com>
-	 <20140404170341.GG9007@google.com> <20140404170517.GH9007@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from service87.mimecast.com ([91.220.42.44]:40907 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755334AbaDVNB2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 09:01:28 -0400
+Date: Tue, 22 Apr 2014 14:01:22 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Arnd Bergmann' <arnd@arndb.de>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Marek Vasut' <marex@denx.de>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Byungho An' <bh74.an@samsung.com>,
+	'Rob Herring' <robherring2@gmail.com>
+Subject: Re: [RFC PATCH 1/2] PCI: designware: Add ARM64 PCI support
+Message-ID: <20140422130122.GH865@e106497-lin.cambridge.arm.com>
+References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
+ <000901cf592e$563bc8c0$02b35a40$%han@samsung.com>
+ <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
+ <16730530.rJ9T0MsYmt@wuerfel>
+ <000001cf5d04$982a6000$c87f2000$%han@samsung.com>
+ <000501cf5d48$4cf707c0$e6e51740$%han@samsung.com>
+MIME-Version: 1.0
+In-Reply-To: <000501cf5d48$4cf707c0$e6e51740$%han@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-Am Freitag, den 04.04.2014, 11:05 -0600 schrieb Bjorn Helgaas:
-> On Fri, Apr 04, 2014 at 11:03:41AM -0600, Bjorn Helgaas wrote:
-> > On Wed, Mar 05, 2014 at 11:42:19AM -0700, Jason Gunthorpe wrote:
-> > > On Wed, Mar 05, 2014 at 02:25:51PM +0100, Lucas Stach wrote:
-> > > > -	return pp->irq;
-> > > > +	irq = of_irq_parse_and_map_pci(dev, slot, pin);
-> > > > +	if (!irq)
-> > > > +		irq = pp->irq;
-> > > 
-> > > In light of the two bugs that Tim found, it might be wise to throw a
-> > > 'dev_warn(FW_BUG "Missing DT interrupt mapping")' in the fall back
-> > > path, so it doesn't continue to silently cover up errors on the OF/DT
-> > > side..
-> > 
-> > This sounds like a reasonable thing to do, but I didn't see a response to
-> > this comment.  Should I merge it as-is, or do you want to add the message?
+On Mon, Apr 21, 2014 at 10:58:52AM +0100, Jingoo Han wrote:
+> On Monday, April 21, 2014 10:54 AM, Jingoo Han wrote:
+> > On Thursday, April 17, 2014 3:26 AM, Arnd Bergmann wrote:
+> > > On Wednesday 16 April 2014 17:57:24 Liviu Dudau wrote:
+> > > > Jingoo,
+> > > >
+> > > > Thanks for taking a stab at trying to convert a host bridge
+> > > > driver to use the new generic host bridge code.
+> > > >
+> > > > I do however have concerns on the direction you took. You have split
+> > > > your driver in two, depending on whether it was CONFIG_ARM or CONFIG_ARM64,
+> > > > even if (with my series) it should be no reason why the host bridge
+> > > > driver should not work on other architectures as well once they are
+> > > > converted.
+> > >
+> > > Right.
+> > >
+> > > > Also, some of the functions that you use have identical names but different
+> > > > signatures depending on what arch you have selected. This is really bad
+> > > > in my books!
 > 
-> Oh, and I suppose the same question applies to the other host drivers in
-> this series (tegra, rcar)?
+> [.....]
+> 
+> > > > What about creating functions that use my series directly if CONFIG_ARM64 is
+> > > > defined (or any CONFIG_ you want to create for your driver that you select
+> > > > from CONFIG_ARM64) and otherwise implement the CONFIG_ARM version? That
+> > > > way your driver will call only one API without any #ifdef and when arm code
+> > > > gets converted you drop your adaptation functions. Or (better yet), have a
+> > > > stab at converting bios32 (Rob Herring has already provided some hints on
+> > > > how to do it for arch/arm).
+> > 
+> > To: Liviu Dudau
+> > 
+> > Sorry, but I will not implement this.
+> > At first, you had to think the compatibility with ARM32 PCIe.
+> > Why do you want other engineers to take this load?
+> 
+> (+cc Rob Herring)
+> 
+> Um, I am looking at Rob Herring's patchset for Versatile PCI. [1]
+> Then, do you mean the following?
+> 
+> 1. Add Rob Herring's patch converting bios32. [2]
+> 2. Reference Rob Herring's patch in order to know how to
+>     handle "of_create_pci_host_bridge()" directly in ARM32. [3]
+> 3. Use of_create_pci_host_bridge() for the designware PCIe
+>     driver in ARM32.
+> 4. Also, use of_create_pci_host_bridge() for the designware PCIe
+>     driver in "ARM64".
+> 
 
-Please apply as-is. of_irq_parse_and_map_pci() already prints an error
-message if it isn't able to establish the mapping, thus right before we
-fall into the fallback path. So any the warning would be redundant.
+Sounds like a good plan. 3 and 4 should be one and the same in my opinion, but
+there might be more things in designware driver that I am missing right now.
 
-Regards,
-Lucas
+Best regards,
+Liviu
+
+> 
+> [1] http://www.spinics.net/lists/linux-pci/msg30084.html
+> [2] http://www.spinics.net/lists/linux-pci/msg30083.html
+> [3] http://www.spinics.net/lists/linux-pci/msg30086.html
+> 
+> Best regards,
+> Jingoo Han
+> 
+> > 
+> > >
+> > > That would of course be best.
+> > >
+> 
+> [.....]
+> 
+> 
+
 -- 
-Pengutronix e.K.                           | Lucas Stach                 |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
