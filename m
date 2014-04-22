@@ -1,34 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:39086 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751175AbaDCUnZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 16:43:25 -0400
-Received: by mail-ig0-f175.google.com with SMTP id ur14so79242igb.2
-        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 13:43:25 -0700 (PDT)
+Received: from service87.mimecast.com ([91.220.42.44]:40850 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755822AbaDVMtm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 08:49:42 -0400
+Date: Tue, 22 Apr 2014 13:49:37 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"patches@apm.com" <patches@apm.com>,
+	"jcm@redhat.com" <jcm@redhat.com>
+Subject: Re: [PATCH v5 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
+Message-ID: <20140422124937.GE865@e106497-lin.cambridge.arm.com>
+References: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
+ <1395270762-6055-3-git-send-email-tinamdar@apm.com>
+ <CAL_Jsq+XxAtUeNKFi0hH=ehb_fhFvkM0U1Zm_j1LdtQZbvSzfA@mail.gmail.com>
+ <20140416170545.GD4858@bart>
+ <20140416212104.GA3469@obsidianresearch.com>
+ <20140417002041.GE4858@bart>
+ <20140417012434.GA8734@obsidianresearch.com>
 MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 3 Apr 2014 14:43:05 -0600
-Message-ID: <CAErSpo6JNDFiV6tmDKKDdnod+skBHx6T-+JGvjCRRLsL98h_uQ@mail.gmail.com>
-Subject: Coverity CID 142811: pci_set_vga_state() operands don't affect result
-To: Dave Airlie <airlied@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <20140417012434.GA8734@obsidianresearch.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Coverity complains about this in drivers/pci/pci.c:
+On Thu, Apr 17, 2014 at 02:24:34AM +0100, Jason Gunthorpe wrote:
+> On Thu, Apr 17, 2014 at 01:20:42AM +0100, Liviu Dudau wrote:
+> 
+> > > No spec says you can put config space into the ranges at all, nobody
+> > > should be doing that today, obviously some cases were missed during
+> > > review..
+> > 
+> > ePAPR documents allows that when ss == 00.
+> 
+> Which do you mean? The 'PCI Bus Binding' spec has fairly specific
+> language on how ranges should be used and interpreted, and it
+> precludes doing anything meaningful with config space (like requiring
+> b,d,f and r to be zeroed when doing compares against ranges, requiring
+> the ranges to represent the bridge windows, etc).
+> 
+> There is certainly room to invent something (like ECAM mapping) but
+> nothing is specified in that document.
 
-CID 142811 (#1 of 1): Operands don't affect result (CONSTANT_EXPRESSION_RESULT)
-result_independent_of_operands: flags & (2U /* 1 << 1 */) &
-(command_bits & 4294967292U /* ~(1 | 2) */) is always 0 regardless of
-the values of its operands. This occurs as the logical operand of if.
+On more carefull reading of the Power_ePAPR_APPROVED_v1.0.pdf document
+that I have I agree, there is no meaningful way of describing one's
+config ranges.
 
-4128        WARN_ON((flags & PCI_VGA_STATE_CHANGE_DECODES) &
-(command_bits & ~(PCI_COMMAND_IO|PCI_COMMAND_MEMORY)));
+> 
+> The ePAPR document I have doesn't talk about PCI..
+> 
+> If you've found a document that defines how it works then that changes
+> things.. ;)
+> 
+> > > The comment about ECAM was intended as a general guidance on what
+> > > config space in ranges could/should be used for.
+> > > 
+> > > Right now config space shouldn't propagate out side any driver, so you
+> > > can probably just filter it in your generic code, and make it very hard
+> > > and obviously wrong for a driver to parse ranges for config space, so
+> > > we don't get more usages.
+> > 
+> > OK, this goes slightly against your email from 26th March:
+> > 
+> > "When we talked about this earlier on the DT bindings list the
+> > consensus seemed to be that configuration MMIO ranges should only be
+> > used if the underlying memory was exactly ECAM, and was not to be used
+> > for random configuration related register blocks.
+> > 
+> > The rational being that generic code, upon seeing that ranges entry,
+> > could just go ahead and assume ECAM mapping."
+> > 
+> > What I'm saying is that the only code that will see this ranges entry will
+> > be the parsing code as if we try to create a resource out of the range
+> > and add it to the host bridge structure (not driver) we will confuse the
+> > rest of the pci_host_bridge API. So we cannot do any ECAM accesses (yet?).
+> 
+> Sorry if this seems unclear, what you quoted was from a specification
+> standpoint - someday defining config space ranges to be the ECAM
+> window makes the most sense. This is from the direction of precluding
+> drivers from using it for random purposes.
+> 
+> From a Linux standpoint, there is simply no infrastructure for generic
+> config access outside the driver, so config space must remain
+> contained in the driver, and shouldn't leak into the host bridge or
+> other core structures.
+> 
+> I think the shared code you are working on should simply ignore config
+> ss ranges entirely, they have no defined meaning..
 
-This is a result of 3448a19da479 "vgaarb: use bridges to control VGA
-routing where possible."
+Agree. Less things to code for is always better!
 
-I wonder if that middle "&" was intended to be "&&"?
+Best regards,
+Liviu
 
-Bjorn
+> 
+> Regards,
+> Jason
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
