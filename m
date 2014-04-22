@@ -1,91 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from am1ehsobe001.messaging.microsoft.com ([213.199.154.204]:18384
-	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750768AbaDNTfS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 15:35:18 -0400
-From: Rajat Jain <rajatjain@juniper.net>
-To: Rajat Jain <rajatxjain@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: Guenter Roeck <groeck@juniper.net>
-Subject: RE: [PATCH v2] pci: Allow hotplug service drivers to operate in
- polling mode
-Date: Mon, 14 Apr 2014 19:35:11 +0000
-Message-ID: <cf4f3cfede2744a5931034aedfcdf4aa@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <5339FF7B.4020904@gmail.com>
-In-Reply-To: <5339FF7B.4020904@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga03.intel.com ([143.182.124.21]:53836 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751500AbaDVHmb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Apr 2014 03:42:31 -0400
+Message-ID: <53561D61.7030706@linux.intel.com>
+Date: Tue, 22 Apr 2014 15:42:25 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
+To: David Woodhouse <dwmw2@infradead.org>
+CC: Joerg Roedel <joro@8bytes.org>, Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: Re: [Patch Part3 V1 19/22] iommu/vt-d: simplify intel_unmap_sg()
+ and kill duplicated code
+References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>	 <1398150453-28141-20-git-send-email-jiang.liu@linux.intel.com> <1398152333.723.27.camel@shinybook.infradead.org>
+In-Reply-To: <1398152333.723.27.camel@shinybook.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
-
-Just wondering if you got a chance to look at this one. This independent of my other patch (that makes polling, a per-port thing). 
-
-Without this patch - today the hot-plug service cannot be used at all in polling mode IF the interrupts are broken (which I'd assume is the case when one would want to resort to use polling).
-
-Thanks,
-
-Rajat
-
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Rajat Jain
-> Sent: Monday, March 31, 2014 4:51 PM
-> To: Bjorn Helgaas; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
-> Cc: Rajat Jain; Guenter Roeck
-> Subject: [PATCH v2] pci: Allow hotplug service drivers to operate in polling
-> mode
+On 2014/4/22 15:38, David Woodhouse wrote:
+> On Tue, 2014-04-22 at 15:07 +0800, Jiang Liu wrote:
+>> +       size_t size = 0;
+>> +#if 0
+>> +       /* current the third argument of intel_unmap_page is unsued */
+>> +       int i;
+>> +       struct scatterlist *sg;
+>>  
+>> -       freelist = domain_unmap(domain, start_pfn, last_pfn);
+>> +       for_each_sg(sglist, sg, nelems, i)
+>> +               size += sg->length;
+>> +#endif
 > 
-> Today the PCIe port bus driver disables the Hot-plug service if the port device
-> does not have the capability to generate interrupts.
-> However, a user must be able to use the "pciehp_poll_mode" parameter to
-> use the pciehp in polling method in such a case. Today it is not possible.
-> 
-> This patch allows a hotplug service driver to decide whether or not it would
-> like to continue in absense of interrupts.
-> 
-> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
-> ---
-> v2: Drop the extra debug msg in pciehp
->     (and just retain the changes in portdrv_core.c)
-> 
->  drivers/pci/pcie/portdrv_core.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 0b6e766..ba31deb 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -377,10 +377,13 @@ int pcie_port_device_register(struct pci_dev *dev)
->  	/*
->  	 * Initialize service irqs. Don't use service devices that
->  	 * require interrupts if there is no way to generate them.
-> +	 * However, some drivers may have a polling mode (e.g
-> pciehp_poll_mode)
-> +	 * that can be used in absense of irqs. Allow them to determine
-> +	 * if that is to be used.
->  	 */
->  	status = init_service_irqs(dev, irqs, capabilities);
->  	if (status) {
-> -		capabilities &= PCIE_PORT_SERVICE_VC;
-> +		capabilities &= PCIE_PORT_SERVICE_VC |
-> PCIE_PORT_SERVICE_HP;
->  		if (!capabilities)
->  			goto error_disable;
->  	}
-> --
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
-> 
+> Please don't do that. If you want to rely on the fact that
+> intel_unmap_page() currently just uses the size from the IOVA it finds,
+> then split it out into a separate function which explicitly does
+> precisely that. And call that new function from both intel_unmap_sg()
+> and intel_unmap_page().
 
-
+Good suggestion, will change to follow that way in next version.
