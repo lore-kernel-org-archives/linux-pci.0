@@ -1,98 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Liviu Dudau" <liviu@dudau.co.uk>
-Date: Wed, 16 Apr 2014 18:05:45 +0100
-To: Rob Herring <robherring2@gmail.com>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:5712 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752201AbaDVOW1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Apr 2014 10:22:27 -0400
+Date: Tue, 22 Apr 2014 08:22:25 -0600 (MDT)
+From: Keith Busch <keith.busch@intel.com>
+To: "Mayes, Barrett N" <barrett.n.mayes@intel.com>
+cc: Learner Study <learner.study@gmail.com>,
+	"Busch, Keith" <keith.busch@intel.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"patches@apm.com" <patches@apm.com>,
-	"jcm@redhat.com" <jcm@redhat.com>
-Subject: Re: [PATCH v5 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
-Message-ID: <20140416170545.GD4858@bart>
-References: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
- <1395270762-6055-3-git-send-email-tinamdar@apm.com>
- <CAL_Jsq+XxAtUeNKFi0hH=ehb_fhFvkM0U1Zm_j1LdtQZbvSzfA@mail.gmail.com>
+	linux-nvme <linux-nvme@lists.infradead.org>
+Subject: RE: [PATCH 2/2] NVMe: Implement PCI-e reset notification callback
+In-Reply-To: <B8DB29EA17EB2742AC3405C31A9B9EE961457B96@ORSMSX111.amr.corp.intel.com>
+Message-ID: <alpine.LRH.2.03.1404220805390.5490@AMR>
+References: <1397000541-1085-1-git-send-email-keith.busch@intel.com> <1397000541-1085-2-git-send-email-keith.busch@intel.com> <CAP8+hKWcybw5u_m5M4c1p4eUAaTq4x+kO+tnegwD2ciDMEFNCw@mail.gmail.com> <alpine.LRH.2.03.1404211935510.5490@AMR>
+ <1E05E2AB-198E-473A-8AA5-87DA2E9910B8@gmail.com> <CAP8+hKUEygoeEv=LvY2ccp6cepnXEpi4WGVSaCnRw+zN7BUE_Q@mail.gmail.com> <B8DB29EA17EB2742AC3405C31A9B9EE961457B96@ORSMSX111.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAL_Jsq+XxAtUeNKFi0hH=ehb_fhFvkM0U1Zm_j1LdtQZbvSzfA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-1184062565-1398176546=:5490"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 26, 2014 at 09:28:42AM -0500, Rob Herring wrote:
-> On Wed, Mar 19, 2014 at 6:12 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
-> > This patch adds the device tree nodes for APM X-Gene PCIe controller and
-> > PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
-> > nodes are added.
-> 
-> [snip]
-> 
-> > +               pcie0: pcie@1f2b0000 {
-> > +                       status = "disabled";
-> > +                       device_type = "pci";
-> > +                       compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-> > +                       #interrupt-cells = <1>;
-> > +                       #size-cells = <2>;
-> > +                       #address-cells = <3>;
-> > +                       reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-> > +                               0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
-> 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Resurecting an old thread as this is relevant to what I'm doing at the moment:
+--8323328-1184062565-1398176546=:5490
+Content-Type: TEXT/PLAIN; charset=ISO-8859-7; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-> Where is the right place for config space? This binding has it here
-> and others have it in ranges. Given that config space type is defined
-> for ranges, I would think that is the right place. But Liviu's patches
-> do not process config space entries in ranges. Perhaps we need a
-> config space resource populated in the bridge struct.
+On Mon, 21 Apr 2014, Mayes, Barrett N wrote:
+> Section 8.5 of the NVMe 1.1 spec contains the following:  "While the details
+> associated with implementing a controller that supports SR-IOV are outside
+> the scope of this specification, such a controller shall implement fully
+> compliant NVM Express Virtual Functions (VFs). This ensures that the same
+> host software developed for non-virtualized environments is capable of
+> running unmodified within an SI. No such requirement exists for the Physical
+> Function (PF)."
+>
+> If a VF is a fully NVMe compliant device then it must at least act like it
+> implements NVMe subsystem reset.  How the SR-IOV-capable controller actually
+> implements this is left up to the vendor.  But the spec does not require that
+> a reset of one VF initiate a reset of other VF.
 
-I have found out that we cannot pasd the config ranges from the DT into the
-pci_host_bridge structure as the PCI framework doesn't have a resource type
-for config resources. Leaving the translation between range flags and
-resource type as is (filtered through the IORESOURCE_TYPE_BITS) will lead
-to a resource type of value zero, which is not recognised by any resource
-handling API so bridge configuration and bus scanning will barf.
+The NVMe spec does not, but PCI does.
 
-I'm looking for suggestions here, as Jason Gunthorpe suggested that we
-should be able to parse config ranges if they conform to the ECAM part
-of the PCI standard.
+In case it wasn't clear from PATCH 1/2, this proposed callback is for a
+function level reset. The PCI SR-IOV spec says all VF's implement FLR and
+that this reset does not affect any other functions, from section 2.2.2:
 
-Best regards,
-Liviu
+   VFs must support Function Level Reset (FLR).
 
-> 
-> Rob
-> 
-> 
-> > +                       reg-names = "csr", "cfg";
-> > +                       ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
-> > +                                 0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+   Note: Software may use FLR to reset a VF. FLR to a VF affects a VF¢s
+   state but does not affect its existence in PCI Configuration Space or
+   PCI Bus address space. The VFs BARn values (see Section 3.3.14) and
+   VF MSE (see Section 3.3.3.4) in the PF¢s SR-IOV extended capability
+   are unaffected by FLRs issued to the VF.
 
--- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
+Further, an NVMe subsystem reset is not the same as a controller or
+function level reset. I have not proposed doing a subsytem reset here.
 
- One small step
-   for me ...
-
+Since this is a call-back invoked from an FLR that happens outside the
+driver whether the driver wants it to happen or not, it's better the
+driver is aware and prepared that this occured rather than not knowing
+and left to wonder why the heck the controller stopped responding.
+--8323328-1184062565-1398176546=:5490--
