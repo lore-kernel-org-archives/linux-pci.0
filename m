@@ -1,68 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:43418 "EHLO gate.crashing.org"
+Received: from mga01.intel.com ([192.55.52.88]:17579 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753448AbaDFJuw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 6 Apr 2014 05:50:52 -0400
-Message-ID: <1396777793.3671.15.camel@pasglop>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
- function.
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Date: Sun, 06 Apr 2014 19:49:53 +1000
-In-Reply-To: <20140405001953.GE15806@google.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
-	 <1394811272-1547-2-git-send-email-Liviu.Dudau@arm.com>
-	 <20140405001953.GE15806@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752990AbaDVHFz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Apr 2014 03:05:55 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part3 V1 06/22] iommu/vt-d: fix possible invalid memory access caused by free_dmar_iommu()
+Date: Tue, 22 Apr 2014 15:07:17 +0800
+Message-Id: <1398150453-28141-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-04-04 at 18:19 -0600, Bjorn Helgaas wrote:
-> > Introduce a pci_register_io_range() helper function that can be used
-> > by the architecture code to keep track of the I/O ranges described by the
-> > PCI bindings. If the PCI_IOBASE macro is not defined that signals
-> > lack of support for PCI and we return an error.
-> 
-> I don't quite see how you intend to use this, because this series doesn't
-> include any non-stub implementation of pci_register_io_range().
-> 
-> Is this anything like the ia64 strategy I mentioned above?  If so, it would
-> be really nice to unify some of this stuff.
+Static identity and virtual machine domains may be cached in
+iommu->domain_ids array after corresponding IOMMUs have been removed
+from domain->iommu_bmp. So we should check domain->iommu_bmp before
+decreasing domain->iommu_count in function free_dmar_iommu(), otherwise
+it may cause free of inuse domain data structure.
 
-We also use two different strategies on ppc32 and ppc64
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
- - On ppc32, inb/outb turn into an MMIO access to _IO_BASE + port
-
-That _IO_BASE is a variable which is initialized to the ioremapped address
-of the IO space MMIO aperture of the first bridge we discover. Then port
-numbers are "fixed up" on all other bridges so that the addition _IO_BASE + port
-fits the ioremapped address of the IO space on that bridge. A bit messy... and breaks
-whenever drivers copy port numbers into variables of the wrong type such as shorts.
-
- - On ppc64, we have more virtual space, so instead we reserve a range
-of address space (fixed) for IO space, it's always the same. Bridges IO spaces
-are then mapped into that range, so we always have a positive offset from _IO_BASE
-which makes things a bit more robust and less "surprising" than ppc32. Additionally,
-the first 64k are reserved. They are only mapped if we see an ISA bridge (which some
-older machines have). Otherwise it's left unmapped, so crappy drivers trying to
-hard code x86 IO ports will blow up immediately which I deem better than silently
-whacking the wrong hardware. In addition, we have a mechanism we use on powernv to
-re-route accesses to that first 64k to the power8 built-in LPC bus which can
-have some legacy IOs on it such as a UART or a RTC.
-
-Cheers,
-Ben.
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 0ab0cd236b16..1f10fcd1c696 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -425,6 +425,8 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
+ 				       struct device *dev);
+ static void iommu_detach_dependent_devices(struct intel_iommu *iommu,
+ 					   struct device *dev);
++static int domain_detach_iommu(struct dmar_domain *domain,
++			       struct intel_iommu *iommu);
+ 
+ #ifdef CONFIG_INTEL_IOMMU_DEFAULT_ON
+ int dmar_disabled = 0;
+@@ -1467,8 +1469,7 @@ static int iommu_init_domains(struct intel_iommu *iommu)
+ static void free_dmar_iommu(struct intel_iommu *iommu)
+ {
+ 	struct dmar_domain *domain;
+-	int i, count;
+-	unsigned long flags;
++	int i;
+ 
+ 	if ((iommu->domains) && (iommu->domain_ids)) {
+ 		for_each_set_bit(i, iommu->domain_ids, cap_ndoms(iommu->cap)) {
+@@ -1481,11 +1482,7 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
+ 
+ 			domain = iommu->domains[i];
+ 			clear_bit(i, iommu->domain_ids);
+-
+-			spin_lock_irqsave(&domain->iommu_lock, flags);
+-			count = --domain->iommu_count;
+-			spin_unlock_irqrestore(&domain->iommu_lock, flags);
+-			if (count == 0)
++			if (domain_detach_iommu(domain, iommu) == 0)
+ 				domain_exit(domain);
+ 		}
+ 	}
+-- 
+1.7.10.4
 
