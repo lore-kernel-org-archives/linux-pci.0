@@ -1,206 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2lp0212.outbound.protection.outlook.com ([207.46.163.212]:27793
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752909AbaDYRhs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 Apr 2014 13:37:48 -0400
-From: Guenter Roeck <groeck@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rajat Jain <rajatxjain@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from service87.mimecast.com ([91.220.42.44]:36690 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751924AbaDVMyP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 08:54:15 -0400
+Date: Tue, 22 Apr 2014 13:54:12 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>
-Subject: RE: [PATCH] pci/pciehp: Allow polling/irq mode to be decided on a
- per-port basis
-Date: Fri, 25 Apr 2014 17:37:33 +0000
-Message-ID: <afddb2ca730f45d59318728d3e3e436f@CO1PR05MB523.namprd05.prod.outlook.com>
-References: <5339FF99.2050200@gmail.com> <20140424213106.GI29593@google.com>
- <e760e15b4f404c6cb3252480a7d8a78a@CO1PR05MB523.namprd05.prod.outlook.com>
- <CAErSpo4ymkPOx5Evi=nctWr5f7OY6vkQTzwGnvi1ck7t-OTAWg@mail.gmail.com>
-In-Reply-To: <CAErSpo4ymkPOx5Evi=nctWr5f7OY6vkQTzwGnvi1ck7t-OTAWg@mail.gmail.com>
-Content-Type: multipart/mixed;
-	boundary="_002_afddb2ca730f45d59318728d3e3e436fCO1PR05MB523namprd05pro_"
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [RFC PATCH 1/2] PCI: designware: Add ARM64 PCI support
+Message-ID: <20140422125412.GF865@e106497-lin.cambridge.arm.com>
+References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
+ <000901cf592e$563bc8c0$02b35a40$%han@samsung.com>
+ <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
+ <16730530.rJ9T0MsYmt@wuerfel>
 MIME-Version: 1.0
+In-Reply-To: <16730530.rJ9T0MsYmt@wuerfel>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_002_afddb2ca730f45d59318728d3e3e436fCO1PR05MB523namprd05pro_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+On Wed, Apr 16, 2014 at 07:26:15PM +0100, Arnd Bergmann wrote:
+> On Wednesday 16 April 2014 17:57:24 Liviu Dudau wrote:
+> > Jingoo,
+> > 
+> > Thanks for taking a stab at trying to convert a host bridge
+> > driver to use the new generic host bridge code.
+> > 
+> > I do however have concerns on the direction you took. You have split
+> > your driver in two, depending on whether it was CONFIG_ARM or CONFIG_ARM64,
+> > even if (with my series) it should be no reason why the host bridge
+> > driver should not work on other architectures as well once they are
+> > converted.
+> 
+> Right.
+> 
+> > Also, some of the functions that you use have identical names but different
+> > signatures depending on what arch you have selected. This is really bad
+> > in my books!
+> 
+> It's only the sys_to_pcie() function, right?
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWls
-dG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0NCj4gU2VudDogRnJpZGF5LCBBcHJpbCAyNSwgMjAxNCA5
-OjQ0IEFNDQo+IFRvOiBHdWVudGVyIFJvZWNrDQo+IENjOiBSYWphdCBKYWluOyBsaW51eC1wY2lA
-dmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsgUmFqYXQg
-SmFpbg0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBwY2kvcGNpZWhwOiBBbGxvdyBwb2xsaW5nL2ly
-cSBtb2RlIHRvIGJlIGRlY2lkZWQNCj4gb24gYSBwZXItcG9ydCBiYXNpcw0KPiANCj4gT24gRnJp
-LCBBcHIgMjUsIDIwMTQgYXQgMTA6MzQgQU0sIEd1ZW50ZXIgUm9lY2sgPGdyb2Vja0BqdW5pcGVy
-Lm5ldD4NCj4gd3JvdGU6DQo+ID4NCj4gPg0KPiA+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0t
-LQ0KPiA+PiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0N
-Cj4gPj4gU2VudDogVGh1cnNkYXksIEFwcmlsIDI0LCAyMDE0IDI6MzEgUE0NCj4gPj4gVG86IFJh
-amF0IEphaW4NCj4gPj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5l
-bEB2Z2VyLmtlcm5lbC5vcmc7IFJhamF0DQo+ID4+IEphaW47IEd1ZW50ZXIgUm9lY2sNCj4gPj4g
-U3ViamVjdDogUmU6IFtQQVRDSF0gcGNpL3BjaWVocDogQWxsb3cgcG9sbGluZy9pcnEgbW9kZSB0
-byBiZQ0KPiBkZWNpZGVkDQo+ID4+IG9uIGEgcGVyLXBvcnQgYmFzaXMNCj4gPj4NCj4gPj4gT24g
-TW9uLCBNYXIgMzEsIDIwMTQgYXQgMDQ6NTE6NTNQTSAtMDcwMCwgUmFqYXQgSmFpbiB3cm90ZToN
-Cj4gPj4gPiBUb2RheSwgdGhlcmUgaXMgYSBnbG9iYWwgcGNpZWhwX3BvbGxfbW9kZSBtb2R1bGUg
-cGFyYW1ldGVyIHVzaW5nDQo+ID4+IHdoaWNoDQo+ID4+ID4gZWl0aGVyIF9hbGxfIHRoZSBob3Qt
-cGx1Z2dhYmxlIHBvcnRzIGFyZSB0byB1c2UgcG9sbGluZywgb3IgX2FsbF8NCj4gPj4gPiB0aGUg
-cG9ydHMgYXJlIHRvIHVzZSBpbnRlcnJ1cHRzLg0KPiA+PiA+DQo+ID4+ID4gSW4gYSBzeXN0ZW0g
-d2hlcmUgYSBjZXJ0YWluIHBvcnQgaGFzIElSUSBpc3N1ZXMsIHRvZGF5IHRoZSBvbmx5DQo+ID4+
-IG9wdGlvbg0KPiA+PiA+IGlzIHRvIHVzZSB0aGUgcGFyYW1ldGVyIHRoYXQgY29udmVydHMgQUxM
-IHRoZSBwb3J0cyB0byB1c2UgcG9sbGluZw0KPiA+PiBtb2RlLg0KPiA+PiA+IFRoaXMgaXMgbm90
-IGdvb2QsIGFuZCBoZW5jZSB0aGlzIHBhdGNoIGludHJ1ZHVjZXMgYSBiaXQgZmllbGQgdGhhdA0K
-PiA+PiBjYW4NCj4gPj4gPiBiZSBzZXQgdXNpbmcgYSBQQ0kgcXVpcmsgdGhhdCBpbmRpY2F0ZXMg
-dGhhdCBwb2xsaW5nIHNob3VsZCBhbHdheXMNCj4gPj4gPiBiZSB1c2VkIGZvciB0aGlzIHBhcnRp
-Y3VsYXIgUENJZSBwb3J0LiBUaGUgcmVtYWluaW5nIHBvcnRzIGNhbg0KPiA+PiA+IHN0aWxsIGhv
-b3NlIHRvIGNvbnRpbnVlIHRvIG9wZXJhdGUgaW4gd2hhdGV2ZXIgbW9kZSB0aGV5IHdpc2ggdG8u
-DQo+ID4+ID4NCj4gPj4gPiBTaWduZWQtb2ZmLWJ5OiBSYWphdCBKYWluIDxyYWphdHhqYWluQGdt
-YWlsLmNvbT4NCj4gPj4gPiBTaWduZWQtb2ZmLWJ5OiBSYWphdCBKYWluIDxyYWphdGphaW5AanVu
-aXBlci5uZXQ+DQo+ID4+ID4gU2lnbmVkLW9mZi1ieTogR3VlbnRlciBSb2VjayA8Z3JvZWNrQGp1
-bmlwZXIubmV0Pg0KPiA+Pg0KPiA+PiBJJ20gd2lsbGluZyB0byBtZXJnZSB0aGlzLCBidXQgSSdk
-IHByZWZlciB0byBtZXJnZSBpdCBhbG9uZyB3aXRoIGENCj4gPj4gcXVpcmsgdGhhdCBhY3R1YWxs
-eSBzZXRzIGRldi0+aG90cGx1Z19wb2xsaW5nLiAgT3RoZXJ3aXNlIGl0J3MgZGVhZA0KPiA+PiBj
-b2RlIGFuZCBJJ2xsIGhhdmUgbm8gd2F5IHRvIHRlbGwgd2hldGhlciB3ZSBuZWVkIHRvIGtlZXAg
-aXQuDQo+ID4+DQo+ID4gQmpvcm4sDQo+ID4NCj4gPiB3aGF0IHdvdWxkIGJlIHRoZSBwcm9wZXIg
-bG9jYXRpb24gZm9yIHN1Y2ggYSBxdWlyayA/DQo+ID4gV2UgdXNlIGl0IHRvIGhlbHAgc2ltdWxh
-dGluZyBob3RwbHVnIHN1cHBvcnQgb24gYW4gSURUIFBFUzEyTlQzLg0KPiA+IFRoZSBjb2RlIGlz
-IGEgYml0IG1vcmUgaW52YXNpdmUgdGhhbiBqdXN0IHRoZSBxdWlyayBpdHNlbGYsIHNpbmNlIGl0
-DQo+ID4gYWxzbyBuZWVkcyB0byB0b3VjaCBsaW5rIGFuZCBzbG90IHN0YXR1cyByZWdpc3RlcnMs
-IHNvIHF1aXJrcy5jDQo+ID4gZG9lc24ndCBzZWVtIGFwcHJvcHJpYXRlLg0KPiA+DQo+ID4gZHJp
-dmVycy9wY2kvcGVzMTJudDMuYywgbWF5YmUsIHdpdGggYSBzZXBhcmF0ZSBjb25maWd1cmF0aW9u
-IG9wdGlvbiA/DQo+ID4gT3IgaW4gdGhlIGhvdHBsdWcgZGlyZWN0b3J5ID8NCj4gDQo+IElmIHRo
-aXMgaXMgb25seSBmb3IgZGVidWcsIGkuZS4sIHlvdSBkb24ndCBpbnRlbmQgdG8gc2hpcCBhIHBy
-b2R1Y3QNCj4gdXNpbmcgdGhpcyBzaW11bGF0ZWQgaG90cGx1ZywgbWF5YmUgeW91IHNob3VsZCBq
-dXN0IGtlZXAgYm90aCB0aGUgcXVpcmsNCj4gYW5kIHRoaXMgcGF0Y2ggb3V0IG9mIHRyZWUuDQo+
-IA0KPiBJZiB5b3UgZG8gd2FudCB0byBldmVudHVhbGx5IHNoaXAgdGhpcyBjb2RlIGZvciBzb21l
-IHByb2R1Y3QsIEkgdGhpbmsNCj4gaXQnZCBiZSBmaW5lIHRvIHB1dCB0aGUgcXVpcmsgaW4gZHJp
-dmVycy9wY2kvcXVpcmtzLmMsIG1heWJlIHdpdGggYQ0KPiBjb25maWcgb3B0aW9uIHRvIGVuYWJs
-ZSBpdC4gIEJ1dCB3aXRob3V0IHNlZWluZyB0aGUgcXVpcmssIEkgY2FuJ3QNCj4gcmVhbGx5IHRl
-bGwuICBBIG5ldyBmaWxlIHNlZW1zIG92ZXJraWxsIHVubGVzcyBpdCdzIHNvbWV0aGluZyByZWFs
-bHkNCj4gaHVnZSAtLSBJIGRvbid0IHRoaW5rIHdlIHJlYWxseSBoYXZlIGV4YW1wbGVzIG9mIGRl
-ZGljYXRlZCBmaWxlcyBmb3INCj4gb3RoZXIgY2hpcCBpZGlvc3luY3Jhc2llcy4NCj4gDQoNCkkn
-ZCBnaXZlIGl0IGEgNTA6NTAgcHJvYmFiaWxpdHkgdGhhdCBpdCB3aWxsIHNoaXAuIEN1cnJlbnQg
-cGxhbiBpcyB0aGF0DQppdCBpcyBmb3IgZGV2ZWxvcG1lbnQgb25seSwgYnV0IEkgc3VzcGVjdCB0
-aGF0IG1heSBjaGFuZ2UgYXQgc29tZSBwb2ludC4NCg0KSSBhZ3JlZSwgdGhpcyBpcyBraW5kIG9m
-IGFuIG91dGxpZXIuIElmIHdlIHB1c2ggaXQgdXBzdHJlYW0sIGl0IG1pZ2h0DQptb3N0bHkgc2Vy
-dmUgYXMgYSByZWZlcmVuY2UgZm9yIG90aGVycyB3aG8gbWlnaHQgaGF2ZSBzaW1pbGFyIHByb2Js
-ZW1zIC0NCm5vdCBqdXN0IGZvciB0aGUgcXVpcmsgaXRzZWxmLCBidXQgYXMgYW4gZXhhbXBsZSBv
-biBob3cgdG8gaW50ZXJjZXB0DQphbmQgbWFuaXB1bGF0ZSBwY2kgY29uZmlndXJhdGlvbiByZWdp
-c3RlciBhY2Nlc3Nlcy4NCg0KSSBhdHRhY2hlZCB0aGUgZmlsZSBzbyB5b3UgY2FuIGhhdmUgYSBs
-b29rLg0KDQpHdWVudGVyDQoNCg==
+Right.
 
---_002_afddb2ca730f45d59318728d3e3e436fCO1PR05MB523namprd05pro_
-Content-Type: text/plain; name="pes12nt3.c.c"
-Content-Description: pes12nt3.c.c
-Content-Disposition: attachment; filename="pes12nt3.c.c"; size=5902;
-	creation-date="Fri, 25 Apr 2014 17:00:35 GMT";
-	modification-date="Wed, 16 Apr 2014 21:24:46 GMT"
-Content-Transfer-Encoding: base64
+> 
+> You can probably simplify that to take a void pointer and have only one line
+> difference.
+> 
+> > What about creating functions that use my series directly if CONFIG_ARM64 is
+> > defined (or any CONFIG_ you want to create for your driver that you select
+> > from CONFIG_ARM64) and otherwise implement the CONFIG_ARM version? That
+> > way your driver will call only one API without any #ifdef and when arm code
+> > gets converted you drop your adaptation functions. Or (better yet), have a
+> > stab at converting bios32 (Rob Herring has already provided some hints on
+> > how to do it for arch/arm).
+> 
+> That would of course be best.
+> 
+> > To give an example on how things are not going well in your version (not obvious
+> > from your patch, but you can see it once you apply it): dw_pcie_host_init()
+> > will still carry the handcoded version of DT parsing and that is not guarded
+> > against CONFIG_ARM64 being defined, where the parsing will happen again
+> > when you call of_create_pci_host_bridge().
+> 
+> How about making the generic DT parsing code from of_create_pci_host_bridge()
+> an exported function that can be called by drivers that don't use
+> of_create_pci_host_bridge?
 
-LyoNCiAqIFBUWDUwMDAgIFNJQiAtIFBDSSBmaXh1cCBjb2RlDQogKg0KICogUmFqYXQgSmFpbiA8
-cmFqYXRqYWluQGp1bmlwZXIubmV0Pg0KICogQ29weXJpZ2h0IDIwMTQgSnVuaXBlciBOZXR3b3Jr
-cw0KICoNCiAqIFRoaXMgcHJvZ3JhbSBpcyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJlZGlzdHJp
-YnV0ZSAgaXQgYW5kL29yIG1vZGlmeSBpdA0KICogdW5kZXIgdGhlIHRlcm1zIG9mIHRoZSBHTlUg
-R2VuZXJhbCBQdWJsaWMgTGljZW5zZSB2MiBhcyBwdWJsaXNoZWQgYnkgdGhlDQogKiBGcmVlIFNv
-ZnR3YXJlIEZvdW5kYXRpb24NCiAqLw0KDQojaW5jbHVkZSA8bGludXgvbGlzdC5oPg0KI2luY2x1
-ZGUgPGxpbnV4L3BjaS5oPg0KI2luY2x1ZGUgPGxpbnV4L2pueC9wY2lfaWRzLmg+DQojaW5jbHVk
-ZSA8bGludXgvc3BpbmxvY2suaD4NCg0KI2RlZmluZSBJRFRfUEVTMTJOVDNfRExTVFMgICAgICAg
-ICAgICAgIDB4MjY4DQojZGVmaW5lIElEVF9QRVMxMk5UM19ETFNUU19ETEZTTSAgICAgICAgMHg3
-DQojZGVmaW5lIElEVF9QRVMxMk5UM19ETFNUU19MSU5LQUNUSVZFICAgMHg0DQoNCnN0cnVjdCBw
-ZXMxMm50M19wY2lfZGF0YSB7DQoJc3RydWN0IGxpc3RfaGVhZCBsaXN0Ow0KCXN0cnVjdCBkZXZp
-Y2UgKmRldjsNCglzdHJ1Y3QgcGNpX29wcyBvcHM7DQoJc3RydWN0IHBjaV9vcHMgKm9sZF9vcHM7
-DQoJYm9vbCBsbmtzdGFfZGxsbGE7DQoJYm9vbCBzbHRzdGFfZGxsc2M7DQp9Ow0KDQpzdGF0aWMg
-TElTVF9IRUFEKHBlczEybnQzX2xpc3QpOw0Kc3RhdGljIERFRklORV9TUElOTE9DSyhwZXMxMm50
-M19sb2NrKTsNCg0Kc3RhdGljIGludCBwZXMxMm50M191cGRhdGVfbGlua3N0YXR1cyhzdHJ1Y3Qg
-cGVzMTJudDNfcGNpX2RhdGEgKmRhdGEsDQoJCQkJICAgICAgc3RydWN0IHBjaV9idXMgKmJ1cywg
-dW5zaWduZWQgaW50IGRldmZuKQ0Kew0KCXUzMiBsaW5rYWN0aXZlOw0KCWJvb2wgZGxsbGE7DQoJ
-aW50IHJldHZhbDsNCg0KCXJldHZhbCA9IGRhdGEtPm9sZF9vcHMtPnJlYWQoYnVzLCBkZXZmbiwg
-SURUX1BFUzEyTlQzX0RMU1RTLA0KCQkJCSAgICAgNCwgJmxpbmthY3RpdmUpOw0KCWlmIChyZXR2
-YWwpDQoJCXJldHVybiByZXR2YWw7DQoJaWYgKGxpbmthY3RpdmUgPT0gMHhmZmZmZmZmZikNCgkJ
-ZGxsbGEgPSBmYWxzZTsNCgllbHNlDQoJCWRsbGxhID0gKGxpbmthY3RpdmUgJiBJRFRfUEVTMTJO
-VDNfRExTVFNfRExGU00pID09DQoJCQkJCQlJRFRfUEVTMTJOVDNfRExTVFNfTElOS0FDVElWRTsN
-CglpZiAoZGxsbGEgIT0gZGF0YS0+bG5rc3RhX2RsbGxhKQ0KCQlkYXRhLT5zbHRzdGFfZGxsc2Mg
-PSB0cnVlOw0KCWRhdGEtPmxua3N0YV9kbGxsYSA9IGRsbGxhOw0KCXJldHVybiAwOw0KfQ0KDQpz
-dGF0aWMgaW50IHBlczEybnQzX3BjaV9yZWFkKHN0cnVjdCBwY2lfYnVzICpidXMsIHVuc2lnbmVk
-IGludCBkZXZmbiwNCgkJCSAgICAgIGludCB3aGVyZSwgaW50IHNpemUsIHUzMiAqdmFsKQ0Kew0K
-CXN0cnVjdCBwZXMxMm50M19wY2lfZGF0YSAqZGF0YSA9DQoJCQljb250YWluZXJfb2YoYnVzLT5v
-cHMsIHN0cnVjdCBwZXMxMm50M19wY2lfZGF0YSwgb3BzKTsNCglpbnQgcmV0dmFsLCBwb3M7DQoN
-CglyZXR2YWwgPSBkYXRhLT5vbGRfb3BzLT5yZWFkKGJ1cywgZGV2Zm4sIHdoZXJlLCBzaXplLCB2
-YWwpOw0KDQoJLyogT25seSBuZWVkIHRvIGNoYW5nZSB0aGUgcmVnaXN0ZXJzIGF0IHBvcnQgbGVh
-ZGluZyB0byBURiBjaGlwICovDQoJaWYgKHJldHZhbCB8fCBkZXZmbiAhPSAwKQ0KCQlyZXR1cm4g
-cmV0dmFsOw0KDQoJcmV0dmFsID0gcGVzMTJudDNfdXBkYXRlX2xpbmtzdGF0dXMoZGF0YSwgYnVz
-LCBkZXZmbik7DQoJaWYgKHJldHZhbCkNCgkJcmV0dXJuIHJldHZhbDsNCg0KCXBvcyA9IHdoZXJl
-IC0gMHg0MDsNCg0KCS8qDQoJICogUENJIHJlZ2lzdGVycyBzbWFsbGVyIHRoYW4gMzIgYml0cyBt
-YXkgYmUgcmVhZCB1c2luZw0KCSAqIGRpZmZlcmVudCBsZW5ndGhzIGF0IGRpZmVyZW50IG9mZnNl
-dHMuIENvbnNpZGVyOg0KCSAqDQoJICogKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tKw0KCSAqIHwgIFJlZy0xIHwgIFJlZy0yIHwgIFJlZy0zIHwgIFJlZy00IHwNCgkgKiArLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0rDQoJICogXiAgICAgICAgXiAgICAgICAg
-XiAgICAgICAgXg0KCSAqIHB0ciAgICAgIHB0cisxICAgIHB0cisyICAgIHB0ciszDQoJICoNCgkg
-KiBSZWctNCBtYXkgYmUgcmVhZCBieSB1c2luZyBhOg0KCSAqIDEgYnl0ZSByZWFkIGF0IChwdHIr
-MykNCgkgKiAyIGJ5dGUgcmVhZCBhdCAocHRyKzIpDQoJICogNCBieXRlIHJlYWQgYXQgKHB0cikN
-CgkgKiBldGMNCgkgKg0KCSAqIFdlIG5lZWQgdG8gdGFrZSBvZiB0aGlzIGhlcmUuDQoJICovDQoN
-Cglzd2l0Y2ggKHNpemUpIHsNCgljYXNlIDQ6DQoJCXN3aXRjaCAocG9zKSB7DQoJCWNhc2UgMDoN
-CgkJCWlmICgqdmFsID09IDB4ZmZmZmZmZmYpDQoJCQkJKnZhbCA9IDA7DQoJCQllbHNlDQoJCQkJ
-KnZhbCB8PSAoUENJX0VYUF9GTEFHU19TTE9UIDw8IDE2KTsNCgkJCWJyZWFrOw0KCQljYXNlIFBD
-SV9FWFBfTE5LQ0FQOg0KCQkJaWYgKCp2YWwgPT0gMHhmZmZmZmZmZikNCgkJCQkqdmFsID0gMDsN
-CgkJCWVsc2UNCgkJCQkqdmFsIHw9IFBDSV9FWFBfTE5LQ0FQX0RMTExBUkM7DQoJCQlicmVhazsN
-CgkJY2FzZSBQQ0lfRVhQX1NMVENBUDoNCgkJCWlmICgqdmFsID09IDB4ZmZmZmZmZmYpIHsNCgkJ
-CQkqdmFsID0gMDsNCgkJCX0gZWxzZSB7DQoJCQkJKnZhbCB8PSBQQ0lfRVhQX1NMVENBUF9IUEM7
-DQoJCQkJKnZhbCA9ICgqdmFsICYgflBDSV9FWFBfU0xUQ0FQX1BTTikgfA0KCQkJCQkoYnVzLT5u
-dW1iZXIgPDwgMTkpOw0KCQkJfQ0KCQkJYnJlYWs7DQoJCWNhc2UgUENJX0VYUF9MTktDVEw6DQoJ
-CQlpZiAoKnZhbCA9PSAweGZmZmZmZmZmKSB7DQoJCQkJKnZhbCA9IDA7DQoJCQl9IGVsc2Ugew0K
-CQkJCWlmIChkYXRhLT5sbmtzdGFfZGxsbGEpDQoJCQkJCSp2YWwgfD0gUENJX0VYUF9MTktTVEFf
-RExMTEEgPDwgMTY7DQoJCQkJZWxzZQ0KCQkJCQkqdmFsICY9IH4oUENJX0VYUF9MTktTVEFfRExM
-TEEgPDwgMTYpOw0KCQkJfQ0KCQkJYnJlYWs7DQoJCX0NCgkJYnJlYWs7DQoNCgljYXNlIDI6DQoJ
-CXN3aXRjaCAocG9zKSB7DQoJCWNhc2UgUENJX0VYUF9GTEFHU19TTE9UOg0KCQkJaWYgKCp2YWwg
-PT0gMHhmZmZmKQ0KCQkJCSp2YWwgPSAwOw0KCQkJZWxzZQ0KCQkJCSp2YWwgfD0gUENJX0VYUF9G
-TEFHU19TTE9UOw0KCQkJYnJlYWs7DQoJCWNhc2UgUENJX0VYUF9MTktTVEE6DQoJCQlpZiAoKnZh
-bCA9PSAweGZmZmYpIHsNCgkJCQkqdmFsID0gMDsNCgkJCX0gZWxzZSB7DQoJCQkJaWYgKGRhdGEt
-Pmxua3N0YV9kbGxsYSkNCgkJCQkJKnZhbCB8PSBQQ0lfRVhQX0xOS1NUQV9ETExMQTsNCgkJCQll
-bHNlDQoJCQkJCSp2YWwgJj0gflBDSV9FWFBfTE5LU1RBX0RMTExBOw0KCQkJfQ0KCQkJYnJlYWs7
-DQoJCWNhc2UgUENJX0VYUF9TTFRTVEE6DQoJCQlpZiAoKnZhbCA9PSAweGZmZmYpDQoJCQkJKnZh
-bCA9IFBDSV9FWFBfU0xUU1RBX0RMTFNDOw0KCQkJZWxzZSBpZiAoZGF0YS0+c2x0c3RhX2RsbHNj
-KQ0KCQkJCSp2YWwgfD0gUENJX0VYUF9TTFRTVEFfRExMU0M7DQoJCQlicmVhazsNCgkJfQ0KCQli
-cmVhazsNCgl9DQoJcmV0dXJuIDA7DQp9DQoNCnN0YXRpYyBpbnQgcGVzMTJudDNfcGNpX3dyaXRl
-KHN0cnVjdCBwY2lfYnVzICpidXMsIHVuc2lnbmVkIGludCBkZXZmbiwNCgkJCSAgICAgIGludCB3
-aGVyZSwgaW50IHNpemUsIHUzMiB2YWwpDQp7DQoJc3RydWN0IHBlczEybnQzX3BjaV9kYXRhICpk
-YXRhID0NCgkJCWNvbnRhaW5lcl9vZihidXMtPm9wcywgc3RydWN0IHBlczEybnQzX3BjaV9kYXRh
-LCBvcHMpOw0KCWludCBwb3MgPSB3aGVyZSAtIDB4NDA7DQoJaW50IHJldHZhbDsNCg0KCWlmIChk
-ZXZmbiA9PSAwICYmIHNpemUgPT0gMikgew0KCQlzd2l0Y2ggKHBvcykgew0KCQljYXNlIFBDSV9F
-WFBfU0xUU1RBOg0KCQkJaWYgKHZhbCAmIFBDSV9FWFBfU0xUU1RBX0RMTFNDKQ0KCQkJCWRhdGEt
-PnNsdHN0YV9kbGxzYyA9IGZhbHNlOw0KCQkJYnJlYWs7DQoJCX0NCgl9DQoNCglyZXR2YWwgPSBk
-YXRhLT5vbGRfb3BzLT53cml0ZShidXMsIGRldmZuLCB3aGVyZSwgc2l6ZSwgdmFsKTsNCglpZiAo
-cmV0dmFsIHx8IGRldmZuICE9IDApDQoJCXJldHVybiByZXR2YWw7DQoNCgkvKiBDYXRjaCBzaXR1
-YXRpb25zIHdoZXJlIHRoZSBsaW5rIHN0YXR1cyBjaGFuZ2VkIGFmdGVyIGJlaW5nIGhhbmRsZWQg
-Ki8NCglyZXR1cm4gcGVzMTJudDNfdXBkYXRlX2xpbmtzdGF0dXMoZGF0YSwgYnVzLCBkZXZmbik7
-DQp9DQoNCnN0YXRpYyB2b2lkIHBlczEybnQzX2Zha2VfbGlua3N0YXRlX2hvdHBsdWcoc3RydWN0
-IHBjaV9kZXYgKmRldikNCnsNCglzdHJ1Y3QgcGVzMTJudDNfcGNpX2RhdGEgKmRhdGE7DQoNCglp
-ZiAocGNpX3BjaWVfdHlwZShkZXYpID09IFBDSV9FWFBfVFlQRV9VUFNUUkVBTSkgew0KCQlkYXRh
-ID0ga3phbGxvYyhzaXplb2YoKmRhdGEpLCBHRlBfS0VSTkVMKTsNCgkJaWYgKGRhdGEgPT0gTlVM
-TCkNCgkJCXJldHVybjsNCgkJZGF0YS0+b3BzLnJlYWQgPSBwZXMxMm50M19wY2lfcmVhZDsNCgkJ
-ZGF0YS0+b3BzLndyaXRlID0gcGVzMTJudDNfcGNpX3dyaXRlOw0KCQlkYXRhLT5vbGRfb3BzID0g
-cGNpX2J1c19zZXRfb3BzKGRldi0+c3Vib3JkaW5hdGUsICZkYXRhLT5vcHMpOw0KCQlkYXRhLT5k
-ZXYgPSAmZGV2LT5kZXY7DQoJCXNwaW5fbG9jaygmcGVzMTJudDNfbG9jayk7DQoJCWxpc3RfYWRk
-KCZkYXRhLT5saXN0LCAmcGVzMTJudDNfbGlzdCk7DQoJCXNwaW5fdW5sb2NrKCZwZXMxMm50M19s
-b2NrKTsNCgl9IGVsc2UgaWYgKHBjaV9wY2llX3R5cGUoZGV2KSA9PSBQQ0lfRVhQX1RZUEVfRE9X
-TlNUUkVBTSkgew0KCQlkZXYtPmhvdHBsdWdfcG9sbGluZyA9IDE7IC8qIE5vIElSUSBzdXBwb3J0
-ICovDQoJCWRldi0+cGNpZV9mbGFnc19yZWcgfD0gUENJX0VYUF9GTEFHU19TTE9UOw0KCX0NCn0N
-CkRFQ0xBUkVfUENJX0ZJWFVQX0ZJTkFMKFBDSV9WRU5ET1JfSURfSURULCBQQ0lfREVWSUNFX0lE
-X0lEVF9QRVMxMk5UM19UUkFOU19BQiwNCgkJCXBlczEybnQzX2Zha2VfbGlua3N0YXRlX2hvdHBs
-dWcpOw0KDQpzdGF0aWMgdm9pZCBwZXMxMm50M19jbGVhbnVwX2VudHJ5KHN0cnVjdCBkZXZpY2Ug
-KmRldikNCnsNCglzdHJ1Y3QgcGVzMTJudDNfcGNpX2RhdGEgKmRhdGEsICp0bXA7DQoNCglzcGlu
-X2xvY2soJnBlczEybnQzX2xvY2spOw0KCWxpc3RfZm9yX2VhY2hfZW50cnlfc2FmZShkYXRhLCB0
-bXAsICZwZXMxMm50M19saXN0LCBsaXN0KSB7DQoJCWlmIChkYXRhLT5kZXYgPT0gZGV2KSB7DQoJ
-CQlsaXN0X2RlbCgmZGF0YS0+bGlzdCk7DQoJCQlrZnJlZShkYXRhKTsNCgkJCWJyZWFrOw0KCQl9
-DQoJfQ0KCXNwaW5fdW5sb2NrKCZwZXMxMm50M19sb2NrKTsNCn0NCg0Kc3RhdGljIGludCBwZXMx
-Mm50M19ub3RpZmllcl9jYWxsKHN0cnVjdCBub3RpZmllcl9ibG9jayAqbiwNCgkJCQkgIHVuc2ln
-bmVkIGxvbmcgYWN0aW9uLCB2b2lkICpkZXYpDQp7DQoJaWYgKGFjdGlvbiA9PSBCVVNfTk9USUZZ
-X0RFTF9ERVZJQ0UpDQoJCXBlczEybnQzX2NsZWFudXBfZW50cnkoZGV2KTsNCg0KCXJldHVybiBO
-T1RJRllfRE9ORTsNCn0NCg0Kc3RhdGljIHN0cnVjdCBub3RpZmllcl9ibG9jayBwZXMxMm50M19u
-YiA9IHsNCgkubm90aWZpZXJfY2FsbCA9IHBlczEybnQzX25vdGlmaWVyX2NhbGwsDQp9Ow0KDQpz
-dGF0aWMgaW50IF9faW5pdCBwZXMxMm50M19pbml0KHZvaWQpDQp7DQoJYnVzX3JlZ2lzdGVyX25v
-dGlmaWVyKCZwY2lfYnVzX3R5cGUsICZwZXMxMm50M19uYik7DQoJcmV0dXJuIDA7DQp9DQoNCnN1
-YnN5c19pbml0Y2FsbChwZXMxMm50M19pbml0KTsNCg==
+Yes, I guess that should ease the transition to the new code even if the function
+should not be needed for the users of the framework.
 
---_002_afddb2ca730f45d59318728d3e3e436fCO1PR05MB523namprd05pro_--
+> 
+> > Speaking of the handcoded DT parsing of resources: you are using restype == 0
+> > as a way of selecting config space, *and then split the range size into two
+> > halves*. From what Jason Gunthorpe and Arnd were saying, config ranges in the DT
+> > tree should only be used for ECAM space, so no split is allowed.
+> > 
+> > Arnd, are you allowing this non-standard use to creep in the bindings?
+> 
+> I fear it's too late to change that now. In retrospect we probably shoulnd't
+> have defined the binding like that.
+
+OK, but I'm going to NAK the driver using the same tricks for arm64. Jingoo will
+need to come up with an upgrade path where he has the config space described in
+the reg property and parses that if CONFIG_ARM64 is enabled.
+
+> 
+> Overall, my impression of the patch is that it should be possible to do
+> the same with much fewer #ifdefs by first rearranging the code in one patch
+> and then doing another patch on top to add the generic arm64 support.
+
+Agree.
+
+Best regards,
+Liviu
+
+> 
+> > > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > > index 6d23d8c..fac0440 100644
+> > > --- a/drivers/pci/host/pcie-designware.c
+> > > +++ b/drivers/pci/host/pcie-designware.c
+> > > @@ -65,14 +65,27 @@
+> > >  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+> > >  #define PCIE_ATU_UPPER_TARGET		0x91C
+> > >  
+> > > +#ifdef CONFIG_ARM
+> > >  static struct hw_pci dw_pci;
+> > > +#endif
+> > >  
+> > >  static unsigned long global_io_offset;
+> > >  
+> > > +#ifdef CONFIG_ARM
+> > >  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+> > >  {
+> > >  	return sys->private_data;
+> > >  }
+> > > +#endif
+> > > +
+> > > +#ifdef CONFIG_ARM64
+> > > +static inline struct pcie_port *sys_to_pcie(struct pcie_port *pp)
+> > > +{
+> > > +	return pp;
+> > > +}
+> > > +
+> > > +static struct pci_ops dw_pcie_ops;
+> > > +#endif
+> > >  
+> > >  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+> > >  {
+> > > @@ -381,7 +394,9 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+> > >  {
+> > >  	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
+> > >  	irq_set_chip_data(irq, domain->host_data);
+> > > +#ifdef CONFIG_ARM
+> > >  	set_irq_flags(irq, IRQF_VALID);
+> > > +#endif
+> > >  
+> > >  	return 0;
+> > >  }
+> > > @@ -397,6 +412,10 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> > >  	struct of_pci_range_parser parser;
+> > >  	u32 val;
+> > >  	int i;
+> > > +#ifdef CONFIG_ARM64
+> > > +	struct pci_host_bridge *bridge;
+> > > +	resource_size_t lastbus;
+> > > +#endif
+> > >  
+> > >  	if (of_pci_range_parser_init(&parser, np)) {
+> > >  		dev_err(pp->dev, "missing ranges property\n");
+> > > @@ -489,6 +508,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> > >  	val |= PORT_LOGIC_SPEED_CHANGE;
+> > >  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> > >  
+> > > +#ifdef CONFIG_ARM
+> > >  	dw_pci.nr_controllers = 1;
+> > >  	dw_pci.private_data = (void **)&pp;
+> > >  
+> > > @@ -497,6 +517,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> > >  #ifdef CONFIG_PCI_DOMAINS
+> > >  	dw_pci.domain++;
+> > >  #endif
+> > > +#endif
+> > > +
+> > > +#ifdef CONFIG_ARM64
+> > > +	bridge = of_create_pci_host_bridge(pp->dev, &dw_pcie_ops, pp);
+> > > +	if (IS_ERR_OR_NULL(bridge))
+> > > +		return PTR_ERR(bridge);
+> > > +
+> > > +	lastbus = pci_rescan_bus(bridge->bus);
+> > > +	pci_bus_update_busn_res_end(bridge->bus, lastbus);
+> > > +#endif
+> > >  
+> > >  	return 0;
+> > >  }
+> > > @@ -695,6 +725,7 @@ static struct pci_ops dw_pcie_ops = {
+> > >  	.write = dw_pcie_wr_conf,
+> > >  };
+> > >  
+> > > +#ifdef CONFIG_ARM
+> > >  static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> > >  {
+> > >  	struct pcie_port *pp;
+> > > @@ -758,6 +789,7 @@ static struct hw_pci dw_pci = {
+> > >  	.map_irq	= dw_pcie_map_irq,
+> > >  	.add_bus	= dw_pcie_add_bus,
+> > >  };
+> > > +#endif /* CONFIG_ARM */
+> > >  
+> > >  void dw_pcie_setup_rc(struct pcie_port *pp)
+> 
+> 
+> 
+> 
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
