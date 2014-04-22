@@ -1,53 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f42.google.com ([209.85.160.42]:35796 "EHLO
-	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932562AbaD2AgM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 20:36:12 -0400
-Received: by mail-pb0-f42.google.com with SMTP id un15so6468213pbc.15
-        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 17:36:11 -0700 (PDT)
-Received: from localhost ([172.26.49.243])
-        by mx.google.com with ESMTPSA id pr4sm37673718pbb.53.2014.04.28.17.36.10
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
-        Mon, 28 Apr 2014 17:36:11 -0700 (PDT)
-Subject: [PATCH] PCI: Remove dead code
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 28 Apr 2014 18:36:09 -0600
-Message-ID: <20140429003609.31283.49544.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part3 V1 13/22] iommu/vt-d: search _DSM method for DMAR hotplug
+Date: Tue, 22 Apr 2014 15:07:24 +0800
+Message-Id: <1398150453-28141-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"pdev" can never be NULL here, so remove the test.
+According to Intel VT-d specification, _DSM method to support DMAR
+hotplug should exist directly under corresponding ACPI object
+representing PCI host bridge. But some BIOSes doesn't conform to
+this, so search for _DSM method in the subtree starting from the
+ACPI object representing the PCI host bridge.
 
-Found by Coverity (CID 744313).
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/pci-driver.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/iommu/dmar.c |   34 +++++++++++++++++++++++++++++++---
+ 1 file changed, 31 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 650ce8935fd7..ff236ed4f5cf 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1345,8 +1345,6 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
- 		return -ENODEV;
- 
- 	pdev = to_pci_dev(dev);
--	if (!pdev)
--		return -ENODEV;
- 
- 	if (add_uevent_var(env, "PCI_CLASS=%04X", pdev->class))
- 		return -ENOMEM;
-@@ -1367,6 +1365,7 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
- 			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
- 			   (u8)(pdev->class)))
- 		return -ENOMEM;
-+
- 	return 0;
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 290b4bdcaa3a..7a7383858c34 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -1920,20 +1920,48 @@ static int dmar_hotplug_remove(acpi_handle handle)
+ 	return ret;
  }
  
++static acpi_status dmar_get_dsm_handle(acpi_handle handle, u32 lvl,
++				       void *context, void **retval)
++{
++	acpi_handle *phdl = retval;
++
++	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
++		*phdl = handle;
++		return AE_CTRL_TERMINATE;
++	}
++
++	return AE_OK;
++}
++
+ int dmar_device_hotplug(acpi_handle handle, bool insert)
+ {
+ 	int ret;
++	acpi_handle tmp = NULL;
++	acpi_status status;
+ 
+ 	if (!dmar_in_use())
+ 		return 0;
+-	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
++
++	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
++		tmp = handle;
++	} else {
++		status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
++					     ACPI_UINT32_MAX,
++					     dmar_get_dsm_handle,
++					     NULL, NULL, &tmp);
++		if (ACPI_FAILURE(status)) {
++			pr_warn("Failed to locate _DSM method.\n");
++			return -ENXIO;
++		}
++	}
++	if (tmp == NULL)
+ 		return 0;
+ 
+ 	down_write(&dmar_global_lock);
+ 	if (insert)
+-		ret = dmar_hotplug_insert(handle);
++		ret = dmar_hotplug_insert(tmp);
+ 	else
+-		ret = dmar_hotplug_remove(handle);
++		ret = dmar_hotplug_remove(tmp);
+ 	up_write(&dmar_global_lock);
+ 
+ 	return ret;
+-- 
+1.7.10.4
 
