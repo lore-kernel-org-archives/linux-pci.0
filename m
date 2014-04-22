@@ -1,47 +1,375 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:46556 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751133AbaDKR3w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Apr 2014 13:29:52 -0400
-Date: Fri, 11 Apr 2014 11:29:21 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Matthew Minter <matthew_minter@xyratex.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Neil Greatorex <neil@fatboyfat.co.uk>,
-	Willy Tarreau <w@1wt.eu>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?iso-8859-1?Q?Cl=E9ment?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: Fixing PCIe issues on Armada XP
-Message-ID: <20140411172921.GA31254@obsidianresearch.com>
-References: <20140410181953.50ccfcc3@skate>
- <20140410165733.GB23104@obsidianresearch.com>
- <20140410200153.46669e0c@skate>
- <20140410201201.GA12661@obsidianresearch.com>
- <alpine.DEB.2.10.1404102206090.28003@vroombuntu>
- <20140411122314.220614bf@skate>
- <20140411163129.GA20565@obsidianresearch.com>
- <CAFJTrDs4oOHCTNBcUnhQ6O0nXXA1WjbpWTPRce7vrgjzv=kQ_w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFJTrDs4oOHCTNBcUnhQ6O0nXXA1WjbpWTPRce7vrgjzv=kQ_w@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part3 V1 14/22] iommu/vt-d: enhance intel_irq_remapping driver to support DMAR unit hotplug
+Date: Tue, 22 Apr 2014 15:07:25 +0800
+Message-Id: <1398150453-28141-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 11, 2014 at 06:21:08PM +0100, Matthew Minter wrote:
+Implement required callback functions for intel_irq_remapping driver
+to support DMAR unit hotplug.
 
-> I would also like to note, my board uses an external clock for the
-> PCI ports, thus it is unlikely to be effected by any issues relating
-> to clock drivers.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel_irq_remapping.c |  222 ++++++++++++++++++++++++++---------
+ 1 file changed, 169 insertions(+), 53 deletions(-)
 
-It doesn't matter, the clock in question is the internal divided CPU
-synchronous clock that drives the PEX TLP logic. Externally sourcing
-the PHY clock won't change the synchronous side.
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index aa309a8e4d3a..9f1c86566452 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -36,7 +36,6 @@ struct hpet_scope {
+ 
+ static struct ioapic_scope ir_ioapic[MAX_IO_APICS];
+ static struct hpet_scope ir_hpet[MAX_HPET_TBS];
+-static int ir_ioapic_num, ir_hpet_num;
+ 
+ /*
+  * Lock ordering:
+@@ -320,7 +319,7 @@ static int set_ioapic_sid(struct irte *irte, int apic)
+ 
+ 	down_read(&dmar_global_lock);
+ 	for (i = 0; i < MAX_IO_APICS; i++) {
+-		if (ir_ioapic[i].id == apic) {
++		if (ir_ioapic[i].iommu && ir_ioapic[i].id == apic) {
+ 			sid = (ir_ioapic[i].bus << 8) | ir_ioapic[i].devfn;
+ 			break;
+ 		}
+@@ -347,7 +346,7 @@ static int set_hpet_sid(struct irte *irte, u8 id)
+ 
+ 	down_read(&dmar_global_lock);
+ 	for (i = 0; i < MAX_HPET_TBS; i++) {
+-		if (ir_hpet[i].id == id) {
++		if (ir_hpet[i].iommu && ir_hpet[i].id == id) {
+ 			sid = (ir_hpet[i].bus << 8) | ir_hpet[i].devfn;
+ 			break;
+ 		}
+@@ -446,17 +445,17 @@ static void iommu_set_irq_remapping(struct intel_iommu *iommu, int mode)
+ 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
+ }
+ 
+-
+-static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
++static int intel_setup_irq_remapping(struct intel_iommu *iommu)
+ {
+ 	struct ir_table *ir_table;
+ 	struct page *pages;
+ 	unsigned long *bitmap;
+ 
+-	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
+-					     GFP_ATOMIC);
++	if (iommu->ir_table)
++		return 0;
+ 
+-	if (!iommu->ir_table)
++	ir_table = kzalloc(sizeof(struct ir_table), GFP_ATOMIC);
++	if (!ir_table)
+ 		return -ENOMEM;
+ 
+ 	pages = alloc_pages_node(iommu->node, GFP_ATOMIC | __GFP_ZERO,
+@@ -465,7 +464,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+ 	if (!pages) {
+ 		pr_err("IR%d: failed to allocate pages of order %d\n",
+ 		       iommu->seq_id, INTR_REMAP_PAGE_ORDER);
+-		kfree(iommu->ir_table);
++		kfree(ir_table);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -480,11 +479,22 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+ 
+ 	ir_table->base = page_address(pages);
+ 	ir_table->bitmap = bitmap;
++	iommu->ir_table = ir_table;
+ 
+-	iommu_set_irq_remapping(iommu, mode);
+ 	return 0;
+ }
+ 
++static void intel_teardown_irq_remapping(struct intel_iommu *iommu)
++{
++	if (iommu && iommu->ir_table) {
++		free_pages((unsigned long)iommu->ir_table->base,
++			   INTR_REMAP_PAGE_ORDER);
++		kfree(iommu->ir_table->bitmap);
++		kfree(iommu->ir_table);
++		iommu->ir_table = NULL;
++	}
++}
++
+ /*
+  * Disable Interrupt Remapping.
+  */
+@@ -639,9 +649,10 @@ static int __init intel_enable_irq_remapping(void)
+ 		if (!ecap_ir_support(iommu->ecap))
+ 			continue;
+ 
+-		if (intel_setup_irq_remapping(iommu, eim))
++		if (intel_setup_irq_remapping(iommu))
+ 			goto error;
+ 
++		iommu_set_irq_remapping(iommu, eim);
+ 		setup = 1;
+ 	}
+ 
+@@ -672,12 +683,13 @@ error:
+ 	return -1;
+ }
+ 
+-static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
+-				      struct intel_iommu *iommu)
++static int ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
++				   struct intel_iommu *iommu,
++				   struct acpi_dmar_hardware_unit *drhd)
+ {
+ 	struct acpi_dmar_pci_path *path;
+ 	u8 bus;
+-	int count;
++	int count, free = -1;
+ 
+ 	bus = scope->bus;
+ 	path = (struct acpi_dmar_pci_path *)(scope + 1);
+@@ -693,19 +705,36 @@ static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
+ 					   PCI_SECONDARY_BUS);
+ 		path++;
+ 	}
+-	ir_hpet[ir_hpet_num].bus   = bus;
+-	ir_hpet[ir_hpet_num].devfn = PCI_DEVFN(path->device, path->function);
+-	ir_hpet[ir_hpet_num].iommu = iommu;
+-	ir_hpet[ir_hpet_num].id    = scope->enumeration_id;
+-	ir_hpet_num++;
++
++	for (count = 0; count < MAX_HPET_TBS; count++) {
++		if (ir_hpet[count].iommu == iommu &&
++		    ir_hpet[count].id == scope->enumeration_id)
++			return 0;
++		else if (ir_hpet[count].iommu == NULL && free == -1)
++			free = count;
++	}
++	if (free == -1) {
++		pr_warn("Exceeded Max HPET blocks\n");
++		return -ENOSPC;
++	}
++
++	ir_hpet[free].iommu = iommu;
++	ir_hpet[free].id    = scope->enumeration_id;
++	ir_hpet[free].bus   = bus;
++	ir_hpet[free].devfn = PCI_DEVFN(path->device, path->function);
++	pr_info("HPET id %d under DRHD base 0x%Lx\n",
++		scope->enumeration_id, drhd->address);
++
++	return 0;
+ }
+ 
+-static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
+-				      struct intel_iommu *iommu)
++static int ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
++				     struct intel_iommu *iommu,
++				     struct acpi_dmar_hardware_unit *drhd)
+ {
+ 	struct acpi_dmar_pci_path *path;
+ 	u8 bus;
+-	int count;
++	int count, free = -1;
+ 
+ 	bus = scope->bus;
+ 	path = (struct acpi_dmar_pci_path *)(scope + 1);
+@@ -722,54 +751,63 @@ static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
+ 		path++;
+ 	}
+ 
+-	ir_ioapic[ir_ioapic_num].bus   = bus;
+-	ir_ioapic[ir_ioapic_num].devfn = PCI_DEVFN(path->device, path->function);
+-	ir_ioapic[ir_ioapic_num].iommu = iommu;
+-	ir_ioapic[ir_ioapic_num].id    = scope->enumeration_id;
+-	ir_ioapic_num++;
++	for (count = 0; count < MAX_IO_APICS; count++) {
++		if (ir_ioapic[count].iommu == iommu &&
++		    ir_ioapic[count].id == scope->enumeration_id)
++			return 0;
++		else if (ir_ioapic[count].iommu == NULL && free == -1)
++			free = count;
++	}
++	if (free == -1) {
++		pr_warn("Exceeded Max IO APICS\n");
++		return -ENOSPC;
++	}
++
++	ir_ioapic[free].bus   = bus;
++	ir_ioapic[free].devfn = PCI_DEVFN(path->device, path->function);
++	ir_ioapic[free].iommu = iommu;
++	ir_ioapic[free].id    = scope->enumeration_id;
++	pr_info("IOAPIC id %d under DRHD base  0x%Lx IOMMU %d\n",
++		scope->enumeration_id, drhd->address, iommu->seq_id);
++
++	return 0;
+ }
+ 
+ static int ir_parse_ioapic_hpet_scope(struct acpi_dmar_header *header,
+ 				      struct intel_iommu *iommu)
+ {
++	int ret = 0;
+ 	struct acpi_dmar_hardware_unit *drhd;
+ 	struct acpi_dmar_device_scope *scope;
+ 	void *start, *end;
+ 
+ 	drhd = (struct acpi_dmar_hardware_unit *)header;
+-
+ 	start = (void *)(drhd + 1);
+ 	end = ((void *)drhd) + header->length;
+ 
+-	while (start < end) {
++	while (start < end && ret == 0) {
+ 		scope = start;
+-		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC) {
+-			if (ir_ioapic_num == MAX_IO_APICS) {
+-				printk(KERN_WARNING "Exceeded Max IO APICS\n");
+-				return -1;
+-			}
+-
+-			printk(KERN_INFO "IOAPIC id %d under DRHD base "
+-			       " 0x%Lx IOMMU %d\n", scope->enumeration_id,
+-			       drhd->address, iommu->seq_id);
++		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC)
++			ret = ir_parse_one_ioapic_scope(scope, iommu, drhd);
++		else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET)
++			ret = ir_parse_one_hpet_scope(scope, iommu, drhd);
++		start += scope->length;
++	}
+ 
+-			ir_parse_one_ioapic_scope(scope, iommu);
+-		} else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET) {
+-			if (ir_hpet_num == MAX_HPET_TBS) {
+-				printk(KERN_WARNING "Exceeded Max HPET blocks\n");
+-				return -1;
+-			}
++	return ret;
++}
+ 
+-			printk(KERN_INFO "HPET id %d under DRHD base"
+-			       " 0x%Lx\n", scope->enumeration_id,
+-			       drhd->address);
++static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
++{
++	int i;
+ 
+-			ir_parse_one_hpet_scope(scope, iommu);
+-		}
+-		start += scope->length;
+-	}
++	for (i = 0; i < MAX_HPET_TBS; i++)
++		if (ir_hpet[i].iommu == iommu)
++			ir_hpet[i].iommu = NULL;
+ 
+-	return 0;
++	for (i = 0; i < MAX_IO_APICS; i++)
++		if (ir_ioapic[i].iommu == iommu)
++			ir_ioapic[i].iommu = NULL;
+ }
+ 
+ /*
+@@ -1145,7 +1183,85 @@ struct irq_remap_ops intel_irq_remap_ops = {
+ 	.setup_hpet_msi		= intel_setup_hpet_msi,
+ };
+ 
++/*
++ * Support of Interrupt Remapping Unit Hotplug
++ */
++static int dmar_ir_add(struct dmar_drhd_unit *dmaru, struct intel_iommu *iommu)
++{
++	int ret;
++	int eim = x2apic_enabled();
++
++	if (eim && !ecap_eim_support(iommu->ecap)) {
++		pr_info("DRHD %Lx: EIM not supported by DRHD, ecap %Lx\n",
++			iommu->reg_phys, iommu->ecap);
++		return -ENODEV;
++	}
++
++	if (ir_parse_ioapic_hpet_scope(dmaru->hdr, iommu)) {
++		pr_warn("DRHD %Lx: failed to parse managed IOAPIC/HPET\n",
++			iommu->reg_phys);
++		return -ENODEV;
++	}
++
++	/* TODO: check all IOAPICs are covered by IOMMU */
++
++	/* Setup Interrupt-remapping now. */
++	ret = intel_setup_irq_remapping(iommu);
++	if (ret) {
++		pr_err("DRHD %Lx: failed to allocate resource\n",
++		       iommu->reg_phys);
++		ir_remove_ioapic_hpet_scope(iommu);
++		return ret;
++	}
++
++	if (!iommu->qi) {
++		/* Clear previous faults. */
++		dmar_fault(-1, iommu);
++		iommu_disable_irq_remapping(iommu);
++		dmar_disable_qi(iommu);
++	}
++
++	/* Enable queued invalidation */
++	ret = dmar_enable_qi(iommu);
++	if (!ret) {
++		iommu_set_irq_remapping(iommu, eim);
++	} else {
++		pr_err("DRHD %Lx: failed to enable queued invalidation, ecap %Lx, ret %d\n",
++		       iommu->reg_phys, iommu->ecap, ret);
++		intel_teardown_irq_remapping(iommu);
++		ir_remove_ioapic_hpet_scope(iommu);
++	}
++
++	return ret;
++}
++
+ int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+ {
+-	return irq_remapping_enabled ? -ENOSYS : 0;
++	int ret = 0;
++	struct intel_iommu *iommu = dmaru->iommu;
++
++	if (!irq_remapping_enabled)
++		return 0;
++	if (iommu == NULL)
++		return -EINVAL;
++	if (!ecap_ir_support(iommu->ecap))
++		return 0;
++
++	if (insert) {
++		if (!iommu->ir_table)
++			ret = dmar_ir_add(dmaru, iommu);
++	} else {
++		if (iommu->ir_table) {
++			if (!bitmap_empty(iommu->ir_table->bitmap,
++					  INTR_REMAP_TABLE_ENTRIES)) {
++				ret = -EBUSY;
++			} else {
++				iommu_disable_irq_remapping(iommu);
++				intel_teardown_irq_remapping(iommu);
++				ir_remove_ioapic_hpet_scope(iommu);
++			}
++		}
++	}
++
++	return ret;
+ }
+-- 
+1.7.10.4
 
-Jason
