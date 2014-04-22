@@ -1,186 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:45208 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751159AbaDPQ53 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 12:57:29 -0400
-Date: Wed, 16 Apr 2014 17:57:24 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [RFC PATCH 1/2] PCI: designware: Add ARM64 PCI support
-Message-ID: <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
-References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
- <000901cf592e$563bc8c0$02b35a40$%han@samsung.com>
-MIME-Version: 1.0
-In-Reply-To: <000901cf592e$563bc8c0$02b35a40$%han@samsung.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:3413 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752133AbaDVHHV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Apr 2014 03:07:21 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part3 V1 19/22] iommu/vt-d: simplify intel_unmap_sg() and kill duplicated code
+Date: Tue, 22 Apr 2014 15:07:30 +0800
+Message-Id: <1398150453-28141-20-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Jingoo,
+Simplify intel_unmap_sg() by calling intel_unmap_page() and
+kill duplicated code, no functionality changes.
 
-Thanks for taking a stab at trying to convert a host bridge
-driver to use the new generic host bridge code.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   63 +++++++++++++------------------------------
+ 1 file changed, 18 insertions(+), 45 deletions(-)
 
-I do however have concerns on the direction you took. You have split
-your driver in two, depending on whether it was CONFIG_ARM or CONFIG_ARM64,
-even if (with my series) it should be no reason why the host bridge
-driver should not work on other architectures as well once they are
-converted.
-
-Also, some of the functions that you use have identical names but different
-signatures depending on what arch you have selected. This is really bad
-in my books!
-
-What about creating functions that use my series directly if CONFIG_ARM64 is
-defined (or any CONFIG_ you want to create for your driver that you select
-from CONFIG_ARM64) and otherwise implement the CONFIG_ARM version? That
-way your driver will call only one API without any #ifdef and when arm code
-gets converted you drop your adaptation functions. Or (better yet), have a
-stab at converting bios32 (Rob Herring has already provided some hints on
-how to do it for arch/arm).
-
-To give an example on how things are not going well in your version (not obvious
-from your patch, but you can see it once you apply it): dw_pcie_host_init()
-will still carry the handcoded version of DT parsing and that is not guarded
-against CONFIG_ARM64 being defined, where the parsing will happen again
-when you call of_create_pci_host_bridge().
-
-Speaking of the handcoded DT parsing of resources: you are using restype == 0
-as a way of selecting config space, *and then split the range size into two
-halves*. From what Jason Gunthorpe and Arnd were saying, config ranges in the DT
-tree should only be used for ECAM space, so no split is allowed.
-
-Arnd, are you allowing this non-standard use to creep in the bindings?
-
-Best regards,
-Liviu
-
-On Wed, Apr 16, 2014 at 05:42:56AM +0100, Jingoo Han wrote:
-> Add ARM64 PCI support for Synopsys designware PCIe, by using
-> pcie arm64 arch support and creating generic pcie bridge from
-> device tree.
-> 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> ---
->  drivers/pci/host/pcie-designware.c |   32 ++++++++++++++++++++++++++++++++
->  1 file changed, 32 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 6d23d8c..fac0440 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -65,14 +65,27 @@
->  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
->  #define PCIE_ATU_UPPER_TARGET		0x91C
->  
-> +#ifdef CONFIG_ARM
->  static struct hw_pci dw_pci;
-> +#endif
->  
->  static unsigned long global_io_offset;
->  
-> +#ifdef CONFIG_ARM
->  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
->  {
->  	return sys->private_data;
->  }
-> +#endif
-> +
-> +#ifdef CONFIG_ARM64
-> +static inline struct pcie_port *sys_to_pcie(struct pcie_port *pp)
-> +{
-> +	return pp;
-> +}
-> +
-> +static struct pci_ops dw_pcie_ops;
-> +#endif
->  
->  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
->  {
-> @@ -381,7 +394,9 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> +#ifdef CONFIG_ARM
->  	set_irq_flags(irq, IRQF_VALID);
-> +#endif
->  
->  	return 0;
->  }
-> @@ -397,6 +412,10 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  	struct of_pci_range_parser parser;
->  	u32 val;
->  	int i;
-> +#ifdef CONFIG_ARM64
-> +	struct pci_host_bridge *bridge;
-> +	resource_size_t lastbus;
-> +#endif
->  
->  	if (of_pci_range_parser_init(&parser, np)) {
->  		dev_err(pp->dev, "missing ranges property\n");
-> @@ -489,6 +508,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  	val |= PORT_LOGIC_SPEED_CHANGE;
->  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
->  
-> +#ifdef CONFIG_ARM
->  	dw_pci.nr_controllers = 1;
->  	dw_pci.private_data = (void **)&pp;
->  
-> @@ -497,6 +517,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  #ifdef CONFIG_PCI_DOMAINS
->  	dw_pci.domain++;
->  #endif
-> +#endif
-> +
-> +#ifdef CONFIG_ARM64
-> +	bridge = of_create_pci_host_bridge(pp->dev, &dw_pcie_ops, pp);
-> +	if (IS_ERR_OR_NULL(bridge))
-> +		return PTR_ERR(bridge);
-> +
-> +	lastbus = pci_rescan_bus(bridge->bus);
-> +	pci_bus_update_busn_res_end(bridge->bus, lastbus);
-> +#endif
->  
->  	return 0;
->  }
-> @@ -695,6 +725,7 @@ static struct pci_ops dw_pcie_ops = {
->  	.write = dw_pcie_wr_conf,
->  };
->  
-> +#ifdef CONFIG_ARM
->  static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
->  {
->  	struct pcie_port *pp;
-> @@ -758,6 +789,7 @@ static struct hw_pci dw_pci = {
->  	.map_irq	= dw_pcie_map_irq,
->  	.add_bus	= dw_pcie_add_bus,
->  };
-> +#endif /* CONFIG_ARM */
->  
->  void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
-> -- 
-> 1.7.10.4
-> 
-> 
-> 
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index f2143b59ad68..4738e64fe097 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -979,6 +979,8 @@ static void dma_pte_free_pagetable(struct dmar_domain *domain,
+ 	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
+ 	BUG_ON(start_pfn > last_pfn);
+ 
++	dma_pte_clear_range(domain, start_pfn, last_pfn);
++
+ 	/* We don't need lock here; nobody else touches the iova range */
+ 	dma_pte_free_level(domain, agaw_to_level(domain->agaw),
+ 			   domain->pgd, 0, start_pfn, last_pfn);
+@@ -2031,12 +2033,14 @@ static int __domain_mapping(struct dmar_domain *domain, unsigned long iov_pfn,
+ 			/* It is large page*/
+ 			if (largepage_lvl > 1) {
+ 				pteval |= DMA_PTE_LARGE_PAGE;
+-				/* Ensure that old small page tables are removed to make room
+-				   for superpage, if they exist. */
+-				dma_pte_clear_range(domain, iov_pfn,
+-						    iov_pfn + lvl_to_nr_pages(largepage_lvl) - 1);
++				lvl_pages = lvl_to_nr_pages(largepage_lvl);
++				/*
++				 * Ensure that old small page tables are
++				 * removed to make room for superpage,
++				 * if they exist.
++				 */
+ 				dma_pte_free_pagetable(domain, iov_pfn,
+-						       iov_pfn + lvl_to_nr_pages(largepage_lvl) - 1);
++						       iov_pfn + lvl_pages - 1);
+ 			} else {
+ 				pteval &= ~(uint64_t)DMA_PTE_LARGE_PAGE;
+ 			}
+@@ -3256,43 +3260,17 @@ static void intel_unmap_sg(struct device *dev, struct scatterlist *sglist,
+ 			   int nelems, enum dma_data_direction dir,
+ 			   struct dma_attrs *attrs)
+ {
+-	struct dmar_domain *domain;
+-	unsigned long start_pfn, last_pfn;
+-	struct iova *iova;
+-	struct intel_iommu *iommu;
+-	struct page *freelist;
+-
+-	if (iommu_no_mapping(dev))
+-		return;
+-
+-	domain = find_domain(dev);
+-	BUG_ON(!domain);
+-
+-	iommu = domain_get_iommu(domain);
+-
+-	iova = find_iova(&domain->iovad, IOVA_PFN(sglist[0].dma_address));
+-	if (WARN_ONCE(!iova, "Driver unmaps unmatched sglist at PFN %llx\n",
+-		      (unsigned long long)sglist[0].dma_address))
+-		return;
+-
+-	start_pfn = mm_to_dma_pfn(iova->pfn_lo);
+-	last_pfn = mm_to_dma_pfn(iova->pfn_hi + 1) - 1;
++	size_t size = 0;
++#if 0
++	/* current the third argument of intel_unmap_page is unsued */
++	int i;
++	struct scatterlist *sg;
+ 
+-	freelist = domain_unmap(domain, start_pfn, last_pfn);
++	for_each_sg(sglist, sg, nelems, i)
++		size += sg->length;
++#endif
+ 
+-	if (intel_iommu_strict) {
+-		iommu_flush_iotlb_psi(iommu, domain->id, start_pfn,
+-				      last_pfn - start_pfn + 1, !freelist, 0);
+-		/* free iova */
+-		__free_iova(&domain->iovad, iova);
+-		dma_free_pagelist(freelist);
+-	} else {
+-		add_unmap(domain, iova, freelist);
+-		/*
+-		 * queue up the release of the unmap to save the 1/6th of the
+-		 * cpu used up by the iotlb flush operation...
+-		 */
+-	}
++	intel_unmap_page(dev, sglist[0].dma_address, size, dir, attrs);
+ }
+ 
+ static int intel_nontranslate_map_sg(struct device *hddev,
+@@ -3356,13 +3334,8 @@ static int intel_map_sg(struct device *dev, struct scatterlist *sglist, int nele
+ 
+ 	ret = domain_sg_mapping(domain, start_vpfn, sglist, size, prot);
+ 	if (unlikely(ret)) {
+-		/*  clear the page */
+-		dma_pte_clear_range(domain, start_vpfn,
+-				    start_vpfn + size - 1);
+-		/* free page tables */
+ 		dma_pte_free_pagetable(domain, start_vpfn,
+ 				       start_vpfn + size - 1);
+-		/* free iova */
+ 		__free_iova(&domain->iovad, iova);
+ 		return 0;
+ 	}
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.10.4
 
