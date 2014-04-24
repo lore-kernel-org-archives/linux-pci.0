@@ -1,85 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:44356 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933607AbaD2Mcv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 08:32:51 -0400
-Message-ID: <1398774686.4677.12.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH 0/8] i.MX6 PCIe binding change and MSI support
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawn.guo@linaro.org>
-Cc: Richard Zhu <r65037@freescale.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marek Vasut <marex@denx.de>, linux-samsung-soc@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>, Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Rob Herring <robh+dt@kernel.org>, kernel@pengutronix.de,
-	Sean Cross <xobs@kosagi.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Date: Tue, 29 Apr 2014 14:31:26 +0200
-In-Reply-To: <CAErSpo7Boi8d+apAUC3TmmE33LuRMYJ6J+TEPLRbeyZyU3O8RQ@mail.gmail.com>
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
-	 <20140424175844.GD29593@google.com>
-	 <1398421265.4657.25.camel@weser.hi.pengutronix.de>
-	 <CAErSpo7Boi8d+apAUC3TmmE33LuRMYJ6J+TEPLRbeyZyU3O8RQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mailout1.samsung.com ([203.254.224.24]:32689 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244AbaDXEx4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 00:53:56 -0400
+From: Kukjin Kim <kgene.kim@samsung.com>
+To: 'Arnd Bergmann' <arnd@arndb.de>,
+	'Liviu Dudau' <Liviu.Dudau@arm.com>
+Cc: linaro-kernel@lists.linaro.org, 'Jingoo Han' <jg1.han@samsung.com>,
+	'Byungho An' <bh74.an@samsung.com>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, ilho215.lee@samsung.com,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com>
+ <4565008.ZECF3eWqge@wuerfel>
+ <20140423142315.GO865@e106497-lin.cambridge.arm.com>
+ <14215032.8jhN17iHj5@wuerfel>
+In-reply-to: <14215032.8jhN17iHj5@wuerfel>
+Subject: RE: [RFC PATCH 2/2] PCI: exynos: Add PCIe support for Samsung GH7 SoC
+Date: Thu, 24 Apr 2014 13:53:47 +0900
+Message-id: <01ff01cf5f79$30f926b0$92eb7410$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-Am Freitag, den 25.04.2014, 08:39 -0600 schrieb Bjorn Helgaas:
-[...]
-> >> >   PCI: designware: split Exynos and i.MX bindings
-> >> >   ARM: dts: imx6: update pcie to bring in line with new binding
-> >> >   PCI: imx6: use new clock names
-> >> >   PCI: imx6: drop old irq mapping
-> >> >   PCI: imx6: rip out optional (and unused) irqs
-> >> >   PCI: designware: make MSI isr shared irq aware
-> >> >   PCI: imx6: add support for MSI
-> >>
-> >> What's the status of all these?  I would normally apply patches 4-8 of this
-> >> series through my tree, given the appropriate acks, but I haven't seen
-> >> those yet.  And I'm not sure what dependencies there are between the
-> >> non-PCI patches and the PCI ones.
-> >>
-> > It's a complete binding change, so applying one part without the other
-> > is going to horribly break things.
-> >
-> > So I would at least want to see an ack for the binding change on the
-> > i.MX side from Shawn and Richard. This will need some follow on patches,
-> > as some boards adding PCIe using the old binding have cropped up in
-> > linux-next, but I can do the patches on short notice if everyone agrees
-> > to merge this patchset.
-> >
-> > The designware part is pretty simple and doesn't change anything for
-> > other users than i.MX. Though I would like to see an ack from Jingoo for
-> > those.
-> >
-> > I have some more stuff in the pipes regarding multiple MSI irqs, that
-> > depend on this series and also the Keystone people are waiting for this
-> > to be applied in order to consolidate the clock handling of the
-> > designware core driver, so it would be nice to get this moving again.
+Arnd Bergmann wrote:
 > 
-> OK, just poke me again when you're ready for me to do something with these.
+> On Wednesday 23 April 2014 15:23:16 Liviu Dudau wrote:
+> > > Unfortunately we are in a tricky situation on arm64 because we have
+> > > to support both server-type SoCs and embedded-type SoCs. In an
+> > > embedded system, you can't trust the boot loader to do a proper
+> > > setup of all the hardware, so the kernel needs full control over
+> > > all the initialization. In a server, the initialization is the
+> > > responsibility of the firmware, and we don't want the kernel to
+> > > even know about those registers.
+
+BTW, actually we can trust boot-loader to do required things in mobile also ;-)
+
+> > >
+> > > My hope is that all server chips use an SBSA compliant PCIe
+> > > implementation, but we already have X-Gene, which is doing server
+> > > workloads with a nonstandard PCIe, and it's possible that there
+> > > will also be server-like systems with a DesignWare PCIe block
+> > > instead of an SBSA compliant one. We can still support those, but
+> > > I don't want to see more than one implementation of dw-pcie
+> > > on servers. Just like we have the generic PCIe support that Will
+> > > is doing for virtual machines and SBSA compliant systems, we
+> > > would do one dw-pcie variant for all systems that come with a
+> > > host firmware and rely on it being set up already.
+
+OK and I think, just one device driver would be nice for whatever embedded or
+server.
+
+> >
+> > There is nothing in the SBSA that mandates firmware setup. All it requires
+
+Yeah, I couldn't look at that in the SBSA...
+
+> > is that hardware is setup in a way that is not specific to a board
+> > or a particular OEM. Surely if the setup being done for GH7 is always
+> > the same it should fit the bill?
 > 
+But Arnd's comments are about firmware based on each SoC not board?...
 
-As both Richard and Jingoo gave their ack for the respective patches I
-think this is good to go in and I would expect all the PCI patches to go
-through your tree for 3.16.
+> GH7 is already not SBSA compliant because it uses a nonstandard config
+> space access method, and it uses its own MSI controller rather than GIC.
+> This means it violates at least two out of the four clauses in SBSA
+> describing PCIe.
+> 
+OK, I see. Honestly, we just focused on how to support PCI on both exynos5440
+and GH7 SoCs.
 
-Shawn, if you are not okay with this change, please speak up now.
-Otherwise please pick the dts change for 3.16. I'll go over linux-next
-and prepare the patches to fix up the boards there.
+> Regardless of this, the level of detail describing config space and
+> MSI handling in SBSA can only make sense if the purpose is to handle
+> all compliant implementations without platform specific code. If you
+> require platform specific setup code in the OS, this underlying assumption
+> no longer holds true and there is no point in having a spec in the
+> first place.
+> 
+OK, your assumption makes sense to us.
 
-Regards,
-Lucas
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+> I think we should treat DW-PCIe in the same way if anyone attempts
+> to use that in a server, e.g. in SBSA level 0. As you can see here,
+
+Agreed. BTW, how about GICv2m for level 1? It can be supported with the same
+way in one DW-PCIe driver?
+
+> even when reusing hardware between Exynos and GH7, you can't just
+> use the same init code, so it has to be in firmware to be any good.
+> On a real server platform, you can't require a kernel upgrade every
+> time a new SoC comes out, any basic functionality like PCI just has to
+> work with existing OS images.
+> 
+OK, when Will's driver is ready, we will test it on GH7 with the setup for PCIe
+included in firmware. Anyway I hope we can use the driver in 3.16 :-)
+
+Thanks,
+Kukjin
 
