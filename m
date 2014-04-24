@@ -1,48 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp10.uk.ibm.com ([195.75.94.106]:37193 "EHLO
-	e06smtp10.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790AbaDNJDq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Apr 2014 05:03:46 -0400
-Received: from /spool/local
-	by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
-	Mon, 14 Apr 2014 10:03:45 +0100
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-	by d06dlp03.portsmouth.uk.ibm.com (Postfix) with ESMTP id 12EF21B08072
-	for <linux-pci@vger.kernel.org>; Mon, 14 Apr 2014 10:03:45 +0100 (BST)
-Received: from d06av09.portsmouth.uk.ibm.com (d06av09.portsmouth.uk.ibm.com [9.149.37.250])
-	by b06cxnps4075.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s3E93h8O63242258
-	for <linux-pci@vger.kernel.org>; Mon, 14 Apr 2014 09:03:43 GMT
-Received: from d06av09.portsmouth.uk.ibm.com (localhost [127.0.0.1])
-	by d06av09.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s3E93hFZ023647
-	for <linux-pci@vger.kernel.org>; Mon, 14 Apr 2014 03:03:43 -0600
-Date: Mon, 14 Apr 2014 11:03:42 +0200 (CEST)
-From: Sebastian Ott <sebott@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-cc: linux-pci@vger.kernel.org
-Subject: [Resend] pcibios_add_platform_entries usage
-In-Reply-To: <alpine.LFD.2.11.1403281931410.1516@denkbrett>
-Message-ID: <alpine.LFD.2.11.1404141101500.1529@denkbrett>
-References: <alpine.LFD.2.11.1403281931410.1516@denkbrett>
+Received: from mga02.intel.com ([134.134.136.20]:52995 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753472AbaDXXPh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 19:15:37 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+CC: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH] pci: Use designated initialization in PCI_VDEVICE
+Date: Thu, 24 Apr 2014 23:15:35 +0000
+Message-ID: <512BF6D5-D529-4605-B1AB-A6DB7D153E14@intel.com>
+References: <1396303119-16766-1-git-send-email-jeffrey.t.kirsher@intel.com>
+ <5339E746.4030503@cogentembedded.com> <20140424212246.GG29593@google.com>
+In-Reply-To: <20140424212246.GG29593@google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+Bjorn, Sergei,
 
-for pci on s390 we currently use pcibios_add_platform_entries to add
-some arch specific attributes to pdevs. This has 2 downsides - it will
-race with userspace which is triggered by udev events and expecting
-these attributes (but that's a theoretical issue). More important to
-me is that one cannot use attribute_groups with this. Both issues could
-be addressed by using pdev->dev.groups and let the driver core handle
-attribute creation.
+On Apr 24, 2014, at 2:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-So would it be ok if we set pdev->dev.groups in pcibios_add_device?
-(It should be since it's not used by pci common code which uses bus_type,
-dev_type, and class groups).
+> On Tue, Apr 01, 2014 at 02:08:06AM +0400, Sergei Shtylyov wrote:
+>> Hello.
+>> 
+>> On 04/01/2014 01:58 AM, Jeff Kirsher wrote:
+>> 
+>>> From: Mark Rustad <mark.d.rustad@intel.com>
+>> 
+>>> By using designated initialization in PCI_VDEVICE, like other
+>>> similar macros, many "missing initializer" warnings that appear
+>>> when compiling with W=2 can be silenced.
+>> 
+>>> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+>>> Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
+>>> Tested-by: Aaron Brown <aaron.f.brown@intel.com>
+>>> Tested-by: Kavindya Deegala <kavindya.s.deegala@intel.com>
+>>> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+>>> ---
+>>> include/linux/pci.h | 10 +++++-----
+>>> 1 file changed, 5 insertions(+), 5 deletions(-)
+>> 
+>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>> index fb57c89..49455f9 100644
+>>> --- a/include/linux/pci.h
+>>> +++ b/include/linux/pci.h
+>> [...]
+>>> @@ -689,9 +689,9 @@ struct pci_driver {
+>>>  * private data.
+>>>  */
+>>> 
+>>> -#define PCI_VDEVICE(vendor, device)		\
+>>> -	PCI_VENDOR_ID_##vendor, (device),	\
+>>> -	PCI_ANY_ID, PCI_ANY_ID, 0, 0
+>>> +#define PCI_VDEVICE(vend, dev) \
+>>> +	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
+>>> +	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+>> 
+>>   Initializing the fields to 0 is pointless, as 0 is what should be
+>> put into them anyway by the compiler. Also, it doesn't look right
+>> when you mix designated and anonymous initializers.
 
-Regards,
-Sebastian
+The zeros can't be dropped because the macro needs to initialize the same number of fields as the previous macro. Callers of this macro do use undesignated initialization and will rely on how that aligns. This macro does that.
+
+> I'm certainly willing to apply this, but I can't reproduce the benefit.  I
+> tried "make W=2 drivers/net/ethernet/intel/e1000e/netdev.o" and didn't see
+> any change before and after this patch (I'm using Ubuntu gcc 4.6.3 if it
+> matters).
+
+The ixgbe driver throws a lot of warnings because it does not provide the final field after the macro call, allowing it default to zero. I think I saw a few other instances around the kernel, but the largest number are in ixgbe.
+
+> What am I missing?  And do we need the zeroes?
+
+If you build ixgbe with W=2, I think you'll see the noise. And the zeros are needed for the reason given above. The zeros could also be moved to designated initialization, but the C standard is pretty clear on how it works, and many callers of the macro will be using undesignated initialization for the final field anyway. That is, with the new macro, many initializations will effectively have a mixed form. If that really bothers you, then I guess you should drop the patch. I was just trying to silence a bunch of noise in a simple, direct way. Adding the missing field in all of those places would also silence the message, but it seemed reasonable to have require that.
+
+-- 
+Mark Rustad, Networking Division, Intel Corporation
 
