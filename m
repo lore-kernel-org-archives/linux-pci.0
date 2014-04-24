@@ -1,33 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54771 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751267AbaDVB5u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 21 Apr 2014 21:57:50 -0400
-Date: Mon, 21 Apr 2014 19:57:48 -0600 (MDT)
-From: Keith Busch <keith.busch@intel.com>
-To: Learner Study <learner.study@gmail.com>
-cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-nvme <linux-nvme@lists.infradead.org>, bhelgaas@google.com
-Subject: Re: [PATCH 2/2] NVMe: Implement PCI-e reset notification callback
-In-Reply-To: <CAP8+hKWcybw5u_m5M4c1p4eUAaTq4x+kO+tnegwD2ciDMEFNCw@mail.gmail.com>
-Message-ID: <alpine.LRH.2.03.1404211935510.5490@AMR>
-References: <1397000541-1085-1-git-send-email-keith.busch@intel.com> <1397000541-1085-2-git-send-email-keith.busch@intel.com> <CAP8+hKWcybw5u_m5M4c1p4eUAaTq4x+kO+tnegwD2ciDMEFNCw@mail.gmail.com>
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:40905 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758755AbaDXWsF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 18:48:05 -0400
+Received: by mail-pb0-f42.google.com with SMTP id un15so2480950pbc.1
+        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 15:48:04 -0700 (PDT)
+Date: Thu, 24 Apr 2014 16:48:02 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: Re: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
+Message-ID: <20140424224802.GL29593@google.com>
+References: <5306AF07.6000601@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5306AF07.6000601@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 21 Apr 2014, Learner Study wrote:
-> Hi Keith,
->
-> I think NVMe Reset should apply to PF mode driver only, and not to VF
-> mode driver.
-> Is that understanding correct? Does the NVMe driver know which mode
-> its running in?
+On Thu, Feb 20, 2014 at 05:42:31PM -0800, Rajat Jain wrote:
+> In case of a spurious "cmd completed", pcie_write_cmd() does not
+> clear it, but yet expects more "cmd completed" events to be generated.
+> This does not happen because the previous (spurious) event has not
+> been acknowledged. Fix that.
+> 
+> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+> Signed-off-by: Guenter Roeck <groeck@juniper.net>
 
-Oh, this driver doesn't enable SR-IOV and has no PF/VF awareness. Shame
-on us, I'll add it to my list unless someone beats me to it.
+Applied to pci/hotplug for v3.16, thanks!
 
-Still, I think we'd like to be able to reset a VF if only because it
-gets the queues back to a pristine state. A VF reset should not affect
-any of the other functions.
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index d7d058f..1463412 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -159,6 +159,8 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+>  
+>  	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+>  	if (slot_status & PCI_EXP_SLTSTA_CC) {
+> +		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+> +					   PCI_EXP_SLTSTA_CC);
+>  		if (!ctrl->no_cmd_complete) {
+>  			/*
+>  			 * After 1 sec and CMD_COMPLETED still not set, just
+> -- 
+> 1.7.9.5
+> 
