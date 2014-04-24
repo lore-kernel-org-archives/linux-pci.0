@@ -1,48 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:53836 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751500AbaDVHmb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Apr 2014 03:42:31 -0400
-Message-ID: <53561D61.7030706@linux.intel.com>
-Date: Tue, 22 Apr 2014 15:42:25 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:50240 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754063AbaDXXKF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 19:10:05 -0400
+Received: by mail-pd0-f182.google.com with SMTP id y10so2426668pdj.41
+        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 16:10:05 -0700 (PDT)
+Date: Thu, 24 Apr 2014 17:10:03 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, liviu.dudau@arm.com,
+	linus.walleij@linaro.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH 0/3] Versatile PCI DT support
+Message-ID: <20140424231003.GM29593@google.com>
+References: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
 MIME-Version: 1.0
-To: David Woodhouse <dwmw2@infradead.org>
-CC: Joerg Roedel <joro@8bytes.org>, Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: Re: [Patch Part3 V1 19/22] iommu/vt-d: simplify intel_unmap_sg()
- and kill duplicated code
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>	 <1398150453-28141-20-git-send-email-jiang.liu@linux.intel.com> <1398152333.723.27.camel@shinybook.infradead.org>
-In-Reply-To: <1398152333.723.27.camel@shinybook.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1395960398-4238-1-git-send-email-robherring2@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/4/22 15:38, David Woodhouse wrote:
-> On Tue, 2014-04-22 at 15:07 +0800, Jiang Liu wrote:
->> +       size_t size = 0;
->> +#if 0
->> +       /* current the third argument of intel_unmap_page is unsued */
->> +       int i;
->> +       struct scatterlist *sg;
->>  
->> -       freelist = domain_unmap(domain, start_pfn, last_pfn);
->> +       for_each_sg(sglist, sg, nelems, i)
->> +               size += sg->length;
->> +#endif
+On Thu, Mar 27, 2014 at 05:46:35PM -0500, Rob Herring wrote:
+> From: Rob Herring <robh@kernel.org>
 > 
-> Please don't do that. If you want to rely on the fact that
-> intel_unmap_page() currently just uses the size from the IOVA it finds,
-> then split it out into a separate function which explicitly does
-> precisely that. And call that new function from both intel_unmap_sg()
-> and intel_unmap_page().
+> This series adds a platform driver for Versatile PB's PCI host using
+> Liviu's recent patch series[1] for DT parsing and setup.
+> 
+> The first patch is a hack to get Liviu's current patches to work on ARM.
+> It at least shows we are not that far off from being able to use the
+> series on ARM.
 
-Good suggestion, will change to follow that way in next version.
+Since this depends on Liviu's work that is not yet upstream, I guess I
+can't do anything with this yet, right?  Poke me again when I can.
+
+I assume you would want a MAINTAINERS update, too (at least, *I* do :))
+
+> I've tested PCI under QEMU, but need someone with actual h/w to test.
+> A branch with this series and which includes full conversion of
+> Versatile to DT is available here[2].
+> 
+> Rob
+> 
+> [1] https://lkml.org/lkml/2014/3/14/279
+> [2] git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git versatile
+> 
+> Rob Herring (3):
+>   ARM: hackup pcibios support for commmon bridge code
+>   dt/bindings: add versatile PCI binding
+>   pci: add DT based ARM Versatile PCI host driver
+> 
+>  .../devicetree/bindings/pci/versatile.txt          |  59 +++++
+>  arch/arm/kernel/bios32.c                           |  63 +++++
+>  drivers/pci/host/Kconfig                           |   4 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pci-versatile.c                   | 275 +++++++++++++++++++++
+>  5 files changed, 402 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/versatile.txt
+>  create mode 100644 drivers/pci/host/pci-versatile.c
+> 
+> -- 
+> 1.8.3.2
+> 
