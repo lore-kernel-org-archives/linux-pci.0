@@ -1,175 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Aaron Lu <aaron.lu@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Stephane Eranian <eranian@google.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Zheng Z Yan <zheng.z.yan@intel.com>,
-	Dave Jones <davej@redhat.com>, Rui Zhang <rui.zhang@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] PNP: Work around BIOS defects in Intel MCH area reporting
-Date: Mon, 21 Apr 2014 23:40:22 +0200
-Message-ID: <5211225.3aS3KszjfE@vostro.rjw.lan>
-In-Reply-To: <CAErSpo4fvfXPJzC2=ixdXO_OO7_syBCC-hXQNRH4Cu-_EkV6Cg@mail.gmail.com>
-References: <20140417202033.7057.98414.stgit@bhelgaas-glaptop.roam.corp.google.com> <1702309.mG1EHfKp35@vostro.rjw.lan> <CAErSpo4fvfXPJzC2=ixdXO_OO7_syBCC-hXQNRH4Cu-_EkV6Cg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:34044 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753711AbaDXVCs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 17:02:48 -0400
+Received: by mail-pb0-f43.google.com with SMTP id um1so2369675pbc.16
+        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 14:02:48 -0700 (PDT)
+Date: Thu, 24 Apr 2014 15:02:45 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jean Delvare <jdelvare@suse.de>
+Cc: linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jslaby@suse.cz>
+Subject: Re: [PATCH] pci_ids: Remove old serial device IDs
+Message-ID: <20140424210245.GF29593@google.com>
+References: <20140331151929.7bd3afef@endymion.delvare>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140331151929.7bd3afef@endymion.delvare>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, April 21, 2014 02:57:20 PM Bjorn Helgaas wrote:
-> On Mon, Apr 21, 2014 at 2:44 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > Hi Bjorn,
-> >
-> > On Thursday, April 17, 2014 02:20:33 PM Bjorn Helgaas wrote:
-> >> Work around BIOSes that don't report the entire Intel MCH area.
-> >>
-> >> MCHBAR is not an architected PCI BAR, so MCH space is usually reported as a
-> >> PNP0C02 resource.  The MCH space was once 16KB, but is 32KB in newer parts.
-> >> Some BIOSes still report a PNP0C02 resource that is only 16KB, which means
-> >> the rest of the MCH space is consumed but unreported.
-> >>
-> >> This can cause resource map sanity check warnings or (theoretically) a
-> >> device conflict if we assigned the unreported space to another device.
-> >>
-> >> The Intel perf event uncore driver tripped over this when it claimed the
-> >> MCH region:
-> >>
-> >>   resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
-> >>   Info: mapping multiple BARs. Your kernel is fine.
-> >>
-> >> To prevent this, if we find a PNP0C02 resource that covers part of the MCH
-> >> space, extend it to cover the entire space.
-> >>
-> >> Link: http://lkml.kernel.org/r/20140224162400.GE16457@pd.tnic
-> >> Reported-by: Borislav Petkov <bp@alien8.de>
-> >> Tested-by: Borislav Petkov <bp@suse.de>
-> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >> Acked-by: Borislav Petkov <bp@suse.de>
-> >
-> > Do you want me to take this patch for PNP, or are you planning to take it
-> > into your tree?
+On Mon, Mar 31, 2014 at 03:19:29PM +0200, Jean Delvare wrote:
+> These IDs are no longer referenced since kernel 3.1 so I suppose we
+> can remove them from pci_ids.h.
 > 
-> I figured it was more of a PNP thing than a PCI thing, so I was
-> thinking you would take it.  But if you'd rather I take it, just let
-> me know.
+> Signed-off-by: Jean Delvare <jdelvare@suse.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
 
-OK, I can apply it.  I'll have some more stuff for 3.15-rc anyway.
+Applied with Greg's ack to pci/misc for v3.16, thanks!
 
-Thanks!
-
-
-> >> ---
-> >>  drivers/pnp/quirks.c |   74 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >>  1 file changed, 74 insertions(+)
-> >>
-> >> diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
-> >> index 258fef272ea7..90b8c12c220d 100644
-> >> --- a/drivers/pnp/quirks.c
-> >> +++ b/drivers/pnp/quirks.c
-> >> @@ -334,6 +334,79 @@ static void quirk_amd_mmconfig_area(struct pnp_dev *dev)
-> >>  }
-> >>  #endif
-> >>
-> >> +/* Device IDs of parts that have 32KB MCH space */
-> >> +static const unsigned int mch_quirk_devices[] = {
-> >> +     0x0154, /* Ivy Bridge */
-> >> +     0x0c00, /* Haswell */
-> >> +};
-> >> +
-> >> +static struct pci_dev *get_intel_host(void)
-> >> +{
-> >> +     int i;
-> >> +     struct pci_dev *host;
-> >> +
-> >> +     for (i = 0; i < ARRAY_SIZE(mch_quirk_devices); i++) {
-> >> +             host = pci_get_device(PCI_VENDOR_ID_INTEL, mch_quirk_devices[i],
-> >> +                                   NULL);
-> >> +             if (host)
-> >> +                     return host;
-> >> +     }
-> >> +     return NULL;
-> >> +}
-> >> +
-> >> +static void quirk_intel_mch(struct pnp_dev *dev)
-> >> +{
-> >> +     struct pci_dev *host;
-> >> +     u32 addr_lo, addr_hi;
-> >> +     struct pci_bus_region region;
-> >> +     struct resource mch;
-> >> +     struct pnp_resource *pnp_res;
-> >> +     struct resource *res;
-> >> +
-> >> +     host = get_intel_host();
-> >> +     if (!host)
-> >> +             return;
-> >> +
-> >> +     /*
-> >> +      * MCHBAR is not an architected PCI BAR, so MCH space is usually
-> >> +      * reported as a PNP0C02 resource.  The MCH space was originally
-> >> +      * 16KB, but is 32KB in newer parts.  Some BIOSes still report a
-> >> +      * PNP0C02 resource that is only 16KB, which means the rest of the
-> >> +      * MCH space is consumed but unreported.
-> >> +      */
-> >> +
-> >> +     /*
-> >> +      * Read MCHBAR for Host Member Mapped Register Range Base
-> >> +      * https://www-ssl.intel.com/content/www/us/en/processors/core/4th-gen-core-family-desktop-vol-2-datasheet
-> >> +      * Sec 3.1.12.
-> >> +      */
-> >> +     pci_read_config_dword(host, 0x48, &addr_lo);
-> >> +     region.start = addr_lo & ~0x7fff;
-> >> +     pci_read_config_dword(host, 0x4c, &addr_hi);
-> >> +     region.start |= (dma_addr_t) addr_hi << 32;
-> >> +     region.end = region.start + 32*1024 - 1;
-> >> +
-> >> +     memset(&mch, 0, sizeof(mch));
-> >> +     mch.flags = IORESOURCE_MEM;
-> >> +     pcibios_bus_to_resource(host->bus, &mch, &region);
-> >> +
-> >> +     list_for_each_entry(pnp_res, &dev->resources, list) {
-> >> +             res = &pnp_res->res;
-> >> +             if (res->end < mch.start || res->start > mch.end)
-> >> +                     continue;       /* no overlap */
-> >> +             if (res->start == mch.start && res->end == mch.end)
-> >> +                     continue;       /* exact match */
-> >> +
-> >> +             dev_info(&dev->dev, FW_BUG "PNP resource %pR covers only part of %s Intel MCH; extending to %pR\n",
-> >> +                      res, pci_name(host), &mch);
-> >> +             res->start = mch.start;
-> >> +             res->end = mch.end;
-> >> +             break;
-> >> +     }
-> >> +
-> >> +     pci_dev_put(host);
-> >> +}
-> >> +
-> >>  /*
-> >>   *  PnP Quirks
-> >>   *  Cards or devices that need some tweaking due to incomplete resource info
-> >> @@ -364,6 +437,7 @@ static struct pnp_fixup pnp_fixups[] = {
-> >>  #ifdef CONFIG_AMD_NB
-> >>       {"PNP0c01", quirk_amd_mmconfig_area},
-> >>  #endif
-> >> +     {"PNP0c02", quirk_intel_mch},
-> >>       {""}
-> >>  };
-> >>
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> > --
-> > I speak only for myself.
-> > Rafael J. Wysocki, Intel Open Source Technology Center.
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> ---
+>  include/linux/pci_ids.h |    3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> --- linux-3.14-rc8.orig/include/linux/pci_ids.h	2014-03-31 14:15:00.832955000 +0200
+> +++ linux-3.14-rc8/include/linux/pci_ids.h	2014-03-31 14:55:08.635085484 +0200
+> @@ -1628,8 +1628,6 @@
+>  #define PCI_DEVICE_ID_ATT_VENUS_MODEM	0x480
+>  
+>  #define PCI_VENDOR_ID_SPECIALIX		0x11cb
+> -#define PCI_DEVICE_ID_SPECIALIX_IO8	0x2000
+> -#define PCI_DEVICE_ID_SPECIALIX_RIO	0x8000
+>  #define PCI_SUBDEVICE_ID_SPECIALIX_SPEED4 0xa004
+>  
+>  #define PCI_VENDOR_ID_ANALOG_DEVICES	0x11d4
+> @@ -2868,7 +2866,6 @@
+>  #define PCI_DEVICE_ID_SCALEMP_VSMP_CTL	0x1010
+>  
+>  #define PCI_VENDOR_ID_COMPUTONE		0x8e0e
+> -#define PCI_DEVICE_ID_COMPUTONE_IP2EX	0x0291
+>  #define PCI_DEVICE_ID_COMPUTONE_PG	0x0302
+>  #define PCI_SUBVENDOR_ID_COMPUTONE	0x8e0e
+>  #define PCI_SUBDEVICE_ID_COMPUTONE_PG4	0x0001
+> 
+> 
+> -- 
+> Jean Delvare
+> SUSE L3 Support
