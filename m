@@ -1,86 +1,34 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay4-d.mail.gandi.net ([217.70.183.196]:52431 "EHLO
-	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753AbaDKFru (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Apr 2014 01:47:50 -0400
-From: Ryan Desfosses <ryan@desfo.org>
-To: bhelgaas@google.com
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
-Subject: [PATCHv2] pci: added or removed a space to resolve checkpatch message
-Date: Fri, 11 Apr 2014 01:47:20 -0400
-Message-Id: <1397195240-4894-1-git-send-email-ryan@desfo.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	Stephane Eranian <eranian@google.com>,
+	linux-acpi@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Zheng Z Yan <zheng.z.yan@intel.com>,
+	Dave Jones <davej@redhat.com>, Rui Zhang <rui.zhang@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v3] Intel MCH BIOS workaround
+Date: Thu, 24 Apr 2014 02:58:02 +0200
+Message-ID: <1643834.MGNKT7oDCE@vostro.rjw.lan>
+In-Reply-To: <20140423161901.16088.46695.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140423161901.16088.46695.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-changes made to resolve following messages:
-  WARNING: please, no spaces at the start of a line
-  ERROR: space prohibited after that '!' (ctx:BxW)
-  ERROR: space required before the open parenthesis '('
+On Wednesday, April 23, 2014 10:20:57 AM Bjorn Helgaas wrote:
+> Hi Rafael,
 
-Signed-off-by: Ryan Desfosses <ryan@desfo.org>
----
- drivers/pci/pci.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Hi,
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index fdbc294..20bcb1a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -114,7 +114,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus* bus)
- 	max = bus->busn_res.end;
- 	list_for_each(tmp, &bus->children) {
- 		n = pci_bus_max_busnr(pci_bus_b(tmp));
--		if(n > max)
-+		if (n > max)
- 			max = n;
- 	}
- 	return max;
-@@ -489,7 +489,7 @@ static inline bool platform_pci_power_manageable(struct pci_dev *dev)
- }
- 
- static inline int platform_pci_set_power_state(struct pci_dev *dev,
--                                                pci_power_t t)
-+					       pci_power_t t)
- {
- 	return pci_platform_pm ? pci_platform_pm->set_state(dev, t) : -ENOSYS;
- }
-@@ -1431,7 +1431,7 @@ void pcim_pin_device(struct pci_dev *pdev)
-  * devices are added. This is the default implementation. Architecture
-  * implementations can override this.
-  */
--int __weak pcibios_add_device (struct pci_dev *dev)
-+int __weak pcibios_add_device(struct pci_dev *dev)
- {
- 	return 0;
- }
-@@ -1454,7 +1454,7 @@ void __weak pcibios_release_device(struct pci_dev *dev) {}
-  * is the default implementation. Architecture implementations can
-  * override this.
-  */
--void __weak pcibios_disable_device (struct pci_dev *dev) {}
-+void __weak pcibios_disable_device(struct pci_dev *dev) {}
- 
- static void do_pci_disable_device(struct pci_dev *dev)
- {
-@@ -2565,7 +2565,7 @@ static int __pci_request_selected_regions(struct pci_dev *pdev, int bars,
- 	return 0;
- 
- err_out:
--	while(--i >= 0)
-+	while (--i >= 0)
- 		if (bars & (1 << i))
- 			pci_release_region(pdev, i);
- 
-@@ -2798,7 +2798,7 @@ pci_set_mwi(struct pci_dev *dev)
- 		return rc;
- 
- 	pci_read_config_word(dev, PCI_COMMAND, &cmd);
--	if (! (cmd & PCI_COMMAND_INVALIDATE)) {
-+	if (!(cmd & PCI_COMMAND_INVALIDATE)) {
- 		dev_dbg(&dev->dev, "enabling Mem-Wr-Inval\n");
- 		cmd |= PCI_COMMAND_INVALIDATE;
- 		pci_write_config_word(dev, PCI_COMMAND, cmd);
--- 
-1.9.1
+> Relative to v2, this adds "#ifdef CONFIG_X86" around the quirk and adds
+> Stephane's ack.  Either v2 or v3 is fine with me; whatever seems best to
+> you.
+
+I've applied this one, thanks!
+
+Rafael
 
