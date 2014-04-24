@@ -1,74 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:46773 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752661AbaDDQKm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 12:10:42 -0400
-Received: by mail-pa0-f45.google.com with SMTP id kl14so3672236pab.4
-        for <linux-pci@vger.kernel.org>; Fri, 04 Apr 2014 09:10:42 -0700 (PDT)
-Date: Fri, 4 Apr 2014 10:10:38 -0600
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:55112 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752679AbaDXVWt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 17:22:49 -0400
+Received: by mail-pa0-f44.google.com with SMTP id ey11so511244pad.17
+        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 14:22:48 -0700 (PDT)
+Date: Thu, 24 Apr 2014 15:22:46 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jan Beulich <JBeulich@suse.com>
-Cc: gregkh@linuxfoundation.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/MSI: simplify populate_msi_sysfs()
-Message-ID: <20140404161038.GB9007@google.com>
-References: <530F0BD3020000780011FC25@nat28.tlf.novell.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Mark Rustad <mark.d.rustad@intel.com>,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] pci: Use designated initialization in PCI_VDEVICE
+Message-ID: <20140424212246.GG29593@google.com>
+References: <1396303119-16766-1-git-send-email-jeffrey.t.kirsher@intel.com>
+ <5339E746.4030503@cogentembedded.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <530F0BD3020000780011FC25@nat28.tlf.novell.com>
+In-Reply-To: <5339E746.4030503@cogentembedded.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 27, 2014 at 08:56:35AM +0000, Jan Beulich wrote:
-> While originally this was a patch to fix the two memory leaks (which
-> got preempted by the two commits that went in the day before I wanted
-> to submit this fix), I think this can (and should) be done more
-> efficiently:
-> - swapping the order of the two allocations and storing the
->   msi_dev_attr-derived pointer right after allocation, allowing the
->   cleanup code to pick things up without extra effort
-> - using kasprintf() instead of the kmalloc()/sprintf() pair
+On Tue, Apr 01, 2014 at 02:08:06AM +0400, Sergei Shtylyov wrote:
+> Hello.
 > 
-> Signed-off-by: Jan Beulich <jbeulich@suse.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> On 04/01/2014 01:58 AM, Jeff Kirsher wrote:
+> 
+> >From: Mark Rustad <mark.d.rustad@intel.com>
+> 
+> >By using designated initialization in PCI_VDEVICE, like other
+> >similar macros, many "missing initializer" warnings that appear
+> >when compiling with W=2 can be silenced.
+> 
+> >Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+> >Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
+> >Tested-by: Aaron Brown <aaron.f.brown@intel.com>
+> >Tested-by: Kavindya Deegala <kavindya.s.deegala@intel.com>
+> >Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> >---
+> >  include/linux/pci.h | 10 +++++-----
+> >  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> >diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >index fb57c89..49455f9 100644
+> >--- a/include/linux/pci.h
+> >+++ b/include/linux/pci.h
+> [...]
+> >@@ -689,9 +689,9 @@ struct pci_driver {
+> >   * private data.
+> >   */
+> >
+> >-#define PCI_VDEVICE(vendor, device)		\
+> >-	PCI_VENDOR_ID_##vendor, (device),	\
+> >-	PCI_ANY_ID, PCI_ANY_ID, 0, 0
+> >+#define PCI_VDEVICE(vend, dev) \
+> >+	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
+> >+	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+> 
+>    Initializing the fields to 0 is pointless, as 0 is what should be
+> put into them anyway by the compiler. Also, it doesn't look right
+> when you mix designated and anonymous initializers.
 
-Applied (with Greg's ack) to my pending/msi branch, which will be rebased
-and renamed after v3.15-rc1.  Thanks!
+I'm certainly willing to apply this, but I can't reproduce the benefit.  I
+tried "make W=2 drivers/net/ethernet/intel/e1000e/netdev.o" and didn't see
+any change before and after this patch (I'm using Ubuntu gcc 4.6.3 if it
+matters).
 
-> ---
->  drivers/pci/msi.c |   16 ++++++----------
->  1 file changed, 6 insertions(+), 10 deletions(-)
-> 
-> --- 3.14-rc4/drivers/pci/msi.c
-> +++ 3.14-rc4-pci-msi-sysfs-cleanup/drivers/pci/msi.c
-> @@ -544,22 +544,18 @@ static int populate_msi_sysfs(struct pci
->  	if (!msi_attrs)
->  		return -ENOMEM;
->  	list_for_each_entry(entry, &pdev->msi_list, list) {
-> -		char *name = kmalloc(20, GFP_KERNEL);
-> -		if (!name)
-> -			goto error_attrs;
-> -
->  		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
-> -		if (!msi_dev_attr) {
-> -			kfree(name);
-> +		if (!msi_dev_attr)
->  			goto error_attrs;
-> -		}
-> +		msi_attrs[count] = &msi_dev_attr->attr;
->  
-> -		sprintf(name, "%d", entry->irq);
->  		sysfs_attr_init(&msi_dev_attr->attr);
-> -		msi_dev_attr->attr.name = name;
-> +		msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
-> +						    entry->irq);
-> +		if (!msi_dev_attr->attr.name)
-> +			goto error_attrs;
->  		msi_dev_attr->attr.mode = S_IRUGO;
->  		msi_dev_attr->show = msi_mode_show;
-> -		msi_attrs[count] = &msi_dev_attr->attr;
->  		++count;
->  	}
->  
-> 
-> 
-> 
+What am I missing?  And do we need the zeroes?
+
+Bjorn
