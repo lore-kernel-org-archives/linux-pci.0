@@ -1,57 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50238 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751354AbaDUNqK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 21 Apr 2014 09:46:10 -0400
-Date: Mon, 21 Apr 2014 14:36:05 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:50223 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758733AbaDXRdx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 13:33:53 -0400
+Received: by mail-pd0-f179.google.com with SMTP id g10so2158945pdj.38
+        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 10:33:52 -0700 (PDT)
+Date: Thu, 24 Apr 2014 11:33:48 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
 	Vinod Koul <vinod.koul@intel.com>,
-	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] ioat: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140421133604.GB25116@dhcp-26-169.brq.redhat.com>
-References: <cover.1394128952.git.agordeev@redhat.com>
- <2ba22558b5db90740d5833c35570c3e7cc1e359e.1394128952.git.agordeev@redhat.com>
- <CAPcyv4jW19zxApviDdbofbXB1OvvN2sCriL3Paszfk9o3T8x0w@mail.gmail.com>
- <20140306214356.GA16376@dhcp-26-207.brq.redhat.com>
- <CAPcyv4ivvxHvyT_5oybVvRJAUKABQQ1ZH4Eua-1KVDeri5kpkA@mail.gmail.com>
- <20140307074932.GC2670@dhcp-26-207.brq.redhat.com>
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Patch Part3 V1 17/22] pci, ACPI, iommu: enhance pci_root to
+ support DMAR device hotplug
+Message-ID: <20140424173348.GC29593@google.com>
+References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+ <1398150453-28141-18-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140307074932.GC2670@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <1398150453-28141-18-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 07, 2014 at 08:49:32AM +0100, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+On Tue, Apr 22, 2014 at 03:07:28PM +0800, Jiang Liu wrote:
+> Finally enhance pci_root driver to support DMAR device hotplug when
+> hot-plugging PCI host bridges.
 > 
-> Function pci_enable_msix() returns a tri-state value while
-> pci_enable_msi_exact() is a canonical zero/-errno variant.
-> The former is being phased out in favor of the latter.
-> In case of 'ioat' there (should be) no difference.
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/acpi/pci_root.c |   16 ++++++++++++++--
+>  1 file changed, 14 insertions(+), 2 deletions(-)
 > 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Cc: Vinod Koul <vinod.koul@intel.com>
-> Cc: dmaengine@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Acked-by: Dan Williams <dan.j.williams@intel.com>
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index d388f13d48b4..aa8f549869f3 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -33,6 +33,7 @@
+>  #include <linux/pci.h>
+>  #include <linux/pci-acpi.h>
+>  #include <linux/pci-aspm.h>
+> +#include <linux/dmar.h>
+>  #include <linux/acpi.h>
+>  #include <linux/slab.h>
+>  #include <acpi/apei.h>	/* for acpi_hest_init() */
+> @@ -511,6 +512,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	struct acpi_pci_root *root;
+>  	acpi_handle handle = device->handle;
+>  	int no_aspm = 0, clear_aspm = 0;
+> +	bool hotadd = (system_state != SYSTEM_BOOTING);
+>  
+>  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+>  	if (!root)
+> @@ -557,6 +559,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+>  	device->driver_data = root;
+>  
+> +	if (hotadd && dmar_device_hotplug(handle, true)) {
 
-Hi Dan,
+Apparently "dmar_device_hotplug(handle, true)" means "add a DMAR device,"
+and "dmar_device_hotplug(device->handle, false)" means "remove a DMAR
+device."  I'm not really a fan of interfaces where one of the arguments
+selects between two completely different actions, because it's harder for a
+casual reader to see what's going on.
 
-Would you pick this patch, please?
+I see how it simplifies your implementation a little bit, but I think it's
+more important to simplify for the reader.
 
-Thanks!
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Bjorn
