@@ -1,98 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:53076 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750960AbaDOLu4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 07:50:56 -0400
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <spear-devel@list.st.com>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Cc: Mohit Kumar <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH V8 9/9] SPEAr13xx: defconfig: Update
-Date: Tue, 15 Apr 2014 17:19:51 +0530
-Message-ID: <ff9f1a8a515daf56f31c67b3be832b93e3642324.1397555158.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1397555158.git.mohit.kumar@st.com>
-References: <cover.1397555158.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38889 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200AbaDXTqd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 15:46:33 -0400
+Date: Thu, 24 Apr 2014 12:49:26 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Mathias Nyman <mathias.nyman@linux.intel.com>
+Cc: linux-usb@vger.kernel.org, sarah.a.sharp@linux.intel.com,
+	linux-kernel@vger.kernel.org,
+	Alexander Gordeev <agordeev@redhat.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/5] xhci: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140424194926.GB12809@kroah.com>
+References: <1398169382-12097-1-git-send-email-mathias.nyman@linux.intel.com>
+ <1398169382-12097-3-git-send-email-mathias.nyman@linux.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1398169382-12097-3-git-send-email-mathias.nyman@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable PCIe, EABI, VFP and NFS configs in default configuration file for
-SPEAr13xx.
+On Tue, Apr 22, 2014 at 03:22:59PM +0300, Mathias Nyman wrote:
+> From: Alexander Gordeev <agordeev@redhat.com>
+> 
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: linux-usb@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Mathias Nyman <mathias.nyman@linux.intel.com>
+> ---
+>  drivers/usb/host/xhci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+> index 988ed5f..b0b8399 100644
+> --- a/drivers/usb/host/xhci.c
+> +++ b/drivers/usb/host/xhci.c
+> @@ -291,7 +291,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
+>  		xhci->msix_entries[i].vector = 0;
+>  	}
+>  
+> -	ret = pci_enable_msix(pdev, xhci->msix_entries, xhci->msix_count);
+> +	ret = pci_enable_msix_exact(pdev, xhci->msix_entries, xhci->msix_count);
 
-Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: spear-devel@list.st.com
-Cc: linux-arm-kernel@lists.infradead.org
----
- arch/arm/configs/spear13xx_defconfig |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
-
-diff --git a/arch/arm/configs/spear13xx_defconfig b/arch/arm/configs/spear13xx_defconfig
-index 82eaa55..d271b26 100644
---- a/arch/arm/configs/spear13xx_defconfig
-+++ b/arch/arm/configs/spear13xx_defconfig
-@@ -11,13 +11,24 @@ CONFIG_ARCH_SPEAR13XX=y
- CONFIG_MACH_SPEAR1310=y
- CONFIG_MACH_SPEAR1340=y
- # CONFIG_SWP_EMULATE is not set
-+CONFIG_PCI=y
-+CONFIG_PCI_MSI=y
-+CONFIG_PCIE_SPEAR13XX=y
- CONFIG_SMP=y
- # CONFIG_SMP_ON_UP is not set
- # CONFIG_ARM_CPU_TOPOLOGY is not set
-+CONFIG_AEABI=y
- CONFIG_ARM_APPENDED_DTB=y
- CONFIG_ARM_ATAG_DTB_COMPAT=y
-+CONFIG_VFP=y
- CONFIG_BINFMT_MISC=y
- CONFIG_NET=y
-+CONFIG_UNIX=y
-+CONFIG_INET=y
-+CONFIG_IP_PNP=y
-+CONFIG_IP_PNP_DHCP=y
-+CONFIG_IP_PNP_BOOTP=y
-+CONFIG_NET_IPIP=y
- CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
- CONFIG_MTD=y
- CONFIG_MTD_OF_PARTS=y
-@@ -27,6 +38,7 @@ CONFIG_MTD_NAND=y
- CONFIG_MTD_NAND_FSMC=y
- CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_SIZE=16384
-+CONFIG_BLK_DEV_SD=y
- CONFIG_ATA=y
- # CONFIG_SATA_PMP is not set
- CONFIG_SATA_AHCI_PLATFORM=y
-@@ -66,6 +78,7 @@ CONFIG_USB=y
- # CONFIG_USB_DEVICE_CLASS is not set
- CONFIG_USB_EHCI_HCD=y
- CONFIG_USB_OHCI_HCD=y
-+CONFIG_USB_STORAGE=y
- CONFIG_MMC=y
- CONFIG_MMC_SDHCI=y
- CONFIG_MMC_SDHCI_SPEAR=y
-@@ -79,11 +92,14 @@ CONFIG_EXT2_FS_SECURITY=y
- CONFIG_EXT3_FS=y
- CONFIG_EXT3_FS_SECURITY=y
- CONFIG_AUTOFS4_FS=m
-+CONFIG_FUSE_FS=y
- CONFIG_MSDOS_FS=m
- CONFIG_VFAT_FS=m
- CONFIG_FAT_DEFAULT_IOCHARSET="ascii"
- CONFIG_TMPFS=y
- CONFIG_JFFS2_FS=y
-+CONFIG_NFS_FS=y
-+CONFIG_ROOT_NFS=y
- CONFIG_NLS_DEFAULT="utf8"
- CONFIG_NLS_CODEPAGE_437=y
- CONFIG_NLS_ASCII=m
--- 
-1.7.0.1
+Why is this change needed for 3.15-final?
 
