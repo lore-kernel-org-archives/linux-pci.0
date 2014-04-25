@@ -1,98 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:52455 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753136AbaDDOU0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 10:20:26 -0400
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 4 Apr 2014 19:50:24 +0530
-Date: Fri, 4 Apr 2014 22:20:17 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	netdev <netdev@vger.kernel.org>, yevgenyp@mellanox.com,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Amir Vadai <amirv@mellanox.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] net/mlx4_core: match pci_device_id including dynids
-Message-ID: <20140404142017.GB5969@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1396326961-20395-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <CAErSpo4yj+31puKhnxJ9Dns4c-1cWoUxxQt+OTDQDCGuuksOAw@mail.gmail.com>
- <20140403015130.GA6151@richard>
- <CAErSpo749gfvcJmwjCw6c6H07S9cvaX2kz4jw1AwUZzbDN6Afw@mail.gmail.com>
- <20140403065432.GA18045@richard>
- <20140403211254.GA21931@google.com>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:46023 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751916AbaDYJCH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 05:02:07 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s3P8uRpw030209
+	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 02:02:06 -0700
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1kbkf6aabt-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 02:02:06 -0700
+Content-Type: multipart/mixed;
+	boundary="_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EEA2avmb2qlogicorg_"
+From: Shahed Shaikh <shahed.shaikh@qlogic.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: linux-kernel <linux-kernel@vger.kernel.org>,
+	Dept-HSG Linux NIC Dev <Dept-HSGLinuxNICDev@qlogic.com>,
+	netdev <netdev@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH net-next 2/2] qlcnic: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Date: Fri, 25 Apr 2014 09:02:02 +0000
+Message-ID: <262CB373A6D1F14F9B81E82F74F77D5A46F9EEA2@avmb2.qlogic.org>
+References: <cover.1398412015.git.agordeev@redhat.com>
+ <0a0d5f5c33d86e3777c22c3c1bbd81035660d57c.1398412015.git.agordeev@redhat.com>
+ <262CB373A6D1F14F9B81E82F74F77D5A46F9EE54@avmb2.qlogic.org>
+ <20140425090029.GA2500@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20140425090029.GA2500@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140403211254.GA21931@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 03, 2014 at 03:12:54PM -0600, Bjorn Helgaas wrote:
->On Thu, Apr 03, 2014 at 02:54:32PM +0800, Wei Yang wrote:
->> Here is another one based on your comment, which split mlx4_remove_one into
->> two and named a helper __mlx4_remove_one(). mlx4_pci_err_detected() will just
->> call __mlx4_remove_one(), which will not release drvdata.
->> 
->> BTW, this is not tested, just want to make sure my understanding is correct.
->
->A couple minor comments below, but in general, yes, this is what I was
->thinking.
->
->> From 84a5a9df0604cbea9b70c74b0709258841637946 Mon Sep 17 00:00:00 2001
->> From: Wei Yang <weiyang@linux.vnet.ibm.com>
->> Date: Mon, 31 Mar 2014 11:34:57 +0800
->> Subject: [PATCH] net/mlx4_core: match pci_device_id including dynids
->> 
->> Fix issue introduced by commit: 97a5221 "net/mlx4_core: pass
->> pci_device_id.driver_data to __mlx4_init_one during reset".
->> 
->> pci_match_id() just match the static pci_device_id, which may return NULL if
->> someone binds the driver to a device manually using
->> /sys/bus/pci/drivers/.../new_id.
->> 
->> This patch wrap up a helper function __mlx4_remove_one() which does the tear
->> down function but preserve the drv_data. Functions like
->> mlx4_pci_err_detected() and mlx4_restart_one() will call this one with out
->> releasing drvdata.
->> 
->> CC: Bjorn Helgaas <bhelgaas@google.com>
->> CC: Amir Vadai <amirv@mellanox.com>
->> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> Acked-by: Amir Vadai <amirv@mellanox.com>
->> ---
->>  drivers/net/ethernet/mellanox/mlx4/main.c |  149 ++++++++++++++++-------------
->>  1 file changed, 80 insertions(+), 69 deletions(-)
->> 
->> diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
->> index aa54ef7..fd1f288 100644
->> --- a/drivers/net/ethernet/mellanox/mlx4/main.c
->> +++ b/drivers/net/ethernet/mellanox/mlx4/main.c
->> @@ -2268,7 +2268,12 @@ static int __mlx4_init_one(struct pci_dev *pdev, int pci_dev_data)
->>  	/* Allow large DMA segments, up to the firmware limit of 1 GB */
->>  	dma_set_max_seg_size(&pdev->dev, 1024 * 1024 * 1024);
->>  
->> -	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
->> +	dev = pci_get_drvdata(pdev);
->> +	if (!dev)
->> +		priv = kzalloc(sizeof(*priv), GFP_KERNEL);
->> +	else
->> +		priv = mlx4_priv(dev);
->
->Why don't you move the priv kzalloc into mlx4_init_one()?  Then it would be
->symmetric -- you alloc and call pci_set_drvdata() in mlx4_init_one(), and
->you call pci_set_drvdata(NULL) and free it in mlx4_remove_one().  And you
->wouldn't need the test here.
->
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EEA2avmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Agree, this looks more consistent.
+> -----Original Message-----
+> From: Alexander Gordeev [mailto:agordeev@redhat.com]
+> Sent: Friday, April 25, 2014 2:31 PM
+> To: Shahed Shaikh
+> Cc: linux-kernel; Dept-HSG Linux NIC Dev; netdev; linux-pci
+> Subject: Re: [PATCH net-next 2/2] qlcnic: Use pci_enable_msix_exact()
+> instead of pci_enable_msix()
+>=20
+> On Fri, Apr 25, 2014 at 08:48:14AM +0000, Shahed Shaikh wrote:
+> > > diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> > > b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> > > index dbf7539..26f022b 100644
+> > > --- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> > > +++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> > > @@ -690,8 +690,8 @@ int qlcnic_setup_tss_rss_intr(struct
+> > > qlcnic_adapter
+> > > *adapter)
+> > >  		adapter->msix_entries[vector].entry =3D vector;
+> > >
+> > >  restore:
+> > > -	err =3D pci_enable_msix(pdev, adapter->msix_entries, num_msix);
+> > > -	if (err > 0) {
+> > > +	err =3D pci_enable_msix_exact(pdev, adapter->msix_entries,
+> > > num_msix);
+> > > +	if (err =3D=3D -ENOSPC) {
+> > >  		if (!adapter->drv_tss_rings && !adapter->drv_rss_rings)
+> > >  			return -ENOSPC;
+> >
+> > I think, it would be good if we return "err" instead of "-ENOSPC" .
+> >
+> >                 if (!adapter->drv_tss_rings && !adapter->drv_rss_rings)
+> > -                       return -ENOSPC;
+> > +                       return err;
+>=20
+> At this point "err" could only be -ENOSPC. I am not sure why returning "e=
+rr" is
+> better, but I'll repost if you insist.
 
-Will write a formal version and send to mail list after verification.
+Agree. But it will make code look cleaner.
 
--- 
-Richard Yang
-Help you, Help me
+Thanks,
+Shahed
 
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EEA2avmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+cwBoAGEAaABlAGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A5V8B
+AAAAOgAAAHMAaQBwADoAcwBoAGEAaABlAGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAAAB8AGgwBAAAAHAAAAFMAaABhAGgAZQBkACAAUwBoAGEAaQBrAGgAAAAfAB8MAQAA
+ADIAAABzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAA
+HwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIA
+AACAUwBoAGEAaABlAGQAIABTAGgAYQBpAGsAaAAAAFMATQBUAFAAAABzAGgAYQBoAGUAZAAuAHMA
+aABhAGkAawBoAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAAMgAAAHMAaABhAGgAZQBk
+AC4AcwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAPg/AQAAABwAAABTAGgA
+YQBoAGUAZAAgAFMAaABhAGkAawBoAAAAHwAjQAEAAAAyAAAAcwBoAGEAaABlAGQALgBzAGgAYQBp
+AGsAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB
++T8BAAAAcAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAaABhAGgAZQBkACAAUwBoAGEAaQBr
+AGgAAABTAE0AVABQAAAAcwBoAGEAaABlAGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAfAAldAQAAADIAAABzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8A
+GgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgEL
+MAEAAAAQAAAA+oyYLrG+u0CuDx+RW++ofAMAFwABAAAAQAA5AAChqQVlYM8BQAAIMIeXKAZlYM8B
+CwApAAAAAAALACMAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABs
+AGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAA
+AEYAAAAABoUAAAAAAAAfADcAAQAAALQAAABSAEUAOgAgAFsAUABBAFQAQwBIACAAbgBlAHQALQBu
+AGUAeAB0ACAAMgAvADIAXQAgAHEAbABjAG4AaQBjADoAIABVAHMAZQAgAHAAYwBpAF8AZQBuAGEA
+YgBsAGUAXwBtAHMAaQB4AF8AZQB4AGEAYwB0ACgAKQAgAGkAbgBzAHQAZQBhAGQAIABvAGYAIABw
+AGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeAAoACkAAAAfAD0AAQAAAAoAAABSAEUAOgAgAAAA
+AAADADYAAAAAAAMALgAAAAAAHwBCEAEAAABmAAAAPAAyADAAMQA0ADAANAAyADUAMAA5ADAAMAAy
+ADkALgBHAEEAMgA1ADAAMABAAGQAaABjAHAALQAyADYALQAyADAANwAuAGIAcgBxAC4AcgBlAGQA
+aABhAHQALgBjAG8AbQA+AAAAAAACAXEAAQAAACUAAAABAc9gXRgBFke9Um4UQ5jAnOoETbbZmyID
+jkCAAHquAP//il9wAAAAHwBwAAEAAACsAAAAWwBQAEEAVABDAEgAIABuAGUAdAAtAG4AZQB4AHQA
+IAAyAC8AMgBdACAAcQBsAGMAbgBpAGMAOgAgAFUAcwBlACAAcABjAGkAXwBlAG4AYQBiAGwAZQBf
+AG0AcwBpAHgAXwBlAHgAYQBjAHQAKAApACAAaQBuAHMAdABlAGEAZAAgAG8AZgAgAHAAYwBpAF8A
+ZQBuAGEAYgBsAGUAXwBtAHMAaQB4ACgAKQAAAB8ANRABAAAAeAAAADwAMgA2ADIAQwBCADMANwAz
+AEEANgBEADEARgAxADQARgA5AEIAOAAxAEUAOAAyAEYANwA0AEYANwA3AEQANQBBADQANgBGADkA
+RQBFAEEAMgBAAGEAdgBtAGIAMgAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAA0AEA
+ADwAYwBvAHYAZQByAC4AMQAzADkAOAA0ADEAMgAwADEANQAuAGcAaQB0AC4AYQBnAG8AcgBkAGUA
+ZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+ACAAPAAwAGEAMABkADUAZgA1AGMAMwAzAGQAOAA2
+AGUAMwA3ADcANwBjADIAMgBjADMAYwAxAGIAYgBkADgAMQAwADMANQA2ADYAMABkADUANwBjAC4A
+MQAzADkAOAA0ADEAMgAwADEANQAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABh
+AHQALgBjAG8AbQA+ACAAPAAyADYAMgBDAEIAMwA3ADMAQQA2AEQAMQBGADEANABGADkAQgA4ADEA
+RQA4ADIARgA3ADQARgA3ADcARAA1AEEANAA2AEYAOQBFAEUANQA0AEAAYQB2AG0AYgAyAC4AcQBs
+AG8AZwBpAGMALgBvAHIAZwA+ACAAPAAyADAAMQA0ADAANAAyADUAMAA5ADAAMAAyADkALgBHAEEA
+MgA1ADAAMABAAGQAaABjAHAALQAyADYALQAyADAANwAuAGIAcgBxAC4AcgBlAGQAaABhAHQALgBj
+AG8AbQA+AAAAAwDeP59OAAALAACACCAGAAAAAADAAAAAAAAARgAAAAADhQAAAAAAAAMAAIAIIAYA
+AAAAAMAAAAAAAABGAAAAAAGFAAAAAAAAAwCAEP////9AAAcwR9ZIBWVgzwELAAIAAQAAAAMAJgAA
+AAAACwArAAAAAAACAUcAAQAAAC8AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIyLTE0MDQyNTA5
+MDIwMlotMTY1NzEzAAACARAwAQAAAEYAAAAAAAAArzyCpH4RikG4uh7fmKWNYAcAWoRvvvW+/063
+9oZ+uI4ZfAAaa2g25QAArrMo5QJN4EiIC4rd8TVo8wBLdv2FqQAAAAAfAPo/AQAAABwAAABTAGgA
+YQBoAGUAZAAgAFMAaABhAGkAawBoAAAAAwAJWQEAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAQ
+hQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAA6FAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAA
+AEYAAAAAGIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAAAACChQAAAAAAAB8AAIAIIAYAAAAA
+AMAAAAAAAABGAAAAANiFAAABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwANNP0/AAAfAACA
+hgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAAB
+AAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEA
+dABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAAC8dw==
+
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EEA2avmb2qlogicorg_--
