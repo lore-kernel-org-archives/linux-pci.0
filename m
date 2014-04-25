@@ -1,84 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sun, 20 Apr 2014 09:59:37 +0200
-From: Borislav Petkov <bp@suse.de>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
-	kim.naru@amd.com, daniel@numascale.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, bp@suse.de,
-	sp@numascale.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range
- capabilities
-Message-ID: <20140420075936.GA19672@pd.tnic>
-References: <20140419025308.2408.51252.stgit@amt.stowe>
- <20140419025323.2408.88764.stgit@amt.stowe>
- <20140419135219.GC8109@pd.tnic>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:44703 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751297AbaDYQoP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 12:44:15 -0400
+Received: by mail-ie0-f176.google.com with SMTP id rd18so4078138iec.35
+        for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 09:44:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140419135219.GC8109@pd.tnic>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <e760e15b4f404c6cb3252480a7d8a78a@CO1PR05MB523.namprd05.prod.outlook.com>
+References: <5339FF99.2050200@gmail.com> <20140424213106.GI29593@google.com> <e760e15b4f404c6cb3252480a7d8a78a@CO1PR05MB523.namprd05.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 25 Apr 2014 10:43:54 -0600
+Message-ID: <CAErSpo4ymkPOx5Evi=nctWr5f7OY6vkQTzwGnvi1ck7t-OTAWg@mail.gmail.com>
+Subject: Re: [PATCH] pci/pciehp: Allow polling/irq mode to be decided on a
+ per-port basis
+To: Guenter Roeck <groeck@juniper.net>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Drop Andreas' old email address from CC as it keeps bouncing.
+On Fri, Apr 25, 2014 at 10:34 AM, Guenter Roeck <groeck@juniper.net> wrote:
+>
+>
+>> -----Original Message-----
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>> Sent: Thursday, April 24, 2014 2:31 PM
+>> To: Rajat Jain
+>> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Rajat
+>> Jain; Guenter Roeck
+>> Subject: Re: [PATCH] pci/pciehp: Allow polling/irq mode to be decided
+>> on a per-port basis
+>>
+>> On Mon, Mar 31, 2014 at 04:51:53PM -0700, Rajat Jain wrote:
+>> > Today, there is a global pciehp_poll_mode module parameter using
+>> which
+>> > either _all_ the hot-pluggable ports are to use polling, or _all_ the
+>> > ports are to use interrupts.
+>> >
+>> > In a system where a certain port has IRQ issues, today the only
+>> option
+>> > is to use the parameter that converts ALL the ports to use polling
+>> mode.
+>> > This is not good, and hence this patch intruduces a bit field that
+>> can
+>> > be set using a PCI quirk that indicates that polling should always be
+>> > used for this particular PCIe port. The remaining ports can still
+>> > hoose to continue to operate in whatever mode they wish to.
+>> >
+>> > Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+>> > Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+>> > Signed-off-by: Guenter Roeck <groeck@juniper.net>
+>>
+>> I'm willing to merge this, but I'd prefer to merge it along with a
+>> quirk that actually sets dev->hotplug_polling.  Otherwise it's dead
+>> code and I'll have no way to tell whether we need to keep it.
+>>
+> Bjorn,
+>
+> what would be the proper location for such a quirk ?
+> We use it to help simulating hotplug support on an IDT PES12NT3.
+> The code is a bit more invasive than just the quirk itself,
+> since it also needs to touch link and slot status registers,
+> so quirks.c doesn't seem appropriate.
+>
+> drivers/pci/pes12nt3.c, maybe, with a separate configuration
+> option ? Or in the hotplug directory ?
 
-On Sat, Apr 19, 2014 at 03:52:20PM +0200, Borislav Petkov wrote:
-> > -static void __init pci_enable_pci_io_ecs(void)
-> > +static void __init pci_enable_pci_io_ecs(u8 bus, u8 slot)
-> >  {
-> >  #ifdef CONFIG_AMD_NB
-> >  	unsigned int i, n;
-> > +	u8 limit;
-> >  
-> >  	for (n = i = 0; !n && amd_nb_bus_dev_ranges[i].dev_limit; ++i) {
-> > -		u8 bus = amd_nb_bus_dev_ranges[i].bus;
-> > -		u8 slot = amd_nb_bus_dev_ranges[i].dev_base;
-> > -		u8 limit = amd_nb_bus_dev_ranges[i].dev_limit;
-> > +		/* Try matching for the bus range */
-> > +		if ((bus != amd_nb_bus_dev_ranges[i].bus) ||
-> > +		    (slot != amd_nb_bus_dev_ranges[i].dev_base))
-> > +			continue;
-> > +
-> > +		limit = amd_nb_bus_dev_ranges[i].dev_limit;
-> >  
-> > +		/* Setup all northbridges within the range */
-> >  		for (; slot < limit; ++slot) {
-> >  			u32 val = read_pci_config(bus, slot, 3, 0);
-> > -
-> > -			if (!early_is_amd_nb(val))
-> > +			if (!val)
-> >  				continue;
-> >  
-> >  			val = read_pci_config(bus, slot, 3, 0x8c);
-> > @@ -375,13 +457,14 @@ static void __init pci_enable_pci_io_ecs(void)
-> >  				val |= ENABLE_CF8_EXT_CFG >> 32;
-> 
-> What a fun shifting!
-> 
-> Maybe you should do
-> 
-> #define ENABLE_CF8_EXT_CFG	BIT(46 - 32)
-> 
-> to show exactly what you mean and how the bit is defined in MSR NB_CFG1
-> and also show how the high 32-bits are mapped into F3x8c, while at it.
-> 
-> And then you can drop the shifting at the call site.
+If this is only for debug, i.e., you don't intend to ship a product
+using this simulated hotplug, maybe you should just keep both the
+quirk and this patch out of tree.
 
-Ok, I see another fun with this ECS enabling:
+If you do want to eventually ship this code for some product, I think
+it'd be fine to put the quirk in drivers/pci/quirks.c, maybe with a
+config option to enable it.  But without seeing the quirk, I can't
+really tell.  A new file seems overkill unless it's something really
+huge -- I don't think we really have examples of dedicated files for
+other chip idiosyncrasies.
 
-There's a enable_pci_io_ecs() which enables ECS through the NB_CFG MSR
-which is called as part of the notifier *and* there's a PCI write to
-that same bit in pci_enable_pci_io_ecs() which iterates over all NBs.
-
-So, AFAICT, we do it twice and the second time is not needed. Which
-means, you probably can drop pci_enable_pci_io_ecs() completely and use
-solely the notifier?
-
-Yes, no?
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+Bjorn
