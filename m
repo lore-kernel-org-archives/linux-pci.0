@@ -1,69 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <533EDA9F.5090801@ti.com>
-Date: Fri, 4 Apr 2014 12:15:27 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:48515 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000AbaDYSTQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 14:19:16 -0400
+Received: by mail-pd0-f178.google.com with SMTP id fp1so1257275pdb.9
+        for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 11:19:16 -0700 (PDT)
+Date: Fri, 25 Apr 2014 12:19:11 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+	Frank Haverkamp <haver@linux.vnet.ibm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] GenWQE: Use pci_enable_msi_exact() instead of
+ pci_enable_msi_block()
+Message-ID: <20140425181911.GI32246@google.com>
+References: <cover.1397458024.git.agordeev@redhat.com>
+ <6e4ebc84c90c5f8e49a931e915ec373576ad416a.1397458024.git.agordeev@redhat.com>
 MIME-Version: 1.0
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Arnd Bergmann <arnd@arndb.de>, "xobs@kosagi.com" <xobs@kosagi.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [RESEND: RFC PATCH 3/3] pcie: keystone: add pcie driver based
- on designware core driver
-References: <1395707726-20437-1-git-send-email-m-karicheri2@ti.com>  <1395707726-20437-4-git-send-email-m-karicheri2@ti.com>  <235376049.yyfljDtinu@wuerfel> <533C460D.1030608@ti.com> <1396513926.5057.12.camel@weser.hi.pengutronix.de>
-In-Reply-To: <1396513926.5057.12.camel@weser.hi.pengutronix.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6e4ebc84c90c5f8e49a931e915ec373576ad416a.1397458024.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/3/2014 4:32 AM, Lucas Stach wrote:
-> Am Mittwoch, den 02.04.2014, 13:17 -0400 schrieb Murali Karicheri:
->> Arnd,
->>
->> Thanks for reviewing the RFC patch. Please see below my response.
->>
->> On 3/25/2014 3:44 AM, Arnd Bergmann wrote:
->>> On Monday 24 March 2014 20:35:26 Murali Karicheri wrote:
-> [...]
->>>> +	ks_pcie->clk = devm_clk_get(&pdev->dev, "pcie");
->>>> +	if (IS_ERR(ks_pcie->clk)) {
->>>> +		dev_err(&pdev->dev, "Failed to get pcie rc clock\n");
->>>> +		return PTR_ERR(ks_pcie->clk);
->>>> +	}
->>>> +	ret = clk_prepare_enable(ks_pcie->clk);
->>>> +	if (ret)
->>>> +		return ret;
->>> Could you move the clock handling into the generic dw-pcie code?
->> Could be. But currently only pci-exynos.c is using a clock name
->> "pcie".pci-imx6.c uses pcie_axi" and
->> will have to be fixed so that we can move this code to the generic
->> dw-pcie code.  Sean Cross is the
->> author for pci-imx6.c.
->>
->> Sean,
->>
->> Is "pcie_axi" is the pcie hw clock? If so, can you rename this to "pcie"
->> so that  my patch can move the
->> clock handling code to pcie designware code?
->>
-> My series "i.MX6 PCIe binding change and MSI support" already changes
-> the clock name. So we could consolidate the clock handling once this is
-> in. Only difference is that the i.MX6 needs an additional PHY clock.
->
-> Regards,
-> Lucas
-Lucas,
+On Mon, Apr 14, 2014 at 09:14:06AM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: linux-pci@vger.kernel.org
+> Acked-by: Frank Haverkamp <haver@linux.vnet.ibm.com>
 
-Thanks. I will send a patch for this.
+Greg, since you acked this rather than saying you applied it, I applied
+this to my pci/msi branch.  If you'd rather take it yourself, just let me
+know.
 
-Murali
+Bjorn
+
+> ---
+>  drivers/misc/genwqe/card_utils.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/misc/genwqe/card_utils.c b/drivers/misc/genwqe/card_utils.c
+> index 6b1a6ef..294f667 100644
+> --- a/drivers/misc/genwqe/card_utils.c
+> +++ b/drivers/misc/genwqe/card_utils.c
+> @@ -628,7 +628,7 @@ int genwqe_set_interrupt_capability(struct genwqe_dev *cd, int count)
+>  	int rc;
+>  	struct pci_dev *pci_dev = cd->pci_dev;
+>  
+> -	rc = pci_enable_msi_block(pci_dev, count);
+> +	rc = pci_enable_msi_exact(pci_dev, count);
+>  	if (rc == 0)
+>  		cd->flags |= GENWQE_FLAG_MSI_ENABLED;
+>  	return rc;
+> -- 
+> 1.7.7.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
