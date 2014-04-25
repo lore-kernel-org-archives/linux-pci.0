@@ -1,97 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:49032 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753103AbaDJR0f (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 13:26:35 -0400
-Received: by mail-ie0-f176.google.com with SMTP id rd18so4251510iec.35
-        for <linux-pci@vger.kernel.org>; Thu, 10 Apr 2014 10:26:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140409075215.GA3173@yanx>
-References: <CAE9FiQXzRQ9S0mwwb58R2icBTtHHJ6NMVFMaxEgtVNP9mZVjZw@mail.gmail.com>
- <1394222924-28886-1-git-send-email-yinghai@kernel.org> <CAErSpo6r16va7oBpaDcTXw0Y0igc=NbXy9G7c27X+P0UM7fh8g@mail.gmail.com>
- <20140408025738.GA3198@yanx> <CAErSpo4JSrjSn4dXC9Pzfz2Aho+W4Gq9uKc+kAFbqTERcRAJ+w@mail.gmail.com>
- <20140409075215.GA3173@yanx>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 10 Apr 2014 11:26:14 -0600
-Message-ID: <CAErSpo4aGU_rmNSiv=HS-pDVsfKk798zLQW8Kx5huHe8jwdghw@mail.gmail.com>
-Subject: Re: [PATCH v7] PCI: Try best to allocate pref mmio 64bit above 4g
-To: Guo Chao <yan@linux.vnet.ibm.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Amir Vadai <amirv@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Eugenia Emantayev <eugenia@mellanox.com>, talal@mellanox.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bill Sumner <bill.sumner@hp.com>
+To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org
+Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com,
+	jerry.hoemann@hp.com
+Subject: [PATCH 5/8] iommu/vt-d: Items required for kdump
+Date: Thu, 24 Apr 2014 18:36:35 -0600
+Message-Id: <1398386198-19304-6-git-send-email-bill.sumner@hp.com>
+In-Reply-To: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
+References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 9, 2014 at 1:52 AM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
+Add data declarations and prototypes needed for kdump.
 
->> OK, then I'm back to square one, and I need an explanation of why we
->> want to merge this patch.
->>
->> I think the patch conserves 32-bit address space by putting more
->> things above 4G than we used to.  But this comes at the cost of using
->> non-prefetchable windows in some cases where we used to use
->> prefetchable ones.
->>
->> Somebody has to explain why we want to do this and why the benefit of
->> conserving the 32-bit space is more important losing the
->> prefetchability.
->
-> I want to make sure we are talking about this patch:
->         PCI: Try best to allocate pref mmio 64bit above 4g
->         http://patchwork.ozlabs.org/patch/328067/
->
-> instead of this one:
->         PCI: Try to allocate mem64 above 4G at first
->         http://patchwork.ozlabs.org/patch/303197/
+Signed-off-by: Bill Sumner <bill.sumner@hp.com>
+---
+ drivers/iommu/intel-iommu-private.h | 94 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 94 insertions(+)
 
-Yes, I'm talking about http://patchwork.ozlabs.org/patch/328067; if
-you look at patchwork, the second one (303197) is marked "superseded."
+diff --git a/drivers/iommu/intel-iommu-private.h b/drivers/iommu/intel-iommu-private.h
+index 480399c..3f20234 100644
+--- a/drivers/iommu/intel-iommu-private.h
++++ b/drivers/iommu/intel-iommu-private.h
+@@ -361,3 +361,97 @@ static inline void free_pgtable_page(void *vaddr)
+ {
+ 	free_page((unsigned long)vaddr);
+ }
++
++#ifdef CONFIG_CRASH_DUMP
++/*
++ * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
++ *
++ * Fixes the crashdump kernel to deal with an active iommu and legacy
++ * DMA from the (old) panicked kernel in a manner similar to how legacy
++ * DMA is handled when no hardware iommu was in use by the old kernel --
++ * allow the legacy DMA to continue into its current buffers.
++ *
++ * In the crashdump kernel, this code:
++ * 1. skips disabling the IOMMU's translating of IO Virtual Addresses (IOVA)
++ * 2. leaves the current translations in-place so that legacy DMA will
++ *    continue to use its current buffers,
++ * 3. allocates to the device drivers in the crashdump kernel
++ *    portions of the iova address ranges that are different
++ *    from the iova address ranges that were being used by the old kernel
++ *    at the time of the panic.
++ *
++ */
++
++struct domain_values_entry {
++	struct list_head link;		/* link entries into a list */
++	struct iova_domain iovad;	/* iova's that belong to this domain */
++	struct dma_pte	*pgd;		/* virtual address */
++	int    did;			/* domain id */
++	int    gaw;			/* max guest address width */
++	int    iommu_superpage;		/* Level of superpages supported:
++					   0 == 4KiB (no superpages), 1 == 2MiB,
++					   2 == 1GiB, 3 == 512GiB, 4 == 1TiB */
++};
++
++
++
++/* ------------------------------------------------------------------------
++ * Prototypes of interface functions
++ * ------------------------------------------------------------------------
++ */
++
++extern int
++intel_iommu_copy_translation_tables(struct dmar_drhd_unit *drhd,
++	struct root_entry **root_old_p, struct root_entry **root_new_p,
++	int g_num_of_iommus);
++
++extern int
++intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
++
++extern struct domain_values_entry *
++intel_iommu_did_to_domain_values_entry(int did, struct intel_iommu *iommu);
++
++
++/* ------------------------------------------------------------------------
++ * Utility functions for accessing the iommu Translation Tables
++ * ------------------------------------------------------------------------
++ */
++
++static inline struct context_entry *
++get_context_phys_from_root(struct root_entry *root)
++{
++	return (struct context_entry *)
++		(root_present(root) ? (void *) (root->val & VTD_PAGE_MASK)
++				    : NULL);
++}
++
++static inline int
++context_get_p(struct context_entry *c)    {return((c->lo >> 0) & 0x1); }
++
++static inline int
++context_get_fpdi(struct context_entry *c) {return((c->lo >> 1) & 0x1); }
++
++static inline int
++context_get_t(struct context_entry *c)    {return((c->lo >> 2) & 0x3); }
++
++static inline u64
++context_get_asr(struct context_entry *c)  {return((c->lo >> 12));      }
++
++static inline int
++context_get_aw(struct context_entry *c)   {return((c->hi >> 0) & 0x7); }
++
++static inline int
++context_get_aval(struct context_entry *c) {return((c->hi >> 3) & 0xf); }
++
++static inline int
++context_get_did(struct context_entry *c)  {return((c->hi >> 8) & 0xffff); }
++
++static inline void
++context_put_asr(struct context_entry *c, unsigned long asr)
++{
++	c->lo &= (~VTD_PAGE_MASK);
++	c->lo |= (asr << VTD_PAGE_SHIFT);
++}
++
++#endif	/* CONFIG_CRASH_DUMP */
++
+-- 
+Bill Sumner <bill.sumner@hp.com>
 
-> This patch does not intend to conserve 32-bit space at all. It makes
-> better use of prefetchable window.
->
-> The problem with the old code is: when both 32-bit and 64-bit prefetchable
-> BARs present, it's in favor of 32-bit one to use prefetchable window.
-> This window is then not supposed to get 4G-above address, and this
-> 32-bit-address-only property would propagates upwards until reaching root
-> bridge. In later assignment phase, 4G-above space is never touched. This
-> is just caused by a single 32-bit prefetchable BAR (say a ROM BAR).
->
-> This patch helps by making better decision:
->
->         * Keep the old behaviour if only 32-bit or 64-bit prefetchable
->           BARs present
->
->         * If both of them present, put 64-bit ones to prefetchable window,
->           32-bit ones to non-prefetchable window
-
-I thought the patch was supposed to change the way we allocate bridge
-windows.  But you are talking about the way we assign 32- and 64-bit
-device resources, i.e., changing the way we decide whether to put them
-in prefetchable or non-prefetchable windows.
-
-> So 4G-above space can be properly used.
->
-> Why does enabling 64-bit space matter?
->
-> * 32-bit space is just too small. If larger-than-4G BAR sounds
->   unrealistic (we do have such devices), there is still a chance that
->   total MMIO size under a domain is too large, especially when SR-IOV
->   enabled (we met this situation).
-
-Please give more details about the problem you saw.  A complete dmesg
-log showing a boot failure or a device that doesn't work, and another
-log with this patch applied, showing things working as desired, would
-go a long ways toward clarifying this.
-
-This sounds like a specific case that will be fixed by the patch, and
-if you give more details, maybe I can figure out what's going on.
-
-Bjorn
