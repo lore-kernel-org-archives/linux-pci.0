@@ -1,61 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25898 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751489AbaDUPSN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 21 Apr 2014 11:18:13 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
-	Jens Axboe <axboe@kernel.dk>, linux-pci@vger.kernel.org
-Subject: [PATCH RESEND 2/2] cciss: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 21 Apr 2014 17:19:32 +0200
-Message-Id: <19e90b1e94d7f1a56d103e9d4cb82748fae754cb.1398093399.git.agordeev@redhat.com>
-In-Reply-To: <cover.1398093399.git.agordeev@redhat.com>
-References: <cover.1398093399.git.agordeev@redhat.com>
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:52428 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000AbaDYSNp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 14:13:45 -0400
+Received: by mail-ee0-f41.google.com with SMTP id t10so3084682eei.28
+        for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 11:13:44 -0700 (PDT)
+Date: Fri, 25 Apr 2014 20:13:40 +0200
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Jarosch <thomas.jarosch@intra2net.com>,
+	linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH] PCI: Add new PCI id for Intel GPU interrupt quirk
+Message-ID: <20140425181340.GY26374@phenom.ffwll.local>
+References: <3185796.STv3LRO1j8@storm>
+ <20140425173521.GD32246@google.com>
+ <20140425173718.GE32246@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140425173718.GE32246@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Fri, Apr 25, 2014 at 11:37:18AM -0600, Bjorn Helgaas wrote:
+> On Fri, Apr 25, 2014 at 11:35:21AM -0600, Bjorn Helgaas wrote:
+> > [+cc Daniel, Jani, intel-gfx, dri-devel, -cc stable]
+> > 
+> > On Mon, Apr 07, 2014 at 03:10:32PM +0200, Thomas Jarosch wrote:
+> > > After a CPU upgrade while keeping the same mainboard,
+> > > we faced "spurious interrupt" problems again.
+> > > 
+> > > It turned out that the new CPU also featured a
+> > > new GPU with a different PCI id.
+> > > 
+> > > -> Add this PCI id to the quirk table. Probably all other
+> > > Intel GPU PCI ids are affected, too, but I don't want
+> > > to add them without a test system.
+> > 
+> > Daniel, Jani, et al, do we need a better solution to this?  Is there
+> > a more general way to solve this than by tripping over affected machines
+> > one-by-one?  Could this be done in the driver rather than in a quirk?
+> 
+> I guess it can't be done in the driver because the problem happens even if
+> the driver isn't loaded, per f67fd55fa96f ("PCI: Add quirk for still
+> enabled interrupts on Intel Sandy Bridge GPUs").
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Mike Miller <mike.miller@hp.com>
-Cc: iss_storagedev@hp.com
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: linux-pci@vger.kernel.org
----
- drivers/block/cciss.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+Hm, this is new to me. The only thing wrt spurious interrupts I was aware
+of is on g4x platforms which also fire legacy interrupts (but only for
+some chip functions) when we use msi. See
 
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 73894ca..4595c22 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -4080,7 +4080,7 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
- 		goto default_int_mode;
- 
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
--		err = pci_enable_msix(h->pdev, cciss_msix_entries, 4);
-+		err = pci_enable_msix_exact(h->pdev, cciss_msix_entries, 4);
- 		if (!err) {
- 			h->intr[0] = cciss_msix_entries[0].vector;
- 			h->intr[1] = cciss_msix_entries[1].vector;
-@@ -4088,10 +4088,6 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
- 			h->intr[3] = cciss_msix_entries[3].vector;
- 			h->msix_vector = 1;
- 			return;
--		}
--		if (err > 0) {
--			dev_warn(&h->pdev->dev,
--				"only %d MSI-X vectors available\n", err);
- 		} else {
- 			dev_warn(&h->pdev->dev,
- 				"MSI-X init failed %d\n", err);
+commit 4e6b788c3f2388c519ab6ed7fe59f372c85d26e9
+Author: Daniel Vetter <daniel.vetter@ffwll.ch>
+Date:   Fri Feb 7 16:33:20 2014 +0100
+
+    drm/i915: Disable dp aux irq on g4x
+
+we simply opted to not enable those interrupts on g4x to keep things
+quiet. For other platforms I'm not aware of any such issues.
+
+I guess you could just match on all of them, but the master irq control
+bit moves around a _lot_. We already have a differen early platform quirk
+and for that exposed pci ids as macros in include/drm/i915_pciids.h
+-Daniel
+
+> 
+> > > Signed-off-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
+> > > Tested-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
+> > > ---
+> > >  drivers/pci/quirks.c | 1 +
+> > >  1 file changed, 1 insertion(+)
+> > > 
+> > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > > index e729206..0feb4a3 100644
+> > > --- a/drivers/pci/quirks.c
+> > > +++ b/drivers/pci/quirks.c
+> > > @@ -2954,6 +2954,7 @@ static void disable_igfx_irq(struct pci_dev *dev)
+> > >  }
+> > >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+> > >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+> > > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0152, disable_igfx_irq);
+> > >  
+> > >  /*
+> > >   * PCI devices which are on Intel chips can skip the 10ms delay
+> > > -- 
+> > > 1.8.1.4
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.7.7.6
-
+Daniel Vetter
+Software Engineer, Intel Corporation
++41 (0) 79 365 57 48 - http://blog.ffwll.ch
