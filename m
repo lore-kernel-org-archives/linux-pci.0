@@ -1,220 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:43050 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752936AbaDVHFl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Apr 2014 03:05:41 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 03/22] iommu/vt-d: introduce helper functions to improve code readability
-Date: Tue, 22 Apr 2014 15:07:14 +0800
-Message-Id: <1398150453-28141-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:59647 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756AbaDYAg7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 20:36:59 -0400
+From: Bill Sumner <bill.sumner@hp.com>
+To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org
+Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com,
+	jerry.hoemann@hp.com
+Subject: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy DMA/IO
+Date: Thu, 24 Apr 2014 18:36:30 -0600
+Message-Id: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce domain_type_is_vm() and domain_type_is_vm_or_si() to improve
-code readability.
+The following series implements a fix for:
+A kdump problem about DMA that has been discussed for a long time.
+That is, when a kernel panics and boots into the kdump kernel, DMA that was
+started by the panicked kernel is not stopped before the kdump kernel is booted;
+and the kdump kernel disables the IOMMU while this DMA continues.
+This causes the IOMMU to stop translating the DMA addresses as IOVAs and
+begin to treat them as physical memory addresses -- which causes the DMA to either:
+1. generate DMAR errors or
+2. generate PCI SERR errors or
+3. transfer data to or from incorrect areas of memory.
+Often this causes the dump to fail.
 
-Also kill useless macro DOMAIN_FLAG_P2P_MULTIPLE_DEVICES.
+This patch set modifies the behavior of the Intel iommu in the crashdump kernel: 
+1. to accept the iommu hardware in an active state,
+2. to leave the current translations in-place so that legacy DMA will continue
+   using its current buffers until the device drivers in the crashdump kernel
+   initialize and initialize their devices,
+3. to use different portions of the iova address ranges for the device drivers
+   in the crashdump kernel than the iova ranges that were in-use at the time
+   of the panic.  
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   59 +++++++++++++++++++------------------------
- 1 file changed, 26 insertions(+), 33 deletions(-)
+Advantages of this approach:
+1. All manipulation of the IO-device is done by the Linux device-driver
+   for that device.
+2. This approach behaves in a manner very similar to operation without an
+   active iommu.
+3. Any activity between the IO-device and its RMRR areas is handled by the
+   device-driver in the same manner as during a non-kdump boot.
+4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
+   This supports the practice of creating a special kdump kernel without
+   drivers for any devices that are not required for taking a crashdump. 
+5. Minimal code-changes among the existing mainline intel-iommu code.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 0b3e6981a2da..63f351a39c63 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -320,16 +320,13 @@ static inline int first_pte_in_page(struct dma_pte *pte)
- static struct dmar_domain *si_domain;
- static int hw_pass_through = 1;
- 
--/* devices under the same p2p bridge are owned in one domain */
--#define DOMAIN_FLAG_P2P_MULTIPLE_DEVICES (1 << 0)
--
- /* domain represents a virtual machine, more than one devices
-  * across iommus may be owned in one domain, e.g. kvm guest.
-  */
--#define DOMAIN_FLAG_VIRTUAL_MACHINE	(1 << 1)
-+#define DOMAIN_FLAG_VIRTUAL_MACHINE	(1 << 0)
- 
- /* si_domain contains mulitple devices */
--#define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 2)
-+#define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 1)
- 
- /* define the limit of IOMMUs supported in each domain */
- #ifdef	CONFIG_X86
-@@ -539,6 +536,16 @@ void free_iova_mem(struct iova *iova)
- 	kmem_cache_free(iommu_iova_cache, iova);
- }
- 
-+static inline int domain_type_is_vm(struct dmar_domain *domain)
-+{
-+	return domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE;
-+}
-+
-+static inline int domain_type_is_vm_or_si(struct dmar_domain *domain)
-+{
-+	return domain->flags & (DOMAIN_FLAG_VIRTUAL_MACHINE |
-+				DOMAIN_FLAG_STATIC_IDENTITY);
-+}
- 
- static int __iommu_calculate_agaw(struct intel_iommu *iommu, int max_gaw)
- {
-@@ -579,9 +586,7 @@ static struct intel_iommu *domain_get_iommu(struct dmar_domain *domain)
- 	int iommu_id;
- 
- 	/* si_domain and vm domain should not get here. */
--	BUG_ON(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE);
--	BUG_ON(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY);
--
-+	BUG_ON(domain_type_is_vm_or_si(domain));
- 	iommu_id = find_first_bit(domain->iommu_bmp, g_num_of_iommus);
- 	if (iommu_id < 0 || iommu_id >= g_num_of_iommus)
- 		return NULL;
-@@ -1499,7 +1504,7 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
- 	free_context_table(iommu);
- }
- 
--static struct dmar_domain *alloc_domain(bool vm)
-+static struct dmar_domain *alloc_domain(int flags)
- {
- 	/* domain id for virtual machine, it won't be set in context */
- 	static atomic_t vm_domid = ATOMIC_INIT(0);
-@@ -1509,16 +1514,13 @@ static struct dmar_domain *alloc_domain(bool vm)
- 	if (!domain)
- 		return NULL;
- 
-+	memset(domain, 0, sizeof(*domain));
- 	domain->nid = -1;
--	domain->iommu_count = 0;
--	memset(domain->iommu_bmp, 0, sizeof(domain->iommu_bmp));
--	domain->flags = 0;
-+	domain->flags = flags;
- 	spin_lock_init(&domain->iommu_lock);
- 	INIT_LIST_HEAD(&domain->devices);
--	if (vm) {
-+	if (flags & DOMAIN_FLAG_VIRTUAL_MACHINE)
- 		domain->id = atomic_inc_return(&vm_domid);
--		domain->flags = DOMAIN_FLAG_VIRTUAL_MACHINE;
--	}
- 
- 	return domain;
- }
-@@ -1706,7 +1708,7 @@ static void domain_exit(struct dmar_domain *domain)
- 	/* clear attached or cached domains */
- 	rcu_read_lock();
- 	for_each_active_iommu(iommu, drhd)
--		if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
-+		if (domain_type_is_vm(domain) ||
- 		    test_bit(iommu->seq_id, domain->iommu_bmp))
- 			iommu_detach_domain(domain, iommu);
- 	rcu_read_unlock();
-@@ -1748,8 +1750,7 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 	id = domain->id;
- 	pgd = domain->pgd;
- 
--	if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
--	    domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) {
-+	if (domain_type_is_vm_or_si(domain)) {
- 		int found = 0;
- 
- 		/* find an available domain id for this device in iommu */
-@@ -2115,7 +2116,7 @@ static void domain_remove_dev_info(struct dmar_domain *domain)
- 		iommu_disable_dev_iotlb(info);
- 		iommu_detach_dev(info->iommu, info->bus, info->devfn);
- 
--		if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) {
-+		if (domain_type_is_vm(domain)) {
- 			iommu_detach_dependent_devices(info->iommu, info->dev);
- 			/* clear this iommu in iommu_bmp, update iommu count
- 			 * and capabilities
-@@ -2181,8 +2182,6 @@ static struct dmar_domain *dmar_insert_dev_info(struct intel_iommu *iommu,
- 	info->dev = dev;
- 	info->domain = domain;
- 	info->iommu = iommu;
--	if (!dev)
--		domain->flags |= DOMAIN_FLAG_P2P_MULTIPLE_DEVICES;
- 
- 	spin_lock_irqsave(&device_domain_lock, flags);
- 	if (dev)
-@@ -2257,7 +2256,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 		goto error;
- 
- 	/* Allocate and initialize new domain for the device */
--	domain = alloc_domain(false);
-+	domain = alloc_domain(0);
- 	if (!domain)
- 		goto error;
- 	if (iommu_attach_domain(domain, iommu)) {
-@@ -2421,12 +2420,10 @@ static int __init si_domain_init(int hw)
- 	struct intel_iommu *iommu;
- 	int nid, ret = 0;
- 
--	si_domain = alloc_domain(false);
-+	si_domain = alloc_domain(DOMAIN_FLAG_STATIC_IDENTITY);
- 	if (!si_domain)
- 		return -EFAULT;
- 
--	si_domain->flags = DOMAIN_FLAG_STATIC_IDENTITY;
--
- 	for_each_active_iommu(iommu, drhd) {
- 		ret = iommu_attach_domain(si_domain, iommu);
- 		if (ret) {
-@@ -3860,9 +3857,7 @@ static int device_notifier(struct notifier_block *nb,
- 
- 	down_read(&dmar_global_lock);
- 	domain_remove_one_dev_info(domain, dev);
--	if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
--	    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) &&
--	    list_empty(&domain->devices))
-+	if (!domain_type_is_vm_or_si(domain) && list_empty(&domain->devices))
- 		domain_exit(domain);
- 	up_read(&dmar_global_lock);
- 
-@@ -4111,8 +4106,7 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
- 		domain_update_iommu_cap(domain);
- 		spin_unlock_irqrestore(&domain->iommu_lock, tmp_flags);
- 
--		if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
--		    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY)) {
-+		if (!domain_type_is_vm_or_si(domain)) {
- 			spin_lock_irqsave(&iommu->lock, tmp_flags);
- 			clear_bit(domain->id, iommu->domain_ids);
- 			iommu->domains[domain->id] = NULL;
-@@ -4151,7 +4145,7 @@ static int intel_iommu_domain_init(struct iommu_domain *domain)
- {
- 	struct dmar_domain *dmar_domain;
- 
--	dmar_domain = alloc_domain(true);
-+	dmar_domain = alloc_domain(DOMAIN_FLAG_VIRTUAL_MACHINE);
- 	if (!dmar_domain) {
- 		printk(KERN_ERR
- 			"intel_iommu_domain_init: dmar_domain == NULL\n");
-@@ -4195,8 +4189,7 @@ static int intel_iommu_attach_device(struct iommu_domain *domain,
- 
- 		old_domain = find_domain(dev);
- 		if (old_domain) {
--			if (dmar_domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
--			    dmar_domain->flags & DOMAIN_FLAG_STATIC_IDENTITY)
-+			if (domain_type_is_vm_or_si(dmar_domain))
- 				domain_remove_one_dev_info(old_domain, dev);
- 			else
- 				domain_remove_dev_info(old_domain);
+Summary of changes in this patch set:
+1. Updated to a more current top-of-tree and merged the code with the
+   large number of changes that were recently taken-in to intel-iommu.c
+2. Returned to the structure of a patch-set
+3. Enabled the intel-iommu driver to consist of multiple *.c files
+   by moving many of the #defines, prototypes, and inline functions
+   into a new file: intel-iommu-private.h (First three patches implement
+   only this enhancement -- could be applied independent of the last 5)
+4. Moved the new "crashdump fix" code into a new file: intel-iommu-kdump.c 
+5. Removed the pr_debug constructs from the new code that implements the
+   "crashdump fix" -- making the code much cleaner and easier to read.
+6. Miscellaneous cleanups such as enum-values for return-codes.
+7. Simplified the code that retrieves the values needed to initialize a new
+   domain by using the linked-list of previously-collected values
+   instead of stepping back into the tree of translation tables.
+
+Bill Sumner (8):
+  Fix a few existing lines for checkpatch.pl
+  Consolidate lines for a new private header
+  Create intel-iommu-private.h
+  Update iommu_attach_domain() and its callers
+  Add Items needed for fixing crashdump to private header
+  Create intel-iommu-kdump.c
+  Add domain-id functions to intel-iommu-kdump.c
+  Add remaining changes to intel-iommu.c to fix crashdump
+
+ drivers/iommu/Makefile              |   2 +-
+ drivers/iommu/intel-iommu-kdump.c   | 629 ++++++++++++++++++++++++++++++++++++
+ drivers/iommu/intel-iommu-private.h | 457 ++++++++++++++++++++++++++
+ drivers/iommu/intel-iommu.c         | 512 ++++++++---------------------
+ 4 files changed, 1229 insertions(+), 371 deletions(-)
+ create mode 100644 drivers/iommu/intel-iommu-kdump.c
+ create mode 100644 drivers/iommu/intel-iommu-private.h
+
 -- 
-1.7.10.4
+Bill Sumner <bill.sumner@hp.com>
 
