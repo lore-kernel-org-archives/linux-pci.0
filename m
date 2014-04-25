@@ -1,127 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:53077 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751111AbaDOLu4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 07:50:56 -0400
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <spear-devel@list.st.com>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>
-Subject: [PATCH V8 7/9] SPEAr13XX: dts: Add PCIe node information
-Date: Tue, 15 Apr 2014 17:19:49 +0530
-Message-ID: <fa5d8aabf3c6a6770462c33426787531cb69bd21.1397555158.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1397555158.git.mohit.kumar@st.com>
-References: <cover.1397555158.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.linuxfoundation.org ([140.211.169.12]:48422 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753692AbaDYSYs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 14:24:48 -0400
+Date: Fri, 25 Apr 2014 11:27:41 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel@vger.kernel.org,
+	Frank Haverkamp <haver@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] GenWQE: Use pci_enable_msi_exact() instead of
+ pci_enable_msi_block()
+Message-ID: <20140425182741.GB6473@kroah.com>
+References: <cover.1397458024.git.agordeev@redhat.com>
+ <6e4ebc84c90c5f8e49a931e915ec373576ad416a.1397458024.git.agordeev@redhat.com>
+ <20140425181911.GI32246@google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140425181911.GI32246@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@st.com>
+On Fri, Apr 25, 2014 at 12:19:11PM -0600, Bjorn Helgaas wrote:
+> On Mon, Apr 14, 2014 at 09:14:06AM +0200, Alexander Gordeev wrote:
+> > As result of deprecation of MSI-X/MSI enablement functions
+> > pci_enable_msix() and pci_enable_msi_block() all drivers
+> > using these two interfaces need to be updated to use the
+> > new pci_enable_msi_range()  or pci_enable_msi_exact()
+> > and pci_enable_msix_range() or pci_enable_msix_exact()
+> > interfaces.
+> > 
+> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> > Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
+> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > Cc: linux-pci@vger.kernel.org
+> > Acked-by: Frank Haverkamp <haver@linux.vnet.ibm.com>
+> 
+> Greg, since you acked this rather than saying you applied it, I applied
+> this to my pci/msi branch.  If you'd rather take it yourself, just let me
+> know.
 
-SPEAr1310 and SPEAr1340 supports 3 and 1 PCIe controller respectively.
-These controllers are based on synopsys designware controller.
+Nope, through your tree is fine, I have enough other patches in my trees :)
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Viresh Kumar <viresh.linux@gmail.com>
-Cc: spear-devel@list.st.com
-Cc: linux-arm-kernel@lists.infradead.org
----
- arch/arm/boot/dts/spear1310.dtsi |   48 ++++++++++++++++++++++++++++++++++++++
- arch/arm/boot/dts/spear1340.dtsi |   16 ++++++++++++
- 2 files changed, 64 insertions(+), 0 deletions(-)
-
-diff --git a/arch/arm/boot/dts/spear1310.dtsi b/arch/arm/boot/dts/spear1310.dtsi
-index 64e7dd5..53f73a2 100644
---- a/arch/arm/boot/dts/spear1310.dtsi
-+++ b/arch/arm/boot/dts/spear1310.dtsi
-@@ -83,6 +83,54 @@
- 			status = "disabled";
- 		};
- 
-+		pcie0: pcie@b1000000 {
-+			compatible = "st,spear1340-pcie", "snps,dw-pcie";
-+			reg = <0xb1000000 0x4000>;
-+			interrupts = <0 68 0x4>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0x0 0 &gic 0 68 0x4>;
-+			num-lanes = <1>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
-+				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
-+				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
-+			status = "disabled";
-+		};
-+
-+		pcie1: pcie@b1800000 {
-+			compatible = "st,spear1340-pcie", "snps,dw-pcie";
-+			reg = <0xb1800000 0x4000>;
-+			interrupts = <0 69 0x4>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0x0 0 &gic 0 69 0x4>;
-+			num-lanes = <1>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			ranges = <0x00000800 0 0x90000000 0x90000000 0 0x00020000   /* configuration space */
-+				0x81000000 0 0  0x90020000 0 0x00010000   /* downstream I/O */
-+				0x82000000 0 0x90030000 0x90030000 0 0x0ffd0000>; /* non-prefetchable memory */
-+			status = "disabled";
-+		};
-+
-+		pcie2: pcie@b4000000 {
-+			compatible = "st,spear1340-pcie", "snps,dw-pcie";
-+			reg = <0xb4000000 0x4000>;
-+			interrupts = <0 70 0x4>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0x0 0 &gic 0 70 0x4>;
-+			num-lanes = <1>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			ranges = <0x00000800 0 0xc0000000 0xc0000000 0 0x00020000   /* configuration space */
-+				0x81000000 0 0	 0xc0020000 0 0x00010000   /* downstream I/O */
-+				0x82000000 0 0xc0030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
-+			status = "disabled";
-+		};
-+
- 		gmac1: eth@5c400000 {
- 			compatible = "st,spear600-gmac";
- 			reg = <0x5c400000 0x8000>;
-diff --git a/arch/arm/boot/dts/spear1340.dtsi b/arch/arm/boot/dts/spear1340.dtsi
-index b8b32c7..bc492f5 100644
---- a/arch/arm/boot/dts/spear1340.dtsi
-+++ b/arch/arm/boot/dts/spear1340.dtsi
-@@ -48,6 +48,22 @@
- 			status = "disabled";
- 		};
- 
-+		pcie0: pcie@b1000000 {
-+			compatible = "st,spear1340-pcie", "snps,dw-pcie";
-+			reg = <0xb1000000 0x4000>;
-+			interrupts = <0 68 0x4>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0x0 0 &gic 0 68 0x4>;
-+			num-lanes = <1>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
-+				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
-+				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
-+			status = "disabled";
-+		};
-+
- 		i2s-play@b2400000 {
- 			compatible = "snps,designware-i2s";
- 			reg = <0xb2400000 0x10000>;
--- 
-1.7.0.1
-
+greg k-h
