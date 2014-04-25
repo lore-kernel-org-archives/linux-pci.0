@@ -1,119 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:57701 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751713AbaDDJJC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Apr 2014 05:09:02 -0400
-Message-ID: <1396602492.5625.4.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH v7 05/10] dt-bindings: pci: rcar pcie device tree
- bindings
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-sh@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Date: Fri, 04 Apr 2014 11:08:12 +0200
-In-Reply-To: <1396261856-22465-6-git-send-email-phil.edworthy@renesas.com>
-References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
-	 <1396261856-22465-6-git-send-email-phil.edworthy@renesas.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:57012 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752327AbaDYRQn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 13:16:43 -0400
+Received: by mail-pd0-f182.google.com with SMTP id y10so3382198pdj.27
+        for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 10:16:43 -0700 (PDT)
+Subject: [PATCH 2/4] x86/PCI: Mark HPET BAR as IORESOURCE_PCI_FIXED
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, Bodo Eggert <7eggert@gmx.de>,
+	x86@kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 25 Apr 2014 11:16:39 -0600
+Message-ID: <20140425171639.312.28185.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140425171144.312.9601.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140425171144.312.9601.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 31.03.2014, 11:30 +0100 schrieb Phil Edworthy:
-> This patch adds the bindings for the R-Car PCIe driver. The driver
-> resides under drivers/pci/host/pcie-rcar.c
-> 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+Bodo reported that on the Asrock M3A UCC, v3.12.6 hangs during boot unless
+he uses "pci=nocrs".  This regression was caused by 7bc5e3f2be32 ("x86/PCI:
+use host bridge _CRS info by default on 2008 and newer machines"), which
+appeared in v2.6.34.
 
-Another nitpick below, otherwise:
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+The reason is that the HPET address appears in a PCI device BAR, and this
+address is not contained in any of the host bridge windows.  Linux moves
+the PCI BAR into a window, but the original address was published via the
+HPET table and an ACPI device, so changing the BAR is a bad idea:
 
-If you decide to roll another version with just this changed, feel free
-to carry over the my tag.
-> 
-> v7:
->  - Change binding description of clocks to 'clock specifiers'
-> 
-> v6:
->  - Correct DT bindings description for reg and clocks
-> 
-> v5:
->  - Add PCIe bus clock reference
->  - Add additional interrupt bindings
->  - Use dma-ranges property to specify inbound memory regions
-> ---
->  Documentation/devicetree/bindings/pci/rcar-pci.txt | 45 ++++++++++++++++++++++
->  1 file changed, 45 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> new file mode 100644
-> index 0000000..789bd46
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> @@ -0,0 +1,45 @@
-> +* Renesas RCar PCIe interface
-> +
-> +Required properties:
-> +- compatible: should contain one of the following
-> +	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
-> +- reg: base address and length of the pcie controller registers.
-> +- #address-cells: set to <3>
-> +- #size-cells: set to <2>
-> +- device_type: set to "pci"
-> +- ranges: ranges for the PCI memory and I/O regions.
-> +- dma-ranges: ranges for the inbound memory regions.
-> +- interrupts: two interrupt sources for MSI interrupts, followed by interrupt
-> +	source for hardware related interrupts (e.g. link speed change).
-> +- #interrupt-cells: set to <1>
-> +- interrupt-map-mask and interrupt-map: standard PCI properties
-> +	to define the mapping of the PCIe interface to interrupt
-> +	numbers.
-> +- clocks: from common clock binding: clock specifiers for the PCIe controller
-> +	and PCIe bus clocks.
-> +- clock-names: from common clock binding: should be "pcie" and "pcie_bus".
-> +
-> +Example:
-> +
-> +SoC specific DT Entry:
-> +
-> +	pcie: pcie@fe000000 {
-> +		compatible = "renesas,pcie-r8a7791";
-> +		reg = <0 0xfe000000 0 0x80000>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
-> +			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
-> +			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
-> +			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-> +		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000
-> +			      0x42000000 2 0x00000000 2 0x00000000 0 0x40000000>;
-> +		interrupts = <0 116 4 0 117 4 0 118 4>;
+  ACPI: HPET id: 0x43538301 base: 0xfed00000
+  pci_root PNP0A03:00: host bridge window [mem 0xd0000000-0xdfffffff]
+  pci_root PNP0A03:00: host bridge window [mem 0xf0000000-0xfebfffff]
+  pci 0000:00:14.0: [1002:4385] type 0 class 0x000c05
+  pci 0000:00:14.0: reg 14: [mem 0xfed00000-0xfed003ff]
+  hpet0: at MMIO 0xfed00000, IRQs 2, 8, 0, 0
+  pnp 00:06: Plug and Play ACPI device, IDs PNP0103 (active)
+  pnp 00:06: [mem 0xfed00000-0xfed003ff]
 
-I think this is confusing, I would rather like to see them in separate
-cells, like
-	interrupts = <0 116 4>, <0 117 4>, <0 118 4>;
+This patch marks the BAR as IORESOURCE_PCI_FIXED to prevent Linux from
+moving it.  This depends on a previous patch ("x86/PCI: Don't try to move
+IORESOURCE_PCI_FIXED resources") to check for this flag when
+pci_claim_resource() fails.
 
-Same would be true for the ranges properties, but there it isn't as
-confusing, so I don't really care.
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=68591
+Reported-by: Bodo Eggert <7eggert@gmx.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/fixup.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 0>;
-> +		interrupt-map = <0 0 0 0 &gic 0 116 4>;
-> +		clocks = <&mstp3_clks R8A7791_CLK_PCIE>, <&pcie_bus_clk>;
-> +		clock-names = "pcie", "pcie_bus";
-> +		status = "disabled";
-> +	};
-
--- 
-Pengutronix e.K.                           | Lucas Stach                 |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 94ae9ae9574f..d4359f9d74b6 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -6,6 +6,7 @@
+ #include <linux/dmi.h>
+ #include <linux/pci.h>
+ #include <linux/vgaarb.h>
++#include <asm/hpet.h>
+ #include <asm/pci_x86.h>
+ 
+ static void pci_fixup_i450nx(struct pci_dev *d)
+@@ -526,6 +527,17 @@ static void sb600_disable_hpet_bar(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x4385, sb600_disable_hpet_bar);
+ 
++static void sb600_hpet_quirk(struct pci_dev *dev)
++{
++	struct resource *r = &dev->resource[0];
++
++	if (r->flags & IORESOURCE_MEM && r->start == hpet_address) {
++		r->flags |= IORESOURCE_PCI_FIXED;
++		dev_info(&dev->dev, "reg 0x10 contains HPET; making it immovable\n");
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATI, 0x4385, sb600_hpet_quirk);
++
+ /*
+  * Twinhead H12Y needs us to block out a region otherwise we map devices
+  * there and any access kills the box.
 
