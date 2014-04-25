@@ -1,61 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:59077 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754182AbaDGJa0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 05:30:26 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-sh@vger.kernel.org,
-	linux-pci@vger.kernel.org, Simon Horman <horms@verge.net.au>,
-	Ben Dooks <ben-linux@fluff.org>, kernel@pengutronix.de,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v2 rebased] PCI: rcar: use new OF interrupt mapping when possible
-Date: Mon,  7 Apr 2014 11:30:20 +0200
-Message-Id: <1396863020-21880-1-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <20140404170103.GF9007@google.com>
-References: <20140404170103.GF9007@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Mitch Williams <mitch.a.williams@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Shahed Shaikh <shahed.shaikh@qlogic.com>,
+	Linux NICS <linux.nics@intel.com>,
+	e1000-devel@lists.sourceforge.net, Dept-HSGLinuxNICDev@qlogic.com,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH net-next 0/2] Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Fri, 25 Apr 2014 10:06:23 +0200
+Message-Id: <cover.1398412015.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the recommended method of doing the IRQ
-mapping. Still fall back to the old method in order
-to not break the just submitted board files.
+Hello,
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
-v2: pass in parent device to pci_common_init(), to
-    make DT parsing work.
----
- drivers/pci/host/pci-rcar-gen2.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+The series completes converison of network drivers to the new
+MSI initialization API.
 
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index fd3e3ab56509..4fe349dcaf59 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -15,6 +15,7 @@
- #include <linux/io.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/of_pci.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
-@@ -180,8 +181,13 @@ static int rcar_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- {
- 	struct pci_sys_data *sys = dev->bus->sysdata;
- 	struct rcar_pci_priv *priv = sys->private_data;
-+	int irq;
-+
-+	irq = of_irq_parse_and_map_pci(dev, slot, pin);
-+	if (!irq)
-+		irq = priv->irq;
- 
--	return priv->irq;
-+	return irq;
- }
- 
- #ifdef CONFIG_PCI_DEBUG
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
+
+Thanks!
+
+Cc: Mitch Williams <mitch.a.williams@intel.com>
+Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
+Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
+Cc: Linux NICS <linux.nics@intel.com>
+Cc: e1000-devel@lists.sourceforge.net
+Cc: Dept-HSGLinuxNICDev@qlogic.com
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+
+Alexander Gordeev (2):
+  i40evf: Use pci_enable_msix_range() instead of pci_enable_msix()
+  qlcnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
+
+ drivers/net/ethernet/intel/i40evf/i40evf_main.c  |   31 ++++++++--------------
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |    4 +-
+ 2 files changed, 13 insertions(+), 22 deletions(-)
+
 -- 
-1.9.1
+1.7.7.6
 
