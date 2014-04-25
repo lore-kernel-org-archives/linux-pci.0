@@ -1,57 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:38553 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755105AbaDGR6r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Apr 2014 13:58:47 -0400
-Received: by mail-ig0-f179.google.com with SMTP id hl10so3936921igb.0
-        for <linux-pci@vger.kernel.org>; Mon, 07 Apr 2014 10:58:45 -0700 (PDT)
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:17361 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753033AbaDYJnt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 05:43:49 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s3P9UFQZ008847
+	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 02:43:49 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1kbkf6ac1g-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 02:43:48 -0700
+Content-Type: multipart/mixed;
+	boundary="_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EF49avmb2qlogicorg_"
+From: Shahed Shaikh <shahed.shaikh@qlogic.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: linux-kernel <linux-kernel@vger.kernel.org>,
+	Dept-HSG Linux NIC Dev <Dept-HSGLinuxNICDev@qlogic.com>,
+	netdev <netdev@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v2 net-next 2/2] qlcnic: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Date: Fri, 25 Apr 2014 09:43:46 +0000
+Message-ID: <262CB373A6D1F14F9B81E82F74F77D5A46F9EF49@avmb2.qlogic.org>
+References: <cover.1398412015.git.agordeev@redhat.com>
+ <0a0d5f5c33d86e3777c22c3c1bbd81035660d57c.1398412015.git.agordeev@redhat.com>
+ <262CB373A6D1F14F9B81E82F74F77D5A46F9EE54@avmb2.qlogic.org>
+ <20140425090029.GA2500@dhcp-26-207.brq.redhat.com>
+ <262CB373A6D1F14F9B81E82F74F77D5A46F9EEA2@avmb2.qlogic.org>
+ <20140425094349.GA6397@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20140425094349.GA6397@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <5183143.FxBNM0xTAV@wuerfel>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <20140405001953.GE15806@google.com> <20140407083120.GE17163@e106497-lin.cambridge.arm.com>
- <5183143.FxBNM0xTAV@wuerfel>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 7 Apr 2014 11:58:24 -0600
-Message-ID: <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 7, 2014 at 5:36 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EF49avmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-> I think migrating other architectures to use the same code should be
-> a separate effort from adding a generic implementation that can be
-> used by arm64. It's probably a good idea to have patches to convert
-> arm32 and/or microblaze.
+> -----Original Message-----
+> From: Alexander Gordeev [mailto:agordeev@redhat.com]
+> Sent: Friday, April 25, 2014 3:14 PM
+> To: Shahed Shaikh
+> Cc: linux-kernel; Dept-HSG Linux NIC Dev; netdev; linux-pci
+> Subject: [PATCH v2 net-next 2/2] qlcnic: Use pci_enable_msix_exact()
+> instead of pci_enable_msix()
+>=20
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers using these two
+> interfaces need to be updated to use the new pci_enable_msi_range()  or
+> pci_enable_msi_exact() and pci_enable_msix_range() or
+> pci_enable_msix_exact() interfaces.
+>=20
+> Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
+> Cc: Dept-HSGLinuxNICDev@qlogic.com
+> Cc: netdev@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+>=20
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: Shahed Shaikh <shahed.shaikh@qlogic.com>
 
-Let me reiterate that I am 100% in favor of replacing arch-specific
-code with more generic implementations.
+Thanks,
+Shahed
 
-However, I am not 100% in favor of doing it as separate efforts
-(although maybe I could be convinced).  The reasons I hesitate are
-that (1) if only one architecture uses a new "generic" implementation,
-we really don't know whether it is generic enough, (2) until I see the
-patches to convert other architectures, I have to assume that I'm the
-one who will write them, and (3) as soon as we add the code to
-drivers/pci, it becomes partly my headache to maintain it, even if
-only one arch benefits from it.
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EF49avmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
-Please don't think I'm questioning anyone's intent or good will.  It's
-just that I understand the business pressures, and I know how hard it
-can be to justify this sort of work to one's management, especially
-after the immediate problem has been solved.
+eJ8+Ig4cAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEJGMDA2RjAz
+OEU4NkZGNDM4ODRFMTU5MjI1NDY3MDlEABQHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HBAAZAAkA
+KwAuAAUAaQEBIIADAA4AAADeBwQAGQAJACsALgAFAGkBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAF0AAABSRTogW1BBVENIIHYyIG5ldC1uZXh0IDIvMl0gcWxjbmljOiBV
+c2UgcGNpX2VuYWJsZV9tc2l4X2V4YWN0KCkgaW5zdGVhZCBvZiBwY2lfZW5hYmxlX21zaXgoKQCf
+HwEDkAYAxBAAAD8AAAACAX8AAQAAADwAAAA8MjYyQ0IzNzNBNkQxRjE0RjlCODFFODJGNzRGNzdE
+NUE0NkY5RUY0OUBhdm1iMi5xbG9naWMub3JnPgALAB8OAQAAAAIBCRABAAAAJAMAACADAABYBQAA
+TFpGdTf9dwNhAApmYmlkBAAAY2PAcGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdt
+AoMAUBFNMgqABrQCgJZ9CoAIyDsJYjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOi
+bwGAIEV4EcFuGDBdBlJ2BJAXtgIQcgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sL
+gGQ1HVME8AdADRdwMApxF/Jia21rBnMBkAAgIEJNX0LgRUdJTn0K/AHxC/FQID4gLSHCTwUQZ88L
+gAdABdAHkHNhGDAhw7RcbAuAZQqAIaBGA2FoOiBBHnB4AHAEgSCGRwWwAQBldiBbAMDbAxAYkDoi
+4CUEQAlxEdDkdC4FoG1dI2cGYAIwRyQwI/AN0GF5LCRAcB8FEAMgDqAogAHQMTQgpDM6KWFQTSNn
+VCXQGwYAEdBoHFEq0WlraBkjZ0NjJDAjcXV4LYprBJFlAnAgRGUFMMAtSFNHIEwsggewtElDLUF2
+LTAYUHQBADMuoSx0cGMAoCdHdWIGagWQJ/FbUEFUQ9BIIHYyLsItGFAQQAEo8C8yXSBxbGOrAwAs
+QVUSACAvsV8J8NMBoB5wX20AkHgzcCSAOTDAKCkjZwuAH2BlYd8cYBkwMz40mSNnQQQgCXD8c3Ul
+sDWyAQAosAWQGIAOaQIgNbIF4EktWC89OeEgM4QHgAIwHHB1bt8wwDlxDgAjdjX/ICSRMz2iXwJg
+b2NrPUJsAyDuZAUQGjEEIHUAkBnAHMBjKwAzEXR3bzS5G6FmnwDQB5EYUBxRGJAgYhng/HVwKFAc
+QkJhP+BAgSsAfy7BB+A9vRhwGcE9QTWwcv87zz41NEU9bzQCRSZFvzOvHUFZLjcPLCMq2yA8c60q
+4y5OwStxQDKAbyJA+mMm4j4rqy1WLeMuQS6BJ0+ZK6su1EB2GDByLvUs1C4FsGcrry+TVD9MjyZT
+IjAYUGQtGTBmLWxieSQ/JUE8Jf9QKEF/PtBY8VliTd9O70/7I2VU+xmhH1AsI2Uq1CNlFUJicB8A
+QgABAAAAHAAAAFMAaABhAGgAZQBkACAAUwBoAGEAaQBrAGgAAAAfAGUAAQAAADIAAABzAGgAYQBo
+AGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEAAAAKAAAA
+UwBNAFQAUAAAAAAAAgFBAAEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBoAGEAaABl
+AGQAIABTAGgAYQBpAGsAaAAAAFMATQBUAFAAAABzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAA
+cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAAMgAAAHMAaABhAGgAZQBkAC4AcwBoAGEAaQBr
+AGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAADoAAABzAGkAcAA6AHMAaABhAGgA
+ZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAABwAAABT
+AGgAYQBoAGUAZAAgAFMAaABhAGkAawBoAAAAHwAfDAEAAAAyAAAAcwBoAGEAaABlAGQALgBzAGgA
+YQBpAGsAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAA
+AAIBGQwBAAAAcAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAaABhAGgAZQBkACAAUwBoAGEA
+aQBrAGgAAABTAE0AVABQAAAAcwBoAGEAaABlAGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBj
+AC4AYwBvAG0AAAAfAAFdAQAAADIAAABzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAcAAAAUwBoAGEAaABlAGQAIABTAGgAYQBpAGsAaAAA
+AB8AI0ABAAAAMgAAAHMAaABhAGgAZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHAAAAAAAAAAgSsfpL6jEBmd
+bgDdAQ9UAgAAAIBTAGgAYQBoAGUAZAAgAFMAaABhAGkAawBoAAAAUwBNAFQAUAAAAHMAaABhAGgA
+ZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAyAAAAcwBo
+AGEAaABlAGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AMUABAAAA
+AgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0
+AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAL8AbwOOhv9DiE4VkiVG
+cJ0DABcAAQAAAEAAOQAAtSnaamDPAUAACDDHsi/aamDPAQsAKQAAAAAACwAjAAAAAAAfAACAhgMC
+AAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAA
+DAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAAC6
+AAAAUgBFADoAIABbAFAAQQBUAEMASAAgAHYAMgAgAG4AZQB0AC0AbgBlAHgAdAAgADIALwAyAF0A
+IABxAGwAYwBuAGkAYwA6ACAAVQBzAGUAIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeABf
+AGUAeABhAGMAdAAoACkAIABpAG4AcwB0AGUAYQBkACAAbwBmACAAcABjAGkAXwBlAG4AYQBiAGwA
+ZQBfAG0AcwBpAHgAKAApAAAAAAAfAD0AAQAAAAoAAABSAEUAOgAgAAAAAAADADYAAAAAAAMALgAA
+AAAAHwBCEAEAAABmAAAAPAAyADAAMQA0ADAANAAyADUAMAA5ADQAMwA0ADkALgBHAEEANgAzADkA
+NwBAAGQAaABjAHAALQAyADYALQAyADAANwAuAGIAcgBxAC4AcgBlAGQAaABhAHQALgBjAG8AbQA+
+AAAAAAACAXEAAQAAABsAAAABAc9gaqpMVYUOnQtmTpYpfxoAflKImyIUlUAAHwBwAAEAAACyAAAA
+WwBQAEEAVABDAEgAIAB2ADIAIABuAGUAdAAtAG4AZQB4AHQAIAAyAC8AMgBdACAAcQBsAGMAbgBp
+AGMAOgAgAFUAcwBlACAAcABjAGkAXwBlAG4AYQBiAGwAZQBfAG0AcwBpAHgAXwBlAHgAYQBjAHQA
+KAApACAAaQBuAHMAdABlAGEAZAAgAG8AZgAgAHAAYwBpAF8AZQBuAGEAYgBsAGUAXwBtAHMAaQB4
+ACgAKQAAAAAAHwA1EAEAAAB4AAAAPAAyADYAMgBDAEIAMwA3ADMAQQA2AEQAMQBGADEANABGADkA
+QgA4ADEARQA4ADIARgA3ADQARgA3ADcARAA1AEEANAA2AEYAOQBFAEYANAA5AEAAYQB2AG0AYgAy
+AC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+AAAAHwA5EAEAAACuAgAAPABjAG8AdgBlAHIALgAxADMA
+OQA4ADQAMQAyADAAMQA1AC4AZwBpAHQALgBhAGcAbwByAGQAZQBlAHYAQAByAGUAZABoAGEAdAAu
+AGMAbwBtAD4AIAA8ADAAYQAwAGQANQBmADUAYwAzADMAZAA4ADYAZQAzADcANwA3AGMAMgAyAGMA
+MwBjADEAYgBiAGQAOAAxADAAMwA1ADYANgAwAGQANQA3AGMALgAxADMAOQA4ADQAMQAyADAAMQA1
+AC4AZwBpAHQALgBhAGcAbwByAGQAZQBlAHYAQAByAGUAZABoAGEAdAAuAGMAbwBtAD4AIAA8ADIA
+NgAyAEMAQgAzADcAMwBBADYARAAxAEYAMQA0AEYAOQBCADgAMQBFADgAMgBGADcANABGADcANwBE
+ADUAQQA0ADYARgA5AEUARQA1ADQAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4A
+IAA8ADIAMAAxADQAMAA0ADIANQAwADkAMAAwADIAOQAuAEcAQQAyADUAMAAwAEAAZABoAGMAcAAt
+ADIANgAtADIAMAA3AC4AYgByAHEALgByAGUAZABoAGEAdAAuAGMAbwBtAD4AIAA8ADIANgAyAEMA
+QgAzADcAMwBBADYARAAxAEYAMQA0AEYAOQBCADgAMQBFADgAMgBGADcANABGADcANwBEADUAQQA0
+ADYARgA5AEUARQBBADIAQABhAHYAbQBiADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AIAA8ADIA
+MAAxADQAMAA0ADIANQAwADkANAAzADQAOQAuAEcAQQA2ADMAOQA3AEAAZABoAGMAcAAtADIANgAt
+ADIAMAA3AC4AYgByAHEALgByAGUAZABoAGEAdAAuAGMAbwBtAD4AAAAAAAMA3j+fTgAACwAAgAgg
+BgAAAAAAwAAAAAAAAEYAAAAAA4UAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAABhQAAAAAA
+AAMAgBD/////QAAHMIfxT9lqYM8BCwACAAEAAAADACYAAAAAAAsAKwAAAAAAAgFHAAEAAAAvAAAA
+Yz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMi0xNDA0MjUwOTQzNDZaLTE2NTcyNAAAAgEQMAEAAABG
+AAAAAAAAAK88gqR+EYpBuLoe35iljWAHAFqEb771vv9Ot/aGfriOGXwAGmtoNuUAAK6zKOUCTeBI
+iAuK3fE1aPMAS3b9hasAAAAAHwD6PwEAAAAcAAAAUwBoAGEAaABlAGQAIABTAGgAYQBpAGsAaAAA
+AAMACVkBAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAEIUAAAAAAAALAACACCAGAAAAAADAAAAA
+AAAARgAAAAAOhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABiFAAAAAAAACwAAgAggBgAA
+AAAAwAAAAAAAAEYAAAAAgoUAAAAAAAAfAACACCAGAAAAAADAAAAAAAAARgAAAADYhQAAAQAAABIA
+AABJAFAATQAuAE4AbwB0AGUAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAA
+AHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAA
+wAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAY
+AAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAxgo=
 
-Bjorn
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EF49avmb2qlogicorg_--
