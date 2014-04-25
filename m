@@ -1,78 +1,178 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Stuart Yoder <stuart.yoder@freescale.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "agraf@suse.de" <agraf@suse.de>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-	"kim.phillips@linaro.org" <kim.phillips@linaro.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"libvir-list@redhat.com" <libvir-list@redhat.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"tech@virtualopensystems.com" <tech@virtualopensystems.com>,
-	"kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>,
-	"christoffer.dall@linaro.org" <christoffer.dall@linaro.org>
-Subject: RE: [PATCH] PCI: Introduce new device binding path using
- pci_dev.driver_override
-Date: Thu, 10 Apr 2014 19:30:32 +0000
-Message-ID: <81d2e04877f04deeb15e6d0e57244385@DM2PR03MB352.namprd03.prod.outlook.com>
-References: <20140404201818.14389.86188.stgit@bling.home>
-In-Reply-To: <20140404201818.14389.86188.stgit@bling.home>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:26256 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750719AbaDYIsR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 04:48:17 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s3P8j1X9023690
+	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 01:48:17 -0700
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1kfd4mgdkr-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 01:48:17 -0700
+Content-Type: multipart/mixed;
+	boundary="_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EE54avmb2qlogicorg_"
+From: Shahed Shaikh <shahed.shaikh@qlogic.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+CC: Dept-HSG Linux NIC Dev <Dept-HSGLinuxNICDev@qlogic.com>,
+	netdev <netdev@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH net-next 2/2] qlcnic: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Date: Fri, 25 Apr 2014 08:48:14 +0000
+Message-ID: <262CB373A6D1F14F9B81E82F74F77D5A46F9EE54@avmb2.qlogic.org>
+References: <cover.1398412015.git.agordeev@redhat.com>
+ <0a0d5f5c33d86e3777c22c3c1bbd81035660d57c.1398412015.git.agordeev@redhat.com>
+In-Reply-To: <0a0d5f5c33d86e3777c22c3c1bbd81035660d57c.1398412015.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxleCBXaWxsaWFtc29u
-IFttYWlsdG86YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb21dDQo+IFNlbnQ6IEZyaWRheSwgQXBy
-aWwgMDQsIDIwMTQgMzoxOSBQTQ0KPiBUbzogYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXgtcGNp
-QHZnZXIua2VybmVsLm9yZw0KPiBDYzogYWdyYWZAc3VzZS5kZTsga3ZtQHZnZXIua2VybmVsLm9y
-Zzsga29ucmFkLndpbGtAb3JhY2xlLmNvbTsNCj4ga2ltLnBoaWxsaXBzQGxpbmFyby5vcmc7IGdy
-ZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBZb2RlciBTdHVhcnQtQjA4MjQ4Ow0KPiBsaW51eC1r
-ZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaWJ2aXItbGlzdEByZWRoYXQuY29tOyBpb21tdUBsaXN0
-cy5saW51eC0NCj4gZm91bmRhdGlvbi5vcmc7IHRlY2hAdmlydHVhbG9wZW5zeXN0ZW1zLmNvbTsN
-Cj4ga3ZtYXJtQGxpc3RzLmNzLmNvbHVtYmlhLmVkdTsgY2hyaXN0b2ZmZXIuZGFsbEBsaW5hcm8u
-b3JnDQo+IFN1YmplY3Q6IFtQQVRDSF0gUENJOiBJbnRyb2R1Y2UgbmV3IGRldmljZSBiaW5kaW5n
-IHBhdGggdXNpbmcNCj4gcGNpX2Rldi5kcml2ZXJfb3ZlcnJpZGUNCj4gDQo+IFRoZSBkcml2ZXJf
-b3ZlcnJpZGUgZmllbGQgYWxsb3dzIHVzIHRvIHNwZWNpZnkgdGhlIGRyaXZlciBmb3IgYSBkZXZp
-Y2UNCj4gcmF0aGVyIHRoYW4gcmVseWluZyBvbiB0aGUgZHJpdmVyIHRvIHByb3ZpZGUgYSBwb3Np
-dGl2ZSBtYXRjaCBvZiB0aGUNCj4gZGV2aWNlLiAgVGhpcyBzaG9ydGN1dHMgdGhlIGV4aXN0aW5n
-IHByb2Nlc3Mgb2YgbG9va2luZyB1cCB0aGUgdmVuZG9yDQo+IGFuZCBkZXZpY2UgSUQsIGFkZGlu
-ZyB0aGVtIHRvIHRoZSBkcml2ZXIgbmV3X2lkLCBiaW5kaW5nIHRoZSBkZXZpY2UsDQo+IHRoZW4g
-cmVtb3ZpbmcgdGhlIElELCBidXQgaXQgYWxzbyBwcm92aWRlcyBhIGNvdXBsZSBhZHZhbnRhZ2Vz
-Lg0KPiANCj4gRmlyc3QsIHRoZSBhYm92ZSBleGlzdGluZyBwcm9jZXNzIGFsbG93cyB0aGUgZHJp
-dmVyIHRvIGJpbmQgdG8gYW55DQo+IGRldmljZSBtYXRjaGluZyB0aGUgbmV3X2lkIGZvciB0aGUg
-d2luZG93IHdoZXJlIGl0J3MgZW5hYmxlZC4gIFRoaXMgaXMNCj4gb2Z0ZW4gbm90IGRlc2lyZWQs
-IHN1Y2ggYXMgdGhlIGNhc2Ugb2YgdHJ5aW5nIHRvIGJpbmQgYSBzaW5nbGUgZGV2aWNlDQo+IHRv
-IGEgbWV0YSBkcml2ZXIgbGlrZSBwY2ktc3R1YiBvciB2ZmlvLXBjaS4gIFVzaW5nIGRyaXZlcl9v
-dmVycmlkZSB3ZQ0KPiBjYW4gZG8gdGhpcyBkZXRlcm1pbmlzdGljYWxseSB1c2luZzoNCj4gDQo+
-IGVjaG8gcGNpLXN0dWIgPiAvc3lzL2J1cy9wY2kvZGV2aWNlcy8wMDAwOjAzOjAwLjAvZHJpdmVy
-X292ZXJyaWRlDQo+IGVjaG8gMDAwMDowMzowMC4wID4gL3N5cy9idXMvcGNpL2RldmljZXMvMDAw
-MDowMzowMC4wL2RyaXZlci91bmJpbmQNCj4gZWNobyAwMDAwOjAzOjAwLjAgPiAvc3lzL2J1cy9w
-Y2kvZHJpdmVyc19wcm9iZQ0KPiANCj4gUHJldmlvdXNseSB3ZSBjb3VsZCBub3QgaW52b2tlIGRy
-aXZlcnNfcHJvYmUgYWZ0ZXIgYWRkaW5nIGEgZGV2aWNlDQo+IHRvIG5ld19pZCBmb3IgYSBkcml2
-ZXIgYXMgd2UgZ2V0IG5vbi1kZXRlcm1pbmlzdGljIGJlaGF2aW9yIHdoZXRoZXINCj4gdGhlIGRy
-aXZlciB3ZSBpbnRlbmQgb3IgdGhlIHN0YW5kYXJkIGRyaXZlciB3aWxsIGNsYWltIHRoZSBkZXZp
-Y2UuDQo+IE5vdyBpdCBiZWNvbWVzIGEgZGV0ZXJtaW5pc3RpYyBwcm9jZXNzLCBvbmx5IHRoZSBk
-cml2ZXIgbWF0Y2hpbmcNCj4gZHJpdmVyX292ZXJyaWRlIHdpbGwgcHJvYmUgdGhlIGRldmljZS4N
-Cj4gDQo+IFRvIHJldHVybiB0aGUgZGV2aWNlIHRvIHRoZSBzdGFuZGFyZCBkcml2ZXIsIHdlIHNp
-bXBseSBjbGVhciB0aGUNCj4gZHJpdmVyX292ZXJyaWRlIGFuZCByZXByb2JlIHRoZSBkZXZpY2U6
-DQo+IA0KPiBlY2hvID4gL3N5cy9idXMvcGNpL2RldmljZXMvMDAwMDowMzowMC4wL3ByZWZlcnJl
-ZF9kcml2ZXINCj4gZWNobyAwMDAwOjAzOjAwLjAgPiAvc3lzL2J1cy9wY2kvZGV2aWNlcy8wMDAw
-OjAzOjAwLjAvZHJpdmVyL3VuYmluZA0KPiBlY2hvIDAwMDA6MDM6MDAuMCA+IC9zeXMvYnVzL3Bj
-aS9kcml2ZXJzX3Byb2JlDQo+IA0KPiBBbm90aGVyIGFkdmFudGFnZSB0byB0aGlzIGFwcHJvYWNo
-IGlzIHRoYXQgd2UgY2FuIHNwZWNpZnkgYSBkcml2ZXINCj4gb3ZlcnJpZGUgdG8gZm9yY2UgYSBz
-cGVjaWZpYyBiaW5kaW5nIG9yIHByZXZlbnQgYW55IGJpbmRpbmcuICBGb3INCj4gaW5zdGFuY2Ug
-d2hlbiBhbiBJT01NVSBncm91cCBpcyBleHBvc2VkIHRvIHVzZXJzcGFjZSB0aHJvdWdoIFZGSU8N
-Cj4gd2UgcmVxdWlyZSB0aGF0IGFsbCBkZXZpY2VzIHdpdGhpbiB0aGF0IGdyb3VwIGFyZSBvd25l
-ZCBieSBWRklPLg0KPiBIb3dldmVyLCBkZXZpY2VzIGNhbiBiZSBob3QtYWRkZWQgaW50byBhbiBJ
-T01NVSBncm91cCwgaW4gd2hpY2ggY2FzZQ0KPiB3ZSB3YW50IHRvIHByZXZlbnQgdGhlIGRldmlj
-ZSBmcm9tIGJpbmRpbmcgdG8gYW55IGRyaXZlciAocHJlZmVycmVkDQo+IGRyaXZlciA9ICJub25l
-Iikgb3IgcGVyaGFwcyBoYXZlIGl0IGF1dG9tYXRpY2FsbHkgYmluZCB0byB2ZmlvLXBjaS4NCj4g
-V2l0aCBkcml2ZXJfb3ZlcnJpZGUgaXQncyBhIHNpbXBsZSBtYXR0ZXIgZm9yIHRoaXMgZmllbGQg
-dG8gYmUgc2V0DQo+IGludGVybmFsbHkgd2hlbiB0aGUgZGV2aWNlIGlzIGZpcnN0IGRpc2NvdmVy
-ZWQgdG8gcHJldmVudCBkcml2ZXINCj4gbWF0Y2hlcy4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEFs
-ZXggV2lsbGlhbXNvbiA8YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb20+DQo+IC0tLQ0KDQpSZXZp
-ZXdlZC1ieTogU3R1YXJ0IFlvZGVyIDxzdHVhcnQueW9kZXJAZnJlZXNjYWxlLmNvbT4NCg==
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EE54avmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+> -----Original Message-----
+> From: Alexander Gordeev [mailto:agordeev@redhat.com]
+> Sent: Friday, April 25, 2014 1:36 PM
+> To: linux-kernel
+> Cc: Alexander Gordeev; Shahed Shaikh; Dept-HSG Linux NIC Dev; netdev;
+> linux-pci
+> Subject: [PATCH net-next 2/2] qlcnic: Use pci_enable_msix_exact() instead
+> of pci_enable_msix()
+>=20
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers using these two
+> interfaces need to be updated to use the new pci_enable_msi_range()  or
+> pci_enable_msi_exact() and pci_enable_msix_range() or
+> pci_enable_msix_exact() interfaces.
+>=20
+> Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
+> Cc: Dept-HSGLinuxNICDev@qlogic.com
+> Cc: netdev@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+>=20
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> index dbf7539..26f022b 100644
+> --- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> +++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+> @@ -690,8 +690,8 @@ int qlcnic_setup_tss_rss_intr(struct qlcnic_adapter
+> *adapter)
+>  		adapter->msix_entries[vector].entry =3D vector;
+>=20
+>  restore:
+> -	err =3D pci_enable_msix(pdev, adapter->msix_entries, num_msix);
+> -	if (err > 0) {
+> +	err =3D pci_enable_msix_exact(pdev, adapter->msix_entries,
+> num_msix);
+> +	if (err =3D=3D -ENOSPC) {
+>  		if (!adapter->drv_tss_rings && !adapter->drv_rss_rings)
+>  			return -ENOSPC;
+
+I think, it would be good if we return "err" instead of "-ENOSPC" .
+ =20
+                if (!adapter->drv_tss_rings && !adapter->drv_rss_rings)
+-                       return -ENOSPC;
++                       return err;
+
+Thanks,
+Shahed
+
+
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EE54avmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+vqMQGZ1uAN0BD1QCAAAAgFMAaABhAGgAZQBkACAAUwBoAGEAaQBrAGgAAABTAE0AVABQAAAAcwBo
+AGEAaABlAGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADIA
+AABzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwDl
+XwEAAAA6AAAAcwBpAHAAOgBzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAAAAHwAaDAEAAAAcAAAAUwBoAGEAaABlAGQAIABTAGgAYQBpAGsAaAAAAB8AHwwB
+AAAAMgAAAHMAaABhAGgAZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
+AAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9U
+AgAAAIBTAGgAYQBoAGUAZAAgAFMAaABhAGkAawBoAAAAUwBNAFQAUAAAAHMAaABhAGgAZQBkAC4A
+cwBoAGEAaQBrAGgAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAAyAAAAcwBoAGEAaABl
+AGQALgBzAGgAYQBpAGsAaABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A+D8BAAAAHAAAAFMA
+aABhAGgAZQBkACAAUwBoAGEAaQBrAGgAAAAfACNAAQAAADIAAABzAGgAYQBoAGUAZAAuAHMAaABh
+AGkAawBoAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAA
+AgH5PwEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBoAGEAaABlAGQAIABTAGgAYQBp
+AGsAaAAAAFMATQBUAFAAAABzAGgAYQBoAGUAZAAuAHMAaABhAGkAawBoAEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAB8ACV0BAAAAMgAAAHMAaABhAGgAZQBkAC4AcwBoAGEAaQBrAGgAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAAAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAA
+HwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAAC
+AQswAQAAABAAAACE3vS1VIUBSJab9l29eOWuAwAXAAEAAABAADkAANsiGGNgzwFAAAgw58l2GGNg
+zwELACkAAAAAAAsAIwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0
+AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAA
+AAAARgAAAAAGhQAAAAAAAB8ANwABAAAAtAAAAFIARQA6ACAAWwBQAEEAVABDAEgAIABuAGUAdAAt
+AG4AZQB4AHQAIAAyAC8AMgBdACAAcQBsAGMAbgBpAGMAOgAgAFUAcwBlACAAcABjAGkAXwBlAG4A
+YQBiAGwAZQBfAG0AcwBpAHgAXwBlAHgAYQBjAHQAKAApACAAaQBuAHMAdABlAGEAZAAgAG8AZgAg
+AHAAYwBpAF8AZQBuAGEAYgBsAGUAXwBtAHMAaQB4ACgAKQAAAB8APQABAAAACgAAAFIARQA6ACAA
+AAAAAAMANgAAAAAAAwAuAAAAAAAfAEIQAQAAAJwAAAA8ADAAYQAwAGQANQBmADUAYwAzADMAZAA4
+ADYAZQAzADcANwA3AGMAMgAyAGMAMwBjADEAYgBiAGQAOAAxADAAMwA1ADYANgAwAGQANQA3AGMA
+LgAxADMAOQA4ADQAMQAyADAAMQA1AC4AZwBpAHQALgBhAGcAbwByAGQAZQBlAHYAQAByAGUAZABo
+AGEAdAAuAGMAbwBtAD4AAAACAXEAAQAAABsAAAABAc9gXRgBFke9Um4UQ5jAnOoETbbZmyIDjkAA
+HwBwAAEAAACsAAAAWwBQAEEAVABDAEgAIABuAGUAdAAtAG4AZQB4AHQAIAAyAC8AMgBdACAAcQBs
+AGMAbgBpAGMAOgAgAFUAcwBlACAAcABjAGkAXwBlAG4AYQBiAGwAZQBfAG0AcwBpAHgAXwBlAHgA
+YQBjAHQAKAApACAAaQBuAHMAdABlAGEAZAAgAG8AZgAgAHAAYwBpAF8AZQBuAGEAYgBsAGUAXwBt
+AHMAaQB4ACgAKQAAAB8ANRABAAAAeAAAADwAMgA2ADIAQwBCADMANwAzAEEANgBEADEARgAxADQA
+RgA5AEIAOAAxAEUAOAAyAEYANwA0AEYANwA3AEQANQBBADQANgBGADkARQBFADUANABAAGEAdgBt
+AGIAMgAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAA8gAAADwAYwBvAHYAZQByAC4A
+MQAzADkAOAA0ADEAMgAwADEANQAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABh
+AHQALgBjAG8AbQA+ACAAPAAwAGEAMABkADUAZgA1AGMAMwAzAGQAOAA2AGUAMwA3ADcANwBjADIA
+MgBjADMAYwAxAGIAYgBkADgAMQAwADMANQA2ADYAMABkADUANwBjAC4AMQAzADkAOAA0ADEAMgAw
+ADEANQAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+AAAA
+AAADAN4/n04AAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAOFAAAAAAAAAwAAgAggBgAAAAAAwAAA
+AAAAAEYAAAAAAYUAAAAAAAADAIAQ/////0AABzCn3EoXY2DPAQsAAgABAAAAAwAmAAAAAAALACsA
+AAAAAAIBRwABAAAALwAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjItMTQwNDI1MDg0ODE0Wi0x
+NjU3MDkAAAIBEDABAAAARgAAAAAAAACvPIKkfhGKQbi6Ht+YpY1gBwBahG++9b7/Trf2hn64jhl8
+ABpraDblAACusyjlAk3gSIgLit3xNWjzAEt2/YWoAAAAAB8A+j8BAAAAHAAAAFMAaABhAGgAZQBk
+ACAAUwBoAGEAaQBrAGgAAAADAAlZAQAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABCFAAAAAAAA
+CwAAgAggBgAAAAAAwAAAAAAAAEYAAAAADoUAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAY
+hQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAIKFAAAAAAAAQAAAgAggBgAAAAAAwAAAAAAA
+AEYAAAAAv4UAAPC3KfRiYM8BHwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA2IUAAAEAAAASAAAASQBQ
+AE0ALgBOAG8AdABlAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0A
+bQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAA
+AABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsA
+MQAwAC4AMQAuADQALgAxADAAXQAAAAaW
+
+--_000_262CB373A6D1F14F9B81E82F74F77D5A46F9EE54avmb2qlogicorg_--
