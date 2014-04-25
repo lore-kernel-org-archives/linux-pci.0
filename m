@@ -1,93 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 13/22] iommu/vt-d: search _DSM method for DMAR hotplug
-Date: Tue, 22 Apr 2014 15:07:24 +0800
-Message-Id: <1398150453-28141-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:36375 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200AbaDYBES (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 21:04:18 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N4K00E4WAZ3IR30@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Fri, 25 Apr 2014 10:04:16 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: 'Richard Zhu' <Hong-Xing.Zhu@freescale.com>,
+	'Marek Vasut' <marex@denx.de>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	linux-pci@vger.kernel.org,
+	'Pratyush ANAND' <pratyush.anand@st.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <000801cf4d95$64322ef0$2c968cd0$%han@samsung.com>
+ <2CC2A0A4A178534D93D5159BF3BCB66189FEC4809B@EAPEX1MAIL1.st.com>
+ <533BA157.6030004@ti.com> <201404021234.48134.marex@denx.de>
+ <65debfc7f79a4a27a58bd7c64382881f@BLUPR03MB136.namprd03.prod.outlook.com>
+ <000001cf4fad$ff227ae0$fd6770a0$%han@samsung.com>
+ <20140424213537.GJ29593@google.com>
+In-reply-to: <20140424213537.GJ29593@google.com>
+Subject: Re: [PATCH] PCI: designware: Remove unnecessary RC BAR setting
+Date: Fri, 25 Apr 2014 10:04:15 +0900
+Message-id: <000001cf6022$47395d10$d5ac1730$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to Intel VT-d specification, _DSM method to support DMAR
-hotplug should exist directly under corresponding ACPI object
-representing PCI host bridge. But some BIOSes doesn't conform to
-this, so search for _DSM method in the subtree starting from the
-ACPI object representing the PCI host bridge.
+On Friday, April 25, 2014 6:36 AM, Bjorn Helgaas wrote:
+> On Fri, Apr 04, 2014 at 11:31:34AM +0900, Jingoo Han wrote:
+> > On Wednesday, April 02, 2014 8:59 PM, Richard Zhu wrote:
+> > > Wednesday, April 02, 2014 6:35 PM, Marek Vasut wrote:
+> > > > On Wednesday, April 02, 2014 at 07:34:15 AM, Kishon Vijay Abraham I wrote:
+> > > > > On Wednesday 02 April 2014 11:03 AM, Mohit KUMAR DCG wrote:
+> > > > > > Wednesday, April 02, 2014 10:53 AM, Jingoo Han wrote:
+> > > > > >> On Wednesday, April 02, 2014 1:57 PM, Mohit KUMAR DCG wrote:
+> > > > > >>> On Tuesday, April 01, 2014 4:00 PM, Jingoo Han wrote:
+> > > > > >>>> According to the spec, the synopsys core does not implement the
+> > > > > >>>> optional BARs such as BAR0/1. This is based on the assumption
+> > > > > >>>> that the RC host probably has registers on some other internal
+> > > > > >>>> bus and has knowledge and setup access to these registers already.
+> > > > > >>>> So, remove unnecessary RC BAR setting.
+> > > > > >>>
+> > > > > >>> - Normally BARs in RC are not used but somehow available in the
+> > > > > >>> design. One possible BAR use can be if RC has some memory
+> > > > > >>> connected to
+> > > > > >>
+> > > > > >> the BAR that needs to be accessed through link.
+> > > > > >>
+> > > > > >>> Otherwise we can ignore BARs setup here.
+> > > > > >>
+> > > > > >> Hi Mohit KUMAR DCG,
+> > > > > >>
+> > > > > >> Thank you for your feedback.
+> > > > > >>
+> > > > > >> I want to know whether or not other SoCs such as ST, Freescale, TI
+> > > > > >> support BAR0/BAR1. If no SoC supports BAR0/BAR1, the unnecessary RC
+> > > > > >> BAR setting code should  be removed.
+> > > > > >
+> > > > > > - We are not currently using RC's BAR0/1 in any application but no
+> > > > > > such restriction from HW as ST SoCs support BARs in HW design.
+> > > > >
+> > > > > Neither do we in DRA7xx.
+> > > >
+> > > > I suspect that means we should keep the code to make sure the registers are
+> > > > configured correctly, no?
+> > > >
+> > > > Richard, can you comment on MX6 please ?
+> > >
+> > >  [Richard] Sorry to reply late. I'm engaged in another stuff in the past days.
+> > > i.MX6 pcie doesn't use RC's BAR0/1 in applications either.
+> > > >
+> >
+> > Thank you all for your comments!
+> >
+> > I noticed that Synopsys PCIe "Dual mode" can support BAR0/BAR1.
+> > The bits[3:0] of BAR0 is RO(CS), which means Read-Only, but writable
+> > from the local application through the DBI.
+> >
+> > So, the BAR0/1 setting might be necessary, in order to ensure the
+> > BAR0/1 setting is written properly.
+> >
+> > But, when BAR0/1 are implemented, the bits[3:0] of BAR0 is decided
+> > by hardware configuration parameters. So, this BAR0/1 setting looks
+> > unnecessary.
+> >
+> > How about others' opinions?
+> >
+> > 1. Necessary: in order to ensure the BAR0/BAR1 setting, even though
+> >                    BAR0/BAR1 were already set as hardware default values
+> >
+> > 2. Unnecessary: the BAR0/BAR1 setting code is dummy, because BAR0/BAR1
+> >                       were already set as hardware default values
+> >
+> > For example, in the case of Exynos5440, BAR0/BAR1 are not implemented;
+> > thus, even though BAR0 is written as 0x4, BAR0 can be always read as 0.
+> > So, there is not side effect, but just unnecessary code is executed
+> > during boot time.
+> 
+> I don't sense a clear consensus that we should apply this, so I'll drop
+> it for now.  Please repost with appropriate acks if we do need it.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c |   34 +++++++++++++++++++++++++++++++---
- 1 file changed, 31 insertions(+), 3 deletions(-)
+OK, I agree with your opinion.
+Thank you.
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 290b4bdcaa3a..7a7383858c34 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1920,20 +1920,48 @@ static int dmar_hotplug_remove(acpi_handle handle)
- 	return ret;
- }
- 
-+static acpi_status dmar_get_dsm_handle(acpi_handle handle, u32 lvl,
-+				       void *context, void **retval)
-+{
-+	acpi_handle *phdl = retval;
-+
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		*phdl = handle;
-+		return AE_CTRL_TERMINATE;
-+	}
-+
-+	return AE_OK;
-+}
-+
- int dmar_device_hotplug(acpi_handle handle, bool insert)
- {
- 	int ret;
-+	acpi_handle tmp = NULL;
-+	acpi_status status;
- 
- 	if (!dmar_in_use())
- 		return 0;
--	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
-+
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		tmp = handle;
-+	} else {
-+		status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-+					     ACPI_UINT32_MAX,
-+					     dmar_get_dsm_handle,
-+					     NULL, NULL, &tmp);
-+		if (ACPI_FAILURE(status)) {
-+			pr_warn("Failed to locate _DSM method.\n");
-+			return -ENXIO;
-+		}
-+	}
-+	if (tmp == NULL)
- 		return 0;
- 
- 	down_write(&dmar_global_lock);
- 	if (insert)
--		ret = dmar_hotplug_insert(handle);
-+		ret = dmar_hotplug_insert(tmp);
- 	else
--		ret = dmar_hotplug_remove(handle);
-+		ret = dmar_hotplug_remove(tmp);
- 	up_write(&dmar_global_lock);
- 
- 	return ret;
--- 
-1.7.10.4
+Best regards,
+Jingoo Han
+
 
