@@ -1,62 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35863 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751622AbaDNIEj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 04:04:39 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Ravindranath <anil_ravindranath@pmc-sierra.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 20/23] pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:44 +0200
-Message-Id: <585bd723050f1aad76c0cc8972293768eccdfc4c.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:51484 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752581AbaDYRQv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 13:16:51 -0400
+Received: by mail-pa0-f49.google.com with SMTP id lj1so3390295pab.36
+        for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 10:16:51 -0700 (PDT)
+Subject: [PATCH 3/4] x86/PCI: Move pcibios_assign_resources() annotation to
+ definition
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, Bodo Eggert <7eggert@gmx.de>,
+	x86@kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 25 Apr 2014 11:16:47 -0600
+Message-ID: <20140425171647.312.98481.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140425171144.312.9601.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140425171144.312.9601.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Move the pcibios_assign_resources() fs_initcall annotation next to the
+function definition.  No functional change.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/scsi/pmcraid.c |   13 ++-----------
- 1 files changed, 2 insertions(+), 11 deletions(-)
+ arch/x86/pci/i386.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index c06af7f..6d0f208 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4698,19 +4698,10 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
- 		for (i = 0; i < PMCRAID_NUM_MSIX_VECTORS; i++)
- 			entries[i].entry = i;
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 6db58d68feb5..a19ed92e74e4 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -361,6 +361,12 @@ static int __init pcibios_assign_resources(void)
+ 	return 0;
+ }
  
--		rc = pci_enable_msix(pdev, entries, num_hrrq);
--		if (rc < 0)
-+		num_hrrq = pci_enable_msix_range(pdev, entries, 1, num_hrrq);
-+		if (num_hrrq < 0)
- 			goto pmcraid_isr_legacy;
++/**
++ * called in fs_initcall (one below subsys_initcall),
++ * give a chance for motherboard reserve resources
++ */
++fs_initcall(pcibios_assign_resources);
++
+ void pcibios_resource_survey_bus(struct pci_bus *bus)
+ {
+ 	dev_printk(KERN_DEBUG, &bus->dev, "Allocating resources\n");
+@@ -397,12 +403,6 @@ void __init pcibios_resource_survey(void)
+ 	ioapic_insert_resources();
+ }
  
--		/* Check how many MSIX vectors are allocated and register
--		 * msi-x handlers for each of them giving appropriate buffer
--		 */
--		if (rc > 0) {
--			num_hrrq = rc;
--			if (pci_enable_msix(pdev, entries, num_hrrq))
--				goto pmcraid_isr_legacy;
--		}
+-/**
+- * called in fs_initcall (one below subsys_initcall),
+- * give a chance for motherboard reserve resources
+- */
+-fs_initcall(pcibios_assign_resources);
 -
- 		for (i = 0; i < num_hrrq; i++) {
- 			pinstance->hrrq_vector[i].hrrq_id = i;
- 			pinstance->hrrq_vector[i].drv_inst = pinstance;
--- 
-1.7.7.6
+ static const struct vm_operations_struct pci_mmap_ops = {
+ 	.access = generic_access_phys,
+ };
 
