@@ -1,53 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay4-d.mail.gandi.net ([217.70.183.196]:56833 "EHLO
-	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754639AbaDSAOm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Apr 2014 20:14:42 -0400
-From: Ryan Desfosses <ryan@desfo.org>
-To: bhelgaas@google.com
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Ryan Desfosses <ryan@desfo.org>
-Subject: [PATCH 5/8] msi: merged quoted strings
-Date: Fri, 18 Apr 2014 20:13:50 -0400
-Message-Id: <1397866433-21119-6-git-send-email-ryan@desfo.org>
-In-Reply-To: <1397866433-21119-1-git-send-email-ryan@desfo.org>
-References: <1397866433-21119-1-git-send-email-ryan@desfo.org>
+Received: from mga02.intel.com ([134.134.136.20]:1599 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753093AbaDYKgg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 25 Apr 2014 06:36:36 -0400
+Message-ID: <535A3D6D.8020008@linux.intel.com>
+Date: Fri, 25 Apr 2014 13:48:13 +0300
+From: Mathias Nyman <mathias.nyman@linux.intel.com>
+MIME-Version: 1.0
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: linux-usb@vger.kernel.org, sarah.a.sharp@linux.intel.com,
+	linux-kernel@vger.kernel.org,
+	Alexander Gordeev <agordeev@redhat.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/5] xhci: Use pci_enable_msix_exact() instead of pci_enable_msix()
+References: <1398169382-12097-1-git-send-email-mathias.nyman@linux.intel.com> <1398169382-12097-3-git-send-email-mathias.nyman@linux.intel.com> <20140424194926.GB12809@kroah.com>
+In-Reply-To: <20140424194926.GB12809@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-change made to resolve following checkpatch message:
-  WARNING: quoted string split across lines
-branch: Linux 3.15-rc1
+On 04/24/2014 10:49 PM, Greg KH wrote:
+> On Tue, Apr 22, 2014 at 03:22:59PM +0300, Mathias Nyman wrote:
+>> From: Alexander Gordeev <agordeev@redhat.com>
+>>
+>> As result of deprecation of MSI-X/MSI enablement functions
+>> pci_enable_msix() and pci_enable_msi_block() all drivers
+>> using these two interfaces need to be updated to use the
+>> new pci_enable_msi_range()  or pci_enable_msi_exact()
+>> and pci_enable_msix_range() or pci_enable_msix_exact()
+>> interfaces.
+>>
+>> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+>> Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> Cc: linux-usb@vger.kernel.org
+>> Cc: linux-pci@vger.kernel.org
+>> Signed-off-by: Mathias Nyman <mathias.nyman@linux.intel.com>
+>> ---
+>>   drivers/usb/host/xhci.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+>> index 988ed5f..b0b8399 100644
+>> --- a/drivers/usb/host/xhci.c
+>> +++ b/drivers/usb/host/xhci.c
+>> @@ -291,7 +291,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
+>>   		xhci->msix_entries[i].vector = 0;
+>>   	}
+>>
+>> -	ret = pci_enable_msix(pdev, xhci->msix_entries, xhci->msix_count);
+>> +	ret = pci_enable_msix_exact(pdev, xhci->msix_entries, xhci->msix_count);
+>
+> Why is this change needed for 3.15-final?
+>
 
-Signed-off-by: Ryan Desfosses <ryan@desfo.org>
----
- drivers/pci/msi.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Can't remember why I thought this was needed for 3.15
+Looks like other subsystems (like PCI) just queued similar MSI changes 
+for 3.16.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 955ab79..31ae0bb 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -917,8 +917,7 @@ int pci_enable_msi_block(struct pci_dev *dev, int nvec)
- 
- 	/* Check whether driver already requested MSI-X irqs */
- 	if (dev->msix_enabled) {
--		dev_info(&dev->dev, "can't enable MSI "
--			 "(MSI-X already enabled)\n");
-+		dev_info(&dev->dev, "can't enable MSI (MSI-X already enabled)\n");
- 		return -EINVAL;
- 	}
- 
-@@ -1029,8 +1028,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- 
- 	/* Check whether driver already requested for MSI irq */
- 	if (dev->msi_enabled) {
--		dev_info(&dev->dev, "can't enable MSI-X "
--		       "(MSI IRQ already assigned)\n");
-+		dev_info(&dev->dev, "can't enable MSI-X (MSI IRQ already assigned)\n");
- 		return -EINVAL;
- 	}
- 	status = msix_capability_init(dev, entries, nvec);
--- 
-1.9.1
+I'll move it to the patchseries for usb-next
 
+-Mathias
