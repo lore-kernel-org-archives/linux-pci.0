@@ -1,60 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:56645 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753197AbaDGQqz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Apr 2014 12:46:55 -0400
-Date: Mon, 7 Apr 2014 10:46:44 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Richard Zhu <r65037@freescale.com>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [RESEND: RFC PATCH 3/3] pcie: keystone: add pcie driver based on
- designware core driver
-Message-ID: <20140407164644.GB9952@obsidianresearch.com>
-References: <1395707726-20437-1-git-send-email-m-karicheri2@ti.com>
- <1395707726-20437-4-git-send-email-m-karicheri2@ti.com>
- <235376049.yyfljDtinu@wuerfel>
- <20140325165421.GB30641@obsidianresearch.com>
- <5342D47F.4010506@ti.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:57678 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751822AbaDYAKW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 20:10:22 -0400
+Received: by mail-ie0-f180.google.com with SMTP id as1so3031583iec.25
+        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 17:10:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5342D47F.4010506@ti.com>
+In-Reply-To: <512BF6D5-D529-4605-B1AB-A6DB7D153E14@intel.com>
+References: <1396303119-16766-1-git-send-email-jeffrey.t.kirsher@intel.com>
+ <5339E746.4030503@cogentembedded.com> <20140424212246.GG29593@google.com> <512BF6D5-D529-4605-B1AB-A6DB7D153E14@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 24 Apr 2014 18:10:01 -0600
+Message-ID: <CAErSpo5Hd0H4D6s4gHUQxzS_5G4CSDAWHjHb3mExi1+RjRgYnA@mail.gmail.com>
+Subject: Re: [PATCH] pci: Use designated initialization in PCI_VDEVICE
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 07, 2014 at 12:38:23PM -0400, Murali Karicheri wrote:
-> On 3/25/2014 12:54 PM, Jason Gunthorpe wrote:
-> >On Tue, Mar 25, 2014 at 08:44:36AM +0100, Arnd Bergmann wrote:
-> >
-> >>I have no idea how this would work with the standard interrupt-map property,
-> >>since the legacy interrupt host is now the same device as the pci host.
-> >>
-> >>Maybe it's better to move the legacy irqchip handling entirely out of
-> >>the driver and use a separate device node for the registers so it can
-> >>come with its own #interrupt-cells, and then refer to this irqchip from
-> >>the interrupt-map.
-> >The other DW PCI-E drivers are being fixed to use interrupt-map, so I
-> >think this driver should be fixed before it goes in as well.
-> 
-> Could you send me a patch reference or branch that I can review to
-> better understand changes required in my driver to use the bindings
-> you have described below?
+On Thu, Apr 24, 2014 at 5:15 PM, Rustad, Mark D <mark.d.rustad@intel.com> wrote:
+> Bjorn, Sergei,
+>
+> On Apr 24, 2014, at 2:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> On Tue, Apr 01, 2014 at 02:08:06AM +0400, Sergei Shtylyov wrote:
+>>> Hello.
+>>>
+>>> On 04/01/2014 01:58 AM, Jeff Kirsher wrote:
+>>>
+>>>> From: Mark Rustad <mark.d.rustad@intel.com>
+>>>
+>>>> By using designated initialization in PCI_VDEVICE, like other
+>>>> similar macros, many "missing initializer" warnings that appear
+>>>> when compiling with W=2 can be silenced.
+>>>
+>>>> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+>>>> Tested-by: Phil Schmitt <phillip.j.schmitt@intel.com>
+>>>> Tested-by: Aaron Brown <aaron.f.brown@intel.com>
+>>>> Tested-by: Kavindya Deegala <kavindya.s.deegala@intel.com>
+>>>> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+>>>> ---
+>>>> include/linux/pci.h | 10 +++++-----
+>>>> 1 file changed, 5 insertions(+), 5 deletions(-)
+>>>
+>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>>> index fb57c89..49455f9 100644
+>>>> --- a/include/linux/pci.h
+>>>> +++ b/include/linux/pci.h
+>>> [...]
+>>>> @@ -689,9 +689,9 @@ struct pci_driver {
+>>>>  * private data.
+>>>>  */
+>>>>
+>>>> -#define PCI_VDEVICE(vendor, device)                \
+>>>> -   PCI_VENDOR_ID_##vendor, (device),       \
+>>>> -   PCI_ANY_ID, PCI_ANY_ID, 0, 0
+>>>> +#define PCI_VDEVICE(vend, dev) \
+>>>> +   .vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
+>>>> +   .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+>>>
+>>>   Initializing the fields to 0 is pointless, as 0 is what should be
+>>> put into them anyway by the compiler. Also, it doesn't look right
+>>> when you mix designated and anonymous initializers.
+>
+> The zeros can't be dropped because the macro needs to initialize the same number of fields as the previous macro. Callers of this macro do use undesignated initialization and will rely on how that aligns. This macro does that.
+>
+>> I'm certainly willing to apply this, but I can't reproduce the benefit.  I
+>> tried "make W=2 drivers/net/ethernet/intel/e1000e/netdev.o" and didn't see
+>> any change before and after this patch (I'm using Ubuntu gcc 4.6.3 if it
+>> matters).
+>
+> The ixgbe driver throws a lot of warnings because it does not provide the final field after the macro call, allowing it default to zero. I think I saw a few other instances around the kernel, but the largest number are in ixgbe.
+>
+>> What am I missing?  And do we need the zeroes?
+>
+> If you build ixgbe with W=2, I think you'll see the noise. And the zeros are needed for the reason given above. The zeros could also be moved to designated initialization, but the C standard is pretty clear on how it works, and many callers of the macro will be using undesignated initialization for the final field anyway. That is, with the new macro, many initializations will effectively have a mixed form. If that really bothers you, then I guess you should drop the patch. I was just trying to silence a bunch of noise in a simple, direct way. Adding the missing field in all of those places would also silence the message, but it seemed reasonable to have require that.
 
-Bjorn is now merging it:
+OK, I see why we need the zeros, that makes sense.
 
-[PATCH v2 0/6] PCI irq mapping fixes and cleanups
-http://www.spinics.net/lists/linux-pci/msg29589.html
+I tried ixgbe, too, and it still doesn't seem to make a difference for
+me.  But obviously it does for you, and it seems perfectly sensible,
+so I applied it to pci/misc for v3.16.
 
-Jason
+Thanks!
+
+Bjorn
