@@ -1,110 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49778 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752616AbaDVHGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Apr 2014 03:06:14 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 08/22] iommu/VT-d: simplify include/linux/dmar.h
-Date: Tue, 22 Apr 2014 15:07:19 +0800
-Message-Id: <1398150453-28141-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:44435 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753068AbaDYQ5x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 12:57:53 -0400
+Received: by mail-pa0-f41.google.com with SMTP id kp14so95957pab.14
+        for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 09:57:53 -0700 (PDT)
+Date: Fri, 25 Apr 2014 10:57:48 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Thierry Reding <treding@nvidia.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org
+Subject: Re: [RFC 0/5] PCI: tegra: Overhaul regulator usage
+Message-ID: <20140425165748.GA32246@google.com>
+References: <1396622969-17837-1-git-send-email-treding@nvidia.com>
+ <53444C4D.2080800@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53444C4D.2080800@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify include/linux/dmar.h a bit based on the fact that
-both CONFIG_INTEL_IOMMU and CONFIG_IRQ_REMAP select CONFIG_DMAR_TABLE.
+On Tue, Apr 08, 2014 at 01:21:49PM -0600, Stephen Warren wrote:
+> On 04/04/2014 08:49 AM, Thierry Reding wrote:
+> > The current device tree binding for the regulator setup on Tegra PCIe is
+> > not accurate. While it does work for current use-cases, that's likely by
+> > accident rather than design. This series replaces the existing set of
+> > power-supply properties with a new set that accurately describes the
+> > inputs of the IP block (depending on SoC generation).
+> > 
+> > As a heads-up, this breaks backwards compatibility with prior versions
+> > of the device tree bindings, but I don't see a reason why that should
+> > keep us from fixing this properly. Not many people are currently using
+> > these bindings and those who are are most likely tracking upstream
+> > development closely enough not to be impacted by this.
+> > 
+> > I've aimed to keep the series bisectible, which has the downside of
+> > interleaving patches to unrelated trees (ARM and PCI). I'm hoping that
+> > perhaps we can find a way to merge this as a whole to keep it possible
+> > to bisect across the series. Although again, I guess it wouldn't be all
+> > that bad if that wasn't the case, given how little PCIe is actually
+> > being used.
+> 
+> I'd be happy to put this series into a branch in the Tegra tree, given
+> suitable acks from Bjorn on the PCI changes.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/dmar.h |   50 ++++++++++++++++++--------------------------------
- 1 file changed, 18 insertions(+), 32 deletions(-)
+For 3/5 ("PCI: tegra: Implement accurate power supply scheme"),
 
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 23c8db129560..1deece46a0ca 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -114,22 +114,30 @@ extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
- /* Intel IOMMU detection */
- extern int detect_intel_iommu(void);
- extern int enable_drhd_fault_handling(void);
--#else
--struct dmar_pci_notify_info;
--static inline int detect_intel_iommu(void)
-+
-+#ifdef CONFIG_INTEL_IOMMU
-+extern int iommu_detected, no_iommu;
-+extern int intel_iommu_init(void);
-+extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
-+extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
-+extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
-+#else /* !CONFIG_INTEL_IOMMU: */
-+static inline int intel_iommu_init(void) { return -ENODEV; }
-+static inline int dmar_parse_one_rmrr(struct acpi_dmar_header *header)
- {
--	return -ENODEV;
-+	return 0;
- }
--
--static inline int dmar_table_init(void)
-+static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
- {
--	return -ENODEV;
-+	return 0;
- }
--static inline int enable_drhd_fault_handling(void)
-+static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
- {
--	return -1;
-+	return 0;
- }
--#endif /* !CONFIG_DMAR_TABLE */
-+#endif /* CONFIG_INTEL_IOMMU */
-+
-+#endif /* CONFIG_DMAR_TABLE */
- 
- struct irte {
- 	union {
-@@ -177,26 +185,4 @@ extern int dmar_set_interrupt(struct intel_iommu *iommu);
- extern irqreturn_t dmar_fault(int irq, void *dev_id);
- extern int arch_setup_dmar_msi(unsigned int irq);
- 
--#ifdef CONFIG_INTEL_IOMMU
--extern int iommu_detected, no_iommu;
--extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
--extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
--extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
--extern int intel_iommu_init(void);
--#else /* !CONFIG_INTEL_IOMMU: */
--static inline int intel_iommu_init(void) { return -ENODEV; }
--static inline int dmar_parse_one_rmrr(struct acpi_dmar_header *header)
--{
--	return 0;
--}
--static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
--{
--	return 0;
--}
--static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
--{
--	return 0;
--}
--#endif /* CONFIG_INTEL_IOMMU */
--
- #endif /* __DMAR_H__ */
--- 
-1.7.10.4
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
+I do have the "PCI: tegra: Use new OF interrupt mapping when possible"
+change from Lucas on my pci/host-tegra branch, but it shouldn't conflict
+with this.
+
+Bjorn
