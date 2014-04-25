@@ -1,61 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:47172 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751229AbaDPRQD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Apr 2014 13:16:03 -0400
-Received: by mail-ig0-f171.google.com with SMTP id c1so1284789igq.16
-        for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2014 10:16:03 -0700 (PDT)
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:54679 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820AbaDYWYc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 18:24:32 -0400
 MIME-Version: 1.0
-In-Reply-To: <1397629987.32730.9.camel@pasglop>
-References: <CAE9FiQXzRQ9S0mwwb58R2icBTtHHJ6NMVFMaxEgtVNP9mZVjZw@mail.gmail.com>
- <1394222924-28886-1-git-send-email-yinghai@kernel.org> <CAErSpo6r16va7oBpaDcTXw0Y0igc=NbXy9G7c27X+P0UM7fh8g@mail.gmail.com>
- <20140408025738.GA3198@yanx> <CAErSpo4JSrjSn4dXC9Pzfz2Aho+W4Gq9uKc+kAFbqTERcRAJ+w@mail.gmail.com>
- <20140409075215.GA3173@yanx> <CAErSpo4aGU_rmNSiv=HS-pDVsfKk798zLQW8Kx5huHe8jwdghw@mail.gmail.com>
- <20140415115450.GA7792@yanx> <CAErSpo63LKffb4DH+cSfBnvtAoPy06u22e7CUhRuKr-PHNWZMw@mail.gmail.com>
- <1397629816.32730.8.camel@pasglop> <1397629987.32730.9.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 16 Apr 2014 11:15:42 -0600
-Message-ID: <CAErSpo676pcHWyEtjJaPjfARB3iJd2qBPPqAzP45+z8RxD3VGA@mail.gmail.com>
-Subject: Re: [PATCH v7] PCI: Try best to allocate pref mmio 64bit above 4g
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>, Yinghai Lu <yinghai@kernel.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Amir Vadai <amirv@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Eugenia Emantayev <eugenia@mellanox.com>, talal@mellanox.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <20140420075936.GA19672@pd.tnic>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+	<20140419025323.2408.88764.stgit@amt.stowe>
+	<20140419135219.GC8109@pd.tnic>
+	<20140420075936.GA19672@pd.tnic>
+Date: Fri, 25 Apr 2014 16:24:31 -0600
+Message-ID: <CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range capabilities
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Borislav Petkov <bp@suse.de>
+Cc: Myron Stowe <myron.stowe@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	kim.naru@amd.com, daniel@numascale.com,
+	Thomas Gleixner <tglx@linutronix.de>, mingo@redhat.com,
+	hpa@zytor.com, x86 <x86@kernel.org>, sp@numascale.com,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 16, 2014 at 12:33 AM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Wed, 2014-04-16 at 16:30 +1000, Benjamin Herrenschmidt wrote:
->> On Tue, 2014-04-15 at 18:09 -0600, Bjorn Helgaas wrote:
->> >
->> > Thanks for the example.  Please open a bug report at
->> > http://bugzilla.kernel.org and attach the complete dmesg logs before
->> > and after Yinghai's patch.
->> >
->> > Having the complete logs helps me answer questions myself without
->> > having to bother you, and it also helps me figure out whether we can
->> > improve our logging to make it easier to diagnose problems like this.
->>
->> Unfortunately, for a *little while* longer (hint !) we can't publish
->> a complete log from a Power8 machine, but we should be able to include
->> everything remotely related to PCI.
+On Sun, Apr 20, 2014 at 1:59 AM, Borislav Petkov <bp@suse.de> wrote:
+> Drop Andreas' old email address from CC as it keeps bouncing.
 >
-> Hrm, actually, I'm not sure we can disclose the device details just yet,
-> so let's just hide the vendor/device ID to make the lawyers happy and
-> you can print all the rest.
+> On Sat, Apr 19, 2014 at 03:52:20PM +0200, Borislav Petkov wrote:
+>> > -static void __init pci_enable_pci_io_ecs(void)
+>> > +static void __init pci_enable_pci_io_ecs(u8 bus, u8 slot)
+>> >  {
+>> >  #ifdef CONFIG_AMD_NB
+>> >     unsigned int i, n;
+>> > +   u8 limit;
+>> >
+>> >     for (n = i = 0; !n && amd_nb_bus_dev_ranges[i].dev_limit; ++i) {
+>> > -           u8 bus = amd_nb_bus_dev_ranges[i].bus;
+>> > -           u8 slot = amd_nb_bus_dev_ranges[i].dev_base;
+>> > -           u8 limit = amd_nb_bus_dev_ranges[i].dev_limit;
+>> > +           /* Try matching for the bus range */
+>> > +           if ((bus != amd_nb_bus_dev_ranges[i].bus) ||
+>> > +               (slot != amd_nb_bus_dev_ranges[i].dev_base))
+>> > +                   continue;
+>> > +
+>> > +           limit = amd_nb_bus_dev_ranges[i].dev_limit;
+>> >
+>> > +           /* Setup all northbridges within the range */
+>> >             for (; slot < limit; ++slot) {
+>> >                     u32 val = read_pci_config(bus, slot, 3, 0);
+>> > -
+>> > -                   if (!early_is_amd_nb(val))
+>> > +                   if (!val)
+>> >                             continue;
+>> >
+>> >                     val = read_pci_config(bus, slot, 3, 0x8c);
+>> > @@ -375,13 +457,14 @@ static void __init pci_enable_pci_io_ecs(void)
+>> >                             val |= ENABLE_CF8_EXT_CFG >> 32;
+>>
+>> What a fun shifting!
+>>
+>> Maybe you should do
+>>
+>> #define ENABLE_CF8_EXT_CFG    BIT(46 - 32)
+>>
+>> to show exactly what you mean and how the bit is defined in MSR NB_CFG1
+>> and also show how the high 32-bits are mapped into F3x8c, while at it.
+>>
+>> And then you can drop the shifting at the call site.
+>
+> Ok, I see another fun with this ECS enabling:
+>
+> There's a enable_pci_io_ecs() which enables ECS through the NB_CFG MSR
+> which is called as part of the notifier *and* there's a PCI write to
+> that same bit in pci_enable_pci_io_ecs() which iterates over all NBs.
+>
+> So, AFAICT, we do it twice and the second time is not needed. Which
+> means, you probably can drop pci_enable_pci_io_ecs() completely and use
+> solely the notifier?
 
-Sure, no problem (and it looks like Guo has done just that with
-https://bugzilla.kernel.org/show_bug.cgi?id=74151).
+It does look as if there is some duplication with respect to setting
+MSR_AMD64_NB_CFG's (which is aliased at D18F3x8c [1])
+ENABLE_CF8_EXT_CFG enable bit but there are at least a couple of
+differences.
 
-I'm pretty sure this problem is not specific to your secret hardware;
-it should be reproducible on any hardware with similar apertures and
-similar BARs.  I am a little concerned about the PE implications, but
-I'm ignoring that for now until we sort out the first-order problem of
-getting the allocation scheme to work.
+enable_pci_io_ecs() only sets the bit on one NB whereas
+pci_enable_pci_io_ecs iterates over all the NBs (as you mentioned
+above).  The other difference has something to do with Xen; see the
+origin of pci_enable_pci_io_ecs - commit 24d9b70b8.
+
+>
+> Yes, no?
+
+Suravee, Kim - either of you want to chime in here?
+
+
+[1] Read-write; Per-node. MSRC001_001F[31:0] is an alias of D18F3x88.
+MSRC001_001F[63:32] is an alias of
+D18F3x8C.
+
+Myron
+>
+> --
+> Regards/Gruss,
+>     Boris.
+>
+> Sent from a fat crate under my desk. Formatting is fine.
+> --
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
