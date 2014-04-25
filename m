@@ -1,63 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:37541 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbaD2ARU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 20:17:20 -0400
-Received: by mail-ig0-f180.google.com with SMTP id r2so357248igi.1
-        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 17:17:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1398682281-18772-1-git-send-email-festevam@gmail.com>
-References: <1398682281-18772-1-git-send-email-festevam@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 28 Apr 2014 18:16:58 -0600
-Message-ID: <CAErSpo70h=DeE3=EpF9d=RQM5y-3tTJ9ZqDiGQ8t5rLfs_zx6w@mail.gmail.com>
-Subject: Re: [PATCH] pci: pci-mvebu: Use '%pa' for printing 'phys_addr_t' type
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:45162 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753005AbaDYKWN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 06:22:13 -0400
+Message-ID: <1398421265.4657.25.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH 0/8] i.MX6 PCIe binding change and MSI support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
+	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
+Date: Fri, 25 Apr 2014 12:21:05 +0200
+In-Reply-To: <20140424175844.GD29593@google.com>
+References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+	 <20140424175844.GD29593@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 28, 2014 at 4:51 AM, Fabio Estevam <festevam@gmail.com> wrote:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
->
-> Fix the following build warning that happens when building multi_v7_defconfig
-> with CONFIG_ARM_LPAE=y:
->
-> drivers/pci/host/pci-mvebu.c:334:5: warning: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'phys_addr_t' [-Wformat=]
->
-> While at it, also use '%zx' for printing 'size_t'.
->
-> Reported-by: Olof's autobuilder <build@lixom.net>
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> ---
->  drivers/pci/host/pci-mvebu.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index e384e25..572a7b5 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -330,8 +330,8 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
->                                                         sz, remap);
->                 if (ret) {
->                         dev_err(&port->pcie->pdev->dev,
-> -                               "Could not create MBus window at 0x%x, size 0x%x: %d\n",
-> -                               base, sz, ret);
-> +                               "Could not create MBus window at %pa, size 0x%zx: %d\n",
-> +                               &base, sz, ret);
+Am Donnerstag, den 24.04.2014, 11:58 -0600 schrieb Bjorn Helgaas:
+> On Fri, Mar 28, 2014 at 05:52:51PM +0100, Lucas Stach wrote:
+> > While working on MSI support for the i.MX6 PCIe host driver
+> > it has been discovered that the binding for this host controller
+> > is broken in many ways (refer to the patch descriptions for more
+> > info) and was introduced without proper discussion about what
+> > should/should not be in the binding.
+> > 
+> > This series fixes this and minimizes the difference of the
+> > i.MX6 binding to the common designware PCIe binding. I'm aware
+> > that this is a quite radical change, but I think it's justified
+> > to do this as long as there aren't many user of the old binding
+> > (most of the optional properties in the binding aren't even
+> > implemented).
+> > 
+> > Looking forward to your feedback.
+> > 
+> > Lucas Stach (8):
+> >   ARM: imx6q-clk: parent lvds_gate from lvds_sel
+This one is already applied.
 
-This is OK, but can we use the same "[mem 0x...-0x...]" format that
-%pR prints a struct resource with?  That would make it look more like
-other similar information we print elsewhere.  When you're debugging a
-problem, sometimes you have to compare address information from
-different places, and it's convenient if they all look similar.
+> >   PCI: designware: split Exynos and i.MX bindings
+> >   ARM: dts: imx6: update pcie to bring in line with new binding
+> >   PCI: imx6: use new clock names
+> >   PCI: imx6: drop old irq mapping
+> >   PCI: imx6: rip out optional (and unused) irqs
+> >   PCI: designware: make MSI isr shared irq aware
+> >   PCI: imx6: add support for MSI
+> 
+> What's the status of all these?  I would normally apply patches 4-8 of this
+> series through my tree, given the appropriate acks, but I haven't seen
+> those yet.  And I'm not sure what dependencies there are between the
+> non-PCI patches and the PCI ones.
+> 
+It's a complete binding change, so applying one part without the other
+is going to horribly break things.
 
->                         mvebu_pcie_del_windows(port, base - size_mapped,
->                                                size_mapped);
->                         return;
-> --
-> 1.8.3.2
->
+So I would at least want to see an ack for the binding change on the
+i.MX side from Shawn and Richard. This will need some follow on patches,
+as some boards adding PCIe using the old binding have cropped up in
+linux-next, but I can do the patches on short notice if everyone agrees
+to merge this patchset.
+
+The designware part is pretty simple and doesn't change anything for
+other users than i.MX. Though I would like to see an ack from Jingoo for
+those.
+
+I have some more stuff in the pipes regarding multiple MSI irqs, that
+depend on this series and also the Keystone people are waiting for this
+to be applied in order to consolidate the clock handling of the
+designware core driver, so it would be nice to get this moving again.
+
+Regards,
+Lucas
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
