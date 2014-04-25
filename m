@@ -1,68 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:33832 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751567AbaD2DHA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 23:07:00 -0400
-Received: by mail-ie0-f178.google.com with SMTP id lx4so7221723iec.23
-        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 20:06:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOMZO5BBLesVnHRkSkGaadr=-RpvUm68u2L2MZeQ2WOq28n=xw@mail.gmail.com>
-References: <1398682281-18772-1-git-send-email-festevam@gmail.com>
- <CAErSpo70h=DeE3=EpF9d=RQM5y-3tTJ9ZqDiGQ8t5rLfs_zx6w@mail.gmail.com> <CAOMZO5BBLesVnHRkSkGaadr=-RpvUm68u2L2MZeQ2WOq28n=xw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 28 Apr 2014 21:06:39 -0600
-Message-ID: <CAErSpo7c+8d9zbSrk_8cdNeyAcSVGve5uEQVcfpbG3feiYRxHg@mail.gmail.com>
-Subject: Re: [PATCH] pci: pci-mvebu: Use '%pa' for printing 'phys_addr_t' type
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Shahed Shaikh <shahed.shaikh@qlogic.com>,
+	Dept-HSGLinuxNICDev@qlogic.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 2/2] qlcnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Fri, 25 Apr 2014 10:06:25 +0200
+Message-Id: <0a0d5f5c33d86e3777c22c3c1bbd81035660d57c.1398412015.git.agordeev@redhat.com>
+In-Reply-To: <cover.1398412015.git.agordeev@redhat.com>
+References: <cover.1398412015.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 28, 2014 at 6:52 PM, Fabio Estevam <festevam@gmail.com> wrote:
-> On Mon, Apr 28, 2014 at 9:16 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Mon, Apr 28, 2014 at 4:51 AM, Fabio Estevam <festevam@gmail.com> wrote:
->>> From: Fabio Estevam <fabio.estevam@freescale.com>
->>>
->>> Fix the following build warning that happens when building multi_v7_defconfig
->>> with CONFIG_ARM_LPAE=y:
->>>
->>> drivers/pci/host/pci-mvebu.c:334:5: warning: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'phys_addr_t' [-Wformat=]
->>>
->>> While at it, also use '%zx' for printing 'size_t'.
->>>
->>> Reported-by: Olof's autobuilder <build@lixom.net>
->>> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
->>> ---
->>>  drivers/pci/host/pci-mvebu.c | 4 ++--
->>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
->>> index e384e25..572a7b5 100644
->>> --- a/drivers/pci/host/pci-mvebu.c
->>> +++ b/drivers/pci/host/pci-mvebu.c
->>> @@ -330,8 +330,8 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
->>>                                                         sz, remap);
->>>                 if (ret) {
->>>                         dev_err(&port->pcie->pdev->dev,
->>> -                               "Could not create MBus window at 0x%x, size 0x%x: %d\n",
->>> -                               base, sz, ret);
->>> +                               "Could not create MBus window at %pa, size 0x%zx: %d\n",
->>> +                               &base, sz, ret);
->>
->> This is OK, but can we use the same "[mem 0x...-0x...]" format that
->> %pR prints a struct resource with?  That would make it look more like
->> other similar information we print elsewhere.  When you're debugging a
->> problem, sometimes you have to compare address information from
->> different places, and it's convenient if they all look similar.
->
-> Understood your point, but in order to use %pR we need to use a
-> 'struct resource', which is something that the current code is not
-> using. 'sz' is calculated inside the function, so it is helpful to
-> print it as is.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-I didn't suggest changing the code to use an actual "struct resource".
- I suggested using a similar printk format, e.g., "[mem
-%#010llx-%#010llx]".
+Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
+Cc: Dept-HSGLinuxNICDev@qlogic.com
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+index dbf7539..26f022b 100644
+--- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
++++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+@@ -690,8 +690,8 @@ int qlcnic_setup_tss_rss_intr(struct qlcnic_adapter *adapter)
+ 		adapter->msix_entries[vector].entry = vector;
+ 
+ restore:
+-	err = pci_enable_msix(pdev, adapter->msix_entries, num_msix);
+-	if (err > 0) {
++	err = pci_enable_msix_exact(pdev, adapter->msix_entries, num_msix);
++	if (err == -ENOSPC) {
+ 		if (!adapter->drv_tss_rings && !adapter->drv_rss_rings)
+ 			return -ENOSPC;
+ 
+-- 
+1.7.7.6
+
