@@ -1,97 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54911 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754239AbaDNPpU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Apr 2014 11:45:20 -0400
-Message-ID: <1397490316.2207.23.camel@dabdike.int.hansenpartnership.com>
-Subject: Re: [PATCH] hpsa: fix uninitialized trans_support in
- hpsa_put_ctlr_into_performant_mode()
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: scameron@beardog.cce.hp.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Davidlohr Bueso <davidlohr@hp.com>,
-	Baoquan He <bhe@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Date: Mon, 14 Apr 2014 08:45:16 -0700
-In-Reply-To: <20140410221704.GA22465@beardog.cce.hp.com>
-References: <20140410221704.GA22465@beardog.cce.hp.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Mime-Version: 1.0
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:47184 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752466AbaD1VYk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 17:24:40 -0400
+MIME-Version: 1.0
+In-Reply-To: <20140420102105.GA19676@pd.tnic>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+	<20140419025339.2408.17866.stgit@amt.stowe>
+	<20140420102105.GA19676@pd.tnic>
+Date: Mon, 28 Apr 2014 15:24:39 -0600
+Message-ID: <CAL-B5D1MRjOGZJ-1PmDmkmqD2nG4+xhwWWsfib_E4-PFuKEkhw@mail.gmail.com>
+Subject: Re: [PATCH v2 4/5] ACPI/PCI: Warn if we have to "guess" host bridge
+ node information
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Borislav Petkov <bp@suse.de>
+Cc: Myron Stowe <myron.stowe@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	kim.naru@amd.com, daniel@numascale.com,
+	Thomas Gleixner <tglx@linutronix.de>, mingo@redhat.com,
+	hpa@zytor.com, x86 <x86@kernel.org>, sp@numascale.com,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Your subject line is very tame.  It should be the one line summary of
-why we apply the patch, so it should read something like
+On Sun, Apr 20, 2014 at 4:21 AM, Borislav Petkov <bp@suse.de> wrote:
+> On Fri, Apr 18, 2014 at 08:53:39PM -0600, Myron Stowe wrote:
+>> The vast majority of platforms are not supplying ACPI _PXM (proximity)
+>> information corresponding to host bridge (PNP0A03/PNP0A08) devices
+>> resulting in sysfs "numa_node" values of -1 (NUMA_NO_NODE) [1]:
+>>   # for i in /sys/devices/pci0000\:00/*/numa_node; do cat $i; done | uniq
+>>   -1
+>>
+>>   # find /sys/ -name "numa_node" | while read fname; do cat $fname; \
+>>     done | uniq
+>>   -1
+>>
+>> AMD based platforms provide a fall-back for this situation via amd_bus.c.
+>> These platforms snoop out the information by directly reading specific
+>> registers from the Northbridge and caching them via 'alloc_pci_root_info'.
+>>
+>> Later during boot processing when host bridges are discovered -
+>> 'pci_acpi_scan_root' - the kernel looks for their corresponding ACPI _PXM
+>> method - drivers/acpi/numa.c::acpi_get_node().  If the BIOS supplied a
+>> _PXM method then that node (proximity) value is associated.  If the BIOS
+>> did not supply a _PXM method *and* the platform is AMD based, the
+>> fall-back cached values obtained directly from the Northbridge are used;
+>> otherwise, "NUMA_NO_NODE" is associated.
+>>
+>> There are a number of issues with this fall-back mechanism the most
+>> notable being that amd_bus.c extracts a 3-bit number from a CPU register
+>> and uses it as the node number.  The node numbers used by Linux are
+>> logical and there's no reason they need to be identical to settings in the
+>> CPU registers.  So if we have some node information obtained in the normal
+>> way (from _PXM, SLIT, SRAT, etc.) and some from amd_bus.c, there's no
+>> reason to believe they will be compatible.
+>>
+>> This patch warns when this situation occurs:
+>>   pci_root PNP0A08:00: [Firmware Bug]: No _PXM; guessing node number 0
+>>
+>> [1] https://bugzilla.kernel.org/show_bug.cgi?id=72051
+>>
+>> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+>> ---
+>>
+>>  arch/x86/pci/acpi.c |    6 +++++-
+>>  1 files changed, 5 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>> index 01edac6..80c09ba 100644
+>> --- a/arch/x86/pci/acpi.c
+>> +++ b/arch/x86/pci/acpi.c
+>> @@ -489,8 +489,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>>       }
+>>
+>>       node = acpi_get_node(device->handle);
+>> -     if (node == NUMA_NO_NODE)
+>> +     if (node == NUMA_NO_NODE) {
+>>               node = x86_pci_root_bus_node(busnum);
+>> +             if (node != NUMA_NO_NODE)
+>> +                     dev_info(&device->dev, FW_BUG "No _PXM; guessing node number %x\n",
+>
+> Hmm, I'm not really convinced this message is user-friendly enough. Can
+> we be more descriptive here please?
+>
 
- hpsa: fix NULL deref in performant mode
+How about -
+  dev_info(&device->dev, FW_BUG "no _PXM; falling back to node %d from
+hardware (may be inconsistent with ACPI node numbers)\n", node);
 
-On Thu, 2014-04-10 at 17:17 -0500, scameron@beardog.cce.hp.com wrote:
-> Without this, you'll see a null pointer dereference in
-> hpsa_enter_performant_mode().
-
-The description should be more comprehensible.
-
-I'm clear that the use before initialisation is a bug ... I'm less clear
-on why it causes an oops.
-
-> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> ---
->  drivers/scsi/hpsa.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 8cf4a0c..ef4dfdd 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -7463,6 +7463,10 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
->  	if (hpsa_simple_mode)
->  		return;
->  
-> +	trans_support = readl(&(h->cfgtable->TransportSupport));
-> +	if (!(trans_support & PERFORMANT_MODE))
-> +		return;
-> +
->  	/* Check for I/O accelerator mode support */
->  	if (trans_support & CFGTBL_Trans_io_accel1) {
->  		transMethod |= CFGTBL_Trans_io_accel1 |
-
-Shouldn't you be moving this check from its previous location, rather
-than adding a new one that makes the original obsolete?
-
-James
-
----
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 8cf4a0c..9a6e4a2 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -7463,6 +7463,10 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
- 	if (hpsa_simple_mode)
- 		return;
- 
-+	trans_support = readl(&(h->cfgtable->TransportSupport));
-+	if (!(trans_support & PERFORMANT_MODE))
-+		return;
-+
- 	/* Check for I/O accelerator mode support */
- 	if (trans_support & CFGTBL_Trans_io_accel1) {
- 		transMethod |= CFGTBL_Trans_io_accel1 |
-@@ -7479,10 +7483,6 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
- 	}
- 
- 	/* TODO, check that this next line h->nreply_queues is correct */
--	trans_support = readl(&(h->cfgtable->TransportSupport));
--	if (!(trans_support & PERFORMANT_MODE))
--		return;
--
- 	h->nreply_queues = h->msix_vector > 0 ? h->msix_vector : 1;
- 	hpsa_get_max_perf_mode_cmds(h);
- 	/* Performant mode ring buffer and supporting data structures */
-
-
+> --
+> Regards/Gruss,
+>     Boris.
+>
+> Sent from a fat crate under my desk. Formatting is fine.
+> --
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
