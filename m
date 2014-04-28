@@ -1,759 +1,392 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com,
-	jerry.hoemann@hp.com
-Subject: [PATCH 3/8] iommu/vt-d: Create intel-iommu-private.h
-Date: Thu, 24 Apr 2014 18:36:33 -0600
-Message-Id: <1398386198-19304-4-git-send-email-bill.sumner@hp.com>
-In-Reply-To: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
-References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:50819 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756161AbaD1VTd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 17:19:33 -0400
+MIME-Version: 1.0
+In-Reply-To: <20140419135219.GC8109@pd.tnic>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+	<20140419025323.2408.88764.stgit@amt.stowe>
+	<20140419135219.GC8109@pd.tnic>
+Date: Mon, 28 Apr 2014 15:19:32 -0600
+Message-ID: <CAL-B5D1UH44DvTyz=FNM-yMnct05p41P_GriUi3fXVN424R2Gg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range capabilities
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: Myron Stowe <myron.stowe@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	kim.naru@amd.com, daniel@numascale.com,
+	Thomas Gleixner <tglx@linutronix.de>, mingo@redhat.com,
+	hpa@zytor.com, x86 <x86@kernel.org>, Borislav Petkov <bp@suse.de>,
+	sp@numascale.com,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- Move the single block of #define, static inline ... ; struct definitions
- to intel-iommu-private.h from intel-iommu.c
- Replace them with #include "intel-iommu-private.h"
+On Sat, Apr 19, 2014 at 7:52 AM, Borislav Petkov <bp@alien8.de> wrote:
+> On Fri, Apr 18, 2014 at 08:53:23PM -0600, Myron Stowe wrote:
+>> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+>>
+>> This patch adds supports for additional MMIO ranges (16 ranges).  Also,
+>> each MMIO base/limit can now support up to 48-bit MMIO addresses.
+>> However, this requires initializing the ECS sooner since the new registers
+>> are in the ECS ranges.
+>>
+>> This applies for AMD Family 15h and later.
+>>
+>> Reference: Advanced Micro Devices (AMD), "BIOS and Kernel Developer's
+>> Guide (BKDG) for AMD Family 15h Models 00h-0fh Processors."  Section 3.4
+>> Device [1F:18]h Function 1 Configuration Registers;
+>>   D18F1x[1CC:180,BC:80] MMIO Base/Limit,
+>>   D18F1x[D8,D0,C8,C0] IO-Space Base,
+>>   D18F1x[DC,D4,CC,C4] IO-Space Limit,
+>> 42301 Rev 3.12 - October 11, 2012.
+>>
+>> Signed-off-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+>> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+>> Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+>> ---
+>>
+>>  arch/x86/pci/amd_bus.c |  126 +++++++++++++++++++++++++++++++++++++++---------
+>>  1 files changed, 103 insertions(+), 23 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+>> index c8cd75c..1b2895e 100644
+>> --- a/arch/x86/pci/amd_bus.c
+>> +++ b/arch/x86/pci/amd_bus.c
+>> @@ -13,11 +13,30 @@
+>>
+>>  #define AMD_NB_F0_NODE_ID                    0x60
+>>  #define AMD_NB_F0_UNIT_ID                    0x64
+>> +#define AMD_NB_F1_MMIO_BASE_REG                      0x80
+>> +#define AMD_NB_F1_MMIO_LIMIT_REG             0x84
+>> +#define AMD_NB_F1_MMIO_BASE_LIMIT_HI_REG     0x180
+>> +#define AMD_NB_F1_IO_BASE_ADDR_REG           0xc0
+>> +#define AMD_NB_F1_IO_LIMIT_ADDR_REG          0xc4
+>>  #define AMD_NB_F1_CONFIG_MAP_REG             0xe0
+>>
+>>  #define RANGE_NUM                            16
+>> +#define AMD_NB_F1_MMIO_RANGES                        16
+>> +#define AMD_NB_F1_IOPORT_RANGES                      4
+>>  #define AMD_NB_F1_CONFIG_MAP_RANGES          4
+>>
+>> +#define AMD_PCIE_CF8(bus, dev, fn, reg) \
+>> +                     (0x80000000 | \
+>> +                     ((reg & 0xF00) << 16) | \
+>> +                     ((bus & 0xF) << 16) | \
+>> +                     ((dev & 0x1F) << 11) | \
+>> +                     ((fn & 0x7) << 8) | \
+>> +                     ((reg & 0xFC)))
+>> +
+>> +static bool amd_early_ecs_enabled;
+>> +
+>> +static int __init pci_io_ecs_init(u8 bus, u8 slot);
+>
+> Please move the function above its caller instead of adding a forward
+> declaration.
+>
 
- This introduces no functional change from current behaviour.
+Patch 3/5 cleans this up
 
-Signed-off-by: Bill Sumner <bill.sumner@hp.com>
----
- drivers/iommu/intel-iommu-private.h | 363 ++++++++++++++++++++++++++++++++++++
- drivers/iommu/intel-iommu.c         | 345 +---------------------------------
- 2 files changed, 364 insertions(+), 344 deletions(-)
- create mode 100644 drivers/iommu/intel-iommu-private.h
+>> +
+>>  /*
+>>   * This discovers the pcibus <-> node mapping on AMD K8, Family 10h, 12h,
+>>   * 14h, 15h, and 16h processor based systems.  This also gets peer root bus
+>> @@ -39,6 +58,20 @@ static struct amd_hostbridge hb_probes[] __initdata = {
+>>       { 0xff, 0   , PCI_DEVICE_ID_AMD_10H_NB_HT },
+>>  };
+>>
+>> +/* This version of read_pci_config allows reading registers in the ECS area */
+>> +static inline int _amd_read_pci_config(u8 bus, u8 slot, u8 fn, u32 offset)
+>> +{
+>> +     u32 value;
+>> +
+>> +     if ((!amd_early_ecs_enabled) && (offset > 0xFF))
+>> +             return -1;
+>> +
+>> +     outl(AMD_PCIE_CF8(bus, slot, fn, offset), 0xcf8);
+>> +     value = inl(0xcfc);
+>> +
+>> +     return value;
+>> +
+>>  static struct pci_root_info __init *find_pci_root_info(int node, int link)
+>>  {
+>>       struct pci_root_info *info;
+>> @@ -48,6 +81,9 @@ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+>>               if (info->node == node && info->link == link)
+>>                       return info;
+>>
+>> +     pr_warn("AMD-Bus: WARNING: Failed to find root info for node %#x, link %#x\n",
+>
+> Prefixes like "AMD-Bus" are done using pr_fmt.
+>
 
-diff --git a/drivers/iommu/intel-iommu-private.h b/drivers/iommu/intel-iommu-private.h
-new file mode 100644
-index 0000000..480399c
---- /dev/null
-+++ b/drivers/iommu/intel-iommu-private.h
-@@ -0,0 +1,363 @@
-+/*
-+ * Copyright (c) 2006, Intel Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * Copyright (C) 2006-2008 Intel Corporation
-+ * Author: Ashok Raj <ashok.raj@intel.com>
-+ * Author: Shaohua Li <shaohua.li@intel.com>
-+ * Author: Anil S Keshavamurthy <anil.s.keshavamurthy@intel.com>
-+ * Author: Fenghua Yu <fenghua.yu@intel.com>
-+ */
-+
-+
-+#define ROOT_SIZE		VTD_PAGE_SIZE
-+#define CONTEXT_SIZE		VTD_PAGE_SIZE
-+
-+#define IS_GFX_DEVICE(pdev) ((pdev->class >> 16) == PCI_BASE_CLASS_DISPLAY)
-+#define IS_ISA_DEVICE(pdev) ((pdev->class >> 8) == PCI_CLASS_BRIDGE_ISA)
-+#define IS_AZALIA(pdev) ((pdev)->vendor == 0x8086 && (pdev)->device == 0x3a3e)
-+
-+#define IOAPIC_RANGE_START	(0xfee00000)
-+#define IOAPIC_RANGE_END	(0xfeefffff)
-+#define IOVA_START_ADDR		(0x1000)
-+
-+#define DEFAULT_DOMAIN_ADDRESS_WIDTH 48
-+
-+#define MAX_AGAW_WIDTH 64
-+#define MAX_AGAW_PFN_WIDTH	(MAX_AGAW_WIDTH - VTD_PAGE_SHIFT)
-+
-+#define __DOMAIN_MAX_PFN(gaw)  ((((uint64_t)1) << (gaw-VTD_PAGE_SHIFT)) - 1)
-+#define __DOMAIN_MAX_ADDR(gaw) ((((uint64_t)1) << gaw) - 1)
-+
-+/* We limit DOMAIN_MAX_PFN to fit in an unsigned long, and DOMAIN_MAX_ADDR
-+   to match. That way, we can use 'unsigned long' for PFNs with impunity. */
-+#define DOMAIN_MAX_PFN(gaw)	((unsigned long) min_t(uint64_t, \
-+				__DOMAIN_MAX_PFN(gaw), (unsigned long)-1))
-+#define DOMAIN_MAX_ADDR(gaw) (((uint64_t)__DOMAIN_MAX_PFN(gaw)) << \
-+					VTD_PAGE_SHIFT)
-+
-+#define IOVA_PFN(addr)		((addr) >> PAGE_SHIFT)
-+#define DMA_32BIT_PFN		IOVA_PFN(DMA_BIT_MASK(32))
-+#define DMA_64BIT_PFN		IOVA_PFN(DMA_BIT_MASK(64))
-+
-+/* page table handling */
-+#define LEVEL_STRIDE		(9)
-+#define LEVEL_MASK		(((u64)1 << LEVEL_STRIDE) - 1)
-+
-+/*
-+ * This bitmap is used to advertise the page sizes our hardware support
-+ * to the IOMMU core, which will then use this information to split
-+ * physically contiguous memory regions it is mapping into page sizes
-+ * that we support.
-+ *
-+ * Traditionally the IOMMU core just handed us the mappings directly,
-+ * after making sure the size is an order of a 4KiB page and that the
-+ * mapping has natural alignment.
-+ *
-+ * To retain this behavior, we currently advertise that we support
-+ * all page sizes that are an order of 4KiB.
-+ *
-+ * If at some point we'd like to utilize the IOMMU core's new behavior,
-+ * we could change this to advertise the real page sizes we support.
-+ */
-+#define INTEL_IOMMU_PGSIZES	(~0xFFFUL)
-+
-+static inline int agaw_to_level(int agaw)
-+{
-+	return agaw + 2;
-+}
-+
-+static inline int agaw_to_width(int agaw)
-+{
-+	return min_t(int, 30 + agaw * LEVEL_STRIDE, MAX_AGAW_WIDTH);
-+}
-+
-+static inline int width_to_agaw(int width)
-+{
-+	return DIV_ROUND_UP(width - 30, LEVEL_STRIDE);
-+}
-+
-+static inline unsigned int level_to_offset_bits(int level)
-+{
-+	return (level - 1) * LEVEL_STRIDE;
-+}
-+
-+static inline int pfn_level_offset(unsigned long pfn, int level)
-+{
-+	return (pfn >> level_to_offset_bits(level)) & LEVEL_MASK;
-+}
-+
-+static inline unsigned long level_mask(int level)
-+{
-+	return -1UL << level_to_offset_bits(level);
-+}
-+
-+static inline unsigned long level_size(int level)
-+{
-+	return 1UL << level_to_offset_bits(level);
-+}
-+
-+static inline unsigned long align_to_level(unsigned long pfn, int level)
-+{
-+	return (pfn + level_size(level) - 1) & level_mask(level);
-+}
-+
-+static inline unsigned long lvl_to_nr_pages(unsigned int lvl)
-+{
-+	return  1 << min_t(int, (lvl - 1) * LEVEL_STRIDE, MAX_AGAW_PFN_WIDTH);
-+}
-+
-+/* VT-d pages must always be _smaller_ than MM pages. Otherwise things
-+   are never going to work. */
-+static inline unsigned long dma_to_mm_pfn(unsigned long dma_pfn)
-+{
-+	return dma_pfn >> (PAGE_SHIFT - VTD_PAGE_SHIFT);
-+}
-+
-+static inline unsigned long mm_to_dma_pfn(unsigned long mm_pfn)
-+{
-+	return mm_pfn << (PAGE_SHIFT - VTD_PAGE_SHIFT);
-+}
-+static inline unsigned long page_to_dma_pfn(struct page *pg)
-+{
-+	return mm_to_dma_pfn(page_to_pfn(pg));
-+}
-+static inline unsigned long virt_to_dma_pfn(void *p)
-+{
-+	return page_to_dma_pfn(virt_to_page(p));
-+}
-+
-+
-+/*
-+ * 0: Present
-+ * 1-11: Reserved
-+ * 12-63: Context Ptr (12 - (haw-1))
-+ * 64-127: Reserved
-+ */
-+struct root_entry {
-+	u64	val;
-+	u64	rsvd1;
-+};
-+#define ROOT_ENTRY_NR (VTD_PAGE_SIZE/sizeof(struct root_entry))
-+static inline bool root_present(struct root_entry *root)
-+{
-+	return root->val & 1;
-+}
-+static inline void set_root_present(struct root_entry *root)
-+{
-+	root->val |= 1;
-+}
-+static inline void set_root_value(struct root_entry *root, unsigned long value)
-+{
-+	root->val |= value & VTD_PAGE_MASK;
-+}
-+
-+static inline struct context_entry *
-+get_context_addr_from_root(struct root_entry *root)
-+{
-+	return (struct context_entry *)
-+		(root_present(root)?phys_to_virt(
-+		root->val & VTD_PAGE_MASK) :
-+		NULL);
-+}
-+
-+/*
-+ * low 64 bits:
-+ * 0: present
-+ * 1: fault processing disable
-+ * 2-3: translation type
-+ * 12-63: address space root
-+ * high 64 bits:
-+ * 0-2: address width
-+ * 3-6: aval
-+ * 8-23: domain id
-+ */
-+struct context_entry {
-+	u64 lo;
-+	u64 hi;
-+};
-+
-+static inline bool context_present(struct context_entry *context)
-+{
-+	return context->lo & 1;
-+}
-+static inline void context_set_present(struct context_entry *context)
-+{
-+	context->lo |= 1;
-+}
-+
-+static inline void context_set_fault_enable(struct context_entry *context)
-+{
-+	context->lo &= (((u64)-1) << 2) | 1;
-+}
-+
-+static inline void context_set_translation_type(struct context_entry *context,
-+						unsigned long value)
-+{
-+	context->lo &= (((u64)-1) << 4) | 3;
-+	context->lo |= (value & 3) << 2;
-+}
-+
-+static inline void context_set_address_root(struct context_entry *context,
-+					    unsigned long value)
-+{
-+	context->lo |= value & VTD_PAGE_MASK;
-+}
-+
-+static inline void context_set_address_width(struct context_entry *context,
-+					     unsigned long value)
-+{
-+	context->hi |= value & 7;
-+}
-+
-+static inline void context_set_domain_id(struct context_entry *context,
-+					 unsigned long value)
-+{
-+	context->hi |= (value & ((1 << 16) - 1)) << 8;
-+}
-+
-+static inline void context_clear_entry(struct context_entry *context)
-+{
-+	context->lo = 0;
-+	context->hi = 0;
-+}
-+
-+/*
-+ * 0: readable
-+ * 1: writable
-+ * 2-6: reserved
-+ * 7: super page
-+ * 8-10: available
-+ * 11: snoop behavior
-+ * 12-63: Host physcial address
-+ */
-+struct dma_pte {
-+	u64 val;
-+};
-+
-+static inline void dma_clear_pte(struct dma_pte *pte)
-+{
-+	pte->val = 0;
-+}
-+
-+static inline u64 dma_pte_addr(struct dma_pte *pte)
-+{
-+#ifdef CONFIG_64BIT
-+	return pte->val & VTD_PAGE_MASK;
-+#else
-+	/* Must have a full atomic 64-bit read */
-+	return  __cmpxchg64(&pte->val, 0ULL, 0ULL) & VTD_PAGE_MASK;
-+#endif
-+}
-+
-+static inline bool dma_pte_present(struct dma_pte *pte)
-+{
-+	return (pte->val & 3) != 0;
-+}
-+
-+static inline bool dma_pte_superpage(struct dma_pte *pte)
-+{
-+	return pte->val & (1 << 7);
-+}
-+
-+static inline int first_pte_in_page(struct dma_pte *pte)
-+{
-+	return !((unsigned long)pte & ~VTD_PAGE_MASK);
-+}
-+
-+/* devices under the same p2p bridge are owned in one domain */
-+#define DOMAIN_FLAG_P2P_MULTIPLE_DEVICES (1 << 0)
-+
-+/* domain represents a virtual machine, more than one devices
-+ * across iommus may be owned in one domain, e.g. kvm guest.
-+ */
-+#define DOMAIN_FLAG_VIRTUAL_MACHINE	(1 << 1)
-+
-+/* si_domain contains mulitple devices */
-+#define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 2)
-+
-+/* define the limit of IOMMUs supported in each domain */
-+#ifdef	CONFIG_X86
-+# define	IOMMU_UNITS_SUPPORTED	MAX_IO_APICS
-+#else
-+# define	IOMMU_UNITS_SUPPORTED	64
-+#endif
-+
-+struct dmar_domain {
-+	int	id;			/* domain id */
-+	int	nid;			/* node id */
-+	DECLARE_BITMAP(iommu_bmp, IOMMU_UNITS_SUPPORTED);
-+					/* bitmap of iommus this domain uses*/
-+
-+	struct list_head devices;	/* all devices' list */
-+	struct iova_domain iovad;	/* iova's that belong to this domain */
-+
-+	struct dma_pte	*pgd;		/* virtual address */
-+	int		gaw;		/* max guest address width */
-+
-+	/* adjusted guest address width, 0 is level 2 30-bit */
-+	int		agaw;
-+
-+	int		flags;		/* flags to find out type of domain */
-+
-+	int		iommu_coherency;/* indicate coherency of iommu access */
-+	int		iommu_snooping; /* indicate snooping control feature*/
-+	int		iommu_count;	/* reference count of iommu */
-+	int		iommu_superpage;/* Level of superpages supported:
-+					   0 == 4KiB (no superpages), 1 == 2MiB,
-+					   2 == 1GiB, 3 == 512GiB, 4 == 1TiB */
-+	spinlock_t	iommu_lock;	/* protect iommu set in domain */
-+	u64		max_addr;	/* maximum mapped address */
-+};
-+
-+/* PCI domain-device relationship */
-+struct device_domain_info {
-+	struct list_head link;	/* link to domain siblings */
-+	struct list_head global; /* link to global list */
-+	u8 bus;			/* PCI bus number */
-+	u8 devfn;		/* PCI devfn number */
-+	struct device *dev; /* it's NULL for PCIe-to-PCI bridge */
-+	struct intel_iommu *iommu; /* IOMMU used by this device */
-+	struct dmar_domain *domain; /* pointer to domain */
-+};
-+
-+struct dmar_rmrr_unit {
-+	struct list_head list;		/* list of rmrr units	*/
-+	struct acpi_dmar_header *hdr;	/* ACPI header		*/
-+	u64	base_address;		/* reserved base address*/
-+	u64	end_address;		/* reserved end address */
-+	struct dmar_dev_scope *devices;	/* target devices */
-+	int	devices_cnt;		/* target device count */
-+};
-+
-+struct dmar_atsr_unit {
-+	struct list_head list;		/* list of ATSR units */
-+	struct acpi_dmar_header *hdr;	/* ACPI header */
-+	struct dmar_dev_scope *devices;	/* target devices */
-+	int devices_cnt;		/* target device count */
-+	u8 include_all:1;		/* include all ports */
-+};
-+
-+static inline void *alloc_pgtable_page(int node)
-+{
-+	struct page *page;
-+	void *vaddr = NULL;
-+
-+	page = alloc_pages_node(node, GFP_ATOMIC | __GFP_ZERO, 0);
-+	if (page)
-+		vaddr = page_address(page);
-+	return vaddr;
-+}
-+
-+static inline void free_pgtable_page(void *vaddr)
-+{
-+	free_page((unsigned long)vaddr);
-+}
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 49fdac5..4116377 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -45,350 +45,7 @@
- 
- #include "irq_remapping.h"
- #include "pci.h"
--
--#define ROOT_SIZE		VTD_PAGE_SIZE
--#define CONTEXT_SIZE		VTD_PAGE_SIZE
--
--#define IS_GFX_DEVICE(pdev) ((pdev->class >> 16) == PCI_BASE_CLASS_DISPLAY)
--#define IS_ISA_DEVICE(pdev) ((pdev->class >> 8) == PCI_CLASS_BRIDGE_ISA)
--#define IS_AZALIA(pdev) ((pdev)->vendor == 0x8086 && (pdev)->device == 0x3a3e)
--
--#define IOAPIC_RANGE_START	(0xfee00000)
--#define IOAPIC_RANGE_END	(0xfeefffff)
--#define IOVA_START_ADDR		(0x1000)
--
--#define DEFAULT_DOMAIN_ADDRESS_WIDTH 48
--
--#define MAX_AGAW_WIDTH 64
--#define MAX_AGAW_PFN_WIDTH	(MAX_AGAW_WIDTH - VTD_PAGE_SHIFT)
--
--#define __DOMAIN_MAX_PFN(gaw)  ((((uint64_t)1) << (gaw-VTD_PAGE_SHIFT)) - 1)
--#define __DOMAIN_MAX_ADDR(gaw) ((((uint64_t)1) << gaw) - 1)
--
--/* We limit DOMAIN_MAX_PFN to fit in an unsigned long, and DOMAIN_MAX_ADDR
--   to match. That way, we can use 'unsigned long' for PFNs with impunity. */
--#define DOMAIN_MAX_PFN(gaw)	((unsigned long) min_t(uint64_t, \
--				__DOMAIN_MAX_PFN(gaw), (unsigned long)-1))
--#define DOMAIN_MAX_ADDR(gaw) (((uint64_t)__DOMAIN_MAX_PFN(gaw)) << \
--					VTD_PAGE_SHIFT)
--
--#define IOVA_PFN(addr)		((addr) >> PAGE_SHIFT)
--#define DMA_32BIT_PFN		IOVA_PFN(DMA_BIT_MASK(32))
--#define DMA_64BIT_PFN		IOVA_PFN(DMA_BIT_MASK(64))
--
--/* page table handling */
--#define LEVEL_STRIDE		(9)
--#define LEVEL_MASK		(((u64)1 << LEVEL_STRIDE) - 1)
--
--/*
-- * This bitmap is used to advertise the page sizes our hardware support
-- * to the IOMMU core, which will then use this information to split
-- * physically contiguous memory regions it is mapping into page sizes
-- * that we support.
-- *
-- * Traditionally the IOMMU core just handed us the mappings directly,
-- * after making sure the size is an order of a 4KiB page and that the
-- * mapping has natural alignment.
-- *
-- * To retain this behavior, we currently advertise that we support
-- * all page sizes that are an order of 4KiB.
-- *
-- * If at some point we'd like to utilize the IOMMU core's new behavior,
-- * we could change this to advertise the real page sizes we support.
-- */
--#define INTEL_IOMMU_PGSIZES	(~0xFFFUL)
--
--static inline int agaw_to_level(int agaw)
--{
--	return agaw + 2;
--}
--
--static inline int agaw_to_width(int agaw)
--{
--	return min_t(int, 30 + agaw * LEVEL_STRIDE, MAX_AGAW_WIDTH);
--}
--
--static inline int width_to_agaw(int width)
--{
--	return DIV_ROUND_UP(width - 30, LEVEL_STRIDE);
--}
--
--static inline unsigned int level_to_offset_bits(int level)
--{
--	return (level - 1) * LEVEL_STRIDE;
--}
--
--static inline int pfn_level_offset(unsigned long pfn, int level)
--{
--	return (pfn >> level_to_offset_bits(level)) & LEVEL_MASK;
--}
--
--static inline unsigned long level_mask(int level)
--{
--	return -1UL << level_to_offset_bits(level);
--}
--
--static inline unsigned long level_size(int level)
--{
--	return 1UL << level_to_offset_bits(level);
--}
--
--static inline unsigned long align_to_level(unsigned long pfn, int level)
--{
--	return (pfn + level_size(level) - 1) & level_mask(level);
--}
--
--static inline unsigned long lvl_to_nr_pages(unsigned int lvl)
--{
--	return  1 << min_t(int, (lvl - 1) * LEVEL_STRIDE, MAX_AGAW_PFN_WIDTH);
--}
--
--/* VT-d pages must always be _smaller_ than MM pages. Otherwise things
--   are never going to work. */
--static inline unsigned long dma_to_mm_pfn(unsigned long dma_pfn)
--{
--	return dma_pfn >> (PAGE_SHIFT - VTD_PAGE_SHIFT);
--}
--
--static inline unsigned long mm_to_dma_pfn(unsigned long mm_pfn)
--{
--	return mm_pfn << (PAGE_SHIFT - VTD_PAGE_SHIFT);
--}
--static inline unsigned long page_to_dma_pfn(struct page *pg)
--{
--	return mm_to_dma_pfn(page_to_pfn(pg));
--}
--static inline unsigned long virt_to_dma_pfn(void *p)
--{
--	return page_to_dma_pfn(virt_to_page(p));
--}
--
--
--/*
-- * 0: Present
-- * 1-11: Reserved
-- * 12-63: Context Ptr (12 - (haw-1))
-- * 64-127: Reserved
-- */
--struct root_entry {
--	u64	val;
--	u64	rsvd1;
--};
--#define ROOT_ENTRY_NR (VTD_PAGE_SIZE/sizeof(struct root_entry))
--static inline bool root_present(struct root_entry *root)
--{
--	return root->val & 1;
--}
--static inline void set_root_present(struct root_entry *root)
--{
--	root->val |= 1;
--}
--static inline void set_root_value(struct root_entry *root, unsigned long value)
--{
--	root->val |= value & VTD_PAGE_MASK;
--}
--
--static inline struct context_entry *
--get_context_addr_from_root(struct root_entry *root)
--{
--	return (struct context_entry *)
--		(root_present(root)?phys_to_virt(
--		root->val & VTD_PAGE_MASK) :
--		NULL);
--}
--
--/*
-- * low 64 bits:
-- * 0: present
-- * 1: fault processing disable
-- * 2-3: translation type
-- * 12-63: address space root
-- * high 64 bits:
-- * 0-2: address width
-- * 3-6: aval
-- * 8-23: domain id
-- */
--struct context_entry {
--	u64 lo;
--	u64 hi;
--};
--
--static inline bool context_present(struct context_entry *context)
--{
--	return context->lo & 1;
--}
--static inline void context_set_present(struct context_entry *context)
--{
--	context->lo |= 1;
--}
--
--static inline void context_set_fault_enable(struct context_entry *context)
--{
--	context->lo &= (((u64)-1) << 2) | 1;
--}
--
--static inline void context_set_translation_type(struct context_entry *context,
--						unsigned long value)
--{
--	context->lo &= (((u64)-1) << 4) | 3;
--	context->lo |= (value & 3) << 2;
--}
--
--static inline void context_set_address_root(struct context_entry *context,
--					    unsigned long value)
--{
--	context->lo |= value & VTD_PAGE_MASK;
--}
--
--static inline void context_set_address_width(struct context_entry *context,
--					     unsigned long value)
--{
--	context->hi |= value & 7;
--}
--
--static inline void context_set_domain_id(struct context_entry *context,
--					 unsigned long value)
--{
--	context->hi |= (value & ((1 << 16) - 1)) << 8;
--}
--
--static inline void context_clear_entry(struct context_entry *context)
--{
--	context->lo = 0;
--	context->hi = 0;
--}
--
--/*
-- * 0: readable
-- * 1: writable
-- * 2-6: reserved
-- * 7: super page
-- * 8-10: available
-- * 11: snoop behavior
-- * 12-63: Host physcial address
-- */
--struct dma_pte {
--	u64 val;
--};
--
--static inline void dma_clear_pte(struct dma_pte *pte)
--{
--	pte->val = 0;
--}
--
--static inline u64 dma_pte_addr(struct dma_pte *pte)
--{
--#ifdef CONFIG_64BIT
--	return pte->val & VTD_PAGE_MASK;
--#else
--	/* Must have a full atomic 64-bit read */
--	return  __cmpxchg64(&pte->val, 0ULL, 0ULL) & VTD_PAGE_MASK;
--#endif
--}
--
--static inline bool dma_pte_present(struct dma_pte *pte)
--{
--	return (pte->val & 3) != 0;
--}
--
--static inline bool dma_pte_superpage(struct dma_pte *pte)
--{
--	return pte->val & (1 << 7);
--}
--
--static inline int first_pte_in_page(struct dma_pte *pte)
--{
--	return !((unsigned long)pte & ~VTD_PAGE_MASK);
--}
--
--/* devices under the same p2p bridge are owned in one domain */
--#define DOMAIN_FLAG_P2P_MULTIPLE_DEVICES (1 << 0)
--
--/* domain represents a virtual machine, more than one devices
-- * across iommus may be owned in one domain, e.g. kvm guest.
-- */
--#define DOMAIN_FLAG_VIRTUAL_MACHINE	(1 << 1)
--
--/* si_domain contains mulitple devices */
--#define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 2)
--
--/* define the limit of IOMMUs supported in each domain */
--#ifdef	CONFIG_X86
--# define	IOMMU_UNITS_SUPPORTED	MAX_IO_APICS
--#else
--# define	IOMMU_UNITS_SUPPORTED	64
--#endif
--
--struct dmar_domain {
--	int	id;			/* domain id */
--	int	nid;			/* node id */
--	DECLARE_BITMAP(iommu_bmp, IOMMU_UNITS_SUPPORTED);
--					/* bitmap of iommus this domain uses*/
--
--	struct list_head devices;	/* all devices' list */
--	struct iova_domain iovad;	/* iova's that belong to this domain */
--
--	struct dma_pte	*pgd;		/* virtual address */
--	int		gaw;		/* max guest address width */
--
--	/* adjusted guest address width, 0 is level 2 30-bit */
--	int		agaw;
--
--	int		flags;		/* flags to find out type of domain */
--
--	int		iommu_coherency;/* indicate coherency of iommu access */
--	int		iommu_snooping; /* indicate snooping control feature*/
--	int		iommu_count;	/* reference count of iommu */
--	int		iommu_superpage;/* Level of superpages supported:
--					   0 == 4KiB (no superpages), 1 == 2MiB,
--					   2 == 1GiB, 3 == 512GiB, 4 == 1TiB */
--	spinlock_t	iommu_lock;	/* protect iommu set in domain */
--	u64		max_addr;	/* maximum mapped address */
--};
--
--/* PCI domain-device relationship */
--struct device_domain_info {
--	struct list_head link;	/* link to domain siblings */
--	struct list_head global; /* link to global list */
--	u8 bus;			/* PCI bus number */
--	u8 devfn;		/* PCI devfn number */
--	struct device *dev; /* it's NULL for PCIe-to-PCI bridge */
--	struct intel_iommu *iommu; /* IOMMU used by this device */
--	struct dmar_domain *domain; /* pointer to domain */
--};
--
--struct dmar_rmrr_unit {
--	struct list_head list;		/* list of rmrr units	*/
--	struct acpi_dmar_header *hdr;	/* ACPI header		*/
--	u64	base_address;		/* reserved base address*/
--	u64	end_address;		/* reserved end address */
--	struct dmar_dev_scope *devices;	/* target devices */
--	int	devices_cnt;		/* target device count */
--};
--
--struct dmar_atsr_unit {
--	struct list_head list;		/* list of ATSR units */
--	struct acpi_dmar_header *hdr;	/* ACPI header */
--	struct dmar_dev_scope *devices;	/* target devices */
--	int devices_cnt;		/* target device count */
--	u8 include_all:1;		/* include all ports */
--};
--
--static inline void *alloc_pgtable_page(int node)
--{
--	struct page *page;
--	void *vaddr = NULL;
--
--	page = alloc_pages_node(node, GFP_ATOMIC | __GFP_ZERO, 0);
--	if (page)
--		vaddr = page_address(page);
--	return vaddr;
--}
--
--static inline void free_pgtable_page(void *vaddr)
--{
--	free_page((unsigned long)vaddr);
--}
-+#include "intel-iommu-private.h"
- 
- static LIST_HEAD(dmar_atsr_units);
- static LIST_HEAD(dmar_rmrr_units);
--- 
-Bill Sumner <bill.sumner@hp.com>
+Ok, I incorporated pr_fmt changes into patch 3/5
 
+>> +             node, link);
+>> +
+>>       return NULL;
+>>  }
+>>
+>> @@ -118,6 +154,12 @@ static int __init early_fill_mp_bus_info(void)
+>>
+>>       pr_debug("Found AMD hostbridge at %x:%x.0\n", bus, slot);
+>>
+>> +     /* We enable ECS mode prior to probing MMIO as MMIO related registers
+>> +      * are in the ECS area.
+>> +      */
+>> +     pci_io_ecs_init(bus, slot);
+>
+> Well, if enabling the ECS failed somehow, you probably want to save
+> yourself the _amd_read_pci_config() calls further down.
+>
+> Which means:
+>
+> * you should propagate an error code from that pci_io_ecs_init() function
+>
+> * you can carve out the huge loop iterating over AMD_NB_F1_MMIO_RANGES
+> along with the pci ECS enablement call to pci_io_ecs_init into a
+> separate function and thus slim down that huge early_fill_mp_bus_info()
+> monster a bit.
+>
+
+Yes but this was not trivial since most, if not all, usages ignore any
+return value.
+
+I'm wanting to focus on just fixing the issue for the most part and
+making as few changes as possible.  This is primarly due to:
+  o  The lack of engagement by the AMD engineers (Suravee posted these
+changes but has since been unresponsive),
+  o  As Bjorn just mentioned, we would like to get rid of this entire
+file (as we did in a similar manner with intel_bus) as it is just an
+"endless treadmill" that needs attention with every new HW release,
+  o  I want my name to be minimally related to this  ;)
+
+>> +
+>> +     found = false;
+>>       for (i = 0; i < AMD_NB_F1_CONFIG_MAP_RANGES; i++) {
+>>               int min_bus;
+>>               int max_bus;
+>> @@ -128,6 +170,7 @@ static int __init early_fill_mp_bus_info(void)
+>>               if ((reg & 7) != 3)
+>>                       continue;
+>>
+>> +             found = true;
+>>               min_bus = (reg >> 16) & 0xff;
+>>               max_bus = (reg >> 24) & 0xff;
+>>               node = (reg >> 4) & 0x07;
+>> @@ -136,6 +179,13 @@ static int __init early_fill_mp_bus_info(void)
+>>               info = alloc_pci_root_info(min_bus, max_bus, node, link);
+>>       }
+>>
+>> +     if (!found) {
+>> +             /* In case there is no AMDNB_F1_CONFIG_MAP_REGs,
+>> +              * we just use default to bus 0, node 0 link 0)
+>> +              */
+>> +             info = alloc_pci_root_info(0, 0, 0, 0);
+>> +     }
+>
+> No need for curly braces around a single statement - simply put the
+> comment before the if (...).
+>
+
+Done
+
+>> +
+>>       /* get the default node and link for left over res */
+>>       reg = read_pci_config(bus, slot, 0, AMD_NB_F0_NODE_ID);
+>>       def_node = (reg >> 8) & 0x07;
+>> @@ -144,14 +194,17 @@ static int __init early_fill_mp_bus_info(void)
+>>
+>>       memset(range, 0, sizeof(range));
+>>       add_range(range, RANGE_NUM, 0, 0, 0xffff + 1);
+>> +
+>>       /* io port resource */
+>> -     for (i = 0; i < 4; i++) {
+>> -             reg = read_pci_config(bus, slot, 1, 0xc0 + (i << 3));
+>> +     for (i = 0; i < AMD_NB_F1_IOPORT_RANGES; i++) {
+>> +             reg = read_pci_config(bus, slot, 1,
+>> +                             AMD_NB_F1_IO_BASE_ADDR_REG + (i << 3));
+>>               if (!(reg & 3))
+>>                       continue;
+>>
+>>               start = reg & 0xfff000;
+>> -             reg = read_pci_config(bus, slot, 1, 0xc4 + (i << 3));
+>> +             reg = read_pci_config(bus, slot, 1,
+>> +                             AMD_NB_F1_IO_LIMIT_ADDR_REG + (i << 3));
+>>               node = reg & 0x07;
+>>               link = (reg >> 4) & 0x03;
+>>               end = (reg & 0xfff000) | 0xfff;
+>> @@ -169,6 +222,7 @@ static int __init early_fill_mp_bus_info(void)
+>>               update_res(info, start, end, IORESOURCE_IO, 1);
+>>               subtract_range(range, RANGE_NUM, start, end + 1);
+>>       }
+>> +
+>>       /* add left over io port range to def node/link, [0, 0xffff] */
+>>       /* find the position */
+>>       info = find_pci_root_info(def_node, def_link);
+>> @@ -211,22 +265,46 @@ static int __init early_fill_mp_bus_info(void)
+>>       }
+>>
+>>       /* mmio resource */
+>> -     for (i = 0; i < 8; i++) {
+>> -             reg = read_pci_config(bus, slot, 1, 0x80 + (i << 3));
+>> +     for (i = 0; i < AMD_NB_F1_MMIO_RANGES; i++) {
+>> +             u64 tmp;
+>> +             u32 base = AMD_NB_F1_MMIO_BASE_REG + (i << 3);
+>> +             u32 limit = AMD_NB_F1_MMIO_LIMIT_REG + (i << 3);
+>> +             u32 base_limit_hi = AMD_NB_F1_MMIO_BASE_LIMIT_HI_REG + (i << 2);
+>> +
+>> +             if (i >= 12) {
+>> +                     /* Range 12 base/limit starts at 0x2A0 */
+>> +                     base += 0x1c0;
+>> +                     limit += 0x1c0;
+>> +                     /* Range 12 base/limit hi starts at 0x2C0 */
+>> +                     base_limit_hi += 0x110;
+>> +             } else if (i >= 8) {
+>> +                     /* Range 8 base/limit starts at 0x1A0 */
+>> +                     base += 0xe0;
+>> +                     limit += 0xe0;
+>> +                     /* Range 12 base/limit hi starts at 0x1C0 */
+>> +                     base_limit_hi += 0x20;
+>> +             }
+>> +
+>> +             /* Base lo */
+>> +             reg = _amd_read_pci_config(bus, slot, 1, base);
+>>               if (!(reg & 3))
+>>                       continue;
+>>
+>> -             start = reg & 0xffffff00; /* 39:16 on 31:8*/
+>> -             start <<= 8;
+>> -             reg = read_pci_config(bus, slot, 1, 0x84 + (i << 3));
+>> +             start = (reg & 0xffffff00UL) << 8;      /* 39:16 on 31:8 */
+>> +
+>> +             /* Limit lo */
+>> +             reg = _amd_read_pci_config(bus, slot, 1, limit);
+>>               node = reg & 0x07;
+>>               link = (reg >> 4) & 0x03;
+>> -             end = (reg & 0xffffff00);
+>> -             end <<= 8;
+>> -             end |= 0xffff;
+>> +             end = (reg & 0xffffff00UL) << 8;        /* 39:16 on 31:8 */
+>> +             end |= 0xffffUL;
+>>
+>> -             info = find_pci_root_info(node, link);
+>> +             /* Base/Limit hi */
+>> +             tmp = _amd_read_pci_config(bus, slot, 1, base_limit_hi);
+>> +             start |= ((tmp & 0xffUL) << 40);
+>> +             end |= ((tmp & (0xffUL << 16)) << 24);
+>>
+>> +             info = find_pci_root_info(node, link);
+>>               if (!info)
+>>                       continue;
+>>
+>> @@ -354,20 +432,24 @@ static struct notifier_block amd_cpu_notifier = {
+>>       .notifier_call  = amd_cpu_notify,
+>>  };
+>>
+>> -static void __init pci_enable_pci_io_ecs(void)
+>> +static void __init pci_enable_pci_io_ecs(u8 bus, u8 slot)
+>>  {
+>>  #ifdef CONFIG_AMD_NB
+>>       unsigned int i, n;
+>> +     u8 limit;
+>>
+>>       for (n = i = 0; !n && amd_nb_bus_dev_ranges[i].dev_limit; ++i) {
+>> -             u8 bus = amd_nb_bus_dev_ranges[i].bus;
+>> -             u8 slot = amd_nb_bus_dev_ranges[i].dev_base;
+>> -             u8 limit = amd_nb_bus_dev_ranges[i].dev_limit;
+>> +             /* Try matching for the bus range */
+>> +             if ((bus != amd_nb_bus_dev_ranges[i].bus) ||
+>> +                 (slot != amd_nb_bus_dev_ranges[i].dev_base))
+>> +                     continue;
+>> +
+>> +             limit = amd_nb_bus_dev_ranges[i].dev_limit;
+>>
+>> +             /* Setup all northbridges within the range */
+>>               for (; slot < limit; ++slot) {
+>>                       u32 val = read_pci_config(bus, slot, 3, 0);
+>> -
+>> -                     if (!early_is_amd_nb(val))
+>> +                     if (!val)
+>>                               continue;
+>>
+>>                       val = read_pci_config(bus, slot, 3, 0x8c);
+>> @@ -375,13 +457,14 @@ static void __init pci_enable_pci_io_ecs(void)
+>>                               val |= ENABLE_CF8_EXT_CFG >> 32;
+>
+> What a fun shifting!
+>
+> Maybe you should do
+>
+> #define ENABLE_CF8_EXT_CFG      BIT(46 - 32)
+>
+> to show exactly what you mean and how the bit is defined in MSR NB_CFG1
+> and also show how the high 32-bits are mapped into F3x8c, while at it.
+>
+> And then you can drop the shifting at the call site.
+>
+>
+
+Yes, this confused me at first also so I added an additional ENABLE_CF8_EXT_CFG
+
+>>                               write_pci_config(bus, slot, 3, 0x8c, val);
+>>                       }
+>> +                     amd_early_ecs_enabled = true;
+>
+> You probably should check whether the PCI config write stuck before
+> setting this.
+>
+>>                       ++n;
+>>               }
+>>       }
+>>  #endif
+>>  }
+>>
+>> -static int __init pci_io_ecs_init(void)
+>> +static int __init pci_io_ecs_init(u8 bus, u8 slot)
+>>  {
+>>       int cpu;
+>>
+>> @@ -389,9 +472,7 @@ static int __init pci_io_ecs_init(void)
+>>          if (boot_cpu_data.x86 < 0x10)
+>>               return 0;
+>>
+>> -     /* Try the PCI method first. */
+>> -     if (early_pci_allowed())
+>> -             pci_enable_pci_io_ecs();
+>
+> Where did the if-check go?
+>
+
+Good catch.  I assume Suravee didn't drop this on purpose?
+
+>> +     pci_enable_pci_io_ecs(bus, slot);
+>>
+>>       cpu_notifier_register_begin();
+>>       for_each_online_cpu(cpu)
+>> @@ -411,7 +492,6 @@ static int __init amd_postcore_init(void)
+>>               return 0;
+>>
+>>       early_fill_mp_bus_info();
+>> -     pci_io_ecs_init();
+>>
+>>       return 0;
+>>  }
+>>
+>
+> --
+> Regards/Gruss,
+>     Boris.
+>
+> Sent from a fat crate under my desk. Formatting is fine.
+> --
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
