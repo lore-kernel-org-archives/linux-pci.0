@@ -1,79 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com,
-	jerry.hoemann@hp.com
-Subject: [PATCH 7/8] iommu/vt-d: Add domain-id functions to intel-iommu-kdump.c
-Date: Thu, 24 Apr 2014 18:36:37 -0600
-Message-Id: <1398386198-19304-8-git-send-email-bill.sumner@hp.com>
-In-Reply-To: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
-References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:60548 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753974AbaD1VVu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 17:21:50 -0400
+MIME-Version: 1.0
+In-Reply-To: <20140420080203.GB19672@pd.tnic>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+	<20140419025331.2408.40589.stgit@amt.stowe>
+	<20140420080203.GB19672@pd.tnic>
+Date: Mon, 28 Apr 2014 15:21:49 -0600
+Message-ID: <CAL-B5D2yYyig6zEyjFHSiJrp83XL1SHuR=ETJMbp3uEVT9smhw@mail.gmail.com>
+Subject: Re: [PATCH v2 3/5] x86/PCI: Miscellaneous code clean up for early_fillup_mp_bus_info
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Borislav Petkov <bp@suse.de>
+Cc: Myron Stowe <myron.stowe@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	kim.naru@amd.com, daniel@numascale.com,
+	Thomas Gleixner <tglx@linutronix.de>, mingo@redhat.com,
+	hpa@zytor.com, x86 <x86@kernel.org>, sp@numascale.com,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Interfaces for when a new domain in the crashdump kernel needs some
-values from the panicked kernel's context entries.
+On Sun, Apr 20, 2014 at 2:02 AM, Borislav Petkov <bp@suse.de> wrote:
+> On Fri, Apr 18, 2014 at 08:53:31PM -0600, Myron Stowe wrote:
+>> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+>>
+>> * Refactoring of the early_fill_mp_bus_info function into multiple helper
+>>   functions since it is getting long, and difficult to follow.
+>
+> Much better.
+>
 
-Signed-off-by: Bill Sumner <bill.sumner@hp.com>
----
- drivers/iommu/intel-iommu-kdump.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+Yes, it had become too big!
 
-diff --git a/drivers/iommu/intel-iommu-kdump.c b/drivers/iommu/intel-iommu-kdump.c
-index 4e653e048..f3c777e 100644
---- a/drivers/iommu/intel-iommu-kdump.c
-+++ b/drivers/iommu/intel-iommu-kdump.c
-@@ -53,6 +53,45 @@ static struct list_head *domain_values_list;
- 
- 
- /* ========================================================================
-+ * Interfaces for when a new domain in the crashdump kernel needs some
-+ * values from the panicked kernel's context entries
-+ * ------------------------------------------------------------------------
-+ */
-+
-+
-+struct domain_values_entry *intel_iommu_did_to_domain_values_entry(int did,
-+		struct intel_iommu *iommu)
-+{
-+	struct domain_values_entry *dve;	/* iterator */
-+
-+	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link)
-+		if (dve->did == did)
-+			return dve;
-+	return NULL;
-+}
-+
-+
-+/* Mark domain-id's from old kernel as in-use on this iommu so that a new
-+ * domain-id is allocated in the case where there is a device in the new kernel
-+ * that was not in the old kernel -- and therefore a new domain-id is needed.
-+ */
-+int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu)
-+{
-+	struct domain_values_entry *dve;	/* iterator */
-+
-+	pr_info("IOMMU:%d Domain ids from panicked kernel:\n", iommu->seq_id);
-+
-+	list_for_each_entry(dve, &domain_values_list[iommu->seq_id], link) {
-+		set_bit(dve->did, iommu->domain_ids);
-+		pr_info("DID did:%d(0x%4.4x)\n", dve->did, dve->did);
-+	}
-+
-+	pr_info("----------------------------------------\n");
-+	return 0;
-+}
-+
-+
-+/* ========================================================================
-  * Copy iommu translation tables from old kernel into new  kernel.
-  * Entry to this set of functions is: intel_iommu_copy_translation_tables()
-  * ------------------------------------------------------------------------
--- 
-Bill Sumner <bill.sumner@hp.com>
+>> * Merge early_fill_mp_bus_info into amd_postcore_init as there is no need to
+>>   have this as a separate function.
+>>
+>> * Use pr_xxx instead of printk
+>
+> You can convert the printk(KERN_CONT -> pr_cont( too, while at it.
+> Although, this would prepend the fmt thing on every line ...
+>
 
+Yeah, I ignored this since the additional pr_fmt() output was too
+noisy and redundant
+
+>> * Prepend "AMD-Bus" for each print.
+>
+> That's done with pr_fmt
+>
+
+Done
+
+>> * The current code is using "fam10h_mmconf_*" in several place.  As this
+>>   file is no longer specific to family10h systems, this patch changes
+>>   such occurrances to "amd_mmconf_*" instead for clarity.
+>
+> ...
+>
+> --
+> Regards/Gruss,
+>     Boris.
+>
+> Sent from a fat crate under my desk. Formatting is fine.
+> --
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
