@@ -1,163 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:62009 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753905AbaDCVzQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 17:55:16 -0400
-Received: by mail-ie0-f181.google.com with SMTP id tp5so2547584ieb.12
-        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 14:55:15 -0700 (PDT)
-Date: Thu, 3 Apr 2014 15:55:13 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 69/73] drivers/pci: delete non-required instances of
- <linux/init.h>
-Message-ID: <20140403215513.GB21931@google.com>
-References: <1390339396-3479-1-git-send-email-paul.gortmaker@windriver.com>
- <1390339396-3479-70-git-send-email-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1390339396-3479-70-git-send-email-paul.gortmaker@windriver.com>
+Received: from mailout2.samsung.com ([203.254.224.25]:48705 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752184AbaD1CO2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Apr 2014 22:14:28 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lucas Stach' <l.stach@pengutronix.de>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Pratyush ANAND' <pratyush.anand@st.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
+	'Sean Cross' <xobs@kosagi.com>, 'Marek Vasut' <marex@denx.de>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
+	'Mark Rutland' <mark.rutland@arm.com>,
+	'Pawel Moll' <pawel.moll@arm.com>,
+	'Rob Herring' <robh+dt@kernel.org>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Tim Harvey' <tharvey@gateworks.com>, kernel@pengutronix.de,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+ <1396025579-14344-8-git-send-email-l.stach@pengutronix.de>
+In-reply-to: <1396025579-14344-8-git-send-email-l.stach@pengutronix.de>
+Subject: Re: [PATCH 7/8] PCI: designware: make MSI isr shared irq aware
+Date: Mon, 28 Apr 2014 11:14:25 +0900
+Message-id: <004601cf6287$93cf7f30$bb6e7d90$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 21, 2014 at 04:23:12PM -0500, Paul Gortmaker wrote:
-> None of these files are actually using any __init type directives
-> and hence don't need to include <linux/init.h>.  Most are just a
-> left over from __devinit and __cpuinit removal, or simply due to
-> code getting copied from one driver to the next.
+On Saturday, March 29, 2014 1:53 AM, Lucas Stach wrote:
 > 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+> On i.MX6 the host controller MSI irq is shared
+> with PCI legacy INTD. Make sure we don't bail too
+> early from the irq handler.
+> 
+> The issue is fairly theoretical as it would require
+> a system setup with a PCIe switch where one connected
+> device is using legacy INTD and another one using
+> MSI, but better fix it now.
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 
-I applied this to my "pci/pending" branch.  After v3.15-rc1, I will sort
-this into something for inclusion in -next.
+(+cc Mohit KUMAR DCG, Pratyush ANAND)
 
-Sorry for the delay; I don't remember why I didn't pick this up before.
+Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-Bjorn
+Best regards,
+Jingoo Han
 
 > ---
->  drivers/pci/bus.c                  | 1 -
->  drivers/pci/host-bridge.c          | 1 -
->  drivers/pci/hotplug/acpiphp_glue.c | 1 -
->  drivers/pci/hotplug/cpqphp_nvram.c | 1 -
->  drivers/pci/hotplug/s390_pci_hpc.c | 1 -
->  drivers/pci/msi.c                  | 1 -
->  drivers/pci/search.c               | 1 -
->  drivers/pci/setup-irq.c            | 1 -
->  drivers/pci/setup-res.c            | 1 -
->  9 files changed, 9 deletions(-)
+>  drivers/pci/host/pci-exynos.c      | 4 +---
+>  drivers/pci/host/pcie-designware.c | 6 +++++-
+>  drivers/pci/host/pcie-designware.h | 2 +-
+>  3 files changed, 7 insertions(+), 5 deletions(-)
 > 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 00660cc..ad0f20a 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -13,7 +13,6 @@
->  #include <linux/errno.h>
->  #include <linux/ioport.h>
->  #include <linux/proc_fs.h>
-> -#include <linux/init.h>
->  #include <linux/slab.h>
->  
->  #include "pci.h"
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 06ace62..389e3df 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -3,7 +3,6 @@
->   */
->  
->  #include <linux/kernel.h>
-> -#include <linux/init.h>
->  #include <linux/pci.h>
->  #include <linux/module.h>
->  
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index cd929ae..1629963 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -41,7 +41,6 @@
->  
->  #define pr_fmt(fmt) "acpiphp_glue: " fmt
->  
-> -#include <linux/init.h>
->  #include <linux/module.h>
->  
->  #include <linux/kernel.h>
-> diff --git a/drivers/pci/hotplug/cpqphp_nvram.c b/drivers/pci/hotplug/cpqphp_nvram.c
-> index 76ba8a1..9600a39 100644
-> --- a/drivers/pci/hotplug/cpqphp_nvram.c
-> +++ b/drivers/pci/hotplug/cpqphp_nvram.c
-> @@ -34,7 +34,6 @@
->  #include <linux/workqueue.h>
->  #include <linux/pci.h>
->  #include <linux/pci_hotplug.h>
-> -#include <linux/init.h>
->  #include <asm/uaccess.h>
->  #include "cpqphp.h"
->  #include "cpqphp_nvram.h"
-> diff --git a/drivers/pci/hotplug/s390_pci_hpc.c b/drivers/pci/hotplug/s390_pci_hpc.c
-> index 8d2ce22..d1332d2 100644
-> --- a/drivers/pci/hotplug/s390_pci_hpc.c
-> +++ b/drivers/pci/hotplug/s390_pci_hpc.c
-> @@ -15,7 +15,6 @@
->  #include <linux/slab.h>
->  #include <linux/pci.h>
->  #include <linux/pci_hotplug.h>
-> -#include <linux/init.h>
->  #include <asm/pci_debug.h>
->  #include <asm/sclp.h>
->  
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 7a0fec6..18ca2497 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -10,7 +10,6 @@
->  #include <linux/mm.h>
->  #include <linux/irq.h>
->  #include <linux/interrupt.h>
-> -#include <linux/init.h>
->  #include <linux/export.h>
->  #include <linux/ioport.h>
->  #include <linux/pci.h>
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index 3ff2ac7..cc6db38 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -7,7 +7,6 @@
->   *	Copyright (C) 2003 -- 2004 Greg Kroah-Hartman <greg@kroah.com>
->   */
->  
-> -#include <linux/init.h>
->  #include <linux/pci.h>
->  #include <linux/slab.h>
->  #include <linux/module.h>
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index 9bd6864..dbc4ffc 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -10,7 +10,6 @@
->   */
->  
->  
-> -#include <linux/init.h>
->  #include <linux/kernel.h>
->  #include <linux/pci.h>
->  #include <linux/errno.h>
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 5c060b1..3e5682c 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -16,7 +16,6 @@
->   *	     Resource sorting
->   */
->  
-> -#include <linux/init.h>
->  #include <linux/kernel.h>
->  #include <linux/export.h>
->  #include <linux/pci.h>
-> -- 
-> 1.8.4.1
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index 3de6bfbbe8e9..b616d34922d8 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -415,9 +415,7 @@ static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
+>  {
+>  	struct pcie_port *pp = arg;
 > 
+> -	dw_handle_msi_irq(pp);
+> -
+> -	return IRQ_HANDLED;
+> +	return dw_handle_msi_irq(pp);
+>  }
+> 
+>  static void exynos_pcie_msi_init(struct pcie_port *pp)
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 98c118e04dba..cbce9b04b13d 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -156,15 +156,17 @@ static struct irq_chip dw_msi_irq_chip = {
+>  };
+> 
+>  /* MSI int handler */
+> -void dw_handle_msi_irq(struct pcie_port *pp)
+> +irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>  {
+>  	unsigned long val;
+>  	int i, pos, irq;
+> +	irqreturn_t ret = IRQ_NONE;
+> 
+>  	for (i = 0; i < MAX_MSI_CTRLS; i++) {
+>  		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+>  				(u32 *)&val);
+>  		if (val) {
+> +			ret = IRQ_HANDLED;
+>  			pos = 0;
+>  			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
+>  				irq = irq_find_mapping(pp->irq_domain,
+> @@ -177,6 +179,8 @@ void dw_handle_msi_irq(struct pcie_port *pp)
+>  			}
+>  		}
+>  	}
+> +
+> +	return ret;
+>  }
+> 
+>  void dw_pcie_msi_init(struct pcie_port *pp)
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index 3063b3594d88..a169d22d517e 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -68,7 +68,7 @@ struct pcie_host_ops {
+> 
+>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+>  int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+> -void dw_handle_msi_irq(struct pcie_port *pp);
+> +irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+>  void dw_pcie_msi_init(struct pcie_port *pp);
+>  int dw_pcie_link_up(struct pcie_port *pp);
+>  void dw_pcie_setup_rc(struct pcie_port *pp);
+> --
+> 1.9.0
+
