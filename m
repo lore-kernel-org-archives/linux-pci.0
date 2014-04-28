@@ -1,108 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26444 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964975AbaD3Vdn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 17:33:43 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatxjain@gmail.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3] pciehp: only wait command complete for real hotplug control
-Date: Wed, 30 Apr 2014 14:33:26 -0700
-Message-Id: <1398893606-22712-1-git-send-email-yinghai@kernel.org>
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:43671 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755200AbaD1Xh6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 19:37:58 -0400
+Received: by mail-pd0-f182.google.com with SMTP id v10so1997870pde.13
+        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 16:37:58 -0700 (PDT)
+Date: Mon, 28 Apr 2014 17:37:54 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bandan Das <bsd@redhat.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: rework new_id interface for known vendor/device
+ values
+Message-ID: <20140428233754.GA30008@google.com>
+References: <jpgbnwkplbo.fsf@nelium.bos.redhat.com>
+ <20140424224555.GK29593@google.com>
+ <1398447576.24318.129.camel@ul30vt.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1398447576.24318.129.camel@ul30vt.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On system with 16 PCI express hotplug slots, customer complain every slot
-will report "Command not completed in 1000 msec" during initialization.
+On Fri, Apr 25, 2014 at 11:39:36AM -0600, Alex Williamson wrote:
+> On Thu, 2014-04-24 at 16:45 -0600, Bjorn Helgaas wrote:
+> > On Tue, Apr 01, 2014 at 09:32:59PM -0400, Bandan Das wrote:
+> > > 
+> > > While using the new_id interface, the user can unintentionally feed
+> > > incorrect values if the driver static table has a matching entry.
+> > > This is possible since only the device and vendor fields are
+> > > mandatory and the rest are optional. As a result, store_new_id
+> > > will fill in default values that are then passed on to the driver
+> > > and can have unintended consequences.
+> > > 
+> > > As an example, consider the ixgbe driver and the 82599EB network card :
+> > > echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
+> > > 
+> > > This will pass a driver_data value of 0 to the driver whereas
+> > > the index 0 in ixgbe actually points to a different set of card
+> > > operations.
+> > > 
+> > > This change returns an error if the user attempts to add a dynid for
+> > > a vendor/device combination for which a static entry already exists.
+> > > However, if the user intentionally wants a different set of values,
+> > > she must provide all the 7 fields and that will be accepted.
+> > > 
+> > > In KVM/device assignment scenario, the user might want 
+> > > to bind a device back to the host driver by writing to new_id
+> > > and trip on a possible null pointer dereference.
+> > 
+> > I don't understand this last KVM comment.  If this patch fixes a null
+> > pointer dereference, it must be because we return -EEXIST instead of
+> > calling the driver's probe method.
+> 
+> Right, the NULL pointer dereference is because drivers implicitly trust
+> the driver_data field supplied to their probe function.  This patch
+> prevents the user from supplying a "shorthand" vendor/device new_id that
+> would conflict with an existing static ID by returning -EEXIST on the
+> new_id update.  This is not really a KVM problem, but prevention of a
+> user error for the new_id interface; there is no reason for the user to
+> add a new_id that duplicates an existing ID unless they want to modify
+> the extended fields.
 
-Intel says that we should only wait command complete only for
-           Electromechanical Interlock Control
-           Power Controller Control
-           Power Indicator Control
-           Attention Indicator Control
+Yep, this all makes sense.  I think I'll just drop the KVM paragraph
+from the changelog because the problem isn't KVM-specific.
 
-System with AMD/Nvidia chipset have same problem.
+> > I know you didn't add the new_id mechanism, and this patch makes it safer
+> > than it was before, but I'm uneasy about it in general.  Most drivers do
+> > not validate the driver_data value.  They assume it came out of the
+> > id_table supplied by the driver and is therefore trustworthy.  But new_id
+> > is a loophole that allows a user (hopefully only root) to pass arbitrary
+> > junk to the driver.
+> 
+> The sysfs files are only accessible to root by default.  Your uneasiness
+> seems to be the new_id mechanism in general.  It is a gap that drivers
+> implicitly trust a field that can be supplied by the user.  I believe
+> there's a test in the code somewhere that verifies that device_data at
+> least matches an existing device_data as a small sanity check.  This
+> patch closes another gap by disallowing new_ids that are not fully
+> specified to supersede an existing entry. 
 
-Two ways to address the problem:
-1. change to only wait when (EIC, PCC, PIC, AIC) bits get changed.
-2. or check CMD_COMPLETE and wait before write command. Only wait
-   when CC is set and cmd_busy is true. For chipset from intel
-   will only have CC set for real hotplug control, so we could
-   skip the wait for others.
+Yep, exactly.  This definitely makes it better than it was before.
 
-This patch is using second way.
+> > I wonder if the device assignment machinery should be more integrated into
+> > the PCI core instead of trying to be "just another driver."  It seems like
+> > we're doing a lot of work to try to get the driver binding mechanism to do
+> > what we need for device assignment.
+> 
+> This problem is only tangentially related to device assignment, any PCI
+> driver can hit this.  Maybe in practice the reason for touching these
+> files is often device assignment, but this interface pre-dates KVM.  Do
+> you have suggestions how device assignment could be more integrated to
+> PCI core?  Note that vfio is intentionally device agnostic and support
+> for assignment of platform devices using vfio is being actively
+> developed.
 
-With that we could save 16 seconds during booting, later with 32 sockets system
-with 64 pcie hotplug slots we could save 64 seconds.
+I don't have a suggestion, but I think using the driver model for this
+feels a bit like putting a square peg in a round hole.  A device-
+agnostic driver is sort of a strange concept to begin with, and the
+machinations to tweak the driver/device binding order and pass a
+device back and forth between host drivers and vfio seem sort of
+artificial.  It feels like we're using the binding mechanism in a way
+it wasn't designed for, and it's not surprising that there are issues.
 
-This patch address spurious "cmd completed" event problem that that
-Rajat met.
+> We do have a new binding mechanism awaiting review that
+> tries to avoid some of the faults with the new_id/remove_id interface.
+> In this case the user would not need to add a new_id and would use
+> drivers_probe on both sides of the attach/re-attach.
 
--v2: use second way that is suggested by Bjorn.
--v3: rebase after
-	PCI: pciehp: Acknowledge spurious "cmd completed" event
+I saw that go by, but haven't looked in detail.  I'm hoping Greg pays
+attention to those, since he's more of an overall driver model guy
+than I am.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Rajat Jain <rajatxjain@gmail.com>
-
----
- drivers/pci/hotplug/pciehp_hpc.c |   28 ++++++++++------------------
- 1 file changed, 10 insertions(+), 18 deletions(-)
-
-Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-@@ -158,17 +158,8 @@ static void pcie_write_cmd(struct contro
- 	mutex_lock(&ctrl->ctrl_lock);
- 
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
--	if (slot_status & PCI_EXP_SLTSTA_CC) {
--		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
--					   PCI_EXP_SLTSTA_CC);
--		if (!ctrl->no_cmd_complete) {
--			/*
--			 * After 1 sec and CMD_COMPLETED still not set, just
--			 * proceed forward to issue the next command according
--			 * to spec. Just print out the error message.
--			 */
--			ctrl_dbg(ctrl, "CMD_COMPLETED not clear after 1 sec\n");
--		} else if (!NO_CMD_CMPL(ctrl)) {
-+	if (ctrl->no_cmd_complete && slot_status & PCI_EXP_SLTSTA_CC) {
-+		if (!NO_CMD_CMPL(ctrl)) {
- 			/*
- 			 * This controller seems to notify of command completed
- 			 * event even though it supports none of power
-@@ -184,16 +175,11 @@ static void pcie_write_cmd(struct contro
- 	}
- 
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
--	slot_ctrl &= ~mask;
--	slot_ctrl |= (cmd & mask);
--	ctrl->cmd_busy = 1;
--	smp_mb();
--	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
--
- 	/*
- 	 * Wait for command completion.
- 	 */
--	if (!ctrl->no_cmd_complete) {
-+	if (!ctrl->no_cmd_complete && (slot_status & PCI_EXP_SLTSTA_CC) &&
-+	    ctrl->cmd_busy) {
- 		int poll = 0;
- 		/*
- 		 * if hotplug interrupt is not enabled or command
-@@ -205,6 +191,12 @@ static void pcie_write_cmd(struct contro
- 			poll = 1;
-                 pcie_wait_cmd(ctrl, poll);
- 	}
-+
-+	slot_ctrl &= ~mask;
-+	slot_ctrl |= (cmd & mask);
-+	ctrl->cmd_busy = 1;
-+	smp_mb();
-+	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
- 	mutex_unlock(&ctrl->ctrl_lock);
- }
- 
+Bjorn
