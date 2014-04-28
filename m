@@ -1,115 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:43671 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755200AbaD1Xh6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 19:37:58 -0400
-Received: by mail-pd0-f182.google.com with SMTP id v10so1997870pde.13
-        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 16:37:58 -0700 (PDT)
-Date: Mon, 28 Apr 2014 17:37:54 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bandan Das <bsd@redhat.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: rework new_id interface for known vendor/device
- values
-Message-ID: <20140428233754.GA30008@google.com>
-References: <jpgbnwkplbo.fsf@nelium.bos.redhat.com>
- <20140424224555.GK29593@google.com>
- <1398447576.24318.129.camel@ul30vt.home>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:56370 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753706AbaD1XWZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 19:22:25 -0400
+Received: by mail-ie0-f176.google.com with SMTP id rd18so7344564iec.35
+        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 16:22:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1398447576.24318.129.camel@ul30vt.home>
+In-Reply-To: <20140426060130.GA1698@gmail.com>
+References: <20140425171144.312.9601.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140425171655.312.97511.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140426060130.GA1698@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 Apr 2014 17:22:04 -0600
+Message-ID: <CAErSpo4ttY-423De+4=TCsK0kXeZRanoEL2yUjp=GVAoZGaOLw@mail.gmail.com>
+Subject: Re: [PATCH 4/4] x86/gart: Tidy messages and add bridge device info
+To: Ingo Molnar <mingo@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	David Airlie <airlied@linux.ie>, Bodo Eggert <7eggert@gmx.de>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 25, 2014 at 11:39:36AM -0600, Alex Williamson wrote:
-> On Thu, 2014-04-24 at 16:45 -0600, Bjorn Helgaas wrote:
-> > On Tue, Apr 01, 2014 at 09:32:59PM -0400, Bandan Das wrote:
-> > > 
-> > > While using the new_id interface, the user can unintentionally feed
-> > > incorrect values if the driver static table has a matching entry.
-> > > This is possible since only the device and vendor fields are
-> > > mandatory and the rest are optional. As a result, store_new_id
-> > > will fill in default values that are then passed on to the driver
-> > > and can have unintended consequences.
-> > > 
-> > > As an example, consider the ixgbe driver and the 82599EB network card :
-> > > echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
-> > > 
-> > > This will pass a driver_data value of 0 to the driver whereas
-> > > the index 0 in ixgbe actually points to a different set of card
-> > > operations.
-> > > 
-> > > This change returns an error if the user attempts to add a dynid for
-> > > a vendor/device combination for which a static entry already exists.
-> > > However, if the user intentionally wants a different set of values,
-> > > she must provide all the 7 fields and that will be accepted.
-> > > 
-> > > In KVM/device assignment scenario, the user might want 
-> > > to bind a device back to the host driver by writing to new_id
-> > > and trip on a possible null pointer dereference.
-> > 
-> > I don't understand this last KVM comment.  If this patch fixes a null
-> > pointer dereference, it must be because we return -EEXIST instead of
-> > calling the driver's probe method.
-> 
-> Right, the NULL pointer dereference is because drivers implicitly trust
-> the driver_data field supplied to their probe function.  This patch
-> prevents the user from supplying a "shorthand" vendor/device new_id that
-> would conflict with an existing static ID by returning -EEXIST on the
-> new_id update.  This is not really a KVM problem, but prevention of a
-> user error for the new_id interface; there is no reason for the user to
-> add a new_id that duplicates an existing ID unless they want to modify
-> the extended fields.
+On Sat, Apr 26, 2014 at 12:01 AM, Ingo Molnar <mingo@kernel.org> wrote:
+>
+> * Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> Print the AGP bridge info the same way as the rest of the kernel, e.g.,
+>> "0000:00:04.0" instead of "00:04:00".
+>>
+>> Also print the AGP aperture address range the same way we print resources,
+>> and label it explicitly as a bus address range.
+>>
+>> No functional change.
+>>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  arch/x86/kernel/aperture_64.c |   20 ++++++++++++--------
+>>  1 file changed, 12 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/arch/x86/kernel/aperture_64.c b/arch/x86/kernel/aperture_64.c
+>> index 9fa8aa051f54..4dd76d3df056 100644
+>> --- a/arch/x86/kernel/aperture_64.c
+>> +++ b/arch/x86/kernel/aperture_64.c
+>> @@ -126,10 +126,12 @@ static u32 __init read_agp(int bus, int slot, int func, int cap, u32 *order)
+>>       u64 aper;
+>>       u32 old_order;
+>>
+>> -     printk(KERN_INFO "AGP bridge at %02x:%02x:%02x\n", bus, slot, func);
+>> +     printk(KERN_INFO "pci 0000:%02x:%02x.%d: AGP bridge\n", bus, slot,
+>> +            func);
+>
+> Please leave it on a single line - checkpatch warning nonwithstanding.
+> pr_info() is also useful.
+> ...
 
-Yep, this all makes sense.  I think I'll just drop the KVM paragraph
-from the changelog because the problem isn't KVM-specific.
+> Also, you could add:
+>
+> #define PREFIX "PCI/gart: "
+>
+> or something like that, to define a standard prefix for these
+> messages.
 
-> > I know you didn't add the new_id mechanism, and this patch makes it safer
-> > than it was before, but I'm uneasy about it in general.  Most drivers do
-> > not validate the driver_data value.  They assume it came out of the
-> > id_table supplied by the driver and is therefore trustworthy.  But new_id
-> > is a loophole that allows a user (hopefully only root) to pass arbitrary
-> > junk to the driver.
-> 
-> The sysfs files are only accessible to root by default.  Your uneasiness
-> seems to be the new_id mechanism in general.  It is a gap that drivers
-> implicitly trust a field that can be supplied by the user.  I believe
-> there's a test in the code somewhere that verifies that device_data at
-> least matches an existing device_data as a small sanity check.  This
-> patch closes another gap by disallowing new_ids that are not fully
-> specified to supersede an existing entry. 
+I converted to pr_info(), etc. and added pr_fmt for an "AGP: " prefix.
 
-Yep, exactly.  This definitely makes it better than it was before.
+> Btw., this file could be moved to arch/x86/pci/?
 
-> > I wonder if the device assignment machinery should be more integrated into
-> > the PCI core instead of trying to be "just another driver."  It seems like
-> > we're doing a lot of work to try to get the driver binding mechanism to do
-> > what we need for device assignment.
-> 
-> This problem is only tangentially related to device assignment, any PCI
-> driver can hit this.  Maybe in practice the reason for touching these
-> files is often device assignment, but this interface pre-dates KVM.  Do
-> you have suggestions how device assignment could be more integrated to
-> PCI core?  Note that vfio is intentionally device agnostic and support
-> for assignment of platform devices using vfio is being actively
-> developed.
+Yes, I'd be glad to do this.  It looks like all the following files
+might be candidates:
 
-I don't have a suggestion, but I think using the driver model for this
-feels a bit like putting a square peg in a round hole.  A device-
-agnostic driver is sort of a strange concept to begin with, and the
-machinations to tweak the driver/device binding order and pass a
-device back and forth between host drivers and vfio seem sort of
-artificial.  It feels like we're using the binding mechanism in a way
-it wasn't designed for, and it's not surprising that there are issues.
+  amd_gart_64.c  (CONFIG_GART_IOMMU)
+  aperture_64.c  (CONFIG_GART_IOMMU)
+  pci-calgary_64.c  (CONFIG_CALGARY_IOMMU)
+  tce_64.c  (CONFIG_CALGARY_IOMMU)
+  mmconf-fam10h_64.c  (CONFIG_PCI_MMCONFIG)
 
-> We do have a new binding mechanism awaiting review that
-> tries to avoid some of the faults with the new_id/remove_id interface.
-> In this case the user would not need to add a new_id and would use
-> drivers_probe on both sides of the attach/re-attach.
+What do you think?  Move all, move none, move only aperture_64.c?
 
-I saw that go by, but haven't looked in detail.  I'm hoping Greg pays
-attention to those, since he's more of an overall driver model guy
-than I am.
+Thanks for your comments!
 
 Bjorn
