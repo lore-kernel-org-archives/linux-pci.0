@@ -1,65 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:60146 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750893AbaDOOru (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 10:47:50 -0400
-Date: Tue, 15 Apr 2014 15:47:35 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>
-Subject: Re: [PATCH 0/3] ARM: PCI: implement virtual PCI host controller
-Message-ID: <20140415144735.GM17408@arm.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
- <20140403220713.GA23545@google.com>
- <20140414171300.GL12916@arm.com>
- <21141977.8ucQJzlJts@wuerfel>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 28 Apr 2014 23:40:36 +0200
+From: Borislav Petkov <bp@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Robert Richter <rric@kernel.org>, herrmann.der.user@gmail.com
+Cc: Myron Stowe <myron.stowe@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	kim.naru@amd.com, Daniel J Blueman <daniel@numascale.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86 <x86@kernel.org>,
+	Steffen Persvold <sp@numascale.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Robert Richter <rric@kernel.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range
+ capabilities
+Message-ID: <20140428214036.GA32143@pd.tnic>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+ <20140419025323.2408.88764.stgit@amt.stowe>
+ <20140419135219.GC8109@pd.tnic>
+ <20140420075936.GA19672@pd.tnic>
+ <CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com>
+ <20140426091031.GA10166@pd.tnic>
+ <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <21141977.8ucQJzlJts@wuerfel>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
-
-On Mon, Apr 14, 2014 at 07:48:17PM +0100, Arnd Bergmann wrote:
-> On Monday 14 April 2014 18:13:00 Will Deacon wrote:
-> > Arnd: Is there anything more you'd like me to do with this series? Given
-> > that it would be targetting 3.16, there's still plenty of time to make
-> > changes (we talked about extracting some library functions in the past).
+On Mon, Apr 28, 2014 at 02:50:29PM -0600, Bjorn Helgaas wrote:
+> This I/O ECS thing seems likely to cause future problems.  My
+> understanding (based on sec 2.8 of [1]) is that enable_pci_io_ecs()
+> and pci_enable_pci_io_ecs() are there to enable access to extended
+> config space (offsets 256-4095) via the 0xcf8/0xcfc I/O ports.
 > 
-> I don't remember the latest status of your patch set, but you might want
-> to read the discussions we had about Liviu's patches last week.
+> Per sec 4.1.1 of [2], we should be using ECAM (the memory-mapped
+> enhanced configuration mechanism, i.e., MMCONFIG) to access extended
+> config space, and the BIOS should supply an MCFG table.
+> 
+> So why do we need to enable I/O access to ECS on AMD chips at all?  Is
+> this a workaround for a broken BIOS that doesn't supply an MCFG table?
 
-The latest status (v5) was that I had something working (I got hung up on
-the I/O offset handing), with all feedback addressed. The next step was to
-try and move parts into library code, but it looks like Liviu is handling a
-lot of that with his arm64 stuff.
+That's a good question. 831d991821dae doesn't say but I have a hunch
+Andreas and/or Robert should know. I seem to vaguely remember it
+might've been because of a missing MCFG but have flushed it out of the
+cache long time ago.
 
-> We still haven't figured out exactly how to handle I/O space in the common
-> code, but I think we are making progress.
+Let's ask them.
 
-The discussions certainly seem to be making progress.
+Andreas, Robert, guys, do you remember why we did the PCI IO ECS access?
+B0rked BIOSes?
 
-> We also have discussed some ideas about how to restructure the PCI
-> code layer to make it easier to share host drivers across architectures
-> and clean up the interfaces in the process.
+Thanks.
 
-Ok. Whilst this all sounds good from an arm64 perspective (with Liviu
-currently doing the work), it's not clear to me where that leaves my 32-bit
-ARM kvmtool code. That was the main reason for me writing this driver, and it
-seems a shame to have to wait for all the generic code to be sorted out
-before it can be used on AArch32, where there is already a functional
-pcibios implementation. The discussions mention things like generic
-pci_host_bridge_ops, but having that for arch/arm/ doesn't sound like
-something that is imminent.
+-- 
+Regards/Gruss,
+    Boris.
 
-Of course, I plan to port my driver to the new infrastructure when it lands
-(since I want to support arm64), but it would be good to have something for
-AArch32 in the meantime.
-
-Will
+Sent from a fat crate under my desk. Formatting is fine.
+--
