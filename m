@@ -1,185 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49778 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753280AbaDVHGP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Apr 2014 03:06:15 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part3 V1 10/22] iommu/vt-d: dynamically allocate and free seq_id for DMAR units
-Date: Tue, 22 Apr 2014 15:07:21 +0800
-Message-Id: <1398150453-28141-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-Id: <535F6B7F020000780000D2DB@nat28.tlf.novell.com>
+Date: Tue, 29 Apr 2014 08:06:07 +0100
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Bjorn Helgaas" <bhelgaas@google.com>
+Cc: "Aravind Gopalakrishnan" <aravind.gopalakrishnan@amd.com>,
+	<kim.naru@amd.com>,
+	"Suravee Suthikulpanit" <suravee.suthikulpanit@amd.com>,
+	"Myron Stowe" <myron.stowe@gmail.com>,
+	"Robert Richter" <rric@kernel.org>, "x86" <x86@kernel.org>,
+	"Yinghai Lu" <yinghai@kernel.org>,
+	"Thomas Gleixner" <tglx@linutronix.de>,
+	"Daniel J Blueman" <daniel@numascale.com>,
+	"Steffen Persvold" <sp@numascale.com>,
+	"Ingo Molnar" <mingo@redhat.com>,
+	"Myron Stowe" <myron.stowe@redhat.com>,
+	"Borislav Petkov" <bp@suse.de>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"LKML" <linux-kernel@vger.kernel.org>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range
+ capabilities
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+ <20140419025323.2408.88764.stgit@amt.stowe>
+ <20140419135219.GC8109@pd.tnic> <20140420075936.GA19672@pd.tnic>
+ <CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com>
+ <20140426091031.GA10166@pd.tnic>
+ <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
+In-Reply-To: <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce functions to support dynamic IOMMU seq_id allocating and
-releasing, which will be used to support DMAR hotplug.
+>>> On 28.04.14 at 22:50, <bhelgaas@google.com> wrote:
+>>> > There's a enable_pci_io_ecs() which enables ECS through the NB_CFG MSR
+>>> > which is called as part of the notifier *and* there's a PCI write to
+>>> > that same bit in pci_enable_pci_io_ecs() which iterates over all NBs.
+>>> >
+>>> > So, AFAICT, we do it twice and the second time is not needed. Which
+>>> > means, you probably can drop pci_enable_pci_io_ecs() completely and use
+>>> > solely the notifier?
+>>>
+>>> It does look as if there is some duplication with respect to setting
+>>> MSR_AMD64_NB_CFG's (which is aliased at D18F3x8c [1])
+>>> ENABLE_CF8_EXT_CFG enable bit but there are at least a couple of
+>>> differences.
+>>>
+>>> enable_pci_io_ecs() only sets the bit on one NB whereas
+>>> pci_enable_pci_io_ecs iterates over all the NBs (as you mentioned
+>>> above).  The other difference has something to do with Xen; see the
+>>> origin of pci_enable_pci_io_ecs - commit 24d9b70b8.
 
-Also rename IOMMU_UNITS_SUPPORTED as DMAR_UNITS_SUPPORTED.
+As stated there - Xen Dom0 is running on virtual CPUs, i.e. which
+physical CPU the code gets executed on is unknown, and hence the
+MSR based approach just does not reliably work there.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c        |   40 ++++++++++++++++++++++++++++++++++------
- drivers/iommu/intel-iommu.c |   13 +++----------
- include/linux/dmar.h        |    6 ++++++
- 3 files changed, 43 insertions(+), 16 deletions(-)
+Of course, with (since then) grown needs to access extended config
+space in Xen itself, this enabling could be moved into the hypervisor.
+Back then the hypervisor didn't have much need for this, so it seemed
+more reasonable (albeit I'm rather certain Borislav is going to disagree
+with this) to augment the Dom0 side code.
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 39f8b717fe84..3e4168cddc64 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -61,6 +61,7 @@ LIST_HEAD(dmar_drhd_units);
- struct acpi_table_header * __initdata dmar_tbl;
- static acpi_size dmar_tbl_size;
- static int dmar_dev_scope_status = 1;
-+static unsigned long dmar_seq_ids[BITS_TO_LONGS(DMAR_UNITS_SUPPORTED)];
- 
- static int alloc_iommu(struct dmar_drhd_unit *drhd);
- static void free_iommu(struct intel_iommu *iommu);
-@@ -914,11 +915,32 @@ out:
- 	return err;
- }
- 
-+static int dmar_alloc_seq_id(struct intel_iommu *iommu)
-+{
-+	iommu->seq_id = find_first_zero_bit(dmar_seq_ids,
-+					    DMAR_UNITS_SUPPORTED);
-+	if (iommu->seq_id >= DMAR_UNITS_SUPPORTED) {
-+		iommu->seq_id = -1;
-+	} else {
-+		set_bit(iommu->seq_id, dmar_seq_ids);
-+		sprintf(iommu->name, "dmar%d", iommu->seq_id);
-+	}
-+
-+	return iommu->seq_id;
-+}
-+
-+static void dmar_free_seq_id(struct intel_iommu *iommu)
-+{
-+	if (iommu->seq_id >= 0) {
-+		clear_bit(iommu->seq_id, dmar_seq_ids);
-+		iommu->seq_id = -1;
-+	}
-+}
-+
- static int alloc_iommu(struct dmar_drhd_unit *drhd)
- {
- 	struct intel_iommu *iommu;
- 	u32 ver, sts;
--	static int iommu_allocated = 0;
- 	int agaw = 0;
- 	int msagaw = 0;
- 	int err;
-@@ -932,13 +954,16 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
- 	if (!iommu)
- 		return -ENOMEM;
- 
--	iommu->seq_id = iommu_allocated++;
--	sprintf (iommu->name, "dmar%d", iommu->seq_id);
-+	if (dmar_alloc_seq_id(iommu) < 0) {
-+		pr_err("IOMMU: failed to allocate seq_id\n");
-+		err = -ENOSPC;
-+		goto error;
-+	}
- 
- 	err = map_iommu(iommu, drhd->reg_base_addr);
- 	if (err) {
- 		pr_err("IOMMU: failed to map %s\n", iommu->name);
--		goto error;
-+		goto error_free_seq_id;
- 	}
- 
- 	err = -EINVAL;
-@@ -982,9 +1007,11 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
- 	drhd->iommu = iommu;
- 	return 0;
- 
-- err_unmap:
-+err_unmap:
- 	unmap_iommu(iommu);
-- error:
-+error_free_seq_id:
-+	dmar_free_seq_id(iommu);
-+error:
- 	kfree(iommu);
- 	return err;
- }
-@@ -1006,6 +1033,7 @@ static void free_iommu(struct intel_iommu *iommu)
- 	if (iommu->reg)
- 		unmap_iommu(iommu);
- 
-+	dmar_free_seq_id(iommu);
- 	kfree(iommu);
- }
- 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 75d7c5e3f77d..92d7b276edb3 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -328,17 +328,10 @@ static int hw_pass_through = 1;
- /* si_domain contains mulitple devices */
- #define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 1)
- 
--/* define the limit of IOMMUs supported in each domain */
--#ifdef	CONFIG_X86
--# define	IOMMU_UNITS_SUPPORTED	MAX_IO_APICS
--#else
--# define	IOMMU_UNITS_SUPPORTED	64
--#endif
--
- struct dmar_domain {
- 	int	id;			/* domain id */
- 	int	nid;			/* node id */
--	DECLARE_BITMAP(iommu_bmp, IOMMU_UNITS_SUPPORTED);
-+	DECLARE_BITMAP(iommu_bmp, DMAR_UNITS_SUPPORTED);
- 					/* bitmap of iommus this domain uses*/
- 
- 	struct list_head devices; 	/* all devices' list */
-@@ -2707,12 +2700,12 @@ static int __init init_dmars(void)
- 		 * threaded kernel __init code path all other access are read
- 		 * only
- 		 */
--		if (g_num_of_iommus < IOMMU_UNITS_SUPPORTED) {
-+		if (g_num_of_iommus < DMAR_UNITS_SUPPORTED) {
- 			g_num_of_iommus++;
- 			continue;
- 		}
- 		printk_once(KERN_ERR "intel-iommu: exceeded %d IOMMUs\n",
--			  IOMMU_UNITS_SUPPORTED);
-+			  DMAR_UNITS_SUPPORTED);
- 	}
- 
- 	g_iommus = kcalloc(g_num_of_iommus, sizeof(struct intel_iommu *),
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 1deece46a0ca..4aa8de0d1b97 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -30,6 +30,12 @@
- 
- struct acpi_dmar_header;
- 
-+#ifdef	CONFIG_X86
-+# define	DMAR_UNITS_SUPPORTED	MAX_IO_APICS
-+#else
-+# define	DMAR_UNITS_SUPPORTED	64
-+#endif
-+
- /* DMAR Flags */
- #define DMAR_INTR_REMAP		0x1
- #define DMAR_X2APIC_OPT_OUT	0x2
--- 
-1.7.10.4
+> This is probably obvious, but my interest here is to (1) make sure all
+> systems in the field run well (so we need quirks to work around BIOS
+> and other issues), and (2) eliminate the need for kernel changes to
+> support future systems.  So far we seem to be concentrating on (1) and
+> neglecting (2), which means we're always reacting to things that are
+> broken.
+> 
+> This I/O ECS thing seems likely to cause future problems.  My
+> understanding (based on sec 2.8 of [1]) is that enable_pci_io_ecs()
+> and pci_enable_pci_io_ecs() are there to enable access to extended
+> config space (offsets 256-4095) via the 0xcf8/0xcfc I/O ports.
+> 
+> Per sec 4.1.1 of [2], we should be using ECAM (the memory-mapped
+> enhanced configuration mechanism, i.e., MMCONFIG) to access extended
+> config space, and the BIOS should supply an MCFG table.
+> 
+> So why do we need to enable I/O access to ECS on AMD chips at all?  Is
+> this a workaround for a broken BIOS that doesn't supply an MCFG table?
+
+Yes. Rather than leaving such systems entirely without access to
+extended config space, it seemed (and still seems to me) better to
+at least have this fallback in place. If after this discussion you decide
+to drop this code here, it would be nice if you could let us know up
+front, so we can decide whether to add the code to the hypervisor
+instead or - just like on Intel systems - rely on MCFG being properly
+exposed by the firmware.
+
+Jan
 
