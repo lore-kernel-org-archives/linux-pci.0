@@ -1,70 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:42147 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752941AbaDJVHE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 17:07:04 -0400
-Date: Thu, 10 Apr 2014 23:07:01 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Neil Greatorex <neil@fatboyfat.co.uk>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Willy Tarreau <w@1wt.eu>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: Fixing PCIe issues on Armada XP
-Message-ID: <20140410230701.1aabb32b@skate>
-In-Reply-To: <alpine.DEB.2.10.1404101849270.1578@vroombuntu>
-References: <20140410181953.50ccfcc3@skate>
-	<alpine.DEB.2.10.1404101849270.1578@vroombuntu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:56231 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756824AbaD2QyZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 12:54:25 -0400
+Received: by mail-ig0-f179.google.com with SMTP id hl10so556878igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 09:54:22 -0700 (PDT)
+Date: Tue, 29 Apr 2014 10:54:19 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Fabio Estevam <fabio.estevam@freescale.com>
+Cc: thomas.petazzoni@free-electrons.com, linux-pci@vger.kernel.org,
+	jg1.han@samsung.com, Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH v3] pci: pci-mvebu: Use '%pa' for printing 'phys_addr_t'
+ type
+Message-ID: <20140429165419.GA13735@google.com>
+References: <1398776287-14229-1-git-send-email-fabio.estevam@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1398776287-14229-1-git-send-email-fabio.estevam@freescale.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Neil Greatorex,
+[+cc Jason]
 
-On Thu, 10 Apr 2014 19:20:37 +0100 (BST), Neil Greatorex wrote:
-
-> I have tested this branch on my Mirabox. I still get the link up problem 
-> but if I work around that (see below) the igb driver works flawlessly.
+On Tue, Apr 29, 2014 at 09:58:07AM -0300, Fabio Estevam wrote:
+> Fix the following build warning that happens when building multi_v7_defconfig
+> with CONFIG_ARM_LPAE=y:
 > 
-> Tested-by: Neil Greatorex <neil@fatboyfat.co.uk>
-
-Good, thanks, we're making progress!
-
-> > Remaining issues:
-> >
-> > * The link up problem. Unfortunately, I tried to reproduce it today,
-> >   and didn't manage to. It's weird, because I'm sure I was able to
-> >   produce it in the past, but I'm no longer able to, I don't know.
-> >   Therefore, it's not easy for me to work on this topic. Neil, Jason,
-> >   do you think this is a topic you could potentially handle?
+> drivers/pci/host/pci-mvebu.c:334:5: warning: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'phys_addr_t' [-Wformat=]
 > 
-> Do you have earlyprintk enabled? I've found that if I have earlyprintk in 
-> my bootargs / command line then I don't get the issue. I assume that is 
-> because of timing, but it could be something else?
+> Fix the warning by using '%pa' to printing 'phys_addr_t' type. While at it,
+> also use the more standard notation [mem 0x - 0x] for memory region.
+> 
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+> ---
+> Changes since v2:
+> - Introduce variable 'end' for printing the memory range
+> 
+> Changes since v1:
+> - use the [mem 0x - 0x] notation
+> 
+>  drivers/pci/host/pci-mvebu.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index e384e25..8329592 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -329,9 +329,11 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
+>  		ret = mvebu_mbus_add_window_remap_by_id(target, attribute, base,
+>  							sz, remap);
+>  		if (ret) {
+> +			phys_addr_t end = base + sz;
 
-I have indeed disabled earlyprintk. Initially by removing it from the
-command line, and then even by disabling CONFIG_DEBUG_LL.
+This needs to be "base + sz - 1" because we print inclusive ranges.
 
-In fact the original bug report I had came from my colleague Gregory
-Clement, who precisely reported to me that a PCIe card was properly
-detected on his Armada 385 board when earlyprintk was enabled, but the
-PCIe card was not detected when earlyprintk was disabled. At the time,
-I was able to reproduce the problem as well on my Armada 385, and
-debugged it to find that the mvebu_pcie_set_local_dev_nr().
+> +
+>  			dev_err(&port->pcie->pdev->dev,
+> -				"Could not create MBus window at 0x%x, size 0x%x: %d\n",
+> -				base, sz, ret);
+> +				"Could not create MBus window at [mem %pa - %pa] :%d\n",
 
-Best regards,
+I removed the extra spaces (relative to %pR) here.
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+> +				&base, &end, ret);
+>  			mvebu_pcie_del_windows(port, base - size_mapped,
+>  					       size_mapped);
+>  			return;
+
+
+I'm ready to merge the following, given an ack from Thomas or Jason.
+Jingoo, I added your reviewed-by, since this is essentially what you
+reviewed before.
+
+Bjorn
+
+
+commit 5bbf2f268b9001c2e46aff6ff17cee0e8a6b8fb8
+Author: Fabio Estevam <fabio.estevam@freescale.com>
+Date:   Tue Apr 29 09:58:07 2014 -0300
+
+    PCI: mvebu: Use '%pa' for printing 'phys_addr_t' type
+    
+    Fix the following build warning that happens when building
+    multi_v7_defconfig with CONFIG_ARM_LPAE=y:
+    
+      drivers/pci/host/pci-mvebu.c:334:5: warning: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'phys_addr_t' [-Wformat=]
+    
+    Fix the warning by using '%pa' to printing 'phys_addr_t' type.  While at
+    it, also use the more standard notation [mem 0x-0x] for memory region.
+    
+    Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Reviewed-by: Jingoo Han <jg1.han@samsung.com>
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 29d64c9efa85..7f450322f397 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -328,9 +328,11 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
+ 		ret = mvebu_mbus_add_window_remap_by_id(target, attribute, base,
+ 							sz, remap);
+ 		if (ret) {
++			phys_addr_t end = base + sz - 1;
++
+ 			dev_err(&port->pcie->pdev->dev,
+-				"Could not create MBus window at 0x%x, size 0x%x: %d\n",
+-				base, sz, ret);
++				"Could not create MBus window at [mem %pa-%pa]: %d\n",
++				&base, &end, ret);
+ 			mvebu_pcie_del_windows(port, base - size_mapped,
+ 					       size_mapped);
+ 			return;
