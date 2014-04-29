@@ -1,53 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f171.google.com ([209.85.160.171]:60924 "EHLO
-	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460AbaD2DZM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 23:25:12 -0400
-Received: by mail-yk0-f171.google.com with SMTP id 10so1338978ykt.16
-        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 20:25:11 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: thomas.petazzoni@free-electrons.com
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	jg1.han@samsung.com, Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH v2] pci: pci-mvebu: Use '%pa' for printing 'phys_addr_t' type
-Date: Tue, 29 Apr 2014 00:24:56 -0300
-Message-Id: <1398741896-5953-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <535F0837.2020102@amd.com>
+References: <20140419025308.2408.51252.stgit@amt.stowe> <20140419025345.2408.99229.stgit@amt.stowe>
+ <20140420105419.GB19676@pd.tnic> <CAL-B5D1_fns=mu7Cw6jeVHO0XPeKYakUrPv-JgO=ma1rjCoQvg@mail.gmail.com>
+ <53554D27.1010803@numascale.com> <535F0837.2020102@amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 29 Apr 2014 13:29:32 -0600
+Message-ID: <CAErSpo77c5F0vftHEOFFwvXLa7S2DZzPdTjO4v6zRGcpJmjj3w@mail.gmail.com>
+Subject: Re: [PATCH v2 5/5] PCI: Remove redundant 'quirk_amd_nb_node'
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: Daniel J Blueman <daniel@numascale.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	kim.naru@amd.com, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86 <x86@kernel.org>,
+	Steffen Persvold <sp@numascale.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+On Mon, Apr 28, 2014 at 8:02 PM, Suravee Suthikulanit
+<suravee.suthikulpanit@amd.com> wrote:
 
-Fix the following build warning that happens when building multi_v7_defconfig
-with CONFIG_ARM_LPAE=y:
+> Sorry for late reply.  My concern is that removing the "quirk_amd_nb_node()"
+> will affect the value of "numa_node" of the host bridge devices (i.e.
+> X:00.[18|19|1a|1b|1c|1d|1e|1f].X).  I am not sure if any code is using this
+> information.  But in theory, these host-bridge devices are not on the same
+> node as where the PCI root complex lives (e.g. 0 and 4 from the example
+> above).
 
-drivers/pci/host/pci-mvebu.c:334:5: warning: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'phys_addr_t' [-Wformat=]
+I doubt anything in the kernel uses the node number for these devices
+(00:[18|19|...]).  The only place the PCI core uses it is to run a
+driver probe method on the same node as the device.  Are there even
+drivers for these devices?
 
-Fix the warning by using '%pa' to printing 'phys_addr_t' type. While at it,
-also use the more standard notation [mem 0x - 0x] for memory region.
+They aren't PCI-to-PCI bridges, so there are no devices below them
+that would be affected by their node numbers.
 
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
----
-Changes since v1:
-- use the [mem 0x - 0x] notation
+> If we want the "numa_node" to really representing the actual node, then the
+> quirk has to stay for now.  We might need to come up with a different logic
+> to replace the quirks here, which would automatically determine the actual
+> node value for these host-bridge devices.
 
- drivers/pci/host/pci-mvebu.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+It sounds like the numa_node for these devices in sysfs is misleading
+unless we have a quirk like this.  If that's important, I think it
+could be fixed by having the BIOS provide _PXM methods for them.  But
+I don't think it is, and I'm inclined to remove the quirk.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index e384e25..df57a6a 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -330,8 +330,8 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
- 							sz, remap);
- 		if (ret) {
- 			dev_err(&port->pcie->pdev->dev,
--				"Could not create MBus window at 0x%x, size 0x%x: %d\n",
--				base, sz, ret);
-+				"Could not create MBus window at [mem %pa - %pa] :%d\n",
-+				&base, &base + sz, ret);
- 			mvebu_pcie_del_windows(port, base - size_mapped,
- 					       size_mapped);
- 			return;
--- 
-1.8.3.2
+I'm pushing hard to get rid of CPU-specific code like this because
+there are generic methods to do it, e.g., _PXM, and the CPU-specific
+code is a perennial maintenance headache.
 
+Bjorn
