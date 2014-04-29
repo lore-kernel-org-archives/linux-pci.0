@@ -1,54 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61326 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753972AbaDNIEU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 04:04:20 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Lukasz Dorau <lukasz.dorau@intel.com>,
-	Maciej Patelczyk <maciej.patelczyk@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>, intel-linux-scu@intel.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 08/23] isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:32 +0200
-Message-Id: <8a203f9f8b7844e46676d526188965e877751edb.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:57751 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755497AbaD2Xzk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 19:55:40 -0400
+Received: by mail-ie0-f181.google.com with SMTP id y20so1003895ier.26
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 16:55:40 -0700 (PDT)
+Subject: [PATCH v2 2/2] x86/gart: Tidy messages and add bridge device info
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, x86@kernel.org,
+	Ingo Molnar <mingo@kernel.org>, linux-kernel@vger.kernel.org
+Date: Tue, 29 Apr 2014 17:55:38 -0600
+Message-ID: <20140429235538.11112.41112.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140429235015.11112.79459.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140429235015.11112.79459.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Print the AGP bridge info the same way as the rest of the kernel, e.g.,
+"0000:00:04.0" instead of "00:04:00".
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: intel-linux-scu@intel.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Also print the AGP aperture address range the same way we print resources,
+and label it explicitly as a bus address range.
+
+No functional change except the message changes.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/scsi/isci/init.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ arch/x86/kernel/aperture_64.c |   39 ++++++++++++++++++++++-----------------
+ 1 file changed, 22 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 695b34e..4198e45 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -356,7 +356,7 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
- 	for (i = 0; i < num_msix; i++)
- 		pci_info->msix_entries[i].entry = i;
+diff --git a/arch/x86/kernel/aperture_64.c b/arch/x86/kernel/aperture_64.c
+index b11edf2b656d..6e2283423887 100644
+--- a/arch/x86/kernel/aperture_64.c
++++ b/arch/x86/kernel/aperture_64.c
+@@ -77,13 +77,13 @@ static u32 __init allocate_aperture(void)
+ 	addr = memblock_find_in_range(GART_MIN_ADDR, GART_MAX_ADDR,
+ 				      aper_size, aper_size);
+ 	if (!addr) {
+-		pr_err("Cannot allocate aperture memory hole (%lx,%uK)\n",
+-		       addr, aper_size>>10);
++		pr_err("Cannot allocate aperture memory hole [mem %#010lx-%#010lx] (%uKB)\n",
++		       addr, addr + aper_size - 1, aper_size >> 10);
+ 		return 0;
+ 	}
+ 	memblock_reserve(addr, aper_size);
+-	pr_info("Mapping aperture over %d KB of RAM @ %lx\n", aper_size >> 10,
+-		addr);
++	pr_info("Mapping aperture over RAM [mem %#010%lx-%#010lx] (%uKB)\n",
++		addr, addr + aper_size - 1, aper_size >> 10);
+ 	register_nosave_region(addr >> PAGE_SHIFT,
+ 			       (addr+aper_size) >> PAGE_SHIFT);
  
--	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
-+	err = pci_enable_msix_exact(pdev, pci_info->msix_entries, num_msix);
- 	if (err)
- 		goto intx;
+@@ -127,10 +127,11 @@ static u32 __init read_agp(int bus, int slot, int func, int cap, u32 *order)
+ 	u64 aper;
+ 	u32 old_order;
  
--- 
-1.7.7.6
+-	pr_info("AGP bridge at %02x:%02x:%02x\n", bus, slot, func);
++	pr_info("pci 0000:%02x:%02x:%02x: AGP bridge\n", bus, slot, func);
+ 	apsizereg = read_pci_config_16(bus, slot, func, cap + 0x14);
+ 	if (apsizereg == 0xffffffff) {
+-		pr_err("APSIZE in AGP bridge unreadable\n");
++		pr_err("pci 0000:%02x:%02x.d: APSIZE unreadable\n",
++		       bus, slot, func);
+ 		return 0;
+ 	}
+ 
+@@ -154,16 +155,18 @@ static u32 __init read_agp(int bus, int slot, int func, int cap, u32 *order)
+ 	 * On some sick chips, APSIZE is 0. It means it wants 4G
+ 	 * so let double check that order, and lets trust AMD NB settings:
+ 	 */
+-	pr_info("Aperture from AGP @ %Lx old size %u MB\n",
+-		aper, 32 << old_order);
++	pr_info("pci 0000:%02x:%02x.%d: AGP aperture [bus addr %#010Lx-%#010Lx] (old size %uMB)\n",
++		bus, slot, func, aper, aper + (32ULL << (old_order + 20)) - 1,
++		32 << old_order);
+ 	if (aper + (32ULL<<(20 + *order)) > 0x100000000ULL) {
+-		pr_info("Aperture size %u MB (APSIZE %x) is not right, using settings from NB\n",
+-			32 << *order, apsizereg);
++		pr_info("pci 0000:%02x:%02x.%d: AGP aperture size %uMB (APSIZE %#x) is not right, using settings from NB\n",
++			bus, slot, func, 32 << *order, apsizereg);
+ 		*order = old_order;
+ 	}
+ 
+-	pr_info("Aperture from AGP @ %Lx size %u MB (APSIZE %x)\n", aper,
+-		32 << *order, apsizereg);
++	pr_info("pci 0000:%02x:%02x.%d: AGP aperture [bus addr %#010Lx-%#010Lx] (%uMB, APSIZE %#x)\n",
++		bus, slot, func, aper, aper + (32ULL << (*order + 20)) - 1,
++		32ULL << *order, apsizereg);
+ 
+ 	if (!aperture_valid(aper, (32*1024*1024) << *order, 32<<20))
+ 		return 0;
+@@ -311,7 +314,8 @@ void __init early_gart_iommu_check(void)
+ 		if (e820_any_mapped(aper_base, aper_base + aper_size,
+ 				    E820_RAM)) {
+ 			/* reserve it, so we can reuse it in second kernel */
+-			pr_info("update e820 for GART\n");
++			pr_info("e820: reserve [mem %#010Lx-%#010Lx] for GART\n",
++				aper_base, aper_base + aper_size - 1);
+ 			e820_add_region(aper_base, aper_size, E820_RESERVED);
+ 			update_e820();
+ 		}
+@@ -396,8 +400,9 @@ int __init gart_iommu_hole_init(void)
+ 			aper_base = read_pci_config(bus, slot, 3, AMD64_GARTAPERTUREBASE) & 0x7fff;
+ 			aper_base <<= 25;
+ 
+-			pr_info("Node %d: aperture @ %Lx size %u MB\n",
+-				node, aper_base, aper_size >> 20);
++			pr_info("Node %d: aperture [bus addr %#010Lx-%#010Lx] (%uMB)\n",
++				node, aper_base, aper_base + aper_size - 1,
++				aper_size >> 20);
+ 			node++;
+ 
+ 			if (!aperture_valid(aper_base, aper_size, 64<<20)) {
+@@ -408,7 +413,7 @@ int __init gart_iommu_hole_init(void)
+ 					if (!no_iommu &&
+ 					    max_pfn > MAX_DMA32_PFN &&
+ 					    !printed_gart_size_msg) {
+-						pr_err("you are using iommu with agp, but GART size is less than 64M\n");
++						pr_err("you are using iommu with agp, but GART size is less than 64MB\n");
+ 						pr_err("please increase GART size in your BIOS setup\n");
+ 						pr_err("if BIOS doesn't have that option, contact your HW vendor!\n");
+ 						printed_gart_size_msg = 1;
+@@ -449,7 +454,7 @@ out:
+ 		   fallback_aper_force) {
+ 		pr_info("Your BIOS doesn't leave a aperture memory hole\n");
+ 		pr_info("Please enable the IOMMU option in the BIOS setup\n");
+-		pr_info("This costs you %d MB of RAM\n",
++		pr_info("This costs you %dMB of RAM\n",
+ 			32 << fallback_aper_order);
+ 
+ 		aper_order = fallback_aper_order;
 
