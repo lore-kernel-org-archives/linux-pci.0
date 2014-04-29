@@ -1,84 +1,43 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 29 Apr 2014 13:19:19 +0200
-From: Robert Richter <rric@kernel.org>
-To: Andreas Herrmann <herrmann.der.user@googlemail.com>
-Cc: Borislav Petkov <bp@suse.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	herrmann.der.user@gmail.com, Myron Stowe <myron.stowe@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	kim.naru@amd.com, Daniel J Blueman <daniel@numascale.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86 <x86@kernel.org>,
-	Steffen Persvold <sp@numascale.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range
- capabilities
-Message-ID: <20140429111919.GI32718@rric.localhost>
-References: <20140419025308.2408.51252.stgit@amt.stowe>
- <20140419025323.2408.88764.stgit@amt.stowe>
- <20140419135219.GC8109@pd.tnic>
- <20140420075936.GA19672@pd.tnic>
- <CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com>
- <20140426091031.GA10166@pd.tnic>
- <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
- <20140428214036.GA32143@pd.tnic>
- <20140429073309.GE10997@alberich>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:43069 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752127AbaD2Xz1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 19:55:27 -0400
+Received: by mail-ig0-f174.google.com with SMTP id h18so6809441igc.7
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 16:55:27 -0700 (PDT)
+Subject: [PATCH v2 0/2] x86/gart: message tidy-up
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, x86@kernel.org,
+	Ingo Molnar <mingo@kernel.org>, linux-kernel@vger.kernel.org
+Date: Tue, 29 Apr 2014 17:55:25 -0600
+Message-ID: <20140429235015.11112.79459.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140429073309.GE10997@alberich>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29.04.14 09:33:09, Andreas Herrmann wrote:
-> On Mon, Apr 28, 2014 at 11:40:36PM +0200, Borislav Petkov wrote:
-> > On Mon, Apr 28, 2014 at 02:50:29PM -0600, Bjorn Helgaas wrote:
-> > > This I/O ECS thing seems likely to cause future problems.  My
-> > > understanding (based on sec 2.8 of [1]) is that enable_pci_io_ecs()
-> > > and pci_enable_pci_io_ecs() are there to enable access to extended
-> > > config space (offsets 256-4095) via the 0xcf8/0xcfc I/O ports.
-> > > 
-> > > Per sec 4.1.1 of [2], we should be using ECAM (the memory-mapped
-> > > enhanced configuration mechanism, i.e., MMCONFIG) to access extended
-> > > config space, and the BIOS should supply an MCFG table.
+v2 of the patch I posted at [1].  I split this into two:
 
-This is due to the non-atomic access to 0xcf8/0xcfc.
+  1) Add pr_fmt() and convert to pr_info(), etc.
+  2) Use more PCI-like device IDs, print ranges in %pR style, make more
+     consistent.
 
-IIRC, another problem with io cfg space access is that it is bound to
-register rax or so. The kernel implementation may not change here.
+Still no functional change except to messages.  I'd be glad to move
+arch/x86/kernel/aperture_64.c to arch/x86/pci if desired; I didn't here
+because it looks like several other files could also be moved, and I don't
+know how far to go.
 
-Otherall mmconfig access is much better implemented and thus
-recommended to use by the os, while io cfg is used mainly by the bios.
+Bjorn
 
-> > > So why do we need to enable I/O access to ECS on AMD chips at all?  Is
-> > > this a workaround for a broken BIOS that doesn't supply an MCFG table?
-> > 
-> > That's a good question. 831d991821dae doesn't say but I have a hunch
-> > Andreas and/or Robert should know. I seem to vaguely remember it
-> > might've been because of a missing MCFG but have flushed it out of the
-> > cache long time ago.
-> > 
-> > Let's ask them.
-> > 
-> > Andreas, Robert, guys, do you remember why we did the PCI IO ECS access?
-> > B0rked BIOSes?
-> 
-> 
-> I am sure, it's because some server systems had MMIO ECS access not
-> enabled in BIOS. I can't remember which systems were affected.
+[1] http://lkml.kernel.org/r/20140425171655.312.97511.stgit@bhelgaas-glaptop.roam.corp.google.com
 
-Yes, mmio ecs was not enabled on some systems by the bios. We needed
-to use cf8/cfc io access.
+---
 
-If MMCONFIG is available it is the default, cf8/cfc is only used
-otherwise. Also, some kernel configs may disable MMCONFIG.
+Bjorn Helgaas (2):
+      x86/gart: Replace printk() with pr_info()
+      x86/gart: Tidy messages and add bridge device info
 
-PCI ECS was especially needed to enable the IBS interrupt for hw
-profiling.
 
--Robert
+ arch/x86/kernel/aperture_64.c |   59 ++++++++++++++++++++++-------------------
+ 1 file changed, 31 insertions(+), 28 deletions(-)
