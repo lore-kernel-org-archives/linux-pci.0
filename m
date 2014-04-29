@@ -1,587 +1,222 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:44782 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753099AbaDGF5g convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Apr 2014 01:57:36 -0400
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>
-Cc: "arnd@arndb.de" <arnd@arndb.de>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Mon, 7 Apr 2014 13:57:19 +0800
-Subject: RE: [PATCH V7 08/10] pcie: SPEAr13xx: Add designware wrapper support
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB6618A44671049@EAPEX1MAIL1.st.com>
-References: <cover.1393568715.git.mohit.kumar@st.com>
- <cbfef3a20e6c713a0d7d6b970dc4c75928798442.1393568715.git.mohit.kumar@st.com>
- <20140404164238.GC9007@google.com>
-In-Reply-To: <20140404164238.GC9007@google.com>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:34057 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752586AbaD2AK6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 20:10:58 -0400
+Received: by mail-pd0-f173.google.com with SMTP id p10so5956477pdj.4
+        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 17:10:57 -0700 (PDT)
+Subject: [PATCH] PCI: Remove unnecessary __ref annotations
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Mon, 28 Apr 2014 18:10:55 -0600
+Message-ID: <20140429001054.30927.32908.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+Some PCI functions used to be marked __devinit.  When CONFIG_HOTPLUG was
+not set, these functions were discarded after boot.  A few callers of these
+__devinit functions were marked __ref to indicate that they could safely
+call the __devinit functions even though the callers were not __devinit.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Friday, April 04, 2014 10:13 PM
-> To: Mohit KUMAR DCG
-> Cc: arnd@arndb.de; Pratyush ANAND; Jingoo Han; Viresh Kumar; spear-
-> devel; linux-pci@vger.kernel.org
-> Subject: Re: [PATCH V7 08/10] pcie: SPEAr13xx: Add designware wrapper
-> support
->
-> On Fri, Feb 28, 2014 at 05:25:01PM +0530, Mohit Kumar wrote:
-> > From: Pratyush Anand <pratyush.anand@st.com>
-> >
-> > SPEAr1310 and SPEAr1340 SOC uses designware PCIe controller. Add
-> > SPEAr13xx PCIe driver based on designware controller driver.
-> >
-> > SPEAr1310 has 3 PCIe ports and SPEAr1340 has 1, which are multiplexed
-> > with ahci/sata pins. By default evaluation board of both controller
-> > works for ahci mode.
-> > To use these patches on SPEAr1340/1310 evaluation board, do the
-> > necessary modifications on board and enable (okay) pcie and miphy from
-> > respective evb dtsi file.
-> >
-> > Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-> > Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-> > Cc: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Viresh Kumar <viresh.linux@gmail.com>
-> > Cc: spear-devel@list.st.com
-> > Cc: linux-pci@vger.kernel.org
-> > ---
-> >  arch/arm/boot/dts/spear1310.dtsi  |    6 +
-> >  arch/arm/boot/dts/spear1340.dtsi  |    2 +
-> >  arch/arm/boot/dts/spear13xx.dtsi  |    4 +-
-> >  arch/arm/mach-spear/Kconfig       |    1 +
-> >  drivers/pci/host/Kconfig          |    8 +
-> >  drivers/pci/host/Makefile         |    1 +
-> >  drivers/pci/host/pcie-spear13xx.c |  414
-> > +++++++++++++++++++++++++++++++++++++
->
-> This doesn't apply cleanly to my tree (currently at 4a4389abdd98), apparently
-> because I don't have some of the ARM DTS stuff.  If you want to split this into
-> a PCI-specific part and an arch/arm part, I can apply the PCI part.  Or you can
-> apply the whole thing via whatever ARM tree makes sense.
->
+But CONFIG_HOTPLUG and __devinit are now gone, and the need for the __ref
+annotations is also gone, so remove them.  Relevant historical commits:
 
-Arnd,
-Pls comment if it can be taken care by you if I resend after rebasing it to your tree?
+  54b956b90360 Remove __dev* markings from init.h
+  a8e4b9c101ae PCI: add generic pci_hp_add_bridge()
+  0ab2b57f8db8 PCI: fix section mismatch warning in pci_scan_child_bus
+  451124a7cc6c PCI: fix 4x section mismatch warnings
 
-> I do have a couple minor comments below.  With those addressed, here's my
-> ACK so you can merge it via another tree if that makes the most sense:
->
-- Thanks for your review and comments. I  will incorporate these in my resend patch.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug-pci.c              |    2 +-
+ drivers/pci/hotplug/acpiphp_glue.c     |    2 +-
+ drivers/pci/hotplug/cpci_hotplug_pci.c |    2 +-
+ drivers/pci/hotplug/shpchp_pci.c       |    2 +-
+ drivers/pci/pci.h                      |    8 ++++----
+ drivers/pci/probe.c                    |    8 ++++----
+ drivers/pci/setup-bus.c                |   25 ++++++++++++-------------
+ 7 files changed, 24 insertions(+), 25 deletions(-)
 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-Thanks
-Mohit
+diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
+index 6258dc260d9f..c68366cee6b7 100644
+--- a/drivers/pci/hotplug-pci.c
++++ b/drivers/pci/hotplug-pci.c
+@@ -4,7 +4,7 @@
+ #include <linux/export.h>
+ #include "pci.h"
+ 
+-int __ref pci_hp_add_bridge(struct pci_dev *dev)
++int pci_hp_add_bridge(struct pci_dev *dev)
+ {
+ 	struct pci_bus *parent = dev->bus;
+ 	int pass, busnr, start = parent->busn_res.start;
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 0238a02b4cb3..bb945e33b1ec 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -500,7 +500,7 @@ static int acpiphp_rescan_slot(struct acpiphp_slot *slot)
+  * This function should be called per *physical slot*,
+  * not per each slot object in ACPI namespace.
+  */
+-static void __ref enable_slot(struct acpiphp_slot *slot)
++static void enable_slot(struct acpiphp_slot *slot)
+ {
+ 	struct pci_dev *dev;
+ 	struct pci_bus *bus = slot->bus;
+diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
+index 8c1464851768..b238a1a28372 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_pci.c
++++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
+@@ -250,7 +250,7 @@ int cpci_led_off(struct slot* slot)
+  * Device configuration functions
+  */
+ 
+-int __ref cpci_configure_slot(struct slot *slot)
++int cpci_configure_slot(struct slot *slot)
+ {
+ 	struct pci_dev *dev;
+ 	struct pci_bus *parent;
+diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
+index 2bf69fe1926c..18209ebc0979 100644
+--- a/drivers/pci/hotplug/shpchp_pci.c
++++ b/drivers/pci/hotplug/shpchp_pci.c
+@@ -34,7 +34,7 @@
+ #include "../pci.h"
+ #include "shpchp.h"
+ 
+-int __ref shpchp_configure_device(struct slot *p_slot)
++int shpchp_configure_device(struct slot *p_slot)
+ {
+ 	struct pci_dev *dev;
+ 	struct controller *ctrl = p_slot->ctrl;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6bd082299e31..fe233a3099cf 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -201,11 +201,11 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		    struct resource *res, unsigned int reg);
+ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
+ void pci_configure_ari(struct pci_dev *dev);
+-void __ref __pci_bus_size_bridges(struct pci_bus *bus,
++void __pci_bus_size_bridges(struct pci_bus *bus,
+ 			struct list_head *realloc_head);
+-void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
+-				      struct list_head *realloc_head,
+-				      struct list_head *fail_head);
++void __pci_bus_assign_resources(const struct pci_bus *bus,
++				struct list_head *realloc_head,
++				struct list_head *fail_head);
+ 
+ /**
+  * pci_ari_enabled - query ARI forwarding status
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ef09f5f2fe6c..fe89a982a3da 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -719,7 +719,7 @@ add_dev:
+ 	return child;
+ }
+ 
+-struct pci_bus *__ref pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev, int busnr)
++struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev, int busnr)
+ {
+ 	struct pci_bus *child;
+ 
+@@ -1369,7 +1369,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	WARN_ON(ret < 0);
+ }
+ 
+-struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
++struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn)
+ {
+ 	struct pci_dev *dev;
+ 
+@@ -1958,7 +1958,7 @@ EXPORT_SYMBOL(pci_scan_bus);
+  *
+  * Returns the max number of subordinate bus discovered.
+  */
+-unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
++unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+ {
+ 	unsigned int max;
+ 	struct pci_bus *bus = bridge->subordinate;
+@@ -1981,7 +1981,7 @@ unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+  *
+  * Returns the max number of subordinate bus discovered.
+  */
+-unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
++unsigned int pci_rescan_bus(struct pci_bus *bus)
+ {
+ 	unsigned int max;
+ 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 138bdd6393be..d219d44709b2 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1113,8 +1113,7 @@ handle_done:
+ 	;
+ }
+ 
+-void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+-			struct list_head *realloc_head)
++void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask;
+@@ -1178,15 +1177,15 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ 	}
+ }
+ 
+-void __ref pci_bus_size_bridges(struct pci_bus *bus)
++void pci_bus_size_bridges(struct pci_bus *bus)
+ {
+ 	__pci_bus_size_bridges(bus, NULL);
+ }
+ EXPORT_SYMBOL(pci_bus_size_bridges);
+ 
+-void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
+-				      struct list_head *realloc_head,
+-				      struct list_head *fail_head)
++void __pci_bus_assign_resources(const struct pci_bus *bus,
++				struct list_head *realloc_head,
++				struct list_head *fail_head)
+ {
+ 	struct pci_bus *b;
+ 	struct pci_dev *dev;
+@@ -1218,15 +1217,15 @@ void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
+ 	}
+ }
+ 
+-void __ref pci_bus_assign_resources(const struct pci_bus *bus)
++void pci_bus_assign_resources(const struct pci_bus *bus)
+ {
+ 	__pci_bus_assign_resources(bus, NULL, NULL);
+ }
+ EXPORT_SYMBOL(pci_bus_assign_resources);
+ 
+-static void __ref __pci_bridge_assign_resources(const struct pci_dev *bridge,
+-					 struct list_head *add_head,
+-					 struct list_head *fail_head)
++static void __pci_bridge_assign_resources(const struct pci_dev *bridge,
++					  struct list_head *add_head,
++					  struct list_head *fail_head)
+ {
+ 	struct pci_bus *b;
+ 
+@@ -1304,9 +1303,9 @@ enum release_type {
+  * try to release pci bridge resources that is from leaf bridge,
+  * so we can allocate big new one later
+  */
+-static void __ref pci_bus_release_bridge_resources(struct pci_bus *bus,
+-						   unsigned long type,
+-						   enum release_type rel_type)
++static void pci_bus_release_bridge_resources(struct pci_bus *bus,
++					     unsigned long type,
++					     enum release_type rel_type)
+ {
+ 	struct pci_dev *dev;
+ 	bool is_leaf_bridge = true;
 
-> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig index
-> > 47d46c6..8697dd1 100644
-> > --- a/drivers/pci/host/Kconfig
-> > +++ b/drivers/pci/host/Kconfig
-> > @@ -33,4 +33,12 @@ config PCI_RCAR_GEN2
-> >       There are 3 internal PCI controllers available with a single
-> >       built-in EHCI/OHCI host controller present on each one.
-> >
-> > +config PCIE_SPEAR13XX
-> > +   tristate "STMicroelectronics SPEAr PCIe controller"
-> > +   depends on ARCH_SPEAR13XX
-> > +   select PCIEPORTBUS
-> > +   select PCIE_DW
-> > +   help
-> > +     Say Y here if you want PCIe support on SPEAr13XX SoCs.
-> > +
-> >  endmenu
-> > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> > index 13fb333..42a491d 100644
-> > --- a/drivers/pci/host/Makefile
-> > +++ b/drivers/pci/host/Makefile
-> > @@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
-> >  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
-> >  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
-> >  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
-> > +obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
-> > diff --git a/drivers/pci/host/pcie-spear13xx.c
-> > b/drivers/pci/host/pcie-spear13xx.c
-> > new file mode 100644
-> > index 0000000..c70d526
-> > --- /dev/null
-> > +++ b/drivers/pci/host/pcie-spear13xx.c
-> > @@ -0,0 +1,414 @@
-> > +/*
-> > + * PCIe host controller driver for ST Microelectronics SPEAr13xx SoCs
-> > + *
-> > + * SPEAr13xx PCIe Glue Layer Source Code
-> > + *
-> > + * Copyright (C) 2010-2014 ST Microelectronics
-> > + * Pratyush Anand <pratyush.anand@st.com>
-> > + * Mohit Kumar <mohit.kumar@st.com>
-> > + *
-> > + * This file is licensed under the terms of the GNU General Public
-> > + * License version 2. This program is licensed "as is" without any
-> > + * warranty of any kind, whether express or implied.
-> > + */
-> > +
-> > +#include <linux/clk.h>
-> > +#include <linux/delay.h>
-> > +#include <linux/interrupt.h>
-> > +#include <linux/kernel.h>
-> > +#include <linux/module.h>
-> > +#include <linux/of.h>
-> > +#include <linux/pci.h>
-> > +#include <linux/phy/phy.h>
-> > +#include <linux/platform_device.h>
-> > +#include <linux/resource.h>
-> > +
-> > +#include "pcie-designware.h"
-> > +
-> > +struct spear13xx_pcie {
-> > +   void __iomem            *app_base;
-> > +   struct phy              *phy;
-> > +   struct clk              *clk;
-> > +   struct pcie_port        pp;
-> > +   bool                    is_gen1;
-> > +};
-> > +
-> > +struct pcie_app_reg {
-> > +   u32     app_ctrl_0;             /*cr0*/
-> > +   u32     app_ctrl_1;             /*cr1*/
-> > +   u32     app_status_0;           /*cr2*/
-> > +   u32     app_status_1;           /*cr3*/
-> > +   u32     msg_status;             /*cr4*/
-> > +   u32     msg_payload;            /*cr5*/
-> > +   u32     int_sts;                /*cr6*/
-> > +   u32     int_clr;                /*cr7*/
-> > +   u32     int_mask;               /*cr8*/
-> > +   u32     mst_bmisc;              /*cr9*/
-> > +   u32     phy_ctrl;               /*cr10*/
-> > +   u32     phy_status;             /*cr11*/
-> > +   u32     cxpl_debug_info_0;      /*cr12*/
-> > +   u32     cxpl_debug_info_1;      /*cr13*/
-> > +   u32     ven_msg_ctrl_0;         /*cr14*/
-> > +   u32     ven_msg_ctrl_1;         /*cr15*/
-> > +   u32     ven_msg_data_0;         /*cr16*/
-> > +   u32     ven_msg_data_1;         /*cr17*/
-> > +   u32     ven_msi_0;              /*cr18*/
-> > +   u32     ven_msi_1;              /*cr19*/
-> > +   u32     mst_rmisc;              /*cr 20*/
->
-> Usually people put a space after "/*" and before "*/" (this applies other
-> places below, too).  But at least make the cr20 comment spacing here
-> consistent with the other ones above.
->
-> > +};
-> > +
-> > +/*CR0 ID*/
-> > +#define RX_LANE_FLIP_EN_ID                 0
-> > +#define TX_LANE_FLIP_EN_ID                 1
-> > +#define SYS_AUX_PWR_DET_ID                 2
-> > +#define APP_LTSSM_ENABLE_ID                        3
-> > +#define SYS_ATTEN_BUTTON_PRESSED_ID                4
-> > +#define SYS_MRL_SENSOR_STATE_ID                    5
-> > +#define SYS_PWR_FAULT_DET_ID                       6
-> > +#define SYS_MRL_SENSOR_CHGED_ID                    7
-> > +#define SYS_PRE_DET_CHGED_ID                       8
-> > +#define SYS_CMD_CPLED_INT_ID                       9
-> > +#define APP_INIT_RST_0_ID                  11
-> > +#define APP_REQ_ENTR_L1_ID                 12
-> > +#define APP_READY_ENTR_L23_ID                      13
-> > +#define APP_REQ_EXIT_L1_ID                 14
-> > +#define DEVICE_TYPE_EP                             (0 << 25)
-> > +#define DEVICE_TYPE_LEP                            (1 << 25)
-> > +#define DEVICE_TYPE_RC                             (4 << 25)
-> > +#define SYS_INT_ID                         29
-> > +#define MISCTRL_EN_ID                              30
-> > +#define REG_TRANSLATION_ENABLE                     31
->
-> Many of these symbols are defined but never used.  Personally, I would just
-> define the things you use, since they've presumably gotten at least some
-> testing.  Then the list is a clue to the reader about what features the driver
-> supports, and you can add others when you add more features.  I think
-> they're more likely to get reviewed and tested then.  But not a big deal either
-> way.
->
-> > +/*CR1 ID*/
-> > +#define APPS_PM_XMT_TURNOFF_ID                     2
-> > +#define APPS_PM_XMT_PME_ID                 5
-> > +
-> > +/*CR3 ID*/
-> > +#define XMLH_LTSSM_STATE_DETECT_QUIET              0x00
-> > +#define XMLH_LTSSM_STATE_DETECT_ACT                0x01
-> > +#define XMLH_LTSSM_STATE_POLL_ACTIVE               0x02
-> > +#define XMLH_LTSSM_STATE_POLL_COMPLIANCE   0x03
-> > +#define XMLH_LTSSM_STATE_POLL_CONFIG               0x04
-> > +#define XMLH_LTSSM_STATE_PRE_DETECT_QUIET  0x05
-> > +#define XMLH_LTSSM_STATE_DETECT_WAIT               0x06
-> > +#define XMLH_LTSSM_STATE_CFG_LINKWD_START  0x07
-> > +#define XMLH_LTSSM_STATE_CFG_LINKWD_ACEPT  0x08
-> > +#define XMLH_LTSSM_STATE_CFG_LANENUM_WAIT  0x09
-> > +#define XMLH_LTSSM_STATE_CFG_LANENUM_ACEPT 0x0A
-> > +#define XMLH_LTSSM_STATE_CFG_COMPLETE              0x0B
-> > +#define XMLH_LTSSM_STATE_CFG_IDLE          0x0C
-> > +#define XMLH_LTSSM_STATE_RCVRY_LOCK                0x0D
-> > +#define XMLH_LTSSM_STATE_RCVRY_SPEED               0x0E
-> > +#define XMLH_LTSSM_STATE_RCVRY_RCVRCFG             0x0F
-> > +#define XMLH_LTSSM_STATE_RCVRY_IDLE                0x10
-> > +#define XMLH_LTSSM_STATE_L0                        0x11
-> > +#define XMLH_LTSSM_STATE_L0S                       0x12
-> > +#define XMLH_LTSSM_STATE_L123_SEND_EIDLE   0x13
-> > +#define XMLH_LTSSM_STATE_L1_IDLE           0x14
-> > +#define XMLH_LTSSM_STATE_L2_IDLE           0x15
-> > +#define XMLH_LTSSM_STATE_L2_WAKE           0x16
-> > +#define XMLH_LTSSM_STATE_DISABLED_ENTRY            0x17
-> > +#define XMLH_LTSSM_STATE_DISABLED_IDLE             0x18
-> > +#define XMLH_LTSSM_STATE_DISABLED          0x19
-> > +#define XMLH_LTSSM_STATE_LPBK_ENTRY                0x1A
-> > +#define XMLH_LTSSM_STATE_LPBK_ACTIVE               0x1B
-> > +#define XMLH_LTSSM_STATE_LPBK_EXIT         0x1C
-> > +#define XMLH_LTSSM_STATE_LPBK_EXIT_TIMEOUT 0x1D
-> > +#define XMLH_LTSSM_STATE_HOT_RESET_ENTRY   0x1E
-> > +#define XMLH_LTSSM_STATE_HOT_RESET         0x1F
-> > +#define XMLH_LTSSM_STATE_MASK                      0x3F
-> > +#define XMLH_LINK_UP                               (1 << 6)
-> > +
-> > +/*CR4 ID*/
-> > +#define CFG_MSI_EN_ID                              18
-> > +
-> > +/*CR6*/
-> > +#define INTA_CTRL_INT                              (1 << 7)
-> > +#define INTB_CTRL_INT                              (1 << 8)
-> > +#define INTC_CTRL_INT                              (1 << 9)
-> > +#define INTD_CTRL_INT                              (1 << 10)
-> > +#define MSI_CTRL_INT                               (1 << 26)
-> > +
-> > +/*CR19 ID*/
-> > +#define VEN_MSI_REQ_ID                             11
-> > +#define VEN_MSI_FUN_NUM_ID                 8
-> > +#define VEN_MSI_TC_ID                              5
-> > +#define VEN_MSI_VECTOR_ID                  0
-> > +#define VEN_MSI_REQ_EN             ((u32)0x1 << VEN_MSI_REQ_ID)
-> > +#define VEN_MSI_FUN_NUM_MASK       ((u32)0x7 <<
-> VEN_MSI_FUN_NUM_ID)
-> > +#define VEN_MSI_TC_MASK            ((u32)0x7 <<
-> VEN_MSI_TC_ID)
-> > +#define VEN_MSI_VECTOR_MASK        ((u32)0x1F << VEN_MSI_VECTOR_ID)
-> > +
-> > +#define PCI_CAP_ID_EXP_OFFSET                      0x70
-> > +
-> > +#define to_spear13xx_pcie(x)       container_of(x, struct
-> spear13xx_pcie, pp)
-> > +
-> > +static int spear13xx_pcie_establish_link(struct pcie_port *pp) {
-> > +   u32 val;
-> > +   int count = 0;
-> > +   struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
-> > +   struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
-> > +   u32 exp_cap_off = PCI_CAP_ID_EXP_OFFSET;
-> > +
-> > +   if (dw_pcie_link_up(pp)) {
-> > +           dev_err(pp->dev, "Link already up\n");
->
-> Most of your messages start with lowercase; it'd be nice to be consistent.
->
-> > +           return 0;
-> > +   }
-> > +
-> > +   /* setup root complex */
->
-> Superfluous comment.
->
-> > +   dw_pcie_setup_rc(pp);
-> > +
-> > +   /*
-> > +    * this controller support only 128 bytes read size, however its
-> > +    * default value in capability register is 512 bytes. So force
-> > +    * it to 128 here.
-> > +    */
-> > +   dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL,
-> 4, &val);
-> > +   val &= ~PCI_EXP_DEVCTL_READRQ;
-> > +   dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL,
-> 4,
-> > +val);
-> > +
-> > +   /* program vid and did for RC */
->
-> Superfluous comment.
->
-> > +   dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
-> > +   dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
-> > +
-> > +   /*
-> > +    * if is_gen1 is set then handle it, so that some buggy card
-> > +    * also works
-> > +    */
-> > +   if (spear13xx_pcie->is_gen1) {
-> > +           dw_pcie_cfg_read(pp->dbi_base, exp_cap_off +
-> PCI_EXP_LNKCAP, 4,
-> > +                           &val);
-> > +           if ((val & PCI_EXP_LNKCAP_SLS) !=
-> PCI_EXP_LNKCAP_SLS_2_5GB) {
-> > +                   val &= ~((u32)PCI_EXP_LNKCAP_SLS);
-> > +                   val |= PCI_EXP_LNKCAP_SLS_2_5GB;
-> > +                   dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
-> > +                                   PCI_EXP_LNKCAP, 4, val);
-> > +           }
-> > +
-> > +           dw_pcie_cfg_read(pp->dbi_base, exp_cap_off +
-> PCI_EXP_LNKCTL2, 4,
-> > +                           &val);
-> > +           if ((val & PCI_EXP_LNKCAP_SLS) !=
-> PCI_EXP_LNKCAP_SLS_2_5GB) {
-> > +                   val &= ~((u32)PCI_EXP_LNKCAP_SLS);
-> > +                   val |= PCI_EXP_LNKCAP_SLS_2_5GB;
-> > +                   dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
-> > +                                   PCI_EXP_LNKCTL2, 4, val);
-> > +           }
-> > +   }
-> > +
-> > +   /* enable ltssm */
-> > +   writel(DEVICE_TYPE_RC | (1 << MISCTRL_EN_ID)
-> > +                   | (1 << APP_LTSSM_ENABLE_ID)
-> > +                   | ((u32)1 << REG_TRANSLATION_ENABLE),
-> > +                   &app_reg->app_ctrl_0);
-> > +
-> > +   /* check if the link is up or not */
-> > +   while (!dw_pcie_link_up(pp)) {
-> > +           mdelay(100);
-> > +           count++;
-> > +           if (count == 10) {
-> > +                   dev_err(pp->dev, "Link Fail\n");
-> > +                   return -EINVAL;
-> > +           }
-> > +   }
-> > +   dev_info(pp->dev, "Link up\n");
-> > +
-> > +   return 0;
-> > +}
-> > +
-> > +static irqreturn_t spear13xx_pcie_irq_handler(int irq, void *arg) {
-> > +   struct pcie_port *pp = arg;
-> > +   struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
-> > +   struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
-> > +   unsigned int status;
-> > +
-> > +   status = readl(&app_reg->int_sts);
-> > +
-> > +   if (status & MSI_CTRL_INT) {
-> > +           if (!IS_ENABLED(CONFIG_PCI_MSI))
-> > +                   BUG();
-> > +           dw_handle_msi_irq(pp);
-> > +   }
-> > +
-> > +   writel(status, &app_reg->int_clr);
-> > +
-> > +   return IRQ_HANDLED;
-> > +}
-> > +
-> > +static void spear13xx_pcie_enable_interrupts(struct pcie_port *pp) {
-> > +   struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
-> > +   struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
-> > +
-> > +   /* Enable MSI interrupt */
-> > +   if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> > +           dw_pcie_msi_init(pp);
-> > +           writel(readl(&app_reg->int_mask) |
-> > +                           MSI_CTRL_INT, &app_reg->int_mask);
-> > +   }
-> > +
-> > +   return;
->
-> Superfluous "return".
->
-> > +}
-> > +
-> > +static int spear13xx_pcie_link_up(struct pcie_port *pp) {
-> > +   struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
-> > +   struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
-> > +
-> > +   if (readl(&app_reg->app_status_1) & XMLH_LINK_UP)
-> > +           return 1;
-> > +
-> > +   return 0;
-> > +}
-> > +
-> > +static void spear13xx_pcie_host_init(struct pcie_port *pp) {
-> > +   spear13xx_pcie_establish_link(pp);
-> > +   spear13xx_pcie_enable_interrupts(pp);
-> > +}
-> > +
-> > +static struct pcie_host_ops spear13xx_pcie_host_ops = {
-> > +   .link_up = spear13xx_pcie_link_up,
-> > +   .host_init = spear13xx_pcie_host_init, };
-> > +
-> > +static int add_pcie_port(struct pcie_port *pp, struct platform_device
-> > +*pdev) {
-> > +   struct device *dev = &pdev->dev;
-> > +   int ret;
-> > +
-> > +   pp->irq = platform_get_irq(pdev, 0);
-> > +   if (!pp->irq) {
-> > +           dev_err(dev, "failed to get irq\n");
-> > +           return -ENODEV;
-> > +   }
-> > +   ret = devm_request_irq(dev, pp->irq, spear13xx_pcie_irq_handler,
-> > +                           IRQF_SHARED, "spear1340-pcie", pp);
-> > +   if (ret) {
-> > +           dev_err(dev, "failed to request irq\n");
->
-> Please include the IRQ number in this message.
->
-> > +           return ret;
-> > +   }
-> > +
-> > +   pp->root_bus_nr = -1;
-> > +   pp->ops = &spear13xx_pcie_host_ops;
-> > +
-> > +   spin_lock_init(&pp->conf_lock);
-> > +   ret = dw_pcie_host_init(pp);
-> > +   if (ret) {
-> > +           dev_err(dev, "failed to initialize host\n");
-> > +           return ret;
-> > +   }
-> > +
-> > +   return 0;
-> > +}
-> > +
-> > +static int __init spear13xx_pcie_probe(struct platform_device *pdev)
-> > +{
-> > +   struct spear13xx_pcie *spear13xx_pcie;
-> > +   struct pcie_port *pp;
-> > +   struct device *dev = &pdev->dev;
-> > +   struct device_node *np = pdev->dev.of_node;
-> > +   struct resource *dbi_base;
-> > +   int ret;
-> > +
-> > +   spear13xx_pcie = devm_kzalloc(dev, sizeof(*spear13xx_pcie),
-> > +                           GFP_KERNEL);
-> > +   if (!spear13xx_pcie) {
-> > +           dev_err(dev, "no memory for SPEAr13xx pcie\n");
-> > +           return -ENOMEM;
-> > +   }
-> > +
-> > +   spear13xx_pcie->phy = devm_phy_get(dev, "pcie-phy");
-> > +   if (IS_ERR(spear13xx_pcie->phy)) {
-> > +           ret = PTR_ERR(spear13xx_pcie->phy);
-> > +           switch (ret) {
-> > +           case -EPROBE_DEFER:
-> > +                   dev_info(dev, "probe deferred\n");
-> > +                   return ret;
-> > +           default:
-> > +                   dev_err(dev, "couldn't get pcie-phy\n");
-> > +                   return ret;
-> > +           }
->
-> This would be slightly simpler (your choice):
->
->       if (ret == -EPROBE_DEFER)
->               dev_info(...)
->       else
->               dev_err(...)
->       return ret;
->
-> > +   }
-> > +
-> > +   phy_init(spear13xx_pcie->phy);
-> > +
-> > +   spear13xx_pcie->clk = devm_clk_get(dev, NULL);
-> > +   if (IS_ERR(spear13xx_pcie->clk)) {
-> > +           dev_err(dev, "couldn't get clk for pcie\n");
-> > +           return PTR_ERR(spear13xx_pcie->clk);
-> > +   }
-> > +   ret = clk_prepare_enable(spear13xx_pcie->clk);
-> > +   if (ret) {
-> > +           dev_err(dev, "couldn't enable clk for pcie\n");
-> > +           return ret;
-> > +   }
-> > +
-> > +   pp = &spear13xx_pcie->pp;
-> > +
-> > +   pp->dev = dev;
-> > +
-> > +   dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> > +   pp->dbi_base = devm_ioremap_resource(dev, dbi_base);
-> > +   if (IS_ERR(pp->dbi_base)) {
-> > +           dev_err(dev, "couldn't remap dbi base\n");
->
-> Please include the dbi_base address in the message.
->
-> > +           ret = PTR_ERR(pp->dbi_base);
-> > +           goto fail_clk;
-> > +   }
-> > +   spear13xx_pcie->app_base = pp->dbi_base + 0x2000;
-> > +
-> > +   if (of_property_read_bool(np, "st,pcie-is-gen1"))
-> > +           spear13xx_pcie->is_gen1 = true;
-> > +
-> > +   ret = add_pcie_port(pp, pdev);
-> > +   if (ret < 0)
-> > +           goto fail_clk;
-> > +
-> > +   platform_set_drvdata(pdev, spear13xx_pcie);
-> > +   return 0;
-> > +
-> > +fail_clk:
-> > +   clk_disable_unprepare(spear13xx_pcie->clk);
-> > +
-> > +   return ret;
-> > +}
-> > +
-> > +static int __exit spear13xx_pcie_remove(struct platform_device *pdev)
-> > +{
-> > +   struct spear13xx_pcie *spear13xx_pcie =
-> platform_get_drvdata(pdev);
-> > +
-> > +   clk_disable_unprepare(spear13xx_pcie->clk);
-> > +
-> > +   phy_exit(spear13xx_pcie->phy);
-> > +
-> > +   return 0;
-> > +}
-> > +
-> > +static const struct of_device_id spear13xx_pcie_of_match[] = {
-> > +   { .compatible = "st,spear1340-pcie", },
-> > +   {},
-> > +};
-> > +MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
-> > +
-> > +static struct platform_driver spear13xx_pcie_driver = {
-> > +   .probe          = spear13xx_pcie_probe,
-> > +   .remove         = spear13xx_pcie_remove,
-> > +   .driver = {
-> > +           .name   = "spear-pcie",
-> > +           .owner  = THIS_MODULE,
-> > +           .of_match_table =
-> of_match_ptr(spear13xx_pcie_of_match),
-> > +   },
-> > +};
-> > +
-> > +/* SPEAr13xx PCIe driver does not allow module unload */
-> > +
-> > +static int __init pcie_init(void)
-> > +{
-> > +   return platform_driver_register(&spear13xx_pcie_driver);
-> > +}
-> > +module_init(pcie_init);
-> > +
-> > +MODULE_DESCRIPTION("ST Microelectronics SPEAr13xx PCIe host
-> > +controller driver"); MODULE_AUTHOR("Pratyush Anand
-> > +<pratyush.anand@st.com>"); MODULE_LICENSE("GPL v2");
-> > --
-> > 1.7.0.1
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> > in the body of a message to majordomo@vger.kernel.org More
-> majordomo
-> > info at  http://vger.kernel.org/majordomo-info.html
