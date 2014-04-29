@@ -1,43 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:58099 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756780AbaDBC35 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Apr 2014 22:29:57 -0400
-Date: Tue, 01 Apr 2014 22:29:55 -0400 (EDT)
-Message-Id: <20140401.222955.1322740724254746495.davem@davemloft.net>
-To: weiyang@linux.vnet.ibm.com
-Cc: netdev@vger.kernel.org, yevgenyp@mellanox.com,
-	ogerlitz@mellanox.com, amirv@mellanox.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] net/mlx4_core: match pci_device_id including dynids
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1396326961-20395-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1396326961-20395-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:64084 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755874AbaD2XGP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 19:06:15 -0400
+Received: by mail-ie0-f176.google.com with SMTP id rd18so1001240iec.7
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 16:06:15 -0700 (PDT)
+Date: Tue, 29 Apr 2014 17:06:12 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jon Mason <jdmason@kudzu.us>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Coverity CID 146454: pcie_bus_configure_settings() use of
+ uninitialized variable
+Message-ID: <20140429230612.GA9795@google.com>
+References: <CAErSpo7OVbiZ=W1N0Zfb=p3KDsDCkq7Xq1CqzQTeANfvWWZ9yw@mail.gmail.com>
+ <533E0F84.1050302@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <533E0F84.1050302@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-Date: Tue,  1 Apr 2014 12:36:01 +0800
+On Fri, Apr 04, 2014 at 09:48:52AM +0800, Yijing Wang wrote:
+> Hi Bjorn,
+>    Jon seems to send a patch to fix this long ago. Link: http://patchwork.ozlabs.org/patch/191054/
+> But this patch cannot be applied now. I think we can just set smpss = 0 in this function as the default value.
 
-> Fix issue introduced by commit: 97a5221 "net/mlx4_core: pass
-> pci_device_id.driver_data to __mlx4_init_one during reset".
-> 
-> pci_match_id() just match the static pci_device_id, which may return NULL if
-> someone binds the driver to a device manually using
-> /sys/bus/pci/drivers/.../new_id.
-> 
-> This patch match pci_device_id with pci_match_device() to cover both dynids
-> and static id_table.
-> 
-> Thanks to Bjorn finding this issue.
-> 
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Amir Vadai <amirv@mellanox.com>
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Acked-by: Amir Vadai <amirv@mellanox.com>
+Yep.  It's ugly, but I don't have time to try to make it prettier.  I'll
+apply the patch below.
 
-And ACK from the PCI folks would be greatly appreciated.
+> On 2014/4/4 0:09, Bjorn Helgaas wrote:
+> > Coverity complains that "smpss" is used uninitialized in
+> > drivers/pci/probe.c in pcie_bus_configure_settings() when calling
+> > pcie_bus_configure_set():
+> > 
+> > 1642        pcie_bus_configure_set(bus->self, &smpss);
+> > 1643        pci_walk_bus(bus, pcie_bus_configure_set, &smpss);
+> > 
+> > "smpss" may be uninitialized, and pcie_bus_configure_set()
+> > dereferences the pointer it receives.
+> > 
+> > This is CID 146454.
+> > 
+> > Bjorn
 
-Thanks.
+
+PCI: Fix use of uninitialized MPS value
+
+From: Bjorn Helgaas <bhelgaas@google.com>
+
+If "pcie_bus_config == PCIE_BUS_PERFORMANCE", we don't initialize "smpss",
+so we pass a pointer to garbage into pcie_bus_configure_set(), where we
+compute "mps" based on the garbage.  We then pass the garbage "mps" to
+pcie_write_mps(), which ignores it in the PCIE_BUS_PERFORMANCE case.
+
+Coverity isn't smart enough to deduce that we ignore the garbage (it's a
+lot to expect from a human, too), so initialize "smpss" to a safe value in
+all cases.
+
+Found by Coverity (CID 146454).
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index fe89a982a3da..490031fd2108 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1617,7 +1617,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+  */
+ void pcie_bus_configure_settings(struct pci_bus *bus)
+ {
+-	u8 smpss;
++	u8 smpss = 0;
+ 
+ 	if (!bus->self)
+ 		return;
