@@ -1,109 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-CC: linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v2 RESEND 02/23] bfa: Do not call pci_enable_msix()
- after it failed once
-Date: Wed, 16 Apr 2014 09:03:47 +0000
-Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59F827E4@avmb2.qlogic.org>
-References: <cover.1397461652.git.agordeev@redhat.com>
- <f9c36a94438cfb19e45f95111877f6e140b98089.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <f9c36a94438cfb19e45f95111877f6e140b98089.1397461652.git.agordeev@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:35796 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932562AbaD2AgM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 20:36:12 -0400
+Received: by mail-pb0-f42.google.com with SMTP id un15so6468213pbc.15
+        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 17:36:11 -0700 (PDT)
+Received: from localhost ([172.26.49.243])
+        by mx.google.com with ESMTPSA id pr4sm37673718pbb.53.2014.04.28.17.36.10
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Mon, 28 Apr 2014 17:36:11 -0700 (PDT)
+Subject: [PATCH] PCI: Remove dead code
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 Apr 2014 18:36:09 -0600
+Message-ID: <20140429003609.31283.49544.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Patch look good.
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+"pdev" can never be NULL here, so remove the test.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Alexander Gordeev
-Sent: 14 April 2014 13:35
-To: linux-kernel
-Cc: Alexander Gordeev; Anil Gurumurthy; Vijaya Mohan Guvva; linux-scsi; linux-pci
-Subject: [PATCH v2 RESEND 02/23] bfa: Do not call pci_enable_msix() after it failed once
+Found by Coverity (CID 744313).
 
-Function pci_enable_msix() should not be called in case it threw a negative errno from a previous call.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/scsi/bfa/bfad.c |   48 ++++++++++++++++++++++------------------------
- 1 files changed, 23 insertions(+), 25 deletions(-)
+ drivers/pci/pci-driver.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c index cc0fbcd..972ff8d 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1235,33 +1235,31 @@ bfad_setup_intr(struct bfad_s *bfad)
-           (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 650ce8935fd7..ff236ed4f5cf 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1345,8 +1345,6 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 		return -ENODEV;
+ 
+ 	pdev = to_pci_dev(dev);
+-	if (!pdev)
+-		return -ENODEV;
+ 
+ 	if (add_uevent_var(env, "PCI_CLASS=%04X", pdev->class))
+ 		return -ENOMEM;
+@@ -1367,6 +1365,7 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
+ 			   (u8)(pdev->class)))
+ 		return -ENOMEM;
++
+ 	return 0;
+ }
+ 
 
-                error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
--               if (error) {
--                       /* In CT1 & CT2, try to allocate just one vector */
--                       if (bfa_asic_id_ctc(pdev->device)) {
--                               printk(KERN_WARNING "bfa %s: trying one msix "
--                                      "vector failed to allocate %d[%d]\n",
--                                      bfad->pci_name, bfad->nvec, error);
--                               bfad->nvec = 1;
--                               error = pci_enable_msix(bfad->pcidev,
-+               /* In CT1 & CT2, try to allocate just one vector */
-+               if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
-+                       printk(KERN_WARNING "bfa %s: trying one msix "
-+                              "vector failed to allocate %d[%d]\n",
-+                              bfad->pci_name, bfad->nvec, error);
-+                       bfad->nvec = 1;
-+                       error = pci_enable_msix(bfad->pcidev,
-                                                msix_entries, bfad->nvec);
--                       }
-+               }
-
--                       /*
--                        * Only error number of vector is available.
--                        * We don't have a mechanism to map multiple
--                        * interrupts into one vector, so even if we
--                        * can try to request less vectors, we don't
--                        * know how to associate interrupt events to
--                        *  vectors. Linux doesn't duplicate vectors
--                        * in the MSIX table for this case.
--                        */
--                       if (error) {
--                               printk(KERN_WARNING "bfad%d: "
--                                      "pci_enable_msix failed (%d), "
--                                      "use line based.\n",
--                                       bfad->inst_no, error);
--                               goto line_based;
--                       }
-+               /*
-+                * Only error number of vector is available.
-+                * We don't have a mechanism to map multiple
-+                * interrupts into one vector, so even if we
-+                * can try to request less vectors, we don't
-+                * know how to associate interrupt events to
-+                *  vectors. Linux doesn't duplicate vectors
-+                * in the MSIX table for this case.
-+                */
-+               if (error) {
-+                       printk(KERN_WARNING "bfad%d: "
-+                              "pci_enable_msix failed (%d), "
-+                              "use line based.\n",
-+                               bfad->inst_no, error);
-+                       goto line_based;
-                }
-
-                /* Disable INTX in MSI-X mode */
---
-1.7.7.6
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-________________________________
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
