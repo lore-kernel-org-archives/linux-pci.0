@@ -1,123 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:40850 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755822AbaDVMtm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Apr 2014 08:49:42 -0400
-Date: Tue, 22 Apr 2014 13:49:37 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"patches@apm.com" <patches@apm.com>,
-	"jcm@redhat.com" <jcm@redhat.com>
-Subject: Re: [PATCH v5 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
-Message-ID: <20140422124937.GE865@e106497-lin.cambridge.arm.com>
-References: <1395270762-6055-1-git-send-email-tinamdar@apm.com>
- <1395270762-6055-3-git-send-email-tinamdar@apm.com>
- <CAL_Jsq+XxAtUeNKFi0hH=ehb_fhFvkM0U1Zm_j1LdtQZbvSzfA@mail.gmail.com>
- <20140416170545.GD4858@bart>
- <20140416212104.GA3469@obsidianresearch.com>
- <20140417002041.GE4858@bart>
- <20140417012434.GA8734@obsidianresearch.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <535FC269.2000808@amd.com>
+Date: Tue, 29 Apr 2014 10:16:57 -0500
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <20140417012434.GA8734@obsidianresearch.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Borislav Petkov <bp@suse.de>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Robert Richter <rric@kernel.org>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>, <kim.naru@amd.com>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86 <x86@kernel.org>,
+	Steffen Persvold <sp@numascale.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Jan Beulich" <JBeulich@suse.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range capabilities
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+ <20140419025323.2408.88764.stgit@amt.stowe> <20140419135219.GC8109@pd.tnic>
+ <20140420075936.GA19672@pd.tnic>
+ <CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com>
+ <20140426091031.GA10166@pd.tnic>
+ <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
+ <20140428214036.GA32143@pd.tnic> <20140429073309.GE10997@alberich>
+ <20140429102013.GA4726@pd.tnic>
+In-Reply-To: <20140429102013.GA4726@pd.tnic>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 17, 2014 at 02:24:34AM +0100, Jason Gunthorpe wrote:
-> On Thu, Apr 17, 2014 at 01:20:42AM +0100, Liviu Dudau wrote:
-> 
-> > > No spec says you can put config space into the ranges at all, nobody
-> > > should be doing that today, obviously some cases were missed during
-> > > review..
-> > 
-> > ePAPR documents allows that when ss == 00.
-> 
-> Which do you mean? The 'PCI Bus Binding' spec has fairly specific
-> language on how ranges should be used and interpreted, and it
-> precludes doing anything meaningful with config space (like requiring
-> b,d,f and r to be zeroed when doing compares against ranges, requiring
-> the ranges to represent the bridge windows, etc).
-> 
-> There is certainly room to invent something (like ECAM mapping) but
-> nothing is specified in that document.
+On 4/29/2014 5:20 AM, Borislav Petkov wrote:
+> On Tue, Apr 29, 2014 at 09:33:09AM +0200, Andreas Herrmann wrote:
+>> I am sure, it's because some server systems had MMIO ECS access not
+>> enabled in BIOS. I can't remember which systems were affected.
+>
+If you are referring to accessing PCI ECS ranges via 0xCF8, then yes, 
+BIOS disable this as described below in the BKDG.
 
-On more carefull reading of the Power_ePAPR_APPROVED_v1.0.pdf document
-that I have I agree, there is no meaningful way of describing one's
-config ranges.
+"The BIOS may use either configuration space access mechanism during 
+boot. Before booting the OS, BIOS must disable IO access to ECS, enable 
+MMIO configuration and build an ACPI defined MCFG table. BIOS ACPI code 
+must use MMIO to access configuration space."
 
-> 
-> The ePAPR document I have doesn't talk about PCI..
-> 
-> If you've found a document that defines how it works then that changes
-> things.. ;)
-> 
-> > > The comment about ECAM was intended as a general guidance on what
-> > > config space in ranges could/should be used for.
-> > > 
-> > > Right now config space shouldn't propagate out side any driver, so you
-> > > can probably just filter it in your generic code, and make it very hard
-> > > and obviously wrong for a driver to parse ranges for config space, so
-> > > we don't get more usages.
-> > 
-> > OK, this goes slightly against your email from 26th March:
-> > 
-> > "When we talked about this earlier on the DT bindings list the
-> > consensus seemed to be that configuration MMIO ranges should only be
-> > used if the underlying memory was exactly ECAM, and was not to be used
-> > for random configuration related register blocks.
-> > 
-> > The rational being that generic code, upon seeing that ranges entry,
-> > could just go ahead and assume ECAM mapping."
-> > 
-> > What I'm saying is that the only code that will see this ranges entry will
-> > be the parsing code as if we try to create a resource out of the range
-> > and add it to the host bridge structure (not driver) we will confuse the
-> > rest of the pci_host_bridge API. So we cannot do any ECAM accesses (yet?).
-> 
-> Sorry if this seems unclear, what you quoted was from a specification
-> standpoint - someday defining config space ranges to be the ECAM
-> window makes the most sense. This is from the direction of precluding
-> drivers from using it for random purposes.
-> 
-> From a Linux standpoint, there is simply no infrastructure for generic
-> config access outside the driver, so config space must remain
-> contained in the driver, and shouldn't leak into the host bridge or
-> other core structures.
-> 
-> I think the shared code you are working on should simply ignore config
-> ss ranges entirely, they have no defined meaning..
+> Ok, now AMD people: what's the story with IO ECS, can we assume that on
+> everything after F10h, BIOS has a sensible MCFG and we can limit this to
+> F10h only? I like Bjorn's idea but we need to make sure a working MCFG
+> is ubiquitous.
+>
+> Which begs the real question: Suravee, why are you even touching IO ECS
+> provided F15h and later have a MCFG? Or, do they?
+>
 
-Agree. Less things to code for is always better!
+As I was trying to generalize the logic inside amd_bus.c, which seems to 
+be used mainly as a fallback mechanism, I tried to maintain the existing 
+code, which does many things:
+     1. Setup numa_node information (if PXM doesn't exist)
+     2. Probe NB for MMIO resources (if MCFG doesn't exist)
+     3. Probe NB for IO resources
+     4. Setup IO ECS
 
-Best regards,
-Liviu
+In the new code, the IO ECS was needed to retrieve the 
+AMD_NB_F1_MMIO_BASE_LIMIT_HI_REG (offset 0x180) during the early 
+initialization as part of (2) logic. However, this register exists only 
+on the newer systems.  However, as you mentioned, for (2) we can assume 
+that the MCFG exists for most of the systems (family10h and later), and 
+should be used instead.
 
-> 
-> Regards,
-> Jason
-> 
+The main purpose of this patch set is mainly to deal with the the node 
+information (1).  So, we might need to split these all up and handle 
+them separately as needed where (2) and (3) will be used as fallback for 
+older systems where MCFG does not exist. I am not sure if where we need (4).
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Suravee
 
