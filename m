@@ -1,106 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0188.outbound.protection.outlook.com ([207.46.163.188]:25131
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751613AbaD2DEl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 28 Apr 2014 23:04:41 -0400
-Message-ID: <535F16C2.6010509@amd.com>
-Date: Mon, 28 Apr 2014 22:04:34 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:38767 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839AbaD2XaX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 19:30:23 -0400
+Received: by mail-ie0-f181.google.com with SMTP id y20so1047685ier.40
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 16:30:22 -0700 (PDT)
+Date: Tue, 29 Apr 2014 17:30:20 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Sebastian Ott <sebott@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Michal Simek <monstr@monstr.eu>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>
+Subject: Re: [Resend] pcibios_add_platform_entries usage
+Message-ID: <20140429233020.GA9912@google.com>
+References: <alpine.LFD.2.11.1403281931410.1516@denkbrett>
+ <alpine.LFD.2.11.1404141101500.1529@denkbrett>
+ <20140414173541.GA4417@google.com>
+ <alpine.LFD.2.11.1404141958120.1561@denkbrett>
+ <alpine.LFD.2.11.1404171938190.1588@denkbrett>
 MIME-Version: 1.0
-To: Myron Stowe <myron.stowe@gmail.com>, Borislav Petkov <bp@suse.de>
-CC: Myron Stowe <myron.stowe@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	<kim.naru@amd.com>, <daniel@numascale.com>,
-	Thomas Gleixner <tglx@linutronix.de>, <mingo@redhat.com>,
-	<hpa@zytor.com>, x86 <x86@kernel.org>, <sp@numascale.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range capabilities
-References: <20140419025308.2408.51252.stgit@amt.stowe>
-	<20140419025323.2408.88764.stgit@amt.stowe>	<20140419135219.GC8109@pd.tnic>
-	<20140420075936.GA19672@pd.tnic>
- <CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com>
-In-Reply-To: <CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <alpine.LFD.2.11.1404171938190.1588@denkbrett>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/25/2014 5:24 PM, Myron Stowe wrote:
-> On Sun, Apr 20, 2014 at 1:59 AM, Borislav Petkov <bp@suse.de> wrote:
->> Drop Andreas' old email address from CC as it keeps bouncing.
->>
->> On Sat, Apr 19, 2014 at 03:52:20PM +0200, Borislav Petkov wrote:
->>>> -static void __init pci_enable_pci_io_ecs(void)
->>>> +static void __init pci_enable_pci_io_ecs(u8 bus, u8 slot)
->>>>   {
->>>>   #ifdef CONFIG_AMD_NB
->>>>      unsigned int i, n;
->>>> +   u8 limit;
->>>>
->>>>      for (n = i = 0; !n && amd_nb_bus_dev_ranges[i].dev_limit; ++i) {
->>>> -           u8 bus = amd_nb_bus_dev_ranges[i].bus;
->>>> -           u8 slot = amd_nb_bus_dev_ranges[i].dev_base;
->>>> -           u8 limit = amd_nb_bus_dev_ranges[i].dev_limit;
->>>> +           /* Try matching for the bus range */
->>>> +           if ((bus != amd_nb_bus_dev_ranges[i].bus) ||
->>>> +               (slot != amd_nb_bus_dev_ranges[i].dev_base))
->>>> +                   continue;
->>>> +
->>>> +           limit = amd_nb_bus_dev_ranges[i].dev_limit;
->>>>
->>>> +           /* Setup all northbridges within the range */
->>>>              for (; slot < limit; ++slot) {
->>>>                      u32 val = read_pci_config(bus, slot, 3, 0);
->>>> -
->>>> -                   if (!early_is_amd_nb(val))
->>>> +                   if (!val)
->>>>                              continue;
->>>>
->>>>                      val = read_pci_config(bus, slot, 3, 0x8c);
->>>> @@ -375,13 +457,14 @@ static void __init pci_enable_pci_io_ecs(void)
->>>>                              val |= ENABLE_CF8_EXT_CFG >> 32;
->>>
->>> What a fun shifting!
->>>
->>> Maybe you should do
->>>
->>> #define ENABLE_CF8_EXT_CFG    BIT(46 - 32)
->>>
->>> to show exactly what you mean and how the bit is defined in MSR NB_CFG1
->>> and also show how the high 32-bits are mapped into F3x8c, while at it.
->>>
->>> And then you can drop the shifting at the call site.
->>
->> Ok, I see another fun with this ECS enabling:
->>
->> There's a enable_pci_io_ecs() which enables ECS through the NB_CFG MSR
->> which is called as part of the notifier *and* there's a PCI write to
->> that same bit in pci_enable_pci_io_ecs() which iterates over all NBs.
->>
->> So, AFAICT, we do it twice and the second time is not needed. Which
->> means, you probably can drop pci_enable_pci_io_ecs() completely and use
->> solely the notifier?
->
-> It does look as if there is some duplication with respect to setting
-> MSR_AMD64_NB_CFG's (which is aliased at D18F3x8c [1])
-> ENABLE_CF8_EXT_CFG enable bit but there are at least a couple of
-> differences.
->
-> enable_pci_io_ecs() only sets the bit on one NB whereas
-> pci_enable_pci_io_ecs iterates over all the NBs (as you mentioned
-> above).  The other difference has something to do with Xen; see the
-> origin of pci_enable_pci_io_ecs - commit 24d9b70b8.
->
->>
->> Yes, no?
->
-> Suravee, Kim - either of you want to chime in here?
+On Thu, Apr 17, 2014 at 07:46:15PM +0200, Sebastian Ott wrote:
+> On Mon, 14 Apr 2014, Sebastian Ott wrote:
+> > On Mon, 14 Apr 2014, Bjorn Helgaas wrote:
+> > > On Mon, Apr 14, 2014 at 11:03:42AM +0200, Sebastian Ott wrote:
+> > > > for pci on s390 we currently use pcibios_add_platform_entries to add
+> > > > some arch specific attributes to pdevs. This has 2 downsides - it will
+> > > > race with userspace which is triggered by udev events and expecting
+> > > > these attributes (but that's a theoretical issue). More important to
+> > > > me is that one cannot use attribute_groups with this. Both issues could
+> > > > be addressed by using pdev->dev.groups and let the driver core handle
+> > > > attribute creation.
+> > > > 
+> > > > So would it be ok if we set pdev->dev.groups in pcibios_add_device?
+> > > > (It should be since it's not used by pci common code which uses bus_type,
+> > > > dev_type, and class groups).
+> > > 
+> > > Hi Sebastian,
+> > > 
+> > > Sorry, I meant to respond to this earlier, but forgot.  This sounds
+> > > reasonable to me, but Greg can give you a much better answer than I can.
+> > > 
+> > > Documentation/driver-model/device.txt says the dev->groups pointer
+> > > should be set before calling device_register().  PCI calls
+> > > device_initialize() and device_add() instead of using device_register(),
+> > > and pcibios_add_device() looks like it happens at the right time:
+> > > 
+> > >     pci_scan_root_bus
+> > >       pci_scan_child_bus
+> > >         pci_scan_slot
+> > >           pci_scan_single_device
+> > >             pci_device_add
+> > >               device_initialize
+> > >               pcibios_add_device                # <---
+> > >               device_add
+> > >       pci_bus_add_devices
+> > >         pci_bus_add_device
+> > >           pci_create_sysfs_dev_files
+> > >             pcibios_add_platform_entries        # 8d4cd0833107 (benh)
+> > >           device_attach
+> > > 
+> > > I'm not sure why pci_create_sysfs_dev_files() is done later.  It seems
+> > > like that should be done before device_add() as well.  Maybe it's
+> > > because BARs might not be valid yet (that doesn't seem like a very good
+> > > excuse, but it's all I can think of).
+> > > 
+> > > I assume that if you change s390, you'll also change microblaze and
+> > > powerpc?  They look structurally similar to s390.
+> > 
+> > Yes, that sounds like a plan - this way we can get rid of
+> > pcibios_add_platform_entries altogether. I'll send these patches soon.
+> 
+> Hm, pcibios_add_platform_entries for microblaze and power is identical
+> and this OF stuff seems not to be arch specific. How about the following
+> patch?
+> 
+> 
+> pci: move open fabric devspec attribute to pci common code
+> 
+> Move the devspec OF attribute to pci common code's set of device
+> attributes since it's not architecture dependent.
+> As a side effect microblaze and powerpc no longer need to use
+> pcibios_add_platform_entries.
+> 
+> Link: https://lkml.kernel.org/r/alpine.LFD.2.11.1404141101500.1529@denkbrett
+> Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
 
-I believe the notifier is mainly for the cores which are initially 
-offline, and then brought up online afterward.
+I applied this with Ben's ack to pci/misc for v3.16.
 
-Suravee
+I don't see a corresponding s390 patch; did I miss it?  I don't want to
+apply the "Remove pcibios_add_platform_entries()" patch until s390 is
+fixed up too.
+
+Bjorn
+
+> ---
+>  arch/microblaze/pci/pci-common.c |   20 --------------------
+>  arch/powerpc/kernel/pci-common.c |   20 --------------------
+>  drivers/pci/pci-sysfs.c          |   17 +++++++++++++++++
+>  3 files changed, 17 insertions(+), 40 deletions(-)
+> 
+> --- a/arch/microblaze/pci/pci-common.c
+> +++ b/arch/microblaze/pci/pci-common.c
+> @@ -168,26 +168,6 @@ struct pci_controller *pci_find_hose_for
+>  	return NULL;
+>  }
+>  
+> -static ssize_t pci_show_devspec(struct device *dev,
+> -		struct device_attribute *attr, char *buf)
+> -{
+> -	struct pci_dev *pdev;
+> -	struct device_node *np;
+> -
+> -	pdev = to_pci_dev(dev);
+> -	np = pci_device_to_OF_node(pdev);
+> -	if (np == NULL || np->full_name == NULL)
+> -		return 0;
+> -	return sprintf(buf, "%s", np->full_name);
+> -}
+> -static DEVICE_ATTR(devspec, S_IRUGO, pci_show_devspec, NULL);
+> -
+> -/* Add sysfs properties */
+> -int pcibios_add_platform_entries(struct pci_dev *pdev)
+> -{
+> -	return device_create_file(&pdev->dev, &dev_attr_devspec);
+> -}
+> -
+>  void pcibios_set_master(struct pci_dev *dev)
+>  {
+>  	/* No special bus mastering setup handling */
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -201,26 +201,6 @@ struct pci_controller* pci_find_hose_for
+>  	return NULL;
+>  }
+>  
+> -static ssize_t pci_show_devspec(struct device *dev,
+> -		struct device_attribute *attr, char *buf)
+> -{
+> -	struct pci_dev *pdev;
+> -	struct device_node *np;
+> -
+> -	pdev = to_pci_dev (dev);
+> -	np = pci_device_to_OF_node(pdev);
+> -	if (np == NULL || np->full_name == NULL)
+> -		return 0;
+> -	return sprintf(buf, "%s", np->full_name);
+> -}
+> -static DEVICE_ATTR(devspec, S_IRUGO, pci_show_devspec, NULL);
+> -
+> -/* Add sysfs properties */
+> -int pcibios_add_platform_entries(struct pci_dev *pdev)
+> -{
+> -	return device_create_file(&pdev->dev, &dev_attr_devspec);
+> -}
+> -
+>  /*
+>   * Reads the interrupt pin to determine if interrupt is use by card.
+>   * If the interrupt is used, then gets the interrupt line from the
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -416,6 +416,20 @@ static ssize_t d3cold_allowed_show(struc
+>  static DEVICE_ATTR_RW(d3cold_allowed);
+>  #endif
+>  
+> +#ifdef CONFIG_OF
+> +static ssize_t devspec_show(struct device *dev,
+> +			    struct device_attribute *attr, char *buf)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +	struct device_node *np = pci_device_to_OF_node(pdev);
+> +
+> +	if (np == NULL || np->full_name == NULL)
+> +		return 0;
+> +	return sprintf(buf, "%s", np->full_name);
+> +}
+> +static DEVICE_ATTR_RO(devspec);
+> +#endif
+> +
+>  #ifdef CONFIG_PCI_IOV
+>  static ssize_t sriov_totalvfs_show(struct device *dev,
+>  				   struct device_attribute *attr,
+> @@ -521,6 +535,9 @@ static struct attribute *pci_dev_attrs[]
+>  #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
+>  	&dev_attr_d3cold_allowed.attr,
+>  #endif
+> +#ifdef CONFIG_OF
+> +	&dev_attr_devspec.attr,
+> +#endif
+>  	NULL,
+>  };
+>  
 
