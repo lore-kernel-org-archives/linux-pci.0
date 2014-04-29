@@ -1,175 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [RFC PATCH 1/2] PCI: designware: Add ARM64 PCI support
-Date: Wed, 16 Apr 2014 20:26:15 +0200
-Message-ID: <16730530.rJ9T0MsYmt@wuerfel>
-In-Reply-To: <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
-References: <000801cf592e$30b7bff0$92273fd0$%han@samsung.com> <000901cf592e$563bc8c0$02b35a40$%han@samsung.com> <20140416165724.GG7802@e106497-lin.cambridge.arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1blp0189.outbound.protection.outlook.com ([207.46.163.189]:8228
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752117AbaD2CrW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Apr 2014 22:47:22 -0400
+Message-ID: <535F12B5.3080209@amd.com>
+Date: Mon, 28 Apr 2014 21:47:17 -0500
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Myron Stowe <myron.stowe@gmail.com>, Borislav Petkov <bp@alien8.de>
+CC: Myron Stowe <myron.stowe@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	<kim.naru@amd.com>, <daniel@numascale.com>,
+	Thomas Gleixner <tglx@linutronix.de>, <mingo@redhat.com>,
+	<hpa@zytor.com>, x86 <x86@kernel.org>,
+	Borislav Petkov <bp@suse.de>, <sp@numascale.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range capabilities
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+	<20140419025323.2408.88764.stgit@amt.stowe>	<20140419135219.GC8109@pd.tnic>
+ <CAL-B5D1UH44DvTyz=FNM-yMnct05p41P_GriUi3fXVN424R2Gg@mail.gmail.com>
+In-Reply-To: <CAL-B5D1UH44DvTyz=FNM-yMnct05p41P_GriUi3fXVN424R2Gg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 16 April 2014 17:57:24 Liviu Dudau wrote:
-> Jingoo,
-> 
-> Thanks for taking a stab at trying to convert a host bridge
-> driver to use the new generic host bridge code.
-> 
-> I do however have concerns on the direction you took. You have split
-> your driver in two, depending on whether it was CONFIG_ARM or CONFIG_ARM64,
-> even if (with my series) it should be no reason why the host bridge
-> driver should not work on other architectures as well once they are
-> converted.
+On 4/28/2014 4:19 PM, Myron Stowe wrote:
+> On Sat, Apr 19, 2014 at 7:52 AM, Borislav Petkov <bp@alien8.de> wrote:
+>> On Fri, Apr 18, 2014 at 08:53:23PM -0600, Myron Stowe wrote:
+>>> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 
-Right.
+.......
 
-> Also, some of the functions that you use have identical names but different
-> signatures depending on what arch you have selected. This is really bad
-> in my books!
+>>> @@ -118,6 +154,12 @@ static int __init early_fill_mp_bus_info(void)
+>>>
+>>>        pr_debug("Found AMD hostbridge at %x:%x.0\n", bus, slot);
+>>>
+>>> +     /* We enable ECS mode prior to probing MMIO as MMIO related registers
+>>> +      * are in the ECS area.
+>>> +      */
+>>> +     pci_io_ecs_init(bus, slot);
+>>
+>> Well, if enabling the ECS failed somehow, you probably want to save
+>> yourself the _amd_read_pci_config() calls further down.
+>>
+>> Which means:
+>>
+>> * you should propagate an error code from that pci_io_ecs_init() function
+>>
+>> * you can carve out the huge loop iterating over AMD_NB_F1_MMIO_RANGES
+>> along with the pci ECS enablement call to pci_io_ecs_init into a
+>> separate function and thus slim down that huge early_fill_mp_bus_info()
+>> monster a bit.
+>>
+>
+> Yes but this was not trivial since most, if not all, usages ignore any
+> return value.
+>
+> I'm wanting to focus on just fixing the issue for the most part and
+> making as few changes as possible.  This is primarly due to:
+>    o  The lack of engagement by the AMD engineers (Suravee posted these
+> changes but has since been unresponsive),
+>    o  As Bjorn just mentioned, we would like to get rid of this entire
+> file (as we did in a similar manner with intel_bus) as it is just an
+> "endless treadmill" that needs attention with every new HW release,
+>    o  I want my name to be minimally related to this  ;)
+>
+[Suravee] Sorry for late reply and did not follow up on this patch in a 
+timely manner.  Also, thank you Myron for helping to follow up with the 
+patch set.
 
-It's only the sys_to_pcie() function, right?
+Regarding the error code from pci_io_ecs_init(), it is currently always 
+return 0 (success).  I am not sure what error code should I 
+check/propagate.  Let me know if I am missing something here.
 
-You can probably simplify that to take a void pointer and have only one line
-difference.
+......
 
-> What about creating functions that use my series directly if CONFIG_ARM64 is
-> defined (or any CONFIG_ you want to create for your driver that you select
-> from CONFIG_ARM64) and otherwise implement the CONFIG_ARM version? That
-> way your driver will call only one API without any #ifdef and when arm code
-> gets converted you drop your adaptation functions. Or (better yet), have a
-> stab at converting bios32 (Rob Herring has already provided some hints on
-> how to do it for arch/arm).
+>>> -static int __init pci_io_ecs_init(void)
+>>> +static int __init pci_io_ecs_init(u8 bus, u8 slot)
+>>>   {
+>>>        int cpu;
+>>>
+>>> @@ -389,9 +472,7 @@ static int __init pci_io_ecs_init(void)
+>>>           if (boot_cpu_data.x86 < 0x10)
+>>>                return 0;
+>>>
+>>> -     /* Try the PCI method first. */
+>>> -     if (early_pci_allowed())
+>>> -             pci_enable_pci_io_ecs();
+>>
+>> Where did the if-check go?
+>>
+>
+> Good catch.  I assume Suravee didn't drop this on purpose?
 
-That would of course be best.
+[SURAVEE] I dropped the "early_pci_allowed()" here since I have moved 
+the calling of "pci_io_ecs_init()" into the "early_fill_mp_bus_info()" 
+since I would like to enable PCI ecs access at earlier stage. The 
+"early_fill_mp_bus_info() has already check for "early_pci_allowed()" 
+already at the beginning of the function. So, this should not be needed 
+here.
 
-> To give an example on how things are not going well in your version (not obvious
-> from your patch, but you can see it once you apply it): dw_pcie_host_init()
-> will still carry the handcoded version of DT parsing and that is not guarded
-> against CONFIG_ARM64 being defined, where the parsing will happen again
-> when you call of_create_pci_host_bridge().
-
-How about making the generic DT parsing code from of_create_pci_host_bridge()
-an exported function that can be called by drivers that don't use
-of_create_pci_host_bridge?
-
-> Speaking of the handcoded DT parsing of resources: you are using restype == 0
-> as a way of selecting config space, *and then split the range size into two
-> halves*. From what Jason Gunthorpe and Arnd were saying, config ranges in the DT
-> tree should only be used for ECAM space, so no split is allowed.
-> 
-> Arnd, are you allowing this non-standard use to creep in the bindings?
-
-I fear it's too late to change that now. In retrospect we probably shoulnd't
-have defined the binding like that.
-
-Overall, my impression of the patch is that it should be possible to do
-the same with much fewer #ifdefs by first rearranging the code in one patch
-and then doing another patch on top to add the generic arm64 support.
-
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index 6d23d8c..fac0440 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -65,14 +65,27 @@
-> >  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
-> >  #define PCIE_ATU_UPPER_TARGET		0x91C
-> >  
-> > +#ifdef CONFIG_ARM
-> >  static struct hw_pci dw_pci;
-> > +#endif
-> >  
-> >  static unsigned long global_io_offset;
-> >  
-> > +#ifdef CONFIG_ARM
-> >  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
-> >  {
-> >  	return sys->private_data;
-> >  }
-> > +#endif
-> > +
-> > +#ifdef CONFIG_ARM64
-> > +static inline struct pcie_port *sys_to_pcie(struct pcie_port *pp)
-> > +{
-> > +	return pp;
-> > +}
-> > +
-> > +static struct pci_ops dw_pcie_ops;
-> > +#endif
-> >  
-> >  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
-> >  {
-> > @@ -381,7 +394,9 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
-> >  {
-> >  	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
-> >  	irq_set_chip_data(irq, domain->host_data);
-> > +#ifdef CONFIG_ARM
-> >  	set_irq_flags(irq, IRQF_VALID);
-> > +#endif
-> >  
-> >  	return 0;
-> >  }
-> > @@ -397,6 +412,10 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >  	struct of_pci_range_parser parser;
-> >  	u32 val;
-> >  	int i;
-> > +#ifdef CONFIG_ARM64
-> > +	struct pci_host_bridge *bridge;
-> > +	resource_size_t lastbus;
-> > +#endif
-> >  
-> >  	if (of_pci_range_parser_init(&parser, np)) {
-> >  		dev_err(pp->dev, "missing ranges property\n");
-> > @@ -489,6 +508,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >  	val |= PORT_LOGIC_SPEED_CHANGE;
-> >  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-> >  
-> > +#ifdef CONFIG_ARM
-> >  	dw_pci.nr_controllers = 1;
-> >  	dw_pci.private_data = (void **)&pp;
-> >  
-> > @@ -497,6 +517,16 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >  #ifdef CONFIG_PCI_DOMAINS
-> >  	dw_pci.domain++;
-> >  #endif
-> > +#endif
-> > +
-> > +#ifdef CONFIG_ARM64
-> > +	bridge = of_create_pci_host_bridge(pp->dev, &dw_pcie_ops, pp);
-> > +	if (IS_ERR_OR_NULL(bridge))
-> > +		return PTR_ERR(bridge);
-> > +
-> > +	lastbus = pci_rescan_bus(bridge->bus);
-> > +	pci_bus_update_busn_res_end(bridge->bus, lastbus);
-> > +#endif
-> >  
-> >  	return 0;
-> >  }
-> > @@ -695,6 +725,7 @@ static struct pci_ops dw_pcie_ops = {
-> >  	.write = dw_pcie_wr_conf,
-> >  };
-> >  
-> > +#ifdef CONFIG_ARM
-> >  static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> >  {
-> >  	struct pcie_port *pp;
-> > @@ -758,6 +789,7 @@ static struct hw_pci dw_pci = {
-> >  	.map_irq	= dw_pcie_map_irq,
-> >  	.add_bus	= dw_pcie_add_bus,
-> >  };
-> > +#endif /* CONFIG_ARM */
-> >  
-> >  void dw_pcie_setup_rc(struct pcie_port *pp)
-
+Suravee
 
 
