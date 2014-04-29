@@ -1,79 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:53336 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758761AbaDBRYL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Apr 2014 13:24:11 -0400
-Message-ID: <533C4795.9080209@ti.com>
-Date: Wed, 2 Apr 2014 13:23:33 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:53903 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676AbaD2Xld (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 19:41:33 -0400
+Received: by mail-ie0-f176.google.com with SMTP id rd18so1090612iec.35
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 16:41:33 -0700 (PDT)
+Date: Tue, 29 Apr 2014 17:41:30 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Bandan Das <bsd@redhat.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: rework new_id interface for known vendor/device
+ values
+Message-ID: <20140429234130.GC9912@google.com>
+References: <jpgbnwkplbo.fsf@nelium.bos.redhat.com>
 MIME-Version: 1.0
-To: Andrew Murray <amurray@embedded-bits.co.uk>
-CC: Thierry Reding <thierry.reding@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Richard Zhu <r65037@freescale.com>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [RESEND: RFC PATCH 3/3] pcie: keystone: add pcie driver based
- on designware core driver
-References: <1395707726-20437-1-git-send-email-m-karicheri2@ti.com> <1395707726-20437-4-git-send-email-m-karicheri2@ti.com> <235376049.yyfljDtinu@wuerfel>	<20140325103525.GA14789@ulmo> <CAPcvp5Gy8uNW3UULi8jYk7GNbmgTd2B_qOEAXnP4H4Wq3v9BCw@mail.gmail.com> <533C300E.7070109@ti.com> <CAPcvp5FEFbP_Fwc47V=LppiZnfbTgPqaAAm-A9K17dVEZWwHQQ@mail.gmail.com>
-In-Reply-To: <CAPcvp5FEFbP_Fwc47V=LppiZnfbTgPqaAAm-A9K17dVEZWwHQQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <jpgbnwkplbo.fsf@nelium.bos.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/2/2014 12:47 PM, Andrew Murray wrote:
-> On 2 April 2014 16:43, Murali Karicheri <m-karicheri2@ti.com> wrote:
->
->> Keystone pcie driver is developed based on other dw based pcie drivers
->>
->> such as pci-exynos that uses subsys_initcall(). I am new to this list,
->>
->> probably Jingoo (copied) has some history on why we can't use module.
->> For now I will keep it as is and can be re-visited in the next revisions.
->> Also I will experiment with PCIE port driver as well.
->>
->>
->> BTW, PCIE driver currently uses Legacy or MSI IRQ. Keystone PCI has
->> a platform IRQ. Is DT based irq configuration is the appropriate way
->> to add this capability?
-> As far as I am aware - the PCI standards define a particular way for
-> devices to describe which interrupt will be used for things like
-> hotplug, AER and PME. These interrupts are always PCI interrupts (i.e.
-> MSI/MSI-X/legacy). Thus the port services code in the kernel uses
-> standard configuration space accesses to determine the interrupt to
-> use. Also note that it's not just the host bridge that can provide
-> these services but any PCIE device, I guess in this sense a host
-> bridge is treated like any other device.
->
-> If my understanding is correct I don't believe the current port
-> services code allows exceptions to this, i.e. to say this host bridge
-> actually uses a platform IRQ for AER rather than an MSI. Though this
-> may be quite useful as I suspect many host bridges provide interrupts
-> for things like PME through platform IRQs rather that PCI interrupts.
->
-> Does the Keystone have platform IRQs for things like AER? Is that
-> because the IP makes these events available through platform IRQs in
-> addition to the standard PCI means?
->
-> Andrew Murray
-Andrew,
+On Tue, Apr 01, 2014 at 09:32:59PM -0400, Bandan Das wrote:
+> 
+> While using the new_id interface, the user can unintentionally feed
+> incorrect values if the driver static table has a matching entry.
+> This is possible since only the device and vendor fields are
+> mandatory and the rest are optional. As a result, store_new_id
+> will fill in default values that are then passed on to the driver
+> and can have unintended consequences.
+> 
+> As an example, consider the ixgbe driver and the 82599EB network card :
+> echo "8086 10fb" > /sys/bus/pci/drivers/ixgbe/new_id
+> 
+> This will pass a driver_data value of 0 to the driver whereas
+> the index 0 in ixgbe actually points to a different set of card
+> operations.
+> 
+> This change returns an error if the user attempts to add a dynid for
+> a vendor/device combination for which a static entry already exists.
+> However, if the user intentionally wants a different set of values,
+> she must provide all the 7 fields and that will be accepted.
+> 
+> In KVM/device assignment scenario, the user might want 
+> to bind a device back to the host driver by writing to new_id
+> and trip on a possible null pointer dereference.
+> 
+> Signed-off-by: Bandan Das <bsd@redhat.com>
 
-Yes. Keystone PCIe hw is based on designware hw version v3.65 that 
-implements
-Error interrupt as a platform IRQ only (not in addition) and 
-unfortunately standard
-PCI means are not supported. The latter versions do support standard PCI 
-means.
+Applied with Alex's ack to pci/misc for v3.16, thanks!
 
-Murali
-
+> ---
+> v3:
+> relocate pdev decl
+> v2:
+> 1. Return error if there is a matching static entry
+> and change commit message to reflect this behavior
+> 3. Fill in a pdev and call pci_match_id instead of creating
+> a new matching function
+> 4. Change commit message to reflect that libvirt does not
+> depend on this behavior
+> 
+>  drivers/pci/pci-driver.c | 22 +++++++++++++++++++++-
+>  1 file changed, 21 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 25f0bc6..a65a014 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -107,7 +107,7 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>  		subdevice=PCI_ANY_ID, class=0, class_mask=0;
+>  	unsigned long driver_data=0;
+>  	int fields=0;
+> -	int retval;
+> +	int retval = 0;
+>  
+>  	fields = sscanf(buf, "%x %x %x %x %x %x %lx",
+>  			&vendor, &device, &subvendor, &subdevice,
+> @@ -115,6 +115,26 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
+>  	if (fields < 2)
+>  		return -EINVAL;
+>  
+> +	if (fields != 7) {
+> +		struct pci_dev *pdev = kzalloc(sizeof(*pdev), GFP_KERNEL);
+> +		if (!pdev)
+> +			return -ENOMEM;
+> +
+> +		pdev->vendor = vendor;
+> +		pdev->device = device;
+> +		pdev->subsystem_vendor = subvendor;
+> +		pdev->subsystem_device = subdevice;
+> +		pdev->class = class;
+> +
+> +		if (pci_match_id(pdrv->id_table, pdev))
+> +			retval = -EEXIST;
+> +
+> +		kfree(pdev);
+> +
+> +		if (retval)
+> +			return retval;
+> +	}
+> +
+>  	/* Only accept driver_data values that match an existing id_table
+>  	   entry */
+>  	if (ids) {
+> -- 
+> 1.8.3.1
+> 
