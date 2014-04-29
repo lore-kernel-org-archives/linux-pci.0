@@ -1,200 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:38767 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750839AbaD2XaX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 19:30:23 -0400
-Received: by mail-ie0-f181.google.com with SMTP id y20so1047685ier.40
-        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 16:30:22 -0700 (PDT)
-Date: Tue, 29 Apr 2014 17:30:20 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sebastian Ott <sebott@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Michal Simek <monstr@monstr.eu>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
-Subject: Re: [Resend] pcibios_add_platform_entries usage
-Message-ID: <20140429233020.GA9912@google.com>
-References: <alpine.LFD.2.11.1403281931410.1516@denkbrett>
- <alpine.LFD.2.11.1404141101500.1529@denkbrett>
- <20140414173541.GA4417@google.com>
- <alpine.LFD.2.11.1404141958120.1561@denkbrett>
- <alpine.LFD.2.11.1404171938190.1588@denkbrett>
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:37239 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756660AbaD2RXn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 13:23:43 -0400
+Received: by mail-ig0-f176.google.com with SMTP id r10so452919igi.15
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 10:23:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <alpine.LFD.2.11.1404171938190.1588@denkbrett>
+In-Reply-To: <535FDA81.3020508@wwwdotorg.org>
+References: <CAHH3p5+9VCYwS6JdB8aFJ0i4JLcFTMgSgiKOaE2GMnhfWM1bWA@mail.gmail.com>
+ <CAErSpo7cDPa0vujMmppWV2RM3vn6=WJ7MCcP8CvwhT4Zn==MwA@mail.gmail.com>
+ <CAHH3p5+qEeYaNKm-L4_RmnkmXeA2030u4t3D+J2wUwBEWiPBPQ@mail.gmail.com>
+ <CAErSpo6+_Tnh9+r50_qK-v0ubpv_pqTcnS7DhMiNi8GbWmsgJA@mail.gmail.com>
+ <CAHH3p5+xTwMaDW-k-0UUZ+21EhCCt2voWXP2jZf_PbRqOdukiA@mail.gmail.com>
+ <CAErSpo7jd2smdoju31r7SWVp4KjNmN+qDAxSUxmVCnUSUOfKTw@mail.gmail.com>
+ <CAHH3p5LKay-1gcgCn1fatM0hOL1Tc+a81Za+ePVjJ6oPo8+6rg@mail.gmail.com>
+ <CAErSpo5VWnAG3xnhn0zgpyC22Eum=ZVR=BM8j2Rvt+=i7LZgjA@mail.gmail.com>
+ <CAHH3p5+aRDq3j_au2Kou6Ef9L+iLaCUVV7hwZPhmD_HU6TxzqQ@mail.gmail.com>
+ <CAHH3p5KYoPdRO-SEBGMwEPC5dhRd0j_nq_jDz+Z2WMuzOPKREA@mail.gmail.com>
+ <CAErSpo7gtOoh_swzOtSyzkjRXUuZvLWwWpBeqHgy-9J4oB6b7g@mail.gmail.com> <535FDA81.3020508@wwwdotorg.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 29 Apr 2014 11:23:22 -0600
+Message-ID: <CAErSpo4BB4viHRBrMupMWMO8fU827AR=GBsq9bTwt5Eyn=8BZQ@mail.gmail.com>
+Subject: Re: Intel NIC testing on ARM
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: shiv prakash Agarwal <chhotu.shiv@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux NICS <linux.nics@intel.com>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 17, 2014 at 07:46:15PM +0200, Sebastian Ott wrote:
-> On Mon, 14 Apr 2014, Sebastian Ott wrote:
-> > On Mon, 14 Apr 2014, Bjorn Helgaas wrote:
-> > > On Mon, Apr 14, 2014 at 11:03:42AM +0200, Sebastian Ott wrote:
-> > > > for pci on s390 we currently use pcibios_add_platform_entries to add
-> > > > some arch specific attributes to pdevs. This has 2 downsides - it will
-> > > > race with userspace which is triggered by udev events and expecting
-> > > > these attributes (but that's a theoretical issue). More important to
-> > > > me is that one cannot use attribute_groups with this. Both issues could
-> > > > be addressed by using pdev->dev.groups and let the driver core handle
-> > > > attribute creation.
-> > > > 
-> > > > So would it be ok if we set pdev->dev.groups in pcibios_add_device?
-> > > > (It should be since it's not used by pci common code which uses bus_type,
-> > > > dev_type, and class groups).
-> > > 
-> > > Hi Sebastian,
-> > > 
-> > > Sorry, I meant to respond to this earlier, but forgot.  This sounds
-> > > reasonable to me, but Greg can give you a much better answer than I can.
-> > > 
-> > > Documentation/driver-model/device.txt says the dev->groups pointer
-> > > should be set before calling device_register().  PCI calls
-> > > device_initialize() and device_add() instead of using device_register(),
-> > > and pcibios_add_device() looks like it happens at the right time:
-> > > 
-> > >     pci_scan_root_bus
-> > >       pci_scan_child_bus
-> > >         pci_scan_slot
-> > >           pci_scan_single_device
-> > >             pci_device_add
-> > >               device_initialize
-> > >               pcibios_add_device                # <---
-> > >               device_add
-> > >       pci_bus_add_devices
-> > >         pci_bus_add_device
-> > >           pci_create_sysfs_dev_files
-> > >             pcibios_add_platform_entries        # 8d4cd0833107 (benh)
-> > >           device_attach
-> > > 
-> > > I'm not sure why pci_create_sysfs_dev_files() is done later.  It seems
-> > > like that should be done before device_add() as well.  Maybe it's
-> > > because BARs might not be valid yet (that doesn't seem like a very good
-> > > excuse, but it's all I can think of).
-> > > 
-> > > I assume that if you change s390, you'll also change microblaze and
-> > > powerpc?  They look structurally similar to s390.
-> > 
-> > Yes, that sounds like a plan - this way we can get rid of
-> > pcibios_add_platform_entries altogether. I'll send these patches soon.
-> 
-> Hm, pcibios_add_platform_entries for microblaze and power is identical
-> and this OF stuff seems not to be arch specific. How about the following
-> patch?
-> 
-> 
-> pci: move open fabric devspec attribute to pci common code
-> 
-> Move the devspec OF attribute to pci common code's set of device
-> attributes since it's not architecture dependent.
-> As a side effect microblaze and powerpc no longer need to use
-> pcibios_add_platform_entries.
-> 
-> Link: https://lkml.kernel.org/r/alpine.LFD.2.11.1404141101500.1529@denkbrett
-> Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+On Tue, Apr 29, 2014 at 10:59 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
 
-I applied this with Ben's ack to pci/misc for v3.16.
+>>> [   82.642468] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+>>> [   86.741124] igb: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control:
+>>> RX
+>>> [   86.763938] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+>>> [   96.748110] ------------[ cut here ]------------
+>>> [   96.756653] WARNING: at
+>>> /home/shiv/kernel_builds/linux/kernel/net/sched/sch_generic.c:255
+>>> dev_watchdog+0x264/0
+>>> x284()
+>>> [   96.775062] NETDEV WATCHDOG: eth0 (igb): transmit queue 0 timed out
+> ...
+>>> [  259.740507] igb 0000:01:00.0 eth0: Reset adapter
+>>> [  263.738512] igb: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control:
+>>> RX
+>>> [  278.749107] igb 0000:01:00.0 eth0: Reset adapter
+>>> [  282.739504] igb: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control:
+>>> RX
+>>> ------------------------CONTINUES for
+>>> EVER---------------------------------------------------
+>
+> Hmmm. This is a completely different problem than the first one or two
+> in this thread, which were about an external abort while enabling the
+> device's bus-master access... I assume there's no longer a problem with
+> enabling bus-master?
 
-I don't see a corresponding s390 patch; did I miss it?  I don't want to
-apply the "Remove pcibios_add_platform_entries()" patch until s390 is
-fixed up too.
-
-Bjorn
-
-> ---
->  arch/microblaze/pci/pci-common.c |   20 --------------------
->  arch/powerpc/kernel/pci-common.c |   20 --------------------
->  drivers/pci/pci-sysfs.c          |   17 +++++++++++++++++
->  3 files changed, 17 insertions(+), 40 deletions(-)
-> 
-> --- a/arch/microblaze/pci/pci-common.c
-> +++ b/arch/microblaze/pci/pci-common.c
-> @@ -168,26 +168,6 @@ struct pci_controller *pci_find_hose_for
->  	return NULL;
->  }
->  
-> -static ssize_t pci_show_devspec(struct device *dev,
-> -		struct device_attribute *attr, char *buf)
-> -{
-> -	struct pci_dev *pdev;
-> -	struct device_node *np;
-> -
-> -	pdev = to_pci_dev(dev);
-> -	np = pci_device_to_OF_node(pdev);
-> -	if (np == NULL || np->full_name == NULL)
-> -		return 0;
-> -	return sprintf(buf, "%s", np->full_name);
-> -}
-> -static DEVICE_ATTR(devspec, S_IRUGO, pci_show_devspec, NULL);
-> -
-> -/* Add sysfs properties */
-> -int pcibios_add_platform_entries(struct pci_dev *pdev)
-> -{
-> -	return device_create_file(&pdev->dev, &dev_attr_devspec);
-> -}
-> -
->  void pcibios_set_master(struct pci_dev *dev)
->  {
->  	/* No special bus mastering setup handling */
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -201,26 +201,6 @@ struct pci_controller* pci_find_hose_for
->  	return NULL;
->  }
->  
-> -static ssize_t pci_show_devspec(struct device *dev,
-> -		struct device_attribute *attr, char *buf)
-> -{
-> -	struct pci_dev *pdev;
-> -	struct device_node *np;
-> -
-> -	pdev = to_pci_dev (dev);
-> -	np = pci_device_to_OF_node(pdev);
-> -	if (np == NULL || np->full_name == NULL)
-> -		return 0;
-> -	return sprintf(buf, "%s", np->full_name);
-> -}
-> -static DEVICE_ATTR(devspec, S_IRUGO, pci_show_devspec, NULL);
-> -
-> -/* Add sysfs properties */
-> -int pcibios_add_platform_entries(struct pci_dev *pdev)
-> -{
-> -	return device_create_file(&pdev->dev, &dev_attr_devspec);
-> -}
-> -
->  /*
->   * Reads the interrupt pin to determine if interrupt is use by card.
->   * If the interrupt is used, then gets the interrupt line from the
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -416,6 +416,20 @@ static ssize_t d3cold_allowed_show(struc
->  static DEVICE_ATTR_RW(d3cold_allowed);
->  #endif
->  
-> +#ifdef CONFIG_OF
-> +static ssize_t devspec_show(struct device *dev,
-> +			    struct device_attribute *attr, char *buf)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	struct device_node *np = pci_device_to_OF_node(pdev);
-> +
-> +	if (np == NULL || np->full_name == NULL)
-> +		return 0;
-> +	return sprintf(buf, "%s", np->full_name);
-> +}
-> +static DEVICE_ATTR_RO(devspec);
-> +#endif
-> +
->  #ifdef CONFIG_PCI_IOV
->  static ssize_t sriov_totalvfs_show(struct device *dev,
->  				   struct device_attribute *attr,
-> @@ -521,6 +535,9 @@ static struct attribute *pci_dev_attrs[]
->  #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
->  	&dev_attr_d3cold_allowed.attr,
->  #endif
-> +#ifdef CONFIG_OF
-> +	&dev_attr_devspec.attr,
-> +#endif
->  	NULL,
->  };
->  
-
+I thought he meant that he just left Bus Master disabled completely.
+I wouldn't expect the driver to work at all in that case, so this just
+looked like a red herring.
