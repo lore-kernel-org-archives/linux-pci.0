@@ -1,72 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23298 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751540AbaD3BM2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 21:12:28 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	amirv@mellanox.com, Or Gerlitz <ogerlitz@mellanox.com>,
-	eugenia@mellanox.com, Guo Chao <yan@linux.vnet.ibm.com>,
-	talal@mellanox.com, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: don't update bridge resource flags according to children
-Date: Tue, 29 Apr 2014 18:11:55 -0700
-Message-Id: <1398820315-27425-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:39344 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755497AbaD3BAP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 21:00:15 -0400
+Received: by mail-ig0-f179.google.com with SMTP id hl10so1103780igb.6
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 18:00:15 -0700 (PDT)
+Subject: [PATCH 5/7] PCI: Don't print anything while decoding is disabled
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 29 Apr 2014 19:00:12 -0600
+Message-ID: <20140430010012.13138.47492.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After
-	PCI: Try best to allocate pref mmio 64bit above 4g
-We don't need to check if children support 64bit, and update
-bridge resource flags anymore.
-As the new code check size and assign according exact type.
+If the console is a PCI device, and we try to print to it while its
+decoding is disabled, the system will hang.  This particular printk hasn't
+caused a problem yet, but it could, so this fixes it.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+See also 0ff9514b579b ("PCI: Don't print anything while decoding is
+disabled").
 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/setup-bus.c |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/pci/probe.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -926,7 +926,6 @@ static int pbus_size_mem(struct pci_bus
- 	int order, max_order;
- 	struct resource *b_res = find_free_bus_resource(bus,
- 					 mask | IORESOURCE_PREFETCH, type);
--	unsigned int mem64_mask = 0;
- 	resource_size_t children_add_size = 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index dd710b12d34c..3bc149b848a8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -174,7 +174,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 	u64 l64, sz64, mask64;
+ 	u16 orig_cmd;
+ 	struct pci_bus_region region, inverted_region;
+-	bool bar_too_big = false, bar_too_high = false;
++	bool bar_too_big = false, bar_too_high = false, bar_invalid = false;
  
- 	if (!b_res)
-@@ -936,9 +935,6 @@ static int pbus_size_mem(struct pci_bus
- 	max_order = 0;
- 	size = 0;
+ 	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
  
--	mem64_mask = b_res->flags & IORESOURCE_MEM_64;
--	b_res->flags &= ~IORESOURCE_MEM_64;
--
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -980,7 +976,6 @@ static int pbus_size_mem(struct pci_bus
- 				aligns[order] += align;
- 			if (order > max_order)
- 				max_order = order;
--			mem64_mask &= r->flags & IORESOURCE_MEM_64;
- 
- 			if (realloc_head)
- 				children_add_size += get_res_add_size(realloc_head, r);
-@@ -1005,7 +1000,7 @@ static int pbus_size_mem(struct pci_bus
+@@ -289,11 +289,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 	 * be claimed by the device.
+ 	 */
+ 	if (inverted_region.start != region.start) {
+-		dev_info(&dev->dev, "reg 0x%x: initial BAR value %pa invalid; forcing reassignment\n",
+-			 pos, &region.start);
+ 		res->flags |= IORESOURCE_UNSET;
+-		res->end -= res->start;
+ 		res->start = 0;
++		res->end = region.end - region.start;
++		bar_invalid = true;
  	}
- 	b_res->start = min_align;
- 	b_res->end = size0 + min_align - 1;
--	b_res->flags |= IORESOURCE_STARTALIGN | mem64_mask;
-+	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
- 		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
+ 
+ 	goto out;
+@@ -312,6 +311,9 @@ out:
+ 	if (bar_too_high)
+ 		dev_info(&dev->dev, "reg 0x%x: can't handle BAR above 4G (bus address %#010llx)\n",
+ 			 pos, (unsigned long long) l64);
++	if (bar_invalid)
++		dev_info(&dev->dev, "reg 0x%x: initial BAR value %#010llx invalid\n",
++			 pos, (unsigned long long) region.start);
+ 	if (res->flags)
+ 		dev_printk(KERN_DEBUG, &dev->dev, "reg 0x%x: %pR\n", pos, res);
+ 
+
