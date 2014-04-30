@@ -1,239 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:56529 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbaDXTTG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Apr 2014 15:19:06 -0400
-Received: by mail-pd0-f176.google.com with SMTP id r10so2239966pdi.7
-        for <linux-pci@vger.kernel.org>; Thu, 24 Apr 2014 12:19:05 -0700 (PDT)
-Date: Thu, 24 Apr 2014 13:19:01 -0600
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:61588 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759296AbaD3UdW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 16:33:22 -0400
+Received: by mail-ie0-f178.google.com with SMTP id lx4so2441973iec.23
+        for <linux-pci@vger.kernel.org>; Wed, 30 Apr 2014 13:33:21 -0700 (PDT)
+Subject: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU address
+ to phys_addr_t
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>
-Subject: Re: [PATCH v7 01/10] PCI: host: rcar: Add Renesas R-Car PCIe driver
-Message-ID: <20140424191901.GE29593@google.com>
-References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
- <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
+Cc: linux-pci@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>,
+	linux-kernel@vger.kernel.org,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	linux-doc@vger.kernel.org
+Date: Wed, 30 Apr 2014 14:33:21 -0600
+Message-ID: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 31, 2014 at 11:30:46AM +0100, Phil Edworthy wrote:
-> This PCIe Host driver currently does not support MSI, so cards
-> fall back to INTx interrupts.
-> 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> ...
+dma_declare_coherent_memory() takes two addresses for a region of memory: a
+"bus_addr" and a "device_addr".  I think the intent is that "bus_addr" is
+the physical address a *CPU* would use to access the region, and
+"device_addr" is the bus address the *device* would use to address the
+region.
 
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -0,0 +1,693 @@
-> ...
-> +#include <linux/slab.h>
-> +#include "pcie-rcar.h"
+Rename "bus_addr" to "phys_addr" and change its type to phys_addr_t.
 
-It looks like the things in pcie-rcar.h are used only in this file
-(pcie-rcar.c), so you might as well just put the contents here and not have
-a pcie-rcar.h at all.  Of course, if there are things needed by more than
-one file, they should stay in pcie-rcar.h.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ Documentation/DMA-API.txt          |    9 ++++-----
+ drivers/base/dma-coherent.c        |    6 +++---
+ drivers/base/dma-mapping.c         |    6 +++---
+ include/asm-generic/dma-coherent.h |   13 +++++--------
+ include/linux/dma-mapping.h        |    7 ++++---
+ 5 files changed, 19 insertions(+), 22 deletions(-)
 
-> +#define DRV_NAME "rcar-pcie"
-> +
-> +#define RCONF(x)	(PCICONF(0)+(x))
-> +#define RPMCAP(x)	(PMCAP(0)+(x))
-> +#define REXPCAP(x)	(EXPCAP(0)+(x))
-> +#define RVCCAP(x)	(VCCAP(0)+(x))
-> +
-> +#define  PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
-> +#define  PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
-> +#define  PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
-> +
-> +#define PCI_MAX_RESOURCES 4
-> +#define MAX_NR_INBOUND_MAPS 6
-> +
-> +/* Structure representing the PCIe interface */
-> +struct rcar_pcie {
-> +	struct device		*dev;
-> +	void __iomem		*base;
-> +	struct resource		res[PCI_MAX_RESOURCES];
-> +	u8			root_bus_nr;
+diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
+index 0371ad0f37e7..97318a365efc 100644
+--- a/Documentation/DMA-API.txt
++++ b/Documentation/DMA-API.txt
+@@ -491,19 +491,18 @@ continuing on for size.  Again, you *must* observe the cache line
+ boundaries when doing this.
+ 
+ int
+-dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 			    dma_addr_t device_addr, size_t size, int
+ 			    flags)
+ 
+ Declare region of memory to be handed out by dma_alloc_coherent when
+ it's asked for coherent memory for this device.
+ 
+-bus_addr is the physical address to which the memory is currently
+-assigned in the bus responding region (this will be used by the
+-platform to perform the mapping).
++phys_addr is the cpu physical address to which the memory is currently
++assigned (this will be used by the platform to perform the mapping).
+ 
+ device_addr is the bus address the device needs to be programmed
+-with actually to address this memory (this will be handed out as the
++with to actually address this memory (this will be handed out as the
+ dma_addr_t in dma_alloc_coherent()).
+ 
+ size is the size of the area (must be multiples of PAGE_SIZE).
+diff --git a/drivers/base/dma-coherent.c b/drivers/base/dma-coherent.c
+index bc256b641027..4d7979863ba4 100644
+--- a/drivers/base/dma-coherent.c
++++ b/drivers/base/dma-coherent.c
+@@ -16,7 +16,7 @@ struct dma_coherent_mem {
+ 	unsigned long	*bitmap;
+ };
+ 
+-int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++int dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 				dma_addr_t device_addr, size_t size, int flags)
+ {
+ 	void __iomem *mem_base = NULL;
+@@ -32,7 +32,7 @@ int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+ 
+ 	/* FIXME: this routine just ignores DMA_MEMORY_INCLUDES_CHILDREN */
+ 
+-	mem_base = ioremap(bus_addr, size);
++	mem_base = ioremap(phys_addr, size);
+ 	if (!mem_base)
+ 		goto out;
+ 
+@@ -45,7 +45,7 @@ int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+ 
+ 	dev->dma_mem->virt_base = mem_base;
+ 	dev->dma_mem->device_base = device_addr;
+-	dev->dma_mem->pfn_base = PFN_DOWN(bus_addr);
++	dev->dma_mem->pfn_base = PFN_DOWN(phys_addr);
+ 	dev->dma_mem->size = pages;
+ 	dev->dma_mem->flags = flags;
+ 
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+index 0ce39a33b3c2..6cd08e145bfa 100644
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -175,7 +175,7 @@ static void dmam_coherent_decl_release(struct device *dev, void *res)
+ /**
+  * dmam_declare_coherent_memory - Managed dma_declare_coherent_memory()
+  * @dev: Device to declare coherent memory for
+- * @bus_addr: Bus address of coherent memory to be declared
++ * @phys_addr: Physical address of coherent memory to be declared
+  * @device_addr: Device address of coherent memory to be declared
+  * @size: Size of coherent memory to be declared
+  * @flags: Flags
+@@ -185,7 +185,7 @@ static void dmam_coherent_decl_release(struct device *dev, void *res)
+  * RETURNS:
+  * 0 on success, -errno on failure.
+  */
+-int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++int dmam_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 				 dma_addr_t device_addr, size_t size, int flags)
+ {
+ 	void *res;
+@@ -195,7 +195,7 @@ int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+ 	if (!res)
+ 		return -ENOMEM;
+ 
+-	rc = dma_declare_coherent_memory(dev, bus_addr, device_addr, size,
++	rc = dma_declare_coherent_memory(dev, phys_addr, device_addr, size,
+ 					 flags);
+ 	if (rc == 0)
+ 		devres_add(dev, res);
+diff --git a/include/asm-generic/dma-coherent.h b/include/asm-generic/dma-coherent.h
+index 2be8a2dbc868..0297e5875798 100644
+--- a/include/asm-generic/dma-coherent.h
++++ b/include/asm-generic/dma-coherent.h
+@@ -16,16 +16,13 @@ int dma_mmap_from_coherent(struct device *dev, struct vm_area_struct *vma,
+  * Standard interface
+  */
+ #define ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
+-extern int
+-dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+-			    dma_addr_t device_addr, size_t size, int flags);
++int dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
++				dma_addr_t device_addr, size_t size, int flags);
+ 
+-extern void
+-dma_release_declared_memory(struct device *dev);
++void dma_release_declared_memory(struct device *dev);
+ 
+-extern void *
+-dma_mark_declared_memory_occupied(struct device *dev,
+-				  dma_addr_t device_addr, size_t size);
++void *dma_mark_declared_memory_occupied(struct device *dev,
++					dma_addr_t device_addr, size_t size);
+ #else
+ #define dma_alloc_from_coherent(dev, size, handle, ret) (0)
+ #define dma_release_from_coherent(dev, order, vaddr) (0)
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index fd4aee29ad10..a266a1d7e77b 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -186,7 +186,7 @@ static inline int dma_get_cache_alignment(void)
+ 
+ #ifndef ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
+ static inline int
+-dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 			    dma_addr_t device_addr, size_t size, int flags)
+ {
+ 	return 0;
+@@ -217,13 +217,14 @@ extern void *dmam_alloc_noncoherent(struct device *dev, size_t size,
+ extern void dmam_free_noncoherent(struct device *dev, size_t size, void *vaddr,
+ 				  dma_addr_t dma_handle);
+ #ifdef ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
+-extern int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++extern int dmam_declare_coherent_memory(struct device *dev,
++					phys_addr_t phys_addr,
+ 					dma_addr_t device_addr, size_t size,
+ 					int flags);
+ extern void dmam_release_declared_memory(struct device *dev);
+ #else /* ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY */
+ static inline int dmam_declare_coherent_memory(struct device *dev,
+-				dma_addr_t bus_addr, dma_addr_t device_addr,
++				phys_addr_t phys_addr, dma_addr_t device_addr,
+ 				size_t size, gfp_t gfp)
+ {
+ 	return 0;
 
-I don't understand how root_bus_nr works.  From its name, it sounds like
-it's the bus number of the PCI bus on the downstream side of the host
-bridge.  That bus number should be a property of the host bridge, i.e.,
-it's either hard-wired into the bridge, or it's programmable somewhere.
-But root_bus_nr comes from sys->busnr, which is apparently from some
-generic code that knows nothing about this particular host bridge.
-
-> +	struct clk		*clk;
-> +	struct clk		*bus_clk;
-> +};
-> +
-> +static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
-> +{
-> +	return sys->private_data;
-> +}
-> +
-> +static void
-> +pci_write_reg(struct rcar_pcie *pcie, unsigned long val, unsigned long reg)
-
-Use this indentation style:
-
-    static void pci_write_reg(struct rcar_pcie *pcie, unsigned long val,
-
-and wrap the args as necessary (as you already did with
-rcar_pcie_read_conf() below).
-
-> +{
-> +	writel(val, pcie->base + reg);
-> +}
-> +
-> +static unsigned long
-> +pci_read_reg(struct rcar_pcie *pcie, unsigned long reg)
-> +{
-> +	return readl(pcie->base + reg);
-> +}
-> +
-> +enum {
-> +	PCI_ACCESS_READ,
-> +	PCI_ACCESS_WRITE,
-> +};
-> +
-> +static void rcar_rmw32(struct rcar_pcie *pcie,
-> +			    int where, u32 mask, u32 data)
-
-No wrapping necessary here.
-
-> +{
-> +	int shift = 8 * (where & 3);
-> +	u32 val = pci_read_reg(pcie, where & ~3);
-
-A blank line is typical here (after the local variables).
-
-> +	val &= ~(mask << shift);
-> +	val |= data << shift;
-> +	pci_write_reg(pcie, val, where & ~3);
-> +}
-> +
-> +static u32 rcar_read_conf(struct rcar_pcie *pcie, int where)
-> +{
-> +	int shift = 8 * (where & 3);
-> +	u32 val = pci_read_reg(pcie, where & ~3);
-
-And here.
-
-> +	return val >> shift;
-> +}
-> +
-> +static int rcar_pcie_config_access(struct rcar_pcie *pcie,
-> +		unsigned char access_type, struct pci_bus *bus,
-> +		unsigned int devfn, int where, u32 *data)
-> +{
-> +	int dev, func, reg, index;
-> +
-> +	dev = PCI_SLOT(devfn);
-> +	func = PCI_FUNC(devfn);
-> +	reg = where & ~3;
-> +	index = reg / 4;
-> +
-> +	if (bus->number > 255 || dev > 31 || func > 7)
-> +		return PCIBIOS_FUNC_NOT_SUPPORTED;
-
-I do see one other place in the tree (sh7786_pcie_config_access()) where we
-test all these, but I don't think it's really necessary.  It's actually
-impossible to satisfy this condition, given the definitions of bus->number,
-PCI_SLOT(), and PCI_FUNC().
-
-> ...
-> +	/* Clear errors */
-> +	pci_write_reg(pcie, pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
-> +
-> +	/* Set the PIO address */
-> +	pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) | PCIE_CONF_DEV(dev) |
-> +				PCIE_CONF_FUNC(func) | reg, PCIECAR);
-> +
-> +	/* Enable the configuration access */
-> +	if (bus->parent->number == pcie->root_bus_nr)
-> +		pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE0, PCIECCTLR);
-> +	else
-> +		pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE1, PCIECCTLR);
-> +
-> +	/* Check for errors */
-> +	if (pci_read_reg(pcie, PCIEERRFR) & UNSUPPORTED_REQUEST)
-> +		return PCIBIOS_DEVICE_NOT_FOUND;
-> +
-> +	/* Check for master and target aborts */
-> +	if (rcar_read_conf(pcie, RCONF(PCI_STATUS)) &
-> +		(PCI_STATUS_REC_MASTER_ABORT | PCI_STATUS_REC_TARGET_ABORT))
-> +		return PCIBIOS_DEVICE_NOT_FOUND;
-> +
-> +	if (access_type == PCI_ACCESS_READ)
-> +		*data = pci_read_reg(pcie, PCIECDR);
-> +	else
-> +		pci_write_reg(pcie, *data, PCIECDR);
-> +
-> +	/* Disable the configuration access */
-> +	pci_write_reg(pcie, 0, PCIECCTLR);
-
-It looks like the above all needs to be atomic, so I suppose you're relying
-on higher-level locking to ensure that.  It might be worth a mention of the
-lock you rely on, just in case that ever changes (I doubt it would, but
-it's conceivable).
-
-> ...
-> +static int rcar_pcie_setup_window(int win, struct resource *res,
-> +					struct rcar_pcie *pcie)
-> +{
-> +	/* Setup PCIe address space mappings for each resource */
-> +	resource_size_t size;
-> +	u32 mask;
-> +
-> +	pci_write_reg(pcie, 0x00000000, PCIEPTCTLR(win));
-> +
-> +	/*
-> +	 * The PAMR mask is calculated in units of 128Bytes, which
-> +	 * keeps things pretty simple.
-> +	 */
-> +	size = resource_size(res);
-> +	mask = (roundup_pow_of_two(size) / SZ_128) - 1;
-> +	pci_write_reg(pcie, mask << 7, PCIEPAMR(win));
-> +
-> +	pci_write_reg(pcie, upper_32_bits(res->start), PCIEPARH(win));
-> +	pci_write_reg(pcie, lower_32_bits(res->start), PCIEPARL(win));
-> +
-> +	/* First resource is for IO */
-> +	mask = PAR_ENABLE;
-> +	if (res->flags & IORESOURCE_IO)
-> +		mask |= IO_SPACE;
-> +
-> +	pci_write_reg(pcie, mask, PCIEPTCTLR(win));
-> +
-> +	return 0;
-
-Maybe could be a void function, since no error is possible?
-
-> ...
-> +static int __init rcar_pcie_get_resources(struct platform_device *pdev,
-> +	struct rcar_pcie *pcie)
-> +{
-> +	struct resource res;
-> +	int err;
-> +
-> +	err = of_address_to_resource(pdev->dev.of_node, 0, &res);
-> +	if (err)
-> +		return err;
-
-I don't see anywhere that figures out the bus number range behind this host
-bridge.  The PCI core needs to know this.  I know the core assumes 00-ff if
-it's not supplied, but that's just to deal with the legacy situation where
-we assumed one host bridge was all anybody would ever need.
-
-For new code, we should be explicit about the range.
-
-Bjorn
