@@ -1,47 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5344679E.1030008@pobox.com>
-Date: Tue, 08 Apr 2014 17:18:22 -0400
-From: Mark Lord <mlord@pobox.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Theodore Ts'o <tytso@mit.edu>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: driver skip pci_set_master, fix it? No.
-References: <5344251D.7040805@pobox.com> <CAErSpo6KuYLaoEsxR4jJQ98P23kNEMzMcu_-RyM3nWd6YRxgag@mail.gmail.com>
-In-Reply-To: <CAErSpo6KuYLaoEsxR4jJQ98P23kNEMzMcu_-RyM3nWd6YRxgag@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:55585 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758570AbaD3KTG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 06:19:06 -0400
+Message-ID: <1398853076.4653.5.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH 3/8] ARM: dts: imx6: update pcie to bring in line with
+ new binding
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Shawn Guo <shawn.guo@linaro.org>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
+	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
+	Richard Zhu <r65037@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
+Date: Wed, 30 Apr 2014 12:17:56 +0200
+In-Reply-To: <20140430060208.GA16727@dragon>
+References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+	 <1396025579-14344-4-git-send-email-l.stach@pengutronix.de>
+	 <20140430060208.GA16727@dragon>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14-04-08 02:27 PM, Bjorn Helgaas wrote:
-> [+cc Ben, linux-pci]
+Am Mittwoch, den 30.04.2014, 14:02 +0800 schrieb Shawn Guo:
+> On Fri, Mar 28, 2014 at 05:52:54PM +0100, Lucas Stach wrote:
+> > The new bindings drops one clock, renames the others and
+> > drops the old interrupt mapping.
+> > 
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 > 
-> On Tue, Apr 8, 2014 at 10:34 AM, Mark Lord <mlord@pobox.com> wrote:
->> I am working a couple of drivers for chips that perform extensive bus-mastering ops.
->> These including full SRIOV support, and allow assigning virtual functions to virtual machines, etc.
->>
->> One thing the driver (still in development) does for safety,
->> is defer the call to pci_set_master() until *after* it has mapped
->> the MMIO space of the chips, so it can reset/flush the DMA engines
->> before giving them permission to scribble over host RAM.
->>
->> But a recent patch to the kernel has removed this from the driver's control.
->> The core PCI now does pci_set_master() immediately on pci_enable_device().
+> It does not apply on my branch, and I had to apply it manually.  Please
+> check my imx/dt branch to see if I did it right.
 > 
-> I assume you're talking about the one added by cf3e1feba7f9 ("PCI:
-> Workaround missing pci_set_master in pci drivers"), but as far as I
-> can tell, it only calls pci_set_master() for *bridge* devices.  What
-> am I missing?  Is pci_set_master() being called for your endpoint?
-> What path is that?
+The diff as applied in your imx/dt looks good to me.
 
-Yes, it is being called during execution of the _probe() function in my driver,
-as evidenced by the annoying (and wrong) message it produces.
-
-Next time I've got the hardware at hand, I'll put a "dump_stack()" into there
-to see the exact calling path.
+Regards,
+Lucas
 -- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
