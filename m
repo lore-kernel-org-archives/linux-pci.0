@@ -1,72 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2lp0210.outbound.protection.outlook.com ([207.46.163.210]:17331
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1030242AbaDJUDb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Apr 2014 16:03:31 -0400
-From: Stuart Yoder <stuart.yoder@freescale.com>
-To: Kim Phillips <Kim.Phillips@freescale.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-	"libvir-list@redhat.com" <libvir-list@redhat.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"tech@virtualopensystems.com" <tech@virtualopensystems.com>,
-	"kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	"christoffer.dall@linaro.org" <christoffer.dall@linaro.org>
-Subject: RE: [PATCH] driver core: platform: add device binding path
- 'driver_override'
-Date: Thu, 10 Apr 2014 20:03:15 +0000
-Message-ID: <52375b57e4b8493a8563aca98b7ba041@DM2PR03MB352.namprd03.prod.outlook.com>
-References: <20140404201818.14389.86188.stgit@bling.home>
- <20140408204726.7a8f4cd6fbd05d0464720b30@freescale.com>
-In-Reply-To: <20140408204726.7a8f4cd6fbd05d0464720b30@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5360AB3D.3020401@amd.com>
+Date: Wed, 30 Apr 2014 02:50:21 -0500
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: Robert Richter <rric@kernel.org>,
+	Myron Stowe <myron.stowe@gmail.com>
+CC: Borislav Petkov <bp@alien8.de>, Borislav Petkov <bp@suse.de>,
+	"Andreas Herrmann" <herrmann.der.user@googlemail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Aravind Gopalakrishnan" <aravind.gopalakrishnan@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>, <kim.naru@amd.com>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86 <x86@kernel.org>,
+	Steffen Persvold <sp@numascale.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Jan Beulich" <JBeulich@suse.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range capabilities
+References: <20140420075936.GA19672@pd.tnic>
+ <CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com>
+ <20140426091031.GA10166@pd.tnic>
+ <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
+ <20140428214036.GA32143@pd.tnic> <20140429073309.GE10997@alberich>
+ <20140429102013.GA4726@pd.tnic> <535FC269.2000808@amd.com>
+ <20140429191454.GB4726@pd.tnic>
+ <CAL-B5D2Z7AvJZ3G2JLY6ZOZBRe4DGgO27RVJ_HHotGrnKL7Y1A@mail.gmail.com>
+ <20140430070042.GN32718@rric.localhost>
+In-Reply-To: <20140430070042.GN32718@rric.localhost>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-> -----Original Message-----
-> From: Kim Phillips [mailto:kim.phillips@freescale.com]
-> Sent: Tuesday, April 08, 2014 8:47 PM
-> To: Alex Williamson; gregkh@linuxfoundation.org
-> Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; kvm@vger.kernel.org;
-> konrad.wilk@oracle.com; Yoder Stuart-B08248; libvir-list@redhat.com;
-> iommu@lists.linux-foundation.org; tech@virtualopensystems.com;
-> kvmarm@lists.cs.columbia.edu; linux-kernel@vger.kernel.org; Guenter
-> Roeck; christoffer.dall@linaro.org
-> Subject: [PATCH] driver core: platform: add device binding path
-> 'driver_override'
-> 
-> Needed by platform device drivers, such as the vfio-platform driver [1],
-> in order to bypass the existing OF, ACPI, id_table and name string
-> matches,
-> and successfully be able to be bound to any device, like so:
-> 
-> echo vfio-platform >
-> /sys/bus/platform/devices/fff51000.ethernet/driver_override
-> echo fff51000.ethernet >
-> /sys/bus/platform/devices/fff51000.ethernet/driver/unbind
-> echo fff51000.ethernet > /sys/bus/platform/drivers_probe
-> 
-> This mimics "PCI: Introduce new device binding path using
-> pci_dev.driver_override" [2], which is an interface enhancement
-> for more deterministic PCI device binding, e.g., when in the
-> presence of hotplug.
-> 
-> [1] http://lkml.iu.edu/hypermail/linux/kernel/1402.1/00177.html
-> [2] http://lists-archives.com/linux-kernel/28030441-pci-introduce-new-
-> device-binding-path-using-pci_dev-driver_override.html
-> 
-> Suggested-by: Alex Williamson <alex.williamson@redhat.com>
-> Signed-off-by: Kim Phillips <kim.phillips@freescale.com>
-> ---
+On 04/30/2014 02:00 AM, Robert Richter wrote:
+> On 29.04.14 15:40:28, Myron Stowe wrote:
+>> On Tue, Apr 29, 2014 at 1:14 PM, Borislav Petkov <bp@alien8.de> wrote:
+>>> So sounds to me like we want to get rid of the whole IO ECS deal
+>>> altogether then.
+>>>
+>>> Now, I'm wondering whether we should kill it completely since I don't
+>>> think anyone cares about numa node info being correct on K8, or? I'm
+>>> specifically turning to our numascale friends who love to have a lot of
+>>> nodes. :-)
+>
+> Maybe I did get you wrong, but IO ECS was introduced with fam10h and
+> is not related to k8.
+>
+>> I think we need to be careful here as there are two unrelated topics
+>> being discussed together.  What started this whole thread was the need
+>> for sysfs related numa_node information with respect to PCI devices
+>> (1).  Without patch 1, platforms with newer AMD CPUs end up having
+>> '-1' numa_node values for all PCI devices.
+>>
+>> IO ECS has no bearing on patch 1, it only comes into play with patch 2
+>> which is concerned with MMIO resource information when MCFG doesn't
+>> exist.  For the particular issue I'm trying to get resolved, patch 2
+>> is not needed.  However, since we have expended time and effort on
+>> this subject, perhaps we should get this cleaned up while it has our
+>> attention.
+>>
+>> I'm all for deleting as much of amd_bus.c as possible due to its
+>> "perennial maintenance headache".  The obvious choices seem to be all,
+>> or some combination, of:
+>>    o removing IO ECS logic,
+>>    o removing IO/MMIO logic (assuming MCFG issues were long enough ago
+>> to no longer be a concern),
+>>    o start deprecating amd_bus.c by adding logic to skip if BIOS >= 2015
+>
+> I don't see any reason for big changes actually. Just bind the IO ECS
+> logic to fam10h (either with fam check or pci device depending on the
+> implementation, xen's flavor would be pci). This is something stricter
+> than 'if BIOS >= 2015'. It leaves code as it is which is maintainable.
+>
+> You implement the new logic for for newer families. No need for one
+> implementation that fits all.
+>
+> -Robert
+>
+Actually, if ECS is needed by IBS, then wouldn't this still be needed 
+for every family since 10h and later (except family11h).
 
-Reviewed-by: Stuart Yoder <stuart.yoder@freescale.com>
+Suravee
