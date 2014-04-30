@@ -1,89 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:48023 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758773AbaDJQ6L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Apr 2014 12:58:11 -0400
-Date: Thu, 10 Apr 2014 10:57:33 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Neil Greatorex <neil@fatboyfat.co.uk>, Willy Tarreau <w@1wt.eu>,
-	Matthew Minter <matthew_minter@xyratex.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?iso-8859-1?Q?Cl=E9ment?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: Fixing PCIe issues on Armada XP
-Message-ID: <20140410165733.GB23104@obsidianresearch.com>
-References: <20140410181953.50ccfcc3@skate>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:60087 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755497AbaD3BAI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 21:00:08 -0400
+Received: by mail-ig0-f181.google.com with SMTP id h18so1124599igc.14
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 18:00:07 -0700 (PDT)
+Subject: [PATCH 4/7] PCI: Don't set BAR to zero if dma_addr_t is too small
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 29 Apr 2014 19:00:05 -0600
+Message-ID: <20140430010005.13138.18200.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140410181953.50ccfcc3@skate>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 10, 2014 at 06:19:53PM +0200, Thomas Petazzoni wrote:
+If a BAR is above 4GB and our dma_addr_t is too small, don't clear the BAR
+to zero: that doesn't disable the BAR, and it makes it more likely that the
+BAR will conflict with things if we turn on the memory enable bit (as we
+will at "out:" if the BIOS left it enabled).
 
-> This is an e-mail that attempts to summarize the situation in terms of
-> Armada XP PCIe issues.
-> 
-> At
-> https://github.com/MISL-EBU-System-SW/mainline-public/commits/3.14/pci-debug,
-> I've pushed a branch based on top of v3.14 that contains:
+We should also print the BAR info and its original size so we can see what
+happens when we try to assign space to it.
 
-mvebu_pcie_del_windows / mvebu_pcie_add_windows I wonder if these
-functions should be dropped into the mbus driver.. They are pretty
-generic.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-'bus: mvebu-mbus: Avoid setting an undefined window size' and
-'pci: mvebu: fix off-by-one in the computed size of the mbus windows'
-need to be swapped in order to maintain bisect-ability.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 82cd75f6118a..dd710b12d34c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -174,7 +174,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 	u64 l64, sz64, mask64;
+ 	u16 orig_cmd;
+ 	struct pci_bus_region region, inverted_region;
+-	bool bar_too_big = false, bar_disabled = false;
++	bool bar_too_big = false, bar_too_high = false;
+ 
+ 	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
+ 
+@@ -254,13 +254,11 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		}
+ 
+ 		if ((sizeof(dma_addr_t) < 8) && l) {
+-			/* Address above 32-bit boundary; disable the BAR */
+-			pci_write_config_dword(dev, pos, 0);
+-			pci_write_config_dword(dev, pos + 4, 0);
++			/* Above 32-bit boundary; try to reallocate */
+ 			res->flags |= IORESOURCE_UNSET;
+ 			res->start = 0;
+ 			res->end = sz64;
+-			bar_disabled = true;
++			bar_too_high = true;
+ 			goto out;
+ 		} else {
+ 			region.start = l64;
+@@ -311,7 +309,10 @@ out:
+ 	if (bar_too_big)
+ 		dev_err(&dev->dev, "reg 0x%x: can't handle BAR larger than 4GB (size %#010llx)\n",
+ 			pos, (unsigned long long) sz64);
+-	if (res->flags && !bar_disabled)
++	if (bar_too_high)
++		dev_info(&dev->dev, "reg 0x%x: can't handle BAR above 4G (bus address %#010llx)\n",
++			 pos, (unsigned long long) l64);
++	if (res->flags)
+ 		dev_printk(KERN_DEBUG, &dev->dev, "reg 0x%x: %pR\n", pos, res);
+ 
+ 	return (res->flags & IORESOURCE_MEM_64) ? 1 : 0;
 
-> Can you test this stack of patches on your system and configuration, and
-> let me know if that works for you? 
-
-Continues to work as expected here, and I see the new error message:
-
-mvebu_mbus: cannot add window '4:e8', conflicts with another window
-mvebu-pcie pex.1: Could not create MBus window at 0xe0000000, size 0x100000: -22
-
-(this is due to the PEX window being in the DT mbus ranges already)
-
-Tested-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-
-> 
->  * The link up problem. Unfortunately, I tried to reproduce it today,
->    and didn't manage to. It's weird, because I'm sure I was able to
->    produce it in the past, but I'm no longer able to, I don't know.
->    Therefore, it's not easy for me to work on this topic. Neil, Jason,
->    do you think this is a topic you could potentially handle?
-
-You said you had a system that sometimes required the udelay? Can you
-run Neil's patch and see if your system behaves the same? Specifically
-that the link eventually goes down after mvebu_pcie_set_local_dev_nr ?
-
-I couldn't find any case where the BDF leaks below the TLP layer, and
-the spec is very clear that the assigned BDF can change at run time,
-so I don't have an explanation for why the link reset is happening.
-Do you have a contact at Marvell that might shed some light on that
-behavior?
-
->  * On my Armada XP DB board, if I plug 5 PCIe cards, the IGB card for
->    some reason isn't able to read data from its non-volatile memory. So
->    the window points to something, but it doesn't seem to patch what
->    the igb driver expects. I've double checked the MBus windows, and
->    they look correct. I haven't tested this PCIe configuration with the
->    Marvell LSP though, so maybe I'm hitting an unrelated hardware
->    problem or something.
-
-Certainly troubling.. And the IGB works if it is the only card in the
-system?
-
-That does sound like more mbus troubles.
-
-Regrads,
-Jason
