@@ -1,79 +1,33 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:53047 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751051AbaDOLum (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Apr 2014 07:50:42 -0400
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <spear-devel@list.st.com>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Mohit Kumar <mohit.kumar@st.com>, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH V8 1/9] clk: SPEAr13XX: Fix pcie clock name
-Date: Tue, 15 Apr 2014 17:19:43 +0530
-Message-ID: <378dc5a17716db13553ae05257b9b0e9722d29b8.1397555158.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1397555158.git.mohit.kumar@st.com>
-References: <cover.1397555158.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 30 Apr 2014 08:41:43 +0200
+From: Robert Richter <rric@kernel.org>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
+	kim.naru@amd.com, daniel@numascale.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, bp@suse.de,
+	sp@numascale.com, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range
+ capabilities
+Message-ID: <20140430064143.GM32718@rric.localhost>
+References: <20140419025308.2408.51252.stgit@amt.stowe>
+ <20140419025323.2408.88764.stgit@amt.stowe>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140419025323.2408.88764.stgit@amt.stowe>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@st.com>
+On 18.04.14 20:53:23, Myron Stowe wrote:
+> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 
-Follow dt clock naming convention for PCIe clocks.
+> -		start = reg & 0xffffff00; /* 39:16 on 31:8*/
+> -		start <<= 8;
+> -		reg = read_pci_config(bus, slot, 1, 0x84 + (i << 3));
+> +		start = (reg & 0xffffff00UL) << 8;	/* 39:16 on 31:8 */
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: spear-devel@list.st.com
-Cc: linux-arm-kernel@lists.infradead.org
----
- drivers/clk/spear/spear1310_clock.c |    6 +++---
- drivers/clk/spear/spear1340_clock.c |    2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+I think this is not save anymore with respect to u32/u64 casting. The
+original was.
 
-diff --git a/drivers/clk/spear/spear1310_clock.c b/drivers/clk/spear/spear1310_clock.c
-index 65894f7..4daa597 100644
---- a/drivers/clk/spear/spear1310_clock.c
-+++ b/drivers/clk/spear/spear1310_clock.c
-@@ -742,19 +742,19 @@ void __init spear1310_clk_init(void __iomem *misc_base, void __iomem *ras_base)
- 	clk = clk_register_gate(NULL, "pcie_sata_0_clk", "ahb_clk", 0,
- 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_0_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie.0");
-+	clk_register_clkdev(clk, NULL, "b1000000.pcie");
- 	clk_register_clkdev(clk, NULL, "b1000000.ahci");
- 
- 	clk = clk_register_gate(NULL, "pcie_sata_1_clk", "ahb_clk", 0,
- 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_1_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie.1");
-+	clk_register_clkdev(clk, NULL, "b1800000.pcie");
- 	clk_register_clkdev(clk, NULL, "b1800000.ahci");
- 
- 	clk = clk_register_gate(NULL, "pcie_sata_2_clk", "ahb_clk", 0,
- 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_2_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie.2");
-+	clk_register_clkdev(clk, NULL, "b4000000.pcie");
- 	clk_register_clkdev(clk, NULL, "b4000000.ahci");
- 
- 	clk = clk_register_gate(NULL, "sysram0_clk", "ahb_clk", 0,
-diff --git a/drivers/clk/spear/spear1340_clock.c b/drivers/clk/spear/spear1340_clock.c
-index fe835c1..5a5c664 100644
---- a/drivers/clk/spear/spear1340_clock.c
-+++ b/drivers/clk/spear/spear1340_clock.c
-@@ -839,7 +839,7 @@ void __init spear1340_clk_init(void __iomem *misc_base)
- 	clk = clk_register_gate(NULL, "pcie_sata_clk", "ahb_clk", 0,
- 			SPEAR1340_PERIP1_CLK_ENB, SPEAR1340_PCIE_SATA_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie");
-+	clk_register_clkdev(clk, NULL, "b1000000.pcie");
- 	clk_register_clkdev(clk, NULL, "b1000000.ahci");
- 
- 	clk = clk_register_gate(NULL, "sysram0_clk", "ahb_clk", 0,
--- 
-1.7.0.1
-
+-Robert
