@@ -1,91 +1,84 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 14 Apr 2014 17:49:06 -0600
+Subject: [PATCH 1/7] PCI: Fail safely if we can't handle BARs larger than 4GB
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ryan Desfosses <ryan@desfo.org>
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCHv2] pci: added or removed a space to resolve checkpatch
- message
-Message-ID: <20140414234906.GB16058@google.com>
-References: <1397195240-4894-1-git-send-email-ryan@desfo.org>
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 29 Apr 2014 18:59:45 -0600
+Message-ID: <20140430005944.13138.29465.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1397195240-4894-1-git-send-email-ryan@desfo.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 11, 2014 at 01:47:20AM -0400, Ryan Desfosses wrote:
-> changes made to resolve following messages:
->   WARNING: please, no spaces at the start of a line
->   ERROR: space prohibited after that '!' (ctx:BxW)
->   ERROR: space required before the open parenthesis '('
-> 
-> Signed-off-by: Ryan Desfosses <ryan@desfo.org>
+We can only handle BARs larger than 4GB if both dma_addr_t and
+resource_size_t are 64 bits wide.  If dma_addr_t is 32 bits, we can't
+represent all the bus addresses, and if resource_size_t is 32 bits, we
+can't represent all the CPU addresses.
 
-Applied to pci/misc, thanks!
+Previously we cleared res->flags (at "fail:") for resources that were too
+large.  That means we think the BAR doesn't exist at all, which in turn
+means that we could enable the device even though we can't keep track of
+where the BAR is and we can't make sure it doesn't overlap something else.
 
-> ---
->  drivers/pci/pci.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index fdbc294..20bcb1a 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -114,7 +114,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus* bus)
->  	max = bus->busn_res.end;
->  	list_for_each(tmp, &bus->children) {
->  		n = pci_bus_max_busnr(pci_bus_b(tmp));
-> -		if(n > max)
-> +		if (n > max)
->  			max = n;
->  	}
->  	return max;
-> @@ -489,7 +489,7 @@ static inline bool platform_pci_power_manageable(struct pci_dev *dev)
->  }
->  
->  static inline int platform_pci_set_power_state(struct pci_dev *dev,
-> -                                                pci_power_t t)
-> +					       pci_power_t t)
->  {
->  	return pci_platform_pm ? pci_platform_pm->set_state(dev, t) : -ENOSYS;
->  }
-> @@ -1431,7 +1431,7 @@ void pcim_pin_device(struct pci_dev *pdev)
->   * devices are added. This is the default implementation. Architecture
->   * implementations can override this.
->   */
-> -int __weak pcibios_add_device (struct pci_dev *dev)
-> +int __weak pcibios_add_device(struct pci_dev *dev)
->  {
->  	return 0;
->  }
-> @@ -1454,7 +1454,7 @@ void __weak pcibios_release_device(struct pci_dev *dev) {}
->   * is the default implementation. Architecture implementations can
->   * override this.
->   */
-> -void __weak pcibios_disable_device (struct pci_dev *dev) {}
-> +void __weak pcibios_disable_device(struct pci_dev *dev) {}
->  
->  static void do_pci_disable_device(struct pci_dev *dev)
->  {
-> @@ -2565,7 +2565,7 @@ static int __pci_request_selected_regions(struct pci_dev *pdev, int bars,
->  	return 0;
->  
->  err_out:
-> -	while(--i >= 0)
-> +	while (--i >= 0)
->  		if (bars & (1 << i))
->  			pci_release_region(pdev, i);
->  
-> @@ -2798,7 +2798,7 @@ pci_set_mwi(struct pci_dev *dev)
->  		return rc;
->  
->  	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-> -	if (! (cmd & PCI_COMMAND_INVALIDATE)) {
-> +	if (!(cmd & PCI_COMMAND_INVALIDATE)) {
->  		dev_dbg(&dev->dev, "enabling Mem-Wr-Inval\n");
->  		cmd |= PCI_COMMAND_INVALIDATE;
->  		pci_write_config_word(dev, PCI_COMMAND, cmd);
-> -- 
-> 1.9.1
-> 
+This preserves the type flags (MEM/IO) so we can keep from enabling the
+device.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |   18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ef09f5f2fe6c..c7f8b717c2e7 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -171,6 +171,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 			struct resource *res, unsigned int pos)
+ {
+ 	u32 l, sz, mask;
++	u64 l64, sz64, mask64;
+ 	u16 orig_cmd;
+ 	struct pci_bus_region region, inverted_region;
+ 	bool bar_too_big = false, bar_disabled = false;
+@@ -226,9 +227,9 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 	}
+ 
+ 	if (res->flags & IORESOURCE_MEM_64) {
+-		u64 l64 = l;
+-		u64 sz64 = sz;
+-		u64 mask64 = mask | (u64)~0 << 32;
++		l64 = l;
++		sz64 = sz;
++		mask64 = mask | (u64)~0 << 32;
+ 
+ 		pci_read_config_dword(dev, pos + 4, &l);
+ 		pci_write_config_dword(dev, pos + 4, ~0);
+@@ -243,9 +244,13 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		if (!sz64)
+ 			goto fail;
+ 
+-		if ((sizeof(resource_size_t) < 8) && (sz64 > 0x100000000ULL)) {
++		if ((sizeof(dma_addr_t) < 8 || sizeof(resource_size_t) < 8) &&
++		    sz64 > 0x100000000ULL) {
++			res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
++			res->start = 0;
++			res->end = 0;
+ 			bar_too_big = true;
+-			goto fail;
++			goto out;
+ 		}
+ 
+ 		if ((sizeof(resource_size_t) < 8) && l) {
+@@ -303,7 +308,8 @@ out:
+ 		pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
+ 
+ 	if (bar_too_big)
+-		dev_err(&dev->dev, "reg 0x%x: can't handle 64-bit BAR\n", pos);
++		dev_err(&dev->dev, "reg 0x%x: can't handle BAR larger than 4GB (size %#010llx)\n",
++			pos, (unsigned long long) sz64);
+ 	if (res->flags && !bar_disabled)
+ 		dev_printk(KERN_DEBUG, &dev->dev, "reg 0x%x: %pR\n", pos, res);
+ 
+
