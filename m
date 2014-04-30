@@ -1,68 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f171.google.com ([209.85.220.171]:61502 "EHLO
-	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754934AbaD2AwE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Apr 2014 20:52:04 -0400
-Received: by mail-vc0-f171.google.com with SMTP id lg15so8944830vcb.2
-        for <linux-pci@vger.kernel.org>; Mon, 28 Apr 2014 17:52:02 -0700 (PDT)
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:36890 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964975AbaD3WGD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 18:06:03 -0400
+Received: by mail-ig0-f178.google.com with SMTP id r10so753056igi.17
+        for <linux-pci@vger.kernel.org>; Wed, 30 Apr 2014 15:06:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo70h=DeE3=EpF9d=RQM5y-3tTJ9ZqDiGQ8t5rLfs_zx6w@mail.gmail.com>
-References: <1398682281-18772-1-git-send-email-festevam@gmail.com>
-	<CAErSpo70h=DeE3=EpF9d=RQM5y-3tTJ9ZqDiGQ8t5rLfs_zx6w@mail.gmail.com>
-Date: Mon, 28 Apr 2014 21:52:02 -0300
-Message-ID: <CAOMZO5BBLesVnHRkSkGaadr=-RpvUm68u2L2MZeQ2WOq28n=xw@mail.gmail.com>
-Subject: Re: [PATCH] pci: pci-mvebu: Use '%pa' for printing 'phys_addr_t' type
-From: Fabio Estevam <festevam@gmail.com>
+In-Reply-To: <CAErSpo7aWM_BjXqEqgTk0uT4RbpZSqjGJOgOH_hWreoQicMU_A@mail.gmail.com>
+References: <1398893606-22712-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo7aWM_BjXqEqgTk0uT4RbpZSqjGJOgOH_hWreoQicMU_A@mail.gmail.com>
+Date: Wed, 30 Apr 2014 15:06:01 -0700
+Message-ID: <CAE9FiQW1yFmgZRCWrhi5ccwxWfDZdR0vbQ1bA7zz-5Fa8TfN5A@mail.gmail.com>
+Subject: Re: [PATCH v3] pciehp: only wait command complete for real hotplug control
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 28, 2014 at 9:16 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Apr 28, 2014 at 4:51 AM, Fabio Estevam <festevam@gmail.com> wrote:
->> From: Fabio Estevam <fabio.estevam@freescale.com>
+On Wed, Apr 30, 2014 at 2:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Apr 30, 2014 at 3:33 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On system with 16 PCI express hotplug slots, customer complain every slot
+>> will report "Command not completed in 1000 msec" during initialization.
 >>
->> Fix the following build warning that happens when building multi_v7_defconfig
->> with CONFIG_ARM_LPAE=y:
+>> Intel says that we should only wait command complete only for
+>>            Electromechanical Interlock Control
+>>            Power Controller Control
+>>            Power Indicator Control
+>>            Attention Indicator Control
 >>
->> drivers/pci/host/pci-mvebu.c:334:5: warning: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'phys_addr_t' [-Wformat=]
->>
->> While at it, also use '%zx' for printing 'size_t'.
->>
->> Reported-by: Olof's autobuilder <build@lixom.net>
->> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
->> ---
->>  drivers/pci/host/pci-mvebu.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
->> index e384e25..572a7b5 100644
->> --- a/drivers/pci/host/pci-mvebu.c
->> +++ b/drivers/pci/host/pci-mvebu.c
->> @@ -330,8 +330,8 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
->>                                                         sz, remap);
->>                 if (ret) {
->>                         dev_err(&port->pcie->pdev->dev,
->> -                               "Could not create MBus window at 0x%x, size 0x%x: %d\n",
->> -                               base, sz, ret);
->> +                               "Could not create MBus window at %pa, size 0x%zx: %d\n",
->> +                               &base, sz, ret);
+>> System with AMD/Nvidia chipset have same problem.
 >
-> This is OK, but can we use the same "[mem 0x...-0x...]" format that
-> %pR prints a struct resource with?  That would make it look more like
-> other similar information we print elsewhere.  When you're debugging a
-> problem, sometimes you have to compare address information from
-> different places, and it's convenient if they all look similar.
+> Do you have a datasheet reference for any of these parts?  Do we have
+> any way of identifying the affected parts?  Is it *all* Intel parts,
+> *all* AMD parts, *all* Nvidia parts?
 
-Understood your point, but in order to use %pR we need to use a
-'struct resource', which is something that the current code is not
-using. 'sz' is calculated inside the function, so it is helpful to
-print it as is.
+For intel: Nehalem, westmere, sndbridge, ivybridge.
 
-IMHO if %pR should be used to improve readability, then it should be
-handled via a separate patch.
+For nvidia, only according to boot log for old systems with chipset:
+ck804 and mcp55.
 
-This one does not introduce any functional change.
+>
+> I want to have a comment in the code because we basically have two
+> strategies for dealing with Command Complete.  Both are legal
+> according to the PCIe spec, and you're changing from strategy A to
+> strategy B because B works better on these parts.  We need a hint in
+> the code that tells us not to change from B back to A and why.
+> Otherwise some future programmer is likely to change back to A, which
+> will break your box again.
+
+ok, will try to add comment about the change.
+
+Thanks
+
+Yinghai
