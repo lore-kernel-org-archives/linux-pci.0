@@ -1,63 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:57772 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756038AbaDPMyP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Apr 2014 08:54:15 -0400
-Message-ID: <534E7CC7.7050300@intel.com>
-Date: Wed, 16 Apr 2014 14:51:19 +0200
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:60442 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754724AbaD3X1E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 19:27:04 -0400
+Received: by mail-ig0-f180.google.com with SMTP id c1so2551354igq.1
+        for <linux-pci@vger.kernel.org>; Wed, 30 Apr 2014 16:27:02 -0700 (PDT)
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org
-CC: Lukasz Dorau <lukasz.dorau@intel.com>,
-	Maciej Patelczyk <maciej.patelczyk@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>, intel-linux-scu@intel.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 08/23] isci: Use pci_enable_msix_exact() instead
- of pci_enable_msix()
-References: <cover.1397461652.git.agordeev@redhat.com> <8a203f9f8b7844e46676d526188965e877751edb.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <8a203f9f8b7844e46676d526188965e877751edb.1397461652.git.agordeev@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAErSpo4K_duSr7Y5OHVm+KMhso2csG=nTZ9v1V=ATVK76Rj=QQ@mail.gmail.com>
+References: <1398893606-22712-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo7aWM_BjXqEqgTk0uT4RbpZSqjGJOgOH_hWreoQicMU_A@mail.gmail.com>
+	<CAE9FiQW1yFmgZRCWrhi5ccwxWfDZdR0vbQ1bA7zz-5Fa8TfN5A@mail.gmail.com>
+	<CAErSpo4K_duSr7Y5OHVm+KMhso2csG=nTZ9v1V=ATVK76Rj=QQ@mail.gmail.com>
+Date: Wed, 30 Apr 2014 16:21:30 -0700
+Message-ID: <CAE9FiQVRHAW3jXwnUSX96Jy3qbeQ8JcSGoPKANJjWYnNS1CTdw@mail.gmail.com>
+Subject: Re: [PATCH v3] pciehp: only wait command complete for real hotplug control
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/14/2014 10:05 AM, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Lukasz Dorau <lukasz.dorau@intel.com>
-> Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
-> Cc: Dave Jiang <dave.jiang@intel.com>
-> Cc: intel-linux-scu@intel.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/isci/init.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-> index 695b34e..4198e45 100644
-> --- a/drivers/scsi/isci/init.c
-> +++ b/drivers/scsi/isci/init.c
-> @@ -356,7 +356,7 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
->  	for (i = 0; i < num_msix; i++)
->  		pci_info->msix_entries[i].entry = i;
->  
-> -	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
-> +	err = pci_enable_msix_exact(pdev, pci_info->msix_entries, num_msix);
->  	if (err)
->  		goto intx;
->  
-> 
+On Wed, Apr 30, 2014 at 3:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-Looks good.
+>> For intel: Nehalem, westmere, sndbridge, ivybridge.
+>>
+>> For nvidia, only according to boot log for old systems with chipset:
+>> ck804 and mcp55.
+>
+> I meant, do you have a reference to a section in the spec that talks
+> about how this works?
+>
+> So far all we have is folklore that was discovered by experimentation.
+>  It'd be nice to see the spec that says "CC is only used when changing
+> these listed bits."
 
-Acked-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+We will have doc from Intel about that. Hope it is not under NDA.
 
-Thanks,
-Artur
+Yinghai
