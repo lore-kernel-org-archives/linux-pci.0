@@ -1,179 +1,166 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sat, 19 Apr 2014 13:31:11 +0200
-From: Borislav Petkov <bp@suse.de>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	suravee.suthikulpanit@amd.com, aravind.gopalakrishnan@amd.com,
-	kim.naru@amd.com, andreas.herrmann3@amd.com, daniel@numascale.com,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	x86@kernel.org, bp@suse.de, sp@numascale.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/5] x86/PCI: Add support for generic AMD hostbridges
-Message-ID: <20140419113111.GA8109@pd.tnic>
-References: <20140419025308.2408.51252.stgit@amt.stowe>
- <20140419025316.2408.29771.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140419025316.2408.29771.stgit@amt.stowe>
+In-Reply-To: <20140430070042.GN32718@rric.localhost>
+References: <20140420075936.GA19672@pd.tnic>
+	<CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com>
+	<20140426091031.GA10166@pd.tnic>
+	<CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com>
+	<20140428214036.GA32143@pd.tnic>
+	<20140429073309.GE10997@alberich>
+	<20140429102013.GA4726@pd.tnic>
+	<535FC269.2000808@amd.com>
+	<20140429191454.GB4726@pd.tnic>
+	<CAL-B5D2Z7AvJZ3G2JLY6ZOZBRe4DGgO27RVJ_HHotGrnKL7Y1A@mail.gmail.com>
+	<20140430070042.GN32718@rric.localhost>
+Date: Wed, 30 Apr 2014 17:03:53 -0600
+Message-ID: <CAL-B5D1ee2t--f3=u4TW3wvUaiUN0n=0X-E7ZEEPkdhtBxi2ZA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range capabilities
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Robert Richter <rric@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	Borislav Petkov <bp@suse.de>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
+	linux-pci <linux-pci@vger.kernel.org>, kim.naru@amd.com,
+	Daniel J Blueman <daniel@numascale.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86 <x86@kernel.org>,
+	Steffen Persvold <sp@numascale.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 18, 2014 at 08:53:16PM -0600, Myron Stowe wrote:
-> From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-> 
-> AMD hostbridges gnenerally show up as PCI device 0:18.0.  This patch adds
-> logic to automatically probe the device at this location and check PCI
-> device class code.
-> 
-> This patch supports platforms with the following AMD hostbridge types:
-> (K8, family10h, 11h, 12h, 14h 15h  and 16h processors).
-> 
-> Reference(s):
->   https://bugzilla.kernel.org/show_bug.cgi?id=72051
->   Advanced Micro Devices (AMD), "BIOS and Kernel Developer's
->   Guide (BKDG) for AMD Family 15h Models 00h-0fh Processors."  Section
->   3.4 Device [1F:18]h Function 1 Configuration Registers; D18F1x[EC:E0]
->   Configuration Map, 42301 Rev 3.12 - October 11, 2012.
-> 
-> Signed-off-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-> Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-> ---
-> 
->  arch/x86/pci/amd_bus.c |   71 ++++++++++++++++++++++++++++++++----------------
->  1 files changed, 47 insertions(+), 24 deletions(-)
-> 
-> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-> index e88f4c5..c8cd75c 100644
-> --- a/arch/x86/pci/amd_bus.c
-> +++ b/arch/x86/pci/amd_bus.c
-> @@ -11,27 +11,34 @@
->  
->  #include "bus_numa.h"
->  
-> +#define AMD_NB_F0_NODE_ID			0x60
-> +#define AMD_NB_F0_UNIT_ID			0x64
-> +#define AMD_NB_F1_CONFIG_MAP_REG		0xe0
-> +
-> +#define RANGE_NUM				16
-> +#define AMD_NB_F1_CONFIG_MAP_RANGES		4
-> +
->  /*
-> - * This discovers the pcibus <-> node mapping on AMD K8.
-> - * also get peer root bus resource for io,mmio
-> + * This discovers the pcibus <-> node mapping on AMD K8, Family 10h, 12h,
-> + * 14h, 15h, and 16h processor based systems.  This also gets peer root bus
-> + * resources corresponding to I/O and MMIO addresses.
->   */
->  
-> -struct pci_hostbridge_probe {
-> +struct amd_hostbridge {
->  	u32 bus;
->  	u32 slot;
-> -	u32 vendor;
->  	u32 device;
->  };
->  
-> -static struct pci_hostbridge_probe pci_probes[] __initdata = {
-> -	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 },
-> -	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 },
-> -	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 },
-> -	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
-> +static struct amd_hostbridge hb_probes[] __initdata = {
-> +	/* Standard AMD Hostbriges are at bus 0x0 slot 0x18.
-> +	 * In case of PCI_ANY_ID, the logic will try matching
-> +	 * PCI_CLASS_BRIDGE_HOST instead.
-> +	 */
+On Wed, Apr 30, 2014 at 1:00 AM, Robert Richter <rric@kernel.org> wrote:
+> On 29.04.14 15:40:28, Myron Stowe wrote:
+>> On Tue, Apr 29, 2014 at 1:14 PM, Borislav Petkov <bp@alien8.de> wrote:
+>> > So sounds to me like we want to get rid of the whole IO ECS deal
+>> > altogether then.
+>> >
+>> > Now, I'm wondering whether we should kill it completely since I don't
+>> > think anyone cares about numa node info being correct on K8, or? I'm
+>> > specifically turning to our numascale friends who love to have a lot of
+>> > nodes. :-)
+>
+> Maybe I did get you wrong, but IO ECS was introduced with fam10h and
+> is not related to k8.
+>
+>> I think we need to be careful here as there are two unrelated topics
+>> being discussed together.  What started this whole thread was the need
+>> for sysfs related numa_node information with respect to PCI devices
+>> (1).  Without patch 1, platforms with newer AMD CPUs end up having
+>> '-1' numa_node values for all PCI devices.
+>>
+>> IO ECS has no bearing on patch 1, it only comes into play with patch 2
+>> which is concerned with MMIO resource information when MCFG doesn't
+>> exist.  For the particular issue I'm trying to get resolved, patch 2
+>> is not needed.  However, since we have expended time and effort on
+>> this subject, perhaps we should get this cleaned up while it has our
+>> attention.
+>>
+>> I'm all for deleting as much of amd_bus.c as possible due to its
+>> "perennial maintenance headache".  The obvious choices seem to be all,
+>> or some combination, of:
+>>   o removing IO ECS logic,
+>>   o removing IO/MMIO logic (assuming MCFG issues were long enough ago
+>> to no longer be a concern),
+>>   o start deprecating amd_bus.c by adding logic to skip if BIOS >= 2015
+>
+> I don't see any reason for big changes actually. Just bind the IO ECS
+> logic to fam10h (either with fam check or pci device depending on the
+> implementation, xen's flavor would be pci). This is something stricter
+> than 'if BIOS >= 2015'. It leaves code as it is which is maintainable.
+>
+> You implement the new logic for for newer families. No need for one
+> implementation that fits all.
 
-Standard kernel comment style:
+I wasn't explicit enough with respect to "deleting as much of
+amd_bus.c as possible ..." so I'll try again.
 
-/*
- * Something interesting for the code below.
- * This is the second comment line.
- */
+Earlier in this thread - https://lkml.org/lkml/2014/4/28/524 - Bjorn
+expressed the desire to "eliminate the need for kernel changes to
+support future systems.  So far we seem to be concentrating on (1) and
+neglecting (2), which means we're always reacting to things that are
+broken.  ...  I think we should try to get rid of amd_bus.c ...".
 
-> +	{ 0x0 , 0x18, PCI_ANY_ID },
-> +	{ 0xff, 0   , PCI_DEVICE_ID_AMD_10H_NB_HT },
->  };
->  
-> -#define RANGE_NUM 16
-> -
->  static struct pci_root_info __init *find_pci_root_info(int node, int link)
->  {
->  	struct pci_root_info *info;
-> @@ -75,31 +82,47 @@ static int __init early_fill_mp_bus_info(void)
+Then, again in this thread - https://lkml.org/lkml/2014/4/29/360 -
+Suravee noted: "... the existing code, which does many things:
+  1. Setup numa_node information (if PXM doesn't exist)
+  2. Probe NB for MMIO resources (if MCFG doesn't exist)
+  3. Probe NB for IO resources
+  4. Setup IO ECS
 
-Btw, this function is huuuge. It could use a splitup some day.
+So let's walk through these.  (1) was put in place to "snoop out, from
+the HW" numa_node information.  It is "snooped" and cached.  Then,
+later in booting, if the platform does not supply an ACPI _PXM method
+corresponding to the hostbridge *and* we are on a AMD based platform,
+the "snooped" numa_node information is retrieved and used.  There are
+two issues with this approach.  First, "The node numbers used by Linux
+are logical and there's no reason they need to be identical to
+settings in the CPU registers.  So if we got some node information in
+the normal way (from _PXM, SLIT, SRAT, etc.) and some from your patch,
+there's no reason to believe they would be compatible." [1].  Second,
+there is a architectural agnostic way to get this information; the
+ACPI _PXM method.  Looking at numerous 'acpidump' captures, the vast
+majority of platform BIOS' are not implementing _PXM methods
+corresponding to hostbridges - we need to try and correct this and get
+away from this current, error prone, fall-back mechanism (again: see
+[1]).
 
->  		return -1;
->  
->  	found = false;
-> -	for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
-> +	for (i = 0; i < ARRAY_SIZE(hb_probes); i++) {
->  		u32 id;
->  		u16 device;
->  		u16 vendor;
-> +		u32 class;
->  
-> -		bus = pci_probes[i].bus;
-> -		slot = pci_probes[i].slot;
-> +		bus = hb_probes[i].bus;
-> +		slot = hb_probes[i].slot;
->  		id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
-> -
->  		vendor = id & 0xffff;
->  		device = (id>>16) & 0xffff;
-> -		if (pci_probes[i].vendor == vendor &&
-> -		    pci_probes[i].device == device) {
-> -			found = true;
-> -			break;
-> +		class = read_pci_config(bus, slot, 0,
-> +			PCI_CLASS_REVISION) >> 16;
-> +
-> +		if (PCI_VENDOR_ID_AMD == vendor) {
+(2) and (3) were put in place for similar reasons but with respect to
+MCFG - during its early phases, it was either buggy or BIOS' were not
+supplying ACPI MCFG tables.  This was long enough ago that I expect we
+are well past those issues with new systems today.  MCFG, _CBA, and
+_CRS are again architectural agnostic ways to get MMCONFIG and
+resource (I/O Port, and MMIO) information.  With respect to (2) and
+(3) we were in a similar situation with Intel based systems and for a
+brief period of time had 'intel_bus.c'.  We were encountering the same
+"perennial maintenance headache" issues with 'intel_bus.c' and finally
+with Bjorn's efforts in implementing _CRS as the default for platforms
+with BIOS >= 2008 [2] we were able to obviate 'intel_bus.c' completely
+- something we should be similarly striving for here with amd_bus.c.
 
-Flip comparison:
+(4) is a little more interesting.  It seems to be related to Xen, non
+MMIO based ECS enabled platforms, and IBS.  Xen has indicated that
+they can "decide whether to add the code to the hypervisor instead or
+- just like on Intel systems - rely on MCFG being properly
+exposed by the firmware." [3].  Again, I expect we are past the early
+implementations of platforms that don't have MMIO based ECS enabled.
+That leaves IBS which I'm completely unfamiliar with [4].
 
-		if (vendor == PCI_VENDOR_ID_AMD)
+With the possible exception of (4), there should be ACPI based
+architectural agnostic ways to get the information being discussed
+here.  MCFG, _CBA, and _CRS are mature and provide solutions to (2)
+and (3).  There are platforms in the field, the vast majority
+actually, that still do not implement _PXM methods corresponding to
+hostbridges (1).  Patch 1 of this series provides a fall-back for that
+situation for AMD based platforms only; albeit a solution with
+problems itself as expressed above.  For (1), the proper solution is
+to get platform BIOS' to implement _PXM methods.
 
-and then save yourself another indentation level:
+As a result, it seems like we should be pursuing an avenue to move us
+out of the current "perennial maintenance headache" design that
+amd_bus.c presents.  As such, I'm going to start working on an
+additional patch to this series that only runs 'amd_postcore_init()'
+for BIOS dates < 2015.
 
-		if (vendor != PCI_VENDOR_ID_AMD)
-			continue;
+[1] https://lkml.org/lkml/2014/3/17/390
+[2] Kernel commit 7bc5e3f  "x86/PCI: use host bridge _CRS info by
+default on 2008 and newer machines"
+[3] https://lkml.org/lkml/2014/4/29/66
+[4]  https://lkml.org/lkml/2014/4/30/153 - "ECS would work there
+out-of-the-box (at least after the system brought pci up, ibs is
+initialized after pci setup)."
 
-> +			if (hb_probes[i].device == device) {
-> +				found = true;
-> +				break;
-> +			}
-> +
-> +			if ((hb_probes[i].device == PCI_ANY_ID) &&
-> +			    (class == PCI_CLASS_BRIDGE_HOST)) {
-> +				hb_probes[i].device = device;
-> +				found = true;
-> +				break;
-> +			}
->  		}
->  	}
->  
-> -	if (!found)
-> +	if (!found) {
-> +		pr_warn("AMD hostbridge not found\n");
->  		return 0;
-> +	}
+Myron
 
-I guess this should return a negative value... Not that it matters much
-from looking at the call site in the amd_postcore_init initcall.
 
->  
-> -	for (i = 0; i < 4; i++) {
-> +	pr_debug("Found AMD hostbridge at %x:%x.0\n", bus, slot);
-
-Why not pr_info? I think this is useful info we want to print out at
-default level.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+>
+> -Robert
