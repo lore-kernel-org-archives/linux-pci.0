@@ -1,49 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.2 \(1874\))
-Subject: Re: [PATCH v2 2/5] x86/PCI: Support additional MMIO range capabilities
-From: Steffen Persvold <sp@numascale.com>
-In-Reply-To: <20140429102013.GA4726@pd.tnic>
-Date: Tue, 29 Apr 2014 06:07:46 -0700
-Cc: Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Robert Richter <rric@kernel.org>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	linux-pci <linux-pci@vger.kernel.org>, kim.naru@amd.com,
-	Daniel J Blueman <daniel@numascale.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86 <x86@kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Message-Id: <3CFA7164-1352-467D-951E-C9F8F35F3163@numascale.com>
-References: <20140419025308.2408.51252.stgit@amt.stowe> <20140419025323.2408.88764.stgit@amt.stowe> <20140419135219.GC8109@pd.tnic> <20140420075936.GA19672@pd.tnic> <CAL-B5D1rJmf9vLSnV2izsXcbCu1idXsTsnSwoFRKFNTM7BnyfA@mail.gmail.com> <20140426091031.GA10166@pd.tnic> <CAErSpo4Jqo_opj=QqjcquS_6HqckZfP5-oQHkmY5FSAyyLNYMg@mail.gmail.com> <20140428214036.GA32143@pd.tnic> <20140429073309.GE10997@alberich> <20140429102013.GA4726@pd.tnic>
-To: Borislav Petkov <bp@suse.de>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor3.renesas.com ([210.160.252.173]:14450 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751749AbaD3KUZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Apr 2014 06:20:25 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>
+Subject: RE: [PATCH v7 01/10] PCI: host: rcar: Add Renesas R-Car PCIe driver
+Date: Wed, 30 Apr 2014 10:20:18 +0000
+Message-ID: <0798ff58bde84f85bc389a8faccd2a4a@HKXPR06MB168.apcprd06.prod.outlook.com>
+References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+ <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
+ <20140424191901.GE29593@google.com>
+ <9b8bedae9d604383ac7ec22fd0f62fdb@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <CAErSpo6Autto4n4A4wHtXQNJzD3RKevkVcLZHUods-2-eiRDYQ@mail.gmail.com>
+In-Reply-To: <CAErSpo6Autto4n4A4wHtXQNJzD3RKevkVcLZHUods-2-eiRDYQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29 Apr 2014, at 3:20 , Borislav Petkov <bp@suse.de> wrote:
-
-> On Tue, Apr 29, 2014 at 09:33:09AM +0200, Andreas Herrmann wrote:
->> I am sure, it's because some server systems had MMIO ECS access not
->> enabled in BIOS. I can't remember which systems were affected.
-> 
-> Ok, now AMD people: what's the story with IO ECS, can we assume that on
-> everything after F10h, BIOS has a sensible MCFG and we can limit this to
-> F10h only? I like Bjorn's idea but we need to make sure a working MCFG
-> is ubiquitous.
-> 
-> Which begs the real question: Suravee, why are you even touching IO ECS
-> provided F15h and later have a MCFG? Or, do they?
-> 
-
-Our experience with this is that Fam10h and later have a very well working MCFG setup, earlier generations not so much (hence IO ECS was needed).
-
-Cheers,
-Steffen
-
+SGkgQmpvcm4sDQoNCk9uIDI4IEFwcmlsIDIwMTQgMjA6MTEsIEJqb3JuIHdyb3RlOg0KPiBPbiBN
+b24sIEFwciAyOCwgMjAxNCBhdCA0OjAzIEFNLCBQaGlsIEVkd29ydGh5DQo+IDxwaGlsLmVkd29y
+dGh5QHJlbmVzYXMuY29tPiB3cm90ZToNCj4gPiBIaSBCam9ybiwNCj4gPg0KPiA+IFRoYW5rcyBm
+b3IgdGhlIHJldmlldy4NCj4gPg0KPiA+IE9uIDI0IEFwcmlsIDIwMTQgMjA6MTksIEJqb3JuIHdy
+b3RlOg0KPiA+PiBPbiBNb24sIE1hciAzMSwgMjAxNCBhdCAxMTozMDo0NkFNICswMTAwLCBQaGls
+IEVkd29ydGh5IHdyb3RlOg0KPiA+PiA+IFRoaXMgUENJZSBIb3N0IGRyaXZlciBjdXJyZW50bHkg
+ZG9lcyBub3Qgc3VwcG9ydCBNU0ksIHNvIGNhcmRzDQo+ID4+ID4gZmFsbCBiYWNrIHRvIElOVHgg
+aW50ZXJydXB0cy4NCj4gPj4gPg0KPiA+PiA+IFNpZ25lZC1vZmYtYnk6IFBoaWwgRWR3b3J0aHkg
+PHBoaWwuZWR3b3J0aHlAcmVuZXNhcy5jb20+DQo+ID4+ID4gLi4uDQo+ID4+DQo+ID4+ID4gLS0t
+IC9kZXYvbnVsbA0KPiA+PiA+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1yY2FyLmMNCj4g
+Pj4gPiBAQCAtMCwwICsxLDY5MyBAQA0KPiA+PiA+IC4uLg0KPiA+PiA+ICsjaW5jbHVkZSA8bGlu
+dXgvc2xhYi5oPg0KPiA+PiA+ICsjaW5jbHVkZSAicGNpZS1yY2FyLmgiDQo+ID4+DQo+ID4+IEl0
+IGxvb2tzIGxpa2UgdGhlIHRoaW5ncyBpbiBwY2llLXJjYXIuaCBhcmUgdXNlZCBvbmx5IGluIHRo
+aXMgZmlsZQ0KPiA+PiAocGNpZS1yY2FyLmMpLCBzbyB5b3UgbWlnaHQgYXMgd2VsbCBqdXN0IHB1
+dCB0aGUgY29udGVudHMgaGVyZSBhbmQgbm90IGhhdmUNCj4gPj4gYSBwY2llLXJjYXIuaCBhdCBh
+bGwuICBPZiBjb3Vyc2UsIGlmIHRoZXJlIGFyZSB0aGluZ3MgbmVlZGVkIGJ5IG1vcmUgdGhhbg0K
+PiA+PiBvbmUgZmlsZSwgdGhleSBzaG91bGQgc3RheSBpbiBwY2llLXJjYXIuaC4NCj4gPiBOb3Ro
+aW5nIGVsc2UgdXNlcyB0aGVtIHNvIEknbGwgcHV0IGluIHRoZSBjIGZpbGUuDQo+ID4NCj4gPj4g
+PiArI2RlZmluZSBEUlZfTkFNRSAicmNhci1wY2llIg0KPiA+PiA+ICsNCj4gPj4gPiArI2RlZmlu
+ZSBSQ09ORih4KSAgIChQQ0lDT05GKDApKyh4KSkNCj4gPj4gPiArI2RlZmluZSBSUE1DQVAoeCkg
+IChQTUNBUCgwKSsoeCkpDQo+ID4+ID4gKyNkZWZpbmUgUkVYUENBUCh4KSAoRVhQQ0FQKDApKyh4
+KSkNCj4gPj4gPiArI2RlZmluZSBSVkNDQVAoeCkgIChWQ0NBUCgwKSsoeCkpDQo+ID4+ID4gKw0K
+PiA+PiA+ICsjZGVmaW5lICBQQ0lFX0NPTkZfQlVTKGIpICAoKChiKSAmIDB4ZmYpIDw8IDI0KQ0K
+PiA+PiA+ICsjZGVmaW5lICBQQ0lFX0NPTkZfREVWKGQpICAoKChkKSAmIDB4MWYpIDw8IDE5KQ0K
+PiA+PiA+ICsjZGVmaW5lICBQQ0lFX0NPTkZfRlVOQyhmKSAoKChmKSAmIDB4NykgPDwgMTYpDQo+
+ID4+ID4gKw0KPiA+PiA+ICsjZGVmaW5lIFBDSV9NQVhfUkVTT1VSQ0VTIDQNCj4gPj4gPiArI2Rl
+ZmluZSBNQVhfTlJfSU5CT1VORF9NQVBTIDYNCj4gPj4gPiArDQo+ID4+ID4gKy8qIFN0cnVjdHVy
+ZSByZXByZXNlbnRpbmcgdGhlIFBDSWUgaW50ZXJmYWNlICovDQo+ID4+ID4gK3N0cnVjdCByY2Fy
+X3BjaWUgew0KPiA+PiA+ICsgICBzdHJ1Y3QgZGV2aWNlICAgICAgICAgICAqZGV2Ow0KPiA+PiA+
+ICsgICB2b2lkIF9faW9tZW0gICAgICAgICAgICAqYmFzZTsNCj4gPj4gPiArICAgc3RydWN0IHJl
+c291cmNlICAgICAgICAgcmVzW1BDSV9NQVhfUkVTT1VSQ0VTXTsNCj4gPj4gPiArICAgdTggICAg
+ICAgICAgICAgICAgICAgICAgcm9vdF9idXNfbnI7DQo+ID4+DQo+ID4+IEkgZG9uJ3QgdW5kZXJz
+dGFuZCBob3cgcm9vdF9idXNfbnIgd29ya3MuICBGcm9tIGl0cyBuYW1lLCBpdCBzb3VuZHMgbGlr
+ZQ0KPiA+PiBpdCdzIHRoZSBidXMgbnVtYmVyIG9mIHRoZSBQQ0kgYnVzIG9uIHRoZSBkb3duc3Ry
+ZWFtIHNpZGUgb2YgdGhlIGhvc3QNCj4gPj4gYnJpZGdlLg0KPiA+IFRoYXQncyBjb3JyZWN0Lg0K
+PiA+DQo+ID4+IFRoYXQgYnVzIG51bWJlciBzaG91bGQgYmUgYSBwcm9wZXJ0eSBvZiB0aGUgaG9z
+dCBicmlkZ2UsIGkuZS4sDQo+ID4+IGl0J3MgZWl0aGVyIGhhcmQtd2lyZWQgaW50byB0aGUgYnJp
+ZGdlLCBvciBpdCdzIHByb2dyYW1tYWJsZSBzb21ld2hlcmUuDQo+ID4+IEJ1dCByb290X2J1c19u
+ciBjb21lcyBmcm9tIHN5cy0+YnVzbnIsIHdoaWNoIGlzIGFwcGFyZW50bHkgZnJvbSBzb21lDQo+
+ID4+IGdlbmVyaWMgY29kZSB0aGF0IGtub3dzIG5vdGhpbmcgYWJvdXQgdGhpcyBwYXJ0aWN1bGFy
+IGhvc3QgYnJpZGdlLg0KPiA+IFRoZSBtYW51YWwgZm9yIHRoaXMgaGFyZHdhcmUgc2F5cyB0aGF0
+IHRoZSBIVyBkb2Vzbid0IGNhcmUgd2hhdCB0aGUgYnVzDQo+IG51bWJlcg0KPiA+IGlzIHNldCB0
+by4gVGhlIG9ubHkgdGhpbmcgdGhlIEhXIG5lZWRzIHRvIGtub3cgaXMgdGhhdCB3aGVuIHNlbmRp
+bmcgY29uZmlnDQo+ID4gYWNjZXNzZXMsIHdlIG5lZWQgdG8gaW5kaWNhdGUgd2hldGhlciBpdCdz
+IGEgVFlQRTAgb3IgVFlQRTEgaGVhZGVyOyBzbyB3ZQ0KPiB1c2UNCj4gPiByb290X2J1c19uciB0
+byBkZXRlcm1pbmUgdGhpcy4gVGhlIGdlbmVyaWMgY29kZSB0aGF0IHNldHMgdXAgc3lzLT5idXNu
+cg0KPiAoQVJNDQo+ID4gYmlvczMyIGluIHRoaXMgY2FzZSksIGp1c3QgaW5jcmVtZW50cyBidXMg
+bnVtYmVyIGZvciBlYWNoIGNvbnRyb2xsZXIuDQo+ID4NCj4gPiBUaGlzIGlzIHZlcnkgc2ltaWxh
+ciB0byB0aGUgcGNpZS1kZXNpZ253YXJlIGRyaXZlciwgaW4gZHdfcGNpZV9zY2FuX2J1cygpLg0K
+PiANCj4gT0suICBGcm9tIHdoYXQgeW91IHNhaWQgYmVsb3csIGl0IHNvdW5kcyBsaWtlIHlvdSB3
+b3VsZCBhZGQgYSBEVCBlbnRyeQ0KPiBmb3IgdGhlIGJ1cyByYW5nZSB5b3Ugd2FudCB0byBoYXZl
+IGJlbG93IHRoaXMgYnJpZGdlLCBhbmQgdXNlIFRZUEUwDQo+IGFjY2Vzc2VzIGZvciB0aGUgYmFz
+ZSBvZiB0aGF0IHJhbmdlLg0KT2suIFRoZSBkcml2ZXIgYWxyZWFkeSB1c2VzIFRZUEUwIGZvciB0
+aGUgYmFzZSwgaS5lLiB0aGF0J3Mgd2hhdCByb290X2J1c19uciBpcyB1c2VkIGZvci4gSSdsbCBh
+ZGQgdGhlIHJhbmdlcyBhYmlsaXR5Lg0KDQo+IEknbSBub3Qgc3VyZSBob3cgeW91IHJlY29uY2ls
+ZSB0aGlzIHdpdGggdGhlIGlkZWEgdGhhdCB0aGUgYmlvczMyIGNvZGUNCj4ganVzdCBpbmNyZW1l
+bnRzIGEgYnVzIG51bWJlciBmb3IgZWFjaCBjb250cm9sbGVyLg0KSSBsb29rZWQgYXQgdGhlIGJp
+b3MzMiBjb2RlIGFnYWluLiBJIHdhcyB3cm9uZyB0byBzYXkgdGhhdCBpdCBqdXN0IGluY3JlbWVu
+dHMgYSBidXMgbnVtYmVyIGZvciBlYWNoIGNvbnRyb2xsZXIuIFRoZSBmaXJzdCBjb250cm9sbGVy
+IGFsd2F5cyBzdGFydHMgd2l0aCBidXNucj0wLCBhbmQgc3Vic2VxdWVudCBjb250cm9sbGVycyBn
+ZXQgdGhlIG5leHQgYXZhaWxhYmxlIGJ1cyBudW1iZXIgYWZ0ZXIgc2Nhbm5pbmcgdGhlIGJ1cy4N
+Cg0KPiA+PiA+ICtzdGF0aWMgaW50IF9faW5pdCByY2FyX3BjaWVfZ2V0X3Jlc291cmNlcyhzdHJ1
+Y3QgcGxhdGZvcm1fZGV2aWNlDQo+ICpwZGV2LA0KPiA+PiA+ICsgICBzdHJ1Y3QgcmNhcl9wY2ll
+ICpwY2llKQ0KPiA+PiA+ICt7DQo+ID4+ID4gKyAgIHN0cnVjdCByZXNvdXJjZSByZXM7DQo+ID4+
+ID4gKyAgIGludCBlcnI7DQo+ID4+ID4gKw0KPiA+PiA+ICsgICBlcnIgPSBvZl9hZGRyZXNzX3Rv
+X3Jlc291cmNlKHBkZXYtPmRldi5vZl9ub2RlLCAwLCAmcmVzKTsNCj4gPj4gPiArICAgaWYgKGVy
+cikNCj4gPj4gPiArICAgICAgICAgICByZXR1cm4gZXJyOw0KPiA+Pg0KPiA+PiBJIGRvbid0IHNl
+ZSBhbnl3aGVyZSB0aGF0IGZpZ3VyZXMgb3V0IHRoZSBidXMgbnVtYmVyIHJhbmdlIGJlaGluZCB0
+aGlzDQo+IGhvc3QNCj4gPj4gYnJpZGdlLiAgVGhlIFBDSSBjb3JlIG5lZWRzIHRvIGtub3cgdGhp
+cy4gIEkga25vdyB0aGUgY29yZSBhc3N1bWVzIDAwLWZmIGlmDQo+ID4+IGl0J3Mgbm90IHN1cHBs
+aWVkLCBidXQgdGhhdCdzIGp1c3QgdG8gZGVhbCB3aXRoIHRoZSBsZWdhY3kgc2l0dWF0aW9uIHdo
+ZXJlDQo+ID4+IHdlIGFzc3VtZWQgb25lIGhvc3QgYnJpZGdlIHdhcyBhbGwgYW55Ym9keSB3b3Vs
+ZCBldmVyIG5lZWQuDQo+ID4+DQo+ID4+IEZvciBuZXcgY29kZSwgd2Ugc2hvdWxkIGJlIGV4cGxp
+Y2l0IGFib3V0IHRoZSByYW5nZS4NCj4gPiBUaGlzIG1lYW5zIGFkZCBhIERUIGVudHJ5IGZvciBi
+dXMtcmFuZ2UsIGFuZCBzaW1wbHkgY2FsbGluZw0KPiBwY2lfYWRkX3Jlc291cmNlIGZvcg0KPiA+
+IHRoZSByYW5nZSwgcmlnaHQ/IElmIHNvLCBvay4NCj4gDQo+IFllYWgsIEkgZ3Vlc3MuICBJZiB0
+aGUgSFcgcmVhbGx5IGRvZXNuJ3QgbG9vayBhdCB0aGUgYnVzIG51bWJlciBhdA0KPiBhbGwsIGl0
+IHNvdW5kcyBsaWtlIHRoZSByYW5nZSBpcyBlZmZlY3RpdmVseSAwMC1mZiwgYW5kIGVhY2ggaG9z
+dA0KPiBicmlkZ2Ugc2hvdWxkIGJlIGluIGl0cyBvd24gZG9tYWluLg0KT2suDQoNClRoYW5rcw0K
+UGhpbA0K
