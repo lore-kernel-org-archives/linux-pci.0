@@ -1,61 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:51484 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752581AbaDYRQv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Apr 2014 13:16:51 -0400
-Received: by mail-pa0-f49.google.com with SMTP id lj1so3390295pab.36
-        for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2014 10:16:51 -0700 (PDT)
-Subject: [PATCH 3/4] x86/PCI: Move pcibios_assign_resources() annotation to
- definition
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:38307 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756147AbaD3BAV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 21:00:21 -0400
+Received: by mail-ie0-f182.google.com with SMTP id tp5so1142609ieb.27
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 18:00:20 -0700 (PDT)
+Subject: [PATCH 6/7] resources: Clarify sanity check message
 To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Airlie <airlied@linux.ie>, Bodo Eggert <7eggert@gmx.de>,
-	x86@kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 25 Apr 2014 11:16:47 -0600
-Message-ID: <20140425171647.312.98481.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140425171144.312.9601.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140425171144.312.9601.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 29 Apr 2014 19:00:19 -0600
+Message-ID: <20140430010019.13138.61238.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move the pcibios_assign_resources() fs_initcall annotation next to the
-function definition.  No functional change.
+The resource map sanity check message is a bit confusing.  Change it to be
+more readable:
+
+  -resource map sanity check conflict: 0xfed10000 0xfed15fff 0xfed10000 0xfed13fff pnp 00:01
+  +resource sanity check: requesting [mem 0xfed10000-0xfed15fff], which spans more than pnp 00:01 [mem 0xfed10000-0xfed13fff]
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/pci/i386.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ kernel/resource.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 6db58d68feb5..a19ed92e74e4 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -361,6 +361,12 @@ static int __init pcibios_assign_resources(void)
- 	return 0;
- }
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 8957d686e29b..3c2237ac32db 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -1288,13 +1288,10 @@ int iomem_map_sanity_check(resource_size_t addr, unsigned long size)
+ 		if (p->flags & IORESOURCE_BUSY)
+ 			continue;
  
-+/**
-+ * called in fs_initcall (one below subsys_initcall),
-+ * give a chance for motherboard reserve resources
-+ */
-+fs_initcall(pcibios_assign_resources);
-+
- void pcibios_resource_survey_bus(struct pci_bus *bus)
- {
- 	dev_printk(KERN_DEBUG, &bus->dev, "Allocating resources\n");
-@@ -397,12 +403,6 @@ void __init pcibios_resource_survey(void)
- 	ioapic_insert_resources();
- }
- 
--/**
-- * called in fs_initcall (one below subsys_initcall),
-- * give a chance for motherboard reserve resources
-- */
--fs_initcall(pcibios_assign_resources);
--
- static const struct vm_operations_struct pci_mmap_ops = {
- 	.access = generic_access_phys,
- };
+-		printk(KERN_WARNING "resource map sanity check conflict: "
+-		       "0x%llx 0x%llx 0x%llx 0x%llx %s\n",
++		printk(KERN_WARNING "resource sanity check: requesting [mem %#010llx-%#010llx], which spans more than %s %pR\n",
+ 		       (unsigned long long)addr,
+ 		       (unsigned long long)(addr + size - 1),
+-		       (unsigned long long)p->start,
+-		       (unsigned long long)p->end,
+-		       p->name);
++		       p->name, p);
+ 		err = -1;
+ 		break;
+ 	}
 
