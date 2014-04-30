@@ -1,84 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12112 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754431AbaDNIEl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Apr 2014 04:04:41 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 21/23] qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 14 Apr 2014 10:05:45 +0200
-Message-Id: <56843dce951ecc7ee986936d91d69a446946d42f.1397461652.git.agordeev@redhat.com>
-In-Reply-To: <cover.1397461652.git.agordeev@redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:51069 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677AbaD3A7k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 20:59:40 -0400
+Received: by mail-ig0-f179.google.com with SMTP id hl10so1122700igb.12
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 17:59:40 -0700 (PDT)
+Subject: [PATCH 0/7] PCI: BAR sizing fixes
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 29 Apr 2014 18:59:38 -0600
+Message-ID: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+These are intended to fix some corner-case BAR sizing issues: cases where
+resource_size_t or dma_addr_t is too small to handle a BAR larger than 4GB
+or one placed above 4GB.  There's also a message clarification in the
+resource sanity check and a subtractive bridge window fix.
 
-Log message code 0x00c6 preserved, although it is reported
-after successful call to pci_enable_msix_range(), not before
-possibly unsuccessful call to pci_enable_msix(). Consumers
-of the error code should not notice the difference.
+Comments welcome.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: qla2xxx-upstream@qlogic.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
- 1 files changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 95314ef..41eb0dc 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2918,27 +2918,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 	for (i = 0; i < ha->msix_count; i++)
- 		entries[i].entry = i;
- 
--	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
--	if (ret) {
--		if (ret < MIN_MSIX_COUNT)
--			goto msix_failed;
--
-+	ret = pci_enable_msix_range(ha->pdev,
-+				    entries, MIN_MSIX_COUNT, ha->msix_count);
-+	if (ret < 0) {
-+		ql_log(ql_log_fatal, vha, 0x00c7,
-+		    "MSI-X: Failed to enable support, "
-+		    "giving   up -- %d/%d.\n",
-+		    ha->msix_count, ret);
-+		goto msix_out;
-+	} else if (ret < ha->msix_count) {
- 		ql_log(ql_log_warn, vha, 0x00c6,
- 		    "MSI-X: Failed to enable support "
- 		    "-- %d/%d\n Retry with %d vectors.\n",
- 		    ha->msix_count, ret, ret);
--		ha->msix_count = ret;
--		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
--		if (ret) {
--msix_failed:
--			ql_log(ql_log_fatal, vha, 0x00c7,
--			    "MSI-X: Failed to enable support, "
--			    "giving   up -- %d/%d.\n",
--			    ha->msix_count, ret);
--			goto msix_out;
--		}
--		ha->max_rsp_queues = ha->msix_count - 1;
- 	}
-+	ha->msix_count = ret;
-+	ha->max_rsp_queues = ha->msix_count - 1;
- 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
- 				ha->msix_count, GFP_KERNEL);
- 	if (!ha->msix_entries) {
--- 
-1.7.7.6
+Bjorn Helgaas (7):
+      PCI: Fail safely if we can't handle BARs larger than 4GB
+      PCI: Reject BAR above 4GB if dma_addr_t is too small
+      PCI: Don't convert BAR address to resource if dma_addr_t is too small
+      PCI: Don't set BAR to zero if dma_addr_t is too small
+      PCI: Don't print anything while decoding is disabled
+      resources: Clarify sanity check message
+      PCI: Don't add disabled subtractive decode bus resources
 
+
+ drivers/pci/probe.c |   48 +++++++++++++++++++++++++++++-------------------
+ kernel/resource.c   |    7 ++-----
+ 2 files changed, 31 insertions(+), 24 deletions(-)
