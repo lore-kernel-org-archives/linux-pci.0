@@ -1,33 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:47184 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300AbaDCQxV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Apr 2014 12:53:21 -0400
-Received: by mail-ie0-f178.google.com with SMTP id lx4so2142935iec.9
-        for <linux-pci@vger.kernel.org>; Thu, 03 Apr 2014 09:53:21 -0700 (PDT)
-MIME-Version: 1.0
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:54278 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754500AbaD3BAB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 21:00:01 -0400
+Received: by mail-ie0-f173.google.com with SMTP id rp18so1147389iec.18
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2014 18:00:00 -0700 (PDT)
+Subject: [PATCH 3/7] PCI: Don't convert BAR address to resource if
+ dma_addr_t is too small
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 3 Apr 2014 10:53:01 -0600
-Message-ID: <CAErSpo4hujoq8Ni7sSrNQv61rf4Xz4s3GjYxNQR6TDLDm0N-Jw@mail.gmail.com>
-Subject: Coverity CID 712278: c_can_pci_probe() doesn't check pci_enable_msi()
- return value
-To: Wolfgang Grandegger <wg@grandegger.com>,
-	Marc Kleine-Budde <mkl@pengutronix.de>
-Cc: Alexander Gordeev <agordeev@redhat.com>, linux-can@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 29 Apr 2014 18:59:59 -0600
+Message-ID: <20140430005958.13138.17945.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140430005642.13138.99577.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Coverity complains that c_can_pci_probe() calls pci_enable_msi()
-without checking the result:
+If dma_addr_t is too small to represent the BAR value,
+pcibios_bus_to_resource() will fail, so just remember the BAR size directly
+in the resource.  The resource is already marked UNSET, so we know the
+address isn't valid anyway.
 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-CID 712278 (#1 of 1): Unchecked return value (CHECKED_RETURN)
-3. check_return: Calling pci_enable_msi_block without checking return
-value (as is done elsewhere 88 out of 105 times).
- 88        pci_enable_msi(pdev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index afae3bf405fa..82cd75f6118a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -258,9 +258,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 			pci_write_config_dword(dev, pos, 0);
+ 			pci_write_config_dword(dev, pos + 4, 0);
+ 			res->flags |= IORESOURCE_UNSET;
+-			region.start = 0;
+-			region.end = sz64;
++			res->start = 0;
++			res->end = sz64;
+ 			bar_disabled = true;
++			goto out;
+ 		} else {
+ 			region.start = l64;
+ 			region.end = l64 + sz64;
 
-This is CID 712278.
-
-Bjorn
