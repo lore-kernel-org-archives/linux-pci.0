@@ -1,90 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com
-Subject: [PATCH 4/8] Update iommu_attach_domain() and its callers
-Date: Tue, 15 Apr 2014 17:09:05 -0600
-Message-Id: <1397603349-30930-5-git-send-email-bill.sumner@hp.com>
-In-Reply-To: <1397603349-30930-1-git-send-email-bill.sumner@hp.com>
-References: <1397603349-30930-1-git-send-email-bill.sumner@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:23298 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751540AbaD3BM2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Apr 2014 21:12:28 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	amirv@mellanox.com, Or Gerlitz <ogerlitz@mellanox.com>,
+	eugenia@mellanox.com, Guo Chao <yan@linux.vnet.ibm.com>,
+	talal@mellanox.com, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: don't update bridge resource flags according to children
+Date: Tue, 29 Apr 2014 18:11:55 -0700
+Message-Id: <1398820315-27425-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- Allow specification of the domain-id for the new domain.
+After
+	PCI: Try best to allocate pref mmio 64bit above 4g
+We don't need to check if children support 64bit, and update
+bridge resource flags anymore.
+As the new code check size and assign according exact type.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Signed-off-by: Bill Sumner <bill.sumner@hp.com>
 ---
- drivers/iommu/intel-iommu.c | 23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
+ drivers/pci/setup-bus.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 4352731..0c00c2d 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1003,7 +1003,8 @@ static struct dmar_domain *alloc_domain(void)
- }
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -926,7 +926,6 @@ static int pbus_size_mem(struct pci_bus
+ 	int order, max_order;
+ 	struct resource *b_res = find_free_bus_resource(bus,
+ 					 mask | IORESOURCE_PREFETCH, type);
+-	unsigned int mem64_mask = 0;
+ 	resource_size_t children_add_size = 0;
  
- static int iommu_attach_domain(struct dmar_domain *domain,
--			       struct intel_iommu *iommu)
-+			       struct intel_iommu *iommu,
-+			       int domain_number)
- {
- 	int num;
- 	unsigned long ndomains;
-@@ -1013,12 +1014,15 @@ static int iommu_attach_domain(struct dmar_domain *domain,
+ 	if (!b_res)
+@@ -936,9 +935,6 @@ static int pbus_size_mem(struct pci_bus
+ 	max_order = 0;
+ 	size = 0;
  
- 	spin_lock_irqsave(&iommu->lock, flags);
+-	mem64_mask = b_res->flags & IORESOURCE_MEM_64;
+-	b_res->flags &= ~IORESOURCE_MEM_64;
+-
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
  
--	num = find_first_zero_bit(iommu->domain_ids, ndomains);
--	if (num >= ndomains) {
--		spin_unlock_irqrestore(&iommu->lock, flags);
--		printk(KERN_ERR "IOMMU: no free domain ids\n");
--		return -ENOMEM;
--	}
-+	if (domain_number < 0) {
-+		num = find_first_zero_bit(iommu->domain_ids, ndomains);
-+		if (num >= ndomains) {
-+			spin_unlock_irqrestore(&iommu->lock, flags);
-+			pr_err("IOMMU: no free domain ids\n");
-+			return -ENOMEM;
-+		}
-+	} else
-+		num = domain_number;
+@@ -980,7 +976,6 @@ static int pbus_size_mem(struct pci_bus
+ 				aligns[order] += align;
+ 			if (order > max_order)
+ 				max_order = order;
+-			mem64_mask &= r->flags & IORESOURCE_MEM_64;
  
- 	domain->id = num;
- 	set_bit(num, iommu->domain_ids);
-@@ -1629,6 +1633,7 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
- 	int bus = 0, devfn = 0;
- 	int segment;
- 	int ret;
-+	int did = -1;   /* Default to "no domain_id supplied" */
- 
- 	domain = find_domain(pdev);
- 	if (domain)
-@@ -1675,7 +1680,7 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ 			if (realloc_head)
+ 				children_add_size += get_res_add_size(realloc_head, r);
+@@ -1005,7 +1000,7 @@ static int pbus_size_mem(struct pci_bus
  	}
- 	iommu = drhd->iommu;
- 
--	ret = iommu_attach_domain(domain, iommu);
-+	ret = iommu_attach_domain(domain, iommu, did);
- 	if (ret) {
- 		free_domain_mem(domain);
- 		goto error;
-@@ -1894,7 +1899,7 @@ static int __init si_domain_init(int hw)
- 		return -EFAULT;
- 
- 	for_each_active_iommu(iommu, drhd) {
--		ret = iommu_attach_domain(si_domain, iommu);
-+		ret = iommu_attach_domain(si_domain, iommu, (int) -1);
- 		if (ret) {
- 			domain_exit(si_domain);
- 			return -EFAULT;
--- 
-Bill Sumner <bill.sumner@hp.com>
-
+ 	b_res->start = min_align;
+ 	b_res->end = size0 + min_align - 1;
+-	b_res->flags |= IORESOURCE_STARTALIGN | mem64_mask;
++	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+ 		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
