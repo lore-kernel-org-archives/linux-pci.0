@@ -1,78 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:62342 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbaDVBel (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Apr 2014 21:34:41 -0400
-Received: by mail-ob0-f180.google.com with SMTP id wm4so5013205obc.39
-        for <linux-pci@vger.kernel.org>; Mon, 21 Apr 2014 18:34:41 -0700 (PDT)
+Received: from mail-bn1blp0188.outbound.protection.outlook.com ([207.46.163.188]:44713
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751972AbaD3GC3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Apr 2014 02:02:29 -0400
+Date: Wed, 30 Apr 2014 14:02:10 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-samsung-soc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
+	Richard Zhu <r65037@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Mark Rutland" <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Tim Harvey <tharvey@gateworks.com>, <kernel@pengutronix.de>
+Subject: Re: [PATCH 3/8] ARM: dts: imx6: update pcie to bring in line with
+ new binding
+Message-ID: <20140430060208.GA16727@dragon>
+References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+ <1396025579-14344-4-git-send-email-l.stach@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <1397000541-1085-2-git-send-email-keith.busch@intel.com>
-References: <1397000541-1085-1-git-send-email-keith.busch@intel.com> <1397000541-1085-2-git-send-email-keith.busch@intel.com>
-From: Learner Study <learner.study@gmail.com>
-Date: Mon, 21 Apr 2014 18:34:20 -0700
-Message-ID: <CAP8+hKWcybw5u_m5M4c1p4eUAaTq4x+kO+tnegwD2ciDMEFNCw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] NVMe: Implement PCI-e reset notification callback
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-nvme <linux-nvme@lists.infradead.org>, bhelgaas@google.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1396025579-14344-4-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith,
+On Fri, Mar 28, 2014 at 05:52:54PM +0100, Lucas Stach wrote:
+> The new bindings drops one clock, renames the others and
+> drops the old interrupt mapping.
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 
-I think NVMe Reset should apply to PF mode driver only, and not to VF
-mode driver.
-Is that understanding correct? Does the NVMe driver know which mode
-its running in?
+It does not apply on my branch, and I had to apply it manually.  Please
+check my imx/dt branch to see if I did it right.
 
-Thanks!
-
-
-On Tue, Apr 8, 2014 at 4:42 PM, Keith Busch <keith.busch@intel.com> wrote:
->
-> Disable and shutdown the device prior to reset, and restart the device
-> after.
->
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/block/nvme-core.c |   11 +++++++++++
->  1 file changed, 11 insertions(+)
->
-> diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-> index 625259d..273ff12 100644
-> --- a/drivers/block/nvme-core.c
-> +++ b/drivers/block/nvme-core.c
-> @@ -2605,6 +2605,16 @@ static void nvme_reset_failed_dev(struct work_struct *ws)
->         nvme_dev_reset(dev);
->  }
->
-> +static void nvme_reset_notify(struct pci_dev *pdev, int prepare)
-> +{
-> +       struct nvme_dev *dev = pci_get_drvdata(pdev);
-> +
-> +       if (prepare)
-> +               nvme_dev_shutdown(dev);
-> +       else
-> +               nvme_dev_resume(dev);
-> +}
-> +
->  static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  {
->         int result = -ENOMEM;
-> @@ -2744,6 +2754,7 @@ static const struct pci_error_handlers nvme_err_handler = {
->         .link_reset     = nvme_link_reset,
->         .slot_reset     = nvme_slot_reset,
->         .resume         = nvme_error_resume,
-> +       .reset_notify   = nvme_reset_notify,
->  };
->
->  /* Move to pci_ids.h later */
-> --
-> 1.7.10.4
->
->
-> _______________________________________________
-> Linux-nvme mailing list
-> Linux-nvme@lists.infradead.org
-> http://merlin.infradead.org/mailman/listinfo/linux-nvme
+Shawn
