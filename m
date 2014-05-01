@@ -1,70 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:52699 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750948AbaEFNS1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 09:18:27 -0400
-Received: by mail-ie0-f171.google.com with SMTP id to1so9744793ieb.2
-        for <linux-pci@vger.kernel.org>; Tue, 06 May 2014 06:18:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1399344142.2164.67.camel@dabdike.int.hansenpartnership.com>
-References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAErSpo7zjXg8xrV7=q36rNp_g573P93HiXTB72Z1cZfjGeeBmg@mail.gmail.com>
- <1399011100.2174.45.camel@dabdike> <11081303.OBX0h8mIfH@wuerfel>
- <20140505230104.GB8883@google.com> <1399344142.2164.67.camel@dabdike.int.hansenpartnership.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 6 May 2014 07:18:06 -0600
-Message-ID: <CAErSpo7wJTP+GyM4sNN6gAA69cV_j3m=nOsgJasi1XYFZMA2YA@mail.gmail.com>
-Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU address
- to phys_addr_t
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "rdunlap@infradead.org" <rdunlap@infradead.org>,
+Received: from relmlor3.renesas.com ([210.160.252.173]:62185 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754452AbaEAJvB convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 May 2014 05:51:01 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Magnus Damm <magnus.damm@gmail.com>,
+	"Valentine Barshak" <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH v7 01/10] PCI: host: rcar: Add Renesas R-Car PCIe driver
+Date: Thu, 1 May 2014 09:50:56 +0000
+Message-ID: <b9160c7a49304270b5070dcf49482723@HKXPR06MB168.apcprd06.prod.outlook.com>
+References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+ <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
+ <20140424191901.GE29593@google.com>
+ <9b8bedae9d604383ac7ec22fd0f62fdb@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <CAErSpo6Autto4n4A4wHtXQNJzD3RKevkVcLZHUods-2-eiRDYQ@mail.gmail.com>
+ <20140428203501.GA3016@obsidianresearch.com>
+ <ac795ce3bb6349708e2e96686e19d24f@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <20140430154345.GA1705@obsidianresearch.com>
+In-Reply-To: <20140430154345.GA1705@obsidianresearch.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 5, 2014 at 8:42 PM, James Bottomley
-<jbottomley@parallels.com> wrote:
-> On Mon, 2014-05-05 at 17:01 -0600, Bjorn Helgaas wrote:
->> On Fri, May 02, 2014 at 10:42:18AM +0200, Arnd Bergmann wrote:
->
->> > I don't know about NCR_Q720, but all others are only used on machines
->> > where physical addresses and bus addresses are in the same space.
->>
->> In general, the driver doesn't know whether physical and bus addresses
->> are in the same space.  At least, I *hope* it doesn't have to know,
->> because it can't be very generic if it does.
->
-> The API was designed for the case where the memory resides on a PCI
-> device (the Q720 case), the card config gives us a bus address, but if
-> the system has an IOMMU, we'd have to do a dma_map of the entire region
-> to set up the IOMMU before we can touch it.  The address it gets back
-> from the dma_map (the dma_addr_t handle for the IOMMU mapping) is what
-> we pass into dma_declare_coherent_memory().
+Hi Jason,
 
-The IOMMU (if any) is only involved for DMA to system memory, and
-there is no system memory in this picture.  The device does DMA to its
-own memory; no dma_map is required for this.  We use
-dma_declare_coherent_memory() to set things up so the CPU can also do
-programmed I/O to the memory.
+On 30 April 2014 16:44, Jason wrote:
+> On Wed, Apr 30, 2014 at 10:33:08AM +0000, Phil Edworthy wrote:
+> 
+> > > You set the value of the integrated bus based on the bus number in the
+> > > TYPE0 accesses the driver performs and it shows up in the PCI config
+> > > space of the root port bridge:
+> > >
+> > > root@koelsch:~# lspci -vv
+> > > 00:00.0 PCI bridge: Renesas Technology Corp. Device 001f (prog-if 00
+> > > [Normal decode])
+> > >         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+> > >
+> > > The value here will be also be exported on-the-wire in certain PCI-E
+> > > TLPs.
+> > >
+> > > So it is important, and must be set properly.
+> > I am not so sure about this...
+> >
+> > There are three things we need to consider:
+> > 1) talking to the host bridge itself
+> > 2) talking to immediate device (connected directly to host bridge)
+> > 3) talking to other devices
+> >
+> > The PCI standard tells us we use type 1's for 3) and type 0's for
+> > 2). The driver uses root_bus_nr to make this decision.  For 1),
+> > there is a note in the driver that the hardware cannot target
+> > itself. The driver has code in rcar_pcie_config_access() to check if
+> > it's an access to the host bridge, and if so, use I/O (readl/writel)
+> > to perform the config access.
+> 
+> The logic should be:
+>  if (bus == primary)
+>     do io access to host bridge
+>  else if (bus == secondary)
+>     issue type 0 TLP on the wire
+>  else if (bus > secondary && bus <= subordinate)
+>     issue type 1 TLP on the wire
+>  else
+>     fail, invalid bus number
+> Where the three values come from the register in the PCI host bridge's
+> configuration space, and are kept in sync with the programming from
+> the Linux PCI core.
+> 
+> It is just a happy hapenstance that root_bus_nr equals the value the
+> PCI core programmed into secondary - that is not guarenteed, you must
+> use the primary value directly.
+For type0 TLPs, we are not checking that root_bus_nr equals the value the PCI core programmed into secondary, we are checking that the (root_bus_nr == bus->parent->number). The only way this wouldn't work is if root_bus_nr was not the root bus number.
 
-> The reason it does an
-> ioremap is because this IOMMU mapped address is now physical to the CPU
-> and we want to make the region available to virtual space.  Essentially
-> the memory the allocator hands out behaves as proper virtual memory but
-> it's backed by physical memory on the card behind the PCI bridge.
+Since the Synopsys DW driver also saves off sys->busnr and later uses this to determine if accesses are for the host bridge, I guess that means it won't always work either, right? Or is it ok because the DW driver saves sys->busnr in its .scan function?
 
-Yep, the programmed I/O depends on the ioremap().  But I don't think
-it depends on any IOMMU mapping.
+When would the PCI core change the root bus number to something other than set in sys->busnr?
 
-> I'm still not that fussed about the difference between phys_addr_t and
-> dma_addr_t, but if the cookie returned from a dma_map is a dma_addr_t
-> then that's what dma_declare_coherent_memory() should use.  If it's a
-> phys_addr_t, then likewise.
->
-> James
->
+> I recommend capturing it on write to the host bridge config
+> space.
+
+Thanks
+Phil
+
