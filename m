@@ -1,103 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:57755 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933084AbaE3UpL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 16:45:11 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Subject: Re: [PATCH] of: treat PCI config space as IORESOURCE_MEM type
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <20140530014116.GF1677@bart.dudau.co.uk>
-Date: Fri, 30 May 2014 15:45:05 -0500
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-Message-Id: <F22EE9D6-8F58-4AF0-9684-71B7A3BFF868@codeaurora.org>
-References: <1401379426-9701-1-git-send-email-galak@codeaurora.org> <CAL_JsqLPFDwtd-QYDqCwx1JVj1Aa8=nof-e0P6R9CZra+fXHfw@mail.gmail.com> <47B1E3D0-4336-4529-80B0-172F4ACA5C97@codeaurora.org> <20140530005602.GE1677@bart.dudau.co.uk> <CAErSpo7qEhJyUAu58R8g6+AEhRGo_+Vv0EMgkK+3ZQOU9+jmhg@mail.gmail.com> <20140530014116.GF1677@bart.dudau.co.uk>
-To: Liviu Dudau <liviu@dudau.co.uk>
+Received: from mx1.redhat.com ([209.132.183.28]:13995 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752029AbaEAQ2W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 May 2014 12:28:22 -0400
+Subject: [PATCH 12/13] PCI: Remove pci_find_upstream_pcie_bridge()
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 May 2014 10:28:18 -0600
+Message-ID: <20140501162818.17512.49335.stgit@bling.home>
+In-Reply-To: <20140501160128.17512.23609.stgit@bling.home>
+References: <20140501160128.17512.23609.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+It's broken and has no users.
 
-On May 29, 2014, at 8:41 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/search.c |   35 -----------------------------------
+ include/linux/pci.h  |   11 -----------
+ 2 files changed, 46 deletions(-)
 
-> On Thu, May 29, 2014 at 07:29:31PM -0600, Bjorn Helgaas wrote:
->> On Thu, May 29, 2014 at 6:56 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
->>> On Thu, May 29, 2014 at 03:51:28PM -0500, Kumar Gala wrote:
->>>> 
->>>> On May 29, 2014, at 3:44 PM, Rob Herring <robherring2@gmail.com> wrote:
->>>> 
->>>>> On Thu, May 29, 2014 at 11:03 AM, Kumar Gala <galak@codeaurora.org> wrote:
->>>>>> If we have a PCI config space specified in something like a ranges
->>>>>> property we should treat it as memory type resource.
->>>>> 
->>>>> Config space should not be in ranges[1]. We have some cases that are,
->>>>> but we don't want new ones.
->>>> 
->>>> For the cases we have I agree, however an ECAM based cfg seems completely legit.
->>>> 
->>>>>> Signed-off-by: Kumar Gala <galak@codeaurora.org>
->>>>>> ---
->>>>>> drivers/of/address.c | 3 +++
->>>>>> 1 file changed, 3 insertions(+)
->>>>>> 
->>>>>> diff --git a/drivers/of/address.c b/drivers/of/address.c
->>>>>> index cb4242a..4e7ee59 100644
->>>>>> --- a/drivers/of/address.c
->>>>>> +++ b/drivers/of/address.c
->>>>>> @@ -122,6 +122,9 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
->>>>>>       u32 w = be32_to_cpup(addr);
->>>>>> 
->>>>>>       switch((w >> 24) & 0x03) {
->>>>>> +       case 0x00: /* cfg space */
->>>>>> +               flags |= IORESOURCE_MEM;
->>>>>> +               break;
->>>>> 
->>>>> How would you then distinguish actual memory ranges?
->>>> 
->>>> One assumes you are still looking at pci_space as part of of_pci_range
->>> 
->>> That doesn't happen when you start scanning the bus. The existing code will
->>> use the IORESOURCE_MEM for allocating memory space for devices, which is
->>> not what you want. Did you test your patch on any PCI system? I'm pretty
->>> sure that with my patch series that tries to make a generic framework for
->>> host controllers this will fail.
->>> 
->>> We really need a IORESOURCE_CFG flag for this space.
->> 
->> Maybe, but I'm not convinced yet.  The existing IORESOURCE_TYPE_BITS
->> types are for things that are mutually exclusive address spaces.  I
->> think this discussion is about ECAM, where the CPU side is definitely
->> in the same address space (IORESOURCE_MEM) as RAM, APICs, host bridge
->> apertures, device MMIO, etc.  The ECAM area must appear in the
->> iomem_resource tree so we avoid it when allocating other areas.
-> 
-> Agree, I'm only concerned that if this ECAM config space gets added to
-> the list of pci_host_bridge windows it will be indistinguishable from
-> IORESOURCE_MEM resources and pci_create_root_bus() will add it to the
-> bus and allow devices present on that bus to be assigned addresses from
-> that range. Which might not be what one wants for certain BARs.
-> 
-> I've had an aborted attempt to parse ECAM ranges in one version of my
-> series (granted, I was trying to hack the IORESOURCE_TYPE_BITS as well)
-> and things got horribly wrong quickly. I could give this patch a go with
-> my series tomorrow when I'm in the office and report back.
-
-We need to fix the parsing code to be smarter about this case.
-
-- k
--- 
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 1eab231..6d3b9be 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -238,41 +238,6 @@ struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev)
+ 	return pdev;
+ }
+ 
+-/*
+- * find the upstream PCIe-to-PCI bridge of a PCI device
+- * if the device is PCIE, return NULL
+- * if the device isn't connected to a PCIe bridge (that is its parent is a
+- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
+- * parent
+- */
+-struct pci_dev *
+-pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+-{
+-	struct pci_dev *tmp = NULL;
+-
+-	if (pci_is_pcie(pdev))
+-		return NULL;
+-	while (1) {
+-		if (pci_is_root_bus(pdev->bus))
+-			break;
+-		pdev = pdev->bus->self;
+-		/* a p2p bridge */
+-		if (!pci_is_pcie(pdev)) {
+-			tmp = pdev;
+-			continue;
+-		}
+-		/* PCI device should connect to a PCIe bridge */
+-		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
+-			/* Busted hardware? */
+-			WARN_ON_ONCE(1);
+-			return NULL;
+-		}
+-		return pdev;
+-	}
+-
+-	return tmp;
+-}
+-
+ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+ {
+ 	struct pci_bus *child;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0d50064..bf4b0e9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1802,15 +1802,4 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 				     u16 alias, void *data), void *data);
+ struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev);
+ 
+-/**
+- * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+- * @pdev: the PCI device
+- *
+- * if the device is PCIE, return NULL
+- * if the device isn't connected to a PCIe bridge (that is its parent is a
+- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
+- * parent
+- */
+-struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
+-
+ #endif /* LINUX_PCI_H */
 
