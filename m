@@ -1,49 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:37809 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752280AbaE0VWl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 17:22:41 -0400
-Received: by mail-ie0-f170.google.com with SMTP id at1so9539896iec.29
-        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 14:22:40 -0700 (PDT)
-Date: Tue, 27 May 2014 14:22:37 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Patch V3 05/37] x86, PCI, ACPI: use kmalloc_node() to optimize
- for performance
-In-Reply-To: <1401178092-1228-6-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.02.1405271421470.14064@chino.kir.corp.google.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com> <1401178092-1228-6-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marcel Apfelbaum <marcel.a@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com, matthew@wil.cx,
+	mst@redhat.com, marcel.a@redhat.com
+Subject: [PATCH] PCI/shpchp: fix a bus speed issue on hotplug
+Date: Thu,  1 May 2014 17:35:48 +0300
+Message-Id: <1398954948-24219-1-git-send-email-marcel.a@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 27 May 2014, Jiang Liu wrote:
+When a board is added, the shpchp driver checks if there
+is a mismatch between the bridge's adapter and the bus speed.
+If there is, it sets the subordinate speed (if there is no device on it).
 
-> Use kmalloc_node() instead of kmalloc() when possible to optimize
-> for performance on NUMA platforms.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+However, it takes the reference of the board speed from the primary bus
+and not from the subordinate. If the primary bus is PCI and not PCIX/PCIe,
+its speed is not updated and remains 0xff. As a result hotplug fails
+with error: "Speed of bus ff and adapter 0 mismatch".
 
-Acked-by: David Rientjes <rientjes@google.com>
+Fixed that by checking the speed against the subordinate bus.
 
-All the handling to make sure sd->node refers to either NUMA_NO_NODE 
-(fallback to local allocation) or an online node looks to be handled 
-properly.
+Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/pci/hotplug/shpchp_ctrl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
+index 5849927..6efc2ec 100644
+--- a/drivers/pci/hotplug/shpchp_ctrl.c
++++ b/drivers/pci/hotplug/shpchp_ctrl.c
+@@ -282,8 +282,8 @@ static int board_added(struct slot *p_slot)
+ 		return WRONG_BUS_FREQUENCY;
+ 	}
+ 
+-	bsp = ctrl->pci_dev->bus->cur_bus_speed;
+-	msp = ctrl->pci_dev->bus->max_bus_speed;
++	bsp = ctrl->pci_dev->subordinate->cur_bus_speed;
++	msp = ctrl->pci_dev->subordinate->max_bus_speed;
+ 
+ 	/* Check if there are other slots or devices on the same bus */
+ 	if (!list_empty(&ctrl->pci_dev->subordinate->devices))
+-- 
+1.8.3.1
+
