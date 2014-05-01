@@ -1,86 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:62398 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830AbaEFOJx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 10:09:53 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"rdunlap@infradead.org" <rdunlap@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU address to phys_addr_t
-Date: Tue, 06 May 2014 16:09:20 +0200
-Message-ID: <5829375.P5n7Z81gQ7@wuerfel>
-In-Reply-To: <1399383725.2237.26.camel@dabdike.int.hansenpartnership.com>
-References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com> <CAErSpo7wJTP+GyM4sNN6gAA69cV_j3m=nOsgJasi1XYFZMA2YA@mail.gmail.com> <1399383725.2237.26.camel@dabdike.int.hansenpartnership.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60992 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751887AbaEAQG1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 May 2014 12:06:27 -0400
+Date: Thu, 1 May 2014 18:07:39 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI/MSI: Phase out pci_enable_msi_block()
+Message-ID: <20140501160738.GA10407@dhcp-26-207.brq.redhat.com>
+References: <cover.1397458024.git.agordeev@redhat.com>
+ <0b08613dc17cd608c1babc1f42b8919f60e1093f.1397458024.git.agordeev@redhat.com>
+ <20140414120921.GA32132@dhcp-26-207.brq.redhat.com>
+ <20140414132834.GA9164@dhcp-26-207.brq.redhat.com>
+ <20140430234933.GB31315@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140430234933.GB31315@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 06 May 2014 13:42:06 James Bottomley wrote:
-> On Tue, 2014-05-06 at 07:18 -0600, Bjorn Helgaas wrote:
-> > On Mon, May 5, 2014 at 8:42 PM, James Bottomley
-> > <jbottomley@parallels.com> wrote:
-> > > On Mon, 2014-05-05 at 17:01 -0600, Bjorn Helgaas wrote:
-> > >> On Fri, May 02, 2014 at 10:42:18AM +0200, Arnd Bergmann wrote:
-> > >
-> > >> > I don't know about NCR_Q720, but all others are only used on machines
-> > >> > where physical addresses and bus addresses are in the same space.
-> > >>
-> > >> In general, the driver doesn't know whether physical and bus addresses
-> > >> are in the same space.  At least, I *hope* it doesn't have to know,
-> > >> because it can't be very generic if it does.
-> > >
-> > > The API was designed for the case where the memory resides on a PCI
-> > > device (the Q720 case), the card config gives us a bus address, but if
-> > > the system has an IOMMU, we'd have to do a dma_map of the entire region
-> > > to set up the IOMMU before we can touch it.  The address it gets back
-> > > from the dma_map (the dma_addr_t handle for the IOMMU mapping) is what
-> > > we pass into dma_declare_coherent_memory().
-> > 
-> > The IOMMU (if any) is only involved for DMA to system memory, and
-> > there is no system memory in this picture.  The device does DMA to its
-> > own memory; no dma_map is required for this.  We use
-> > dma_declare_coherent_memory() to set things up so the CPU can also do
-> > programmed I/O to the memory.
+On Wed, Apr 30, 2014 at 05:49:33PM -0600, Bjorn Helgaas wrote:
+> I mistakenly assumed this would have to wait because I thought there were
+> other pci_enable_msi_block() users that wouldn't be removed until the v3.16
+> merge window.  But I think I was wrong: I put your GenWQE patch in my tree,
+> and I think that was the last use, so I can just add this patch on top.
+
+That is right, GenWQE is the last one.
+
+> But I need a little help understanding the changelog:
 > 
-> Right, but for the CPU to access memory on a device, the access has to
-> go through the IOMMU: it has to be programmed to map the memory on the
-> bus to a physical address.
-
-That's not how most IOMMUs work, I haven't actually seen any system that
-requires using the IOMMU for an MMIO access on the architectures I worked
-on. The IOMMU may be required for the device to access its own memory
-though, if it issues a DMA request that goes up the bus hierarchy into
-the IOMMU and gets translated into an MMIO address there.
-
-> > > The reason it does an
-> > > ioremap is because this IOMMU mapped address is now physical to the CPU
-> > > and we want to make the region available to virtual space.  Essentially
-> > > the memory the allocator hands out behaves as proper virtual memory but
-> > > it's backed by physical memory on the card behind the PCI bridge.
-> > 
-> > Yep, the programmed I/O depends on the ioremap().  But I don't think
-> > it depends on any IOMMU mapping.
+> > Up until now, when enabling MSI mode for a device a single
+> > successful call to arch_msi_check_device() was followed by
+> > a single call to arch_setup_msi_irqs() function.
 > 
-> At least on Parisc with U2/Uturn, unless there are IOMMU entries, you
-> won't be able to address the memory on the device because it's behind
-> the IOMMU.  For regions like this, the necessary IOMMU entries are set
-> up at init time because without them you don't get memory mapped access
-> to register space either.
+> I understand this part; the following two paths call
+> arch_msi_check_device() once and then arch_setup_msi_irqs() once:
+> 
+>   pci_enable_msi_block
+>     pci_msi_check_device
+>       arch_msi_check_device
+>     msi_capability_init
+>       arch_setup_msi_irqs
+> 
+>   pci_enable_msix
+>     pci_msi_check_device
+>       arch_msi_check_device
+>     msix_capability_init
+>       arch_setup_msi_irqs
+> 
+> > Yet, if arch_msi_check_device() returned success we should be
+> > able to call arch_setup_msi_irqs() multiple times - while it
+> > returns a number of MSI vectors that could have been allocated
+> > (a third state).
+> 
+> I don't know what you mean by "a third state."
 
-I would treat that as a specific property of that system. The IOMMU
-and dma-mapping APIs we have in Linux normally assume that the IOMMU
-is strictly one-way, translating dma_addr_t (used by the device) into
-phys_addr_t (normally for RAM), but not for memory mapped access
-initiated by the CPU. Most architectures (not s390 though) rely
-on the MMU to set up a page table entry converting from a virtual
-address to the physical address. There may be offsets between the
-physical address seen by the CPU and the address seen on the bus,
-but not a second set of page tables.
+That is "a number of MSI vectors that could have been allocated", which
+is neither success nor failure. In previous conversations someone branded
+it this as "third state".
 
-	Arnd
+> Previously we only called arch_msi_check_device() once.  After your patch,
+> pci_enable_msi_range() can call it several times.  The only non-trivial
+> implementation of arch_msi_check_device() is in powerpc, and all the
+> ppc_md.msi_check_device() possibilities look safe to call multiple times.
+
+Yep, I see it the same way.
+
+> After your patch, the pci_enable_msi_range() path can also call
+> arch_setup_msi_irqs() several times.  I don't see a problem with that --
+> even if the first call succeeds and allocates something, then a subsequent
+> call fails, I assume the allocations will be cleaned up when
+> msi_capability_init() calls free_msi_irqs().
+
+Well, the potential problem related to the fact arch_msi_check_device()
+could be called with 'nvec1' while arch_setup_msi_irqs() could be called
+with 'nvec2', where 'nvec1' > 'nvec2'.
+
+While it is not a problem with current implementations, in therory it is
+possible free_msi_irqs() could be called with 'nvec2' and fail to clean
+up 'nvec1' - 'nvec2' number of resources.
+
+The only assumption that makes the above scenario impossible is if
+arch_msi_check_device() is stateless.
+
+Again, that is purely theoretical with no particular architecture in mind.
+
+> > This update makes use of the assumption described above. It
+> > could have broke things had the architectures done any pre-
+> > allocations or switch to some state in a call to function
+> > arch_msi_check_device(). But because arch_msi_check_device()
+> > is expected stateless and MSI resources are allocated in a
+> > follow-up call to arch_setup_msi_irqs() we should be fine.
+> 
+> I guess you mean that your patch assumes arch_msi_check_device() is
+> stateless.  That looks like a safe assumption to me.
+
+Moreover, if arch_msi_check_device() was not stateless then it would
+be superfluous, since all state switches and allocations are done in
+arch_setup_msi_irqs() anyway.
+
+In fact, I think arch_msi_check_device() could be eliminated, but I
+do not want to engage with PPC folks at this stage ;)
+
+> arch_setup_msi_irqs() is clearly not stateless, but I assume
+> free_msi_irqs() is enough to clean up any state if we fail.
+> 
+> Bjorn
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
