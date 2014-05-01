@@ -1,62 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:47750 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755809AbaEHUtL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 16:49:11 -0400
-Received: by mail-ie0-f180.google.com with SMTP id as1so3044300iec.25
-        for <linux-pci@vger.kernel.org>; Thu, 08 May 2014 13:49:10 -0700 (PDT)
-Subject: [PATCH v3 4/4] iommu/exynos: Remove unnecessary "&" from function
- pointers
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-kernel@vger.kernel.org,
-	James Bottomley <jbottomley@parallels.com>,
-	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
-Date: Thu, 08 May 2014 14:49:14 -0600
-Message-ID: <20140508204914.17877.15500.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 02/13] PCI: quirk pci_for_each_dma_alias()
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 May 2014 10:27:18 -0600
+Message-ID: <20140501162717.17512.25998.stgit@bling.home>
+In-Reply-To: <20140501160128.17512.23609.stgit@bling.home>
+References: <20140501160128.17512.23609.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-To: unlisted-recipients:; (no To-header on input)
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove unnecessary "&" from function pointers in exynos_iommu_ops.
+There are a few broken devices that use the requester ID of a different
+function in the slot for their DMA.  To handle these, add a bitmap to
+struct pci_dev (using an alignment gap) that quirks can populate.  As
+we iterate over the device and bus DMA aliases, also iterate over any
+bits in the map.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/iommu/exynos-iommu.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/pci/search.c |   21 +++++++++++++++++++++
+ include/linux/pci.h  |    2 ++
+ 2 files changed, 23 insertions(+)
 
-diff --git a/drivers/iommu/exynos-iommu.c b/drivers/iommu/exynos-iommu.c
-index 074018979cdf..2ca0744b0a45 100644
---- a/drivers/iommu/exynos-iommu.c
-+++ b/drivers/iommu/exynos-iommu.c
-@@ -1011,13 +1011,13 @@ static phys_addr_t exynos_iommu_iova_to_phys(struct iommu_domain *domain,
- }
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 5601cdb..ad698b2 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -37,6 +37,27 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 	if (ret)
+ 		return ret;
  
- static struct iommu_ops exynos_iommu_ops = {
--	.domain_init = &exynos_iommu_domain_init,
--	.domain_destroy = &exynos_iommu_domain_destroy,
--	.attach_dev = &exynos_iommu_attach_device,
--	.detach_dev = &exynos_iommu_detach_device,
--	.map = &exynos_iommu_map,
--	.unmap = &exynos_iommu_unmap,
--	.iova_to_phys = &exynos_iommu_iova_to_phys,
-+	.domain_init = exynos_iommu_domain_init,
-+	.domain_destroy = exynos_iommu_domain_destroy,
-+	.attach_dev = exynos_iommu_attach_device,
-+	.detach_dev = exynos_iommu_detach_device,
-+	.map = exynos_iommu_map,
-+	.unmap = exynos_iommu_unmap,
-+	.iova_to_phys = exynos_iommu_iova_to_phys,
- 	.pgsize_bitmap = SECT_SIZE | LPAGE_SIZE | SPAGE_SIZE,
- };
++	/*
++	 * dma_func_alias provides a bitmap of other function numbers on
++	 * this same PCI slot to use as DMA aliases.
++	 */
++	if (unlikely(pdev->dma_func_alias)) {
++		u8 map = pdev->dma_func_alias & ~(1 << PCI_FUNC(pdev->devfn));
++		int func;
++
++		for (func = 0; map && func < 8; func++, map >>= 1) {
++			if (!(map & 1))
++				continue;
++
++			ret = fn(pdev,
++				 PCI_DEVID(pdev->bus->number,
++					   PCI_DEVFN(PCI_SLOT(pdev->devfn),
++					   func)), data);
++			if (ret)
++				return ret;
++		}
++	}
++
+ 	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
+ 		struct pci_dev *tmp;
  
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 14b074b..b4c97d2 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -268,6 +268,8 @@ struct pci_dev {
+ 	u8		rom_base_reg;	/* which config register controls the ROM */
+ 	u8		pin;		/* which interrupt pin this device uses */
+ 	u16		pcie_flags_reg;	/* cached PCIe Capabilities Register */
++	u8		dma_func_alias;	/* bitmap of functions used as DMA
++					   aliases for this device */
+ 
+ 	struct pci_driver *driver;	/* which driver has allocated this device */
+ 	u64		dma_mask;	/* Mask of the bits of bus address this
 
