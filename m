@@ -1,76 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:60670 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751811AbaEBSZs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 May 2014 14:25:48 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com
-Subject: Re: [RESEND PATCH 2/3] PCI: ARM: add support for generic PCI host controller
-Date: Fri, 02 May 2014 20:25:36 +0200
-Message-ID: <5644412.ouY7G25ZK8@wuerfel>
-In-Reply-To: <20140502172317.GC3179@obsidianresearch.com>
-References: <1399048876-11862-1-git-send-email-will.deacon@arm.com> <1399048876-11862-3-git-send-email-will.deacon@arm.com> <20140502172317.GC3179@obsidianresearch.com>
+Received: from mx1.redhat.com ([209.132.183.28]:16652 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751995AbaEAQ2R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 May 2014 12:28:17 -0400
+Subject: [PATCH 11/13] iommu: Remove pci.h
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>,
+	acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 May 2014 10:28:12 -0600
+Message-ID: <20140501162812.17512.28070.stgit@bling.home>
+In-Reply-To: <20140501160128.17512.23609.stgit@bling.home>
+References: <20140501160128.17512.23609.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 02 May 2014 11:23:18 Jason Gunthorpe wrote:
-> On Fri, May 02, 2014 at 05:41:15PM +0100, Will Deacon wrote:
-> 
-> > +       bus_range = &pci->cfg.bus_range;
-> > +       for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
-> > +               u32 idx = busn - bus_range->start;
-> > +               u32 sz = 1 << pci->cfg.ops->bus_shift;
-> > +
-> > +               pci->cfg.win[idx] = devm_ioremap(dev,
-> > +                                                pci->cfg.res.start + busn * sz,
-> > +                                                sz);
-> 
-> Why map each bus individually? Both CAM and ECAM define consecutive
-> busses consecutively in the address space, and I though ioremap was OK
-> with unaligned stuff?
+The single helper here no longer has any users.
 
-One optimization we discussed before was to do this ioremap on the first
-access to any config space register in one bus, so we don't actually have
-to map all of them but only the ones that are in use.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/iommu/pci.h |   29 -----------------------------
+ 1 file changed, 29 deletions(-)
+ delete mode 100644 drivers/iommu/pci.h
 
-I don't know if there was a technical problem with that. We can't just
-map/unmap on every config space access, because it can be called from
-atomic context and ioremap can sleep, but the initial bus scan is
-always done in a context in which we are allowed to sleep.
+diff --git a/drivers/iommu/pci.h b/drivers/iommu/pci.h
+deleted file mode 100644
+index 352d80a..0000000
+--- a/drivers/iommu/pci.h
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/*
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License, version 2, as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+- *
+- * Copyright (C) 2013 Red Hat, Inc.
+- * Copyright (C) 2013 Freescale Semiconductor, Inc.
+- *
+- */
+-#ifndef __IOMMU_PCI_H
+-#define __IOMMU_PCI_H
+-
+-/* Helper function for swapping pci device reference */
+-static inline void swap_pci_ref(struct pci_dev **from, struct pci_dev *to)
+-{
+-	pci_dev_put(*from);
+-	*from = to;
+-}
+-
+-#endif  /* __IOMMU_PCI_H */
 
-> > +out_unmap_cfg:
-> > +     while (busn-- > bus_range->start)
-> > +             devm_iounmap(dev, pci->cfg.win[busn - bus_range->start]);
-> 
-> Is there a reason to explicitly clean up devm resources? I guess it is
-> because this is in setup not probe?
-
-Setup is called from probe, through pci_common_init_dev(), so that shouldn't
-make a difference.
-
-> It seems strange to me for a driver to do this sort of work in a setup
-> function, typically probe acquires as much stuff as it can, that way
-> defered probe can work properly.
-> 
-> Looking at pci-mvebu, 'setup' is only populating the resource list, I
-> would suggest the same split for this driver.
-
-I suggested moving it all into setup, to make it easier to port this code
-to arm64: I don't expect we will have the same pci_common_init_dev()
-mechanism there, so setup will get called directly from the probe
-function.
-
-The alternative is to do everything in probe() as well for arm32, and only
-do a single list_move() of the resources list to sys->resources in the
-setup function. That was the advice I gave in the xilinx pci host driver
-review for the same reason. I only now noticed that I recommended the opposite
-here. Anyway it shouldn't matter where we do all the things, but I feel
-it's better to have only one function that does all the work for the case
-of having nr_controllers=1, as we always do for loadable host drivers.
-
-	Arnd
