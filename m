@@ -1,53 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:34871 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758296AbaEMBfg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 May 2014 21:35:36 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 13 May 2014 11:35:33 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 1/4] PCI: Export MSI message relevant functions
-Date: Tue, 13 May 2014 11:35:21 +1000
-Message-Id: <1399944924-1200-2-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1399944924-1200-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1399944924-1200-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:57777 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751168AbaEAQuM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 May 2014 12:50:12 -0400
+Date: Thu, 1 May 2014 10:50:03 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v7 01/10] PCI: host: rcar: Add Renesas R-Car PCIe driver
+Message-ID: <20140501165003.GC3296@obsidianresearch.com>
+References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+ <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
+ <20140424191901.GE29593@google.com>
+ <9b8bedae9d604383ac7ec22fd0f62fdb@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <CAErSpo6Autto4n4A4wHtXQNJzD3RKevkVcLZHUods-2-eiRDYQ@mail.gmail.com>
+ <20140428203501.GA3016@obsidianresearch.com>
+ <ac795ce3bb6349708e2e96686e19d24f@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <20140430154345.GA1705@obsidianresearch.com>
+ <b9160c7a49304270b5070dcf49482723@HKXPR06MB168.apcprd06.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b9160c7a49304270b5070dcf49482723@HKXPR06MB168.apcprd06.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch exports 2 MSI message relevant functions, which will be
-used by VFIO PCI driver. The VFIO PCI driver would be built as
-a module.
+On Thu, May 01, 2014 at 09:50:56AM +0000, Phil Edworthy wrote:
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/pci/msi.c | 2 ++
- 1 file changed, 2 insertions(+)
+> > The logic should be:
+> >  if (bus == primary)
+> >     do io access to host bridge
+> >  else if (bus == secondary)
+> >     issue type 0 TLP on the wire
+> >  else if (bus > secondary && bus <= subordinate)
+> >     issue type 1 TLP on the wire
+> >  else
+> >     fail, invalid bus number
+> > Where the three values come from the register in the PCI host bridge's
+> > configuration space, and are kept in sync with the programming from
+> > the Linux PCI core.
+> > 
+> > It is just a happy hapenstance that root_bus_nr equals the value the
+> > PCI core programmed into secondary - that is not guarenteed, you must
+> > use the primary value directly.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 955ab79..2350271 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -324,6 +324,7 @@ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
- 
- 	__get_cached_msi_msg(entry, msg);
- }
-+EXPORT_SYMBOL_GPL(get_cached_msi_msg);
- 
- void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
-@@ -368,6 +369,7 @@ void write_msi_msg(unsigned int irq, struct msi_msg *msg)
- 
- 	__write_msi_msg(entry, msg);
- }
-+EXPORT_SYMBOL_GPL(write_msi_msg);
- 
- static void free_msi_irqs(struct pci_dev *dev)
- {
--- 
-1.8.3.2
+> For type0 TLPs, we are not checking that root_bus_nr equals the
+> value the PCI core programmed into secondary, we are checking that
+> the (root_bus_nr == bus->parent->number). The only way this wouldn't
+> work is if root_bus_nr was not the root bus number.
 
+Okay, that isn't as sketchy, but that process still ignores the
+subordinate bus number and the failure case as required by PCI.
+
+The goal here is to have the stuff below the drivers implement the PCI
+spec so that the core code can assume everything below is
+conformant. Drivers should not introduce gratuitous differences 'just
+because'
+
+There is no reason drivers should be using PCI core structures to make
+decisions when the spec says those decisions are driven by config
+space fields.
+
+This way the PCI core code doesn't have to be aware of any weird
+non-standard edge cases.. Such as not failing bus numbers beyond the
+subordinate bus number.
+
+> Since the Synopsys DW driver also saves off sys->busnr and later
+> uses this to determine if accesses are for the host bridge, I guess
+> that means it won't always work either, right? Or is it ok because
+> the DW driver saves sys->busnr in its .scan function?
+
+Sounds like it is making the same mistake, and nobody noticed. This is
+another reason why it is important to implement correctly so people
+copying copy the right stuff :)
+
+> When would the PCI core change the root bus number to something
+> other than set in sys->busnr?
+
+I think the more likely scenario is that 'sys' in general is
+architecture specific and its use is being discouraged so that host
+drivers are not arch specific.
+
+A domain driver like rcar should always place the root complex
+integrated bus as bus 0 in the domain.
+
+Jason
