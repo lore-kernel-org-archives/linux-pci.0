@@ -1,65 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:46020 "EHLO comal.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44849 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757079AbaE2NR6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 May 2014 09:17:58 -0400
-Message-ID: <53873353.9010609@ti.com>
-Date: Thu, 29 May 2014 18:47:07 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+	id S1751272AbaEAQ2L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 May 2014 12:28:11 -0400
+Subject: [PATCH 10/13] iommu/fsl: Use pci_find_dma_isolation_root() for
+ IOMMU groups
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, Varun Sethi <varun.sethi@freescale.com>,
+	acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 May 2014 10:28:06 -0600
+Message-ID: <20140501162806.17512.54367.stgit@bling.home>
+In-Reply-To: <20140501160128.17512.23609.stgit@bling.home>
+References: <20140501160128.17512.23609.stgit@bling.home>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <arnd@arndb.de>,
-	<tony@atomide.com>, "'Rob Herring'" <robh+dt@kernel.org>,
-	"'Pawel Moll'" <pawel.moll@arm.com>,
-	"'Mark Rutland'" <mark.rutland@arm.com>,
-	"'Kumar Gala'" <galak@codeaurora.org>
-Subject: Re: [PATCH v2 16/18] ARM: OMAP: Enable PCI for DRA7
-References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-17-git-send-email-kishon@ti.com> <000601cf7b0a$0fbce200$2f36a600$%han@samsung.com>
-In-Reply-To: <000601cf7b0a$0fbce200$2f36a600$%han@samsung.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Drop custom code and use PCI provided isolation root support.
 
-On Thursday 29 May 2014 12:18 PM, Jingoo Han wrote:
-> On Thursday, May 29, 2014 3:38 PM, Kishon Vijay Abraham I wrote:
->>
->> Now that we have added PCIe driver for DRA7 SOCs, enable PCI on
->> DRA7 SOCs.
->>
->> Cc: Tony Lindgren <tony@atomide.com>
->> Cc: Rob Herring <robh+dt@kernel.org>
->> Cc: Pawel Moll <pawel.moll@arm.com>
->> Cc: Mark Rutland <mark.rutland@arm.com>
->> Cc: Kumar Gala <galak@codeaurora.org>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  arch/arm/mach-omap2/Kconfig |    2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/arch/arm/mach-omap2/Kconfig b/arch/arm/mach-omap2/Kconfig
->> index cb31d43..b179e80 100644
->> --- a/arch/arm/mach-omap2/Kconfig
->> +++ b/arch/arm/mach-omap2/Kconfig
->> @@ -75,6 +75,8 @@ config SOC_DRA7XX
->>  	select ARM_GIC
->>  	select HAVE_ARM_ARCH_TIMER
->>  	select IRQ_CROSSBAR
->> +	select MIGHT_HAVE_PCI
->> +	select ARCH_SUPPORTS_MSI
-> 
-> Hi Kishon,
-> 
-> Please, don't select ARCH_SUPPORTS_MSI, because this kconfig
-> option was already removed in v3.12 by the commit ebd97be635
-> ('PCI: remove ARCH_SUPPORTS_MSI kconfig option'). So, there is
-> NO need to select 'ARCH_SUPPORTS_MSI'.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Varun Sethi <varun.sethi@freescale.com>
+---
+ drivers/iommu/fsl_pamu_domain.c |   67 ++-------------------------------------
+ 1 file changed, 3 insertions(+), 64 deletions(-)
 
-Thanks for spotting it. Will remove it.
+diff --git a/drivers/iommu/fsl_pamu_domain.c b/drivers/iommu/fsl_pamu_domain.c
+index 93072ba..83e3e7c 100644
+--- a/drivers/iommu/fsl_pamu_domain.c
++++ b/drivers/iommu/fsl_pamu_domain.c
+@@ -38,7 +38,6 @@
+ #include <sysdev/fsl_pci.h>
+ 
+ #include "fsl_pamu_domain.h"
+-#include "pci.h"
+ 
+ /*
+  * Global spinlock that needs to be held while
+@@ -892,8 +891,6 @@ static int fsl_pamu_get_domain_attr(struct iommu_domain *domain,
+ 	return ret;
+ }
+ 
+-#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
+-
+ static struct iommu_group *get_device_iommu_group(struct device *dev)
+ {
+ 	struct iommu_group *group;
+@@ -950,74 +947,16 @@ static struct iommu_group *get_pci_device_group(struct pci_dev *pdev)
+ 	struct pci_controller *pci_ctl;
+ 	bool pci_endpt_partioning;
+ 	struct iommu_group *group = NULL;
+-	struct pci_dev *bridge, *dma_pdev = NULL;
++	struct pci_dev *dma_pdev;
+ 
+ 	pci_ctl = pci_bus_to_host(pdev->bus);
+ 	pci_endpt_partioning = check_pci_ctl_endpt_part(pci_ctl);
+ 	/* We can partition PCIe devices so assign device group to the device */
+ 	if (pci_endpt_partioning) {
+-		bridge = pci_find_upstream_pcie_bridge(pdev);
+-		if (bridge) {
+-			if (pci_is_pcie(bridge))
+-				dma_pdev = pci_get_domain_bus_and_slot(
+-						pci_domain_nr(pdev->bus),
+-						bridge->subordinate->number, 0);
+-			if (!dma_pdev)
+-				dma_pdev = pci_dev_get(bridge);
+-		} else
+-			dma_pdev = pci_dev_get(pdev);
+-
+-		/* Account for quirked devices */
+-		swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
+-
+-		/*
+-		 * If it's a multifunction device that does not support our
+-		 * required ACS flags, add to the same group as lowest numbered
+-		 * function that also does not suport the required ACS flags.
+-		 */
+-		if (dma_pdev->multifunction &&
+-		    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
+-			u8 i, slot = PCI_SLOT(dma_pdev->devfn);
++		dma_pdev = pci_find_dma_isolation_root(pdev);
+ 
+-			for (i = 0; i < 8; i++) {
+-				struct pci_dev *tmp;
+-
+-				tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
+-				if (!tmp)
+-					continue;
+-
+-				if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
+-					swap_pci_ref(&dma_pdev, tmp);
+-					break;
+-				}
+-				pci_dev_put(tmp);
+-			}
+-		}
+-
+-		/*
+-		 * Devices on the root bus go through the iommu.  If that's not us,
+-		 * find the next upstream device and test ACS up to the root bus.
+-		 * Finding the next device may require skipping virtual buses.
+-		 */
+-		while (!pci_is_root_bus(dma_pdev->bus)) {
+-			struct pci_bus *bus = dma_pdev->bus;
+-
+-			while (!bus->self) {
+-				if (!pci_is_root_bus(bus))
+-					bus = bus->parent;
+-				else
+-					goto root_bus;
+-			}
+-
+-			if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
+-				break;
+-
+-			swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
+-		}
+-
+-root_bus:
+ 		group = get_device_iommu_group(&dma_pdev->dev);
+-		pci_dev_put(dma_pdev);
++
+ 		/*
+ 		 * PCIe controller is not a paritionable entity
+ 		 * free the controller device iommu_group.
 
-Thanks
-Kishon
