@@ -1,285 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39650 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934184AbaEFHD4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 May 2014 03:03:56 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 04/21] iommu/vt-d: introduce helper functions to make code symmetric for readability
-Date: Tue,  6 May 2014 15:05:15 +0800
-Message-Id: <1399359932-28972-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:35041 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750811AbaEASDL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 May 2014 14:03:11 -0400
+Received: by mail-ie0-f180.google.com with SMTP id as1so3778175iec.25
+        for <linux-pci@vger.kernel.org>; Thu, 01 May 2014 11:03:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1398954948-24219-1-git-send-email-marcel.a@redhat.com>
+References: <1398954948-24219-1-git-send-email-marcel.a@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 1 May 2014 12:02:49 -0600
+Message-ID: <CAErSpo4KLq7m8PXzAEhv20e29Wk=sAtageDf3CgziDLno0JUCw@mail.gmail.com>
+Subject: Re: [PATCH] PCI/shpchp: fix a bus speed issue on hotplug
+To: Marcel Apfelbaum <marcel.a@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Matthew Wilcox <matthew@wil.cx>,
+	"Michael S. Tsirkin" <mst@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce domain_attach_iommu()/domain_detach_iommu() and refine
-iommu_attach_domain()/iommu_detach_domain() to make code symmetric
-and improve readability.
+On Thu, May 1, 2014 at 8:35 AM, Marcel Apfelbaum <marcel.a@redhat.com> wrote:
+> When a board is added, the shpchp driver checks if there
+> is a mismatch between the bridge's adapter and the bus speed.
+> If there is, it sets the subordinate speed (if there is no device on it).
+>
+> However, it takes the reference of the board speed from the primary bus
+> and not from the subordinate. If the primary bus is PCI and not PCIX/PCIe,
+> its speed is not updated and remains 0xff. As a result hotplug fails
+> with error: "Speed of bus ff and adapter 0 mismatch".
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |  146 ++++++++++++++++++++++++-------------------
- 1 file changed, 80 insertions(+), 66 deletions(-)
+It'd be cool to have a bugzilla for this with lspci and dmesg output.
+I'll also have to check the other hotplug drivers for similar issues,
+unless you've already done that.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 63f351a39c63..29f613e7eea3 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1525,32 +1525,39 @@ static struct dmar_domain *alloc_domain(int flags)
- 	return domain;
- }
- 
--static int iommu_attach_domain(struct dmar_domain *domain,
--			       struct intel_iommu *iommu)
-+static int __iommu_attach_domain(struct dmar_domain *domain,
-+				 struct intel_iommu *iommu)
- {
- 	int num;
- 	unsigned long ndomains;
--	unsigned long flags;
- 
- 	ndomains = cap_ndoms(iommu->cap);
--
--	spin_lock_irqsave(&iommu->lock, flags);
--
- 	num = find_first_zero_bit(iommu->domain_ids, ndomains);
--	if (num >= ndomains) {
--		spin_unlock_irqrestore(&iommu->lock, flags);
--		printk(KERN_ERR "IOMMU: no free domain ids\n");
--		return -ENOMEM;
-+	if (num < ndomains) {
-+		set_bit(num, iommu->domain_ids);
-+		iommu->domains[num] = domain;
-+	} else {
-+		num = -ENOSPC;
- 	}
- 
--	domain->id = num;
--	domain->iommu_count++;
--	set_bit(num, iommu->domain_ids);
--	set_bit(iommu->seq_id, domain->iommu_bmp);
--	iommu->domains[num] = domain;
-+	return num;
-+}
-+
-+static int iommu_attach_domain(struct dmar_domain *domain,
-+			       struct intel_iommu *iommu)
-+{
-+	int num;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&iommu->lock, flags);
-+	num = __iommu_attach_domain(domain, iommu);
-+	if (num < 0)
-+		pr_err("IOMMU: no free domain ids\n");
-+	else
-+		domain->id = num;
- 	spin_unlock_irqrestore(&iommu->lock, flags);
- 
--	return 0;
-+	return num;
- }
- 
- static void iommu_detach_domain(struct dmar_domain *domain,
-@@ -1560,17 +1567,53 @@ static void iommu_detach_domain(struct dmar_domain *domain,
- 	int num, ndomains;
- 
- 	spin_lock_irqsave(&iommu->lock, flags);
--	ndomains = cap_ndoms(iommu->cap);
--	for_each_set_bit(num, iommu->domain_ids, ndomains) {
--		if (iommu->domains[num] == domain) {
--			clear_bit(num, iommu->domain_ids);
--			iommu->domains[num] = NULL;
--			break;
-+	if (domain_type_is_vm_or_si(domain)) {
-+		ndomains = cap_ndoms(iommu->cap);
-+		for_each_set_bit(num, iommu->domain_ids, ndomains) {
-+			if (iommu->domains[num] == domain) {
-+				clear_bit(num, iommu->domain_ids);
-+				iommu->domains[num] = NULL;
-+				break;
-+			}
- 		}
-+	} else {
-+		clear_bit(domain->id, iommu->domain_ids);
-+		iommu->domains[domain->id] = NULL;
- 	}
- 	spin_unlock_irqrestore(&iommu->lock, flags);
- }
- 
-+static void domain_attach_iommu(struct dmar_domain *domain,
-+			       struct intel_iommu *iommu)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&domain->iommu_lock, flags);
-+	if (!test_and_set_bit(iommu->seq_id, domain->iommu_bmp)) {
-+		domain->iommu_count++;
-+		if (domain->iommu_count == 1)
-+			domain->nid = iommu->node;
-+		domain_update_iommu_cap(domain);
-+	}
-+	spin_unlock_irqrestore(&domain->iommu_lock, flags);
-+}
-+
-+static int domain_detach_iommu(struct dmar_domain *domain,
-+			       struct intel_iommu *iommu)
-+{
-+	unsigned long flags;
-+	int count = INT_MAX;
-+
-+	spin_lock_irqsave(&domain->iommu_lock, flags);
-+	if (test_and_clear_bit(iommu->seq_id, domain->iommu_bmp)) {
-+		count = --domain->iommu_count;
-+		domain_update_iommu_cap(domain);
-+	}
-+	spin_unlock_irqrestore(&domain->iommu_lock, flags);
-+
-+	return count;
-+}
-+
- static struct iova_domain reserved_iova_list;
- static struct lock_class_key reserved_rbtree_key;
- 
-@@ -1708,9 +1751,7 @@ static void domain_exit(struct dmar_domain *domain)
- 	/* clear attached or cached domains */
- 	rcu_read_lock();
- 	for_each_active_iommu(iommu, drhd)
--		if (domain_type_is_vm(domain) ||
--		    test_bit(iommu->seq_id, domain->iommu_bmp))
--			iommu_detach_domain(domain, iommu);
-+		iommu_detach_domain(domain, iommu);
- 	rcu_read_unlock();
- 
- 	dma_free_pagelist(freelist);
-@@ -1764,16 +1805,12 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 		}
- 
- 		if (found == 0) {
--			num = find_first_zero_bit(iommu->domain_ids, ndomains);
--			if (num >= ndomains) {
-+			id = __iommu_attach_domain(domain, iommu);
-+			if (id < 0) {
- 				spin_unlock_irqrestore(&iommu->lock, flags);
--				printk(KERN_ERR "IOMMU: no free domain ids\n");
-+				pr_err("IOMMU: no free domain ids\n");
- 				return -EFAULT;
- 			}
--
--			set_bit(num, iommu->domain_ids);
--			iommu->domains[num] = domain;
--			id = num;
- 		}
- 
- 		/* Skip top levels of page tables for
-@@ -1832,14 +1869,8 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 	iommu_enable_dev_iotlb(info);
- 	spin_unlock_irqrestore(&iommu->lock, flags);
- 
--	spin_lock_irqsave(&domain->iommu_lock, flags);
--	if (!test_and_set_bit(iommu->seq_id, domain->iommu_bmp)) {
--		domain->iommu_count++;
--		if (domain->iommu_count == 1)
--			domain->nid = iommu->node;
--		domain_update_iommu_cap(domain);
--	}
--	spin_unlock_irqrestore(&domain->iommu_lock, flags);
-+	domain_attach_iommu(domain, iommu);
-+
- 	return 0;
- }
- 
-@@ -2104,7 +2135,7 @@ static inline void unlink_domain_info(struct device_domain_info *info)
- static void domain_remove_dev_info(struct dmar_domain *domain)
- {
- 	struct device_domain_info *info;
--	unsigned long flags, flags2;
-+	unsigned long flags;
- 
- 	spin_lock_irqsave(&device_domain_lock, flags);
- 	while (!list_empty(&domain->devices)) {
-@@ -2118,16 +2149,7 @@ static void domain_remove_dev_info(struct dmar_domain *domain)
- 
- 		if (domain_type_is_vm(domain)) {
- 			iommu_detach_dependent_devices(info->iommu, info->dev);
--			/* clear this iommu in iommu_bmp, update iommu count
--			 * and capabilities
--			 */
--			spin_lock_irqsave(&domain->iommu_lock, flags2);
--			if (test_and_clear_bit(info->iommu->seq_id,
--					       domain->iommu_bmp)) {
--				domain->iommu_count--;
--				domain_update_iommu_cap(domain);
--			}
--			spin_unlock_irqrestore(&domain->iommu_lock, flags2);
-+			domain_detach_iommu(domain, info->iommu);
- 		}
- 
- 		free_devinfo_mem(info);
-@@ -2259,11 +2281,12 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(0);
- 	if (!domain)
- 		goto error;
--	if (iommu_attach_domain(domain, iommu)) {
-+	if (iommu_attach_domain(domain, iommu) < 0) {
- 		free_domain_mem(domain);
- 		domain = NULL;
- 		goto error;
- 	}
-+	domain_attach_iommu(domain, iommu);
- 	free = domain;
- 	if (domain_init(domain, gaw))
- 		goto error;
-@@ -2426,10 +2449,11 @@ static int __init si_domain_init(int hw)
- 
- 	for_each_active_iommu(iommu, drhd) {
- 		ret = iommu_attach_domain(si_domain, iommu);
--		if (ret) {
-+		if (ret < 0) {
- 			domain_exit(si_domain);
- 			return -EFAULT;
- 		}
-+		domain_attach_iommu(si_domain, iommu);
- 	}
- 
- 	if (md_domain_init(si_domain, DEFAULT_DOMAIN_ADDRESS_WIDTH)) {
-@@ -4099,19 +4123,9 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
- 	spin_unlock_irqrestore(&device_domain_lock, flags);
- 
- 	if (found == 0) {
--		unsigned long tmp_flags;
--		spin_lock_irqsave(&domain->iommu_lock, tmp_flags);
--		clear_bit(iommu->seq_id, domain->iommu_bmp);
--		domain->iommu_count--;
--		domain_update_iommu_cap(domain);
--		spin_unlock_irqrestore(&domain->iommu_lock, tmp_flags);
--
--		if (!domain_type_is_vm_or_si(domain)) {
--			spin_lock_irqsave(&iommu->lock, tmp_flags);
--			clear_bit(domain->id, iommu->domain_ids);
--			iommu->domains[domain->id] = NULL;
--			spin_unlock_irqrestore(&iommu->lock, tmp_flags);
--		}
-+		domain_detach_iommu(domain, iommu);
-+		if (!domain_type_is_vm_or_si(domain))
-+			iommu_detach_domain(domain, iommu);
- 	}
- }
- 
--- 
-1.7.10.4
-
+> Fixed that by checking the speed against the subordinate bus.
+>
+> Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
+> Acked-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  drivers/pci/hotplug/shpchp_ctrl.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
+> index 5849927..6efc2ec 100644
+> --- a/drivers/pci/hotplug/shpchp_ctrl.c
+> +++ b/drivers/pci/hotplug/shpchp_ctrl.c
+> @@ -282,8 +282,8 @@ static int board_added(struct slot *p_slot)
+>                 return WRONG_BUS_FREQUENCY;
+>         }
+>
+> -       bsp = ctrl->pci_dev->bus->cur_bus_speed;
+> -       msp = ctrl->pci_dev->bus->max_bus_speed;
+> +       bsp = ctrl->pci_dev->subordinate->cur_bus_speed;
+> +       msp = ctrl->pci_dev->subordinate->max_bus_speed;
+>
+>         /* Check if there are other slots or devices on the same bus */
+>         if (!list_empty(&ctrl->pci_dev->subordinate->devices))
+> --
+> 1.8.3.1
+>
