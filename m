@@ -1,81 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:32801 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754061AbaEHQWv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 12:22:51 -0400
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:53307 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750852AbaEAR4n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 May 2014 13:56:43 -0400
+Received: by mail-pa0-f45.google.com with SMTP id kq14so3959167pab.32
+        for <linux-pci@vger.kernel.org>; Thu, 01 May 2014 10:56:43 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140508153722.GO32718@rric.localhost>
-References: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
-	<1399489127-6961-2-git-send-email-suravee.suthikulpanit@amd.com>
-	<20140508085905.GK32718@rric.localhost>
-	<20140508090148.GL32718@rric.localhost>
-	<536B973B.2000207@amd.com>
-	<20140508151402.GN32718@rric.localhost>
-	<536BA0E3.4050709@amd.com>
-	<20140508153722.GO32718@rric.localhost>
-Date: Thu, 8 May 2014 10:22:51 -0600
-Message-ID: <CAL-B5D0NpOoi-J44qnxjCiQ4mDZ=tP_qtaQT19AGS73o6u8DVw@mail.gmail.com>
-Subject: Re: [PATCH V3 1/3] x86/PCI: Fix PCI root numa_node info on AMD family15h
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Robert Richter <rric@kernel.org>
-Cc: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	Borislav Petkov <bp@suse.de>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <1398966055-19325-1-git-send-email-yinghai@kernel.org>
+References: <1398966055-19325-1-git-send-email-yinghai@kernel.org>
+Date: Thu, 1 May 2014 10:56:42 -0700
+Message-ID: <CAA93t1oMk1hGkGfbHohai+Pe37uEA0bsiUQM3WCRfWp1=2yP4g@mail.gmail.com>
+Subject: Re: [PATCH v4] pciehp: only wait command complete for real hotplug control
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Guenter Roeck <groeck@juniper.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 8, 2014 at 9:37 AM, Robert Richter <rric@kernel.org> wrote:
-> On 08.05.14 10:21:07, Suravee Suthikulanit wrote:
->> The reason I put it all these comments here is because it took us a while to
->> discuss what to do with this file going forward. There were some confusions.
->> Therefore, I just want to document it here.
+Hello Yinghai,
 
-I agree.  Hopefully anyone getting into this in the future will be
-able to find this thread in the archives as it has been enlightning
+On Thu, May 1, 2014 at 10:40 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On system with 16 PCI express hotplug slots, customer complain every slot
+> will report "Command not completed in 1000 msec" during initialization.
+>
+> Intel says that we should only wait command complete only for
+>            Electromechanical Interlock Control
+>            Power Controller Control
+>            Power Indicator Control
+>            Attention Indicator Control
 
->>
->> Also, the check for (boot_cpu_data.x86 > 0x11) was needed because it should
->> not be done for family15h.
+The document that you sent is an Intel ERRATA. Thus it would be nice
+if you can please also mention CF118 in the context of it being an
+Intel "errata", so that people do not confuse it with being expected /
+default / standard behavior on all platforms.
+
+Thanks,
+
+Rajat
+
 >
-> Yes, the only functional change of this patch is adding the bridge and
-> the family check, right? Basically:
+> For detail please check CF118 on
+>   http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
 >
-> +       { 0, 0x18, PCI_VENDOR_ID_AMD, 0x1600 },
+> We saw same problems on system with AMD/Nvidia chipsets.
 >
-> and
+> Two ways to address the problem:
+> 1. change to only wait when (EIC, PCC, PIC, AIC) bits get changed.
+> 2. or check CMD_COMPLETE and wait before write command. Only wait
+>    when CC is set and cmd_busy is true. For chipset from intel
+>    will only have CC set for real hotplug control, so we could
+>    skip the wait for others.
 >
-> +        /*
-> +         * The following code is only supported until Fam11h.
-> +         * Newer processors will depend on ACPI MCFG table instead.
-> +         */
-> +        if (boot_cpu_data.x86 > 0x11)
-> +                return 0;
+> This patch is using second way.
+>
+> With that we could save 16 seconds during booting, later with 32 sockets system
+> with 64 pcie hotplug slots we could save 64 seconds.
+>
+> This patch address spurious "cmd completed" event problem that that
+> Rajat met.
+>
+> -v2: use second way that is suggested by Bjorn.
+> -v3: rebase after
+>         PCI: pciehp: Acknowledge spurious "cmd completed" event
+> -v4: add comments according to Bjorn.
+>      also add URL for Intel doc about the CC set on intel chipset.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Tested-by: Rajat Jain <rajatxjain@gmail.com>
+>
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c |   48 ++++++++++++++++++++++++---------------
+>  1 file changed, 30 insertions(+), 18 deletions(-)
+>
+> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
+> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -155,20 +155,30 @@ static void pcie_write_cmd(struct contro
+>         u16 slot_status;
+>         u16 slot_ctrl;
+>
+> +       /*
+> +        * We basically have two strategies for dealing with Command Complete.
+> +        * Both are legal according to the PCIe spec:
+> +        * A: Write command at first and wait for Command Complete is set.
+> +        * B: Wait at first iff Command Complete and cmd_busy are set,
+> +        *    that means previous command is not complete yet.
+> +        *    Then write command.
+> +        *
+> +        * Second way also cover "Command not completed in 1000 msec"
+> +        * Problem on system with chipsets that only set Command Complete
+> +        * for some "real" hotplug events like:
+> +        *      Electromechanical Interlock Control
+> +        *      Power Controller Control
+> +        *      Power Indicator Control
+> +        *      Attention Indicator Control
+> +        * like CF118 in
+> +        * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
+> +        */
 > +
+>         mutex_lock(&ctrl->ctrl_lock);
 >
-> This patch should stripped down to only those changes with a
-> split. And maybe this should be added to linux-stable?
+>         pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+> -       if (slot_status & PCI_EXP_SLTSTA_CC) {
+> -               pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+> -                                          PCI_EXP_SLTSTA_CC);
+> -               if (!ctrl->no_cmd_complete) {
+> -                       /*
+> -                        * After 1 sec and CMD_COMPLETED still not set, just
+> -                        * proceed forward to issue the next command according
+> -                        * to spec. Just print out the error message.
+> -                        */
+> -                       ctrl_dbg(ctrl, "CMD_COMPLETED not clear after 1 sec\n");
+> -               } else if (!NO_CMD_CMPL(ctrl)) {
+> +       if (ctrl->no_cmd_complete && slot_status & PCI_EXP_SLTSTA_CC) {
+> +               if (!NO_CMD_CMPL(ctrl)) {
+>                         /*
+>                          * This controller seems to notify of command completed
+>                          * event even though it supports none of power
+> @@ -184,16 +194,11 @@ static void pcie_write_cmd(struct contro
+>         }
 >
-> All other rework is a different story... Can be done on top of this,
-> though I would drop it.
-
-I understand Robert's reasoning to split out the core changes (as
-denoted above).  However, I *would* tend to follow on with an
-additional subsequent patch that has the rest of the content as it
-cleans this area up (as opposed to dropping it all together).  It
-makes the code a little clearer and is basically little to no risk (no
-functional change).
-
-Myron
+>         pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+> -       slot_ctrl &= ~mask;
+> -       slot_ctrl |= (cmd & mask);
+> -       ctrl->cmd_busy = 1;
+> -       smp_mb();
+> -       pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
+> -
+>         /*
+>          * Wait for command completion.
+>          */
+> -       if (!ctrl->no_cmd_complete) {
+> +       if (!ctrl->no_cmd_complete && (slot_status & PCI_EXP_SLTSTA_CC) &&
+> +           ctrl->cmd_busy) {
+>                 int poll = 0;
+>                 /*
+>                  * if hotplug interrupt is not enabled or command
+> @@ -205,6 +210,13 @@ static void pcie_write_cmd(struct contro
+>                         poll = 1;
+>                  pcie_wait_cmd(ctrl, poll);
+>         }
+> +
+> +       slot_ctrl &= ~mask;
+> +       slot_ctrl |= (cmd & mask);
+> +       ctrl->cmd_busy = 1;
+> +       smp_mb();
+> +       pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
+> +
+>         mutex_unlock(&ctrl->ctrl_lock);
+>  }
 >
-> -Robert
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
