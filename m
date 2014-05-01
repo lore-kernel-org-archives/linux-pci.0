@@ -1,126 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V3 15/37] x86, irq: reorganize IO_APIC_get_PCI_irq_vector() to prepare for irqdomain
-Date: Tue, 27 May 2014 16:07:50 +0800
-Message-Id: <1401178092-1228-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:51821 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851AbaEAS4t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 May 2014 14:56:49 -0400
+Message-ID: <1398970625.18595.24.camel@localhost.localdomain>
+Subject: Re: [PATCH] PCI/shpchp: fix a bus speed issue on hotplug
+From: Marcel Apfelbaum <marcel.apfelbaum@gmail.com>
+Reply-To: marcel.a@redhat.com
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Matthew Wilcox <matthew@wil.cx>,
+	"Michael S. Tsirkin" <mst@redhat.com>
+Date: Thu, 01 May 2014 21:57:05 +0300
+In-Reply-To: <1398968025.18595.22.camel@localhost.localdomain>
+References: <1398954948-24219-1-git-send-email-marcel.a@redhat.com>
+	 <CAErSpo4KLq7m8PXzAEhv20e29Wk=sAtageDf3CgziDLno0JUCw@mail.gmail.com>
+	 <1398968025.18595.22.camel@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reorganize function IO_APIC_get_PCI_irq_vector() a bit to better support
-coming irqdomain.
+On Thu, 2014-05-01 at 21:13 +0300, Marcel Apfelbaum wrote:
+> On Thu, 2014-05-01 at 12:02 -0600, Bjorn Helgaas wrote:
+> > On Thu, May 1, 2014 at 8:35 AM, Marcel Apfelbaum <marcel.a@redhat.com> wrote:
+> > > When a board is added, the shpchp driver checks if there
+> > > is a mismatch between the bridge's adapter and the bus speed.
+> > > If there is, it sets the subordinate speed (if there is no device on it).
+> > >
+> > > However, it takes the reference of the board speed from the primary bus
+> > > and not from the subordinate. If the primary bus is PCI and not PCIX/PCIe,
+> > > its speed is not updated and remains 0xff. As a result hotplug fails
+> > > with error: "Speed of bus ff and adapter 0 mismatch".
+> > 
+> > It'd be cool to have a bugzilla for this with lspci and dmesg output.
+> > I'll also have to check the other hotplug drivers for similar issues,
+> > unless you've already done that.
+> I'll open a BZ with the details, sure.
+Done: https://bugzilla.kernel.org/show_bug.cgi?id=75251
+If you need further details, please let me know.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/io_apic.c |   61 ++++++++++++++++++++++------------------
- 1 file changed, 33 insertions(+), 28 deletions(-)
+Thanks,
+Marcel
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 18d0e8a831c0..b14241915262 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -997,7 +997,7 @@ static int pin_2_irq(int idx, int apic, int pin)
- int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 				struct io_apic_irq_attr *irq_attr)
- {
--	int ioapic_idx, i, best_guess = -1;
-+	int irq, i, best_guess = -1;
- 
- 	apic_printk(APIC_DEBUG,
- 		    "querying PCI -> IRQ mapping bus:%d, slot:%d, pin:%d.\n",
-@@ -1007,41 +1007,46 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 			    "PCI BIOS passed nonexistent PCI bus %d!\n", bus);
- 		return -1;
- 	}
-+
- 	for (i = 0; i < mp_irq_entries; i++) {
- 		int lbus = mp_irqs[i].srcbus;
-+		int ioapic_idx, found = 0;
-+
-+		if (bus != lbus || mp_irqs[i].irqtype != mp_INT ||
-+		    slot != ((mp_irqs[i].srcbusirq >> 2) & 0x1f))
-+			continue;
- 
- 		for_each_ioapic(ioapic_idx)
- 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic ||
--			    mp_irqs[i].dstapic == MP_APIC_ALL)
-+			    mp_irqs[i].dstapic == MP_APIC_ALL) {
-+				found = 1;
- 				break;
-+			}
-+		if (!found)
-+			continue;
- 
--		if (!test_bit(lbus, mp_bus_not_pci) &&
--		    mp_irqs[i].irqtype == mp_INT &&
--		    (bus == lbus) &&
--		    (slot == ((mp_irqs[i].srcbusirq >> 2) & 0x1f))) {
--			int irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
--
--			if (!(ioapic_idx || IO_APIC_IRQ(irq)))
--				continue;
-+		/* Skip ISA IRQs */
-+		irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
-+		if (ioapic_idx == 0 && !IO_APIC_IRQ(irq))
-+			continue;
- 
--			if (pin == (mp_irqs[i].srcbusirq & 3)) {
--				set_io_apic_irq_attr(irq_attr, ioapic_idx,
--						     mp_irqs[i].dstirq,
--						     irq_trigger(i),
--						     irq_polarity(i));
--				return irq;
--			}
--			/*
--			 * Use the first all-but-pin matching entry as a
--			 * best-guess fuzzy result for broken mptables.
--			 */
--			if (best_guess < 0) {
--				set_io_apic_irq_attr(irq_attr, ioapic_idx,
--						     mp_irqs[i].dstirq,
--						     irq_trigger(i),
--						     irq_polarity(i));
--				best_guess = irq;
--			}
-+		if (pin == (mp_irqs[i].srcbusirq & 3)) {
-+			set_io_apic_irq_attr(irq_attr, ioapic_idx,
-+					     mp_irqs[i].dstirq,
-+					     irq_trigger(i),
-+					     irq_polarity(i));
-+			return irq;
-+		}
-+		/*
-+		 * Use the first all-but-pin matching entry as a
-+		 * best-guess fuzzy result for broken mptables.
-+		 */
-+		if (best_guess < 0) {
-+			set_io_apic_irq_attr(irq_attr, ioapic_idx,
-+					     mp_irqs[i].dstirq,
-+					     irq_trigger(i),
-+					     irq_polarity(i));
-+			best_guess = irq;
- 		}
- 	}
- 	return best_guess;
--- 
-1.7.10.4
+
+> 
+> I didn't check the other hotplug drivers, but I do plan
+> to look into PCIe driver as part of QEMU's PCIe hotplug feature.
+> 
+> Thanks,
+> Marcel
+> 
+> > 
+> > > Fixed that by checking the speed against the subordinate bus.
+> > >
+> > > Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
+> > > Acked-by: Michael S. Tsirkin <mst@redhat.com>
+> > > ---
+> > >  drivers/pci/hotplug/shpchp_ctrl.c | 4 ++--
+> > >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
+> > > index 5849927..6efc2ec 100644
+> > > --- a/drivers/pci/hotplug/shpchp_ctrl.c
+> > > +++ b/drivers/pci/hotplug/shpchp_ctrl.c
+> > > @@ -282,8 +282,8 @@ static int board_added(struct slot *p_slot)
+> > >                 return WRONG_BUS_FREQUENCY;
+> > >         }
+> > >
+> > > -       bsp = ctrl->pci_dev->bus->cur_bus_speed;
+> > > -       msp = ctrl->pci_dev->bus->max_bus_speed;
+> > > +       bsp = ctrl->pci_dev->subordinate->cur_bus_speed;
+> > > +       msp = ctrl->pci_dev->subordinate->max_bus_speed;
+> > >
+> > >         /* Check if there are other slots or devices on the same bus */
+> > >         if (!list_empty(&ctrl->pci_dev->subordinate->devices))
+> > > --
+> > > 1.8.3.1
+> > >
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 
