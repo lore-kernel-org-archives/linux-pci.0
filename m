@@ -1,72 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24921 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754691AbaEORn6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 May 2014 13:43:58 -0400
-Message-ID: <1400175834.3289.65.camel@ul30vt.home>
-Subject: Re: [PATCH v2 00/15] PCI/iommu: Fix DMA alias problems
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 03/13] PCI: quirk dma_func_alias for Ricoh devices
 From: Alex Williamson <alex.williamson@redhat.com>
-To: Andrew Cooks <acooks@gmail.com>
-Cc: "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	open list <linux-kernel@vger.kernel.org>
-Date: Thu, 15 May 2014 11:43:54 -0600
-In-Reply-To: <CAJtEV7YYB4W_+nZeMgiqZVDV+M4OyFJVBic09z=KbMjOpihnTQ@mail.gmail.com>
-References: <20140509151735.8321.22017.stgit@bling.home>
-	 <CAJtEV7YYB4W_+nZeMgiqZVDV+M4OyFJVBic09z=KbMjOpihnTQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 May 2014 10:27:24 -0600
+Message-ID: <20140501162723.17512.96286.stgit@bling.home>
+In-Reply-To: <20140501160128.17512.23609.stgit@bling.home>
+References: <20140501160128.17512.23609.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-05-15 at 07:40 +0800, Andrew Cooks wrote:
-> Hi Alex
-> 
-> On Fri, May 9, 2014 at 11:28 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > ....
-> >
-> > Original description:
-> >
-> > This series attempts to fix a couple issues we've had outstanding in
-> > the PCI/IOMMU code for a while.  The first issue is with devices that
-> > use the wrong requester ID for DMA transactions.  We already have a
-> > sort of half-baked attempt to fix this for several Ricoh devices, but
-> > the fix only helps them be useful through IOMMU groups, not the
-> > general DMA case.  There are also several Marvell devices which use
-> > use a different wrong requester ID and don't even fit into the DMA
-> > source idea.  This series creates a DMA alias iterator that will
-> > step through each possible alias of a device, allowing IOMMUs to
-> > insert mappings for both the device and its aliases.
-> >
-> > Hand-in-hand with this is our broken pci_find_upstream_pcie_bridge()
-> > function, which is known to blowup when it finds itself suddenly at
-> > a PCIe device without crossing a PCIe-to-PCI bridge (as identified by
-> > the PCIe capability).  It also likes to make the invalid assumption
-> > that a PCIe device never has its requester ID masked by any usptream
-> > bus.  We can fix this using the above new DMA alias iterator, since
-> > that's effectively what this function was meant to do.
-> >
-> 
-> There are two cases where the DMA requester id seems to use the wrong
-> slot (as opposed to function) in the patch I attached to
-> https://bugzilla.kernel.org/show_bug.cgi?id=42679
-> The original bug reports are listed in the patch.
-> 
-> Unfortunately, I wasn't able to get test feedback on those two cases,
-> but I'm wondering...
-> Did I understand correctly that a slot alias is something that could be needed?
-> If so, is it a variation of the PCIe-to-PCI bridge case that's already
-> covered or will it require a different approach?
+The existing quirk for these devices doesn't really solve the problem,
+re-implement it using the DMA alias iterator.  We'll come back later
+and remove the existing quirk and dma_source interface.
 
-Wow, I didn't think that kind of broken was possible.  Maybe instead of
-a bitmap of function aliases we could have a single devfn alias for a
-device.  That means we'd only be able to support a single alias for a
-device, but since I don't think we've seen devices that use more than a
-single alias, maybe that's ok.  I'll see what changes we'd need to make
-for that, but I probably won't go adding the actual quirk based on those
-old reports.  Thanks,
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/quirks.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-Alex
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e729206..a458c6b 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3333,6 +3333,22 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ 	return -ENOTTY;
+ }
+ 
++static void quirk_dma_func0_alias(struct pci_dev *dev)
++{
++	if (PCI_SLOT(dev->devfn) != 0)
++		dev->dma_func_alias |= (1 << 0);
++}
++
++/*
++ * https://bugzilla.redhat.com/show_bug.cgi?id=605888
++ *
++ * Some Ricoh devices use function 0 as the PCIe requester ID for DMA.
++ */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe822, quirk_dma_func0_alias);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe230, quirk_dma_func0_alias);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
++
+ static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+ {
+ 	if (!PCI_FUNC(dev->devfn))
 
