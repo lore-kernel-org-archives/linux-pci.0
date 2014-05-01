@@ -1,65 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:53569 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909AbaE1Ovv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 10:51:51 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 0/5] PCI: tegra: Overhaul regulator usage
-Date: Wed, 28 May 2014 16:49:10 +0200
-Message-Id: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:36160 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752099AbaEAHsh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 May 2014 03:48:37 -0400
+Received: by mail-ig0-f176.google.com with SMTP id hl10so225205igb.3
+        for <linux-pci@vger.kernel.org>; Thu, 01 May 2014 00:48:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140501000750.GB21775@kroah.com>
+References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140501000750.GB21775@kroah.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 1 May 2014 01:48:17 -0600
+Message-ID: <CAErSpo4saE6+BxWBr_=CaPXtBXGgmV83ueEvMsB+oPdrBSHCOg@mail.gmail.com>
+Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU address
+ to phys_addr_t
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+On Wed, Apr 30, 2014 at 6:07 PM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Wed, Apr 30, 2014 at 02:33:21PM -0600, Bjorn Helgaas wrote:
+>> dma_declare_coherent_memory() takes two addresses for a region of memory: a
+>> "bus_addr" and a "device_addr".  I think the intent is that "bus_addr" is
+>> the physical address a *CPU* would use to access the region, and
+>> "device_addr" is the bus address the *device* would use to address the
+>> region.
+>>
+>> Rename "bus_addr" to "phys_addr" and change its type to phys_addr_t.
+>
+> Isn't this going to cause problems with the callers of this function?
+> You aren't changing them...
 
-The current device tree binding for the regulator setup on Tegra PCIe is
-not accurate. While it does work for current use-cases, that's likely by
-accident rather than design. This series replaces the existing set of
-power-supply properties with a new set that accurately describes the
-inputs of the IP block (depending on SoC generation).
+Sorry, I should have mentioned that in the changelog.
 
-As a heads-up, this breaks backwards compatibility with prior versions
-of the device tree bindings, but I don't see a reason why that should
-keep us from fixing this properly. Not many people are currently using
-these bindings and those who are are most likely tracking upstream
-development closely enough not to be impacted by this.
+This could cause a problem if it changed "bus_addr" to a smaller type,
+e.g., in a config where dma_addr_t was 64 bits but phys_addr_t was
+only 32.  In that config (if it exists), this change would truncate
+the address if a caller  supplied a 64-bit dma_addr_t.  But most of
+the callers in the tree already supply a phys_addr_t (or the
+equivalent resource_size_t), and the rest supply 32-bit int values, so
+I don't think there's a problem here.
 
-I've aimed to keep the series bisectible, which has the downside of
-interleaving patches to unrelated trees (ARM and PCI). I'm hoping that
-perhaps we can find a way to merge this as a whole to keep it possible
-to bisect across the series. Although again, I guess it wouldn't be all
-that bad if that wasn't the case, given how little PCIe is actually
-being used.
+This change could theoretically *fix* a problem in a config with
+32-bit dma_addr_t and 64-bit phys_addr_t.  In that case we could
+previously have truncated a phys_addr_t, and this change would fix it.
+ But I don't know of any issues like this.
 
-This second version of the series has Bjorn's Acked-by for patch 3 from
-the RFC. Stephen, it would be great if you can take this through the
-Tegra tree so that the bisectability can be preserved. I have a bunch of
-other smaller changes for the PCIe driver (mostly cleanups). I don't
-think any of them will conflict, but for extra safety Bjorn may want to
-pull this as a stable branch into his tree.
+Here are the 16 callers in the tree:
 
-Thanks,
-Thierry
+4 in arch/arm/mach-imx/mach-imx27_visstrim_m10.c (phys_addr_t)
+3 in arch/arm/mach-imx/mach-mx31_3ds.c (phys_addr_t)
+1 in arch/arm/mach-imx/mach-pcm037.c (phys_addr_t)
+1 in arch/arm/plat-samsung/s5p-dev-mfc.c (phys_addr_t)
+1 in arch/sh/drivers/pci/fixups-dreamcast.c (#define constant)
+2 in drivers/media/platform/s5p-mfc/s5p_mfc.c (unsigned int from OF property)
+1 in drivers/media/platform/soc_camera/sh_mobile_ceu_camera.c (struct
+resource.start)
+1 in drivers/scsi/NCR_Q720.c (__u32 memory address computed from I/O
+port values)
+1 in drivers/usb/host/ohci-sm501.c (struct resource.start)
+1 in drivers/usb/host/ohci-tmio.c (struct resource.start)
 
-Thierry Reding (5):
-  PCI: tegra: Overhaul regulator usage
-  ARM: tegra: Add new PCIe regulator properties
-  PCI: tegra: Implement accurate power supply scheme
-  PCI: tegra: Remove deprecated power supply properties
-  ARM: tegra: Remove legacy PCIe power supply properties
-
- .../bindings/pci/nvidia,tegra20-pcie.txt           |  30 ++++-
- arch/arm/boot/dts/tegra20-harmony.dts              |   8 +-
- arch/arm/boot/dts/tegra20-tamonten.dtsi            |   7 +-
- arch/arm/boot/dts/tegra20-trimslice.dts            |   8 +-
- arch/arm/boot/dts/tegra30-beaver.dts               |  12 +-
- arch/arm/boot/dts/tegra30-cardhu.dtsi              |  11 +-
- drivers/pci/host/pci-tegra.c                       | 148 ++++++++++++---------
- 7 files changed, 148 insertions(+), 76 deletions(-)
-
--- 
-1.9.2
-
+Bjorn
