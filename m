@@ -1,63 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:35041 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811AbaEASDL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 May 2014 14:03:11 -0400
-Received: by mail-ie0-f180.google.com with SMTP id as1so3778175iec.25
-        for <linux-pci@vger.kernel.org>; Thu, 01 May 2014 11:03:10 -0700 (PDT)
+Received: from mga09.intel.com ([134.134.136.24]:24428 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751811AbaEAUUH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 May 2014 16:20:07 -0400
+Date: Thu, 1 May 2014 14:20:05 -0600 (MDT)
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: Keith Busch <keith.busch@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-nvme <linux-nvme@lists.infradead.org>
+Subject: Re: [PATCH 1/2] PCI: Device driver function reset notification
+In-Reply-To: <CAErSpo7R9BZtJpb3ekR=8D+tkWR9tPzsT0YLY5YS-hOGQJuxQA@mail.gmail.com>
+Message-ID: <alpine.LRH.2.03.1405011412500.5666@AMR>
+References: <1397000541-1085-1-git-send-email-keith.busch@intel.com> <20140430224637.GA31315@google.com> <alpine.LRH.2.03.1405011344330.5666@AMR> <CAErSpo7R9BZtJpb3ekR=8D+tkWR9tPzsT0YLY5YS-hOGQJuxQA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1398954948-24219-1-git-send-email-marcel.a@redhat.com>
-References: <1398954948-24219-1-git-send-email-marcel.a@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 1 May 2014 12:02:49 -0600
-Message-ID: <CAErSpo4KLq7m8PXzAEhv20e29Wk=sAtageDf3CgziDLno0JUCw@mail.gmail.com>
-Subject: Re: [PATCH] PCI/shpchp: fix a bus speed issue on hotplug
-To: Marcel Apfelbaum <marcel.a@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Matthew Wilcox <matthew@wil.cx>,
-	"Michael S. Tsirkin" <mst@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 1, 2014 at 8:35 AM, Marcel Apfelbaum <marcel.a@redhat.com> wrote:
-> When a board is added, the shpchp driver checks if there
-> is a mismatch between the bridge's adapter and the bus speed.
-> If there is, it sets the subordinate speed (if there is no device on it).
+On Thu, 1 May 2014, Bjorn Helgaas wrote:
+> On Thu, May 1, 2014 at 1:57 PM, Keith Busch <keith.busch@intel.com> wrote:
+>> On Wed, 30 Apr 2014, Bjorn Helgaas wrote:
+>>>
+>>> On Tue, Apr 08, 2014 at 05:42:20PM -0600, Keith Busch wrote:
+>>> You put the notify in these functions:
+>>>
+>>>  pci_reset_function()
+>>>  pci_try_reset_function()
+>>>
+>>> but what about these:
+>>>
+>>>  pci_reset_slot()
+>>>  pci_try_reset_slot()
+>>>  pci_reset_bus()
+>>>  pci_try_reset_bus()
+>>
+>>
+>> Good point. These all call pci_dev_save_and_disable at the start and
+>> pci_dev_restore after, so I think just adding the reset prepare/complete
+>> to those functions should cover all scenarios. Does this sound ok?
 >
-> However, it takes the reference of the board speed from the primary bus
-> and not from the subordinate. If the primary bus is PCI and not PCIX/PCIe,
-> its speed is not updated and remains 0xff. As a result hotplug fails
-> with error: "Speed of bus ff and adapter 0 mismatch".
+> Sound OK to me, as long as the save/restore functions aren't used elsewhere.
 
-It'd be cool to have a bugzilla for this with lspci and dmesg output.
-I'll also have to check the other hotplug drivers for similar issues,
-unless you've already done that.
-
-> Fixed that by checking the speed against the subordinate bus.
->
-> Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
-> Acked-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  drivers/pci/hotplug/shpchp_ctrl.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
-> index 5849927..6efc2ec 100644
-> --- a/drivers/pci/hotplug/shpchp_ctrl.c
-> +++ b/drivers/pci/hotplug/shpchp_ctrl.c
-> @@ -282,8 +282,8 @@ static int board_added(struct slot *p_slot)
->                 return WRONG_BUS_FREQUENCY;
->         }
->
-> -       bsp = ctrl->pci_dev->bus->cur_bus_speed;
-> -       msp = ctrl->pci_dev->bus->max_bus_speed;
-> +       bsp = ctrl->pci_dev->subordinate->cur_bus_speed;
-> +       msp = ctrl->pci_dev->subordinate->max_bus_speed;
->
->         /* Check if there are other slots or devices on the same bus */
->         if (!list_empty(&ctrl->pci_dev->subordinate->devices))
-> --
-> 1.8.3.1
->
+Yep, there is currently 1:1 symmetry for these in all cases. I'll make
+a note for any future use that the calling disabling/restore should
+maintain this property.
