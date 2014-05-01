@@ -1,79 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:55387 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752561AbaEOQCI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 May 2014 12:02:08 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v1 0/5] Add Keystone PCIe controller driver
-Date: Thu, 15 May 2014 12:01:27 -0400
-Message-ID: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 04/13] PCI: quirk dma_func_alias for Marvell devices
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Thu, 01 May 2014 10:27:30 -0600
+Message-ID: <20140501162729.17512.34992.stgit@bling.home>
+In-Reply-To: <20140501160128.17512.23609.stgit@bling.home>
+References: <20140501160128.17512.23609.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a PCIe controller driver for Keystone SoCs. This
-is based on the origin RFC patch that I had sent earlier. I have
-incorporated following comments:-
+Several Marvell devices and a JMicron device have a similar DMA
+requester ID problem to Ricoh, except they use function 1 as the
+PCIe requester ID.  Add a quirk for these to populate the DMA
+function alias bitmap.
 
- - Add a interrupt controller node for Legacy irq chip and use
-   interrupt map/map-mask property to map legacy IRQs A/B/C/D
- - Add a Phy driver to replace the original serdes driver
- - Move common applicaiton register handling code to a separate
-   file to allow re-use across other platforms that use older
-   DW PCIe h/w
- - PCI quirk for maximum read request size. Check and override only
-   if the maximum is higher than what controller can handle.
- - Converted to a module platform driver.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/quirks.c |   22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Mohit Kumar <mohit.kumar@st.com>
-CC: Jingoo Han <jg1.han@samsung.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-
-
-Murali Karicheri (5):
-  ARM: keystone: add pcie related options
-  pci: designware: enhancements to support keystone pcie
-  phy: pci serdes phy driver for keystone
-  pci: dw: add common functions to support old hw based pci driver
-  pci: keystone: add pcie driver based on designware core driver
-
- .../devicetree/bindings/pci/pcie-keystone.txt      |   68 ++++
- arch/arm/mach-keystone/Kconfig                     |    2 +
- drivers/pci/host/Kconfig                           |   12 +
- drivers/pci/host/Makefile                          |    2 +
- drivers/pci/host/pci-dw-old-msi.c                  |  150 ++++++++
- drivers/pci/host/pci-dw-old.c                      |  371 ++++++++++++++++++
- drivers/pci/host/pci-dw-old.h                      |   30 ++
- drivers/pci/host/pci-keystone.c                    |  400 ++++++++++++++++++++
- drivers/pci/host/pcie-designware.c                 |  101 +++--
- drivers/pci/host/pcie-designware.h                 |   42 +-
- drivers/pci/quirks.c                               |   13 +
- drivers/phy/Kconfig                                |    6 +
- drivers/phy/Makefile                               |    1 +
- drivers/phy/phy-keystone.c                         |  230 +++++++++++
- 14 files changed, 1388 insertions(+), 40 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/pcie-keystone.txt
- create mode 100644 drivers/pci/host/pci-dw-old-msi.c
- create mode 100644 drivers/pci/host/pci-dw-old.c
- create mode 100644 drivers/pci/host/pci-dw-old.h
- create mode 100644 drivers/pci/host/pci-keystone.c
- create mode 100644 drivers/phy/phy-keystone.c
-
--- 
-1.7.9.5
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index a458c6b..82b2733 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3349,6 +3349,28 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe230, quirk_dma_func0_alias);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
+ 
++static void quirk_dma_func1_alias(struct pci_dev *dev)
++{
++	if (PCI_SLOT(dev->devfn) != 1)
++		dev->dma_func_alias |= (1 << 1);
++}
++
++/*
++ * Marvell 88SE9123 uses function 1 as the requester ID for DMA.  In some
++ * SKUs function 1 is present and is a legacy IDE controller, in other
++ * SKUs this function is not present, making this a ghost requester.
++ * https://bugzilla.kernel.org/show_bug.cgi?id=42679
++ */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9123,
++			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c14 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9130,
++			 quirk_dma_func1_alias);
++/* https://bugs.gentoo.org/show_bug.cgi?id=497630 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
++			 PCI_DEVICE_ID_JMICRON_JMB388_ESD,
++			 quirk_dma_func1_alias);
++
+ static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+ {
+ 	if (!PCI_FUNC(dev->devfn))
 
