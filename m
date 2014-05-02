@@ -1,127 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:25880 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751696AbaE2Bhh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 21:37:37 -0400
-Message-ID: <53868F40.8000909@huawei.com>
-Date: Thu, 29 May 2014 09:37:04 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:57849 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752036AbaEBRX2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 2 May 2014 13:23:28 -0400
+Date: Fri, 2 May 2014 11:23:18 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [RESEND PATCH 2/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140502172317.GC3179@obsidianresearch.com>
+References: <1399048876-11862-1-git-send-email-will.deacon@arm.com>
+ <1399048876-11862-3-git-send-email-will.deacon@arm.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: fix return in pci_bus_add_device
-References: <1400729544-7940-1-git-send-email-wangyijing@huawei.com>	<20140528032213.GP11907@google.com>	<538558D2.3050706@huawei.com> <CAE9FiQWM15UHvX=7wv4aMXfTp5QLsB+J9c1qjOzpZ1vU0ePB4A@mail.gmail.com>
-In-Reply-To: <CAE9FiQWM15UHvX=7wv4aMXfTp5QLsB+J9c1qjOzpZ1vU0ePB4A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1399048876-11862-3-git-send-email-will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> I found some kernel code still check this return value, and I also think return the
->> real retval make sense.
-> 
-> No, that is not right.
-> 
-> If you look closely,
-> 
-> device_attach() returns
-> 1: success
-> 0: not attached
-> <0: fail.
+On Fri, May 02, 2014 at 05:41:15PM +0100, Will Deacon wrote:
 
-Hi Yinghai,
-   Thanks for your explanation.
-I found all the kernel code to check its return value, only for print a warning for users.
+> +       bus_range = &pci->cfg.bus_range;
+> +       for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+> +               u32 idx = busn - bus_range->start;
+> +               u32 sz = 1 << pci->cfg.ops->bus_shift;
+> +
+> +               pci->cfg.win[idx] = devm_ioremap(dev,
+> +                                                pci->cfg.res.start + busn * sz,
+> +                                                sz);
 
+Why map each bus individually? Both CAM and ECAM define consecutive
+busses consecutively in the address space, and I though ioremap was OK
+with unaligned stuff?
 
-So I think we can drop all return checking from calling path, or rework pci_bus_add_device(),
-return 0 if device_attach success, otherwise return -1, indicates the device not bound to a driver.
+> +out_unmap_cfg:
+> +	while (busn-- > bus_range->start)
+> +		devm_iounmap(dev, pci->cfg.win[busn - bus_range->start]);
 
-int pci_bus_add_device(struct pci_dev *dev)
-{
-	int retval;
+Is there a reason to explicitly clean up devm resources? I guess it is
+because this is in setup not probe?
 
-	/*
-	 * Can not put in pci_device_add yet because resources
-	 * are not assigned yet for some devices.
-	 */
-	pci_fixup_device(pci_fixup_final, dev);
-	pci_create_sysfs_dev_files(dev);
-	pci_proc_attach_device(dev);
+It seems strange to me for a driver to do this sort of work in a setup
+function, typically probe acquires as much stuff as it can, that way
+defered probe can work properly.
 
-	dev->match_driver = true;
-	retval = device_attach(&dev->dev);
-	WARN_ON(retval < 0);
+Looking at pci-mvebu, 'setup' is only populating the resource list, I
+would suggest the same split for this driver.
 
-	dev->is_added = 1;
+> +out_release_res:
+> +	release_child_resources(&iomem_resource);
+> +	release_child_resources(&ioport_resource);
 
-	return retval >=0 ? 0:-1;
-}
+This looks really off to me, doesn't this free all resources in the
+system?
 
-Yinghai, which solution would you prefer?
+This isn't enough?:
 
-Thanks!
-Yijing.
-
-> 
-> so if you return ret directly, you have false warning from
-> 
-> drivers/edac/i82875p_edac.c:            err = pci_bus_add_device(dev);
-> drivers/edac/i82875p_edac.c:                            "%s():
-> pci_bus_add_device() Failed\n",
-> drivers/platform/x86/asus-wmi.c:                                if
-> (pci_bus_add_device(dev))
-> drivers/platform/x86/eeepc-laptop.c:                            if
-> (pci_bus_add_device(dev))
-> 
-> We already have
->     WARN_ON(retval < 0);
-> 
-> so please just remove all return checking from calling path.
-> compiler already drop them...
-> 
->>
->> eg.
->>
->>         list_for_each_entry(dev, &bus->devices, bus_list) {
->>                 /* Skip already-added devices */
->>                 if (dev->is_added)
->>                         continue;
->>                 retval = pci_bus_add_device(dev);
->>                 if (retval)
->>                         dev_err(&dev->dev, "Error adding device (%d)\n",
->>                                 retval);
-> 
-> should be dropped.
-> 
->>         }
->>
->>
->>
->>         if (!blocked) {
->>                 dev = pci_get_slot(bus, 0);
->>                 if (dev) {
->>                         /* Device already present */
->>                         pci_dev_put(dev);
->>                         goto out_put_dev;
->>                 }
->>                 dev = pci_scan_single_device(bus, 0);
->>                 if (dev) {
->>                         pci_bus_assign_resources(bus);
->>                         if (pci_bus_add_device(dev))
->>                                 pr_err("Unable to hotplug wifi\n");
-> oh, no, no one have that report. instead if should have trace printed out.
->>                 }
-> 
-> Thanks
-> 
-> Yinghai
-> 
-> .
-> 
+> +	list_for_each_entry(win, &sys->resources, list)
+> +		devm_kfree(dev, win->res);
+> +	pci_free_resource_list(&sys->resources);
 
 
--- 
-Thanks!
-Yijing
+At worst, I would guess 'release_child_resources(win->res);' in the
+loop. But since no bus scan has been done, is there any chance of
+child resources at this point?
 
+Regards,
+Jason
