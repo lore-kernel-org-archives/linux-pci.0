@@ -1,165 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:39277 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750760AbaEURjr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 13:39:47 -0400
-Date: Wed, 21 May 2014 10:39:32 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Francesco Ruggeri <fruggeri@arista.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Francesco Ruggeri <fruggeri@aristanetworks.com>
-Subject: Re: pci: kernel crash in bus_find_device
-Message-ID: <20140521173932.GA31583@roeck-us.net>
-References: <CA+HUmGjvHgWB3vcPnXAEVFdFuy9sOaB1BjaDW1-7ai933XEGWQ@mail.gmail.com>
- <20140520195041.GA28913@roeck-us.net>
- <CA+HUmGg4mE5RDxShNCK78yLi9gdX_FnHtWPKfGD4LaEqrCdj2Q@mail.gmail.com>
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:59508 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750841AbaEBUNV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 May 2014 16:13:21 -0400
+Date: Fri, 2 May 2014 14:13:07 -0600
+From: Jerry Hoemann <jerry.hoemann@hp.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Bill Sumner <bill.sumner@hp.com>, indou.takao@jp.fujitsu.com,
+	bhe@redhat.com, joro@8bytes.org, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	iommu@lists.linux-foundation.org, doug.hatch@hp.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com, zhenhua@hp.com
+Subject: Re: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy
+ DMA/IO
+Message-ID: <20140502201307.GA23419@anatevka.fc.hp.com>
+Reply-To: Jerry.Hoemann@hp.com
+References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
+ <1398854973.12733.23.camel@i7.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+HUmGg4mE5RDxShNCK78yLi9gdX_FnHtWPKfGD4LaEqrCdj2Q@mail.gmail.com>
+In-Reply-To: <1398854973.12733.23.camel@i7.infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 20, 2014 at 03:35:15PM -0700, Francesco Ruggeri wrote:
-> Hi Guenter,
-> thank you for your reply. I will check out the changes that you pointed to.
-> The problem we are seeing is a race condition between for_each_pci_dev
-> (or similar) and device_unregisters. I am not sure if use of the new
-> lock should be extended to all code using for_each_pci_dev as well.
+On Wed, Apr 30, 2014 at 11:49:33AM +0100, David Woodhouse wrote:
+
+Hi David,
+
+As you may know,  Bill has retired and I am picking up this work.
+I am still coming up to speed in this area so my goal is to understand
+your concerns and research them as I dig through code and specs.
+
+My apologizes for the delay in replying and for our missing your
+earlier questions.
+
+
+> On Thu, 2014-04-24 at 18:36 -0600, Bill Sumner wrote:
+> > 
+> > This patch set modifies the behavior of the Intel iommu in the crashdump kernel: 
+> > 1. to accept the iommu hardware in an active state,
+> > 2. to leave the current translations in-place so that legacy DMA will continue
+> >    using its current buffers until the device drivers in the crashdump kernel
+> >    initialize and initialize their devices,
+> > 3. to use different portions of the iova address ranges for the device drivers
+> >    in the crashdump kernel than the iova ranges that were in-use at the time
+> >    of the panic.  
 > 
-> pci_scan is a kernel thread that I used for testing purposes, to
-> mimick the dynamics that we saw in our crashes in
-> edac_pci_clear_parity_errors:
+> There could be all kinds of existing mappings in the DMA page tables,
+> and I'm not sure it's safe to preserve them. What prevents the crashdump
+> kernel from trying to use any of the physical pages which are
+> accessible, and which could thus be corrupted by stray DMA?
+
+In kdump, we switch to, and execute from the capture kernel.  (AKA 2nd kernel,
+crash kernel.)  This is a separate distinct instance of linux.  One of
+the intents of this switch is to (kdump.txt):
+
+    "This ensures that ongoing Direct Memory Access
+(DMA) from the system kernel does not corrupt the dump-capture kernel.
+The kexec -p command loads the dump-capture kernel into this reserved
+memory."
+
+As capture kernel is allocated early in boot, we shouldn't have DMA
+targeted to it once the capture kernel is loaded.
+
+Now,  the capture kernel will try to access 1st kernel memory via /proc/vmcore
+after it boots and runs makedumpfile.   Is it this access that you
+are concerned with?
+
+
+
 > 
->         for (;;) {
->                 pci_dev = NULL;
->                 while ((pci_dev = pci_get_device(PCI_ANY_ID,
-> PCI_ANY_ID, pci_dev)) != NULL)
->                         ;
->         }
+> In fact, the old kernel could even have set up 1:1 passthrough mappings
+> for some devices, which would then be able to DMA *anywhere*. Surely we
+> need to prevent that?
+
+>From prior patch version comments,  I know Bill was aware of the
+issue of pass-through, but don't know to what extent he tested with
+the feature enabled.  E.g. in Jan and prior versions he stated he
+had not tested w/ pass through.  He subsequently dropped this statement.
+
+The approach of the patch is to just allow the outstanding DMA
+to complete.  Assuming the targeted address of the pass through
+was sane,  does this differ greatly from the non pass through case?
+Now, if the DMA was truly going to random places (like the capture
+kernel itself)  I'm not sure what we would do.  Suggestions?
+
+
 > 
-> It keeps traversing klist_devices in pci_bus_type using
-> bus_find_device, costantly resuming its search for the next element
-> starting from the one it got in the previous round.
-> There are several loops of this kind in linux. In case of this thread
-> no action is taken on the elements as they are "found".
+> After the last round of this patchset, we discussed a potential
+> improvement where you point every virtual bus address at the *same*
+> physical scratch page.
 > 
-> The race condition occurs when bus_find_device resumes its search from
-> a device that has been unregistered. Because device_unregister resets
-> klist_bus in the device, bus_find device cannot resume from where it
-> left off in the klist.
-> The sequence is device_unregister, device_del, bus_remove_device,
-> klist_del(&dev->p->knode_bus.).
+> That way, we allow the "rogue" DMA to continue to the same virtual bus
+> addresses, but it can only ever affect one piece of physical memory and
+> can't have detrimental effects elsewhere.
 > 
+> Was that option considered and discounted for some reason? It seems like
+> it would make sense...
 
-Problem is confirmed to exist in 3.14, and can be reproduced easily
-with the following dummy driver, courtesy to Francesco. I added
-usleep_range() to make it easier to reproduce. It took only about
-half a dozen hot insertion/removal events to make it happen.
+I don't know if this was considered.
 
-Here are the tracebacks:
+I will need time to go through code and the spec to understand
+implications better.
 
-------------[ cut here ]------------
-WARNING: at /home/p2020/linux-freescale/include/linux/kref.h:47
-Modules linked in: jnx_connector leds_gpio sam_flash gpio_sam i2c_sam sam_core uio_pci_hostif pci_scan [last unloaded: sam_core]
-CPU: 0 PID: 2641 Comm: pci_scan Not tainted 3.14.4-juniper-00422-gf428c34 #47
-task: e7ce8ea0 ti: e73e6000 task.ti: e73e6000
-NIP: c04e0988 LR: c02baa28 CTR: c0268ca4
-REGS: e73e7da0 TRAP: 0700   Not tainted (3.14.4-juniper-00422-gf428c34)
-MSR: 00029000 <CE,EE,ME>  CR: 24038382  XER: 00000000
-GPR00: c0268b38 e73e7e50 e7ce8ea0 e7c96f94 e73e7e58 e725a264 c0268a38 eedaa2c0 
-GPR08: 00000002 00000001 00000000 00021000 2403d382 00000000 c00576f8 e7377750 
-GPR16: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
-GPR24: 00000000 00000000 f170f000 00000000 c056c33c c0268a38 e73e7ea8 eedaa2c0 
-NIP [c04e0988] klist_iter_init_node.part.0+0xc/0x684
-LR [c02baa28] bus_find_device+0x48/0xac
-Call Trace:
-[e73e7e80] [c0268b38] pci_get_dev_by_id+0x5c/0x94
-[e73e7ea0] [c0268c94] pci_get_subsys+0x38/0x48
-[e73e7ed0] [f170f02c] pci_scan+0x2c/0x64 [pci_scan]
-[e73e7ee0] [c00577bc] kthread+0xc4/0xd8
-[e73e7f40] [c000f004] ret_from_kernel_thread+0x5c/0x64
+Thanks
 
-and:
+Jerry
 
-------------[ cut here ]------------
-WARNING: at /home/p2020/linux-freescale/lib/klist.c:189
-Modules linked in: jnx_connector leds_gpio sam_flash gpio_sam i2c_sam sam_core uio_pci_hostif pci_scan [last unloaded: sam_core]
-CPU: 0 PID: 2641 Comm: pci_scan Tainted: G        W 3.14.4-juniper-00422-gf428c34 #47
-task: e7ce8ea0 ti: e73e6000 task.ti: e73e6000
-NIP: c04d7ad0 LR: c04d7be4 CTR: c0268ca4
-REGS: e73e7d30 TRAP: 0700   Tainted: G        W (3.14.4-juniper-00422-gf428c34)
-MSR: 00029000 <CE,EE,ME>  CR: 24038382  XER: 00000000
-GPR00: c04d7be4 e73e7de0 e7ce8ea0 e725a264 e73e7e58 e725a264 c0268a38 eedaa2c0 
-GPR08: 00000002 00000001 00000001 00021000 24038384 00000000 c00576f8 e7377750 
-GPR16: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
-GPR24: 00000000 00000000 f170f000 00000000 c02ba364 e725a258 e725a258 e73e7e58 
-NIP [c04d7ad0] klist_release+0x20/0xec
-LR [c04d7be4] klist_dec_and_del+0x48/0x5c
-Call Trace:
-[e73e7e10] [c04d7be4] klist_dec_and_del+0x48/0x5c
-[e73e7e20] [c04d7c3c] klist_next+0x44/0x138
-[e73e7e40] [c02ba444] next_device+0x10/0x34
-[e73e7e50] [c02baa30] bus_find_device+0x50/0xac
-[e73e7e80] [c0268b38] pci_get_dev_by_id+0x5c/0x94
-[e73e7ea0] [c0268c94] pci_get_subsys+0x38/0x48
-[e73e7ed0] [f170f02c] pci_scan+0x2c/0x64 [pci_scan]
-[e73e7ee0] [c00577bc] kthread+0xc4/0xd8
-[e73e7f40] [c000f004] ret_from_kernel_thread+0x5c/0x64
 
-Francesco, I'll test the patches you sent me next.
+-- 
 
-Guenter
+----------------------------------------------------------------------------
+Jerry Hoemann            Software Engineer              Hewlett-Packard
 
----
-
-/*
- * PCI scan test driver
- */
-
-#include <linux/delay.h>
-#include <linux/kernel.h>
-#include <linux/module.h>
-#include <linux/sched.h>
-#include <linux/kprobes.h>
-#include <linux/kallsyms.h>
-#include <linux/kthread.h>
-#include <linux/pci.h>
-#include <linux/pcieport_if.h>
-
-static struct task_struct *pci_scan_task = NULL;
-
-static int pci_scan(void *unused)
-{
-	for (;;) {
-		struct pci_dev *dev = NULL;
-
-		while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL)
-			usleep_range(1000, 2000);
-		schedule();
-		if (kthread_should_stop())
-			break;
-	}
-	return 0;
-}
-
-static int __init pci_scan_init(void)
-{
-	pci_scan_task = kthread_create(pci_scan, NULL, "pci_scan");
-	if (!pci_scan_task)
-		return -ENODEV;
-
-	wake_up_process(pci_scan_task);
-	return 0;
-}
-
-static void __exit pci_scan_exit(void)
-{
-	if (pci_scan_task)
-		kthread_stop(pci_scan_task);
-}
-
-module_init(pci_scan_init);
-module_exit(pci_scan_exit);
-
-MODULE_LICENSE("GPL");
+3404 E Harmony Rd. MS 57                        phone:  (970) 898-1022
+Ft. Collins, CO 80528                           FAX:    (970) 898-XXXX
+                                                email:  jerry.hoemann@hp.com
+----------------------------------------------------------------------------
 
