@@ -1,85 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:62335 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965019AbaESQZ4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 May 2014 12:25:56 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Tony Lindgren <tony@atomide.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 V2 28/29] x86, irq, devicetree: use common irqdomain map interface to program IOAPIC pins
-Date: Tue, 20 May 2014 00:23:12 +0800
-Message-Id: <1400516594-11544-29-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mout.kundenserver.de ([212.227.17.10]:60670 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811AbaEBSZs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 May 2014 14:25:48 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com
+Subject: Re: [RESEND PATCH 2/3] PCI: ARM: add support for generic PCI host controller
+Date: Fri, 02 May 2014 20:25:36 +0200
+Message-ID: <5644412.ouY7G25ZK8@wuerfel>
+In-Reply-To: <20140502172317.GC3179@obsidianresearch.com>
+References: <1399048876-11862-1-git-send-email-will.deacon@arm.com> <1399048876-11862-3-git-send-email-will.deacon@arm.com> <20140502172317.GC3179@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine devicetree to use common irqdomain map interface to program
-IOAPIC pins, so we can unify the callsite to progam IOAPIC pins.
+On Friday 02 May 2014 11:23:18 Jason Gunthorpe wrote:
+> On Fri, May 02, 2014 at 05:41:15PM +0100, Will Deacon wrote:
+> 
+> > +       bus_range = &pci->cfg.bus_range;
+> > +       for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+> > +               u32 idx = busn - bus_range->start;
+> > +               u32 sz = 1 << pci->cfg.ops->bus_shift;
+> > +
+> > +               pci->cfg.win[idx] = devm_ioremap(dev,
+> > +                                                pci->cfg.res.start + busn * sz,
+> > +                                                sz);
+> 
+> Why map each bus individually? Both CAM and ECAM define consecutive
+> busses consecutively in the address space, and I though ioremap was OK
+> with unaligned stuff?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/devicetree.c |   12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+One optimization we discussed before was to do this ioremap on the first
+access to any config space register in one bus, so we don't actually have
+to map all of them but only the ones that are in use.
 
-diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
-index a44d45df49f5..3bd30eb92d9d 100644
---- a/arch/x86/kernel/devicetree.c
-+++ b/arch/x86/kernel/devicetree.c
-@@ -280,10 +280,8 @@ static int ioapic_xlate(struct irq_domain *domain,
- 			const u32 *intspec, u32 intsize,
- 			irq_hw_number_t *out_hwirq, u32 *out_type)
- {
--	struct io_apic_irq_attr attr;
- 	struct of_ioapic_type *it;
- 	u32 line, idx;
--	int rc;
- 
- 	if (WARN_ON(intsize < 2))
- 		return -EINVAL;
-@@ -296,12 +294,9 @@ static int ioapic_xlate(struct irq_domain *domain,
- 	it = &of_ioapic_type[intspec[1]];
- 
- 	idx = (u32)(long)domain->host_data;
--	set_io_apic_irq_attr(&attr, idx, line, it->trigger, it->polarity);
--
--	rc = io_apic_setup_irq_pin_once(irq_find_mapping(domain, line),
--					cpu_to_node(0), &attr);
--	if (rc)
--		return rc;
-+	if (mp_set_pin_attr(idx, line, it->trigger, it->polarity,
-+			    cpu_to_node(0)))
-+		return -EBUSY;
- 
- 	*out_hwirq = line;
- 	*out_type = it->out_type;
-@@ -309,6 +304,7 @@ static int ioapic_xlate(struct irq_domain *domain,
- }
- 
- const struct irq_domain_ops ioapic_irq_domain_ops = {
-+	.map = mp_irqdomain_map,
- 	.xlate = ioapic_xlate,
- };
- 
--- 
-1.7.10.4
+I don't know if there was a technical problem with that. We can't just
+map/unmap on every config space access, because it can be called from
+atomic context and ioremap can sleep, but the initial bus scan is
+always done in a context in which we are allowed to sleep.
 
+> > +out_unmap_cfg:
+> > +     while (busn-- > bus_range->start)
+> > +             devm_iounmap(dev, pci->cfg.win[busn - bus_range->start]);
+> 
+> Is there a reason to explicitly clean up devm resources? I guess it is
+> because this is in setup not probe?
+
+Setup is called from probe, through pci_common_init_dev(), so that shouldn't
+make a difference.
+
+> It seems strange to me for a driver to do this sort of work in a setup
+> function, typically probe acquires as much stuff as it can, that way
+> defered probe can work properly.
+> 
+> Looking at pci-mvebu, 'setup' is only populating the resource list, I
+> would suggest the same split for this driver.
+
+I suggested moving it all into setup, to make it easier to port this code
+to arm64: I don't expect we will have the same pci_common_init_dev()
+mechanism there, so setup will get called directly from the probe
+function.
+
+The alternative is to do everything in probe() as well for arm32, and only
+do a single list_move() of the resources list to sys->resources in the
+setup function. That was the advice I gave in the xilinx pci host driver
+review for the same reason. I only now noticed that I recommended the opposite
+here. Anyway it shouldn't matter where we do all the things, but I feel
+it's better to have only one function that does all the work for the case
+of having nr_controllers=1, as we always do for loadable host drivers.
+
+	Arnd
