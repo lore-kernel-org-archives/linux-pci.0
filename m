@@ -1,61 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:57413 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755533AbaEIPcc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 11:32:32 -0400
-Received: by mail-ie0-f170.google.com with SMTP id ar20so825925iec.15
-        for <linux-pci@vger.kernel.org>; Fri, 09 May 2014 08:32:32 -0700 (PDT)
-Date: Fri, 9 May 2014 09:32:26 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-kernel@vger.kernel.org,
-	James Bottomley <jbottomley@parallels.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 4/5] iommu: Use dma_addr_t for IOVA arguments
-Message-ID: <20140509153226.GA3571@google.com>
-References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <45161364.3Gyo1xJJLV@wuerfel>
- <20140508001814.GB4951@google.com>
- <15249748.Q2CaU9aBE9@wuerfel>
- <20140508203053.GA14448@google.com>
- <1399629530.879.21.camel@i7.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1399629530.879.21.camel@i7.infradead.org>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:45509 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752977AbaEBQmE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 May 2014 12:42:04 -0400
+From: Will Deacon <will.deacon@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	jgunthorpe@obsidianresearch.com, Will Deacon <will.deacon@arm.com>
+Subject: [RESEND PATCH 1/3] ARM: mach-virt: allow PCI support to be selected
+Date: Fri,  2 May 2014 17:41:14 +0100
+Message-Id: <1399048876-11862-2-git-send-email-will.deacon@arm.com>
+In-Reply-To: <1399048876-11862-1-git-send-email-will.deacon@arm.com>
+References: <1399048876-11862-1-git-send-email-will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 09, 2014 at 10:58:50AM +0100, David Woodhouse wrote:
-> On Thu, 2014-05-08 at 14:30 -0600, Bjorn Helgaas wrote:
-> > I doubt there would be a noticeable performance effect since these are
-> > relatively low-frequency interfaces (map, unmap, report_fault), 
-> 
-> That point of view makes me sad.
+mach-virt can make use of virtio-pci devices, which requires the guest
+kernel to have PCI support selected.
 
-Don't be sad; Arnd successfully fended off the challenge :)
+This patch selects CONFIG_MIGHT_HAVE_PCI when CONFIG_ARCH_VIRT=y.
 
-> There are people who care deeply about the performance of IOMMU API
-> map/unmap. It isn't used *just* for virtual machines any more. See
-> drivers/infiniband/hw/usnic/usnic_uiom.c for example.
+Signed-off-by: Will Deacon <will.deacon@arm.com>
+---
+ arch/arm/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-Of course we should care about IOMMU API performance.  We should also
-care about interface consistency, and it seems there's a tradeoff in
-this case.  I said "relatively" because I expect map/unmap to be less
-frequent than read/write operations that use the mapping.  I don't
-know anything about infiniband, so maybe that assumption is false
-there.
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index db3c5414223e..f24356c4d630 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -941,6 +941,7 @@ config ARCH_VIRT
+ 	select ARM_GIC
+ 	select ARM_PSCI
+ 	select HAVE_ARM_ARCH_TIMER
++	select MIGHT_HAVE_PCI
+ 
+ #
+ # This is sorted alphabetically by mach-* pathname.  However, plat-*
+-- 
+1.9.2
 
-> I also hold out *some* hope for consolidating the map/unmap functions
-> for the IOMMU and DMA APIs at some point. The main difference is that
-> the DMA API allocates an IOVA for itself, while the IOMMU API is given
-> the bus address too.
-
-I find this aspect of these APIs confusing, so I agree that it would
-be nice if these could be consolidated somehow.
-
-Bjorn
