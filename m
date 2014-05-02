@@ -1,141 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54770 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:46759 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757513AbaEJPDb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 10 May 2014 11:03:31 -0400
-Subject: [PATCH v3 10/15] iommu/intel: Use pci_find_dma_isolation_root() for
- IOMMU groups
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	David Woodhouse <David.Woodhouse@intel.com>, linux@horizon.com,
-	linux-kernel@vger.kernel.org
-Date: Sat, 10 May 2014 09:03:24 -0600
-Message-ID: <20140510150324.2997.69374.stgit@bling.home>
-In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
-References: <20140510145619.2997.429.stgit@bling.home>
+	id S1751857AbaEBTDZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 2 May 2014 15:03:25 -0400
+Date: Fri, 2 May 2014 13:03:18 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [RESEND PATCH 2/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140502190318.GE3179@obsidianresearch.com>
+References: <1399048876-11862-1-git-send-email-will.deacon@arm.com>
+ <1399048876-11862-3-git-send-email-will.deacon@arm.com>
+ <20140502172317.GC3179@obsidianresearch.com>
+ <5644412.ouY7G25ZK8@wuerfel>
+ <20140502184421.GF14645@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140502184421.GF14645@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Drop custom code that attempts to do the exact same thing and use
-PCI provided isolation root support.  Existing IOMMU group laytout
-should not change.
+On Fri, May 02, 2014 at 07:44:21PM +0100, Will Deacon wrote:
+> > > > +       bus_range = &pci->cfg.bus_range;
+> > > > +       for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+> > > > +               u32 idx = busn - bus_range->start;
+> > > > +               u32 sz = 1 << pci->cfg.ops->bus_shift;
+> > > > +
+> > > > +               pci->cfg.win[idx] = devm_ioremap(dev,
+> > > > +                                                pci->cfg.res.start + busn * sz,
+> > > > +                                                sz);
+> > > 
+> > > Why map each bus individually? Both CAM and ECAM define consecutive
+> > > busses consecutively in the address space, and I though ioremap was OK
+> > > with unaligned stuff?
+> > 
+> > One optimization we discussed before was to do this ioremap on the first
+> > access to any config space register in one bus, so we don't actually have
+> > to map all of them but only the ones that are in use.
+> 
+> Right, and this optimisation is because we don't have a lot of virtual
+> address space on 32-bit ARM, so blowing away 256M on ECAM isn't viable.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: David Woodhouse <David.Woodhouse@intel.com>
----
- drivers/iommu/intel-iommu.c |   71 +++++--------------------------------------
- 1 file changed, 8 insertions(+), 63 deletions(-)
+But why not just
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index f256ffc..f0e50f1 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -44,7 +44,6 @@
- #include <asm/iommu.h>
- 
- #include "irq_remapping.h"
--#include "pci.h"
- 
- #define ROOT_SIZE		VTD_PAGE_SIZE
- #define CONTEXT_SIZE		VTD_PAGE_SIZE
-@@ -4359,12 +4358,9 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
- 	return 0;
- }
- 
--#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
--
- static int intel_iommu_add_device(struct device *dev)
- {
--	struct pci_dev *pdev = to_pci_dev(dev);
--	struct pci_dev *bridge, *dma_pdev = NULL;
-+	struct pci_dev *pdev;
- 	struct iommu_group *group;
- 	int ret;
- 	u8 bus, devfn;
-@@ -4372,68 +4368,16 @@ static int intel_iommu_add_device(struct device *dev)
- 	if (!device_to_iommu(dev, &bus, &devfn))
- 		return -ENODEV;
- 
--	bridge = pci_find_upstream_pcie_bridge(pdev);
--	if (bridge) {
--		if (pci_is_pcie(bridge))
--			dma_pdev = pci_get_domain_bus_and_slot(
--						pci_domain_nr(pdev->bus),
--						bridge->subordinate->number, 0);
--		if (!dma_pdev)
--			dma_pdev = pci_dev_get(bridge);
--	} else
--		dma_pdev = pci_dev_get(pdev);
--
--	/* Account for quirked devices */
--	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
--
--	/*
--	 * If it's a multifunction device that does not support our
--	 * required ACS flags, add to the same group as lowest numbered
--	 * function that also does not suport the required ACS flags.
--	 */
--	if (dma_pdev->multifunction &&
--	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
--		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
--
--		for (i = 0; i < 8; i++) {
--			struct pci_dev *tmp;
--
--			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
--			if (!tmp)
--				continue;
--
--			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
--				swap_pci_ref(&dma_pdev, tmp);
--				break;
--			}
--			pci_dev_put(tmp);
--		}
-+	group = iommu_group_get(dev);
-+	if (group) {
-+		iommu_group_put(group);
-+		return 0;
- 	}
- 
--	/*
--	 * Devices on the root bus go through the iommu.  If that's not us,
--	 * find the next upstream device and test ACS up to the root bus.
--	 * Finding the next device may require skipping virtual buses.
--	 */
--	while (!pci_is_root_bus(dma_pdev->bus)) {
--		struct pci_bus *bus = dma_pdev->bus;
-+	pdev = pci_find_dma_isolation_root(to_pci_dev(dev));
- 
--		while (!bus->self) {
--			if (!pci_is_root_bus(bus))
--				bus = bus->parent;
--			else
--				goto root_bus;
--		}
-+	group = iommu_group_get(&pdev->dev);
- 
--		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
--			break;
--
--		swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
--	}
--
--root_bus:
--	group = iommu_group_get(&dma_pdev->dev);
--	pci_dev_put(dma_pdev);
- 	if (!group) {
- 		group = iommu_group_alloc();
- 		if (IS_ERR(group))
-@@ -4443,6 +4387,7 @@ root_bus:
- 	ret = iommu_group_add_device(group, dev);
- 
- 	iommu_group_put(group);
-+
- 	return ret;
- }
- 
+devm_ioremap(dev, pci->cfg.res.start + bus_range->start * sz,
+		  resource_size(&bus_range) * sz);
 
+?
+
+> > Setup is called from probe, through pci_common_init_dev(), so that shouldn't
+> > make a difference.
+> 
+> Given that the idea was to separate setup() and probe(), I didn't want to
+> make the assumption that I was called in probe context.
+
+IMHO, we need to have clear purposes for setup() and probe().
+
+Probe is well defined already, it requests resources, claims the
+device, puts it in reset and then does some subsystem specific thing.
+The interaction with probe and devm is also already well specified.
+
+It doesn't matter for this driver, but look at mvebu, you cannot move
+the interrupt, gpio and clock acquisitions from probe() to setup(), as
+they could all trigger a defered probe. Better to be consistent,
+especially if this is the golden reference driver we want everyone to
+follow (sorry Will)
+
+To me setup() is more like netdev open(), so it should just do that
+final step to enable the links and bring up the PCI network and be
+ready to run PCI discovery. Consider, someday we might have an
+unsetup() for power mangement reasons, just like we have a close() in
+netdev.
+
+If the long term plan is to keep probe() then I don't think it makes
+sense to move probe() duties into setup(). That just restricts what we
+can do with the setup() call if setup() is now required to always
+handle defered probe and so forth.
+
+Will, don't forget this q:
+
+------
+> +out_release_res:
+> +     release_child_resources(&iomem_resource);
+> +     release_child_resources(&ioport_resource);
+
+This looks really off to me, doesn't this free all resources in the
+system?
+-------
+
+Regards,
+Jason
