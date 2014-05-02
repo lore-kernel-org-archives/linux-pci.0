@@ -1,86 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:57919 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752342AbaEUWyo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 18:54:44 -0400
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
-	"jg1.han@samsung.com" <jg1.han@samsung.com>,
-	"xobs@kosagi.com" <xobs@kosagi.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Mohit Kumar <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>
-Subject: RE: [RFC PATCH] pcie-designware: DT documentation update to clarify
- DT properties
-Date: Wed, 21 May 2014 22:54:21 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B70474C9AB@DFLE11.ent.ti.com>
-References: <1400712749-6490-1-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1400712749-6490-1-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:49947 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752080AbaEBSW1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 May 2014 14:22:27 -0400
+Date: Fri, 2 May 2014 19:21:50 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>
+Subject: Re: [RESEND PATCH 1/3] ARM: mach-virt: allow PCI support to be
+ selected
+Message-ID: <20140502182149.GE14645@arm.com>
+References: <1399048876-11862-1-git-send-email-will.deacon@arm.com>
+ <1399048876-11862-2-git-send-email-will.deacon@arm.com>
+ <4646975.AnXvL4OPrE@wuerfel>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4646975.AnXvL4OPrE@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->-----Original Message-----
->From: Karicheri, Muralidharan
->Sent: Wednesday, May 21, 2014 6:52 PM
->To: jg1.han@samsung.com; xobs@kosagi.com; devicetree@vger.kernel.org; linux-
->doc@vger.kernel.org; linux-kernel@vger.kernel.org; arnd@arndb.de
->Cc: Karicheri, Muralidharan; Mohit Kumar; Pratyush Anand; Richard Zhu; ABRAHAM,
->KISHON VIJAY; Marek Vasut
->Subject: [RFC PATCH] pcie-designware: DT documentation update to clarify DT properties
->
->Current documentation is not clear enough about the mandatory bindings to be present in
->the device node of a snps,dw-pcie compatible pcie controller. In some cases the property is
->not present in all drivers.
->For example pcie_bus is specified as a clock, but only one of the driver uses it. This patch
->attempts to make the documentation consistent with current implementation so that it is
->clear enough for anyone who develops a dw-pcie compatible pcie driver.
->
->CC: Mohit Kumar <mohit.kumar@st.com>
->CC: Jingoo Han <jg1.han@samsung.com>
->CC: Pratyush Anand <pratyush.anand@st.com>
->CC: Richard Zhu <r65037@freescale.com>
->CC: Kishon Vijay Abraham I <kishon@ti.com>
->CC: Marek Vasut <marex@denx.de>
->
->Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->---
-> .../devicetree/bindings/pci/designware-pcie.txt    |   10 ++++++----
-> 1 file changed, 6 insertions(+), 4 deletions(-)
->
->diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt
->b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->index d6fae13..8b9dc52 100644
->--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
->+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->@@ -4,12 +4,14 @@ Required properties:
-> - compatible: should contain "snps,dw-pcie" to identify the
-> 	core, plus an identifier for the specific instance, such
-> 	as "samsung,exynos5440-pcie" or "fsl,imx6q-pcie".
->-- reg: base addresses and lengths of the pcie controller,
->-	the phy controller, additional register for the phy controller.
->+- reg: base addresses and lengths of the pcie controller.
->+    index 0 - base address and length of RC's config space.
->+    index 1 and above: additional registers for the PCI controller
->+    that are specific to an implementation.
-> - interrupts: interrupt values for level interrupt,
-> 	pulse interrupt, special interrupt.
->-- clocks: from common clock binding: handle to pci clock.
->-- clock-names: from common clock binding: should be "pcie" and "pcie_bus".
->+- clocks: from common clock binding: handle to list of pci clock.
->+- clock-names: from common clock binding: pci clock names: "pcie"
-> - #address-cells: set to <3>
-> - #size-cells: set to <2>
-> - device_type: set to "pci"
->--
->1.7.9.5
+Hi Arnd,
 
-+ Adding to the pci list.
+On Fri, May 02, 2014 at 07:11:04PM +0100, Arnd Bergmann wrote:
+> On Friday 02 May 2014 17:41:14 Will Deacon wrote:
+> > mach-virt can make use of virtio-pci devices, which requires the guest
+> > kernel to have PCI support selected.
+> > 
+> > This patch selects CONFIG_MIGHT_HAVE_PCI when CONFIG_ARCH_VIRT=y.
+> > 
+> > Signed-off-by: Will Deacon <will.deacon@arm.com>
+> > ---
+> >  arch/arm/Kconfig | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> > index db3c5414223e..f24356c4d630 100644
+> > --- a/arch/arm/Kconfig
+> > +++ b/arch/arm/Kconfig
+> > @@ -941,6 +941,7 @@ config ARCH_VIRT
+> >         select ARM_GIC
+> >         select ARM_PSCI
+> >         select HAVE_ARM_ARCH_TIMER
+> > +       select MIGHT_HAVE_PCI
+> 
+> I would actually just put it under ARCH_MULTIPLATFORM. Anything can
+> have PCI really, and it doesn't cause any harm.
+
+Sure, I can change that easily enough.
+
+Will
