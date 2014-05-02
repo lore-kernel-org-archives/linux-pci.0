@@ -1,77 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22342 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753226AbaEJPCj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 10 May 2014 11:02:39 -0400
-Subject: [PATCH v3 02/15] PCI: quirk pci_for_each_dma_alias()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, linux@horizon.com
-Date: Sat, 10 May 2014 09:02:35 -0600
-Message-ID: <20140510150235.2997.88101.stgit@bling.home>
-In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
-References: <20140510145619.2997.429.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:45513 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752914AbaEBQmJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 May 2014 12:42:09 -0400
+From: Will Deacon <will.deacon@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	jgunthorpe@obsidianresearch.com, Will Deacon <will.deacon@arm.com>
+Subject: [RESEND PATCH 0/3] Support for Generic PCI Host Controller
+Date: Fri,  2 May 2014 17:41:13 +0100
+Message-Id: <1399048876-11862-1-git-send-email-will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are a few broken devices that use the requester ID of a different
-function in the slot for their DMA.  To handle these, add a bitmap to
-struct pci_dev (using an alignment gap) that quirks can populate.  As
-we iterate over the device and bus DMA aliases, also iterate over any
-bits in the map.
+Hi all,
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/search.c |   21 +++++++++++++++++++++
- include/linux/pci.h  |    2 ++
- 2 files changed, 23 insertions(+)
+This is a resend of the generic PCI host controller patch I last posted
+in March:
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 5601cdb..ad698b2 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -37,6 +37,27 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 	if (ret)
- 		return ret;
- 
-+	/*
-+	 * dma_func_alias provides a bitmap of other function numbers on
-+	 * this same PCI slot to use as DMA aliases.
-+	 */
-+	if (unlikely(pdev->dma_func_alias)) {
-+		u8 map = pdev->dma_func_alias & ~(1 << PCI_FUNC(pdev->devfn));
-+		int func;
-+
-+		for (func = 0; map && func < 8; func++, map >>= 1) {
-+			if (!(map & 1))
-+				continue;
-+
-+			ret = fn(pdev,
-+				 PCI_DEVID(pdev->bus->number,
-+					   PCI_DEVFN(PCI_SLOT(pdev->devfn),
-+					   func)), data);
-+			if (ret)
-+				return ret;
-+		}
-+	}
-+
- 	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
- 		struct pci_dev *tmp;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 14b074b..b4c97d2 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -268,6 +268,8 @@ struct pci_dev {
- 	u8		rom_base_reg;	/* which config register controls the ROM */
- 	u8		pin;		/* which interrupt pin this device uses */
- 	u16		pcie_flags_reg;	/* cached PCIe Capabilities Register */
-+	u8		dma_func_alias;	/* bitmap of functions used as DMA
-+					   aliases for this device */
- 
- 	struct pci_driver *driver;	/* which driver has allocated this device */
- 	u64		dma_mask;	/* Mask of the bits of bus address this
+  http://lists.infradead.org/pipermail/linux-arm-kernel/2014-March/237540.html
+
+I've also included two additional patches to enable PCI for mach-virt
+and add a MAINTAINERS entry for the new driver (Arnd -- I'm happy to add
+you here as well if you like).
+
+I've tested successfully on a 3.15-rc3-based kernel with kvmtool and would
+really like to see this merged for 3.16.
+
+All feedback welcome,
+
+Will
+
+Will Deacon (3):
+  ARM: mach-virt: allow PCI support to be selected
+  PCI: ARM: add support for generic PCI host controller
+  MAINTAINERS: add entry for generic PCI host controller driver
+
+ .../devicetree/bindings/pci/host-generic-pci.txt   | 100 ++++++
+ MAINTAINERS                                        |   8 +
+ arch/arm/Kconfig                                   |   1 +
+ drivers/pci/host/Kconfig                           |   7 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-host-generic.c                | 369 +++++++++++++++++++++
+ 6 files changed, 486 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/host-generic-pci.txt
+ create mode 100644 drivers/pci/host/pci-host-generic.c
+
+-- 
+1.9.2
 
