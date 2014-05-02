@@ -1,95 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:50214 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304AbaE3CHy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 22:07:54 -0400
-Received: by mail-ie0-f173.google.com with SMTP id lx4so1174061iec.32
-        for <linux-pci@vger.kernel.org>; Thu, 29 May 2014 19:07:53 -0700 (PDT)
-Date: Thu, 29 May 2014 20:07:51 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 1/3] PCI: remove the unnecssary checking for
- pci_bus_add_device
-Message-ID: <20140530020751.GA4607@google.com>
-References: <1401346866-11648-1-git-send-email-wangyijing@huawei.com>
- <1401346866-11648-2-git-send-email-wangyijing@huawei.com>
+Received: from service87.mimecast.com ([91.220.42.44]:59645 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751887AbaEBLSM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 May 2014 07:18:12 -0400
+Date: Fri, 2 May 2014 12:18:07 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: James Bottomley <jbottomley@parallels.com>,
+	"rdunlap@infradead.org" <rdunlap@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU
+ address to phys_addr_t
+Message-ID: <20140502111807.GL4750@e106497-lin.cambridge.arm.com>
+References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <1398953290.2313.15.camel@dabdike.int.hansenpartnership.com>
+ <CAErSpo7zjXg8xrV7=q36rNp_g573P93HiXTB72Z1cZfjGeeBmg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401346866-11648-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <CAErSpo7zjXg8xrV7=q36rNp_g573P93HiXTB72Z1cZfjGeeBmg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 29, 2014 at 03:01:04PM +0800, Yijing Wang wrote:
-> Kernel will WARN_ON(retval < 0) if device_attach() fail with
-> error in pci_bus_add_device(). currently, all the kernel code
-> to check pci_bus_add_device() return value only for printing
-> warning message, no other actions. So we can remove the
-> unnecessary checking codes.
-
-If we remove all the checks of the return value, why wouldn't we convert it
-to a void function?  If we keep the return value, it seems like we're
-saying "this function could fail someday," but we removing all the code
-that would actually *check* for that failure.
-
-If you convert it to void, please just squash them all into a single patch.
-
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/bus.c   |    6 +-----
->  drivers/pci/iov.c   |    2 +-
->  include/linux/pci.h |    2 +-
->  3 files changed, 3 insertions(+), 7 deletions(-)
+On Thu, May 01, 2014 at 08:05:04PM +0100, Bjorn Helgaas wrote:
+> [+cc Arnd]
 > 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index ba2bf55..f0efbee 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -266,16 +266,12 @@ void pci_bus_add_devices(const struct pci_bus *bus)
->  {
->  	struct pci_dev *dev;
->  	struct pci_bus *child;
-> -	int retval;
->  
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
->  		/* Skip already-added devices */
->  		if (dev->is_added)
->  			continue;
-> -		retval = pci_bus_add_device(dev);
-> -		if (retval)
-> -			dev_err(&dev->dev, "Error adding device (%d)\n",
-> -				retval);
-> +		pci_bus_add_device(dev);
->  	}
->  
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index de7a747..cb6f247 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -106,7 +106,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->  	pci_device_add(virtfn, virtfn->bus);
->  	mutex_unlock(&iov->dev->sriov->lock);
->  
-> -	rc = pci_bus_add_device(virtfn);
-> +	pci_bus_add_device(virtfn);
->  	sprintf(buf, "virtfn%u", id);
->  	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
->  	if (rc)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 65f22e8..3c4c0cf 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -781,7 +781,7 @@ int pci_scan_slot(struct pci_bus *bus, int devfn);
->  struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
->  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
->  unsigned int pci_scan_child_bus(struct pci_bus *bus);
-> -int __must_check pci_bus_add_device(struct pci_dev *dev);
-> +int pci_bus_add_device(struct pci_dev *dev);
->  void pci_read_bridge_bases(struct pci_bus *child);
->  struct resource *pci_find_parent_resource(const struct pci_dev *dev,
->  					  struct resource *res);
-> -- 
-> 1.7.1
+> On Thu, May 1, 2014 at 8:08 AM, James Bottomley
+> <jbottomley@parallels.com> wrote:
+> > On Wed, 2014-04-30 at 14:33 -0600, Bjorn Helgaas wrote:
+> >> dma_declare_coherent_memory() takes two addresses for a region of memory: a
+> >> "bus_addr" and a "device_addr".  I think the intent is that "bus_addr" is
+> >> the physical address a *CPU* would use to access the region, and
+> >> "device_addr" is the bus address the *device* would use to address the
+> >> region.
+> >>
+> >> Rename "bus_addr" to "phys_addr" and change its type to phys_addr_t.
+> >
+> > Remind me what the difference between phys_addr_t and dma_addr_t are.
+> >
+> > I thought phys_addr_t was the maximum address the CPU could reach after
+> > address translation and dma_addr_t was the maximum physical address any
+> > bus attached memory mapped devices could appear at. (of course, mostly
+> > they're the same).
 > 
+> I assumed phys_addr_t was for physical addresses generated by a CPU
+> and dma_addr_t was for addresses generated by a device, e.g.,
+> addresses you would see with a PCI bus analyzer or in a PCI BAR.  But
+> ARCH_DMA_ADDR_T_64BIT does seem more connected to processor-specific
+> things, e.g., ARM_LPAE, than to device bus properties like "support
+> 64-bit PCI, not just 32-bit PCI."
 > 
+> DMA-API-HOWTO.txt contains this:
+> 
+>   ... the definition of the dma_addr_t (which can hold any valid DMA
+>   address for the platform) type which should be used everywhere you
+>   hold a DMA (bus) address returned from the DMA mapping functions.
+> 
+> and clearly you use a dma_addr_t from dma_alloc_coherent(), etc., to
+> program the device.  It seems silly to have phys_addr_t and dma_addr_t
+> for two (possibly slightly different) flavors of CPU physical
+> addresses, and then sort of overload dma_addr_t by also using it to
+> hold the addresses devices use for DMA.
+
+dma_addr_t is a phys_addr_t masked according to the capabilities of the
+*DMA engine* (not device). Quite a lot of PCI devices (all?) now contain
+a DMA engine, so the distinction is somewhat blurred nowadays.
+
+> 
+> I think the "CPU generates phys_addr_t" and "device generates
+> dma_addr_t" distinction seems like a useful idea.  
+
+s/device/DMA engine inside device/
+
+> I'm not a CPU
+> person, so I don't understand the usefulness of dma_addr_t as a
+> separate type to hold CPU addresses at which memory-mapped devices can
+> appear.  If that's all it is, why not just use phys_addr_t everywhere
+> and get rid of dma_addr_t altogether?
+
+Because dma_addr_t imposes further restrictions based on what the DMA engine
+can access. You could have a DMA engine that can only access 32bit addresses
+in a 40+ bit CPU addresses system.
+
+> 
+> > The intent of dma_declare_coherent_memory() is to take a range of memory
+> > provided by some device on the bus and allow the CPU to allocate regions
+> > from it for use as things like descriptors.  The CPU treats it as real
+> > memory, but, in fact, it is a mapped region of an attached device.
+
+It is not the CPU that is the user of the bus_addr but the DMA engine. And
+that can be on the bus as well, so it needs to generate bus addresses.
+
+> >
+> > If my definition is correct, then bus_addr should be dma_addr_t because
+> > it has to be mapped from a device and dma_addr_t is the correct type for
+> > device addresses.  If I've got the definition wrong, then we should
+> > document it somewhere, because it's probably confusing other people as
+> > well.
+> 
+> dma_declare_coherent_memory() calls ioremap() on bus_addr, which seems
+> a clear indication that bus_addr is really a physical address usable
+> by the CPU.  But I do see your point that bus_addr is a CPU address
+> for a memory-mapped device, and would thus fit into your idea of a
+> dma_addr_t.
+> 
+> I think this is the only part of the DMA API that deals with CPU
+> physical addresses.  I suppose we could side-step this question by
+> having the caller do the ioremap; then dma_declare_coherent_memory()
+> could just take a CPU virtual address (a void *) and a device address
+> (a dma_addr_t).
+
+And how would that change the meaning of the function?
+
+Best regards,
+Liviu
+
+> 
+> But I'd still have the question of whether we're using dma_addr_t
+> correctly in the PCI core.  We use it to hold BAR values and the like,
+> and I've been making assumptions like "if dma_addr_t is only 32 bits,
+> we can't handle BARs above 4GB."
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
