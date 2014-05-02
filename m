@@ -1,160 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Jiri Kosina <trivial@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
-	linux-pm@vger.kernel.org
-Subject: [RFC Patch Part1 V1 06/30] x86, ACPI, trivial: minor improvements to arch/x86/kernel/acpi/boot.c
-Date: Fri, 16 May 2014 16:05:26 +0800
-Message-Id: <1400227550-5935-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:47818 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721AbaEBLCZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 May 2014 07:02:25 -0400
+Date: Fri, 2 May 2014 12:02:20 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"rdunlap@infradead.org" <rdunlap@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU
+ address to phys_addr_t
+Message-ID: <20140502110220.GK4750@e106497-lin.cambridge.arm.com>
+References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <1398953290.2313.15.camel@dabdike.int.hansenpartnership.com>
+MIME-Version: 1.0
+In-Reply-To: <1398953290.2313.15.camel@dabdike.int.hansenpartnership.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1) Remove out-of-date comment
-2) Kill unused function acpi_set_irq_model_pic()
-3) Use NR_IRQS_LEGACY instead of hard-coded 16
-4) Trivial syntax improvements
+On Thu, May 01, 2014 at 03:08:12PM +0100, James Bottomley wrote:
+> On Wed, 2014-04-30 at 14:33 -0600, Bjorn Helgaas wrote:
+> > dma_declare_coherent_memory() takes two addresses for a region of memory: a
+> > "bus_addr" and a "device_addr".  I think the intent is that "bus_addr" is
+> > the physical address a *CPU* would use to access the region, and
+> > "device_addr" is the bus address the *device* would use to address the
+> > region.
+> > 
+> > Rename "bus_addr" to "phys_addr" and change its type to phys_addr_t.
+> 
+> Remind me what the difference between phys_addr_t and dma_addr_t are.
+> 
+> I thought phys_addr_t was the maximum address the CPU could reach after
+> address translation and dma_addr_t was the maximum physical address any
+> bus attached memory mapped devices could appear at. (of course, mostly
+> they're the same).
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   50 ++++++++++++++-----------------------------
- 1 file changed, 16 insertions(+), 34 deletions(-)
+My understanding is that dma_addr_t has nothing to do (directly) with the
+bus the device is on. In the way I understand things, dma_addr_t is the
+range of addresses that a DMA engine (possibly inside a device) can access.
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 8390db1f7a93..6d65850f49e9 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -370,11 +370,6 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
- 	if (acpi_sci_flags & ACPI_MADT_POLARITY_MASK)
- 		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
- 
--	/*
--	 * mp_config_acpi_legacy_irqs() already setup IRQs < 16
--	 * If GSI is < 16, this will update its flags,
--	 * else it will create a new mp_irqs[] entry.
--	 */
- 	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
- 
- 	/*
-@@ -573,14 +568,7 @@ void acpi_unregister_gsi(u32 gsi)
- }
- EXPORT_SYMBOL_GPL(acpi_unregister_gsi);
- 
--void __init acpi_set_irq_model_pic(void)
--{
--	acpi_irq_model = ACPI_IRQ_MODEL_PIC;
--	__acpi_register_gsi = acpi_register_gsi_pic;
--	acpi_ioapic = 0;
--}
--
--void __init acpi_set_irq_model_ioapic(void)
-+static void __init acpi_set_irq_model_ioapic(void)
- {
- 	acpi_irq_model = ACPI_IRQ_MODEL_IOAPIC;
- 	__acpi_register_gsi = acpi_register_gsi_ioapic;
-@@ -819,9 +807,8 @@ static int __init early_acpi_parse_madt_lapic_addr_ovr(void)
- 	 * and (optionally) overriden by a LAPIC_ADDR_OVR entry (64-bit value).
- 	 */
- 
--	count =
--	    acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_OVERRIDE,
--				  acpi_parse_lapic_addr_ovr, 0);
-+	count = acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_OVERRIDE,
-+				      acpi_parse_lapic_addr_ovr, 0);
- 	if (count < 0) {
- 		printk(KERN_ERR PREFIX
- 		       "Error parsing LAPIC address override entry\n");
-@@ -846,9 +833,8 @@ static int __init acpi_parse_madt_lapic_entries(void)
- 	 * and (optionally) overriden by a LAPIC_ADDR_OVR entry (64-bit value).
- 	 */
- 
--	count =
--	    acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_OVERRIDE,
--				  acpi_parse_lapic_addr_ovr, 0);
-+	count = acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_OVERRIDE,
-+				      acpi_parse_lapic_addr_ovr, 0);
- 	if (count < 0) {
- 		printk(KERN_ERR PREFIX
- 		       "Error parsing LAPIC address override entry\n");
-@@ -876,11 +862,10 @@ static int __init acpi_parse_madt_lapic_entries(void)
- 		return count;
- 	}
- 
--	x2count =
--	    acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_X2APIC_NMI,
--				  acpi_parse_x2apic_nmi, 0);
--	count =
--	    acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_NMI, acpi_parse_lapic_nmi, 0);
-+	x2count = acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_X2APIC_NMI,
-+					acpi_parse_x2apic_nmi, 0);
-+	count = acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_NMI,
-+				      acpi_parse_lapic_nmi, 0);
- 	if (count < 0 || x2count < 0) {
- 		printk(KERN_ERR PREFIX "Error parsing LAPIC NMI entry\n");
- 		/* TBD: Cleanup to allow fallback to MPS */
-@@ -947,7 +932,7 @@ static void __init mp_config_acpi_legacy_irqs(void)
- 	 * Use the default configuration for the IRQs 0-15.  Unless
- 	 * overridden by (MADT) interrupt source override entries.
- 	 */
--	for (i = 0; i < 16; i++) {
-+	for (i = 0; i < NR_IRQS_LEGACY; i++) {
- 		int ioapic, pin;
- 		unsigned int dstapic;
- 		int idx;
-@@ -1103,9 +1088,8 @@ static int __init acpi_parse_madt_ioapic_entries(void)
- 		return -ENODEV;
- 	}
- 
--	count =
--	    acpi_table_parse_madt(ACPI_MADT_TYPE_IO_APIC, acpi_parse_ioapic,
--				  MAX_IO_APICS);
-+	count = acpi_table_parse_madt(ACPI_MADT_TYPE_IO_APIC, acpi_parse_ioapic,
-+				      MAX_IO_APICS);
- 	if (!count) {
- 		printk(KERN_ERR PREFIX "No IOAPIC entries present\n");
- 		return -ENODEV;
-@@ -1114,9 +1098,8 @@ static int __init acpi_parse_madt_ioapic_entries(void)
- 		return count;
- 	}
- 
--	count =
--	    acpi_table_parse_madt(ACPI_MADT_TYPE_INTERRUPT_OVERRIDE, acpi_parse_int_src_ovr,
--				  nr_irqs);
-+	count = acpi_table_parse_madt(ACPI_MADT_TYPE_INTERRUPT_OVERRIDE,
-+				      acpi_parse_int_src_ovr, nr_irqs);
- 	if (count < 0) {
- 		printk(KERN_ERR PREFIX
- 		       "Error parsing interrupt source overrides entry\n");
-@@ -1135,9 +1118,8 @@ static int __init acpi_parse_madt_ioapic_entries(void)
- 	/* Fill in identity legacy mappings where no override */
- 	mp_config_acpi_legacy_irqs();
- 
--	count =
--	    acpi_table_parse_madt(ACPI_MADT_TYPE_NMI_SOURCE, acpi_parse_nmi_src,
--				  nr_irqs);
-+	count = acpi_table_parse_madt(ACPI_MADT_TYPE_NMI_SOURCE,
-+				      acpi_parse_nmi_src, nr_irqs);
- 	if (count < 0) {
- 		printk(KERN_ERR PREFIX "Error parsing NMI SRC entry\n");
- 		/* TBD: Cleanup to allow fallback to MPS */
+So it is possible to have a device sitting on a PCI bus that uses addresses
+for dma_addr_t that are 32bit but those addresses are then translated by
+the bus translation setup into phys_addr_t and that can be any size
+(preferrably >= dma_addr_t).
+
+One way of seeing dma_addr_t is a translated IO physical address. And yes,
+that means that there are two ways of expressing a phys_addr_t, except
+that dma_addr_t is further restricted to the space that the DMA engine can
+access and how the address output of the DMA engine gets mapped on the
+physical busses.
+
+Best regards,
+Liviu
+
+> 
+> The intent of dma_declare_coherent_memory() is to take a range of memory
+> provided by some device on the bus and allow the CPU to allocate regions
+> from it for use as things like descriptors.  The CPU treats it as real
+> memory, but, in fact, it is a mapped region of an attached device.
+> 
+> If my definition is correct, then bus_addr should be dma_addr_t because
+> it has to be mapped from a device and dma_addr_t is the correct type for
+> device addresses.  If I've got the definition wrong, then we should
+> document it somewhere, because it's probably confusing other people as
+> well.
+> 
+> James
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
 -- 
-1.7.10.4
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
