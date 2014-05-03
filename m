@@ -1,100 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:40167 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752163AbaEUNx6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 09:53:58 -0400
-Received: by mail-ig0-f170.google.com with SMTP id uy17so4928037igb.5
-        for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 06:53:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+eFSM3683deo8aRiKo6Yobq6sRoWgyoVV+gCnTHaSUNjYcHaA@mail.gmail.com>
-References: <CA+eFSM2CBiWZNmpnSNGKZGjEpK6gc=T0a5r7m6sbORi==XTCjQ@mail.gmail.com>
- <CAErSpo61Ge078ip6x5XqosMaa4+TYvH8d6pTkR9OE1-_DPbu7g@mail.gmail.com> <CA+eFSM3683deo8aRiKo6Yobq6sRoWgyoVV+gCnTHaSUNjYcHaA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 21 May 2014 07:53:37 -0600
-Message-ID: <CAErSpo60LfyX=qmui=kTsg851jgu_DU-RCXZr-MgVA3CfFThRA@mail.gmail.com>
-Subject: Re: PCI-to-USB ExpressCard Hotplugging can't work in v3.15-rc5
-To: Gavin Guo <gavin.guo@canonical.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, YK <yk@canonical.com>,
-	Yung Shen <yung.shen@canonical.com>,
-	Po-Hsu Lin <po-hsu.lin@canonical.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1399094110.24318.505.camel@ul30vt.home>
+Subject: Re: [PATCH 03/13] PCI: quirk dma_func_alias for Ricoh devices
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andrew Cooks <acooks@gmail.com>
+Cc: "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	open list <linux-kernel@vger.kernel.org>
+Date: Fri, 02 May 2014 23:15:10 -0600
+In-Reply-To: <CAJtEV7bZ10fAE-JoTO6Gg1rg8sWxwzQUR5FkQpLZ1nTF_+dk5w@mail.gmail.com>
+References: <20140501160128.17512.23609.stgit@bling.home>
+	 <20140501162723.17512.96286.stgit@bling.home>
+	 <CAJtEV7bZ10fAE-JoTO6Gg1rg8sWxwzQUR5FkQpLZ1nTF_+dk5w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 21, 2014 at 3:45 AM, Gavin Guo <gavin.guo@canonical.com> wrote:
-> Hi Bjorn,
->
-> On Wed, May 21, 2014 at 12:54 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, May 20, 2014 at 10:36 PM, Gavin Guo <gavin.guo@canonical.com> wrote:
->>> Hi all,
->>>
->>> I have a APIOTEK PCI-to-USB ExpressCard and found that when it is
->>> plugged at cold boot, the card can be detected. But, hotplug cannot
->>> work at run time. The bug may be related to the commit which I
->>> reported last year:
->>>
->>> commit 3f327e39b4b8f760c331bb2836735be6d83fbf53
->>
->> Where is your report from last year?  How did you identify this
->> commit?  Did you verify that it works correctly with v3.10-rc1, but
->> fails when you add this commit?
->
-> The mail about the bug I reported last year is attached. And I'm sorry
-> about not describing clearly. This commit is the one to fix the bug
-> before. So, I think it will be a clue to find out what's wrong. I've
-> built v3.10 and tested it on the platform. It works fine. The bug
-> seems like a regression.
->
-> I also attached the dmesg of v3.10 which works correctly with hotplug.
+On Sat, 2014-05-03 at 10:29 +0800, Andrew Cooks wrote:
+> Hi Alex
+> 
+> On Fri, May 2, 2014 at 12:27 AM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > The existing quirk for these devices doesn't really solve the problem,
+> > re-implement it using the DMA alias iterator.  We'll come back later
+> > and remove the existing quirk and dma_source interface.
+> >
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> >  drivers/pci/quirks.c |   16 ++++++++++++++++
+> >  1 file changed, 16 insertions(+)
+> >
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index e729206..a458c6b 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -3333,6 +3333,22 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+> >         return -ENOTTY;
+> >  }
+> >
+> > +static void quirk_dma_func0_alias(struct pci_dev *dev)
+> > +{
+> > +       if (PCI_SLOT(dev->devfn) != 0)
+> > +               dev->dma_func_alias |= (1 << 0);
+> > +}
+> > +
+> > +/*
+> > + * https://bugzilla.redhat.com/show_bug.cgi?id=605888
+> > + *
+> > + * Some Ricoh devices use function 0 as the PCIe requester ID for DMA.
+> > + */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe822, quirk_dma_func0_alias);
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe230, quirk_dma_func0_alias);
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
+> 
+> 0xe832 is listed twice.
 
-v3.10 contains 3f327e39b4b8 (it appeared in v3.10-rc3).  So since it
-works correctly in v3.10, that commit is probably not the cause of the
-regression.
+oops, copy-paste error
 
-So apparently it worked in v3.10 and broke sometime later.  Do you
-know when it broke?
+> Previously only 0xe832 needed the dma alias on my thinkpad T410, which
+> has all three devices.
+> 
+> > +
+> >  static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+> >  {
+> >         if (!PCI_FUNC(dev->devfn))
+> >
+> 
+> Unfortunately, this quirk doesn't work for me. I tried it without
+> modification, as well as with each alias individually. I get:
+> 
+> Set context mapping for 0d:00.3
+> firewire_ohci 0000:0d:00.3: added OHCI v1.10 device as card 0, 4 IR +
+> 4 IT contexts, quirks 0x11
+> dmar: DRHD: handling fault status reg 2
+> dmar: DMAR:[DMA Read] Request device [0d:00.0] fault addr fffff000
+> DMAR:[fault reason 02] Present bit in context entry is clear
+> 
+> I think I need to see
+> Set context mapping for 0d:00.0
+> before
+> Set context mapping for 0d:00.3
 
-We're getting Bus Check events:
+It would actually be the reverse, we always set the device, then the
+alias for the device.
 
-  ACPI: \_SB_.PCI0: ACPI_NOTIFY_BUS_CHECK event
+> in the log, but it's not there. I'd love to look into this and
+> understand it properly, but I don't have time for the next four weeks.
+> 
+> The devices are attached as follows:
+> BDF, device ID
+> 0d:00.0, e822
+> 0d:00.1, e230
+> 0d:00.3, e832
+> 
+> The kernel log is attached.
 
-but apparently we aren't handling them correctly.  Can you turn on the
-debug in the acpi_hotplug_schedule() path and add more if necessary to
-if we get to acpi_hotplug_work_fn(), acpi_device_hotplug(), etc.?  I'm
-not familiar with that path, so either you'll have to narrow it down,
-or we can hope that Yinghai or Rafael has some insight.
+Hmm, there are only a few reasons why you'd never see 0d:00.3 followed
+by 0d:00.0...
 
-Bjorn
+1) dma_func_alias bit 0 isn't getting set on 0d:00.3; we are building
+with CONFIG_PCI_QUIRKS=y, right?
+2) domain_context_mapping_one called from domain_context_mapping_cb
+returns !0; there's only one possible non-zero return for a non-vm,
+non-si domain
+3) something is broken in the first loop of pci_for_each_dma_alias; I'm
+not seeing anything obvious
 
->>> Author: Yinghai Lu <yinghai@kernel.org>
->>> Date:   Tue May 7 11:06:03 2013 -0600
->>>
->>>     PCI: acpiphp: Re-enumerate devices when host bridge receives Bus Check
->>>
->>>     When a PCI host bridge device receives a Bus Check notification, we
->>>     must re-enumerate starting with the bridge to discover changes (devices
->>>     that have been added or removed).
->>>
->>>     Prior to 668192b678 ("PCI: acpiphp: Move host bridge hotplug to
->>>     pci_root.c"), this happened in _handle_hotplug_event_bridge().  After that
->>>     commit, _handle_hotplug_event_bridge() is not installed for host bridges,
->>>     and the host bridge notify handler, _handle_hotplug_event_root() did not
->>>     re-enumerate.
->>>
->>>     This patch adds re-enumeration to _handle_hotplug_event_root().
->>>
->>>     This fixes cases where we don't notice the addition or removal of
->>>     PCI devices, e.g., the PCI-to-USB ExpressCard in the bugzilla below.
->>>
->>> Dmesg is attached. The scenario of the dmesg: The PCI-to-USB
->>> ExpressCard is attached at cold boot. Then, you can see that the usb
->>> storage can be detected in the dmesg. Finally, I've done hotplug 2
->>> times to see if it can detect the PCI-to-USB ExpressCard. At the end
->>> of Dmesg, it only has several "ACPI: \_SB_.PCI0: ACPI_NOTIFY_BUS_CHECK
->>> event" and can't detect the card.
->>>
->>> Thanks,
->>> Gavin Guo
+Anyway, appreciate an debugging you're able to fit in, my only ricoh
+device has only function 0.  Thanks,
+
+Alex
+
+
