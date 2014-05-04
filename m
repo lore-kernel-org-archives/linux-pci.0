@@ -1,61 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:58935 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751829AbaEGIPZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 May 2014 04:15:25 -0400
-From: Arnd Bergmann <arnd@arndb.de>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:3440 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753222AbaEDE0k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 May 2014 00:26:40 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-kernel@vger.kernel.org,
-	James Bottomley <jbottomley@parallels.com>,
-	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH v2 3/5] sh/PCI: Pass GAPSPCI_DMA_BASE CPU address to dma_declare_coherent_memory()
-Date: Wed, 07 May 2014 10:15:10 +0200
-Message-ID: <4271645.KYLAoYxC5v@wuerfel>
-In-Reply-To: <6994558.Q3OYh8PWMa@wuerfel>
-References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140506224833.17968.87108.stgit@bhelgaas-glaptop.roam.corp.google.com> <6994558.Q3OYh8PWMa@wuerfel>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	<x86@kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 09/13] PCI, shpchp: Use new pci_is_bridge() to simplify code
+Date: Sun, 4 May 2014 12:23:44 +0800
+Message-ID: <1399177428-3784-10-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
+References: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 07 May 2014 09:55:16 Arnd Bergmann wrote:
-> On Tuesday 06 May 2014 16:48:33 Bjorn Helgaas wrote:
-> > @@ -51,8 +53,12 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
-> >                 /*
-> >                  * Redirect dma memory allocations to special memory window.
-> >                  */
-> > +               region.start = GAPSPCI_DMA_BASE;
-> > +               region.end = GAPSPCI_DMA_BASE + GAPSPCI_DMA_SIZE - 1;
-> > +               res.flags = IORESOURCE_MEM;
-> > +               pcibios_bus_to_resource(dev->bus, &res, &region);
-> >                 BUG_ON(!dma_declare_coherent_memory(&dev->dev,
-> > -                                               GAPSPCI_DMA_BASE,
-> > +                                               res->start,
-> >                                                 GAPSPCI_DMA_BASE,
-> >                                                 GAPSPCI_DMA_SIZE,
-> >                                                 DMA_MEMORY_MAP |
-> 
-> Not sure if this is an improvement. I understand the intention, but
-> it's actually possible for the offset to be different both ways:
-> 
-> Your patch applies the outbound mem_offset that was provided when
-> registering the MMIO resource for the PCI host bridge. What the driver
-> needs instead is the inbound DMA offset that gets applied by some
-> host bridges that don't have a 1:1 mapping but also don't have an
-> IOMMU. We know that on this particular platform, both are zero, so
-> the original code works and it will keep working with your change,
-> but I think it's a mistake anyway. I have seen both kinds of offsets
-> in the past on real machines, but I am not aware of any where they
-> are both nonzero and have the same value.
+Now we can use new pci_is_bridge() helper function
+to simplify code.
 
-Hmm, looking at it again, it seem even weirder: the address we register
-for DMA allocations is the same that gets passed into the PCI host
-for MMIO resources. Something is very strange here. Still, I'd rather
-not touch it at all, whatever it does.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/hotplug/shpchp_pci.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-	Arnd
+diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
+index 2bf69fe..ea8ad31 100644
+--- a/drivers/pci/hotplug/shpchp_pci.c
++++ b/drivers/pci/hotplug/shpchp_pci.c
+@@ -64,8 +64,7 @@ int __ref shpchp_configure_device(struct slot *p_slot)
+ 	list_for_each_entry(dev, &parent->devices, bus_list) {
+ 		if (PCI_SLOT(dev->devfn) != p_slot->device)
+ 			continue;
+-		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
+-		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
++		if (pci_is_bridge(dev))
+ 			pci_hp_add_bridge(dev);
+ 	}
+ 
+-- 
+1.7.1
+
+
