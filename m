@@ -1,51 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:41701 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752787AbaE1JvH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 05:51:07 -0400
-Received: by mail-pa0-f45.google.com with SMTP id ey11so10743188pad.32
-        for <linux-pci@vger.kernel.org>; Wed, 28 May 2014 02:51:07 -0700 (PDT)
-From: Sachin Kamat <sachin.kamat@linaro.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-samsung-soc@vger.kernel.org, jg1.han@samsung.com,
-	bhelgaas@google.com, sachin.kamat@linaro.org
-Subject: [PATCH 1/1] PCI: exynos: Fix section mismatch warning
-Date: Wed, 28 May 2014 15:18:45 +0530
-Message-Id: <1401270525-27139-1-git-send-email-sachin.kamat@linaro.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:4447 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750864AbaEDE0d (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 May 2014 00:26:33 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	<x86@kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 01/13] PCI: rename pci_is_bridge() to pci_has_subordinate()
+Date: Sun, 4 May 2014 12:23:36 +0800
+Message-ID: <1399177428-3784-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
+References: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-add_pcie_port is called from probe which is annotated with __init.
-add_pcie_port calls dw_pcie_host_init which is also annotated with
-__init. Thus it makes sense to annotate add_pcie_port with __init
-to avoid the following section mismatch warning:
+pci_is_bridge() which seems to determine whether device is a bridge,
+returns true only when the subordinate bus exists. This confuses
+people. PCI device is a bridge means its header type(bit 0 through 6)
+is 0x1(PCI bridge) or 0x2(CardBus bridge). Rename the current
+pci_is_bridge() helper function to pci_has_subordinate().
 
-WARNING: drivers/pci/built-in.o(.text.unlikely+0xf8): Section mismatch in reference from the function add_pcie_port() to the function .init.text:dw_pcie_host_init()
-   The function add_pcie_port() references
-   the function __init dw_pcie_host_init().
-   This is often because add_pcie_port lacks a __init
-   annotation or the annotation of dw_pcie_host_init is wrong.
-
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/host/pci-exynos.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/pci-driver.c |    8 ++++----
+ drivers/pci/pci.h        |    2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 3de6bfbbe8e9..3c1ff89829ec 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -511,7 +511,8 @@ static struct pcie_host_ops exynos_pcie_host_ops = {
- 	.host_init = exynos_pcie_host_init,
- };
- 
--static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
-+static int __init add_pcie_port(struct pcie_port *pp,
-+				struct platform_device *pdev)
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index d911e0c..b7850cb 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -580,14 +580,14 @@ static void pci_pm_default_resume(struct pci_dev *pci_dev)
  {
- 	int ret;
+ 	pci_fixup_device(pci_fixup_resume, pci_dev);
  
+-	if (!pci_is_bridge(pci_dev))
++	if (!pci_has_subordinate(pci_dev))
+ 		pci_enable_wake(pci_dev, PCI_D0, false);
+ }
+ 
+ static void pci_pm_default_suspend(struct pci_dev *pci_dev)
+ {
+ 	/* Disable non-bridge devices without PM support */
+-	if (!pci_is_bridge(pci_dev))
++	if (!pci_has_subordinate(pci_dev))
+ 		pci_disable_enabled_device(pci_dev);
+ }
+ 
+@@ -717,7 +717,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 
+ 	if (!pci_dev->state_saved) {
+ 		pci_save_state(pci_dev);
+-		if (!pci_is_bridge(pci_dev))
++		if (!pci_has_subordinate(pci_dev))
+ 			pci_prepare_to_sleep(pci_dev);
+ 	}
+ 
+@@ -971,7 +971,7 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+ 			return error;
+ 	}
+ 
+-	if (!pci_dev->state_saved && !pci_is_bridge(pci_dev))
++	if (!pci_dev->state_saved && !pci_has_subordinate(pci_dev))
+ 		pci_prepare_to_sleep(pci_dev);
+ 
+ 	/*
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6bd0822..65108fc 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -77,7 +77,7 @@ static inline void pci_wakeup_event(struct pci_dev *dev)
+ 	pm_wakeup_event(&dev->dev, 100);
+ }
+ 
+-static inline bool pci_is_bridge(struct pci_dev *pci_dev)
++static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
+ {
+ 	return !!(pci_dev->subordinate);
+ }
 -- 
-1.7.9.5
+1.7.1
+
 
