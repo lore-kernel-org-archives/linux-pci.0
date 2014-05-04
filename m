@@ -1,98 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:56976 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934237AbaEFHEh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 May 2014 03:04:37 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 09/21] iommu/vt-d: change iommu_enable/disable_translation to return void
-Date: Tue,  6 May 2014 15:05:20 +0800
-Message-Id: <1399359932-28972-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:3814 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441AbaEDE3V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 May 2014 00:29:21 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<sparclinux@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	<x86@kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 03/13] PCI: Use new pci_is_bridge() to simplify code
+Date: Sun, 4 May 2014 12:23:38 +0800
+Message-ID: <1399177428-3784-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
+References: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify error handling path by changing iommu_{enable|disable}_translation
-to return void.
+Now we can use new pci_is_bridge() helper function
+to simplify code.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/iommu/intel-iommu.c |   18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
+ drivers/pci/pci-acpi.c  |    8 +-------
+ drivers/pci/probe.c     |    3 +--
+ drivers/pci/setup-bus.c |    4 +---
+ 3 files changed, 3 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 5e865c1265ad..75d7c5e3f77d 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1391,7 +1391,7 @@ static void iommu_disable_protect_mem_regions(struct intel_iommu *iommu)
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
- }
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index f49abef..ca4927b 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -309,13 +309,7 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+ 	bool check_children;
+ 	u64 addr;
  
--static int iommu_enable_translation(struct intel_iommu *iommu)
-+static void iommu_enable_translation(struct intel_iommu *iommu)
- {
- 	u32 sts;
- 	unsigned long flags;
-@@ -1405,10 +1405,9 @@ static int iommu_enable_translation(struct intel_iommu *iommu)
- 		      readl, (sts & DMA_GSTS_TES), sts);
+-	/*
+-	 * pci_is_bridge() is not suitable here, because pci_dev->subordinate
+-	 * is set only after acpi_pci_find_device() has been called for the
+-	 * given device.
+-	 */
+-	check_children = pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE
+-			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
++	check_children = pci_is_bridge(pci_dev);
+ 	/* Please ref to ACPI spec for the syntax of _ADR */
+ 	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
+ 	return acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ef09f5f..f831dd8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1670,8 +1670,7 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
  
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
--	return 0;
- }
+ 	for (pass=0; pass < 2; pass++)
+ 		list_for_each_entry(dev, &bus->devices, bus_list) {
+-			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+-			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
++			if (pci_is_bridge(dev))
+ 				max = pci_scan_bridge(bus, dev, max, pass);
+ 		}
  
--static int iommu_disable_translation(struct intel_iommu *iommu)
-+static void iommu_disable_translation(struct intel_iommu *iommu)
- {
- 	u32 sts;
- 	unsigned long flag;
-@@ -1422,7 +1421,6 @@ static int iommu_disable_translation(struct intel_iommu *iommu)
- 		      readl, (!(sts & DMA_GSTS_TES)), sts);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 138bdd6..e399d00 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1629,9 +1629,7 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
  
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flag);
--	return 0;
- }
- 
- 
-@@ -2875,11 +2873,7 @@ static int __init init_dmars(void)
- 
- 		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
- 		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
--
--		ret = iommu_enable_translation(iommu);
--		if (ret)
--			goto free_iommu;
--
-+		iommu_enable_translation(iommu);
- 		iommu_disable_protect_mem_regions(iommu);
- 	}
- 
-@@ -3577,10 +3571,8 @@ static int init_iommu_hw(void)
- 
- 		iommu->flush.flush_context(iommu, 0, 0, 0,
- 					   DMA_CCMD_GLOBAL_INVL);
--		iommu->flush.flush_iotlb(iommu, 0, 0, 0,
--					 DMA_TLB_GLOBAL_FLUSH);
--		if (iommu_enable_translation(iommu))
--			return 1;
-+		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
-+		iommu_enable_translation(iommu);
- 		iommu_disable_protect_mem_regions(iommu);
- 	}
- 
+ 	down_read(&pci_bus_sem);
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+-		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
+-			if (dev->subordinate)
++		if (pci_is_bridge(dev) && pci_has_subordinate(dev))
+ 				__pci_bus_size_bridges(dev->subordinate,
+ 							 &add_list);
+ 	up_read(&pci_bus_sem);
 -- 
-1.7.10.4
+1.7.1
+
 
