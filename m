@@ -1,46 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marcel Apfelbaum <marcel.a@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com, matthew@wil.cx,
-	mst@redhat.com, marcel.a@redhat.com
-Subject: [PATCH] PCI/shpchp: fix a bus speed issue on hotplug
-Date: Thu,  1 May 2014 17:35:48 +0300
-Message-Id: <1398954948-24219-1-git-send-email-marcel.a@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:64854 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752114AbaEEUUw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 May 2014 16:20:52 -0400
+Subject: [PATCH] PCI: Test for std config alias when testing extended config
+ space
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Mon, 05 May 2014 14:20:51 -0600
+Message-ID: <20140505201835.2466.46125.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a board is added, the shpchp driver checks if there
-is a mismatch between the bridge's adapter and the bus speed.
-If there is, it sets the subordinate speed (if there is no device on it).
+When a PCI-to-PCIe bridge is stacked on a PCIe-to-PCI bridge, we can
+have PCIe endpoints masked by a conventional PCI bus.  This makes the
+extended config space of the PCIe endpoing inaccessible.  The PCIe-to-
+PCI bridge is supposed to handle any type 1 configuration transactions
+where the extended config offset bits are non-zero as an Unsupported
+Request rather than forward it to the secondary interface.  As noted
+here, there are a couple known offenders to this rule.  These bridges
+drop the extended offset bits, resulting in the conventional config
+space being aliased many times across the extended config space.  For
+Intel NICs, this alias often seems to expose a bogus SR-IOV cap.
 
-However, it takes the reference of the board speed from the primary bus
-and not from the subordinate. If the primary bus is PCI and not PCIX/PCIe,
-its speed is not updated and remains 0xff. As a result hotplug fails
-with error: "Speed of bus ff and adapter 0 mismatch".
+Stacking bridges may seem like an uncommon scenario, but note that the
+any conventional PCI slot in a modern PC is already the secondary
+interface of an onboard PCIe-to-PCI bridge.  The user need only add
+a PCI-to-PCIe adapter and PCIe device to encounter this problem.
 
-Fixed that by checking the speed against the subordinate bus.
-
-Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/hotplug/shpchp_ctrl.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/probe.c |   39 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
-index 5849927..6efc2ec 100644
---- a/drivers/pci/hotplug/shpchp_ctrl.c
-+++ b/drivers/pci/hotplug/shpchp_ctrl.c
-@@ -282,8 +282,8 @@ static int board_added(struct slot *p_slot)
- 		return WRONG_BUS_FREQUENCY;
- 	}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ef09f5f..fdb0182 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -984,6 +984,43 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
  
--	bsp = ctrl->pci_dev->bus->cur_bus_speed;
--	msp = ctrl->pci_dev->bus->max_bus_speed;
-+	bsp = ctrl->pci_dev->subordinate->cur_bus_speed;
-+	msp = ctrl->pci_dev->subordinate->max_bus_speed;
  
- 	/* Check if there are other slots or devices on the same bus */
- 	if (!list_empty(&ctrl->pci_dev->subordinate->devices))
--- 
-1.8.3.1
+ /**
++ * pci_ext_cfg_is_aliased - is ext config space just an alias of std config?
++ * @dev: PCI device
++ *
++ * PCI Express to PCI/PCI-X Bridge Specification, rev 1.0, 4.1.4 says that
++ * when forwarding a type1 configuration request the bridge must check that
++ * the extended register address field is zero.  The bridge is not permitted
++ * to forward the transactions and must handle it as an Unsupported Request.
++ * Some bridges do not follow this rule and simply drop the extended register
++ * bits, resulting in the standard config space being aliased, every 256
++ * bytes across the entire configuration space.  Test for this condition by
++ * comparing the first dword of each potential alias to the vendor/device ID.
++ * Known offenders:
++ *   ASM1083/1085 PCIe-to-PCI Reversible Bridge (1b21:1080, rev 01 & 03)
++ *   AMD/ATI SBx00 PCI to PCI Bridge (1002:4384, rev 40)
++ */
++static bool pci_ext_cfg_is_aliased(struct pci_dev *dev)
++{
++#ifdef CONFIG_PCI_QUIRKS
++	int pos;
++	u32 header, tmp;
++
++	pci_read_config_dword(dev, PCI_VENDOR_ID, &header);
++
++	for (pos = PCI_CFG_SPACE_SIZE;
++	     pos < PCI_CFG_SPACE_EXP_SIZE; pos += PCI_CFG_SPACE_SIZE) {
++		if (pci_read_config_dword(dev, pos, &tmp) != PCIBIOS_SUCCESSFUL
++		    || header != tmp)
++			return false;
++	}
++
++	return true;
++#else
++	return false;
++#endif
++}
++
++/**
+  * pci_cfg_space_size - get the configuration space size of the PCI device.
+  * @dev: PCI device
+  *
+@@ -1001,7 +1038,7 @@ static int pci_cfg_space_size_ext(struct pci_dev *dev)
+ 
+ 	if (pci_read_config_dword(dev, pos, &status) != PCIBIOS_SUCCESSFUL)
+ 		goto fail;
+-	if (status == 0xffffffff)
++	if (status == 0xffffffff || pci_ext_cfg_is_aliased(dev))
+ 		goto fail;
+ 
+ 	return PCI_CFG_SPACE_EXP_SIZE;
 
