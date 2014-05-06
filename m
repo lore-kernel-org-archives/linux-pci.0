@@ -1,134 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v4 01/16] PCI: Add DMA alias iterator
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
-Date: Thu, 22 May 2014 17:07:30 -0600
-Message-ID: <20140522230730.2856.39308.stgit@bling.home>
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-References: <20140522230230.2856.40017.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:44822 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754866AbaEFUXM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 16:23:12 -0400
+Received: by mail-ig0-f173.google.com with SMTP id hn18so6768178igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 06 May 2014 13:23:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140506085957.GQ4750@e106497-lin.cambridge.arm.com>
+References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <1398953290.2313.15.camel@dabdike.int.hansenpartnership.com>
+ <CAErSpo7zjXg8xrV7=q36rNp_g573P93HiXTB72Z1cZfjGeeBmg@mail.gmail.com>
+ <20140502111807.GL4750@e106497-lin.cambridge.arm.com> <20140505224240.GA8883@google.com>
+ <20140506085957.GQ4750@e106497-lin.cambridge.arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 6 May 2014 14:22:50 -0600
+Message-ID: <CAErSpo5wrHFv1c3dnKrGdVKbjM6WqqSocKbYA_zHc35Uc=x3gw@mail.gmail.com>
+Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU address
+ to phys_addr_t
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	James Bottomley <jbottomley@parallels.com>,
+	"rdunlap@infradead.org" <rdunlap@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In a mixed PCI/PCI-X/PCI-e topology, bridges can take ownership of
-transactions, replacing the original requester ID with their own.
-Sometimes we just want to know the resulting device or resulting
-alias, sometimes we want each step in the chain.  This iterator
-allows either usage.  When an endpoint is connected via an unbroken
-chain of PCIe switches and root ports, it has no alias and its
-requester ID is visible to the root bus.  When PCI/X get in the way,
-we pick up aliases for bridges.
+On Tue, May 6, 2014 at 2:59 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Mon, May 05, 2014 at 11:42:40PM +0100, Bjorn Helgaas wrote:
+>> On Fri, May 02, 2014 at 12:18:07PM +0100, Liviu Dudau wrote:
+>> > On Thu, May 01, 2014 at 08:05:04PM +0100, Bjorn Helgaas wrote:
 
-The reason why we potentially care about each step in the path is
-because of PCI-X.  PCI-X has the concept of a requester ID, but
-bridges may or may not take ownership of various types of
-transactions.  We therefore leave it to the consumer of this function
-to prune out what they don't care about rather than attempt to flatten
-the alias ourselves.
+>> > > I'm not a CPU
+>> > > person, so I don't understand the usefulness of dma_addr_t as a
+>> > > separate type to hold CPU addresses at which memory-mapped devices can
+>> > > appear.  If that's all it is, why not just use phys_addr_t everywhere
+>> > > and get rid of dma_addr_t altogether?
+>> >
+>> > Because dma_addr_t imposes further restrictions based on what the DMA engine
+>> > can access. You could have a DMA engine that can only access 32bit addresses
+>> > in a 40+ bit CPU addresses system.
+>>
+>> Yes; this is an argument for having separate types for bus addresses
+>> and CPU addresses.  I think dma_addr_t *is* for bus addresses.  I
+>> thought James was suggesting that it was a subset of CPU physical
+>> address space, and that any valid dma_addr_t is also a valid
+>> phys_addr_t.  That doesn't seem right to me.
+>
+> I'm actually more inclined towards James' view. To me the DMA engine is a very
+> specialised CPU that does memcpy(). You can pair it with an IOMMU engine and
+> you can have address translation into virtual space of any size you want, or
+> you can have the engine sitting behind a bus in which case it will use bus
+> addresses. But its uses of addresses is similar to a CPU (whenever you want to
+> call them phys_addr_t or not is a different discussion).
+>
+> ARM has a PL330 DMA engine. It's a SoC component and usually doesn't get attached
+> to any PCI bus. It uses a system bus called AXI in the same way a CPU would. So
+> for that having a *bus* address does not fit with the way hardware is connected.
+>
+> My mental picture for this discussion is a hypotetical DMA engine that sits on
+> a PCI bus but has access to the system memory that the CPU can see (sort of like
+> a DMA engine inside a host bridge). Would you use a phys_addr_t when programming
+> the device or a bus address? I would say the former, because you know how to
+> translate that into bus addresses and back in the host bridge.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/search.c |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |    4 +++
- 2 files changed, 74 insertions(+)
+I don't think the physical location of the DMA engine is important.  I
+think what matters is how you program it.  If it fully participates in
+the single shared virtual address space used by the main CPUs, i.e.,
+it uses the same page tables and TLB management and is cache-coherent
+with them, then you'd probably give it virtual source and destination
+addresses.  But my guess is the DMA engine operates on some flavor of
+physical address and is outside the coherency domain.  In that case,
+you probably have to allocate wired buffers to avoid faults, and you
+probably have to use the DMA API (DMA_TO_DEVICE, DMA_FROM_DEVICE,
+etc.) to manage cache coherency.  The DMA API gives you back a bus
+address just like it does for ordinary devices, even if the value of
+that address happens to be identical to the CPU physical address.
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 4a1b972..5601cdb 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -18,6 +18,76 @@ DECLARE_RWSEM(pci_bus_sem);
- EXPORT_SYMBOL_GPL(pci_bus_sem);
- 
- /*
-+ * pci_for_each_dma_alias - Iterate over DMA aliases for a device
-+ * @pdev: starting downstream device
-+ * @fn: function to call for each alias
-+ * @data: opaque data to pass to @fn
-+ *
-+ * Starting @pdev, walk up the bus calling @fn for each possible alias
-+ * of @pdev at the root bus.
-+ */
-+int pci_for_each_dma_alias(struct pci_dev *pdev,
-+			   int (*fn)(struct pci_dev *pdev,
-+				     u16 alias, void *data), void *data)
-+{
-+	struct pci_bus *bus;
-+	int ret;
-+
-+	ret = fn(pdev, PCI_DEVID(pdev->bus->number, pdev->devfn), data);
-+	if (ret)
-+		return ret;
-+
-+	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
-+		struct pci_dev *tmp;
-+
-+		/* Skip virtual buses */
-+		if (!bus->self)
-+			continue;
-+
-+		tmp = bus->self;
-+
-+		/*
-+		 * PCIe-to-PCI/X bridges alias transactions from downstream
-+		 * devices using the subordinate bus number (PCI Express to
-+		 * PCI/PCI-X Bridge Spec, rev 1.0, sec 2.3).  For all cases
-+		 * where the upstream bus is PCI/X we alias to the bridge
-+		 * (there are various conditions in the previous reference
-+		 * where the bridge may take ownership of transactions, even
-+		 * when the secondary interface is PCI-X).
-+		 */
-+		if (pci_is_pcie(tmp)) {
-+			switch (pci_pcie_type(tmp)) {
-+			case PCI_EXP_TYPE_ROOT_PORT:
-+			case PCI_EXP_TYPE_UPSTREAM:
-+			case PCI_EXP_TYPE_DOWNSTREAM:
-+				continue;
-+			case PCI_EXP_TYPE_PCI_BRIDGE:
-+				ret = fn(tmp,
-+					 PCI_DEVID(tmp->subordinate->number,
-+						   PCI_DEVFN(0, 0)), data);
-+				if (ret)
-+					return ret;
-+				continue;
-+			case PCI_EXP_TYPE_PCIE_BRIDGE:
-+				ret = fn(tmp,
-+					 PCI_DEVID(tmp->bus->number,
-+						   tmp->devfn), data);
-+				if (ret)
-+					return ret;
-+				continue;
-+			}
-+		} else {
-+			ret = fn(tmp, PCI_DEVID(tmp->bus->number, tmp->devfn),
-+				 data);
-+			if (ret)
-+				return ret;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
-+/*
-  * find the upstream PCIe-to-PCI bridge of a PCI device
-  * if the device is PCIE, return NULL
-  * if the device isn't connected to a PCIe bridge (that is its parent is a
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..14b074b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1795,6 +1795,10 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
- }
- #endif
- 
-+int pci_for_each_dma_alias(struct pci_dev *pdev,
-+			   int (*fn)(struct pci_dev *pdev,
-+				     u16 alias, void *data), void *data);
-+
- /**
-  * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
-  * @pdev: the PCI device
+Should that bus address be a phys_addr_t instead of a dma_addr_t?  I
+dunno.  We have a pretty long history of using dma_addr_t to hold bus
+addresses, and I don't see a compelling reason to change, and the
+separate type does help me understand the code.
 
+I'll write some text about dma_addr_t in the docs when I repost these
+patches and maybe we can converge on something.
+
+Bjorn
