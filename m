@@ -1,49 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:5438 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753270AbaEDEbm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 May 2014 00:31:42 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	<x86@kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 12/13] PCI, pcmcia: Use new pci_is_bridge() to simplify code
-Date: Sun, 4 May 2014 12:23:47 +0800
-Message-ID: <1399177428-3784-13-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
-References: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:34948 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933838AbaEFHDd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 03:03:33 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 00/21] Enable support of Intel DMAR device hotplug
+Date: Tue,  6 May 2014 15:05:11 +0800
+Message-Id: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we can use new pci_is_bridge() helper function
-to simplify code.
+When hot plugging a descrete IOH or a physical processor with embedded
+IIO, we need to handle DMAR(or IOMMU) unit in the PCIe host bridge if
+DMAR is in use. This patch set tries to enhance current DMAR/IOMMU/IR
+drivers to support hotplug and is based on latest mainstream kernel
+v3.15-rc3-177-g0384dcae2b18.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pcmcia/cardbus.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+Patch 1-13 are bugfixes and code improvement for current drivers.
+Patch 14-17 enhances DMAR framework to support hotplug
+Patch 18 enhances Intel interrupt remapping driver to support hotplug
+Patch 19 enhances error handling in Intel IR driver
+Patch 20 enhance Intel IOMMU to support hotplug
+Patch 21 enhance ACPI pci_root driver to handle DMAR units
 
-diff --git a/drivers/pcmcia/cardbus.c b/drivers/pcmcia/cardbus.c
-index 8bde619..4fe4cc4 100644
---- a/drivers/pcmcia/cardbus.c
-+++ b/drivers/pcmcia/cardbus.c
-@@ -78,8 +78,7 @@ int __ref cb_alloc(struct pcmcia_socket *s)
- 	max = bus->busn_res.start;
- 	for (pass = 0; pass < 2; pass++)
- 		list_for_each_entry(dev, &bus->devices, bus_list)
--			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
--			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
-+			if (pci_is_bridge(dev))
- 				max = pci_scan_bridge(bus, dev, max, pass);
- 
- 	/*
+This patch set has been tested on Intel development machine.
+Appreciate any comments and tests.
+
+V1->V2:
+1) enhance the way to simplify intel_unmap_sg()
+2) rename dmar_device_hotplug() to dmar_device_add/remove()
+3) coding style improvment
+
+Best Regards!
+
+Jiang Liu (21):
+  iommu/vt-d: match segment number when searching for dev_iotlb capable
+    devices
+  iommu/vt-d: use correct domain id to flush virtual machine domains
+  iommu/vt-d: introduce helper functions to improve code readability
+  iommu/vt-d: introduce helper functions to make code symmetric for
+    readability
+  iommu/vt-d: only dynamically allocate domain id for virtual domains
+  iommu/vt-d: fix possible invalid memory access caused by
+    free_dmar_iommu()
+  iommu/vt-d: avoid freeing virtual machine domain in free_dmar_iommu()
+  iommu/VT-d: simplify include/linux/dmar.h
+  iommu/vt-d: change iommu_enable/disable_translation to return void
+  iommu/vt-d: simplify intel_unmap_sg() and kill duplicated code
+  iommu/vt-d: introduce helper domain_pfn_within_range() to simplify
+    code
+  iommu/vt-d: introduce helper function iova_size() to improve code
+    readability
+  iommu/vt-d: fix bug in computing domain's iommu_snooping flag
+  IOMMU/vt-d: introduce helper function dmar_walk_resources()
+  iommu/vt-d: dynamically allocate and free seq_id for DMAR units
+  iommu/vt-d: implement DMAR unit hotplug framework
+  iommu/vt-d: search _DSM method for DMAR hotplug
+  iommu/vt-d: enhance intel_irq_remapping driver to support DMAR unit
+    hotplug
+  iommu/vt-d: enhance error recovery in function
+    intel_enable_irq_remapping()
+  iommu/vt-d: enhance intel-iommu driver to support DMAR unit hotplug
+  pci, ACPI, iommu: enhance pci_root to support DMAR device hotplug
+
+ drivers/acpi/pci_root.c             |   16 +-
+ drivers/iommu/dmar.c                |  531 +++++++++++++++++++------
+ drivers/iommu/intel-iommu.c         |  725 +++++++++++++++++++++--------------
+ drivers/iommu/intel_irq_remapping.c |  233 ++++++++---
+ include/linux/dmar.h                |   86 +++--
+ include/linux/iova.h                |    5 +
+ 6 files changed, 1105 insertions(+), 491 deletions(-)
+
 -- 
-1.7.1
-
+1.7.10.4
 
