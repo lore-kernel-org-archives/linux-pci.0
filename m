@@ -1,95 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:2479 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:54817 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752410AbaEBQlT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 2 May 2014 12:41:19 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 1/2] PCI: Device driver reset notification
-Date: Fri,  2 May 2014 10:40:42 -0600
-Message-Id: <1399048843-9376-1-git-send-email-keith.busch@intel.com>
+	id S934220AbaEFHEb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 03:04:31 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 06/21] iommu/vt-d: fix possible invalid memory access caused by free_dmar_iommu()
+Date: Tue,  6 May 2014 15:05:17 +0800
+Message-Id: <1399359932-28972-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Notifies a pci device driver when its device's access is about to be
-disabled for an impending reset attempt, then after the attempt completes
-and device access is restored.
+Static identity and virtual machine domains may be cached in
+iommu->domain_ids array after corresponding IOMMUs have been removed
+from domain->iommu_bmp. So we should check domain->iommu_bmp before
+decreasing domain->iommu_count in function free_dmar_iommu(), otherwise
+it may cause free of inuse domain data structure.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
-v1 -> v2:
+ drivers/iommu/intel-iommu.c |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-Call the reset notification in all cases before device access is disabled
-and after device access is restored.
-
- drivers/pci/pci.c   |   21 +++++++++++++++++++++
- include/linux/pci.h |    3 +++
- 2 files changed, 24 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7325d43..43d87b2 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3305,8 +3305,27 @@ static void pci_dev_unlock(struct pci_dev *dev)
- 	pci_cfg_access_unlock(dev);
- }
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 0ab0cd236b16..1f10fcd1c696 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -425,6 +425,8 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
+ 				       struct device *dev);
+ static void iommu_detach_dependent_devices(struct intel_iommu *iommu,
+ 					   struct device *dev);
++static int domain_detach_iommu(struct dmar_domain *domain,
++			       struct intel_iommu *iommu);
  
-+/**
-+ * pci_reset_notify - notify device driver of reset
-+ * @dev: device to be notified of reset
-+ * @prepare: 'true' if device is about to be reset; 'false' if reset attempt
-+ *           completed
-+ *
-+ * Must be called prior to device access being disabled and after device
-+ * access is restored.
-+ */
-+static void pci_reset_notify(struct pci_dev *dev, bool prepare)
-+{
-+	const struct pci_error_handlers *err_handler =
-+			dev->driver ? dev->driver->err_handler : NULL;
-+	if (err_handler && err_handler->reset_notify)
-+		err_handler->reset_notify(dev, prepare);
-+}
-+
- static void pci_dev_save_and_disable(struct pci_dev *dev)
+ #ifdef CONFIG_INTEL_IOMMU_DEFAULT_ON
+ int dmar_disabled = 0;
+@@ -1467,8 +1469,7 @@ static int iommu_init_domains(struct intel_iommu *iommu)
+ static void free_dmar_iommu(struct intel_iommu *iommu)
  {
-+	pci_reset_notify(dev, true);
-+
- 	/*
- 	 * Wake-up device prior to save.  PM registers default to D0 after
- 	 * reset and a simple register restore doesn't reliably return
-@@ -3328,6 +3347,7 @@ static void pci_dev_save_and_disable(struct pci_dev *dev)
- static void pci_dev_restore(struct pci_dev *dev)
- {
- 	pci_restore_state(dev);
-+	pci_reset_notify(dev, false);
- }
+ 	struct dmar_domain *domain;
+-	int i, count;
+-	unsigned long flags;
++	int i;
  
- static int pci_dev_reset(struct pci_dev *dev, int probe)
-@@ -3344,6 +3364,7 @@ static int pci_dev_reset(struct pci_dev *dev, int probe)
+ 	if ((iommu->domains) && (iommu->domain_ids)) {
+ 		for_each_set_bit(i, iommu->domain_ids, cap_ndoms(iommu->cap)) {
+@@ -1481,11 +1482,7 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
  
- 	return rc;
- }
-+
- /**
-  * __pci_reset_function - reset a PCI device function
-  * @dev: PCI device to reset
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..31c4309 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -603,6 +603,9 @@ struct pci_error_handlers {
- 	/* PCI slot has been reset */
- 	pci_ers_result_t (*slot_reset)(struct pci_dev *dev);
- 
-+	/* PCI function reset prepare or completed */
-+	void (*reset_notify)(struct pci_dev *dev, bool prepare);
-+
- 	/* Device driver may resume normal operations */
- 	void (*resume)(struct pci_dev *dev);
- };
+ 			domain = iommu->domains[i];
+ 			clear_bit(i, iommu->domain_ids);
+-
+-			spin_lock_irqsave(&domain->iommu_lock, flags);
+-			count = --domain->iommu_count;
+-			spin_unlock_irqrestore(&domain->iommu_lock, flags);
+-			if (count == 0)
++			if (domain_detach_iommu(domain, iommu) == 0)
+ 				domain_exit(domain);
+ 		}
+ 	}
 -- 
 1.7.10.4
 
