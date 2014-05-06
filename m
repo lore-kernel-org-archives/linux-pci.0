@@ -1,101 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:55334 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753540AbaEHPWC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 11:22:02 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from mga03.intel.com ([143.182.124.21]:53954 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934235AbaEFHEf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 03:04:35 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <damm@opensource.se>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>
-Subject: Re: [PATCH] pci: rcar host needs OF
-Date: Thu, 08 May 2014 17:21:54 +0200
-Message-ID: <9614403.Lyniq7F3TJ@wuerfel>
-In-Reply-To: <CAMuHMdWBzBneDqyDxK5HU3Bt_5CyRfTM_f_6YGJHokG_v17_sw@mail.gmail.com>
-References: <1399560433-1402630-1-git-send-email-arnd@arndb.de> <536B9D78.5000602@codethink.co.uk> <CAMuHMdWBzBneDqyDxK5HU3Bt_5CyRfTM_f_6YGJHokG_v17_sw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 12/21] iommu/vt-d: introduce helper function iova_size() to improve code readability
+Date: Tue,  6 May 2014 15:05:23 +0800
+Message-Id: <1399359932-28972-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 08 May 2014 17:16:32 Geert Uytterhoeven wrote:
-> On Thu, May 8, 2014 at 5:06 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
-> > On 08/05/14 15:56, Arnd Bergmann wrote:
-> >>
-> >> The pci-rcar driver is enabled for compile tests, and this has
-> >> now shown that the driver cannot build without CONFIG_OF,
-> >> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
-> >> interrupt mapping when possible":
-> >>
-> >> drivers/built-in.o: In function `rcar_pci_map_irq':
-> >> :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
-> >>
-> >> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: Magnus Damm <damm@opensource.se>
-> >> Cc: linux-pci@vger.kernel.org
-> >> Cc: linux-sh@vger.kernel.org
-> >> ---
-> >>   drivers/pci/host/Kconfig | 2 +-
-> >>   1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> >> index fbbef0b..4675f47 100644
-> >> --- a/drivers/pci/host/Kconfig
-> >> +++ b/drivers/pci/host/Kconfig
-> >> @@ -27,7 +27,7 @@ config PCI_TEGRA
-> >>
-> >>   config PCI_RCAR_GEN2
-> >>         bool "Renesas R-Car Gen2 Internal PCI controller"
-> >> -       depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
-> >> +       depends on ARCH_SHMOBILE || (ARM && OF && COMPILE_TEST)
-> >>         help
-> >>           Say Y here if you want internal PCI support on R-Car Gen2 SoC.
-> >>           There are 3 internal PCI controllers available with a single
-> >>
-> >
-> > This driver /should/ be able to be built for just the platform case
-> > so it sounds like f8f2fe7355fb stopped this but no-one has yet to
-> > notice.
-> 
-> You mean include/linux/of_pci.h should provide a dummy version of
-> of_irq_parse_and_map_pci() returning 0 in case OF=n?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |    7 +++----
+ include/linux/iova.h        |    5 +++++
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
-Good idea, I'll give this patch some testing in the randconfig builder,
-replacing the one above.
-
-	Arnd
-
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 1a1f5ff..b6f2621 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -7,7 +7,6 @@
- struct pci_dev;
- struct of_phandle_args;
- int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq);
--int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 7b54f4a08bb9..0ebea100108f 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3116,10 +3116,10 @@ static void flush_unmaps(void)
+ 			/* On real hardware multiple invalidations are expensive */
+ 			if (cap_caching_mode(iommu->cap))
+ 				iommu_flush_iotlb_psi(iommu, domain->id,
+-					iova->pfn_lo, iova->pfn_hi - iova->pfn_lo + 1,
++					iova->pfn_lo, iova_size(iova),
+ 					!deferred_flush[i].freelist[j], 0);
+ 			else {
+-				mask = ilog2(mm_to_dma_pfn(iova->pfn_hi - iova->pfn_lo + 1));
++				mask = ilog2(mm_to_dma_pfn(iova_size(iova)));
+ 				iommu_flush_dev_iotlb(deferred_flush[i].domain[j],
+ 						(uint64_t)iova->pfn_lo << PAGE_SHIFT, mask);
+ 			}
+@@ -3902,8 +3902,7 @@ static int intel_iommu_memory_notifier(struct notifier_block *nb,
+ 			rcu_read_lock();
+ 			for_each_active_iommu(iommu, drhd)
+ 				iommu_flush_iotlb_psi(iommu, si_domain->id,
+-					iova->pfn_lo,
+-					iova->pfn_hi - iova->pfn_lo + 1,
++					iova->pfn_lo, iova_size(iova),
+ 					!freelist, 0);
+ 			rcu_read_unlock();
+ 			dma_free_pagelist(freelist);
+diff --git a/include/linux/iova.h b/include/linux/iova.h
+index 3277f4711349..19e81d5ccb6d 100644
+--- a/include/linux/iova.h
++++ b/include/linux/iova.h
+@@ -34,6 +34,11 @@ struct iova_domain {
+ 	unsigned long	dma_32bit_pfn;
+ };
  
- struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
-@@ -19,11 +18,14 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_pci_msi_chip_add(struct msi_chip *chip);
- void of_pci_msi_chip_remove(struct msi_chip *chip);
- struct msi_chip *of_pci_find_msi_chip_by_node(struct device_node *of_node);
-+int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- #else
- static inline int of_pci_msi_chip_add(struct msi_chip *chip) { return -EINVAL; }
- static inline void of_pci_msi_chip_remove(struct msi_chip *chip) { }
- static inline struct msi_chip *
- of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL; }
-+static inline int
-+of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin) { return 0; }
- #endif
- 
- #endif
++static inline unsigned long iova_size(struct iova *iova)
++{
++	return iova->pfn_hi - iova->pfn_lo + 1;
++}
++
+ struct iova *alloc_iova_mem(void);
+ void free_iova_mem(struct iova *iova);
+ void free_iova(struct iova_domain *iovad, unsigned long pfn);
+-- 
+1.7.10.4
 
