@@ -1,80 +1,427 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31097 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751404AbaE1UyF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 May 2014 16:54:05 -0400
-Subject: [PATCH v4.1 05/16] PCI: quirk dma_alias_devfn for Marvell devices
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
-Date: Wed, 28 May 2014 14:54:00 -0600
-Message-ID: <20140528205242.27872.54432.stgit@bling.home>
-In-Reply-To: <20140522230755.2856.19714.stgit@bling.home>
-References: <20140522230755.2856.19714.stgit@bling.home>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:51226 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751369AbaEFSir (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 14:38:47 -0400
+Date: Tue, 6 May 2014 19:38:12 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [RESEND PATCH 2/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140506183811.GI13677@arm.com>
+References: <1399048876-11862-1-git-send-email-will.deacon@arm.com>
+ <20140502184421.GF14645@arm.com>
+ <20140502190318.GE3179@obsidianresearch.com>
+ <12080862.flQZBvPba4@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <12080862.flQZBvPba4@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Several Marvell devices and a JMicron device have a similar DMA
-requester ID problem to Ricoh, except they use function 1 as the
-PCIe requester ID.  Add a quirk for these to populate the DMA
-alias with the correct devfn.
+On Fri, May 02, 2014 at 08:29:30PM +0100, Arnd Bergmann wrote:
+> On Friday 02 May 2014 13:03:18 Jason Gunthorpe wrote:
+> > > Given that the idea was to separate setup() and probe(), I didn't want to
+> > > make the assumption that I was called in probe context.
+> > 
+> > It doesn't matter for this driver, but look at mvebu, you cannot move
+> > the interrupt, gpio and clock acquisitions from probe() to setup(), as
+> > they could all trigger a defered probe. Better to be consistent,
+> > especially if this is the golden reference driver we want everyone to
+> > follow (sorry Will)
+> 
+> Fair enough. It shouldn't be hard to move.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+[...]
 
-v4.1: minor commitlog tweak, no code chage
+> It should be fine to have a trivial setup function like this
+> 
+> static int gen_pci_setup(int nr, struct pci_sys_data *sys)
+> {
+> 	struct gen_pci *pci = sys->private_data;
+> 	list_splice_init(pci->resource, sys->resources);
+> 	return 1;
+> }
+> 
+> and do everything in probe().
 
- drivers/pci/quirks.c |   36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+Ok, I've respun the patch and included it below. It's turned probe() into a
+bit of a beast, but the cleanup is a lot simpler (unless I'm missing
+something).
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index bc8ebd9..923689f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3349,6 +3349,42 @@ static void quirk_dma_func0_alias(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe476, quirk_dma_func0_alias);
- 
-+static void quirk_dma_func1_alias(struct pci_dev *dev)
+Will
+
+--->8
+
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+new file mode 100644
+index 000000000000..199a8795cb77
+--- /dev/null
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -0,0 +1,361 @@
++/*
++ * Simple, generic PCI host controller driver targetting firmware-initialised
++ * systems and virtual machines (e.g. the PCI emulation provided by kvmtool).
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ *
++ * Copyright (C) 2014 ARM Limited
++ *
++ * Author: Will Deacon <will.deacon@arm.com>
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/platform_device.h>
++
++struct gen_pci_cfg_bus_ops {
++	u32 bus_shift;
++	void __iomem *(*map_bus)(struct pci_bus *, unsigned int, int);
++};
++
++struct gen_pci_cfg_windows {
++	struct resource				res;
++	struct resource				bus_range;
++	void __iomem				**win;
++
++	const struct gen_pci_cfg_bus_ops	*ops;
++};
++
++struct gen_pci {
++	struct pci_host_bridge			host;
++	struct gen_pci_cfg_windows		cfg;
++	struct list_head			resources;
++};
++
++static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
++					     unsigned int devfn,
++					     int where)
 +{
-+	if (PCI_FUNC(dev->devfn) != 1) {
-+		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 1);
-+		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-+	}
++	struct pci_sys_data *sys = bus->sysdata;
++	struct gen_pci *pci = sys->private_data;
++	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
++
++	return pci->cfg.win[idx] + ((devfn << 8) | where);
 +}
 +
-+/*
-+ * Marvell 88SE9123 uses function 1 as the requester ID for DMA.  In some
-+ * SKUs function 1 is present and is a legacy IDE controller, in other
-+ * SKUs this function is not present, making this a ghost requester.
-+ * https://bugzilla.kernel.org/show_bug.cgi?id=42679
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9123,
-+			 quirk_dma_func1_alias);
-+/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c14 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9130,
-+			 quirk_dma_func1_alias);
-+/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c47 + c57 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9172,
-+			 quirk_dma_func1_alias);
-+/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c59 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x917a,
-+			 quirk_dma_func1_alias);
-+/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c46 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
-+			 quirk_dma_func1_alias);
-+/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c49 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9230,
-+			 quirk_dma_func1_alias);
-+/* https://bugs.gentoo.org/show_bug.cgi?id=497630 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
-+			 PCI_DEVICE_ID_JMICRON_JMB388_ESD,
-+			 quirk_dma_func1_alias);
++static struct gen_pci_cfg_bus_ops gen_pci_cfg_cam_bus_ops = {
++	.bus_shift	= 16,
++	.map_bus	= gen_pci_map_cfg_bus_cam,
++};
 +
- static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
- {
- 	if (!PCI_FUNC(dev->devfn))
-
++static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
++					      unsigned int devfn,
++					      int where)
++{
++	struct pci_sys_data *sys = bus->sysdata;
++	struct gen_pci *pci = sys->private_data;
++	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
++
++	return pci->cfg.win[idx] + ((devfn << 12) | where);
++}
++
++static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
++	.bus_shift	= 20,
++	.map_bus	= gen_pci_map_cfg_bus_ecam,
++};
++
++static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
++				int where, int size, u32 *val)
++{
++	void __iomem *addr;
++	struct pci_sys_data *sys = bus->sysdata;
++	struct gen_pci *pci = sys->private_data;
++
++	addr = pci->cfg.ops->map_bus(bus, devfn, where);
++
++	switch (size) {
++	case 1:
++		*val = readb(addr);
++		break;
++	case 2:
++		*val = readw(addr);
++		break;
++	default:
++		*val = readl(addr);
++	}
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
++				 int where, int size, u32 val)
++{
++	void __iomem *addr;
++	struct pci_sys_data *sys = bus->sysdata;
++	struct gen_pci *pci = sys->private_data;
++
++	addr = pci->cfg.ops->map_bus(bus, devfn, where);
++
++	switch (size) {
++	case 1:
++		writeb(val, addr);
++		break;
++	case 2:
++		writew(val, addr);
++		break;
++	default:
++		writel(val, addr);
++	}
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static struct pci_ops gen_pci_ops = {
++	.read	= gen_pci_config_read,
++	.write	= gen_pci_config_write,
++};
++
++static int gen_pci_calc_io_offset(struct device *dev,
++				  struct of_pci_range *range,
++				  struct resource *res,
++				  resource_size_t *offset)
++{
++	static atomic_t wins = ATOMIC_INIT(0);
++	int err, idx, max_win;
++	unsigned int window;
++
++	if (!PAGE_ALIGNED(range->cpu_addr))
++		return -EINVAL;
++
++	max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
++	idx = atomic_inc_return(&wins);
++	if (idx >= max_win)
++		return -ENOSPC;
++
++	window = (idx - 1) * SZ_64K;
++	err = pci_ioremap_io(window, range->cpu_addr);
++	if (err)
++		return err;
++
++	of_pci_range_to_resource(range, dev->of_node, res);
++	res->start = window;
++	res->end = res->start + range->size - 1;
++	*offset = window - range->pci_addr;
++	return 0;
++}
++
++static int gen_pci_calc_mem_offset(struct device *dev,
++				   struct of_pci_range *range,
++				   struct resource *res,
++				   resource_size_t *offset)
++{
++	of_pci_range_to_resource(range, dev->of_node, res);
++	*offset = range->cpu_addr - range->pci_addr;
++	return 0;
++}
++
++static const struct of_device_id gen_pci_of_match[] = {
++	{ .compatible = "pci-host-cam-generic",
++	  .data = &gen_pci_cfg_cam_bus_ops },
++
++	{ .compatible = "pci-host-ecam-generic",
++	  .data = &gen_pci_cfg_ecam_bus_ops },
++
++	{ },
++};
++MODULE_DEVICE_TABLE(of, gen_pci_of_match);
++
++static int gen_pci_setup(int nr, struct pci_sys_data *sys)
++{
++	struct gen_pci *pci = sys->private_data;
++	list_splice_init(&pci->resources, &sys->resources);
++	return 1;
++}
++
++static int gen_pci_probe(struct platform_device *pdev)
++{
++	struct gen_pci *pci;
++	int err, res_valid;
++	struct pci_host_bridge_window *win;
++	struct resource *bus_range;
++	resource_size_t busn;
++	const char *type;
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	struct hw_pci hw;
++	const struct of_device_id *of_id;
++	const int *prop;
++	u8 bus_max;
++	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
++
++	if (!dev->of_node)
++		return -ENODEV;
++
++	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
++	if (!pci)
++		return -ENOMEM;
++
++	pci->host.dev.parent = dev;
++	hw = (struct hw_pci) {
++		.nr_controllers	= 1,
++		.private_data	= (void **)&pci,
++		.setup		= gen_pci_setup,
++		.map_irq	= of_irq_parse_and_map_pci,
++		.ops		= &gen_pci_ops,
++	};
++
++	type = of_get_property(np, "device_type", NULL);
++	if (!type || strcmp(type, "pci")) {
++		dev_err(dev, "invalid \"device_type\" %s\n", type);
++		return -EINVAL;
++	}
++
++	if (of_pci_range_parser_init(&parser, np)) {
++		dev_err(dev, "missing \"ranges\" property\n");
++		return -EINVAL;
++	}
++
++	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
++	if (prop) {
++		if (*prop)
++			pci_add_flags(PCI_PROBE_ONLY);
++		else
++			pci_clear_flags(PCI_PROBE_ONLY);
++	}
++
++	if (of_pci_parse_bus_range(np, &pci->cfg.bus_range))
++		pci->cfg.bus_range = (struct resource) {
++			.name	= np->name,
++			.start	= 0,
++			.end	= 0xff,
++			.flags	= IORESOURCE_BUS,
++		};
++
++	err = of_address_to_resource(np, 0, &pci->cfg.res);
++	if (err) {
++		dev_err(dev, "missing \"reg\" property\n");
++		return err;
++	}
++
++	pci->cfg.win = devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
++				    sizeof(*pci->cfg.win), GFP_KERNEL);
++	if (!pci->cfg.win)
++		return -ENOMEM;
++
++	of_id = of_match_node(gen_pci_of_match, np);
++	pci->cfg.ops = of_id->data;
++	INIT_LIST_HEAD(&pci->host.windows);
++	INIT_LIST_HEAD(&pci->resources);
++
++	/* Limit the bus-range to fit within reg */
++	bus_max = pci->cfg.bus_range.start +
++		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
++	pci->cfg.bus_range.end = min_t(resource_size_t, pci->cfg.bus_range.end,
++				       bus_max);
++
++	/* Create and register resources from the ranges property */
++	res_valid = 0;
++	for_each_of_pci_range(&parser, &range) {
++		struct resource *parent, *res;
++		resource_size_t offset;
++		u32 restype = range.flags & IORESOURCE_TYPE_BITS;
++
++		res = devm_kmalloc(dev, sizeof(*res), GFP_KERNEL);
++		if (!res) {
++			err = -ENOMEM;
++			goto out_release_res;
++		}
++
++		switch (restype) {
++		case IORESOURCE_IO:
++			parent = &ioport_resource;
++			err = gen_pci_calc_io_offset(dev, &range, res, &offset);
++			break;
++		case IORESOURCE_MEM:
++			parent = &iomem_resource;
++			err = gen_pci_calc_mem_offset(dev, &range, res, &offset);
++			res_valid |= !(res->flags & IORESOURCE_PREFETCH || err);
++			break;
++		default:
++			err = -EINVAL;
++			continue;
++		}
++
++		if (err) {
++			dev_warn(dev,
++				 "error %d: failed to add resource [type 0x%x, %lld bytes]\n",
++				 err, restype, range.size);
++			continue;
++		}
++
++		err = request_resource(parent, res);
++		if (err)
++			goto out_release_res;
++
++		pci_add_resource_offset(&pci->resources, res, offset);
++	}
++
++	if (!res_valid) {
++		dev_err(dev, "non-prefetchable memory resource required\n");
++		err = -EINVAL;
++		goto out_release_res;
++	}
++
++	/* Map our Configuration Space windows */
++	err = -ENOMEM;
++	if (!devm_request_mem_region(dev, pci->cfg.res.start,
++				     resource_size(&pci->cfg.res),
++				     "Configuration Space"))
++		goto out_release_res;
++
++	bus_range = &pci->cfg.bus_range;
++	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
++		u32 idx = busn - bus_range->start;
++		u32 sz = 1 << pci->cfg.ops->bus_shift;
++
++		pci->cfg.win[idx] = devm_ioremap(dev,
++						 pci->cfg.res.start + busn * sz,
++						 sz);
++		if (!pci->cfg.win[idx])
++			goto out_release_res;
++	}
++
++	/* Register bus resource */
++	pci_add_resource(&pci->resources, bus_range);
++	pci_common_init_dev(dev, &hw);
++	return 0;
++
++out_release_res:
++	list_for_each_entry(win, &pci->resources, list)
++		release_resource(win->res);
++
++	pci_free_resource_list(&pci->resources);
++	return err;
++}
++
++static struct platform_driver gen_pci_driver = {
++	.driver = {
++		.name = "pci-host-generic",
++		.owner = THIS_MODULE,
++		.of_match_table = gen_pci_of_match,
++	},
++	.probe = gen_pci_probe,
++};
++module_platform_driver(gen_pci_driver);
++
++MODULE_DESCRIPTION("Generic PCI host driver");
++MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
++MODULE_LICENSE("GPLv2");
