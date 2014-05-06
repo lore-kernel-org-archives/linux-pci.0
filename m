@@ -1,90 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0141.outbound.protection.outlook.com ([207.46.163.141]:11944
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751632AbaEGS7T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 May 2014 14:59:19 -0400
-From: <suravee.suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	Borislav Petkov <bp@suse.de>,
-	"Robert Richter" <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V3 2/3] ACPI/PCI: Warn if we have to "guess" host bridge node information
-Date: Wed, 7 May 2014 13:58:46 -0500
-Message-ID: <1399489127-6961-3-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:54280 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934364AbaEFHFG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 03:05:06 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 17/21] iommu/vt-d: search _DSM method for DMAR hotplug
+Date: Tue,  6 May 2014 15:05:28 +0800
+Message-Id: <1399359932-28972-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Myron Stowe <myron.stowe@redhat.com>
+According to Intel VT-d specification, _DSM method to support DMAR
+hotplug should exist directly under corresponding ACPI object
+representing PCI host bridge. But some BIOSes doesn't conform to
+this, so search for _DSM method in the subtree starting from the
+ACPI object representing the PCI host bridge.
 
-The vast majority of platforms are not supplying ACPI _PXM (proximity)
-information corresponding to host bridge (PNP0A03/PNP0A08) devices
-resulting in sysfs "numa_node" values of -1 (NUMA_NO_NODE) [1]:
-  # for i in /sys/devices/pci0000\:00/*/numa_node; do cat $i; done | uniq
-  -1
-
-  # find /sys/ -name "numa_node" | while read fname; do cat $fname; \
-    done | uniq
-  -1
-
-AMD based platforms provide a fall-back for this situation via amd_bus.c.
-These platforms snoop out the information by directly reading specific
-registers from the Northbridge and caching them via 'alloc_pci_root_info'.
-
-Later during boot processing when host bridges are discovered -
-'pci_acpi_scan_root' - the kernel looks for their corresponding ACPI _PXM
-method - drivers/acpi/numa.c::acpi_get_node().  If the BIOS supplied a
-_PXM method then that node (proximity) value is associated.  If the BIOS
-did not supply a _PXM method *and* the platform is AMD based, the
-fall-back cached values obtained directly from the Northbridge are used;
-otherwise, "NUMA_NO_NODE" is associated.
-
-There are a number of issues with this fall-back mechanism the most
-notable being that amd_bus.c extracts a 3-bit number from a CPU register
-and uses it as the node number.  The node numbers used by Linux are
-logical and there's no reason they need to be identical to settings in the
-CPU registers.  So if we have some node information obtained in the normal
-way (from _PXM, SLIT, SRAT, etc.) and some from amd_bus.c, there's no
-reason to believe they will be compatible.
-
-This patch warns when this situation occurs:
-  pci_root PNP0A08:00: [Firmware Bug]: no _PXM; falling back to node 0 from hardware (may be inconsistent with ACPI node numbers)
-
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=72051
-
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/pci/acpi.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/iommu/dmar.c |   35 +++++++++++++++++++++++++++++++----
+ 1 file changed, 31 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 01edac6..5075371 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -489,8 +489,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	}
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 2006e1cd8c0f..a1b436b105a0 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -1921,21 +1921,48 @@ static int dmar_hotplug_remove(acpi_handle handle)
+ 	return ret;
+ }
  
- 	node = acpi_get_node(device->handle);
--	if (node == NUMA_NO_NODE)
-+	if (node == NUMA_NO_NODE) {
- 		node = x86_pci_root_bus_node(busnum);
-+		if (node != 0 && node != NUMA_NO_NODE)
-+			dev_info(&device->dev, FW_BUG "no _PXM; falling back to node %d from hardware (may be inconsistent with ACPI node numbers)\n",
-+				node);
+-static int dmar_device_hotplug(acpi_handle handle, bool insert)
++static acpi_status dmar_get_dsm_handle(acpi_handle handle, u32 lvl,
++				       void *context, void **retval)
++{
++	acpi_handle *phdl = retval;
++
++	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
++		*phdl = handle;
++		return AE_CTRL_TERMINATE;
 +	}
++
++	return AE_OK;
++}
++
++int dmar_device_hotplug(acpi_handle handle, bool insert)
+ {
+ 	int ret;
++	acpi_handle tmp = NULL;
++	acpi_status status;
  
- 	if (node != NUMA_NO_NODE && !node_online(node))
- 		node = NUMA_NO_NODE;
+ 	if (!dmar_in_use())
+ 		return 0;
+ 
+-	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
++	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
++		tmp = handle;
++	} else {
++		status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
++					     ACPI_UINT32_MAX,
++					     dmar_get_dsm_handle,
++					     NULL, NULL, &tmp);
++		if (ACPI_FAILURE(status)) {
++			pr_warn("Failed to locate _DSM method.\n");
++			return -ENXIO;
++		}
++	}
++	if (tmp == NULL)
+ 		return 0;
+ 
+ 	down_write(&dmar_global_lock);
+ 	if (insert)
+-		ret = dmar_hotplug_insert(handle);
++		ret = dmar_hotplug_insert(tmp);
+ 	else
+-		ret = dmar_hotplug_remove(handle);
++		ret = dmar_hotplug_remove(tmp);
+ 	up_write(&dmar_global_lock);
+ 
+ 	return ret;
 -- 
-1.9.0
+1.7.10.4
 
