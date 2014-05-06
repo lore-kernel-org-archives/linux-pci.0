@@ -1,130 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:53192 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753053AbaEFWsY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 18:48:24 -0400
+Received: by mail-ig0-f170.google.com with SMTP id r10so6417879igi.3
+        for <linux-pci@vger.kernel.org>; Tue, 06 May 2014 15:48:23 -0700 (PDT)
+Subject: [PATCH v2 3/5] sh/PCI: Pass GAPSPCI_DMA_BASE CPU address to
+ dma_declare_coherent_memory()
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch Part1 V2 25/29] x86, irq, ACPI: use common irqdomain map interface to program IOAPIC pins
-Date: Tue, 20 May 2014 00:23:09 +0800
-Message-Id: <1400516594-11544-26-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Date: Tue, 06 May 2014 16:48:33 -0600
+Message-ID: <20140506224833.17968.87108.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+To: unlisted-recipients:; (no To-header on input)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine ACPI to use common irqdomain map interface to program IOAPIC pins,
-so we can unify the callsite to progam IOAPIC pins.
+dma_declare_coherent_memory() needs both the CPU physical address and the
+bus address of the device memory.  They are likely the same on this
+platform, but in general we should use pcibios_bus_to_resource() to account
+for any address translation done by the PCI host bridge.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Magnus Damm <damm@opensource.se>
+CC: linux-sh@vger.kernel.org
 ---
- arch/x86/kernel/acpi/boot.c |   48 ++++++++++++++++---------------------------
- 1 file changed, 18 insertions(+), 30 deletions(-)
+ arch/sh/drivers/pci/fixups-dreamcast.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 4e8566b071c1..68baa34b8346 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -332,7 +332,9 @@ static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity);
- 
--static struct irq_domain_ops acpi_irqdomain_ops;
-+static struct irq_domain_ops acpi_irqdomain_ops = {
-+	.map = mp_irqdomain_map,
-+};
- 
- static struct irq_domain *acpi_create_irqdomain(int idx, void *arg)
+diff --git a/arch/sh/drivers/pci/fixups-dreamcast.c b/arch/sh/drivers/pci/fixups-dreamcast.c
+index d6cde700e316..987c788f5a4f 100644
+--- a/arch/sh/drivers/pci/fixups-dreamcast.c
++++ b/arch/sh/drivers/pci/fixups-dreamcast.c
+@@ -31,6 +31,8 @@
+ static void gapspci_fixup_resources(struct pci_dev *dev)
  {
-@@ -512,10 +514,6 @@ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- 	int irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
+ 	struct pci_channel *p = dev->sysdata;
++	struct pci_bus_region region;
++	struct resource res;
  
- 	if (irq >= 0) {
--#ifdef CONFIG_X86_IO_APIC
--		if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
--			setup_IO_APIC_irq_extra(gsi);
--#endif
- 		*irqp = irq;
- 		return 0;
- 	}
-@@ -1047,11 +1045,7 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity)
- {
--	int irq;
--	int ioapic;
--	int ioapic_pin;
--	struct io_apic_irq_attr irq_attr;
--	int ret;
-+	int irq, ioapic, pin, node;
+ 	printk(KERN_NOTICE "PCI: Fixing up device %s\n", pci_name(dev));
  
- 	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
- 		return gsi;
-@@ -1060,35 +1054,29 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	if (acpi_gbl_FADT.sci_interrupt == gsi)
- 		return gsi;
- 
--	irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
--	if (irq < 0)
--		return ACPI_INVALID_GSI;
--
- 	ioapic = mp_find_ioapic(gsi);
- 	if (ioapic < 0) {
--		printk(KERN_WARNING "No IOAPIC for GSI %u\n", gsi);
--		return gsi;
-+		pr_warn("No IOAPIC for GSI %u\n", gsi);
-+		return ACPI_INVALID_GSI;
- 	}
- 
--	ioapic_pin = mp_find_ioapic_pin(ioapic, gsi);
--
--	if (ioapic_pin > MP_MAX_IOAPIC_PIN) {
--		printk(KERN_ERR "Invalid reference to IOAPIC pin "
--		       "%d-%d\n", mpc_ioapic_id(ioapic),
--		       ioapic_pin);
--		return gsi;
-+	pin = mp_find_ioapic_pin(ioapic, gsi);
-+	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
-+	if (mp_set_pin_attr(ioapic, pin,
-+			    trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
-+			    polarity == ACPI_ACTIVE_HIGH ? 0 : 1,
-+			    node)) {
-+		pr_warn("Failed to set pin attr for GSI%d\n", gsi);
-+		return ACPI_INVALID_GSI;
- 	}
- 
-+	irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
-+	if (irq < 0)
-+		return ACPI_INVALID_GSI;
-+
- 	if (enable_update_mptable)
- 		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
- 
--	set_io_apic_irq_attr(&irq_attr, ioapic, ioapic_pin,
--			     trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
--			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
--	ret = io_apic_set_pci_routing(dev, irq, &irq_attr);
--	if (ret < 0)
--		gsi = ACPI_INVALID_GSI;
--
- 	return gsi;
- }
- 
--- 
-1.7.10.4
+@@ -51,8 +53,12 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
+ 		/*
+ 		 * Redirect dma memory allocations to special memory window.
+ 		 */
++		region.start = GAPSPCI_DMA_BASE;
++		region.end = GAPSPCI_DMA_BASE + GAPSPCI_DMA_SIZE - 1;
++		res.flags = IORESOURCE_MEM;
++		pcibios_bus_to_resource(dev->bus, &res, &region);
+ 		BUG_ON(!dma_declare_coherent_memory(&dev->dev,
+-						GAPSPCI_DMA_BASE,
++						res->start,
+ 						GAPSPCI_DMA_BASE,
+ 						GAPSPCI_DMA_SIZE,
+ 						DMA_MEMORY_MAP |
 
