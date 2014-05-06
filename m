@@ -1,119 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:45531 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110AbaE2A2Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 20:28:25 -0400
-Received: by mail-ig0-f170.google.com with SMTP id uy17so2969297igb.5
-        for <linux-pci@vger.kernel.org>; Wed, 28 May 2014 17:28:24 -0700 (PDT)
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:52699 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750948AbaEFNS1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 09:18:27 -0400
+Received: by mail-ie0-f171.google.com with SMTP id to1so9744793ieb.2
+        for <linux-pci@vger.kernel.org>; Tue, 06 May 2014 06:18:27 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <538558D2.3050706@huawei.com>
-References: <1400729544-7940-1-git-send-email-wangyijing@huawei.com>
-	<20140528032213.GP11907@google.com>
-	<538558D2.3050706@huawei.com>
-Date: Wed, 28 May 2014 17:28:24 -0700
-Message-ID: <CAE9FiQWM15UHvX=7wv4aMXfTp5QLsB+J9c1qjOzpZ1vU0ePB4A@mail.gmail.com>
-Subject: Re: [PATCH] PCI: fix return in pci_bus_add_device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <1399344142.2164.67.camel@dabdike.int.hansenpartnership.com>
+References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAErSpo7zjXg8xrV7=q36rNp_g573P93HiXTB72Z1cZfjGeeBmg@mail.gmail.com>
+ <1399011100.2174.45.camel@dabdike> <11081303.OBX0h8mIfH@wuerfel>
+ <20140505230104.GB8883@google.com> <1399344142.2164.67.camel@dabdike.int.hansenpartnership.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 6 May 2014 07:18:06 -0600
+Message-ID: <CAErSpo7wJTP+GyM4sNN6gAA69cV_j3m=nOsgJasi1XYFZMA2YA@mail.gmail.com>
+Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU address
+ to phys_addr_t
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "rdunlap@infradead.org" <rdunlap@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 27, 2014 at 8:32 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2014/5/28 11:22, Bjorn Helgaas wrote:
->> [+cc Yinghai]
+On Mon, May 5, 2014 at 8:42 PM, James Bottomley
+<jbottomley@parallels.com> wrote:
+> On Mon, 2014-05-05 at 17:01 -0600, Bjorn Helgaas wrote:
+>> On Fri, May 02, 2014 at 10:42:18AM +0200, Arnd Bergmann wrote:
+>
+>> > I don't know about NCR_Q720, but all others are only used on machines
+>> > where physical addresses and bus addresses are in the same space.
 >>
->> On Thu, May 22, 2014 at 11:32:24AM +0800, Yijing Wang wrote:
->>> Fix device_attach() return vaule in pci_bus_add_device
->>> instead of meaningless 0.
->>>
->>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->>> ---
->>>  drivers/pci/bus.c |    2 +-
->>>  1 files changed, 1 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->>> index ba2bf55..42b42b7 100644
->>> --- a/drivers/pci/bus.c
->>> +++ b/drivers/pci/bus.c
->>> @@ -253,7 +253,7 @@ int pci_bus_add_device(struct pci_dev *dev)
->>>
->>>      dev->is_added = 1;
->>>
->>> -    return 0;
->>> +    return retval;
->>
->> I'd like to see a Reviewed-by: from Yinghai, since he recently changed
->> this area, e.g.,
->>
->>   4f535093cf8f PCI: Put pci_dev in device tree as early as possible
->>   58d9a38f6fac PCI: Skip attaching driver in device_add()
+>> In general, the driver doesn't know whether physical and bus addresses
+>> are in the same space.  At least, I *hope* it doesn't have to know,
+>> because it can't be very generic if it does.
 >
-> OK, Yinghai, can you look at this change ?
+> The API was designed for the case where the memory resides on a PCI
+> device (the Q720 case), the card config gives us a bus address, but if
+> the system has an IOMMU, we'd have to do a dma_map of the entire region
+> to set up the IOMMU before we can touch it.  The address it gets back
+> from the dma_map (the dma_addr_t handle for the IOMMU mapping) is what
+> we pass into dma_declare_coherent_memory().
+
+The IOMMU (if any) is only involved for DMA to system memory, and
+there is no system memory in this picture.  The device does DMA to its
+own memory; no dma_map is required for this.  We use
+dma_declare_coherent_memory() to set things up so the CPU can also do
+programmed I/O to the memory.
+
+> The reason it does an
+> ioremap is because this IOMMU mapped address is now physical to the CPU
+> and we want to make the region available to virtual space.  Essentially
+> the memory the allocator hands out behaves as proper virtual memory but
+> it's backed by physical memory on the card behind the PCI bridge.
+
+Yep, the programmed I/O depends on the ioremap().  But I don't think
+it depends on any IOMMU mapping.
+
+> I'm still not that fussed about the difference between phys_addr_t and
+> dma_addr_t, but if the cookie returned from a dma_map is a dma_addr_t
+> then that's what dma_declare_coherent_memory() should use.  If it's a
+> phys_addr_t, then likewise.
 >
-> I found some kernel code still check this return value, and I also think return the
-> real retval make sense.
-
-No, that is not right.
-
-If you look closely,
-
-device_attach() returns
-1: success
-0: not attached
-<0: fail.
-
-so if you return ret directly, you have false warning from
-
-drivers/edac/i82875p_edac.c:            err = pci_bus_add_device(dev);
-drivers/edac/i82875p_edac.c:                            "%s():
-pci_bus_add_device() Failed\n",
-drivers/platform/x86/asus-wmi.c:                                if
-(pci_bus_add_device(dev))
-drivers/platform/x86/eeepc-laptop.c:                            if
-(pci_bus_add_device(dev))
-
-We already have
-    WARN_ON(retval < 0);
-
-so please just remove all return checking from calling path.
-compiler already drop them...
-
+> James
 >
-> eg.
->
->         list_for_each_entry(dev, &bus->devices, bus_list) {
->                 /* Skip already-added devices */
->                 if (dev->is_added)
->                         continue;
->                 retval = pci_bus_add_device(dev);
->                 if (retval)
->                         dev_err(&dev->dev, "Error adding device (%d)\n",
->                                 retval);
-
-should be dropped.
-
->         }
->
->
->
->         if (!blocked) {
->                 dev = pci_get_slot(bus, 0);
->                 if (dev) {
->                         /* Device already present */
->                         pci_dev_put(dev);
->                         goto out_put_dev;
->                 }
->                 dev = pci_scan_single_device(bus, 0);
->                 if (dev) {
->                         pci_bus_assign_resources(bus);
->                         if (pci_bus_add_device(dev))
->                                 pr_err("Unable to hotplug wifi\n");
-oh, no, no one have that report. instead if should have trace printed out.
->                 }
-
-Thanks
-
-Yinghai
