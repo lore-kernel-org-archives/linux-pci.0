@@ -1,117 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:53541 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751085AbaEPUlg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 May 2014 16:41:36 -0400
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: Jingoo Han <jg1.han@samsung.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from mx2.parallels.com ([199.115.105.18]:47903 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752886AbaEFNmL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 09:42:11 -0400
+From: James Bottomley <jbottomley@parallels.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>
+CC: "rdunlap@infradead.org" <rdunlap@infradead.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	"'Russell King'" <linux@arm.linux.org.uk>,
-	"'Grant Likely'" <grant.likely@linaro.org>,
-	"'Rob Herring'" <robh+dt@kernel.org>,
-	"'Mohit Kumar'" <mohit.kumar@st.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Pratyush Anand'" <pratyush.anand@st.com>,
-	"'Richard Zhu'" <r65037@freescale.com>,
-	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
-	"'Marek Vasut'" <marex@denx.de>
-Subject: RE: [PATCH v1 0/5] Add Keystone PCIe controller driver
-Date: Fri, 16 May 2014 20:40:51 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B704742160@DFLE11.ent.ti.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
- <004f01cf70a0$90d7e520$b287af60$%han@samsung.com>
-In-Reply-To: <004f01cf70a0$90d7e520$b287af60$%han@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU
+ address to phys_addr_t
+Date: Tue, 6 May 2014 13:42:06 +0000
+Message-ID: <1399383725.2237.26.camel@dabdike.int.hansenpartnership.com>
+References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	 <CAErSpo7zjXg8xrV7=q36rNp_g573P93HiXTB72Z1cZfjGeeBmg@mail.gmail.com>
+	 <1399011100.2174.45.camel@dabdike> <11081303.OBX0h8mIfH@wuerfel>
+	 <20140505230104.GB8883@google.com>
+	 <1399344142.2164.67.camel@dabdike.int.hansenpartnership.com>
+	 <CAErSpo7wJTP+GyM4sNN6gAA69cV_j3m=nOsgJasi1XYFZMA2YA@mail.gmail.com>
+In-Reply-To: <CAErSpo7wJTP+GyM4sNN6gAA69cV_j3m=nOsgJasi1XYFZMA2YA@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->-----Original Message-----
->From: Jingoo Han [mailto:jg1.han@samsung.com]
->Sent: Thursday, May 15, 2014 8:49 PM
->To: Karicheri, Muralidharan
->Cc: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org; linux-arm-
->kernel@lists.infradead.org; Shilimkar, Santosh; 'Russell King'; 'Grant Likely'; 'Rob Herring';
->'Mohit Kumar'; 'Bjorn Helgaas'; 'Jingoo Han'; 'Pratyush Anand'; 'Richard Zhu'; ABRAHAM,
->KISHON VIJAY; 'Marek Vasut'
->Subject: Re: [PATCH v1 0/5] Add Keystone PCIe controller driver
->
->On Friday, May 16, 2014 1:01 AM, Murali Karicheri wrote:
->>
->> This patch adds a PCIe controller driver for Keystone SoCs. This is
->> based on the origin RFC patch that I had sent earlier. I have
->> incorporated following comments:-
->>
->>  - Add a interrupt controller node for Legacy irq chip and use
->>    interrupt map/map-mask property to map legacy IRQs A/B/C/D
->>  - Add a Phy driver to replace the original serdes driver
->>  - Move common applicaiton register handling code to a separate
->>    file to allow re-use across other platforms that use older
->>    DW PCIe h/w
->>  - PCI quirk for maximum read request size. Check and override only
->>    if the maximum is higher than what controller can handle.
->>  - Converted to a module platform driver.
->>
->> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
->> CC: Russell King <linux@arm.linux.org.uk>
->> CC: Grant Likely <grant.likely@linaro.org>
->> CC: Rob Herring <robh+dt@kernel.org>
->> CC: Mohit Kumar <mohit.kumar@st.com>
->> CC: Jingoo Han <jg1.han@samsung.com>
->> CC: Bjorn Helgaas <bhelgaas@google.com>
->>
->
->Your patches modify 'pcie-designware.c', and affects other PCIe drivers using designware
->PCIe Core IP. Please add the following people to CC list. They are also related to the
->designware PCIe.
->
->  Pratyush Anand <pratyush.anand@st.com>
->  Richard Zhu <r65037@freescale.com>
->  Kishon Vijay Abraham I <kishon@ti.com>
->  Marek Vasut <marex@denx.de>
->
-Will forward the patches to the above list as well.
+On Tue, 2014-05-06 at 07:18 -0600, Bjorn Helgaas wrote:
+> On Mon, May 5, 2014 at 8:42 PM, James Bottomley
+> <jbottomley@parallels.com> wrote:
+> > On Mon, 2014-05-05 at 17:01 -0600, Bjorn Helgaas wrote:
+> >> On Fri, May 02, 2014 at 10:42:18AM +0200, Arnd Bergmann wrote:
+> >
+> >> > I don't know about NCR_Q720, but all others are only used on machines
+> >> > where physical addresses and bus addresses are in the same space.
+> >>
+> >> In general, the driver doesn't know whether physical and bus addresses
+> >> are in the same space.  At least, I *hope* it doesn't have to know,
+> >> because it can't be very generic if it does.
+> >
+> > The API was designed for the case where the memory resides on a PCI
+> > device (the Q720 case), the card config gives us a bus address, but if
+> > the system has an IOMMU, we'd have to do a dma_map of the entire region
+> > to set up the IOMMU before we can touch it.  The address it gets back
+> > from the dma_map (the dma_addr_t handle for the IOMMU mapping) is what
+> > we pass into dma_declare_coherent_memory().
+> 
+> The IOMMU (if any) is only involved for DMA to system memory, and
+> there is no system memory in this picture.  The device does DMA to its
+> own memory; no dma_map is required for this.  We use
+> dma_declare_coherent_memory() to set things up so the CPU can also do
+> programmed I/O to the memory.
 
-Thanks
+Right, but for the CPU to access memory on a device, the access has to
+go through the IOMMU: it has to be programmed to map the memory on the
+bus to a physical address.
 
-Murali
->Best regards,
->Jingoo Han
->
->>
->> Murali Karicheri (5):
->>   ARM: keystone: add pcie related options
->>   pci: designware: enhancements to support keystone pcie
->>   phy: pci serdes phy driver for keystone
->>   pci: dw: add common functions to support old hw based pci driver
->>   pci: keystone: add pcie driver based on designware core driver
->>
->>  .../devicetree/bindings/pci/pcie-keystone.txt      |   68 ++++
->>  arch/arm/mach-keystone/Kconfig                     |    2 +
->>  drivers/pci/host/Kconfig                           |   12 +
->>  drivers/pci/host/Makefile                          |    2 +
->>  drivers/pci/host/pci-dw-old-msi.c                  |  150 ++++++++
->>  drivers/pci/host/pci-dw-old.c                      |  371 ++++++++++++++++++
->>  drivers/pci/host/pci-dw-old.h                      |   30 ++
->>  drivers/pci/host/pci-keystone.c                    |  400 ++++++++++++++++++++
->>  drivers/pci/host/pcie-designware.c                 |  101 +++--
->>  drivers/pci/host/pcie-designware.h                 |   42 +-
->>  drivers/pci/quirks.c                               |   13 +
->>  drivers/phy/Kconfig                                |    6 +
->>  drivers/phy/Makefile                               |    1 +
->>  drivers/phy/phy-keystone.c                         |  230 +++++++++++
->>  14 files changed, 1388 insertions(+), 40 deletions(-)  create mode
->> 100644 Documentation/devicetree/bindings/pci/pcie-keystone.txt
->>  create mode 100644 drivers/pci/host/pci-dw-old-msi.c  create mode
->> 100644 drivers/pci/host/pci-dw-old.c  create mode 100644
->> drivers/pci/host/pci-dw-old.h  create mode 100644
->> drivers/pci/host/pci-keystone.c  create mode 100644
->> drivers/phy/phy-keystone.c
->>
->> --
->> 1.7.9.5
+> > The reason it does an
+> > ioremap is because this IOMMU mapped address is now physical to the CPU
+> > and we want to make the region available to virtual space.  Essentially
+> > the memory the allocator hands out behaves as proper virtual memory but
+> > it's backed by physical memory on the card behind the PCI bridge.
+> 
+> Yep, the programmed I/O depends on the ioremap().  But I don't think
+> it depends on any IOMMU mapping.
+
+At least on Parisc with U2/Uturn, unless there are IOMMU entries, you
+won't be able to address the memory on the device because it's behind
+the IOMMU.  For regions like this, the necessary IOMMU entries are set
+up at init time because without them you don't get memory mapped access
+to register space either.
+
+So like I said, I can go either way.  The entries arrive properly set
+up, so perhaps we should use phys_addr_t because that's what's the other
+side of the IOMMU.  On the other hand it is a handle for something on
+the device, so perhaps it should be dma_addr_t.
+
+James
+
+> > I'm still not that fussed about the difference between phys_addr_t and
+> > dma_addr_t, but if the cookie returned from a dma_map is a dma_addr_t
+> > then that's what dma_declare_coherent_memory() should use.  If it's a
+> > phys_addr_t, then likewise.
+> >
+> > James
+> >
+
 
