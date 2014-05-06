@@ -1,112 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:55232 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751256AbaEOQXL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 12:23:11 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware core driver
-Date: Thu, 15 May 2014 18:23:05 +0200
-Message-ID: <6048322.x3M3sdDEWO@wuerfel>
-In-Reply-To: <1400169692-9677-6-git-send-email-m-karicheri2@ti.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <1400169692-9677-6-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga09.intel.com ([134.134.136.24]:56976 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934237AbaEFHEh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 03:04:37 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 09/21] iommu/vt-d: change iommu_enable/disable_translation to return void
+Date: Tue,  6 May 2014 15:05:20 +0800
+Message-Id: <1399359932-28972-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 15 May 2014 12:01:32 Murali Karicheri wrote:
+Simplify error handling path by changing iommu_{enable|disable}_translation
+to return void.
 
-> +static int
-> +keystone_pcie_fault(unsigned long addr, unsigned int fsr,
-> +		struct pt_regs *regs)
-> +{
-> +	unsigned long instr = *(unsigned long *) instruction_pointer(regs);
-> +
-> +	if ((instr & 0x0e100090) == 0x00100090) {
-> +		int reg = (instr >> 12) & 15;
-> +
-> +		regs->uregs[reg] = -1;
-> +		regs->ARM_pc += 4;
-> +	}
-> +
-> +	return 0;
-> +}
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
 
-This needs to check in the PCI host registers what happened and do
-some appropriate action. If the fault was not caused by PCIe, it
-should not be ignored here but get passed on to the next handler.
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 5e865c1265ad..75d7c5e3f77d 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1391,7 +1391,7 @@ static void iommu_disable_protect_mem_regions(struct intel_iommu *iommu)
+ 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
+ }
+ 
+-static int iommu_enable_translation(struct intel_iommu *iommu)
++static void iommu_enable_translation(struct intel_iommu *iommu)
+ {
+ 	u32 sts;
+ 	unsigned long flags;
+@@ -1405,10 +1405,9 @@ static int iommu_enable_translation(struct intel_iommu *iommu)
+ 		      readl, (sts & DMA_GSTS_TES), sts);
+ 
+ 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
+-	return 0;
+ }
+ 
+-static int iommu_disable_translation(struct intel_iommu *iommu)
++static void iommu_disable_translation(struct intel_iommu *iommu)
+ {
+ 	u32 sts;
+ 	unsigned long flag;
+@@ -1422,7 +1421,6 @@ static int iommu_disable_translation(struct intel_iommu *iommu)
+ 		      readl, (!(sts & DMA_GSTS_TES)), sts);
+ 
+ 	raw_spin_unlock_irqrestore(&iommu->register_lock, flag);
+-	return 0;
+ }
+ 
+ 
+@@ -2875,11 +2873,7 @@ static int __init init_dmars(void)
+ 
+ 		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
+ 		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
+-
+-		ret = iommu_enable_translation(iommu);
+-		if (ret)
+-			goto free_iommu;
+-
++		iommu_enable_translation(iommu);
+ 		iommu_disable_protect_mem_regions(iommu);
+ 	}
+ 
+@@ -3577,10 +3571,8 @@ static int init_iommu_hw(void)
+ 
+ 		iommu->flush.flush_context(iommu, 0, 0, 0,
+ 					   DMA_CCMD_GLOBAL_INVL);
+-		iommu->flush.flush_iotlb(iommu, 0, 0, 0,
+-					 DMA_TLB_GLOBAL_FLUSH);
+-		if (iommu_enable_translation(iommu))
+-			return 1;
++		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
++		iommu_enable_translation(iommu);
+ 		iommu_disable_protect_mem_regions(iommu);
+ 	}
+ 
+-- 
+1.7.10.4
 
-> +static int __init ks_pcie_probe(struct platform_device *pdev)
-> +{
-> +	struct device_node *np = pdev->dev.of_node;
-> +	struct device *dev = &pdev->dev;
-> +	struct keystone_pcie *ks_pcie;
-> +	void __iomem *devstat;
-> +	struct pcie_port *pp;
-> +	struct resource *res;
-> +	struct phy *phy;
-> +	int ret = 0;
-> +	u32 val;
-> +
-> +	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
-> +				GFP_KERNEL);
-> +	if (!ks_pcie) {
-> +		dev_err(dev, "no memory for keystone pcie\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	/* check if serdes phy needs to be enabled */
-> +	if (of_get_property(np, "ti,init-phy", NULL) != NULL) {
-> +		phy = devm_phy_get(dev, "pcie-phy");
-> +			if (IS_ERR(phy))
-> +				return PTR_ERR(phy);
-> +
-> +		ret = phy_init(phy);
-> +		if (ret < 0)
-> +			return ret;
-> +	}
-
-I think you can just call devm_phy_get() unconditionally here and
-get rid of the ti,init-phy property. If there is no phy, don't
-initialize it.
-
-> +
-> +	ret = add_pcie_port(ks_pcie, pdev);
-> +	if (ret < 0)
-> +		goto fail_clk;
-> +
-> +	platform_set_drvdata(pdev, ks_pcie);
-
-Set the platform data first, then add the port.
-
-> +	dev_info(dev, "pcie rc probe success\n");
-
-Remove this.
-
-> +#ifdef CONFIG_PCI_KEYSTONE
-> +/*
-> + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
-> + */
-> +static void quirk_limit_readrequest(struct pci_dev *dev)
-> +{
-> +	int readrq = pcie_get_readrq(dev);
-> +
-> +	if (readrq > 256)
-> +		pcie_set_readrq(dev, 256);
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
-> +#endif /* CONFIG_PCI_KEYSTONE */
-
-This doesn't work: you can't just limit do this for all devices just based
-on PCI_KEYSTONE being enabled, you have to check if you are actually using
-this controller.
-
-	Arnd
