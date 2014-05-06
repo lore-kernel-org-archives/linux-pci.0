@@ -1,141 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1500 "EHLO mx1.redhat.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:58984 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756393AbaEIP3b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 May 2014 11:29:31 -0400
-Subject: [PATCH v2 10/15] iommu/intel: Use pci_find_dma_isolation_root() for
- IOMMU groups
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	David Woodhouse <David.Woodhouse@intel.com>,
-	linux-kernel@vger.kernel.org
-Date: Fri, 09 May 2014 09:29:25 -0600
-Message-ID: <20140509152925.8321.83284.stgit@bling.home>
-In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
-References: <20140509151735.8321.22017.stgit@bling.home>
+	id S1757715AbaEFNfu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 09:35:50 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: <rogerq@ti.com>, <balajitk@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Dan Murphy <dmurphy@ti.com>
+Subject: [TEMP PATCH 16/17] pci: host: pcie-dra7xx: use reset framework APIs to reset PCIe
+Date: Tue, 6 May 2014 19:04:02 +0530
+Message-ID: <1399383244-14556-17-git-send-email-kishon@ti.com>
+In-Reply-To: <1399383244-14556-1-git-send-email-kishon@ti.com>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Drop custom code that attempts to do the exact same thing and use
-PCI provided isolation root support.  Existing IOMMU group laytout
-should not change.
+Get reset nodes from dt and use reset framework APIs to reset PCIe.
+This is needed since reset is handled by the SoC.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: David Woodhouse <David.Woodhouse@intel.com>
+Cc: Dan Murphy <dmurphy@ti.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/iommu/intel-iommu.c |   71 +++++--------------------------------------
- 1 file changed, 8 insertions(+), 63 deletions(-)
+ Documentation/devicetree/bindings/pci/ti-pci.txt |    2 ++
+ drivers/pci/host/pci-dra7xx.c                    |   10 ++++++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index f256ffc..f0e50f1 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -44,7 +44,6 @@
- #include <asm/iommu.h>
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+index 6cb6f09..cfb95c0 100644
+--- a/Documentation/devicetree/bindings/pci/ti-pci.txt
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -9,6 +9,8 @@ This node should have the properties described in "designware-pcie.txt".
+  - phys : the phandle for the PHY device (used by generic PHY framework)
+  - phy-names : the names of the PHY corresponding to the PHYs present in the
+    *phy* phandle.
++ - resets: phandle used if reset is handled be soc
++ - reset-names: name given to the phandle
  
- #include "irq_remapping.h"
--#include "pci.h"
+ Example:
+ pcie@51000000 {
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index a37c25c..17d64ee 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -20,6 +20,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/resource.h>
++#include <linux/reset.h>
+ #include <linux/types.h>
  
- #define ROOT_SIZE		VTD_PAGE_SIZE
- #define CONTEXT_SIZE		VTD_PAGE_SIZE
-@@ -4359,12 +4358,9 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
- 	return 0;
- }
+ #include "pcie-designware.h"
+@@ -281,6 +282,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	struct resource *res;
+ 	struct dra7xx_pcie *dra7xx;
+ 	struct device *dev = &pdev->dev;
++	struct reset_control *rstc;
  
--#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
--
- static int intel_iommu_add_device(struct device *dev)
- {
--	struct pci_dev *pdev = to_pci_dev(dev);
--	struct pci_dev *bridge, *dma_pdev = NULL;
-+	struct pci_dev *pdev;
- 	struct iommu_group *group;
- 	int ret;
- 	u8 bus, devfn;
-@@ -4372,68 +4368,16 @@ static int intel_iommu_add_device(struct device *dev)
- 	if (!device_to_iommu(dev, &bus, &devfn))
- 		return -ENODEV;
+ 	dra7xx = devm_kzalloc(&pdev->dev, sizeof(*dra7xx), GFP_KERNEL);
+ 	if (!dra7xx)
+@@ -304,6 +306,14 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	if (!base)
+ 		return -ENOMEM;
  
--	bridge = pci_find_upstream_pcie_bridge(pdev);
--	if (bridge) {
--		if (pci_is_pcie(bridge))
--			dma_pdev = pci_get_domain_bus_and_slot(
--						pci_domain_nr(pdev->bus),
--						bridge->subordinate->number, 0);
--		if (!dma_pdev)
--			dma_pdev = pci_dev_get(bridge);
--	} else
--		dma_pdev = pci_dev_get(pdev);
--
--	/* Account for quirked devices */
--	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
--
--	/*
--	 * If it's a multifunction device that does not support our
--	 * required ACS flags, add to the same group as lowest numbered
--	 * function that also does not suport the required ACS flags.
--	 */
--	if (dma_pdev->multifunction &&
--	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
--		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
--
--		for (i = 0; i < 8; i++) {
--			struct pci_dev *tmp;
--
--			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
--			if (!tmp)
--				continue;
--
--			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
--				swap_pci_ref(&dma_pdev, tmp);
--				break;
--			}
--			pci_dev_put(tmp);
--		}
-+	group = iommu_group_get(dev);
-+	if (group) {
-+		iommu_group_put(group);
-+		return 0;
- 	}
- 
--	/*
--	 * Devices on the root bus go through the iommu.  If that's not us,
--	 * find the next upstream device and test ACS up to the root bus.
--	 * Finding the next device may require skipping virtual buses.
--	 */
--	while (!pci_is_root_bus(dma_pdev->bus)) {
--		struct pci_bus *bus = dma_pdev->bus;
-+	pdev = pci_find_dma_isolation_root(to_pci_dev(dev));
- 
--		while (!bus->self) {
--			if (!pci_is_root_bus(bus))
--				bus = bus->parent;
--			else
--				goto root_bus;
--		}
-+	group = iommu_group_get(&pdev->dev);
- 
--		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
--			break;
--
--		swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
--	}
--
--root_bus:
--	group = iommu_group_get(&dma_pdev->dev);
--	pci_dev_put(dma_pdev);
- 	if (!group) {
- 		group = iommu_group_alloc();
- 		if (IS_ERR(group))
-@@ -4443,6 +4387,7 @@ root_bus:
- 	ret = iommu_group_add_device(group, dev);
- 
- 	iommu_group_put(group);
++	rstc = devm_reset_control_get(dev, "reset");
++	if (IS_ERR(rstc))
++		return PTR_ERR(rstc);
 +
- 	return ret;
- }
- 
++	ret = reset_control_deassert(rstc);
++	if (ret)
++		return ret;
++
+ 	phy = devm_phy_get(dev, "pcie-phy");
+ 	if (IS_ERR(phy))
+ 		return PTR_ERR(phy);
+-- 
+1.7.9.5
 
