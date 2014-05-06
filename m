@@ -1,73 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:53267 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750808AbaETIow (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 04:44:52 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+Received: from relmlor2.renesas.com ([210.160.252.172]:63128 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754840AbaEFMtX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 08:49:23 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Scott Lurndal <kdb@lurndal.org>,
-	"yu.zhao@intel.com" <yu.zhao@intel.com>
-Subject: Re: [PATCH v7 0/3] Add support for PCI in AArch64
-Date: Tue, 20 May 2014 10:44:30 +0200
-Message-ID: <5759329.P75jKFdv3B@wuerfel>
-In-Reply-To: <CA+sq2Ce+8YB+02B7zhxTXwropZXv9spy-w=AJ8YXCP69kr-_1A@mail.gmail.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com> <4292818.mI6kZGgTzd@wuerfel> <CA+sq2Ce+8YB+02B7zhxTXwropZXv9spy-w=AJ8YXCP69kr-_1A@mail.gmail.com>
+	Srikanth Thokala <sthokal@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: RE: [PATCH v7 01/10] PCI: host: rcar: Add Renesas R-Car PCIe driver
+Date: Tue, 6 May 2014 12:49:17 +0000
+Message-ID: <adb16b87e1b54911b02d5d0cd720b02c@HKXPR06MB168.apcprd06.prod.outlook.com>
+References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+ <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
+ <20140424191901.GE29593@google.com>
+ <9b8bedae9d604383ac7ec22fd0f62fdb@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <CAErSpo6Autto4n4A4wHtXQNJzD3RKevkVcLZHUods-2-eiRDYQ@mail.gmail.com>
+ <20140428203501.GA3016@obsidianresearch.com>
+ <ac795ce3bb6349708e2e96686e19d24f@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <20140430154345.GA1705@obsidianresearch.com>
+ <b9160c7a49304270b5070dcf49482723@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <CAErSpo4xJ36UabUcCDLsA_Q+r-C2ZV_q16y=Os8vVGFm-iMBxw@mail.gmail.com>
+In-Reply-To: <CAErSpo4xJ36UabUcCDLsA_Q+r-C2ZV_q16y=Os8vVGFm-iMBxw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 20 May 2014 09:52:33 Sunil Kovvuri wrote:
-> >> In sriov_enable() (drivers/pci/iov.c)
-> >>
-> >>  296        for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-> >>  297                 bars |= (1 << (i + PCI_IOV_RESOURCES));
-> >>  298                 res = dev->resource + PCI_IOV_RESOURCES + i;
-> >>  299                 if (res->parent)
-> >>  300                         nres++;
-> >>  301         }
-> >>  302         if (nres != iov->nres) {
-> >>  303                 dev_err(&dev->dev, "not enough MMIO resources for
-> >>  SR-IOV\n");
-> >>  304                 return -ENOMEM;
-> >>  305         }
-> >>
-> >> Here its checking if physical function's IOV resource has a parent or not.
-> >> Which is pci-pci bridge in this case. Otherwise it doesn't consider
-> >> that resource.
-> >>
-> >> Added below api to your patch.
-> >> This will try to claim a resource while creating a PCI device which
-> >> inturn sets 'res->parent'.
-> >
-> > This looks like the wrong approach. The PCI host controller should
-> > really have been registered with the root 'iomem_resource' during
-> > the probe of the host controller.
-> >
-> I didn't get this, if a SR-IOV device is connected to a PCI-PCI bridge
-> and inturn bridge connected to root port. Then the parent bus is not root,
-> but the bridge.  The issue is either hierarchy should not be checked for
-> SR-IOV resources or someone should set the hierarchy (i.e parent resources).
-
-Ah, I misunderstood the problem, I thought the PCI core was complaining
-about lack of space in the resources, not about a lack of BARs.
-
-It seems there is code like yours in a couple of architectures, but they
-only claim the resources of bridges, not the actual devices as you
-seem to be doing. Can you check if the x86 version of
-pcibios_allocate_bus_resources() does the trick for you? Maybe we can
-turn that into a generic helper.
-
-	Arnd
+SGkgQmpvcm4sDQoNCk9uIDAxIE1heSAyMDE0IDE4OjMxLCBCam9ybiB3cm90ZToNCj4gWytjYyBT
+cmlrYW50aCwgTWljaGFsLCBHcmFudCBiZWNhdXNlIHdlJ3JlIGhhdmluZyB0aGUgc2FtZSBkaXNj
+dXNzaW9uDQo+IGFib3V0IHJvb3QgYnVzIG51bWJlcnMgaW4gdGhlIFhpbGlueCBob3N0IGJyaWRn
+ZSBkcml2ZXJdDQo+IA0KPiBPbiBUaHUsIE1heSAxLCAyMDE0IGF0IDM6NTAgQU0sIFBoaWwgRWR3
+b3J0aHkNCj4gPHBoaWwuZWR3b3J0aHlAcmVuZXNhcy5jb20+IHdyb3RlOg0KPiANCj4gPiBXaGVu
+IHdvdWxkIHRoZSBQQ0kgY29yZSBjaGFuZ2UgdGhlIHJvb3QgYnVzIG51bWJlciB0byBzb21ldGhp
+bmcgb3RoZXINCj4gdGhhbiBzZXQgaW4gc3lzLT5idXNucj8NCj4gDQo+IFRoZSBQQ0kgY29yZSBu
+ZXZlciBjaGFuZ2VzIHRoZSByb290IGJ1cyBudW1iZXIgb2YgYSBob3N0IGJyaWRnZSwgYnV0DQo+
+IGl0J3MgaW1wb3J0YW50IGZvciB0aGUgY29yZSB0byBrbm93IGV4YWN0bHkgd2hhdCBidXMgbnVt
+YmVycyBhcmUNCj4gYmVoaW5kIGVhY2ggaG9zdCBicmlkZ2Ugc28gd2UgY2FuIGNvcnJlY3RseSBh
+c3NpZ24gYnVzIG51bWJlcnMsIE1NSU8sDQo+IGFuZCBJL08gcG9ydCByZXNvdXJjZXMuDQo+IA0K
+PiBUaGUgcmVhc29uIGlzIHRoYXQgd2hlbiB3ZSBlbnVtZXJhdGUgYSBQQ0ktdG8tUENJIGJyaWRn
+ZSwgd2UgaGF2ZSB0bw0KPiBrbm93IHdoZXRoZXIgYnVzIG51bWJlcnMgYXJlIGF2YWlsYWJsZSBm
+b3IgdGhlIHNlY29uZGFyeSBidXMuICBGb3INCj4gZXhhbXBsZSwgYXNzdW1lIHR3byBob3N0IGJy
+aWRnZXMgY29uZmlndXJlZCAob3Igd2lyZWQpIGFzIGZvbGxvd3M6DQo+IA0KPiAgIEEgbGVhZHMg
+dG8gW2J1cyAwMC0xZl0sIHdpdGggYXBlcnR1cmUgW21lbSAweDgwMDAwMDAwLTB4OGZmZmZmZmZd
+DQo+ICAgQiBsZWFkcyB0byBbYnVzIDIwLWZmXSwgd2l0aCBhcGVydHVyZSBbbWVtIDB4OTAwMDAw
+MDAtMHg5ZmZmZmZmZl0NCj4gDQo+IEZ1cnRoZXIsIGFzc3VtZSBhIFBDSS10by1QQ0kgYnJpZGdl
+IGF0IDFmOjAwLjAuICBJZiB0aGUgaG9zdCBicmlkZ2UNCj4gZHJpdmVyIGRvZXNuJ3QgdGVsbCB1
+cyB0aGUgW2J1cyAwMC0xZl0gcmFuZ2UgZm9yIGhvc3QgYnJpZGdlIEEsIHRoZQ0KPiBQQ0kgY29y
+ZSB3aWxsIGFzc3VtZSBbYnVzIDAwLWZmXS4gIFdoZW4gdGhlIGNvcmUgZW51bWVyYXRlcyB0aGUN
+Cj4gMWY6MDAuMCBicmlkZ2UsIGl0IHdpbGwgYXNzaWduIGJ1cyBudW1iZXIgMjAgdG8gaXRzIHNl
+Y29uZGFyeSBidXMuDQo+IE5vdyBpdCBlbnVtZXJhdGVzIGRldmljZXMgb24gYnVzIDIwLiAgVGhl
+IGNvcmUgZXhwZWN0cyB0aGlzIHRvIGJlIGRvbmUNCj4gdmlhIGhvc3QgYnJpZGdlIEEsIGJ1dCBl
+bnVtZXJhdGlvbiB1c2VzIElELXJvdXRlZCBjb25maWcgdHJhbnNhY3Rpb25zLA0KPiBzbyB0aGV5
+IGFyZSBjbGFpbWVkIGJ5IGhvc3QgYnJpZGdlIEIgaW5zdGVhZC4gIElmIHdlIGZpbmQgYSBkZXZp
+Y2UNCj4gMjA6MDAuMCwgdGhlIGNvcmUgdGhpbmtzIGl0IGlzIGJlbG93IEEsIGJ1dCBpdCBpcyBy
+ZWFsbHkgYmVsb3cgQi4NCj4gDQo+IE5vdyB3ZSBhc3NpZ24gcmVzb3VyY2VzIHRvIDIwOjAwLjAs
+IGFuZCBzaW5jZSB3ZSB0aGluayBpdCdzIGJlbG93IEEsDQo+IHdlIGFzc2lnbiB0aGVtIGZyb20g
+dGhlIFttZW0gMHg4MDAwMDAwMC0weDhmZmZmZmZmXSBhcGVydHVyZS4gIFRoaXMNCj4gb2J2aW91
+c2x5IGRvZXNuJ3Qgd29yaywgYmVjYXVzZSB3aGVuIHRoZSBkcml2ZXIgcGVyZm9ybXMgTU1JTw0K
+PiBhY2Nlc3Nlcywgd2hpY2ggYXJlIGFkZHJlc3Mtcm91dGVkLCB0aGV5IGFyZSBjbGFpbWVkIGJ5
+IGhvc3QgYnJpZGdlIEEsDQo+IG5vdCBCLCBzbyB0aGUgMjA6MDAuMCBkZXZpY2UgbmV2ZXIgc2Vl
+cyB0aGVtLg0KVGhhbmtzIGZvciB0aGUgY2xlYXIgZXhwbGFuYXRpb24uDQoNCj4gSWYgeW91ciBo
+b3N0IGJyaWRnZSByZWFsbHkgY2xhaW1zIEFMTCBidXMgbnVtYmVycyAoMDAtZmYpLCB0aGF0J3MN
+Cj4gZmluZSwgYW5kIHlvdSBjYW4gdGVsbCB0aGUgUENJIGNvcmUgdGhhdC4gIEJ1dCBpZiB5b3Ug
+aGF2ZSBzZXZlcmFsDQo+IHN1Y2ggYnJpZGdlcywgdGhleSBzaG91bGQgYmUgcGxhY2VkIGluIHNl
+cGFyYXRlIGRvbWFpbnMuDQpUaGF0IG1ha2VzIHNlbnNlLg0KDQpJbiB0aGUgY2FzZSBvZiB0aGUg
+Ui1DYXIgUENJZSBob3N0IGJyaWRnZSwgYXMgZmFyIGFzIEkgY2FuIHRlbGwsIHRoZSBoYXJkd2Fy
+ZSBkb2VzbuKAmXQgY2FyZSBhYm91dCBidXMgbnVtYmVycyBhdCBhbGwsIHdpdGggdGhlIGV4Y2Vw
+dGlvbiB0aGF0IHRoZSBkcml2ZXIgdXNlcyBvbmUgYnVzIG51bWJlciB0byB0YXJnZXQgdGhlIGJy
+aWRnZSBpdHNlbGYuIFdlIGNhbiB1c2UgYXMgbWFueSBvciBhcyBmZXcgYnVzIG51bWJlcnMgZm9y
+IHRoZSBzZWNvbmRhcnkgYnVzIGFzIHlvdSBsaWtlLg0KDQpTbywgdGhlIFItQ2FyIFBDSWUgZHJp
+dmVyIHNob3VsZCBpbXBsZW1lbnQgYnVzIHJhbmdlcywgYnV0IHNob3VsZCBpdCBhbHNvIHVzZSBz
+ZXBhcmF0ZSBQQ0kgZG9tYWlucyBmb3IgbXVsdGlwbGUgY29udHJvbGxlcnM/DQoNCj4gVGhpcyBp
+cyBwcm9iYWJseSBtb3JlIGRldGFpbCB0aGFuIHlvdSB3YW50ZWQsIGFuZCBtYXliZSB5b3UgZG9u
+J3QgZXZlcg0KPiBleHBlY3QgdG8gaGF2ZSBtdWx0aXBsZSBob3N0IGJyaWRnZXMgb3IgY29tcGxp
+Y2F0ZWQgaGllcmFyY2hpZXMgb2YNCj4gZGV2aWNlcy4gIEJ1dCB0aGUgUENJIGNvcmUgaGFzIHRv
+IGRlYWwgd2l0aCB0aGVzZSBpc3N1ZXMgb24gb3RoZXINCj4gc3lzdGVtcywgc28gaXQncyBpbXBv
+cnRhbnQgdG8gZ2V0IHRoZXNlIGRldGFpbHMgcmlnaHQuDQoNClRoYW5rcw0KUGhpbA0K
