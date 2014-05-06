@@ -1,63 +1,170 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65239 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752633AbaEAPot (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 May 2014 11:44:49 -0400
-Date: Thu, 1 May 2014 18:43:39 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Marcel Apfelbaum <marcel.a@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com, matthew@wil.cx
-Subject: Re: [PATCH] PCI/shpchp: fix a bus speed issue on hotplug
-Message-ID: <20140501154339.GC9180@redhat.com>
-References: <1398954948-24219-1-git-send-email-marcel.a@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1398954948-24219-1-git-send-email-marcel.a@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 10/21] iommu/vt-d: simplify intel_unmap_sg() and kill duplicated code
+Date: Tue,  6 May 2014 15:05:21 +0800
+Message-Id: <1399359932-28972-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 01, 2014 at 05:35:48PM +0300, Marcel Apfelbaum wrote:
-> When a board is added, the shpchp driver checks if there
-> is a mismatch between the bridge's adapter and the bus speed.
-> If there is, it sets the subordinate speed (if there is no device on it).
-> 
-> However, it takes the reference of the board speed from the primary bus
-> and not from the subordinate. If the primary bus is PCI and not PCIX/PCIe,
-> its speed is not updated and remains 0xff. As a result hotplug fails
-> with error: "Speed of bus ff and adapter 0 mismatch".
-> 
-> Fixed that by checking the speed against the subordinate bus.
-> 
-> Signed-off-by: Marcel Apfelbaum <marcel.a@redhat.com>
-> Acked-by: Michael S. Tsirkin <mst@redhat.com>
+Introduce intel_unmap() to reduce duplicated code in intel_unmap_sg()
+and intel_unmap_page().
 
-Looking at git history, I suspect this is a regression
-introduced by
-	commit 3749c51ac6c1560aa1cb1520066bed84c6f8152a
-	Author: Matthew Wilcox <matthew@wil.cx>
-	Date:   Sun Dec 13 08:11:32 2009 -0500
-	    PCI: Make current and maximum bus speeds part of the PCI core
-At least I remember this configuration worked for me early in 2009...
+Also let dma_pte_free_pagetable() to call dma_pte_clear_range() directly,
+so caller only needs to call dma_pte_free_pagetable().
 
-> ---
->  drivers/pci/hotplug/shpchp_ctrl.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
-> index 5849927..6efc2ec 100644
-> --- a/drivers/pci/hotplug/shpchp_ctrl.c
-> +++ b/drivers/pci/hotplug/shpchp_ctrl.c
-> @@ -282,8 +282,8 @@ static int board_added(struct slot *p_slot)
->  		return WRONG_BUS_FREQUENCY;
->  	}
->  
-> -	bsp = ctrl->pci_dev->bus->cur_bus_speed;
-> -	msp = ctrl->pci_dev->bus->max_bus_speed;
-> +	bsp = ctrl->pci_dev->subordinate->cur_bus_speed;
-> +	msp = ctrl->pci_dev->subordinate->max_bus_speed;
->  
->  	/* Check if there are other slots or devices on the same bus */
->  	if (!list_empty(&ctrl->pci_dev->subordinate->devices))
-> -- 
-> 1.8.3.1
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   77 +++++++++++--------------------------------
+ 1 file changed, 20 insertions(+), 57 deletions(-)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 75d7c5e3f77d..cf083c8a223e 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -986,6 +986,8 @@ static void dma_pte_free_pagetable(struct dmar_domain *domain,
+ 	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
+ 	BUG_ON(start_pfn > last_pfn);
+ 
++	dma_pte_clear_range(domain, start_pfn, last_pfn);
++
+ 	/* We don't need lock here; nobody else touches the iova range */
+ 	dma_pte_free_level(domain, agaw_to_level(domain->agaw),
+ 			   domain->pgd, 0, start_pfn, last_pfn);
+@@ -2030,12 +2032,14 @@ static int __domain_mapping(struct dmar_domain *domain, unsigned long iov_pfn,
+ 			/* It is large page*/
+ 			if (largepage_lvl > 1) {
+ 				pteval |= DMA_PTE_LARGE_PAGE;
+-				/* Ensure that old small page tables are removed to make room
+-				   for superpage, if they exist. */
+-				dma_pte_clear_range(domain, iov_pfn,
+-						    iov_pfn + lvl_to_nr_pages(largepage_lvl) - 1);
++				lvl_pages = lvl_to_nr_pages(largepage_lvl);
++				/*
++				 * Ensure that old small page tables are
++				 * removed to make room for superpage,
++				 * if they exist.
++				 */
+ 				dma_pte_free_pagetable(domain, iov_pfn,
+-						       iov_pfn + lvl_to_nr_pages(largepage_lvl) - 1);
++						       iov_pfn + lvl_pages - 1);
+ 			} else {
+ 				pteval &= ~(uint64_t)DMA_PTE_LARGE_PAGE;
+ 			}
+@@ -3163,9 +3167,7 @@ static void add_unmap(struct dmar_domain *dom, struct iova *iova, struct page *f
+ 	spin_unlock_irqrestore(&async_umap_flush_lock, flags);
+ }
+ 
+-static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
+-			     size_t size, enum dma_data_direction dir,
+-			     struct dma_attrs *attrs)
++static void intel_unmap(struct device *dev, dma_addr_t dev_addr)
+ {
+ 	struct dmar_domain *domain;
+ 	unsigned long start_pfn, last_pfn;
+@@ -3209,6 +3211,13 @@ static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
+ 	}
+ }
+ 
++static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
++			     size_t size, enum dma_data_direction dir,
++			     struct dma_attrs *attrs)
++{
++	intel_unmap(dev, dev_addr);
++}
++
+ static void *intel_alloc_coherent(struct device *dev, size_t size,
+ 				  dma_addr_t *dma_handle, gfp_t flags,
+ 				  struct dma_attrs *attrs)
+@@ -3245,56 +3254,15 @@ static void *intel_alloc_coherent(struct device *dev, size_t size,
+ static void intel_free_coherent(struct device *dev, size_t size, void *vaddr,
+ 				dma_addr_t dma_handle, struct dma_attrs *attrs)
+ {
+-	int order;
+-
+-	size = PAGE_ALIGN(size);
+-	order = get_order(size);
+-
+-	intel_unmap_page(dev, dma_handle, size, DMA_BIDIRECTIONAL, NULL);
+-	free_pages((unsigned long)vaddr, order);
++	intel_unmap(dev, dma_handle);
++	free_pages((unsigned long)vaddr, get_order(PAGE_ALIGN(size)));
+ }
+ 
+ static void intel_unmap_sg(struct device *dev, struct scatterlist *sglist,
+ 			   int nelems, enum dma_data_direction dir,
+ 			   struct dma_attrs *attrs)
+ {
+-	struct dmar_domain *domain;
+-	unsigned long start_pfn, last_pfn;
+-	struct iova *iova;
+-	struct intel_iommu *iommu;
+-	struct page *freelist;
+-
+-	if (iommu_no_mapping(dev))
+-		return;
+-
+-	domain = find_domain(dev);
+-	BUG_ON(!domain);
+-
+-	iommu = domain_get_iommu(domain);
+-
+-	iova = find_iova(&domain->iovad, IOVA_PFN(sglist[0].dma_address));
+-	if (WARN_ONCE(!iova, "Driver unmaps unmatched sglist at PFN %llx\n",
+-		      (unsigned long long)sglist[0].dma_address))
+-		return;
+-
+-	start_pfn = mm_to_dma_pfn(iova->pfn_lo);
+-	last_pfn = mm_to_dma_pfn(iova->pfn_hi + 1) - 1;
+-
+-	freelist = domain_unmap(domain, start_pfn, last_pfn);
+-
+-	if (intel_iommu_strict) {
+-		iommu_flush_iotlb_psi(iommu, domain->id, start_pfn,
+-				      last_pfn - start_pfn + 1, !freelist, 0);
+-		/* free iova */
+-		__free_iova(&domain->iovad, iova);
+-		dma_free_pagelist(freelist);
+-	} else {
+-		add_unmap(domain, iova, freelist);
+-		/*
+-		 * queue up the release of the unmap to save the 1/6th of the
+-		 * cpu used up by the iotlb flush operation...
+-		 */
+-	}
++	intel_unmap(dev, sglist[0].dma_address);
+ }
+ 
+ static int intel_nontranslate_map_sg(struct device *hddev,
+@@ -3358,13 +3326,8 @@ static int intel_map_sg(struct device *dev, struct scatterlist *sglist, int nele
+ 
+ 	ret = domain_sg_mapping(domain, start_vpfn, sglist, size, prot);
+ 	if (unlikely(ret)) {
+-		/*  clear the page */
+-		dma_pte_clear_range(domain, start_vpfn,
+-				    start_vpfn + size - 1);
+-		/* free page tables */
+ 		dma_pte_free_pagetable(domain, start_vpfn,
+ 				       start_vpfn + size - 1);
+-		/* free iova */
+ 		__free_iova(&domain->iovad, iova);
+ 		return 0;
+ 	}
+-- 
+1.7.10.4
+
