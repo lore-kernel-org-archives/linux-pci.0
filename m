@@ -1,412 +1,285 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v3 11/15] iommu/intel: Update to use PCI DMA aliases
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	David Woodhouse <David.Woodhouse@intel.com>, linux@horizon.com,
-	linux-kernel@vger.kernel.org
-Date: Sat, 10 May 2014 09:03:30 -0600
-Message-ID: <20140510150330.2997.79604.stgit@bling.home>
-In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
-References: <20140510145619.2997.429.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:39650 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934184AbaEFHD4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 03:03:56 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 04/21] iommu/vt-d: introduce helper functions to make code symmetric for readability
+Date: Tue,  6 May 2014 15:05:15 +0800
+Message-Id: <1399359932-28972-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VT-d code currently makes use of pci_find_upstream_pcie_bridge() in
-order to find the topology based alias of a device.  This function has
-a few problems.  First, it doesn't check the entire alias path of the
-device to the root bus, therefore if a PCIe device is masked upstream,
-the wrong result is produced.  Also, it's known to get confused and
-give up when it crosses a bridge from a conventional PCI bus to a PCIe
-bus that lacks a PCIe capability.  The PCI-core provided DMA alias
-support solves both of these problems and additionally adds support
-for DMA function quirks allowing VT-d to work with devices like
-Marvell and Ricoh with known broken requester IDs.
+Introduce domain_attach_iommu()/domain_detach_iommu() and refine
+iommu_attach_domain()/iommu_detach_domain() to make code symmetric
+and improve readability.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: David Woodhouse <David.Woodhouse@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/iommu/intel-iommu.c         |  222 ++++++++++++++++-------------------
- drivers/iommu/intel_irq_remapping.c |   55 ++++++---
- 2 files changed, 139 insertions(+), 138 deletions(-)
+ drivers/iommu/intel-iommu.c |  146 ++++++++++++++++++++++++-------------------
+ 1 file changed, 80 insertions(+), 66 deletions(-)
 
 diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index f0e50f1..7dbb1cb 100644
+index 63f351a39c63..29f613e7eea3 100644
 --- a/drivers/iommu/intel-iommu.c
 +++ b/drivers/iommu/intel-iommu.c
-@@ -1840,54 +1840,56 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 	return 0;
- }
- 
-+struct domain_context_mapping_data {
-+	struct dmar_domain *domain;
-+	struct intel_iommu *iommu;
-+	int translation;
-+};
-+
-+static int domain_context_mapping_cb(struct pci_dev *pdev,
-+				     u16 alias, void *opaque)
-+{
-+	struct domain_context_mapping_data *data = opaque;
-+
-+	return domain_context_mapping_one(data->domain, data->iommu,
-+					  PCI_BUS_NUM(alias), alias & 0xff,
-+					  data->translation);
-+}
-+
- static int
- domain_context_mapping(struct dmar_domain *domain, struct device *dev,
- 		       int translation)
- {
--	int ret;
--	struct pci_dev *pdev, *tmp, *parent;
- 	struct intel_iommu *iommu;
- 	u8 bus, devfn;
-+	struct domain_context_mapping_data data;
- 
- 	iommu = device_to_iommu(dev, &bus, &devfn);
- 	if (!iommu)
- 		return -ENODEV;
- 
--	ret = domain_context_mapping_one(domain, iommu, bus, devfn,
--					 translation);
--	if (ret || !dev_is_pci(dev))
--		return ret;
--
--	/* dependent device mapping */
--	pdev = to_pci_dev(dev);
--	tmp = pci_find_upstream_pcie_bridge(pdev);
--	if (!tmp)
--		return 0;
--	/* Secondary interface's bus number and devfn 0 */
--	parent = pdev->bus->self;
--	while (parent != tmp) {
--		ret = domain_context_mapping_one(domain, iommu,
--						 parent->bus->number,
--						 parent->devfn, translation);
--		if (ret)
--			return ret;
--		parent = parent->bus->self;
--	}
--	if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
--		return domain_context_mapping_one(domain, iommu,
--					tmp->subordinate->number, 0,
--					translation);
--	else /* this is a legacy PCI bridge */
--		return domain_context_mapping_one(domain, iommu,
--						  tmp->bus->number,
--						  tmp->devfn,
-+	if (!dev_is_pci(dev))
-+		return domain_context_mapping_one(domain, iommu, bus, devfn,
- 						  translation);
-+
-+	data.domain = domain;
-+	data.iommu = iommu;
-+	data.translation = translation;
-+
-+	return pci_for_each_dma_alias(to_pci_dev(dev),
-+				      &domain_context_mapping_cb, &data);
-+}
-+
-+static int domain_context_mapped_cb(struct pci_dev *pdev,
-+				    u16 alias, void *opaque)
-+{
-+	struct intel_iommu *iommu = opaque;
-+
-+	return !device_context_mapped(iommu, PCI_BUS_NUM(alias), alias & 0xff);
- }
- 
- static int domain_context_mapped(struct device *dev)
- {
--	int ret;
--	struct pci_dev *pdev, *tmp, *parent;
- 	struct intel_iommu *iommu;
- 	u8 bus, devfn;
- 
-@@ -1895,30 +1897,11 @@ static int domain_context_mapped(struct device *dev)
- 	if (!iommu)
- 		return -ENODEV;
- 
--	ret = device_context_mapped(iommu, bus, devfn);
--	if (!ret || !dev_is_pci(dev))
--		return ret;
-+	if (!dev_is_pci(dev))
-+		return device_context_mapped(iommu, bus, devfn);
- 
--	/* dependent device mapping */
--	pdev = to_pci_dev(dev);
--	tmp = pci_find_upstream_pcie_bridge(pdev);
--	if (!tmp)
--		return ret;
--	/* Secondary interface's bus number and devfn 0 */
--	parent = pdev->bus->self;
--	while (parent != tmp) {
--		ret = device_context_mapped(iommu, parent->bus->number,
--					    parent->devfn);
--		if (!ret)
--			return ret;
--		parent = parent->bus->self;
--	}
--	if (pci_is_pcie(tmp))
--		return device_context_mapped(iommu, tmp->subordinate->number,
--					     0);
--	else
--		return device_context_mapped(iommu, tmp->bus->number,
--					     tmp->devfn);
-+	return !pci_for_each_dma_alias(to_pci_dev(dev),
-+				       domain_context_mapped_cb, iommu);
- }
- 
- /* Returns a number of VTD pages, but aligned to MM page size */
-@@ -2207,79 +2190,86 @@ static struct dmar_domain *dmar_insert_dev_info(struct intel_iommu *iommu,
+@@ -1525,32 +1525,39 @@ static struct dmar_domain *alloc_domain(int flags)
  	return domain;
  }
  
-+static int get_last_alias(struct pci_dev *pdev, u16 alias, void *opaque)
-+{
-+	*(u16 *)opaque = alias;
-+	return 0;
-+}
-+
- /* domain is initialized */
- static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+-static int iommu_attach_domain(struct dmar_domain *domain,
+-			       struct intel_iommu *iommu)
++static int __iommu_attach_domain(struct dmar_domain *domain,
++				 struct intel_iommu *iommu)
  {
--	struct dmar_domain *domain, *free = NULL;
--	struct intel_iommu *iommu = NULL;
-+	struct dmar_domain *domain, *tmp;
-+	struct intel_iommu *iommu;
- 	struct device_domain_info *info;
--	struct pci_dev *dev_tmp = NULL;
-+	u16 dma_alias;
- 	unsigned long flags;
--	u8 bus, devfn, bridge_bus, bridge_devfn;
-+	u8 bus, devfn;
+ 	int num;
+ 	unsigned long ndomains;
+-	unsigned long flags;
  
- 	domain = find_domain(dev);
- 	if (domain)
- 		return domain;
- 
-+	iommu = device_to_iommu(dev, &bus, &devfn);
-+	if (!iommu)
-+		return NULL;
-+
- 	if (dev_is_pci(dev)) {
- 		struct pci_dev *pdev = to_pci_dev(dev);
--		u16 segment;
- 
--		segment = pci_domain_nr(pdev->bus);
--		dev_tmp = pci_find_upstream_pcie_bridge(pdev);
--		if (dev_tmp) {
--			if (pci_is_pcie(dev_tmp)) {
--				bridge_bus = dev_tmp->subordinate->number;
--				bridge_devfn = 0;
--			} else {
--				bridge_bus = dev_tmp->bus->number;
--				bridge_devfn = dev_tmp->devfn;
--			}
--			spin_lock_irqsave(&device_domain_lock, flags);
--			info = dmar_search_domain_by_dev_info(segment,
--							      bridge_bus,
--							      bridge_devfn);
--			if (info) {
--				iommu = info->iommu;
--				domain = info->domain;
--			}
--			spin_unlock_irqrestore(&device_domain_lock, flags);
--			/* pcie-pci bridge already has a domain, uses it */
--			if (info)
--				goto found_domain;
-+		pci_for_each_dma_alias(pdev, get_last_alias, &dma_alias);
-+
-+		spin_lock_irqsave(&device_domain_lock, flags);
-+		info = dmar_search_domain_by_dev_info(pci_domain_nr(pdev->bus),
-+						      PCI_BUS_NUM(dma_alias),
-+						      dma_alias & 0xff);
-+		if (info) {
-+			iommu = info->iommu;
-+			domain = info->domain;
- 		}
--	}
-+		spin_unlock_irqrestore(&device_domain_lock, flags);
- 
--	iommu = device_to_iommu(dev, &bus, &devfn);
--	if (!iommu)
--		goto error;
-+		/* DMA alias already has a domain, uses it */
-+		if (info)
-+			goto found_domain;
-+	}
- 
- 	/* Allocate and initialize new domain for the device */
- 	domain = alloc_domain(false);
- 	if (!domain)
--		goto error;
-+		return NULL;
-+
- 	if (iommu_attach_domain(domain, iommu)) {
- 		free_domain_mem(domain);
--		domain = NULL;
--		goto error;
-+		return NULL;
- 	}
--	free = domain;
--	if (domain_init(domain, gaw))
--		goto error;
- 
--	/* register pcie-to-pci device */
--	if (dev_tmp) {
--		domain = dmar_insert_dev_info(iommu, bridge_bus, bridge_devfn,
--					      NULL, domain);
-+	if (domain_init(domain, gaw)) {
-+		domain_exit(domain);
-+		return NULL;
-+	}
-+
-+	/* register PCI DMA alias device */
-+	if (dev_is_pci(dev)) {
-+		tmp = dmar_insert_dev_info(iommu, PCI_BUS_NUM(dma_alias),
-+					   dma_alias & 0xff, NULL, domain);
-+
-+		if (!tmp || tmp != domain) {
-+			domain_exit(domain);
-+			domain = tmp;
-+		}
-+
- 		if (!domain)
--			goto error;
-+			return NULL;
+ 	ndomains = cap_ndoms(iommu->cap);
+-
+-	spin_lock_irqsave(&iommu->lock, flags);
+-
+ 	num = find_first_zero_bit(iommu->domain_ids, ndomains);
+-	if (num >= ndomains) {
+-		spin_unlock_irqrestore(&iommu->lock, flags);
+-		printk(KERN_ERR "IOMMU: no free domain ids\n");
+-		return -ENOMEM;
++	if (num < ndomains) {
++		set_bit(num, iommu->domain_ids);
++		iommu->domains[num] = domain;
++	} else {
++		num = -ENOSPC;
  	}
  
- found_domain:
--	domain = dmar_insert_dev_info(iommu, bus, devfn, dev, domain);
--error:
--	if (free != domain)
--		domain_exit(free);
-+	tmp = dmar_insert_dev_info(iommu, bus, devfn, dev, domain);
-+
-+	if (!tmp || tmp != domain) {
-+		domain_exit(domain);
-+		domain = tmp;
-+	}
- 
- 	return domain;
- }
-@@ -4029,33 +4019,21 @@ out_free_dmar:
- 	return ret;
- }
- 
-+static int iommu_detach_dev_cb(struct pci_dev *pdev, u16 alias, void *opaque)
-+{
-+	struct intel_iommu *iommu = opaque;
-+
-+	iommu_detach_dev(iommu, PCI_BUS_NUM(alias), alias & 0xff);
-+	return 0;
+-	domain->id = num;
+-	domain->iommu_count++;
+-	set_bit(num, iommu->domain_ids);
+-	set_bit(iommu->seq_id, domain->iommu_bmp);
+-	iommu->domains[num] = domain;
++	return num;
 +}
 +
- static void iommu_detach_dependent_devices(struct intel_iommu *iommu,
- 					   struct device *dev)
- {
--	struct pci_dev *tmp, *parent, *pdev;
--
- 	if (!iommu || !dev || !dev_is_pci(dev))
- 		return;
- 
--	pdev = to_pci_dev(dev);
--
--	/* dependent device detach */
--	tmp = pci_find_upstream_pcie_bridge(pdev);
--	/* Secondary interface's bus number and devfn 0 */
--	if (tmp) {
--		parent = pdev->bus->self;
--		while (parent != tmp) {
--			iommu_detach_dev(iommu, parent->bus->number,
--					 parent->devfn);
--			parent = parent->bus->self;
--		}
--		if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
--			iommu_detach_dev(iommu,
--				tmp->subordinate->number, 0);
--		else /* this is a legacy PCI bridge */
--			iommu_detach_dev(iommu, tmp->bus->number,
--					 tmp->devfn);
--	}
-+	pci_for_each_dma_alias(to_pci_dev(dev), &iommu_detach_dev_cb, iommu);
- }
- 
- static void domain_remove_one_dev_info(struct dmar_domain *domain,
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 9b17489..757e0b0 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -369,29 +369,52 @@ static int set_hpet_sid(struct irte *irte, u8 id)
- 	return 0;
- }
- 
-+struct set_msi_sid_data {
-+	struct pci_dev *pdev;
-+	u16 alias;
-+};
-+
-+static int set_msi_sid_cb(struct pci_dev *pdev, u16 alias, void *opaque)
++static int iommu_attach_domain(struct dmar_domain *domain,
++			       struct intel_iommu *iommu)
 +{
-+	struct set_msi_sid_data *data = opaque;
++	int num;
++	unsigned long flags;
 +
-+	data->pdev = pdev;
-+	data->alias = alias;
-+
-+	return 0;
-+}
-+
- static int set_msi_sid(struct irte *irte, struct pci_dev *dev)
- {
--	struct pci_dev *bridge;
-+	struct set_msi_sid_data data;
- 
- 	if (!irte || !dev)
- 		return -1;
- 
--	/* PCIe device or Root Complex integrated PCI device */
--	if (pci_is_pcie(dev) || !dev->bus->parent) {
--		set_irte_sid(irte, SVT_VERIFY_SID_SQ, SQ_ALL_16,
--			     (dev->bus->number << 8) | dev->devfn);
--		return 0;
--	}
-+	pci_for_each_dma_alias(dev, set_msi_sid_cb, &data);
- 
--	bridge = pci_find_upstream_pcie_bridge(dev);
--	if (bridge) {
--		if (pci_is_pcie(bridge))/* this is a PCIe-to-PCI/PCIX bridge */
--			set_irte_sid(irte, SVT_VERIFY_BUS, SQ_ALL_16,
--				(bridge->bus->number << 8) | dev->bus->number);
--		else /* this is a legacy PCI bridge */
--			set_irte_sid(irte, SVT_VERIFY_SID_SQ, SQ_ALL_16,
--				(bridge->bus->number << 8) | bridge->devfn);
--	}
-+	/*
-+	 * DMA alias provides us with a PCI device and alias.  The only case
-+	 * where the it will return an alias on a different bus than the
-+	 * device is the case of a PCIe-to-PCI bridge, where the alias is for
-+	 * the subordinate bus.  In this case we can only verify the bus.
-+	 *
-+	 * If the alias device is on a different bus than our source device
-+	 * then we have a topology based alias, use it.
-+	 *
-+	 * Otherwise, the alias is for a device DMA quirk and we cannot
-+	 * assume that MSI uses the same requester ID.  Therefore use the
-+	 * original device.
-+	 */
-+	if (PCI_BUS_NUM(data.alias) != data.pdev->bus->number)
-+		set_irte_sid(irte, SVT_VERIFY_BUS, SQ_ALL_16,
-+			     PCI_DEVID(PCI_BUS_NUM(data.alias),
-+				       dev->bus->number));
-+	else if (data.pdev->bus->number != dev->bus->number)
-+		set_irte_sid(irte, SVT_VERIFY_SID_SQ, SQ_ALL_16, data.alias);
++	spin_lock_irqsave(&iommu->lock, flags);
++	num = __iommu_attach_domain(domain, iommu);
++	if (num < 0)
++		pr_err("IOMMU: no free domain ids\n");
 +	else
-+		set_irte_sid(irte, SVT_VERIFY_SID_SQ, SQ_ALL_16,
-+			     PCI_DEVID(dev->bus->number, dev->devfn));
++		domain->id = num;
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
  
+-	return 0;
++	return num;
+ }
+ 
+ static void iommu_detach_domain(struct dmar_domain *domain,
+@@ -1560,17 +1567,53 @@ static void iommu_detach_domain(struct dmar_domain *domain,
+ 	int num, ndomains;
+ 
+ 	spin_lock_irqsave(&iommu->lock, flags);
+-	ndomains = cap_ndoms(iommu->cap);
+-	for_each_set_bit(num, iommu->domain_ids, ndomains) {
+-		if (iommu->domains[num] == domain) {
+-			clear_bit(num, iommu->domain_ids);
+-			iommu->domains[num] = NULL;
+-			break;
++	if (domain_type_is_vm_or_si(domain)) {
++		ndomains = cap_ndoms(iommu->cap);
++		for_each_set_bit(num, iommu->domain_ids, ndomains) {
++			if (iommu->domains[num] == domain) {
++				clear_bit(num, iommu->domain_ids);
++				iommu->domains[num] = NULL;
++				break;
++			}
+ 		}
++	} else {
++		clear_bit(domain->id, iommu->domain_ids);
++		iommu->domains[domain->id] = NULL;
+ 	}
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
+ }
+ 
++static void domain_attach_iommu(struct dmar_domain *domain,
++			       struct intel_iommu *iommu)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&domain->iommu_lock, flags);
++	if (!test_and_set_bit(iommu->seq_id, domain->iommu_bmp)) {
++		domain->iommu_count++;
++		if (domain->iommu_count == 1)
++			domain->nid = iommu->node;
++		domain_update_iommu_cap(domain);
++	}
++	spin_unlock_irqrestore(&domain->iommu_lock, flags);
++}
++
++static int domain_detach_iommu(struct dmar_domain *domain,
++			       struct intel_iommu *iommu)
++{
++	unsigned long flags;
++	int count = INT_MAX;
++
++	spin_lock_irqsave(&domain->iommu_lock, flags);
++	if (test_and_clear_bit(iommu->seq_id, domain->iommu_bmp)) {
++		count = --domain->iommu_count;
++		domain_update_iommu_cap(domain);
++	}
++	spin_unlock_irqrestore(&domain->iommu_lock, flags);
++
++	return count;
++}
++
+ static struct iova_domain reserved_iova_list;
+ static struct lock_class_key reserved_rbtree_key;
+ 
+@@ -1708,9 +1751,7 @@ static void domain_exit(struct dmar_domain *domain)
+ 	/* clear attached or cached domains */
+ 	rcu_read_lock();
+ 	for_each_active_iommu(iommu, drhd)
+-		if (domain_type_is_vm(domain) ||
+-		    test_bit(iommu->seq_id, domain->iommu_bmp))
+-			iommu_detach_domain(domain, iommu);
++		iommu_detach_domain(domain, iommu);
+ 	rcu_read_unlock();
+ 
+ 	dma_free_pagelist(freelist);
+@@ -1764,16 +1805,12 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 		}
+ 
+ 		if (found == 0) {
+-			num = find_first_zero_bit(iommu->domain_ids, ndomains);
+-			if (num >= ndomains) {
++			id = __iommu_attach_domain(domain, iommu);
++			if (id < 0) {
+ 				spin_unlock_irqrestore(&iommu->lock, flags);
+-				printk(KERN_ERR "IOMMU: no free domain ids\n");
++				pr_err("IOMMU: no free domain ids\n");
+ 				return -EFAULT;
+ 			}
+-
+-			set_bit(num, iommu->domain_ids);
+-			iommu->domains[num] = domain;
+-			id = num;
+ 		}
+ 
+ 		/* Skip top levels of page tables for
+@@ -1832,14 +1869,8 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 	iommu_enable_dev_iotlb(info);
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
+ 
+-	spin_lock_irqsave(&domain->iommu_lock, flags);
+-	if (!test_and_set_bit(iommu->seq_id, domain->iommu_bmp)) {
+-		domain->iommu_count++;
+-		if (domain->iommu_count == 1)
+-			domain->nid = iommu->node;
+-		domain_update_iommu_cap(domain);
+-	}
+-	spin_unlock_irqrestore(&domain->iommu_lock, flags);
++	domain_attach_iommu(domain, iommu);
++
  	return 0;
  }
+ 
+@@ -2104,7 +2135,7 @@ static inline void unlink_domain_info(struct device_domain_info *info)
+ static void domain_remove_dev_info(struct dmar_domain *domain)
+ {
+ 	struct device_domain_info *info;
+-	unsigned long flags, flags2;
++	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&device_domain_lock, flags);
+ 	while (!list_empty(&domain->devices)) {
+@@ -2118,16 +2149,7 @@ static void domain_remove_dev_info(struct dmar_domain *domain)
+ 
+ 		if (domain_type_is_vm(domain)) {
+ 			iommu_detach_dependent_devices(info->iommu, info->dev);
+-			/* clear this iommu in iommu_bmp, update iommu count
+-			 * and capabilities
+-			 */
+-			spin_lock_irqsave(&domain->iommu_lock, flags2);
+-			if (test_and_clear_bit(info->iommu->seq_id,
+-					       domain->iommu_bmp)) {
+-				domain->iommu_count--;
+-				domain_update_iommu_cap(domain);
+-			}
+-			spin_unlock_irqrestore(&domain->iommu_lock, flags2);
++			domain_detach_iommu(domain, info->iommu);
+ 		}
+ 
+ 		free_devinfo_mem(info);
+@@ -2259,11 +2281,12 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	domain = alloc_domain(0);
+ 	if (!domain)
+ 		goto error;
+-	if (iommu_attach_domain(domain, iommu)) {
++	if (iommu_attach_domain(domain, iommu) < 0) {
+ 		free_domain_mem(domain);
+ 		domain = NULL;
+ 		goto error;
+ 	}
++	domain_attach_iommu(domain, iommu);
+ 	free = domain;
+ 	if (domain_init(domain, gaw))
+ 		goto error;
+@@ -2426,10 +2449,11 @@ static int __init si_domain_init(int hw)
+ 
+ 	for_each_active_iommu(iommu, drhd) {
+ 		ret = iommu_attach_domain(si_domain, iommu);
+-		if (ret) {
++		if (ret < 0) {
+ 			domain_exit(si_domain);
+ 			return -EFAULT;
+ 		}
++		domain_attach_iommu(si_domain, iommu);
+ 	}
+ 
+ 	if (md_domain_init(si_domain, DEFAULT_DOMAIN_ADDRESS_WIDTH)) {
+@@ -4099,19 +4123,9 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
+ 	spin_unlock_irqrestore(&device_domain_lock, flags);
+ 
+ 	if (found == 0) {
+-		unsigned long tmp_flags;
+-		spin_lock_irqsave(&domain->iommu_lock, tmp_flags);
+-		clear_bit(iommu->seq_id, domain->iommu_bmp);
+-		domain->iommu_count--;
+-		domain_update_iommu_cap(domain);
+-		spin_unlock_irqrestore(&domain->iommu_lock, tmp_flags);
+-
+-		if (!domain_type_is_vm_or_si(domain)) {
+-			spin_lock_irqsave(&iommu->lock, tmp_flags);
+-			clear_bit(domain->id, iommu->domain_ids);
+-			iommu->domains[domain->id] = NULL;
+-			spin_unlock_irqrestore(&iommu->lock, tmp_flags);
+-		}
++		domain_detach_iommu(domain, iommu);
++		if (!domain_type_is_vm_or_si(domain))
++			iommu_detach_domain(domain, iommu);
+ 	}
+ }
+ 
+-- 
+1.7.10.4
 
