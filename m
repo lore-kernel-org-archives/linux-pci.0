@@ -1,116 +1,213 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60992 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751887AbaEAQG1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 May 2014 12:06:27 -0400
-Date: Thu, 1 May 2014 18:07:39 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI/MSI: Phase out pci_enable_msi_block()
-Message-ID: <20140501160738.GA10407@dhcp-26-207.brq.redhat.com>
-References: <cover.1397458024.git.agordeev@redhat.com>
- <0b08613dc17cd608c1babc1f42b8919f60e1093f.1397458024.git.agordeev@redhat.com>
- <20140414120921.GA32132@dhcp-26-207.brq.redhat.com>
- <20140414132834.GA9164@dhcp-26-207.brq.redhat.com>
- <20140430234933.GB31315@google.com>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:64302 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754818AbaEFWsR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 18:48:17 -0400
+Received: by mail-ig0-f177.google.com with SMTP id l13so332445iga.4
+        for <linux-pci@vger.kernel.org>; Tue, 06 May 2014 15:48:17 -0700 (PDT)
+Subject: [PATCH v2 2/5] DMA-API: Change dma_declare_coherent_memory() CPU
+ address to phys_addr_t
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Date: Tue, 06 May 2014 16:48:26 -0600
+Message-ID: <20140506224826.17968.59068.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140430234933.GB31315@google.com>
+Content-Type: text/plain; charset="utf-8"
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 30, 2014 at 05:49:33PM -0600, Bjorn Helgaas wrote:
-> I mistakenly assumed this would have to wait because I thought there were
-> other pci_enable_msi_block() users that wouldn't be removed until the v3.16
-> merge window.  But I think I was wrong: I put your GenWQE patch in my tree,
-> and I think that was the last use, so I can just add this patch on top.
+dma_declare_coherent_memory() takes two addresses for a region of memory: a
+"bus_addr" and a "device_addr".  I think the intent is that "bus_addr" is
+the physical address a *CPU* would use to access the region, and
+"device_addr" is the bus address the *device* would use to address the
+region.
 
-That is right, GenWQE is the last one.
+Rename "bus_addr" to "phys_addr" and change its type to phys_addr_t.
+Most callers already supply a phys_addr_t for this argument.  The others
+supply a 32-bit integer (a constant, unsigned int, or __u32) and need no
+change.
 
-> But I need a little help understanding the changelog:
-> 
-> > Up until now, when enabling MSI mode for a device a single
-> > successful call to arch_msi_check_device() was followed by
-> > a single call to arch_setup_msi_irqs() function.
-> 
-> I understand this part; the following two paths call
-> arch_msi_check_device() once and then arch_setup_msi_irqs() once:
-> 
->   pci_enable_msi_block
->     pci_msi_check_device
->       arch_msi_check_device
->     msi_capability_init
->       arch_setup_msi_irqs
-> 
->   pci_enable_msix
->     pci_msi_check_device
->       arch_msi_check_device
->     msix_capability_init
->       arch_setup_msi_irqs
-> 
-> > Yet, if arch_msi_check_device() returned success we should be
-> > able to call arch_setup_msi_irqs() multiple times - while it
-> > returns a number of MSI vectors that could have been allocated
-> > (a third state).
-> 
-> I don't know what you mean by "a third state."
+Use "unsigned long", not phys_addr_t, to hold PFNs.
 
-That is "a number of MSI vectors that could have been allocated", which
-is neither success nor failure. In previous conversations someone branded
-it this as "third state".
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ Documentation/DMA-API.txt          |    9 ++++-----
+ drivers/base/dma-coherent.c        |   10 +++++-----
+ drivers/base/dma-mapping.c         |    6 +++---
+ include/asm-generic/dma-coherent.h |   13 +++++--------
+ include/linux/dma-mapping.h        |    7 ++++---
+ 5 files changed, 21 insertions(+), 24 deletions(-)
 
-> Previously we only called arch_msi_check_device() once.  After your patch,
-> pci_enable_msi_range() can call it several times.  The only non-trivial
-> implementation of arch_msi_check_device() is in powerpc, and all the
-> ppc_md.msi_check_device() possibilities look safe to call multiple times.
+diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
+index 1699e26c6284..de4671f81395 100644
+--- a/Documentation/DMA-API.txt
++++ b/Documentation/DMA-API.txt
+@@ -498,19 +498,18 @@ continuing on for size.  Again, you *must* observe the cache line
+ boundaries when doing this.
+ 
+ int
+-dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 			    dma_addr_t device_addr, size_t size, int
+ 			    flags)
+ 
+ Declare region of memory to be handed out by dma_alloc_coherent() when
+ it's asked for coherent memory for this device.
+ 
+-bus_addr is the physical address to which the memory is currently
+-assigned in the bus responding region (this will be used by the
+-platform to perform the mapping).
++phys_addr is the cpu physical address to which the memory is currently
++assigned (this will be ioremapped so the cpu can access the region).
+ 
+ device_addr is the bus address the device needs to be programmed
+-with actually to address this memory (this will be handed out as the
++with to actually address this memory (this will be handed out as the
+ dma_addr_t in dma_alloc_coherent()).
+ 
+ size is the size of the area (must be multiples of PAGE_SIZE).
+diff --git a/drivers/base/dma-coherent.c b/drivers/base/dma-coherent.c
+index bc256b641027..7d6e84a51424 100644
+--- a/drivers/base/dma-coherent.c
++++ b/drivers/base/dma-coherent.c
+@@ -10,13 +10,13 @@
+ struct dma_coherent_mem {
+ 	void		*virt_base;
+ 	dma_addr_t	device_base;
+-	phys_addr_t	pfn_base;
++	unsigned long	pfn_base;
+ 	int		size;
+ 	int		flags;
+ 	unsigned long	*bitmap;
+ };
+ 
+-int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++int dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 				dma_addr_t device_addr, size_t size, int flags)
+ {
+ 	void __iomem *mem_base = NULL;
+@@ -32,7 +32,7 @@ int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+ 
+ 	/* FIXME: this routine just ignores DMA_MEMORY_INCLUDES_CHILDREN */
+ 
+-	mem_base = ioremap(bus_addr, size);
++	mem_base = ioremap(phys_addr, size);
+ 	if (!mem_base)
+ 		goto out;
+ 
+@@ -45,7 +45,7 @@ int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+ 
+ 	dev->dma_mem->virt_base = mem_base;
+ 	dev->dma_mem->device_base = device_addr;
+-	dev->dma_mem->pfn_base = PFN_DOWN(bus_addr);
++	dev->dma_mem->pfn_base = PFN_DOWN(phys_addr);
+ 	dev->dma_mem->size = pages;
+ 	dev->dma_mem->flags = flags;
+ 
+@@ -208,7 +208,7 @@ int dma_mmap_from_coherent(struct device *dev, struct vm_area_struct *vma,
+ 
+ 		*ret = -ENXIO;
+ 		if (off < count && user_count <= count - off) {
+-			unsigned pfn = mem->pfn_base + start + off;
++			unsigned long pfn = mem->pfn_base + start + off;
+ 			*ret = remap_pfn_range(vma, vma->vm_start, pfn,
+ 					       user_count << PAGE_SHIFT,
+ 					       vma->vm_page_prot);
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+index 0ce39a33b3c2..6cd08e145bfa 100644
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -175,7 +175,7 @@ static void dmam_coherent_decl_release(struct device *dev, void *res)
+ /**
+  * dmam_declare_coherent_memory - Managed dma_declare_coherent_memory()
+  * @dev: Device to declare coherent memory for
+- * @bus_addr: Bus address of coherent memory to be declared
++ * @phys_addr: Physical address of coherent memory to be declared
+  * @device_addr: Device address of coherent memory to be declared
+  * @size: Size of coherent memory to be declared
+  * @flags: Flags
+@@ -185,7 +185,7 @@ static void dmam_coherent_decl_release(struct device *dev, void *res)
+  * RETURNS:
+  * 0 on success, -errno on failure.
+  */
+-int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++int dmam_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 				 dma_addr_t device_addr, size_t size, int flags)
+ {
+ 	void *res;
+@@ -195,7 +195,7 @@ int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+ 	if (!res)
+ 		return -ENOMEM;
+ 
+-	rc = dma_declare_coherent_memory(dev, bus_addr, device_addr, size,
++	rc = dma_declare_coherent_memory(dev, phys_addr, device_addr, size,
+ 					 flags);
+ 	if (rc == 0)
+ 		devres_add(dev, res);
+diff --git a/include/asm-generic/dma-coherent.h b/include/asm-generic/dma-coherent.h
+index 2be8a2dbc868..0297e5875798 100644
+--- a/include/asm-generic/dma-coherent.h
++++ b/include/asm-generic/dma-coherent.h
+@@ -16,16 +16,13 @@ int dma_mmap_from_coherent(struct device *dev, struct vm_area_struct *vma,
+  * Standard interface
+  */
+ #define ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
+-extern int
+-dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+-			    dma_addr_t device_addr, size_t size, int flags);
++int dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
++				dma_addr_t device_addr, size_t size, int flags);
+ 
+-extern void
+-dma_release_declared_memory(struct device *dev);
++void dma_release_declared_memory(struct device *dev);
+ 
+-extern void *
+-dma_mark_declared_memory_occupied(struct device *dev,
+-				  dma_addr_t device_addr, size_t size);
++void *dma_mark_declared_memory_occupied(struct device *dev,
++					dma_addr_t device_addr, size_t size);
+ #else
+ #define dma_alloc_from_coherent(dev, size, handle, ret) (0)
+ #define dma_release_from_coherent(dev, order, vaddr) (0)
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index 0808d3e7e218..3ec7c831e16a 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -193,7 +193,7 @@ static inline int dma_get_cache_alignment(void)
+ 
+ #ifndef ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
+ static inline int
+-dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 			    dma_addr_t device_addr, size_t size, int flags)
+ {
+ 	return 0;
+@@ -224,13 +224,14 @@ extern void *dmam_alloc_noncoherent(struct device *dev, size_t size,
+ extern void dmam_free_noncoherent(struct device *dev, size_t size, void *vaddr,
+ 				  dma_addr_t dma_handle);
+ #ifdef ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
+-extern int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++extern int dmam_declare_coherent_memory(struct device *dev,
++					phys_addr_t phys_addr,
+ 					dma_addr_t device_addr, size_t size,
+ 					int flags);
+ extern void dmam_release_declared_memory(struct device *dev);
+ #else /* ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY */
+ static inline int dmam_declare_coherent_memory(struct device *dev,
+-				dma_addr_t bus_addr, dma_addr_t device_addr,
++				phys_addr_t phys_addr, dma_addr_t device_addr,
+ 				size_t size, gfp_t gfp)
+ {
+ 	return 0;
 
-Yep, I see it the same way.
-
-> After your patch, the pci_enable_msi_range() path can also call
-> arch_setup_msi_irqs() several times.  I don't see a problem with that --
-> even if the first call succeeds and allocates something, then a subsequent
-> call fails, I assume the allocations will be cleaned up when
-> msi_capability_init() calls free_msi_irqs().
-
-Well, the potential problem related to the fact arch_msi_check_device()
-could be called with 'nvec1' while arch_setup_msi_irqs() could be called
-with 'nvec2', where 'nvec1' > 'nvec2'.
-
-While it is not a problem with current implementations, in therory it is
-possible free_msi_irqs() could be called with 'nvec2' and fail to clean
-up 'nvec1' - 'nvec2' number of resources.
-
-The only assumption that makes the above scenario impossible is if
-arch_msi_check_device() is stateless.
-
-Again, that is purely theoretical with no particular architecture in mind.
-
-> > This update makes use of the assumption described above. It
-> > could have broke things had the architectures done any pre-
-> > allocations or switch to some state in a call to function
-> > arch_msi_check_device(). But because arch_msi_check_device()
-> > is expected stateless and MSI resources are allocated in a
-> > follow-up call to arch_setup_msi_irqs() we should be fine.
-> 
-> I guess you mean that your patch assumes arch_msi_check_device() is
-> stateless.  That looks like a safe assumption to me.
-
-Moreover, if arch_msi_check_device() was not stateless then it would
-be superfluous, since all state switches and allocations are done in
-arch_setup_msi_irqs() anyway.
-
-In fact, I think arch_msi_check_device() could be eliminated, but I
-do not want to engage with PPC folks at this stage ;)
-
-> arch_setup_msi_irqs() is clearly not stateless, but I assume
-> free_msi_irqs() is enough to clean up any state if we fail.
-> 
-> Bjorn
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
