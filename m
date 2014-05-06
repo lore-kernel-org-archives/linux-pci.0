@@ -1,144 +1,315 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:28080 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934371AbaEFHFU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 03:05:20 -0400
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch Part1 V2 00/29] use irqdomain to dynamically allocate IRQ for IOAPIC
-Date: Tue, 20 May 2014 00:22:44 +0800
-Message-Id: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 20/21] iommu/vt-d: enhance intel-iommu driver to support DMAR unit hotplug
+Date: Tue,  6 May 2014 15:05:31 +0800
+Message-Id: <1399359932-28972-21-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On x86 platforms, IRQ number are statically allocated to IOAPIC pins at boot.
-There are two issues with this design. First it causes trouble to IOAPIC
-hotplug because we need to allocate a block of IRQ numbers for each IOAPIC.
-Second it may waste IRQ nubmers even if some IOAPIC pins are not used because
-IRQ numbers are statically assigned.
+Implement required callback functions for intel-iommu driver
+to support DMAR unit hotplug.
 
-This patchset tries to enable dynamic IRQ number allocation for IOAPIC
-by adopting the irqdomain framework, it solves the two issues mentioned
-above. It also simplifies the IOAPIC driver by consolidating ways to
-program IOAPIC pins with the irqdomain map interface.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |  206 +++++++++++++++++++++++++++++++------------
+ 1 file changed, 151 insertions(+), 55 deletions(-)
 
-We will enhance the IOAPIC driver core to support ACPI based IOAPIC hotplug
-once the IOAPIC driver has been converted to irqdomain.
-
-This patchset applies to tip/irq/core and has been tested on a two socket 64
-bit Intel platforms with:
-1) ACPI and mpparse enabled (boot successfully)
-2) Mpparse enabled with ACPI disabled (boot successfully)
-3) ACPI enabled with Mpparse disabled (boot successfully)
-
-It also builds successfully (but without booting due to hardware resource
-constraints) for 32 bit platforms with following configuraitons:
-1) IOAPIC diabled
-2) SFI enabled
-3) devicetree (CE4100) enabled
-
-TODO list:
-1) check whether it affects Xen or not
-
-Patch 1 is simple bugfix for MSI.
-
-Patch 2-16 are trivial code improvements, bugfixes and preparation.
-
-Patch 17-23 enable basic irqdomain support and IRQ number dynamic
-allocation.
-
-Patch 24-28 consoldate the way to program IOAPIC pins by using
-irqdomain map() interface.
-
-Patch 29 cleans up unused interfaces and functions in IOAPIC driver.
-
-Tests and comments are warmly welcomed!
-
-V1->V2
-1) Rebase to tip/irq/core
-2) reorder patches to put bugfixes at the head
-3) fix bug in handling shared ISA IRQs
-4) refine commit messages
-
-Jiang Liu (29):
-  x86, irq: update high address field when updating affinity for MSI
-    IRQ
-  genirq, trivial: improve documentation to match current
-    implementation
-  x86, mpparse: use pr_lvl() helper utilities to replace
-    printk(KERN_LVL)
-  x86, mpparse: simplify arch/x86/include/asm/mpspec.h
-  x86, PCI, ACPI: use kmalloc_node() to optimize for performance
-  x86, acpi, irq: kill static function irq_to_gsi()
-  x86, ACPI, trivial: minor improvements to arch/x86/kernel/acpi/boot.c
-  x86, ACPI, irq: enhance error handling in function
-    acpi_register_gsi()
-  x86, ACPI, irq: fix possible eror in GSI to IRQ mapping for legacy
-    IRQ
-  x86, irq, trivial: minor improvements of IRQ related code
-  x86, ioapic: kill unused global variable timer_through_8259
-  x86, ioapic: kill static variable nr_irqs_gsi
-  x86, ioapic: introduce helper utilities to walk ioapics and pins
-  x86, ioapic: use irq_cfg() instead of irq_get_chip_data() for better
-    readability
-  x86, irq: reorganize IO_APIC_get_PCI_irq_vector() to prepare for
-    irqdomain
-  x86, irq: introduce some helper utilities to improve readability
-  x86, ACPI, irq: consolidate algorithm of mapping (ioapic, pin) to IRQ
-    number
-  x86, irq: introduce mechanisms to support dynamically allocate IRQ
-    for IOAPIC
-  x86, irq: enhance mp_register_ioapic() to support irqdomain
-  x86, ACPI, irq: provide basic irqdomain support
-  x86, mpparse, irq: provide basic irqdomain support
-  x86, devicetree, irq: use common mechanism to support irqdomain
-  x86, SFI, irq: provide basic irqdomain support
-  x86, irq: introduce two helper functions to support irqdomain map
-    operation
-  x86, irq, ACPI: use common irqdomain map interface to program IOAPIC
-    pins
-  x86, irq, mpparse: use common irqdomain map interface to program
-    IOAPIC pins
-  x86, irq, SFI: use common irqdomain map interface to program IOAPIC
-    pins
-  x86, irq, devicetree: use common irqdomain map interface to program
-    IOAPIC pins
-  x86, irq: clean up unused IOAPIC interface
-
- Documentation/IRQ-domain.txt      |    3 +-
- arch/x86/include/asm/apic.h       |    4 +-
- arch/x86/include/asm/hardirq.h    |    3 -
- arch/x86/include/asm/io_apic.h    |   45 ++--
- arch/x86/include/asm/mpspec.h     |   13 -
- arch/x86/include/asm/prom.h       |    2 -
- arch/x86/kernel/acpi/boot.c       |  205 +++++++-------
- arch/x86/kernel/apic/apic.c       |    2 +-
- arch/x86/kernel/apic/io_apic.c    |  536 ++++++++++++++++++++++---------------
- arch/x86/kernel/devicetree.c      |   92 +------
- arch/x86/kernel/irqinit.c         |    6 -
- arch/x86/kernel/mpparse.c         |   97 +++----
- arch/x86/pci/acpi.c               |    6 +-
- arch/x86/pci/intel_mid_pci.c      |   17 +-
- arch/x86/pci/irq.c                |    2 -
- arch/x86/platform/intel-mid/sfi.c |   18 +-
- arch/x86/platform/sfi/sfi.c       |   12 +-
- kernel/irq/internals.h            |    2 +-
- kernel/irq/irqdomain.c            |    6 +-
- 19 files changed, 550 insertions(+), 521 deletions(-)
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index f8db3788d08a..fabafb7a0c9a 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1127,8 +1127,11 @@ static int iommu_alloc_root_entry(struct intel_iommu *iommu)
+ 	unsigned long flags;
+ 
+ 	root = (struct root_entry *)alloc_pgtable_page(iommu->node);
+-	if (!root)
++	if (!root) {
++		pr_err("IOMMU: allocating root entry for %s failed\n",
++			iommu->name);
+ 		return -ENOMEM;
++	}
+ 
+ 	__iommu_flush_cache(iommu, root, ROOT_SIZE);
+ 
+@@ -1468,7 +1471,7 @@ static int iommu_init_domains(struct intel_iommu *iommu)
+ 	return 0;
+ }
+ 
+-static void free_dmar_iommu(struct intel_iommu *iommu)
++static void disable_dmar_iommu(struct intel_iommu *iommu)
+ {
+ 	struct dmar_domain *domain;
+ 	int i;
+@@ -1492,11 +1495,16 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
+ 
+ 	if (iommu->gcmd & DMA_GCMD_TE)
+ 		iommu_disable_translation(iommu);
++}
+ 
+-	kfree(iommu->domains);
+-	kfree(iommu->domain_ids);
+-	iommu->domains = NULL;
+-	iommu->domain_ids = NULL;
++static void free_dmar_iommu(struct intel_iommu *iommu)
++{
++	if ((iommu->domains) && (iommu->domain_ids)) {
++		kfree(iommu->domains);
++		kfree(iommu->domain_ids);
++		iommu->domains = NULL;
++		iommu->domain_ids = NULL;
++	}
+ 
+ 	g_iommus[iommu->seq_id] = NULL;
+ 
+@@ -2692,6 +2700,41 @@ static int __init iommu_prepare_static_identity_mapping(int hw)
+ 	return 0;
+ }
+ 
++static void intel_iommu_init_qi(struct intel_iommu *iommu)
++{
++	/*
++	 * Start from the sane iommu hardware state.
++	 * If the queued invalidation is already initialized by us
++	 * (for example, while enabling interrupt-remapping) then
++	 * we got the things already rolling from a sane state.
++	 */
++	if (!iommu->qi) {
++		/*
++		 * Clear any previous faults.
++		 */
++		dmar_fault(-1, iommu);
++		/*
++		 * Disable queued invalidation if supported and already enabled
++		 * before OS handover.
++		 */
++		dmar_disable_qi(iommu);
++	}
++
++	if (dmar_enable_qi(iommu)) {
++		/*
++		 * Queued Invalidate not enabled, use Register Based Invalidate
++		 */
++		iommu->flush.flush_context = __iommu_flush_context;
++		iommu->flush.flush_iotlb = __iommu_flush_iotlb;
++		pr_info("IOMMU: %s using Register based invalidation\n",
++			iommu->name);
++	} else {
++		iommu->flush.flush_context = qi_flush_context;
++		iommu->flush.flush_iotlb = qi_flush_iotlb;
++		pr_info("IOMMU: %s using Queued invalidation\n", iommu->name);
++	}
++}
++
+ static int __init init_dmars(void)
+ {
+ 	struct dmar_drhd_unit *drhd;
+@@ -2720,6 +2763,10 @@ static int __init init_dmars(void)
+ 			  DMAR_UNITS_SUPPORTED);
+ 	}
+ 
++	/* Preallocate enough resources for IOMMU hot-addition */
++	if (g_num_of_iommus < DMAR_UNITS_SUPPORTED)
++		g_num_of_iommus = DMAR_UNITS_SUPPORTED;
++
+ 	g_iommus = kcalloc(g_num_of_iommus, sizeof(struct intel_iommu *),
+ 			GFP_KERNEL);
+ 	if (!g_iommus) {
+@@ -2748,58 +2795,14 @@ static int __init init_dmars(void)
+ 		 * among all IOMMU's. Need to Split it later.
+ 		 */
+ 		ret = iommu_alloc_root_entry(iommu);
+-		if (ret) {
+-			printk(KERN_ERR "IOMMU: allocate root entry failed\n");
++		if (ret)
+ 			goto free_iommu;
+-		}
+ 		if (!ecap_pass_through(iommu->ecap))
+ 			hw_pass_through = 0;
+ 	}
+ 
+-	/*
+-	 * Start from the sane iommu hardware state.
+-	 */
+-	for_each_active_iommu(iommu, drhd) {
+-		/*
+-		 * If the queued invalidation is already initialized by us
+-		 * (for example, while enabling interrupt-remapping) then
+-		 * we got the things already rolling from a sane state.
+-		 */
+-		if (iommu->qi)
+-			continue;
+-
+-		/*
+-		 * Clear any previous faults.
+-		 */
+-		dmar_fault(-1, iommu);
+-		/*
+-		 * Disable queued invalidation if supported and already enabled
+-		 * before OS handover.
+-		 */
+-		dmar_disable_qi(iommu);
+-	}
+-
+-	for_each_active_iommu(iommu, drhd) {
+-		if (dmar_enable_qi(iommu)) {
+-			/*
+-			 * Queued Invalidate not enabled, use Register Based
+-			 * Invalidate
+-			 */
+-			iommu->flush.flush_context = __iommu_flush_context;
+-			iommu->flush.flush_iotlb = __iommu_flush_iotlb;
+-			printk(KERN_INFO "IOMMU %d 0x%Lx: using Register based "
+-			       "invalidation\n",
+-				iommu->seq_id,
+-			       (unsigned long long)drhd->reg_base_addr);
+-		} else {
+-			iommu->flush.flush_context = qi_flush_context;
+-			iommu->flush.flush_iotlb = qi_flush_iotlb;
+-			printk(KERN_INFO "IOMMU %d 0x%Lx: using Queued "
+-			       "invalidation\n",
+-				iommu->seq_id,
+-			       (unsigned long long)drhd->reg_base_addr);
+-		}
+-	}
++	for_each_active_iommu(iommu, drhd)
++		intel_iommu_init_qi(iommu);
+ 
+ 	if (iommu_pass_through)
+ 		iommu_identity_mapping |= IDENTMAP_ALL;
+@@ -2885,8 +2888,10 @@ static int __init init_dmars(void)
+ 	return 0;
+ 
+ free_iommu:
+-	for_each_active_iommu(iommu, drhd)
++	for_each_active_iommu(iommu, drhd) {
++		disable_dmar_iommu(iommu);
+ 		free_dmar_iommu(iommu);
++	}
+ 	kfree(deferred_flush);
+ free_g_iommus:
+ 	kfree(g_iommus);
+@@ -3771,9 +3776,100 @@ int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg)
+ 	return 0;
+ }
+ 
++static int intel_iommu_add(struct dmar_drhd_unit *dmaru)
++{
++	int ret = 0;
++	struct intel_iommu *iommu = dmaru->iommu;
++
++	if (g_iommus[iommu->seq_id])
++		return 0;
++
++	if (hw_pass_through && !ecap_pass_through(iommu->ecap)) {
++		pr_warn("IOMMU: %s doesn't support hardware pass through.\n",
++			iommu->name);
++		return -ENXIO;
++	}
++	if (!ecap_sc_support(iommu->ecap) &&
++	    domain_update_iommu_snooping(iommu)) {
++		pr_warn("IOMMU: %s doesn't support snooping.\n",
++			iommu->name);
++		return -ENXIO;
++	}
++	if ((cap_super_page_val(iommu->cap) &
++	    (1 << domain_update_iommu_superpage(iommu))) == 0) {
++		pr_warn("IOMMU: %s doesn't support large page.\n",
++			iommu->name);
++		return -ENXIO;
++	}
++
++	/*
++	 * Disable translation if already enabled prior to OS handover.
++	 */
++	if (iommu->gcmd & DMA_GCMD_TE)
++		iommu_disable_translation(iommu);
++
++	g_iommus[iommu->seq_id] = iommu;
++	ret = iommu_init_domains(iommu);
++	if (ret == 0)
++		ret = iommu_alloc_root_entry(iommu);
++	if (ret)
++		goto out;
++
++	if (dmaru->ignored) {
++		/*
++		 * we always have to disable PMRs or DMA may fail on this device
++		 */
++		if (force_on)
++			iommu_disable_protect_mem_regions(iommu);
++		return 0;
++	}
++
++	intel_iommu_init_qi(iommu);
++	iommu_flush_write_buffer(iommu);
++	ret = dmar_set_interrupt(iommu);
++	if (ret)
++		goto disable_iommu;
++
++	iommu_set_root_entry(iommu);
++	iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
++	iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
++	iommu_enable_translation(iommu);
++
++	if (si_domain) {
++		ret = iommu_attach_domain(si_domain, iommu);
++		if (ret < 0 || si_domain->id != ret)
++			goto disable_iommu;
++		domain_attach_iommu(si_domain, iommu);
++	}
++
++	iommu_disable_protect_mem_regions(iommu);
++	return 0;
++
++disable_iommu:
++	disable_dmar_iommu(iommu);
++out:
++	free_dmar_iommu(iommu);
++	return ret;
++}
++
+ int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+ {
+-	return intel_iommu_enabled ? -ENOSYS : 0;
++	int ret = 0;
++	struct intel_iommu *iommu = dmaru->iommu;
++
++	if (!intel_iommu_enabled)
++		return 0;
++	if (iommu == NULL)
++		return -EINVAL;
++
++	if (insert) {
++		ret = intel_iommu_add(dmaru);
++	} else {
++		disable_dmar_iommu(iommu);
++		free_dmar_iommu(iommu);
++	}
++
++	return ret;
+ }
+ 
+ static void intel_iommu_free_dmars(void)
 -- 
 1.7.10.4
 
