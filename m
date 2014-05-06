@@ -1,127 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41442 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752617AbaEVXIx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 19:08:53 -0400
-Subject: [PATCH v4 13/16] iommu/fsl: Use iommu_group_get_for_dev() for IOMMU
- groups
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, acooks@gmail.com, linux@horizon.com,
-	bhelgaas@google.com, Varun Sethi <varun.sethi@freescale.com>,
-	eddy0596@gmail.com
-Date: Thu, 22 May 2014 17:08:45 -0600
-Message-ID: <20140522230845.2856.95844.stgit@bling.home>
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-References: <20140522230230.2856.40017.stgit@bling.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: <rogerq@ti.com>, <balajitk@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH 00/17] PCIe support for DRA7xx
+Date: Tue, 6 May 2014 19:03:46 +0530
+Message-ID: <1399383244-14556-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Drop custom code and use IOMMU provided grouping support for PCI.
+This patch series adds support for PCIe in DRA7xx including drivers and dt
+data. PCIe in DRA7xx uses desingware IP and hence this re-uses the
+pcie desingware driver (pcie-designware.c) by Jingoo.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Varun Sethi <varun.sethi@freescale.com>
----
- drivers/iommu/fsl_pamu_domain.c |   66 +--------------------------------------
- 1 file changed, 1 insertion(+), 65 deletions(-)
+The last couple of patches are marked as *TEMP* since the TI reset driver [1]
+is not yet merged and is in RFC.
 
-diff --git a/drivers/iommu/fsl_pamu_domain.c b/drivers/iommu/fsl_pamu_domain.c
-index 93072ba..d02d668 100644
---- a/drivers/iommu/fsl_pamu_domain.c
-+++ b/drivers/iommu/fsl_pamu_domain.c
-@@ -38,7 +38,6 @@
- #include <sysdev/fsl_pci.h>
- 
- #include "fsl_pamu_domain.h"
--#include "pci.h"
- 
- /*
-  * Global spinlock that needs to be held while
-@@ -892,8 +891,6 @@ static int fsl_pamu_get_domain_attr(struct iommu_domain *domain,
- 	return ret;
- }
- 
--#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
--
- static struct iommu_group *get_device_iommu_group(struct device *dev)
- {
- 	struct iommu_group *group;
-@@ -950,74 +947,13 @@ static struct iommu_group *get_pci_device_group(struct pci_dev *pdev)
- 	struct pci_controller *pci_ctl;
- 	bool pci_endpt_partioning;
- 	struct iommu_group *group = NULL;
--	struct pci_dev *bridge, *dma_pdev = NULL;
- 
- 	pci_ctl = pci_bus_to_host(pdev->bus);
- 	pci_endpt_partioning = check_pci_ctl_endpt_part(pci_ctl);
- 	/* We can partition PCIe devices so assign device group to the device */
- 	if (pci_endpt_partioning) {
--		bridge = pci_find_upstream_pcie_bridge(pdev);
--		if (bridge) {
--			if (pci_is_pcie(bridge))
--				dma_pdev = pci_get_domain_bus_and_slot(
--						pci_domain_nr(pdev->bus),
--						bridge->subordinate->number, 0);
--			if (!dma_pdev)
--				dma_pdev = pci_dev_get(bridge);
--		} else
--			dma_pdev = pci_dev_get(pdev);
--
--		/* Account for quirked devices */
--		swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
--
--		/*
--		 * If it's a multifunction device that does not support our
--		 * required ACS flags, add to the same group as lowest numbered
--		 * function that also does not suport the required ACS flags.
--		 */
--		if (dma_pdev->multifunction &&
--		    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
--			u8 i, slot = PCI_SLOT(dma_pdev->devfn);
--
--			for (i = 0; i < 8; i++) {
--				struct pci_dev *tmp;
--
--				tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
--				if (!tmp)
--					continue;
--
--				if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
--					swap_pci_ref(&dma_pdev, tmp);
--					break;
--				}
--				pci_dev_put(tmp);
--			}
--		}
--
--		/*
--		 * Devices on the root bus go through the iommu.  If that's not us,
--		 * find the next upstream device and test ACS up to the root bus.
--		 * Finding the next device may require skipping virtual buses.
--		 */
--		while (!pci_is_root_bus(dma_pdev->bus)) {
--			struct pci_bus *bus = dma_pdev->bus;
--
--			while (!bus->self) {
--				if (!pci_is_root_bus(bus))
--					bus = bus->parent;
--				else
--					goto root_bus;
--			}
--
--			if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
--				break;
--
--			swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
--		}
-+		group = iommu_group_get_for_dev(&pdev->dev);
- 
--root_bus:
--		group = get_device_iommu_group(&dma_pdev->dev);
--		pci_dev_put(dma_pdev);
- 		/*
- 		 * PCIe controller is not a paritionable entity
- 		 * free the controller device iommu_group.
+Tested broadcom PCIe card and XIO2000 bridge along with DGE530T ethernet
+card.
+
+Changes from RFC:
+* Added external clock support for PCIE APLL
+* Miscellaneous cleanups in Documentation, macro naming etc..
+
+[1] -> http://www.spinics.net/lists/linux-omap/msg106411.html
+
+Keerthy (2):
+  ARM: dts: DRA7: Add divider table to optfclk_pciephy_div clock
+  ARM: dts: DRA7: Change the parent of apll_pcie_in_clk_mux to
+    dpll_pcie_ref_m2ldo_ck
+
+Kishon Vijay Abraham I (15):
+  phy: phy-omap-pipe3: Add support for PCIe PHY
+  phy: omap-control: add external clock support for PCIe PHY
+  phy: ti-pipe3: add external clock support for PCIe PHY
+  phy: pipe3: insert delay to enumerate in GEN2 mode
+  pci: host: pcie-dra7xx: add support for pcie-dra7xx controller
+  pci: host: pcie-designware: Use *base-mask* for configuring the iATU
+  arm: dra7xx: Add hwmod data for pcie1 phy and pcie2 phy
+  arm: dra7xx: Add hwmod data for pcie1 and pcie2 subsystems
+  ARM: dts: dra7xx-clocks: Add missing 32khz clocks used for PHY
+  ARM: dts: dra7: Add dt data for PCIe PHY control module
+  ARM: dts: dra7: Add dt data for PCIe PHY
+  ARM: dts: dra7: Add dt data for PCIe controller
+  ARM: OMAP: Enable PCI for DRA7
+  pci: host: pcie-dra7xx: use reset framework APIs to reset PCIe
+  ARM: dts: dra7: Add *resets* property for PCIe dt node
+
+ .../devicetree/bindings/pci/designware-pcie.txt    |    1 +
+ Documentation/devicetree/bindings/pci/ti-pci.txt   |   35 ++
+ Documentation/devicetree/bindings/phy/ti-phy.txt   |   21 +-
+ arch/arm/boot/dts/dra7.dtsi                        |   55 +++
+ arch/arm/boot/dts/dra7xx-clocks.dtsi               |   11 +-
+ arch/arm/mach-omap2/Kconfig                        |    2 +
+ arch/arm/mach-omap2/cm2_7xx.h                      |    4 +
+ arch/arm/mach-omap2/omap_hwmod_7xx_data.c          |  112 ++++++
+ arch/arm/mach-omap2/prm7xx.h                       |    4 +
+ drivers/pci/host/Kconfig                           |   10 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pci-dra7xx.c                      |  395 ++++++++++++++++++++
+ drivers/pci/host/pcie-designware.c                 |   39 +-
+ drivers/pci/host/pcie-designware.h                 |    1 +
+ drivers/phy/phy-omap-control.c                     |   92 ++++-
+ drivers/phy/phy-ti-pipe3.c                         |  142 +++++--
+ include/linux/phy/omap_control_phy.h               |   23 ++
+ 17 files changed, 898 insertions(+), 50 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
+ create mode 100644 drivers/pci/host/pci-dra7xx.c
+
+-- 
+1.7.9.5
 
