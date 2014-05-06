@@ -1,37 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:35161 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752878AbaE2AKz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 20:10:55 -0400
-Date: Thu, 29 May 2014 09:10:51 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	grant.likely@linaro.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, rdunlap@infradead.org,
-	linux-doc@vger.kernel.org, linux-sh@vger.kernel.org
-Subject: Re: [PATCH v4] pci-rcar-gen2: add device tree support
-Message-ID: <20140529001050.GC22705@verge.net.au>
-References: <201405200110.21914.sergei.shtylyov@cogentembedded.com>
- <20140528135154.GQ11907@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140528135154.GQ11907@google.com>
+Received: from mga01.intel.com ([192.55.52.88]:54280 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934375AbaEFHFN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 03:05:13 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 19/21] iommu/vt-d: enhance error recovery in function intel_enable_irq_remapping()
+Date: Tue,  6 May 2014 15:05:30 +0800
+Message-Id: <1399359932-28972-20-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 28, 2014 at 07:51:54AM -0600, Bjorn Helgaas wrote:
-> On Tue, May 20, 2014 at 01:10:20AM +0400, Sergei Shtylyov wrote:
-> > From: Ben Dooks <ben.dooks@codethink.co.uk>
-> > 
-> > Add device tree probing support to the 'pci-rcar-gen2' driver.
-> > 
-> > Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
-> > [Sergei: numerous fixes/cleanups/additions]
-> > Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> 
-> Applied to pci/host-rcar for v3.16, thanks everybody!
+Enhance error recovery in function intel_enable_irq_remapping()
+by tearing down all created data structures.
 
-Thanks Bjorn.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel_irq_remapping.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 9f1c86566452..f65b68d3de10 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -673,9 +673,11 @@ static int __init intel_enable_irq_remapping(void)
+ 	return eim ? IRQ_REMAP_X2APIC_MODE : IRQ_REMAP_XAPIC_MODE;
+ 
+ error:
+-	/*
+-	 * handle error condition gracefully here!
+-	 */
++	for_each_iommu(iommu, drhd)
++		if (ecap_ir_support(iommu->ecap)) {
++			iommu_disable_irq_remapping(iommu);
++			intel_teardown_irq_remapping(iommu);
++		}
+ 
+ 	if (x2apic_present)
+ 		pr_warn("Failed to enable irq remapping.  You are vulnerable to irq-injection attacks.\n");
+-- 
+1.7.10.4
+
