@@ -1,104 +1,176 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:52385 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756219AbaE2Pf3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 May 2014 11:35:29 -0400
-Message-ID: <53875399.2020700@ti.com>
-Date: Thu, 29 May 2014 11:34:49 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+Received: from mout.kundenserver.de ([212.227.17.24]:54994 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754940AbaEFNy5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 09:54:57 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	Marek Vasut <marex@denx.de>, balajitk@ti.com,
 	Mohit Kumar <mohit.kumar@st.com>,
 	Jingoo Han <jg1.han@samsung.com>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware
- core driver
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <1400169692-9677-6-git-send-email-m-karicheri2@ti.com> <6048322.x3M3sdDEWO@wuerfel>
-In-Reply-To: <6048322.x3M3sdDEWO@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Bjorn Helgaas <bhelgaas@google.com>, rogerq@ti.com
+Subject: Re: [PATCH 05/17] pci: host: pcie-dra7xx: add support for pcie-dra7xx controller
+Date: Tue, 06 May 2014 15:54:49 +0200
+Message-ID: <4300084.bc6ByDTk7W@wuerfel>
+In-Reply-To: <1399383244-14556-6-git-send-email-kishon@ti.com>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <1399383244-14556-6-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/15/2014 12:23 PM, Arnd Bergmann wrote:
-> On Thursday 15 May 2014 12:01:32 Murali Karicheri wrote:
+On Tuesday 06 May 2014 19:03:51 Kishon Vijay Abraham I wrote:
+> Added support for pcie controller in dra7xx. This driver re-uses
+> the designware core code that is already present in kernel.
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Mohit Kumar <mohit.kumar@st.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Marek Vasut <marex@denx.de>
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+
+Looks pretty good overall, just a few details I noticed:
+
+> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> new file mode 100644
+> index 0000000..6cb6f09
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> @@ -0,0 +1,33 @@
+> +TI PCI Controllers
+> +
+> +PCIe Designware Controller
+> +This node should have the properties described in "designware-pcie.txt".
+> + - compatible: Should be "ti,dra7xx-pcie""
+
+No "xx" in compatible strings please. Just make name this after the first
+chip to use this particular interface.
+
+> + - reg : Address and length of the register set for the device.
+> + - reg-names : "ti_conf" for the TI specific registers and rc_dbics for the
+> +   "designware" registers.
+
+The description uses inconsistent quotation marks. You should also have
+a fixed order in the binding, such as
+
+ - reg : Two register ranges as listed in the reg-names property
+ - reg-names : The first entry must be "ti-conf" for the TI specific registers
+	       The second entry must be "rc-dbics" for the designware pcie registers.
+
+> + - phys : the phandle for the PHY device (used by generic PHY framework)
+> + - phy-names : the names of the PHY corresponding to the PHYs present in the
+> +   *phy* phandle.
+
+It's not just a phandle, it can be any phy specifier including additional
+argument cells.
+
+The second line should just read
+
+ - phy-names : must be "pcie-phy"
+
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index a6f67ec..7be6393 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -1,6 +1,16 @@
+>  menu "PCI host controller drivers"
+>  	depends on PCI
+>  
+> +config PCI_DRA7XX
+> +	bool "TI DRA7xx PCIe controller"
+> +	select PCIE_DW
+> +	depends on OF || HAS_IOMEM || TI_PIPE3
+
+I think you mean &&, not || here.
+
+> +static inline u32 x(void __iomem *base, u32 offset)
+> +{
+> +	return readl(base + offset);
+> +}
+> +
+> +static inline void dra7xx_pcie_writel(void __iomem *base, u32 offset, u32 value)
+> +{
+> +	writel(value, base + offset);
+> +}
+
+These don't actually seem to add any value, you need more characters
+to call the inline function than to open-code it.
+
+> +static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
+> +{
+> +	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+> +
+> +	dra7xx_pcie_writel(dra7xx->base, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
+> +			   ~INTERRUPTS);
+> +	dra7xx_pcie_writel(dra7xx->base,
+> +			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
+> +	dra7xx_pcie_writel(dra7xx->base, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+> +			   ~LEG_EP_INTERRUPTS & ~MSI);
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+> +		dra7xx_pcie_writel(dra7xx->base,
+> +				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
+> +	else
+> +		dra7xx_pcie_writel(dra7xx->base,
+> +				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
+> +				   LEG_EP_INTERRUPTS);
+
+Doesn't this just enable one or the other? In general I'd assume you need
+both INTx and MSI, at least if MSI is available.
+
+It probably doesn't hurt to always turn them all on.
+
+> +static int add_pcie_port(struct dra7xx_pcie *dra7xx,
+> +			  struct platform_device *pdev)
+> +{
+> +	int ret;
+> +	struct pcie_port *pp;
+> +	struct resource *res;
+> +	struct device *dev = &pdev->dev;
+> +
+> +	pp = &dra7xx->pp;
+> +	pp->dev = dev;
+> +	pp->ops = &dra7xx_pcie_host_ops;
+> +
+> +	spin_lock_init(&pp->conf_lock);
+> +
+> +	pp->irq = platform_get_irq(pdev, 1);
+> +	if (pp->irq < 0) {
+> +		dev_err(dev, "missing IRQ resource\n");
+> +		return -EINVAL;
+> +	}
 >
->> +static int
->> +keystone_pcie_fault(unsigned long addr, unsigned int fsr,
->> +		struct pt_regs *regs)
->> +{
->> +	unsigned long instr = *(unsigned long *) instruction_pointer(regs);
->> +
->> +	if ((instr & 0x0e100090) == 0x00100090) {
->> +		int reg = (instr >> 12) & 15;
->> +
->> +		regs->uregs[reg] = -1;
->> +		regs->ARM_pc += 4;
->> +	}
->> +
->> +	return 0;
->> +}
-> This needs to check in the PCI host registers what happened and do
-> some appropriate action. If the fault was not caused by PCIe, it
-> should not be ignored here but get passed on to the next handler.
->
->
-Arnd,
 
-The PCI controller is not able to detect the abort error from the EP and 
-this gets
-reported to ARM as an Asynchronous external abort. PCI fault handler 
-needs to
-consume this fault, otherwise it can't work on the Keystone h/w.
+The binding does not list a mandatory "interrupts" property, so
+this should not be treated as an error.
 
-For example pci-imx6.c has
+> +static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+> +{
+> +	irq = platform_get_irq(pdev, 0);
+> +	if (irq < 0) {
+> +		dev_err(dev, "missing IRQ resource\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	ret = devm_request_irq(&pdev->dev, irq, dra7xx_pcie_irq_handler,
+> +			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
+> +	if (ret) {
+> +		dev_err(&pdev->dev, "failed to request irq\n");
+> +		return ret;
+> +	}
 
-/*  Added for PCI abort handling */
-static int imx6q_pcie_abort_handler(unsigned long addr,
-                 unsigned int fsr, struct pt_regs *regs)
-{
-         return 0;
-}
+Same here.
 
-Other examples are
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
+> +	base = devm_ioremap_nocache(dev, res->start, resource_size(res));
 
-1) arch/arm/mach-cns3xxx/pci.c
-static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
-                                       struct pt_regs *regs)
-{
-         if (fsr & (1 << 10))
-                 regs->ARM_pc += 4;
-         return 0;
-}
-2) arch/.arm/plat-iop/pci.c
-/*
-  * When a PCI device does not exist during config cycles, the 80200 gets a
-  * bus error instead of returning 0xffffffff. This handler simply returns.
-  */
-static int
-iop3xx_pci_abort(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
-{
-         DBG("PCI abort: address = 0x%08lx fsr = 0x%03x PC = 0x%08lx LR 
-= 0x%08lx\n",
-                 addr, fsr, regs->ARM_pc, regs->ARM_lr);
+Just use devm_ioremap() instead of devm_ioremap_nocache(). The second
+one is just there for historic reasons, and they always do the same
+thing.
 
-         /*
-          * If it was an imprecise abort, then we need to correct the
-          * return address to be _after_ the instruction.
-          */
-         if (fsr & (1 << 10))
-                 regs->ARM_pc += 4;
 
-         return 0;
-}
-
-I suggest we document this as done in plat-iop. Let me know as I need to 
-post my
-v2 of the patch this week that incorporates all the comments so far on v1.
-
-Murali
+	Arnd
