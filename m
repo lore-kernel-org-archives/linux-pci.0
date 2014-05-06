@@ -1,124 +1,182 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v2 12/15] iommu/fsl: Use pci_find_dma_isolation_root() for
- IOMMU groups
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, Varun Sethi <varun.sethi@freescale.com>,
-	acooks@gmail.com, linux-kernel@vger.kernel.org
-Date: Fri, 09 May 2014 09:29:38 -0600
-Message-ID: <20140509152937.8321.75213.stgit@bling.home>
-In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
-References: <20140509151735.8321.22017.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 15/21] iommu/vt-d: dynamically allocate and free seq_id for DMAR units
+Date: Tue,  6 May 2014 15:05:26 +0800
+Message-Id: <1399359932-28972-16-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Drop custom code and use PCI provided isolation root support.
+Introduce functions to support dynamic IOMMU seq_id allocating and
+releasing, which will be used to support DMAR hotplug.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Varun Sethi <varun.sethi@freescale.com>
+Also rename IOMMU_UNITS_SUPPORTED as DMAR_UNITS_SUPPORTED.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/iommu/fsl_pamu_domain.c |   67 ++-------------------------------------
- 1 file changed, 3 insertions(+), 64 deletions(-)
+ drivers/iommu/dmar.c        |   40 ++++++++++++++++++++++++++++++++++------
+ drivers/iommu/intel-iommu.c |   13 +++----------
+ include/linux/dmar.h        |    6 ++++++
+ 3 files changed, 43 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/iommu/fsl_pamu_domain.c b/drivers/iommu/fsl_pamu_domain.c
-index 93072ba..83e3e7c 100644
---- a/drivers/iommu/fsl_pamu_domain.c
-+++ b/drivers/iommu/fsl_pamu_domain.c
-@@ -38,7 +38,6 @@
- #include <sysdev/fsl_pci.h>
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index acfceb25a2d2..7a871607cedb 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -69,6 +69,7 @@ LIST_HEAD(dmar_drhd_units);
+ struct acpi_table_header * __initdata dmar_tbl;
+ static acpi_size dmar_tbl_size;
+ static int dmar_dev_scope_status = 1;
++static unsigned long dmar_seq_ids[BITS_TO_LONGS(DMAR_UNITS_SUPPORTED)];
  
- #include "fsl_pamu_domain.h"
--#include "pci.h"
- 
- /*
-  * Global spinlock that needs to be held while
-@@ -892,8 +891,6 @@ static int fsl_pamu_get_domain_attr(struct iommu_domain *domain,
- 	return ret;
+ static int alloc_iommu(struct dmar_drhd_unit *drhd);
+ static void free_iommu(struct intel_iommu *iommu);
+@@ -928,11 +929,32 @@ out:
+ 	return err;
  }
  
--#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
--
- static struct iommu_group *get_device_iommu_group(struct device *dev)
- {
- 	struct iommu_group *group;
-@@ -950,74 +947,16 @@ static struct iommu_group *get_pci_device_group(struct pci_dev *pdev)
- 	struct pci_controller *pci_ctl;
- 	bool pci_endpt_partioning;
- 	struct iommu_group *group = NULL;
--	struct pci_dev *bridge, *dma_pdev = NULL;
-+	struct pci_dev *dma_pdev;
- 
- 	pci_ctl = pci_bus_to_host(pdev->bus);
- 	pci_endpt_partioning = check_pci_ctl_endpt_part(pci_ctl);
- 	/* We can partition PCIe devices so assign device group to the device */
- 	if (pci_endpt_partioning) {
--		bridge = pci_find_upstream_pcie_bridge(pdev);
--		if (bridge) {
--			if (pci_is_pcie(bridge))
--				dma_pdev = pci_get_domain_bus_and_slot(
--						pci_domain_nr(pdev->bus),
--						bridge->subordinate->number, 0);
--			if (!dma_pdev)
--				dma_pdev = pci_dev_get(bridge);
--		} else
--			dma_pdev = pci_dev_get(pdev);
--
--		/* Account for quirked devices */
--		swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
--
--		/*
--		 * If it's a multifunction device that does not support our
--		 * required ACS flags, add to the same group as lowest numbered
--		 * function that also does not suport the required ACS flags.
--		 */
--		if (dma_pdev->multifunction &&
--		    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
--			u8 i, slot = PCI_SLOT(dma_pdev->devfn);
-+		dma_pdev = pci_find_dma_isolation_root(pdev);
- 
--			for (i = 0; i < 8; i++) {
--				struct pci_dev *tmp;
--
--				tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
--				if (!tmp)
--					continue;
--
--				if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
--					swap_pci_ref(&dma_pdev, tmp);
--					break;
--				}
--				pci_dev_put(tmp);
--			}
--		}
--
--		/*
--		 * Devices on the root bus go through the iommu.  If that's not us,
--		 * find the next upstream device and test ACS up to the root bus.
--		 * Finding the next device may require skipping virtual buses.
--		 */
--		while (!pci_is_root_bus(dma_pdev->bus)) {
--			struct pci_bus *bus = dma_pdev->bus;
--
--			while (!bus->self) {
--				if (!pci_is_root_bus(bus))
--					bus = bus->parent;
--				else
--					goto root_bus;
--			}
--
--			if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
--				break;
--
--			swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
--		}
--
--root_bus:
- 		group = get_device_iommu_group(&dma_pdev->dev);
--		pci_dev_put(dma_pdev);
++static int dmar_alloc_seq_id(struct intel_iommu *iommu)
++{
++	iommu->seq_id = find_first_zero_bit(dmar_seq_ids,
++					    DMAR_UNITS_SUPPORTED);
++	if (iommu->seq_id >= DMAR_UNITS_SUPPORTED) {
++		iommu->seq_id = -1;
++	} else {
++		set_bit(iommu->seq_id, dmar_seq_ids);
++		sprintf(iommu->name, "dmar%d", iommu->seq_id);
++	}
 +
- 		/*
- 		 * PCIe controller is not a paritionable entity
- 		 * free the controller device iommu_group.
++	return iommu->seq_id;
++}
++
++static void dmar_free_seq_id(struct intel_iommu *iommu)
++{
++	if (iommu->seq_id >= 0) {
++		clear_bit(iommu->seq_id, dmar_seq_ids);
++		iommu->seq_id = -1;
++	}
++}
++
+ static int alloc_iommu(struct dmar_drhd_unit *drhd)
+ {
+ 	struct intel_iommu *iommu;
+ 	u32 ver, sts;
+-	static int iommu_allocated = 0;
+ 	int agaw = 0;
+ 	int msagaw = 0;
+ 	int err;
+@@ -946,13 +968,16 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
+ 	if (!iommu)
+ 		return -ENOMEM;
+ 
+-	iommu->seq_id = iommu_allocated++;
+-	sprintf (iommu->name, "dmar%d", iommu->seq_id);
++	if (dmar_alloc_seq_id(iommu) < 0) {
++		pr_err("IOMMU: failed to allocate seq_id\n");
++		err = -ENOSPC;
++		goto error;
++	}
+ 
+ 	err = map_iommu(iommu, drhd->reg_base_addr);
+ 	if (err) {
+ 		pr_err("IOMMU: failed to map %s\n", iommu->name);
+-		goto error;
++		goto error_free_seq_id;
+ 	}
+ 
+ 	err = -EINVAL;
+@@ -996,9 +1021,11 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
+ 	drhd->iommu = iommu;
+ 	return 0;
+ 
+- err_unmap:
++err_unmap:
+ 	unmap_iommu(iommu);
+- error:
++error_free_seq_id:
++	dmar_free_seq_id(iommu);
++error:
+ 	kfree(iommu);
+ 	return err;
+ }
+@@ -1020,6 +1047,7 @@ static void free_iommu(struct intel_iommu *iommu)
+ 	if (iommu->reg)
+ 		unmap_iommu(iommu);
+ 
++	dmar_free_seq_id(iommu);
+ 	kfree(iommu);
+ }
+ 
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index b696bcd3f6e0..361de6697d8a 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -328,17 +328,10 @@ static int hw_pass_through = 1;
+ /* si_domain contains mulitple devices */
+ #define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 1)
+ 
+-/* define the limit of IOMMUs supported in each domain */
+-#ifdef	CONFIG_X86
+-# define	IOMMU_UNITS_SUPPORTED	MAX_IO_APICS
+-#else
+-# define	IOMMU_UNITS_SUPPORTED	64
+-#endif
+-
+ struct dmar_domain {
+ 	int	id;			/* domain id */
+ 	int	nid;			/* node id */
+-	DECLARE_BITMAP(iommu_bmp, IOMMU_UNITS_SUPPORTED);
++	DECLARE_BITMAP(iommu_bmp, DMAR_UNITS_SUPPORTED);
+ 					/* bitmap of iommus this domain uses*/
+ 
+ 	struct list_head devices; 	/* all devices' list */
+@@ -2719,12 +2712,12 @@ static int __init init_dmars(void)
+ 		 * threaded kernel __init code path all other access are read
+ 		 * only
+ 		 */
+-		if (g_num_of_iommus < IOMMU_UNITS_SUPPORTED) {
++		if (g_num_of_iommus < DMAR_UNITS_SUPPORTED) {
+ 			g_num_of_iommus++;
+ 			continue;
+ 		}
+ 		printk_once(KERN_ERR "intel-iommu: exceeded %d IOMMUs\n",
+-			  IOMMU_UNITS_SUPPORTED);
++			  DMAR_UNITS_SUPPORTED);
+ 	}
+ 
+ 	g_iommus = kcalloc(g_num_of_iommus, sizeof(struct intel_iommu *),
+diff --git a/include/linux/dmar.h b/include/linux/dmar.h
+index fac8ca34f9a8..c8a576bc3a98 100644
+--- a/include/linux/dmar.h
++++ b/include/linux/dmar.h
+@@ -30,6 +30,12 @@
+ 
+ struct acpi_dmar_header;
+ 
++#ifdef	CONFIG_X86
++# define	DMAR_UNITS_SUPPORTED	MAX_IO_APICS
++#else
++# define	DMAR_UNITS_SUPPORTED	64
++#endif
++
+ /* DMAR Flags */
+ #define DMAR_INTR_REMAP		0x1
+ #define DMAR_X2APIC_OPT_OUT	0x2
+-- 
+1.7.10.4
 
