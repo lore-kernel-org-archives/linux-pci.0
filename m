@@ -1,88 +1,148 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:39650 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934095AbaEFHEA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 03:04:00 -0400
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Jiri Kosina <trivial@kernel.org>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	sfi-devel@simplefirmware.org, linux-doc@vger.kernel.org
-Subject: [RFC Patch Part1 V1 01/30] genirq, trivial: improve documentation to match current implementation
-Date: Fri, 16 May 2014 16:05:21 +0800
-Message-Id: <1400227550-5935-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 05/21] iommu/vt-d: only dynamically allocate domain id for virtual domains
+Date: Tue,  6 May 2014 15:05:16 +0800
+Message-Id: <1399359932-28972-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
+
+Check the same domain id is allocated for si_domain on each IOMMU,
+otherwise the IOTLB flush for si_domain will fail.
+
+Now the rules to allocate and manage domain id are:
+1) For normal and static identity domains, domain id is allocated
+   when creating domain structure. And this id will be written into
+   context entry.
+2) For virtual machine domain, a virtual id is allocated when creating
+   domain. And when binding virtual machine domain to an iommu, a real
+   domain id is allocated on demand and this domain id will be written
+   into context entry. So domain->id for virtual machine domain may be
+   different from the domain id written into context entry(used by
+   hardware).
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- Documentation/IRQ-domain.txt |    3 +--
- kernel/irq/internals.h       |    2 +-
- kernel/irq/irqdomain.c       |    6 +++---
- 3 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/iommu/intel-iommu.c |   46 ++++++++++++++++++++++++-------------------
+ 1 file changed, 26 insertions(+), 20 deletions(-)
 
-diff --git a/Documentation/IRQ-domain.txt b/Documentation/IRQ-domain.txt
-index 03df71aeb38c..8a8b82c9ca53 100644
---- a/Documentation/IRQ-domain.txt
-+++ b/Documentation/IRQ-domain.txt
-@@ -41,8 +41,7 @@ An interrupt controller driver creates and registers an irq_domain by
- calling one of the irq_domain_add_*() functions (each mapping method
- has a different allocator function, more on that later).  The function
- will return a pointer to the irq_domain on success.  The caller must
--provide the allocator function with an irq_domain_ops structure with
--the .map callback populated as a minimum.
-+provide the allocator function with an irq_domain_ops structure.
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 29f613e7eea3..0ab0cd236b16 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1551,15 +1551,27 @@ static int iommu_attach_domain(struct dmar_domain *domain,
  
- In most cases, the irq_domain will begin empty without any mappings
- between hwirq and IRQ numbers.  Mappings are added to the irq_domain
-diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-index ddf1ffeb79f1..9552a0c123c8 100644
---- a/kernel/irq/internals.h
-+++ b/kernel/irq/internals.h
-@@ -33,7 +33,7 @@ enum {
- };
+ 	spin_lock_irqsave(&iommu->lock, flags);
+ 	num = __iommu_attach_domain(domain, iommu);
++	spin_unlock_irqrestore(&iommu->lock, flags);
+ 	if (num < 0)
+ 		pr_err("IOMMU: no free domain ids\n");
+-	else
+-		domain->id = num;
+-	spin_unlock_irqrestore(&iommu->lock, flags);
  
- /*
-- * Bit masks for desc->state
-+ * Bit masks for desc->core_internal_state__do_not_mess_with_it
-  *
-  * IRQS_AUTODETECT		- autodetection in progress
-  * IRQS_SPURIOUS_DISABLED	- was disabled due to spurious interrupt
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index f14033700c25..eb5e10e32e05 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -27,14 +27,14 @@ static struct irq_domain *irq_default_domain;
-  * __irq_domain_add() - Allocate a new irq_domain data structure
-  * @of_node: optional device-tree node of the interrupt controller
-  * @size: Size of linear map; 0 for radix mapping only
-+ * @hwirq_max: Maximum number of interrupts supported by controller
-  * @direct_max: Maximum value of direct maps; Use ~0 for no limit; 0 for no
-  *              direct mapping
-  * @ops: map/unmap domain callbacks
-  * @host_data: Controller private data pointer
-  *
-- * Allocates and initialize and irq_domain structure.  Caller is expected to
-- * register allocated irq_domain with irq_domain_register().  Returns pointer
-- * to IRQ domain, or NULL on failure.
-+ * Allocates and initialize and irq_domain structure.
-+ * Returns pointer to IRQ domain, or NULL on failure.
-  */
- struct irq_domain *__irq_domain_add(struct device_node *of_node, int size,
- 				    irq_hw_number_t hwirq_max, int direct_max,
+ 	return num;
+ }
+ 
++static int iommu_attach_vm_domain(struct dmar_domain *domain,
++				  struct intel_iommu *iommu)
++{
++	int num;
++	unsigned long ndomains;
++
++	ndomains = cap_ndoms(iommu->cap);
++	for_each_set_bit(num, iommu->domain_ids, ndomains)
++		if (iommu->domains[num] == domain)
++			return num;
++
++	return __iommu_attach_domain(domain, iommu);
++}
++
+ static void iommu_detach_domain(struct dmar_domain *domain,
+ 				struct intel_iommu *iommu)
+ {
+@@ -1766,8 +1778,6 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 	struct context_entry *context;
+ 	unsigned long flags;
+ 	struct dma_pte *pgd;
+-	unsigned long num;
+-	unsigned long ndomains;
+ 	int id;
+ 	int agaw;
+ 	struct device_domain_info *info = NULL;
+@@ -1792,20 +1802,8 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 	pgd = domain->pgd;
+ 
+ 	if (domain_type_is_vm_or_si(domain)) {
+-		int found = 0;
+-
+-		/* find an available domain id for this device in iommu */
+-		ndomains = cap_ndoms(iommu->cap);
+-		for_each_set_bit(num, iommu->domain_ids, ndomains) {
+-			if (iommu->domains[num] == domain) {
+-				id = num;
+-				found = 1;
+-				break;
+-			}
+-		}
+-
+-		if (found == 0) {
+-			id = __iommu_attach_domain(domain, iommu);
++		if (domain_type_is_vm(domain)) {
++			id = iommu_attach_vm_domain(domain, iommu);
+ 			if (id < 0) {
+ 				spin_unlock_irqrestore(&iommu->lock, flags);
+ 				pr_err("IOMMU: no free domain ids\n");
+@@ -2281,7 +2279,8 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	domain = alloc_domain(0);
+ 	if (!domain)
+ 		goto error;
+-	if (iommu_attach_domain(domain, iommu) < 0) {
++	domain->id = iommu_attach_domain(domain, iommu);
++	if (domain->id < 0) {
+ 		free_domain_mem(domain);
+ 		domain = NULL;
+ 		goto error;
+@@ -2442,6 +2441,7 @@ static int __init si_domain_init(int hw)
+ 	struct dmar_drhd_unit *drhd;
+ 	struct intel_iommu *iommu;
+ 	int nid, ret = 0;
++	bool first = true;
+ 
+ 	si_domain = alloc_domain(DOMAIN_FLAG_STATIC_IDENTITY);
+ 	if (!si_domain)
+@@ -2452,6 +2452,12 @@ static int __init si_domain_init(int hw)
+ 		if (ret < 0) {
+ 			domain_exit(si_domain);
+ 			return -EFAULT;
++		} else if (first) {
++			si_domain->id = ret;
++			first = false;
++		} else if (si_domain->id != ret) {
++			domain_exit(si_domain);
++			return -EFAULT;
+ 		}
+ 		domain_attach_iommu(si_domain, iommu);
+ 	}
 -- 
 1.7.10.4
 
