@@ -1,222 +1,101 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor4.renesas.com ([210.160.252.174]:14810 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S934579AbaEFKq1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 06:46:27 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: [Patch V3 31/37] x86, irq: simplify the way to handle ISA IRQ
-Date: Tue, 27 May 2014 16:08:06 +0800
-Message-Id: <1401178092-1228-32-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH v7 01/10] PCI: host: rcar: Add Renesas R-Car PCIe driver
+Date: Tue, 6 May 2014 10:46:22 +0000
+Message-ID: <0b36805160b7426faa481d5603bebb6c@HKXPR06MB168.apcprd06.prod.outlook.com>
+References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
+ <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
+ <20140424191901.GE29593@google.com>
+ <9b8bedae9d604383ac7ec22fd0f62fdb@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <CAErSpo6Autto4n4A4wHtXQNJzD3RKevkVcLZHUods-2-eiRDYQ@mail.gmail.com>
+ <20140428203501.GA3016@obsidianresearch.com>
+ <ac795ce3bb6349708e2e96686e19d24f@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <20140430154345.GA1705@obsidianresearch.com>
+ <b9160c7a49304270b5070dcf49482723@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <20140501165003.GC3296@obsidianresearch.com>
+In-Reply-To: <20140501165003.GC3296@obsidianresearch.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On startup, setup_IO_APIC_irqs() will program all IOAPIC pins for ISA
-IRQs. Later when mp_map_pin_to_irq() is called, it just returns ISA IRQ
-number without programming corresponding IOAPIC pin.
+Hi Jason,
 
-This patch consolidates the way to program IOAPIC pins for both ISA and
-non-ISA IRQs into mp_map_pin_to_irq() as below:
-1) For ISA IRQs, mp_irqs array is used to map IOAPIC pin to IRQ and
-   mp_irqdomain_map() is used to actually program the pin.
-2) For non-ISA IRQs, irqdomain is used to map IOAPIC pin to IRQ, and
-   mp_irqdomain_map() is also used to actually program the pin.
+On 01 May 2014 17:50, Jason wrote:
+> On Thu, May 01, 2014 at 09:50:56AM +0000, Phil Edworthy wrote:
+> 
+> > > The logic should be:
+> > >  if (bus == primary)
+> > >     do io access to host bridge
+> > >  else if (bus == secondary)
+> > >     issue type 0 TLP on the wire
+> > >  else if (bus > secondary && bus <= subordinate)
+> > >     issue type 1 TLP on the wire
+> > >  else
+> > >     fail, invalid bus number
+> > > Where the three values come from the register in the PCI host bridge's
+> > > configuration space, and are kept in sync with the programming from
+> > > the Linux PCI core.
+> > >
+> > > It is just a happy hapenstance that root_bus_nr equals the value the
+> > > PCI core programmed into secondary - that is not guarenteed, you must
+> > > use the primary value directly.
+> 
+> > For type0 TLPs, we are not checking that root_bus_nr equals the
+> > value the PCI core programmed into secondary, we are checking that
+> > the (root_bus_nr == bus->parent->number). The only way this wouldn't
+> > work is if root_bus_nr was not the root bus number.
+> 
+> Okay, that isn't as sketchy, but that process still ignores the
+> subordinate bus number and the failure case as required by PCI.
+> 
+> The goal here is to have the stuff below the drivers implement the PCI
+> spec so that the core code can assume everything below is
+> conformant. Drivers should not introduce gratuitous differences 'just
+> because'
+> 
+> There is no reason drivers should be using PCI core structures to make
+> decisions when the spec says those decisions are driven by config
+> space fields.
+> 
+> This way the PCI core code doesn't have to be aware of any weird
+> non-standard edge cases.. Such as not failing bus numbers beyond the
+> subordinate bus number.
+> 
+> > Since the Synopsys DW driver also saves off sys->busnr and later
+> > uses this to determine if accesses are for the host bridge, I guess
+> > that means it won't always work either, right? Or is it ok because
+> > the DW driver saves sys->busnr in its .scan function?
+> 
+> Sounds like it is making the same mistake, and nobody noticed. This is
+> another reason why it is important to implement correctly so people
+> copying copy the right stuff :)
+> 
+> > When would the PCI core change the root bus number to something
+> > other than set in sys->busnr?
+> 
+> I think the more likely scenario is that 'sys' in general is
+> architecture specific and its use is being discouraged so that host
+> drivers are not arch specific.
+> 
+> A domain driver like rcar should always place the root complex
+> integrated bus as bus 0 in the domain.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c    |   15 +------
- arch/x86/kernel/apic/io_apic.c |   88 ++++++++++++----------------------------
- 2 files changed, 29 insertions(+), 74 deletions(-)
+Ok, I now understand the reason for removing the dependency on sys->busnr. That makes sense & I'll update the driver for this.
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 4788b3f50f69..0592c38d9952 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -100,17 +100,6 @@ static u32 isa_irq_to_gsi[NR_IRQS_LEGACY] __read_mostly = {
- 
- #define	ACPI_INVALID_GSI		INT_MIN
- 
--static int map_gsi_to_irq(unsigned int gsi, unsigned int flags)
--{
--	int i;
--
--	for (i = 0; i < NR_IRQS_LEGACY; i++)
--		if (isa_irq_to_gsi[i] == gsi)
--			return i;
--
--	return mp_map_gsi_to_irq(gsi, flags);
--}
--
- /*
-  * This is just a simple wrapper around early_ioremap(),
-  * with sanity checks for phys == 0 and size == 0.
-@@ -504,7 +493,7 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
- 
- int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- {
--	int irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
-+	int irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
- 
- 	if (irq >= 0) {
- 		*irqp = irq;
-@@ -1051,7 +1040,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 		return -1;
- 	}
- 
--	irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
-+	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
- 	if (irq < 0)
- 		return irq;
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 25a2877a5788..7fc34fcf3ea3 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -207,9 +207,6 @@ static int __init parse_noapic(char *str)
- }
- early_param("noapic", parse_noapic);
- 
--static int io_apic_setup_irq_pin(unsigned int irq, int node,
--				 struct io_apic_irq_attr *attr);
--
- /* Will be called in mpparse/acpi/sfi codes for saving IRQ info */
- void mp_save_irq(struct mpc_intsrc *m)
- {
-@@ -1021,34 +1018,35 @@ static int mp_map_pin_to_irq(u32 gsi, int idx, int ioapic, int pin,
- 	struct irq_domain *domain = mp_ioapic_irqdomain(ioapic);
- 	struct mp_pin_info *info = mp_pin_info(ioapic, pin);
- 
-+	if (!domain)
-+		return -1;
-+
-+	mutex_lock(&ioapic_mutex);
-+
- 	/*
- 	 * Don't use irqdomain to manage ISA IRQs because there may be
- 	 * multiple IOAPIC pins sharing the same ISA IRQ number and
- 	 * irqdomain only supports 1:1 mapping between IOAPIC pin and
- 	 * IRQ number.
- 	 */
--	if (idx >= 0 && test_bit(mp_irqs[idx].srcbus, mp_bus_not_pci))
--		return mp_irqs[idx].srcbusirq;
--
--	if (!domain) {
--		/*
--		 * Provide an identity mapping of gsi == irq except on truly
--		 * weird platforms that have non isa irqs in the first 16 gsis.
--		 */
--		return gsi >= NR_IRQS_LEGACY ? gsi : gsi_top + gsi;
-+	if (idx >= 0 && test_bit(mp_irqs[idx].srcbus, mp_bus_not_pci)) {
-+		irq = mp_irqs[idx].srcbusirq;
-+		if ((flags & IOAPIC_MAP_ALLOC) && info->count == 0 &&
-+		    mp_irqdomain_map(domain, irq, pin) != 0)
-+			irq = -1;
-+	} else {
-+		irq = irq_find_mapping(domain, pin);
-+		if (irq <= 0 && (flags & IOAPIC_MAP_ALLOC))
-+			irq = alloc_irq_from_domain(domain, gsi, pin);
- 	}
- 
--	mutex_lock(&ioapic_mutex);
--	irq = irq_find_mapping(domain, pin);
--	if (irq <= 0 && (flags & IOAPIC_MAP_ALLOC))
--		irq = alloc_irq_from_domain(domain, gsi, pin);
--
- 	if (flags & IOAPIC_MAP_ALLOC) {
- 		if (irq > 0)
- 			info->count++;
- 		else if (info->count == 0)
- 			info->set = 0;
- 	}
-+
- 	mutex_unlock(&ioapic_mutex);
- 
- 	return irq > 0 ? irq : -1;
-@@ -1465,55 +1463,23 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
- 	ioapic_write_entry(attr->ioapic, attr->ioapic_pin, entry);
- }
- 
--static bool __init io_apic_pin_not_connected(int idx, int ioapic_idx, int pin)
--{
--	if (idx != -1)
--		return false;
--
--	apic_printk(APIC_VERBOSE, KERN_DEBUG " apic %d pin %d not connected\n",
--		    mpc_ioapic_id(ioapic_idx), pin);
--	return true;
--}
--
--static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
--{
--	int idx, node = cpu_to_node(0);
--	struct io_apic_irq_attr attr;
--	unsigned int pin, irq;
--
--	for_each_pin(ioapic_idx, pin) {
--		idx = find_irq_entry(ioapic_idx, pin, mp_INT);
--		if (io_apic_pin_not_connected(idx, ioapic_idx, pin))
--			continue;
--
--		irq = pin_2_irq(idx, ioapic_idx, pin,
--				ioapic_idx ? 0 : IOAPIC_MAP_ALLOC);
--		if (irq < 0 || !mp_init_irq_at_boot(ioapic_idx, irq))
--			continue;
--
--		/*
--		 * Skip the timer IRQ if there's a quirk handler
--		 * installed and if it returns 1:
--		 */
--		if (apic->multi_timer_check &&
--		    apic->multi_timer_check(ioapic_idx, irq))
--			continue;
--
--		set_io_apic_irq_attr(&attr, ioapic_idx, pin, irq_trigger(idx),
--				     irq_polarity(idx));
--
--		io_apic_setup_irq_pin(irq, node, &attr);
--	}
--}
--
- static void __init setup_IO_APIC_irqs(void)
- {
--	unsigned int ioapic_idx;
-+	unsigned int ioapic, pin;
-+	int idx;
- 
- 	apic_printk(APIC_VERBOSE, KERN_DEBUG "init IO_APIC IRQs\n");
- 
--	for_each_ioapic(ioapic_idx)
--		__io_apic_setup_irqs(ioapic_idx);
-+	for_each_ioapic_pin(ioapic, pin) {
-+		idx = find_irq_entry(ioapic, pin, mp_INT);
-+		if (idx < 0)
-+			apic_printk(APIC_VERBOSE,
-+				    KERN_DEBUG " apic %d pin %d not connected\n",
-+				    mpc_ioapic_id(ioapic), pin);
-+		else
-+			pin_2_irq(idx, ioapic, pin,
-+				  ioapic ? 0 : IOAPIC_MAP_ALLOC);
-+	}
- }
- 
- /*
--- 
-1.7.10.4
-
+Thanks for your patience :)
+Phil
