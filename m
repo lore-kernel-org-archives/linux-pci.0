@@ -1,415 +1,232 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hygieia.santi-shop.eu ([78.46.175.2]:60105 "EHLO
-	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407AbaENUxS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 May 2014 16:53:18 -0400
-Date: Wed, 14 May 2014 22:43:39 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>
-Subject: [Patch] x86, ia64, efifb: Move boot_vga fixup from pci to vgaarb
-Message-ID: <20140514224339.7f8be3a9@neptune.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from devils.ext.ti.com ([198.47.26.153]:44169 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756576AbaEFNer (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 09:34:47 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: <rogerq@ti.com>, <balajitk@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH 01/17] phy: phy-omap-pipe3: Add support for PCIe PHY
+Date: Tue, 6 May 2014 19:03:47 +0530
+Message-ID: <1399383244-14556-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1399383244-14556-1-git-send-email-kishon@ti.com>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With commit b4aa0163056b6c70029b6e8619ce07c274351f42 Matthew Garret
-introduced a efifb vga_default_device() so that EFI systems that do not
-load shadow VBIOS or setup VGA get proper value for boot_vga PCI sysfs
-attribute on the corresponding PCI device.
+PCIe PHY uses an external pll instead of the internal pll used by SATA
+and USB3. So added support in pipe3 PHY to use external pll.
 
-Xorg is refusing to autodetect devices when boot_vga=0 which is the case
-on some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
-the dri device but then bails out with "no devices detected".
-
-With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
-while having native drivers for the GPU also makes selecting
-sysfb/efifb optional.
-
-Remove the efifb implementation of vga_default_device() and initialize
-vgaarb's vga_default_device() with the PCI GPU that matches boot
-screen_info in pci_fixup_video() [x86 and ia64 pci_fixup_video merged
-into common function in vgaarb.c].
-
-Other architectures with PCI GPU might need a similar fixup.
-
-Note: If CONFIG_VGA_ARB is unset vga_default_device() is only available
-      as a stub that returns NULL, making this adjustment insufficient.
-      In addition, with the merge of x86/ia64 fixup code, this would
-      also result in disabled fixup.
-      Unsetting CONFIG_VGA_ARB requires CONFIG_EXPERT=y though.
-
-Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
-This is ported to changes in pci/fixup.c that landed in 3.15-rcs.
+ Documentation/devicetree/bindings/phy/ti-phy.txt |    8 +-
+ drivers/phy/phy-ti-pipe3.c                       |   99 +++++++++++++++++-----
+ 2 files changed, 84 insertions(+), 23 deletions(-)
 
-Is this fine to go in, if so who will take it?
-
-I got no feedback on my last respin (on top of 3.14 a couple of weeks ago,
-which added moving the ia64 pci boot_vga fixup).
-I've been running this revision for a week or so on 3.15-rc kernels here
-(mostly EFI-enabled system, the mentioned MBA as wells as non-Apple systems
-where the patch was not required).
-
-
- arch/ia64/pci/fixup.c       | 56 ++-------------------------------
- arch/x86/include/asm/vga.h  |  6 ----
- arch/x86/pci/fixup.c        | 55 +--------------------------------
- drivers/gpu/vga/vgaarb.c    | 75 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/video/fbdev/efifb.c | 38 -----------------------
- include/linux/vgaarb.h      | 37 ++++++++++++++++++++++
- 6 files changed, 116 insertions(+), 151 deletions(-)
-
-diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
-index eee069a..5df22f9 100644
---- a/arch/ia64/pci/fixup.c
-+++ b/arch/ia64/pci/fixup.c
-@@ -9,64 +9,14 @@
+diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+index 9ce458f..cf3de7e 100644
+--- a/Documentation/devicetree/bindings/phy/ti-phy.txt
++++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+@@ -56,8 +56,8 @@ usb2phy@4a0ad080 {
+ TI PIPE3 PHY
  
- #include <asm/machvec.h>
+ Required properties:
+- - compatible: Should be "ti,phy-usb3" or "ti,phy-pipe3-sata".
+-   "ti,omap-usb3" is deprecated.
++ - compatible: Should be "ti,phy-usb3", "ti,phy-pipe3-sata" or
++   "ti,phy-pipe3-pcie. "ti,omap-usb3" is deprecated.
+  - reg : Address and length of the register set for the device.
+  - reg-names: The names of the register addresses corresponding to the registers
+    filled in "reg".
+@@ -69,6 +69,10 @@ Required properties:
+    * "wkupclk" - wakeup clock.
+    * "sysclk" - system clock.
+    * "refclk" - reference clock.
++   * "dpll_ref" - external dpll ref clk
++   * "dpll_ref_m2" - external dpll ref clk
++   * "phy-div" - divider for apll
++   * "div-clk" - apll clock
  
--/*
-- * Fixup to mark boot BIOS video selected by BIOS before it changes
-- *
-- * From information provided by "Jon Smirl" <jonsmirl@gmail.com>
-- *
-- * The standard boot ROM sequence for an x86 machine uses the BIOS
-- * to select an initial video card for boot display. This boot video
-- * card will have it's BIOS copied to C0000 in system RAM.
-- * IORESOURCE_ROM_SHADOW is used to associate the boot video
-- * card with this copy. On laptops this copy has to be used since
-- * the main ROM may be compressed or combined with another image.
-- * See pci_map_rom() for use of this flag. Before marking the device
-- * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
-- * by either arch cde or vga-arbitration, if so only apply the fixup to this
-- * already determined primary video card.
-- */
--
--static void pci_fixup_video(struct pci_dev *pdev)
-+static void pci_ia64_fixup_video(struct pci_dev *pdev)
- {
--	struct pci_dev *bridge;
--	struct pci_bus *bus;
--	u16 config;
--
- 	if ((strcmp(ia64_platform_name, "dig") != 0)
- 	    && (strcmp(ia64_platform_name, "hpzx1")  != 0))
- 		return;
- 	/* Maybe, this machine supports legacy memory map. */
- 
--	/* Is VGA routed to us? */
--	bus = pdev->bus;
--	while (bus) {
--		bridge = bus->self;
--
--		/*
--		 * From information provided by
--		 * "David Miller" <davem@davemloft.net>
--		 * The bridge control register is valid for PCI header
--		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
--		 * PCI header type NORMAL.
--		 */
--		if (bridge
--		    &&((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
--		       ||(bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
--			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
--						&config);
--			if (!(config & PCI_BRIDGE_CTL_VGA))
--				return;
--		}
--		bus = bus->parent;
--	}
--	if (!vga_default_device() || pdev == vga_default_device()) {
--		pci_read_config_word(pdev, PCI_COMMAND, &config);
--		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
--			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
--			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
--			vga_set_default_device(pdev);
--		}
--	}
-+	pci_fixup_video(pdev);
- }
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
--				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_video);
-+				PCI_CLASS_DISPLAY_VGA, 8, pci_ia64_fixup_video);
-diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
-index 44282fb..c4b9dc2 100644
---- a/arch/x86/include/asm/vga.h
-+++ b/arch/x86/include/asm/vga.h
-@@ -17,10 +17,4 @@
- #define vga_readb(x) (*(x))
- #define vga_writeb(x, y) (*(y) = (x))
- 
--#ifdef CONFIG_FB_EFI
--#define __ARCH_HAS_VGA_DEFAULT_DEVICE
--extern struct pci_dev *vga_default_device(void);
--extern void vga_set_default_device(struct pci_dev *pdev);
--#endif
--
- #endif /* _ASM_X86_VGA_H */
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 94ae9ae..b599847 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -302,60 +302,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PB1,	pcie_r
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC,	pcie_rootport_aspm_quirk);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC1,	pcie_rootport_aspm_quirk);
- 
--/*
-- * Fixup to mark boot BIOS video selected by BIOS before it changes
-- *
-- * From information provided by "Jon Smirl" <jonsmirl@gmail.com>
-- *
-- * The standard boot ROM sequence for an x86 machine uses the BIOS
-- * to select an initial video card for boot display. This boot video
-- * card will have it's BIOS copied to C0000 in system RAM.
-- * IORESOURCE_ROM_SHADOW is used to associate the boot video
-- * card with this copy. On laptops this copy has to be used since
-- * the main ROM may be compressed or combined with another image.
-- * See pci_map_rom() for use of this flag. Before marking the device
-- * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
-- * by either arch cde or vga-arbitration, if so only apply the fixup to this
-- * already determined primary video card.
-- */
--
--static void pci_fixup_video(struct pci_dev *pdev)
--{
--	struct pci_dev *bridge;
--	struct pci_bus *bus;
--	u16 config;
--
--	/* Is VGA routed to us? */
--	bus = pdev->bus;
--	while (bus) {
--		bridge = bus->self;
--
--		/*
--		 * From information provided by
--		 * "David Miller" <davem@davemloft.net>
--		 * The bridge control register is valid for PCI header
--		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
--		 * PCI header type NORMAL.
--		 */
--		if (bridge
--		    && ((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
--		       || (bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
--			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
--						&config);
--			if (!(config & PCI_BRIDGE_CTL_VGA))
--				return;
--		}
--		bus = bus->parent;
--	}
--	if (!vga_default_device() || pdev == vga_default_device()) {
--		pci_read_config_word(pdev, PCI_COMMAND, &config);
--		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
--			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
--			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
--			vga_set_default_device(pdev);
--		}
--	}
--}
-+/* pci_fixup_video shared in vgaarb.c */
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
- 				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_video);
- 
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index af02597..f0fbdf6 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -149,6 +149,81 @@ void vga_set_default_device(struct pci_dev *pdev)
- }
- #endif
- 
-+/*
-+ * Fixup to mark boot BIOS video selected by BIOS before it changes
-+ *
-+ * From information provided by "Jon Smirl" <jonsmirl@gmail.com>
-+ *
-+ * The standard boot ROM sequence for an x86 machine uses the BIOS
-+ * to select an initial video card for boot display. This boot video
-+ * card will have it's BIOS copied to C0000 in system RAM.
-+ * IORESOURCE_ROM_SHADOW is used to associate the boot video
-+ * card with this copy. On laptops this copy has to be used since
-+ * the main ROM may be compressed or combined with another image.
-+ * See pci_map_rom() for use of this flag. Before marking the device
-+ * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
-+ * by either arch cde or vga-arbitration, if so only apply the fixup to this
-+ * already determined primary video card.
-+ */
-+
-+void pci_fixup_video(struct pci_dev *pdev)
-+{
-+	struct pci_dev *bridge;
-+	struct pci_bus *bus;
-+	u16 config;
-+
-+	if (!vga_default_device()) {
-+		resource_size_t start, end;
-+		int i;
-+
-+		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-+			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-+				continue;
-+
-+			start = pci_resource_start(pdev, i);
-+			end  = pci_resource_end(pdev, i);
-+
-+			if (!start || !end)
-+				continue;
-+
-+			if (screen_info.lfb_base >= start &&
-+				(screen_info.lfb_base + screen_info.lfb_size) < end)
-+				vga_set_default_device(pdev);
-+		}
-+	}
-+
-+	/* Is VGA routed to us? */
-+	bus = pdev->bus;
-+	while (bus) {
-+		bridge = bus->self;
-+
-+		/*
-+		 * From information provided by
-+		 * "David Miller" <davem@davemloft.net>
-+		 * The bridge control register is valid for PCI header
-+		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
-+		 * PCI header type NORMAL.
-+		 */
-+		if (bridge
-+		    && ((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-+		       || (bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
-+			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
-+						&config);
-+			if (!(config & PCI_BRIDGE_CTL_VGA))
-+				return;
-+		}
-+		bus = bus->parent;
-+	}
-+	if (!vga_default_device() || pdev == vga_default_device()) {
-+		pci_read_config_word(pdev, PCI_COMMAND, &config);
-+		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-+			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
-+			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
-+			vga_set_default_device(pdev);
-+		}
-+	}
-+}
-+
- static inline void vga_irq_set_state(struct vga_device *vgadev, bool state)
- {
- 	if (vgadev->irq_set_state)
-diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-index ae9618f..a033180 100644
---- a/drivers/video/fbdev/efifb.c
-+++ b/drivers/video/fbdev/efifb.c
-@@ -19,8 +19,6 @@
- 
- static bool request_mem_succeeded = false;
- 
--static struct pci_dev *default_vga;
--
- static struct fb_var_screeninfo efifb_defined = {
- 	.activate		= FB_ACTIVATE_NOW,
- 	.height			= -1,
-@@ -84,18 +82,6 @@ static struct fb_ops efifb_ops = {
- 	.fb_imageblit	= cfb_imageblit,
+ Optional properties:
+  - ctrl-module : phandle of the control module used by PHY driver to power on
+diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
+index 5913676..d43019d 100644
+--- a/drivers/phy/phy-ti-pipe3.c
++++ b/drivers/phy/phy-ti-pipe3.c
+@@ -80,6 +80,7 @@ struct ti_pipe3 {
+ 	struct clk		*wkupclk;
+ 	struct clk		*sys_clk;
+ 	struct clk		*refclk;
++	struct clk		*div_clk;
+ 	struct pipe3_dpll_map	*dpll_map;
  };
  
--struct pci_dev *vga_default_device(void)
--{
--	return default_vga;
--}
+@@ -215,6 +216,9 @@ static int ti_pipe3_init(struct phy *x)
+ 	u32 val;
+ 	int ret = 0;
+ 
++	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-pcie"))
++		return 0;
++
+ 	/* Bring it out of IDLE if it is IDLE */
+ 	val = ti_pipe3_readl(phy->pll_ctrl_base, PLL_CONFIGURATION2);
+ 	if (val & PLL_IDLE) {
+@@ -238,8 +242,11 @@ static int ti_pipe3_exit(struct phy *x)
+ 	u32 val;
+ 	unsigned long timeout;
+ 
+-	/* SATA DPLL can't be powered down due to Errata i783 */
+-	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-sata"))
++	/* SATA DPLL can't be powered down due to Errata i783 and PCIe
++	 * does not have internal DPLL
++	 */
++	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-sata") ||
++	    of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-pcie"))
+ 		return 0;
+ 
+ 	/* Put DPLL in IDLE mode */
+@@ -286,32 +293,41 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+ 	struct device_node *control_node;
+ 	struct platform_device *control_pdev;
+ 	const struct of_device_id *match;
 -
--EXPORT_SYMBOL_GPL(vga_default_device);
--
--void vga_set_default_device(struct pci_dev *pdev)
--{
--	default_vga = pdev;
--}
--
- static int efifb_setup(char *options)
- {
- 	char *this_opt;
-@@ -126,30 +112,6 @@ static int efifb_setup(char *options)
+-	match = of_match_device(of_match_ptr(ti_pipe3_id_table), &pdev->dev);
+-	if (!match)
+-		return -EINVAL;
++	struct clk *clk;
+ 
+ 	phy = devm_kzalloc(&pdev->dev, sizeof(*phy), GFP_KERNEL);
+ 	if (!phy) {
+ 		dev_err(&pdev->dev, "unable to alloc mem for TI PIPE3 PHY\n");
+ 		return -ENOMEM;
+ 	}
++	phy->dev		= &pdev->dev;
+ 
+-	phy->dpll_map = (struct pipe3_dpll_map *)match->data;
+-	if (!phy->dpll_map) {
+-		dev_err(&pdev->dev, "no DPLL data\n");
+-		return -EINVAL;
+-	}
++	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
++		match = of_match_device(of_match_ptr(ti_pipe3_id_table),
++					&pdev->dev);
++		if (!match)
++			return -EINVAL;
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pll_ctrl");
+-	phy->pll_ctrl_base = devm_ioremap_resource(&pdev->dev, res);
+-	if (IS_ERR(phy->pll_ctrl_base))
+-		return PTR_ERR(phy->pll_ctrl_base);
++		phy->dpll_map = (struct pipe3_dpll_map *)match->data;
++		if (!phy->dpll_map) {
++			dev_err(&pdev->dev, "no DPLL data\n");
++			return -EINVAL;
++		}
+ 
+-	phy->dev		= &pdev->dev;
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++						   "pll_ctrl");
++		phy->pll_ctrl_base = devm_ioremap_resource(&pdev->dev, res);
++		if (IS_ERR(phy->pll_ctrl_base))
++			return PTR_ERR(phy->pll_ctrl_base);
+ 
+-	if (!of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
++		phy->sys_clk = devm_clk_get(phy->dev, "sysclk");
++		if (IS_ERR(phy->sys_clk)) {
++			dev_err(&pdev->dev, "unable to get sysclk\n");
++			return -EINVAL;
++		}
++	}
+ 
++	if (!of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
+ 		phy->wkupclk = devm_clk_get(phy->dev, "wkupclk");
+ 		if (IS_ERR(phy->wkupclk)) {
+ 			dev_err(&pdev->dev, "unable to get wkupclk\n");
+@@ -328,10 +344,35 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+ 		phy->refclk = ERR_PTR(-ENODEV);
+ 	}
+ 
+-	phy->sys_clk = devm_clk_get(phy->dev, "sysclk");
+-	if (IS_ERR(phy->sys_clk)) {
+-		dev_err(&pdev->dev, "unable to get sysclk\n");
+-		return -EINVAL;
++	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
++		clk = devm_clk_get(phy->dev, "dpll_ref");
++		if (IS_ERR(clk)) {
++			dev_err(&pdev->dev, "unable to get dpll ref clk\n");
++			return PTR_ERR(clk);
++		}
++		clk_set_rate(clk, 1500000000);
++
++		clk = devm_clk_get(phy->dev, "dpll_ref_m2");
++		if (IS_ERR(clk)) {
++			dev_err(&pdev->dev, "unable to get dpll ref m2 clk\n");
++			return PTR_ERR(clk);
++		}
++		clk_set_rate(clk, 100000000);
++
++		clk = devm_clk_get(phy->dev, "phy-div");
++		if (IS_ERR(clk)) {
++			dev_err(&pdev->dev, "unable to get phy-div clk\n");
++			return PTR_ERR(clk);
++		}
++		clk_set_rate(clk, 100000000);
++
++		phy->div_clk = devm_clk_get(phy->dev, "div-clk");
++		if (IS_ERR(phy->div_clk)) {
++			dev_err(&pdev->dev, "unable to get div-clk\n");
++			return PTR_ERR(phy->div_clk);
++		}
++	} else {
++		phy->div_clk = ERR_PTR(-ENODEV);
+ 	}
+ 
+ 	control_node = of_parse_phandle(node, "ctrl-module", 0);
+@@ -387,6 +428,8 @@ static int ti_pipe3_runtime_suspend(struct device *dev)
+ 		clk_disable_unprepare(phy->wkupclk);
+ 	if (!IS_ERR(phy->refclk))
+ 		clk_disable_unprepare(phy->refclk);
++	if (!IS_ERR(phy->div_clk))
++		clk_disable_unprepare(phy->div_clk);
+ 
+ 	return 0;
+ }
+@@ -412,8 +455,19 @@ static int ti_pipe3_runtime_resume(struct device *dev)
  		}
  	}
  
--	for_each_pci_dev(dev) {
--		int i;
--
--		if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
--			continue;
--
--		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
--			resource_size_t start, end;
--
--			if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
--				continue;
--
--			start = pci_resource_start(dev, i);
--			end  = pci_resource_end(dev, i);
--
--			if (!start || !end)
--				continue;
--
--			if (screen_info.lfb_base >= start &&
--			    (screen_info.lfb_base + screen_info.lfb_size) < end)
--				default_vga = dev;
--		}
--	}
--
++	if (!IS_ERR(phy->div_clk)) {
++		ret = clk_prepare_enable(phy->div_clk);
++		if (ret) {
++			dev_err(phy->dev, "Failed to enable div_clk %d\n", ret);
++			goto err3;
++		}
++	}
  	return 0;
- }
  
-diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
-index 2c02f3a..6518460 100644
---- a/include/linux/vgaarb.h
-+++ b/include/linux/vgaarb.h
-@@ -162,6 +162,43 @@ extern void vga_put(struct pci_dev *pdev, unsigned int rsrc);
- #define vga_put(pdev, rsrc)
- #endif
- 
-+/**
-+ *     pci_fixup_video
-+ *
-+ *     This can be called by arch PCI to fixup boot VGA tagging
-+ *     of VGA PCI devices (e.g. for X86, IA64)
-+ *
-+ *     This code was initially spread/duplicated across:
-+ *     - X86 PCI-fixup
-+ *     - IA64 PCI-fixup
-+ *     - EFI_FB
-+ *
-+ *     * PCI-fixup part:
-+ *     Fixup to mark boot BIOS video selected by BIOS before it changes
-+ *
-+ *     From information provided by "Jon Smirl" <jonsmirl@gmail.com>
-+ *
-+ *     The standard boot ROM sequence for an x86 machine uses the BIOS
-+ *     to select an initial video card for boot display. This boot video
-+ *     card will have it's BIOS copied to C0000 in system RAM.
-+ *     IORESOURCE_ROM_SHADOW is used to associate the boot video
-+ *     card with this copy. On laptops this copy has to be used since
-+ *     the main ROM may be compressed or combined with another image.
-+ *     See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
-+ *     is marked here since the boot video device will be the only enabled
-+ *     video device at this point.
-+ *
-+ *     * EFI_FB part:
-+ *     Some EFI-based system (e.g. Intel-Macs from Apple) do not setup
-+ *     shadow Video-BIOS and thus can only be detected by framebuffer
-+ *     IO memory range. Flag the corresponding GPU as boot_vga.
-+ */
++err3:
++	if (!IS_ERR(phy->wkupclk))
++		clk_disable_unprepare(phy->wkupclk);
 +
-+#if defined(CONFIG_VGA_ARB)
-+void pci_fixup_video(struct pci_dev *pdev);
-+#else
-+static inline void pci_fixup_video(struct pci_dev *pdev) { }
-+#endif
- 
- /**
-  *     vga_default_device
+ err2:
+ 	if (!IS_ERR(phy->refclk))
+ 		clk_disable_unprepare(phy->refclk);
+@@ -446,6 +500,9 @@ static const struct of_device_id ti_pipe3_id_table[] = {
+ 		.compatible = "ti,phy-pipe3-sata",
+ 		.data = dpll_map_sata,
+ 	},
++	{
++		.compatible = "ti,phy-pipe3-pcie",
++	},
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(of, ti_pipe3_id_table);
+-- 
+1.7.9.5
+
