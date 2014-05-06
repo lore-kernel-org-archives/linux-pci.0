@@ -1,386 +1,221 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:49652 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751512AbaELK6A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 May 2014 06:58:00 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
+Received: from mga11.intel.com ([192.55.52.93]:39650 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934095AbaEFHDx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 03:03:53 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com>
-References: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1399892270-25021-3-git-send-email-phil.edworthy@renesas.com>
-Date: Mon, 12 May 2014 11:57:49 +0100
-Subject: [PATCH v8 2/3] PCI: host: rcar: Add MSI support
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V2 03/21] iommu/vt-d: introduce helper functions to improve code readability
+Date: Tue,  6 May 2014 15:05:14 +0800
+Message-Id: <1399359932-28972-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Introduce domain_type_is_vm() and domain_type_is_vm_or_si() to improve
+code readability.
 
-v8:
- - Moved header file contents to c file
- - Formatting cleaned up
- - Removed unused variable in rcar_msi_free()
+Also kill useless macro DOMAIN_FLAG_P2P_MULTIPLE_DEVICES.
 
-v7:
- - No changes
-
-v6:
- - Don't check MSI irq number is valid, as upper level checks this
- - Change "Unexpected MSI" msg to debug level
- - Reword "Unexpected MSI" comment so that it's one line
-
-v5:
- - Return IRQ_NONE from MSI isr when there is no pending MSI
- - Add additional interrupt bindings
-
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pcie-rcar.c | 242 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 241 insertions(+), 1 deletion(-)
+ drivers/iommu/intel-iommu.c |   59 +++++++++++++++++++------------------------
+ 1 file changed, 26 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 3c524b9..8e06124 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -15,8 +15,11 @@
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
- #include <linux/of_pci.h>
-@@ -35,6 +38,7 @@
- #define PCIECDR			0x000020
- #define PCIEMSR			0x000028
- #define PCIEINTXR		0x000400
-+#define PCIEMSITXR		0x000840
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 0b3e6981a2da..63f351a39c63 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -320,16 +320,13 @@ static inline int first_pte_in_page(struct dma_pte *pte)
+ static struct dmar_domain *si_domain;
+ static int hw_pass_through = 1;
  
- /* Transfer control */
- #define PCIETCTLR		0x02000
-@@ -43,6 +47,11 @@
- #define  DATA_LINK_ACTIVE	1
- #define PCIEERRFR		0x02020
- #define  UNSUPPORTED_REQUEST	(1 << 4)
-+#define PCIEMSIFR		0x02044
-+#define PCIEMSIALR		0x02048
-+#define  MSIFE			1
-+#define PCIEMSIAUR		0x0204c
-+#define PCIEMSIIER		0x02050
+-/* devices under the same p2p bridge are owned in one domain */
+-#define DOMAIN_FLAG_P2P_MULTIPLE_DEVICES (1 << 0)
+-
+ /* domain represents a virtual machine, more than one devices
+  * across iommus may be owned in one domain, e.g. kvm guest.
+  */
+-#define DOMAIN_FLAG_VIRTUAL_MACHINE	(1 << 1)
++#define DOMAIN_FLAG_VIRTUAL_MACHINE	(1 << 0)
  
- /* root port address */
- #define PCIEPRAR(x)		(0x02080 + ((x) * 0x4))
-@@ -85,6 +94,8 @@
- #define H1_PCIEPHYDOUTR		0x040014
- #define H1_PCIEPHYSR		0x040018
+ /* si_domain contains mulitple devices */
+-#define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 2)
++#define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 1)
  
-+#define INT_PCI_MSI_NR	32
-+
- #define RCONF(x)	(PCICONF(0)+(x))
- #define RPMCAP(x)	(PMCAP(0)+(x))
- #define REXPCAP(x)	(EXPCAP(0)+(x))
-@@ -97,6 +108,21 @@
- #define PCI_MAX_RESOURCES 4
- #define MAX_NR_INBOUND_MAPS 6
- 
-+struct rcar_msi {
-+	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-+	struct irq_domain *domain;
-+	struct msi_chip chip;
-+	unsigned long pages;
-+	struct mutex lock;
-+	int irq1;
-+	int irq2;
-+};
-+
-+static inline struct rcar_msi *to_rcar_msi(struct msi_chip *chip)
-+{
-+	return container_of(chip, struct rcar_msi, chip);
-+}
-+
- /* Structure representing the PCIe interface */
- struct rcar_pcie {
- 	struct device		*dev;
-@@ -106,6 +132,7 @@ struct rcar_pcie {
- 	int			root_bus_nr;
- 	struct clk		*clk;
- 	struct clk		*bus_clk;
-+	struct			rcar_msi msi;
- };
- 
- static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
-@@ -356,10 +383,20 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
+ /* define the limit of IOMMUs supported in each domain */
+ #ifdef	CONFIG_X86
+@@ -539,6 +536,16 @@ void free_iova_mem(struct iova *iova)
+ 	kmem_cache_free(iommu_iova_cache, iova);
  }
  
-+static void rcar_pcie_add_bus(struct pci_bus *bus)
++static inline int domain_type_is_vm(struct dmar_domain *domain)
 +{
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
-+
-+		bus->msi = &pcie->msi.chip;
-+	}
++	return domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE;
 +}
 +
- struct hw_pci rcar_pci = {
- 	.setup          = rcar_pcie_setup,
- 	.map_irq        = of_irq_parse_and_map_pci,
- 	.ops            = &rcar_pcie_ops,
-+	.add_bus        = rcar_pcie_add_bus,
- };
++static inline int domain_type_is_vm_or_si(struct dmar_domain *domain)
++{
++	return domain->flags & (DOMAIN_FLAG_VIRTUAL_MACHINE |
++				DOMAIN_FLAG_STATIC_IDENTITY);
++}
  
- static void rcar_pcie_enable(struct rcar_pcie *pcie)
-@@ -477,6 +514,10 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
- 	/* Enable MAC data scrambling. */
- 	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
- 
-+	/* Enable MSI */
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
-+
- 	/* Finish initialization - establish a PCI Express link */
- 	pci_write_reg(pcie, CFINIT, PCIETCTLR);
- 
-@@ -530,11 +571,184 @@ static int rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
- 	return -ETIMEDOUT;
- }
- 
-+static int rcar_msi_alloc(struct rcar_msi *chip)
-+{
-+	int msi;
-+
-+	mutex_lock(&chip->lock);
-+
-+	msi = find_first_zero_bit(chip->used, INT_PCI_MSI_NR);
-+	if (msi < INT_PCI_MSI_NR)
-+		set_bit(msi, chip->used);
-+	else
-+		msi = -ENOSPC;
-+
-+	mutex_unlock(&chip->lock);
-+
-+	return msi;
-+}
-+
-+static void rcar_msi_free(struct rcar_msi *chip, unsigned long irq)
-+{
-+	mutex_lock(&chip->lock);
-+	clear_bit(irq, chip->used);
-+	mutex_unlock(&chip->lock);
-+}
-+
-+static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
-+{
-+	struct rcar_pcie *pcie = data;
-+	struct rcar_msi *msi = &pcie->msi;
-+	unsigned long reg;
-+
-+	reg = pci_read_reg(pcie, PCIEMSIFR);
-+
-+	/* MSI & INTx share an interrupt - we only handle MSI here */
-+	if (!reg)
-+		return IRQ_NONE;
-+
-+	while (reg) {
-+		unsigned int index = find_first_bit(&reg, 32);
-+		unsigned int irq;
-+
-+		/* clear the interrupt */
-+		pci_write_reg(pcie, 1 << index, PCIEMSIFR);
-+
-+		irq = irq_find_mapping(msi->domain, index);
-+		if (irq) {
-+			if (test_bit(index, msi->used))
-+				generic_handle_irq(irq);
-+			else
-+				dev_info(pcie->dev, "unhandled MSI\n");
-+		} else {
-+			/* Unknown MSI, just clear it */
-+			dev_dbg(pcie->dev, "unexpected MSI\n");
-+		}
-+
-+		/* see if there's any more pending in this vector */
-+		reg = pci_read_reg(pcie, PCIEMSIFR);
-+	}
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int rcar_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
-+			      struct msi_desc *desc)
-+{
-+	struct rcar_msi *msi = to_rcar_msi(chip);
-+	struct rcar_pcie *pcie = container_of(chip, struct rcar_pcie, msi.chip);
-+	struct msi_msg msg;
-+	unsigned int irq;
-+	int hwirq;
-+
-+	hwirq = rcar_msi_alloc(msi);
-+	if (hwirq < 0)
-+		return hwirq;
-+
-+	irq = irq_create_mapping(msi->domain, hwirq);
-+	if (!irq) {
-+		rcar_msi_free(msi, hwirq);
-+		return -EINVAL;
-+	}
-+
-+	irq_set_msi_desc(irq, desc);
-+
-+	msg.address_lo = pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
-+	msg.address_hi = pci_read_reg(pcie, PCIEMSIAUR);
-+	msg.data = hwirq;
-+
-+	write_msi_msg(irq, &msg);
-+
-+	return 0;
-+}
-+
-+static void rcar_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
-+{
-+	struct rcar_msi *msi = to_rcar_msi(chip);
-+	struct irq_data *d = irq_get_irq_data(irq);
-+
-+	rcar_msi_free(msi, d->hwirq);
-+}
-+
-+static struct irq_chip rcar_msi_irq_chip = {
-+	.name = "R-Car PCIe MSI",
-+	.irq_enable = unmask_msi_irq,
-+	.irq_disable = mask_msi_irq,
-+	.irq_mask = mask_msi_irq,
-+	.irq_unmask = unmask_msi_irq,
-+};
-+
-+static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
-+			irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+	set_irq_flags(irq, IRQF_VALID);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops msi_domain_ops = {
-+	.map = rcar_msi_map,
-+};
-+
-+static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
-+{
-+	struct platform_device *pdev = to_platform_device(pcie->dev);
-+	struct rcar_msi *msi = &pcie->msi;
-+	unsigned long base;
-+	int err;
-+
-+	mutex_init(&msi->lock);
-+
-+	msi->chip.dev = pcie->dev;
-+	msi->chip.setup_irq = rcar_msi_setup_irq;
-+	msi->chip.teardown_irq = rcar_msi_teardown_irq;
-+
-+	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
-+					    &msi_domain_ops, &msi->chip);
-+	if (!msi->domain) {
-+		dev_err(&pdev->dev, "failed to create IRQ domain\n");
-+		return -ENOMEM;
-+	}
-+
-+	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
-+	err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
-+			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
-+		goto err;
-+	}
-+
-+	err = devm_request_irq(&pdev->dev, msi->irq2, rcar_pcie_msi_irq,
-+			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
-+		goto err;
-+	}
-+
-+	/* setup MSI data target */
-+	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-+	base = virt_to_phys((void *)msi->pages);
-+
-+	pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
-+	pci_write_reg(pcie, 0, PCIEMSIAUR);
-+
-+	/* enable all MSI interrupts */
-+	pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
-+
-+	return 0;
-+
-+err:
-+	irq_domain_remove(msi->domain);
-+	return err;
-+}
-+
- static int rcar_pcie_get_resources(struct platform_device *pdev,
- 				   struct rcar_pcie *pcie)
+ static int __iommu_calculate_agaw(struct intel_iommu *iommu, int max_gaw)
  {
- 	struct resource res;
--	int err;
-+	int err, i;
+@@ -579,9 +586,7 @@ static struct intel_iommu *domain_get_iommu(struct dmar_domain *domain)
+ 	int iommu_id;
  
- 	err = of_address_to_resource(pdev->dev.of_node, 0, &res);
- 	if (err)
-@@ -559,6 +773,22 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
- 	if (err)
- 		goto err_map_reg;
+ 	/* si_domain and vm domain should not get here. */
+-	BUG_ON(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE);
+-	BUG_ON(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY);
+-
++	BUG_ON(domain_type_is_vm_or_si(domain));
+ 	iommu_id = find_first_bit(domain->iommu_bmp, g_num_of_iommus);
+ 	if (iommu_id < 0 || iommu_id >= g_num_of_iommus)
+ 		return NULL;
+@@ -1499,7 +1504,7 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
+ 	free_context_table(iommu);
+ }
  
-+	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
-+	if (i < 0) {
-+		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
-+		err = -ENOENT;
-+		goto err_map_reg;
-+	}
-+	pcie->msi.irq1 = i;
-+
-+	i = irq_of_parse_and_map(pdev->dev.of_node, 1);
-+	if (i < 0) {
-+		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
-+		err = -ENOENT;
-+		goto err_map_reg;
-+	}
-+	pcie->msi.irq2 = i;
-+
- 	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
- 	if (IS_ERR(pcie->base)) {
- 		err = PTR_ERR(pcie->base);
-@@ -732,6 +962,16 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	 if (err)
- 		return err;
+-static struct dmar_domain *alloc_domain(bool vm)
++static struct dmar_domain *alloc_domain(int flags)
+ {
+ 	/* domain id for virtual machine, it won't be set in context */
+ 	static atomic_t vm_domid = ATOMIC_INIT(0);
+@@ -1509,16 +1514,13 @@ static struct dmar_domain *alloc_domain(bool vm)
+ 	if (!domain)
+ 		return NULL;
  
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		err = rcar_pcie_enable_msi(pcie);
-+		if (err < 0) {
-+			dev_err(&pdev->dev,
-+				"failed to enable MSI support: %d\n",
-+				err);
-+			return err;
-+		}
-+	}
-+
- 	of_id = of_match_device(rcar_pcie_of_match, pcie->dev);
- 	if (!of_id || !of_id->data)
- 		return -EINVAL;
++	memset(domain, 0, sizeof(*domain));
+ 	domain->nid = -1;
+-	domain->iommu_count = 0;
+-	memset(domain->iommu_bmp, 0, sizeof(domain->iommu_bmp));
+-	domain->flags = 0;
++	domain->flags = flags;
+ 	spin_lock_init(&domain->iommu_lock);
+ 	INIT_LIST_HEAD(&domain->devices);
+-	if (vm) {
++	if (flags & DOMAIN_FLAG_VIRTUAL_MACHINE)
+ 		domain->id = atomic_inc_return(&vm_domid);
+-		domain->flags = DOMAIN_FLAG_VIRTUAL_MACHINE;
+-	}
+ 
+ 	return domain;
+ }
+@@ -1706,7 +1708,7 @@ static void domain_exit(struct dmar_domain *domain)
+ 	/* clear attached or cached domains */
+ 	rcu_read_lock();
+ 	for_each_active_iommu(iommu, drhd)
+-		if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
++		if (domain_type_is_vm(domain) ||
+ 		    test_bit(iommu->seq_id, domain->iommu_bmp))
+ 			iommu_detach_domain(domain, iommu);
+ 	rcu_read_unlock();
+@@ -1748,8 +1750,7 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 	id = domain->id;
+ 	pgd = domain->pgd;
+ 
+-	if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
+-	    domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) {
++	if (domain_type_is_vm_or_si(domain)) {
+ 		int found = 0;
+ 
+ 		/* find an available domain id for this device in iommu */
+@@ -2115,7 +2116,7 @@ static void domain_remove_dev_info(struct dmar_domain *domain)
+ 		iommu_disable_dev_iotlb(info);
+ 		iommu_detach_dev(info->iommu, info->bus, info->devfn);
+ 
+-		if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) {
++		if (domain_type_is_vm(domain)) {
+ 			iommu_detach_dependent_devices(info->iommu, info->dev);
+ 			/* clear this iommu in iommu_bmp, update iommu count
+ 			 * and capabilities
+@@ -2181,8 +2182,6 @@ static struct dmar_domain *dmar_insert_dev_info(struct intel_iommu *iommu,
+ 	info->dev = dev;
+ 	info->domain = domain;
+ 	info->iommu = iommu;
+-	if (!dev)
+-		domain->flags |= DOMAIN_FLAG_P2P_MULTIPLE_DEVICES;
+ 
+ 	spin_lock_irqsave(&device_domain_lock, flags);
+ 	if (dev)
+@@ -2257,7 +2256,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 		goto error;
+ 
+ 	/* Allocate and initialize new domain for the device */
+-	domain = alloc_domain(false);
++	domain = alloc_domain(0);
+ 	if (!domain)
+ 		goto error;
+ 	if (iommu_attach_domain(domain, iommu)) {
+@@ -2421,12 +2420,10 @@ static int __init si_domain_init(int hw)
+ 	struct intel_iommu *iommu;
+ 	int nid, ret = 0;
+ 
+-	si_domain = alloc_domain(false);
++	si_domain = alloc_domain(DOMAIN_FLAG_STATIC_IDENTITY);
+ 	if (!si_domain)
+ 		return -EFAULT;
+ 
+-	si_domain->flags = DOMAIN_FLAG_STATIC_IDENTITY;
+-
+ 	for_each_active_iommu(iommu, drhd) {
+ 		ret = iommu_attach_domain(si_domain, iommu);
+ 		if (ret) {
+@@ -3860,9 +3857,7 @@ static int device_notifier(struct notifier_block *nb,
+ 
+ 	down_read(&dmar_global_lock);
+ 	domain_remove_one_dev_info(domain, dev);
+-	if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
+-	    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) &&
+-	    list_empty(&domain->devices))
++	if (!domain_type_is_vm_or_si(domain) && list_empty(&domain->devices))
+ 		domain_exit(domain);
+ 	up_read(&dmar_global_lock);
+ 
+@@ -4111,8 +4106,7 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
+ 		domain_update_iommu_cap(domain);
+ 		spin_unlock_irqrestore(&domain->iommu_lock, tmp_flags);
+ 
+-		if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
+-		    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY)) {
++		if (!domain_type_is_vm_or_si(domain)) {
+ 			spin_lock_irqsave(&iommu->lock, tmp_flags);
+ 			clear_bit(domain->id, iommu->domain_ids);
+ 			iommu->domains[domain->id] = NULL;
+@@ -4151,7 +4145,7 @@ static int intel_iommu_domain_init(struct iommu_domain *domain)
+ {
+ 	struct dmar_domain *dmar_domain;
+ 
+-	dmar_domain = alloc_domain(true);
++	dmar_domain = alloc_domain(DOMAIN_FLAG_VIRTUAL_MACHINE);
+ 	if (!dmar_domain) {
+ 		printk(KERN_ERR
+ 			"intel_iommu_domain_init: dmar_domain == NULL\n");
+@@ -4195,8 +4189,7 @@ static int intel_iommu_attach_device(struct iommu_domain *domain,
+ 
+ 		old_domain = find_domain(dev);
+ 		if (old_domain) {
+-			if (dmar_domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
+-			    dmar_domain->flags & DOMAIN_FLAG_STATIC_IDENTITY)
++			if (domain_type_is_vm_or_si(dmar_domain))
+ 				domain_remove_one_dev_info(old_domain, dev);
+ 			else
+ 				domain_remove_dev_info(old_domain);
 -- 
-1.9.1
+1.7.10.4
 
