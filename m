@@ -1,247 +1,376 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56937 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751704AbaEAQ1t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 May 2014 12:27:49 -0400
-Subject: [PATCH 06/13] iommu/amd: Use pci_find_dma_isolation_root() for
- IOMMU groups
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>,
-	acooks@gmail.com, linux-kernel@vger.kernel.org
-Date: Thu, 01 May 2014 10:27:41 -0600
-Message-ID: <20140501162741.17512.82459.stgit@bling.home>
-In-Reply-To: <20140501160128.17512.23609.stgit@bling.home>
-References: <20140501160128.17512.23609.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:44628 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933740AbaEFDbd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 May 2014 23:31:33 -0400
+Received: by mail-pd0-f169.google.com with SMTP id z10so7650572pdj.0
+        for <linux-pci@vger.kernel.org>; Mon, 05 May 2014 20:31:33 -0700 (PDT)
+From: Hanjun Guo <hanjun.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-ia64@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org, Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH] PCI: Turn pcibios_penalize_isa_irq() into __weak function
+Date: Tue,  6 May 2014 11:29:52 +0800
+Message-Id: <1399346992-6584-1-git-send-email-hanjun.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The IVRS tables provides aliases, but not to the extent now provided
-by PCI core with DMA alias support and pci_find_dma_isolation_root().
-The expectation is that the kernel and IVRS will produce the same
-result for topology based aliases while the kernel will also include
-device specific DMA quirks.  We therefore drop the AMD-specific IOMMU
-group discovery in favor of the common code.  This also allows us to
-drop tracking of the IOMMU group on the alias dev_data structure.
+pcibios_penalize_isa_irq() is only useful for x86 now, and
+legacy ISA is not used by some architectures, so make
+pcibios_penalize_isa_irq() as __weak function to simplify
+the code, this will prevent new platform from introducing
+dummy stub function for pcibios_penalize_isa_irq() too.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <joro@8bytes.org>
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
 ---
- drivers/iommu/amd_iommu.c       |  158 ++-------------------------------------
- drivers/iommu/amd_iommu_types.h |    1 
- 2 files changed, 10 insertions(+), 149 deletions(-)
+ arch/alpha/include/asm/pci.h        |    5 -----
+ arch/arm/include/asm/pci.h          |    5 -----
+ arch/blackfin/include/asm/pci.h     |    5 -----
+ arch/cris/include/asm/pci.h         |    1 -
+ arch/frv/include/asm/pci.h          |    2 --
+ arch/frv/mb93090-mb00/pci-irq.c     |    4 ----
+ arch/ia64/include/asm/pci.h         |    6 ------
+ arch/microblaze/include/asm/pci.h   |    5 -----
+ arch/mips/include/asm/pci.h         |    5 -----
+ arch/mn10300/include/asm/pci.h      |    1 -
+ arch/mn10300/unit-asb2305/pci-irq.c |    4 ----
+ arch/parisc/include/asm/pci.h       |    5 -----
+ arch/powerpc/include/asm/pci.h      |    5 -----
+ arch/sh/include/asm/pci.h           |    5 -----
+ arch/sparc/include/asm/pci_32.h     |    5 -----
+ arch/sparc/include/asm/pci_64.h     |    5 -----
+ arch/unicore32/include/asm/pci.h    |    5 -----
+ arch/x86/include/asm/pci.h          |    1 -
+ arch/xtensa/include/asm/pci.h       |    5 -----
+ drivers/pci/pci.c                   |   11 +++++++++++
+ include/linux/pci.h                 |    1 +
+ 21 files changed, 12 insertions(+), 79 deletions(-)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index c949520..3d58de4 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -46,7 +46,6 @@
- #include "amd_iommu_proto.h"
- #include "amd_iommu_types.h"
- #include "irq_remapping.h"
--#include "pci.h"
+diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+index d01afb7..f7f680f 100644
+--- a/arch/alpha/include/asm/pci.h
++++ b/arch/alpha/include/asm/pci.h
+@@ -59,11 +59,6 @@ struct pci_controller {
  
- #define CMD_SET_TYPE(cmd, t) ((cmd)->data[1] |= ((t) << 28))
+ extern void pcibios_set_master(struct pci_dev *dev);
  
-@@ -133,9 +132,6 @@ static void free_dev_data(struct iommu_dev_data *dev_data)
- 	list_del(&dev_data->dev_data_list);
- 	spin_unlock_irqrestore(&dev_data_list_lock, flags);
- 
--	if (dev_data->group)
--		iommu_group_put(dev_data->group);
+-extern inline void pcibios_penalize_isa_irq(int irq, int active)
+-{
+-	/* We don't do dynamic PCI IRQ allocation */
+-}
 -
- 	kfree(dev_data);
+ /* IOMMU controls.  */
+ 
+ /* The PCI address space does not equal the physical memory address space.
+diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
+index 680a83e..7e95d85 100644
+--- a/arch/arm/include/asm/pci.h
++++ b/arch/arm/include/asm/pci.h
+@@ -31,11 +31,6 @@ static inline int pci_proc_domain(struct pci_bus *bus)
  }
+ #endif /* CONFIG_PCI_DOMAINS */
  
-@@ -264,107 +260,10 @@ static bool check_device(struct device *dev)
- 	return true;
- }
+-static inline void pcibios_penalize_isa_irq(int irq, int active)
+-{
+-	/* We don't do dynamic PCI IRQ allocation */
+-}
+-
+ /*
+  * The PCI address space does equal the physical memory address space.
+  * The networking and block device layers use this boolean for bounce
+diff --git a/arch/blackfin/include/asm/pci.h b/arch/blackfin/include/asm/pci.h
+index 74352c4..c737909 100644
+--- a/arch/blackfin/include/asm/pci.h
++++ b/arch/blackfin/include/asm/pci.h
+@@ -10,9 +10,4 @@
+ #define PCIBIOS_MIN_IO 0x00001000
+ #define PCIBIOS_MIN_MEM 0x10000000
  
--static struct pci_bus *find_hosted_bus(struct pci_bus *bus)
+-static inline void pcibios_penalize_isa_irq(int irq)
 -{
--	while (!bus->self) {
--		if (!pci_is_root_bus(bus))
--			bus = bus->parent;
--		else
--			return ERR_PTR(-ENODEV);
--	}
--
--	return bus;
+-	/* We don't do dynamic PCI IRQ allocation */
 -}
 -
--#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
--
--static struct pci_dev *get_isolation_root(struct pci_dev *pdev)
--{
--	struct pci_dev *dma_pdev = pdev;
--
--	/* Account for quirked devices */
--	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
--
--	/*
--	 * If it's a multifunction device that does not support our
--	 * required ACS flags, add to the same group as lowest numbered
--	 * function that also does not suport the required ACS flags.
--	 */
--	if (dma_pdev->multifunction &&
--	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
--		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
--
--		for (i = 0; i < 8; i++) {
--			struct pci_dev *tmp;
--
--			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
--			if (!tmp)
--				continue;
--
--			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
--				swap_pci_ref(&dma_pdev, tmp);
--				break;
--			}
--			pci_dev_put(tmp);
--		}
--	}
--
--	/*
--	 * Devices on the root bus go through the iommu.  If that's not us,
--	 * find the next upstream device and test ACS up to the root bus.
--	 * Finding the next device may require skipping virtual buses.
--	 */
--	while (!pci_is_root_bus(dma_pdev->bus)) {
--		struct pci_bus *bus = find_hosted_bus(dma_pdev->bus);
--		if (IS_ERR(bus))
--			break;
--
--		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
--			break;
--
--		swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
--	}
--
--	return dma_pdev;
--}
--
--static int use_pdev_iommu_group(struct pci_dev *pdev, struct device *dev)
--{
--	struct iommu_group *group = iommu_group_get(&pdev->dev);
--	int ret;
--
--	if (!group) {
--		group = iommu_group_alloc();
--		if (IS_ERR(group))
--			return PTR_ERR(group);
--
--		WARN_ON(&pdev->dev != dev);
--	}
--
--	ret = iommu_group_add_device(group, dev);
--	iommu_group_put(group);
--	return ret;
--}
--
--static int use_dev_data_iommu_group(struct iommu_dev_data *dev_data,
--				    struct device *dev)
--{
--	if (!dev_data->group) {
--		struct iommu_group *group = iommu_group_alloc();
--		if (IS_ERR(group))
--			return PTR_ERR(group);
--
--		dev_data->group = group;
--	}
--
--	return iommu_group_add_device(dev_data->group, dev);
--}
--
- static int init_iommu_group(struct device *dev)
- {
--	struct iommu_dev_data *dev_data;
- 	struct iommu_group *group;
--	struct pci_dev *dma_pdev;
-+	struct pci_dev *pdev;
- 	int ret;
+ #endif				/* _ASM_BFIN_PCI_H */
+diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
+index f666734..cc2399c 100644
+--- a/arch/cris/include/asm/pci.h
++++ b/arch/cris/include/asm/pci.h
+@@ -20,7 +20,6 @@ void pcibios_config_init(void);
+ struct pci_bus * pcibios_scan_root(int bus);
  
- 	group = iommu_group_get(dev);
-@@ -373,58 +272,21 @@ static int init_iommu_group(struct device *dev)
- 		return 0;
+ void pcibios_set_master(struct pci_dev *dev);
+-void pcibios_penalize_isa_irq(int irq);
+ struct irq_routing_table *pcibios_get_irq_routing_table(void);
+ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+ 
+diff --git a/arch/frv/include/asm/pci.h b/arch/frv/include/asm/pci.h
+index ef03baf..2035a4d 100644
+--- a/arch/frv/include/asm/pci.h
++++ b/arch/frv/include/asm/pci.h
+@@ -24,8 +24,6 @@ struct pci_dev;
+ 
+ extern void pcibios_set_master(struct pci_dev *dev);
+ 
+-extern void pcibios_penalize_isa_irq(int irq);
+-
+ #ifdef CONFIG_MMU
+ extern void *consistent_alloc(gfp_t gfp, size_t size, dma_addr_t *dma_handle);
+ extern void consistent_free(void *vaddr);
+diff --git a/arch/frv/mb93090-mb00/pci-irq.c b/arch/frv/mb93090-mb00/pci-irq.c
+index c677b9d..1c35c93 100644
+--- a/arch/frv/mb93090-mb00/pci-irq.c
++++ b/arch/frv/mb93090-mb00/pci-irq.c
+@@ -55,10 +55,6 @@ void __init pcibios_fixup_irqs(void)
  	}
- 
--	dev_data = find_dev_data(get_device_id(dev));
--	if (!dev_data)
--		return -ENOMEM;
--
--	if (dev_data->alias_data) {
--		u16 alias;
--		struct pci_bus *bus;
-+	pdev = pci_find_dma_isolation_root(to_pci_dev(dev));
- 
--		if (dev_data->alias_data->group)
--			goto use_group;
--
--		/*
--		 * If the alias device exists, it's effectively just a first
--		 * level quirk for finding the DMA source.
--		 */
--		alias = amd_iommu_alias_table[dev_data->devid];
--		dma_pdev = pci_get_bus_and_slot(alias >> 8, alias & 0xff);
--		if (dma_pdev) {
--			dma_pdev = get_isolation_root(dma_pdev);
--			goto use_pdev;
--		}
--
--		/*
--		 * If the alias is virtual, try to find a parent device
--		 * and test whether the IOMMU group is actualy rooted above
--		 * the alias.  Be careful to also test the parent device if
--		 * we think the alias is the root of the group.
--		 */
--		bus = pci_find_bus(0, alias >> 8);
--		if (!bus)
--			goto use_group;
-+	group = iommu_group_get(&pdev->dev);
- 
--		bus = find_hosted_bus(bus);
--		if (IS_ERR(bus) || !bus->self)
--			goto use_group;
-+	if (!group) {
-+		group = iommu_group_alloc();
-+		if (IS_ERR(group))
-+			return PTR_ERR(group);
-+	}
- 
--		dma_pdev = get_isolation_root(pci_dev_get(bus->self));
--		if (dma_pdev != bus->self || (dma_pdev->multifunction &&
--		    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)))
--			goto use_pdev;
-+	ret = iommu_group_add_device(group, dev);
- 
--		pci_dev_put(dma_pdev);
--		goto use_group;
--	}
-+	iommu_group_put(group);
- 
--	dma_pdev = get_isolation_root(pci_dev_get(to_pci_dev(dev)));
--use_pdev:
--	ret = use_pdev_iommu_group(dma_pdev, dev);
--	pci_dev_put(dma_pdev);
- 	return ret;
--use_group:
--	return use_dev_data_iommu_group(dev_data->alias_data, dev);
  }
  
- static int iommu_init_device(struct device *dev)
-diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
-index f1a5abf..7277a20 100644
---- a/drivers/iommu/amd_iommu_types.h
-+++ b/drivers/iommu/amd_iommu_types.h
-@@ -432,7 +432,6 @@ struct iommu_dev_data {
- 	struct iommu_dev_data *alias_data;/* The alias dev_data */
- 	struct protection_domain *domain; /* Domain the device is bound to */
- 	atomic_t bind;			  /* Domain attach reference count */
--	struct iommu_group *group;	  /* IOMMU group for virtual aliases */
- 	u16 devid;			  /* PCI Device ID */
- 	bool iommu_v2;			  /* Device can make use of IOMMUv2 */
- 	bool passthrough;		  /* Default for device is pt_domain */
+-void __init pcibios_penalize_isa_irq(int irq)
+-{
+-}
+-
+ void pcibios_enable_irq(struct pci_dev *dev)
+ {
+ 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 7d41cc0..52af5ed 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -50,12 +50,6 @@ struct pci_dev;
+ extern unsigned long ia64_max_iommu_merge_mask;
+ #define PCI_DMA_BUS_IS_PHYS	(ia64_max_iommu_merge_mask == ~0UL)
+ 
+-static inline void
+-pcibios_penalize_isa_irq (int irq, int active)
+-{
+-	/* We don't do dynamic PCI IRQ allocation */
+-}
+-
+ #include <asm-generic/pci-dma-compat.h>
+ 
+ #ifdef CONFIG_PCI
+diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
+index 935f9be..3355240 100644
+--- a/arch/microblaze/include/asm/pci.h
++++ b/arch/microblaze/include/asm/pci.h
+@@ -44,11 +44,6 @@ struct pci_dev;
+  */
+ #define pcibios_assign_all_busses()	0
+ 
+-static inline void pcibios_penalize_isa_irq(int irq, int active)
+-{
+-	/* We don't do dynamic PCI IRQ allocation */
+-}
+-
+ #ifdef CONFIG_PCI
+ extern void set_pci_dma_ops(struct dma_map_ops *dma_ops);
+ extern struct dma_map_ops *get_pci_dma_ops(void);
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index 12d6842..974b0e3 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -73,11 +73,6 @@ extern unsigned long PCIBIOS_MIN_MEM;
+ 
+ extern void pcibios_set_master(struct pci_dev *dev);
+ 
+-static inline void pcibios_penalize_isa_irq(int irq, int active)
+-{
+-	/* We don't do dynamic PCI IRQ allocation */
+-}
+-
+ #define HAVE_PCI_MMAP
+ 
+ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
+index 1663238..5f70af2 100644
+--- a/arch/mn10300/include/asm/pci.h
++++ b/arch/mn10300/include/asm/pci.h
+@@ -48,7 +48,6 @@ extern void unit_pci_init(void);
+ #define PCIBIOS_MIN_MEM		0xB8000000
+ 
+ void pcibios_set_master(struct pci_dev *dev);
+-void pcibios_penalize_isa_irq(int irq);
+ 
+ /* Dynamic DMA mapping stuff.
+  * i386 has everything mapped statically.
+diff --git a/arch/mn10300/unit-asb2305/pci-irq.c b/arch/mn10300/unit-asb2305/pci-irq.c
+index 77439da..fcb28ce 100644
+--- a/arch/mn10300/unit-asb2305/pci-irq.c
++++ b/arch/mn10300/unit-asb2305/pci-irq.c
+@@ -40,10 +40,6 @@ void __init pcibios_fixup_irqs(void)
+ 	}
+ }
+ 
+-void __init pcibios_penalize_isa_irq(int irq)
+-{
+-}
+-
+ void pcibios_enable_irq(struct pci_dev *dev)
+ {
+ 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
+diff --git a/arch/parisc/include/asm/pci.h b/arch/parisc/include/asm/pci.h
+index 4651540..20df2b0 100644
+--- a/arch/parisc/include/asm/pci.h
++++ b/arch/parisc/include/asm/pci.h
+@@ -215,11 +215,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ }
+ #endif
+ 
+-static inline void pcibios_penalize_isa_irq(int irq, int active)
+-{
+-	/* We don't need to penalize isa irq's */
+-}
+-
+ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ {
+ 	return channel ? 15 : 14;
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 95145a1..1b0739b 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -46,11 +46,6 @@ struct pci_dev;
+ #define pcibios_assign_all_busses() \
+ 	(pci_has_flag(PCI_REASSIGN_ALL_BUS))
+ 
+-static inline void pcibios_penalize_isa_irq(int irq, int active)
+-{
+-	/* We don't do dynamic PCI IRQ allocation */
+-}
+-
+ #define HAVE_ARCH_PCI_GET_LEGACY_IDE_IRQ
+ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ {
+diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+index bff96c2..5b45115 100644
+--- a/arch/sh/include/asm/pci.h
++++ b/arch/sh/include/asm/pci.h
+@@ -70,11 +70,6 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 	enum pci_mmap_state mmap_state, int write_combine);
+ extern void pcibios_set_master(struct pci_dev *dev);
+ 
+-static inline void pcibios_penalize_isa_irq(int irq, int active)
+-{
+-	/* We don't do dynamic PCI IRQ allocation */
+-}
+-
+ /* Dynamic DMA mapping stuff.
+  * SuperH has everything mapped statically like x86.
+  */
+diff --git a/arch/sparc/include/asm/pci_32.h b/arch/sparc/include/asm/pci_32.h
+index dc50329..53e9b49 100644
+--- a/arch/sparc/include/asm/pci_32.h
++++ b/arch/sparc/include/asm/pci_32.h
+@@ -16,11 +16,6 @@
+ 
+ #define PCI_IRQ_NONE		0xffffffff
+ 
+-static inline void pcibios_penalize_isa_irq(int irq, int active)
+-{
+-	/* We don't do dynamic PCI IRQ allocation */
+-}
+-
+ /* Dynamic DMA mapping stuff.
+  */
+ #define PCI_DMA_BUS_IS_PHYS	(0)
+diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
+index 1633b71..c6c7396 100644
+--- a/arch/sparc/include/asm/pci_64.h
++++ b/arch/sparc/include/asm/pci_64.h
+@@ -16,11 +16,6 @@
+ 
+ #define PCI_IRQ_NONE		0xffffffff
+ 
+-static inline void pcibios_penalize_isa_irq(int irq, int active)
+-{
+-	/* We don't do dynamic PCI IRQ allocation */
+-}
+-
+ /* The PCI address space does not equal the physical memory
+  * address space.  The networking and block device layers use
+  * this boolean for bounce buffer decisions.
+diff --git a/arch/unicore32/include/asm/pci.h b/arch/unicore32/include/asm/pci.h
+index f5e108f..654407e 100644
+--- a/arch/unicore32/include/asm/pci.h
++++ b/arch/unicore32/include/asm/pci.h
+@@ -18,11 +18,6 @@
+ #include <asm-generic/pci.h>
+ #include <mach/hardware.h> /* for PCIBIOS_MIN_* */
+ 
+-static inline void pcibios_penalize_isa_irq(int irq, int active)
+-{
+-	/* We don't do dynamic PCI IRQ allocation */
+-}
+-
+ #ifdef CONFIG_PCI
+ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ 					enum pci_dma_burst_strategy *strat,
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 96ae4f4..0892ea0 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -68,7 +68,6 @@ void pcibios_config_init(void);
+ void pcibios_scan_root(int bus);
+ 
+ void pcibios_set_master(struct pci_dev *dev);
+-void pcibios_penalize_isa_irq(int irq, int active);
+ struct irq_routing_table *pcibios_get_irq_routing_table(void);
+ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+ 
+diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
+index 614be03..5d52dc4 100644
+--- a/arch/xtensa/include/asm/pci.h
++++ b/arch/xtensa/include/asm/pci.h
+@@ -22,11 +22,6 @@
+ 
+ extern struct pci_controller* pcibios_alloc_controller(void);
+ 
+-static inline void pcibios_penalize_isa_irq(int irq)
+-{
+-	/* We don't do dynamic PCI IRQ allocation */
+-}
+-
+ /* Assume some values. (We should revise them, if necessary) */
+ 
+ #define PCIBIOS_MIN_IO		0x2000
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7325d43..57c330f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1468,6 +1468,17 @@ void __weak pcibios_release_device(struct pci_dev *dev) {}
+  */
+ void __weak pcibios_disable_device (struct pci_dev *dev) {}
+ 
++/**
++ * pcibios_penalize_isa_irq - provide arch specific hooks when penalize isa irq
++ * @irq: isa irq to penalize
++ * @active: irq active or not
++ *
++ * Permits the platform to provide architecture specific functionality when
++ * penalize isa irq. This is the default implementation. Architecture
++ * implementations can override this.
++ */
++void __weak pcibios_penalize_isa_irq(int irq, int active) {}
++
+ static void do_pci_disable_device(struct pci_dev *dev)
+ {
+ 	u16 pci_command;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aab57b4..da8f7d5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1579,6 +1579,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+ 				 enum pcie_reset_state state);
+ int pcibios_add_device(struct pci_dev *dev);
+ void pcibios_release_device(struct pci_dev *dev);
++void pcibios_penalize_isa_irq(int irq, int active);
+ 
+ #ifdef CONFIG_HIBERNATE_CALLBACKS
+ extern struct dev_pm_ops pcibios_pm_ops;
+-- 
+1.7.9.5
 
