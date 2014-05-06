@@ -1,91 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:44822 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754866AbaEFUXM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 16:23:12 -0400
-Received: by mail-ig0-f173.google.com with SMTP id hn18so6768178igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 06 May 2014 13:23:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140506085957.GQ4750@e106497-lin.cambridge.arm.com>
-References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <1398953290.2313.15.camel@dabdike.int.hansenpartnership.com>
- <CAErSpo7zjXg8xrV7=q36rNp_g573P93HiXTB72Z1cZfjGeeBmg@mail.gmail.com>
- <20140502111807.GL4750@e106497-lin.cambridge.arm.com> <20140505224240.GA8883@google.com>
- <20140506085957.GQ4750@e106497-lin.cambridge.arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 6 May 2014 14:22:50 -0600
-Message-ID: <CAErSpo5wrHFv1c3dnKrGdVKbjM6WqqSocKbYA_zHc35Uc=x3gw@mail.gmail.com>
-Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU address
- to phys_addr_t
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	James Bottomley <jbottomley@parallels.com>,
-	"rdunlap@infradead.org" <rdunlap@infradead.org>,
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:43659 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751105AbaEFQFp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 12:05:45 -0400
+Date: Tue, 6 May 2014 17:05:05 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [RESEND PATCH 2/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140506160504.GM30234@arm.com>
+References: <1399048876-11862-1-git-send-email-will.deacon@arm.com>
+ <1399048876-11862-3-git-send-email-will.deacon@arm.com>
+ <20140502172317.GC3179@obsidianresearch.com>
+ <5644412.ouY7G25ZK8@wuerfel>
+ <20140502184421.GF14645@arm.com>
+ <20140502190318.GE3179@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140502190318.GE3179@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 6, 2014 at 2:59 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> On Mon, May 05, 2014 at 11:42:40PM +0100, Bjorn Helgaas wrote:
->> On Fri, May 02, 2014 at 12:18:07PM +0100, Liviu Dudau wrote:
->> > On Thu, May 01, 2014 at 08:05:04PM +0100, Bjorn Helgaas wrote:
+On Fri, May 02, 2014 at 08:03:18PM +0100, Jason Gunthorpe wrote:
+> On Fri, May 02, 2014 at 07:44:21PM +0100, Will Deacon wrote:
+> > > > > +       bus_range = &pci->cfg.bus_range;
+> > > > > +       for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+> > > > > +               u32 idx = busn - bus_range->start;
+> > > > > +               u32 sz = 1 << pci->cfg.ops->bus_shift;
+> > > > > +
+> > > > > +               pci->cfg.win[idx] = devm_ioremap(dev,
+> > > > > +                                                pci->cfg.res.start + busn * sz,
+> > > > > +                                                sz);
+> > > > 
+> > > > Why map each bus individually? Both CAM and ECAM define consecutive
+> > > > busses consecutively in the address space, and I though ioremap was OK
+> > > > with unaligned stuff?
+> > > 
+> > > One optimization we discussed before was to do this ioremap on the first
+> > > access to any config space register in one bus, so we don't actually have
+> > > to map all of them but only the ones that are in use.
+> > 
+> > Right, and this optimisation is because we don't have a lot of virtual
+> > address space on 32-bit ARM, so blowing away 256M on ECAM isn't viable.
+> 
+> But why not just
+> 
+> devm_ioremap(dev, pci->cfg.res.start + bus_range->start * sz,
+> 		  resource_size(&bus_range) * sz);
+> 
+> ?
 
->> > > I'm not a CPU
->> > > person, so I don't understand the usefulness of dma_addr_t as a
->> > > separate type to hold CPU addresses at which memory-mapped devices can
->> > > appear.  If that's all it is, why not just use phys_addr_t everywhere
->> > > and get rid of dma_addr_t altogether?
->> >
->> > Because dma_addr_t imposes further restrictions based on what the DMA engine
->> > can access. You could have a DMA engine that can only access 32bit addresses
->> > in a 40+ bit CPU addresses system.
->>
->> Yes; this is an argument for having separate types for bus addresses
->> and CPU addresses.  I think dma_addr_t *is* for bus addresses.  I
->> thought James was suggesting that it was a subset of CPU physical
->> address space, and that any valid dma_addr_t is also a valid
->> phys_addr_t.  That doesn't seem right to me.
->
-> I'm actually more inclined towards James' view. To me the DMA engine is a very
-> specialised CPU that does memcpy(). You can pair it with an IOMMU engine and
-> you can have address translation into virtual space of any size you want, or
-> you can have the engine sitting behind a bus in which case it will use bus
-> addresses. But its uses of addresses is similar to a CPU (whenever you want to
-> call them phys_addr_t or not is a different discussion).
->
-> ARM has a PL330 DMA engine. It's a SoC component and usually doesn't get attached
-> to any PCI bus. It uses a system bus called AXI in the same way a CPU would. So
-> for that having a *bus* address does not fit with the way hardware is connected.
->
-> My mental picture for this discussion is a hypotetical DMA engine that sits on
-> a PCI bus but has access to the system memory that the CPU can see (sort of like
-> a DMA engine inside a host bridge). Would you use a phys_addr_t when programming
-> the device or a bus address? I would say the former, because you know how to
-> translate that into bus addresses and back in the host bridge.
+I was just trying to avoid the need for a single, virtually contiguous range
+where it's not actually required. If the driver is loaded as a module, we
+could already have a bunch of fragmentation in the vmalloc space.
 
-I don't think the physical location of the DMA engine is important.  I
-think what matters is how you program it.  If it fully participates in
-the single shared virtual address space used by the main CPUs, i.e.,
-it uses the same page tables and TLB management and is cache-coherent
-with them, then you'd probably give it virtual source and destination
-addresses.  But my guess is the DMA engine operates on some flavor of
-physical address and is outside the coherency domain.  In that case,
-you probably have to allocate wired buffers to avoid faults, and you
-probably have to use the DMA API (DMA_TO_DEVICE, DMA_FROM_DEVICE,
-etc.) to manage cache coherency.  The DMA API gives you back a bus
-address just like it does for ordinary devices, even if the value of
-that address happens to be identical to the CPU physical address.
+> > > Setup is called from probe, through pci_common_init_dev(), so that shouldn't
+> > > make a difference.
+> > 
+> > Given that the idea was to separate setup() and probe(), I didn't want to
+> > make the assumption that I was called in probe context.
+> 
+> IMHO, we need to have clear purposes for setup() and probe().
+> 
+> Probe is well defined already, it requests resources, claims the
+> device, puts it in reset and then does some subsystem specific thing.
+> The interaction with probe and devm is also already well specified.
+> 
+> It doesn't matter for this driver, but look at mvebu, you cannot move
+> the interrupt, gpio and clock acquisitions from probe() to setup(), as
+> they could all trigger a defered probe. Better to be consistent,
+> especially if this is the golden reference driver we want everyone to
+> follow (sorry Will)
 
-Should that bus address be a phys_addr_t instead of a dma_addr_t?  I
-dunno.  We have a pretty long history of using dma_addr_t to hold bus
-addresses, and I don't see a compelling reason to change, and the
-separate type does help me understand the code.
+Groan!
 
-I'll write some text about dma_addr_t in the docs when I repost these
-patches and maybe we can converge on something.
+> To me setup() is more like netdev open(), so it should just do that
+> final step to enable the links and bring up the PCI network and be
+> ready to run PCI discovery. Consider, someday we might have an
+> unsetup() for power mangement reasons, just like we have a close() in
+> netdev.
 
-Bjorn
+That's what I did originally! Anyway, this is just refactoring so shouldn't
+be too much work. After reading Arnd's reply,  I'll move the bulk into
+->probe().
+
+> If the long term plan is to keep probe() then I don't think it makes
+> sense to move probe() duties into setup(). That just restricts what we
+> can do with the setup() call if setup() is now required to always
+> handle defered probe and so forth.
+> 
+> Will, don't forget this q:
+
+Sorry, that got chopped off somehow...
+
+> ------
+> > +out_release_res:
+> > +     release_child_resources(&iomem_resource);
+> > +     release_child_resources(&ioport_resource);
+> 
+> This looks really off to me, doesn't this free all resources in the
+> system?
+
+... yes, I suppose that would cause problems if we have multiple instances
+of the driver. I could probably just release_resource(win->res) instead
+of freeing the resources and use devm_request_mem_region for configuration
+space.
+
+Will
