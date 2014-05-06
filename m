@@ -1,50 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:8753 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389AbaEDE0r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 May 2014 00:26:47 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	<x86@kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 04/13] x86/PCI: Use new pci_is_bridge() to simplify code
-Date: Sun, 4 May 2014 12:23:39 +0800
-Message-ID: <1399177428-3784-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
-References: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:54902 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755656AbaEFNfr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 09:35:47 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: <rogerq@ti.com>, <balajitk@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH 15/17] ARM: OMAP: Enable PCI for DRA7
+Date: Tue, 6 May 2014 19:04:01 +0530
+Message-ID: <1399383244-14556-16-git-send-email-kishon@ti.com>
+In-Reply-To: <1399383244-14556-1-git-send-email-kishon@ti.com>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we can use new pci_is_bridge() helper function
-to simplify code.
+Now that we have added PCIe driver for DRA7 SOCs, enable PCI on
+DRA7 SOCs.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Tony Lindgren <tony@atomide.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- arch/x86/pci/fixup.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ arch/arm/mach-omap2/Kconfig |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 94ae9ae..e5f000c 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -337,9 +337,7 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
- 		 * PCI header type NORMAL.
- 		 */
--		if (bridge
--		    && ((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
--		       || (bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
-+		if (bridge && (pci_is_bridge(bridge))) {
- 			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
- 						&config);
- 			if (!(config & PCI_BRIDGE_CTL_VGA))
+diff --git a/arch/arm/mach-omap2/Kconfig b/arch/arm/mach-omap2/Kconfig
+index cb31d43..b179e80 100644
+--- a/arch/arm/mach-omap2/Kconfig
++++ b/arch/arm/mach-omap2/Kconfig
+@@ -75,6 +75,8 @@ config SOC_DRA7XX
+ 	select ARM_GIC
+ 	select HAVE_ARM_ARCH_TIMER
+ 	select IRQ_CROSSBAR
++	select MIGHT_HAVE_PCI
++	select ARCH_SUPPORTS_MSI
+ 
+ config ARCH_OMAP2PLUS
+ 	bool
 -- 
-1.7.1
-
+1.7.9.5
 
