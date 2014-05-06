@@ -1,88 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:52116 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751713AbaE1DwH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 23:52:07 -0400
-Date: Wed, 28 May 2014 12:52:03 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v8 0/3] R-Car Gen2 PCIe host driver
-Message-ID: <20140528035203.GA28249@verge.net.au>
-References: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com>
- <20140528024820.GL11907@google.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:46795 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751897AbaEFQfP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 6 May 2014 12:35:15 -0400
+Date: Tue, 6 May 2014 10:35:08 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	Marek Vasut <marex@denx.de>, balajitk@ti.com,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, rogerq@ti.com
+Subject: Re: [PATCH 05/17] pci: host: pcie-dra7xx: add support for
+ pcie-dra7xx controller
+Message-ID: <20140506163507.GA15542@obsidianresearch.com>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com>
+ <1399383244-14556-6-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140528024820.GL11907@google.com>
+In-Reply-To: <1399383244-14556-6-git-send-email-kishon@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 27, 2014 at 08:48:20PM -0600, Bjorn Helgaas wrote:
-> On Mon, May 12, 2014 at 11:57:47AM +0100, Phil Edworthy wrote:
-> > This is version 8 of a PCIe Host driver for the R-Car Gen2 devices,
-> > i.e. R-Car H2 (r8a7790) and R-Car M2 (r8a7791).
-> > 
-> > v8:
-> >  - Platform changes removed from this patch set
-> >  - Moved header file contents into c file
-> >  - Formatting cleaned up
-> >  - Remove bus/dev/func range checks for config access
-> >  - Add comment about config access serialization
-> >  - Made rcar_pcie_setup_window() return void as no errors possible
-> >  - Remove unused register definitions
-> >  - Removed __init markers to fix section mismatches
-> >  - Add explicit bus number range
-> >  - Get the root bus nr from config writes instead of sys->busnr
-> >  - Use PCI domains
-> >  - Removed unused variable in rcar_msi_free()
-> >  - Split interrupt bindings into separate cells
-> > 
-> > v7:
-> >  - Change binding description of clocks to 'clock specifiers'
-> > 
-> > v6:
-> >  - Correct DT bindings description for reg and clocks
-> >  - Split device and board DT changes
-> >  - Add shmobile to subject for shmobile DT patches
-> >  - Don't check MSI irq number is valid, as upper level checks this
-> >  - Change "Unexpected MSI" msg to debug level
-> >  - Reword "Unexpected MSI" comment so that it's one line
-> >  - Remove patch that adds HAVE_ARM_ARCH_TIMER to koelsch defconfig as not needed
-> > 
-> > v5:
-> >  - Use module_platform_driver instead of subsys_initcall
-> >  - Use the of_device_id data field for HW init function
-> >  - Init hw_pci struct in declaration
-> >  - Renesas SoC compatible string has peripheral before device name
-> >  - Add PCIe bus clock reference
-> >  - Use dma-ranges property to specify inbound memory regions
-> >  - Support multiple IO windows and correct resources
-> >  - Return IRQ_NONE from MSI isr when there is no pending MSI
-> >  - Add additional interrupt bindings
-> > 
-> > v4:
-> >  - Use runtime PM properly
-> > 
-> > Phil Edworthy (3):
-> >   PCI: host: rcar: Add Renesas R-Car PCIe driver
-> >   PCI: host: rcar: Add MSI support
-> >   dt-bindings: pci: rcar pcie device tree bindings
-> > 
-> >  Documentation/devicetree/bindings/pci/rcar-pci.txt |   47 +
-> >  drivers/pci/host/Kconfig                           |    6 +
-> >  drivers/pci/host/Makefile                          |    1 +
-> >  drivers/pci/host/pcie-rcar.c                       | 1008 ++++++++++++++++++++
-> >  4 files changed, 1062 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
-> >  create mode 100644 drivers/pci/host/pcie-rcar.c
-> 
-> Applied with Simon's ack to pci/host-rcar for v3.16, thanks!
+On Tue, May 06, 2014 at 07:03:51PM +0530, Kishon Vijay Abraham I wrote:
+> +Example:
+> +pcie@51000000 {
+> +	compatible = "ti,dra7xx-pcie";
+> +	reg = <0x51002000 0x14c>, <0x51000000 0x2000>;
+> +	reg-names = "ti_conf", "rc_dbics";
+> +	interrupts = <0 232 0x4>, <0 233 0x4>;
+> +	#address-cells = <3>;
+> +	#size-cells = <2>;
+> +	device_type = "pci";
+> +	ti,device_type = <3>;
+> +	ranges = <0x00000800 0 0x20001000 0x20001000 0 0x00002000  /* Configuration Space */
 
-Thanks!
+Configuration space should not show up in the ranges, please don't
+copy that mistake from other drivers, put it in reg.
+
+> +	interrupt-map-mask = <0 0 0 0>;
+> +	interrupt-map = <0x0 0 &gic 134>;
+
+The HW cannot decode INTA/B/C/D?
+
+> +#define	PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI		0x0034
+> +#define	PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI		0x0038
+> +#define	INTA						BIT(0)
+> +#define	INTB						BIT(1)
+> +#define	INTC						BIT(2)
+> +#define	INTD						BIT(3)
+> +#define	MSI						BIT(4)
+> +#define	LEG_EP_INTERRUPTS (INTA | INTB | INTC | INTD)
+
+Oh, it can, it would be wise to export this from the driver. Look at
+the latest patches from Srikanth Thokala for the Xilinx PCI driver to
+see how this should look
+
+> +static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+> +{
+> +	u32 reg;
+> +	int retries = 1000;
+> +	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+> +
+> +	if (dw_pcie_link_up(pp)) {
+> +		dev_err(pp->dev, "link is already up\n");
+> +		return 0;
+> +	}
+> +
+> +	reg = dra7xx_pcie_readl(dra7xx->base, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+> +	reg |= LTSSM_EN;
+> +	dra7xx_pcie_writel(dra7xx->base, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+> +
+> +	while (--retries) {
+> +		reg = dra7xx_pcie_readl(dra7xx->base,
+> +					PCIECTRL_DRA7XX_CONF_PHY_CS);
+> +		if (reg & LINK_UP)
+> +			break;
+> +		usleep_range(10, 20);
+> +	}
+> +
+> +	if (retries <= 0) {
+> +		dev_err(pp->dev, "link is not up\n");
+> +		return -ETIMEDOUT;
+> +	}
+> +
+> +	return 0;
+> +}
+
+It would be really nice to see the link bring up process live in the
+PCI core, every driver seems to have its own take on this.
+
+The PCI-E spec requires a 100ms delay after link bring up (aka hot
+reset) before sending any configuration TLPs.
+
+Jason
