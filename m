@@ -1,124 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:9494 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751434AbaE0XxD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 May 2014 19:53:03 -0400
-Message-ID: <5385255D.5060204@intel.com>
-Date: Tue, 27 May 2014 16:53:01 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:58077 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752001AbaEFNys (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 09:54:48 -0400
+From: Marek Vasut <marex@denx.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 05/17] pci: host: pcie-dra7xx: add support for pcie-dra7xx controller
+Date: Tue, 6 May 2014 15:44:28 +0200
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	rogerq@ti.com, balajitk@ti.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <1399383244-14556-6-git-send-email-kishon@ti.com>
+In-Reply-To: <1399383244-14556-6-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jeffrey.t.kirsher@intel.com
-Subject: Re: [PATCH] pci: Save and restore VFs as a part of a reset
-References: <20140505212346.18767.34117.stgit@ahduyck-cp2.jf.intel.com> <20140527222256.GC11907@google.com>
-In-Reply-To: <20140527222256.GC11907@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201405061544.28738.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/27/2014 03:22 PM, Bjorn Helgaas wrote:
-> On Mon, May 05, 2014 at 02:25:17PM -0700, Alexander Duyck wrote:
->> This fixes an issue I found in which triggering a reset via the PCI sysfs
->> reset while SR-IOV was enabled would leave the VFs in a state in which the
->> BME and MSI-X enable bits were all cleared.
->>
->> To correct that I have added code so that the VF state is saved and restored
->> as a part of the PF save and restore state functions.  By doing this the VF
->> state is restored as well as the IOV state allowing the VFs to resume function
->> following a reset.
->>
->> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
->> ---
->>  drivers/pci/iov.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++--
->>  drivers/pci/pci.c |    2 ++
->>  drivers/pci/pci.h |    5 +++++
->>  3 files changed, 53 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index de7a747..645ed71 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -521,13 +521,57 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
->>  }
->>  
->>  /**
->> + * pci_save_iov_state - Save the state of the VF configurations
->> + * @dev: the PCI device
->> + */
->> +int pci_save_iov_state(struct pci_dev *dev)
->> +{
->> +	struct pci_dev *vfdev = NULL;
->> +	unsigned short dev_id;
->> +
->> +	/* only search if we are a PF */
->> +	if (!dev->is_physfn)
->> +		return 0;
->> +
->> +	/* retrieve VF device ID */
->> +	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
-> 
-> This is just an optimization to reduce the number of things you get
-> back from pci_get_device(), and hence reduce the number of times the
-> "vfdev->is_virtfn && (vfdev->physfn == dev)" condition is false, right?
-> 
+On Tuesday, May 06, 2014 at 03:33:51 PM, Kishon Vijay Abraham I wrote:
+> Added support for pcie controller in dra7xx. This driver re-uses
+> the designware core code that is already present in kernel.
 
-Yes, this is just a mechanism to reduce the number of items we have to test.
+[...]
 
->> +	/* loop through all the VFs and save their state information */
->> +	while ((vfdev = pci_get_device(dev->vendor, dev_id, vfdev))) {
->> +		if (vfdev->is_virtfn && (vfdev->physfn == dev)) {
->> +			int err = pci_save_state(vfdev);
-> 
-> It makes me uneasy to operate on another device (we're resetting A, and
-> here we save state for B).  I know B is dependent on A, since B is a VF
-> related to PF A, but what synchronization is there to serialize this
-> against any other save/restore operations that may be in progress by B's
-> driver or by a sysfs operation on B?
+> +#define to_dra7xx_pcie(x)	container_of((x), struct dra7xx_pcie, pp)
+> +
+> +static inline u32 dra7xx_pcie_readl(void __iomem *base, u32 offset)
 
-I don't believe there is any synchronization mechanism in place
-currently.  I can look into that as well.  Odds are we probably need to
-have the VFs check the parent lock before they take any independent action.
+Just pass struct dra7xx_pcie * instead of *base here , it will make the code 
+below shorter.
 
-> 
-> Is there anything in the reset path that pays attention to whether
-> resetting this PF will clobber VFs?  Do we care whether those VFs are in
-> use?  I assume they might be in use by guests?
+> +{
+> +	return readl(base + offset);
+> +}
+> +
+> +static inline void dra7xx_pcie_writel(void __iomem *base, u32 offset, u32
+> value) +{
 
-The problem I found was that the sysfs reset call doesn't bother to
-check with the PF driver at all.  It just clobbers the PF and any VFs on
-it without talking to the PF driver.
+DTTO.
 
-> 
->> +			if (err)
->> +				return err;
->> +		}
->> +	}
-> 
-> pci_get_device() acquires a reference on each device it returns, so this
-> strategy would require a pci_dev_put().
+> +	writel(value, base + offset);
+> +}
+> +
+> +static int dra7xx_pcie_link_up(struct pcie_port *pp)
+> +{
+> +	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+> +	u32 reg = dra7xx_pcie_readl(dra7xx->base, PCIECTRL_DRA7XX_CONF_PHY_CS);
+> +
+> +	if (reg & LINK_UP)
+> +		return true;
+> +	return false;
 
-Yes, if I am not mistaken the pci_dev_put is called as a part of
-pci_get_dev_by_id which is what pci_get_device ends up being.
+return reg & LINK_UP;
 
-> 
-> But I'm not really keen on pci_get_device() in the first place.  It works
-> by iterating over all PCI devices in the system, which seems like a
-> sledgehammer approach.  It *is* widely used, but mostly in quirk-type code
-> from which I avert my eyes.
-> 
-> Maybe you could do something based on pci_walk_bus()?  If you did that, I
-> think the PCI_SRIOV_VF_DID would become superfluous.
-> 
+> +}
+> +
+> +static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+> +{
+> +	u32 reg;
+> +	int retries = 1000;
+> +	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+> +
+> +	if (dw_pcie_link_up(pp)) {
+> +		dev_err(pp->dev, "link is already up\n");
 
-I can look into that, I'm not familiar with the interface.  I'll have to
-see what the relationship is between the PF and VF in terms of busses as
-I don't recall it off of the top of my head.
+This will spew, since the .link_up (and thus this function) can be called 
+repeatedly. The subsystem will query if the link is up via this function.
 
-If it is simple enough I might submit a second patch to update the
-pci_vfs_assigned since it is using similar logic.
+> +		return 0;
+> +	}
+> +
+> +	reg = dra7xx_pcie_readl(dra7xx->base, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+> +	reg |= LTSSM_EN;
+> +	dra7xx_pcie_writel(dra7xx->base, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+> +
+> +	while (--retries) {
 
-Thanks,
+Use retries--
 
-Alex
+> +		reg = dra7xx_pcie_readl(dra7xx->base,
+> +					PCIECTRL_DRA7XX_CONF_PHY_CS);
+> +		if (reg & LINK_UP)
+> +			break;
+> +		usleep_range(10, 20);
+> +	}
+> +
+> +	if (retries <= 0) {
 
+Then check if retries == 0 and retries can be unsigned int.
+
+> +		dev_err(pp->dev, "link is not up\n");
+> +		return -ETIMEDOUT;
+> +	}
+> +
+> +	return 0;
+> +}
+[...]
+> +static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+> +{
+> +	u32 reg;
+> +	int ret;
+> +	int irq;
+> +	struct phy *phy;
+> +	void __iomem *base;
+> +	struct resource *res;
+> +	struct dra7xx_pcie *dra7xx;
+> +	struct device *dev = &pdev->dev;
+> +
+> +	dra7xx = devm_kzalloc(&pdev->dev, sizeof(*dra7xx), GFP_KERNEL);
+> +	if (!dra7xx)
+> +		return -ENOMEM;
+> +
+> +	irq = platform_get_irq(pdev, 0);
+> +	if (irq < 0) {
+> +		dev_err(dev, "missing IRQ resource\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	ret = devm_request_irq(&pdev->dev, irq, dra7xx_pcie_irq_handler,
+> +			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
+> +	if (ret) {
+> +		dev_err(&pdev->dev, "failed to request irq\n");
+> +		return ret;
+> +	}
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
+> +	base = devm_ioremap_nocache(dev, res->start, resource_size(res));
+> +	if (!base)
+> +		return -ENOMEM;
+> +
+> +	phy = devm_phy_get(dev, "pcie-phy");
+> +	if (IS_ERR(phy))
+> +		return PTR_ERR(phy);
+> +
+> +	ret = phy_init(phy);
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	ret = phy_power_on(phy);
+> +	if (ret < 0)
+> +		goto err_power_on;
+> +
+> +	dra7xx->base = base;
+> +	dra7xx->phy = phy;
+> +	dra7xx->dev = dev;
+> +
+> +	pm_runtime_enable(&pdev->dev);
+> +	ret = pm_runtime_get_sync(&pdev->dev);
+> +	if (IS_ERR_VALUE(ret)) {
+> +		dev_err(dev, "pm_runtime_get_sync failed\n");
+> +		goto err_runtime_get;
+> +	}
+> +
+> +	reg = dra7xx_pcie_readl(dra7xx->base, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+> +	reg &= ~LTSSM_EN;
+> +	dra7xx_pcie_writel(dra7xx->base, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+
+platform_set_drvdata() should be here, before you add the port.
+
+> +	ret = add_pcie_port(dra7xx, pdev);
+> +	if (ret < 0)
+> +		goto err_add_port;
+> +
+> +	platform_set_drvdata(pdev, dra7xx);
+> +	return 0;
+[...]
