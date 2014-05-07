@@ -1,72 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:50015 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828AbaE1UO4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 16:14:56 -0400
-Received: by mail-ie0-f170.google.com with SMTP id at1so10931506iec.29
-        for <linux-pci@vger.kernel.org>; Wed, 28 May 2014 13:14:55 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-doc@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v2 1/5] DMA-API: Clarify physical/bus address distinction
+Date: Wed, 07 May 2014 09:37:04 +0200
+Message-ID: <4295045.447pOn727x@wuerfel>
+In-Reply-To: <20140506224819.17968.2922.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140506224819.17968.2922.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <53861154.4080402@intel.com>
-References: <20140505212346.18767.34117.stgit@ahduyck-cp2.jf.intel.com>
- <20140527222256.GC11907@google.com> <5385255D.5060204@intel.com>
- <CAErSpo5QU1LsKVqyGbT07mhF-t5L1y3NxD4JhJ6N3AM0XT0c2A@mail.gmail.com>
- <1401250378.3289.774.camel@ul30vt.home> <53861154.4080402@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 28 May 2014 14:14:35 -0600
-Message-ID: <CAErSpo4htYwi3jfoxdj=W9VjVdd5gDjYcxg_i52VVz1sYQHL5A@mail.gmail.com>
-Subject: Re: [PATCH] pci: Save and restore VFs as a part of a reset
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	Don Dutile <ddutile@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 28, 2014 at 10:39 AM, Alexander Duyck
-<alexander.h.duyck@intel.com> wrote:
-> On 05/27/2014 09:12 PM, Alex Williamson wrote:
->> On Tue, 2014-05-27 at 19:19 -0600, Bjorn Helgaas wrote:
+On Tuesday 06 May 2014 16:48:19 Bjorn Helgaas wrote:
+> The DMA-API documentation sometimes refers to "physical addresses" when it
+> really means "bus addresses."  Sometimes these are identical, but they may
+> be different if the bridge leading to the bus performs address translation.
+> Update the documentation to use "bus address" when appropriate.
+> 
+> Also, consistently capitalize "DMA", use parens with function names, use
+> dev_printk() in examples, and reword a few sections for clarity.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
->>> Maybe resetting the PF should just fail if there's an active VF.  If
->>> you need to reset the PF, you'd have to unbind the VFs first.
->>
->> The use case is certainly questionable, personally I'm not going to
->> expect VFs to continue working after the PF is reset.  Driver binding
->> gets complicated, especially when KVM doesn't actually bind devices to
->> use them.  Hopefully we'll get that out of the tree some day though.  I
->> suppose we could -EBUSY the PF reset as long as VFs are enabled.
->
-> What I could do is go through and notify the VFs that they are about to
-> get hit by a reset.  What they do with that information would be up to them.
->
-> So if the VFs are loaded on the host I could then at least allow them to
-> recover by saving and restoring the config space within the driver
-> themselves.
+Looks great!
 
-I really like the idea of punting by failing the PF reset if there are
-any active VFs.  That's a really easy way of making sure we aren't
-going to blow up any guests.  What problems would it cause if we went
-this route?
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 
->>> This reminds me about an open problem: VFs can be on "virtual" buses,
->>> which aren't really connected in the hierarchy, and I don't think we
->>> have a nice way to iterate over them.  So probably pci_get_device() is
->>> the best we can do now.
->>
->> Yeah, those virtual buses don't have a bus->self, we just have to skip
->> to bus->parent->self.  pci_walk_bus() goes in the opposite direction,
->> but without an actual device hosting the bus, I don't see how it finds
->> it.  Thanks,
->
-> It seems like we should be able to come up with something like
-> pci_walk_vbus() though or something similar.  All we would need to do is
-> search the VFs on the bus of the PF and all child busses to that bus if
-> I am not mistaken.
+Just some minor comments that you may include if you like (my Ack
+holds if you don't as well).
 
-I don't think that's going to work because the virtual buses don't
-appear as the child bus of anything.
+> @@ -30,16 +28,16 @@ hardware exists.
+>  
+>  Note that the DMA API works with any bus independent of the underlying
+>  microprocessor architecture. You should use the DMA API rather than
+> -the bus specific DMA API (e.g. pci_dma_*).
+> +the bus-specific DMA API (e.g. pci_dma_*).
 
-Bjorn
+It might make sense to change the example to dma_map_* rather than pci_dma_*,
+which is rarely used these days. I think there was at one point a move
+to replace remove the include/asm-generic/pci-dma-compat.h APIs.
+
+>  First of all, you should make sure
+>  
+>  #include <linux/dma-mapping.h>
+>  
+> -is in your driver. This file will obtain for you the definition of the
+> -dma_addr_t (which can hold any valid DMA address for the platform)
+> -type which should be used everywhere you hold a DMA (bus) address
+> -returned from the DMA mapping functions.
+> +is in your driver, which provides the definition of dma_addr_t.  This type
+> +can hold any valid DMA or bus address for the platform and should be used
+> +everywhere you hold a DMA address returned from the DMA mapping functions
+> +or a bus address read from a device register such as a PCI BAR.
+
+The PCI BAR example is misleading I think: While the raw value of the
+BAR would be a dma_addr_t that can be used for pci-pci DMA, we normally
+only deal with translated BARs from pci_resource_*, which would be
+a resource_size_t in the same space as phys_addr_t, which has the
+PCI mem_offset added in.
+
+> + * A dma_addr_t can hold any valid DMA or bus address for the platform.
+> + * It can be given to a device to use as a DMA source or target, or it may
+> + * appear on the bus when a CPU performs programmed I/O.  A CPU cannot
+> + * reference a dma_addr_t directly because there may be translation between
+> + * its physical address space and the bus address space.
+
+On a similar note, I think the part 'or it may appear on the bus when a CPU
+performs programmed I/O' is somewhat misleading: While true in theory, we
+would never use a dma_addr_t to store an address to be used for PIO, because
+the CPU needs to use either the phys_addr_t value associated with the physical
+MMIO address or the __iomem pointer for the virtually mapped address.
+
+	Arnd
