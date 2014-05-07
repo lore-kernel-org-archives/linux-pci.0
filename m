@@ -1,54 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:40419 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755805AbaE2Dg1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 23:36:27 -0400
-Received: by mail-ie0-f178.google.com with SMTP id rl12so11292343iec.9
-        for <linux-pci@vger.kernel.org>; Wed, 28 May 2014 20:36:26 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-doc@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v2 3/5] sh/PCI: Pass GAPSPCI_DMA_BASE CPU address to dma_declare_coherent_memory()
+Date: Wed, 07 May 2014 09:55:16 +0200
+Message-ID: <6994558.Q3OYh8PWMa@wuerfel>
+In-Reply-To: <20140506224833.17968.87108.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140506224833.17968.87108.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <53868F40.8000909@huawei.com>
-References: <1400729544-7940-1-git-send-email-wangyijing@huawei.com>
-	<20140528032213.GP11907@google.com>
-	<538558D2.3050706@huawei.com>
-	<CAE9FiQWM15UHvX=7wv4aMXfTp5QLsB+J9c1qjOzpZ1vU0ePB4A@mail.gmail.com>
-	<53868F40.8000909@huawei.com>
-Date: Wed, 28 May 2014 20:36:26 -0700
-Message-ID: <CAE9FiQX6-E7xq9Ew=KJQnMf9NkorSBtsAEWt_9+PW2R_T5ABrg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: fix return in pci_bus_add_device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 28, 2014 at 6:37 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> I found some kernel code still check this return value, and I also think return the
->>> real retval make sense.
->>
->> No, that is not right.
->>
->> If you look closely,
->>
->> device_attach() returns
->> 1: success
->> 0: not attached
->> <0: fail.
->
-> Hi Yinghai,
->    Thanks for your explanation.
-> I found all the kernel code to check its return value, only for print a warning for users.
->
->
-> So I think we can drop all return checking from calling path
+On Tuesday 06 May 2014 16:48:33 Bjorn Helgaas wrote:
+> @@ -51,8 +53,12 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
+>                 /*
+>                  * Redirect dma memory allocations to special memory window.
+>                  */
+> +               region.start = GAPSPCI_DMA_BASE;
+> +               region.end = GAPSPCI_DMA_BASE + GAPSPCI_DMA_SIZE - 1;
+> +               res.flags = IORESOURCE_MEM;
+> +               pcibios_bus_to_resource(dev->bus, &res, &region);
+>                 BUG_ON(!dma_declare_coherent_memory(&dev->dev,
+> -                                               GAPSPCI_DMA_BASE,
+> +                                               res->start,
+>                                                 GAPSPCI_DMA_BASE,
+>                                                 GAPSPCI_DMA_SIZE,
+>                                                 DMA_MEMORY_MAP |
 
-I prefer this one. as pci_bus_add_device already have
+Not sure if this is an improvement. I understand the intention, but
+it's actually possible for the offset to be different both ways:
 
->         WARN_ON(retval < 0);
+Your patch applies the outbound mem_offset that was provided when
+registering the MMIO resource for the PCI host bridge. What the driver
+needs instead is the inbound DMA offset that gets applied by some
+host bridges that don't have a 1:1 mapping but also don't have an
+IOMMU. We know that on this particular platform, both are zero, so
+the original code works and it will keep working with your change,
+but I think it's a mistake anyway. I have seen both kinds of offsets
+in the past on real machines, but I am not aware of any where they
+are both nonzero and have the same value.
 
-There is no need to print warning message later again.
-
-Thanks
-
-Yinghai
+	Arnd
