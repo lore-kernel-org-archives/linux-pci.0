@@ -1,35 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:43502 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755357AbaENNU7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 May 2014 09:20:59 -0400
-Message-ID: <53736DA1.4040405@ti.com>
-Date: Wed, 14 May 2014 16:20:33 +0300
-From: Roger Quadros <rogerq@ti.com>
-MIME-Version: 1.0
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: <balajitk@ti.com>
-Subject: Re: [PATCH 04/17] phy: pipe3: insert delay to enumerate in GEN2 mode
-References: <1399383244-14556-1-git-send-email-kishon@ti.com> <1399383244-14556-5-git-send-email-kishon@ti.com>
-In-Reply-To: <1399383244-14556-5-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:47586 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933942AbaEGQIq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 May 2014 12:08:46 -0400
+From: Will Deacon <will.deacon@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	jgunthorpe@obsidianresearch.com, sthokal@xilinx.com,
+	Will Deacon <will.deacon@arm.com>
+Subject: [PATCH v6 3/3] MAINTAINERS: add entry for generic PCI host controller driver
+Date: Wed,  7 May 2014 17:07:19 +0100
+Message-Id: <1399478839-3564-4-git-send-email-will.deacon@arm.com>
+In-Reply-To: <1399478839-3564-1-git-send-email-will.deacon@arm.com>
+References: <1399478839-3564-1-git-send-email-will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
-> 8-bit delay value (0xF1) is required for GEN2 devices to be enumerated
-> consistently. Added an API to be called from PHY drivers to set this delay
-> value and called it from PIPE3 driver to set the delay value.
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Add myself as the maintainer for the generic PCI host controller driver.
 
-Reviewed-by: Roger Quadros <rogerq@ti.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Will Deacon <will.deacon@arm.com>
+---
+ MAINTAINERS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
---
-cheers,
--roger
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 106626442124..424874c9a692 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6751,6 +6751,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*designware*
+ 
++PCI DRIVER FOR GENERIC OF HOSTS
++M:	Will Deacon <will.deacon@arm.com>
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
++F:	drivers/pci/host/pci-host-generic.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
+-- 
+1.9.2
 
