@@ -1,48 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:35430 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754392AbaEMBff (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 May 2014 21:35:35 -0400
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 13 May 2014 11:35:33 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 2/4] drivers/vfio: Rework offsetofend()
-Date: Tue, 13 May 2014 11:35:22 +1000
-Message-Id: <1399944924-1200-3-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1399944924-1200-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1399944924-1200-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:47575 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933933AbaEGQIm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 May 2014 12:08:42 -0400
+From: Will Deacon <will.deacon@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	jgunthorpe@obsidianresearch.com, sthokal@xilinx.com,
+	Will Deacon <will.deacon@arm.com>
+Subject: [PATCH v6 0/3] Support for Generic PCI Host Controller
+Date: Wed,  7 May 2014 17:07:16 +0100
+Message-Id: <1399478839-3564-1-git-send-email-will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The macro offsetofend() introduces unnecessary temporary variable
-"tmp". The patch avoids that and saves a bit memory in stack.
+Hello again,
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- include/linux/vfio.h | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+This is version 6 of the generic PCI host controller series that has
+previously been posted here:
 
-diff --git a/include/linux/vfio.h b/include/linux/vfio.h
-index 81022a52..8ec980b 100644
---- a/include/linux/vfio.h
-+++ b/include/linux/vfio.h
-@@ -86,9 +86,8 @@ extern void vfio_unregister_iommu_driver(
-  * from user space.  This allows us to easily determine if the provided
-  * structure is sized to include various fields.
-  */
--#define offsetofend(TYPE, MEMBER) ({				\
--	TYPE tmp;						\
--	offsetof(TYPE, MEMBER) + sizeof(tmp.MEMBER); })		\
-+#define offsetofend(TYPE, MEMBER) \
-+	(offsetof(TYPE, MEMBER)	+ sizeof(((TYPE *)0)->MEMBER))
- 
- /*
-  * External user API
+  v1: http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/229679.html
+  v2: http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/232213.html
+  v3: http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/233491.html
+  v4: http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/235468.html
+  v5: http://lists.infradead.org/pipermail/linux-arm-kernel/2014-March/237540.html
+      http://lists.infradead.org/pipermail/linux-arm-kernel/2014-May/252915.html
+
+Changes since v5 include:
+
+  - Moved most of ->setup() into ->probe() (via two new function calls)
+
+  - Improved cleanup (we can now rely on devm_* doing its job for us)
+
+  - Moved Kconfig option under ARCH_MULTIPLATFORM
+
+All feedback welcome.
+
+Cheers,
+
+Will
+
+
+Will Deacon (3):
+  ARM: kconfig: allow PCI support to be selected with ARCH_MULTIPLATFORM
+  PCI: ARM: add support for generic PCI host controller
+  MAINTAINERS: add entry for generic PCI host controller driver
+
+ .../devicetree/bindings/pci/host-generic-pci.txt   | 100 ++++++
+ MAINTAINERS                                        |   8 +
+ arch/arm/Kconfig                                   |   1 +
+ drivers/pci/host/Kconfig                           |   7 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-host-generic.c                | 388 +++++++++++++++++++++
+ 6 files changed, 505 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/host-generic-pci.txt
+ create mode 100644 drivers/pci/host/pci-host-generic.c
+
 -- 
-1.8.3.2
+1.9.2
 
