@@ -1,102 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7883 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751784AbaEAQ1x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 May 2014 12:27:53 -0400
-Subject: [PATCH 07/13] iommu/amd: Update to use PCI DMA aliases
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>,
-	acooks@gmail.com, linux-kernel@vger.kernel.org
-Date: Thu, 01 May 2014 10:27:48 -0600
-Message-ID: <20140501162748.17512.4466.stgit@bling.home>
-In-Reply-To: <20140501160128.17512.23609.stgit@bling.home>
-References: <20140501160128.17512.23609.stgit@bling.home>
+Received: from mout.kundenserver.de ([212.227.126.130]:56854 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750910AbaEGH70 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 May 2014 03:59:26 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-doc@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v2 4/5] iommu: Use dma_addr_t for IOVA arguments
+Date: Wed, 07 May 2014 09:58:58 +0200
+Message-ID: <45161364.3Gyo1xJJLV@wuerfel>
+In-Reply-To: <20140506224840.17968.29010.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140506224840.17968.29010.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AMD-Vi already has a concept of an alias provided via the IVRS table.
-This alias only handles topology based aliases, such as PCIe-to-PCI
-bridges.  When such an alias is present, we continue to use it.  When
-a platform alias is not present, we can now add a check of the device
-dma_func_alias to create our own.  Note that the current code can
-only handle a single alias of a device, and we don't attempt to change
-that here.  It would only become a factor for the requester ID seen by
-the IOMMU if PCI-X were involved anway.
+On Tuesday 06 May 2014 16:48:40 Bjorn Helgaas wrote:
+> Convert the "iova" arguments of iommu_map(), iommu_unmap(), etc., from
+> "unsigned long" to dma_addr_t.
+> 
+> bb5547acfcd8 ("iommu/fsl: Make iova dma_addr_t in the iommu_iova_to_phys
+> API") did this for iommu_iova_to_phys(), but didn't fix the rest of the
+> IOMMU API.
 
-Since the alias is now potentially device specific rather than the
-topology based alias provided by the platform, we need to clear it
-when the device goes away.
+This patch looks 100% correct, but I'm not convinced it's a good idea:
+On 32-bit platforms (i.e. most of the ones you change), doing 64-bit
+arithmetic has a noticeable overhead. I am not aware of an IOMMU that
+actually uses 64-bit DMA addresses on its slave side, usually they
+are used to translate addresses from 32-bit masters into 64-bit
+memory addresses, so using 'unsigned long' seems better from a practical
+point of view as opposed to the strict type correctness.
 
-With the DMA alias and isolation infrastructure now in PCI-core, we
-could opt to ignore IVRS provided aliases.  We now do this for IOMMU
-groups.  However, for this more common use case, the "don't fix what
-isn't broken" mantra seems like the safer route.
-
-This should allow AMD-Vi to work with devices like Marvell and Ricoh
-with DMA function alias quirks.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/amd_iommu.c |   27 ++++++++++++++++++++++++---
- 1 file changed, 24 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 3d58de4..4621692 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -294,6 +294,7 @@ static int iommu_init_device(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct iommu_dev_data *dev_data;
- 	u16 alias;
-+	u8 func_alias;
- 	int ret;
- 
- 	if (dev->archdata.iommu)
-@@ -304,6 +305,19 @@ static int iommu_init_device(struct device *dev)
- 		return -ENOMEM;
- 
- 	alias = amd_iommu_alias_table[dev_data->devid];
-+
-+	/*
-+	 * If there is no platform provided alias (topology-based) check
-+	 * if we have a device quirk based alias.
-+	 */
-+	func_alias = pdev->dma_func_alias & ~(1 << PCI_SLOT(pdev->devfn));
-+	if (func_alias && alias == dev_data->devid) {
-+		WARN_ON(hweight8(func_alias) > 1);
-+		alias = PCI_DEVID(pdev->bus->number,
-+				  PCI_DEVFN(PCI_SLOT(pdev->devfn),
-+					    ffs(func_alias) - 1));
-+	}
-+
- 	if (alias != dev_data->devid) {
- 		struct iommu_dev_data *alias_data;
- 
-@@ -351,12 +365,19 @@ static void iommu_ignore_device(struct device *dev)
- 
- static void iommu_uninit_device(struct device *dev)
- {
-+	struct iommu_dev_data *dev_data = search_dev_data(get_device_id(dev));
-+
-+	if (!dev_data)
-+		return;
-+
- 	iommu_group_remove_device(dev);
- 
-+	/* Unlink from alias, it may change if another device is re-plugged */
-+	dev_data->alias_data = NULL;
-+
- 	/*
--	 * Nothing to do here - we keep dev_data around for unplugged devices
--	 * and reuse it when the device is re-plugged - not doing so would
--	 * introduce a ton of races.
-+	 * We keep dev_data around for unplugged devices and reuse it when the
-+	 * device is re-plugged - not doing so would introduce a ton of races.
- 	 */
- }
- 
-
+	Arnd
