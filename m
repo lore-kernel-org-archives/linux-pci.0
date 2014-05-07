@@ -1,56 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:57878 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753300AbaETRWm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 13:22:42 -0400
-Received: by mail-ie0-f179.google.com with SMTP id rd18so790982iec.38
-        for <linux-pci@vger.kernel.org>; Tue, 20 May 2014 10:22:42 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 7 May 2014 20:00:40 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	David Airlie <airlied@linux.ie>, Bodo Eggert <7eggert@gmx.de>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 4/4] x86/gart: Tidy messages and add bridge device info
+Message-ID: <20140507180040.GA17329@gmail.com>
+References: <20140425171144.312.9601.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140425171655.312.97511.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140426060130.GA1698@gmail.com>
+ <CAErSpo4ttY-423De+4=TCsK0kXeZRanoEL2yUjp=GVAoZGaOLw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20140520170221.GA5130@obsidianresearch.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
- <6048322.x3M3sdDEWO@wuerfel> <5374FD24.8000806@ti.com> <22200719.Jb5jnJylJH@wuerfel>
- <20140515183919.GC11650@obsidianresearch.com> <53751DDF.40304@ti.com>
- <20140515205210.GB14722@obsidianresearch.com> <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com>
- <20140520170221.GA5130@obsidianresearch.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 20 May 2014 11:22:22 -0600
-Message-ID: <CAErSpo667uWybiHOh4tVQDh_JFpF0EbvxKwo_GQm+B1-wMtT1Q@mail.gmail.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware
- core driver
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4ttY-423De+4=TCsK0kXeZRanoEL2yUjp=GVAoZGaOLw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 20, 2014 at 11:02 AM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Fri, May 16, 2014 at 08:29:56PM +0000, Karicheri, Muralidharan wrote:
->
->> But pcie_bus_configure_settings just make sure the mrrs for a device
->> is not greater than the max payload size.
->
-> Not quite, it first scans the network checking the Maximum Payload Size
-> Supported (MPSS) for each device, and chooses the highest supported by
-> all as the MPS for all.
 
-The "performance" setting, e.g., "pci=pcie_bus_perf", adds a few
-wrinkles by setting MRRS in ways that allow some devices to have
-larger MPS than others.  I don't think this is exactly what was
-envisioned in the spec, and it is not guaranteed to work if there is
-peer-to-peer DMA.  This isn't documented very well; the best I know of
-is the changelogs for:
+* Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-  a1c473aa11e6 pci: Clamp pcie_set_readrq() when using "performance" settings
-  b03e7495a862 PCI: Set PCI-E Max Payload Size on fabric
+> On Sat, Apr 26, 2014 at 12:01 AM, Ingo Molnar <mingo@kernel.org> wrote:
+> >
+> > * Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >
+> >> Print the AGP bridge info the same way as the rest of the kernel, e.g.,
+> >> "0000:00:04.0" instead of "00:04:00".
+> >>
+> >> Also print the AGP aperture address range the same way we print resources,
+> >> and label it explicitly as a bus address range.
+> >>
+> >> No functional change.
+> >>
+> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >> ---
+> >>  arch/x86/kernel/aperture_64.c |   20 ++++++++++++--------
+> >>  1 file changed, 12 insertions(+), 8 deletions(-)
+> >>
+> >> diff --git a/arch/x86/kernel/aperture_64.c b/arch/x86/kernel/aperture_64.c
+> >> index 9fa8aa051f54..4dd76d3df056 100644
+> >> --- a/arch/x86/kernel/aperture_64.c
+> >> +++ b/arch/x86/kernel/aperture_64.c
+> >> @@ -126,10 +126,12 @@ static u32 __init read_agp(int bus, int slot, int func, int cap, u32 *order)
+> >>       u64 aper;
+> >>       u32 old_order;
+> >>
+> >> -     printk(KERN_INFO "AGP bridge at %02x:%02x:%02x\n", bus, slot, func);
+> >> +     printk(KERN_INFO "pci 0000:%02x:%02x.%d: AGP bridge\n", bus, slot,
+> >> +            func);
+> >
+> > Please leave it on a single line - checkpatch warning nonwithstanding.
+> > pr_info() is also useful.
+> > ...
+> 
+> > Also, you could add:
+> >
+> > #define PREFIX "PCI/gart: "
+> >
+> > or something like that, to define a standard prefix for these
+> > messages.
+> 
+> I converted to pr_info(), etc. and added pr_fmt for an "AGP: " prefix.
+> 
+> > Btw., this file could be moved to arch/x86/pci/?
+> 
+> Yes, I'd be glad to do this.  It looks like all the following files
+> might be candidates:
+> 
+>   amd_gart_64.c  (CONFIG_GART_IOMMU)
+>   aperture_64.c  (CONFIG_GART_IOMMU)
+>   pci-calgary_64.c  (CONFIG_CALGARY_IOMMU)
+>   tce_64.c  (CONFIG_CALGARY_IOMMU)
+>   mmconf-fam10h_64.c  (CONFIG_PCI_MMCONFIG)
+> 
+> What do you think?  Move all, move none, move only aperture_64.c?
+> 
+> Thanks for your comments!
 
-Bjorn
+Please move all of them, they are really 95% PCI bits:
+
+  Acked-by: Ingo Molnar <mingo@kernel.org>
+
+Thanks,
+
+	Ingo
