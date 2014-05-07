@@ -1,99 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:51435 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751249AbaEOUFe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 May 2014 16:05:34 -0400
-Message-ID: <53751DDF.40304@ti.com>
-Date: Thu, 15 May 2014 16:04:47 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:51960 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755895AbaEGNJE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 May 2014 09:09:04 -0400
+Received: by mail-lb0-f175.google.com with SMTP id l4so1298950lbv.6
+        for <linux-pci@vger.kernel.org>; Wed, 07 May 2014 06:09:03 -0700 (PDT)
 MIME-Version: 1.0
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware
- core driver
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <6048322.x3M3sdDEWO@wuerfel> <5374FD24.8000806@ti.com> <22200719.Jb5jnJylJH@wuerfel> <20140515183919.GC11650@obsidianresearch.com>
-In-Reply-To: <20140515183919.GC11650@obsidianresearch.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Reply-To: pricardofc@ipfn.ist.utl.pt
+Date: Wed, 7 May 2014 14:09:02 +0100
+Message-ID: <CAH9N0t8HdJadhJ9A=Z2owAb0RZU70g2G+XWE+MG155hbb4BfWQ@mail.gmail.com>
+Subject: Hotswap with an ATCA PCI Express carrier containing a PCIe Switch
+From: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/15/2014 2:39 PM, Jason Gunthorpe wrote:
-> On Thu, May 15, 2014 at 08:20:13PM +0200, Arnd Bergmann wrote:
->> On Thursday 15 May 2014 13:45:08 Murali Karicheri wrote:
->>>>> +#ifdef CONFIG_PCI_KEYSTONE
->>>>> +/*
->>>>> + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
->>>>> + */
->>>>> +static void quirk_limit_readrequest(struct pci_dev *dev)
->>>>> +{
->>>>> +    int readrq = pcie_get_readrq(dev);
->>>>> +
->>>>> +    if (readrq > 256)
->>>>> +            pcie_set_readrq(dev, 256);
->>>>> +}
->>>>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
->>>>> +#endif /* CONFIG_PCI_KEYSTONE */
->>>> This doesn't work: you can't just limit do this for all devices just based
->>>> on PCI_KEYSTONE being enabled, you have to check if you are actually using
->>>> this controller.
->>>>
->>>>        Arnd
->>>    I assume, I need to check if PCI controller's vendor ID/ device ID
->>> match with the keystone
->>>    PCI controller's ID and call pcie_set_readrq() for all of the slave
->>> PCI devices and do this fixup.
->>> Is this correct understanding?  If you can point me to an example code
->>> for this that will be
->>> really helpful so that I can avoid re-inventing the wheel.
->> I think it would be best to move the quirk into the keystone pci driver
->> and compare compare the dev->driver pointer of the PCI controller device.
-> The PCI core handles setting the maximum read request size already,
-> can you figure out why the core code isn't doing what you need and
-> correct the root problem?
->
-> I'm guessing the values in the root port bridge config space are not
-> correct or something like that??
->
-> Jason
-What you mean by "The PCI core handles setting the maximum read request 
-size already"
-I see there is function pcie_write_mrrs() in the drivers/pci/probe.c 
-that reads the mps
-using pcie_get_mps() and then set mrrs to mps. But this function is 
-called only from
-pcie_bus_configure_set() that is called by pcie_bus_configure_settings()
+Hello,
+Im trying to remove and insert a carrier PCI Express card that
+contains an endpoint card from an ATCA system. The PCI express card
+that contains the PCIe Swittch (PEX 8696 from PLX) is attached to an
+OSS (One Stop System) card that contains the Root Complex (PEX 8733
+from Plx) via a PCI Express cable. The OSS card is a x16 PCI Express
+card placed in the PCIE motherboard slot from a computer running
+Redhat 6.3 with real time kernel version 3.0.9.rt.
+When I hotplug, remove or insert, the endpoint connected to the
+carrier card everything goes well with the removal and insertion
+procedures (also the device drivers are unloaded and loaded from the
+system when I run "remove" and "rescan" commands through an hotplug
+developed service for this purpose).
 
-pcie_bus_configure_settings() is called by
+Problems arrive when I try to hotplug (hotswap to be precise) the
+carrier card containing PEX 8696 (PCIe Switch). I can perform the
+operation once by removing and inserting the PCI Express cable
+connected between carrier and OSS cards (and consequently unloading
+and loading the corresponding carrier device drivers). When performing
+the same operation for the second time I can remove the PCI express
+cable and unload carrier device drivers again but the insert procedure
+(and device drivers load operation) no longer occur because PCI
+Express upstream (from PEX 8733, the root complex point of view) link
+does not seems to happen (signalled by a LED indicator placed in the
+carrier card).
 
-0 pci-common.c pcibios_scan_phb             1676 
-pcie_bus_configure_settings(child);
-1 pci_gx.c     fixup_read_and_payload_sizes  606 
-pcie_bus_configure_settings(child);
-2 acpi.c       pci_acpi_scan_root            556 
-pcie_bus_configure_settings(child);
-3 pcihp_slot.c pci_configure_slot            164 
-pcie_bus_configure_settings(dev->bus);
+There was a test in which I could manage to perform the above
+operation 3 times and in the 4th insertion the same happened (but in
+this test I opened the Plx editor software between each operation of
+removal and insertion to capture a snapshot of the PEX 8733 upstream
+registers to track and isolate the problem). So I suppose that somehow
+when the link negotiation procedure fails the hotswap procedure no
+longer occurs.
 
-None of them gets called on ARM platform.
+Also when I run "lspci" command PEX 8696 no longer appears (of course)
+and the branch of the entire PCI express tree (path until the FPGA
+endpoint) reaches only until the PEX 8733 downstream port.
 
-What is needed for Keystone PCI is that we need to limit mrrs to 256 
-bytes for all
-of the downstream devices that talks to PCIe controller. This needs to 
-be enforced
-through a quirk. Or Is there something missing that Keystone or DW 
-driver is not
-making use of that reads the mrrs value of the RC and set the same on 
-all of the
-downstream devices connected to the bus that the controller is connected to?
+Can anybody explain what is happening and what can I do to restore the
+PCI express link each time I perform the hotswap procedure?
+Also, from the registers snapshot I could see that somehow when this
+happens there is always TLP packet that is waiting to be delivered
+(pending I suppose) but I don't know if this is an hardware or
+software issue.
 
-Murali
-
+Regards,
+Paulo.
