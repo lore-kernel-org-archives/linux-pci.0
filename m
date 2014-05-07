@@ -1,78 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:41896 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755028AbaE1V4V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 17:56:21 -0400
-Date: Wed, 28 May 2014 14:59:56 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	konrad.wilk@oracle.com, kim.phillips@linaro.org,
-	stuart.yoder@freescale.com, agraf@suse.de, libvir-list@redhat.com,
-	iommu@lists.linux-foundation.org, christoffer.dall@linaro.org,
-	tech@virtualopensystems.com, kvmarm@lists.cs.columbia.edu,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: Introduce new device binding path using
- pci_dev.driver_override
-Message-ID: <20140528215956.GA7339@kroah.com>
-References: <20140520145136.28232.90707.stgit@bling.home>
- <20140528030742.GO11907@google.com>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:43840 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750933AbaEGOyH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 May 2014 10:54:07 -0400
+Date: Wed, 7 May 2014 15:53:27 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Srikanth Thokala <sthokal@xilinx.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	marc.zyngier@arm.com
+Subject: Re: [PATCH v3] pcie: Add Xilinx PCIe Host Bridge IP driver
+Message-ID: <20140507145327.GB2563@arm.com>
+References: <1397561911-11647-1-git-send-email-sthokal@xilinx.com>
+ <201404301734.14478.arnd@arndb.de>
+ <CA+mB=1K_AU5cLsW0J9OhVXmpvc+nYSZwpS5iyNXVTFpibfHq6g@mail.gmail.com>
+ <4288313.uDFYZQS3W7@wuerfel>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140528030742.GO11907@google.com>
+In-Reply-To: <4288313.uDFYZQS3W7@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 27, 2014 at 09:07:42PM -0600, Bjorn Helgaas wrote:
-> On Tue, May 20, 2014 at 08:53:21AM -0600, Alex Williamson wrote:
-> > The driver_override field allows us to specify the driver for a device
-> > rather than relying on the driver to provide a positive match of the
-> > device.  This shortcuts the existing process of looking up the vendor
-> > and device ID, adding them to the driver new_id, binding the device,
-> > then removing the ID, but it also provides a couple advantages.
+Hi all,
+
+Thanks for CC'ing me, Arnd.
+
+On Wed, May 07, 2014 at 03:35:48PM +0100, Arnd Bergmann wrote:
+> On Wednesday 07 May 2014 17:21:13 Srikanth Thokala wrote:
+> > On Wed, Apr 30, 2014 at 9:04 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > > Would it be possible to split the config space access out into
+> > > a separate file? It would be nice to share that with the generic
+> > > ECAM driver that Will Deacon has sent.
 > > 
-> > First, the above existing process allows the driver to bind to any
-> > device matching the new_id for the window where it's enabled.  This is
-> > often not desired, such as the case of trying to bind a single device
-> > to a meta driver like pci-stub or vfio-pci.  Using driver_override we
-> > can do this deterministically using:
-> > 
-> > echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
-> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
-> > 
-> > Previously we could not invoke drivers_probe after adding a device
-> > to new_id for a driver as we get non-deterministic behavior whether
-> > the driver we intend or the standard driver will claim the device.
-> > Now it becomes a deterministic process, only the driver matching
-> > driver_override will probe the device.
-> > 
-> > To return the device to the standard driver, we simply clear the
-> > driver_override and reprobe the device:
-> > 
-> > echo > /sys/bus/pci/devices/0000:03:00.0/driver_override
-> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
-> > 
-> > Another advantage to this approach is that we can specify a driver
-> > override to force a specific binding or prevent any binding.  For
-> > instance when an IOMMU group is exposed to userspace through VFIO
-> > we require that all devices within that group are owned by VFIO.
-> > However, devices can be hot-added into an IOMMU group, in which case
-> > we want to prevent the device from binding to any driver (override
-> > driver = "none") or perhaps have it automatically bind to vfio-pci.
-> > With driver_override it's a simple matter for this field to be set
-> > internally when the device is first discovered to prevent driver
-> > matches.
-> > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > Yes, it should be possible.  Is it ok, if I work on top of this driver?
 > 
-> Greg, are you going to weigh in on this?  It does seem to solve some real
-> problems.  ISTR you had an opinion once, but I don't know your current
-> thoughts.
+> Do you mean as a follow-on patch? My feeling is that since we are trying
+> to merge both for 3.16, it would be good to get it done right away if
+> it doesn't cause too much extra work.
 
-This looks good to me:
+Do you mean something as simple as a helper for base + offset ECAM
+addressing, or something more involved that handles the mapping as well? The
+latter would need some alignment on sys->private_data, I think.
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Srikanth: I'll CC you on the next version of my patches (I'll send them
+now).
+
+> > > As a general comment about the MSI implementation, I wonder if this is actually
+> > > generic enough to be shared with other host controllers. It could be moved
+> > > into a separate file like the config space access in that case.
+> > 
+> > I feel the MSI implementation is not generic by looking into the other
+> > host controllers,
+> > it is more specific to the hardware.  Correct me, if am wrong.
+> 
+> The other host controllers are certainly incompatible, but this one looks
+> like it could be used on other controllers easily.
+> 
+> Splitting it out would also make it easier to use another MSI implementation
+> like the one in the GIC.
+
+Actually, MarcZ and I already have my driver working with GICv3 + MSI. The
+code basically amounts to implementing {add,remove}_bus callbacks to set
+the msi_chip for the pci_bus, based on what we got out of the devicetree.
+I don't think we needed anything else... Marc?
+
+Will
