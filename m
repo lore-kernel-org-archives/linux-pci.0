@@ -1,62 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:51545 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751266AbaETRCe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 May 2014 13:02:34 -0400
-Date: Tue, 20 May 2014 11:02:21 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on
- designware core driver
-Message-ID: <20140520170221.GA5130@obsidianresearch.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
- <6048322.x3M3sdDEWO@wuerfel>
- <5374FD24.8000806@ti.com>
- <22200719.Jb5jnJylJH@wuerfel>
- <20140515183919.GC11650@obsidianresearch.com>
- <53751DDF.40304@ti.com>
- <20140515205210.GB14722@obsidianresearch.com>
- <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com>
+Received: from mail-bn1lp0141.outbound.protection.outlook.com ([207.46.163.141]:11944
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751632AbaEGS7T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 May 2014 14:59:19 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	Borislav Petkov <bp@suse.de>,
+	"Robert Richter" <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V3 2/3] ACPI/PCI: Warn if we have to "guess" host bridge node information
+Date: Wed, 7 May 2014 13:58:46 -0500
+Message-ID: <1399489127-6961-3-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 16, 2014 at 08:29:56PM +0000, Karicheri, Muralidharan wrote:
+From: Myron Stowe <myron.stowe@redhat.com>
 
-> But pcie_bus_configure_settings just make sure the mrrs for a device
-> is not greater than the max payload size. 
+The vast majority of platforms are not supplying ACPI _PXM (proximity)
+information corresponding to host bridge (PNP0A03/PNP0A08) devices
+resulting in sysfs "numa_node" values of -1 (NUMA_NO_NODE) [1]:
+  # for i in /sys/devices/pci0000\:00/*/numa_node; do cat $i; done | uniq
+  -1
 
-Not quite, it first scans the network checking the Maximum Payload Size
-Supported (MPSS) for each device, and chooses the highest supported by
-all as the MPS for all.
+  # find /sys/ -name "numa_node" | while read fname; do cat $fname; \
+    done | uniq
+  -1
 
-PCI-E requires that an end point support all packets up to the MPS, so
-if your bridge can't generate a 512 byte read response packet, then it
-must not advertise a MPSS greater than 256 bytes.
+AMD based platforms provide a fall-back for this situation via amd_bus.c.
+These platforms snoop out the information by directly reading specific
+registers from the Northbridge and caching them via 'alloc_pci_root_info'.
 
-Setting your MPSS to 128, 256, then using the
-pcie_bus_configure_settings to run the standard algorithm should
-properly limit the readrq to 256 and be able to properly support all
-the fun edge cases like hot plug.
+Later during boot processing when host bridges are discovered -
+'pci_acpi_scan_root' - the kernel looks for their corresponding ACPI _PXM
+method - drivers/acpi/numa.c::acpi_get_node().  If the BIOS supplied a
+_PXM method then that node (proximity) value is associated.  If the BIOS
+did not supply a _PXM method *and* the platform is AMD based, the
+fall-back cached values obtained directly from the Northbridge are used;
+otherwise, "NUMA_NO_NODE" is associated.
 
-If the config space in your root port bridge is correct and already
-declares a MPSS of 256 then you have nothing else to do but make sure
-pcie_bus_configure_settings gets calls.
+There are a number of issues with this fall-back mechanism the most
+notable being that amd_bus.c extracts a 3-bit number from a CPU register
+and uses it as the node number.  The node numbers used by Linux are
+logical and there's no reason they need to be identical to settings in the
+CPU registers.  So if we have some node information obtained in the normal
+way (from _PXM, SLIT, SRAT, etc.) and some from amd_bus.c, there's no
+reason to believe they will be compatible.
 
-If it is broken and claims a higher MPSS than it can support then you
-need to use a quirk only for the root port bridge or edit the config
-reply in the driver only to fix the MPSS.
+This patch warns when this situation occurs:
+  pci_root PNP0A08:00: [Firmware Bug]: no _PXM; falling back to node 0 from hardware (may be inconsistent with ACPI node numbers)
 
-Jason
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=72051
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ arch/x86/pci/acpi.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 01edac6..5075371 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -489,8 +489,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	}
+ 
+ 	node = acpi_get_node(device->handle);
+-	if (node == NUMA_NO_NODE)
++	if (node == NUMA_NO_NODE) {
+ 		node = x86_pci_root_bus_node(busnum);
++		if (node != 0 && node != NUMA_NO_NODE)
++			dev_info(&device->dev, FW_BUG "no _PXM; falling back to node %d from hardware (may be inconsistent with ACPI node numbers)\n",
++				node);
++	}
+ 
+ 	if (node != NUMA_NO_NODE && !node_online(node))
+ 		node = NUMA_NO_NODE;
+-- 
+1.9.0
+
