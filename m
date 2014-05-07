@@ -1,62 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:33532 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753348AbaEHUso (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 16:48:44 -0400
-Received: by mail-ie0-f169.google.com with SMTP id rl12so3203389iec.14
-        for <linux-pci@vger.kernel.org>; Thu, 08 May 2014 13:48:44 -0700 (PDT)
-Subject: [PATCH v3 0/4] Clean up DMA API docs and dma_addr_t usage
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-kernel@vger.kernel.org,
-	James Bottomley <jbottomley@parallels.com>,
-	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
-Date: Thu, 08 May 2014 14:48:47 -0600
-Message-ID: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, devicetree@vger.kernel.org,
+	balajitk@ti.com, linux-doc@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
+	linux-kernel@vger.kernel.org, Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-omap@vger.kernel.org, rogerq@ti.com
+Subject: Re: [PATCH 05/17] pci: host: pcie-dra7xx: add support for pcie-dra7xx controller
+Date: Wed, 07 May 2014 11:30:35 +0200
+Message-ID: <6485683.q96o7U6vf8@wuerfel>
+In-Reply-To: <5369F287.6000103@ti.com>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <4300084.bc6ByDTk7W@wuerfel> <5369F287.6000103@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-To: unlisted-recipients:; (no To-header on input)
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Maybe the third time's a charm :)
+On Wednesday 07 May 2014 14:14:55 Kishon Vijay Abraham I wrote:
+> >> +static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
+> >> +{
+> >> +    struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+> >> +
+> >> +    dra7xx_pcie_writel(dra7xx->base, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
+> >> +                       ~INTERRUPTS);
+> >> +    dra7xx_pcie_writel(dra7xx->base,
+> >> +                       PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
+> >> +    dra7xx_pcie_writel(dra7xx->base, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+> >> +                       ~LEG_EP_INTERRUPTS & ~MSI);
+> >> +
+> >> +    if (IS_ENABLED(CONFIG_PCI_MSI))
+> >> +            dra7xx_pcie_writel(dra7xx->base,
+> >> +                               PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
+> >> +    else
+> >> +            dra7xx_pcie_writel(dra7xx->base,
+> >> +                               PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
+> >> +                               LEG_EP_INTERRUPTS);
+> > 
+> > Doesn't this just enable one or the other? In general I'd assume you need
+> > both INTx and MSI, at least if MSI is available.
+> 
+> Not sure since the programming sequence in the TRM explicitly states either
+> legacy interrupts or MSI interrupts should be enabled but not both.
 
-This cleans up some DMA-API documentation and makes a minor no-op change to
-the dma_declare_coherent_memory() prototype.
+Hmm, I think that means you can't have MSI at all. You have to support
+legacy PCI devices that can't do MSI.
 
-Changes from v2:
-  - Added description of CPU virtual/physical and bus addresses in
-    DMA-API-HOWTO
-  - Added comments to sh/PCI (Dreamcast) update
-  - Dropped IOMMU interface dma_addr_t changes
+Do you know if you have a modern GIC implementation with MSI support
+in these SoCs? It would be better anyway to use the GIC for doing
+MSI, so you can just ignore the internal MSI controller here.
 
-I didn't add Arnd's and Greg's acks to patch 1 because of all the new
-address description text I added.
+> >> +static int add_pcie_port(struct dra7xx_pcie *dra7xx,
+> >> +                      struct platform_device *pdev)
+> >> +{
+> >> +    int ret;
+> >> +    struct pcie_port *pp;
+> >> +    struct resource *res;
+> >> +    struct device *dev = &pdev->dev;
+> >> +
+> >> +    pp = &dra7xx->pp;
+> >> +    pp->dev = dev;
+> >> +    pp->ops = &dra7xx_pcie_host_ops;
+> >> +
+> >> +    spin_lock_init(&pp->conf_lock);
+> >> +
+> >> +    pp->irq = platform_get_irq(pdev, 1);
+> >> +    if (pp->irq < 0) {
+> >> +            dev_err(dev, "missing IRQ resource\n");
+> >> +            return -EINVAL;
+> >> +    }
+> >>
+> > 
+> > The binding does not list a mandatory "interrupts" property, so
+> > this should not be treated as an error.
+> 
+> actually the 'interrupts' property is documented in pci/designware-pcie.txt.
 
----
+Hmm, but you don't seem to use it the same way as documented there.
+I'm not sure what 'level interrupt, pulse interrupt, special interrupt'
+in the parent binding are, but they don't seem to be the ones you use
+here.
 
-Bjorn Helgaas (4):
-      DMA-API: Clarify physical/bus address distinction
-      DMA-API: Change dma_declare_coherent_memory() CPU address to phys_addr_t
-      sh/PCI: Pass GAPSPCI_DMA_BASE CPU & bus address to dma_declare_coherent_memory()
-      iommu/exynos: Remove unnecessary "&" from function pointers
-
-
- Documentation/DMA-API-HOWTO.txt        |  192 +++++++++++++++++++++-----------
- Documentation/DMA-API.txt              |  148 +++++++++++++------------
- Documentation/DMA-ISA-LPC.txt          |    4 -
- arch/sh/drivers/pci/fixups-dreamcast.c |   18 +++
- drivers/base/dma-coherent.c            |   10 +-
- drivers/base/dma-mapping.c             |    6 +
- drivers/iommu/exynos-iommu.c           |   14 +-
- include/asm-generic/dma-coherent.h     |   13 +-
- include/linux/dma-mapping.h            |   13 ++
- include/linux/types.h                  |    1 
- 10 files changed, 247 insertions(+), 172 deletions(-)
-
--- 
-Signature
+	Arnd
