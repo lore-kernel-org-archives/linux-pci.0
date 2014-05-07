@@ -1,86 +1,207 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:40418 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750923AbaEUDbT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 23:31:19 -0400
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 21 May 2014 09:01:17 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id C4750E004B
-	for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 09:01:53 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s4L3VceK53936198
-	for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 09:01:38 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s4L3VCsL011260
-	for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 09:01:13 +0530
-Date: Wed, 21 May 2014 11:31:11 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, talal@mellanox.com,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	amirv@mellanox.com, eugenia@mellanox.com,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>
-Subject: Re: [PATCH v10 0/4] PCI: Restrict 64-bit prefetchable bridge windows
- to 64-bit resources
-Message-ID: <20140521033111.GA8419@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1397752819-17326-1-git-send-email-yinghai@kernel.org>
- <20140520033233.11972.49094.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-by2lp0239.outbound.protection.outlook.com ([207.46.163.239]:6497
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751578AbaEGS7I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 May 2014 14:59:08 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	Borislav Petkov <bp@suse.de>,
+	"Robert Richter" <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH V3 1/3] x86/PCI: Fix PCI root numa_node info on AMD family15h
+Date: Wed, 7 May 2014 13:58:45 -0500
+Message-ID: <1399489127-6961-2-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140520033233.11972.49094.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 
-I tried to apply it on the lastest upstrea, but seems not work.
+This patch fixes the numa_node information in sysfs for PCI root
+on AMD family15h platforms (currently showing -1) by adding
+the hostbridge in the list of probed devices to be used for initializing
+pci_root_info structue.
 
-Which tree should I apply to? This one ?
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+This mechanism is now deprecated in favor of info in ACPI.
+Therefore, this patch also adds note stating the deprecation.
 
-On Mon, May 19, 2014 at 09:45:45PM -0600, Bjorn Helgaas wrote:
->I'd like to merge these for v3.16.  The first is Yinghai's v9 patch
->unchanged except to resolve minor merge conflicts, write a changelog, and
->fold in the mem64_mask removal posted previously as [1].
->
->The rest are cleanups and comment changes to try to make the code more
->readable.
->
->This does fix a real bug -- in some cases we can't assign space to large
->64-bit BARs even though there is plenty of 64-bit space available.  But I
->am concerned that we are giving up performance in some cases (32-bit
->prefetchable resources below a bridge with a 64-bit prefetchable window
->will no longer be prefetchable).  With some additional work, it should be
->possible to get that performance back.
->
->Comments welcome.
->
->[1] http://lkml.kernel.org/r/CAE9FiQUKYMPvXLsk84o-gH-j0-wiJGL0Wt1aTW2o4FPSm0PvbQ@mail.gmail.com
->
->---
->
->Bjorn Helgaas (3):
->      PCI: Change pbus_size_mem() return values to be more conventional
->      PCI: Simplify __pci_assign_resource() coding style
->      PCI: Add resource allocation comments
->
->Yinghai Lu (1):
->      PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources
->
->
-> drivers/pci/setup-bus.c |  207 +++++++++++++++++++++++++++++++++--------------
-> drivers/pci/setup-res.c |   41 +++++++--
-> 2 files changed, 176 insertions(+), 72 deletions(-)
+Reference(s):
+  https://bugzilla.kernel.org/show_bug.cgi?id=72051
+  Advanced Micro Devices (AMD), "BIOS and Kernel Developer's
+  Guide (BKDG) for AMD Family 15h Models 00h-0fh Processors."  Section
+  3.4 Device [1F:18]h Function 1 Configuration Registers; D18F1x[EC:E0]
+  Configuration Map, 42301 Rev 3.12 - October 11, 2012.
 
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Robert Richter <rric@kernel.org>
+Cc: Daniel J Blueman <daniel@numascale.com>
+Cc: Andreas Herrmann <herrmann.der.user@googlemail.com>
+---
+ arch/x86/pci/amd_bus.c | 75 +++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 46 insertions(+), 29 deletions(-)
+
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index e88f4c5..7c251c2 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -11,27 +11,33 @@
+ 
+ #include "bus_numa.h"
+ 
+-/*
+- * This discovers the pcibus <-> node mapping on AMD K8.
+- * also get peer root bus resource for io,mmio
+- */
++#define AMD_NB_F0_NODE_ID			0x60
++#define AMD_NB_F0_UNIT_ID			0x64
++#define AMD_NB_F1_CONFIG_MAP_REG		0xe0
+ 
+-struct pci_hostbridge_probe {
++#define RANGE_NUM				16
++#define AMD_NB_F1_CONFIG_MAP_RANGES		4
++
++struct amd_hostbridge {
+ 	u32 bus;
+ 	u32 slot;
+-	u32 vendor;
+ 	u32 device;
+ };
+ 
+-static struct pci_hostbridge_probe pci_probes[] __initdata = {
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 },
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 },
+-	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 },
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
++/*
++ * IMPORTANT NOTE:
++ * hb_probes[] and early_root_info_init() is in maintenance mode.
++ * It only supports K8, Fam10h, Fam11h, and Fam15h_00h-0fh .
++ * Future processor will rely on information in ACPI.
++ */
++static struct amd_hostbridge hb_probes[] __initdata = {
++	{ 0, 0x18, 0x1100 }, /* K8 */
++	{ 0, 0x18, 0x1200 }, /* Family10h */
++	{ 0xff, 0, 0x1200 }, /* Family10h */
++	{ 0, 0x18, 0x1300 }, /* Family11h */
++	{ 0, 0x18, 0x1600 }, /* Family15h */
+ };
+ 
+-#define RANGE_NUM 16
+-
+ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+ {
+ 	struct pci_root_info *info;
+@@ -45,12 +51,12 @@ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+ }
+ 
+ /**
+- * early_fill_mp_bus_to_node()
++ * early_root_info_init()
+  * called before pcibios_scan_root and pci_scan_bus
+- * fills the mp_bus_to_cpumask array based according to the LDT Bus Number
+- * Registers found in the K8 northbridge
++ * fills the mp_bus_to_cpumask array based according
++ * to the LDT Bus Number Registers found in the northbridge.
+  */
+-static int __init early_fill_mp_bus_info(void)
++static int __init early_root_info_init(void)
+ {
+ 	int i;
+ 	unsigned bus;
+@@ -75,19 +81,21 @@ static int __init early_fill_mp_bus_info(void)
+ 		return -1;
+ 
+ 	found = false;
+-	for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
++	for (i = 0; i < ARRAY_SIZE(hb_probes); i++) {
+ 		u32 id;
+ 		u16 device;
+ 		u16 vendor;
+ 
+-		bus = pci_probes[i].bus;
+-		slot = pci_probes[i].slot;
++		bus = hb_probes[i].bus;
++		slot = hb_probes[i].slot;
+ 		id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
+-
+ 		vendor = id & 0xffff;
+ 		device = (id>>16) & 0xffff;
+-		if (pci_probes[i].vendor == vendor &&
+-		    pci_probes[i].device == device) {
++
++		if (vendor != PCI_VENDOR_ID_AMD)
++			continue;
++
++		if (hb_probes[i].device == device) {
+ 			found = true;
+ 			break;
+ 		}
+@@ -96,10 +104,11 @@ static int __init early_fill_mp_bus_info(void)
+ 	if (!found)
+ 		return 0;
+ 
+-	for (i = 0; i < 4; i++) {
++	for (i = 0; i < AMD_NB_F1_CONFIG_MAP_RANGES; i++) {
+ 		int min_bus;
+ 		int max_bus;
+-		reg = read_pci_config(bus, slot, 1, 0xe0 + (i << 2));
++		reg = read_pci_config(bus, slot, 1,
++				AMD_NB_F1_CONFIG_MAP_REG + (i << 2));
+ 
+ 		/* Check if that register is enabled for bus range */
+ 		if ((reg & 7) != 3)
+@@ -113,10 +122,17 @@ static int __init early_fill_mp_bus_info(void)
+ 		info = alloc_pci_root_info(min_bus, max_bus, node, link);
+ 	}
+ 
++	/*
++	 * The following code is only supported until Fam11h.
++	 * Newer processors will depend on ACPI MCFG table instead.
++	 */
++	if (boot_cpu_data.x86 > 0x11)
++		return 0;
++
+ 	/* get the default node and link for left over res */
+-	reg = read_pci_config(bus, slot, 0, 0x60);
++	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_NODE_ID);
+ 	def_node = (reg >> 8) & 0x07;
+-	reg = read_pci_config(bus, slot, 0, 0x64);
++	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_UNIT_ID);
+ 	def_link = (reg >> 8) & 0x03;
+ 
+ 	memset(range, 0, sizeof(range));
+@@ -363,7 +379,7 @@ static int __init pci_io_ecs_init(void)
+ 	int cpu;
+ 
+ 	/* assume all cpus from fam10h have IO ECS */
+-        if (boot_cpu_data.x86 < 0x10)
++	if (boot_cpu_data.x86 < 0x10)
+ 		return 0;
+ 
+ 	/* Try the PCI method first. */
+@@ -387,7 +403,8 @@ static int __init amd_postcore_init(void)
+ 	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
+ 		return 0;
+ 
+-	early_fill_mp_bus_info();
++	early_root_info_init();
++
+ 	pci_io_ecs_init();
+ 
+ 	return 0;
 -- 
-Richard Yang
-Help you, Help me
+1.9.0
 
