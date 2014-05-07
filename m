@@ -1,61 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:43714 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750905AbaE2WNf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 18:13:35 -0400
-Received: by mail-ie0-f182.google.com with SMTP id x19so968580ier.27
-        for <linux-pci@vger.kernel.org>; Thu, 29 May 2014 15:13:35 -0700 (PDT)
+Received: from mail-bn1blp0186.outbound.protection.outlook.com ([207.46.163.186]:16366
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751282AbaEGS67 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 May 2014 14:58:59 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	Borislav Petkov <bp@suse.de>,
+	"Robert Richter" <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V3 0/3] x86/pci Fix numa_node info for AMD hostbridge and misc clean up.
+Date: Wed, 7 May 2014 13:58:44 -0500
+Message-ID: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <1401346866-11648-4-git-send-email-wangyijing@huawei.com>
-References: <1401346866-11648-1-git-send-email-wangyijing@huawei.com>
-	<1401346866-11648-4-git-send-email-wangyijing@huawei.com>
-Date: Thu, 29 May 2014 15:13:35 -0700
-Message-ID: <CAE9FiQULQuKk2yFePQu90fRBtB0eDjhOfJtYHYb_Hx2ANrpvCw@mail.gmail.com>
-Subject: Re: [PATCH 3/3] edac: remove the unnecessary checking for pci_bus_add_device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>, Ingo Molnar <mingo@elte.hu>,
-	Borislav Petkov <bp@suse.de>, "H. Peter Anvin" <hpa@zytor.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 29, 2014 at 12:01 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Pci_bus_add_device() always return 0, remove the unnecessary
-> checking for pci_bus_add_device().
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/edac/i82875p_edac.c |    7 +------
->  1 files changed, 1 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/edac/i82875p_edac.c b/drivers/edac/i82875p_edac.c
-> index 8d0450b..8705ba6 100644
-> --- a/drivers/edac/i82875p_edac.c
-> +++ b/drivers/edac/i82875p_edac.c
-> @@ -293,12 +293,7 @@ static int i82875p_setup_overfl_dev(struct pci_dev *pdev,
->                 if (dev == NULL)
->                         return 1;
->
-> -               err = pci_bus_add_device(dev);
-> -               if (err) {
-> -                       i82875p_printk(KERN_ERR,
-> -                               "%s(): pci_bus_add_device() Failed\n",
-> -                               __func__);
-> -               }
-> +               pci_bus_add_device(dev);
->                 pci_bus_assign_resources(dev->bus);
->         }
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Bjorn,
+This in the V3 of the patch set which trys to fixed up numa_node for AMD hostbridges.
+This topic was discussed in the following threads:
 
-At same time, can you please apply
+V1: https://lkml.org/lkml/2014/3/5/898
+V2: https://lkml.org/lkml/2014/4/18/623
 
-http://patchwork.ozlabs.org/patch/242480/
+Change from V2:
+As requested by Bjorn, the patch set will only add supports for family15h, and 
+also deprecating the mechanism, as future platforms should be relying on the ACPI info.
+He has also requested to keep the changes to the minimum. Therefore, the V2 patch 2 and 3
+has been removed.
 
-PCI, EDAC: fix ordering assign resource and bus_add
+Myron Stowe (2):
+  ACPI/PCI: Warn if we have to "guess" host bridge node information
+  PCI: Remove unnecessary 'quirk_amd_nb_node'
 
-Thanks
+Suravee Suthikulpanit (1):
+  x86/PCI: Fix PCI root numa_node info on AMD family15h
 
-Yinghai
+ arch/x86/kernel/quirks.c | 58 -------------------------------------
+ arch/x86/pci/acpi.c      |  6 +++-
+ arch/x86/pci/amd_bus.c   | 75 +++++++++++++++++++++++++++++-------------------
+ 3 files changed, 51 insertions(+), 88 deletions(-)
+
+-- 
+1.9.0
+
