@@ -1,114 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:39349 "EHLO smtp.dudau.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753306AbaE3Ayn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 May 2014 20:54:43 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id E5995FF6BA
-	for <linux-pci@vger.kernel.org>; Fri, 30 May 2014 01:54:41 +0100 (BST)
-From: "Liviu Dudau" <liviu@dudau.co.uk>
-Date: Fri, 30 May 2014 01:56:03 +0100
-To: Kumar Gala <galak@codeaurora.org>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH] of: treat PCI config space as IORESOURCE_MEM type
-Message-ID: <20140530005602.GE1677@bart.dudau.co.uk>
-References: <1401379426-9701-1-git-send-email-galak@codeaurora.org>
- <CAL_JsqLPFDwtd-QYDqCwx1JVj1Aa8=nof-e0P6R9CZra+fXHfw@mail.gmail.com>
- <47B1E3D0-4336-4529-80B0-172F4ACA5C97@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: <suravee.suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	Borislav Petkov <bp@suse.de>,
+	"Robert Richter" <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V4 3/4] ACPI/PCI: Warn if we have to "guess" host bridge node information
+Date: Thu, 8 May 2014 11:44:20 -0500
+Message-ID: <1399567461-15928-4-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <47B1E3D0-4336-4529-80B0-172F4ACA5C97@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 29, 2014 at 03:51:28PM -0500, Kumar Gala wrote:
-> 
-> On May 29, 2014, at 3:44 PM, Rob Herring <robherring2@gmail.com> wrote:
-> 
-> > On Thu, May 29, 2014 at 11:03 AM, Kumar Gala <galak@codeaurora.org> wrote:
-> >> If we have a PCI config space specified in something like a ranges
-> >> property we should treat it as memory type resource.
-> > 
-> > Config space should not be in ranges[1]. We have some cases that are,
-> > but we don't want new ones.
-> 
-> For the cases we have I agree, however an ECAM based cfg seems completely legit.
-> 
-> >> Signed-off-by: Kumar Gala <galak@codeaurora.org>
-> >> ---
-> >> drivers/of/address.c | 3 +++
-> >> 1 file changed, 3 insertions(+)
-> >> 
-> >> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> >> index cb4242a..4e7ee59 100644
-> >> --- a/drivers/of/address.c
-> >> +++ b/drivers/of/address.c
-> >> @@ -122,6 +122,9 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
-> >>        u32 w = be32_to_cpup(addr);
-> >> 
-> >>        switch((w >> 24) & 0x03) {
-> >> +       case 0x00: /* cfg space */
-> >> +               flags |= IORESOURCE_MEM;
-> >> +               break;
-> > 
-> > How would you then distinguish actual memory ranges?
-> 
-> One assumes you are still looking at pci_space as part of of_pci_range
+From: Myron Stowe <myron.stowe@redhat.com>
 
-That doesn't happen when you start scanning the bus. The existing code will
-use the IORESOURCE_MEM for allocating memory space for devices, which is
-not what you want. Did you test your patch on any PCI system? I'm pretty
-sure that with my patch series that tries to make a generic framework for
-host controllers this will fail.
+The vast majority of platforms are not supplying ACPI _PXM (proximity)
+information corresponding to host bridge (PNP0A03/PNP0A08) devices
+resulting in sysfs "numa_node" values of -1 (NUMA_NO_NODE) [1]:
+  # for i in /sys/devices/pci0000\:00/*/numa_node; do cat $i; done | uniq
+  -1
 
-We really need a IORESOURCE_CFG flag for this space.
+  # find /sys/ -name "numa_node" | while read fname; do cat $fname; \
+    done | uniq
+  -1
 
-Best regards,
-Liviu
+AMD based platforms provide a fall-back for this situation via amd_bus.c.
+These platforms snoop out the information by directly reading specific
+registers from the Northbridge and caching them via 'alloc_pci_root_info'.
 
-> 
-> > 
-> > Rob
-> > 
-> > [1] http://www.spinics.net/lists/linux-pci/msg30585.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> -- 
-> Employee of Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+Later during boot processing when host bridges are discovered -
+'pci_acpi_scan_root' - the kernel looks for their corresponding ACPI _PXM
+method - drivers/acpi/numa.c::acpi_get_node().  If the BIOS supplied a
+_PXM method then that node (proximity) value is associated.  If the BIOS
+did not supply a _PXM method *and* the platform is AMD based, the
+fall-back cached values obtained directly from the Northbridge are used;
+otherwise, "NUMA_NO_NODE" is associated.
 
+There are a number of issues with this fall-back mechanism the most
+notable being that amd_bus.c extracts a 3-bit number from a CPU register
+and uses it as the node number.  The node numbers used by Linux are
+logical and there's no reason they need to be identical to settings in the
+CPU registers.  So if we have some node information obtained in the normal
+way (from _PXM, SLIT, SRAT, etc.) and some from amd_bus.c, there's no
+reason to believe they will be compatible.
+
+This patch warns when this situation occurs:
+  pci_root PNP0A08:00: [Firmware Bug]: no _PXM; falling back to node 0 from hardware (may be inconsistent with ACPI node numbers)
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=72051
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ arch/x86/pci/acpi.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 01edac6..5075371 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -489,8 +489,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	}
+ 
+ 	node = acpi_get_node(device->handle);
+-	if (node == NUMA_NO_NODE)
++	if (node == NUMA_NO_NODE) {
+ 		node = x86_pci_root_bus_node(busnum);
++		if (node != 0 && node != NUMA_NO_NODE)
++			dev_info(&device->dev, FW_BUG "no _PXM; falling back to node %d from hardware (may be inconsistent with ACPI node numbers)\n",
++				node);
++	}
+ 
+ 	if (node != NUMA_NO_NODE && !node_online(node))
+ 		node = NUMA_NO_NODE;
 -- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
-
- One small step
-   for me ...
+1.9.0
 
