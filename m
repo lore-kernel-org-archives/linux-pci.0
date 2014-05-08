@@ -1,137 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:34782 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755051AbaESQXP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 May 2014 12:23:15 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch Part1 V2 14/29] x86, ioapic: use irq_cfg() instead of irq_get_chip_data() for better readability
-Date: Tue, 20 May 2014 00:22:58 +0800
-Message-Id: <1400516594-11544-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-bl2lp0206.outbound.protection.outlook.com ([207.46.163.206]:43042
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755077AbaEHQpA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 May 2014 12:45:00 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	Borislav Petkov <bp@suse.de>,
+	"Robert Richter" <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V4 2/4] x86/PCI: Clean up and mark early_root_info_init as deprecated
+Date: Thu, 8 May 2014 11:44:19 -0500
+Message-ID: <1399567461-15928-3-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use defined helper function irq_cfg() instead of irq_get_chip_data() for
-better readability.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+early_root_info_init is now deprecated in favor of info in ACPI.
+Therefore, this patch adds note stating the deprecation.
+Also, adding some clean up.
+
+There is no functional change
+
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 ---
- arch/x86/kernel/apic/io_apic.c |   20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ arch/x86/pci/amd_bus.c | 69 ++++++++++++++++++++++++++++----------------------
+ 1 file changed, 39 insertions(+), 30 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 55fb3c1385c5..18d0e8a831c0 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -230,7 +230,7 @@ int __init arch_early_irq_init(void)
- 	return 0;
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index 330dbfe..7c251c2 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -11,28 +11,33 @@
+ 
+ #include "bus_numa.h"
+ 
+-/*
+- * This discovers the pcibus <-> node mapping on AMD K8.
+- * also get peer root bus resource for io,mmio
+- */
++#define AMD_NB_F0_NODE_ID			0x60
++#define AMD_NB_F0_UNIT_ID			0x64
++#define AMD_NB_F1_CONFIG_MAP_REG		0xe0
++
++#define RANGE_NUM				16
++#define AMD_NB_F1_CONFIG_MAP_RANGES		4
+ 
+-struct pci_hostbridge_probe {
++struct amd_hostbridge {
+ 	u32 bus;
+ 	u32 slot;
+-	u32 vendor;
+ 	u32 device;
+ };
+ 
+-static struct pci_hostbridge_probe pci_probes[] __initdata = {
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 }, /* K8 */
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 }, /* Fam10h */
+-	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 }, /* Fam10h */
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 }, /* Fam11h */
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1600 }, /* Fam15h */
++/*
++ * IMPORTANT NOTE:
++ * hb_probes[] and early_root_info_init() is in maintenance mode.
++ * It only supports K8, Fam10h, Fam11h, and Fam15h_00h-0fh .
++ * Future processor will rely on information in ACPI.
++ */
++static struct amd_hostbridge hb_probes[] __initdata = {
++	{ 0, 0x18, 0x1100 }, /* K8 */
++	{ 0, 0x18, 0x1200 }, /* Family10h */
++	{ 0xff, 0, 0x1200 }, /* Family10h */
++	{ 0, 0x18, 0x1300 }, /* Family11h */
++	{ 0, 0x18, 0x1600 }, /* Family15h */
+ };
+ 
+-#define RANGE_NUM 16
+-
+ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+ {
+ 	struct pci_root_info *info;
+@@ -46,12 +51,12 @@ static struct pci_root_info __init *find_pci_root_info(int node, int link)
  }
  
--static struct irq_cfg *irq_cfg(unsigned int irq)
-+static inline struct irq_cfg *irq_cfg(unsigned int irq)
- {
- 	return irq_get_chip_data(irq);
- }
-@@ -272,7 +272,7 @@ static struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
- 	if (res < 0) {
- 		if (res != -EEXIST)
- 			return NULL;
--		cfg = irq_get_chip_data(at);
-+		cfg = irq_cfg(at);
- 		if (cfg)
- 			return cfg;
- 	}
-@@ -1204,7 +1204,7 @@ void __setup_vector_irq(int cpu)
- 	raw_spin_lock(&vector_lock);
- 	/* Mark the inuse vectors */
- 	for_each_active_irq(irq) {
--		cfg = irq_get_chip_data(irq);
-+		cfg = irq_cfg(irq);
- 		if (!cfg)
- 			continue;
- 
-@@ -1612,7 +1612,7 @@ __apicdebuginit(void) print_IO_APICs(void)
- 		if (chip != &ioapic_chip)
- 			continue;
- 
--		cfg = irq_get_chip_data(irq);
-+		cfg = irq_cfg(irq);
- 		if (!cfg)
- 			continue;
- 		entry = cfg->irq_2_pin;
-@@ -2253,7 +2253,7 @@ static void irq_complete_move(struct irq_cfg *cfg)
- 
- void irq_force_complete_move(int irq)
- {
--	struct irq_cfg *cfg = irq_get_chip_data(irq);
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 
- 	if (!cfg)
- 		return;
-@@ -2526,7 +2526,7 @@ static inline void init_IO_APIC_traps(void)
- 	 * 0x80, because int 0x80 is hm, kind of importantish. ;)
- 	 */
- 	for_each_active_irq(irq) {
--		cfg = irq_get_chip_data(irq);
-+		cfg = irq_cfg(irq);
- 		if (IO_APIC_IRQ(irq) && cfg && !cfg->vector) {
- 			/*
- 			 * Hmm.. We don't have an entry for this,
-@@ -2659,7 +2659,7 @@ early_param("disable_timer_pin_1", disable_timer_pin_setup);
+ /**
+- * early_fill_mp_bus_to_node()
++ * early_root_info_init()
+  * called before pcibios_scan_root and pci_scan_bus
+- * fills the mp_bus_to_cpumask array based according to the LDT Bus Number
+- * Registers found in the K8 northbridge
++ * fills the mp_bus_to_cpumask array based according
++ * to the LDT Bus Number Registers found in the northbridge.
   */
- static inline void __init check_timer(void)
+-static int __init early_fill_mp_bus_info(void)
++static int __init early_root_info_init(void)
  {
--	struct irq_cfg *cfg = irq_get_chip_data(0);
-+	struct irq_cfg *cfg = irq_cfg(0);
- 	int node = cpu_to_node(0);
- 	int apic1, pin1, apic2, pin2;
- 	unsigned long flags;
-@@ -2923,7 +2923,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
+ 	int i;
+ 	unsigned bus;
+@@ -76,19 +81,21 @@ static int __init early_fill_mp_bus_info(void)
+ 		return -1;
  
- void arch_teardown_hwirq(unsigned int irq)
- {
--	struct irq_cfg *cfg = irq_get_chip_data(irq);
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned long flags;
+ 	found = false;
+-	for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
++	for (i = 0; i < ARRAY_SIZE(hb_probes); i++) {
+ 		u32 id;
+ 		u16 device;
+ 		u16 vendor;
  
- 	free_remapped_irq(irq);
-@@ -3052,7 +3052,7 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 	if (!irq_offset)
- 		write_msi_msg(irq, &msg);
+-		bus = pci_probes[i].bus;
+-		slot = pci_probes[i].slot;
++		bus = hb_probes[i].bus;
++		slot = hb_probes[i].slot;
+ 		id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
+-
+ 		vendor = id & 0xffff;
+ 		device = (id>>16) & 0xffff;
+-		if (pci_probes[i].vendor == vendor &&
+-		    pci_probes[i].device == device) {
++
++		if (vendor != PCI_VENDOR_ID_AMD)
++			continue;
++
++		if (hb_probes[i].device == device) {
+ 			found = true;
+ 			break;
+ 		}
+@@ -97,10 +104,11 @@ static int __init early_fill_mp_bus_info(void)
+ 	if (!found)
+ 		return 0;
  
--	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
-+	setup_remapped_irq(irq, irq_cfg(irq), chip);
+-	for (i = 0; i < 4; i++) {
++	for (i = 0; i < AMD_NB_F1_CONFIG_MAP_RANGES; i++) {
+ 		int min_bus;
+ 		int max_bus;
+-		reg = read_pci_config(bus, slot, 1, 0xe0 + (i << 2));
++		reg = read_pci_config(bus, slot, 1,
++				AMD_NB_F1_CONFIG_MAP_REG + (i << 2));
  
- 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 		/* Check if that register is enabled for bus range */
+ 		if ((reg & 7) != 3)
+@@ -122,9 +130,9 @@ static int __init early_fill_mp_bus_info(void)
+ 		return 0;
  
-@@ -3187,7 +3187,7 @@ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+ 	/* get the default node and link for left over res */
+-	reg = read_pci_config(bus, slot, 0, 0x60);
++	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_NODE_ID);
+ 	def_node = (reg >> 8) & 0x07;
+-	reg = read_pci_config(bus, slot, 0, 0x64);
++	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_UNIT_ID);
+ 	def_link = (reg >> 8) & 0x03;
  
- 	hpet_msi_write(irq_get_handler_data(irq), &msg);
- 	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
--	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
-+	setup_remapped_irq(irq, irq_cfg(irq), chip);
+ 	memset(range, 0, sizeof(range));
+@@ -371,7 +379,7 @@ static int __init pci_io_ecs_init(void)
+ 	int cpu;
  
- 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 	/* assume all cpus from fam10h have IO ECS */
+-        if (boot_cpu_data.x86 < 0x10)
++	if (boot_cpu_data.x86 < 0x10)
+ 		return 0;
+ 
+ 	/* Try the PCI method first. */
+@@ -395,7 +403,8 @@ static int __init amd_postcore_init(void)
+ 	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
+ 		return 0;
+ 
+-	early_fill_mp_bus_info();
++	early_root_info_init();
++
+ 	pci_io_ecs_init();
+ 
  	return 0;
 -- 
-1.7.10.4
+1.9.0
 
