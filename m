@@ -1,127 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [RFC Patch Part1 V1 16/30] x86, irq: reorganize IO_APIC_get_PCI_irq_vector() to prepare for irqdomain
-Date: Fri, 16 May 2014 16:05:36 +0800
-Message-Id: <1400227550-5935-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:64068 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753257AbaEHI7O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 04:59:14 -0400
+Date: Thu, 8 May 2014 10:59:05 +0200
+From: Robert Richter <rric@kernel.org>
+To: suravee.suthikulpanit@amd.com
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	Borislav Petkov <bp@suse.de>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH V3 1/3] x86/PCI: Fix PCI root numa_node info on AMD
+ family15h
+Message-ID: <20140508085905.GK32718@rric.localhost>
+References: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1399489127-6961-2-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1399489127-6961-2-git-send-email-suravee.suthikulpanit@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reorganize function IO_APIC_get_PCI_irq_vector() a bit to better support
-coming irqdomain.
+On 07.05.14 13:58:45, suravee.suthikulpanit@amd.com wrote:
+> @@ -113,10 +122,17 @@ static int __init early_fill_mp_bus_info(void)
+>  		info = alloc_pci_root_info(min_bus, max_bus, node, link);
+>  	}
+>  
+> +	/*
+> +	 * The following code is only supported until Fam11h.
+> +	 * Newer processors will depend on ACPI MCFG table instead.
+> +	 */
+> +	if (boot_cpu_data.x86 > 0x11)
+> +		return 0;
+> +
+>  	/* get the default node and link for left over res */
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/io_apic.c |   62 ++++++++++++++++++++++------------------
- 1 file changed, 34 insertions(+), 28 deletions(-)
+As this is the only substantial change of your patch, I would better
+drop ther rest or at least split it in two patches. Should this change
+also be for stable?
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index b74ec1183d34..dd81b58cce95 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1012,7 +1012,7 @@ static int pin_2_irq(int idx, int apic, int pin)
- int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 				struct io_apic_irq_attr *irq_attr)
- {
--	int ioapic_idx, i, best_guess = -1;
-+	int irq, i, best_guess = -1;
- 
- 	apic_printk(APIC_DEBUG,
- 		    "querying PCI -> IRQ mapping bus:%d, slot:%d, pin:%d.\n",
-@@ -1022,41 +1022,47 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 			    "PCI BIOS passed nonexistent PCI bus %d!\n", bus);
- 		return -1;
- 	}
-+
- 	for (i = 0; i < mp_irq_entries; i++) {
- 		int lbus = mp_irqs[i].srcbus;
-+		int ioapic_idx, found = 0;
-+
-+		if (test_bit(lbus, mp_bus_not_pci) || (bus != lbus) ||
-+		    mp_irqs[i].irqtype != mp_INT ||
-+		    (slot != ((mp_irqs[i].srcbusirq >> 2) & 0x1f)))
-+			continue;
- 
- 		for_each_ioapic(ioapic_idx)
- 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic ||
--			    mp_irqs[i].dstapic == MP_APIC_ALL)
-+			    mp_irqs[i].dstapic == MP_APIC_ALL) {
-+				found = 1;
- 				break;
-+			}
-+		if (!found)
-+			continue;
- 
--		if (!test_bit(lbus, mp_bus_not_pci) &&
--		    mp_irqs[i].irqtype == mp_INT &&
--		    (bus == lbus) &&
--		    (slot == ((mp_irqs[i].srcbusirq >> 2) & 0x1f))) {
--			int irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
--
--			if (!(ioapic_idx || IO_APIC_IRQ(irq)))
--				continue;
-+		/* Skip ISA IRQs */
-+		irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
-+		if (ioapic_idx == 0 && !IO_APIC_IRQ(irq))
-+			continue;
- 
--			if (pin == (mp_irqs[i].srcbusirq & 3)) {
--				set_io_apic_irq_attr(irq_attr, ioapic_idx,
--						     mp_irqs[i].dstirq,
--						     irq_trigger(i),
--						     irq_polarity(i));
--				return irq;
--			}
--			/*
--			 * Use the first all-but-pin matching entry as a
--			 * best-guess fuzzy result for broken mptables.
--			 */
--			if (best_guess < 0) {
--				set_io_apic_irq_attr(irq_attr, ioapic_idx,
--						     mp_irqs[i].dstirq,
--						     irq_trigger(i),
--						     irq_polarity(i));
--				best_guess = irq;
--			}
-+		if (pin == (mp_irqs[i].srcbusirq & 3)) {
-+			set_io_apic_irq_attr(irq_attr, ioapic_idx,
-+					     mp_irqs[i].dstirq,
-+					     irq_trigger(i),
-+					     irq_polarity(i));
-+			return irq;
-+		}
-+		/*
-+		 * Use the first all-but-pin matching entry as a
-+		 * best-guess fuzzy result for broken mptables.
-+		 */
-+		if (best_guess < 0) {
-+			set_io_apic_irq_attr(irq_attr, ioapic_idx,
-+					     mp_irqs[i].dstirq,
-+					     irq_trigger(i),
-+					     irq_polarity(i));
-+			best_guess = irq;
- 		}
- 	}
- 	return best_guess;
--- 
-1.7.10.4
-
+-Robert
