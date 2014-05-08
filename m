@@ -1,178 +1,77 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:56132 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755228AbaEHUav (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 16:30:51 -0400
+Received: by mail-ig0-f171.google.com with SMTP id c1so286931igq.10
+        for <linux-pci@vger.kernel.org>; Thu, 08 May 2014 13:30:51 -0700 (PDT)
+Date: Thu, 8 May 2014 14:30:53 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-doc@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch Part1 V2 29/29] x86, irq: clean up unused IOAPIC interface
-Date: Tue, 20 May 2014 00:23:13 +0800
-Message-Id: <1400516594-11544-30-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v2 4/5] iommu: Use dma_addr_t for IOVA arguments
+Message-ID: <20140508203053.GA14448@google.com>
+References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <45161364.3Gyo1xJJLV@wuerfel>
+ <20140508001814.GB4951@google.com>
+ <15249748.Q2CaU9aBE9@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <15249748.Q2CaU9aBE9@wuerfel>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted all x86 platforms to use the common irqdomain map
-interface. There's no caller of io_apic_set_pci_routing(),
-setup_IO_APIC_irq_extra() and io_apic_setup_irq_pin_once() any more,
-so kill them.
+On Thu, May 08, 2014 at 12:44:12PM +0200, Arnd Bergmann wrote:
+> On Wednesday 07 May 2014 18:18:14 Bjorn Helgaas wrote:
+> > On Wed, May 07, 2014 at 09:58:58AM +0200, Arnd Bergmann wrote:
+> > > On Tuesday 06 May 2014 16:48:40 Bjorn Helgaas wrote:
+> > > > Convert the "iova" arguments of iommu_map(), iommu_unmap(), etc., from
+> > > > "unsigned long" to dma_addr_t.
+> > > > 
+> > > > bb5547acfcd8 ("iommu/fsl: Make iova dma_addr_t in the iommu_iova_to_phys
+> > > > API") did this for iommu_iova_to_phys(), but didn't fix the rest of the
+> > > > IOMMU API.
+> > > 
+> > > This patch looks 100% correct, but I'm not convinced it's a good idea:
+> > > On 32-bit platforms (i.e. most of the ones you change), doing 64-bit
+> > > arithmetic has a noticeable overhead. I am not aware of an IOMMU that
+> > > actually uses 64-bit DMA addresses on its slave side, usually they
+> > > are used to translate addresses from 32-bit masters into 64-bit
+> > > memory addresses, so using 'unsigned long' seems better from a practical
+> > > point of view as opposed to the strict type correctness.
+> > 
+> > The current x86 IOMMUs support DMA addresses larger than 32 bits, but
+> > obviously those platforms usually run 64-bit kernels so "unsigned
+> > long" is already 64 bits.
+> > 
+> > I guess you're thinking about cases where "unsigned long" is 32 bits,
+> > the IOMMU only supports 32 bit DMA addresses, and dma_addr_t is 64
+> > bits.  If the IOMMU only supports 32-bit DMA addresses, is there any
+> > value in having a 64-bit dma_addr_t?
+> 
+> Two cases:
+> 
+> a) You can have a system with some DMA masters that are 64-bit capable,
+>    and other masters that can only do 32-bit DMA and for this reason
+>    use an IOMMU. I expect to see more of these in the future.
+> 
+> b) We build kernels that run on a multitude of ARM32 platforms these
+>    days. We have some that require a 32-bit dma_addr_t and some that
+>    don't (because they always use swiotlb or an IOMMU).
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    9 ------
- arch/x86/kernel/apic/io_apic.c |   70 ----------------------------------------
- 2 files changed, 79 deletions(-)
+Those both make sense (I assume you meant some ARM32 platforms require
+a *64-bit* dma_addr_t, i.e., you might want to build an ILP32 kernel
+with a 64-bit dma_addr_t).
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index d71da9cc30ae..ff6f253e049f 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -144,9 +144,6 @@ extern int ioapic_dynirq_base;
- 
- struct io_apic_irq_attr;
- struct irq_cfg;
--extern int io_apic_set_pci_routing(struct device *dev, int irq,
--		 struct io_apic_irq_attr *irq_attr);
--extern void setup_IO_APIC_irq_extra(u32 gsi);
- extern void ioapic_insert_resources(void);
- 
- extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
-@@ -158,8 +155,6 @@ extern void native_compose_msi_msg(struct pci_dev *pdev,
- 				   unsigned int irq, unsigned int dest,
- 				   struct msi_msg *msg, u8 hpet_id);
- extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
--extern int io_apic_setup_irq_pin_once(unsigned int irq, int node,
--				      struct io_apic_irq_attr *attr);
- 
- extern int save_ioapic_entries(void);
- extern void mask_ioapic_entries(void);
-@@ -234,10 +229,6 @@ static inline int mp_map_pin_to_irq(int ioapic, int pin, int idx,
- 	return -1;
- }
- 
--struct io_apic_irq_attr;
--static inline int io_apic_set_pci_routing(struct device *dev, int irq,
--		 struct io_apic_irq_attr *irq_attr) { return 0; }
--
- static inline int save_ioapic_entries(void)
- {
- 	return -ENOMEM;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 6c838a2ecac0..898f1c766e9b 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -111,7 +111,6 @@ static struct ioapic {
- 	struct irq_domain *irqdomain;
- 	ioapic_create_domain_fn irqdomain_cb;
- 	void *irqdomain_arg;
--	DECLARE_BITMAP(pin_programmed, MP_MAX_IOAPIC_PIN + 1);
- } ioapics[MAX_IO_APICS];
- 
- #define mpc_ioapic_ver(ioapic_idx)	ioapics[ioapic_idx].mp_config.apicver
-@@ -1497,38 +1496,6 @@ static void __init setup_IO_APIC_irqs(void)
- }
- 
- /*
-- * for the gsi that is not in first ioapic
-- * but could not use acpi_register_gsi()
-- * like some special sci in IBM x3330
-- */
--void setup_IO_APIC_irq_extra(u32 gsi)
--{
--	int ioapic_idx = 0, pin, idx, irq, node = cpu_to_node(0);
--	struct io_apic_irq_attr attr;
--
--	/*
--	 * Convert 'gsi' to 'ioapic.pin'.
--	 */
--	ioapic_idx = mp_find_ioapic(gsi);
--	if (ioapic_idx < 0)
--		return;
--
--	pin = mp_find_ioapic_pin(ioapic_idx, gsi);
--	idx = find_irq_entry(ioapic_idx, pin, mp_INT);
--	if (idx == -1)
--		return;
--
--	irq = pin_2_irq(idx, ioapic_idx, pin, IOAPIC_MAP_ALLOC);
--	if (irq < 0 || mp_init_irq_at_boot(ioapic_idx, irq))
--		return;
--
--	set_io_apic_irq_attr(&attr, ioapic_idx, pin, irq_trigger(idx),
--			     irq_polarity(idx));
--
--	io_apic_setup_irq_pin_once(irq, node, &attr);
--}
--
--/*
-  * Set up the timer pin, possibly with the 8259A-master behind.
-  */
- static void __init setup_timer_IRQ0_pin(unsigned int ioapic_idx,
-@@ -3415,27 +3382,6 @@ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
- 	return ret;
- }
- 
--int io_apic_setup_irq_pin_once(unsigned int irq, int node,
--			       struct io_apic_irq_attr *attr)
--{
--	unsigned int ioapic_idx = attr->ioapic, pin = attr->ioapic_pin;
--	int ret;
--	struct IO_APIC_route_entry orig_entry;
--
--	/* Avoid redundant programming */
--	if (test_bit(pin, ioapics[ioapic_idx].pin_programmed)) {
--		pr_debug("Pin %d-%d already programmed\n", mpc_ioapic_id(ioapic_idx), pin);
--		orig_entry = ioapic_read_entry(attr->ioapic, pin);
--		if (attr->trigger == orig_entry.trigger && attr->polarity == orig_entry.polarity)
--			return 0;
--		return -EBUSY;
--	}
--	ret = io_apic_setup_irq_pin(irq, node, attr);
--	if (!ret)
--		set_bit(pin, ioapics[ioapic_idx].pin_programmed);
--	return ret;
--}
--
- static int __init io_apic_get_redir_entries(int ioapic)
- {
- 	union IO_APIC_reg_01	reg_01;
-@@ -3482,22 +3428,6 @@ int __init arch_probe_nr_irqs(void)
- 	return NR_IRQS_LEGACY;
- }
- 
--int io_apic_set_pci_routing(struct device *dev, int irq,
--			    struct io_apic_irq_attr *irq_attr)
--{
--	int node;
--
--	if (!IO_APIC_IRQ(irq)) {
--		apic_printk(APIC_QUIET,KERN_ERR "IOAPIC[%d]: Invalid reference to IRQ 0\n",
--			    irq_attr->ioapic);
--		return -EINVAL;
--	}
--
--	node = dev ? dev_to_node(dev) : cpu_to_node(0);
--
--	return io_apic_setup_irq_pin_once(irq, node, irq_attr);
--}
--
- #ifdef CONFIG_X86_32
- static int __init io_apic_get_unique_id(int ioapic, int apic_id)
- {
--- 
-1.7.10.4
+I doubt there would be a noticeable performance effect since these are
+relatively low-frequency interfaces (map, unmap, report_fault), but I
+don't have any numbers, so I'll drop this for now.
 
+Bjorn
