@@ -1,133 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f170.google.com ([209.85.128.170]:47256 "EHLO
-	mail-ve0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751455AbaEONQR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 09:16:17 -0400
-Received: by mail-ve0-f170.google.com with SMTP id db11so1252801veb.15
-        for <linux-pci@vger.kernel.org>; Thu, 15 May 2014 06:16:16 -0700 (PDT)
+Received: from mout.kundenserver.de ([212.227.17.10]:50234 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753257AbaEHJRG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 05:17:06 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Marek Vasut' <marex@denx.de>, devicetree@vger.kernel.org,
+	balajitk@ti.com, linux-doc@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	'Mohit Kumar' <mohit.kumar@st.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-omap@vger.kernel.org, rogerq@ti.com,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Thierry Reding' <treding@nvidia.com>
+Subject: Re: [PATCH 05/17] pci: host: pcie-dra7xx: add support for pcie-dra7xx controller
+Date: Thu, 08 May 2014 11:16:16 +0200
+Message-ID: <4266819.iBi1FzBIBZ@wuerfel>
+In-Reply-To: <000101cf6a9b$6c96c8d0$45c45a70$%han@samsung.com>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <5525000.bPgPLB3ZrT@wuerfel> <000101cf6a9b$6c96c8d0$45c45a70$%han@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <20140515123948.GD27594@arm.com>
-References: <1399478839-3564-1-git-send-email-will.deacon@arm.com>
-	<1399478839-3564-2-git-send-email-will.deacon@arm.com>
-	<CAL_JsqLUMQTd65xBRMx3XNa-7RcY93CcLdL=Z6wXsLXRpNcHGg@mail.gmail.com>
-	<20140515123948.GD27594@arm.com>
-Date: Thu, 15 May 2014 08:16:16 -0500
-Message-ID: <CAL_JsqLbWL136=dGZZfzPbPdF5HjhktYwLaVfbkOoo7Tr+g9Pg@mail.gmail.com>
-Subject: Re: [PATCH v6 1/3] ARM: kconfig: allow PCI support to be selected
- with ARCH_MULTIPLATFORM
-From: Rob Herring <robherring2@gmail.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	srikanth t <sthokal@xilinx.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 15, 2014 at 7:39 AM, Will Deacon <will.deacon@arm.com> wrote:
-> On Wed, May 14, 2014 at 03:01:35PM +0100, Rob Herring wrote:
->> On Wed, May 7, 2014 at 11:07 AM, Will Deacon <will.deacon@arm.com> wrote:
->> > When targetting ARCH_MULTIPLATFORM, we may include support for SoCs with
->> > PCI-capable devices (e.g. mach-virt with virtio-pci).
->> >
->> > This patch allows PCI support to be selected for these SoCs by selecting
->> > CONFIG_MIGHT_HAVE_PCI when CONFIG_ARCH_MULTIPLATFORM=y.
->>
->> I generally think we should select all options for multi-platform that
->> only serve to hide other options like this.
->>
->> You should remove the MIGHT_HAVE_PCI selections from all the
->> multi-platform enabled platforms as well.
->
-> Something like the diff below?
+On Thursday 08 May 2014 17:56:38 Jingoo Han wrote:
+> On Wednesday, May 07, 2014 6:26 PM, Arnd Bergmann wrote:
+> > On Wednesday 07 May 2014 14:52:47 Kishon Vijay Abraham I wrote:
+> > > On Tuesday 06 May 2014 10:05 PM, Jason Gunthorpe wrote:
+> > > > On Tue, May 06, 2014 at 07:03:51PM +0530, Kishon Vijay Abraham I wrote:
+> > > >> +Example:
+> > > >> +pcie@51000000 {
+> > > >> +    compatible = "ti,dra7xx-pcie";
+> > > >> +    reg = <0x51002000 0x14c>, <0x51000000 0x2000>;
+> > > >> +    reg-names = "ti_conf", "rc_dbics";
+> > > >> +    interrupts = <0 232 0x4>, <0 233 0x4>;
+> > > >> +    #address-cells = >;
+> > > >> +    #size-cells = <2>;
+> > > >> +    device_type = "pci";
+> > > >> +    ti,device_type = >;
+> > > >> +    ranges = <0x00000800 0 0x20001000 0x20001000 0 0x00002000  /* Configuration Space */
+> > > >
+> > > > Configuration space should not show up in the ranges, please don't
+> > > > copy that mistake from other drivers, put it in reg.
+> > >
+> > > But then it needs pcie-designware.c to be modified and it will be breaking
+> > > other platforms no?
+> > 
+> > I think the pcie-designware driver should be changed to allow either way.
+> > Ideally we would deprecate the existing method in a way that for new front-ends
+> > it doesn't work, but the old front-ends can still deal with it but also work
+> > if you put it into the reg property.
+> 
+> (+cc Pratyush Anand, Thierry Reding)
+> 
+> Hi Arnd,
+> 
+> Thank you for your comment.
+> Do you mean the case of Tegra PCIe as below?
+> 
+> ./arch/arm/boot/dts/tegra20.dts
+>         pcie-controller@80003000 {
+>                 ...
+>                 reg = <0x80003000 0x00000800   /* PADS registers */
+>                          0x80003800 0x00000200   /* AFI registers */
+>                          0x90000000 0x10000000>; /* configuration space */
+>                 ...
+>                 ranges = <0x82000000 0 0x80000000 0x80000000 0 0x00001000   /* port 0 registers */
+>                         0x82000000 0 0x80001000 0x80001000 0 0x00001000   /* port 1 registers */
+>                         0x81000000 0 0          0x82000000 0 0x00010000   /* downstream I/O */
+>                         0x82000000 0 0xa0000000 0xa0000000 0 0x08000000   /* non-prefetchable memory */
+>                         0xc2000000 0 0xa8000000 0xa8000000 0 0x18000000>; /* prefetchable memory */
+>                 ...
+> 
+> ./drivers/pci/host/pci-tegra.c
+>         /* request configuration space, but remap later, on demand */
+>         res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cs");
+>         ...
+>         pcie->cs = devm_request_mem_region(pcie->dev, res->start,
+>                                                 resource_size(res), res->name);
 
-Yes, but that raises another question as to what do we do with
-PCI_DOMAINS? Probably should be a PCI host driver select, or given how
-little code it controls it could just be removed. Anyway, that's a
-problem for another day (or patch).
+Yes, that is how the config space should be handled normally.
 
-So with the below part added:
-
-Acked-by: Rob Herring <robh@kernel.org>
-
->
-> Will
->
-> --->8
->
-> diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
-> index 49c914cd9c7a..764c129b5eee 100644
-> --- a/arch/arm/mach-bcm/Kconfig
-> +++ b/arch/arm/mach-bcm/Kconfig
-> @@ -55,7 +55,6 @@ config ARCH_BCM_5301X
->         select GENERIC_CLOCKEVENTS
->         select ARM_GLOBAL_TIMER
->         select CLKSRC_ARM_GLOBAL_TIMER_SCHED_CLOCK
-> -       select MIGHT_HAVE_PCI
->         help
->           Support for Broadcom BCM470X and BCM5301X SoCs with ARM CPU cores.
->
-> diff --git a/arch/arm/mach-cns3xxx/Kconfig b/arch/arm/mach-cns3xxx/Kconfig
-> index dce8decd5d46..66838f42037f 100644
-> --- a/arch/arm/mach-cns3xxx/Kconfig
-> +++ b/arch/arm/mach-cns3xxx/Kconfig
-> @@ -1,7 +1,6 @@
->  config ARCH_CNS3XXX
->         bool "Cavium Networks CNS3XXX family" if ARCH_MULTI_V6
->         select ARM_GIC
-> -       select MIGHT_HAVE_PCI
->         select PCI_DOMAINS if PCI
->         help
->           Support for Cavium Networks CNS3XXX platform.
-> diff --git a/arch/arm/mach-imx/Kconfig b/arch/arm/mach-imx/Kconfig
-> index 5740296dc429..50bb546b893a 100644
-> --- a/arch/arm/mach-imx/Kconfig
-> +++ b/arch/arm/mach-imx/Kconfig
-> @@ -796,7 +796,6 @@ config SOC_IMX6Q
->         select ARM_ERRATA_764369 if SMP
->         select HAVE_ARM_SCU if SMP
->         select HAVE_ARM_TWD if SMP
-> -       select MIGHT_HAVE_PCI
->         select PCI_DOMAINS if PCI
->         select PINCTRL_IMX6Q
->         select SOC_IMX6
-> diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
-> index 3f73eecbcfb0..120301ebd324 100644
-> --- a/arch/arm/mach-mvebu/Kconfig
-> +++ b/arch/arm/mach-mvebu/Kconfig
-> @@ -9,7 +9,6 @@ config ARCH_MVEBU
->         select MVEBU_MBUS
->         select ZONE_DMA if ARM_LPAE
->         select ARCH_REQUIRE_GPIOLIB
-> -       select MIGHT_HAVE_PCI
->         select PCI_QUIRKS if PCI
->         select OF_ADDRESS_PCI
->
-> diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
-> index 0f92ba8e7884..905003898913 100644
-> --- a/arch/arm/mach-shmobile/Kconfig
-> +++ b/arch/arm/mach-shmobile/Kconfig
-> @@ -8,7 +8,6 @@ config ARCH_SHMOBILE_MULTI
->         select HAVE_ARM_SCU if SMP
->         select HAVE_ARM_TWD if SMP
->         select ARM_GIC
-> -       select MIGHT_HAVE_PCI
->         select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
->         select NO_IOPORT_MAP
->         select PINCTRL
-> diff --git a/arch/arm/mach-tegra/Kconfig b/arch/arm/mach-tegra/Kconfig
-> index 55b305d51669..e16999e5b735 100644
-> --- a/arch/arm/mach-tegra/Kconfig
-> +++ b/arch/arm/mach-tegra/Kconfig
-> @@ -7,7 +7,6 @@ config ARCH_TEGRA
->         select CLKSRC_MMIO
->         select HAVE_ARM_SCU if SMP
->         select HAVE_ARM_TWD if SMP
-> -       select MIGHT_HAVE_PCI
->         select PINCTRL
->         select ARCH_HAS_RESET_CONTROLLER
->         select RESET_CONTROLLER
+	Arnd
