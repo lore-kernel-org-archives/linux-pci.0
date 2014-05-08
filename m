@@ -1,57 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:57661 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754167AbaE3UoZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 16:44:25 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Subject: Re: [PATCH] of: treat PCI config space as IORESOURCE_MEM type
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <20140530203741.GA30134@obsidianresearch.com>
-Date: Fri, 30 May 2014 15:44:18 -0500
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-Message-Id: <69822442-4373-4CDA-916D-77450AADF6A3@codeaurora.org>
-References: <1401379426-9701-1-git-send-email-galak@codeaurora.org> <CAL_JsqLPFDwtd-QYDqCwx1JVj1Aa8=nof-e0P6R9CZra+fXHfw@mail.gmail.com> <47B1E3D0-4336-4529-80B0-172F4ACA5C97@codeaurora.org> <20140530005602.GE1677@bart.dudau.co.uk> <CAErSpo7qEhJyUAu58R8g6+AEhRGo_+Vv0EMgkK+3ZQOU9+jmhg@mail.gmail.com> <20140530014116.GF1677@bart.dudau.co.uk> <20140530203741.GA30134@obsidianresearch.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Received: from mail-bn1blp0182.outbound.protection.outlook.com ([207.46.163.182]:32379
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755128AbaEHQon (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 May 2014 12:44:43 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	Borislav Petkov <bp@suse.de>,
+	"Robert Richter" <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V4 0/4] x86/pci Fix numa_node info for AMD hostbridge and misc clean up.
+Date: Thu, 8 May 2014 11:44:17 -0500
+Message-ID: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-On May 30, 2014, at 3:37 PM, Jason Gunthorpe <jgunthorpe@obsidianresearch.com> wrote:
+This in the V4 of the patch set which trys to fixed up numa_node for AMD hostbridges.
+This topic was discussed in the following threads:
 
-> On Fri, May 30, 2014 at 02:41:17AM +0100, Liviu Dudau wrote:
-> 
->> Agree, I'm only concerned that if this ECAM config space gets added to
->> the list of pci_host_bridge windows it will be indistinguishable from
->> IORESOURCE_MEM resources and pci_create_root_bus() will add it to the
->> bus and allow devices present on that bus to be assigned addresses from
->> that range. Which might not be what one wants for certain BARs.
-> 
-> I wouldn't worry about supporting config in ranges. ECAM is the
-> logical use for config ranges, but it isn't specified and probably
-> will never be.
-> 
-> Will's driver the is the only driver I've seen to support ECAM and it
-> didn't use ranges.
+V1: https://lkml.org/lkml/2014/3/5/898
+V2: https://lkml.org/lkml/2014/4/18/623
+V3: https://lkml.org/lkml/2014/5/7/588
 
-I expect with 64-bit parts we will see more use of ECAM, I think the reason its not used much is because of the address space it chews up, but that becomes less of an issue with LPAE or 64-bit parts with larger physical address spaces.
+Change from V3:
+Split up the changes in patch1 into two per Robert's suggestions. The second patch has 
+no functional change. 
 
-- k
+Change from V2:
+As requested by Bjorn, the patch set will only add supports for family15h, and 
+also deprecating the mechanism, as future platforms should be relying on the ACPI info.
+He has also requested to keep the changes to the minimum. Therefore, the V2 patch 2 and 3
+has been removed.
+
+Suravee Suthikulpanit (2):
+  Patch1: x86/PCI: Fix PCI root numa_node info on AMD family15h
+  Patch2: x86/PCI: Clean up and mark early_root_info_init as deprecated
+
+Myron Stowe (2):
+  Patch3: ACPI/PCI: Warn if we have to "guess" host bridge node information
+  Patch4: X86/PCI: Remove unnecessary 'quirk_amd_nb_node'
+
+ arch/x86/kernel/quirks.c | 58 -------------------------------------
+ arch/x86/pci/acpi.c      |  6 +++-
+ arch/x86/pci/amd_bus.c   | 75 +++++++++++++++++++++++++++++-------------------
+ 3 files changed, 51 insertions(+), 88 deletions(-)
 
 -- 
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+1.9.0
 
