@@ -1,412 +1,197 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 09/13] iommu/intel: Update to use PCI DMA aliases
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	David Woodhouse <David.Woodhouse@intel.com>,
-	linux-kernel@vger.kernel.org
-Date: Thu, 01 May 2014 10:28:00 -0600
-Message-ID: <20140501162800.17512.76941.stgit@bling.home>
-In-Reply-To: <20140501160128.17512.23609.stgit@bling.home>
-References: <20140501160128.17512.23609.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:57062 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753106AbaEHLhD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 07:37:03 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-doc@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+	Magnus Damm <damm@opensource.se>, linux-sh@vger.kernel.org
+Subject: Re: [PATCH v2 3/5] sh/PCI: Pass GAPSPCI_DMA_BASE CPU address to dma_declare_coherent_memory()
+Date: Thu, 08 May 2014 13:36:26 +0200
+Message-ID: <7530420.5q1IGMpiC3@wuerfel>
+In-Reply-To: <20140507231822.GA4951@google.com>
+References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com> <4271645.KYLAoYxC5v@wuerfel> <20140507231822.GA4951@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VT-d code currently makes use of pci_find_upstream_pcie_bridge() in
-order to find the topology based alias of a device.  This function has
-a few problems.  First, it doesn't check the entire alias path of the
-device to the root bus, therefore if a PCIe device is masked upstream,
-the wrong result is produced.  Also, it's known to get confused and
-give up when it crosses a bridge from a conventional PCI bus to a PCIe
-bus that lacks a PCIe capability.  The PCI-core provided DMA alias
-support solves both of these problems and additionally adds support
-for DMA function quirks allowing VT-d to work with devices like
-Marvell and Ricoh with known broken requester IDs.
+On Wednesday 07 May 2014 17:18:22 Bjorn Helgaas wrote:
+> [+cc Magnus, linux-sh (sorry, I forgot to tell stgit to cc you)]
+> 
+> On Wed, May 07, 2014 at 10:15:10AM +0200, Arnd Bergmann wrote:
+> > On Wednesday 07 May 2014 09:55:16 Arnd Bergmann wrote:
+> > > On Tuesday 06 May 2014 16:48:33 Bjorn Helgaas wrote:
+> > > > @@ -51,8 +53,12 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
+> > > >                 /*
+> > > >                  * Redirect dma memory allocations to special memory window.
+> > > >                  */
+> > > > +               region.start = GAPSPCI_DMA_BASE;
+> > > > +               region.end = GAPSPCI_DMA_BASE + GAPSPCI_DMA_SIZE - 1;
+> > > > +               res.flags = IORESOURCE_MEM;
+> > > > +               pcibios_bus_to_resource(dev->bus, &res, &region);
+> > > >                 BUG_ON(!dma_declare_coherent_memory(&dev->dev,
+> > > > -                                               GAPSPCI_DMA_BASE,
+> > > > +                                               res->start,
+> > > >                                                 GAPSPCI_DMA_BASE,
+> > > >                                                 GAPSPCI_DMA_SIZE,
+> > > >                                                 DMA_MEMORY_MAP |
+> > > 
+> > > Not sure if this is an improvement. I understand the intention, but
+> > > it's actually possible for the offset to be different both ways:
+> > > 
+> > > Your patch applies the outbound mem_offset that was provided when
+> > > registering the MMIO resource for the PCI host bridge. What the driver
+> > > needs instead is the inbound DMA offset that gets applied by some
+> > > host bridges that don't have a 1:1 mapping but also don't have an
+> > > IOMMU.
+> 
+> I don't understand where the inbound DMA offset comes into play.  As I
+> understand it, we're talking about a region of memory on the PCI bus,
+> not in system RAM, and there are two ways to access it: (1) the CPU
+> makes MMIO accesses to it, and (2) the device makes DMA accesses to
+> it.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: David Woodhouse <David.Woodhouse@intel.com>
----
- drivers/iommu/intel-iommu.c         |  222 ++++++++++++++++-------------------
- drivers/iommu/intel_irq_remapping.c |   55 ++++++---
- 2 files changed, 139 insertions(+), 138 deletions(-)
+I was actually assuming that it's in system RAM but happens to have
+some property that lets PCI devices access it coherently.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index f0e50f1..d87b3c9 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1840,54 +1840,56 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 	return 0;
- }
- 
-+struct domain_context_mapping_data {
-+	struct dmar_domain *domain;
-+	struct intel_iommu *iommu;
-+	int translation;
-+};
-+
-+static int domain_context_mapping_cb(struct pci_dev *pdev,
-+				     u16 alias, void *opaque)
-+{
-+	struct domain_context_mapping_data *data = opaque;
-+
-+	return domain_context_mapping_one(data->domain, data->iommu,
-+					  PCI_BUS_NUM(alias), alias & 0xff,
-+					  data->translation);
-+}
-+
- static int
- domain_context_mapping(struct dmar_domain *domain, struct device *dev,
- 		       int translation)
- {
--	int ret;
--	struct pci_dev *pdev, *tmp, *parent;
- 	struct intel_iommu *iommu;
- 	u8 bus, devfn;
-+	struct domain_context_mapping_data data;
- 
- 	iommu = device_to_iommu(dev, &bus, &devfn);
- 	if (!iommu)
- 		return -ENODEV;
- 
--	ret = domain_context_mapping_one(domain, iommu, bus, devfn,
--					 translation);
--	if (ret || !dev_is_pci(dev))
--		return ret;
--
--	/* dependent device mapping */
--	pdev = to_pci_dev(dev);
--	tmp = pci_find_upstream_pcie_bridge(pdev);
--	if (!tmp)
--		return 0;
--	/* Secondary interface's bus number and devfn 0 */
--	parent = pdev->bus->self;
--	while (parent != tmp) {
--		ret = domain_context_mapping_one(domain, iommu,
--						 parent->bus->number,
--						 parent->devfn, translation);
--		if (ret)
--			return ret;
--		parent = parent->bus->self;
--	}
--	if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
--		return domain_context_mapping_one(domain, iommu,
--					tmp->subordinate->number, 0,
--					translation);
--	else /* this is a legacy PCI bridge */
--		return domain_context_mapping_one(domain, iommu,
--						  tmp->bus->number,
--						  tmp->devfn,
-+	if (!dev_is_pci(dev))
-+		return domain_context_mapping_one(domain, iommu, bus, devfn,
- 						  translation);
-+
-+	data.domain = domain;
-+	data.iommu = iommu;
-+	data.translation = translation;
-+
-+	return pci_for_each_dma_alias(to_pci_dev(dev),
-+				      &domain_context_mapping_cb, &data);
-+}
-+
-+static int domain_context_mapped_cb(struct pci_dev *pdev,
-+				    u16 alias, void *opaque)
-+{
-+	struct intel_iommu *iommu = opaque;
-+
-+	return !device_context_mapped(iommu, PCI_BUS_NUM(alias), alias & 0xff);
- }
- 
- static int domain_context_mapped(struct device *dev)
- {
--	int ret;
--	struct pci_dev *pdev, *tmp, *parent;
- 	struct intel_iommu *iommu;
- 	u8 bus, devfn;
- 
-@@ -1895,30 +1897,11 @@ static int domain_context_mapped(struct device *dev)
- 	if (!iommu)
- 		return -ENODEV;
- 
--	ret = device_context_mapped(iommu, bus, devfn);
--	if (!ret || !dev_is_pci(dev))
--		return ret;
-+	if (dev_is_pci(dev))
-+		return device_context_mapped(iommu, bus, devfn);
- 
--	/* dependent device mapping */
--	pdev = to_pci_dev(dev);
--	tmp = pci_find_upstream_pcie_bridge(pdev);
--	if (!tmp)
--		return ret;
--	/* Secondary interface's bus number and devfn 0 */
--	parent = pdev->bus->self;
--	while (parent != tmp) {
--		ret = device_context_mapped(iommu, parent->bus->number,
--					    parent->devfn);
--		if (!ret)
--			return ret;
--		parent = parent->bus->self;
--	}
--	if (pci_is_pcie(tmp))
--		return device_context_mapped(iommu, tmp->subordinate->number,
--					     0);
--	else
--		return device_context_mapped(iommu, tmp->bus->number,
--					     tmp->devfn);
-+	return !pci_for_each_dma_alias(to_pci_dev(dev),
-+				       domain_context_mapped_cb, iommu);
- }
- 
- /* Returns a number of VTD pages, but aligned to MM page size */
-@@ -2207,79 +2190,86 @@ static struct dmar_domain *dmar_insert_dev_info(struct intel_iommu *iommu,
- 	return domain;
- }
- 
-+static int get_last_alias(struct pci_dev *pdev, u16 alias, void *opaque)
-+{
-+	*(u16 *)opaque = alias;
-+	return 0;
-+}
-+
- /* domain is initialized */
- static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- {
--	struct dmar_domain *domain, *free = NULL;
--	struct intel_iommu *iommu = NULL;
-+	struct dmar_domain *domain, *tmp;
-+	struct intel_iommu *iommu;
- 	struct device_domain_info *info;
--	struct pci_dev *dev_tmp = NULL;
-+	u16 dma_alias;
- 	unsigned long flags;
--	u8 bus, devfn, bridge_bus, bridge_devfn;
-+	u8 bus, devfn;
- 
- 	domain = find_domain(dev);
- 	if (domain)
- 		return domain;
- 
-+	iommu = device_to_iommu(dev, &bus, &devfn);
-+	if (!iommu)
-+		return NULL;
-+
- 	if (dev_is_pci(dev)) {
- 		struct pci_dev *pdev = to_pci_dev(dev);
--		u16 segment;
- 
--		segment = pci_domain_nr(pdev->bus);
--		dev_tmp = pci_find_upstream_pcie_bridge(pdev);
--		if (dev_tmp) {
--			if (pci_is_pcie(dev_tmp)) {
--				bridge_bus = dev_tmp->subordinate->number;
--				bridge_devfn = 0;
--			} else {
--				bridge_bus = dev_tmp->bus->number;
--				bridge_devfn = dev_tmp->devfn;
--			}
--			spin_lock_irqsave(&device_domain_lock, flags);
--			info = dmar_search_domain_by_dev_info(segment,
--							      bridge_bus,
--							      bridge_devfn);
--			if (info) {
--				iommu = info->iommu;
--				domain = info->domain;
--			}
--			spin_unlock_irqrestore(&device_domain_lock, flags);
--			/* pcie-pci bridge already has a domain, uses it */
--			if (info)
--				goto found_domain;
-+		pci_for_each_dma_alias(pdev, get_last_alias, &dma_alias);
-+
-+		spin_lock_irqsave(&device_domain_lock, flags);
-+		info = dmar_search_domain_by_dev_info(pci_domain_nr(pdev->bus),
-+						      PCI_BUS_NUM(dma_alias),
-+						      dma_alias & 0xff);
-+		if (info) {
-+			iommu = info->iommu;
-+			domain = info->domain;
- 		}
--	}
-+		spin_unlock_irqrestore(&device_domain_lock, flags);
- 
--	iommu = device_to_iommu(dev, &bus, &devfn);
--	if (!iommu)
--		goto error;
-+		/* DMA alias already has a domain, uses it */
-+		if (info)
-+			goto found_domain;
-+	}
- 
- 	/* Allocate and initialize new domain for the device */
- 	domain = alloc_domain(false);
- 	if (!domain)
--		goto error;
-+		return NULL;
-+
- 	if (iommu_attach_domain(domain, iommu)) {
- 		free_domain_mem(domain);
--		domain = NULL;
--		goto error;
-+		return NULL;
- 	}
--	free = domain;
--	if (domain_init(domain, gaw))
--		goto error;
- 
--	/* register pcie-to-pci device */
--	if (dev_tmp) {
--		domain = dmar_insert_dev_info(iommu, bridge_bus, bridge_devfn,
--					      NULL, domain);
-+	if (domain_init(domain, gaw)) {
-+		domain_exit(domain);
-+		return NULL;
-+	}
-+
-+	/* register PCI DMA alias device */
-+	if (dev_is_pci(dev)) {
-+		tmp = dmar_insert_dev_info(iommu, PCI_BUS_NUM(dma_alias),
-+					   dma_alias & 0xff, NULL, domain);
-+
-+		if (!tmp || tmp != domain) {
-+			domain_exit(domain);
-+			domain = tmp;
-+		}
-+
- 		if (!domain)
--			goto error;
-+			return NULL;
- 	}
- 
- found_domain:
--	domain = dmar_insert_dev_info(iommu, bus, devfn, dev, domain);
--error:
--	if (free != domain)
--		domain_exit(free);
-+	tmp = dmar_insert_dev_info(iommu, bus, devfn, dev, domain);
-+
-+	if (!tmp || tmp != domain) {
-+		domain_exit(domain);
-+		domain = tmp;
-+	}
- 
- 	return domain;
- }
-@@ -4029,33 +4019,21 @@ out_free_dmar:
- 	return ret;
- }
- 
-+static int iommu_detach_dev_cb(struct pci_dev *pdev, u16 alias, void *opaque)
-+{
-+	struct intel_iommu *iommu = opaque;
-+
-+	iommu_detach_dev(iommu, PCI_BUS_NUM(alias), alias & 0xff);
-+	return 0;
-+}
-+
- static void iommu_detach_dependent_devices(struct intel_iommu *iommu,
- 					   struct device *dev)
- {
--	struct pci_dev *tmp, *parent, *pdev;
--
- 	if (!iommu || !dev || !dev_is_pci(dev))
- 		return;
- 
--	pdev = to_pci_dev(dev);
--
--	/* dependent device detach */
--	tmp = pci_find_upstream_pcie_bridge(pdev);
--	/* Secondary interface's bus number and devfn 0 */
--	if (tmp) {
--		parent = pdev->bus->self;
--		while (parent != tmp) {
--			iommu_detach_dev(iommu, parent->bus->number,
--					 parent->devfn);
--			parent = parent->bus->self;
--		}
--		if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
--			iommu_detach_dev(iommu,
--				tmp->subordinate->number, 0);
--		else /* this is a legacy PCI bridge */
--			iommu_detach_dev(iommu, tmp->bus->number,
--					 tmp->devfn);
--	}
-+	pci_for_each_dma_alias(to_pci_dev(dev), &iommu_detach_dev_cb, iommu);
- }
- 
- static void domain_remove_one_dev_info(struct dmar_domain *domain,
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 9b17489..29ded8f 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -369,29 +369,52 @@ static int set_hpet_sid(struct irte *irte, u8 id)
- 	return 0;
- }
- 
-+struct set_msi_sid_data {
-+	struct pci_dev *pdev;
-+	u16 alias;
-+};
-+
-+static int set_msi_sid_cb(struct pci_dev *pdev, u16 alias, void *opaque)
-+{
-+	struct set_msi_sid_data *data = opaque;
-+
-+	data->pdev = pdev;
-+	data->alias = alias;
-+
-+	return 0;
-+}
-+
- static int set_msi_sid(struct irte *irte, struct pci_dev *dev)
- {
--	struct pci_dev *bridge;
-+	struct set_msi_sid_data data;
- 
- 	if (!irte || !dev)
- 		return -1;
- 
--	/* PCIe device or Root Complex integrated PCI device */
--	if (pci_is_pcie(dev) || !dev->bus->parent) {
--		set_irte_sid(irte, SVT_VERIFY_SID_SQ, SQ_ALL_16,
--			     (dev->bus->number << 8) | dev->devfn);
--		return 0;
--	}
-+	pci_for_each_dma_alias(dev, set_msi_sid_cb, &data);
- 
--	bridge = pci_find_upstream_pcie_bridge(dev);
--	if (bridge) {
--		if (pci_is_pcie(bridge))/* this is a PCIe-to-PCI/PCIX bridge */
--			set_irte_sid(irte, SVT_VERIFY_BUS, SQ_ALL_16,
--				(bridge->bus->number << 8) | dev->bus->number);
--		else /* this is a legacy PCI bridge */
--			set_irte_sid(irte, SVT_VERIFY_SID_SQ, SQ_ALL_16,
--				(bridge->bus->number << 8) | bridge->devfn);
--	}
-+	/*
-+	 * DMA alias provides us with a PCI device and alias.  The only case
-+	 * where the it will return an alias on a different bus than the
-+	 * device is the case of a PCIe-to-PCI bridge, where the alias is for
-+	 * the subordinate bus.  In this case we can only verify the bus.
-+	 *
-+	 * If the alias device is on a different bus than our source device
-+	 * then we have a topology based alias, use it.
-+	 *
-+	 * Otherwise, the alias is for a device DMA quirk and we cannot
-+	 * assume that MSI uses the same requester ID.  Therefore use the
-+	 * original device.
-+	 */
-+	if (PCI_BUS_NUM(data.alias) != data.pdev->bus->number)
-+		set_irte_sid(irte, SVT_VERIFY_BUS, SQ_ALL_16,
-+			     PCI_DEVID(PCI_BUS_NUM(data.alias),
-+				       PCI_BUS_NUM(data.alias)));
-+	else if (data.pdev->bus->number != dev->bus->number)
-+		set_irte_sid(irte, SVT_VERIFY_SID_SQ, SQ_ALL_16, data.alias);
-+	else
-+		set_irte_sid(irte, SVT_VERIFY_SID_SQ, SQ_ALL_16,
-+			     PCI_DEVID(dev->bus->number, dev->devfn));
- 
- 	return 0;
- }
+Your explanation also seems plausible, I have no idea which one is
+true.
+
+> The CPU accesses go through the host bridge MMIO aperture and will
+> have the outbound mem_offset applied to them.  The DMA accesses are
+> handled by the device itself and there's no host bridge or IOMMU or
+> inbound DMA offset involved.
+> 
+> I think there are two reasonable ways a PCI driver could use
+> dma_declare_coherent_memory():
+> 
+>   1) The bus address of the region might be in a BAR.  In that case,
+>   it should pass pci_resource_start() (the CPU phys_addr_t) as the
+>   first address, and pci_bus_address(pci_resource_start()) (the bus
+>   dma_addr_t) as the second.
+> 
+>   2) The bus address of the region might be discovered from the device
+>   in some non-standard way.  In this case, the driver reads the bus
+>   address dma_addr_t directly from the device, and it should use
+>   something like the pcibios_bus_to_resource() code I proposed to find
+>   the CPU phys_addr_t.
+> 
+> For this platform, all the addresses are hard-coded and there is no
+> outbound MMIO offset, so we can't tell which to use and in this
+> system, it doesn't matter if we do anything at all.
+
+Based on your initial assumption, this all is correct.
+
+> The only reason I would make a change here is because the current code
+> cannot be safely copied (another driver might be used in systems where
+> the host bridge does have an outbound MMIO offset).  If we make this
+> code use either strategy, it would be a clue to future users that they
+> should not assume the physical address is the same as the bus address.
+> 
+> I changed the patch (below) to add a comment and to use the first
+> strategy (though there isn't an actual BAR, so we can't do it exactly
+> that way).
+
+Ok.
+
+> > > We know that on this particular platform, both are zero, so
+> > > the original code works and it will keep working with your change,
+> > > but I think it's a mistake anyway. I have seen both kinds of offsets
+> > > in the past on real machines, but I am not aware of any where they
+> > > are both nonzero and have the same value.
+> > 
+> > Hmm, looking at it again, it seem even weirder: the address we register
+> > for DMA allocations is the same that gets passed into the PCI host
+> > for MMIO resources. Something is very strange here. Still, I'd rather
+> > not touch it at all, whatever it does.
+> 
+> It's definitely strange.  It looks to me like the memory on the device
+> takes up the entire 32KB host bridge MMIO aperture.  I don't know what
+> driver uses this, but the device must be programmed via I/O ports,
+> which sort of makes sense given the previous lines in this quirk that
+> set the BAR1 resource to be in the I/O aperture.
+
+>From what I can tell, the only device on the PCI bus is an ethernet
+adapter with the 8139too configured into MMIO mode (the driver as well
+as the hardware supports both PIO and MMIO modes).
+
+The gapspci_fixup_resources() in arch/sh/drivers/pci/fixups-dreamcast.c
+seems to manually adjust MMIO BAR to point to the correct place, which
+is probably required because the MMIO aperture provided is fake.
+
+
+> sh/PCI: Pass GAPSPCI_DMA_BASE CPU & bus address to dma_declare_coherent_memory()
+> 
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> dma_declare_coherent_memory() needs both the CPU physical address and the
+> bus address of the device memory.  They are the same on this platform, but
+> in general we should use pcibios_resource_to_bus() to account for any
+> address translation done by the PCI host bridge.
+> 
+> This makes no difference on Dreamcast, but is safer if the usage is copied
+> to future drivers.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Magnus Damm <damm@opensource.se>
+> CC: linux-sh@vger.kernel.org
+
+Unless Magnus or someone else is able to clarify where GAPSPCI_DMA_BASE
+actually is in the system (on the CPU bus or the PCI bus), your patch
+does help anyone copying this code to a driver that needs it for coherent
+memory on the PCI bus.
+
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+
+> ---
+>  arch/sh/drivers/pci/fixups-dreamcast.c |   18 +++++++++++++++---
+>  1 file changed, 15 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/sh/drivers/pci/fixups-dreamcast.c b/arch/sh/drivers/pci/fixups-dreamcast.c
+> index d6cde700e316..f22127f966ce 100644
+> --- a/arch/sh/drivers/pci/fixups-dreamcast.c
+> +++ b/arch/sh/drivers/pci/fixups-dreamcast.c
+> @@ -31,6 +31,8 @@
+>  static void gapspci_fixup_resources(struct pci_dev *dev)
+>  {
+>  	struct pci_channel *p = dev->sysdata;
+> +	struct resource res;
+> +	struct pci_bus_region region;
+>  
+>  	printk(KERN_NOTICE "PCI: Fixing up device %s\n", pci_name(dev));
+>  
+> @@ -50,11 +52,21 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
+>  
+>  		/*
+>  		 * Redirect dma memory allocations to special memory window.
+> +		 *
+> +		 * If this GAPSPCI region were mapped by a BAR, the CPU
+> +		 * phys_addr_t would be pci_resource_start(), and the bus
+> +		 * address would be pci_bus_address(pci_resource_start()).
+> +		 * But apparently there's no BAR mapping it, so we just
+> +		 * "know" its CPU address is GAPSPCI_DMA_BASE.
+>  		 */
+> +		res.start = GAPSPCI_DMA_BASE;
+> +		res.end = GAPSPCI_DMA_BASE + GAPSPCI_DMA_SIZE - 1;
+> +		res.flags = IORESOURCE_MEM;
+> +		pcibios_resource_to_bus(dev, &region, &resource);
+>  		BUG_ON(!dma_declare_coherent_memory(&dev->dev,
+> -						GAPSPCI_DMA_BASE,
+> -						GAPSPCI_DMA_BASE,
+> -						GAPSPCI_DMA_SIZE,
+> +						res.start,
+> +						region.start,
+> +						resource_size(&res),
+>  						DMA_MEMORY_MAP |
+>  						DMA_MEMORY_EXCLUSIVE));
+>  		break;
 
