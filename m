@@ -1,40 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:65345 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932164AbaESQ7k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 12:59:40 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Srikanth Thokala <sthokal@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"michals@xilinx.com" <michals@xilinx.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Generic Configuration Access Mechanism support
-Date: Mon, 19 May 2014 18:59:36 +0200
-Message-ID: <10203370.xOnWqK3Vx4@wuerfel>
-In-Reply-To: <20140519163223.GP15130@arm.com>
-References: <1400422125-2209-1-git-send-email-sthokal@xilinx.com> <20140519163223.GP15130@arm.com>
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:60044 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754196AbaEHQmJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 12:42:09 -0400
+Date: Thu, 8 May 2014 09:41:57 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com, dwmw2@infradead.org,
+	dmitry.torokhov@gmail.com, balbi@ti.com,
+	gregkh@linuxfoundation.org, plagnioj@jcrosoft.com,
+	jic23@kernel.org, josh.wu@atmel.com, kishon@ti.com,
+	linus.walleij@linaro.org, broonie@kernel.org,
+	mturquette@linaro.org, nicolas.ferre@atmel.com, ohad@wizery.com,
+	linux@arm.linux.org.uk, tony@atomide.com, vinod.koul@intel.com,
+	wim@iguana.be, wsa@the-dreams.de, dmaengine@vger.kernel.org,
+	linux-i2c@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-watchdog@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 00/22] Random ARM randconfig fixes in drivers
+Message-ID: <20140508164157.GA22224@roeck-us.net>
+References: <1399560433-1402630-1-git-send-email-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1399560433-1402630-1-git-send-email-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 19 May 2014 17:32:23 Will Deacon wrote:
-> On Sun, May 18, 2014 at 03:08:45PM +0100, Srikanth Thokala wrote:
-> > This patch adds support for a generic CAM and ECAM configuration
-> > space accesses.
+On Thu, May 08, 2014 at 04:46:51PM +0200, Arnd Bergmann wrote:
+> These are a bunch of fixes I had to do to get all randconfig
+> configurations on ARM working. Most of these are really old
+> bugs, but there are also some new ones. I don't think any of
+> them require a backport to linux-stable.
 > 
-> Looks good to me, thanks Srikanth!
+> I have checked that they are all still required on yesterday's
+> linux-next kernel. Please apply on the appropriate trees unless
+> there are objections.
 > 
-> Arnd: is this the sort of thing you were expecting? The
-> ->is_valid_cfg_access callback is a bit horrible, but I can't think of
-> anything better.
-> 
-> I can include this in the next posting of my PCI patches.
+Is this series of patches also going to fix arm:allmodconfig ?
 
-Yes, this is roughly what I had in mind, thanks a lot!
-
-I'll comment a bit more on the patch itself
-
-	Arnd
+Thanks,
+Guenter
