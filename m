@@ -1,122 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:42669 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752662AbaEZPS3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 May 2014 11:18:29 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v3 07/15] thunderbolt: Enable plug events
-Date: Mon, 26 May 2014 17:18:04 +0200
-Message-Id: <1401117492-2870-8-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
-References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:33982 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752769AbaEHJYg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 05:24:36 -0400
+Date: Thu, 8 May 2014 02:24:28 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v2 1/5] DMA-API: Clarify physical/bus address distinction
+Message-ID: <20140508092428.GB27651@kroah.com>
+References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140506224819.17968.2922.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140506224819.17968.2922.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thunderbolt switches have a plug events capability. This patch adds the
-tb_plug_events_active method and uses it to activate plug events during
-switch allocation.
+On Tue, May 06, 2014 at 04:48:19PM -0600, Bjorn Helgaas wrote:
+> The DMA-API documentation sometimes refers to "physical addresses" when it
+> really means "bus addresses."  Sometimes these are identical, but they may
+> be different if the bridge leading to the bus performs address translation.
+> Update the documentation to use "bus address" when appropriate.
+> 
+> Also, consistently capitalize "DMA", use parens with function names, use
+> dev_printk() in examples, and reword a few sections for clarity.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/switch.c | 46 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.h     |  1 +
- 2 files changed, 47 insertions(+)
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index e89121f..21457cc 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -99,6 +99,39 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
- }
- 
- /**
-+ * tb_plug_events_active() - enable/disable plug events on a switch
-+ *
-+ * Also configures a sane plug_events_delay of 255ms.
-+ *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+static int tb_plug_events_active(struct tb_switch *sw, bool active)
-+{
-+	u32 data;
-+	int res;
-+
-+	sw->config.plug_events_delay = 0xff;
-+	res = tb_sw_write(sw, ((u32 *) &sw->config) + 4, TB_CFG_SWITCH, 4, 1);
-+	if (res)
-+		return res;
-+
-+	res = tb_sw_read(sw, &data, TB_CFG_SWITCH, sw->cap_plug_events + 1, 1);
-+	if (res)
-+		return res;
-+
-+	if (active) {
-+		data = data & 0xFFFFFF83;
-+		if (sw->config.device_id == 0x1547)
-+			data |= 4;
-+	} else {
-+		data = data | 0x7c;
-+	}
-+	return tb_sw_write(sw, &data, TB_CFG_SWITCH,
-+			   sw->cap_plug_events + 1, 1);
-+}
-+
-+
-+/**
-  * tb_switch_free() - free a tb_switch and all downstream switches
-  */
- void tb_switch_free(struct tb_switch *sw)
-@@ -113,6 +146,8 @@ void tb_switch_free(struct tb_switch *sw)
- 		sw->ports[i].remote = NULL;
- 	}
- 
-+	tb_plug_events_active(sw, false);
-+
- 	kfree(sw->ports);
- 	kfree(sw);
- }
-@@ -125,6 +160,7 @@ void tb_switch_free(struct tb_switch *sw)
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
- {
- 	int i;
-+	int cap;
- 	struct tb_switch *sw;
- 	int upstream_port = tb_cfg_get_upstream_port(tb->ctl, route);
- 	if (upstream_port < 0)
-@@ -177,6 +213,16 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
- 
- 	/* TODO: I2C, IECS, EEPROM, link controller */
- 
-+	cap = tb_find_cap(&sw->ports[0], TB_CFG_SWITCH, TB_CAP_PLUG_EVENTS);
-+	if (cap < 0) {
-+		tb_sw_warn(sw, "cannot find TB_CAP_PLUG_EVENTS aborting\n");
-+		goto err;
-+	}
-+	sw->cap_plug_events = cap;
-+
-+	if (tb_plug_events_active(sw, true))
-+		goto err;
-+
- 	return sw;
- err:
- 	kfree(sw->ports);
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 38e4c23..af123c4 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -19,6 +19,7 @@ struct tb_switch {
- 	struct tb_regs_switch_header config;
- 	struct tb_port *ports;
- 	struct tb *tb;
-+	int cap_plug_events; /* offset, zero if not found */
- };
- 
- /**
--- 
-1.9.3
+Thanks for cleaning this up.
 
