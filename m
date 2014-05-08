@@ -1,53 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:55290 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945AbaEHPQc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 11:16:32 -0400
+MIME-Version: 1.0
+In-Reply-To: <536B9D78.5000602@codethink.co.uk>
+References: <1399560433-1402630-1-git-send-email-arnd@arndb.de>
+	<1399560990-1402858-1-git-send-email-arnd@arndb.de>
+	<1399560990-1402858-14-git-send-email-arnd@arndb.de>
+	<536B9D78.5000602@codethink.co.uk>
+Date: Thu, 8 May 2014 17:16:32 +0200
+Message-ID: <CAMuHMdWBzBneDqyDxK5HU3Bt_5CyRfTM_f_6YGJHokG_v17_sw@mail.gmail.com>
+Subject: Re: [PATCH] pci: rcar host needs OF
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 07/21] iommu/vt-d: avoid freeing virtual machine domain in free_dmar_iommu()
-Date: Tue,  6 May 2014 15:05:18 +0800
-Message-Id: <1399359932-28972-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Magnus Damm <damm@opensource.se>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Virtual machine domains are created by intel_iommu_domain_init() and
-should be destroyed by intel_iommu_domain_destroy(). So avoid freeing
-virtual machine domain data structure in free_dmar_iommu() when
-doamin->iommu_count reaches zero, otherwise it may cause invalid
-memory access because the IOMMU framework still holds references
-to the domain structure.
+On Thu, May 8, 2014 at 5:06 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
+> On 08/05/14 15:56, Arnd Bergmann wrote:
+>>
+>> The pci-rcar driver is enabled for compile tests, and this has
+>> now shown that the driver cannot build without CONFIG_OF,
+>> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
+>> interrupt mapping when possible":
+>>
+>> drivers/built-in.o: In function `rcar_pci_map_irq':
+>> :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
+>>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Magnus Damm <damm@opensource.se>
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: linux-sh@vger.kernel.org
+>> ---
+>>   drivers/pci/host/Kconfig | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>> index fbbef0b..4675f47 100644
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -27,7 +27,7 @@ config PCI_TEGRA
+>>
+>>   config PCI_RCAR_GEN2
+>>         bool "Renesas R-Car Gen2 Internal PCI controller"
+>> -       depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
+>> +       depends on ARCH_SHMOBILE || (ARM && OF && COMPILE_TEST)
+>>         help
+>>           Say Y here if you want internal PCI support on R-Car Gen2 SoC.
+>>           There are 3 internal PCI controllers available with a single
+>>
+>
+> This driver /should/ be able to be built for just the platform case
+> so it sounds like f8f2fe7355fb stopped this but no-one has yet to
+> notice.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+You mean include/linux/of_pci.h should provide a dummy version of
+of_irq_parse_and_map_pci() returning 0 in case OF=n?
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 1f10fcd1c696..5e865c1265ad 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1482,7 +1482,8 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
- 
- 			domain = iommu->domains[i];
- 			clear_bit(i, iommu->domain_ids);
--			if (domain_detach_iommu(domain, iommu) == 0)
-+			if (domain_detach_iommu(domain, iommu) == 0 &&
-+			    !domain_type_is_vm(domain))
- 				domain_exit(domain);
- 		}
- 	}
--- 
-1.7.10.4
+Gr{oetje,eeting}s,
 
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
