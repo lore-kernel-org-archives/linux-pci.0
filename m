@@ -1,61 +1,218 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38845 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932217AbaEIP3F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 May 2014 11:29:05 -0400
-Subject: [PATCH v2 06/15] PCI: Add quirks for ASMedia and Tundra bridges
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
-Date: Fri, 09 May 2014 09:29:01 -0600
-Message-ID: <20140509152901.8321.66435.stgit@bling.home>
-In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
-References: <20140509151735.8321.22017.stgit@bling.home>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:64614 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755799AbaEHUs6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 16:48:58 -0400
+Received: by mail-ie0-f175.google.com with SMTP id rl12so3066484iec.6
+        for <linux-pci@vger.kernel.org>; Thu, 08 May 2014 13:48:57 -0700 (PDT)
+Subject: [PATCH v3 2/4] DMA-API: Change dma_declare_coherent_memory() CPU
+ address to phys_addr_t
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Date: Thu, 08 May 2014 14:49:00 -0600
+Message-ID: <20140508204900.17877.3108.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The quirk is intended to be extremely generic, but we only apply it
-to known offending devices.
+dma_declare_coherent_memory() takes two addresses for a region of memory: a
+"bus_addr" and a "device_addr".  I think the intent is that "bus_addr" is
+the physical address a *CPU* would use to access the region, and
+"device_addr" is the bus address the *device* would use to address the
+region.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Rename "bus_addr" to "phys_addr" and change its type to phys_addr_t.
+Most callers already supply a phys_addr_t for this argument.  The others
+supply a 32-bit integer (a constant, unsigned int, or __u32) and need no
+change.
+
+Use "unsigned long", not phys_addr_t, to hold PFNs.
+
+No functional change (this could theoretically fix a truncation in a config
+with 32-bit dma_addr_t and 64-bit phys_addr_t, but I don't think there are
+any such cases involving this code).
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/pci/quirks.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ Documentation/DMA-API.txt          |    9 ++++-----
+ drivers/base/dma-coherent.c        |   10 +++++-----
+ drivers/base/dma-mapping.c         |    6 +++---
+ include/asm-generic/dma-coherent.h |   13 +++++--------
+ include/linux/dma-mapping.h        |    7 ++++---
+ 5 files changed, 21 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 63b8245..a10a685 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3356,6 +3356,29 @@ static void quirk_dma_func1_alias(struct pci_dev *dev)
- }
+diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
+index 1147eba43128..4f1cdc5febd1 100644
+--- a/Documentation/DMA-API.txt
++++ b/Documentation/DMA-API.txt
+@@ -497,19 +497,18 @@ continuing on for size.  Again, you *must* observe the cache line
+ boundaries when doing this.
  
- /*
-+ * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
-+ * using the wrong DMA alias for the device.  Some of these devices can be
-+ * used as either forward or reverse bridges, so we need to test whether the
-+ * device is operating in the correct mode.  We could probably apply this
-+ * quirk to PCI_ANY_ID, but for now we'll just use known offenders.  The test
-+ * is for a non-root, non-PCIe bridge where the upstream device is PCIe and
-+ * is not a PCIe-to-PCI bridge, then @pdev is actually a PCIe-to-PCI bridge.
-+ */
-+static void quirk_use_pcie_bridge_dma_alias(struct pci_dev *pdev)
-+{
-+	if (!pci_is_root_bus(pdev->bus) &&
-+	    pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
-+	    !pci_is_pcie(pdev) && pci_is_pcie(pdev->bus->self) &&
-+	    pci_pcie_type(pdev->bus->self) != PCI_EXP_TYPE_PCI_BRIDGE)
-+		pdev->dev_flags |= PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS;
-+}
-+/* ASM1083/1085, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c46 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
-+			 quirk_use_pcie_bridge_dma_alias);
-+/* Tundra 8113, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c43 */
-+DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
-+
-+/*
-  * Marvell 88SE9123 uses function 1 as the requester ID for DMA.  In some
-  * SKUs function 1 is present and is a legacy IDE controller, in other
-  * SKUs this function is not present, making this a ghost requester.
+ int
+-dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 			    dma_addr_t device_addr, size_t size, int
+ 			    flags)
+ 
+ Declare region of memory to be handed out by dma_alloc_coherent() when
+ it's asked for coherent memory for this device.
+ 
+-bus_addr is the physical address to which the memory is currently
+-assigned in the bus responding region (this will be used by the
+-platform to perform the mapping).
++phys_addr is the cpu physical address to which the memory is currently
++assigned (this will be ioremapped so the cpu can access the region).
+ 
+ device_addr is the bus address the device needs to be programmed
+-with actually to address this memory (this will be handed out as the
++with to actually address this memory (this will be handed out as the
+ dma_addr_t in dma_alloc_coherent()).
+ 
+ size is the size of the area (must be multiples of PAGE_SIZE).
+diff --git a/drivers/base/dma-coherent.c b/drivers/base/dma-coherent.c
+index bc256b641027..7d6e84a51424 100644
+--- a/drivers/base/dma-coherent.c
++++ b/drivers/base/dma-coherent.c
+@@ -10,13 +10,13 @@
+ struct dma_coherent_mem {
+ 	void		*virt_base;
+ 	dma_addr_t	device_base;
+-	phys_addr_t	pfn_base;
++	unsigned long	pfn_base;
+ 	int		size;
+ 	int		flags;
+ 	unsigned long	*bitmap;
+ };
+ 
+-int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++int dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 				dma_addr_t device_addr, size_t size, int flags)
+ {
+ 	void __iomem *mem_base = NULL;
+@@ -32,7 +32,7 @@ int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+ 
+ 	/* FIXME: this routine just ignores DMA_MEMORY_INCLUDES_CHILDREN */
+ 
+-	mem_base = ioremap(bus_addr, size);
++	mem_base = ioremap(phys_addr, size);
+ 	if (!mem_base)
+ 		goto out;
+ 
+@@ -45,7 +45,7 @@ int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+ 
+ 	dev->dma_mem->virt_base = mem_base;
+ 	dev->dma_mem->device_base = device_addr;
+-	dev->dma_mem->pfn_base = PFN_DOWN(bus_addr);
++	dev->dma_mem->pfn_base = PFN_DOWN(phys_addr);
+ 	dev->dma_mem->size = pages;
+ 	dev->dma_mem->flags = flags;
+ 
+@@ -208,7 +208,7 @@ int dma_mmap_from_coherent(struct device *dev, struct vm_area_struct *vma,
+ 
+ 		*ret = -ENXIO;
+ 		if (off < count && user_count <= count - off) {
+-			unsigned pfn = mem->pfn_base + start + off;
++			unsigned long pfn = mem->pfn_base + start + off;
+ 			*ret = remap_pfn_range(vma, vma->vm_start, pfn,
+ 					       user_count << PAGE_SHIFT,
+ 					       vma->vm_page_prot);
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+index 0ce39a33b3c2..6cd08e145bfa 100644
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -175,7 +175,7 @@ static void dmam_coherent_decl_release(struct device *dev, void *res)
+ /**
+  * dmam_declare_coherent_memory - Managed dma_declare_coherent_memory()
+  * @dev: Device to declare coherent memory for
+- * @bus_addr: Bus address of coherent memory to be declared
++ * @phys_addr: Physical address of coherent memory to be declared
+  * @device_addr: Device address of coherent memory to be declared
+  * @size: Size of coherent memory to be declared
+  * @flags: Flags
+@@ -185,7 +185,7 @@ static void dmam_coherent_decl_release(struct device *dev, void *res)
+  * RETURNS:
+  * 0 on success, -errno on failure.
+  */
+-int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++int dmam_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 				 dma_addr_t device_addr, size_t size, int flags)
+ {
+ 	void *res;
+@@ -195,7 +195,7 @@ int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+ 	if (!res)
+ 		return -ENOMEM;
+ 
+-	rc = dma_declare_coherent_memory(dev, bus_addr, device_addr, size,
++	rc = dma_declare_coherent_memory(dev, phys_addr, device_addr, size,
+ 					 flags);
+ 	if (rc == 0)
+ 		devres_add(dev, res);
+diff --git a/include/asm-generic/dma-coherent.h b/include/asm-generic/dma-coherent.h
+index 2be8a2dbc868..0297e5875798 100644
+--- a/include/asm-generic/dma-coherent.h
++++ b/include/asm-generic/dma-coherent.h
+@@ -16,16 +16,13 @@ int dma_mmap_from_coherent(struct device *dev, struct vm_area_struct *vma,
+  * Standard interface
+  */
+ #define ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
+-extern int
+-dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
+-			    dma_addr_t device_addr, size_t size, int flags);
++int dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
++				dma_addr_t device_addr, size_t size, int flags);
+ 
+-extern void
+-dma_release_declared_memory(struct device *dev);
++void dma_release_declared_memory(struct device *dev);
+ 
+-extern void *
+-dma_mark_declared_memory_occupied(struct device *dev,
+-				  dma_addr_t device_addr, size_t size);
++void *dma_mark_declared_memory_occupied(struct device *dev,
++					dma_addr_t device_addr, size_t size);
+ #else
+ #define dma_alloc_from_coherent(dev, size, handle, ret) (0)
+ #define dma_release_from_coherent(dev, order, vaddr) (0)
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index b9aa2b97aab5..0c3eab1e39ac 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -192,7 +192,7 @@ static inline int dma_get_cache_alignment(void)
+ 
+ #ifndef ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
+ static inline int
+-dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 			    dma_addr_t device_addr, size_t size, int flags)
+ {
+ 	return 0;
+@@ -223,13 +223,14 @@ extern void *dmam_alloc_noncoherent(struct device *dev, size_t size,
+ extern void dmam_free_noncoherent(struct device *dev, size_t size, void *vaddr,
+ 				  dma_addr_t dma_handle);
+ #ifdef ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
+-extern int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
++extern int dmam_declare_coherent_memory(struct device *dev,
++					phys_addr_t phys_addr,
+ 					dma_addr_t device_addr, size_t size,
+ 					int flags);
+ extern void dmam_release_declared_memory(struct device *dev);
+ #else /* ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY */
+ static inline int dmam_declare_coherent_memory(struct device *dev,
+-				dma_addr_t bus_addr, dma_addr_t device_addr,
++				phys_addr_t phys_addr, dma_addr_t device_addr,
+ 				size_t size, gfp_t gfp)
+ {
+ 	return 0;
 
