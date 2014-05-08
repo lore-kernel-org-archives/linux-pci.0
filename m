@@ -1,65 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:50849 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485AbaEPA1l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 20:27:41 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Murali Karicheri' <m-karicheri2@ti.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	'Santosh Shilimkar' <santosh.shilimkar@ti.com>,
-	'Russell King' <linux@arm.linux.org.uk>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
- <1400169692-9677-2-git-send-email-m-karicheri2@ti.com>
-In-reply-to: <1400169692-9677-2-git-send-email-m-karicheri2@ti.com>
-Subject: Re: [PATCH v1 1/5] ARM: keystone: add pcie related options
-Date: Fri, 16 May 2014 09:27:38 +0900
-Message-id: <004e01cf709d$a48b4240$eda1c6c0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-bn1lp0145.outbound.protection.outlook.com ([207.46.163.145]:22825
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753156AbaEHQoh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 8 May 2014 12:44:37 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	Borislav Petkov <bp@suse.de>,
+	"Robert Richter" <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH V4 1/4] x86/PCI: Fix PCI root numa_node info on AMD family15h
+Date: Thu, 8 May 2014 11:44:18 -0500
+Message-ID: <1399567461-15928-2-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, May 16, 2014 1:01 AM, Murali Karicheri wrote:
-> 
-> Add pcie related options by default for keystone architecture
-> 
-> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-> CC: Russell King <linux@arm.linux.org.uk>
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->  arch/arm/mach-keystone/Kconfig |    2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/arch/arm/mach-keystone/Kconfig b/arch/arm/mach-keystone/Kconfig
-> index f50bc93..f87844d 100644
-> --- a/arch/arm/mach-keystone/Kconfig
-> +++ b/arch/arm/mach-keystone/Kconfig
-> @@ -8,6 +8,8 @@ config ARCH_KEYSTONE
->  	select COMMON_CLK_KEYSTONE
->  	select ARCH_SUPPORTS_BIG_ENDIAN
->  	select ZONE_DMA if ARM_LPAE
-> +	select MIGHT_HAVE_PCI
-> +	select ARCH_SUPPORTS_MSI
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Please, don't select ARCH_SUPPORTS_MSI, because this kconfig
-option was already removed in v3.12 by the commit ebd97be635
-('PCI: remove ARCH_SUPPORTS_MSI kconfig option'). So. there is
-NO need to select 'ARCH_SUPPORTS_MSI'.
+This patch fixes the numa_node information in sysfs for PCI root
+on AMD family15h platforms (currently showing -1) by adding
+the hostbridge in the list of probed devices to be used for initializing
+pci_root_info structue.
 
-Best regards,
-Jingoo Han
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Robert Richter <rric@kernel.org>
+Cc: Daniel J Blueman <daniel@numascale.com>
+Cc: Andreas Herrmann <herrmann.der.user@googlemail.com>
+---
+ arch/x86/pci/amd_bus.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
->  	help
->  	  Support for boards based on the Texas Instruments Keystone family of
->  	  SoCs.
-> --
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index e88f4c5..330dbfe 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -24,10 +24,11 @@ struct pci_hostbridge_probe {
+ };
+ 
+ static struct pci_hostbridge_probe pci_probes[] __initdata = {
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 },
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 },
+-	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 },
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
++	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 }, /* K8 */
++	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 }, /* Fam10h */
++	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 }, /* Fam10h */
++	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 }, /* Fam11h */
++	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1600 }, /* Fam15h */
+ };
+ 
+ #define RANGE_NUM 16
+@@ -113,6 +114,13 @@ static int __init early_fill_mp_bus_info(void)
+ 		info = alloc_pci_root_info(min_bus, max_bus, node, link);
+ 	}
+ 
++	/*
++	 * The following code is only supported until Fam11h.
++	 * Newer processors will depend on ACPI MCFG table instead.
++	 */
++	if (boot_cpu_data.x86 > 0x11)
++		return 0;
++
+ 	/* get the default node and link for left over res */
+ 	reg = read_pci_config(bus, slot, 0, 0x60);
+ 	def_node = (reg >> 8) & 0x07;
+-- 
+1.9.0
 
