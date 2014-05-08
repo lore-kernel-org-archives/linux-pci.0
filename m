@@ -1,87 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14202 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752471AbaEUMBq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 May 2014 08:01:46 -0400
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: davem@davemloft.net
-Cc: Alexander Gordeev <agordeev@redhat.com>, netdev@vger.kernel.org,
-	gospo@redhat.com, sassmann@redhat.com,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	linux-pci@vger.kernel.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: [net-next 14/15] i40evf: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 21 May 2014 05:01:12 -0700
-Message-Id: <1400673673-31626-15-git-send-email-jeffrey.t.kirsher@intel.com>
-In-Reply-To: <1400673673-31626-1-git-send-email-jeffrey.t.kirsher@intel.com>
-References: <1400673673-31626-1-git-send-email-jeffrey.t.kirsher@intel.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:63792 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755843AbaEHUtE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 16:49:04 -0400
+Received: by mail-ig0-f182.google.com with SMTP id uy17so305263igb.15
+        for <linux-pci@vger.kernel.org>; Thu, 08 May 2014 13:49:04 -0700 (PDT)
+Subject: [PATCH v3 3/4] sh/PCI: Pass GAPSPCI_DMA_BASE CPU & bus address to
+ dma_declare_coherent_memory()
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+	linux-sh@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	Magnus Damm <damm@opensource.se>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>
+Date: Thu, 08 May 2014 14:49:07 -0600
+Message-ID: <20140508204907.17877.4848.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexander Gordeev <agordeev@redhat.com>
+dma_declare_coherent_memory() needs both the CPU physical address and the
+bus address of the device memory.  They are the same on this platform, but
+in general we should use pcibios_resource_to_bus() to account for any
+address translation done by the PCI host bridge.
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+This makes no difference on Dreamcast, but is safer if the usage is copied
+to future drivers.
 
-Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Tested-by: Sibai Li <sibai.li@intel.com>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+CC: Magnus Damm <damm@opensource.se>
+CC: linux-sh@vger.kernel.org
 ---
- drivers/net/ethernet/intel/i40evf/i40evf_main.c | 31 +++++++++----------------
- 1 file changed, 11 insertions(+), 20 deletions(-)
+ arch/sh/drivers/pci/fixups-dreamcast.c |   18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/i40evf/i40evf_main.c b/drivers/net/ethernet/intel/i40evf/i40evf_main.c
-index 13989ef..6f6bd3f 100644
---- a/drivers/net/ethernet/intel/i40evf/i40evf_main.c
-+++ b/drivers/net/ethernet/intel/i40evf/i40evf_main.c
-@@ -1032,30 +1032,21 @@ i40evf_acquire_msix_vectors(struct i40evf_adapter *adapter, int vectors)
- 	 * Right now, we simply care about how many we'll get; we'll
- 	 * set them up later while requesting irq's.
- 	 */
--	while (vectors >= vector_threshold) {
--		err = pci_enable_msix(adapter->pdev, adapter->msix_entries,
--				      vectors);
--		if (!err) /* Success in acquiring all requested vectors. */
--			break;
--		else if (err < 0)
--			vectors = 0; /* Nasty failure, quit now */
--		else /* err == number of vectors we should try again with */
--			vectors = err;
--	}
--
--	if (vectors < vector_threshold) {
-+	err = pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
-+				    vector_threshold, vectors);
-+	if (err < 0) {
- 		dev_err(&adapter->pdev->dev, "Unable to allocate MSI-X interrupts.\n");
- 		kfree(adapter->msix_entries);
- 		adapter->msix_entries = NULL;
--		err = -EIO;
--	} else {
--		/* Adjust for only the vectors we'll use, which is minimum
--		 * of max_msix_q_vectors + NONQ_VECS, or the number of
--		 * vectors we were allocated.
--		 */
--		adapter->num_msix_vectors = vectors;
-+		return err;
- 	}
--	return err;
-+
-+	/* Adjust for only the vectors we'll use, which is minimum
-+	 * of max_msix_q_vectors + NONQ_VECS, or the number of
-+	 * vectors we were allocated.
-+	 */
-+	adapter->num_msix_vectors = err;
-+	return 0;
- }
+diff --git a/arch/sh/drivers/pci/fixups-dreamcast.c b/arch/sh/drivers/pci/fixups-dreamcast.c
+index d6cde700e316..f22127f966ce 100644
+--- a/arch/sh/drivers/pci/fixups-dreamcast.c
++++ b/arch/sh/drivers/pci/fixups-dreamcast.c
+@@ -31,6 +31,8 @@
+ static void gapspci_fixup_resources(struct pci_dev *dev)
+ {
+ 	struct pci_channel *p = dev->sysdata;
++	struct resource res;
++	struct pci_bus_region region;
  
- /**
--- 
-1.9.0
+ 	printk(KERN_NOTICE "PCI: Fixing up device %s\n", pci_name(dev));
+ 
+@@ -50,11 +52,21 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
+ 
+ 		/*
+ 		 * Redirect dma memory allocations to special memory window.
++		 *
++		 * If this GAPSPCI region were mapped by a BAR, the CPU
++		 * phys_addr_t would be pci_resource_start(), and the bus
++		 * address would be pci_bus_address(pci_resource_start()).
++		 * But apparently there's no BAR mapping it, so we just
++		 * "know" its CPU address is GAPSPCI_DMA_BASE.
+ 		 */
++		res.start = GAPSPCI_DMA_BASE;
++		res.end = GAPSPCI_DMA_BASE + GAPSPCI_DMA_SIZE - 1;
++		res.flags = IORESOURCE_MEM;
++		pcibios_resource_to_bus(dev, &region, &resource);
+ 		BUG_ON(!dma_declare_coherent_memory(&dev->dev,
+-						GAPSPCI_DMA_BASE,
+-						GAPSPCI_DMA_BASE,
+-						GAPSPCI_DMA_SIZE,
++						res.start,
++						region.start,
++						resource_size(&res),
+ 						DMA_MEMORY_MAP |
+ 						DMA_MEMORY_EXCLUSIVE));
+ 		break;
 
