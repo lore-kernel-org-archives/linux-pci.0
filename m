@@ -1,80 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
-	linux-pm@vger.kernel.org
-Subject: [RFC Patch Part1 V1 07/30] x86, ACPI, irq: enhance error handling in function acpi_register_gsi()
-Date: Fri, 16 May 2014 16:05:27 +0800
-Message-Id: <1400227550-5935-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: James Bottomley <jbottomley@parallels.com>
+To: "arnd@arndb.de" <arnd@arndb.de>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"rdunlap@infradead.org" <rdunlap@infradead.org>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"dwmw2@infradead.org" <dwmw2@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Subject: Re: [PATCH v3 1/4] DMA-API: Clarify physical/bus address distinction
+Date: Fri, 9 May 2014 14:09:31 +0000
+Message-ID: <1399644571.2166.1.camel@dabdike.int.hansenpartnership.com>
+References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	 <20140508204854.17877.59304.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	 <119388463.n2RtThRsle@wuerfel>
+In-Reply-To: <119388463.n2RtThRsle@wuerfel>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function mp_register_gsi() may return invalid GSI if error happens,
-so enhance acpi_register_gsi() to handle possible error cases.
+On Fri, 2014-05-09 at 08:12 +0200, Arnd Bergmann wrote:
+> On Thursday 08 May 2014 14:48:54 Bjorn Helgaas wrote:
+> > The DMA-API documentation sometimes refers to "physical addresses" when it
+> > really means "bus addresses."  Sometimes these are identical, but they may
+> > be different if the bridge leading to the bus performs address translation.
+> > Update the documentation to use "bus address" when appropriate.
+> > 
+> > Also, consistently capitalize "DMA", use parens with function names, use
+> > dev_printk() in examples, and reword a few sections for clarity.
+> > 
+> > No functional change; documentation changes only.
+> > 
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Looks great!
+> 
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+Yes, from me too (probably only patches 1-2, since that's only what I
+directly wrote originally); thanks for listening to the arguments and
+persevering.
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 6d65850f49e9..8b8ff786af12 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -97,6 +97,8 @@ static u32 isa_irq_to_gsi[NR_IRQS_LEGACY] __read_mostly = {
- 	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
- };
- 
-+#define	ACPI_INVALID_GSI		INT_MIN
-+
- static unsigned int gsi_to_irq(unsigned int gsi)
- {
- 	unsigned int irq = gsi + NR_IRQS_LEGACY;
-@@ -553,13 +555,13 @@ int (*acpi_suspend_lowlevel)(void);
-  */
- int acpi_register_gsi(struct device *dev, u32 gsi, int trigger, int polarity)
- {
--	unsigned int irq;
- 	unsigned int plat_gsi = gsi;
- 
- 	plat_gsi = (*__acpi_register_gsi)(dev, gsi, trigger, polarity);
--	irq = gsi_to_irq(plat_gsi);
-+	if (plat_gsi != ACPI_INVALID_GSI)
-+		return gsi_to_irq(plat_gsi);
- 
--	return irq;
-+	return -1;
- }
- EXPORT_SYMBOL_GPL(acpi_register_gsi);
- 
-@@ -1054,7 +1056,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
- 	ret = io_apic_set_pci_routing(dev, gsi_to_irq(gsi), &irq_attr);
- 	if (ret < 0)
--		gsi = INT_MIN;
-+		gsi = ACPI_INVALID_GSI;
- 
- 	return gsi;
- }
--- 
-1.7.10.4
+Acked-by: James Bottomley <jbottomley@Parallels.com>
+
+James
 
