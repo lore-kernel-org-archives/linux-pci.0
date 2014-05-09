@@ -1,78 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54817 "EHLO mga09.intel.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:38005 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934220AbaEFHEb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 May 2014 03:04:31 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+	id S1753422AbaEIL3w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 May 2014 07:29:52 -0400
+Message-ID: <536CBC00.6000709@ti.com>
+Date: Fri, 9 May 2014 16:59:04 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>
+CC: Marek Vasut <marex@denx.de>, <devicetree@vger.kernel.org>,
+	<balajitk@ti.com>, <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Jingoo Han <jg1.han@samsung.com>,
+	<linux-kernel@vger.kernel.org>, Mohit Kumar <mohit.kumar@st.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 06/21] iommu/vt-d: fix possible invalid memory access caused by free_dmar_iommu()
-Date: Tue,  6 May 2014 15:05:17 +0800
-Message-Id: <1399359932-28972-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+	<linux-omap@vger.kernel.org>, <rogerq@ti.com>
+Subject: Re: [PATCH 05/17] pci: host: pcie-dra7xx: add support for pcie-dra7xx
+ controller
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <4300084.bc6ByDTk7W@wuerfel> <5369F287.6000103@ti.com> <6485683.q96o7U6vf8@wuerfel>
+In-Reply-To: <6485683.q96o7U6vf8@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Static identity and virtual machine domains may be cached in
-iommu->domain_ids array after corresponding IOMMUs have been removed
-from domain->iommu_bmp. So we should check domain->iommu_bmp before
-decreasing domain->iommu_count in function free_dmar_iommu(), otherwise
-it may cause free of inuse domain data structure.
+Hi Arnd,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+On Wednesday 07 May 2014 03:00 PM, Arnd Bergmann wrote:
+> On Wednesday 07 May 2014 14:14:55 Kishon Vijay Abraham I wrote:
+>>>> +static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
+>>>> +{
+>>>> +    struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+>>>> +
+>>>> +    dra7xx_pcie_writel(dra7xx->base, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
+>>>> +                       ~INTERRUPTS);
+>>>> +    dra7xx_pcie_writel(dra7xx->base,
+>>>> +                       PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
+>>>> +    dra7xx_pcie_writel(dra7xx->base, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+>>>> +                       ~LEG_EP_INTERRUPTS & ~MSI);
+>>>> +
+>>>> +    if (IS_ENABLED(CONFIG_PCI_MSI))
+>>>> +            dra7xx_pcie_writel(dra7xx->base,
+>>>> +                               PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
+>>>> +    else
+>>>> +            dra7xx_pcie_writel(dra7xx->base,
+>>>> +                               PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
+>>>> +                               LEG_EP_INTERRUPTS);
+>>>
+>>> Doesn't this just enable one or the other? In general I'd assume you need
+>>> both INTx and MSI, at least if MSI is available.
+>>
+>> Not sure since the programming sequence in the TRM explicitly states either
+>> legacy interrupts or MSI interrupts should be enabled but not both.
+> 
+> Hmm, I think that means you can't have MSI at all. You have to support
+> legacy PCI devices that can't do MSI.
+> 
+> Do you know if you have a modern GIC implementation with MSI support
+> in these SoCs? It would be better anyway to use the GIC for doing
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 0ab0cd236b16..1f10fcd1c696 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -425,6 +425,8 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
- 				       struct device *dev);
- static void iommu_detach_dependent_devices(struct intel_iommu *iommu,
- 					   struct device *dev);
-+static int domain_detach_iommu(struct dmar_domain *domain,
-+			       struct intel_iommu *iommu);
- 
- #ifdef CONFIG_INTEL_IOMMU_DEFAULT_ON
- int dmar_disabled = 0;
-@@ -1467,8 +1469,7 @@ static int iommu_init_domains(struct intel_iommu *iommu)
- static void free_dmar_iommu(struct intel_iommu *iommu)
- {
- 	struct dmar_domain *domain;
--	int i, count;
--	unsigned long flags;
-+	int i;
- 
- 	if ((iommu->domains) && (iommu->domain_ids)) {
- 		for_each_set_bit(i, iommu->domain_ids, cap_ndoms(iommu->cap)) {
-@@ -1481,11 +1482,7 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
- 
- 			domain = iommu->domains[i];
- 			clear_bit(i, iommu->domain_ids);
--
--			spin_lock_irqsave(&domain->iommu_lock, flags);
--			count = --domain->iommu_count;
--			spin_unlock_irqrestore(&domain->iommu_lock, flags);
--			if (count == 0)
-+			if (domain_detach_iommu(domain, iommu) == 0)
- 				domain_exit(domain);
- 		}
- 	}
--- 
-1.7.10.4
+In DRA7 it is not there. I'm not sure in other platforms.
+> MSI, so you can just ignore the internal MSI controller here.
+> 
+>>>> +static int add_pcie_port(struct dra7xx_pcie *dra7xx,
+>>>> +                      struct platform_device *pdev)
+>>>> +{
+>>>> +    int ret;
+>>>> +    struct pcie_port *pp;
+>>>> +    struct resource *res;
+>>>> +    struct device *dev = &pdev->dev;
+>>>> +
+>>>> +    pp = &dra7xx->pp;
+>>>> +    pp->dev = dev;
+>>>> +    pp->ops = &dra7xx_pcie_host_ops;
+>>>> +
+>>>> +    spin_lock_init(&pp->conf_lock);
+>>>> +
+>>>> +    pp->irq = platform_get_irq(pdev, 1);
+>>>> +    if (pp->irq < 0) {
+>>>> +            dev_err(dev, "missing IRQ resource\n");
+>>>> +            return -EINVAL;
+>>>> +    }
+>>>>
+>>>
+>>> The binding does not list a mandatory "interrupts" property, so
+>>> this should not be treated as an error.
+>>
+>> actually the 'interrupts' property is documented in pci/designware-pcie.txt.
+> 
+> Hmm, but you don't seem to use it the same way as documented there.
+> I'm not sure what 'level interrupt, pulse interrupt, special interrupt'
+> in the parent binding are, but they don't seem to be the ones you use
+> here.
 
+Yeah. I'll update my Documentation. Thanks for pointing this out.
+
+Thanks
+Kishon
