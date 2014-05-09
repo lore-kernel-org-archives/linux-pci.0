@@ -1,94 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:34963 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932582AbaEPP2a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 May 2014 11:28:30 -0400
-Date: Fri, 16 May 2014 17:28:06 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Received: from mout.kundenserver.de ([212.227.126.131]:61073 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751055AbaEIJD3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 05:03:29 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: devicetree@vger.kernel.org, Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	sfi-devel@simplefirmware.org
-Subject: Re: [RFC Patch Part1 V1 00/30] use irqdomain to dynamically allocate
- IRQ for IOAPIC pin
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.02.1405161601060.4039@ionos.tec.linutronix.de>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+	Magnus Damm <damm@opensource.se>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: [PATCH v2] of/irq: provide int of_irq_parse_and_map_pci wrapper
+Date: Fri, 09 May 2014 11:03:11 +0200
+Message-ID: <5744457.bgUFy9g0ST@wuerfel>
+In-Reply-To: <1399624119.4833.3.camel@weser.hi.pengutronix.de>
+References: <4527717.yJh2gX3xCP@wuerfel> <1399624119.4833.3.camel@weser.hi.pengutronix.de>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Jiang,
+The pci-rcar driver is enabled for compile tests, and this has
+now shown that the driver cannot build without CONFIG_OF,
+following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
+interrupt mapping when possible":
 
-On Fri, 16 May 2014, Jiang Liu wrote:
+drivers/built-in.o: In function `rcar_pci_map_irq':
+:(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
 
-> On x86 platforms, IRQ number are statically allocated to IOAPIC pins at boot.
-> There are two issues with this design. First it causes trouble to IOAPIC
-> hotplug because we need to allocate a block of IRQ numbers for each IOAPIC.
-> Second it may waste IRQ nubmers even if some IOAPIC pins are not used because
-> IRQ numbers are statically assigned.
-> 
-> This patchset tries to enable dynamic IRQ number allocation for IOAPIC
-> by adopting the irqdomain framework, it solves the two issues mentioned
-> above. It also simplifies the IOAPIC driver by consolidating ways to
-> program IOAPIC pins with the irqdomain map interface.
-> 
-> We will enhance the IOAPIC driver core to support ACPI based IOAPIC hotplug
-> once the IOAPIC driver has been converted to irqdomain.
+As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
+supposed to build fine, which we can achieve if we make the
+declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
+and provide an empty inline function otherwise, as we do for
+a lot of other of interfaces.
 
-Thanks for tackling this!
+This lets us build the rcar_pci driver again without CONFIG_OF
+for build testing. All platforms using this driver select OF,
+so this doesn't change anything for the users.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <damm@opensource.se>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
+---
+v2: clarified commit text.
+
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 1a1f5ff..1e29bf4 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -7,13 +7,18 @@
+ struct pci_dev;
+ struct of_phandle_args;
+ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq);
+-int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
  
-> This patchset applies to v3.15-rc4-260-g38583f095c5a and has been tested
-
-That's a bit unfortunate, as there are conflicting changes in the tip
-tree irq/core branch. Can you please rebase on top of that.
-
-> TODO list:
-> 1) check whether it affects Xen or not
-> 
-> Patch 1-17 are trivial code improvements, bugfixes and preparation.
-
-Can you please move the bugfixes before the other changes, so we can
-pick them up independently from the outcome?
+ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
+ int of_pci_get_devfn(struct device_node *np);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
++#ifdef CONFIG_OF
++int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
++#else
++static inline int
++of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin) { return 0; }
++#endif
  
-> Patch 18-24 enable basic irqdomain support and IRQ number dynamic
-> allocation.
-> 
-> Patch 25-29 consoldate the way to program IOAPIC pins by using
-> irqdomain map() interface.
-> 
-> Patch 30 cleans up unused interfaces and functions in IOAPIC driver.
-> 
-> Tests and comments are warmly welcomed!
-
-I like the general approach, but we have now a mixture of legacy irq
-handling and irq domains. We really want to cleanup the legacy PIC no
-ioapic case as well. That will cleanup the code further.
-
-The other thing we discussed here: https://lkml.org/lkml/2014/5/7/901
-in several places of the thread is to move the vector allocation into
-a irqdomain with a generic matrix allocator as well. We have other use
-cases for this as well. It would be nice if you could look at that as
-well.
-
-Thanks,
-
-	tglx
-
-
-
+ #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+ int of_pci_msi_chip_add(struct msi_chip *chip);
 
