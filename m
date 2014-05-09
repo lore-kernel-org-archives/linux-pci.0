@@ -1,135 +1,247 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:58608 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933058AbaE3WMg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 18:12:36 -0400
-Received: by mail-ie0-f178.google.com with SMTP id rl12so2367119iec.37
-        for <linux-pci@vger.kernel.org>; Fri, 30 May 2014 15:12:35 -0700 (PDT)
-Date: Fri, 30 May 2014 16:12:32 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, alex.williamson@redhat.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 4/4] vfio/pci: Restore MSIx message prior to enabling
-Message-ID: <20140530221232.GG4607@google.com>
-References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1400468470-11262-5-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:13452 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932343AbaEIP3U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 May 2014 11:29:20 -0400
+Subject: [PATCH v2 08/15] iommu/amd: Use pci_find_dma_isolation_root() for
+ IOMMU groups
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>,
+	acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Fri, 09 May 2014 09:29:13 -0600
+Message-ID: <20140509152913.8321.70925.stgit@bling.home>
+In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
+References: <20140509151735.8321.22017.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1400468470-11262-5-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 19, 2014 at 01:01:10PM +1000, Gavin Shan wrote:
-> The MSIx vector table lives in device memory, which may be cleared as
-> part of a backdoor device reset. This is the case on the IBM IPR HBA
-> when the BIST is run on the device. When assigned to a QEMU guest,
-> the guest driver does a pci_save_state(), issues a BIST, then does a
-> pci_restore_state(). The BIST clears the MSIx vector table, but due
-> to the way interrupts are configured the pci_restore_state() does not
-> restore the vector table as expected. Eventually this results in an
-> EEH error on Power platforms when the device attempts to signal an
-> interrupt with the zero'd table entry.
-> 
-> Fix the problem by restoring the host cached MSI message prior to
-> enabling each vector.
-> 
-> Reported-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/vfio/pci/vfio_pci_intrs.c | 15 +++++++++++++++
->  1 file changed, 15 insertions(+)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-> index 9dd49c9..553212f 100644
-> --- a/drivers/vfio/pci/vfio_pci_intrs.c
-> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
-> @@ -16,6 +16,7 @@
->  #include <linux/device.h>
->  #include <linux/interrupt.h>
->  #include <linux/eventfd.h>
-> +#include <linux/msi.h>
->  #include <linux/pci.h>
->  #include <linux/file.h>
->  #include <linux/poll.h>
-> @@ -548,6 +549,20 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
->  		return PTR_ERR(trigger);
->  	}
->  
-> +	/*
-> +	 * The MSIx vector table resides in device memory which may be cleared
-> +	 * via backdoor resets. We don't allow direct access to the vector
-> +	 * table so even if a userspace driver attempts to save/restore around
-> +	 * such a reset it would be unsuccessful. To avoid this, restore the
-> +	 * cached value of the message prior to enabling.
-> +	 */
-> +	if (msix) {
-> +		struct msi_msg msg;
-> +
-> +		get_cached_msi_msg(irq, &msg);
-> +		write_msi_msg(irq, &msg);
-> +	}
+The IVRS tables provides aliases, but not to the extent now provided
+by PCI core with DMA alias support and pci_find_dma_isolation_root().
+The expectation is that the kernel and IVRS will produce the same
+result for topology based aliases while the kernel will also include
+device specific DMA quirks.  We therefore drop the AMD-specific IOMMU
+group discovery in favor of the common code.  This also allows us to
+drop tracking of the IOMMU group on the alias dev_data structure.
 
-I think this is pretty ugly.  Drivers should not be writing to the
-MSI-X vector table, so I don't really want to export these internal
-implementation functions if we can avoid it.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/iommu/amd_iommu.c       |  158 ++-------------------------------------
+ drivers/iommu/amd_iommu_types.h |    1 
+ 2 files changed, 10 insertions(+), 149 deletions(-)
 
-I chatted with Alex about this last week on IRC, trying to understand
-what's going on here, but I'm afraid I didn't get very far.
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index c949520..3d58de4 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -46,7 +46,6 @@
+ #include "amd_iommu_proto.h"
+ #include "amd_iommu_types.h"
+ #include "irq_remapping.h"
+-#include "pci.h"
+ 
+ #define CMD_SET_TYPE(cmd, t) ((cmd)->data[1] |= ((t) << 28))
+ 
+@@ -133,9 +132,6 @@ static void free_dev_data(struct iommu_dev_data *dev_data)
+ 	list_del(&dev_data->dev_data_list);
+ 	spin_unlock_irqrestore(&dev_data_list_lock, flags);
+ 
+-	if (dev_data->group)
+-		iommu_group_put(dev_data->group);
+-
+ 	kfree(dev_data);
+ }
+ 
+@@ -264,107 +260,10 @@ static bool check_device(struct device *dev)
+ 	return true;
+ }
+ 
+-static struct pci_bus *find_hosted_bus(struct pci_bus *bus)
+-{
+-	while (!bus->self) {
+-		if (!pci_is_root_bus(bus))
+-			bus = bus->parent;
+-		else
+-			return ERR_PTR(-ENODEV);
+-	}
+-
+-	return bus;
+-}
+-
+-#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
+-
+-static struct pci_dev *get_isolation_root(struct pci_dev *pdev)
+-{
+-	struct pci_dev *dma_pdev = pdev;
+-
+-	/* Account for quirked devices */
+-	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
+-
+-	/*
+-	 * If it's a multifunction device that does not support our
+-	 * required ACS flags, add to the same group as lowest numbered
+-	 * function that also does not suport the required ACS flags.
+-	 */
+-	if (dma_pdev->multifunction &&
+-	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
+-		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
+-
+-		for (i = 0; i < 8; i++) {
+-			struct pci_dev *tmp;
+-
+-			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
+-			if (!tmp)
+-				continue;
+-
+-			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
+-				swap_pci_ref(&dma_pdev, tmp);
+-				break;
+-			}
+-			pci_dev_put(tmp);
+-		}
+-	}
+-
+-	/*
+-	 * Devices on the root bus go through the iommu.  If that's not us,
+-	 * find the next upstream device and test ACS up to the root bus.
+-	 * Finding the next device may require skipping virtual buses.
+-	 */
+-	while (!pci_is_root_bus(dma_pdev->bus)) {
+-		struct pci_bus *bus = find_hosted_bus(dma_pdev->bus);
+-		if (IS_ERR(bus))
+-			break;
+-
+-		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
+-			break;
+-
+-		swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
+-	}
+-
+-	return dma_pdev;
+-}
+-
+-static int use_pdev_iommu_group(struct pci_dev *pdev, struct device *dev)
+-{
+-	struct iommu_group *group = iommu_group_get(&pdev->dev);
+-	int ret;
+-
+-	if (!group) {
+-		group = iommu_group_alloc();
+-		if (IS_ERR(group))
+-			return PTR_ERR(group);
+-
+-		WARN_ON(&pdev->dev != dev);
+-	}
+-
+-	ret = iommu_group_add_device(group, dev);
+-	iommu_group_put(group);
+-	return ret;
+-}
+-
+-static int use_dev_data_iommu_group(struct iommu_dev_data *dev_data,
+-				    struct device *dev)
+-{
+-	if (!dev_data->group) {
+-		struct iommu_group *group = iommu_group_alloc();
+-		if (IS_ERR(group))
+-			return PTR_ERR(group);
+-
+-		dev_data->group = group;
+-	}
+-
+-	return iommu_group_add_device(dev_data->group, dev);
+-}
+-
+ static int init_iommu_group(struct device *dev)
+ {
+-	struct iommu_dev_data *dev_data;
+ 	struct iommu_group *group;
+-	struct pci_dev *dma_pdev;
++	struct pci_dev *pdev;
+ 	int ret;
+ 
+ 	group = iommu_group_get(dev);
+@@ -373,58 +272,21 @@ static int init_iommu_group(struct device *dev)
+ 		return 0;
+ 	}
+ 
+-	dev_data = find_dev_data(get_device_id(dev));
+-	if (!dev_data)
+-		return -ENOMEM;
+-
+-	if (dev_data->alias_data) {
+-		u16 alias;
+-		struct pci_bus *bus;
++	pdev = pci_find_dma_isolation_root(to_pci_dev(dev));
+ 
+-		if (dev_data->alias_data->group)
+-			goto use_group;
+-
+-		/*
+-		 * If the alias device exists, it's effectively just a first
+-		 * level quirk for finding the DMA source.
+-		 */
+-		alias = amd_iommu_alias_table[dev_data->devid];
+-		dma_pdev = pci_get_bus_and_slot(alias >> 8, alias & 0xff);
+-		if (dma_pdev) {
+-			dma_pdev = get_isolation_root(dma_pdev);
+-			goto use_pdev;
+-		}
+-
+-		/*
+-		 * If the alias is virtual, try to find a parent device
+-		 * and test whether the IOMMU group is actualy rooted above
+-		 * the alias.  Be careful to also test the parent device if
+-		 * we think the alias is the root of the group.
+-		 */
+-		bus = pci_find_bus(0, alias >> 8);
+-		if (!bus)
+-			goto use_group;
++	group = iommu_group_get(&pdev->dev);
+ 
+-		bus = find_hosted_bus(bus);
+-		if (IS_ERR(bus) || !bus->self)
+-			goto use_group;
++	if (!group) {
++		group = iommu_group_alloc();
++		if (IS_ERR(group))
++			return PTR_ERR(group);
++	}
+ 
+-		dma_pdev = get_isolation_root(pci_dev_get(bus->self));
+-		if (dma_pdev != bus->self || (dma_pdev->multifunction &&
+-		    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)))
+-			goto use_pdev;
++	ret = iommu_group_add_device(group, dev);
+ 
+-		pci_dev_put(dma_pdev);
+-		goto use_group;
+-	}
++	iommu_group_put(group);
+ 
+-	dma_pdev = get_isolation_root(pci_dev_get(to_pci_dev(dev)));
+-use_pdev:
+-	ret = use_pdev_iommu_group(dma_pdev, dev);
+-	pci_dev_put(dma_pdev);
+ 	return ret;
+-use_group:
+-	return use_dev_data_iommu_group(dev_data->alias_data, dev);
+ }
+ 
+ static int iommu_init_device(struct device *dev)
+diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
+index f1a5abf..7277a20 100644
+--- a/drivers/iommu/amd_iommu_types.h
++++ b/drivers/iommu/amd_iommu_types.h
+@@ -432,7 +432,6 @@ struct iommu_dev_data {
+ 	struct iommu_dev_data *alias_data;/* The alias dev_data */
+ 	struct protection_domain *domain; /* Domain the device is bound to */
+ 	atomic_t bind;			  /* Domain attach reference count */
+-	struct iommu_group *group;	  /* IOMMU group for virtual aliases */
+ 	u16 devid;			  /* PCI Device ID */
+ 	bool iommu_v2;			  /* Device can make use of IOMMUv2 */
+ 	bool passthrough;		  /* Default for device is pt_domain */
 
-I think I understand what happens when there's no virtualization
-involved.  The driver enables MSI-X and writes the vector table via
-this path:
-
-    pci_enable_msix
-      msix_capability_init
-	arch_setup_msi_irqs
-	  native_setup_msi_irqs		# .setup_msi_irqs (on x86)
-	    setup_msi_irq
-	      write_msi_msg
-		__write_msi_msg		# write vector table
-
-When a device is reset, its MSI-X vector table is cleared.  The type
-of reset (FLR, "backdoor", etc.) doesn't really matter.
-
-After a device reset, the driver would use this path to restore the
-vector table:
-
-    pci_restore_state
-      pci_restore_msi_state
-        __pci_restore_msix_state
-          arch_restore_msi_irqs
-            default_restore_msi_irqs	# .restore_msi_irqs (on x86)
-              default_restore_msi_irq
-                write_msi_msg
-                  __write_msi_msg	# write vector table
-
-This rewrites the MSI-X vector table (it doesn't use any data that was
-saved by pci_save_state(), so it's not really a "restore" in that
-sense; it writes the vector table from scratch based on the data
-structures maintained by the MSI core).
-
-If the same driver is running in a qemu guest, it still calls
-pci_enable_msix() and pci_restore_state(), but apparently the restore
-path doesn't work.  Alex mentioned that qemu virtualizes the vector
-table, so I assume it traps the writel() to the vector table when
-enabling MSI-X?  And I assume qemu would also trap the writel() in the
-restore path, but it sounded like it ignores the write because we're
-writing the same data qemu believes to be there?
-
-I'd like to understand more details about how those writel()s
-performed by the guest kernel are handled.  Alex mentioned that the
-vector table is inaccessible to the guest, and I see code in
-vfio_pci_bar_rw() that looks like it excludes the table area, so I
-assume that is involved somehow, but I don't know how to connect the
-dots.  Obviously the enable path must be handled differently from the
-restore path somehow, because if the enable used vfio_pci_bar_rw(),
-that write would just be dropped, too, and it's not.
-
->  	ret = request_irq(irq, vfio_msihandler, 0,
->  			  vdev->ctx[vector].name, trigger);
->  	if (ret) {
-> -- 
-> 1.8.3.2
-> 
