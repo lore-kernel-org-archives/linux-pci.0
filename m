@@ -1,53 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:33789 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933023AbaE3PxR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 11:53:17 -0400
-Received: by mail-ig0-f181.google.com with SMTP id h3so987323igd.14
-        for <linux-pci@vger.kernel.org>; Fri, 30 May 2014 08:53:17 -0700 (PDT)
-Date: Fri, 30 May 2014 09:53:14 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sachin Kamat <sachin.kamat@linaro.org>
-Cc: linux-pci@vger.kernel.org, r65037@freescale.com,
-	shawn.guo@linaro.org, Sean Cross <xobs@kosagi.com>
-Subject: Re: [PATCH 1/1] PCI: imx6: Annotate imx6_add_pcie_port with __init
-Message-ID: <20140530155314.GD4607@google.com>
-References: <1401431928-15096-1-git-send-email-sachin.kamat@linaro.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 9 May 2014 04:50:14 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v3 2/4] DMA-API: Change dma_declare_coherent_memory() CPU
+ address to phys_addr_t
+Message-ID: <20140509025014.GE21085@kroah.com>
+References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140508204900.17877.3108.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401431928-15096-1-git-send-email-sachin.kamat@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140508204900.17877.3108.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 30, 2014 at 12:08:48PM +0530, Sachin Kamat wrote:
-> imx6_add_pcie_port is called from probe which is annotated with __init.
-> imx6_add_pcie_port calls dw_pcie_host_init which is also annotated with
-> __init. Thus it makes sense to annotate imx6_add_pcie_port with __init.
+On Thu, May 08, 2014 at 02:49:00PM -0600, Bjorn Helgaas wrote:
+> dma_declare_coherent_memory() takes two addresses for a region of memory: a
+> "bus_addr" and a "device_addr".  I think the intent is that "bus_addr" is
+> the physical address a *CPU* would use to access the region, and
+> "device_addr" is the bus address the *device* would use to address the
+> region.
 > 
-> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-> Cc: Sean Cross <xobs@kosagi.com>
+> Rename "bus_addr" to "phys_addr" and change its type to phys_addr_t.
+> Most callers already supply a phys_addr_t for this argument.  The others
+> supply a 32-bit integer (a constant, unsigned int, or __u32) and need no
+> change.
+> 
+> Use "unsigned long", not phys_addr_t, to hold PFNs.
+> 
+> No functional change (this could theoretically fix a truncation in a config
+> with 32-bit dma_addr_t and 64-bit phys_addr_t, but I don't think there are
+> any such cases involving this code).
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-This looks correct to me, so I put it on a pci/host-imx6 branch to squeeze
-it in for v3.16.  Richard, Shawn, let me know (soonish, since the merge
-window may open next week) if you object.
-
-> ---
->  drivers/pci/host/pci-imx6.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index ee082509b0ba..facbf8faa353 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -487,7 +487,7 @@ static struct pcie_host_ops imx6_pcie_host_ops = {
->  	.host_init = imx6_pcie_host_init,
->  };
->  
-> -static int imx6_add_pcie_port(struct pcie_port *pp,
-> +static int __init imx6_add_pcie_port(struct pcie_port *pp,
->  			struct platform_device *pdev)
->  {
->  	int ret;
-> -- 
-> 1.7.9.5
-> 
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
