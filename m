@@ -1,130 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:56976 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:13994 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934243AbaEFHEk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 May 2014 03:04:40 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 11/21] iommu/vt-d: introduce helper domain_pfn_within_range() to simplify code
-Date: Tue,  6 May 2014 15:05:22 +0800
-Message-Id: <1399359932-28972-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1756946AbaEIP2f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 May 2014 11:28:35 -0400
+Subject: [PATCH v2 01/15] PCI: Add DMA alias iterator
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Fri, 09 May 2014 09:28:31 -0600
+Message-ID: <20140509152831.8321.20833.stgit@bling.home>
+In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
+References: <20140509151735.8321.22017.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce helper function domain_pfn_within_range() to simplify code
-and improve readability.
+In a mixed PCI/PCI-X/PCI-e topology, bridges can take ownership of
+transactions, replacing the original requester ID with their own.
+Sometimes we just want to know the resulting device or resulting
+alias, sometimes we want each step in the chain.  This iterator
+allows either usage.  When an endpoint is connected via an unbroken
+chain of PCIe switches and root ports, it has no alias and its
+requester ID is visible to the root bus.  When PCI/X get in the way,
+we pick up aliases for bridges.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+The reason why we potentially care about each step in the path is
+because of PCI-X.  PCI-X has the concept of a requester ID, but
+bridges may or may not take ownership of various types of
+transactions.  We therefore leave it to the consumer of this function
+to prune out what they don't care about rather than attempt to flatten
+the alias ourselves.
+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/iommu/intel-iommu.c |   30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+ drivers/pci/search.c |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    4 +++
+ 2 files changed, 74 insertions(+)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index cf083c8a223e..7b54f4a08bb9 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -549,6 +549,14 @@ static inline int domain_type_is_vm_or_si(struct dmar_domain *domain)
- 				DOMAIN_FLAG_STATIC_IDENTITY);
- }
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 4a1b972..5601cdb 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -18,6 +18,76 @@ DECLARE_RWSEM(pci_bus_sem);
+ EXPORT_SYMBOL_GPL(pci_bus_sem);
  
-+static inline int domain_pfn_supported(struct dmar_domain *domain,
-+				       unsigned long pfn)
+ /*
++ * pci_for_each_dma_alias - Iterate over DMA aliases for a device
++ * @pdev: starting downstream device
++ * @fn: function to call for each alias
++ * @data: opaque data to pass to @fn
++ *
++ * Starting @pdev, walk up the bus calling @fn for each possible alias
++ * of @pdev at the root bus.
++ */
++int pci_for_each_dma_alias(struct pci_dev *pdev,
++			   int (*fn)(struct pci_dev *pdev,
++				     u16 alias, void *data), void *data)
 +{
-+	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
++	struct pci_bus *bus;
++	int ret;
 +
-+	return !(addr_width < BITS_PER_LONG && pfn >> addr_width);
++	ret = fn(pdev, PCI_DEVID(pdev->bus->number, pdev->devfn), data);
++	if (ret)
++		return ret;
++
++	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
++		struct pci_dev *tmp;
++
++		/* Skip virtual buses */
++		if (!bus->self)
++			continue;
++
++		tmp = bus->self;
++
++		/*
++		 * PCIe-to-PCI/X bridges alias transactions from downstream
++		 * devices using the subordinate bus number (PCI Express to
++		 * PCI/PCI-X Bridge Spec, rev 1.0, sec 2.3).  For all cases
++		 * where the upstream bus is PCI/X we alias to the bridge
++		 * (there are various conditions in the previous reference
++		 * where the bridge may take ownership of transactions, even
++		 * when the secondary interface is PCI-X).
++		 */
++		if (pci_is_pcie(tmp)) {
++			switch (pci_pcie_type(tmp)) {
++			case PCI_EXP_TYPE_ROOT_PORT:
++			case PCI_EXP_TYPE_UPSTREAM:
++			case PCI_EXP_TYPE_DOWNSTREAM:
++				continue;
++			case PCI_EXP_TYPE_PCI_BRIDGE:
++				ret = fn(tmp,
++					 PCI_DEVID(tmp->subordinate->number,
++						   PCI_DEVFN(0, 0)), data);
++				if (ret)
++					return ret;
++				continue;
++			case PCI_EXP_TYPE_PCIE_BRIDGE:
++				ret = fn(tmp,
++					 PCI_DEVID(tmp->bus->number,
++						   tmp->devfn), data);
++				if (ret)
++					return ret;
++				continue;
++			}
++		} else {
++			ret = fn(tmp, PCI_DEVID(tmp->bus->number, tmp->devfn),
++				 data);
++			if (ret)
++				return ret;
++		}
++	}
++
++	return ret;
 +}
 +
- static int __iommu_calculate_agaw(struct intel_iommu *iommu, int max_gaw)
- {
- 	unsigned long sagaw;
-@@ -822,14 +830,13 @@ out:
- static struct dma_pte *pfn_to_dma_pte(struct dmar_domain *domain,
- 				      unsigned long pfn, int *target_level)
- {
--	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
- 	struct dma_pte *parent, *pte = NULL;
- 	int level = agaw_to_level(domain->agaw);
- 	int offset;
++/*
+  * find the upstream PCIe-to-PCI bridge of a PCI device
+  * if the device is PCIE, return NULL
+  * if the device isn't connected to a PCIe bridge (that is its parent is a
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aab57b4..14b074b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1795,6 +1795,10 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
+ }
+ #endif
  
- 	BUG_ON(!domain->pgd);
- 
--	if (addr_width < BITS_PER_LONG && pfn >> addr_width)
-+	if (!domain_pfn_supported(domain, pfn))
- 		/* Address beyond IOMMU's addressing capabilities. */
- 		return NULL;
- 
-@@ -914,12 +921,11 @@ static void dma_pte_clear_range(struct dmar_domain *domain,
- 				unsigned long start_pfn,
- 				unsigned long last_pfn)
- {
--	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
- 	unsigned int large_page = 1;
- 	struct dma_pte *first_pte, *pte;
- 
--	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
--	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
-+	BUG_ON(!domain_pfn_supported(domain, start_pfn));
-+	BUG_ON(!domain_pfn_supported(domain, last_pfn));
- 	BUG_ON(start_pfn > last_pfn);
- 
- 	/* we don't need lock here; nobody else touches the iova range */
-@@ -980,10 +986,8 @@ static void dma_pte_free_pagetable(struct dmar_domain *domain,
- 				   unsigned long start_pfn,
- 				   unsigned long last_pfn)
- {
--	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
--
--	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
--	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
-+	BUG_ON(!domain_pfn_supported(domain, start_pfn));
-+	BUG_ON(!domain_pfn_supported(domain, last_pfn));
- 	BUG_ON(start_pfn > last_pfn);
- 
- 	dma_pte_clear_range(domain, start_pfn, last_pfn);
-@@ -1085,11 +1089,10 @@ struct page *domain_unmap(struct dmar_domain *domain,
- 			  unsigned long start_pfn,
- 			  unsigned long last_pfn)
- {
--	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
- 	struct page *freelist = NULL;
- 
--	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
--	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
-+	BUG_ON(!domain_pfn_supported(domain, start_pfn));
-+	BUG_ON(!domain_pfn_supported(domain, last_pfn));
- 	BUG_ON(start_pfn > last_pfn);
- 
- 	/* we don't need lock here; nobody else touches the iova range */
-@@ -1993,12 +1996,11 @@ static int __domain_mapping(struct dmar_domain *domain, unsigned long iov_pfn,
- {
- 	struct dma_pte *first_pte = NULL, *pte = NULL;
- 	phys_addr_t uninitialized_var(pteval);
--	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
- 	unsigned long sg_res;
- 	unsigned int largepage_lvl = 0;
- 	unsigned long lvl_pages = 0;
- 
--	BUG_ON(addr_width < BITS_PER_LONG && (iov_pfn + nr_pages - 1) >> addr_width);
-+	BUG_ON(!domain_pfn_supported(domain, iov_pfn + nr_pages - 1));
- 
- 	if ((prot & (DMA_PTE_READ|DMA_PTE_WRITE)) == 0)
- 		return -EINVAL;
--- 
-1.7.10.4
++int pci_for_each_dma_alias(struct pci_dev *pdev,
++			   int (*fn)(struct pci_dev *pdev,
++				     u16 alias, void *data), void *data);
++
+ /**
+  * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+  * @pdev: the PCI device
 
