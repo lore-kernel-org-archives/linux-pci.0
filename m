@@ -1,182 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:62983 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752710AbaE0ILo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 May 2014 04:11:44 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:50090 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753451AbaEIIzo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 04:55:44 -0400
+Message-ID: <1399625667.4833.6.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH] of/irq: provide int of_irq_parse_and_map_pci wrapper
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: devicetree@vger.kernel.org, Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V3 30/37] x86, irq: clean up unused IOAPIC interface
-Date: Tue, 27 May 2014 16:08:05 +0800
-Message-Id: <1401178092-1228-31-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+	Magnus Damm <damm@opensource.se>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org
+Date: Fri, 09 May 2014 10:54:27 +0200
+In-Reply-To: <4975430.zMeeu7d2Xc@wuerfel>
+References: <4527717.yJh2gX3xCP@wuerfel>
+	 <1399624119.4833.3.camel@weser.hi.pengutronix.de>
+	 <4975430.zMeeu7d2Xc@wuerfel>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted all x86 platforms to use the common irqdomain map
-interface. There's no caller of io_apic_set_pci_routing(),
-setup_IO_APIC_irq_extra() and io_apic_setup_irq_pin_once() any more,
-so kill them.
+Am Freitag, den 09.05.2014, 10:45 +0200 schrieb Arnd Bergmann:
+> On Friday 09 May 2014 10:28:39 Lucas Stach wrote:
+> > Am Freitag, den 09.05.2014, 08:58 +0200 schrieb Arnd Bergmann:
+> > > The pci-rcar driver is enabled for compile tests, and this has
+> > > now shown that the driver cannot build without CONFIG_OF,
+> > > following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
+> > > interrupt mapping when possible":
+> > > 
+> > > drivers/built-in.o: In function `rcar_pci_map_irq':
+> > > :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
+> > > 
+> > > As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
+> > > supposed to build fine, which we can achieve if we make the
+> > > declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
+> > > and provide an empty inline function otherwise, as we do for
+> > > a lot of other of interfaces.
+> > > 
+> > > This lets us build the rcar_pci driver again without CONFIG_OF,
+> > > which won't work but give us compile time coverage.
+> > > 
+> > This part of the commit message is confusing. The driver is explicitly
+> > written to fall back to a platform irq when OF interrupt mapping doesn't
+> > work (return 0 or error), to keep non DT enabled boards working.
+> > 
+> > I hadn't thought of the compile time dependency, so thanks for fixing
+> > this up.
+> 
+> I thought it was meant to keep old DTBs working. AFAIK, there is no
+> legacy board file support for rcar-gen2, so we don't actually have to
+> worry about that.
+> 
+I haven't watched closely, but at the time of writing the patch the were
+some board files in flight which used the rcar-pci.  All I wanted to say
+is that with your patch applied things continue to work, at least at the
+same level as before my change, but I really don't care too much about
+the details.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    9 ------
- arch/x86/kernel/apic/io_apic.c |   70 ----------------------------------------
- 2 files changed, 79 deletions(-)
-
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 6d7a856ae045..073358c12d90 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -147,9 +147,6 @@ extern int ioapic_dynirq_base;
- 
- struct io_apic_irq_attr;
- struct irq_cfg;
--extern int io_apic_set_pci_routing(struct device *dev, int irq,
--		 struct io_apic_irq_attr *irq_attr);
--extern void setup_IO_APIC_irq_extra(u32 gsi);
- extern void ioapic_insert_resources(void);
- 
- extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
-@@ -161,8 +158,6 @@ extern void native_compose_msi_msg(struct pci_dev *pdev,
- 				   unsigned int irq, unsigned int dest,
- 				   struct msi_msg *msg, u8 hpet_id);
- extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
--extern int io_apic_setup_irq_pin_once(unsigned int irq, int node,
--				      struct io_apic_irq_attr *attr);
- 
- extern int save_ioapic_entries(void);
- extern void mask_ioapic_entries(void);
-@@ -235,10 +230,6 @@ static inline int mp_find_ioapic(u32 gsi) { return 0; }
- static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
- static inline int mp_map_gsi_to_irq(u32 gsi, unsigned int flags) { return gsi; }
- 
--struct io_apic_irq_attr;
--static inline int io_apic_set_pci_routing(struct device *dev, int irq,
--		 struct io_apic_irq_attr *irq_attr) { return 0; }
--
- static inline int save_ioapic_entries(void)
- {
- 	return -ENOMEM;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 6bb3485693dc..25a2877a5788 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -111,7 +111,6 @@ static struct ioapic {
- 	struct irq_domain *irqdomain;
- 	ioapic_create_domain_fn irqdomain_cb;
- 	void *irqdomain_arg;
--	DECLARE_BITMAP(pin_programmed, MP_MAX_IOAPIC_PIN + 1);
- } ioapics[MAX_IO_APICS];
- 
- #define mpc_ioapic_ver(ioapic_idx)	ioapics[ioapic_idx].mp_config.apicver
-@@ -1518,38 +1517,6 @@ static void __init setup_IO_APIC_irqs(void)
- }
- 
- /*
-- * for the gsi that is not in first ioapic
-- * but could not use acpi_register_gsi()
-- * like some special sci in IBM x3330
-- */
--void setup_IO_APIC_irq_extra(u32 gsi)
--{
--	int ioapic_idx = 0, pin, idx, irq, node = cpu_to_node(0);
--	struct io_apic_irq_attr attr;
--
--	/*
--	 * Convert 'gsi' to 'ioapic.pin'.
--	 */
--	ioapic_idx = mp_find_ioapic(gsi);
--	if (ioapic_idx < 0)
--		return;
--
--	pin = mp_find_ioapic_pin(ioapic_idx, gsi);
--	idx = find_irq_entry(ioapic_idx, pin, mp_INT);
--	if (idx == -1)
--		return;
--
--	irq = pin_2_irq(idx, ioapic_idx, pin, IOAPIC_MAP_ALLOC);
--	if (irq < 0 || mp_init_irq_at_boot(ioapic_idx, irq))
--		return;
--
--	set_io_apic_irq_attr(&attr, ioapic_idx, pin, irq_trigger(idx),
--			     irq_polarity(idx));
--
--	io_apic_setup_irq_pin_once(irq, node, &attr);
--}
--
--/*
-  * Set up the timer pin, possibly with the 8259A-master behind.
-  */
- static void __init setup_timer_IRQ0_pin(unsigned int ioapic_idx,
-@@ -3436,27 +3403,6 @@ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
- 	return ret;
- }
- 
--int io_apic_setup_irq_pin_once(unsigned int irq, int node,
--			       struct io_apic_irq_attr *attr)
--{
--	unsigned int ioapic_idx = attr->ioapic, pin = attr->ioapic_pin;
--	int ret;
--	struct IO_APIC_route_entry orig_entry;
--
--	/* Avoid redundant programming */
--	if (test_bit(pin, ioapics[ioapic_idx].pin_programmed)) {
--		pr_debug("Pin %d-%d already programmed\n", mpc_ioapic_id(ioapic_idx), pin);
--		orig_entry = ioapic_read_entry(attr->ioapic, pin);
--		if (attr->trigger == orig_entry.trigger && attr->polarity == orig_entry.polarity)
--			return 0;
--		return -EBUSY;
--	}
--	ret = io_apic_setup_irq_pin(irq, node, attr);
--	if (!ret)
--		set_bit(pin, ioapics[ioapic_idx].pin_programmed);
--	return ret;
--}
--
- static int __init io_apic_get_redir_entries(int ioapic)
- {
- 	union IO_APIC_reg_01	reg_01;
-@@ -3503,22 +3449,6 @@ int __init arch_probe_nr_irqs(void)
- 	return NR_IRQS_LEGACY;
- }
- 
--int io_apic_set_pci_routing(struct device *dev, int irq,
--			    struct io_apic_irq_attr *irq_attr)
--{
--	int node;
--
--	if (!IO_APIC_IRQ(irq)) {
--		apic_printk(APIC_QUIET,KERN_ERR "IOAPIC[%d]: Invalid reference to IRQ 0\n",
--			    irq_attr->ioapic);
--		return -EINVAL;
--	}
--
--	node = dev ? dev_to_node(dev) : cpu_to_node(0);
--
--	return io_apic_setup_irq_pin_once(irq, node, irq_attr);
--}
--
- #ifdef CONFIG_X86_32
- static int __init io_apic_get_unique_id(int ioapic, int apic_id)
- {
+Regards,
+Lucas
 -- 
-1.7.10.4
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
