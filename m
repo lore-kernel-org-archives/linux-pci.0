@@ -1,81 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:36965 "EHLO arroyo.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43642 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751615AbaE0Qrg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 May 2014 12:47:36 -0400
-Message-ID: <5384C17E.5060806@ti.com>
-Date: Tue, 27 May 2014 12:46:54 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+	id S932217AbaEIP27 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 May 2014 11:28:59 -0400
+Subject: [PATCH v2 05/15] PCI: Quirk pci_for_each_dma_alias() for bridges
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Fri, 09 May 2014 09:28:55 -0600
+Message-ID: <20140509152855.8321.78358.stgit@bling.home>
+In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
+References: <20140509151735.8321.22017.stgit@bling.home>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 3/5] phy: pci serdes phy driver for keystone
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <9550746.D1ri3H0uvi@wuerfel> <537F81D8.2080005@ti.com> <9828919.7tZBgbvqj4@wuerfel>
-In-Reply-To: <9828919.7tZBgbvqj4@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/23/2014 3:23 PM, Arnd Bergmann wrote:
-> On Friday 23 May 2014 13:14:00 Murali Karicheri wrote:
->> On 5/15/2014 12:14 PM, Arnd Bergmann wrote:
->>> On Thursday 15 May 2014 12:01:30 Murali Karicheri wrote:
->>>> +static struct serdes_config ks_100mhz_pcie_5gbps_serdes[] = {
->>>> +       {0x0000, 0x00000800, 0x0000ff00},
->>>> +       {0x0060, 0x00041c5c, 0x00ffffff},
->>>> +       {0x0064, 0x0343c700, 0xffffff00},
->>>> +       {0x006c, 0x00000012, 0x000000ff},
->>>> +       {0x0068, 0x00070000, 0x00ff0000},
->>>> +       {0x0078, 0x0000c000, 0x0000ff00},
->>> It looks like the PHY is generic, but the configuration above is
->>> PCI specific. If this is true, you should have #phy-cells=<1>
->>> and document the possible modes, adding a lookup table here to
->>> pick the configuration based on the argument. It's fine to just
->>> implement pcie-5ghz initially, but the binding should list all
->>> the modes that the PHY can support.
->> The PCIE name needs to be dropped and as you correctly guessed, this SERDES
->> is generic.
-> Ok, good.
->
->>> Also, please list the exact name of the phy if you can find it
->>> out. You mention that you don't know the register descriptions,
->>> but you should at least be able to let us know what phy this
->>> is, in case some other SoC reuses the same thing.
->> Unfortunately there is a NDA restriction that prevents us from using the
->> actual Phy name and keystone phy is the name what we can usel at the
->> moment. I am checking
->> this with our IP team and if original name can  be used, I will update
->> the driver to reflect the same.
-> Can you please check the phy drivers that we already have in linux-next
-> to see if any of those are for the same hardware then?
->
-> I guess it's our best hope to catch duplications by inspecting all
-> other phy drivers as they get merged then.
->
-> 	Arnd
-Arnd,
+Several PCIe-to-PCI bridges fail to provide a PCIe capability, causing
+us to handle them as conventional PCI devices.  In some cases, this
+may be correct, in others it's not.  Add a dev_flag bit to identify
+devices to be handled as standard PCIe-to-PCI bridges.
 
-I have checked the register set of the following drivers under 
-drivers/phy from the
-master branch (v3.15-rc6) using the registers set available with us 
-internally and
-I can't find a match.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/search.c |   10 ++++++++--
+ include/linux/pci.h  |    2 ++
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-phy-exynos5250-sata.c  phy-exynos-mipi-video.c  phy-omap-usb2.c 
-phy-sun4i-usb.c
-phy-xgene.c phy-exynos4210-usb2.c  phy-exynos5250-usb2.c phy-mvebu-sata.c
-phy-samsung-usb2.c  phy-ti-pipe3.c phy-bcm-kona-usb2.c phy-exynos4x12-usb2.c
-  phy-exynos-dp-video.c  phy-omap-control.c  phy-twl4030-usb.c
-
-So there is no duplication.
-
-Murali
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index ad698b2..dab4561 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -98,8 +98,14 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 				continue;
+ 			}
+ 		} else {
+-			ret = fn(tmp, PCI_DEVID(tmp->bus->number, tmp->devfn),
+-				 data);
++			if (tmp->dev_flags & PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS)
++				ret = fn(tmp,
++					 PCI_DEVID(tmp->subordinate->number,
++						   PCI_DEVFN(0, 0)), data);
++			else
++				ret = fn(tmp,
++					 PCI_DEVID(tmp->bus->number,
++						   tmp->devfn), data);
+ 			if (ret)
+ 				return ret;
+ 		}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b4c97d2..31d9a90 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -171,6 +171,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) 4,
+ 	/* Flag for quirk use to store if quirk-specific ACS is enabled */
+ 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) 8,
++	/* DMA alias the device as if it was a PCIe-to-PCI bridge */
++	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) 16,
+ };
+ 
+ enum pci_irq_reroute_variant {
 
