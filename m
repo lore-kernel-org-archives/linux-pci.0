@@ -1,86 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:53910 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754614AbaESNRb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 09:17:31 -0400
-Received: by mail-ig0-f178.google.com with SMTP id hl10so3500419igb.5
-        for <linux-pci@vger.kernel.org>; Mon, 19 May 2014 06:17:30 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:20687 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755420AbaEIP3L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 May 2014 11:29:11 -0400
+Subject: [PATCH v2 07/15] PCI: Consolidate isolation domain code
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Fri, 09 May 2014 09:29:07 -0600
+Message-ID: <20140509152907.8321.17741.stgit@bling.home>
+In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
+References: <20140509151735.8321.22017.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LFD.2.11.1405190256070.31506@localhost>
-References: <alpine.LFD.2.11.1405170706260.536@localhost> <CAErSpo6jn1gG=s9Vaz0_Lvf-ZKi=1QUz0WRZ55St--LBOUSZ7Q@mail.gmail.com>
- <alpine.LFD.2.11.1405190256070.31506@localhost>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 19 May 2014 07:17:10 -0600
-Message-ID: <CAErSpo6apP+kv0sVGj4mgqdWHw78hLs7HcEbBdFYsommEaP8_w@mail.gmail.com>
-Subject: Re: could the [x86] Kconfig content for PCI be cleaned up at all?
-To: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Cc: Linux PCI mailing list <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 19, 2014 at 12:59 AM, Robert P. J. Day
-<rpjday@crashcourse.ca> wrote:
-> On Sat, 17 May 2014, Bjorn Helgaas wrote:
->
->> On Sat, May 17, 2014 at 5:29 AM, Robert P. J. Day <rpjday@crashcourse.ca> wrote:
->> >
->> >   digging through the current PCI code and Kconfig files and it seems
->> > like some of that could be made simpler, but i'm willing to be
->> > convinced otherwise.
->>
->> I'm sure it could be cleaned up, and it would be great if you did!
->>
->> I don't know the reason why all the arches source
->> drivers/pci/pcie/Kconfig directly; it seems like that should be done
->> from drivers/pci/Kconfig.
->>
->> >   first, from arch/x86/Kconfig, rather than simply sourcing the file
->> > "drivers/pci/Kconfig" (as is done with many other drivers
->> > directories), that Kconfig file defines:
->> >
->> >   menu "Bus options (PCI etc.)"
->> >
->> >   config PCI
->> >         bool "PCI support"
->> >         default y
->> >   ... snip ...
->> >
->> > and later on, sources the Kconfig files for PCI and PCIe individually:
->> >
->> >   source "drivers/pci/pcie/Kconfig"
->> >
->> >   source "drivers/pci/Kconfig"
->> >
->> > and even further down, finally sources the file for PCI hotplug after
->> > PCMCIA:
->> >
->> >   source "drivers/pcmcia/Kconfig"
->> >
->> >   source "drivers/pci/hotplug/Kconfig"
->
->    ... snip ...
->
->> I don't know all the history behind what we have now, so I can't
->> give you much advice.  I think you just have to work through the
->> process of simplifying things and see whether it turns out to be
->> feasible.
->
->   one of the quirky features of the current Kconfig layout is that, in
-> some arch Kconfig files, the main PCI content is included, then
-> pcmcia, *then* PCI hotplug, which means that when you pop into
-> something like "make menuconfig" and wander over to the PCI menu, you
-> see the majority of PCI selections, then the selection for PCCard, and
-> *then* the choice for PCI hotplug, which strikes me as just, well, odd
-> and confusing since, if you deselect PCI entirely, almost everything
-> goes away except for (you guessed it) PCCard. (and that framebuffer
-> selection as well.)
->
->   as you say, there may be some historical inertia as to why things
-> were done this way, but is there any *technical* reason why everything
-> PCI-related can't just hang off of the drivers/pci/ directory via a
-> single "source" directive?
+Each of the IOMMU drivers supporting IOMMU groups has their own
+implementation of an algorithm to find the base device for an IOMMU
+group.  This N:1 function takes into account visibility of a PCI
+device on the bus using DMA aliases, as well as the isolation of
+devices using ACS.  Since these are all generic PCI properties,
+provide this helper in PCI code to create a single, standard
+implementation.
 
-Not that I'm aware of.  Give it a try and we'll see what happens.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/search.c |  130 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    1 
+ 2 files changed, 131 insertions(+)
 
-Bjorn
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index dab4561..aea2443 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -115,6 +115,136 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ }
+ 
+ /*
++ * last_dma_alias_dev - Isolation root helper to record the last DMA alias pdev
++ */
++static int last_dma_alias_dev(struct pci_dev *pdev, u16 alias, void *data)
++{
++	*(struct pci_dev **)data = pdev;
++	return 0;
++}
++
++/*
++ * To consider a device isolated, we require ACS to support Source Validation,
++ * Request Redirection, Completer Redirection, and Upstream Forwarding.  This
++ * effectively means that devices cannot spoof their requester ID, requests
++ * and commpletions cannot be redirected, and all transactions are forwarded
++ * upstream, even as it passes through a bridge where the target device is
++ * downstream.
++ */
++#define REQ_ACS_FLAGS   (PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
++
++/*
++ * pci_find_dma_isolation_root - Given a PCI device, find the root device for
++ *				 an isolation domain.
++ * @pdev: target device
++ *
++ * This function takes DMA alias quirks, bus topology, and PCI ACS into
++ * account to find the root device for an isolation domain.  The root device
++ * is a consistent and representative device within the isolation domain.
++ * Passing any device within a given isolation domain results in the same
++ * returned root device, allowing this root device to be used for lookup
++ * for structures like IOMMU groups.  Note that the root device is not
++ * necessarily a bridge, in the case of a multifunction device without
++ * DMA isolation between functions, the root device is the lowest function
++ * without isolation.
++ */
++struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev)
++{
++	struct pci_bus *bus;
++
++	/*
++	 * Step 1: Find the upstream DMA alias device
++	 *
++	 * A device can be aliased by bridges or DMA alias quirks.  Being able
++	 * to differentiate devices is a minimum requirement for isolation.
++	 */
++	pci_for_each_dma_alias(pdev, &last_dma_alias_dev, &pdev);
++
++	/*
++	 * Step 2: Find the upstream ACS device
++	 *
++	 * Beyond differentiation, ACS prevents uncontrolled peer-to-peer
++	 * transactions.  Therefore the next step is to find the upstream
++	 * ACS device.
++	 */
++	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
++		if (!bus->self)
++			continue;
++
++		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
++			break;
++
++		pdev = bus->self;
++	}
++
++	/*
++	 * Step 3: Handle DMA function aliases
++	 *
++	 * PCI functions are sometimes broken and use the wrong requester
++	 * ID for DMA transactions.  The requester ID for this device may
++	 * actually be used by another function in this slot.  If such a
++	 * function exists, use it.
++	 */
++	if (pdev->multifunction) {
++		u8 func, func_mask = 1 << PCI_FUNC(pdev->devfn);
++
++		for (func = 0; func < 8; func++) {
++			struct pci_dev *tmp;
++
++			if (func == PCI_FUNC(pdev->devfn))
++				continue;
++
++			tmp = pci_get_slot(pdev->bus,
++					   PCI_DEVFN(PCI_SLOT(pdev->devfn),
++						     func));
++			if (!tmp)
++				continue;
++
++			pci_dev_put(tmp);
++			/*
++			 * If this device has a DMA alias to us, it becomes
++			 * the base device regardless of ACS.
++			 */
++			if (tmp->dma_func_alias & func_mask) {
++				pdev = tmp;
++				break;
++			}
++		}
++	}
++
++	/*
++	 * Step 4: Handle multifunction ACS
++	 *
++	 * If the resulting device is multifunction and does not itself
++	 * support ACS then we cannot assume isolation between functions.
++	 * The root device needs to be consistent, therefore we return the
++	 * lowest numbered function that also lacks ACS support.
++	 */
++	if (pdev->multifunction && !pci_acs_enabled(pdev, REQ_ACS_FLAGS)) {
++		u8 func;
++
++		for (func = 0; func < PCI_FUNC(pdev->devfn); func++) {
++			struct pci_dev *tmp;
++
++			tmp = pci_get_slot(pdev->bus,
++					   PCI_DEVFN(PCI_SLOT(pdev->devfn),
++						     func));
++			if (!tmp)
++				continue;
++
++			pci_dev_put(tmp);
++
++			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
++				pdev = tmp;
++				break;
++			}
++		}
++	}
++
++	return pdev;
++}
++
++/*
+  * find the upstream PCIe-to-PCI bridge of a PCI device
+  * if the device is PCIE, return NULL
+  * if the device isn't connected to a PCIe bridge (that is its parent is a
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 31d9a90..5096031 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1802,6 +1802,7 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
+ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 			   int (*fn)(struct pci_dev *pdev,
+ 				     u16 alias, void *data), void *data);
++struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev);
+ 
+ /**
+  * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+
