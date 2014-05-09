@@ -1,65 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:52980 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753420AbaESNCf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 09:02:35 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>, kdb@lurndal.org,
-	yu.zhao@intel.com
-Subject: Re: [PATCH v7 0/3] Add support for PCI in AArch64
-Date: Mon, 19 May 2014 15:01:59 +0200
-Message-ID: <4292818.mI6kZGgTzd@wuerfel>
-In-Reply-To: <CA+sq2Ccok5wtKjCZUkBhhj3WsiqFAoMgHK7LY210aBtMku+8SA@mail.gmail.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com> <CA+sq2Ccok5wtKjCZUkBhhj3WsiqFAoMgHK7LY210aBtMku+8SA@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:30901 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932217AbaEIP2x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 May 2014 11:28:53 -0400
+Subject: [PATCH v2 04/15] PCI: quirk dma_func_alias for Marvell devices
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Fri, 09 May 2014 09:28:49 -0600
+Message-ID: <20140509152849.8321.61634.stgit@bling.home>
+In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
+References: <20140509151735.8321.22017.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 16 May 2014 16:03:04 Sunil Kovvuri wrote:
-> When the SR-IOV capable device's driver tries to enable sriov
-> (pci_enable_sriov()) it fails to create/add PCI device for each
-> virtual function reporting  "not enough MMIO resources for SR-IOV".
+Several Marvell devices and a JMicron device have a similar DMA
+requester ID problem to Ricoh, except they use function 1 as the
+PCIe requester ID.  Add a quirk for these to populate the DMA
+function alias bitmap.
 
-I assume you have checked that there is indeed enough MMIO space
-available, right?
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/quirks.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-> In sriov_enable() (drivers/pci/iov.c)
-> 
->  296        for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->  297                 bars |= (1 << (i + PCI_IOV_RESOURCES));
->  298                 res = dev->resource + PCI_IOV_RESOURCES + i;
->  299                 if (res->parent)
->  300                         nres++;
->  301         }
->  302         if (nres != iov->nres) {
->  303                 dev_err(&dev->dev, "not enough MMIO resources for
->  SR-IOV\n");
->  304                 return -ENOMEM;
->  305         }
-> 
-> Here its checking if physical function's IOV resource has a parent or not.
-> Which is pci-pci bridge in this case. Otherwise it doesn't consider
-> that resource.
-> 
-> Added below api to your patch.
-> This will try to claim a resource while creating a PCI device which
-> inturn sets 'res->parent'.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index fa70476..63b8245 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3349,6 +3349,40 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe230, quirk_dma_func0_alias);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe476, quirk_dma_func0_alias);
+ 
++static void quirk_dma_func1_alias(struct pci_dev *dev)
++{
++	if (PCI_SLOT(dev->devfn) != 1)
++		dev->dma_func_alias |= (1 << 1);
++}
++
++/*
++ * Marvell 88SE9123 uses function 1 as the requester ID for DMA.  In some
++ * SKUs function 1 is present and is a legacy IDE controller, in other
++ * SKUs this function is not present, making this a ghost requester.
++ * https://bugzilla.kernel.org/show_bug.cgi?id=42679
++ */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9123,
++			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c14 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9130,
++			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c47 + c57 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9172,
++			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c59 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x917a,
++			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c46 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
++			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c49 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9230,
++			 quirk_dma_func1_alias);
++/* https://bugs.gentoo.org/show_bug.cgi?id=497630 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
++			 PCI_DEVICE_ID_JMICRON_JMB388_ESD,
++			 quirk_dma_func1_alias);
++
+ static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+ {
+ 	if (!PCI_FUNC(dev->devfn))
 
-This looks like the wrong approach. The PCI host controller should
-really have been registered with the root 'iomem_resource' during
-the probe of the host controller.
-
-	Arnd
