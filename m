@@ -1,84 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:43591 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751476AbaEOJPs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 May 2014 05:15:48 -0400
-Message-ID: <5374859F.5080902@ti.com>
-Date: Thu, 15 May 2014 14:45:11 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 12/15] iommu/fsl: Use pci_find_dma_isolation_root() for
+ IOMMU groups
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, Varun Sethi <varun.sethi@freescale.com>,
+	acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Fri, 09 May 2014 09:29:38 -0600
+Message-ID: <20140509152937.8321.75213.stgit@bling.home>
+In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
+References: <20140509151735.8321.22017.stgit@bling.home>
 MIME-Version: 1.0
-To: Nishanth Menon <nm@ti.com>
-CC: Roger Quadros <rogerq@ti.com>,
-	dt list <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-omap <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Tero Kristo <t-kristo@ti.com>,
-	Paul Walmsley <paul@pwsan.com>, Rajendra Nayak <rnayak@ti.com>,
-	"Krishnamoorthy, Balaji T" <balajitk@ti.com>
-Subject: Re: [PATCH 03/17] phy: ti-pipe3: add external clock support for PCIe
- PHY
-References: <1399383244-14556-1-git-send-email-kishon@ti.com>	<1399383244-14556-4-git-send-email-kishon@ti.com>	<53736CBC.2060702@ti.com>	<5373897C.6080504@ti.com> <CAGo_u6qw1OomEw_ueb3x+xT+qZLAfGv7Se1K=o725aOoD3ankQ@mail.gmail.com>
-In-Reply-To: <CAGo_u6qw1OomEw_ueb3x+xT+qZLAfGv7Se1K=o725aOoD3ankQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Nishanth,
+Drop custom code and use PCI provided isolation root support.
 
-On Wednesday 14 May 2014 09:04 PM, Nishanth Menon wrote:
-> On Wed, May 14, 2014 at 10:19 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
->> Hi Roger,
->>
->> On Wednesday 14 May 2014 06:46 PM, Roger Quadros wrote:
->>> Hi Kishon,
->>>
->>> On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
->>>> APLL used by PCIE phy can either use external clock as input or the clock
->>>> from DPLL. Added support for the APLL to use external clock as input here.
->>>>
->>>> Cc: Rajendra Nayak <rnayak@ti.com>
->>>> Cc: Tero Kristo <t-kristo@ti.com>
->>>> Cc: Paul Walmsley <paul@pwsan.com>
->>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->>>> ---
->>>>  Documentation/devicetree/bindings/phy/ti-phy.txt |    4 ++
->>>>  drivers/phy/phy-ti-pipe3.c                       |   75 ++++++++++++++--------
->>>>  2 files changed, 52 insertions(+), 27 deletions(-)
->>>>
->>>> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
->>>> index bc9afb5..d50f8ee 100644
->>>> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
->>>> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
->>>> @@ -76,6 +76,10 @@ Required properties:
->>>>     * "dpll_ref_m2" - external dpll ref clk
->>>>     * "phy-div" - divider for apll
->>>>     * "div-clk" - apll clock
->>>> +   * "apll_mux" - mux for pcie apll
->>>> +   * "refclk_ext" - external reference clock for pcie apll
->>>> + - ti,ext-clk: To specifiy if PCIE apll should use external clock. Applicable
->>>> +   only to PCIE PHY.
->>>
->>> Instead of specifying both clock sources "dpll_ref_clock", "refclk_ext" and then specifying a 3rd control option "ti,ext-clk" to select one of the 2 sources, why can't the DT just supply one clock source, i.e. the one that is being used in the board instance? The driver should then just configure the clock rate that is needed at that node. Shouldn't the clock framework automatically take care of muxing and parent rates?
->>
->> Want the dt to have all the clocks used by the controller. "ti,ext-clk" should
->> go in the board dt file (suggested by Nishanth).
->> The point is at some point later if some one wants to change the clock source,
->> it should be a simple enabling "ti,ext-clk" flag instead of finding the clock
->> phandle etc..
-> 
-> Wonder if that is implicit by the presence of  "refclk_ext" in the
-> clocks provided?
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Varun Sethi <varun.sethi@freescale.com>
+---
+ drivers/iommu/fsl_pamu_domain.c |   67 ++-------------------------------------
+ 1 file changed, 3 insertions(+), 64 deletions(-)
 
-IMO the presence of "refclk_ext" is useless unless the board indicates it
-provides the clock source.
+diff --git a/drivers/iommu/fsl_pamu_domain.c b/drivers/iommu/fsl_pamu_domain.c
+index 93072ba..83e3e7c 100644
+--- a/drivers/iommu/fsl_pamu_domain.c
++++ b/drivers/iommu/fsl_pamu_domain.c
+@@ -38,7 +38,6 @@
+ #include <sysdev/fsl_pci.h>
+ 
+ #include "fsl_pamu_domain.h"
+-#include "pci.h"
+ 
+ /*
+  * Global spinlock that needs to be held while
+@@ -892,8 +891,6 @@ static int fsl_pamu_get_domain_attr(struct iommu_domain *domain,
+ 	return ret;
+ }
+ 
+-#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
+-
+ static struct iommu_group *get_device_iommu_group(struct device *dev)
+ {
+ 	struct iommu_group *group;
+@@ -950,74 +947,16 @@ static struct iommu_group *get_pci_device_group(struct pci_dev *pdev)
+ 	struct pci_controller *pci_ctl;
+ 	bool pci_endpt_partioning;
+ 	struct iommu_group *group = NULL;
+-	struct pci_dev *bridge, *dma_pdev = NULL;
++	struct pci_dev *dma_pdev;
+ 
+ 	pci_ctl = pci_bus_to_host(pdev->bus);
+ 	pci_endpt_partioning = check_pci_ctl_endpt_part(pci_ctl);
+ 	/* We can partition PCIe devices so assign device group to the device */
+ 	if (pci_endpt_partioning) {
+-		bridge = pci_find_upstream_pcie_bridge(pdev);
+-		if (bridge) {
+-			if (pci_is_pcie(bridge))
+-				dma_pdev = pci_get_domain_bus_and_slot(
+-						pci_domain_nr(pdev->bus),
+-						bridge->subordinate->number, 0);
+-			if (!dma_pdev)
+-				dma_pdev = pci_dev_get(bridge);
+-		} else
+-			dma_pdev = pci_dev_get(pdev);
+-
+-		/* Account for quirked devices */
+-		swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
+-
+-		/*
+-		 * If it's a multifunction device that does not support our
+-		 * required ACS flags, add to the same group as lowest numbered
+-		 * function that also does not suport the required ACS flags.
+-		 */
+-		if (dma_pdev->multifunction &&
+-		    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
+-			u8 i, slot = PCI_SLOT(dma_pdev->devfn);
++		dma_pdev = pci_find_dma_isolation_root(pdev);
+ 
+-			for (i = 0; i < 8; i++) {
+-				struct pci_dev *tmp;
+-
+-				tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
+-				if (!tmp)
+-					continue;
+-
+-				if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
+-					swap_pci_ref(&dma_pdev, tmp);
+-					break;
+-				}
+-				pci_dev_put(tmp);
+-			}
+-		}
+-
+-		/*
+-		 * Devices on the root bus go through the iommu.  If that's not us,
+-		 * find the next upstream device and test ACS up to the root bus.
+-		 * Finding the next device may require skipping virtual buses.
+-		 */
+-		while (!pci_is_root_bus(dma_pdev->bus)) {
+-			struct pci_bus *bus = dma_pdev->bus;
+-
+-			while (!bus->self) {
+-				if (!pci_is_root_bus(bus))
+-					bus = bus->parent;
+-				else
+-					goto root_bus;
+-			}
+-
+-			if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
+-				break;
+-
+-			swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
+-		}
+-
+-root_bus:
+ 		group = get_device_iommu_group(&dma_pdev->dev);
+-		pci_dev_put(dma_pdev);
++
+ 		/*
+ 		 * PCIe controller is not a paritionable entity
+ 		 * free the controller device iommu_group.
 
-refclk_ext holds phandle for *fixed-clock*, so irrespective of whether the
-board provides a clock or not, it can have that handle for configuring in PRCM.
-However if the board does not provide the clock source, configuring refclk_ext
-in PRCM is useless.
-
-Thanks
-Kishon
