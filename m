@@ -1,41 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:64882 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754619AbaEIGOt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 02:14:49 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-kernel@vger.kernel.org,
-	James Bottomley <jbottomley@parallels.com>,
-	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH v3 1/4] DMA-API: Clarify physical/bus address distinction
-Date: Fri, 09 May 2014 08:12:02 +0200
-Message-ID: <119388463.n2RtThRsle@wuerfel>
-In-Reply-To: <20140508204854.17877.59304.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140508204854.17877.59304.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mx1.redhat.com ([209.132.183.28]:14046 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757062AbaEIP3t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 May 2014 11:29:49 -0400
+Subject: [PATCH v2 13/15] iommu: Remove pci.h
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>,
+	acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Fri, 09 May 2014 09:29:44 -0600
+Message-ID: <20140509152943.8321.64626.stgit@bling.home>
+In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
+References: <20140509151735.8321.22017.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 08 May 2014 14:48:54 Bjorn Helgaas wrote:
-> The DMA-API documentation sometimes refers to "physical addresses" when it
-> really means "bus addresses."  Sometimes these are identical, but they may
-> be different if the bridge leading to the bus performs address translation.
-> Update the documentation to use "bus address" when appropriate.
-> 
-> Also, consistently capitalize "DMA", use parens with function names, use
-> dev_printk() in examples, and reword a few sections for clarity.
-> 
-> No functional change; documentation changes only.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+The single helper here no longer has any users.
 
-Looks great!
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/iommu/pci.h |   29 -----------------------------
+ 1 file changed, 29 deletions(-)
+ delete mode 100644 drivers/iommu/pci.h
 
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+diff --git a/drivers/iommu/pci.h b/drivers/iommu/pci.h
+deleted file mode 100644
+index 352d80a..0000000
+--- a/drivers/iommu/pci.h
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/*
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License, version 2, as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+- *
+- * Copyright (C) 2013 Red Hat, Inc.
+- * Copyright (C) 2013 Freescale Semiconductor, Inc.
+- *
+- */
+-#ifndef __IOMMU_PCI_H
+-#define __IOMMU_PCI_H
+-
+-/* Helper function for swapping pci device reference */
+-static inline void swap_pci_ref(struct pci_dev **from, struct pci_dev *to)
+-{
+-	pci_dev_put(*from);
+-	*from = to;
+-}
+-
+-#endif  /* __IOMMU_PCI_H */
+
