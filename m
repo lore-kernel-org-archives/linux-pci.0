@@ -1,110 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:40591 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752209AbaE3Ra4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 13:30:56 -0400
-Received: by mail-ig0-f170.google.com with SMTP id uy17so1055785igb.5
-        for <linux-pci@vger.kernel.org>; Fri, 30 May 2014 10:30:56 -0700 (PDT)
-Date: Fri, 30 May 2014 11:30:53 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Shawn Guo <shawn.guo@linaro.org>,
-	Richard Zhu <r65037@freescale.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	linux-samsung-soc@vger.kernel.org, kernel@pengutronix.de,
-	Mark Rutland <mark.rutland@arm.com>,
-	Sean Cross <xobs@kosagi.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 0/8] i.MX6 PCIe binding change and MSI support
-Message-ID: <20140530173053.GF4607@google.com>
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
- <20140424175844.GD29593@google.com>
- <1398421265.4657.25.camel@weser.hi.pengutronix.de>
- <CAErSpo7Boi8d+apAUC3TmmE33LuRMYJ6J+TEPLRbeyZyU3O8RQ@mail.gmail.com>
- <1398774686.4677.12.camel@weser.hi.pengutronix.de>
- <1399885183.5016.4.camel@weser.hi.pengutronix.de>
+Received: from mx1.redhat.com ([209.132.183.28]:29817 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751067AbaEIP2a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 May 2014 11:28:30 -0400
+Subject: [PATCH v2 00/15] PCI/iommu: Fix DMA alias problems
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Fri, 09 May 2014 09:28:25 -0600
+Message-ID: <20140509151735.8321.22017.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1399885183.5016.4.camel@weser.hi.pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 12, 2014 at 10:59:43AM +0200, Lucas Stach wrote:
-> Hi Bjorn,
-> 
-> just a friendly reminder. It would be nice if you could pull those in.
-> 
-> Shawn already pulled the DT change and as it is a binding change this
-> means PCIe on i.MX6 is broken in -next, as long as the remaining patches
-> are missing.
+v2:
+ - Several new Marvell controllers added to quirks.  There's been
+   a lot of success reported with this series in
+   https://bugzilla.kernel.org/show_bug.cgi?id=42679
 
-I applied these to pci/host-imx6 for v3.16.
+ - Add quirk for ASMedia and Tundra PCIe-to-PCI bridges that do
+   not expose a PCIe capability.  These have been shown to use
+   the standard PCIe-to-PCI bridge requester ID.
 
-Sorry I didn't do this sooner; I get a lot of email and it's easy to
-overlook things.  I mostly work from patchwork
-(http://patchwork.ozlabs.org/project/linux-pci/list/?order=date), and I had
-dropped this series from there because there was enough discussion that I
-expected a re-post, so it wasn't on my radar screen anymore.
+ - Fix copy/paste duplicate Ricoh quirk ID
 
-Bjorn
+ - Fixed AMD IOMMU for the "ghost" function case where the DMA
+   alias is for an absent device.  The iommu rlookup table and
+   data fields need to be initializes.
 
-> Am Dienstag, den 29.04.2014, 14:31 +0200 schrieb Lucas Stach:
-> > Hi Bjorn,
-> > 
-> > Am Freitag, den 25.04.2014, 08:39 -0600 schrieb Bjorn Helgaas:
-> > [...]
-> > > >> >   PCI: designware: split Exynos and i.MX bindings
-> > > >> >   ARM: dts: imx6: update pcie to bring in line with new binding
-> > > >> >   PCI: imx6: use new clock names
-> > > >> >   PCI: imx6: drop old irq mapping
-> > > >> >   PCI: imx6: rip out optional (and unused) irqs
-> > > >> >   PCI: designware: make MSI isr shared irq aware
-> > > >> >   PCI: imx6: add support for MSI
-> > > >>
-> > > >> What's the status of all these?  I would normally apply patches 4-8 of this
-> > > >> series through my tree, given the appropriate acks, but I haven't seen
-> > > >> those yet.  And I'm not sure what dependencies there are between the
-> > > >> non-PCI patches and the PCI ones.
-> > > >>
-> > > > It's a complete binding change, so applying one part without the other
-> > > > is going to horribly break things.
-> > > >
-> > > > So I would at least want to see an ack for the binding change on the
-> > > > i.MX side from Shawn and Richard. This will need some follow on patches,
-> > > > as some boards adding PCIe using the old binding have cropped up in
-> > > > linux-next, but I can do the patches on short notice if everyone agrees
-> > > > to merge this patchset.
-> > > >
-> > > > The designware part is pretty simple and doesn't change anything for
-> > > > other users than i.MX. Though I would like to see an ack from Jingoo for
-> > > > those.
-> > > >
-> > > > I have some more stuff in the pipes regarding multiple MSI irqs, that
-> > > > depend on this series and also the Keystone people are waiting for this
-> > > > to be applied in order to consolidate the clock handling of the
-> > > > designware core driver, so it would be nice to get this moving again.
-> > > 
-> > > OK, just poke me again when you're ready for me to do something with these.
-> > > 
-> > 
-> > As both Richard and Jingoo gave their ack for the respective patches I
-> > think this is good to go in and I would expect all the PCI patches to go
-> > through your tree for 3.16.
-> > 
-> > Shawn, if you are not okay with this change, please speak up now.
-> > Otherwise please pick the dts change for 3.16. I'll go over linux-next
-> > and prepare the patches to fix up the boards there.
-> > 
-> 
-> 
-> -- 
-> Pengutronix e.K.             | Lucas Stach                 |
-> Industrial Linux Solutions   | http://www.pengutronix.de/  |
-> 
+ - Fixed Intel interrupt remapping, I wasn't passing the target
+   bus number, only the alias bus number.
+
+The only outstanding issue that I know about is that Andrew Cooks
+reported that the Ricoh quirk doesn't work.  AFAIK, the existing
+Ricoh quirk has only ever worked for IOMMU groups, not for dma_ops.
+I don't have access to a system with this device to test on my
+own.  I'd appreciate feedback from anyone that can test on these
+devices.
+
+These patches are split across PCI and IOMMU, but I've front-loaded
+all of the PCI infrastructure so that the first 7 patches can be
+applied to PCI-core, the IOMMU maintainers can pickup their patches,
+then we can finish with dead code removal.  Bjorn might also be
+willing to carry the IOMMU changes if the maintainers want to ack
+them.
+
+Original description:
+
+This series attempts to fix a couple issues we've had outstanding in
+the PCI/IOMMU code for a while.  The first issue is with devices that
+use the wrong requester ID for DMA transactions.  We already have a
+sort of half-baked attempt to fix this for several Ricoh devices, but
+the fix only helps them be useful through IOMMU groups, not the
+general DMA case.  There are also several Marvell devices which use
+use a different wrong requester ID and don't even fit into the DMA
+source idea.  This series creates a DMA alias iterator that will
+step through each possible alias of a device, allowing IOMMUs to
+insert mappings for both the device and its aliases.
+
+Hand-in-hand with this is our broken pci_find_upstream_pcie_bridge()
+function, which is known to blowup when it finds itself suddenly at
+a PCIe device without crossing a PCIe-to-PCI bridge (as identified by
+the PCIe capability).  It also likes to make the invalid assumption
+that a PCIe device never has its requester ID masked by any usptream
+bus.  We can fix this using the above new DMA alias iterator, since
+that's effectively what this function was meant to do.
+
+Finally, with all these helpers, it makes sense to consolidate code
+for determining IOMMU groups.  The first step in finding the root
+of a group is finding the final upstream DMA alias for the device,
+then applying additional ACS rules and incorporating device specific
+aliases.  As this is all common to PCI, create a single implementation
+and remove piles of code from the individual IOMMU drivers.
+
+This series allows devices like the Marvell 88SE9123 to finally work
+on Linux with either AMD-Vi or VT-d enabled on the box.  I've
+collected device IDs from various bugs to support as many SKUs of
+these devices as possible, but I'm sure there are others that I've
+missed.
+
+This should also enable motherboards with an onboard ASmedia
+ASM1083/1085 PCIe-to-PCI bridge to work with VT-d enabled.  I've
+acquired an adapter board with this chip, but it actually exposes
+a PCIe capability, unlike most of the onboard controllers.  Therefore
+I expect this series will fix the WARN_ON currently hit during boot,
+but there's a 50/50 chance whether the device behaves like a PCI
+bridge or a PCIe bridge with regard to the requester ID that it uses
+to take ownership of the transaction.  If it turns out to use the
+PCIe bridge model, I expect we can quirk it using a dev_flags bit
+to identify a PCI bridge that takes ownership as if it was a PCIe
+bridge.
+
+Please test and provide feedback.  I expect IOMMU group topology
+should not change from this series, but if a case is found where it
+does, please share.  Also, if there are additional quirks we need
+to add, please either file new or add to the existing bugs.  Thanks,
+
+Alex
+
+---
+
+Alex Williamson (15):
+      PCI: Add DMA alias iterator
+      PCI: quirk pci_for_each_dma_alias()
+      PCI: quirk dma_func_alias for Ricoh devices
+      PCI: quirk dma_func_alias for Marvell devices
+      PCI: Quirk pci_for_each_dma_alias() for bridges
+      PCI: Add quirks for ASMedia and Tundra bridges
+      PCI: Consolidate isolation domain code
+      iommu/amd: Use pci_find_dma_isolation_root() for IOMMU groups
+      iommu/amd: Update to use PCI DMA aliases
+      iommu/intel: Use pci_find_dma_isolation_root() for IOMMU groups
+      iommu/intel: Update to use PCI DMA aliases
+      iommu/fsl: Use pci_find_dma_isolation_root() for IOMMU groups
+      iommu: Remove pci.h
+      PCI: Remove pci_find_upstream_pcie_bridge()
+      PCI: Remove pci_get_dma_source()
+
+
+ drivers/iommu/amd_iommu.c           |  195 +++++------------------
+ drivers/iommu/amd_iommu_types.h     |    1 
+ drivers/iommu/fsl_pamu_domain.c     |   67 --------
+ drivers/iommu/intel-iommu.c         |  293 +++++++++++++----------------------
+ drivers/iommu/intel_irq_remapping.c |   55 +++++--
+ drivers/iommu/pci.h                 |   29 ---
+ drivers/pci/quirks.c                |  114 ++++++++------
+ drivers/pci/search.c                |  240 ++++++++++++++++++++++++++---
+ include/linux/pci.h                 |   23 +--
+ 9 files changed, 486 insertions(+), 531 deletions(-)
+ delete mode 100644 drivers/iommu/pci.h
