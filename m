@@ -1,255 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:49805 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752124AbaERIH2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 May 2014 04:07:28 -0400
-Received: from [99.240.204.5] (port=47211 helo=crashcourse.ca)
-	by astoria.ccjclearline.com with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.80)
-	(envelope-from <rpjday@crashcourse.ca>)
-	id 1Wlw82-00006m-Ii
-	for linux-pci@vger.kernel.org; Sun, 18 May 2014 04:07:30 -0400
-Date: Sun, 18 May 2014 04:05:06 -0400 (EDT)
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-To: Linux PCI mailing list <linux-pci@vger.kernel.org>
-Subject: [PATCH] Clean up PCI-related Kconfig files with "if" and fix
- "help"
-Message-ID: <alpine.LFD.2.11.1405180401450.13036@localhost>
+Received: from mx1.redhat.com ([209.132.183.28]:41665 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932362AbaEIP30 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 May 2014 11:29:26 -0400
+Subject: [PATCH v2 09/15] iommu/amd: Update to use PCI DMA aliases
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>,
+	acooks@gmail.com, linux-kernel@vger.kernel.org
+Date: Fri, 09 May 2014 09:29:19 -0600
+Message-ID: <20140509152919.8321.89317.stgit@bling.home>
+In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
+References: <20140509151735.8321.22017.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+AMD-Vi already has a concept of an alias provided via the IVRS table.
+This alias only handles topology based aliases, such as PCIe-to-PCI
+bridges.  When such an alias is present, we continue to use it.  When
+a platform alias is not present, we can now add a check of the device
+dma_func_alias to create our own.  Note that the current code can
+only handle a single alias of a device, and we don't attempt to change
+that here.  It would only become a factor for the requester ID seen by
+the IOMMU if PCI-X were involved anway.
 
-Simplify some of the PCI-related Kconfig files by replacing numerous
-explicit dependencies with "if" wrappers"
+Since the alias is now potentially device specific rather than the
+topology based alias provided by the platform, we need to clear it
+when the device goes away.
 
-  * PCI
-  * PCIEPORTBUS
-  * PCIEASPM
+With the DMA alias and isolation infrastructure now in PCI-core, we
+could opt to ignore IVRS provided aliases.  We now do this for IOMMU
+groups.  However, for this more common use case, the "don't fix what
+isn't broken" mantra seems like the safer route.
 
-and fix some "help" typoes and formatting. None of this should cause
-any functional change.
+This should allow AMD-Vi to work with devices like Marvell and Ricoh
+with DMA function alias quirks.
 
-Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
-
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Joerg Roedel <joro@8bytes.org>
 ---
+ drivers/iommu/amd_iommu.c |   37 ++++++++++++++++++++++++++++++++++---
+ 1 file changed, 34 insertions(+), 3 deletions(-)
 
-  Not compile-tested, but "make menuconfig" tested.
-
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 893503f..cc48eb4 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -1,24 +1,26 @@
- #
- # PCI configuration
- #
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 3d58de4..9b2da00 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -294,6 +294,7 @@ static int iommu_init_device(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct iommu_dev_data *dev_data;
+ 	u16 alias;
++	u8 func_alias;
+ 	int ret;
+ 
+ 	if (dev->archdata.iommu)
+@@ -304,6 +305,29 @@ static int iommu_init_device(struct device *dev)
+ 		return -ENOMEM;
+ 
+ 	alias = amd_iommu_alias_table[dev_data->devid];
 +
-+if PCI
++	/*
++	 * If there is no platform provided alias (topology-based) check for
++	 * a device quirk-based alias.  Note that a non-existent alias (ie.
++	 * ghost alias) will also need their rlookup and dev_table setup.
++	 * Copy these from the original device since they're both functions
++	 * in the same slot.
++	 */
++	func_alias = pdev->dma_func_alias & ~(1 << PCI_SLOT(pdev->devfn));
++	if (func_alias && alias == dev_data->devid) {
++		WARN_ON(hweight8(func_alias) > 1);
++		alias = PCI_DEVID(pdev->bus->number,
++				  PCI_DEVFN(PCI_SLOT(pdev->devfn),
++					    ffs(func_alias) - 1));
++		if (!amd_iommu_rlookup_table[alias]) {
++			amd_iommu_rlookup_table[alias] =
++				amd_iommu_rlookup_table[dev_data->devid];
++			memcpy(amd_iommu_dev_table[alias].data,
++			       amd_iommu_dev_table[dev_data->devid].data,
++			       sizeof(amd_iommu_dev_table[alias].data));
++		}
++	}
 +
- config PCI_MSI
- 	bool "Message Signaled Interrupts (MSI and MSI-X)"
--	depends on PCI
- 	help
--	   This allows device drivers to enable MSI (Message Signaled
--	   Interrupts).  Message Signaled Interrupts enable a device to
--	   generate an interrupt using an inbound Memory Write on its
--	   PCI bus instead of asserting a device IRQ pin.
-+	  This allows device drivers to enable MSI (Message Signaled
-+	  Interrupts).  Message Signaled Interrupts enable a device to
-+	  generate an interrupt using an inbound Memory Write on its
-+	  PCI bus instead of asserting a device IRQ pin.
-
--	   Use of PCI MSI interrupts can be disabled at kernel boot time
--	   by using the 'pci=nomsi' option.  This disables MSI for the
--	   entire system.
-+	  Use of PCI MSI interrupts can be disabled at kernel boot time
-+	  by using the 'pci=nomsi' option.  This disables MSI for the
-+	  entire system.
-
--	   If you don't know what to do here, say Y.
-+	  If you don't know what to do here, say Y.
-
- config PCI_DEBUG
- 	bool "PCI Debugging"
--	depends on PCI && DEBUG_KERNEL
-+	depends on DEBUG_KERNEL
- 	help
- 	  Say Y here if you want the PCI core to produce a bunch of debug
- 	  messages to the system log.  Select this if you are having a
-@@ -28,7 +30,6 @@ config PCI_DEBUG
-
- config PCI_REALLOC_ENABLE_AUTO
- 	bool "Enable PCI resource re-allocation detection"
--	depends on PCI
- 	help
- 	  Say Y here if you want the PCI core to detect if PCI resource
- 	  re-allocation needs to be enabled. You can always use pci=realloc=on
-@@ -41,7 +42,6 @@ config PCI_REALLOC_ENABLE_AUTO
-
- config PCI_STUB
- 	tristate "PCI Stub driver"
--	depends on PCI
- 	help
- 	  Say Y or M here if you want be able to reserve a PCI device
- 	  when it is going to be assigned to a guest operating system.
-@@ -50,7 +50,7 @@ config PCI_STUB
-
- config XEN_PCIDEV_FRONTEND
-         tristate "Xen PCI Frontend"
--        depends on PCI && X86 && XEN
-+        depends on X86 && XEN
-         select PCI_XEN
- 	select XEN_XENBUS_FRONTEND
-         default y
-@@ -61,18 +61,17 @@ config XEN_PCIDEV_FRONTEND
- config HT_IRQ
- 	bool "Interrupts on hypertransport devices"
- 	default y
--	depends on PCI && X86_LOCAL_APIC && X86_IO_APIC
-+	depends on X86_LOCAL_APIC && X86_IO_APIC
- 	help
--	   This allows native hypertransport devices to use interrupts.
-+	  This allows native hypertransport devices to use interrupts.
-
--	   If unsure say Y.
-+	  If unsure say Y.
-
- config PCI_ATS
- 	bool
-
- config PCI_IOV
- 	bool "PCI IOV support"
--	depends on PCI
- 	select PCI_ATS
- 	help
- 	  I/O Virtualization is a PCI feature supported by some devices
-@@ -83,7 +82,6 @@ config PCI_IOV
-
- config PCI_PRI
- 	bool "PCI PRI support"
--	depends on PCI
- 	select PCI_ATS
- 	help
- 	  PRI is the PCI Page Request Interface. It allows PCI devices that are
-@@ -93,7 +91,6 @@ config PCI_PRI
-
- config PCI_PASID
- 	bool "PCI PASID support"
--	depends on PCI
- 	select PCI_ATS
- 	help
- 	  Process Address Space Identifiers (PASIDs) can be used by PCI devices
-@@ -106,7 +103,6 @@ config PCI_PASID
-
- config PCI_IOAPIC
- 	bool "PCI IO-APIC hotplug support" if X86
--	depends on PCI
- 	depends on ACPI
- 	depends on X86_IO_APIC
- 	default !X86
-@@ -116,3 +112,5 @@ config PCI_LABEL
- 	select NLS
-
- source "drivers/pci/host/Kconfig"
+ 	if (alias != dev_data->devid) {
+ 		struct iommu_dev_data *alias_data;
+ 
+@@ -351,12 +375,19 @@ static void iommu_ignore_device(struct device *dev)
+ 
+ static void iommu_uninit_device(struct device *dev)
+ {
++	struct iommu_dev_data *dev_data = search_dev_data(get_device_id(dev));
 +
-+endif # PCI
-diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
-index df8caec..334d50d 100644
---- a/drivers/pci/hotplug/Kconfig
-+++ b/drivers/pci/hotplug/Kconfig
-@@ -81,7 +81,7 @@ config HOTPLUG_PCI_CPCI_ZT5550
- 	tristate "Ziatech ZT5550 CompactPCI Hotplug driver"
- 	depends on HOTPLUG_PCI_CPCI && X86
- 	help
--	  Say Y here if you have an Performance Technologies (formerly Intel,
-+	  Say Y here if you have a Performance Technologies (formerly Intel,
-           formerly just Ziatech) Ziatech ZT5550 CompactPCI system card.
-
- 	  To compile this driver as a module, choose M here: the
-diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-index 7958e59..4a404f3 100644
---- a/drivers/pci/pcie/Kconfig
-+++ b/drivers/pci/pcie/Kconfig
-@@ -10,12 +10,14 @@ config PCIEPORTBUS
- 	  Power Management Event support and Virtual Channel support to run
- 	  on PCI Express Ports (Root or Switch).
-
-+if PCIEPORTBUS
++	if (!dev_data)
++		return;
 +
- #
- # Include service Kconfig here
- #
- config HOTPLUG_PCI_PCIE
- 	bool "PCI Express Hotplug driver"
--	depends on HOTPLUG_PCI && PCIEPORTBUS
-+	depends on HOTPLUG_PCI
- 	help
- 	  Say Y here if you have a motherboard that supports PCI Express Native
- 	  Hotplug
-@@ -29,7 +31,6 @@ source "drivers/pci/pcie/aer/Kconfig"
- #
- config PCIEASPM
- 	bool "PCI Express ASPM control" if EXPERT
--	depends on PCI && PCIEPORTBUS
- 	default y
- 	help
- 	  This enables OS control over PCI Express ASPM (Active State
-@@ -44,9 +45,11 @@ config PCIEASPM
- 	  /sys/module/pcie_aspm/parameters/policy
-
- 	  When in doubt, say Y.
+ 	iommu_group_remove_device(dev);
+ 
++	/* Unlink from alias, it may change if another device is re-plugged */
++	dev_data->alias_data = NULL;
 +
-+if PCIEASPM
-+
- config PCIEASPM_DEBUG
- 	bool "Debug PCI Express ASPM"
--	depends on PCIEASPM
- 	default n
- 	help
- 	  This enables PCI Express ASPM debug support. It will add per-device
-@@ -55,28 +58,28 @@ config PCIEASPM_DEBUG
- choice
- 	prompt "Default ASPM policy"
- 	default PCIEASPM_DEFAULT
--	depends on PCIEASPM
+ 	/*
+-	 * Nothing to do here - we keep dev_data around for unplugged devices
+-	 * and reuse it when the device is re-plugged - not doing so would
+-	 * introduce a ton of races.
++	 * We keep dev_data around for unplugged devices and reuse it when the
++	 * device is re-plugged - not doing so would introduce a ton of races.
+ 	 */
+ }
+ 
 
- config PCIEASPM_DEFAULT
-         bool "BIOS default"
--	depends on PCIEASPM
- 	help
- 	  Use the BIOS defaults for PCI Express ASPM.
-
- config PCIEASPM_POWERSAVE
-         bool "Powersave"
--	depends on PCIEASPM
- 	help
- 	  Enable PCI Express ASPM L0s and L1 where possible, even if the
- 	  BIOS did not.
-
- config PCIEASPM_PERFORMANCE
-         bool "Performance"
--	depends on PCIEASPM
- 	help
- 	  Disable PCI Express ASPM L0s and L1, even if the BIOS enabled them.
- endchoice
-
-+endif # PCIEASPM
-+
- config PCIE_PME
- 	def_bool y
--	depends on PCIEPORTBUS && PM_RUNTIME
-+	depends on PM_RUNTIME
-+
-+endif # PCIEPORTBUS
-
--- 
-
-========================================================================
-Robert P. J. Day                                 Ottawa, Ontario, CANADA
-                        http://crashcourse.ca
-
-Twitter:                                       http://twitter.com/rpjday
-LinkedIn:                               http://ca.linkedin.com/in/rpjday
-========================================================================
