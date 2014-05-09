@@ -1,214 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:46494 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911AbaE1DpH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 23:45:07 -0400
-Date: Wed, 28 May 2014 12:45:01 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	grant.likely@linaro.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, rdunlap@infradead.org,
-	linux-doc@vger.kernel.org, linux-sh@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v4] pci-rcar-gen2: add device tree support
-Message-ID: <20140528034459.GA26524@verge.net.au>
-References: <201405200110.21914.sergei.shtylyov@cogentembedded.com>
- <20140528030418.GN11907@google.com>
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:48758 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756400AbaEIUUF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 16:20:05 -0400
+Received: by mail-ig0-f176.google.com with SMTP id hl10so1590313igb.15
+        for <linux-pci@vger.kernel.org>; Fri, 09 May 2014 13:20:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140528030418.GN11907@google.com>
+In-Reply-To: <9450765.GaoRYW154J@wuerfel>
+References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <1399629530.879.21.camel@i7.infradead.org> <20140509153226.GA3571@google.com> <9450765.GaoRYW154J@wuerfel>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 9 May 2014 14:19:44 -0600
+Message-ID: <CAErSpo5bPvaATcptz3wGdLWOG-1thHKCHDK5D8K=D9wy+NDomA@mail.gmail.com>
+Subject: Re: [PATCH v2 4/5] iommu: Use dma_addr_t for IOVA arguments
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	James Bottomley <jbottomley@parallels.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 27, 2014 at 09:04:18PM -0600, Bjorn Helgaas wrote:
-> [+cc Arnd]
-> 
-> On Tue, May 20, 2014 at 01:10:20AM +0400, Sergei Shtylyov wrote:
-> > From: Ben Dooks <ben.dooks@codethink.co.uk>
-> > 
-> > Add device tree probing support to the 'pci-rcar-gen2' driver.
-> > 
-> > Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
-> > [Sergei: numerous fixes/cleanups/additions]
-> > Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> 
-> I'd like to see an ack from Simon (since it changes pci-rcar-gen2.c) and
-> Arnd (since he pointed out some issues with the devicetree binding).
+On Fri, May 9, 2014 at 1:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Friday 09 May 2014 09:32:26 Bjorn Helgaas wrote:
+>> > There are people who care deeply about the performance of IOMMU API
+>> > map/unmap. It isn't used *just* for virtual machines any more. See
+>> > drivers/infiniband/hw/usnic/usnic_uiom.c for example.
+>>
+>> Of course we should care about IOMMU API performance.  We should also
+>> care about interface consistency, and it seems there's a tradeoff in
+>> this case.  I said "relatively" because I expect map/unmap to be less
+>> frequent than read/write operations that use the mapping.  I don't
+>> know anything about infiniband, so maybe that assumption is false
+>> there.
+>
+> In most drivers using the streaming DMA API, every mapping is used
+> exactly once. Think of network or block drivers: they rarely send
+> the same data twice to the device, and it usually comes from or
+> goes to some user space buffer.
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+Oh, good point.  I don't work that high up in the stack, so thanks for
+reminding me of that.
 
-> 
-> Bjorn
-> 
-> > ---
-> > The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo.
-> > 
-> > Changes in version 4:
-> > - added the descriptions for the #{address|size|interrupt}-cells and
-> >   #interrupt-map[-mask] properties to the binding document;
-> > - added the interrupt-related properties to the example;
-> > - refreshed the patch.
-> > 
-> > Changes in version 3:
-> > - added "renesas,pci-r8a7791" to the possible "compatible" property values;
-> > - removed '#ifdef CONFIG_OF' around rcar_pci_of_match[] and hence of_match_ptr()
-> >   invocation too;
-> > - fixed trailing whitespace in the DT parsing code;
-> > - removed the wrong "renessas," prefix from the binding document's file name;
-> > - moved the PCI device sub-nodes from the board example to the SoC example;
-> > - fixed labels in the board example;
-> > - fixed grammar and punctuation in the binding document;
-> > - reworded the changelog, fixed the subject.
-> > 
-> > Changes in version 2:
-> > - merged the binding document from a separate patch;
-> > - moved to the "bus-range" property parsing;
-> > - added example to the binding document.
-> > 
-> >  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt |   66 ++++++++++++++++
-> >  drivers/pci/host/pci-rcar-gen2.c                        |   31 +++++++
-> >  2 files changed, 95 insertions(+), 2 deletions(-)
-> > 
-> > Index: pci/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> > ===================================================================
-> > --- /dev/null
-> > +++ pci/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> > @@ -0,0 +1,66 @@
-> > +Renesas AHB to PCI bridge
-> > +-------------------------
-> > +
-> > +This is the bridge used internally to connect the USB controllers to the
-> > +AHB. There is one bridge instance per USB port connected to the internal
-> > +OHCI and EHCI controllers.
-> > +
-> > +Required properties:
-> > +- compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
-> > +	      "renesas,pci-r8a7791" for the R8A7791 SoC.
-> > +- reg:	A list of physical regions to access the device: the first is
-> > +	the operational registers for the OHCI/EHCI controllers and the
-> > +	second is for the bridge configuration and control registers.
-> > +- interrupts: interrupt for the device.
-> > +- clocks: The reference to the device clock.
-> > +- bus-range: The PCI bus number range; as this is a single bus, the range
-> > +	     should be specified as the same value twice.
-> > +- #address-cells: must be 3.
-> > +- #size-cells: must be 2.
-> > +- #interrupt-cells: must be 1.
-> > +- interrupt-map: standard property used to define the mapping of the PCI
-> > +  interrupts to the GIC interrupts.
-> > +- interrupt-map-mask: standard property that helps to define the interrupt
-> > +  mapping.
-> > +
-> > +Example SoC configuration:
-> > +
-> > +	pci0: pci@ee090000  {
-> > +		compatible = "renesas,pci-r8a7790";
-> > +		clocks = <&mstp7_clks R8A7790_CLK_EHCI>;
-> > +		reg = <0x0 0xee090000 0x0 0xc00>,
-> > +		      <0x0 0xee080000 0x0 0x1100>;
-> > +		interrupts = <0 108 IRQ_TYPE_LEVEL_HIGH>;
-> > +		status = "disabled";
-> > +
-> > +		bus-range = <0 0>;
-> > +		#address-cells = <3>;
-> > +		#size-cells = <2>;
-> > +		#interrupt-cells = <1>;
-> > +		interrupt-map-mask = <0xff00 0 0 0x7>;
-> > +		interrupt-map = <0x0000 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
-> > +			      	 0x0800 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
-> > +			      	 0x1000 0 0 2 &gic 0 108 IRQ_TYPE_LEVEL_HIGH>;
-> > +
-> > +		pci@0,1 {
-> > +			reg = <0x800 0 0 0 0>;
-> > +			device_type = "pci";
-> > +			phys = <&usbphy 0 0>;
-> > +			phy-names = "usb";
-> > +		};
-> > +
-> > +		pci@0,2 {
-> > +			reg = <0x1000 0 0 0 0>;
-> > +			device_type = "pci";
-> > +			phys = <&usbphy 0 0>;
-> > +			phy-names = "usb";
-> > +		};
-> > +	};
-> > +
-> > +Example board setup:
-> > +
-> > +&pci0 {
-> > +	status = "okay";
-> > +	pinctrl-0 = <&usb0_pins>;
-> > +	pinctrl-names = "default";
-> > +};
-> > Index: pci/drivers/pci/host/pci-rcar-gen2.c
-> > ===================================================================
-> > --- pci.orig/drivers/pci/host/pci-rcar-gen2.c
-> > +++ pci/drivers/pci/host/pci-rcar-gen2.c
-> > @@ -98,6 +98,7 @@ struct rcar_pci_priv {
-> >  	struct resource io_res;
-> >  	struct resource mem_res;
-> >  	struct resource *cfg_res;
-> > +	unsigned busnr;
-> >  	int irq;
-> >  	unsigned long window_size;
-> >  };
-> > @@ -312,8 +313,8 @@ static int rcar_pci_setup(int nr, struct
-> >  	pci_add_resource(&sys->resources, &priv->io_res);
-> >  	pci_add_resource(&sys->resources, &priv->mem_res);
-> >  
-> > -	/* Setup bus number based on platform device id */
-> > -	sys->busnr = to_platform_device(priv->dev)->id;
-> > +	/* Setup bus number based on platform device id / of bus-range */
-> > +	sys->busnr = priv->busnr;
-> >  	return 1;
-> >  }
-> >  
-> > @@ -366,6 +367,23 @@ static int rcar_pci_probe(struct platfor
-> >  
-> >  	priv->window_size = SZ_1G;
-> >  
-> > +	if (pdev->dev.of_node) {
-> > +		struct resource busnr;
-> > +		int ret;
-> > +
-> > +		ret = of_pci_parse_bus_range(pdev->dev.of_node, &busnr);
-> > +		if (ret < 0) {
-> > +			dev_err(&pdev->dev, "failed to parse bus-range\n");
-> > +			return ret;
-> > +		}
-> > +
-> > +		priv->busnr = busnr.start;
-> > +		if (busnr.end != busnr.start)
-> > +			dev_warn(&pdev->dev, "only one bus number supported\n");
-> > +	} else {
-> > +		priv->busnr = pdev->id;
-> > +	}
-> > +
-> >  	hw_private[0] = priv;
-> >  	memset(&hw, 0, sizeof(hw));
-> >  	hw.nr_controllers = ARRAY_SIZE(hw_private);
-> > @@ -377,11 +395,20 @@ static int rcar_pci_probe(struct platfor
-> >  	return 0;
-> >  }
-> >  
-> > +static struct of_device_id rcar_pci_of_match[] = {
-> > +	{ .compatible = "renesas,pci-r8a7790", },
-> > +	{ .compatible = "renesas,pci-r8a7791", },
-> > +	{ },
-> > +};
-> > +
-> > +MODULE_DEVICE_TABLE(of, rcar_pci_of_match);
-> > +
-> >  static struct platform_driver rcar_pci_driver = {
-> >  	.driver = {
-> >  		.name = "pci-rcar-gen2",
-> >  		.owner = THIS_MODULE,
-> >  		.suppress_bind_attrs = true,
-> > +		.of_match_table = rcar_pci_of_match,
-> >  	},
-> >  	.probe = rcar_pci_probe,
-> >  };
-> 
+Bjorn
