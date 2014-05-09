@@ -1,293 +1,227 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 V2 03/29] x86, mpparse: use pr_lvl() helper utilities to replace printk(KERN_LVL)
-Date: Tue, 20 May 2014 00:22:47 +0800
-Message-Id: <1400516594-11544-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:27623 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756553AbaEIQuv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 9 May 2014 12:50:51 -0400
+Subject: [PATCH v2] PCI: Introduce new device binding path using
+ pci_dev.driver_override
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: agraf@suse.de, kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	kim.phillips@linaro.org, gregkh@linuxfoundation.org,
+	stuart.yoder@freescale.com, linux-kernel@vger.kernel.org,
+	libvir-list@redhat.com, iommu@lists.linux-foundation.org,
+	tech@virtualopensystems.com, kvmarm@lists.cs.columbia.edu,
+	christoffer.dall@linaro.org
+Date: Fri, 09 May 2014 10:50:39 -0600
+Message-ID: <20140509164326.12141.44591.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pr_lvl() helper utilities to replace printk(KERN_LVL) for readability,
-no function changes.
+The driver_override field allows us to specify the driver for a device
+rather than relying on the driver to provide a positive match of the
+device.  This shortcuts the existing process of looking up the vendor
+and device ID, adding them to the driver new_id, binding the device,
+then removing the ID, but it also provides a couple advantages.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+First, the above existing process allows the driver to bind to any
+device matching the new_id for the window where it's enabled.  This is
+often not desired, such as the case of trying to bind a single device
+to a meta driver like pci-stub or vfio-pci.  Using driver_override we
+can do this deterministically using:
+
+echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
+echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+
+Previously we could not invoke drivers_probe after adding a device
+to new_id for a driver as we get non-deterministic behavior whether
+the driver we intend or the standard driver will claim the device.
+Now it becomes a deterministic process, only the driver matching
+driver_override will probe the device.
+
+To return the device to the standard driver, we simply clear the
+driver_override and reprobe the device:
+
+echo > /sys/bus/pci/devices/0000:03:00.0/driver_override
+echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+
+Another advantage to this approach is that we can specify a driver
+override to force a specific binding or prevent any binding.  For
+instance when an IOMMU group is exposed to userspace through VFIO
+we require that all devices within that group are owned by VFIO.
+However, devices can be hot-added into an IOMMU group, in which case
+we want to prevent the device from binding to any driver (override
+driver = "none") or perhaps have it automatically bind to vfio-pci.
+With driver_override it's a simple matter for this field to be set
+internally when the device is first discovered to prevent driver
+matches.
+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- arch/x86/kernel/mpparse.c |   84 +++++++++++++++++++++------------------------
- 1 file changed, 39 insertions(+), 45 deletions(-)
 
-diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
-index d2b56489d70f..24da837389b7 100644
---- a/arch/x86/kernel/mpparse.c
-+++ b/arch/x86/kernel/mpparse.c
-@@ -67,7 +67,7 @@ static void __init MP_processor_info(struct mpc_cpu *m)
- 		boot_cpu_physical_apicid = m->apicid;
- 	}
- 
--	printk(KERN_INFO "Processor #%d%s\n", m->apicid, bootup_cpu);
-+	pr_info("Processor #%d%s\n", m->apicid, bootup_cpu);
- 	generic_processor_info(apicid, m->apicver);
+v2: Use strchr() as suggested by Guenter Roeck and adopted by the
+    platform driver version of this same interface.
+
+ Documentation/ABI/testing/sysfs-bus-pci |   21 ++++++++++++++++
+ drivers/pci/pci-driver.c                |   25 +++++++++++++++++--
+ drivers/pci/pci-sysfs.c                 |   40 +++++++++++++++++++++++++++++++
+ include/linux/pci.h                     |    1 +
+ 4 files changed, 84 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index a3c5a66..898ddc4 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -250,3 +250,24 @@ Description:
+ 		valid.  For example, writing a 2 to this file when sriov_numvfs
+ 		is not 0 and not 2 already will return an error. Writing a 10
+ 		when the value of sriov_totalvfs is 8 will return an error.
++
++What:		/sys/bus/pci/devices/.../driver_override
++Date:		April 2014
++Contact:	Alex Williamson <alex.williamson@redhat.com>
++Description:
++		This file allows the driver for a device to be specified which
++		will override standard static and dynamic ID matching.  When
++		specified, only a driver with a name matching the value written
++		to driver_override will have an opportunity to bind to the
++		device.  The override is specified by writing a string to the
++		driver_override file (echo pci-stub > driver_override) and
++		may be cleared with an empty string (echo > driver_override).
++		This returns the device to standard matching rules binding.
++		Writing to driver_override does not automatically unbind the
++		device from its current driver or make any attempt to
++		automatically load the specified driver.  If no driver with a
++		matching name is currently loaded in the kernel, the device
++		will not bind to any driver.  This also allows devices to
++		opt-out of driver binding using a driver_override name such as
++		"none".  Only a single driver may be specified in the override,
++		there is no support for parsing delimiters.
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index d911e0c..4393c12 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -216,6 +216,13 @@ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
+ 	return NULL;
  }
  
-@@ -87,9 +87,8 @@ static void __init MP_bus_info(struct mpc_bus *m)
- 
- #if MAX_MP_BUSSES < 256
- 	if (m->busid >= MAX_MP_BUSSES) {
--		printk(KERN_WARNING "MP table busid value (%d) for bustype %s "
--		       " is too large, max. supported is %d\n",
--		       m->busid, str, MAX_MP_BUSSES - 1);
-+		pr_warn("MP table busid value (%d) for bustype %s is too large, max. supported is %d\n",
-+			m->busid, str, MAX_MP_BUSSES - 1);
- 		return;
- 	}
- #endif
-@@ -110,7 +109,7 @@ static void __init MP_bus_info(struct mpc_bus *m)
- 		mp_bus_id_to_type[m->busid] = MP_BUS_EISA;
- #endif
- 	} else
--		printk(KERN_WARNING "Unknown bustype %s - ignoring\n", str);
-+		pr_warn("Unknown bustype %s - ignoring\n", str);
- }
- 
- static void __init MP_ioapic_info(struct mpc_ioapic *m)
-@@ -148,34 +147,33 @@ static int __init smp_check_mpc(struct mpc_table *mpc, char *oem, char *str)
++static const struct pci_device_id pci_device_id_any = {
++	.vendor = PCI_ANY_ID,
++	.device = PCI_ANY_ID,
++	.subvendor = PCI_ANY_ID,
++	.subdevice = PCI_ANY_ID,
++};
++
+ /**
+  * pci_match_device - Tell if a PCI device structure has a matching PCI device id structure
+  * @drv: the PCI driver to match against
+@@ -229,18 +236,30 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
+ 						    struct pci_dev *dev)
  {
+ 	struct pci_dynid *dynid;
++	const struct pci_device_id *found_id = NULL;
++
++	/* When driver_override is set, only bind to the matching driver */
++	if (dev->driver_override && strcmp(dev->driver_override, drv->name))
++		return NULL;
  
- 	if (memcmp(mpc->signature, MPC_SIGNATURE, 4)) {
--		printk(KERN_ERR "MPTABLE: bad signature [%c%c%c%c]!\n",
-+		pr_err("MPTABLE: bad signature [%c%c%c%c]!\n",
- 		       mpc->signature[0], mpc->signature[1],
- 		       mpc->signature[2], mpc->signature[3]);
- 		return 0;
+ 	/* Look at the dynamic ids first, before the static ones */
+ 	spin_lock(&drv->dynids.lock);
+ 	list_for_each_entry(dynid, &drv->dynids.list, node) {
+ 		if (pci_match_one_device(&dynid->id, dev)) {
+-			spin_unlock(&drv->dynids.lock);
+-			return &dynid->id;
++			found_id = &dynid->id;
++			break;
+ 		}
  	}
- 	if (mpf_checksum((unsigned char *)mpc, mpc->length)) {
--		printk(KERN_ERR "MPTABLE: checksum error!\n");
-+		pr_err("MPTABLE: checksum error!\n");
- 		return 0;
- 	}
- 	if (mpc->spec != 0x01 && mpc->spec != 0x04) {
--		printk(KERN_ERR "MPTABLE: bad table version (%d)!!\n",
--		       mpc->spec);
-+		pr_err("MPTABLE: bad table version (%d)!!\n", mpc->spec);
- 		return 0;
- 	}
- 	if (!mpc->lapic) {
--		printk(KERN_ERR "MPTABLE: null local APIC address!\n");
-+		pr_err("MPTABLE: null local APIC address!\n");
- 		return 0;
- 	}
- 	memcpy(oem, mpc->oem, 8);
- 	oem[8] = 0;
--	printk(KERN_INFO "MPTABLE: OEM ID: %s\n", oem);
-+	pr_info("MPTABLE: OEM ID: %s\n", oem);
+ 	spin_unlock(&drv->dynids.lock);
  
- 	memcpy(str, mpc->productid, 12);
- 	str[12] = 0;
- 
--	printk(KERN_INFO "MPTABLE: Product ID: %s\n", str);
-+	pr_info("MPTABLE: Product ID: %s\n", str);
- 
--	printk(KERN_INFO "MPTABLE: APIC at: 0x%X\n", mpc->lapic);
-+	pr_info("MPTABLE: APIC at: 0x%X\n", mpc->lapic);
- 
- 	return 1;
- }
-@@ -188,8 +186,8 @@ static void skip_entry(unsigned char **ptr, int *count, int size)
- 
- static void __init smp_dump_mptable(struct mpc_table *mpc, unsigned char *mpt)
- {
--	printk(KERN_ERR "Your mptable is wrong, contact your HW vendor!\n"
--		"type %x\n", *mpt);
-+	pr_err("Your mptable is wrong, contact your HW vendor!\ntype %x\n",
-+	       *mpt);
- 	print_hex_dump(KERN_ERR, "  ", DUMP_PREFIX_ADDRESS, 16,
- 			1, mpc, mpc->length, 1);
- }
-@@ -259,7 +257,7 @@ static int __init smp_read_mpc(struct mpc_table *mpc, unsigned early)
- 	}
- 
- 	if (!num_processors)
--		printk(KERN_ERR "MPTABLE: no processors registered!\n");
-+		pr_err("MPTABLE: no processors registered!\n");
- 	return num_processors;
+-	return pci_match_id(drv->id_table, dev);
++	if (!found_id)
++		found_id = pci_match_id(drv->id_table, dev);
++
++	/* driver_override will always match, send a dummy id */
++	if (!found_id && dev->driver_override)
++		found_id = &pci_device_id_any;
++
++	return found_id;
  }
  
-@@ -295,16 +293,13 @@ static void __init construct_default_ioirq_mptable(int mpc_default_type)
- 	 *  If it does, we assume it's valid.
- 	 */
- 	if (mpc_default_type == 5) {
--		printk(KERN_INFO "ISA/PCI bus type with no IRQ information... "
--		       "falling back to ELCR\n");
-+		pr_info("ISA/PCI bus type with no IRQ information... falling back to ELCR\n");
+ struct drv_dev_and_id {
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 4e0acef..faa4ab5 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -499,6 +499,45 @@ static struct device_attribute sriov_numvfs_attr =
+ 		       sriov_numvfs_show, sriov_numvfs_store);
+ #endif /* CONFIG_PCI_IOV */
  
- 		if (ELCR_trigger(0) || ELCR_trigger(1) || ELCR_trigger(2) ||
- 		    ELCR_trigger(13))
--			printk(KERN_ERR "ELCR contains invalid data... "
--			       "not using ELCR\n");
-+			pr_err("ELCR contains invalid data... not using ELCR\n");
- 		else {
--			printk(KERN_INFO
--			       "Using ELCR to identify PCI interrupts\n");
-+			pr_info("Using ELCR to identify PCI interrupts\n");
- 			ELCR_fallback = 1;
- 		}
- 	}
-@@ -353,7 +348,7 @@ static void __init construct_ioapic_table(int mpc_default_type)
- 	bus.busid = 0;
- 	switch (mpc_default_type) {
- 	default:
--		printk(KERN_ERR "???\nUnknown standard configuration %d\n",
-+		pr_err("???\nUnknown standard configuration %d\n",
- 		       mpc_default_type);
- 		/* fall through */
- 	case 1:
-@@ -462,7 +457,7 @@ static int __init check_physptr(struct mpf_intel *mpf, unsigned int early)
- #ifdef CONFIG_X86_LOCAL_APIC
- 		smp_found_config = 0;
++static ssize_t driver_override_store(struct device *dev,
++				     struct device_attribute *attr,
++				     const char *buf, size_t count)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	char *driver_override, *old = pdev->driver_override, *cp;
++
++	if (count > PATH_MAX)
++		return -EINVAL;
++
++	driver_override = kstrndup(buf, count, GFP_KERNEL);
++	if (!driver_override)
++		return -ENOMEM;
++
++	cp = strchr(driver_override, '\n');
++	if (cp)
++		*cp = '\0';
++
++	if (strlen(driver_override)) {
++		pdev->driver_override = driver_override;
++	} else {
++		kfree(driver_override);
++		pdev->driver_override = NULL;
++	}
++
++	kfree(old);
++
++	return count;
++}
++
++static ssize_t driver_override_show(struct device *dev,
++				    struct device_attribute *attr, char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return sprintf(buf, "%s\n", pdev->driver_override);
++}
++static DEVICE_ATTR_RW(driver_override);
++
+ static struct attribute *pci_dev_attrs[] = {
+ 	&dev_attr_resource.attr,
+ 	&dev_attr_vendor.attr,
+@@ -521,6 +560,7 @@ static struct attribute *pci_dev_attrs[] = {
+ #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
+ 	&dev_attr_d3cold_allowed.attr,
  #endif
--		printk(KERN_ERR "BIOS bug, MP table errors detected!...\n"
-+		pr_err("BIOS bug, MP table errors detected!...\n"
- 			"... disabling SMP support. (tell your hw vendor)\n");
- 		early_iounmap(mpc, size);
- 		return -1;
-@@ -481,7 +476,7 @@ static int __init check_physptr(struct mpf_intel *mpf, unsigned int early)
- 	if (!mp_irq_entries) {
- 		struct mpc_bus bus;
++	&dev_attr_driver_override.attr,
+ 	NULL,
+ };
  
--		printk(KERN_ERR "BIOS bug, no explicit IRQ entries, "
-+		pr_err("BIOS bug, no explicit IRQ entries, "
- 		       "using default mptable. (tell your hw vendor)\n");
- 
- 		bus.type = MP_BUS;
-@@ -516,14 +511,14 @@ void __init default_get_smp_config(unsigned int early)
- 	if (acpi_lapic && acpi_ioapic)
- 		return;
- 
--	printk(KERN_INFO "Intel MultiProcessor Specification v1.%d\n",
--	       mpf->specification);
-+	pr_info("Intel MultiProcessor Specification v1.%d\n",
-+		mpf->specification);
- #if defined(CONFIG_X86_LOCAL_APIC) && defined(CONFIG_X86_32)
- 	if (mpf->feature2 & (1 << 7)) {
--		printk(KERN_INFO "    IMCR and PIC compatibility mode.\n");
-+		pr_info("    IMCR and PIC compatibility mode.\n");
- 		pic_mode = 1;
- 	} else {
--		printk(KERN_INFO "    Virtual Wire compatibility mode.\n");
-+		pr_info("    Virtual Wire compatibility mode.\n");
- 		pic_mode = 0;
- 	}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c7183be..a7a08f1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -369,6 +369,7 @@ struct pci_dev {
  #endif
-@@ -539,8 +534,7 @@ void __init default_get_smp_config(unsigned int early)
- 			return;
- 		}
+ 	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+ 	size_t romlen; /* Length of ROM if it's not from the BAR */
++	char *driver_override; /* Driver name to force a match */
+ };
  
--		printk(KERN_INFO "Default MP configuration #%d\n",
--		       mpf->feature1);
-+		pr_info("Default MP configuration #%d\n", mpf->feature1);
- 		construct_default_ISA_mptable(mpf->feature1);
- 
- 	} else if (mpf->physptr) {
-@@ -550,7 +544,7 @@ void __init default_get_smp_config(unsigned int early)
- 		BUG();
- 
- 	if (!early)
--		printk(KERN_INFO "Processors: %d\n", num_processors);
-+		pr_info("Processors: %d\n", num_processors);
- 	/*
- 	 * Only use the first configuration found.
- 	 */
-@@ -583,10 +577,10 @@ static int __init smp_scan_config(unsigned long base, unsigned long length)
- #endif
- 			mpf_found = mpf;
- 
--			printk(KERN_INFO "found SMP MP-table at [mem %#010llx-%#010llx] mapped at [%p]\n",
--			       (unsigned long long) virt_to_phys(mpf),
--			       (unsigned long long) virt_to_phys(mpf) +
--			       sizeof(*mpf) - 1, mpf);
-+			pr_info("found SMP MP-table at [mem %#010llx-%#010llx] mapped at [%p]\n",
-+				(unsigned long long) virt_to_phys(mpf),
-+				(unsigned long long) virt_to_phys(mpf) +
-+				sizeof(*mpf) - 1, mpf);
- 
- 			mem = virt_to_phys(mpf);
- 			memblock_reserve(mem, sizeof(*mpf));
-@@ -735,7 +729,7 @@ static int  __init replace_intsrc_all(struct mpc_table *mpc,
- 	int nr_m_spare = 0;
- 	unsigned char *mpt = ((unsigned char *)mpc) + count;
- 
--	printk(KERN_INFO "mpc_length %x\n", mpc->length);
-+	pr_info("mpc_length %x\n", mpc->length);
- 	while (count < mpc->length) {
- 		switch (*mpt) {
- 		case MP_PROCESSOR:
-@@ -862,13 +856,13 @@ static int __init update_mp_table(void)
- 	if (!smp_check_mpc(mpc, oem, str))
- 		return 0;
- 
--	printk(KERN_INFO "mpf: %llx\n", (u64)virt_to_phys(mpf));
--	printk(KERN_INFO "physptr: %x\n", mpf->physptr);
-+	pr_info("mpf: %llx\n", (u64)virt_to_phys(mpf));
-+	pr_info("physptr: %x\n", mpf->physptr);
- 
- 	if (mpc_new_phys && mpc->length > mpc_new_length) {
- 		mpc_new_phys = 0;
--		printk(KERN_INFO "mpc_new_length is %ld, please use alloc_mptable=8k\n",
--			 mpc_new_length);
-+		pr_info("mpc_new_length is %ld, please use alloc_mptable=8k\n",
-+			mpc_new_length);
- 	}
- 
- 	if (!mpc_new_phys) {
-@@ -879,10 +873,10 @@ static int __init update_mp_table(void)
- 		mpc->checksum = 0xff;
- 		new = mpf_checksum((unsigned char *)mpc, mpc->length);
- 		if (old == new) {
--			printk(KERN_INFO "mpc is readonly, please try alloc_mptable instead\n");
-+			pr_info("mpc is readonly, please try alloc_mptable instead\n");
- 			return 0;
- 		}
--		printk(KERN_INFO "use in-position replacing\n");
-+		pr_info("use in-position replacing\n");
- 	} else {
- 		mpf->physptr = mpc_new_phys;
- 		mpc_new = phys_to_virt(mpc_new_phys);
-@@ -892,7 +886,7 @@ static int __init update_mp_table(void)
- 		if (mpc_new_phys - mpf->physptr) {
- 			struct mpf_intel *mpf_new;
- 			/* steal 16 bytes from [0, 1k) */
--			printk(KERN_INFO "mpf new: %x\n", 0x400 - 16);
-+			pr_info("mpf new: %x\n", 0x400 - 16);
- 			mpf_new = phys_to_virt(0x400 - 16);
- 			memcpy(mpf_new, mpf, 16);
- 			mpf = mpf_new;
-@@ -900,7 +894,7 @@ static int __init update_mp_table(void)
- 		}
- 		mpf->checksum = 0;
- 		mpf->checksum -= mpf_checksum((unsigned char *)mpf, 16);
--		printk(KERN_INFO "physptr new: %x\n", mpf->physptr);
-+		pr_info("physptr new: %x\n", mpf->physptr);
- 	}
- 
- 	/*
--- 
-1.7.10.4
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
 
