@@ -1,89 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1440 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752527AbaE0IJq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 May 2014 04:09:46 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:57413 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755533AbaEIPcc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 11:32:32 -0400
+Received: by mail-ie0-f170.google.com with SMTP id ar20so825925iec.15
+        for <linux-pci@vger.kernel.org>; Fri, 09 May 2014 08:32:32 -0700 (PDT)
+Date: Fri, 9 May 2014 09:32:26 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch V3 21/37] x86, ACPI, irq: provide basic irqdomain support
-Date: Tue, 27 May 2014 16:07:56 +0800
-Message-Id: <1401178092-1228-22-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 4/5] iommu: Use dma_addr_t for IOVA arguments
+Message-ID: <20140509153226.GA3571@google.com>
+References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <45161364.3Gyo1xJJLV@wuerfel>
+ <20140508001814.GB4951@google.com>
+ <15249748.Q2CaU9aBE9@wuerfel>
+ <20140508203053.GA14448@google.com>
+ <1399629530.879.21.camel@i7.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1399629530.879.21.camel@i7.infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance ACPI driver to provide basic irqdomain support for IOAPIC.
+On Fri, May 09, 2014 at 10:58:50AM +0100, David Woodhouse wrote:
+> On Thu, 2014-05-08 at 14:30 -0600, Bjorn Helgaas wrote:
+> > I doubt there would be a noticeable performance effect since these are
+> > relatively low-frequency interfaces (map, unmap, report_fault), 
+> 
+> That point of view makes me sad.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+Don't be sad; Arnd successfully fended off the challenge :)
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 9525498e41d5..0632622a3798 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -31,6 +31,7 @@
- #include <linux/module.h>
- #include <linux/dmi.h>
- #include <linux/irq.h>
-+#include <linux/irqdomain.h>
- #include <linux/slab.h>
- #include <linux/bootmem.h>
- #include <linux/ioport.h>
-@@ -324,6 +325,23 @@ static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity);
- 
-+static struct irq_domain_ops acpi_irqdomain_ops;
-+
-+static struct irq_domain *acpi_create_irqdomain(int idx, void *arg)
-+{
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
-+
-+	/*
-+	 * Statically allocate IRQ number for legacy IRQs and all pins on the
-+	 * first IOAPIC.
-+	 */
-+	if (gsi_cfg->gsi_base < NR_IRQS_LEGACY &&
-+	    ioapic_dynirq_base < gsi_cfg->gsi_end)
-+		ioapic_dynirq_base = gsi_cfg->gsi_end + 1;
-+
-+	return mp_irqdomain_create(idx, NULL, &acpi_irqdomain_ops);
-+}
-+
- static int __init
- acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
- {
-@@ -338,7 +356,7 @@ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
- 
- 	mp_register_ioapic(ioapic->id,
- 			   ioapic->address, ioapic->global_irq_base,
--			   NULL, NULL);
-+			   acpi_create_irqdomain, NULL);
- 
- 	return 0;
- }
--- 
-1.7.10.4
+> There are people who care deeply about the performance of IOMMU API
+> map/unmap. It isn't used *just* for virtual machines any more. See
+> drivers/infiniband/hw/usnic/usnic_uiom.c for example.
 
+Of course we should care about IOMMU API performance.  We should also
+care about interface consistency, and it seems there's a tradeoff in
+this case.  I said "relatively" because I expect map/unmap to be less
+frequent than read/write operations that use the mapping.  I don't
+know anything about infiniband, so maybe that assumption is false
+there.
+
+> I also hold out *some* hope for consolidating the map/unmap functions
+> for the IOMMU and DMA APIs at some point. The main difference is that
+> the DMA API allocates an IOVA for itself, while the IOMMU API is given
+> the bus address too.
+
+I find this aspect of these APIs confusing, so I agree that it would
+be nice if these could be consolidated somehow.
+
+Bjorn
