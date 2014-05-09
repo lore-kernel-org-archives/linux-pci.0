@@ -1,50 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:40310 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751443AbaE1UuI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 16:50:08 -0400
-Date: Wed, 28 May 2014 22:49:34 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [RFC Patch V1 1/4] x86, irq: refine mp_register_ioapic() to
- prepare for IOAPIC hotplug
-In-Reply-To: <1401179077-2020-2-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.10.1405282247530.3952@nanos>
-References: <1401179077-2020-1-git-send-email-jiang.liu@linux.intel.com> <1401179077-2020-2-git-send-email-jiang.liu@linux.intel.com>
+Received: from mout.kundenserver.de ([212.227.126.131]:55984 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090AbaEIG7m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 02:59:42 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Magnus Damm <damm@opensource.se>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pci: rcar host needs OF
+Date: Fri, 09 May 2014 08:59:12 +0200
+Message-ID: <13437915.HeCZ0zGaLk@wuerfel>
+In-Reply-To: <9614403.Lyniq7F3TJ@wuerfel>
+References: <1399560433-1402630-1-git-send-email-arnd@arndb.de> <CAMuHMdWBzBneDqyDxK5HU3Bt_5CyRfTM_f_6YGJHokG_v17_sw@mail.gmail.com> <9614403.Lyniq7F3TJ@wuerfel>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 27 May 2014, Jiang Liu wrote:
+On Thursday 08 May 2014 17:21:54 Arnd Bergmann wrote:
+> On Thursday 08 May 2014 17:16:32 Geert Uytterhoeven wrote:
+> > On Thu, May 8, 2014 at 5:06 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
+> > >> @@ -27,7 +27,7 @@ config PCI_TEGRA
+> > >>
+> > >>   config PCI_RCAR_GEN2
+> > >>         bool "Renesas R-Car Gen2 Internal PCI controller"
+> > >> -       depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
+> > >> +       depends on ARCH_SHMOBILE || (ARM && OF && COMPILE_TEST)
+> > >>         help
+> > >>           Say Y here if you want internal PCI support on R-Car Gen2 SoC.
+> > >>           There are 3 internal PCI controllers available with a single
+> > >>
+> > >
+> > > This driver /should/ be able to be built for just the platform case
+> > > so it sounds like f8f2fe7355fb stopped this but no-one has yet to
+> > > notice.
+> > 
+> > You mean include/linux/of_pci.h should provide a dummy version of
+> > of_irq_parse_and_map_pci() returning 0 in case OF=n?
+> 
+> Good idea, I'll give this patch some testing in the randconfig builder,
+> replacing the one above.
 
-> -static void ioapic_create_irqdomains(void)
-> +static int ioapic_create_irqdomain(int idx)
+The first version was flawed, I submitted a new patch "[PATCH] of/irq:
+provide int of_irq_parse_and_map_pci wrapper" now.
 
-...
-
-> -static int __init io_apic_get_redir_entries(int ioapic)
-> +static int io_apic_get_redir_entries(int ioapic)
-
-Can you please split the functional changes from the trivial __init
-removal ones?
-
-Thanks,
-
-	tglx
+	Arnd
