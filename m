@@ -1,85 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:39543 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750783AbaEIJJ6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 05:09:58 -0400
+MIME-Version: 1.0
+In-Reply-To: <5744457.bgUFy9g0ST@wuerfel>
+References: <4527717.yJh2gX3xCP@wuerfel>
+	<1399624119.4833.3.camel@weser.hi.pengutronix.de>
+	<5744457.bgUFy9g0ST@wuerfel>
+Date: Fri, 9 May 2014 11:09:57 +0200
+Message-ID: <CAMuHMdXXFmxmq9H1fuc7fRg8BHQ+3m6=4mPDe5FjL0hLLvwUUw@mail.gmail.com>
+Subject: Re: [PATCH v2] of/irq: provide int of_irq_parse_and_map_pci wrapper
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Rob Herring <robh+dt@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch Part1 V2 06/29] x86, acpi, irq: kill static function irq_to_gsi()
-Date: Tue, 20 May 2014 00:22:50 +0800
-Message-Id: <1400516594-11544-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Magnus Damm <damm@opensource.se>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Static function irq_to_gsi() is only called by acpi_isa_irq_to_gsi(),
-so kill function irq_to_gsi() and simplify acpi_isa_irq_to_gsi().
+Hi Arnd,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   26 ++++++--------------------
- 1 file changed, 6 insertions(+), 20 deletions(-)
+On Fri, May 9, 2014 at 11:03 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> The pci-rcar driver is enabled for compile tests, and this has
+> now shown that the driver cannot build without CONFIG_OF,
+> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
+> interrupt mapping when possible":
+>
+> drivers/built-in.o: In function `rcar_pci_map_irq':
+> :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
+>
+> As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
+> supposed to build fine, which we can achieve if we make the
+> declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
+> and provide an empty inline function otherwise, as we do for
+> a lot of other of interfaces.
+>
+> This lets us build the rcar_pci driver again without CONFIG_OF
+> for build testing. All platforms using this driver select OF,
+> so this doesn't change anything for the users.
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index b41b47021f53..8390db1f7a93 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -120,22 +120,6 @@ static unsigned int gsi_to_irq(unsigned int gsi)
- 	return irq;
- }
- 
--static u32 irq_to_gsi(int irq)
--{
--	unsigned int gsi;
--
--	if (irq < NR_IRQS_LEGACY)
--		gsi = isa_irq_to_gsi[irq];
--	else if (irq < gsi_top)
--		gsi = irq;
--	else if (irq < (gsi_top + NR_IRQS_LEGACY))
--		gsi = irq - gsi_top;
--	else
--		gsi = 0xffffffff;
--
--	return gsi;
--}
--
- /*
-  * This is just a simple wrapper around early_ioremap(),
-  * with sanity checks for phys == 0 and size == 0.
-@@ -527,10 +511,12 @@ EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
- 
- int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
- {
--	if (isa_irq >= 16)
--		return -1;
--	*gsi = irq_to_gsi(isa_irq);
--	return 0;
-+	if (isa_irq < NR_IRQS_LEGACY) {
-+		*gsi = isa_irq_to_gsi[isa_irq];
-+		return 0;
-+	}
-+
-+	return -1;
- }
- 
- static int acpi_register_gsi_pic(struct device *dev, u32 gsi,
--- 
-1.7.10.4
+Thanks!
 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Magnus Damm <damm@opensource.se>
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: Ben Dooks <ben.dooks@codethink.co.uk>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-sh@vger.kernel.org
+
+Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
