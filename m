@@ -1,71 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:27198 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756702AbaEPIHg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 May 2014 04:07:36 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org
-Subject: [RFC Patch Part1 V1 27/30] x86, irq, mpparse: use common irqdomain map interface to program IOAPIC pins
-Date: Fri, 16 May 2014 16:05:47 +0800
-Message-Id: <1400227550-5935-28-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:55621 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751070AbaEILwp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 07:52:45 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH 00/22] Random ARM randconfig fixes in drivers
+Date: Fri, 9 May 2014 13:48:49 +0200
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com, dwmw2@infradead.org,
+	dmitry.torokhov@gmail.com, balbi@ti.com,
+	gregkh@linuxfoundation.org, plagnioj@jcrosoft.com,
+	jic23@kernel.org, josh.wu@atmel.com, kishon@ti.com,
+	linus.walleij@linaro.org, broonie@kernel.org,
+	mturquette@linaro.org, nicolas.ferre@atmel.com, ohad@wizery.com,
+	linux@arm.linux.org.uk, tony@atomide.com, vinod.koul@intel.com,
+	wim@iguana.be, wsa@the-dreams.de, dmaengine@vger.kernel.org,
+	linux-i2c@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-watchdog@vger.kernel.org, netdev@vger.kernel.org
+References: <1399560433-1402630-1-git-send-email-arnd@arndb.de> <20140508164157.GA22224@roeck-us.net>
+In-Reply-To: <20140508164157.GA22224@roeck-us.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201405091348.49713.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine mpparse to use common irqdomain map interface to program IOAPIC pins,
-so we can unify the callsite to progam IOAPIC pins.
+On Thursday 08 May 2014, Guenter Roeck wrote:
+> On Thu, May 08, 2014 at 04:46:51PM +0200, Arnd Bergmann wrote:
+> > These are a bunch of fixes I had to do to get all randconfig
+> > configurations on ARM working. Most of these are really old
+> > bugs, but there are also some new ones. I don't think any of
+> > them require a backport to linux-stable.
+> > 
+> > I have checked that they are all still required on yesterday's
+> > linux-next kernel. Please apply on the appropriate trees unless
+> > there are objections.
+> > 
+> Is this series of patches also going to fix arm:allmodconfig ?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/mpparse.c |    4 +++-
- arch/x86/pci/irq.c        |    2 --
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Possibly, I haven't checked in a while. I'm unfortunately sitting on
+about 200 other patches in the same branch, which together fix all
+build errors in any configuration I encountered.
 
-diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
-index b9823bea332a..55acf55b41e7 100644
---- a/arch/x86/kernel/mpparse.c
-+++ b/arch/x86/kernel/mpparse.c
-@@ -113,7 +113,9 @@ static void __init MP_bus_info(struct mpc_bus *m)
- 		pr_warn("Unknown bustype %s - ignoring\n", str);
- }
- 
--static struct irq_domain_ops mp_ioapic_irqdomain_ops;
-+static struct irq_domain_ops mp_ioapic_irqdomain_ops = {
-+	.map = mp_irqdomain_map,
-+};
- 
- static struct irq_domain *mp_ioapic_create_irqdomain(int ioapic, void *arg)
- {
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 84112f55dd7a..e4200e5e775e 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1227,8 +1227,6 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			}
- 			dev = temp_dev;
- 			if (irq >= 0) {
--				io_apic_set_pci_routing(&dev->dev, irq,
--							 &irq_attr);
- 				dev->irq = irq;
- 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
- 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
--- 
-1.7.10.4
+I should really do some allmodconfig/allnoconfig/allyesconfig
+builds without my series again, and prioritize sending out the
+ones required for that.
 
+	Arnd
