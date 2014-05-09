@@ -1,121 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:52027 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752631AbaESLzb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 07:55:31 -0400
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: "Arnd Bergmann (arnd@arndb.de)" <arnd@arndb.de>
-Cc: spear-devel <spear-devel@list.st.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Mark Nicholson <mark@nicholnet.com>,
-	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>
-Date: Mon, 19 May 2014 19:55:12 +0800
-Subject: RE: [PATCH V8 0/9] PCI: Add SPEAr13xx PCie support
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB6619B94997E2B@EAPEX1MAIL1.st.com>
-References: <cover.1397555158.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1397555158.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:39074 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721AbaEIHLW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 03:11:22 -0400
 MIME-Version: 1.0
+In-Reply-To: <4527717.yJh2gX3xCP@wuerfel>
+References: <4527717.yJh2gX3xCP@wuerfel>
+Date: Fri, 9 May 2014 09:11:21 +0200
+Message-ID: <CAMuHMdVn3UTKymxq3uqXbNVjkBhuSWzSG5GzhXWW89ceviLYzA@mail.gmail.com>
+Subject: Re: [PATCH] of/irq: provide int of_irq_parse_and_map_pci wrapper
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <damm@opensource.se>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gQXJuZCwNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNb2hp
-dCBLVU1BUiBEQ0cNCj4gU2VudDogVHVlc2RheSwgQXByaWwgMTUsIDIwMTQgNToyMCBQTQ0KPiBU
-bzogc3BlYXItZGV2ZWw7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRldmljZXRyZWVA
-dmdlci5rZXJuZWwub3JnOw0KPiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0t
-a2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gQ2M6IE1vaGl0IEtVTUFSIERDRw0KPiBTdWJq
-ZWN0OiBbUEFUQ0ggVjggMC85XSBQQ0k6IEFkZCBTUEVBcjEzeHggUENpZSBzdXBwb3J0DQo+IA0K
-PiBQYXRjaCMgMSBhbmQgMjogSW1wcm92ZW1lbnQgYW5kIGZpeGVzIGZvciBTUEVBcjEzeHggc3Vw
-cG9ydC4NCj4gUGF0Y2gjIDMsNCBhbmQgNjogQWRkIERUIGJpbmRpbmdzIGZvciBzcGVhcjEzMTAv
-NDAtbWlwaHksIG1pc2MgYW5kIHBjaWUNCj4gbm9kZSBQYXRjaCMgNTogQWRkIHNwZWFyMTMxMC80
-MC1taXBoeSBkcml2ZXIgYW5kIHN1cHBvcnQgZm9yIHNwZWFyMTMxMC80MA0KPiBtaXBoeSB3cmFw
-cGVyLg0KPiBQYXRjaCMgNy05OiBBZGQgU1BFQXIxM3h4IFBDSWUgZHJpdmVyIGFuZCBkdCBzdXBw
-b3J0Lg0KPiANCj4gVGhlc2UgcGF0aGVzIGFyZSB0ZXN0ZWQgd2l0aCBsaW51eC0zLjE1IHRhZyBv
-ZiBhcm0tc29jIHRyZWUuDQo+IFRlc3RlZCB3aXRoIFNQRUFyMTMxMCBldmFsdWF0aW9uIGJvYXJk
-IHdpdGg6DQo+IAktIElOVEVMIFBSTyAxMDAvMTAwIEVQIGNhcmQNCj4gCS0gVVNCIHhoY2kgZ2Vu
-MiBjYXJkDQo+ICAJLSBBYm92ZSBjYXJkcyBjb25uZWN0ZWQgdGhyb3VnaCBMZUNST1kgUFRDIHN3
-aXRjaA0KPiANCj4gTW9kaWZpY2F0aW9ucyBmb3IgU0FUQSBhcmUgdGVzdGVkIHdpdGggU1BFQXIx
-MzQwLWV2YiBib2FyZA0KPiANCg0KSSB0aGluayAzLjE2IHdpbmRvd3MgaXMgYWJvdXQgdG8gY2xv
-c2UsIGFyZSB5b3UgcGxhbm5pbmcgdG8gbWVyZ2UgdGhpcyBzZXJpZXM/DQpQbHMgbGV0IG1lIGtu
-b3cgaWYgc29tZXRoaW5nIHBlbmRpbmcgb24gb3VyIHBhcnQuDQoNClJlZ2FyZHMNCk1vaGl0DQoN
-Cj4gQ2hhbmdlcyBzaW5jZSB2NzoNCj4gLSBSZWJhc2Ugb3ZlciBmb3ItbGludXMtMy4xNSB0YWcg
-b2YgYXJtLXNvYyB0cmVlIHNvIHRoYXQgY29tcGxldGUgcGF0Y2ggc2VyaWVzDQo+IGNhbiBiZSBh
-cHBsaWVkIGNsZWFubHkuDQo+IC0gSW5jb3Jwb3JhdGVkIGZldyBjb21tZW50cyBvbiBjb21tZW50
-IHN0eWxlIGFuZCBzdXBlcmZsdW91cyBjb21tZW50cw0KPiBDaGFuZ2VzIHNpbmNlIHY2Og0KPiAt
-IFNwbGl0IG1pcGh5IGRyaXZlciBmb3IgU1BFQXIxMzEwIGFuZCBTUEVBcjEzNDANCj4gLSBTb21l
-IGNsZWFudXAgYW5kIGluY29ycG9yYXRlZCBvdGhlciBtaW5vciBjb21tZW50cyBDaGFuZ2VzIHNp
-bmNlIHY1Og0KPiAtIFNwbGl0IERUIGJpbmRpbmdzIGZvciBtaXNjLCBtaXBoeS00MGxwIGFuZCBw
-Y2llIG5vZGUgaW50byBzZXBlYXJ0ZSBwYXRjaGVzDQo+IC0gTWVyZ2UgY29uZmlnIG9wdGlvbnMg
-UENJRV9TUEVBUjEzWFggYW5kIFBDSV9NU0kgaW50byBkZWZjb25maWcgcGF0Y2gNCj4gLSBJbmNv
-cnBvcmF0ZWQgb3RoZXIgbWlub3IgY29tbWVudHMNCj4gQ2hhbmdlcyBzaW5jZSB2NDoNCj4gLSBV
-c2VzIHBlciBkZXZpY2UgZnVuY3Rpb24gcG9pbnRlcnMgcGFzc2VkIGZyb20gLmRhdGEgZmllbGQg
-dG8NCj4gICB0aGUgb2ZfZGV2aWNlX2lkIGluc3RlYWQgb2Ygb2ZfZGV2aWNlX2lzX2NvbXBhdGli
-bGUuDQo+IC0gSW5jb3Jwb3JhdGVkIG90aGVyIG1pbm9yIGNvbW1lbnRzIGZyb20gdjQNCj4gDQo+
-IENoYW5nZXMgc2luY2UgdjM6DQo+IC0gUGh5IGRyaXZlciByZW5hbWVkIHRvIHBoeS1taXBoeTQw
-bHANCj4gLSBhaGNpIHBoeSBob29rIHBhdGNoIHVzZWQgYXMgc3VnZ2VzdGVkIGJ5IEFybmQNCj4g
-LSBJbmNvcnBvcmF0ZWQgb3RoZXIgbWlub3IgY29tbWVudHMgZnJvbSB2Mw0KPiANCj4gQ2hhbmdl
-cyBzaW5jZSB2MjoNCj4gLSBJbmNvcnBvcmF0ZWQgY29tbWVudHMgdG8gbW92ZSBTUEVBcjEzeHgg
-UENJZSBhbmQgU0FUQSBwaHkgc3BlY2lmaWMNCj4gcm91dGluZXMgdG8NCj4gICB0aGUgcGh5IGZy
-YW1ld29yaw0KPiAtIE1vZGlmeSBhaGNpIGRyaXZlciB0byBpbmNsdWRlIHBoeSBob29rcw0KPiAt
-IHBoeS1jb3JlIGRyaXZlciBtb2RpZmljYXRpb25zIGZvciBzdWJzeXNfaW5pdGNhbGwoKQ0KPiAN
-Cj4gQ2hhbmdlcyBzaW5jZSB2MToNCj4gLSBGZXcgcGF0Y2hlcyBvZiB0aGUgc2VyaWVzIGFyZSBh
-bHJlYWR5IGFjY2VwdGVkIGFuZCBhcHBsaWVkIHRvIG1haW5saW5lIGUuZy4NCj4gIHBjaWUgZGVz
-aWdud2FyZSBkcml2ZXIgaW1wcm92ZW1lbnRzLGZpeGVzIGZvciBJTyB0cmFuc2xhdGlvbiBidWcs
-IFBDSWUgZHcNCj4gZHJpdmVyIG1haW50YWluZXIuIFNvIGRyb3BwZWQgdGhlc2UgZnJvbSB2Mi4N
-Cj4gLSBJbmNvcnBvcmF0ZWQgY29tbWVudCB0byBtb3ZlIHRoZSBjb21tb24vcmVzZXQgUENJZSBj
-b2RlIHRvIHRoZQ0KPiBzZXBlcmF0ZSBkcml2ZXINCj4gLSBQQ0llIGFuZCBTQVRBIHNoYXJlIGNv
-bW1vbiBQSFkgY29uZmlndXJhdGlvbiByZWdpc3RlcnMsIHNvIG1vdmUgU0FUQQ0KPiBwbGF0Zm9y
-bSBjb2RlIHRvIHRoZSBzeXN0ZW0gY29uZmlnIGRyaXZlciBGb3VydGggcGF0Y2ggaXMgaW1wcm92
-ZXMgcGNpZQ0KPiBkZXNpZ253YXJlIGRyaXZlciBhbmQgZml4ZXMgdGhlIElPIHRyYW5zbGF0aW9u
-IGJ1Zy4gSU8gdHJhbnNsYXRpb24gYnVnIGZpeA0KPiBsZWFkcyB0byB0aGUgd29ya2luZyBvZiBQ
-Q0llIEVQIGRldmljZXMgY29ubmVjdGVkIHRvIFJDIHRocm91Z2ggc3dpdGNoLg0KPiANCj4gTW9o
-aXQgS3VtYXIgKDEpOg0KPiAgIFNQRUFyMTN4eDogZGVmY29uZmlnOiBVcGRhdGUNCj4gDQo+IFBy
-YXR5dXNoIEFuYW5kICg4KToNCj4gICBjbGs6IFNQRUFyMTNYWDogRml4IHBjaWUgY2xvY2sgbmFt
-ZQ0KPiAgIFNQRUFyMTNYWDogRml4IHN0YXRpYyBtYXBwaW5nIHRhYmxlDQo+ICAgcGh5OiBTUEVB
-cjEzMTAvNDAtbWlwaHk6IEFkZCBiaW5kaW5nIGluZm9ybWF0aW9uDQo+ICAgU1BFQXI6IG1pc2M6
-IEFkZCBiaW5kaW5nIGluZm9ybWF0aW9uDQo+ICAgcGh5OiBTUEVBcjEzMTAvNDAtbWlwaHk6IEFk
-ZCBwaHkgZHJpdmVyIGZvciBQQ0llIGFuZCBTQVRBDQo+ICAgU1BFQXIxM1hYOiBBZGQgYmluZGlu
-ZyBpbmZvcm1hdGlvbiBmb3IgUENJZSBjb250cm9sbGVyDQo+ICAgU1BFQXIxM1hYOiBkdHM6IEFk
-ZCBQQ0llIG5vZGUgaW5mb3JtYXRpb24NCj4gICBwY2llOiBTUEVBcjEzeHg6IEFkZCBkZXNpZ253
-YXJlIHdyYXBwZXIgc3VwcG9ydA0KPiANCj4gIC4uLi9kZXZpY2V0cmVlL2JpbmRpbmdzL2FybS9z
-cGVhci1taXNjLnR4dCAgICAgICAgIHwgICAgOSArDQo+ICAuLi4vZGV2aWNldHJlZS9iaW5kaW5n
-cy9wY2kvc3BlYXIxM3h4LXBjaWUudHh0ICAgICB8ICAgMTQgKw0KPiAgLi4uL2RldmljZXRyZWUv
-YmluZGluZ3MvcGh5L3N0LXNwZWFyMTMxMC1taXBoeS50eHQgfCAgIDEyICsNCj4gIC4uLi9kZXZp
-Y2V0cmVlL2JpbmRpbmdzL3BoeS9zdC1zcGVhcjEzNDAtbWlwaHkudHh0IHwgICAxMSArDQo+ICBN
-QUlOVEFJTkVSUyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDYg
-Kw0KPiAgYXJjaC9hcm0vYm9vdC9kdHMvc3BlYXIxMzEwLWV2Yi5kdHMgICAgICAgICAgICAgICAg
-fCAgICA0ICsNCj4gIGFyY2gvYXJtL2Jvb3QvZHRzL3NwZWFyMTMxMC5kdHNpICAgICAgICAgICAg
-ICAgICAgIHwgICA5MyArKysrKy0NCj4gIGFyY2gvYXJtL2Jvb3QvZHRzL3NwZWFyMTM0MC1ldmIu
-ZHRzICAgICAgICAgICAgICAgIHwgICAgNCArDQo+ICBhcmNoL2FybS9ib290L2R0cy9zcGVhcjEz
-NDAuZHRzaSAgICAgICAgICAgICAgICAgICB8ICAgMzAgKystDQo+ICBhcmNoL2FybS9ib290L2R0
-cy9zcGVhcjEzeHguZHRzaSAgICAgICAgICAgICAgICAgICB8ICAgIDkgKy0NCj4gIGFyY2gvYXJt
-L2NvbmZpZ3Mvc3BlYXIxM3h4X2RlZmNvbmZpZyAgICAgICAgICAgICAgIHwgICAxNiArDQo+ICBh
-cmNoL2FybS9tYWNoLXNwZWFyL0tjb25maWcgICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDQg
-Kw0KPiAgYXJjaC9hcm0vbWFjaC1zcGVhci9pbmNsdWRlL21hY2gvc3BlYXIuaCAgICAgICAgICAg
-fCAgICA0ICstDQo+ICBhcmNoL2FybS9tYWNoLXNwZWFyL3NwZWFyMTM0MC5jICAgICAgICAgICAg
-ICAgICAgICB8ICAxMjcgKy0tLS0tLQ0KPiAgYXJjaC9hcm0vbWFjaC1zcGVhci9zcGVhcjEzeHgu
-YyAgICAgICAgICAgICAgICAgICAgfCAgICAyICstDQo+ICBkcml2ZXJzL2Nsay9zcGVhci9zcGVh
-cjEzMTBfY2xvY2suYyAgICAgICAgICAgICAgICB8ICAgIDYgKy0NCj4gIGRyaXZlcnMvY2xrL3Nw
-ZWFyL3NwZWFyMTM0MF9jbG9jay5jICAgICAgICAgICAgICAgIHwgICAgMiArLQ0KPiAgZHJpdmVy
-cy9wY2kvaG9zdC9LY29uZmlnICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICA4ICsNCj4g
-IGRyaXZlcnMvcGNpL2hvc3QvTWFrZWZpbGUgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAg
-MSArDQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtc3BlYXIxM3h4LmMgICAgICAgICAgICAgICAg
-ICB8ICA0MDcgKysrKysrKysrKysrKysrKysrKysNCj4gIGRyaXZlcnMvcGh5L0tjb25maWcgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAxMiArDQo+ICBkcml2ZXJzL3BoeS9NYWtl
-ZmlsZSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDIgKw0KPiAgZHJpdmVycy9w
-aHkvcGh5LXNwZWFyMTMxMC1taXBoeS5jICAgICAgICAgICAgICAgICAgfCAgMjc0ICsrKysrKysr
-KysrKysNCj4gIGRyaXZlcnMvcGh5L3BoeS1zcGVhcjEzNDAtbWlwaHkuYyAgICAgICAgICAgICAg
-ICAgIHwgIDMwMCArKysrKysrKysrKysrKw0KPiAgMjQgZmlsZXMgY2hhbmdlZCwgMTIxOCBpbnNl
-cnRpb25zKCspLCAxMzkgZGVsZXRpb25zKC0pICBjcmVhdGUgbW9kZSAxMDA2NDQNCj4gRG9jdW1l
-bnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2FybS9zcGVhci1taXNjLnR4dA0KPiAgY3JlYXRl
-IG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvc3BlYXIx
-M3h4LQ0KPiBwY2llLnR4dA0KPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vZGV2
-aWNldHJlZS9iaW5kaW5ncy9waHkvc3QtDQo+IHNwZWFyMTMxMC1taXBoeS50eHQNCj4gIGNyZWF0
-ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGh5L3N0LQ0K
-PiBzcGVhcjEzNDAtbWlwaHkudHh0DQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9wY2kv
-aG9zdC9wY2llLXNwZWFyMTN4eC5jICBjcmVhdGUgbW9kZSAxMDA2NDQNCj4gZHJpdmVycy9waHkv
-cGh5LXNwZWFyMTMxMC1taXBoeS5jICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9waHkvcGh5
-LQ0KPiBzcGVhcjEzNDAtbWlwaHkuYw0KDQo=
+On Fri, May 9, 2014 at 8:58 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> The pci-rcar driver is enabled for compile tests, and this has
+> now shown that the driver cannot build without CONFIG_OF,
+> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
+> interrupt mapping when possible":
+>
+> drivers/built-in.o: In function `rcar_pci_map_irq':
+> :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
+>
+> As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
+> supposed to build fine, which we can achieve if we make the
+> declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
+> and provide an empty inline function otherwise, as we do for
+> a lot of other of interfaces.
+>
+> This lets us build the rcar_pci driver again without CONFIG_OF,
+> which won't work but give us compile time coverage.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Magnus Damm <damm@opensource.se>
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: Ben Dooks <ben.dooks@codethink.co.uk>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-sh@vger.kernel.org
+
+Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
