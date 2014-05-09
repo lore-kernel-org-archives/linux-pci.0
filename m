@@ -1,99 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <538597F0.1040003@linutronix.de>
-Date: Wed, 28 May 2014 10:01:52 +0200
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:33076 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756929AbaEIUZn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 16:25:43 -0400
+From: James Bottomley <jbottomley@parallels.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"rdunlap@infradead.org" <rdunlap@infradead.org>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"dwmw2@infradead.org" <dwmw2@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Subject: Re: [PATCH v2 4/5] iommu: Use dma_addr_t for IOVA arguments
+Date: Fri, 9 May 2014 20:25:40 +0000
+Message-ID: <1399667139.2166.71.camel@dabdike.int.hansenpartnership.com>
+References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	 <1399629530.879.21.camel@i7.infradead.org>
+	 <20140509153226.GA3571@google.com> <9450765.GaoRYW154J@wuerfel>
+	 <CAErSpo5bPvaATcptz3wGdLWOG-1thHKCHDK5D8K=D9wy+NDomA@mail.gmail.com>
+In-Reply-To: <CAErSpo5bPvaATcptz3wGdLWOG-1thHKCHDK5D8K=D9wy+NDomA@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: Re: [Patch V3 19/37] x86, irq: introduce mechanisms to support dynamically
- allocate IRQ for IOAPIC
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com> <1401178092-1228-20-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.02.1405271445050.21720@ionos.tec.linutronix.de>
-In-Reply-To: <alpine.DEB.2.02.1405271445050.21720@ionos.tec.linutronix.de>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/27/2014 09:58 PM, Thomas Gleixner wrote:
-> ce4100 is an oddball though. The ioapic is registered way before the
-> interrupt subsystem is initialized and I have a hard time to
-> understand that comment:
+On Fri, 2014-05-09 at 14:19 -0600, Bjorn Helgaas wrote:
+> On Fri, May 9, 2014 at 1:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Friday 09 May 2014 09:32:26 Bjorn Helgaas wrote:
+> >> > There are people who care deeply about the performance of IOMMU API
+> >> > map/unmap. It isn't used *just* for virtual machines any more. See
+> >> > drivers/infiniband/hw/usnic/usnic_uiom.c for example.
+> >>
+> >> Of course we should care about IOMMU API performance.  We should also
+> >> care about interface consistency, and it seems there's a tradeoff in
+> >> this case.  I said "relatively" because I expect map/unmap to be less
+> >> frequent than read/write operations that use the mapping.  I don't
+> >> know anything about infiniband, so maybe that assumption is false
+> >> there.
+> >
+> > In most drivers using the streaming DMA API, every mapping is used
+> > exactly once. Think of network or block drivers: they rarely send
+> > the same data twice to the device, and it usually comes from or
+> > goes to some user space buffer.
 > 
->         /* We can't set this earlier, because we need to calibrate the timer */
->         legacy_pic = &null_legacy_pic;
-> 
-> The timer calibration happens after the interrupts are set up. I
-> assume it's check_timer() which wants that, but we know exactly how
-> the ce4100 works, so we might be able to avoid that whole "testing"
-> stuff. Sebastian, any input on this?
+> Oh, good point.  I don't work that high up in the stack, so thanks for
+> reminding me of that.
 
-According to my memory there was some PIC init we need but I don't
-recall the details. However, booting the system with "legacy_pic =
-&null_legacy_pic;" in x86_ce4100_early_setup() gives me this:
+To round this out, for most devices we have two types of mappings: the
+mailbox ones, which designate regions of communication memory between
+the kernel and the device which are usually permanent mappings, and the
+transmission mappings: every bit of data we send to the device is
+mapped, sent/received and then unmapped.  The setup and teardown costs
+factor into the throughput.  Some high iops devices (like SSD or high
+speed net) are peculiarly sensitive to this.
 
-[    0.001000] Enabling APIC mode:  Flat.  Using 2 I/O APICs
-[    0.001000] leaving PIC mode, enabling APIC mode.
-[    0.001000] enabled ExtINT on CPU#0
-[    0.001000] ENABLING IO-APIC IRQs
-[    0.001000] Setting 1 in the phys_id_present_map
-[    0.001000] ...changing IO-APIC physical APIC ID to 1 ... ok.
-[    0.001000] Setting 2 in the phys_id_present_map
-[    0.001000] ...changing IO-APIC physical APIC ID to 2 ... ok.
-[    0.001000] smpboot: CPU0: Intel(R) Atom(TM) CPU CE4150   @ 1.20GHz
-(fam: 06, model: 1c, stepping: 0a)
-[    0.001000] Using local APIC timer interrupts.
-[    0.001000] calibrating APIC timer ...
+James
 
-and we stand still. With the assignment as it is now:
-
-[    0.001000] Enabling APIC mode:  Flat.  Using 2 I/O APICs
-[    0.001000] leaving PIC mode, enabling APIC mode.
-[    0.001000] enabled ExtINT on CPU#0
-[    0.002312] ENABLING IO-APIC IRQs
-[    0.003009] Setting 1 in the phys_id_present_map
-[    0.004007] ...changing IO-APIC physical APIC ID to 1 ... ok.
-[    0.005533] Setting 2 in the phys_id_present_map
-[    0.006006] ...changing IO-APIC physical APIC ID to 2 ... ok.
-[    0.008373] ..TIMER: vector=0x30 apic1=-1 pin1=-1 apic2=-1 pin2=-1
-[    0.009000] ...trying to set up timer as Virtual Wire IRQ...
-[    0.019490] ..... works.
-[    0.020005] smpboot: CPU0: Intel(R) Atom(TM) CPU CE4150   @ 1.20GHz
-(fam: 06, model: 1c, stepping: 0a)
-[    0.024005] Using local APIC timer interrupts.
-[    0.024005] calibrating APIC timer ...
-[    0.026000] ... lapic delta = 624992
-[    0.026000] ... PM-Timer delta = 0
-[    0.026000] ..... delta 624992
-[    0.026000] ..... mult: 26843202
-[    0.026000] ..... calibration result: 99998
-[    0.026000] ..... CPU clock speed is 1199.0984 MHz.
-[    0.026000] ..... host bus clock speed is 99.0998 MHz.
-[    0.026000] ... verify APIC timer
-[    0.128565] ... jiffies delta = 100
-[    0.129004] ... jiffies result ok
-
-and it goes on. As you see, "..TIMER:" is missing in the upper output.
-
-> 
-> Thanks,
-> 
-> 	tglx
-
-Sebastian
