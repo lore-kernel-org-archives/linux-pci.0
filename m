@@ -1,116 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0141.outbound.protection.outlook.com ([207.46.163.141]:47686
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751010AbaEXAbf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 23 May 2014 20:31:35 -0400
-Message-ID: <537FE860.9000802@amd.com>
-Date: Fri, 23 May 2014 19:31:28 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Received: from mail-ve0-f174.google.com ([209.85.128.174]:40653 "EHLO
+	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752845AbaEJMxg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 May 2014 08:53:36 -0400
+Received: by mail-ve0-f174.google.com with SMTP id jw12so6610953veb.19
+        for <linux-pci@vger.kernel.org>; Sat, 10 May 2014 05:53:35 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Borislav Petkov <bp@alien8.de>, Robert Richter <rric@kernel.org>,
-	"Daniel J Blueman" <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Borislav Petkov <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after
- Fam16h
-References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521233802.GA21575@pd.tnic>
- <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
- <20140522191746.GL4383@pd.tnic>
- <CAErSpo7=0-xdnu4DQufu_6eS=6AYhnDRaQvzeiMEC5a=zKU0Jg@mail.gmail.com>
- <537E8ACF.6000103@amd.com>
- <CAErSpo6AMGPFELx+2qJXYaxaLRhk2F2J=wn4=gLgmvYGdLup7A@mail.gmail.com>
-In-Reply-To: <CAErSpo6AMGPFELx+2qJXYaxaLRhk2F2J=wn4=gLgmvYGdLup7A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <20140510121542.5359.qmail@ns.horizon.com>
+References: <20140510121542.5359.qmail@ns.horizon.com>
+Date: Sat, 10 May 2014 20:53:35 +0800
+Message-ID: <CAJtEV7bbyvqBbtj+SDo_HrVubAZjs7Zn75zeKLZq3b6ga=qALA@mail.gmail.com>
+Subject: Re: [PATCH v2 00/15] PCI/iommu: Fix DMA alias problems
+From: Andrew Cooks <acooks@gmail.com>
+To: George Spelvin <linux@horizon.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	linux-kernel@vger.kernrl.org,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/22/2014 9:54 PM, Bjorn Helgaas wrote:
-> I've been poking around for recent dmesg logs that contain "PCI: Using
-> configuration type 1 for extended access", and there are quite a few.
-> In most cases there*is*  an MCFG table, but apparently we decide not
-> to use it for some reason (unfortunately we don't print the specific
-> reason).  One example is at
-> https://bugzilla.kernel.org/show_bug.cgi?id=68591  .
+On Sat, May 10, 2014 at 8:15 PM, George Spelvin <linux@horizon.com> wrote:
+> Well, chalk up one test failure.
 >
-> I'm going to go out on a limb and guess that Windows does not enable
-> ECS, so it probably uses ECAM.  Therefore, I suspect Linux's parsing
-> of MCFG is broken in some way, and we probably*could*  use ECAM in all
-> these cases I'm seeing.
+> I'm running a GA-X79-UP4 motherboard with VT-d enabled.
+> It has 3x Marvell SATA controllers:
+> 05:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller (rev 11)
+> 06:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller (rev 11)
+> 07:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller (rev 11)
 >
-> It would probably be prudent to figure out why Linux is rejecting
-> these MCFG tables.  We'll probably see similar tables on Fam17h
-> systems, and if we continue rejecting them, and we don't turn on ECS,
-> we won't be able to access extended config space.
+> With Andrew's patch from https://bugzilla.kernel.org/show_bug.cgi?id=42679#c22
+> the Marvell SATA ports work.  With your dma-alias branch (rebased onto 3.15-rc5),
+> the ports don't work:
 >
-> I opened a bugzilla for this issue:
-> https://bugzilla.kernel.org/show_bug.cgi?id=76771
->
-> I'm wavering on whether it's a good idea to put this patch in before
-> understanding the issue.  As much as I'd like to stop fiddling with
-> ECS, we'd likely end up with a v3.15 where extended config space
-> doesn't work on some Fam17h systems.
+> -ata7.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
+> -dmar: DRHD: handling fault status reg 502
+> -dmar: DMAR:[DMA Write] Request device [05:00.1] fault addr fffc0000
+> -DMAR:[fault reason 02] Present bit in context entry is clear
 
-So, I have located a system which presents issue with MMCONFIG. Here is 
-my investigation:
 
-DEBUG: pci_io_ecs_init: pci_probe = 4000f
-ACPI: bus type PCI registered
-DEBUG: -----> pci_mmcfg_early_init
-DEBUG: pci_parse_mcfg
-PCI: MMCONFIG for domain 0000 [bus 00-01] at [mem 0xe0000000-0xe01fffff] 
-(base 0xe0000000)
-DEBUG: pci_mmcfg_check_reserved
-DEBUG: is_mmconf_reserved: method = E820
-PCI: not using MMCONFIG
-DEBUG: pci_direct_init
-PCI: Using configuration type 1 for base access
-PCI: Using configuration type 1 for extended access
-ACPI: Added _OSI(Module Device)
-ACPI: Added _OSI(Processor Device)
-ACPI: Added _OSI(3.0 _SCP Extensions)
-ACPI: Added _OSI(Processor Aggregator Device)
-[Firmware Bug]: ACPI: BIOS _OSI(Linux) query ignored
-\_SB_:_OSC invalid UUID
-_OSC request data:1 1f
-ACPI: Interpreter enabled
-ACPI Exception: AE_NOT_FOUND, While evaluating Sleep State [\_S1_] 
-(20140214/hwxface-580)
-ACPI Exception: AE_NOT_FOUND, While evaluating Sleep State [\_S2_] 
-(20140214/hwxface-580)
-ACPI Exception: AE_NOT_FOUND, While evaluating Sleep State [\_S4_] 
-(20140214/hwxface-580)
-ACPI: (supports S0 S3 S5)
-ACPI: Using IOAPIC for interrupt routing
-DEBUG: ----> pci_mmcfg_late_init
-DEBUG: pci_parse_mcfg
-PCI: MMCONFIG for domain 0000 [bus 00-01] at [mem 0xe0000000-0xe01fffff] 
-(base 0xe0000000)
-DEBUG: pci_mmcfg_check_reserved
-DEBUG: is_mmconf_reserved: method = ACPI motherboard resources
-PCI: MMCONFIG at [mem 0xe0000000-0xe01fffff] reserved in ACPI 
-motherboard resources
+When I checked, about 12 hours ago, the dma-alias branch on github
+didn't have all the v2 changes, so I applied the v2 patch set on
+3.15-rc5. You may want to try that as well.
 
-During pci_mmcfg_early_init(), the MMCONFIG failed because the range 
-0xe0000000 is not showing as reserved in the E820 mapping.  Here is the 
-snippet of E820 mapping from the system:
-........
-BIOS-e820: [mem 0x00000000c7eb0000-0x00000000c7ec0fff] ACPI data
-BIOS-e820: [mem 0x00000000c7ec1000-0x00000000c7ec2fff] ACPI NVS
-BIOS-e820: [mem 0x00000000c7ec3000-0x00000000c7efefff] reserved
-BIOS-e820: [mem 0x00000000c7f00000-0x00000000c7ffffff] reserved
-BIOS-e820: [mem 0x00000000fec00000-0x00000000fec0ffff] reserved
+I didn't notice any problems on the board I used: GA-X79-UD5, with the
+same 88SE9172 controllers as above and with drives attached to each of
+the internal SATA ports.
 
-However, during pci_mmcfg_late_init(), the area is reserved in the "ACPI 
-motherboard resources", and the pci_mmcfg_check_reserved() does not fail 
-here.  But this is too late since we already setup the "raw_pci_ext_ops" 
-in the "arch/x86/pci/direct.c: pci_direct_init()" (during to use the IO_ECS.
-
-Suravee
+a.
