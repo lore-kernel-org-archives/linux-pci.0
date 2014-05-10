@@ -1,47 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 8 May 2014 11:01:48 +0200
-From: Robert Richter <rric@kernel.org>
-To: suravee.suthikulpanit@amd.com
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	Borislav Petkov <bp@suse.de>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH V3 1/3] x86/PCI: Fix PCI root numa_node info on AMD
- family15h
-Message-ID: <20140508090148.GL32718@rric.localhost>
-References: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1399489127-6961-2-git-send-email-suravee.suthikulpanit@amd.com>
- <20140508085905.GK32718@rric.localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41424 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757806AbaEJPDs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 10 May 2014 11:03:48 -0400
+Subject: [PATCH v3 13/15] iommu: Remove pci.h
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>,
+	acooks@gmail.com, linux-kernel@vger.kernel.org, linux@horizon.com
+Date: Sat, 10 May 2014 09:03:42 -0600
+Message-ID: <20140510150342.2997.55320.stgit@bling.home>
+In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
+References: <20140510145619.2997.429.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140508085905.GK32718@rric.localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08.05.14 10:59:05, Robert Richter wrote:
-> On 07.05.14 13:58:45, suravee.suthikulpanit@amd.com wrote:
-> > @@ -113,10 +122,17 @@ static int __init early_fill_mp_bus_info(void)
-> >  		info = alloc_pci_root_info(min_bus, max_bus, node, link);
-> >  	}
-> >  
-> > +	/*
-> > +	 * The following code is only supported until Fam11h.
-> > +	 * Newer processors will depend on ACPI MCFG table instead.
-> > +	 */
-> > +	if (boot_cpu_data.x86 > 0x11)
-> > +		return 0;
-> > +
-> >  	/* get the default node and link for left over res */
-> 
-> As this is the only substantial change of your patch, I would better
-> drop ther rest or at least split it in two patches. Should this change
-> also be for stable?
+The single helper here no longer has any users.
 
-Of course adding the hostbridge must be also part of the patch, didn't
-note this due to the other noise. See why the split would be good?
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/iommu/pci.h |   29 -----------------------------
+ 1 file changed, 29 deletions(-)
+ delete mode 100644 drivers/iommu/pci.h
 
-> 
-> -Robert
+diff --git a/drivers/iommu/pci.h b/drivers/iommu/pci.h
+deleted file mode 100644
+index 352d80a..0000000
+--- a/drivers/iommu/pci.h
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/*
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License, version 2, as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+- *
+- * Copyright (C) 2013 Red Hat, Inc.
+- * Copyright (C) 2013 Freescale Semiconductor, Inc.
+- *
+- */
+-#ifndef __IOMMU_PCI_H
+-#define __IOMMU_PCI_H
+-
+-/* Helper function for swapping pci device reference */
+-static inline void swap_pci_ref(struct pci_dev **from, struct pci_dev *to)
+-{
+-	pci_dev_put(*from);
+-	*from = to;
+-}
+-
+-#endif  /* __IOMMU_PCI_H */
+
