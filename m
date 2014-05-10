@@ -1,56 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:56128 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014AbaEOSUs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 14:20:48 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware core driver
-Date: Thu, 15 May 2014 20:20:13 +0200
-Message-ID: <22200719.Jb5jnJylJH@wuerfel>
-In-Reply-To: <5374FD24.8000806@ti.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <6048322.x3M3sdDEWO@wuerfel> <5374FD24.8000806@ti.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52582 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757806AbaEJPDw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 10 May 2014 11:03:52 -0400
+Subject: [PATCH v3 14/15] PCI: Remove pci_find_upstream_pcie_bridge()
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	linux-kernel@vger.kernel.org, linux@horizon.com
+Date: Sat, 10 May 2014 09:03:48 -0600
+Message-ID: <20140510150348.2997.36661.stgit@bling.home>
+In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
+References: <20140510145619.2997.429.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 15 May 2014 13:45:08 Murali Karicheri wrote:
-> >> +#ifdef CONFIG_PCI_KEYSTONE
-> >> +/*
-> >> + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
-> >> + */
-> >> +static void quirk_limit_readrequest(struct pci_dev *dev)
-> >> +{
-> >> +    int readrq = pcie_get_readrq(dev);
-> >> +
-> >> +    if (readrq > 256)
-> >> +            pcie_set_readrq(dev, 256);
-> >> +}
-> >> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
-> >> +#endif /* CONFIG_PCI_KEYSTONE */
-> > This doesn't work: you can't just limit do this for all devices just based
-> > on PCI_KEYSTONE being enabled, you have to check if you are actually using
-> > this controller.
-> >
-> >       Arnd
->   I assume, I need to check if PCI controller's vendor ID/ device ID 
-> match with the keystone
->   PCI controller's ID and call pcie_set_readrq() for all of the slave 
-> PCI devices and do this fixup.
-> Is this correct understanding?  If you can point me to an example code 
-> for this that will be
-> really helpful so that I can avoid re-inventing the wheel.
+It's broken and has no users.
 
-I think it would be best to move the quirk into the keystone pci driver
-and compare compare the dev->driver pointer of the PCI controller device.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/search.c |   35 -----------------------------------
+ include/linux/pci.h  |   11 -----------
+ 2 files changed, 46 deletions(-)
 
-	Arnd
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index aea2443..473c6e8 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -244,41 +244,6 @@ struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev)
+ 	return pdev;
+ }
+ 
+-/*
+- * find the upstream PCIe-to-PCI bridge of a PCI device
+- * if the device is PCIE, return NULL
+- * if the device isn't connected to a PCIe bridge (that is its parent is a
+- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
+- * parent
+- */
+-struct pci_dev *
+-pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+-{
+-	struct pci_dev *tmp = NULL;
+-
+-	if (pci_is_pcie(pdev))
+-		return NULL;
+-	while (1) {
+-		if (pci_is_root_bus(pdev->bus))
+-			break;
+-		pdev = pdev->bus->self;
+-		/* a p2p bridge */
+-		if (!pci_is_pcie(pdev)) {
+-			tmp = pdev;
+-			continue;
+-		}
+-		/* PCI device should connect to a PCIe bridge */
+-		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
+-			/* Busted hardware? */
+-			WARN_ON_ONCE(1);
+-			return NULL;
+-		}
+-		return pdev;
+-	}
+-
+-	return tmp;
+-}
+-
+ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+ {
+ 	struct pci_bus *child;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5096031..64184d5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1804,15 +1804,4 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 				     u16 alias, void *data), void *data);
+ struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev);
+ 
+-/**
+- * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+- * @pdev: the PCI device
+- *
+- * if the device is PCIE, return NULL
+- * if the device isn't connected to a PCIe bridge (that is its parent is a
+- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
+- * parent
+- */
+-struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
+-
+ #endif /* LINUX_PCI_H */
+
