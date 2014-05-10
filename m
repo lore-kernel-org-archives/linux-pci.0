@@ -1,43 +1,26 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:49248 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757260AbaEITwu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 15:52:50 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Woodhouse <dwmw2@infradead.org>, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-kernel@vger.kernel.org,
-	James Bottomley <jbottomley@parallels.com>,
+Received: from ns.horizon.com ([71.41.210.147]:28989 "HELO ns.horizon.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751136AbaEJQQi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 10 May 2014 12:16:38 -0400
+Date: 10 May 2014 12:16:36 -0400
+Message-ID: <20140510161636.25044.qmail@ns.horizon.com>
+From: "George Spelvin" <linux@horizon.com>
+To: alex.williamson@redhat.com, linux@horizon.com
+Subject: Re: [PATCH v2 00/15] PCI/iommu: Fix DMA alias problems
+Cc: acooks@gmail.com, bhelgaas@google.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 4/5] iommu: Use dma_addr_t for IOVA arguments
-Date: Fri, 09 May 2014 21:52:08 +0200
-Message-ID: <9450765.GaoRYW154J@wuerfel>
-In-Reply-To: <20140509153226.GA3571@google.com>
-References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com> <1399629530.879.21.camel@i7.infradead.org> <20140509153226.GA3571@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1399731309.17639.167.camel@ul30vt.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 09 May 2014 09:32:26 Bjorn Helgaas wrote:
-> > There are people who care deeply about the performance of IOMMU API
-> > map/unmap. It isn't used *just* for virtual machines any more. See
-> > drivers/infiniband/hw/usnic/usnic_uiom.c for example.
-> 
-> Of course we should care about IOMMU API performance.  We should also
-> care about interface consistency, and it seems there's a tradeoff in
-> this case.  I said "relatively" because I expect map/unmap to be less
-> frequent than read/write operations that use the mapping.  I don't
-> know anything about infiniband, so maybe that assumption is false
-> there.
+> I'll post a v3 soon, I think we figured out the problem Andrew was
+> having, a couple typos on my part.  I'll push out a new branch for that
+> so you don't need to piece it together yourself.  Thanks,
 
-In most drivers using the streaming DMA API, every mapping is used
-exactly once. Think of network or block drivers: they rarely send
-the same data twice to the device, and it usually comes from or
-goes to some user space buffer.
+Don't worry; I imported v2, and have it running successfully right now.
+I ran e2fsck and hdparm -t on a couple of drives on the controller
+(including in parallel), with no problems.
 
-	Arnd
+Again, sorry for my earlier laziness.
