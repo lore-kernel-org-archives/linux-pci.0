@@ -1,32 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:40362 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932751AbaE2Rsr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 13:48:47 -0400
-Message-ID: <538772FD.40407@wwwdotorg.org>
-Date: Thu, 29 May 2014 11:48:45 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/5] PCI: tegra: Overhaul regulator usage
-References: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com> <1401288555-24197-2-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1401288555-24197-2-git-send-email-thierry.reding@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from ns.horizon.com ([71.41.210.147]:26303 "HELO ns.horizon.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753850AbaEJOIQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 10 May 2014 10:08:16 -0400
+Date: 10 May 2014 10:08:14 -0400
+Message-ID: <20140510140814.16061.qmail@ns.horizon.com>
+From: "George Spelvin" <linux@horizon.com>
+To: alex.williamson@redhat.com, linux@horizon.com
+Subject: Re: [PATCH v2 00/15] PCI/iommu: Fix DMA alias problems
+Cc: acooks@gmail.com, bhelgaas@google.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernrl.org,
+	linux-pci@vger.kernel.org
+In-Reply-To: <1399727869.17639.157.camel@ul30vt.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/28/2014 08:49 AM, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> The current usage of regulators for the Tegra PCIe block is wrong. It
-> doesn't accurately reflect the actual supply inputs of the IP block and
-> therefore isn't as flexible as it should be. Rectify this by describing
-> all possible supply inputs in the device tree binding documentation and
-> deprecate the old supply properties.
+> What's the device ID of these devices?
 
-The series looks fine to me at a quick glance. Since Bjorn has ack'd the
-PCIe driver patch, I'll apply this to the Tegra tree for 3.17. I'll put
-it into a topic branch in case it needs to be merged into the PCI tree
-to resolve any conflicts.
+Oops!  It's
+
+05:00.0 SATA controller [0106]: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller [1b4b:9172] (rev 11)
+06:00.0 SATA controller [0106]: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller [1b4b:9172] (rev 11)
+07:00.0 SATA controller [0106]: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller [1b4b:9172] (rev 11)
+
+> The dma-alias branch only has the v1 patchset.  There are several more
+> Marvell devices included in the quirks in the v2 set.  Please re-test
+> with this code.  Thanks,
+
+Oh, okay!  I got the patches from github because it was a lot easier
+to get the whole set that way.  (I don't actually have an SMTP LKML
+subscription, so I have to copy them all from a web archive, then
+manually edit the headers into something RFC822-like enough for "git am"
+to accept.)
+
+Mea culpa for forgetting to check the version.  And thank you for the response!
