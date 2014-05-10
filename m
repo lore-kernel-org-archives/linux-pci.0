@@ -1,219 +1,141 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch Part1 V2 24/29] x86, irq: introduce two helper functions to support irqdomain map operation
-Date: Tue, 20 May 2014 00:23:08 +0800
-Message-Id: <1400516594-11544-25-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54770 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757513AbaEJPDb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 10 May 2014 11:03:31 -0400
+Subject: [PATCH v3 10/15] iommu/intel: Use pci_find_dma_isolation_root() for
+ IOMMU groups
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	David Woodhouse <David.Woodhouse@intel.com>, linux@horizon.com,
+	linux-kernel@vger.kernel.org
+Date: Sat, 10 May 2014 09:03:24 -0600
+Message-ID: <20140510150324.2997.69374.stgit@bling.home>
+In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
+References: <20140510145619.2997.429.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently there are multiple entries to program IOAPIC pins, such as
-io_apic_setup_irq_pin_once(), io_apic_set_pci_routing() and
-setup_IO_APIC_irq_extra() etc.
+Drop custom code that attempts to do the exact same thing and use
+PCI provided isolation root support.  Existing IOMMU group laytout
+should not change.
 
-This patch introduces two functions to help consolidate the code to
-program IOAPIC pins. Function mp_set_pin_attr() is used to optionally
-set trigger, polarity and NUMA node property for an IOAPIC pin.
-If mp_set_pin_attr() is not invoked for a pin, the default configuration
-from BIOS will be used.
-
-Function mp_irqdomain_map() is an common implementation of irqdomain map()
-operation. It figures out attribures for pin and then actually programs
-the IOAPIC pin. We hope this will be the only entrance for programming
-IOAPIC pin.
-
-And the flow will:
-1) caller such as xxx_pci_irq_enable figures out pin attributes.
-2) Invoke mp_set_pin_attr() to set attributes for a pin. If the pin has
-   already bin programmed,  mp_set_pin_attr() will aslo detects attribute
-   confictions.
-3) Invoke mp_map_pin_to_irq()
-3.1) If IRQ has already been assigned, return irq_find_mapping()
-3.2) Else irq_create_mapping()
-		->irq_domain_associate()
-			->mp_irqdomain_map()
-				->io_apic_setup_irq_pin()
-
-So every pin will only programmed once by mp_irqdomain_map(), so we
-could kill io_apic_setup_irq_pin_once(), io_apic_set_pci_routing() and
-setup_IO_APIC_irq_extra() etc.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: David Woodhouse <David.Woodhouse@intel.com>
 ---
- arch/x86/include/asm/io_apic.h |    4 ++
- arch/x86/kernel/apic/io_apic.c |   79 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 82 insertions(+), 1 deletion(-)
+ drivers/iommu/intel-iommu.c |   71 +++++--------------------------------------
+ 1 file changed, 8 insertions(+), 63 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 666170437d78..d71da9cc30ae 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -184,6 +184,10 @@ extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 				      ioapic_create_domain_fn cb, void *arg);
- extern struct irq_domain *mp_irqdomain_create(int ioapic,
- 		struct device_node *np, const struct irq_domain_ops *ops);
-+extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
-+			    irq_hw_number_t hwirq);
-+extern int mp_set_pin_attr(int ioapic, int pin, int trigger, int polarity,
-+			   int node);
- extern void __init pre_init_apic_IRQ0(void);
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index f256ffc..f0e50f1 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -44,7 +44,6 @@
+ #include <asm/iommu.h>
  
- extern void mp_save_irq(struct mpc_intsrc *m);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 1b9dd0a70dfa..6c838a2ecac0 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -86,6 +86,14 @@ static DEFINE_RAW_SPINLOCK(ioapic_lock);
- static DEFINE_RAW_SPINLOCK(vector_lock);
- static DEFINE_MUTEX(ioapic_mutex);
+ #include "irq_remapping.h"
+-#include "pci.h"
  
-+struct mp_pin_info {
-+	int trigger;
-+	int polarity;
-+	int node;
-+	int set;
-+	u32 count;
-+};
-+
- static struct ioapic {
- 	/*
- 	 * # of IRQ routing registers
-@@ -99,6 +107,7 @@ static struct ioapic {
- 	struct mpc_ioapic mp_config;
- 	/* IO APIC gsi routing info */
- 	struct mp_ioapic_gsi  gsi_config;
-+	struct mp_pin_info *pin_info;
- 	struct irq_domain *irqdomain;
- 	ioapic_create_domain_fn irqdomain_cb;
- 	void *irqdomain_arg;
-@@ -140,6 +149,11 @@ static inline int mp_init_irq_at_boot(int ioapic, int irq)
- 	return ioapic == 0 || (irq >= 0 && irq < NR_IRQS_LEGACY);
+ #define ROOT_SIZE		VTD_PAGE_SIZE
+ #define CONTEXT_SIZE		VTD_PAGE_SIZE
+@@ -4359,12 +4358,9 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
+ 	return 0;
  }
  
-+static inline struct mp_pin_info *mp_pin_info(int ioapic_idx, int pin)
-+{
-+	return ioapics[ioapic_idx].pin_info + pin;
-+}
-+
- static inline struct irq_domain *mp_ioapic_irqdomain(int ioapic)
+-#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
+-
+ static int intel_iommu_add_device(struct device *dev)
  {
- 	return ioapics[ioapic].irqdomain;
-@@ -987,6 +1001,7 @@ int mp_map_pin_to_irq(int ioapic, int pin, int idx, unsigned int flags)
- 	int irq = -1;
- 	u32 gsi = mp_pin_2_gsi(ioapic, pin);
- 	struct irq_domain *domain = mp_ioapic_irqdomain(ioapic);
-+	struct mp_pin_info *info = mp_pin_info(ioapic, pin);
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct pci_dev *bridge, *dma_pdev = NULL;
++	struct pci_dev *pdev;
+ 	struct iommu_group *group;
+ 	int ret;
+ 	u8 bus, devfn;
+@@ -4372,68 +4368,16 @@ static int intel_iommu_add_device(struct device *dev)
+ 	if (!device_to_iommu(dev, &bus, &devfn))
+ 		return -ENODEV;
  
- 	if (!domain) {
- 		/*
-@@ -1015,6 +1030,11 @@ int mp_map_pin_to_irq(int ioapic, int pin, int idx, unsigned int flags)
- 			irq = irq_create_mapping(domain, pin);
- 		else if (irq_create_strict_mappings(domain, gsi, pin, 1) == 0)
- 			irq = gsi;
-+
-+		if (irq > 0)
-+			info->count++;
-+		else if (info->count == 0)
-+			info->set = 0;
- 	}
- out:
- 	mutex_unlock(&ioapic_mutex);
-@@ -2909,11 +2929,14 @@ out:
- 
- static void ioapic_create_irqdomains(void)
- {
--	int i;
-+	int i, size;
- 	struct ioapic *ip;
- 
- 	for_each_ioapic(i) {
- 		ip = &ioapics[i];
-+		size = sizeof(struct mp_pin_info) * mp_ioapic_pin_count(i);
-+		ip->pin_info = kzalloc(size, GFP_KERNEL);
-+		BUG_ON(!ip->pin_info);
- 		if (ip->irqdomain_cb)
- 			ip->irqdomain = ip->irqdomain_cb(i, ip->irqdomain_arg);
- 	}
-@@ -3880,6 +3903,60 @@ struct irq_domain *mp_irqdomain_create(int ioapic, struct device_node *np,
- 	return domain;
- }
- 
-+int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
-+		     irq_hw_number_t hwirq)
-+{
-+	int ioapic = (int)(long)domain->host_data;
-+	struct mp_pin_info *info = mp_pin_info(ioapic, hwirq);
-+	struct io_apic_irq_attr attr;
-+
-+	/*
-+	 * Skip the timer IRQ if there's a quirk handler installed and if it
-+	 * returns 1:
-+	 */
-+	if (apic->multi_timer_check &&
-+	    apic->multi_timer_check(ioapic, virq))
+-	bridge = pci_find_upstream_pcie_bridge(pdev);
+-	if (bridge) {
+-		if (pci_is_pcie(bridge))
+-			dma_pdev = pci_get_domain_bus_and_slot(
+-						pci_domain_nr(pdev->bus),
+-						bridge->subordinate->number, 0);
+-		if (!dma_pdev)
+-			dma_pdev = pci_dev_get(bridge);
+-	} else
+-		dma_pdev = pci_dev_get(pdev);
+-
+-	/* Account for quirked devices */
+-	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
+-
+-	/*
+-	 * If it's a multifunction device that does not support our
+-	 * required ACS flags, add to the same group as lowest numbered
+-	 * function that also does not suport the required ACS flags.
+-	 */
+-	if (dma_pdev->multifunction &&
+-	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
+-		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
+-
+-		for (i = 0; i < 8; i++) {
+-			struct pci_dev *tmp;
+-
+-			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
+-			if (!tmp)
+-				continue;
+-
+-			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
+-				swap_pci_ref(&dma_pdev, tmp);
+-				break;
+-			}
+-			pci_dev_put(tmp);
+-		}
++	group = iommu_group_get(dev);
++	if (group) {
++		iommu_group_put(group);
 +		return 0;
+ 	}
+ 
+-	/*
+-	 * Devices on the root bus go through the iommu.  If that's not us,
+-	 * find the next upstream device and test ACS up to the root bus.
+-	 * Finding the next device may require skipping virtual buses.
+-	 */
+-	while (!pci_is_root_bus(dma_pdev->bus)) {
+-		struct pci_bus *bus = dma_pdev->bus;
++	pdev = pci_find_dma_isolation_root(to_pci_dev(dev));
+ 
+-		while (!bus->self) {
+-			if (!pci_is_root_bus(bus))
+-				bus = bus->parent;
+-			else
+-				goto root_bus;
+-		}
++	group = iommu_group_get(&pdev->dev);
+ 
+-		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
+-			break;
+-
+-		swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
+-	}
+-
+-root_bus:
+-	group = iommu_group_get(&dma_pdev->dev);
+-	pci_dev_put(dma_pdev);
+ 	if (!group) {
+ 		group = iommu_group_alloc();
+ 		if (IS_ERR(group))
+@@ -4443,6 +4387,7 @@ root_bus:
+ 	ret = iommu_group_add_device(group, dev);
+ 
+ 	iommu_group_put(group);
 +
-+	/* Get default attribute if not set by caller yet */
-+	if (!info->set) {
-+		u32 gsi = mp_pin_2_gsi(ioapic, hwirq);
-+		if (acpi_get_override_irq(gsi, &info->trigger,
-+					  &info->polarity) < 0) {
-+			return -ENODEV;
-+		}
-+		info->node = NUMA_NO_NODE;
-+		info->set = 1;
-+	}
-+
-+	set_io_apic_irq_attr(&attr, ioapic, hwirq, info->trigger,
-+			     info->polarity);
-+
-+	return io_apic_setup_irq_pin(virq, info->node, &attr);
-+}
-+
-+int mp_set_pin_attr(int ioapic, int pin, int trigger, int polarity, int node)
-+{
-+	int ret = 0;
-+	struct mp_pin_info *info = mp_pin_info(ioapic, pin);
-+
-+	trigger = !!trigger;
-+	polarity = !!polarity;
-+
-+	mutex_lock(&ioapic_mutex);
-+	if (!info->set) {
-+		info->trigger = trigger;
-+		info->polarity = polarity;
-+		info->node = node;
-+		info->set = 1;
-+	} else if (info->trigger != trigger || info->polarity != polarity) {
-+		ret = -EBUSY;
-+	}
-+	mutex_unlock(&ioapic_mutex);
-+
-+	return ret;
-+}
-+
- /* Enable IOAPIC early just for system timer */
- void __init pre_init_apic_IRQ0(void)
- {
--- 
-1.7.10.4
+ 	return ret;
+ }
+ 
 
