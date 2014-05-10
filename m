@@ -1,74 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:34448 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:20662 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752878AbaESQV5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 May 2014 12:21:57 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 V2 05/29] x86, PCI, ACPI: use kmalloc_node() to optimize for performance
-Date: Tue, 20 May 2014 00:22:49 +0800
-Message-Id: <1400516594-11544-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1756788AbaEJOPR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 10 May 2014 10:15:17 -0400
+Message-ID: <1399731309.17639.167.camel@ul30vt.home>
+Subject: Re: [PATCH v2 00/15] PCI/iommu: Fix DMA alias problems
+From: Alex Williamson <alex.williamson@redhat.com>
+To: George Spelvin <linux@horizon.com>
+Cc: acooks@gmail.com, bhelgaas@google.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Sat, 10 May 2014 08:15:09 -0600
+In-Reply-To: <20140510140814.16061.qmail@ns.horizon.com>
+References: <20140510140814.16061.qmail@ns.horizon.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use kmalloc_node() instead of kmalloc() when possible to optimize
-for performance on NUMA platforms.
+On Sat, 2014-05-10 at 10:08 -0400, George Spelvin wrote:
+> > What's the device ID of these devices?
+> 
+> Oops!  It's
+> 
+> 05:00.0 SATA controller [0106]: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller [1b4b:9172] (rev 11)
+> 06:00.0 SATA controller [0106]: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller [1b4b:9172] (rev 11)
+> 07:00.0 SATA controller [0106]: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller [1b4b:9172] (rev 11)
+> 
+> > The dma-alias branch only has the v1 patchset.  There are several more
+> > Marvell devices included in the quirks in the v2 set.  Please re-test
+> > with this code.  Thanks,
+> 
+> Oh, okay!  I got the patches from github because it was a lot easier
+> to get the whole set that way.  (I don't actually have an SMTP LKML
+> subscription, so I have to copy them all from a web archive, then
+> manually edit the headers into something RFC822-like enough for "git am"
+> to accept.)
+> 
+> Mea culpa for forgetting to check the version.  And thank you for the response!
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/acpi.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 01edac6c5e18..91bef49df228 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -448,7 +448,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 		return;
- 
- 	size = sizeof(*info->res) * info->res_num;
--	info->res = kzalloc(size, GFP_KERNEL);
-+	info->res = kzalloc_node(size, GFP_KERNEL, info->sd.node);
- 	if (!info->res) {
- 		info->res_num = 0;
- 		return;
-@@ -456,7 +456,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 
- 	size = sizeof(*info->res_offset) * info->res_num;
- 	info->res_num = 0;
--	info->res_offset = kzalloc(size, GFP_KERNEL);
-+	info->res_offset = kzalloc_node(size, GFP_KERNEL, info->sd.node);
- 	if (!info->res_offset) {
- 		kfree(info->res);
- 		info->res = NULL;
-@@ -495,7 +495,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	if (node != NUMA_NO_NODE && !node_online(node))
- 		node = NUMA_NO_NODE;
- 
--	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
- 	if (!info) {
- 		printk(KERN_WARNING "pci_bus %04x:%02x: "
- 		       "ignored (out of memory)\n", domain, busnum);
--- 
-1.7.10.4
+Hi George,
+
+I'll post a v3 soon, I think we figured out the problem Andrew was
+having, a couple typos on my part.  I'll push out a new branch for that
+so you don't need to piece it together yourself.  Thanks,
+
+Alex
 
