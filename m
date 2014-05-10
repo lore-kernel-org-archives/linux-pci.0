@@ -1,157 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:53307 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852AbaEAR4n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 May 2014 13:56:43 -0400
-Received: by mail-pa0-f45.google.com with SMTP id kq14so3959167pab.32
-        for <linux-pci@vger.kernel.org>; Thu, 01 May 2014 10:56:43 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:18400 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752525AbaEJPCd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 10 May 2014 11:02:33 -0400
+Subject: [PATCH v3 01/15] PCI: Add DMA alias iterator
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	linux-kernel@vger.kernel.org, linux@horizon.com
+Date: Sat, 10 May 2014 09:02:29 -0600
+Message-ID: <20140510150229.2997.39465.stgit@bling.home>
+In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
+References: <20140510145619.2997.429.stgit@bling.home>
 MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <1398966055-19325-1-git-send-email-yinghai@kernel.org>
-References: <1398966055-19325-1-git-send-email-yinghai@kernel.org>
-Date: Thu, 1 May 2014 10:56:42 -0700
-Message-ID: <CAA93t1oMk1hGkGfbHohai+Pe37uEA0bsiUQM3WCRfWp1=2yP4g@mail.gmail.com>
-Subject: Re: [PATCH v4] pciehp: only wait command complete for real hotplug control
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Guenter Roeck <groeck@juniper.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Yinghai,
+In a mixed PCI/PCI-X/PCI-e topology, bridges can take ownership of
+transactions, replacing the original requester ID with their own.
+Sometimes we just want to know the resulting device or resulting
+alias, sometimes we want each step in the chain.  This iterator
+allows either usage.  When an endpoint is connected via an unbroken
+chain of PCIe switches and root ports, it has no alias and its
+requester ID is visible to the root bus.  When PCI/X get in the way,
+we pick up aliases for bridges.
 
-On Thu, May 1, 2014 at 10:40 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On system with 16 PCI express hotplug slots, customer complain every slot
-> will report "Command not completed in 1000 msec" during initialization.
->
-> Intel says that we should only wait command complete only for
->            Electromechanical Interlock Control
->            Power Controller Control
->            Power Indicator Control
->            Attention Indicator Control
+The reason why we potentially care about each step in the path is
+because of PCI-X.  PCI-X has the concept of a requester ID, but
+bridges may or may not take ownership of various types of
+transactions.  We therefore leave it to the consumer of this function
+to prune out what they don't care about rather than attempt to flatten
+the alias ourselves.
 
-The document that you sent is an Intel ERRATA. Thus it would be nice
-if you can please also mention CF118 in the context of it being an
-Intel "errata", so that people do not confuse it with being expected /
-default / standard behavior on all platforms.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/search.c |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    4 +++
+ 2 files changed, 74 insertions(+)
 
-Thanks,
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 4a1b972..5601cdb 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -18,6 +18,76 @@ DECLARE_RWSEM(pci_bus_sem);
+ EXPORT_SYMBOL_GPL(pci_bus_sem);
+ 
+ /*
++ * pci_for_each_dma_alias - Iterate over DMA aliases for a device
++ * @pdev: starting downstream device
++ * @fn: function to call for each alias
++ * @data: opaque data to pass to @fn
++ *
++ * Starting @pdev, walk up the bus calling @fn for each possible alias
++ * of @pdev at the root bus.
++ */
++int pci_for_each_dma_alias(struct pci_dev *pdev,
++			   int (*fn)(struct pci_dev *pdev,
++				     u16 alias, void *data), void *data)
++{
++	struct pci_bus *bus;
++	int ret;
++
++	ret = fn(pdev, PCI_DEVID(pdev->bus->number, pdev->devfn), data);
++	if (ret)
++		return ret;
++
++	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
++		struct pci_dev *tmp;
++
++		/* Skip virtual buses */
++		if (!bus->self)
++			continue;
++
++		tmp = bus->self;
++
++		/*
++		 * PCIe-to-PCI/X bridges alias transactions from downstream
++		 * devices using the subordinate bus number (PCI Express to
++		 * PCI/PCI-X Bridge Spec, rev 1.0, sec 2.3).  For all cases
++		 * where the upstream bus is PCI/X we alias to the bridge
++		 * (there are various conditions in the previous reference
++		 * where the bridge may take ownership of transactions, even
++		 * when the secondary interface is PCI-X).
++		 */
++		if (pci_is_pcie(tmp)) {
++			switch (pci_pcie_type(tmp)) {
++			case PCI_EXP_TYPE_ROOT_PORT:
++			case PCI_EXP_TYPE_UPSTREAM:
++			case PCI_EXP_TYPE_DOWNSTREAM:
++				continue;
++			case PCI_EXP_TYPE_PCI_BRIDGE:
++				ret = fn(tmp,
++					 PCI_DEVID(tmp->subordinate->number,
++						   PCI_DEVFN(0, 0)), data);
++				if (ret)
++					return ret;
++				continue;
++			case PCI_EXP_TYPE_PCIE_BRIDGE:
++				ret = fn(tmp,
++					 PCI_DEVID(tmp->bus->number,
++						   tmp->devfn), data);
++				if (ret)
++					return ret;
++				continue;
++			}
++		} else {
++			ret = fn(tmp, PCI_DEVID(tmp->bus->number, tmp->devfn),
++				 data);
++			if (ret)
++				return ret;
++		}
++	}
++
++	return ret;
++}
++
++/*
+  * find the upstream PCIe-to-PCI bridge of a PCI device
+  * if the device is PCIE, return NULL
+  * if the device isn't connected to a PCIe bridge (that is its parent is a
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aab57b4..14b074b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1795,6 +1795,10 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
+ }
+ #endif
+ 
++int pci_for_each_dma_alias(struct pci_dev *pdev,
++			   int (*fn)(struct pci_dev *pdev,
++				     u16 alias, void *data), void *data);
++
+ /**
+  * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+  * @pdev: the PCI device
 
-Rajat
-
->
-> For detail please check CF118 on
->   http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
->
-> We saw same problems on system with AMD/Nvidia chipsets.
->
-> Two ways to address the problem:
-> 1. change to only wait when (EIC, PCC, PIC, AIC) bits get changed.
-> 2. or check CMD_COMPLETE and wait before write command. Only wait
->    when CC is set and cmd_busy is true. For chipset from intel
->    will only have CC set for real hotplug control, so we could
->    skip the wait for others.
->
-> This patch is using second way.
->
-> With that we could save 16 seconds during booting, later with 32 sockets system
-> with 64 pcie hotplug slots we could save 64 seconds.
->
-> This patch address spurious "cmd completed" event problem that that
-> Rajat met.
->
-> -v2: use second way that is suggested by Bjorn.
-> -v3: rebase after
->         PCI: pciehp: Acknowledge spurious "cmd completed" event
-> -v4: add comments according to Bjorn.
->      also add URL for Intel doc about the CC set on intel chipset.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Tested-by: Rajat Jain <rajatxjain@gmail.com>
->
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c |   48 ++++++++++++++++++++++++---------------
->  1 file changed, 30 insertions(+), 18 deletions(-)
->
-> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -155,20 +155,30 @@ static void pcie_write_cmd(struct contro
->         u16 slot_status;
->         u16 slot_ctrl;
->
-> +       /*
-> +        * We basically have two strategies for dealing with Command Complete.
-> +        * Both are legal according to the PCIe spec:
-> +        * A: Write command at first and wait for Command Complete is set.
-> +        * B: Wait at first iff Command Complete and cmd_busy are set,
-> +        *    that means previous command is not complete yet.
-> +        *    Then write command.
-> +        *
-> +        * Second way also cover "Command not completed in 1000 msec"
-> +        * Problem on system with chipsets that only set Command Complete
-> +        * for some "real" hotplug events like:
-> +        *      Electromechanical Interlock Control
-> +        *      Power Controller Control
-> +        *      Power Indicator Control
-> +        *      Attention Indicator Control
-> +        * like CF118 in
-> +        * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
-> +        */
-> +
->         mutex_lock(&ctrl->ctrl_lock);
->
->         pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
-> -       if (slot_status & PCI_EXP_SLTSTA_CC) {
-> -               pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
-> -                                          PCI_EXP_SLTSTA_CC);
-> -               if (!ctrl->no_cmd_complete) {
-> -                       /*
-> -                        * After 1 sec and CMD_COMPLETED still not set, just
-> -                        * proceed forward to issue the next command according
-> -                        * to spec. Just print out the error message.
-> -                        */
-> -                       ctrl_dbg(ctrl, "CMD_COMPLETED not clear after 1 sec\n");
-> -               } else if (!NO_CMD_CMPL(ctrl)) {
-> +       if (ctrl->no_cmd_complete && slot_status & PCI_EXP_SLTSTA_CC) {
-> +               if (!NO_CMD_CMPL(ctrl)) {
->                         /*
->                          * This controller seems to notify of command completed
->                          * event even though it supports none of power
-> @@ -184,16 +194,11 @@ static void pcie_write_cmd(struct contro
->         }
->
->         pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
-> -       slot_ctrl &= ~mask;
-> -       slot_ctrl |= (cmd & mask);
-> -       ctrl->cmd_busy = 1;
-> -       smp_mb();
-> -       pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
-> -
->         /*
->          * Wait for command completion.
->          */
-> -       if (!ctrl->no_cmd_complete) {
-> +       if (!ctrl->no_cmd_complete && (slot_status & PCI_EXP_SLTSTA_CC) &&
-> +           ctrl->cmd_busy) {
->                 int poll = 0;
->                 /*
->                  * if hotplug interrupt is not enabled or command
-> @@ -205,6 +210,13 @@ static void pcie_write_cmd(struct contro
->                         poll = 1;
->                  pcie_wait_cmd(ctrl, poll);
->         }
-> +
-> +       slot_ctrl &= ~mask;
-> +       slot_ctrl |= (cmd & mask);
-> +       ctrl->cmd_busy = 1;
-> +       smp_mb();
-> +       pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
-> +
->         mutex_unlock(&ctrl->ctrl_lock);
->  }
->
