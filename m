@@ -1,109 +1,142 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: <suravee.suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	Borislav Petkov <bp@suse.de>,
-	"Robert Richter" <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V4 4/4] X86/PCI: Remove unnecessary 'quirk_amd_nb_node'
-Date: Thu, 8 May 2014 11:44:21 -0500
-Message-ID: <1399567461-15928-5-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:22465 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751738AbaEJPC2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 10 May 2014 11:02:28 -0400
+Subject: [PATCH v3 00/15] PCI/iommu: Fix DMA alias problems
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	linux-kernel@vger.kernel.org, linux@horizon.com
+Date: Sat, 10 May 2014 09:02:23 -0600
+Message-ID: <20140510145619.2997.429.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Myron Stowe <myron.stowe@redhat.com>
+This version can be found in my git tree:
 
-The quirk is used for fixing up the numa_node information in sysfs for AMD hostbridge
-devices (i.e. PCI device 00:[18-1f].x).  However, this is currently unused.
-and is becoming maintenance burden. Therefore, it is removed.
+git://github.com/awilliam/linux-vfio.git dma-alias-v3
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Robert Richter <rric@kernel.org>
-Cc: Daniel J Blueman <daniel@numascale.com>
-Cc: Andreas Herrmann <herrmann.der.user@googlemail.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Please report any issues.
+
+v3:
+ - Found several instances where I had PCI_SLOT when I meant
+   PCI_FUNC.  Thanks to Andrew for spotting this.  This should
+   fix the problem he was having with Ricoh quirks.  We also
+   pruned down the func0 quirks to only those that we know are
+   needed.  We can always add them back later.
+
+ - Found a case in intel-iommu of using dev_is_pci() where I
+   really wanted !dev_is_pci().  Fixed.
+
+v2:
+ - Several new Marvell controllers added to quirks.  There's been
+   a lot of success reported with this series in
+   https://bugzilla.kernel.org/show_bug.cgi?id=42679
+
+ - Add quirk for ASMedia and Tundra PCIe-to-PCI bridges that do
+   not expose a PCIe capability.  These have been shown to use
+   the standard PCIe-to-PCI bridge requester ID.
+
+ - Fix copy/paste duplicate Ricoh quirk ID
+
+ - Fixed AMD IOMMU for the "ghost" function case where the DMA
+   alias is for an absent device.  The iommu rlookup table and
+   data fields need to be initializes.
+
+ - Fixed Intel interrupt remapping, I wasn't passing the target
+   bus number, only the alias bus number.
+
+These patches are split across PCI and IOMMU, but I've front-loaded
+all of the PCI infrastructure so that the first 7 patches can be
+applied to PCI-core, the IOMMU maintainers can pickup their patches,
+then we can finish with dead code removal.  Bjorn might also be
+willing to carry the IOMMU changes if the maintainers want to ack
+them.
+
+Original description:
+
+This series attempts to fix a couple issues we've had outstanding in
+the PCI/IOMMU code for a while.  The first issue is with devices that
+use the wrong requester ID for DMA transactions.  We already have a
+sort of half-baked attempt to fix this for several Ricoh devices, but
+the fix only helps them be useful through IOMMU groups, not the
+general DMA case.  There are also several Marvell devices which use
+use a different wrong requester ID and don't even fit into the DMA
+source idea.  This series creates a DMA alias iterator that will
+step through each possible alias of a device, allowing IOMMUs to
+insert mappings for both the device and its aliases.
+
+Hand-in-hand with this is our broken pci_find_upstream_pcie_bridge()
+function, which is known to blowup when it finds itself suddenly at
+a PCIe device without crossing a PCIe-to-PCI bridge (as identified by
+the PCIe capability).  It also likes to make the invalid assumption
+that a PCIe device never has its requester ID masked by any usptream
+bus.  We can fix this using the above new DMA alias iterator, since
+that's effectively what this function was meant to do.
+
+Finally, with all these helpers, it makes sense to consolidate code
+for determining IOMMU groups.  The first step in finding the root
+of a group is finding the final upstream DMA alias for the device,
+then applying additional ACS rules and incorporating device specific
+aliases.  As this is all common to PCI, create a single implementation
+and remove piles of code from the individual IOMMU drivers.
+
+This series allows devices like the Marvell 88SE9123 to finally work
+on Linux with either AMD-Vi or VT-d enabled on the box.  I've
+collected device IDs from various bugs to support as many SKUs of
+these devices as possible, but I'm sure there are others that I've
+missed.
+
+This should also enable motherboards with an onboard ASmedia
+ASM1083/1085 PCIe-to-PCI bridge to work with VT-d enabled.  I've
+acquired an adapter board with this chip, but it actually exposes
+a PCIe capability, unlike most of the onboard controllers.  Therefore
+I expect this series will fix the WARN_ON currently hit during boot,
+but there's a 50/50 chance whether the device behaves like a PCI
+bridge or a PCIe bridge with regard to the requester ID that it uses
+to take ownership of the transaction.  If it turns out to use the
+PCIe bridge model, I expect we can quirk it using a dev_flags bit
+to identify a PCI bridge that takes ownership as if it was a PCIe
+bridge.
+
+Please test and provide feedback.  I expect IOMMU group topology
+should not change from this series, but if a case is found where it
+does, please share.  Also, if there are additional quirks we need
+to add, please either file new or add to the existing bugs.  Thanks,
+
+Alex
+
 ---
- arch/x86/kernel/quirks.c | 58 ------------------------------------------------
- 1 file changed, 58 deletions(-)
 
-diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
-index ff898bb..abbd6bc 100644
---- a/arch/x86/kernel/quirks.c
-+++ b/arch/x86/kernel/quirks.c
-@@ -514,64 +514,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
- 
- #endif
- 
--#if defined(CONFIG_PCI) && defined(CONFIG_NUMA)
--/* Set correct numa_node information for AMD NB functions */
--static void quirk_amd_nb_node(struct pci_dev *dev)
--{
--	struct pci_dev *nb_ht;
--	unsigned int devfn;
--	u32 node;
--	u32 val;
--
--	devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
--	nb_ht = pci_get_slot(dev->bus, devfn);
--	if (!nb_ht)
--		return;
--
--	pci_read_config_dword(nb_ht, 0x60, &val);
--	node = pcibus_to_node(dev->bus) | (val & 7);
--	/*
--	 * Some hardware may return an invalid node ID,
--	 * so check it first:
--	 */
--	if (node_online(node))
--		set_dev_node(&dev->dev, node);
--	pci_dev_put(nb_ht);
--}
--
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_K8_NB,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_K8_NB_ADDRMAP,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_K8_NB_MEMCTL,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_K8_NB_MISC,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_HT,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MAP,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_DRAM,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_LINK,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F0,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F1,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F2,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F5,
--			quirk_amd_nb_node);
--
--#endif
--
- #ifdef CONFIG_PCI
- /*
-  * Processor does not ensure DRAM scrub read/write sequence
--- 
-1.9.0
+Alex Williamson (15):
+      PCI: Add DMA alias iterator
+      PCI: quirk pci_for_each_dma_alias()
+      PCI: quirk dma_func_alias for Ricoh devices
+      PCI: quirk dma_func_alias for Marvell devices
+      PCI: Quirk pci_for_each_dma_alias() for bridges
+      PCI: Add quirks for ASMedia and Tundra bridges
+      PCI: Consolidate isolation domain code
+      iommu/amd: Use pci_find_dma_isolation_root() for IOMMU groups
+      iommu/amd: Update to use PCI DMA aliases
+      iommu/intel: Use pci_find_dma_isolation_root() for IOMMU groups
+      iommu/intel: Update to use PCI DMA aliases
+      iommu/fsl: Use pci_find_dma_isolation_root() for IOMMU groups
+      iommu: Remove pci.h
+      PCI: Remove pci_find_upstream_pcie_bridge()
+      PCI: Remove pci_get_dma_source()
 
+
+ drivers/iommu/amd_iommu.c           |  195 +++++------------------
+ drivers/iommu/amd_iommu_types.h     |    1 
+ drivers/iommu/fsl_pamu_domain.c     |   67 --------
+ drivers/iommu/intel-iommu.c         |  293 +++++++++++++----------------------
+ drivers/iommu/intel_irq_remapping.c |   55 +++++--
+ drivers/iommu/pci.h                 |   29 ---
+ drivers/pci/quirks.c                |  112 ++++++++-----
+ drivers/pci/search.c                |  240 ++++++++++++++++++++++++++---
+ include/linux/pci.h                 |   23 +--
+ 9 files changed, 484 insertions(+), 531 deletions(-)
+ delete mode 100644 drivers/iommu/pci.h
