@@ -1,51 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-kernel@vger.kernel.org,
-	James Bottomley <jbottomley@parallels.com>,
-	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH v2 3/5] sh/PCI: Pass GAPSPCI_DMA_BASE CPU address to dma_declare_coherent_memory()
-Date: Wed, 07 May 2014 09:55:16 +0200
-Message-ID: <6994558.Q3OYh8PWMa@wuerfel>
-In-Reply-To: <20140506224833.17968.87108.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140506224833.17968.87108.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:20200 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757785AbaEJPDn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 10 May 2014 11:03:43 -0400
+Subject: [PATCH v3 12/15] iommu/fsl: Use pci_find_dma_isolation_root() for
+ IOMMU groups
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, Varun Sethi <varun.sethi@freescale.com>,
+	acooks@gmail.com, linux-kernel@vger.kernel.org, linux@horizon.com
+Date: Sat, 10 May 2014 09:03:36 -0600
+Message-ID: <20140510150336.2997.76556.stgit@bling.home>
+In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
+References: <20140510145619.2997.429.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 06 May 2014 16:48:33 Bjorn Helgaas wrote:
-> @@ -51,8 +53,12 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
->                 /*
->                  * Redirect dma memory allocations to special memory window.
->                  */
-> +               region.start = GAPSPCI_DMA_BASE;
-> +               region.end = GAPSPCI_DMA_BASE + GAPSPCI_DMA_SIZE - 1;
-> +               res.flags = IORESOURCE_MEM;
-> +               pcibios_bus_to_resource(dev->bus, &res, &region);
->                 BUG_ON(!dma_declare_coherent_memory(&dev->dev,
-> -                                               GAPSPCI_DMA_BASE,
-> +                                               res->start,
->                                                 GAPSPCI_DMA_BASE,
->                                                 GAPSPCI_DMA_SIZE,
->                                                 DMA_MEMORY_MAP |
+Drop custom code and use PCI provided isolation root support.
 
-Not sure if this is an improvement. I understand the intention, but
-it's actually possible for the offset to be different both ways:
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Varun Sethi <varun.sethi@freescale.com>
+---
+ drivers/iommu/fsl_pamu_domain.c |   67 ++-------------------------------------
+ 1 file changed, 3 insertions(+), 64 deletions(-)
 
-Your patch applies the outbound mem_offset that was provided when
-registering the MMIO resource for the PCI host bridge. What the driver
-needs instead is the inbound DMA offset that gets applied by some
-host bridges that don't have a 1:1 mapping but also don't have an
-IOMMU. We know that on this particular platform, both are zero, so
-the original code works and it will keep working with your change,
-but I think it's a mistake anyway. I have seen both kinds of offsets
-in the past on real machines, but I am not aware of any where they
-are both nonzero and have the same value.
+diff --git a/drivers/iommu/fsl_pamu_domain.c b/drivers/iommu/fsl_pamu_domain.c
+index 93072ba..83e3e7c 100644
+--- a/drivers/iommu/fsl_pamu_domain.c
++++ b/drivers/iommu/fsl_pamu_domain.c
+@@ -38,7 +38,6 @@
+ #include <sysdev/fsl_pci.h>
+ 
+ #include "fsl_pamu_domain.h"
+-#include "pci.h"
+ 
+ /*
+  * Global spinlock that needs to be held while
+@@ -892,8 +891,6 @@ static int fsl_pamu_get_domain_attr(struct iommu_domain *domain,
+ 	return ret;
+ }
+ 
+-#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
+-
+ static struct iommu_group *get_device_iommu_group(struct device *dev)
+ {
+ 	struct iommu_group *group;
+@@ -950,74 +947,16 @@ static struct iommu_group *get_pci_device_group(struct pci_dev *pdev)
+ 	struct pci_controller *pci_ctl;
+ 	bool pci_endpt_partioning;
+ 	struct iommu_group *group = NULL;
+-	struct pci_dev *bridge, *dma_pdev = NULL;
++	struct pci_dev *dma_pdev;
+ 
+ 	pci_ctl = pci_bus_to_host(pdev->bus);
+ 	pci_endpt_partioning = check_pci_ctl_endpt_part(pci_ctl);
+ 	/* We can partition PCIe devices so assign device group to the device */
+ 	if (pci_endpt_partioning) {
+-		bridge = pci_find_upstream_pcie_bridge(pdev);
+-		if (bridge) {
+-			if (pci_is_pcie(bridge))
+-				dma_pdev = pci_get_domain_bus_and_slot(
+-						pci_domain_nr(pdev->bus),
+-						bridge->subordinate->number, 0);
+-			if (!dma_pdev)
+-				dma_pdev = pci_dev_get(bridge);
+-		} else
+-			dma_pdev = pci_dev_get(pdev);
+-
+-		/* Account for quirked devices */
+-		swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
+-
+-		/*
+-		 * If it's a multifunction device that does not support our
+-		 * required ACS flags, add to the same group as lowest numbered
+-		 * function that also does not suport the required ACS flags.
+-		 */
+-		if (dma_pdev->multifunction &&
+-		    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
+-			u8 i, slot = PCI_SLOT(dma_pdev->devfn);
++		dma_pdev = pci_find_dma_isolation_root(pdev);
+ 
+-			for (i = 0; i < 8; i++) {
+-				struct pci_dev *tmp;
+-
+-				tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
+-				if (!tmp)
+-					continue;
+-
+-				if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
+-					swap_pci_ref(&dma_pdev, tmp);
+-					break;
+-				}
+-				pci_dev_put(tmp);
+-			}
+-		}
+-
+-		/*
+-		 * Devices on the root bus go through the iommu.  If that's not us,
+-		 * find the next upstream device and test ACS up to the root bus.
+-		 * Finding the next device may require skipping virtual buses.
+-		 */
+-		while (!pci_is_root_bus(dma_pdev->bus)) {
+-			struct pci_bus *bus = dma_pdev->bus;
+-
+-			while (!bus->self) {
+-				if (!pci_is_root_bus(bus))
+-					bus = bus->parent;
+-				else
+-					goto root_bus;
+-			}
+-
+-			if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
+-				break;
+-
+-			swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
+-		}
+-
+-root_bus:
+ 		group = get_device_iommu_group(&dma_pdev->dev);
+-		pci_dev_put(dma_pdev);
++
+ 		/*
+ 		 * PCIe controller is not a paritionable entity
+ 		 * free the controller device iommu_group.
 
-	Arnd
