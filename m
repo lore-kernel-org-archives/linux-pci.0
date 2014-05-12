@@ -1,60 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:54591 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752180AbaE1ROv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 May 2014 13:14:51 -0400
-Message-ID: <5386195C.1080603@ti.com>
-Date: Wed, 28 May 2014 13:14:04 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] ARM: pci: add call to pcie_bus_configure_settings()
-References: <1401287176-4986-1-git-send-email-m-karicheri2@ti.com> <20140528165856.GA20193@obsidianresearch.com>
-In-Reply-To: <20140528165856.GA20193@obsidianresearch.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:53851 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000AbaELJBD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 May 2014 05:01:03 -0400
+Message-ID: <1399885183.5016.4.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH 0/8] i.MX6 PCIe binding change and MSI support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>,
+	Richard Zhu <r65037@freescale.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	linux-samsung-soc@vger.kernel.org, kernel@pengutronix.de,
+	Mark Rutland <mark.rutland@arm.com>,
+	Sean Cross <xobs@kosagi.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>
+Date: Mon, 12 May 2014 10:59:43 +0200
+In-Reply-To: <1398774686.4677.12.camel@weser.hi.pengutronix.de>
+References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+	 <20140424175844.GD29593@google.com>
+	 <1398421265.4657.25.camel@weser.hi.pengutronix.de>
+	 <CAErSpo7Boi8d+apAUC3TmmE33LuRMYJ6J+TEPLRbeyZyU3O8RQ@mail.gmail.com>
+	 <1398774686.4677.12.camel@weser.hi.pengutronix.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/28/2014 12:58 PM, Jason Gunthorpe wrote:
-> On Wed, May 28, 2014 at 10:26:16AM -0400, Murali Karicheri wrote:
->> PCI core supports PCIE_BUS_SAFE and PCIE_BUS_PERFORMANCE modes.
->> PCI controllers may not be able to handle pay load size higher
->> than MPS and also read data size higher than MRSS. So limit the
->> max to the least common supported payload size by calling
->> pcie_bus_configure_settings(). Using pci=pcie_bus_safe do a walk
->> and set the MPS to least common value used by devices on the bus.
->> pci=pcie_bus_perf does do a walk and set MRSS to MPS.
-> This text doesn't make much sense.. Calling
-> pcie_bus_configure_settings is just a good thing to do, the fact it
-> helps avoid a HW defect in a specific PCI-E implementation is not the
-> main reason to add this to the core ARM code.
->
->   Call pcie_bus_configure_settings on ARM, like for other
->   platforms. pcie_bus_configure_settings makes sure the MPS across the
->   bus is uniform and provides the ability to tune the MRSS and MPS to
->   higher performance values.
->
->   This is particularly important for embedded where there is no
->   firmware to program these PCI-E settings for the OS.
+Hi Bjorn,
 
-Thanks. I will add this text for v1.
->
->> +
->> +			list_for_each_entry(child, &bus->children, node)
->> +			pcie_bus_configure_settings(child);
->                    ^^^^^^^^^^^^^^^
->
-> Missing indent.
->
-> Regards,
-> Jason
-Will fix in v1.
+just a friendly reminder. It would be nice if you could pull those in.
 
-Thanks
+Shawn already pulled the DT change and as it is a binding change this
+means PCIe on i.MX6 is broken in -next, as long as the remaining patches
+are missing.
+
+Regards,
+Lucas
+ 
+Am Dienstag, den 29.04.2014, 14:31 +0200 schrieb Lucas Stach:
+> Hi Bjorn,
+> 
+> Am Freitag, den 25.04.2014, 08:39 -0600 schrieb Bjorn Helgaas:
+> [...]
+> > >> >   PCI: designware: split Exynos and i.MX bindings
+> > >> >   ARM: dts: imx6: update pcie to bring in line with new binding
+> > >> >   PCI: imx6: use new clock names
+> > >> >   PCI: imx6: drop old irq mapping
+> > >> >   PCI: imx6: rip out optional (and unused) irqs
+> > >> >   PCI: designware: make MSI isr shared irq aware
+> > >> >   PCI: imx6: add support for MSI
+> > >>
+> > >> What's the status of all these?  I would normally apply patches 4-8 of this
+> > >> series through my tree, given the appropriate acks, but I haven't seen
+> > >> those yet.  And I'm not sure what dependencies there are between the
+> > >> non-PCI patches and the PCI ones.
+> > >>
+> > > It's a complete binding change, so applying one part without the other
+> > > is going to horribly break things.
+> > >
+> > > So I would at least want to see an ack for the binding change on the
+> > > i.MX side from Shawn and Richard. This will need some follow on patches,
+> > > as some boards adding PCIe using the old binding have cropped up in
+> > > linux-next, but I can do the patches on short notice if everyone agrees
+> > > to merge this patchset.
+> > >
+> > > The designware part is pretty simple and doesn't change anything for
+> > > other users than i.MX. Though I would like to see an ack from Jingoo for
+> > > those.
+> > >
+> > > I have some more stuff in the pipes regarding multiple MSI irqs, that
+> > > depend on this series and also the Keystone people are waiting for this
+> > > to be applied in order to consolidate the clock handling of the
+> > > designware core driver, so it would be nice to get this moving again.
+> > 
+> > OK, just poke me again when you're ready for me to do something with these.
+> > 
+> 
+> As both Richard and Jingoo gave their ack for the respective patches I
+> think this is good to go in and I would expect all the PCI patches to go
+> through your tree for 3.16.
+> 
+> Shawn, if you are not okay with this change, please speak up now.
+> Otherwise please pick the dts change for 3.16. I'll go over linux-next
+> and prepare the patches to fix up the boards there.
+> 
+
+
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
