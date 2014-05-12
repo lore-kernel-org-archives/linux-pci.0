@@ -1,374 +1,881 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:48931 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751291AbaETDpy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 23:45:54 -0400
-Received: by mail-ie0-f181.google.com with SMTP id ar20so209155iec.40
-        for <linux-pci@vger.kernel.org>; Mon, 19 May 2014 20:45:54 -0700 (PDT)
-Subject: [PATCH v10 1/4] PCI: Restrict 64-bit prefetchable bridge windows to
- 64-bit resources
-To: Yinghai Lu <yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: talal@mellanox.com, Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	amirv@mellanox.com, eugenia@mellanox.com,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>
-Date: Mon, 19 May 2014 21:45:52 -0600
-Message-ID: <20140520034551.11972.38303.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140520033233.11972.49094.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140520033233.11972.49094.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from relmlor2.renesas.com ([210.160.252.172]:23928 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752682AbaELK6C (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 May 2014 06:58:02 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com>
+References: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1399892270-25021-2-git-send-email-phil.edworthy@renesas.com>
+Date: Mon, 12 May 2014 11:57:48 +0100
+Subject: [PATCH v8 1/3] PCI: host: rcar: Add Renesas R-Car PCIe driver
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+This PCIe Host driver currently does not support MSI, so cards
+fall back to INTx interrupts.
 
-This patch changes the way we handle 64-bit prefetchable bridge windows to
-make it more likely that we can assign space to all devices.
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 
-Previously we put all prefetchable resources in the prefetchable bridge
-window.  If any of those resources was 32-bit only, we restricted the
-window to be below 4GB.
+v8:
+ - Moved header file contents into c file
+ - Formatting cleaned up
+ - Remove bus/dev/func range checks for config access
+ - Add comment about config access serialization
+ - Made rcar_pcie_setup_window() return void as no errors possible
+ - Remove unused register definitions
+ - Removed __init markers to fix section mismatches
+ - Add explicit bus number range
+ - Get the root bus nr from config writes instead of sys->busnr
+ - Use PCI domains
 
-After this patch, we only put 64-bit prefetchable resources in a 64-bit
-prefetchable window.  We put all 32-bit prefetchable resources in the
-non-prefetchable window, even if there are no 64-bit prefetchable
-resources.
+v7, v6:
+ - No changes
 
-With the previous approach, if there was a 32-bit prefetchable resource
-behind a bridge, we forced the bridge's prefetchable window below 4GB,
-which meant that even if there was plenty of space above 4GB available, we
-couldn't use it, and assignment of large 64-bit resources could fail, as
-in the bugzilla below.
+v5:
+ - Use module_platform_driver instead of subsys_initcall
+ - Use the of_device_id data field for HW init function
+ - Init hw_pci struct in declaration
+ - Renesas SoC compatible string has peripheral before device name
+ - Add PCIe bus clock reference
+ - Use dma-ranges property to specify inbound memory regions
+ - Support multiple IO windows and correct resources
 
-The new strategy is:
+v4:
+ - Use runtime PM properly
 
-  1) If there is a 64-bit prefetchable window, we put only 64-bit
-     prefetchable resources in it.  Any 32-bit prefetchable resources go in
-     the non-prefetchable window.
+v3:
+ - Add DT support
+ - Use 'of_irq_parse_and_map_pci' for '.map_irq'
+ - Use pm ops to enable clocks
+ - Fix checkpatch errors
+ - Use subsys_initcall to overcome issues with port bus driver
+ - Adjust Kconfig to match other R-Car drivers
 
-  2) If there is a 32-bit prefetchable window, we put both 32- and 64-bit
-     prefetchable resources in it.
+v2:
+ - Use msleep instead of udelay when waiting for the link
+ - Use pm_runtime
+ - Removed unused definition
+ - Also replaced call to devm_request_and_ioremap with devm_ioremap_resource
+   and fixed a bug with this when reporting errors.
 
-  3) If there is no prefetchable window, all MMIO resources go in the
-     non-prefetchable window.
-
-This reduces performance for 32-bit prefetchable resources below a bridge
-with a 64-bit prefetchable window.  We previously assigned prefetchable
-space, but now we'll assign non-prefetchable space.  This is the case even
-if there are no 64-bit prefetchable resources, or if they would all fit
-below 4GB.  In those cases, the old strategy would work and would have
-better performance.
-
-[bhelgaas: write changelog, add bugzilla link, fold in mem64_mask removal]
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=74151
-Tested-by: Guo Chao <yan@linux.vnet.ibm.com>
-Tested-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 ---
- drivers/pci/setup-bus.c |  150 +++++++++++++++++++++++++++++++----------------
- drivers/pci/setup-res.c |   20 ++++++
- 2 files changed, 117 insertions(+), 53 deletions(-)
+ drivers/pci/host/Kconfig     |   6 +
+ drivers/pci/host/Makefile    |   1 +
+ drivers/pci/host/pcie-rcar.c | 768 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 775 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-rcar.c
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 5516657386a0..589f2261ab0e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -713,12 +713,11 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
-    bus resource of a given type. Note: we intentionally skip
-    the bus resources which have already been assigned (that is,
-    have non-NULL parent resource). */
--static struct resource *find_free_bus_resource(struct pci_bus *bus, unsigned long type)
-+static struct resource *find_free_bus_resource(struct pci_bus *bus,
-+			 unsigned long type_mask, unsigned long type)
- {
- 	int i;
- 	struct resource *r;
--	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH;
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index a6f67ec..24d290d 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -33,4 +33,10 @@ config PCI_RCAR_GEN2
+ 	  There are 3 internal PCI controllers available with a single
+ 	  built-in EHCI/OHCI host controller present on each one.
  
- 	pci_bus_for_each_resource(bus, r, i) {
- 		if (r == &ioport_resource || r == &iomem_resource)
-@@ -815,7 +814,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		resource_size_t add_size, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
--	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
-+	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
-+							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
- 	resource_size_t children_add_size = 0;
- 	resource_size_t min_align, align;
-@@ -907,6 +907,8 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
-  * @bus : the bus
-  * @mask: mask the resource flag, then compare it with type
-  * @type: the type of free resource from bridge
-+ * @type2: second match type
-+ * @type3: third match type
-  * @min_size : the minimum memory window that must to be allocated
-  * @add_size : additional optional memory window
-  * @realloc_head : track the additional memory window on this list
-@@ -915,16 +917,17 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
-  * guarantees that all child resources fit in this size.
-  */
- static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
--			 unsigned long type, resource_size_t min_size,
--			resource_size_t add_size,
--			struct list_head *realloc_head)
-+			 unsigned long type, unsigned long type2,
-+			 unsigned long type3,
-+			 resource_size_t min_size, resource_size_t add_size,
-+			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	resource_size_t min_align, align, size, size0, size1;
- 	resource_size_t aligns[14];	/* Alignments from 1Mb to 8Gb */
- 	int order, max_order;
--	struct resource *b_res = find_free_bus_resource(bus, type);
--	unsigned int mem64_mask = 0;
-+	struct resource *b_res = find_free_bus_resource(bus,
-+					mask | IORESOURCE_PREFETCH, type);
- 	resource_size_t children_add_size = 0;
- 
- 	if (!b_res)
-@@ -934,9 +937,6 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	max_order = 0;
- 	size = 0;
- 
--	mem64_mask = b_res->flags & IORESOURCE_MEM_64;
--	b_res->flags &= ~IORESOURCE_MEM_64;
--
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -944,7 +944,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			struct resource *r = &dev->resource[i];
- 			resource_size_t r_size;
- 
--			if (r->parent || (r->flags & mask) != type)
-+			if (r->parent || ((r->flags & mask) != type &&
-+					  (r->flags & mask) != type2 &&
-+					  (r->flags & mask) != type3))
- 				continue;
- 			r_size = resource_size(r);
- #ifdef CONFIG_PCI_IOV
-@@ -976,7 +978,6 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				aligns[order] += align;
- 			if (order > max_order)
- 				max_order = order;
--			mem64_mask &= r->flags & IORESOURCE_MEM_64;
- 
- 			if (realloc_head)
- 				children_add_size += get_res_add_size(realloc_head, r);
-@@ -1001,7 +1002,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	}
- 	b_res->start = min_align;
- 	b_res->end = size0 + min_align - 1;
--	b_res->flags |= IORESOURCE_STARTALIGN | mem64_mask;
-+	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
- 		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
-@@ -1117,8 +1118,9 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
- 			struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
--	unsigned long mask, prefmask;
-+	unsigned long mask, prefmask, type2 = 0, type3 = 0;
- 	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-+	struct resource *b_res;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
-@@ -1163,15 +1165,37 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
- 		   has already been allocated by arch code, try
- 		   non-prefetchable range for both types of PCI memory
- 		   resources. */
-+		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
- 		mask = IORESOURCE_MEM;
- 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
--		if (pbus_size_mem(bus, prefmask, prefmask,
-+		if (b_res[2].flags & IORESOURCE_MEM_64) {
-+			prefmask |= IORESOURCE_MEM_64;
-+			if (pbus_size_mem(bus, prefmask, prefmask,
-+				  prefmask, prefmask,
- 				  realloc_head ? 0 : additional_mem_size,
--				  additional_mem_size, realloc_head))
--			mask = prefmask; /* Success, size non-prefetch only. */
--		else
--			additional_mem_size += additional_mem_size;
--		pbus_size_mem(bus, mask, IORESOURCE_MEM,
-+				  additional_mem_size, realloc_head)) {
-+					/*
-+					 * Success, with pref mmio64,
-+					 * next will size non-pref or
-+					 * non-mmio64 */
-+					mask = prefmask;
-+					type2 = prefmask & ~IORESOURCE_MEM_64;
-+					type3 = prefmask & ~IORESOURCE_PREFETCH;
-+			}
-+		}
-+		if (!type2) {
-+			prefmask &= ~IORESOURCE_MEM_64;
-+			if (pbus_size_mem(bus, prefmask, prefmask,
-+					 prefmask, prefmask,
-+					 realloc_head ? 0 : additional_mem_size,
-+					 additional_mem_size, realloc_head)) {
-+				/* Success, next will size non-prefetch. */
-+				mask = prefmask;
-+			} else
-+				additional_mem_size += additional_mem_size;
-+			type2 = type3 = IORESOURCE_MEM;
-+		}
-+		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
- 				realloc_head ? 0 : additional_mem_size,
- 				additional_mem_size, realloc_head);
- 		break;
-@@ -1257,42 +1281,66 @@ static void __ref __pci_bridge_assign_resources(const struct pci_dev *bridge,
- static void pci_bridge_release_resources(struct pci_bus *bus,
- 					  unsigned long type)
- {
--	int idx;
--	bool changed = false;
--	struct pci_dev *dev;
-+	struct pci_dev *dev = bus->self;
- 	struct resource *r;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH;
-+				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
-+	unsigned old_flags = 0;
-+	struct resource *b_res;
-+	int idx = 1;
- 
--	dev = bus->self;
--	for (idx = PCI_BRIDGE_RESOURCES; idx <= PCI_BRIDGE_RESOURCE_END;
--	     idx++) {
--		r = &dev->resource[idx];
--		if ((r->flags & type_mask) != type)
--			continue;
--		if (!r->parent)
--			continue;
--		/*
--		 * if there are children under that, we should release them
--		 *  all
--		 */
--		release_child_resources(r);
--		if (!release_resource(r)) {
--			dev_printk(KERN_DEBUG, &dev->dev,
--				 "resource %d %pR released\n", idx, r);
--			/* keep the old size */
--			r->end = resource_size(r) - 1;
--			r->start = 0;
--			r->flags = 0;
--			changed = true;
--		}
--	}
-+	b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
++config PCI_RCAR_GEN2_PCIE
++	bool "Renesas R-Car PCIe controller"
++	depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
++	help
++	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 13fb333..19946f9 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
++obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+new file mode 100644
+index 0000000..3c524b9
+--- /dev/null
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -0,0 +1,768 @@
++/*
++ * PCIe driver for Renesas R-Car SoCs
++ *  Copyright (C) 2014 Renesas Electronics Europe Ltd
++ *
++ * Based on:
++ *  arch/sh/drivers/pci/pcie-sh7786.c
++ *  arch/sh/drivers/pci/ops-sh7786.c
++ *  Copyright (C) 2009 - 2011  Paul Mundt
++ *
++ * This file is licensed under the terms of the GNU General Public
++ * License version 2.  This program is licensed "as is" without any
++ * warranty of any kind, whether express or implied.
++ */
++
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++
++#define DRV_NAME "rcar-pcie"
++
++#define PCIECAR			0x000010
++#define PCIECCTLR		0x000018
++#define  CONFIG_SEND_ENABLE	(1 << 31)
++#define  TYPE0			(0 << 8)
++#define  TYPE1			(1 << 8)
++#define PCIECDR			0x000020
++#define PCIEMSR			0x000028
++#define PCIEINTXR		0x000400
++
++/* Transfer control */
++#define PCIETCTLR		0x02000
++#define  CFINIT			1
++#define PCIETSTR		0x02004
++#define  DATA_LINK_ACTIVE	1
++#define PCIEERRFR		0x02020
++#define  UNSUPPORTED_REQUEST	(1 << 4)
++
++/* root port address */
++#define PCIEPRAR(x)		(0x02080 + ((x) * 0x4))
++
++/* local address reg & mask */
++#define PCIELAR(x)		(0x02200 + ((x) * 0x20))
++#define PCIELAMR(x)		(0x02208 + ((x) * 0x20))
++#define  LAM_PREFETCH		(1 << 3)
++#define  LAM_64BIT		(1 << 2)
++#define  LAR_ENABLE		(1 << 1)
++
++/* PCIe address reg & mask */
++#define PCIEPARL(x)		(0x03400 + ((x) * 0x20))
++#define PCIEPARH(x)		(0x03404 + ((x) * 0x20))
++#define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
++#define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
++#define  PAR_ENABLE		(1 << 31)
++#define  IO_SPACE		(1 << 8)
++
++/* Configuration */
++#define PCICONF(x)		(0x010000 + ((x) * 0x4))
++#define PMCAP(x)		(0x010040 + ((x) * 0x4))
++#define EXPCAP(x)		(0x010070 + ((x) * 0x4))
++#define VCCAP(x)		(0x010100 + ((x) * 0x4))
++
++/* link layer */
++#define IDSETR1			0x011004
++#define TLCTLR			0x011048
++#define MACSR			0x011054
++#define MACCTLR			0x011058
++#define  SCRAMBLE_DISABLE	(1 << 27)
++
++/* R-Car H1 PHY */
++#define H1_PCIEPHYADRR		0x04000c
++#define  WRITE_CMD		(1 << 16)
++#define  PHY_ACK		(1 << 24)
++#define  RATE_POS		12
++#define  LANE_POS		8
++#define  ADR_POS		0
++#define H1_PCIEPHYDOUTR		0x040014
++#define H1_PCIEPHYSR		0x040018
++
++#define RCONF(x)	(PCICONF(0)+(x))
++#define RPMCAP(x)	(PMCAP(0)+(x))
++#define REXPCAP(x)	(EXPCAP(0)+(x))
++#define RVCCAP(x)	(VCCAP(0)+(x))
++
++#define  PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
++#define  PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
++#define  PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
++
++#define PCI_MAX_RESOURCES 4
++#define MAX_NR_INBOUND_MAPS 6
++
++/* Structure representing the PCIe interface */
++struct rcar_pcie {
++	struct device		*dev;
++	void __iomem		*base;
++	struct resource		res[PCI_MAX_RESOURCES];
++	struct resource		busn;
++	int			root_bus_nr;
++	struct clk		*clk;
++	struct clk		*bus_clk;
++};
++
++static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
++{
++	return sys->private_data;
++}
++
++static void pci_write_reg(struct rcar_pcie *pcie, unsigned long val,
++			  unsigned long reg)
++{
++	writel(val, pcie->base + reg);
++}
++
++static unsigned long pci_read_reg(struct rcar_pcie *pcie, unsigned long reg)
++{
++	return readl(pcie->base + reg);
++}
++
++enum {
++	PCI_ACCESS_READ,
++	PCI_ACCESS_WRITE,
++};
++
++static void rcar_rmw32(struct rcar_pcie *pcie, int where, u32 mask, u32 data)
++{
++	int shift = 8 * (where & 3);
++	u32 val = pci_read_reg(pcie, where & ~3);
++
++	val &= ~(mask << shift);
++	val |= data << shift;
++	pci_write_reg(pcie, val, where & ~3);
++}
++
++static u32 rcar_read_conf(struct rcar_pcie *pcie, int where)
++{
++	int shift = 8 * (where & 3);
++	u32 val = pci_read_reg(pcie, where & ~3);
++
++	return val >> shift;
++}
++
++/* Serialization is provided by 'pci_lock' in drivers/pci/access.c */
++static int rcar_pcie_config_access(struct rcar_pcie *pcie,
++		unsigned char access_type, struct pci_bus *bus,
++		unsigned int devfn, int where, u32 *data)
++{
++	int dev, func, reg, index;
++
++	dev = PCI_SLOT(devfn);
++	func = PCI_FUNC(devfn);
++	reg = where & ~3;
++	index = reg / 4;
 +
 +	/*
-+	 *     1. if there is io port assign fail, will release bridge
-+	 *	  io port.
-+	 *     2. if there is non pref mmio assign fail, release bridge
-+	 *	  nonpref mmio.
-+	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
-+	 *	  is 64bit, release bridge pref mmio.
-+	 *     4. if there is pref mmio assign fail, and bridge pref is
-+	 *	  32bit mmio, release bridge pref mmio
-+	 *     5. if there is pref mmio assign fail, and bridge pref is not
-+	 *	  assigned, release bridge nonpref mmio.
++	 * While each channel has its own memory-mapped extended config
++	 * space, it's generally only accessible when in endpoint mode.
++	 * When in root complex mode, the controller is unable to target
++	 * itself with either type 0 or type 1 accesses, and indeed, any
++	 * controller initiated target transfer to its own config space
++	 * result in a completer abort.
++	 *
++	 * Each channel effectively only supports a single device, but as
++	 * the same channel <-> device access works for any PCI_SLOT()
++	 * value, we cheat a bit here and bind the controller's config
++	 * space to devfn 0 in order to enable self-enumeration. In this
++	 * case the regular ECAR/ECDR path is sidelined and the mangled
++	 * config access itself is initiated as an internal bus transaction.
 +	 */
-+	if (type & IORESOURCE_IO)
-+		idx = 0;
-+	else if (!(type & IORESOURCE_PREFETCH))
-+		idx = 1;
-+	else if ((type & IORESOURCE_MEM_64) &&
-+		 (b_res[2].flags & IORESOURCE_MEM_64))
-+		idx = 2;
-+	else if (!(b_res[2].flags & IORESOURCE_MEM_64) &&
-+		 (b_res[2].flags & IORESOURCE_PREFETCH))
-+		idx = 2;
-+	else
-+		idx = 1;
++	if (pci_is_root_bus(bus)) {
++		if (dev != 0)
++			return PCIBIOS_DEVICE_NOT_FOUND;
 +
-+	r = &b_res[idx];
++		if (access_type == PCI_ACCESS_READ) {
++			*data = pci_read_reg(pcie, PCICONF(index));
++		} else {
++			/* Keep an eye out for changes to the root bus number */
++			if (pci_is_root_bus(bus) && (reg == PCI_PRIMARY_BUS))
++				pcie->root_bus_nr = *data & 0xff;
 +
-+	if (!r->parent)
-+		return;
++			pci_write_reg(pcie, *data, PCICONF(index));
++		}
 +
-+	/*
-+	 * if there are children under that, we should release them
-+	 *  all
-+	 */
-+	release_child_resources(r);
-+	if (!release_resource(r)) {
-+		type = old_flags = r->flags & type_mask;
-+		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
-+					PCI_BRIDGE_RESOURCES + idx, r);
-+		/* keep the old size */
-+		r->end = resource_size(r) - 1;
-+		r->start = 0;
-+		r->flags = 0;
- 
--	if (changed) {
- 		/* avoiding touch the one without PREF */
- 		if (type & IORESOURCE_PREFETCH)
- 			type = IORESOURCE_PREFETCH;
- 		__pci_setup_bridge(bus, type);
-+		/* for next child res under same bridge */
-+		r->flags = old_flags;
- 	}
- }
- 
-@@ -1471,7 +1519,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- 	LIST_HEAD(fail_head);
- 	struct pci_dev_resource *fail_res;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH;
-+				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
- 	int pci_try_num = 1;
- 	enum enable_type enable_local;
- 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 7eed671d5586..2473f091a9cc 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -211,15 +211,31 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 
- 	/* First, try exact prefetching match.. */
- 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
--				     IORESOURCE_PREFETCH,
-+				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
- 				     pcibios_align_resource, dev);
- 
--	if (ret < 0 && (res->flags & IORESOURCE_PREFETCH)) {
-+	if (ret < 0 &&
-+	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
-+	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
-+		/*
-+		 * That failed.
-+		 *
-+		 * Try 32bit pref
-+		 */
-+		ret = pci_bus_alloc_resource(bus, res, size, align, min,
-+					     IORESOURCE_PREFETCH,
-+					     pcibios_align_resource, dev);
++		return PCIBIOS_SUCCESSFUL;
 +	}
 +
-+	if (ret < 0 &&
-+	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))) {
- 		/*
- 		 * That failed.
- 		 *
- 		 * But a prefetching area can handle a non-prefetching
- 		 * window (it will just not perform as well).
-+		 *
-+		 * Also can put 64bit under 32bit range. (below 4g).
- 		 */
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
- 					     pcibios_align_resource, dev);
++	if (pcie->root_bus_nr < 0)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	/* Clear errors */
++	pci_write_reg(pcie, pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
++
++	/* Set the PIO address */
++	pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) | PCIE_CONF_DEV(dev) |
++				PCIE_CONF_FUNC(func) | reg, PCIECAR);
++
++	/* Enable the configuration access */
++	if (bus->parent->number == pcie->root_bus_nr)
++		pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE0, PCIECCTLR);
++	else
++		pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE1, PCIECCTLR);
++
++	/* Check for errors */
++	if (pci_read_reg(pcie, PCIEERRFR) & UNSUPPORTED_REQUEST)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	/* Check for master and target aborts */
++	if (rcar_read_conf(pcie, RCONF(PCI_STATUS)) &
++		(PCI_STATUS_REC_MASTER_ABORT | PCI_STATUS_REC_TARGET_ABORT))
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	if (access_type == PCI_ACCESS_READ)
++		*data = pci_read_reg(pcie, PCIECDR);
++	else
++		pci_write_reg(pcie, *data, PCIECDR);
++
++	/* Disable the configuration access */
++	pci_write_reg(pcie, 0, PCIECCTLR);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int rcar_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
++			       int where, int size, u32 *val)
++{
++	struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
++	int ret;
++
++	if ((size == 2) && (where & 1))
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++	else if ((size == 4) && (where & 3))
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
++				      bus, devfn, where, val);
++	if (ret != PCIBIOS_SUCCESSFUL) {
++		*val = 0xffffffff;
++		return ret;
++	}
++
++	if (size == 1)
++		*val = (*val >> (8 * (where & 3))) & 0xff;
++	else if (size == 2)
++		*val = (*val >> (8 * (where & 2))) & 0xffff;
++
++	dev_dbg(&bus->dev, "pcie-config-read: bus=%3d devfn=0x%04x "
++		"where=0x%04x size=%d val=0x%08lx\n", bus->number,
++		devfn, where, size, (unsigned long)*val);
++
++	return ret;
++}
++
++/* Serialization is provided by 'pci_lock' in drivers/pci/access.c */
++static int rcar_pcie_write_conf(struct pci_bus *bus, unsigned int devfn,
++				int where, int size, u32 val)
++{
++	struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
++	int shift, ret;
++	u32 data;
++
++	if ((size == 2) && (where & 1))
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++	else if ((size == 4) && (where & 3))
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
++				      bus, devfn, where, &data);
++	if (ret != PCIBIOS_SUCCESSFUL)
++		return ret;
++
++	dev_dbg(&bus->dev, "pcie-config-write: bus=%3d devfn=0x%04x "
++		"where=0x%04x size=%d val=0x%08lx\n", bus->number,
++		devfn, where, size, (unsigned long)val);
++
++	if (size == 1) {
++		shift = 8 * (where & 3);
++		data &= ~(0xff << shift);
++		data |= ((val & 0xff) << shift);
++	} else if (size == 2) {
++		shift = 8 * (where & 2);
++		data &= ~(0xffff << shift);
++		data |= ((val & 0xffff) << shift);
++	} else
++		data = val;
++
++	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_WRITE,
++				      bus, devfn, where, &data);
++
++	return ret;
++}
++
++static struct pci_ops rcar_pcie_ops = {
++	.read	= rcar_pcie_read_conf,
++	.write	= rcar_pcie_write_conf,
++};
++
++static void rcar_pcie_setup_window(int win, struct resource *res,
++				   struct rcar_pcie *pcie)
++{
++	/* Setup PCIe address space mappings for each resource */
++	resource_size_t size;
++	u32 mask;
++
++	pci_write_reg(pcie, 0x00000000, PCIEPTCTLR(win));
++
++	/*
++	 * The PAMR mask is calculated in units of 128Bytes, which
++	 * keeps things pretty simple.
++	 */
++	size = resource_size(res);
++	mask = (roundup_pow_of_two(size) / SZ_128) - 1;
++	pci_write_reg(pcie, mask << 7, PCIEPAMR(win));
++
++	pci_write_reg(pcie, upper_32_bits(res->start), PCIEPARH(win));
++	pci_write_reg(pcie, lower_32_bits(res->start), PCIEPARL(win));
++
++	/* First resource is for IO */
++	mask = PAR_ENABLE;
++	if (res->flags & IORESOURCE_IO)
++		mask |= IO_SPACE;
++
++	pci_write_reg(pcie, mask, PCIEPTCTLR(win));
++}
++
++static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
++{
++	struct rcar_pcie *pcie = sys_to_pcie(sys);
++	struct resource *res;
++	int i;
++
++	pcie->root_bus_nr = -1;
++
++	/* Setup PCI resources */
++	for (i = 0; i < PCI_MAX_RESOURCES; i++) {
++
++		res = &pcie->res[i];
++		if (!res->flags)
++			continue;
++
++		rcar_pcie_setup_window(i, res, pcie);
++
++		if (res->flags & IORESOURCE_IO)
++			pci_ioremap_io(nr * SZ_64K, res->start);
++		else
++			pci_add_resource(&sys->resources, res);
++	}
++	pci_add_resource(&sys->resources, &pcie->busn);
++
++	return 1;
++}
++
++struct hw_pci rcar_pci = {
++	.setup          = rcar_pcie_setup,
++	.map_irq        = of_irq_parse_and_map_pci,
++	.ops            = &rcar_pcie_ops,
++};
++
++static void rcar_pcie_enable(struct rcar_pcie *pcie)
++{
++	struct platform_device *pdev = to_platform_device(pcie->dev);
++
++	rcar_pci.nr_controllers = 1;
++	rcar_pci.private_data = (void **)&pcie;
++
++	pci_common_init_dev(&pdev->dev, &rcar_pci);
++#ifdef CONFIG_PCI_DOMAINS
++	rcar_pci.domain++;
++#endif
++}
++
++static int phy_wait_for_ack(struct rcar_pcie *pcie)
++{
++	unsigned int timeout = 100;
++
++	while (timeout--) {
++		if (pci_read_reg(pcie, H1_PCIEPHYADRR) & PHY_ACK)
++			return 0;
++
++		udelay(100);
++	}
++
++	dev_err(pcie->dev, "Access to PCIe phy timed out\n");
++
++	return -ETIMEDOUT;
++}
++
++static void phy_write_reg(struct rcar_pcie *pcie,
++				 unsigned int rate, unsigned int addr,
++				 unsigned int lane, unsigned int data)
++{
++	unsigned long phyaddr;
++
++	phyaddr = WRITE_CMD |
++		((rate & 1) << RATE_POS) |
++		((lane & 0xf) << LANE_POS) |
++		((addr & 0xff) << ADR_POS);
++
++	/* Set write data */
++	pci_write_reg(pcie, data, H1_PCIEPHYDOUTR);
++	pci_write_reg(pcie, phyaddr, H1_PCIEPHYADRR);
++
++	/* Ignore errors as they will be dealt with if the data link is down */
++	phy_wait_for_ack(pcie);
++
++	/* Clear command */
++	pci_write_reg(pcie, 0, H1_PCIEPHYDOUTR);
++	pci_write_reg(pcie, 0, H1_PCIEPHYADRR);
++
++	/* Ignore errors as they will be dealt with if the data link is down */
++	phy_wait_for_ack(pcie);
++}
++
++static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
++{
++	unsigned int timeout = 10;
++
++	while (timeout--) {
++		if ((pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
++			return 0;
++
++		msleep(5);
++	}
++
++	return -ETIMEDOUT;
++}
++
++static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
++{
++	int err;
++
++	/* Begin initialization */
++	pci_write_reg(pcie, 0, PCIETCTLR);
++
++	/* Set mode */
++	pci_write_reg(pcie, 1, PCIEMSR);
++
++	/*
++	 * Initial header for port config space is type 1, set the device
++	 * class to match. Hardware takes care of propagating the IDSETR
++	 * settings, so there is no need to bother with a quirk.
++	 */
++	pci_write_reg(pcie, PCI_CLASS_BRIDGE_PCI << 16, IDSETR1);
++
++	/*
++	 * Setup Secondary Bus Number & Subordinate Bus Number, even though
++	 * they aren't used, to avoid bridge being detected as broken.
++	 */
++	rcar_rmw32(pcie, RCONF(PCI_SECONDARY_BUS), 0xff, 1);
++	rcar_rmw32(pcie, RCONF(PCI_SUBORDINATE_BUS), 0xff, 1);
++
++	/* Initialize default capabilities. */
++	rcar_rmw32(pcie, REXPCAP(0), 0, PCI_CAP_ID_EXP);
++	rcar_rmw32(pcie, REXPCAP(PCI_EXP_FLAGS),
++		PCI_EXP_FLAGS_TYPE, PCI_EXP_TYPE_ROOT_PORT << 4);
++	rcar_rmw32(pcie, RCONF(PCI_HEADER_TYPE), 0x7f,
++		PCI_HEADER_TYPE_BRIDGE);
++
++	/* Enable data link layer active state reporting */
++	rcar_rmw32(pcie, REXPCAP(PCI_EXP_LNKCAP), 0, PCI_EXP_LNKCAP_DLLLARC);
++
++	/* Write out the physical slot number = 0 */
++	rcar_rmw32(pcie, REXPCAP(PCI_EXP_SLTCAP), PCI_EXP_SLTCAP_PSN, 0);
++
++	/* Set the completion timer timeout to the maximum 50ms. */
++	rcar_rmw32(pcie, TLCTLR+1, 0x3f, 50);
++
++	/* Terminate list of capabilities (Next Capability Offset=0) */
++	rcar_rmw32(pcie, RVCCAP(0), 0xfff0, 0);
++
++	/* Enable MAC data scrambling. */
++	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
++
++	/* Finish initialization - establish a PCI Express link */
++	pci_write_reg(pcie, CFINIT, PCIETCTLR);
++
++	/* This will timeout if we don't have a link. */
++	err = rcar_pcie_wait_for_dl(pcie);
++	if (err)
++		return err;
++
++	/* Enable INTx interrupts */
++	rcar_rmw32(pcie, PCIEINTXR, 0, 0xF << 8);
++
++	/* Enable slave Bus Mastering */
++	rcar_rmw32(pcie, RCONF(PCI_STATUS), PCI_STATUS_DEVSEL_MASK,
++		PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER |
++		PCI_STATUS_CAP_LIST | PCI_STATUS_DEVSEL_FAST);
++
++	wmb();
++
++	return 0;
++}
++
++static int rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
++{
++	unsigned int timeout = 10;
++
++	/* Initialize the phy */
++	phy_write_reg(pcie, 0, 0x42, 0x1, 0x0EC34191);
++	phy_write_reg(pcie, 1, 0x42, 0x1, 0x0EC34180);
++	phy_write_reg(pcie, 0, 0x43, 0x1, 0x00210188);
++	phy_write_reg(pcie, 1, 0x43, 0x1, 0x00210188);
++	phy_write_reg(pcie, 0, 0x44, 0x1, 0x015C0014);
++	phy_write_reg(pcie, 1, 0x44, 0x1, 0x015C0014);
++	phy_write_reg(pcie, 1, 0x4C, 0x1, 0x786174A0);
++	phy_write_reg(pcie, 1, 0x4D, 0x1, 0x048000BB);
++	phy_write_reg(pcie, 0, 0x51, 0x1, 0x079EC062);
++	phy_write_reg(pcie, 0, 0x52, 0x1, 0x20000000);
++	phy_write_reg(pcie, 1, 0x52, 0x1, 0x20000000);
++	phy_write_reg(pcie, 1, 0x56, 0x1, 0x00003806);
++
++	phy_write_reg(pcie, 0, 0x60, 0x1, 0x004B03A5);
++	phy_write_reg(pcie, 0, 0x64, 0x1, 0x3F0F1F0F);
++	phy_write_reg(pcie, 0, 0x66, 0x1, 0x00008000);
++
++	while (timeout--) {
++		if (pci_read_reg(pcie, H1_PCIEPHYSR))
++			return rcar_pcie_hw_init(pcie);
++
++		msleep(5);
++	}
++
++	return -ETIMEDOUT;
++}
++
++static int rcar_pcie_get_resources(struct platform_device *pdev,
++				   struct rcar_pcie *pcie)
++{
++	struct resource res;
++	int err;
++
++	err = of_address_to_resource(pdev->dev.of_node, 0, &res);
++	if (err)
++		return err;
++
++	pcie->clk = devm_clk_get(&pdev->dev, "pcie");
++	if (IS_ERR(pcie->clk)) {
++		dev_err(pcie->dev, "cannot get platform clock\n");
++		return PTR_ERR(pcie->clk);
++	}
++	err = clk_prepare_enable(pcie->clk);
++	if (err)
++		goto fail_clk;
++
++	pcie->bus_clk = devm_clk_get(&pdev->dev, "pcie_bus");
++	if (IS_ERR(pcie->bus_clk)) {
++		dev_err(pcie->dev, "cannot get pcie bus clock\n");
++		err = PTR_ERR(pcie->bus_clk);
++		goto fail_clk;
++	}
++	err = clk_prepare_enable(pcie->bus_clk);
++	if (err)
++		goto err_map_reg;
++
++	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
++	if (IS_ERR(pcie->base)) {
++		err = PTR_ERR(pcie->base);
++		goto err_map_reg;
++	}
++
++	return 0;
++
++err_map_reg:
++	clk_disable_unprepare(pcie->bus_clk);
++fail_clk:
++	clk_disable_unprepare(pcie->clk);
++
++	return err;
++}
++
++static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
++				    struct of_pci_range *range,
++				    int *index)
++{
++	u64 restype = range->flags;
++	u64 cpu_addr = range->cpu_addr;
++	u64 cpu_end = range->cpu_addr + range->size;
++	u64 pci_addr = range->pci_addr;
++	u32 flags = LAM_64BIT | LAR_ENABLE;
++	u64 mask;
++	u64 size;
++	int idx = *index;
++
++	if (restype & IORESOURCE_PREFETCH)
++		flags |= LAM_PREFETCH;
++
++	/*
++	 * If the size of the range is larger than the alignment of the start
++	 * address, we have to use multiple entries to perform the mapping.
++	 */
++	if (cpu_addr > 0) {
++		unsigned long nr_zeros = __ffs64(cpu_addr);
++		u64 alignment = 1ULL << nr_zeros;
++		size = min(range->size, alignment);
++	} else {
++		size = range->size;
++	}
++	/* Hardware supports max 4GiB inbound region */
++	size = min(size, 1ULL << 32);
++
++	mask = roundup_pow_of_two(size) - 1;
++	mask &= ~0xf;
++
++	while (cpu_addr < cpu_end) {
++		/*
++		 * Set up 64-bit inbound regions as the range parser doesn't
++		 * distinguish between 32 and 64-bit types.
++		 */
++		pci_write_reg(pcie, lower_32_bits(pci_addr), PCIEPRAR(idx));
++		pci_write_reg(pcie, lower_32_bits(cpu_addr), PCIELAR(idx));
++		pci_write_reg(pcie, lower_32_bits(mask) | flags, PCIELAMR(idx));
++
++		pci_write_reg(pcie, upper_32_bits(pci_addr), PCIEPRAR(idx+1));
++		pci_write_reg(pcie, upper_32_bits(cpu_addr), PCIELAR(idx+1));
++		pci_write_reg(pcie, 0, PCIELAMR(idx+1));
++
++		pci_addr += size;
++		cpu_addr += size;
++		idx += 2;
++
++		if (idx > MAX_NR_INBOUND_MAPS) {
++			dev_err(pcie->dev, "Failed to map inbound regions!\n");
++			return -EINVAL;
++		}
++	}
++	*index = idx;
++
++	return 0;
++}
++
++static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
++				     struct device_node *node)
++{
++	const int na = 3, ns = 2;
++	int rlen;
++
++	parser->node = node;
++	parser->pna = of_n_addr_cells(node);
++	parser->np = parser->pna + na + ns;
++
++	parser->range = of_get_property(node, "dma-ranges", &rlen);
++	if (!parser->range)
++		return -ENOENT;
++
++	parser->end = parser->range + rlen / sizeof(__be32);
++	return 0;
++}
++
++static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
++					  struct device_node *np)
++{
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	int index = 0;
++	int err;
++
++	if (pci_dma_range_parser_init(&parser, np))
++		return -EINVAL;
++
++	/* Get the dma-ranges from DT */
++	for_each_of_pci_range(&parser, &range) {
++		u64 end = range.cpu_addr + range.size - 1;
++		dev_dbg(pcie->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
++			range.flags, range.cpu_addr, end, range.pci_addr);
++
++		err = rcar_pcie_inbound_ranges(pcie, &range, &index);
++		if (err)
++			return err;
++	}
++
++	return 0;
++}
++
++static const struct of_device_id rcar_pcie_of_match[] = {
++	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
++	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
++	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
++	{},
++};
++MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
++
++static int rcar_pcie_probe(struct platform_device *pdev)
++{
++	struct rcar_pcie *pcie;
++	unsigned int data;
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	const struct of_device_id *of_id;
++	int err, win = 0;
++	int (*hw_init_fn)(struct rcar_pcie *);
++
++	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
++	if (!pcie)
++		return -ENOMEM;
++
++	pcie->dev = &pdev->dev;
++	platform_set_drvdata(pdev, pcie);
++
++	/* Get the bus range */
++	if (of_pci_parse_bus_range(pdev->dev.of_node, &pcie->busn)) {
++		dev_err(&pdev->dev, "failed to parse bus-range property\n");
++		return -EINVAL;
++	}
++
++	if (of_pci_range_parser_init(&parser, pdev->dev.of_node)) {
++		dev_err(&pdev->dev, "missing ranges property\n");
++		return -EINVAL;
++	}
++
++	err = rcar_pcie_get_resources(pdev, pcie);
++	if (err < 0) {
++		dev_err(&pdev->dev, "failed to request resources: %d\n", err);
++		return err;
++	}
++
++	for_each_of_pci_range(&parser, &range) {
++		of_pci_range_to_resource(&range, pdev->dev.of_node,
++						&pcie->res[win++]);
++
++		if (win > PCI_MAX_RESOURCES)
++			break;
++	}
++
++	 err = rcar_pcie_parse_map_dma_ranges(pcie, pdev->dev.of_node);
++	 if (err)
++		return err;
++
++	of_id = of_match_device(rcar_pcie_of_match, pcie->dev);
++	if (!of_id || !of_id->data)
++		return -EINVAL;
++	hw_init_fn = of_id->data;
++
++	/* Failure to get a link might just be that no cards are inserted */
++	err = hw_init_fn(pcie);
++	if (err) {
++		dev_info(&pdev->dev, "PCIe link down\n");
++		return 0;
++	}
++
++	data = pci_read_reg(pcie, MACSR);
++	dev_info(&pdev->dev, "PCIe x%d: link up\n", (data >> 20) & 0x3f);
++
++	rcar_pcie_enable(pcie);
++
++	return 0;
++}
++
++static struct platform_driver rcar_pcie_driver = {
++	.driver = {
++		.name = DRV_NAME,
++		.owner = THIS_MODULE,
++		.of_match_table = rcar_pcie_of_match,
++		.suppress_bind_attrs = true,
++	},
++	.probe = rcar_pcie_probe,
++};
++module_platform_driver(rcar_pcie_driver);
++
++MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
++MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
++MODULE_LICENSE("GPLv2");
+-- 
+1.9.1
 
