@@ -1,64 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43642 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46449 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932217AbaEIP27 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 May 2014 11:28:59 -0400
-Subject: [PATCH v2 05/15] PCI: Quirk pci_for_each_dma_alias() for bridges
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
-Date: Fri, 09 May 2014 09:28:55 -0600
-Message-ID: <20140509152855.8321.78358.stgit@bling.home>
-In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
-References: <20140509151735.8321.22017.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S934213AbaEMPN1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 13 May 2014 11:13:27 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org,
+	Alexander Gordeev <agordeev@redhat.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	Alexandre Bounine <alexandre.bounine@idt.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 RESEND] rapidio/tsi721: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Tue, 13 May 2014 17:01:32 +0200
+Message-Id: <1399993292-31692-1-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Several PCIe-to-PCI bridges fail to provide a PCIe capability, causing
-us to handle them as conventional PCI devices.  In some cases, this
-may be correct, in others it's not.  Add a dev_flag bit to identify
-devices to be handled as standard PCIe-to-PCI bridges.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Matt Porter <mporter@kernel.crashing.org>
+Cc: Alexandre Bounine <alexandre.bounine@idt.com>
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/search.c |   10 ++++++++--
- include/linux/pci.h  |    2 ++
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ drivers/rapidio/devices/tsi721.c |   11 +++--------
+ 1 files changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index ad698b2..dab4561 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -98,8 +98,14 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 				continue;
- 			}
- 		} else {
--			ret = fn(tmp, PCI_DEVID(tmp->bus->number, tmp->devfn),
--				 data);
-+			if (tmp->dev_flags & PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS)
-+				ret = fn(tmp,
-+					 PCI_DEVID(tmp->subordinate->number,
-+						   PCI_DEVFN(0, 0)), data);
-+			else
-+				ret = fn(tmp,
-+					 PCI_DEVID(tmp->bus->number,
-+						   tmp->devfn), data);
- 			if (ret)
- 				return ret;
- 		}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b4c97d2..31d9a90 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -171,6 +171,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) 4,
- 	/* Flag for quirk use to store if quirk-specific ACS is enabled */
- 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) 8,
-+	/* DMA alias the device as if it was a PCIe-to-PCI bridge */
-+	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) 16,
- };
+diff --git a/drivers/rapidio/devices/tsi721.c b/drivers/rapidio/devices/tsi721.c
+index 1753dc6..2ca1a0b 100644
+--- a/drivers/rapidio/devices/tsi721.c
++++ b/drivers/rapidio/devices/tsi721.c
+@@ -768,15 +768,10 @@ static int tsi721_enable_msix(struct tsi721_device *priv)
+ 	}
+ #endif /* CONFIG_RAPIDIO_DMA_ENGINE */
  
- enum pci_irq_reroute_variant {
+-	err = pci_enable_msix(priv->pdev, entries, ARRAY_SIZE(entries));
++	err = pci_enable_msix_exact(priv->pdev, entries, ARRAY_SIZE(entries));
+ 	if (err) {
+-		if (err > 0)
+-			dev_info(&priv->pdev->dev,
+-				 "Only %d MSI-X vectors available, "
+-				 "not using MSI-X\n", err);
+-		else
+-			dev_err(&priv->pdev->dev,
+-				"Failed to enable MSI-X (err=%d)\n", err);
++		dev_err(&priv->pdev->dev,
++			"Failed to enable MSI-X (err=%d)\n", err);
+ 		return err;
+ 	}
+ 
+-- 
+1.7.7.6
 
