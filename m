@@ -1,112 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
-	Ingo Molnar <mingo@kernel.org>,
-	iommu@lists.linux-foundation.org, xen-devel@lists.xenproject.org
-Subject: [RFC Patch Part1 V1 11/30] x86, ioapic: replace get_nr_irqs_gsi() with arch_dynirq_lower_bound(0)
-Date: Fri, 16 May 2014 16:05:31 +0800
-Message-Id: <1400227550-5935-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:34871 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758296AbaEMBfg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 May 2014 21:35:36 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 13 May 2014 11:35:33 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 1/4] PCI: Export MSI message relevant functions
+Date: Tue, 13 May 2014 11:35:21 +1000
+Message-Id: <1399944924-1200-2-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1399944924-1200-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1399944924-1200-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently all callers use get_nr_irqs_gsi() to get the lowest dynamic
-allocatable IRQ number, and arch_dynirq_lower_bound(0) achieves the same
-goal with a better name. So replace get_nr_irqs_gsi() with
-arch_dynirq_lower_bound(0). It will also help to support dynamic IRQ
-allocation for IOAPIC by using arch_dynirq_lower_bound().
+The patch exports 2 MSI message relevant functions, which will be
+used by VFIO PCI driver. The VFIO PCI driver would be built as
+a module.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/x86/include/asm/io_apic.h   |    2 --
- arch/x86/kernel/apic/io_apic.c   |    5 -----
- drivers/iommu/irq_remapping.c    |    4 ++--
- drivers/xen/events/events_base.c |    2 +-
- 4 files changed, 3 insertions(+), 10 deletions(-)
+ drivers/pci/msi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 0c448ac14abf..de3d8b04cf64 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -160,8 +160,6 @@ extern int save_ioapic_entries(void);
- extern void mask_ioapic_entries(void);
- extern int restore_ioapic_entries(void);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 955ab79..2350271 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -324,6 +324,7 @@ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
  
--extern int get_nr_irqs_gsi(void);
--
- extern void setup_ioapic_ids_from_mpc(void);
- extern void setup_ioapic_ids_from_mpc_nocheck(void);
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index a338d9601841..2c91a7fc9915 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3417,11 +3417,6 @@ static void __init probe_nr_irqs_gsi(void)
- 	printk(KERN_DEBUG "nr_irqs_gsi: %d\n", nr_irqs_gsi);
+ 	__get_cached_msi_msg(entry, msg);
  }
++EXPORT_SYMBOL_GPL(get_cached_msi_msg);
  
--int get_nr_irqs_gsi(void)
--{
--	return nr_irqs_gsi;
--}
--
- unsigned int arch_dynirq_lower_bound(unsigned int from)
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
  {
- 	return from < nr_irqs_gsi ? nr_irqs_gsi : from;
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 228632c99adb..f874344409df 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -62,7 +62,7 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
- 	WARN_ON(msidesc->nvec_used);
+@@ -368,6 +369,7 @@ void write_msi_msg(unsigned int irq, struct msi_msg *msg)
  
- 	node = dev_to_node(&dev->dev);
--	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
-+	irq = __create_irqs(arch_dynirq_lower_bound(0), nvec, node);
- 	if (irq == 0)
- 		return -ENOSPC;
+ 	__write_msi_msg(entry, msg);
+ }
++EXPORT_SYMBOL_GPL(write_msi_msg);
  
-@@ -109,7 +109,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
- 	unsigned int irq;
- 
- 	node		= dev_to_node(&dev->dev);
--	irq		= get_nr_irqs_gsi();
-+	irq		= arch_dynirq_lower_bound(0);
- 	sub_handle	= 0;
- 
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
-diff --git a/drivers/xen/events/events_base.c b/drivers/xen/events/events_base.c
-index dfa12a4a0a48..004e9bb293c6 100644
---- a/drivers/xen/events/events_base.c
-+++ b/drivers/xen/events/events_base.c
-@@ -402,7 +402,7 @@ static int __must_check xen_allocate_irqs_dynamic(int nvec)
- 	 * collisions.
- 	 */
- 	if (xen_initial_domain() || xen_hvm_domain())
--		first = get_nr_irqs_gsi();
-+		first = arch_dynirq_lower_bound(0);
- #endif
- 
- 	irq = irq_alloc_descs_from(first, nvec, -1);
+ static void free_msi_irqs(struct pci_dev *dev)
+ {
 -- 
-1.7.10.4
+1.8.3.2
 
