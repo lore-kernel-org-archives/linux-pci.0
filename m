@@ -1,110 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:59850 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932730AbaE2Gjs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 May 2014 02:39:48 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
-	<kishon@ti.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>, Marek Vasut <marex@denx.de>
-Subject: [PATCH v2 03/18] PCI: designware: Configuration space should be specified in 'reg'
-Date: Thu, 29 May 2014 12:08:05 +0530
-Message-ID: <1401345500-20188-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1401345500-20188-1-git-send-email-kishon@ti.com>
-References: <1401345500-20188-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:35436 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758174AbaEMBff (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 May 2014 21:35:35 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 13 May 2014 11:35:34 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 3/4] drivers/vfio/pci: Fix wrong MSI interrupt count
+Date: Tue, 13 May 2014 11:35:23 +1000
+Message-Id: <1399944924-1200-4-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1399944924-1200-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1399944924-1200-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The configuration address space has so far been specified in *ranges*,
-however it should be specified in *reg* making it a platform MEM resource.
-Hence used 'platform_get_resource_*' API to get configuration address
-space in the designware driver.
+According PCI local bus specification, the register of Message
+Control for MSI (offset: 2, length: 2) has bit#0 to enable or
+disable MSI logic and it shouldn't be part contributing to the
+calculation of MSI interrupt count. The patch fixes the issue.
 
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Marek Vasut <marex@denx.de>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- .../devicetree/bindings/pci/designware-pcie.txt    |    1 +
- drivers/pci/host/pcie-designware.c                 |   17 +++++++++++++++--
- 2 files changed, 16 insertions(+), 2 deletions(-)
+ drivers/vfio/pci/vfio_pci.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index d6fae13..8314360 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -6,6 +6,7 @@ Required properties:
- 	as "samsung,exynos5440-pcie" or "fsl,imx6q-pcie".
- - reg: base addresses and lengths of the pcie controller,
- 	the phy controller, additional register for the phy controller.
-+	The configuration address space should also be specified here.
- - interrupts: interrupt values for level interrupt,
- 	pulse interrupt, special interrupt.
- - clocks: from common clock binding: handle to pci clock.
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index c4e3732..603b386 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -20,6 +20,7 @@
- #include <linux/of_pci.h>
- #include <linux/pci.h>
- #include <linux/pci_regs.h>
-+#include <linux/platform_device.h>
- #include <linux/types.h>
- 
- #include "pcie-designware.h"
-@@ -392,11 +393,23 @@ static const struct irq_domain_ops msi_domain_ops = {
- int __init dw_pcie_host_init(struct pcie_port *pp)
- {
- 	struct device_node *np = pp->dev->of_node;
-+	struct platform_device *pdev = to_platform_device(pp->dev);
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
-+	struct resource *cfg_res;
- 	u32 val;
- 	int i;
- 
-+	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
-+	if (cfg_res) {
-+		pp->config.cfg0_size = resource_size(cfg_res)/2;
-+		pp->config.cfg1_size = resource_size(cfg_res)/2;
-+		pp->cfg0_base = cfg_res->start;
-+		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
-+	} else {
-+		dev_err(pp->dev, "missing *config* reg space\n");
-+	}
-+
- 	if (of_pci_range_parser_init(&parser, np)) {
- 		dev_err(pp->dev, "missing ranges property\n");
- 		return -EINVAL;
-@@ -429,6 +442,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 			of_pci_range_to_resource(&range, np, &pp->cfg);
- 			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
- 			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
-+			pp->cfg0_base = pp->cfg.start;
-+			pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 7ba0424..6b8cd07 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -196,8 +196,7 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+ 		if (pos) {
+ 			pci_read_config_word(vdev->pdev,
+ 					     pos + PCI_MSI_FLAGS, &flags);
+-
+-			return 1 << (flags & PCI_MSI_FLAGS_QMASK);
++			return 1 << ((flags & PCI_MSI_FLAGS_QMASK) >> 1);
  		}
- 	}
- 
-@@ -441,8 +456,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
- 
--	pp->cfg0_base = pp->cfg.start;
--	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
- 	pp->mem_base = pp->mem.start;
- 
- 	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+ 	} else if (irq_type == VFIO_PCI_MSIX_IRQ_INDEX) {
+ 		u8 pos;
 -- 
-1.7.9.5
+1.8.3.2
 
