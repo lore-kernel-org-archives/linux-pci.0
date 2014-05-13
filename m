@@ -1,80 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:55290 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751945AbaEHPQc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 11:16:32 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	'Santosh Shilimkar' <santosh.shilimkar@ti.com>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	rogerq@ti.com, balajitk@ti.com,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Marek Vasut' <marex@denx.de>
+Subject: Re: [PATCH 06/17] pci: host: pcie-designware: Use *base-mask* for configuring the iATU
+Date: Tue, 13 May 2014 15:34:53 +0200
+Message-ID: <4528185.oZbgyuuFKX@wuerfel>
+In-Reply-To: <202752041.rgamje4etj@wuerfel>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <53721D7F.9070200@ti.com> <202752041.rgamje4etj@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <536B9D78.5000602@codethink.co.uk>
-References: <1399560433-1402630-1-git-send-email-arnd@arndb.de>
-	<1399560990-1402858-1-git-send-email-arnd@arndb.de>
-	<1399560990-1402858-14-git-send-email-arnd@arndb.de>
-	<536B9D78.5000602@codethink.co.uk>
-Date: Thu, 8 May 2014 17:16:32 +0200
-Message-ID: <CAMuHMdWBzBneDqyDxK5HU3Bt_5CyRfTM_f_6YGJHokG_v17_sw@mail.gmail.com>
-Subject: Re: [PATCH] pci: rcar host needs OF
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <damm@opensource.se>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 8, 2014 at 5:06 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
-> On 08/05/14 15:56, Arnd Bergmann wrote:
->>
->> The pci-rcar driver is enabled for compile tests, and this has
->> now shown that the driver cannot build without CONFIG_OF,
->> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
->> interrupt mapping when possible":
->>
->> drivers/built-in.o: In function `rcar_pci_map_irq':
->> :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
->>
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Magnus Damm <damm@opensource.se>
->> Cc: linux-pci@vger.kernel.org
->> Cc: linux-sh@vger.kernel.org
->> ---
->>   drivers/pci/host/Kconfig | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index fbbef0b..4675f47 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -27,7 +27,7 @@ config PCI_TEGRA
->>
->>   config PCI_RCAR_GEN2
->>         bool "Renesas R-Car Gen2 Internal PCI controller"
->> -       depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
->> +       depends on ARCH_SHMOBILE || (ARM && OF && COMPILE_TEST)
->>         help
->>           Say Y here if you want internal PCI support on R-Car Gen2 SoC.
->>           There are 3 internal PCI controllers available with a single
->>
->
-> This driver /should/ be able to be built for just the platform case
-> so it sounds like f8f2fe7355fb stopped this but no-one has yet to
-> notice.
+On Tuesday 13 May 2014 15:27:46 Arnd Bergmann wrote:
+> On Tuesday 13 May 2014 18:56:23 Kishon Vijay Abraham I wrote:
+> > > If you have a case where the outbound translation is a 256MB (i.e. 28bit)
+> > > section of the CPU address space, that could be represented as
+> > > 
+> > >       ranges = <0x82000000 0 0  0xb0000000  0 0x10000000>;
+> > > 
+> > > or 
+> > > 
+> > >       ranges = <0x82000000 0 0xb0000000  0xb0000000  0 0x10000000>;
+> > > 
+> > > depending on whether you want the BARs to be programmed using a low
+> > > address 0x0-0x0fffffff or an address matching the window
+> > > 0xb0000000-0xbfffffff.
+> > 
+> > The problem is, for configuring the window starting at 0xb0000000, the ATU
+> > should be programmed 0x0000000 (the cpu address for it will be 0xb0000000 though).
+> > 
+> 
+> Then use the first of the two?
+> 
 
-You mean include/linux/of_pci.h should provide a dummy version of
-of_irq_parse_and_map_pci() returning 0 in case OF=n?
+To clarify: using <0x82000000 0 0  0xb0000000  0 0x10000000> will give you 
+a mem_offset of 0xb0000000, which should work just fine for this case.
 
-Gr{oetje,eeting}s,
+What I don't understand is why the ATU cares about whether the outbound
+address is 0x0000000 or 0xb0000000 if it just decodes the lower 28 bit
+anyway. Did you mean that we have to program the BARs using low addresses
+regardless of what is programmed in the ATU? That would make more sense,
+and it also matches what I suggested.
 
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+	Arnd
