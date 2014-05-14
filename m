@@ -1,305 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:34042 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755073AbaEOQCJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 12:02:09 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v1 3/5] phy: pci serdes phy driver for keystone
-Date: Thu, 15 May 2014 12:01:30 -0400
-Message-ID: <1400169692-9677-4-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:32942 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755203AbaENNRL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 May 2014 09:17:11 -0400
+Message-ID: <53736CBC.2060702@ti.com>
+Date: Wed, 14 May 2014 16:16:44 +0300
+From: Roger Quadros <rogerq@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: <balajitk@ti.com>, Rajendra Nayak <rnayak@ti.com>,
+	Tero Kristo <t-kristo@ti.com>, Paul Walmsley <paul@pwsan.com>
+Subject: Re: [PATCH 03/17] phy: ti-pipe3: add external clock support for PCIe
+ PHY
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <1399383244-14556-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1399383244-14556-4-git-send-email-kishon@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This phy driver is used by keystone PCI driver. The hw vendor that
-provides the phy hw published only registers and their values. So
-this driver uses these hard coded values to initialize the phy.
+Hi Kishon,
 
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Mohit Kumar <mohit.kumar@st.com>
-CC: Jingoo Han <jg1.han@samsung.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
+On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
+> APLL used by PCIE phy can either use external clock as input or the clock
+> from DPLL. Added support for the APLL to use external clock as input here.
+> 
+> Cc: Rajendra Nayak <rnayak@ti.com>
+> Cc: Tero Kristo <t-kristo@ti.com>
+> Cc: Paul Walmsley <paul@pwsan.com>
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  Documentation/devicetree/bindings/phy/ti-phy.txt |    4 ++
+>  drivers/phy/phy-ti-pipe3.c                       |   75 ++++++++++++++--------
+>  2 files changed, 52 insertions(+), 27 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+> index bc9afb5..d50f8ee 100644
+> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
+> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+> @@ -76,6 +76,10 @@ Required properties:
+>     * "dpll_ref_m2" - external dpll ref clk
+>     * "phy-div" - divider for apll
+>     * "div-clk" - apll clock
+> +   * "apll_mux" - mux for pcie apll
+> +   * "refclk_ext" - external reference clock for pcie apll
+> + - ti,ext-clk: To specifiy if PCIE apll should use external clock. Applicable
+> +   only to PCIE PHY.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/phy/Kconfig        |    6 ++
- drivers/phy/Makefile       |    1 +
- drivers/phy/phy-keystone.c |  230 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 237 insertions(+)
- create mode 100644 drivers/phy/phy-keystone.c
+Instead of specifying both clock sources "dpll_ref_clock", "refclk_ext" and then specifying a 3rd control option "ti,ext-clk" to select one of the 2 sources, why can't the DT just supply one clock source, i.e. the one that is being used in the board instance? The driver should then just configure the clock rate that is needed at that node. Shouldn't the clock framework automatically take care of muxing and parent rates?
 
-diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-index 4906c27..e5f4b5a 100644
---- a/drivers/phy/Kconfig
-+++ b/drivers/phy/Kconfig
-@@ -167,4 +167,10 @@ config PHY_XGENE
- 	help
- 	  This option enables support for APM X-Gene SoC multi-purpose PHY.
- 
-+config PHY_TI_KEYSTONE
-+	bool "TI Keystone PHY support"
-+	depends on ARCH_KEYSTONE
-+	select GENERIC_PHY
-+	help
-+	  This option enables support for TI Keystone PHY (serdes).
- endmenu
-diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-index 7728518..bd306a7 100644
---- a/drivers/phy/Makefile
-+++ b/drivers/phy/Makefile
-@@ -19,3 +19,4 @@ phy-exynos-usb2-$(CONFIG_PHY_EXYNOS4210_USB2)	+= phy-exynos4210-usb2.o
- phy-exynos-usb2-$(CONFIG_PHY_EXYNOS4X12_USB2)	+= phy-exynos4x12-usb2.o
- phy-exynos-usb2-$(CONFIG_PHY_EXYNOS5250_USB2)	+= phy-exynos5250-usb2.o
- obj-$(CONFIG_PHY_XGENE)			+= phy-xgene.o
-+obj-$(CONFIG_PHY_TI_KEYSTONE)		+= phy-keystone.o
-diff --git a/drivers/phy/phy-keystone.c b/drivers/phy/phy-keystone.c
-new file mode 100644
-index 0000000..ba1b9fa
---- /dev/null
-+++ b/drivers/phy/phy-keystone.c
-@@ -0,0 +1,230 @@
-+/*
-+ * PCIe Keystone platform specific driver code
-+ *
-+ * Copyright (C) 2013-2014 Texas Instruments, Inc.
-+ *		http://www.ti.com
-+ *
-+ * Author: Murali Karicheri <m-karicheri2@ti.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/err.h>
-+#include <linux/io.h>
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_address.h>
-+#include <linux/of_platform.h>
-+#include <linux/phy/phy.h>
-+#include <linux/platform_device.h>
-+
-+#define reg_dump(addr, mask) \
-+		pr_debug("reg %p has value %x\n", (void *)addr, \
-+			(readl(addr) & ~mask))
-+
-+/* mask bits point to bits being modified */
-+#define reg_rmw(addr, value, mask) \
-+		writel(((readl(addr) & (~(mask))) | \
-+			(value & (mask))), (addr))
-+struct serdes_config {
-+	u32 reg;
-+	u32 val;
-+	u32 mask;
-+};
-+
-+struct phy_keystone {
-+	struct device *dev;
-+	void __iomem *base;
-+};
-+
-+static struct serdes_config ks_100mhz_pcie_5gbps_serdes[] = {
-+	{0x0000, 0x00000800, 0x0000ff00},
-+	{0x0060, 0x00041c5c, 0x00ffffff},
-+	{0x0064, 0x0343c700, 0xffffff00},
-+	{0x006c, 0x00000012, 0x000000ff},
-+	{0x0068, 0x00070000, 0x00ff0000},
-+	{0x0078, 0x0000c000, 0x0000ff00},
-+
-+	{0x0200, 0x00000000, 0x000000ff},
-+	{0x0204, 0x5e000080, 0xff0000ff},
-+	{0x0208, 0x00000006, 0x000000ff},
-+	{0x0210, 0x00000023, 0x000000ff},
-+	{0x0214, 0x2e003060, 0xff00ffff},
-+	{0x0218, 0x76000000, 0xff000000},
-+	{0x022c, 0x00200002, 0x00ff00ff},
-+	{0x02a0, 0xffee0000, 0xffff0000},
-+	{0x02a4, 0x0000000f, 0x000000ff},
-+	{0x0204, 0x5e000000, 0xff000000},
-+	{0x0208, 0x00000006, 0x000000ff},
-+	{0x0278, 0x00002000, 0x0000ff00},
-+	{0x0280, 0x00280028, 0x00ff00ff},
-+	{0x0284, 0x2d0f0385, 0xffffffff},
-+	{0x0250, 0xd0000000, 0xff000000},
-+	{0x0284, 0x00000085, 0x000000ff},
-+	{0x0294, 0x20000000, 0xff000000},
-+
-+	{0x0400, 0x00000000, 0x000000ff},
-+	{0x0404, 0x5e000080, 0xff0000ff},
-+	{0x0408, 0x00000006, 0x000000ff},
-+	{0x0410, 0x00000023, 0x000000ff},
-+	{0x0414, 0x2e003060, 0xff00ffff},
-+	{0x0418, 0x76000000, 0xff000000},
-+	{0x042c, 0x00200002, 0x00ff00ff},
-+	{0x04a0, 0xffee0000, 0xffff0000},
-+	{0x04a4, 0x0000000f, 0x000000ff},
-+	{0x0404, 0x5e000000, 0xff000000},
-+	{0x0408, 0x00000006, 0x000000ff},
-+	{0x0478, 0x00002000, 0x0000ff00},
-+	{0x0480, 0x00280028, 0x00ff00ff},
-+	{0x0484, 0x2d0f0385, 0xffffffff},
-+	{0x0450, 0xd0000000, 0xff000000},
-+	{0x0494, 0x20000000, 0xff000000},
-+
-+	{0x0604, 0x00000080, 0x000000ff},
-+	{0x0600, 0x00000000, 0x000000ff},
-+	{0x0604, 0x5e000000, 0xff000000},
-+	{0x0608, 0x00000006, 0x000000ff},
-+	{0x0610, 0x00000023, 0x000000ff},
-+	{0x0614, 0x2e003060, 0xff00ffff},
-+	{0x0618, 0x76000000, 0xff000000},
-+	{0x062c, 0x00200002, 0x00ff00ff},
-+	{0x06a0, 0xffee0000, 0xffff0000},
-+	{0x06a4, 0x0000000f, 0x000000ff},
-+	{0x0604, 0x5e000000, 0xff000000},
-+	{0x0608, 0x00000006, 0x000000ff},
-+	{0x0678, 0x00002000, 0x0000ff00},
-+	{0x0680, 0x00280028, 0x00ff00ff},
-+	{0x0684, 0x2d0f0385, 0xffffffff},
-+	{0x0650, 0xd0000000, 0xff000000},
-+	{0x0694, 0x20000000, 0xff000000},
-+
-+	{0x0800, 0x00000000, 0x000000ff},
-+	{0x0804, 0x5e000080, 0xff0000ff},
-+	{0x0808, 0x00000006, 0x000000ff},
-+	{0x0810, 0x00000023, 0x000000ff},
-+	{0x0814, 0x2e003060, 0xff00ffff},
-+	{0x0818, 0x76000000, 0xff000000},
-+	{0x082c, 0x00200002, 0x00ff00ff},
-+	{0x08a0, 0xffee0000, 0xffff0000},
-+	{0x08a4, 0x0000000f, 0x000000ff},
-+	{0x0804, 0x5e000000, 0xff000000},
-+	{0x0808, 0x00000006, 0x000000ff},
-+	{0x0878, 0x00002000, 0x0000ff00},
-+	{0x0880, 0x00280028, 0x00ff00ff},
-+	{0x0884, 0x2d0f0385, 0xffffffff},
-+	{0x0850, 0xd0000000, 0xff000000},
-+	{0x0894, 0x20000000, 0xff000000},
-+
-+	{0x0a00, 0x00000100, 0x0000ff00},
-+	{0x0a08, 0x00e12c08, 0x00ffffff},
-+	{0x0a0c, 0x00000081, 0x000000ff},
-+	{0x0a18, 0x00e80000, 0x00ff0000},
-+	{0x0a30, 0x002f2f00, 0x00ffff00},
-+	{0x0a4c, 0xac820000, 0xffff0000},
-+	{0x0a54, 0xc0000000, 0xff000000},
-+	{0x0a58, 0x00001441, 0x0000ffff},
-+	{0x0a84, 0x00000301, 0x0000ffff},
-+
-+	{0x0a8c, 0x81030000, 0xffff0000},
-+	{0x0a90, 0x00006001, 0x0000ffff},
-+	{0x0a94, 0x01000000, 0xff000000},
-+	{0x0aa0, 0x81000000, 0xff000000},
-+	{0x0abc, 0xff000000, 0xff000000},
-+	{0x0ac0, 0x0000008b, 0x000000ff},
-+
-+	{0x0000, 0x00000003, 0x000000ff},
-+	{0x0a00, 0x0000009f, 0x000000ff},
-+
-+	{0x0a44, 0x5f733d00, 0xffffff00},
-+	{0x0a48, 0x00fdca00, 0x00ffff00},
-+	{0x0a5c, 0x00000000, 0xffff0000},
-+	{0x0a60, 0x00008000, 0xffffffff},
-+	{0x0a64, 0x0c581220, 0xffffffff},
-+	{0x0a68, 0xe13b0602, 0xffffffff},
-+	{0x0a6c, 0xb8074cc1, 0xffffffff},
-+	{0x0a70, 0x3f02e989, 0xffffffff},
-+	{0x0a74, 0x00000001, 0x000000ff},
-+	{0x0b14, 0x00370000, 0x00ff0000},
-+	{0x0b10, 0x37000000, 0xff000000},
-+	{0x0b14, 0x0000005d, 0x000000ff},
-+};
-+
-+static int ks_phy_init(struct phy *phy)
-+{
-+	struct serdes_config *p;
-+	struct phy_keystone *ks_phy = phy_get_drvdata(phy);
-+
-+	int i;
-+
-+	for (i = 0, p = &ks_100mhz_pcie_5gbps_serdes[0];
-+		i < ARRAY_SIZE(ks_100mhz_pcie_5gbps_serdes);
-+		i++, p++) {
-+		reg_rmw((ks_phy->base + p->reg), p->val, p->mask);
-+		reg_dump((ks_phy->base + p->reg), p->mask);
-+	}
-+	udelay(2000);
-+
-+	return 0;
-+}
-+
-+static struct phy_ops ks_phy_ops = {
-+	.init		= ks_phy_init,
-+	.owner		= THIS_MODULE,
-+};
-+
-+static int ks_phy_probe(struct platform_device *pdev)
-+{
-+	struct phy_provider *phy_provider;
-+	struct device *dev = &pdev->dev;
-+	struct phy_keystone *ks_phy;
-+	struct phy *phy;
-+	struct resource *res;
-+
-+	ks_phy = devm_kzalloc(dev, sizeof(*ks_phy), GFP_KERNEL);
-+	if (!ks_phy)
-+		return -ENOMEM;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "reg_serdes");
-+	ks_phy->base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(ks_phy->base))
-+		return PTR_ERR(ks_phy->base);
-+
-+	ks_phy->dev = dev;
-+	phy = devm_phy_create(dev, &ks_phy_ops, NULL);
-+	if (IS_ERR(phy))
-+		return PTR_ERR(phy);
-+
-+	phy_set_drvdata(phy, ks_phy);
-+	phy_provider = devm_of_phy_provider_register(ks_phy->dev,
-+				of_phy_simple_xlate);
-+
-+	if (IS_ERR(phy_provider))
-+		return PTR_ERR(phy_provider);
-+
-+	dev_info(dev, "keystone phy initialized\n");
-+	return 0;
-+}
-+
-+static const struct of_device_id ks_phy_of_match[] = {
-+	{ .compatible = "ti,keystone-phy" },
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, ks_phy_of_match);
-+
-+static struct platform_driver ks_phy_driver = {
-+	.probe	= ks_phy_probe,
-+	.driver = {
-+		.of_match_table	= ks_phy_of_match,
-+		.name  = "ti,keystone-phy",
-+		.owner = THIS_MODULE,
-+	}
-+};
-+module_platform_driver(ks_phy_driver);
-+
-+MODULE_DESCRIPTION("TI Keystone SerDes PHY driver");
-+MODULE_LICENSE("GPL V2");
-+MODULE_AUTHOR("Murali Karicheri <m-karicheri2@ti.com>");
--- 
-1.7.9.5
+>  
+>  Optional properties:
+>   - ctrl-module : phandle of the control module used by PHY driver to power on
+> diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
+> index d43019d..5513aa0 100644
+> --- a/drivers/phy/phy-ti-pipe3.c
+> +++ b/drivers/phy/phy-ti-pipe3.c
+> @@ -293,7 +293,7 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+>  	struct device_node *control_node;
+>  	struct platform_device *control_pdev;
+>  	const struct of_device_id *match;
+> -	struct clk *clk;
+> +	struct clk *clk, *pclk;
+>  
+>  	phy = devm_kzalloc(&pdev->dev, sizeof(*phy), GFP_KERNEL);
+>  	if (!phy) {
+> @@ -302,6 +302,20 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+>  	}
+>  	phy->dev		= &pdev->dev;
+>  
+> +	control_node = of_parse_phandle(node, "ctrl-module", 0);
+> +	if (!control_node) {
+> +		dev_err(&pdev->dev, "Failed to get control device phandle\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	control_pdev = of_find_device_by_node(control_node);
+> +	if (!control_pdev) {
+> +		dev_err(&pdev->dev, "Failed to get control device\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	phy->control_dev = &control_pdev->dev;
+> +
 
+Why this code was moved move is not part of patch description/subject.
+
+>  	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
+>  		match = of_match_device(of_match_ptr(ti_pipe3_id_table),
+>  					&pdev->dev);
+> @@ -345,19 +359,40 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+>  	}
+>  
+>  	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
+> -		clk = devm_clk_get(phy->dev, "dpll_ref");
+> -		if (IS_ERR(clk)) {
+> -			dev_err(&pdev->dev, "unable to get dpll ref clk\n");
+> -			return PTR_ERR(clk);
+> +		if (!of_property_read_bool(node, "ti,ext-clk")) {
+> +			clk = devm_clk_get(phy->dev, "dpll_ref");
+> +			if (IS_ERR(clk)) {
+> +				dev_err(&pdev->dev,
+> +					"unable to get dpll ref clk\n");
+> +				return PTR_ERR(clk);
+> +			}
+> +			clk_set_rate(clk, 1500000000);
+> +
+> +			clk = devm_clk_get(phy->dev, "dpll_ref_m2");
+> +			if (IS_ERR(clk)) {
+> +				dev_err(&pdev->dev,
+> +					"unable to get dpll ref m2 clk\n");
+> +				return PTR_ERR(clk);
+> +			}
+> +			clk_set_rate(clk, 100000000);
+> +		} else {
+> +			omap_control_pcie_tx_rx_control(phy->control_dev,
+> +						OMAP_CTRL_PCIE_PHY_RX_ACSPCIE);
+> +
+> +			clk = clk_get(phy->dev, "apll_mux");
+> +			if (IS_ERR(clk)) {
+> +				dev_err(&pdev->dev, "unable to get apll mux clk\n");
+> +				return PTR_ERR(clk);
+> +			}
+> +
+> +			pclk = clk_get(phy->dev, "refclk_ext");
+> +			if (IS_ERR(pclk)) {
+> +				dev_err(&pdev->dev, "unable to get ext ref clk for apll\n");
+> +				return PTR_ERR(pclk);
+> +			}
+> +
+> +			clk_set_parent(clk, pclk);
+>  		}
+> -		clk_set_rate(clk, 1500000000);
+> -
+> -		clk = devm_clk_get(phy->dev, "dpll_ref_m2");
+> -		if (IS_ERR(clk)) {
+> -			dev_err(&pdev->dev, "unable to get dpll ref m2 clk\n");
+> -			return PTR_ERR(clk);
+> -		}
+> -		clk_set_rate(clk, 100000000);
+>  
+>  		clk = devm_clk_get(phy->dev, "phy-div");
+>  		if (IS_ERR(clk)) {
+> @@ -375,20 +410,6 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+>  		phy->div_clk = ERR_PTR(-ENODEV);
+>  	}
+>  
+> -	control_node = of_parse_phandle(node, "ctrl-module", 0);
+> -	if (!control_node) {
+> -		dev_err(&pdev->dev, "Failed to get control device phandle\n");
+> -		return -EINVAL;
+> -	}
+> -
+> -	control_pdev = of_find_device_by_node(control_node);
+> -	if (!control_pdev) {
+> -		dev_err(&pdev->dev, "Failed to get control device\n");
+> -		return -EINVAL;
+> -	}
+> -
+> -	phy->control_dev = &control_pdev->dev;
+> -
+>  	omap_control_phy_power(phy->control_dev, 0);
+>  
+>  	platform_set_drvdata(pdev, phy);
+> 
+
+--
+cheers,
+-roger
