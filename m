@@ -1,172 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53861154.4080402@intel.com>
-Date: Wed, 28 May 2014 09:39:48 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:56979 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751899AbaENMpw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 May 2014 08:45:52 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	'Santosh Shilimkar' <santosh.shilimkar@ti.com>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	rogerq@ti.com, balajitk@ti.com,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Marek Vasut' <marex@denx.de>
+Subject: Re: [PATCH 06/17] pci: host: pcie-designware: Use *base-mask* for configuring the iATU
+Date: Wed, 14 May 2014 14:45:36 +0200
+Message-ID: <5281007.CFRjW0Yeu2@wuerfel>
+In-Reply-To: <537302CD.7000701@ti.com>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <4528185.oZbgyuuFKX@wuerfel> <537302CD.7000701@ti.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	Don Dutile <ddutile@redhat.com>
-Subject: Re: [PATCH] pci: Save and restore VFs as a part of a reset
-References: <20140505212346.18767.34117.stgit@ahduyck-cp2.jf.intel.com>	 <20140527222256.GC11907@google.com> <5385255D.5060204@intel.com>	 <CAErSpo5QU1LsKVqyGbT07mhF-t5L1y3NxD4JhJ6N3AM0XT0c2A@mail.gmail.com> <1401250378.3289.774.camel@ul30vt.home>
-In-Reply-To: <1401250378.3289.774.camel@ul30vt.home>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/27/2014 09:12 PM, Alex Williamson wrote:
-> On Tue, 2014-05-27 at 19:19 -0600, Bjorn Helgaas wrote:
->> [+cc Alex, Don]
->>
->> On Tue, May 27, 2014 at 5:53 PM, Alexander Duyck
->> <alexander.h.duyck@intel.com> wrote:
->>> On 05/27/2014 03:22 PM, Bjorn Helgaas wrote:
->>>> On Mon, May 05, 2014 at 02:25:17PM -0700, Alexander Duyck wrote:
->>>>> This fixes an issue I found in which triggering a reset via the PCI sysfs
->>>>> reset while SR-IOV was enabled would leave the VFs in a state in which the
->>>>> BME and MSI-X enable bits were all cleared.
->>>>>
->>>>> To correct that I have added code so that the VF state is saved and restored
->>>>> as a part of the PF save and restore state functions.  By doing this the VF
->>>>> state is restored as well as the IOV state allowing the VFs to resume function
->>>>> following a reset.
->>>>>
->>>>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
->>>>> ---
->>>>>  drivers/pci/iov.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++--
->>>>>  drivers/pci/pci.c |    2 ++
->>>>>  drivers/pci/pci.h |    5 +++++
->>>>>  3 files changed, 53 insertions(+), 2 deletions(-)
->>>>>
->>>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>>>> index de7a747..645ed71 100644
->>>>> --- a/drivers/pci/iov.c
->>>>> +++ b/drivers/pci/iov.c
->>>>> @@ -521,13 +521,57 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
->>>>>  }
->>>>>
->>>>>  /**
->>>>> + * pci_save_iov_state - Save the state of the VF configurations
->>>>> + * @dev: the PCI device
->>>>> + */
->>>>> +int pci_save_iov_state(struct pci_dev *dev)
->>>>> +{
->>>>> +    struct pci_dev *vfdev = NULL;
->>>>> +    unsigned short dev_id;
->>>>> +
->>>>> +    /* only search if we are a PF */
->>>>> +    if (!dev->is_physfn)
->>>>> +            return 0;
->>>>> +
->>>>> +    /* retrieve VF device ID */
->>>>> +    pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
->> ...
->>
->>>>> +    /* loop through all the VFs and save their state information */
->>>>> +    while ((vfdev = pci_get_device(dev->vendor, dev_id, vfdev))) {
->>>>> +            if (vfdev->is_virtfn && (vfdev->physfn == dev)) {
->>>>> +                    int err = pci_save_state(vfdev);
->>>>
->>>> It makes me uneasy to operate on another device (we're resetting A, and
->>>> here we save state for B).  I know B is dependent on A, since B is a VF
->>>> related to PF A, but what synchronization is there to serialize this
->>>> against any other save/restore operations that may be in progress by B's
->>>> driver or by a sysfs operation on B?
->>>
->>> I don't believe there is any synchronization mechanism in place
->>> currently.  I can look into that as well.  Odds are we probably need to
->>> have the VFs check the parent lock before they take any independent action.
->>
->> It's just the whole question of how we manage the single "saved-state"
->> area.  Right now, I think almost all use of it is under control of the
->> driver that owns the device, in suspend/resume methods.  The
->> exceptions are the PM suspend/freeze/etc. routines in
->> pci/pci-driver.c, which I assume prevent the driver from running and
->> are therefore safe, and the reset path.  I don't know how the
+On Wednesday 14 May 2014 11:14:45 Kishon Vijay Abraham I wrote:
+> hi Arnd,
 > 
-> Makes me a little uneasy too, what happens to a transaction headed
-> to/from the VF while the PF is in a reset state?  I suspect not good
-> things.  OTOH, the reset interface and a good bit of pci-sysfs have
-> always been at-your-own-risk interfaces and this restores some bits that
-> might get us closer to it being survivable.
+> On Tuesday 13 May 2014 07:04 PM, Arnd Bergmann wrote:
+> > On Tuesday 13 May 2014 15:27:46 Arnd Bergmann wrote:
+> >> On Tuesday 13 May 2014 18:56:23 Kishon Vijay Abraham I wrote:
+> >>>> If you have a case where the outbound translation is a 256MB (i.e. 28bit)
+> >>>> section of the CPU address space, that could be represented as
+> >>>>
+> >>>>       ranges = <0x82000000 0 0  0xb0000000  0 0x10000000>;
+> >>>>
+> >>>> or 
+> >>>>
+> >>>>       ranges = <0x82000000 0 0xb0000000  0xb0000000  0 0x10000000>;
+> >>>>
+> >>>> depending on whether you want the BARs to be programmed using a low
+> >>>> address 0x0-0x0fffffff or an address matching the window
+> >>>> 0xb0000000-0xbfffffff.
+> >>>
+> >>> The problem is, for configuring the window starting at 0xb0000000, the ATU
+> >>> should be programmed 0x0000000 (the cpu address for it will be 0xb0000000 though).
+> >>>
+> >>
+> >> Then use the first of the two?
+> >>
+> > 
+> > To clarify: using <0x82000000 0 0  0xb0000000  0 0x10000000> will give you 
+> > a mem_offset of 0xb0000000, which should work just fine for this case.
+> > 
+> > What I don't understand is why the ATU cares about whether the outbound
+> > address is 0x0000000 or 0xb0000000 if it just decodes the lower 28 bit
+> > anyway. Did you mean that we have to program the BARs using low addresses
+> > regardless of what is programmed in the ATU? That would make more sense,
+> > and it also matches what I suggested.
 > 
-> We do have a way for drivers to get a long-term save state that they can
-> keep on their own, pci_save_state(); pci_store_saved_state() along with
-> pci_load_saved_state(); pci_restore_state().  Both KVM and VFIO use this
-> for assigning a device so we can attempt to re-load the pre-assigned
-> saved state.
-
-So it sounds like this patch would interfere with the functioning of KVM
-and VFIO then.  So perhaps I should just not take the direct approach of
-saving it myself then.  Perhaps it would be better to just use the
-notifier provided below to notify the VFs that an event has occurred.
-
->>>> Is there anything in the reset path that pays attention to whether
->>>> resetting this PF will clobber VFs?  Do we care whether those VFs are in
->>>> use?  I assume they might be in use by guests?
->>>
->>> The problem I found was that the sysfs reset call doesn't bother to
->>> check with the PF driver at all.  It just clobbers the PF and any VFs on
->>> it without talking to the PF driver.
->>
->> There is Keith Busch's recent patch:
->> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/hotplug&id=3ebe7f9f7e4a4fd1f6461ecd01ff2961317a483a
->> .  I dunno if that's useful to you or not.
->>
->> And I'm not sure there's actually a requirement to *have* a PF driver.
->>  Obviously there has to be a way to enable the VFs, but once they're
->> enabled, it might be possible to keep using them via VF drivers even
->> without a PF driver in the picture.
->>
->> Maybe resetting the PF should just fail if there's an active VF.  If
->> you need to reset the PF, you'd have to unbind the VFs first.
+> No, It's not like it decodes only the lower 28bits. The BARs is programmed with
+> 32 bit value.
 > 
-> The use case is certainly questionable, personally I'm not going to
-> expect VFs to continue working after the PF is reset.  Driver binding
-> gets complicated, especially when KVM doesn't actually bind devices to
-> use them.  Hopefully we'll get that out of the tree some day though.  I
-> suppose we could -EBUSY the PF reset as long as VFs are enabled.
-
-What I could do is go through and notify the VFs that they are about to
-get hit by a reset.  What they do with that information would be up to them.
-
-So if the VFs are loaded on the host I could then at least allow them to
-recover by saving and restoring the config space within the driver
-themselves.
-
->>>> But I'm not really keen on pci_get_device() in the first place.  It works
->>>> by iterating over all PCI devices in the system, which seems like a
->>>> sledgehammer approach.  It *is* widely used, but mostly in quirk-type code
->>>> from which I avert my eyes.
->>>>
->>>> Maybe you could do something based on pci_walk_bus()?  If you did that, I
->>>> think the PCI_SRIOV_VF_DID would become superfluous.
->>>>
->>>
->>> I can look into that, I'm not familiar with the interface.  I'll have to
->>> see what the relationship is between the PF and VF in terms of busses as
->>> I don't recall it off of the top of my head.
->>
->> This reminds me about an open problem: VFs can be on "virtual" buses,
->> which aren't really connected in the hierarchy, and I don't think we
->> have a nice way to iterate over them.  So probably pci_get_device() is
->> the best we can do now.
+> My pcie dt node has
+>  ranges = <0x00000800 0 0x20001000 0x20001000 0 0x00002000  /* CONFIG */
+>            0x81000000 0 0          0x20003000 0 0x00010000  /* IO */
+>            0x82000000 0 0x20013000 0x20013000 0 0xffed000>; /* MEM */
 > 
-> Yeah, those virtual buses don't have a bus->self, we just have to skip
-> to bus->parent->self.  pci_walk_bus() goes in the opposite direction,
-> but without an actual device hosting the bus, I don't see how it finds
-> it.  Thanks,
+> Consider MEM address space..
 > 
-> Alex
+> Here both PCI address and CPU address is 0x20013000. So when there is a write
+> to cpu addr 0x20013000 [writel(virt_addr(0x20013000)], we want it to be
+> translated to PCI addr 0x20013000. So in 'ATU', we would expect *base* to be
+> programmed to *0x20013000* and target to be programmed to *0x20013000*. But
+> that's not the case for DRA7xx. For DRA7xx *base* should be programmed to
+> *0x0013000* and target should be programmed to *0x20013000*.
 
-It seems like we should be able to come up with something like
-pci_walk_vbus() though or something similar.  All we would need to do is
-search the VFs on the bus of the PF and all child busses to that bus if
-I am not mistaken.
+Ok, got it, thanks for your patience.
 
-Thanks,
+I think this would best be modeled as a separate bus node that contains the
+restriction, like this:
 
-Alex
+/ {
+	#address-cells = <1>; // or <2> if you support > 4GB address space
+	#size-cells = <1>;
 
+	soc {
+		#address-cells <1>;
+		#size-cells = <1>;
+		ranges;
+		dma-ranges;
+
+		... // all normal devices
+
+		axi@20000000 {
+			#size-cells = <1>;
+			#address-cells = <1>;
+			dma-ranges; // can access all 4GB outbound
+			ranges = <0 0x20000000 0x10000000>; // 28-bit bus
+
+			pci@0 {
+				reg = <0x0    0x1000>, // internal regs
+				      <0x1000 0x2000>; // config space
+				dma-ranges; // 32-bit outbound
+				ranges = <0x81000000 0 0           0x3000 0 0x00010000  /* IO */
+					  0x82000000 0 0x20013000 0x13000 0 0xffed000>; /* MEM */
+			};
+		};
+	};
+};
+
+
+	Arnd
