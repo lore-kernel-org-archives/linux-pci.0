@@ -1,66 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:58550 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751039AbaEPU13 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 May 2014 16:27:29 -0400
-Message-ID: <5376748B.7080302@ti.com>
-Date: Fri, 16 May 2014 16:26:51 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:41969 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754101AbaENNLo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 May 2014 09:11:44 -0400
+Received: by mail-ie0-f171.google.com with SMTP id rl12so1823149iec.30
+        for <linux-pci@vger.kernel.org>; Wed, 14 May 2014 06:11:43 -0700 (PDT)
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
+In-Reply-To: <53730504.4080201@amd.com>
+References: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com> <53730504.4080201@amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 14 May 2014 07:11:23 -0600
+Message-ID: <CAErSpo4hRkDnRTnz1Ur7Fu8AwE4YFtZesUJebFEGi2ECSkdPag@mail.gmail.com>
+Subject: Re: [PATCH V4 0/4] x86/pci Fix numa_node info for AMD hostbridge and
+ misc clean up.
+To: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware
- core driver
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <6048322.x3M3sdDEWO@wuerfel> <5374FD24.8000806@ti.com> <22200719.Jb5jnJylJH@wuerfel>
-In-Reply-To: <22200719.Jb5jnJylJH@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	Borislav Petkov <bp@suse.de>, Robert Richter <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/15/2014 2:20 PM, Arnd Bergmann wrote:
-> On Thursday 15 May 2014 13:45:08 Murali Karicheri wrote:
->>>> +#ifdef CONFIG_PCI_KEYSTONE
->>>> +/*
->>>> + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
->>>> + */
->>>> +static void quirk_limit_readrequest(struct pci_dev *dev)
->>>> +{
->>>> +    int readrq = pcie_get_readrq(dev);
->>>> +
->>>> +    if (readrq > 256)
->>>> +            pcie_set_readrq(dev, 256);
->>>> +}
->>>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
->>>> +#endif /* CONFIG_PCI_KEYSTONE */
->>> This doesn't work: you can't just limit do this for all devices just based
->>> on PCI_KEYSTONE being enabled, you have to check if you are actually using
->>> this controller.
->>>
->>>        Arnd
->>    I assume, I need to check if PCI controller's vendor ID/ device ID
->> match with the keystone
->>    PCI controller's ID and call pcie_set_readrq() for all of the slave
->> PCI devices and do this fixup.
->> Is this correct understanding?  If you can point me to an example code
->> for this that will be
->> really helpful so that I can avoid re-inventing the wheel.
-> I think it would be best to move the quirk into the keystone pci driver
-> and compare compare the dev->driver pointer of the PCI controller device.
+On Tue, May 13, 2014 at 11:54 PM, Suravee Suthikulpanit
+<suravee.suthikulpanit@amd.com> wrote:
+> Bjorn,
 >
-> 	Arnd
-Arnd,
+> I am following up on this patch set.  Do you have any other concerns?
 
-I will move this quirk to keystone pci driver. So in that case, I guess 
-your original comment
-is not applicable as  this quirk gets enabled only with PCI keystone 
-driver enabled. Right?
+Sorry, I've been busy with some other work and haven't had a chance to
+look at this yet.
 
-Murali
+> On 05/08/2014 11:44 AM, suravee.suthikulpanit@amd.com wrote:
+>>
+>> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>
+>> This in the V4 of the patch set which trys to fixed up numa_node for AMD
+>> hostbridges.
+>> This topic was discussed in the following threads:
+>>
+>> V1: https://lkml.org/lkml/2014/3/5/898
+>> V2: https://lkml.org/lkml/2014/4/18/623
+>> V3: https://lkml.org/lkml/2014/5/7/588
+>>
+>> Change from V3:
+>> Split up the changes in patch1 into two per Robert's suggestions. The
+>> second patch has
+>> no functional change.
+>>
+>> Change from V2:
+>> As requested by Bjorn, the patch set will only add supports for family15h,
+>> and
+>> also deprecating the mechanism, as future platforms should be relying on
+>> the ACPI info.
+>> He has also requested to keep the changes to the minimum. Therefore, the
+>> V2 patch 2 and 3
+>> has been removed.
+>>
+>> Suravee Suthikulpanit (2):
+>>    Patch1: x86/PCI: Fix PCI root numa_node info on AMD family15h
+>>    Patch2: x86/PCI: Clean up and mark early_root_info_init as deprecated
+>>
+>> Myron Stowe (2):
+>>    Patch3: ACPI/PCI: Warn if we have to "guess" host bridge node
+>> information
+>>    Patch4: X86/PCI: Remove unnecessary 'quirk_amd_nb_node'
+>>
+>>   arch/x86/kernel/quirks.c | 58 -------------------------------------
+>>   arch/x86/pci/acpi.c      |  6 +++-
+>>   arch/x86/pci/amd_bus.c   | 75
+>> +++++++++++++++++++++++++++++-------------------
+>>   3 files changed, 51 insertions(+), 88 deletions(-)
+>>
+>
