@@ -1,179 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:53505 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756662AbaEaO27 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:28:59 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v4 09/15] thunderbolt: Handle hotplug events
-Date: Sat, 31 May 2014 16:27:54 +0200
-Message-Id: <1401546480-2071-10-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:39150 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752445AbaENPT7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 May 2014 11:19:59 -0400
+Message-ID: <5373897C.6080504@ti.com>
+Date: Wed, 14 May 2014 20:49:24 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+MIME-Version: 1.0
+To: Roger Quadros <rogerq@ti.com>, <devicetree@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: <balajitk@ti.com>, Rajendra Nayak <rnayak@ti.com>,
+	Tero Kristo <t-kristo@ti.com>, Paul Walmsley <paul@pwsan.com>
+Subject: Re: [PATCH 03/17] phy: ti-pipe3: add external clock support for PCIe
+ PHY
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <1399383244-14556-4-git-send-email-kishon@ti.com> <53736CBC.2060702@ti.com>
+In-Reply-To: <53736CBC.2060702@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We receive a plug event callback whenever a thunderbolt device is added
-or removed. This patch fills in the tb_handle_hotplug method and starts
-reacting to these events by adding/removing switches from the hierarchy.
+Hi Roger,
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/switch.c | 42 +++++++++++++++++++++++++++++++++++++++-
- drivers/thunderbolt/tb.c     | 46 +++++++++++++++++++++++++++++++++++++++++++-
- drivers/thunderbolt/tb.h     |  3 +++
- 3 files changed, 89 insertions(+), 2 deletions(-)
+On Wednesday 14 May 2014 06:46 PM, Roger Quadros wrote:
+> Hi Kishon,
+> 
+> On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
+>> APLL used by PCIE phy can either use external clock as input or the clock
+>> from DPLL. Added support for the APLL to use external clock as input here.
+>>
+>> Cc: Rajendra Nayak <rnayak@ti.com>
+>> Cc: Tero Kristo <t-kristo@ti.com>
+>> Cc: Paul Walmsley <paul@pwsan.com>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  Documentation/devicetree/bindings/phy/ti-phy.txt |    4 ++
+>>  drivers/phy/phy-ti-pipe3.c                       |   75 ++++++++++++++--------
+>>  2 files changed, 52 insertions(+), 27 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>> index bc9afb5..d50f8ee 100644
+>> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
+>> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>> @@ -76,6 +76,10 @@ Required properties:
+>>     * "dpll_ref_m2" - external dpll ref clk
+>>     * "phy-div" - divider for apll
+>>     * "div-clk" - apll clock
+>> +   * "apll_mux" - mux for pcie apll
+>> +   * "refclk_ext" - external reference clock for pcie apll
+>> + - ti,ext-clk: To specifiy if PCIE apll should use external clock. Applicable
+>> +   only to PCIE PHY.
+> 
+> Instead of specifying both clock sources "dpll_ref_clock", "refclk_ext" and then specifying a 3rd control option "ti,ext-clk" to select one of the 2 sources, why can't the DT just supply one clock source, i.e. the one that is being used in the board instance? The driver should then just configure the clock rate that is needed at that node. Shouldn't the clock framework automatically take care of muxing and parent rates?
 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index 279b9c5..c092f7c 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -195,6 +195,24 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
- 		sw->__unknown1, sw->__unknown4);
- }
- 
-+struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route)
-+{
-+	u8 next_port = route; /*
-+			       * Routes use a stride of 8 bits,
-+			       * eventhough a port index has 6 bits at most.
-+			       * */
-+	if (route == 0)
-+		return sw;
-+	if (next_port > sw->config.max_port_number)
-+		return 0;
-+	if (tb_is_upstream_port(&sw->ports[next_port]))
-+		return 0;
-+	if (!sw->ports[next_port].remote)
-+		return 0;
-+	return get_switch_at_route(sw->ports[next_port].remote->sw,
-+				   route >> TB_ROUTE_SHIFT);
-+}
-+
- /**
-  * tb_plug_events_active() - enable/disable plug events on a switch
-  *
-@@ -243,7 +261,8 @@ void tb_switch_free(struct tb_switch *sw)
- 		sw->ports[i].remote = NULL;
- 	}
- 
--	tb_plug_events_active(sw, false);
-+	if (!sw->is_unplugged)
-+		tb_plug_events_active(sw, false);
- 
- 	kfree(sw->ports);
- 	kfree(sw);
-@@ -327,3 +346,24 @@ err:
- 	return NULL;
- }
- 
-+/**
-+ * tb_sw_set_unpplugged() - set is_unplugged on switch and downstream switches
-+ */
-+void tb_sw_set_unpplugged(struct tb_switch *sw)
-+{
-+	int i;
-+	if (sw == sw->tb->root_switch) {
-+		tb_sw_WARN(sw, "cannot unplug root switch\n");
-+		return;
-+	}
-+	if (sw->is_unplugged) {
-+		tb_sw_WARN(sw, "is_unplugged already set\n");
-+		return;
-+	}
-+	sw->is_unplugged = true;
-+	for (i = 0; i <= sw->config.max_port_number; i++) {
-+		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
-+			tb_sw_set_unpplugged(sw->ports[i].remote->sw);
-+	}
-+}
-+
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index 3b716fd..1efcacc 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -71,11 +71,55 @@ static void tb_handle_hotplug(struct work_struct *work)
- {
- 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
- 	struct tb *tb = ev->tb;
-+	struct tb_switch *sw;
-+	struct tb_port *port;
- 	mutex_lock(&tb->lock);
- 	if (!tb->hotplug_active)
- 		goto out; /* during init, suspend or shutdown */
- 
--	/* do nothing for now */
-+	sw = get_switch_at_route(tb->root_switch, ev->route);
-+	if (!sw) {
-+		tb_warn(tb,
-+			"hotplug event from non existent switch %llx:%x (unplug: %d)\n",
-+			ev->route, ev->port, ev->unplug);
-+		goto out;
-+	}
-+	if (ev->port > sw->config.max_port_number) {
-+		tb_warn(tb,
-+			"hotplug event from non existent port %llx:%x (unplug: %d)\n",
-+			ev->route, ev->port, ev->unplug);
-+		goto out;
-+	}
-+	port = &sw->ports[ev->port];
-+	if (tb_is_upstream_port(port)) {
-+		tb_warn(tb,
-+			"hotplug event for upstream port %llx:%x (unplug: %d)\n",
-+			ev->route, ev->port, ev->unplug);
-+		goto out;
-+	}
-+	if (ev->unplug) {
-+		if (port->remote) {
-+			tb_port_info(port, "unplugged\n");
-+			tb_sw_set_unpplugged(port->remote->sw);
-+			tb_switch_free(port->remote->sw);
-+			port->remote = NULL;
-+		} else {
-+			tb_port_info(port,
-+				     "got unplug event for disconnected port, ignoring\n");
-+		}
-+	} else if (port->remote) {
-+		tb_port_info(port,
-+			     "got plug event for connected port, ignoring\n");
-+	} else {
-+		tb_port_info(port, "hotplug: scanning\n");
-+		tb_scan_port(port);
-+		if (!port->remote) {
-+			tb_port_info(port, "hotplug: no switch found\n");
-+		} else if (port->remote->sw->config.depth > 1) {
-+			tb_sw_warn(port->remote->sw,
-+				   "hotplug: chaining not supported\n");
-+		}
-+	}
- out:
- 	mutex_unlock(&tb->lock);
- 	kfree(ev);
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 70a66fe..661f182 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -20,6 +20,7 @@ struct tb_switch {
- 	struct tb_port *ports;
- 	struct tb *tb;
- 	int cap_plug_events; /* offset, zero if not found */
-+	bool is_unplugged; /* unplugged, will go away */
- };
- 
- /**
-@@ -160,6 +161,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
- 
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
- void tb_switch_free(struct tb_switch *sw);
-+void tb_sw_set_unpplugged(struct tb_switch *sw);
-+struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
- 
- int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
- 
--- 
-1.9.3
+Want the dt to have all the clocks used by the controller. "ti,ext-clk" should
+go in the board dt file (suggested by Nishanth).
+The point is at some point later if some one wants to change the clock source,
+it should be a simple enabling "ti,ext-clk" flag instead of finding the clock
+phandle etc..
+> 
+>>  
+>>  Optional properties:
+>>   - ctrl-module : phandle of the control module used by PHY driver to power on
+>> diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
+>> index d43019d..5513aa0 100644
+>> --- a/drivers/phy/phy-ti-pipe3.c
+>> +++ b/drivers/phy/phy-ti-pipe3.c
+>> @@ -293,7 +293,7 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+>>  	struct device_node *control_node;
+>>  	struct platform_device *control_pdev;
+>>  	const struct of_device_id *match;
+>> -	struct clk *clk;
+>> +	struct clk *clk, *pclk;
+>>  
+>>  	phy = devm_kzalloc(&pdev->dev, sizeof(*phy), GFP_KERNEL);
+>>  	if (!phy) {
+>> @@ -302,6 +302,20 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+>>  	}
+>>  	phy->dev		= &pdev->dev;
+>>  
+>> +	control_node = of_parse_phandle(node, "ctrl-module", 0);
+>> +	if (!control_node) {
+>> +		dev_err(&pdev->dev, "Failed to get control device phandle\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	control_pdev = of_find_device_by_node(control_node);
+>> +	if (!control_pdev) {
+>> +		dev_err(&pdev->dev, "Failed to get control device\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	phy->control_dev = &control_pdev->dev;
+>> +
+> 
+> Why this code was moved move is not part of patch description/subject.
 
+external clock support needs 'control_dev', so had to move the get control
+device part before configuring the clocks.
+> 
+>>  	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
+>>  		match = of_match_device(of_match_ptr(ti_pipe3_id_table),
+>>  					&pdev->dev);
+>> @@ -345,19 +359,40 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+>>  	}
+>>  
+>>  	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
+>> -		clk = devm_clk_get(phy->dev, "dpll_ref");
+>> -		if (IS_ERR(clk)) {
+>> -			dev_err(&pdev->dev, "unable to get dpll ref clk\n");
+>> -			return PTR_ERR(clk);
+>> +		if (!of_property_read_bool(node, "ti,ext-clk")) {
+>> +			clk = devm_clk_get(phy->dev, "dpll_ref");
+>> +			if (IS_ERR(clk)) {
+>> +				dev_err(&pdev->dev,
+>> +					"unable to get dpll ref clk\n");
+>> +				return PTR_ERR(clk);
+>> +			}
+>> +			clk_set_rate(clk, 1500000000);
+>> +
+>> +			clk = devm_clk_get(phy->dev, "dpll_ref_m2");
+>> +			if (IS_ERR(clk)) {
+>> +				dev_err(&pdev->dev,
+>> +					"unable to get dpll ref m2 clk\n");
+>> +				return PTR_ERR(clk);
+>> +			}
+>> +			clk_set_rate(clk, 100000000);
+>> +		} else {
+>> +			omap_control_pcie_tx_rx_control(phy->control_dev,
+>> +						OMAP_CTRL_PCIE_PHY_RX_ACSPCIE);
+
+                        ^^here
+
+Thanks
+Kishon
