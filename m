@@ -1,54 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48284 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932289AbaEPO4J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 May 2014 10:56:09 -0400
-Date: Fri, 16 May 2014 10:55:48 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Konrad Rzeszutek Wilk <konrad@kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>, KVM <kvm@vger.kernel.org>,
-	kim.phillips@linaro.org, linux-pci@vger.kernel.org,
-	stuart.yoder@freescale.com, agraf@suse.de, libvir-list@redhat.com,
-	iommu@lists.linux-foundation.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	tech@virtualopensystems.com, kvmarm@lists.cs.columbia.edu,
-	christoffer.dall@linaro.org
-Subject: Re: [PATCH v2] PCI: Introduce new device binding path using
- pci_dev.driver_override
-Message-ID: <20140516145548.GA4199@phenom.dumpdata.com>
-References: <20140509164326.12141.44591.stgit@bling.home>
- <CACJDEmp+whOkOZ5pVn4qqNBqXJc5Nb=1m-DmxPzFUZNxEyG6gQ@mail.gmail.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:43502 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755357AbaENNU7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 May 2014 09:20:59 -0400
+Message-ID: <53736DA1.4040405@ti.com>
+Date: Wed, 14 May 2014 16:20:33 +0300
+From: Roger Quadros <rogerq@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACJDEmp+whOkOZ5pVn4qqNBqXJc5Nb=1m-DmxPzFUZNxEyG6gQ@mail.gmail.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: <balajitk@ti.com>
+Subject: Re: [PATCH 04/17] phy: pipe3: insert delay to enumerate in GEN2 mode
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <1399383244-14556-5-git-send-email-kishon@ti.com>
+In-Reply-To: <1399383244-14556-5-git-send-email-kishon@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 16, 2014 at 10:48:00AM -0400, Konrad Rzeszutek Wilk wrote:
-> On Fri, May 9, 2014 at 12:50 PM, Alex Williamson <alex.williamson@redhat.com
-> > wrote:
+On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
+> 8-bit delay value (0xF1) is required for GEN2 devices to be enumerated
+> consistently. Added an API to be called from PHY drivers to set this delay
+> value and called it from PIPE3 driver to set the delay value.
 > 
-> > The driver_override field allows us to specify the driver for a device
-> > ...
-> >
-> ...
-> 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> >
-> 
-> Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 
-And somehow my emailer (Google) decided to add yucky HTML crud
-to the end.
+Reviewed-by: Roger Quadros <rogerq@ti.com>
 
-So here is an nice plain email so that it can go the the right
-mailing lists - and sorry for the extra emails to those on the
-'To' and 'CC'!
-> _______________________________________________
-> iommu mailing list
-> iommu@lists.linux-foundation.org
-> https://lists.linuxfoundation.org/mailman/listinfo/iommu
+--
+cheers,
+-roger
 
