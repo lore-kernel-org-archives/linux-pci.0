@@ -1,109 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:60916 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751386AbaE1Alx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 20:41:53 -0400
-Date: Wed, 28 May 2014 09:41:49 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v8 0/3] R-Car Gen2 PCIe host driver
-Message-ID: <20140528004149.GF7374@verge.net.au>
-References: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com>
- <20140527230923.GG11907@google.com>
+Received: from relmlor2.renesas.com ([210.160.252.172]:31119 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753170AbaENINx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 May 2014 04:13:53 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Tim Harvey <tharvey@gateworks.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Marek Vasut <marex@denx.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>
+Subject: RE: [Q] Synopsys PCIe interrupts
+Date: Wed, 14 May 2014 08:13:46 +0000
+Message-ID: <48f8fbc1569e49df8fe8e15e4138d8d9@HKXPR06MB168.apcprd06.prod.outlook.com>
+References: <fd5f29f175b2499e9d972629f1ccd74a@HKXPR06MB168.apcprd06.prod.outlook.com>
+	<001801cf6f0f$cfd4b510$6f7e1f30$%han@samsung.com>
+ <CAJ+vNU29uZn+TRx+X8miLuRXhQS32QQZkEF53y09ijNYm9NX7w@mail.gmail.com>
+In-Reply-To: <CAJ+vNU29uZn+TRx+X8miLuRXhQS32QQZkEF53y09ijNYm9NX7w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140527230923.GG11907@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 27, 2014 at 05:09:23PM -0600, Bjorn Helgaas wrote:
-> On Mon, May 12, 2014 at 11:57:47AM +0100, Phil Edworthy wrote:
-> > This is version 8 of a PCIe Host driver for the R-Car Gen2 devices,
-> > i.e. R-Car H2 (r8a7790) and R-Car M2 (r8a7791).
-> 
-> How do we want to handle maintenance of this new file (pcie-rcar.c)?
-> MAINTAINERS currently contains drivers/pci/host/*rcar*, which matches it
-> and says Simon maintains it.  If he wants it, I'd like an ack from him
-> before merging it.  If not, I'd like to update MAINTAINERS to show who I
-> should look for acks from.
-> 
-> I don't care either way; I just don't know what to do with this right now.
-
-Hi Bjorn,
-
-I'm happy for the maintenance role to default to me.
-
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
-
-> Bjorn
-> 
-> > v8:
-> >  - Platform changes removed from this patch set
-> >  - Moved header file contents into c file
-> >  - Formatting cleaned up
-> >  - Remove bus/dev/func range checks for config access
-> >  - Add comment about config access serialization
-> >  - Made rcar_pcie_setup_window() return void as no errors possible
-> >  - Remove unused register definitions
-> >  - Removed __init markers to fix section mismatches
-> >  - Add explicit bus number range
-> >  - Get the root bus nr from config writes instead of sys->busnr
-> >  - Use PCI domains
-> >  - Removed unused variable in rcar_msi_free()
-> >  - Split interrupt bindings into separate cells
-> > 
-> > v7:
-> >  - Change binding description of clocks to 'clock specifiers'
-> > 
-> > v6:
-> >  - Correct DT bindings description for reg and clocks
-> >  - Split device and board DT changes
-> >  - Add shmobile to subject for shmobile DT patches
-> >  - Don't check MSI irq number is valid, as upper level checks this
-> >  - Change "Unexpected MSI" msg to debug level
-> >  - Reword "Unexpected MSI" comment so that it's one line
-> >  - Remove patch that adds HAVE_ARM_ARCH_TIMER to koelsch defconfig as not needed
-> > 
-> > v5:
-> >  - Use module_platform_driver instead of subsys_initcall
-> >  - Use the of_device_id data field for HW init function
-> >  - Init hw_pci struct in declaration
-> >  - Renesas SoC compatible string has peripheral before device name
-> >  - Add PCIe bus clock reference
-> >  - Use dma-ranges property to specify inbound memory regions
-> >  - Support multiple IO windows and correct resources
-> >  - Return IRQ_NONE from MSI isr when there is no pending MSI
-> >  - Add additional interrupt bindings
-> > 
-> > v4:
-> >  - Use runtime PM properly
-> > 
-> > Phil Edworthy (3):
-> >   PCI: host: rcar: Add Renesas R-Car PCIe driver
-> >   PCI: host: rcar: Add MSI support
-> >   dt-bindings: pci: rcar pcie device tree bindings
-> > 
-> >  Documentation/devicetree/bindings/pci/rcar-pci.txt |   47 +
-> >  drivers/pci/host/Kconfig                           |    6 +
-> >  drivers/pci/host/Makefile                          |    1 +
-> >  drivers/pci/host/pcie-rcar.c                       | 1008 ++++++++++++++++++++
-> >  4 files changed, 1062 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
-> >  create mode 100644 drivers/pci/host/pcie-rcar.c
-> > 
-> > -- 
-> > 1.9.1
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+SGkgVGltLA0KDQpPbiAxNCBNYXkgMjAxNCAwNTo1NSwgVGltIHdyb3RlOg0KPiBPbiBUdWUsIE1h
+eSAxMywgMjAxNCBhdCA1OjU5IFBNLCBKaW5nb28gSGFuIDxqZzEuaGFuQHNhbXN1bmcuY29tPg0K
+PiB3cm90ZToNCj4gPiBPbiBXZWRuZXNkYXksIE1heSAxNCwgMjAxNCAxOjE0IEFNLCBQaGlsIEVk
+d29ydGh5IHdyb3RlOg0KPiA+Pg0KPiA+PiBIaSwNCj4gPj4NCj4gPj4gSSBhbSBjdXJyZW50bHkg
+d3JpdGluZyBhbm90aGVyIGRyaXZlciB0aGF0IHVzZXMgdGhlIFN5bm9wc3lzIERlc2lnbndhcmUN
+Cj4gPj4gUENJZSBob3N0IGNvbnRyb2xsZXIgZHJpdmVyLg0KPiA+Pg0KPiA+PiBJbiBnZW5lcmFs
+LCBpdCBhbGwgbG9va3MgZ29vZCB0aGFua3MgdG8gYWxsIGludm9sdmVkIGluIHRoaXMgZHJpdmVy
+Lg0KPiA+PiBPbmUgYXJlYSB0aGF0IEkgYW0gaGF2aW5nIGEgbGl0dGxlIHByb2JsZW0gd2l0aCBp
+cyB0aGUgaW50ZXJydXB0cy4NCj4gPj4gIEFjY29yZGluZyB0byB0aGUgZG9jdW1lbnRhdGlvbiBJ
+IGhhdmUsIHRoZSBtb2R1bGUgaGFzIHNlcGFyYXRlDQo+ID4+IGludGVycnVwdHMgZm9yIElOVEEs
+IElOVEIsIElOVEMsIElOVEQsIE1TSSwgQUVSLCBiYW5kd2lkdGggbWFuYWdlbWVudCwNCj4gPj4g
+IFBNRSAoYW5kIHBvc3NpYmx5IGEgY291cGxlIG9mIG90aGVycyBhcyB3ZWxsKS4NCj4gPj4NCj4g
+Pj4gSG93ZXZlciwgc28gZmFyIGl0IGxvb2tzIGxpa2UgdGhlIHVwc3RyZWFtIGltcGxlbWVudGF0
+aW9ucyBqdXN0IHVzZQ0KPiA+PiBhIHNpbmdsZSBpbnRlcnJ1cHQgZm9yIHRoZSBtb2R1bGUsIGlz
+IHRoYXQgY29ycmVjdD8gSSBub3RpY2UgdGhhdCBzb21lDQo+ID4+ICBEVCBiaW5kaW5ncyBpbmNs
+dWRlIG90aGVyIGludGVycnVwdHMgdGhhdCBhcmUgbm90IHBhcnQgb2YgdGhlIERlc2lnbndhcmUN
+Cj4gPj4gUENJZSBjb250cm9sbGVyLCBidXQgdGhhdCdzIG5vdCB3aGF0IEknbSB0YWxraW5nIGFi
+b3V0Lg0KPiA+DQo+ID4gKCtjYyBNb2hpdCBLdW1hciwgUHJhdHl1c2ggQW5hbmQsIE1hcmVrIFZh
+c3V0LCBLaXNob24gVmlqYXkgQWJyYWhhbSBJLA0KPiA+ICAgICAgICBMdWNhcyBTdGFjaCwgVGlt
+IEhhcnZleSwgQXJuZCBCZXJnbWFubikNCj4gPg0KPiA+IFBDSWUgSW50ZXJydXB0IG1hcHBpbmcg
+aXMgc3BlY2lmaWMgZm9yIFNvQy4NCj4gPg0KPiA+IEluIHRoZSBjYXNlIG9mIEV4eW5vcywgdGhl
+cmUgYXJlIHRocmVlIGludGVycnVwdHMgZm9yDQo+ID4gRXh5bm9zIFBDSWU7IElOVHgsIE1TSSwg
+UEhZIExpbmssIHJlc3BlY3RpdmVseSBhcyBiZWxvdy4NCj4gPg0KPiA+IC4vYXJjaC9hcm0vYm9v
+dC9kdHMvZXh5bm9zNTQ0MC5kdHNpDQo+ID4gICAgICAgICBpbnRlcnJ1cHRzID0gPDAgMjAgMD4s
+IDwwIDIxIDA+LCA8MCAyMiAwPjsNCj4gPg0KPiA+IDwwIDIwIDA+OiBQQ0llIFJDMCBwdWxzZSBp
+bnRlcnJ1cHQsDQo+ID4gICAgICAgICAgICAgIElOVEEsIElOVEIsIElOVEMgYW5kIElOVEQsIGV0
+Yw0KPiA+IDwwIDIxIDA+OiBQQ0llIFJDMCBsZXZlbCBpbnRlcnJ1cHQsDQo+ID4gICAgICAgICAg
+ICAgIE1TSSwgZXRjDQo+ID4gPDAgMjIgMD46IFBDSWUgUkMwIHNwZWNpYWwgaW50ZXJydXB0LA0K
+PiA+ICAgICAgICAgICAgICBQSFkgTGluayByZWxhdGVkIGludGVycnVwdHMsIGV0Yw0KPiA+DQo+
+ID4gU28sIHRoZXJlIGFyZSB0aHJlZSBsaW5lcyBiZXR3ZWVuIEdJQyBhbmQgUENJZS4gQWxzbywg
+SVJRIG1hcHBpbmdzDQo+ID4gZm9yIG90aGVyIFNvQ3MgYXJlIGRpZmZlcmVudC4NCj4gPg0KPiA+
+IEZvciBleGFtcGxlLCB0aGUgSU1YNiBtYXBzIElOVEEvQi9DL0QgdG8gQVJNIEdJQyBJUlEgMTU1
+LzE1NC8xNTMvMTUyDQo+ID4gcmVzcGVjdGl2ZWx5Lg0KPiA+DQo+ID4gVGhlbiwgaG93IG1hbnkg
+bGluZXMgYXJlIHRoZXJlIGJldHdlZW4gR0lDIGFuZCBQQ0llIGluIHlvdXIgU29DPw0KPiA+IEhv
+dyBkb2VzIHlvdXIgU29DIG1hcCBpbnRlcnJ1cHRzIHRvIEdJQz8NCj4gPg0KPiA+Pg0KPiA+PiBJ
+biBleGlzdGluZyBpbXBsZW1lbnRhdGlvbnMsIGRvZXMgdGhlIGhhcmR3YXJlIGp1c3QgT1INCj4g
+Pj4gYWxsIHRoZXNlIGludGVycnVwdHMgdG9nZXRoZXI/DQo+ID4+DQo+IA0KPiBQaGlsLA0KPiAN
+Cj4gVGhlcmUgaXMgbm90IGp1c3QgYSBzaW5nbGUgaW50ZXJydXB0IGZvciB0aGUgdXBzdHJlYW0g
+aW1wbGVtZW50YXRpb25zLg0KPiBTZWU6DQo+IGh0dHA6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xp
+bnV4L2tlcm5lbC9naXQvdG9ydmFsZHMvbGludXguZ2l0L3RyZWUvZHJpdmVycy9wY2kvDQo+IGhv
+c3QvcGNpZS1kZXNpZ253YXJlLmMjbjc0Mg0KPiANCj4gb2ZfaXJxX3BhcnNlX2FuZF9tYXBfcGNp
+KGRldiwgc2xvdCwgcGluKSBpcyB1c2VkIHRvIHBhcnNlIHRoZQ0KPiBkZXZpY2UtdHJlZSBpbnRl
+cnJ1cHQgbWFwIHdoaWNoIGRlZmluZXMgdGhlIG11bHRpcGxlIElSUSdzIHRoYXQgSmluZ29vDQo+
+IG1lbnRpb25zIGFib3ZlLiBGb3IgSU1YNiB0aGVzZSBhcmUgZGVmaW5lZCBpbiB0aGUgaW14NnFk
+bC5kdHNpIGhlcmU6DQo+IGh0dHA6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9n
+aXQvdG9ydmFsZHMvbGludXguZ2l0L3RyZWUvYXJjaC9hcm0vYg0KPiBvb3QvZHRzL2lteDZxZGwu
+ZHRzaSNuMTQ2Lg0KPiANCj4gU28gaW4gb3RoZXIgd29yZHMsIGRlcGVuZGluZyBvbiB0aGUgc2xv
+dCBhbmQgcGluIChlYWNoIGxlZ2FjeSBQQ0kNCj4gZGV2aWNlIGNhbiBoYXZlIDQgaW50ZXJydXB0
+IHBpbnMsIElOVEEvQi9DL0QpIHRoZSBpcnEgd291bGQgZ2V0IG1hcHBlZA0KPiB0byBhIGRpZmZl
+cmVudCBpbnRlcnJ1cHQuIFRoZSBpbnRlcnJ1cHRzIGFyZSBub3QgT1InZCB0b2dldGhlci4NCg0K
+SSd2ZSBqdXN0IGhhZCBhIGxvb2sgdGhyb3VnaCBMdWNhcycgcGF0Y2hlcyBmb3IgYWRkaW5nIE1T
+SSBpbnRlcnJ1cHRzIHRvIGlteDZxZGwuIEZyb20gdGhpcyBpdCBsb29rcyBsaWtlIGlteDZxZGwg
+aGFzIDQgaW50ZXJydXB0cywgb25lIGlzIGEgY29tYmluZWQgaW50ZXJydXB0IGZvciBJTlRBIGFu
+ZCBNU0ksIGFuZCB0aGUgb3RoZXIgdGhyZWUgYXJlIGZvciBJTlRCLCBJTlRDLCBJTlRELiBJcyB0
+aGF0IGNvcnJlY3Q/DQoNCkFzIEkgbWVudGlvbmVkIHByZXZpb3VzbHksIHRoZSBTeW5vcHN5cyBE
+VyBQQ0llIEhvc3QgSVAgKG9yIGF0IGxlYXN0IHRoZSB2ZXJzaW9uIDQuMjFhIHRoYXQgSSBhbSBs
+b29raW5nIGF0KSBhY3R1YWxseSBvdXRwdXRzIGFsbCBvZiB0aGVzZSBpbnRlcnJ1cHRzIChhbmQg
+b3RoZXJzIGZvciBBRVIsIGV0YykgYXMgc2VwYXJhdGUgc2lnbmFscy4gQm90aCB0aGUgRXh5bm9z
+IGFuZCBpbXg2cWRsIFNvQ3MgYXBwZWFyIHRvIGNvbWJpbmUgc29tZSBvZiB0aGVzZSBpbnRlcnJ1
+cHRzLg0KDQpUaGFua3MNClBoaWwNCg==
