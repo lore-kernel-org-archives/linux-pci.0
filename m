@@ -1,78 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:36144 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757166AbaEPOhJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 May 2014 10:37:09 -0400
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: Jingoo Han <jg1.han@samsung.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	"'Russell King'" <linux@arm.linux.org.uk>
-Subject: RE: [PATCH v1 1/5] ARM: keystone: add pcie related options
-Date: Fri, 16 May 2014 14:36:37 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B7047413F8@DFLE11.ent.ti.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
- <1400169692-9677-2-git-send-email-m-karicheri2@ti.com>
- <004e01cf709d$a48b4240$eda1c6c0$%han@samsung.com>
-In-Reply-To: <004e01cf709d$a48b4240$eda1c6c0$%han@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-we0-f170.google.com ([74.125.82.170]:59845 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750812AbaENEyf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 May 2014 00:54:35 -0400
+Received: by mail-we0-f170.google.com with SMTP id u57so1364036wes.1
+        for <linux-pci@vger.kernel.org>; Tue, 13 May 2014 21:54:33 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <001801cf6f0f$cfd4b510$6f7e1f30$%han@samsung.com>
+References: <fd5f29f175b2499e9d972629f1ccd74a@HKXPR06MB168.apcprd06.prod.outlook.com>
+	<001801cf6f0f$cfd4b510$6f7e1f30$%han@samsung.com>
+Date: Tue, 13 May 2014 21:54:33 -0700
+Message-ID: <CAJ+vNU29uZn+TRx+X8miLuRXhQS32QQZkEF53y09ijNYm9NX7w@mail.gmail.com>
+Subject: Re: [Q] Synopsys PCIe interrupts
+From: Tim Harvey <tharvey@gateworks.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Marek Vasut <marex@denx.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->-----Original Message-----
->From: Jingoo Han [mailto:jg1.han@samsung.com]
->Sent: Thursday, May 15, 2014 8:28 PM
->To: Karicheri, Muralidharan
->Cc: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org; linux-arm-
->kernel@lists.infradead.org; Shilimkar, Santosh; 'Russell King'; 'Jingoo Han'
->Subject: Re: [PATCH v1 1/5] ARM: keystone: add pcie related options
+On Tue, May 13, 2014 at 5:59 PM, Jingoo Han <jg1.han@samsung.com> wrote:
+> On Wednesday, May 14, 2014 1:14 AM, Phil Edworthy wrote:
+>>
+>> Hi,
+>>
+>> I am currently writing another driver that uses the Synopsys Designware
+>> PCIe host controller driver.
+>>
+>> In general, it all looks good thanks to all involved in this driver.
+>> One area that I am having a little problem with is the interrupts.
+>>  According to the documentation I have, the module has separate
+>> interrupts for INTA, INTB, INTC, INTD, MSI, AER, bandwidth management,
+>>  PME (and possibly a couple of others as well).
+>>
+>> However, so far it looks like the upstream implementations just use
+>> a single interrupt for the module, is that correct? I notice that some
+>>  DT bindings include other interrupts that are not part of the Designware
+>> PCIe controller, but that's not what I'm talking about.
 >
->On Friday, May 16, 2014 1:01 AM, Murali Karicheri wrote:
->>
->> Add pcie related options by default for keystone architecture
->>
->> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
->> CC: Russell King <linux@arm.linux.org.uk>
->>
->> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->> ---
->>  arch/arm/mach-keystone/Kconfig |    2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/arch/arm/mach-keystone/Kconfig
->> b/arch/arm/mach-keystone/Kconfig index f50bc93..f87844d 100644
->> --- a/arch/arm/mach-keystone/Kconfig
->> +++ b/arch/arm/mach-keystone/Kconfig
->> @@ -8,6 +8,8 @@ config ARCH_KEYSTONE
->>  	select COMMON_CLK_KEYSTONE
->>  	select ARCH_SUPPORTS_BIG_ENDIAN
->>  	select ZONE_DMA if ARM_LPAE
->> +	select MIGHT_HAVE_PCI
->> +	select ARCH_SUPPORTS_MSI
+> (+cc Mohit Kumar, Pratyush Anand, Marek Vasut, Kishon Vijay Abraham I,
+>        Lucas Stach, Tim Harvey, Arnd Bergmann)
 >
->Please, don't select ARCH_SUPPORTS_MSI, because this kconfig option was already
->removed in v3.12 by the commit ebd97be635
->('PCI: remove ARCH_SUPPORTS_MSI kconfig option'). So. there is NO need to select
->'ARCH_SUPPORTS_MSI'.
+> PCIe Interrupt mapping is specific for SoC.
 >
+> In the case of Exynos, there are three interrupts for
+> Exynos PCIe; INTx, MSI, PHY Link, respectively as below.
+>
+> ./arch/arm/boot/dts/exynos5440.dtsi
+>         interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
+>
+> <0 20 0>: PCIe RC0 pulse interrupt,
+>              INTA, INTB, INTC and INTD, etc
+> <0 21 0>: PCIe RC0 level interrupt,
+>              MSI, etc
+> <0 22 0>: PCIe RC0 special interrupt,
+>              PHY Link related interrupts, etc
+>
+> So, there are three lines between GIC and PCIe. Also, IRQ mappings
+> for other SoCs are different.
+>
+> For example, the IMX6 maps INTA/B/C/D to ARM GIC IRQ 155/154/153/152
+> respectively.
+>
+> Then, how many lines are there between GIC and PCIe in your SoC?
+> How does your SoC map interrupts to GIC?
+>
+>>
+>> In existing implementations, does the hardware just OR
+>> all these interrupts together?
+>>
 
-Will do. Thanks.
+Phil,
 
->Best regards,
->Jingoo Han
+There is not just a single interrupt for the upstream implementations.
+See: http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/host/pcie-designware.c#n742
+
+of_irq_parse_and_map_pci(dev, slot, pin) is used to parse the
+device-tree interrupt map which defines the multiple IRQ's that Jingoo
+mentions above. For IMX6 these are defined in the imx6qdl.dtsi here:
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/arch/arm/boot/dts/imx6qdl.dtsi#n146.
+
+So in other words, depending on the slot and pin (each legacy PCI
+device can have 4 interrupt pins, INTA/B/C/D) the irq would get mapped
+to a different interrupt. The interrupts are not OR'd together.
+
+Tim
+
 >
->>  	help
->>  	  Support for boards based on the Texas Instruments Keystone family of
->>  	  SoCs.
->> --
->> 1.7.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci"
->> in the body of a message to majordomo@vger.kernel.org More majordomo
->> info at  http://vger.kernel.org/majordomo-info.html
-
+> Sorry, I cannot understand; other engineers will answer.
+>
+> Best regards,
+> Jingoo Han
+>
+>> Thanks
+>> Phil
+>
