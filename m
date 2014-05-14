@@ -1,85 +1,79 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
-	linux-pm@vger.kernel.org
-Subject: [RFC Patch Part1 V1 21/30] x86, ACPI, irq: provide basic irqdomain support
-Date: Fri, 16 May 2014 16:05:41 +0800
-Message-Id: <1400227550-5935-22-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:39188 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753319AbaENPU1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 May 2014 11:20:27 -0400
+Message-ID: <53738993.8070708@ti.com>
+Date: Wed, 14 May 2014 20:49:47 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+MIME-Version: 1.0
+To: Roger Quadros <rogerq@ti.com>, <devicetree@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: <balajitk@ti.com>, Tony Lindgren <tony@atomide.com>,
+	Rajendra Nayak <rnayak@ti.com>, Tero Kristo <t-kristo@ti.com>,
+	Paul Walmsley <paul@pwsan.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH 11/17] ARM: dts: dra7xx-clocks: Add missing 32khz clocks
+ used for PHY
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <1399383244-14556-12-git-send-email-kishon@ti.com> <53736E47.4070402@ti.com>
+In-Reply-To: <53736E47.4070402@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance ACPI driver to provide basic irqdomain support for IOAPIC.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index f70f4f318316..1ee639e74d50 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -31,6 +31,7 @@
- #include <linux/module.h>
- #include <linux/dmi.h>
- #include <linux/irq.h>
-+#include <linux/irqdomain.h>
- #include <linux/slab.h>
- #include <linux/bootmem.h>
- #include <linux/ioport.h>
-@@ -331,6 +332,23 @@ static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity);
- 
-+static struct irq_domain_ops acpi_irqdomain_ops;
-+
-+static struct irq_domain *acpi_create_irqdomain(int idx, void *arg)
-+{
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
-+
-+	/*
-+	 * Statically allocate IRQ number for legacy IRQs and all pins on the
-+	 * first IOAPIC.
-+	 */
-+	if (gsi_cfg->gsi_base < NR_IRQS_LEGACY &&
-+	    ioapic_dynirq_base < gsi_cfg->gsi_end)
-+		ioapic_dynirq_base = gsi_cfg->gsi_end + 1;
-+
-+	return mp_irqdomain_create(idx, NULL, &acpi_irqdomain_ops);
-+}
-+
- static int __init
- acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
- {
-@@ -345,7 +363,7 @@ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
- 
- 	mp_register_ioapic(ioapic->id,
- 			   ioapic->address, ioapic->global_irq_base,
--			   NULL, NULL);
-+			   acpi_create_irqdomain, NULL);
- 
- 	return 0;
- }
--- 
-1.7.10.4
+On Wednesday 14 May 2014 06:53 PM, Roger Quadros wrote:
+> Hi Kishon,
+> 
+> 
+> On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
+>> Added missing 32khz clock used by PCIe PHY.
+>> The documention for this node can be found @ ../bindings/clock/ti/gate.txt.
+> 
+> Typo in $subject
+> s/clocks/clock
 
+Will fix it.
+
+Thanks
+Kishon
+> 
+> --
+> cheers,
+> -roger
+> 
+>>
+>> Cc: Tony Lindgren <tony@atomide.com>
+>> Cc: Rajendra Nayak <rnayak@ti.com>
+>> Cc: Tero Kristo <t-kristo@ti.com>
+>> Cc: Paul Walmsley <paul@pwsan.com>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  arch/arm/boot/dts/dra7xx-clocks.dtsi |    8 ++++++++
+>>  1 file changed, 8 insertions(+)
+>>
+>> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>> index 44993ec..e1bd052 100644
+>> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>> @@ -1165,6 +1165,14 @@
+>>  		reg = <0x021c>, <0x0220>;
+>>  	};
+>>  
+>> +	optfclk_pciephy_32khz: optfclk_pciephy_32khz@4a0093b0 {
+>> +		compatible = "ti,gate-clock";
+>> +		clocks = <&sys_32k_ck>;
+>> +		#clock-cells = <0>;
+>> +		reg = <0x13b0>;
+>> +		ti,bit-shift = <8>;
+>> +	};
+>> +
+>>  	optfclk_pciephy_div: optfclk_pciephy_div@4a00821c {
+>>  		compatible = "ti,divider-clock";
+>>  		clocks = <&apll_pcie_ck>;
+>>
+> 
