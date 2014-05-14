@@ -1,70 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:32777 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750861AbaETVD5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 17:03:57 -0400
-Received: by mail-ig0-f181.google.com with SMTP id h3so1294115igd.8
-        for <linux-pci@vger.kernel.org>; Tue, 20 May 2014 14:03:56 -0700 (PDT)
-Date: Tue, 20 May 2014 15:03:53 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, nic_swsd@realtek.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: quirk RTL8110SC INTx masking
-Message-ID: <20140520210353.GB22821@google.com>
-References: <20140501203525.27822.98248.stgit@bling.home>
+Received: from comal.ext.ti.com ([198.47.26.152]:54271 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751189AbaENFp3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 14 May 2014 01:45:29 -0400
+Message-ID: <537302CD.7000701@ti.com>
+Date: Wed, 14 May 2014 11:14:45 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140501203525.27822.98248.stgit@bling.home>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Jingoo Han <jg1.han@samsung.com>,
+	"'Santosh Shilimkar'" <santosh.shilimkar@ti.com>,
+	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<rogerq@ti.com>, <balajitk@ti.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Marek Vasut'" <marex@denx.de>
+Subject: Re: [PATCH 06/17] pci: host: pcie-designware: Use *base-mask* for
+ configuring the iATU
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <53721D7F.9070200@ti.com> <202752041.rgamje4etj@wuerfel> <4528185.oZbgyuuFKX@wuerfel>
+In-Reply-To: <4528185.oZbgyuuFKX@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 01, 2014 at 02:36:31PM -0600, Alex Williamson wrote:
-> INTx masking does not work on this device.  To see this, configure
-> the network device UP on an active network, note that the interrupt
-> count continues to increment for the device in /proc/interrupts.  Use
-> setpci to set the PCI_COMMAND_INTX_DISABLE bit in the PCI_COMMAND
-> register.  As expected, the interrupt count ceases to increment.
-> However, reading the PCI_STATUS_INTERRUPT bit of the PCI_STATUS
-> register does not indicate that interrupts are pending and clearing
-> PCI_COMMAND_INTX_DISABLE in the PCI_COMMAND register does not allow
-> the device to continue operation.
-> 
-> This does not affect operation of the host r8169 driver, but it does
-> prevent the device from being functional when assigned to a VM, such
-> as with QEMU and VFIO.  The guest driver successfully probes the
-> device, but there is no traffic.  Mark INTx masking as broken,
-> allowing the more restrictive APIC masking to be used instead.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+hi Arnd,
 
-Applied to pci/virtualization for v3.16, thanks.
+On Tuesday 13 May 2014 07:04 PM, Arnd Bergmann wrote:
+> On Tuesday 13 May 2014 15:27:46 Arnd Bergmann wrote:
+>> On Tuesday 13 May 2014 18:56:23 Kishon Vijay Abraham I wrote:
+>>>> If you have a case where the outbound translation is a 256MB (i.e. 28bit)
+>>>> section of the CPU address space, that could be represented as
+>>>>
+>>>>       ranges = <0x82000000 0 0  0xb0000000  0 0x10000000>;
+>>>>
+>>>> or 
+>>>>
+>>>>       ranges = <0x82000000 0 0xb0000000  0xb0000000  0 0x10000000>;
+>>>>
+>>>> depending on whether you want the BARs to be programmed using a low
+>>>> address 0x0-0x0fffffff or an address matching the window
+>>>> 0xb0000000-0xbfffffff.
+>>>
+>>> The problem is, for configuring the window starting at 0xb0000000, the ATU
+>>> should be programmed 0x0000000 (the cpu address for it will be 0xb0000000 though).
+>>>
+>>
+>> Then use the first of the two?
+>>
+> 
+> To clarify: using <0x82000000 0 0  0xb0000000  0 0x10000000> will give you 
+> a mem_offset of 0xb0000000, which should work just fine for this case.
+> 
+> What I don't understand is why the ATU cares about whether the outbound
+> address is 0x0000000 or 0xb0000000 if it just decodes the lower 28 bit
+> anyway. Did you mean that we have to program the BARs using low addresses
+> regardless of what is programmed in the ATU? That would make more sense,
+> and it also matches what I suggested.
 
-> ---
->  drivers/pci/quirks.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index ea55b0f..e15a5da 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2991,6 +2991,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
->  			 quirk_broken_intx_masking);
->  DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
->  			 quirk_broken_intx_masking);
-> +/*
-> + * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
-> + * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
-> + *
-> + * RTL8110SC - Fails under PCI device assignment using DisINTx masking.
-> + */
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
-> +			 quirk_broken_intx_masking);
->  
->  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
->  			  struct pci_fixup *end)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+No, It's not like it decodes only the lower 28bits. The BARs is programmed with
+32 bit value.
+
+My pcie dt node has
+ ranges = <0x00000800 0 0x20001000 0x20001000 0 0x00002000  /* CONFIG */
+           0x81000000 0 0          0x20003000 0 0x00010000  /* IO */
+           0x82000000 0 0x20013000 0x20013000 0 0xffed000>; /* MEM */
+
+Consider MEM address space..
+
+Here both PCI address and CPU address is 0x20013000. So when there is a write
+to cpu addr 0x20013000 [writel(virt_addr(0x20013000)], we want it to be
+translated to PCI addr 0x20013000. So in 'ATU', we would expect *base* to be
+programmed to *0x20013000* and target to be programmed to *0x20013000*. But
+that's not the case for DRA7xx. For DRA7xx *base* should be programmed to
+*0x0013000* and target should be programmed to *0x20013000*.
+
+Thanks
+Kishon
