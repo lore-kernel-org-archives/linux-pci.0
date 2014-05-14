@@ -1,122 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:5322 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751055AbaENJNu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 May 2014 05:13:50 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Tim Harvey <tharvey@gateworks.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Marek Vasut <marex@denx.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>
-Subject: RE: [Q] Synopsys PCIe interrupts
-Date: Wed, 14 May 2014 09:13:45 +0000
-Message-ID: <4335be621d0e47b38580c54658b1702b@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <fd5f29f175b2499e9d972629f1ccd74a@HKXPR06MB168.apcprd06.prod.outlook.com>
-	 <001801cf6f0f$cfd4b510$6f7e1f30$%han@samsung.com>
-	 <CAJ+vNU29uZn+TRx+X8miLuRXhQS32QQZkEF53y09ijNYm9NX7w@mail.gmail.com>
-	 <48f8fbc1569e49df8fe8e15e4138d8d9@HKXPR06MB168.apcprd06.prod.outlook.com>
- <1400056898.4837.11.camel@weser.hi.pengutronix.de>
-In-Reply-To: <1400056898.4837.11.camel@weser.hi.pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 14 May 2014 17:56:01 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-doc@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	James Bottomley <jbottomley@parallels.com>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v3 0/4] Clean up DMA API docs and dma_addr_t usage
+Message-ID: <20140514155601.GF23770@8bytes.org>
+References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140514102307.GD6026@8bytes.org>
+ <537390BE.3010307@infradead.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <537390BE.3010307@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTHVjYXMsDQoNCk9uIDE0IE1heSAyMDE0IDA5OjQyLCBMdWNhcyB3cm90ZToNCj4gcGxlYXNl
-IGxpbWl0IHlvdXIgbGluZXMgdG8gYSByZWFzb25hYmxlIGFtb3VudCBvZiBjaGFyYWN0ZXJzLCB0
-aGFua3MuDQpPb3BzLCByZWNlbnRseSBjaGFuZ2UgZW1haWwgY2xpZW50ICYgSSB0aG91Z2h0IHRo
-aXMgd2FzIG9uLCBteSBiYWQuDQoNCiANCj4gQW0gTWl0dHdvY2gsIGRlbiAxNC4wNS4yMDE0LCAw
-ODoxMyArMDAwMCBzY2hyaWViIFBoaWwgRWR3b3J0aHk6DQo+ID4gSGkgVGltLA0KPiA+DQo+ID4g
-T24gMTQgTWF5IDIwMTQgMDU6NTUsIFRpbSB3cm90ZToNCj4gPiA+IE9uIFR1ZSwgTWF5IDEzLCAy
-MDE0IGF0IDU6NTkgUE0sIEppbmdvbyBIYW4gPGpnMS5oYW5Ac2Ftc3VuZy5jb20+DQo+ID4gPiB3
-cm90ZToNCj4gPiA+ID4gT24gV2VkbmVzZGF5LCBNYXkgMTQsIDIwMTQgMToxNCBBTSwgUGhpbCBF
-ZHdvcnRoeSB3cm90ZToNCj4gPiA+ID4+DQo+ID4gPiA+PiBIaSwNCj4gPiA+ID4+DQo+ID4gPiA+
-PiBJIGFtIGN1cnJlbnRseSB3cml0aW5nIGFub3RoZXIgZHJpdmVyIHRoYXQgdXNlcyB0aGUgU3lu
-b3BzeXMNCj4gRGVzaWdud2FyZQ0KPiA+ID4gPj4gUENJZSBob3N0IGNvbnRyb2xsZXIgZHJpdmVy
-Lg0KPiA+ID4gPj4NCj4gPiA+ID4+IEluIGdlbmVyYWwsIGl0IGFsbCBsb29rcyBnb29kIHRoYW5r
-cyB0byBhbGwgaW52b2x2ZWQgaW4gdGhpcyBkcml2ZXIuDQo+ID4gPiA+PiBPbmUgYXJlYSB0aGF0
-IEkgYW0gaGF2aW5nIGEgbGl0dGxlIHByb2JsZW0gd2l0aCBpcyB0aGUgaW50ZXJydXB0cy4NCj4g
-PiA+ID4+ICBBY2NvcmRpbmcgdG8gdGhlIGRvY3VtZW50YXRpb24gSSBoYXZlLCB0aGUgbW9kdWxl
-IGhhcyBzZXBhcmF0ZQ0KPiA+ID4gPj4gaW50ZXJydXB0cyBmb3IgSU5UQSwgSU5UQiwgSU5UQywg
-SU5URCwgTVNJLCBBRVIsIGJhbmR3aWR0aA0KPiBtYW5hZ2VtZW50LA0KPiA+ID4gPj4gIFBNRSAo
-YW5kIHBvc3NpYmx5IGEgY291cGxlIG9mIG90aGVycyBhcyB3ZWxsKS4NCj4gPiA+ID4+DQo+ID4g
-PiA+PiBIb3dldmVyLCBzbyBmYXIgaXQgbG9va3MgbGlrZSB0aGUgdXBzdHJlYW0gaW1wbGVtZW50
-YXRpb25zIGp1c3QgdXNlDQo+ID4gPiA+PiBhIHNpbmdsZSBpbnRlcnJ1cHQgZm9yIHRoZSBtb2R1
-bGUsIGlzIHRoYXQgY29ycmVjdD8gSSBub3RpY2UgdGhhdCBzb21lDQo+ID4gPiA+PiAgRFQgYmlu
-ZGluZ3MgaW5jbHVkZSBvdGhlciBpbnRlcnJ1cHRzIHRoYXQgYXJlIG5vdCBwYXJ0IG9mIHRoZQ0K
-PiBEZXNpZ253YXJlDQo+ID4gPiA+PiBQQ0llIGNvbnRyb2xsZXIsIGJ1dCB0aGF0J3Mgbm90IHdo
-YXQgSSdtIHRhbGtpbmcgYWJvdXQuDQo+ID4gPiA+DQo+ID4gPiA+ICgrY2MgTW9oaXQgS3VtYXIs
-IFByYXR5dXNoIEFuYW5kLCBNYXJlayBWYXN1dCwgS2lzaG9uIFZpamF5IEFicmFoYW0NCj4gSSwN
-Cj4gPiA+ID4gICAgICAgIEx1Y2FzIFN0YWNoLCBUaW0gSGFydmV5LCBBcm5kIEJlcmdtYW5uKQ0K
-PiA+ID4gPg0KPiA+ID4gPiBQQ0llIEludGVycnVwdCBtYXBwaW5nIGlzIHNwZWNpZmljIGZvciBT
-b0MuDQo+ID4gPiA+DQo+ID4gPiA+IEluIHRoZSBjYXNlIG9mIEV4eW5vcywgdGhlcmUgYXJlIHRo
-cmVlIGludGVycnVwdHMgZm9yDQo+ID4gPiA+IEV4eW5vcyBQQ0llOyBJTlR4LCBNU0ksIFBIWSBM
-aW5rLCByZXNwZWN0aXZlbHkgYXMgYmVsb3cuDQo+ID4gPiA+DQo+ID4gPiA+IC4vYXJjaC9hcm0v
-Ym9vdC9kdHMvZXh5bm9zNTQ0MC5kdHNpDQo+ID4gPiA+ICAgICAgICAgaW50ZXJydXB0cyA9IDww
-IDIwIDA+LCA8MCAyMSAwPiwgPDAgMjIgMD47DQo+ID4gPiA+DQo+ID4gPiA+IDwwIDIwIDA+OiBQ
-Q0llIFJDMCBwdWxzZSBpbnRlcnJ1cHQsDQo+ID4gPiA+ICAgICAgICAgICAgICBJTlRBLCBJTlRC
-LCBJTlRDIGFuZCBJTlRELCBldGMNCj4gPiA+ID4gPDAgMjEgMD46IFBDSWUgUkMwIGxldmVsIGlu
-dGVycnVwdCwNCj4gPiA+ID4gICAgICAgICAgICAgIE1TSSwgZXRjDQo+ID4gPiA+IDwwIDIyIDA+
-OiBQQ0llIFJDMCBzcGVjaWFsIGludGVycnVwdCwNCj4gPiA+ID4gICAgICAgICAgICAgIFBIWSBM
-aW5rIHJlbGF0ZWQgaW50ZXJydXB0cywgZXRjDQo+ID4gPiA+DQo+ID4gPiA+IFNvLCB0aGVyZSBh
-cmUgdGhyZWUgbGluZXMgYmV0d2VlbiBHSUMgYW5kIFBDSWUuIEFsc28sIElSUSBtYXBwaW5ncw0K
-PiA+ID4gPiBmb3Igb3RoZXIgU29DcyBhcmUgZGlmZmVyZW50Lg0KPiA+ID4gPg0KPiA+ID4gPiBG
-b3IgZXhhbXBsZSwgdGhlIElNWDYgbWFwcyBJTlRBL0IvQy9EIHRvIEFSTSBHSUMgSVJRDQo+IDE1
-NS8xNTQvMTUzLzE1Mg0KPiA+ID4gPiByZXNwZWN0aXZlbHkuDQo+ID4gPiA+DQo+ID4gPiA+IFRo
-ZW4sIGhvdyBtYW55IGxpbmVzIGFyZSB0aGVyZSBiZXR3ZWVuIEdJQyBhbmQgUENJZSBpbiB5b3Vy
-IFNvQz8NCj4gPiA+ID4gSG93IGRvZXMgeW91ciBTb0MgbWFwIGludGVycnVwdHMgdG8gR0lDPw0K
-PiA+ID4gPg0KPiA+ID4gPj4NCj4gPiA+ID4+IEluIGV4aXN0aW5nIGltcGxlbWVudGF0aW9ucywg
-ZG9lcyB0aGUgaGFyZHdhcmUganVzdCBPUg0KPiA+ID4gPj4gYWxsIHRoZXNlIGludGVycnVwdHMg
-dG9nZXRoZXI/DQo+ID4gPiA+Pg0KPiA+ID4NCj4gPiA+IFBoaWwsDQo+ID4gPg0KPiA+ID4gVGhl
-cmUgaXMgbm90IGp1c3QgYSBzaW5nbGUgaW50ZXJydXB0IGZvciB0aGUgdXBzdHJlYW0gaW1wbGVt
-ZW50YXRpb25zLg0KPiA+ID4gU2VlOg0KPiA+ID4NCj4gaHR0cDovL2dpdC5rZXJuZWwub3JnL2Nn
-aXQvbGludXgva2VybmVsL2dpdC90b3J2YWxkcy9saW51eC5naXQvdHJlZS9kcml2ZXJzL3BjaS8N
-Cj4gPiA+IGhvc3QvcGNpZS1kZXNpZ253YXJlLmMjbjc0Mg0KPiA+ID4NCj4gPiA+IG9mX2lycV9w
-YXJzZV9hbmRfbWFwX3BjaShkZXYsIHNsb3QsIHBpbikgaXMgdXNlZCB0byBwYXJzZSB0aGUNCj4g
-PiA+IGRldmljZS10cmVlIGludGVycnVwdCBtYXAgd2hpY2ggZGVmaW5lcyB0aGUgbXVsdGlwbGUg
-SVJRJ3MgdGhhdCBKaW5nb28NCj4gPiA+IG1lbnRpb25zIGFib3ZlLiBGb3IgSU1YNiB0aGVzZSBh
-cmUgZGVmaW5lZCBpbiB0aGUgaW14NnFkbC5kdHNpIGhlcmU6DQo+ID4gPg0KPiBodHRwOi8vZ2l0
-Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L3RvcnZhbGRzL2xpbnV4LmdpdC90cmVl
-L2FyY2gvYXJtL2INCj4gPiA+IG9vdC9kdHMvaW14NnFkbC5kdHNpI24xNDYuDQo+ID4gPg0KPiA+
-ID4gU28gaW4gb3RoZXIgd29yZHMsIGRlcGVuZGluZyBvbiB0aGUgc2xvdCBhbmQgcGluIChlYWNo
-IGxlZ2FjeSBQQ0kNCj4gPiA+IGRldmljZSBjYW4gaGF2ZSA0IGludGVycnVwdCBwaW5zLCBJTlRB
-L0IvQy9EKSB0aGUgaXJxIHdvdWxkIGdldCBtYXBwZWQNCj4gPiA+IHRvIGEgZGlmZmVyZW50IGlu
-dGVycnVwdC4gVGhlIGludGVycnVwdHMgYXJlIG5vdCBPUidkIHRvZ2V0aGVyLg0KPiA+DQo+ID4g
-SSd2ZSBqdXN0IGhhZCBhIGxvb2sgdGhyb3VnaCBMdWNhcycgcGF0Y2hlcyBmb3IgYWRkaW5nIE1T
-SSBpbnRlcnJ1cHRzDQo+ID4gdG8gaW14NnFkbC4gRnJvbSB0aGlzIGl0IGxvb2tzIGxpa2UgaW14
-NnFkbCBoYXMgNCBpbnRlcnJ1cHRzLCBvbmUgaXMgYQ0KPiA+IGNvbWJpbmVkIGludGVycnVwdCBm
-b3IgSU5UQSBhbmQgTVNJLCBhbmQgdGhlIG90aGVyIHRocmVlIGFyZSBmb3IgSU5UQiwNCj4gPiBJ
-TlRDLCBJTlRELiBJcyB0aGF0IGNvcnJlY3Q/DQo+ID4NCj4gSXQncyB0aGUgb3RoZXIgd2F5IGFy
-b3VuZDogTVNJIGFuZCBJTlREIHNoYXJlIGEgc2luZ2xlIGlycSBsaW5lLCBidXQgaW4NCj4gcHJp
-bmNpcGxlIHlvdXIgZGVzY3JpcHRpb24gaXMgY29ycmVjdC4NCkFoLCB5ZXMgbm93IEkgc2VlIHRo
-YXQuDQoNCg0KPiA+IEFzIEkgbWVudGlvbmVkIHByZXZpb3VzbHksIHRoZSBTeW5vcHN5cyBEVyBQ
-Q0llIEhvc3QgSVAgKG9yIGF0IGxlYXN0DQo+ID4gdGhlIHZlcnNpb24gNC4yMWEgdGhhdCBJIGFt
-IGxvb2tpbmcgYXQpIGFjdHVhbGx5IG91dHB1dHMgYWxsIG9mIHRoZXNlDQo+ID4gaW50ZXJydXB0
-cyAoYW5kIG90aGVycyBmb3IgQUVSLCBldGMpIGFzIHNlcGFyYXRlIHNpZ25hbHMuIEJvdGggdGhl
-DQo+ID4gRXh5bm9zIGFuZCBpbXg2cWRsIFNvQ3MgYXBwZWFyIHRvIGNvbWJpbmUgc29tZSBvZiB0
-aGVzZSBpbnRlcnJ1cHRzLg0KPiA+DQo+IEkgZG9uJ3QgaGF2ZSBhY2Nlc3MgdG8gdGhlIHVuZGVy
-bHlpbmcgRFcgSVAgY29yZSBkb2N1bWVudGF0aW9uLCBvbmx5IHRvDQo+IGEgaS5NWCBzcGVjaWZp
-YyBvbmUsIHNvIEkgb25seSBrbm93IGFib3V0IHRoaXMgc3BlY2lmaWMgaW1wbGVtZW50YXRpb24u
-DQo+IA0KPiBpLk1YIGRvZXNuJ3Qgc2VlbSB0byBoYXZlIHRoZSBBRVIgaXJxIHdpcmVkIHVwLg0K
-SXQncyBhbHNvIHBvc3NpYmxlIHRoYXQgdGhlIGkuTVggZG9lc27igJl0IHN1cHBvcnQgQUVSLiBU
-aGlzIGlzIGEgY29uZmlndXJhdGlvbg0Kb3B0aW9uIGZvciB0aGUgU3lub3BzeXMgSVAuDQoNCg0K
-PiBCZWNhdXNlIG9mIHRob3NlIGRpZmZlcmVuY2VzIEkndmUgcHVzaGVkIHRoZSBpcnEgcHJvcGVy
-dGllcyBvZiB0aGUNCj4gYmluZGluZyBpbnRvIHRoZSBTb0Mgc3BlY2lmaWMgcGFydC4NCj4gSWYg
-d2UgY2FuIGVudW1lcmF0ZSBhbGwgaXJxIHNpZ25hbHMgZnJvbSB0aGUgRFcgY29yZSB3ZSBjb3Vs
-ZCBtYXliZSBwdXNoDQo+IHRoaXMgc3R1ZmYgYmFjayBpbnRvIGNvbW1vbiBkb2MvY29kZSwgYnV0
-IEknbSBub3Qgc3VyZSBhYm91dCBob3cgdG8NCj4gaGFuZGxlIHRoaXMgd2l0aG91dCBicmVha2lu
-ZyB0aGUgRXh5bm9zIGJpbmRpbmcuIGkuTVggd29uJ3QgY2FyZSBhcyB0aGUNCj4gb25seSBpcnEg
-aXQgdXNlcyBiZXNpZGVzIHRoZSBsZWdhY3kgaXJxcywgd2hpY2ggYXJlIG1hcHBlZCB0aHJvdWdo
-IERULA0KPiBpcyBub3cgYSBuYW1lZCBpcnEuDQpJIGRvbuKAmXQgaGF2ZSBhIGxvdCBvZiBleHBl
-cmllbmNlIHdpdGggRFQgYmluZGluZ3MsIHRob3VnaCBpdCBhcHBlYXJzIGFzDQp0aG91Z2ggaXQg
-d291bGQgYmUgZ29vZCBpZiB3ZSBjb3VsZCBzcGVjaWZ5IGludGVycnVwdHMgYnkgdGhlaXIgbmFt
-ZSwNCnJhdGhlciB0aGFuIHRoZSBvcmRlciBpbiB3aGljaCB0aGV5IGFyZSBsaXN0ZWQuIE9mIGNv
-dXJzZSwgdGhhdCB3b3VsZCBhZGQNCnNvbWUgb3ZlcmhlYWQgdG8gRFQgcGFyc2luZy4NCg0KSSBj
-YW4gaW1hZ2luZSB0aGlzIHNvcnQgb2YgcHJvYmxlbSBoYXBwZW5pbmcgd2l0aCBsb3RzIG9mIG90
-aGVyIElQIGJsb2Nrcy4NCg0KVGhhbmtzDQpQaGlsDQo=
+On Wed, May 14, 2014 at 08:50:22AM -0700, Randy Dunlap wrote:
+> On 05/14/2014 03:23 AM, Joerg Roedel wrote:
+> > On Thu, May 08, 2014 at 02:48:47PM -0600, Bjorn Helgaas wrote:
+> >> Maybe the third time's a charm :)
+> >>
+> >> This cleans up some DMA-API documentation and makes a minor no-op change to
+> >> the dma_declare_coherent_memory() prototype.
+> >>
+> >> Changes from v2:
+> >>   - Added description of CPU virtual/physical and bus addresses in
+> >>     DMA-API-HOWTO
+> >>   - Added comments to sh/PCI (Dreamcast) update
+> >>   - Dropped IOMMU interface dma_addr_t changes
+> >>
+> >> I didn't add Arnd's and Greg's acks to patch 1 because of all the new
+> >> address description text I added.
+> >>
+> >> ---
+> >>
+> >> Bjorn Helgaas (4):
+> >>       DMA-API: Clarify physical/bus address distinction
+> >>       DMA-API: Change dma_declare_coherent_memory() CPU address to phys_addr_t
+> >>       sh/PCI: Pass GAPSPCI_DMA_BASE CPU & bus address to dma_declare_coherent_memory()
+> >>       iommu/exynos: Remove unnecessary "&" from function pointers
+> > 
+> > Applied patches 1-3 to my core branch and patch 4 to the arm/exynos
+> > branch. Patch 3 doesn't really belong into my tree, please let me know
+> > if there are any objections against it being there and I'll drop it.
+> 
+> I was thinking that either Bjorn or I should merge patches 1 and 2.
+
+Okay, fine with me. Then I drop 1-3 entirely and only keep patch 4 in
+the exynos branch.
+
+
+	Joerg
+
+
