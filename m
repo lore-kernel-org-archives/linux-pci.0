@@ -1,91 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:16156 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbaENA7y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 May 2014 20:59:54 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N5J00LTHHFSZQ10@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 14 May 2014 09:59:52 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Phil Edworthy' <phil.edworthy@renesas.com>
-Cc: linux-pci@vger.kernel.org, 'Richard Zhu' <r65037@freescale.com>,
-	'Shawn Guo' <shawn.guo@linaro.org>,
-	'Mohit Kumar' <mohit.kumar@st.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Marek Vasut' <marex@denx.de>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Lucas Stach' <l.stach@pengutronix.de>,
-	'Tim Harvey' <tharvey@gateworks.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <fd5f29f175b2499e9d972629f1ccd74a@HKXPR06MB168.apcprd06.prod.outlook.com>
-In-reply-to: <fd5f29f175b2499e9d972629f1ccd74a@HKXPR06MB168.apcprd06.prod.outlook.com>
-Subject: Re: [Q] Synopsys PCIe interrupts
-Date: Wed, 14 May 2014 09:59:51 +0900
-Message-id: <001801cf6f0f$cfd4b510$6f7e1f30$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from devils.ext.ti.com ([198.47.26.153]:38482 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752014AbaEORpm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 13:45:42 -0400
+Message-ID: <5374FD24.8000806@ti.com>
+Date: Thu, 15 May 2014 13:45:08 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware
+ core driver
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <1400169692-9677-6-git-send-email-m-karicheri2@ti.com> <6048322.x3M3sdDEWO@wuerfel>
+In-Reply-To: <6048322.x3M3sdDEWO@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, May 14, 2014 1:14 AM, Phil Edworthy wrote:
-> 
-> Hi,
-> 
-> I am currently writing another driver that uses the Synopsys Designware
-> PCIe host controller driver.
-> 
-> In general, it all looks good thanks to all involved in this driver.
-> One area that I am having a little problem with is the interrupts.
->  According to the documentation I have, the module has separate
-> interrupts for INTA, INTB, INTC, INTD, MSI, AER, bandwidth management,
->  PME (and possibly a couple of others as well).
-> 
-> However, so far it looks like the upstream implementations just use
-> a single interrupt for the module, is that correct? I notice that some
->  DT bindings include other interrupts that are not part of the Designware
-> PCIe controller, but that's not what I'm talking about.
+Arnd,
 
-(+cc Mohit Kumar, Pratyush Anand, Marek Vasut, Kishon Vijay Abraham I,
-       Lucas Stach, Tim Harvey, Arnd Bergmann)
 
-PCIe Interrupt mapping is specific for SoC.
+Thanks for the review. I may have more questions as I digest the 
+comments. Here is the
+immediate one.
 
-In the case of Exynos, there are three interrupts for
-Exynos PCIe; INTx, MSI, PHY Link, respectively as below. 
-
-./arch/arm/boot/dts/exynos5440.dtsi
-	interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-
-<0 20 0>: PCIe RC0 pulse interrupt,
-             INTA, INTB, INTC and INTD, etc
-<0 21 0>: PCIe RC0 level interrupt,
-             MSI, etc
-<0 22 0>: PCIe RC0 special interrupt,
-             PHY Link related interrupts, etc
-
-So, there are three lines between GIC and PCIe. Also, IRQ mappings
-for other SoCs are different.
-
-For example, the IMX6 maps INTA/B/C/D to ARM GIC IRQ 155/154/153/152
-respectively.
-
-Then, how many lines are there between GIC and PCIe in your SoC?
-How does your SoC map interrupts to GIC?
-
-> 
-> In existing implementations, does the hardware just OR
-> all these interrupts together?
+>> +#ifdef CONFIG_PCI_KEYSTONE
+>> +/*
+>> + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
+>> + */
+>> +static void quirk_limit_readrequest(struct pci_dev *dev)
+>> +{
+>> +	int readrq = pcie_get_readrq(dev);
+>> +
+>> +	if (readrq > 256)
+>> +		pcie_set_readrq(dev, 256);
+>> +}
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
+>> +#endif /* CONFIG_PCI_KEYSTONE */
+> This doesn't work: you can't just limit do this for all devices just based
+> on PCI_KEYSTONE being enabled, you have to check if you are actually using
+> this controller.
 >
+> 	Arnd
+  I assume, I need to check if PCI controller's vendor ID/ device ID 
+match with the keystone
+  PCI controller's ID and call pcie_set_readrq() for all of the slave 
+PCI devices and do this fixup.
+Is this correct understanding?  If you can point me to an example code 
+for this that will be
+really helpful so that I can avoid re-inventing the wheel.
 
-Sorry, I cannot understand; other engineers will answer.
-
-Best regards,
-Jingoo Han
-
-> Thanks
-> Phil
+Murali
 
