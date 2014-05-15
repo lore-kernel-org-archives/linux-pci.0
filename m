@@ -1,65 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24082 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:37485 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752617AbaEVXI5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 19:08:57 -0400
-Subject: [PATCH v4 14/16] iommu: Remove pci.h
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: Joerg Roedel <joro@8bytes.org>, linux-kernel@vger.kernel.org,
-	acooks@gmail.com, linux@horizon.com, bhelgaas@google.com,
-	eddy0596@gmail.com
-Date: Thu, 22 May 2014 17:08:51 -0600
-Message-ID: <20140522230851.2856.41363.stgit@bling.home>
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-References: <20140522230230.2856.40017.stgit@bling.home>
+	id S1751320AbaEOUwW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 May 2014 16:52:22 -0400
+Date: Thu, 15 May 2014 14:52:10 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on
+ designware core driver
+Message-ID: <20140515205210.GB14722@obsidianresearch.com>
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+ <6048322.x3M3sdDEWO@wuerfel>
+ <5374FD24.8000806@ti.com>
+ <22200719.Jb5jnJylJH@wuerfel>
+ <20140515183919.GC11650@obsidianresearch.com>
+ <53751DDF.40304@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53751DDF.40304@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The single helper here no longer has any users.
+On Thu, May 15, 2014 at 04:04:47PM -0400, Murali Karicheri wrote:
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/pci.h |   29 -----------------------------
- 1 file changed, 29 deletions(-)
- delete mode 100644 drivers/iommu/pci.h
+> Jason What you mean by "The PCI core handles setting the maximum
+> read request size already" I see there is function pcie_write_mrrs()
+> in the drivers/pci/probe.c that reads the mps using pcie_get_mps()
+> and then set mrrs to mps. But this function is called only from
+> pcie_bus_configure_set() that is called by
+> pcie_bus_configure_settings()
 
-diff --git a/drivers/iommu/pci.h b/drivers/iommu/pci.h
-deleted file mode 100644
-index 352d80a..0000000
---- a/drivers/iommu/pci.h
-+++ /dev/null
-@@ -1,29 +0,0 @@
--/*
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License, version 2, as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-- *
-- * Copyright (C) 2013 Red Hat, Inc.
-- * Copyright (C) 2013 Freescale Semiconductor, Inc.
-- *
-- */
--#ifndef __IOMMU_PCI_H
--#define __IOMMU_PCI_H
--
--/* Helper function for swapping pci device reference */
--static inline void swap_pci_ref(struct pci_dev **from, struct pci_dev *to)
--{
--	pci_dev_put(*from);
--	*from = to;
--}
--
--#endif  /* __IOMMU_PCI_H */
+Right, that is the common code that correctly sets the MRRS that you
+should be using instead of quirks.
 
+> None of them gets called on ARM platform.
+
+Hmm, a cursory glance tells me the same as well.
+
+That seems to be the root problem here, ARM needs to do the PCIE
+setup just as much as any other arch.
+
+So, I would prefer to see you fix ARM common code to call
+pcie_bus_configure_settings() properly, that seems very simple and is
+obviously needed for any PCI-E host driver on ARM.
+
+Thoughts? Arnd? Bjorn?
+
+Jason
