@@ -1,56 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:41136 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751945AbaEHPP6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 11:15:58 -0400
-Date: Thu, 8 May 2014 16:15:27 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sthokal@xilinx.com" <sthokal@xilinx.com>,
-	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v6 1/3] ARM: kconfig: allow PCI support to be selected
- with ARCH_MULTIPLATFORM
-Message-ID: <20140508151526.GE8981@arm.com>
-References: <1399478839-3564-1-git-send-email-will.deacon@arm.com>
- <1399478839-3564-2-git-send-email-will.deacon@arm.com>
- <536B9DE9.80100@wwwdotorg.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:55232 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751256AbaEOQXL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 12:23:11 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware core driver
+Date: Thu, 15 May 2014 18:23:05 +0200
+Message-ID: <6048322.x3M3sdDEWO@wuerfel>
+In-Reply-To: <1400169692-9677-6-git-send-email-m-karicheri2@ti.com>
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <1400169692-9677-6-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <536B9DE9.80100@wwwdotorg.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 08, 2014 at 04:08:25PM +0100, Stephen Warren wrote:
-> On 05/07/2014 10:07 AM, Will Deacon wrote:
-> > When targetting ARCH_MULTIPLATFORM, we may include support for SoCs with
-> > PCI-capable devices (e.g. mach-virt with virtio-pci).
-> > 
-> > This patch allows PCI support to be selected for these SoCs by selecting
-> > CONFIG_MIGHT_HAVE_PCI when CONFIG_ARCH_MULTIPLATFORM=y.
-> 
-> > diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> 
-> > @@ -314,6 +314,7 @@ config ARCH_MULTIPLATFORM
-> >  	select CLKSRC_OF
-> >  	select COMMON_CLK
-> >  	select GENERIC_CLOCKEVENTS
-> > +	select MIGHT_HAVE_PCI
-> 
-> Doesn't ARCH_MULTIPLATFORM allow ARCH_$soc to be selected, and ARCH_$soc
-> selects MIGHT_HAVE_PCI?
-> 
-> That way, you can only enable PCI support if you have actually enabled
-> an SoC that has PCI, and equally ARCH_$soc selects MIGHT_HAVE_PCI just
-> like it always used to work before ARCH_MULTIPLATFORM.
+On Thursday 15 May 2014 12:01:32 Murali Karicheri wrote:
 
-Yeah, I initially had this only for mach-virt, but the last review suggested
-moving it here:
+> +static int
+> +keystone_pcie_fault(unsigned long addr, unsigned int fsr,
+> +		struct pt_regs *regs)
+> +{
+> +	unsigned long instr = *(unsigned long *) instruction_pointer(regs);
+> +
+> +	if ((instr & 0x0e100090) == 0x00100090) {
+> +		int reg = (instr >> 12) & 15;
+> +
+> +		regs->uregs[reg] = -1;
+> +		regs->ARM_pc += 4;
+> +	}
+> +
+> +	return 0;
+> +}
 
-  http://lists.infradead.org/pipermail/linux-arm-kernel/2014-May/252937.html
+This needs to check in the PCI host registers what happened and do
+some appropriate action. If the fault was not caused by PCIe, it
+should not be ignored here but get passed on to the next handler.
 
-Will
+> +static int __init ks_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct device_node *np = pdev->dev.of_node;
+> +	struct device *dev = &pdev->dev;
+> +	struct keystone_pcie *ks_pcie;
+> +	void __iomem *devstat;
+> +	struct pcie_port *pp;
+> +	struct resource *res;
+> +	struct phy *phy;
+> +	int ret = 0;
+> +	u32 val;
+> +
+> +	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
+> +				GFP_KERNEL);
+> +	if (!ks_pcie) {
+> +		dev_err(dev, "no memory for keystone pcie\n");
+> +		return -ENOMEM;
+> +	}
+> +
+> +	/* check if serdes phy needs to be enabled */
+> +	if (of_get_property(np, "ti,init-phy", NULL) != NULL) {
+> +		phy = devm_phy_get(dev, "pcie-phy");
+> +			if (IS_ERR(phy))
+> +				return PTR_ERR(phy);
+> +
+> +		ret = phy_init(phy);
+> +		if (ret < 0)
+> +			return ret;
+> +	}
+
+I think you can just call devm_phy_get() unconditionally here and
+get rid of the ti,init-phy property. If there is no phy, don't
+initialize it.
+
+> +
+> +	ret = add_pcie_port(ks_pcie, pdev);
+> +	if (ret < 0)
+> +		goto fail_clk;
+> +
+> +	platform_set_drvdata(pdev, ks_pcie);
+
+Set the platform data first, then add the port.
+
+> +	dev_info(dev, "pcie rc probe success\n");
+
+Remove this.
+
+> +#ifdef CONFIG_PCI_KEYSTONE
+> +/*
+> + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
+> + */
+> +static void quirk_limit_readrequest(struct pci_dev *dev)
+> +{
+> +	int readrq = pcie_get_readrq(dev);
+> +
+> +	if (readrq > 256)
+> +		pcie_set_readrq(dev, 256);
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
+> +#endif /* CONFIG_PCI_KEYSTONE */
+
+This doesn't work: you can't just limit do this for all devices just based
+on PCI_KEYSTONE being enabled, you have to check if you are actually using
+this controller.
+
+	Arnd
