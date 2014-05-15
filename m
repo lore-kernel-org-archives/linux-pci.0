@@ -1,92 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53721D7F.9070200@ti.com>
-Date: Tue, 13 May 2014 18:56:23 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:58813 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754293AbaEOSjc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 May 2014 14:39:32 -0400
+Date: Thu, 15 May 2014 12:39:19 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 To: Arnd Bergmann <arnd@arndb.de>
-CC: Jingoo Han <jg1.han@samsung.com>,
-	"'Santosh Shilimkar'" <santosh.shilimkar@ti.com>,
-	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<rogerq@ti.com>, <balajitk@ti.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Marek Vasut'" <marex@denx.de>
-Subject: Re: [PATCH 06/17] pci: host: pcie-designware: Use *base-mask* for
- configuring the iATU
-References: <1399383244-14556-1-git-send-email-kishon@ti.com> <6882241.amuhzvbd8n@wuerfel> <537210BF.2050100@ti.com> <10531498.kYV5eO1J1m@wuerfel>
-In-Reply-To: <10531498.kYV5eO1J1m@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on
+ designware core driver
+Message-ID: <20140515183919.GC11650@obsidianresearch.com>
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+ <6048322.x3M3sdDEWO@wuerfel>
+ <5374FD24.8000806@ti.com>
+ <22200719.Jb5jnJylJH@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <22200719.Jb5jnJylJH@wuerfel>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+On Thu, May 15, 2014 at 08:20:13PM +0200, Arnd Bergmann wrote:
+> On Thursday 15 May 2014 13:45:08 Murali Karicheri wrote:
+> > >> +#ifdef CONFIG_PCI_KEYSTONE
+> > >> +/*
+> > >> + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
+> > >> + */
+> > >> +static void quirk_limit_readrequest(struct pci_dev *dev)
+> > >> +{
+> > >> +    int readrq = pcie_get_readrq(dev);
+> > >> +
+> > >> +    if (readrq > 256)
+> > >> +            pcie_set_readrq(dev, 256);
+> > >> +}
+> > >> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
+> > >> +#endif /* CONFIG_PCI_KEYSTONE */
+> > > This doesn't work: you can't just limit do this for all devices just based
+> > > on PCI_KEYSTONE being enabled, you have to check if you are actually using
+> > > this controller.
+> > >
+> > >       Arnd
+> >   I assume, I need to check if PCI controller's vendor ID/ device ID 
+> > match with the keystone
+> >   PCI controller's ID and call pcie_set_readrq() for all of the slave 
+> > PCI devices and do this fixup.
+> > Is this correct understanding?  If you can point me to an example code 
+> > for this that will be
+> > really helpful so that I can avoid re-inventing the wheel.
+> 
+> I think it would be best to move the quirk into the keystone pci driver
+> and compare compare the dev->driver pointer of the PCI controller device.
 
-On Tuesday 13 May 2014 06:17 PM, Arnd Bergmann wrote:
-> On Tuesday 13 May 2014 18:01:59 Kishon Vijay Abraham I wrote:
->> On Thursday 08 May 2014 02:48 PM, Arnd Bergmann wrote:
->>> On Thursday 08 May 2014 18:05:11 Jingoo Han wrote:
->>>> On Tuesday, May 06, 2014 10:59 PM, Arnd Bergmann wrote:
->>>>> On Tuesday 06 May 2014 19:03:52 Kishon Vijay Abraham I wrote:
->>>>>> In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
->>>>>> address. So whenever the cpu issues a read/write request, the 4 most
->>>>>> significant bits are used by L3 to determine the target controller.
->>>>>> For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
->>>>>> the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
->>>>>> the outbound translation window the *base* should be programmed as 0x000_0000.
->>>>>> Whenever we try to write to say 0x2000_0000, it will be translated to whatever
->>>>>> we have programmed in the translation window with base as 0x000_0000.
->>>>>>
->>>>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>>>>> Cc: Marek Vasut <marex@denx.de>
->>>>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->>>>>> Acked-by: Jingoo Han <jg1.han@samsung.com>
->>>>>> Acked-by: Mohit Kumar <mohit.kumar@st.com>
->>>>>
->>>>> Sorry, but NAK.
->>>>>
->>>>> We have a standard 'dma-ranges' property to handle this, so use it.
->>>>>
->>>>> See the x-gene PCIe driver patches for an example. Please also talk
->>>>> to Santosh about it, as he is implementing generic support for
->>>>> parsing dma-ranges in platform devices at the moment.
->>>>
->>>> Hi Arnd,
->>>>
->>>> Do you mean the following patch?
->>>> http://www.spinics.net/lists/kernel/msg1737725.html
->>>>
->>>
->>> That is the patch Santosh did for platform devices, which is related but not
->>> what I meant here. For the PCI inbound window setup, please have a look
->>> at https://lkml.org/lkml/2014/3/19/607
->>
->> Do you think it can be used for *outbound* window setup too? The problem is the
->> *ranges* property defines both the pci address and cpu address which should
->> have been enough to program the ob translation window, but the hw is designed
->> so that the controller sees only the 28 bits. (The most significant 4 bits is
->> for the l3 to address the controller).
-> 
-> I'm not following what the problem is. You should always be able to describe
-> in the inbound window (that is from the CPU perspective) using dma-ranges
-> and the outbound window using ranges.
-> 
-> If you have a case where the outbound translation is a 256MB (i.e. 28bit)
-> section of the CPU address space, that could be represented as
-> 
-> 	ranges = <0x82000000 0 0  0xb0000000  0 0x10000000>;
-> 
-> or 
-> 
-> 	ranges = <0x82000000 0 0xb0000000  0xb0000000  0 0x10000000>;
-> 
-> depending on whether you want the BARs to be programmed using a low
-> address 0x0-0x0fffffff or an address matching the window
-> 0xb0000000-0xbfffffff.
+The PCI core handles setting the maximum read request size already,
+can you figure out why the core code isn't doing what you need and
+correct the root problem?
 
-The problem is, for configuring the window starting at 0xb0000000, the ATU
-should be programmed 0x0000000 (the cpu address for it will be 0xb0000000 though).
+I'm guessing the values in the root port bridge config space are not
+correct or something like that??
 
-Thanks
-Kishon
+Jason
