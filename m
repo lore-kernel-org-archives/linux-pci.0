@@ -1,110 +1,149 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:51309 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751654AbaEOMdh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 08:33:37 -0400
+Message-ID: <5374B409.3000607@ti.com>
+Date: Thu, 15 May 2014 07:33:13 -0500
+From: Nishanth Menon <nm@ti.com>
 MIME-Version: 1.0
-Date: Sat, 3 May 2014 01:34:01 +0200
-Message-ID: <CAJZ5v0gVEfcv6NeYwiNL8=0jtJXd3po_TK3+fP4q_3Rz0hBy_g@mail.gmail.com>
-Subject: [GIT PULL] ACPI and power management fixes for v3.15-rc4
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	Mike Turquette <mturquette@linaro.org>,
+	Tero Kristo <t-kristo@ti.com>
+CC: Roger Quadros <rogerq@ti.com>,
+	dt list <devicetree@vger.kernel.org>,
+	Paul Walmsley <paul@pwsan.com>,
+	"Krishnamoorthy, Balaji T" <balajitk@ti.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Rajendra Nayak <rnayak@ti.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	Tero Kristo <t-kristo@ti.com>,
+	linux-omap <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 03/17] phy: ti-pipe3: add external clock support for PCIe
+ PHY
+References: <1399383244-14556-1-git-send-email-kishon@ti.com>	<1399383244-14556-4-git-send-email-kishon@ti.com>	<53736CBC.2060702@ti.com>	<5373897C.6080504@ti.com>	<CAGo_u6qw1OomEw_ueb3x+xT+qZLAfGv7Se1K=o725aOoD3ankQ@mail.gmail.com>	<5374859F.5080902@ti.com>	<53748819.8060705@ti.com>	<CAGo_u6qbbdAbdvrB3AFXSH1qD5MaBkJbi6oJJvvTWW4xfbmd_Q@mail.gmail.com>	<5374AC0A.7070709@ti.com> <CAGo_u6r8XtGHOvsfJKQMZ2ghFRz8x8_UhzyKE9jnwO6mJ2HYpQ@mail.gmail.com> <5374B09F.2080803@ti.com>
+In-Reply-To: <5374B09F.2080803@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On 05/15/2014 07:18 AM, Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> On Thursday 15 May 2014 05:42 PM, Nishanth Menon wrote:
+>> On Thu, May 15, 2014 at 6:59 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>>> Hi Nishant,
+>>>
+>>> On Thursday 15 May 2014 05:16 PM, Nishanth Menon wrote:
+>>>> On Thu, May 15, 2014 at 4:25 AM, Roger Quadros <rogerq@ti.com> wrote:
+>>>>> On 05/15/2014 12:15 PM, Kishon Vijay Abraham I wrote:
+>>>>>> Hi Nishanth,
+>>>>>>
+>>>>>> On Wednesday 14 May 2014 09:04 PM, Nishanth Menon wrote:
+>>>>>>> On Wed, May 14, 2014 at 10:19 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>>>>>>>> Hi Roger,
+>>>>>>>>
+>>>>>>>> On Wednesday 14 May 2014 06:46 PM, Roger Quadros wrote:
+>>>>>>>>> Hi Kishon,
+>>>>>>>>>
+>>>>>>>>> On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
+>>>>>>>>>> APLL used by PCIE phy can either use external clock as input or the clock
+>>>>>>>>>> from DPLL. Added support for the APLL to use external clock as input here.
+>>>>>>>>>>
+>>>>>>>>>> Cc: Rajendra Nayak <rnayak@ti.com>
+>>>>>>>>>> Cc: Tero Kristo <t-kristo@ti.com>
+>>>>>>>>>> Cc: Paul Walmsley <paul@pwsan.com>
+>>>>>>>>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>>>>>>>>> ---
+>>>>>>>>>>  Documentation/devicetree/bindings/phy/ti-phy.txt |    4 ++
+>>>>>>>>>>  drivers/phy/phy-ti-pipe3.c                       |   75 ++++++++++++++--------
+>>>>>>>>>>  2 files changed, 52 insertions(+), 27 deletions(-)
+>>>>>>>>>>
+>>>>>>>>>> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>>>>>>> index bc9afb5..d50f8ee 100644
+>>>>>>>>>> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>>>>>>> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>>>>>>> @@ -76,6 +76,10 @@ Required properties:
+>>>>>>>>>>     * "dpll_ref_m2" - external dpll ref clk
+>>>>>>>>>>     * "phy-div" - divider for apll
+>>>>>>>>>>     * "div-clk" - apll clock
+>>>>>>>>>> +   * "apll_mux" - mux for pcie apll
+>>>>>>>>>> +   * "refclk_ext" - external reference clock for pcie apll
+>>>>>>>>>> + - ti,ext-clk: To specifiy if PCIE apll should use external clock. Applicable
+>>>>>>>>>> +   only to PCIE PHY.
+>>>>>>>>>
+>>>>>>>>> Instead of specifying both clock sources "dpll_ref_clock", "refclk_ext" and then specifying a 3rd control option "ti,ext-clk" to select one of the 2 sources, why can't the DT just supply one clock source, i.e. the one that is being used in the board instance? The driver should then just configure the clock rate that is needed at that node. Shouldn't the clock framework automatically take care of muxing and parent rates?
+>>>>>>>>
+>>>>>>>> Want the dt to have all the clocks used by the controller. "ti,ext-clk" should
+>>>>>>>> go in the board dt file (suggested by Nishanth).
+>>>>>>>> The point is at some point later if some one wants to change the clock source,
+>>>>>>>> it should be a simple enabling "ti,ext-clk" flag instead of finding the clock
+>>>>>>>> phandle etc..
+>>>>>>>
+>>>>>>> Wonder if that is implicit by the presence of  "refclk_ext" in the
+>>>>>>> clocks provided?
+>>>>>>
+>>>>>> IMO the presence of "refclk_ext" is useless unless the board indicates it
+>>>>>> provides the clock source.
+>>>>>>
+>>>>>> refclk_ext holds phandle for *fixed-clock*, so irrespective of whether the
+>>>>>> board provides a clock or not, it can have that handle for configuring in PRCM.
+>>>>>> However if the board does not provide the clock source, configuring refclk_ext
+>>>>>> in PRCM is useless.
+>>>>>
+>>>>> I think what Nishant meant is that if "refclk_ext" is provided it means that the driver
+>>>>> should use that over "dpll_ref_clock" so no need of a separate "ti,ext-clk" flag.
+>>>>
+>>>> yes, thank you for clarifying - it does indeed redundant to have
+>>>> "ti,ext-clk". and apologies on being a little obscure in the comment.
+>>>
+>>> Irrespective of whether external reference clock is used or not, all DRA7
+>>> (apll) has an input for external reference clock (and also a PRCM register for
+>>> programming it) and it has to be specified in dt no?
+>>
+>> Why is that a binding for ti-phy? that is a problem for the APLL clock
+>> driver (selecting it's own source). PHY properties should describe
+>> itself -> let the bindings of the APLL describe itself. please dont
+>> mix the two up.
+> 
+> The apll clock node is like this
+> 
+> apll_pcie_in_clk_mux: apll_pcie_in_clk_mux@4ae06118 {
+>         compatible = "mux-clock";
+>         clocks = <&dpll_pcie_ref_m2ldo_ck>, <&pciesref_acs_clk_ck>;
+>         #clock-cells = <0>;
+>         reg = <0x4a00821c 0x4>;
+>         bit-mask = <0x80>;
+> };
+> 
+> The external reference clock is denoted by *pciesref_acs_clk_ck*.
+> 
+> refclk_ext holds the phandle to *pciesref_acs_clk_ck* and is used in
+> "clk_set_parent" to set the parent of apll mux.
 
-Please pull from
+So, How about this: if refclk_ext is not defined, dont do setparent,
+if it is defined, do setparent.
+in short:
+Optional Properties:
+* "refclk_ext" - external reference clock for pcie apll - if defined,
+used as the parent to "apll_mux"
 
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- pm+acpi-3.15-rc4
+That said, my problem in general with this approach(which many folks
+have taken of describing parent of clock X in hardware block binding
+for Y) is the following:
 
-to receive ACPI, power management and PNP fixes for v3.15-rc4
-with top-most commit de3afce5336af3214374de6df360f9eb010a9a36
+The binding now has dependency on clock tree hierarchy. What if
+towmorrow, we have a tree where refclk_ext parent of muxZ parent of
+apll_mux? the binding breaks down. Lets not forget that we consider DT
+as an ABI - we dont want to change the binding in the future.
 
-  Merge branches 'acpi-ec' and 'acpi-processor'
+I had always preferred describing parent-child relationship of clocks
+by the approach Tero posted: https://patchwork.kernel.org/patch/3871551/
 
-on top of commit d1db0eea852497762cab43b905b879dfcd3b8987
+Maybe Mike and Tero could help here?
 
-  Linux 3.15-rc3
-
-A bunch of regression fixes this time.  They fix two regressions
-in the PNP subsystem, one in the ACPI processor driver and one in
-the ACPI EC driver, four cpufreq driver regressions and an unrelated
-bug in one of the drivers.  The regressions are recent or introduced
-in 3.14.
-
-Specifics:
-
- - There are two bugs in the ACPI PNP core that cause errors to
-   be returned if optional ACPI methods are not present.  After
-   an ACPI core change made in 3.14 one of those errors leads
-   to serial port suspend failures on some systems.  Fix from
-   yours truly.
-
- - A recently added PNP quirk related to Intel chipsets intorduced
-   a build error in unusual configurations (PNP without PCI).  Fix
-   from Bjorn Helgaas.
-
- - An ACPI EC workaround related to system suspend on Samsung machines
-   added in 3.14 introduced a race causing some valid EC events to be
-   discarded.  Fix from Kieran Clancy.
-
- - The acpi-cpufreq driver fails to load on some systems after a 3.14
-   commit related to APIC ID parsing that overlooked one corner case.
-   Fix from Lan Tianyu.
-
- - Fix for a recently introduced build problem in the ppc-corenet
-   cpufreq driver from Tim Gardner.
-
- - A recent cpufreq core change to ensure serialization of frequency
-   transitions for drivers with a ->target_index() callback overlooked
-   the fact that some of those drivers had been doing operations
-   introduced by it into the core already by themselves.  That resulted
-   in a mess in which the core and the drivers try to do the same thing
-   and block each other which leads to deadlocks.  Fixes for the
-   powernow-k7, powernow-k6, and longhaul cpufreq drivers from
-   Srivatsa S Bhat.
-
- - Fix for a computational error in the powernow-k6 cpufreq driver
-   from Srivatsa S Bhat.
-
-Thanks!
-
-
----------------
-
-Bjorn Helgaas (1):
-      PNP: Fix compile error in quirks.c
-
-Kieran Clancy (1):
-      ACPI / EC: Process rather than discard events in acpi_ec_clear
-
-Lan Tianyu (1):
-      ACPI / processor: Fix failure of loading acpi-cpufreq driver
-
-Rafael J. Wysocki (1):
-      PNP / ACPI: Do not return errors if _DIS or _SRS are not present
-
-Srivatsa S. Bhat (4):
-      cpufreq: longhaul: Fix double invocation of
-cpufreq_freq_transition_begin/end
-      cpufreq: powernow-k6: Fix incorrect comparison with max_multipler
-      cpufreq: powernow-k6: Fix double invocation of
-cpufreq_freq_transition_begin/end
-      cpufreq: powernow-k7: Fix double invocation of
-cpufreq_freq_transition_begin/end
-
-Tim Gardner (1):
-      cpufreq: ppc-corenet-cpufreq: Fix __udivdi3 modpost error
-
----------------
-
- drivers/acpi/acpi_processor.c         |  7 +++---
- drivers/acpi/ec.c                     | 21 ++++++++++-------
- drivers/cpufreq/longhaul.c            | 36 ++++++++++++++++++----------
- drivers/cpufreq/powernow-k6.c         | 23 ++++++++++--------
- drivers/cpufreq/powernow-k7.c         |  4 ----
- drivers/cpufreq/ppc-corenet-cpufreq.c |  5 +++-
- drivers/pnp/pnpacpi/core.c            | 44 +++++++++++++++++++++--------------
- drivers/pnp/quirks.c                  |  4 ++--
- 8 files changed, 85 insertions(+), 59 deletions(-)
+-- 
+Regards,
+Nishanth Menon
