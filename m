@@ -1,67 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:53494 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753960AbaE1RPd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 13:15:33 -0400
+Received: from arroyo.ext.ti.com ([192.94.94.40]:51435 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751249AbaEOUFe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 May 2014 16:05:34 -0400
+Message-ID: <53751DDF.40304@ti.com>
+Date: Thu, 15 May 2014 16:04:47 -0400
 From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>
-Subject: [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
-Date: Wed, 28 May 2014 13:14:53 -0400
-Message-ID: <1401297293-3950-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware
+ core driver
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <6048322.x3M3sdDEWO@wuerfel> <5374FD24.8000806@ti.com> <22200719.Jb5jnJylJH@wuerfel> <20140515183919.GC11650@obsidianresearch.com>
+In-Reply-To: <20140515183919.GC11650@obsidianresearch.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Call pcie_bus_configure_settings on ARM, like for other platforms.
-pcie_bus_configure_settings makes sure the MPS across the bus is
-uniform and provides the ability to tune the MRSS and MPS to higher
-performance values. This is particularly important for embedded where
-there is no firmware to program these PCI-E settings for the OS.
+On 5/15/2014 2:39 PM, Jason Gunthorpe wrote:
+> On Thu, May 15, 2014 at 08:20:13PM +0200, Arnd Bergmann wrote:
+>> On Thursday 15 May 2014 13:45:08 Murali Karicheri wrote:
+>>>>> +#ifdef CONFIG_PCI_KEYSTONE
+>>>>> +/*
+>>>>> + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
+>>>>> + */
+>>>>> +static void quirk_limit_readrequest(struct pci_dev *dev)
+>>>>> +{
+>>>>> +    int readrq = pcie_get_readrq(dev);
+>>>>> +
+>>>>> +    if (readrq > 256)
+>>>>> +            pcie_set_readrq(dev, 256);
+>>>>> +}
+>>>>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
+>>>>> +#endif /* CONFIG_PCI_KEYSTONE */
+>>>> This doesn't work: you can't just limit do this for all devices just based
+>>>> on PCI_KEYSTONE being enabled, you have to check if you are actually using
+>>>> this controller.
+>>>>
+>>>>        Arnd
+>>>    I assume, I need to check if PCI controller's vendor ID/ device ID
+>>> match with the keystone
+>>>    PCI controller's ID and call pcie_set_readrq() for all of the slave
+>>> PCI devices and do this fixup.
+>>> Is this correct understanding?  If you can point me to an example code
+>>> for this that will be
+>>> really helpful so that I can avoid re-inventing the wheel.
+>> I think it would be best to move the quirk into the keystone pci driver
+>> and compare compare the dev->driver pointer of the PCI controller device.
+> The PCI core handles setting the maximum read request size already,
+> can you figure out why the core code isn't doing what you need and
+> correct the root problem?
+>
+> I'm guessing the values in the root port bridge config space are not
+> correct or something like that??
+>
+> Jason
+What you mean by "The PCI core handles setting the maximum read request 
+size already"
+I see there is function pcie_write_mrrs() in the drivers/pci/probe.c 
+that reads the mps
+using pcie_get_mps() and then set mrrs to mps. But this function is 
+called only from
+pcie_bus_configure_set() that is called by pcie_bus_configure_settings()
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+pcie_bus_configure_settings() is called by
 
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
----
- - Fixed comments against initial version
- arch/arm/kernel/bios32.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+0 pci-common.c pcibios_scan_phb             1676 
+pcie_bus_configure_settings(child);
+1 pci_gx.c     fixup_read_and_payload_sizes  606 
+pcie_bus_configure_settings(child);
+2 acpi.c       pci_acpi_scan_root            556 
+pcie_bus_configure_settings(child);
+3 pcihp_slot.c pci_configure_slot            164 
+pcie_bus_configure_settings(dev->bus);
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 16d43cd..17a26c1 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -545,6 +545,18 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
- 		 */
- 		pci_bus_add_devices(bus);
- 	}
-+
-+	list_for_each_entry(sys, &head, node) {
-+		struct pci_bus *bus = sys->bus;
-+
-+		/* Configure PCI Express settings */
-+		if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-+			struct pci_bus *child;
-+
-+			list_for_each_entry(child, &bus->children, node)
-+				pcie_bus_configure_settings(child);
-+		}
-+	}
- }
- 
- #ifndef CONFIG_PCI_HOST_ITE8152
--- 
-1.7.9.5
+None of them gets called on ARM platform.
+
+What is needed for Keystone PCI is that we need to limit mrrs to 256 
+bytes for all
+of the downstream devices that talks to PCIe controller. This needs to 
+be enforced
+through a quirk. Or Is there something missing that Keystone or DW 
+driver is not
+making use of that reads the mrrs value of the RC and set the same on 
+all of the
+downstream devices connected to the bus that the controller is connected to?
+
+Murali
 
