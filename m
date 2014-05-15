@@ -1,72 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:51741 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752292AbaEUXi1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 May 2014 19:38:27 -0400
-Date: Thu, 22 May 2014 01:38:02 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Robert Richter <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	linux-kernel@vger.kernel.org,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	linux-pci@vger.kernel.org, Borislav Petkov <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after
- Fam16h
-Message-ID: <20140521233802.GA21575@pd.tnic>
-References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5374B09F.2080803@ti.com>
+Date: Thu, 15 May 2014 17:48:39 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Nishanth Menon <nm@ti.com>
+CC: Roger Quadros <rogerq@ti.com>,
+	dt list <devicetree@vger.kernel.org>,
+	Paul Walmsley <paul@pwsan.com>,
+	"Krishnamoorthy, Balaji T" <balajitk@ti.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Rajendra Nayak <rnayak@ti.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	Tero Kristo <t-kristo@ti.com>,
+	linux-omap <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 03/17] phy: ti-pipe3: add external clock support for PCIe
+ PHY
+References: <1399383244-14556-1-git-send-email-kishon@ti.com>	<1399383244-14556-4-git-send-email-kishon@ti.com>	<53736CBC.2060702@ti.com>	<5373897C.6080504@ti.com>	<CAGo_u6qw1OomEw_ueb3x+xT+qZLAfGv7Se1K=o725aOoD3ankQ@mail.gmail.com>	<5374859F.5080902@ti.com>	<53748819.8060705@ti.com>	<CAGo_u6qbbdAbdvrB3AFXSH1qD5MaBkJbi6oJJvvTWW4xfbmd_Q@mail.gmail.com>	<5374AC0A.7070709@ti.com> <CAGo_u6r8XtGHOvsfJKQMZ2ghFRz8x8_UhzyKE9jnwO6mJ2HYpQ@mail.gmail.com>
+In-Reply-To: <CAGo_u6r8XtGHOvsfJKQMZ2ghFRz8x8_UhzyKE9jnwO6mJ2HYpQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 21, 2014 at 05:18:17PM -0600, Bjorn Helgaas wrote:
-> ECS is an AMD mechanism that allows access to extended PCI config space
-> (offsets 256-4096) via I/O ports CF8/CFCh.  We normally use ECAM, i.e.,
-> MMCONFIG, to access that space, but apparently old machines have issues
-> that meant we couldn't use ECAM.
-> 
-> The solution was to enable ECS so we could use configuration mechanism #1
-> (I/O ports CF8/CFCh) to access extended config space.  See 831d991821da
-> ("x86: add PCI extended config space access for AMD Barcelona").
-> 
-> New machines should be able to use ECAM, which means they don't need the
-> CPU-specific code to enable ECS.  This patch leaves ECS the same on all
-> existing platforms, but stops enabling it on platforms after Fam16h.
-> 
-> Those future platforms should be able to use the standard ACPI MCFG/_CBA
-> descriptions of the PCIe ECAM mechanism.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Robert Richter <rric@kernel.org>
-> ---
->  arch/x86/pci/amd_bus.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-> index aa936e3a2019..67dadf179348 100644
-> --- a/arch/x86/pci/amd_bus.c
-> +++ b/arch/x86/pci/amd_bus.c
-> @@ -405,7 +405,9 @@ static int __init amd_postcore_init(void)
->  		return 0;
->  
->  	early_fill_mp_bus_info();
-> -	pci_io_ecs_init();
-> +
-> +	if (boot_cpu_data.x86 <= 0x16)
+Hi,
 
-Fam 0x16, i.e. hex? I think we talked about fam 0x10, i.e. 16 decimal.
+On Thursday 15 May 2014 05:42 PM, Nishanth Menon wrote:
+> On Thu, May 15, 2014 at 6:59 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>> Hi Nishant,
+>>
+>> On Thursday 15 May 2014 05:16 PM, Nishanth Menon wrote:
+>>> On Thu, May 15, 2014 at 4:25 AM, Roger Quadros <rogerq@ti.com> wrote:
+>>>> On 05/15/2014 12:15 PM, Kishon Vijay Abraham I wrote:
+>>>>> Hi Nishanth,
+>>>>>
+>>>>> On Wednesday 14 May 2014 09:04 PM, Nishanth Menon wrote:
+>>>>>> On Wed, May 14, 2014 at 10:19 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>>>>>>> Hi Roger,
+>>>>>>>
+>>>>>>> On Wednesday 14 May 2014 06:46 PM, Roger Quadros wrote:
+>>>>>>>> Hi Kishon,
+>>>>>>>>
+>>>>>>>> On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
+>>>>>>>>> APLL used by PCIE phy can either use external clock as input or the clock
+>>>>>>>>> from DPLL. Added support for the APLL to use external clock as input here.
+>>>>>>>>>
+>>>>>>>>> Cc: Rajendra Nayak <rnayak@ti.com>
+>>>>>>>>> Cc: Tero Kristo <t-kristo@ti.com>
+>>>>>>>>> Cc: Paul Walmsley <paul@pwsan.com>
+>>>>>>>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>>>>>>>> ---
+>>>>>>>>>  Documentation/devicetree/bindings/phy/ti-phy.txt |    4 ++
+>>>>>>>>>  drivers/phy/phy-ti-pipe3.c                       |   75 ++++++++++++++--------
+>>>>>>>>>  2 files changed, 52 insertions(+), 27 deletions(-)
+>>>>>>>>>
+>>>>>>>>> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>>>>>> index bc9afb5..d50f8ee 100644
+>>>>>>>>> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>>>>>> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>>>>>> @@ -76,6 +76,10 @@ Required properties:
+>>>>>>>>>     * "dpll_ref_m2" - external dpll ref clk
+>>>>>>>>>     * "phy-div" - divider for apll
+>>>>>>>>>     * "div-clk" - apll clock
+>>>>>>>>> +   * "apll_mux" - mux for pcie apll
+>>>>>>>>> +   * "refclk_ext" - external reference clock for pcie apll
+>>>>>>>>> + - ti,ext-clk: To specifiy if PCIE apll should use external clock. Applicable
+>>>>>>>>> +   only to PCIE PHY.
+>>>>>>>>
+>>>>>>>> Instead of specifying both clock sources "dpll_ref_clock", "refclk_ext" and then specifying a 3rd control option "ti,ext-clk" to select one of the 2 sources, why can't the DT just supply one clock source, i.e. the one that is being used in the board instance? The driver should then just configure the clock rate that is needed at that node. Shouldn't the clock framework automatically take care of muxing and parent rates?
+>>>>>>>
+>>>>>>> Want the dt to have all the clocks used by the controller. "ti,ext-clk" should
+>>>>>>> go in the board dt file (suggested by Nishanth).
+>>>>>>> The point is at some point later if some one wants to change the clock source,
+>>>>>>> it should be a simple enabling "ti,ext-clk" flag instead of finding the clock
+>>>>>>> phandle etc..
+>>>>>>
+>>>>>> Wonder if that is implicit by the presence of  "refclk_ext" in the
+>>>>>> clocks provided?
+>>>>>
+>>>>> IMO the presence of "refclk_ext" is useless unless the board indicates it
+>>>>> provides the clock source.
+>>>>>
+>>>>> refclk_ext holds phandle for *fixed-clock*, so irrespective of whether the
+>>>>> board provides a clock or not, it can have that handle for configuring in PRCM.
+>>>>> However if the board does not provide the clock source, configuring refclk_ext
+>>>>> in PRCM is useless.
+>>>>
+>>>> I think what Nishant meant is that if "refclk_ext" is provided it means that the driver
+>>>> should use that over "dpll_ref_clock" so no need of a separate "ti,ext-clk" flag.
+>>>
+>>> yes, thank you for clarifying - it does indeed redundant to have
+>>> "ti,ext-clk". and apologies on being a little obscure in the comment.
+>>
+>> Irrespective of whether external reference clock is used or not, all DRA7
+>> (apll) has an input for external reference clock (and also a PRCM register for
+>> programming it) and it has to be specified in dt no?
+> 
+> Why is that a binding for ti-phy? that is a problem for the APLL clock
+> driver (selecting it's own source). PHY properties should describe
+> itself -> let the bindings of the APLL describe itself. please dont
+> mix the two up.
 
-Oh well, that's an AMD call now.
+The apll clock node is like this
 
--- 
-Regards/Gruss,
-    Boris.
+apll_pcie_in_clk_mux: apll_pcie_in_clk_mux@4ae06118 {
+        compatible = "mux-clock";
+        clocks = <&dpll_pcie_ref_m2ldo_ck>, <&pciesref_acs_clk_ck>;
+        #clock-cells = <0>;
+        reg = <0x4a00821c 0x4>;
+        bit-mask = <0x80>;
+};
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+The external reference clock is denoted by *pciesref_acs_clk_ck*.
+
+refclk_ext holds the phandle to *pciesref_acs_clk_ck* and is used in
+"clk_set_parent" to set the parent of apll mux.
+
+Thanks
+Kishon
