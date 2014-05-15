@@ -1,218 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:64614 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755799AbaEHUs6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 16:48:58 -0400
-Received: by mail-ie0-f175.google.com with SMTP id rl12so3066484iec.6
-        for <linux-pci@vger.kernel.org>; Thu, 08 May 2014 13:48:57 -0700 (PDT)
-Subject: [PATCH v3 2/4] DMA-API: Change dma_declare_coherent_memory() CPU
- address to phys_addr_t
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-kernel@vger.kernel.org,
-	James Bottomley <jbottomley@parallels.com>,
-	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
-Date: Thu, 08 May 2014 14:49:00 -0600
-Message-ID: <20140508204900.17877.3108.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:52443 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751000AbaEOJ0O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 May 2014 05:26:14 -0400
+Message-ID: <53748819.8060705@ti.com>
+Date: Thu, 15 May 2014 12:25:45 +0300
+From: Roger Quadros <rogerq@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-To: unlisted-recipients:; (no To-header on input)
+To: Kishon Vijay Abraham I <kishon@ti.com>, Nishanth Menon <nm@ti.com>
+CC: dt list <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linux-omap <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Tero Kristo <t-kristo@ti.com>,
+	Paul Walmsley <paul@pwsan.com>, Rajendra Nayak <rnayak@ti.com>,
+	"Krishnamoorthy, Balaji T" <balajitk@ti.com>
+Subject: Re: [PATCH 03/17] phy: ti-pipe3: add external clock support for PCIe
+ PHY
+References: <1399383244-14556-1-git-send-email-kishon@ti.com>	<1399383244-14556-4-git-send-email-kishon@ti.com>	<53736CBC.2060702@ti.com>	<5373897C.6080504@ti.com> <CAGo_u6qw1OomEw_ueb3x+xT+qZLAfGv7Se1K=o725aOoD3ankQ@mail.gmail.com> <5374859F.5080902@ti.com>
+In-Reply-To: <5374859F.5080902@ti.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-dma_declare_coherent_memory() takes two addresses for a region of memory: a
-"bus_addr" and a "device_addr".  I think the intent is that "bus_addr" is
-the physical address a *CPU* would use to access the region, and
-"device_addr" is the bus address the *device* would use to address the
-region.
+On 05/15/2014 12:15 PM, Kishon Vijay Abraham I wrote:
+> Hi Nishanth,
+> 
+> On Wednesday 14 May 2014 09:04 PM, Nishanth Menon wrote:
+>> On Wed, May 14, 2014 at 10:19 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>>> Hi Roger,
+>>>
+>>> On Wednesday 14 May 2014 06:46 PM, Roger Quadros wrote:
+>>>> Hi Kishon,
+>>>>
+>>>> On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
+>>>>> APLL used by PCIE phy can either use external clock as input or the clock
+>>>>> from DPLL. Added support for the APLL to use external clock as input here.
+>>>>>
+>>>>> Cc: Rajendra Nayak <rnayak@ti.com>
+>>>>> Cc: Tero Kristo <t-kristo@ti.com>
+>>>>> Cc: Paul Walmsley <paul@pwsan.com>
+>>>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>>>> ---
+>>>>>  Documentation/devicetree/bindings/phy/ti-phy.txt |    4 ++
+>>>>>  drivers/phy/phy-ti-pipe3.c                       |   75 ++++++++++++++--------
+>>>>>  2 files changed, 52 insertions(+), 27 deletions(-)
+>>>>>
+>>>>> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>> index bc9afb5..d50f8ee 100644
+>>>>> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>> @@ -76,6 +76,10 @@ Required properties:
+>>>>>     * "dpll_ref_m2" - external dpll ref clk
+>>>>>     * "phy-div" - divider for apll
+>>>>>     * "div-clk" - apll clock
+>>>>> +   * "apll_mux" - mux for pcie apll
+>>>>> +   * "refclk_ext" - external reference clock for pcie apll
+>>>>> + - ti,ext-clk: To specifiy if PCIE apll should use external clock. Applicable
+>>>>> +   only to PCIE PHY.
+>>>>
+>>>> Instead of specifying both clock sources "dpll_ref_clock", "refclk_ext" and then specifying a 3rd control option "ti,ext-clk" to select one of the 2 sources, why can't the DT just supply one clock source, i.e. the one that is being used in the board instance? The driver should then just configure the clock rate that is needed at that node. Shouldn't the clock framework automatically take care of muxing and parent rates?
+>>>
+>>> Want the dt to have all the clocks used by the controller. "ti,ext-clk" should
+>>> go in the board dt file (suggested by Nishanth).
+>>> The point is at some point later if some one wants to change the clock source,
+>>> it should be a simple enabling "ti,ext-clk" flag instead of finding the clock
+>>> phandle etc..
+>>
+>> Wonder if that is implicit by the presence of  "refclk_ext" in the
+>> clocks provided?
+> 
+> IMO the presence of "refclk_ext" is useless unless the board indicates it
+> provides the clock source.
+> 
+> refclk_ext holds phandle for *fixed-clock*, so irrespective of whether the
+> board provides a clock or not, it can have that handle for configuring in PRCM.
+> However if the board does not provide the clock source, configuring refclk_ext
+> in PRCM is useless.
 
-Rename "bus_addr" to "phys_addr" and change its type to phys_addr_t.
-Most callers already supply a phys_addr_t for this argument.  The others
-supply a 32-bit integer (a constant, unsigned int, or __u32) and need no
-change.
+I think what Nishant meant is that if "refclk_ext" is provided it means that the driver
+should use that over "dpll_ref_clock" so no need of a separate "ti,ext-clk" flag.
 
-Use "unsigned long", not phys_addr_t, to hold PFNs.
-
-No functional change (this could theoretically fix a truncation in a config
-with 32-bit dma_addr_t and 64-bit phys_addr_t, but I don't think there are
-any such cases involving this code).
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
----
- Documentation/DMA-API.txt          |    9 ++++-----
- drivers/base/dma-coherent.c        |   10 +++++-----
- drivers/base/dma-mapping.c         |    6 +++---
- include/asm-generic/dma-coherent.h |   13 +++++--------
- include/linux/dma-mapping.h        |    7 ++++---
- 5 files changed, 21 insertions(+), 24 deletions(-)
-
-diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
-index 1147eba43128..4f1cdc5febd1 100644
---- a/Documentation/DMA-API.txt
-+++ b/Documentation/DMA-API.txt
-@@ -497,19 +497,18 @@ continuing on for size.  Again, you *must* observe the cache line
- boundaries when doing this.
- 
- int
--dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
-+dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
- 			    dma_addr_t device_addr, size_t size, int
- 			    flags)
- 
- Declare region of memory to be handed out by dma_alloc_coherent() when
- it's asked for coherent memory for this device.
- 
--bus_addr is the physical address to which the memory is currently
--assigned in the bus responding region (this will be used by the
--platform to perform the mapping).
-+phys_addr is the cpu physical address to which the memory is currently
-+assigned (this will be ioremapped so the cpu can access the region).
- 
- device_addr is the bus address the device needs to be programmed
--with actually to address this memory (this will be handed out as the
-+with to actually address this memory (this will be handed out as the
- dma_addr_t in dma_alloc_coherent()).
- 
- size is the size of the area (must be multiples of PAGE_SIZE).
-diff --git a/drivers/base/dma-coherent.c b/drivers/base/dma-coherent.c
-index bc256b641027..7d6e84a51424 100644
---- a/drivers/base/dma-coherent.c
-+++ b/drivers/base/dma-coherent.c
-@@ -10,13 +10,13 @@
- struct dma_coherent_mem {
- 	void		*virt_base;
- 	dma_addr_t	device_base;
--	phys_addr_t	pfn_base;
-+	unsigned long	pfn_base;
- 	int		size;
- 	int		flags;
- 	unsigned long	*bitmap;
- };
- 
--int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
-+int dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
- 				dma_addr_t device_addr, size_t size, int flags)
- {
- 	void __iomem *mem_base = NULL;
-@@ -32,7 +32,7 @@ int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
- 
- 	/* FIXME: this routine just ignores DMA_MEMORY_INCLUDES_CHILDREN */
- 
--	mem_base = ioremap(bus_addr, size);
-+	mem_base = ioremap(phys_addr, size);
- 	if (!mem_base)
- 		goto out;
- 
-@@ -45,7 +45,7 @@ int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
- 
- 	dev->dma_mem->virt_base = mem_base;
- 	dev->dma_mem->device_base = device_addr;
--	dev->dma_mem->pfn_base = PFN_DOWN(bus_addr);
-+	dev->dma_mem->pfn_base = PFN_DOWN(phys_addr);
- 	dev->dma_mem->size = pages;
- 	dev->dma_mem->flags = flags;
- 
-@@ -208,7 +208,7 @@ int dma_mmap_from_coherent(struct device *dev, struct vm_area_struct *vma,
- 
- 		*ret = -ENXIO;
- 		if (off < count && user_count <= count - off) {
--			unsigned pfn = mem->pfn_base + start + off;
-+			unsigned long pfn = mem->pfn_base + start + off;
- 			*ret = remap_pfn_range(vma, vma->vm_start, pfn,
- 					       user_count << PAGE_SHIFT,
- 					       vma->vm_page_prot);
-diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-index 0ce39a33b3c2..6cd08e145bfa 100644
---- a/drivers/base/dma-mapping.c
-+++ b/drivers/base/dma-mapping.c
-@@ -175,7 +175,7 @@ static void dmam_coherent_decl_release(struct device *dev, void *res)
- /**
-  * dmam_declare_coherent_memory - Managed dma_declare_coherent_memory()
-  * @dev: Device to declare coherent memory for
-- * @bus_addr: Bus address of coherent memory to be declared
-+ * @phys_addr: Physical address of coherent memory to be declared
-  * @device_addr: Device address of coherent memory to be declared
-  * @size: Size of coherent memory to be declared
-  * @flags: Flags
-@@ -185,7 +185,7 @@ static void dmam_coherent_decl_release(struct device *dev, void *res)
-  * RETURNS:
-  * 0 on success, -errno on failure.
-  */
--int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
-+int dmam_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
- 				 dma_addr_t device_addr, size_t size, int flags)
- {
- 	void *res;
-@@ -195,7 +195,7 @@ int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
- 	if (!res)
- 		return -ENOMEM;
- 
--	rc = dma_declare_coherent_memory(dev, bus_addr, device_addr, size,
-+	rc = dma_declare_coherent_memory(dev, phys_addr, device_addr, size,
- 					 flags);
- 	if (rc == 0)
- 		devres_add(dev, res);
-diff --git a/include/asm-generic/dma-coherent.h b/include/asm-generic/dma-coherent.h
-index 2be8a2dbc868..0297e5875798 100644
---- a/include/asm-generic/dma-coherent.h
-+++ b/include/asm-generic/dma-coherent.h
-@@ -16,16 +16,13 @@ int dma_mmap_from_coherent(struct device *dev, struct vm_area_struct *vma,
-  * Standard interface
-  */
- #define ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
--extern int
--dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
--			    dma_addr_t device_addr, size_t size, int flags);
-+int dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
-+				dma_addr_t device_addr, size_t size, int flags);
- 
--extern void
--dma_release_declared_memory(struct device *dev);
-+void dma_release_declared_memory(struct device *dev);
- 
--extern void *
--dma_mark_declared_memory_occupied(struct device *dev,
--				  dma_addr_t device_addr, size_t size);
-+void *dma_mark_declared_memory_occupied(struct device *dev,
-+					dma_addr_t device_addr, size_t size);
- #else
- #define dma_alloc_from_coherent(dev, size, handle, ret) (0)
- #define dma_release_from_coherent(dev, order, vaddr) (0)
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index b9aa2b97aab5..0c3eab1e39ac 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -192,7 +192,7 @@ static inline int dma_get_cache_alignment(void)
- 
- #ifndef ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
- static inline int
--dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
-+dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
- 			    dma_addr_t device_addr, size_t size, int flags)
- {
- 	return 0;
-@@ -223,13 +223,14 @@ extern void *dmam_alloc_noncoherent(struct device *dev, size_t size,
- extern void dmam_free_noncoherent(struct device *dev, size_t size, void *vaddr,
- 				  dma_addr_t dma_handle);
- #ifdef ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
--extern int dmam_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
-+extern int dmam_declare_coherent_memory(struct device *dev,
-+					phys_addr_t phys_addr,
- 					dma_addr_t device_addr, size_t size,
- 					int flags);
- extern void dmam_release_declared_memory(struct device *dev);
- #else /* ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY */
- static inline int dmam_declare_coherent_memory(struct device *dev,
--				dma_addr_t bus_addr, dma_addr_t device_addr,
-+				phys_addr_t phys_addr, dma_addr_t device_addr,
- 				size_t size, gfp_t gfp)
- {
- 	return 0;
-
+cheers,
+-roger
