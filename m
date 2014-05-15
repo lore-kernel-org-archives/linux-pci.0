@@ -1,247 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13452 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932343AbaEIP3U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 May 2014 11:29:20 -0400
-Subject: [PATCH v2 08/15] iommu/amd: Use pci_find_dma_isolation_root() for
- IOMMU groups
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>,
-	acooks@gmail.com, linux-kernel@vger.kernel.org
-Date: Fri, 09 May 2014 09:29:13 -0600
-Message-ID: <20140509152913.8321.70925.stgit@bling.home>
-In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
-References: <20140509151735.8321.22017.stgit@bling.home>
+Received: from mail-ve0-f170.google.com ([209.85.128.170]:47256 "EHLO
+	mail-ve0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455AbaEONQR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 09:16:17 -0400
+Received: by mail-ve0-f170.google.com with SMTP id db11so1252801veb.15
+        for <linux-pci@vger.kernel.org>; Thu, 15 May 2014 06:16:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20140515123948.GD27594@arm.com>
+References: <1399478839-3564-1-git-send-email-will.deacon@arm.com>
+	<1399478839-3564-2-git-send-email-will.deacon@arm.com>
+	<CAL_JsqLUMQTd65xBRMx3XNa-7RcY93CcLdL=Z6wXsLXRpNcHGg@mail.gmail.com>
+	<20140515123948.GD27594@arm.com>
+Date: Thu, 15 May 2014 08:16:16 -0500
+Message-ID: <CAL_JsqLbWL136=dGZZfzPbPdF5HjhktYwLaVfbkOoo7Tr+g9Pg@mail.gmail.com>
+Subject: Re: [PATCH v6 1/3] ARM: kconfig: allow PCI support to be selected
+ with ARCH_MULTIPLATFORM
+From: Rob Herring <robherring2@gmail.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	srikanth t <sthokal@xilinx.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The IVRS tables provides aliases, but not to the extent now provided
-by PCI core with DMA alias support and pci_find_dma_isolation_root().
-The expectation is that the kernel and IVRS will produce the same
-result for topology based aliases while the kernel will also include
-device specific DMA quirks.  We therefore drop the AMD-specific IOMMU
-group discovery in favor of the common code.  This also allows us to
-drop tracking of the IOMMU group on the alias dev_data structure.
+On Thu, May 15, 2014 at 7:39 AM, Will Deacon <will.deacon@arm.com> wrote:
+> On Wed, May 14, 2014 at 03:01:35PM +0100, Rob Herring wrote:
+>> On Wed, May 7, 2014 at 11:07 AM, Will Deacon <will.deacon@arm.com> wrote:
+>> > When targetting ARCH_MULTIPLATFORM, we may include support for SoCs with
+>> > PCI-capable devices (e.g. mach-virt with virtio-pci).
+>> >
+>> > This patch allows PCI support to be selected for these SoCs by selecting
+>> > CONFIG_MIGHT_HAVE_PCI when CONFIG_ARCH_MULTIPLATFORM=y.
+>>
+>> I generally think we should select all options for multi-platform that
+>> only serve to hide other options like this.
+>>
+>> You should remove the MIGHT_HAVE_PCI selections from all the
+>> multi-platform enabled platforms as well.
+>
+> Something like the diff below?
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/amd_iommu.c       |  158 ++-------------------------------------
- drivers/iommu/amd_iommu_types.h |    1 
- 2 files changed, 10 insertions(+), 149 deletions(-)
+Yes, but that raises another question as to what do we do with
+PCI_DOMAINS? Probably should be a PCI host driver select, or given how
+little code it controls it could just be removed. Anyway, that's a
+problem for another day (or patch).
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index c949520..3d58de4 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -46,7 +46,6 @@
- #include "amd_iommu_proto.h"
- #include "amd_iommu_types.h"
- #include "irq_remapping.h"
--#include "pci.h"
- 
- #define CMD_SET_TYPE(cmd, t) ((cmd)->data[1] |= ((t) << 28))
- 
-@@ -133,9 +132,6 @@ static void free_dev_data(struct iommu_dev_data *dev_data)
- 	list_del(&dev_data->dev_data_list);
- 	spin_unlock_irqrestore(&dev_data_list_lock, flags);
- 
--	if (dev_data->group)
--		iommu_group_put(dev_data->group);
--
- 	kfree(dev_data);
- }
- 
-@@ -264,107 +260,10 @@ static bool check_device(struct device *dev)
- 	return true;
- }
- 
--static struct pci_bus *find_hosted_bus(struct pci_bus *bus)
--{
--	while (!bus->self) {
--		if (!pci_is_root_bus(bus))
--			bus = bus->parent;
--		else
--			return ERR_PTR(-ENODEV);
--	}
--
--	return bus;
--}
--
--#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
--
--static struct pci_dev *get_isolation_root(struct pci_dev *pdev)
--{
--	struct pci_dev *dma_pdev = pdev;
--
--	/* Account for quirked devices */
--	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
--
--	/*
--	 * If it's a multifunction device that does not support our
--	 * required ACS flags, add to the same group as lowest numbered
--	 * function that also does not suport the required ACS flags.
--	 */
--	if (dma_pdev->multifunction &&
--	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
--		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
--
--		for (i = 0; i < 8; i++) {
--			struct pci_dev *tmp;
--
--			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
--			if (!tmp)
--				continue;
--
--			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
--				swap_pci_ref(&dma_pdev, tmp);
--				break;
--			}
--			pci_dev_put(tmp);
--		}
--	}
--
--	/*
--	 * Devices on the root bus go through the iommu.  If that's not us,
--	 * find the next upstream device and test ACS up to the root bus.
--	 * Finding the next device may require skipping virtual buses.
--	 */
--	while (!pci_is_root_bus(dma_pdev->bus)) {
--		struct pci_bus *bus = find_hosted_bus(dma_pdev->bus);
--		if (IS_ERR(bus))
--			break;
--
--		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
--			break;
--
--		swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
--	}
--
--	return dma_pdev;
--}
--
--static int use_pdev_iommu_group(struct pci_dev *pdev, struct device *dev)
--{
--	struct iommu_group *group = iommu_group_get(&pdev->dev);
--	int ret;
--
--	if (!group) {
--		group = iommu_group_alloc();
--		if (IS_ERR(group))
--			return PTR_ERR(group);
--
--		WARN_ON(&pdev->dev != dev);
--	}
--
--	ret = iommu_group_add_device(group, dev);
--	iommu_group_put(group);
--	return ret;
--}
--
--static int use_dev_data_iommu_group(struct iommu_dev_data *dev_data,
--				    struct device *dev)
--{
--	if (!dev_data->group) {
--		struct iommu_group *group = iommu_group_alloc();
--		if (IS_ERR(group))
--			return PTR_ERR(group);
--
--		dev_data->group = group;
--	}
--
--	return iommu_group_add_device(dev_data->group, dev);
--}
--
- static int init_iommu_group(struct device *dev)
- {
--	struct iommu_dev_data *dev_data;
- 	struct iommu_group *group;
--	struct pci_dev *dma_pdev;
-+	struct pci_dev *pdev;
- 	int ret;
- 
- 	group = iommu_group_get(dev);
-@@ -373,58 +272,21 @@ static int init_iommu_group(struct device *dev)
- 		return 0;
- 	}
- 
--	dev_data = find_dev_data(get_device_id(dev));
--	if (!dev_data)
--		return -ENOMEM;
--
--	if (dev_data->alias_data) {
--		u16 alias;
--		struct pci_bus *bus;
-+	pdev = pci_find_dma_isolation_root(to_pci_dev(dev));
- 
--		if (dev_data->alias_data->group)
--			goto use_group;
--
--		/*
--		 * If the alias device exists, it's effectively just a first
--		 * level quirk for finding the DMA source.
--		 */
--		alias = amd_iommu_alias_table[dev_data->devid];
--		dma_pdev = pci_get_bus_and_slot(alias >> 8, alias & 0xff);
--		if (dma_pdev) {
--			dma_pdev = get_isolation_root(dma_pdev);
--			goto use_pdev;
--		}
--
--		/*
--		 * If the alias is virtual, try to find a parent device
--		 * and test whether the IOMMU group is actualy rooted above
--		 * the alias.  Be careful to also test the parent device if
--		 * we think the alias is the root of the group.
--		 */
--		bus = pci_find_bus(0, alias >> 8);
--		if (!bus)
--			goto use_group;
-+	group = iommu_group_get(&pdev->dev);
- 
--		bus = find_hosted_bus(bus);
--		if (IS_ERR(bus) || !bus->self)
--			goto use_group;
-+	if (!group) {
-+		group = iommu_group_alloc();
-+		if (IS_ERR(group))
-+			return PTR_ERR(group);
-+	}
- 
--		dma_pdev = get_isolation_root(pci_dev_get(bus->self));
--		if (dma_pdev != bus->self || (dma_pdev->multifunction &&
--		    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)))
--			goto use_pdev;
-+	ret = iommu_group_add_device(group, dev);
- 
--		pci_dev_put(dma_pdev);
--		goto use_group;
--	}
-+	iommu_group_put(group);
- 
--	dma_pdev = get_isolation_root(pci_dev_get(to_pci_dev(dev)));
--use_pdev:
--	ret = use_pdev_iommu_group(dma_pdev, dev);
--	pci_dev_put(dma_pdev);
- 	return ret;
--use_group:
--	return use_dev_data_iommu_group(dev_data->alias_data, dev);
- }
- 
- static int iommu_init_device(struct device *dev)
-diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
-index f1a5abf..7277a20 100644
---- a/drivers/iommu/amd_iommu_types.h
-+++ b/drivers/iommu/amd_iommu_types.h
-@@ -432,7 +432,6 @@ struct iommu_dev_data {
- 	struct iommu_dev_data *alias_data;/* The alias dev_data */
- 	struct protection_domain *domain; /* Domain the device is bound to */
- 	atomic_t bind;			  /* Domain attach reference count */
--	struct iommu_group *group;	  /* IOMMU group for virtual aliases */
- 	u16 devid;			  /* PCI Device ID */
- 	bool iommu_v2;			  /* Device can make use of IOMMUv2 */
- 	bool passthrough;		  /* Default for device is pt_domain */
+So with the below part added:
 
+Acked-by: Rob Herring <robh@kernel.org>
+
+>
+> Will
+>
+> --->8
+>
+> diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
+> index 49c914cd9c7a..764c129b5eee 100644
+> --- a/arch/arm/mach-bcm/Kconfig
+> +++ b/arch/arm/mach-bcm/Kconfig
+> @@ -55,7 +55,6 @@ config ARCH_BCM_5301X
+>         select GENERIC_CLOCKEVENTS
+>         select ARM_GLOBAL_TIMER
+>         select CLKSRC_ARM_GLOBAL_TIMER_SCHED_CLOCK
+> -       select MIGHT_HAVE_PCI
+>         help
+>           Support for Broadcom BCM470X and BCM5301X SoCs with ARM CPU cores.
+>
+> diff --git a/arch/arm/mach-cns3xxx/Kconfig b/arch/arm/mach-cns3xxx/Kconfig
+> index dce8decd5d46..66838f42037f 100644
+> --- a/arch/arm/mach-cns3xxx/Kconfig
+> +++ b/arch/arm/mach-cns3xxx/Kconfig
+> @@ -1,7 +1,6 @@
+>  config ARCH_CNS3XXX
+>         bool "Cavium Networks CNS3XXX family" if ARCH_MULTI_V6
+>         select ARM_GIC
+> -       select MIGHT_HAVE_PCI
+>         select PCI_DOMAINS if PCI
+>         help
+>           Support for Cavium Networks CNS3XXX platform.
+> diff --git a/arch/arm/mach-imx/Kconfig b/arch/arm/mach-imx/Kconfig
+> index 5740296dc429..50bb546b893a 100644
+> --- a/arch/arm/mach-imx/Kconfig
+> +++ b/arch/arm/mach-imx/Kconfig
+> @@ -796,7 +796,6 @@ config SOC_IMX6Q
+>         select ARM_ERRATA_764369 if SMP
+>         select HAVE_ARM_SCU if SMP
+>         select HAVE_ARM_TWD if SMP
+> -       select MIGHT_HAVE_PCI
+>         select PCI_DOMAINS if PCI
+>         select PINCTRL_IMX6Q
+>         select SOC_IMX6
+> diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
+> index 3f73eecbcfb0..120301ebd324 100644
+> --- a/arch/arm/mach-mvebu/Kconfig
+> +++ b/arch/arm/mach-mvebu/Kconfig
+> @@ -9,7 +9,6 @@ config ARCH_MVEBU
+>         select MVEBU_MBUS
+>         select ZONE_DMA if ARM_LPAE
+>         select ARCH_REQUIRE_GPIOLIB
+> -       select MIGHT_HAVE_PCI
+>         select PCI_QUIRKS if PCI
+>         select OF_ADDRESS_PCI
+>
+> diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
+> index 0f92ba8e7884..905003898913 100644
+> --- a/arch/arm/mach-shmobile/Kconfig
+> +++ b/arch/arm/mach-shmobile/Kconfig
+> @@ -8,7 +8,6 @@ config ARCH_SHMOBILE_MULTI
+>         select HAVE_ARM_SCU if SMP
+>         select HAVE_ARM_TWD if SMP
+>         select ARM_GIC
+> -       select MIGHT_HAVE_PCI
+>         select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
+>         select NO_IOPORT_MAP
+>         select PINCTRL
+> diff --git a/arch/arm/mach-tegra/Kconfig b/arch/arm/mach-tegra/Kconfig
+> index 55b305d51669..e16999e5b735 100644
+> --- a/arch/arm/mach-tegra/Kconfig
+> +++ b/arch/arm/mach-tegra/Kconfig
+> @@ -7,7 +7,6 @@ config ARCH_TEGRA
+>         select CLKSRC_MMIO
+>         select HAVE_ARM_SCU if SMP
+>         select HAVE_ARM_TWD if SMP
+> -       select MIGHT_HAVE_PCI
+>         select PINCTRL
+>         select ARCH_HAS_RESET_CONTROLLER
+>         select RESET_CONTROLLER
