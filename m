@@ -1,75 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31413 "EHLO mx1.redhat.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:51975 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753072AbaEVXHr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 19:07:47 -0400
-Subject: [PATCH v4 03/16] PCI: quirk pci_for_each_dma_alias()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
-Date: Thu, 22 May 2014 17:07:43 -0600
-Message-ID: <20140522230742.2856.25341.stgit@bling.home>
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-References: <20140522230230.2856.40017.stgit@bling.home>
+	id S1751052AbaEOMmt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 May 2014 08:42:49 -0400
+Message-ID: <5374B625.2020800@ti.com>
+Date: Thu, 15 May 2014 18:12:13 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Nishanth Menon <nm@ti.com>, Mike Turquette <mturquette@linaro.org>,
+	Tero Kristo <t-kristo@ti.com>
+CC: Roger Quadros <rogerq@ti.com>,
+	dt list <devicetree@vger.kernel.org>,
+	Paul Walmsley <paul@pwsan.com>,
+	"Krishnamoorthy, Balaji T" <balajitk@ti.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Rajendra Nayak <rnayak@ti.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	linux-omap <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 03/17] phy: ti-pipe3: add external clock support for PCIe
+ PHY
+References: <1399383244-14556-1-git-send-email-kishon@ti.com>	<1399383244-14556-4-git-send-email-kishon@ti.com>	<53736CBC.2060702@ti.com>	<5373897C.6080504@ti.com>	<CAGo_u6qw1OomEw_ueb3x+xT+qZLAfGv7Se1K=o725aOoD3ankQ@mail.gmail.com>	<5374859F.5080902@ti.com>	<53748819.8060705@ti.com>	<CAGo_u6qbbdAbdvrB3AFXSH1qD5MaBkJbi6oJJvvTWW4xfbmd_Q@mail.gmail.com>	<5374AC0A.7070709@ti.com> <CAGo_u6r8XtGHOvsfJKQMZ2ghFRz8x8_UhzyKE9jnwO6mJ2HYpQ@mail.gmail.com> <5374B09F.2080803@ti.com> <5374B409.3000607@ti.com>
+In-Reply-To: <5374B409.3000607@ti.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices are broken and use a requester ID other than their
-physical devfn.  Add a byte, using an existing gap in the pci_dev
-structure, to store an alternate "alias" devfn.  A bit in the
-dev_flags tells us when this is valid.  We then add the alias as
-one more step in the pci_for_each_dma_alias() iterator.
+Hi,
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/search.c |   11 +++++++++++
- include/linux/pci.h  |    3 +++
- 2 files changed, 14 insertions(+)
+On Thursday 15 May 2014 06:03 PM, Nishanth Menon wrote:
+> On 05/15/2014 07:18 AM, Kishon Vijay Abraham I wrote:
+>> Hi,
+>>
+>> On Thursday 15 May 2014 05:42 PM, Nishanth Menon wrote:
+>>> On Thu, May 15, 2014 at 6:59 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>>>> Hi Nishant,
+>>>>
+>>>> On Thursday 15 May 2014 05:16 PM, Nishanth Menon wrote:
+>>>>> On Thu, May 15, 2014 at 4:25 AM, Roger Quadros <rogerq@ti.com> wrote:
+>>>>>> On 05/15/2014 12:15 PM, Kishon Vijay Abraham I wrote:
+>>>>>>> Hi Nishanth,
+>>>>>>>
+>>>>>>> On Wednesday 14 May 2014 09:04 PM, Nishanth Menon wrote:
+>>>>>>>> On Wed, May 14, 2014 at 10:19 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>>>>>>>>> Hi Roger,
+>>>>>>>>>
+>>>>>>>>> On Wednesday 14 May 2014 06:46 PM, Roger Quadros wrote:
+>>>>>>>>>> Hi Kishon,
+>>>>>>>>>>
+>>>>>>>>>> On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
+>>>>>>>>>>> APLL used by PCIE phy can either use external clock as input or the clock
+>>>>>>>>>>> from DPLL. Added support for the APLL to use external clock as input here.
+>>>>>>>>>>>
+>>>>>>>>>>> Cc: Rajendra Nayak <rnayak@ti.com>
+>>>>>>>>>>> Cc: Tero Kristo <t-kristo@ti.com>
+>>>>>>>>>>> Cc: Paul Walmsley <paul@pwsan.com>
+>>>>>>>>>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>>>>>>>>>> ---
+>>>>>>>>>>>  Documentation/devicetree/bindings/phy/ti-phy.txt |    4 ++
+>>>>>>>>>>>  drivers/phy/phy-ti-pipe3.c                       |   75 ++++++++++++++--------
+>>>>>>>>>>>  2 files changed, 52 insertions(+), 27 deletions(-)
+>>>>>>>>>>>
+>>>>>>>>>>> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>>>>>>>> index bc9afb5..d50f8ee 100644
+>>>>>>>>>>> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>>>>>>>> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>>>>>>>>> @@ -76,6 +76,10 @@ Required properties:
+>>>>>>>>>>>     * "dpll_ref_m2" - external dpll ref clk
+>>>>>>>>>>>     * "phy-div" - divider for apll
+>>>>>>>>>>>     * "div-clk" - apll clock
+>>>>>>>>>>> +   * "apll_mux" - mux for pcie apll
+>>>>>>>>>>> +   * "refclk_ext" - external reference clock for pcie apll
+>>>>>>>>>>> + - ti,ext-clk: To specifiy if PCIE apll should use external clock. Applicable
+>>>>>>>>>>> +   only to PCIE PHY.
+>>>>>>>>>>
+>>>>>>>>>> Instead of specifying both clock sources "dpll_ref_clock", "refclk_ext" and then specifying a 3rd control option "ti,ext-clk" to select one of the 2 sources, why can't the DT just supply one clock source, i.e. the one that is being used in the board instance? The driver should then just configure the clock rate that is needed at that node. Shouldn't the clock framework automatically take care of muxing and parent rates?
+>>>>>>>>>
+>>>>>>>>> Want the dt to have all the clocks used by the controller. "ti,ext-clk" should
+>>>>>>>>> go in the board dt file (suggested by Nishanth).
+>>>>>>>>> The point is at some point later if some one wants to change the clock source,
+>>>>>>>>> it should be a simple enabling "ti,ext-clk" flag instead of finding the clock
+>>>>>>>>> phandle etc..
+>>>>>>>>
+>>>>>>>> Wonder if that is implicit by the presence of  "refclk_ext" in the
+>>>>>>>> clocks provided?
+>>>>>>>
+>>>>>>> IMO the presence of "refclk_ext" is useless unless the board indicates it
+>>>>>>> provides the clock source.
+>>>>>>>
+>>>>>>> refclk_ext holds phandle for *fixed-clock*, so irrespective of whether the
+>>>>>>> board provides a clock or not, it can have that handle for configuring in PRCM.
+>>>>>>> However if the board does not provide the clock source, configuring refclk_ext
+>>>>>>> in PRCM is useless.
+>>>>>>
+>>>>>> I think what Nishant meant is that if "refclk_ext" is provided it means that the driver
+>>>>>> should use that over "dpll_ref_clock" so no need of a separate "ti,ext-clk" flag.
+>>>>>
+>>>>> yes, thank you for clarifying - it does indeed redundant to have
+>>>>> "ti,ext-clk". and apologies on being a little obscure in the comment.
+>>>>
+>>>> Irrespective of whether external reference clock is used or not, all DRA7
+>>>> (apll) has an input for external reference clock (and also a PRCM register for
+>>>> programming it) and it has to be specified in dt no?
+>>>
+>>> Why is that a binding for ti-phy? that is a problem for the APLL clock
+>>> driver (selecting it's own source). PHY properties should describe
+>>> itself -> let the bindings of the APLL describe itself. please dont
+>>> mix the two up.
+>>
+>> The apll clock node is like this
+>>
+>> apll_pcie_in_clk_mux: apll_pcie_in_clk_mux@4ae06118 {
+>>         compatible = "mux-clock";
+>>         clocks = <&dpll_pcie_ref_m2ldo_ck>, <&pciesref_acs_clk_ck>;
+>>         #clock-cells = <0>;
+>>         reg = <0x4a00821c 0x4>;
+>>         bit-mask = <0x80>;
+>> };
+>>
+>> The external reference clock is denoted by *pciesref_acs_clk_ck*.
+>>
+>> refclk_ext holds the phandle to *pciesref_acs_clk_ck* and is used in
+>> "clk_set_parent" to set the parent of apll mux.
+> 
+> So, How about this: if refclk_ext is not defined, dont do setparent,
+> if it is defined, do setparent.
+> in short:
+> Optional Properties:
+> * "refclk_ext" - external reference clock for pcie apll - if defined,
+> used as the parent to "apll_mux"
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 5601cdb..2c19f3f 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -37,6 +37,17 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 	if (ret)
- 		return ret;
- 
-+	/*
-+	 * If the device is broken and uses an alias requester ID for
-+	 * DMA, iterate over that too.
-+	 */
-+	if (unlikely(pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN)) {
-+		ret = fn(pdev, PCI_DEVID(pdev->bus->number,
-+					 pdev->dma_alias_devfn), data);
-+		if (ret)
-+			return ret;
-+	}
-+
- 	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
- 		struct pci_dev *tmp;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 545903d..9d4035c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -171,6 +171,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) (1 << 2),
- 	/* Flag for quirk use to store if quirk-specific ACS is enabled */
- 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
-+	/* Flag to indicate the device uses dma_alias_devfn */
-+	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
- };
- 
- enum pci_irq_reroute_variant {
-@@ -268,6 +270,7 @@ struct pci_dev {
- 	u8		rom_base_reg;	/* which config register controls the ROM */
- 	u8		pin;		/* which interrupt pin this device uses */
- 	u16		pcie_flags_reg;	/* cached PCIe Capabilities Register */
-+	u8		dma_alias_devfn;/* devfn of DMA alias, if any */
- 
- 	struct pci_driver *driver;	/* which driver has allocated this device */
- 	u64		dma_mask;	/* Mask of the bits of bus address this
+Ok, will remove "ti,ext-clk".
 
+Thanks
+Kishon
+> 
+> That said, my problem in general with this approach(which many folks
+> have taken of describing parent of clock X in hardware block binding
+> for Y) is the following:
+> 
+> The binding now has dependency on clock tree hierarchy. What if
+> towmorrow, we have a tree where refclk_ext parent of muxZ parent of
+> apll_mux? the binding breaks down. Lets not forget that we consider DT
+> as an ABI - we dont want to change the binding in the future.
+> 
+> I had always preferred describing parent-child relationship of clocks
+> by the approach Tero posted: https://patchwork.kernel.org/patch/3871551/
+> 
+> Maybe Mike and Tero could help here?
+> 
