@@ -1,160 +1,80 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CA+sq2CejJFg--0rS1arr4Sactp-ssENB8Y3g4b61JPGPBCms=A@mail.gmail.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
-	<CA+sq2Ccok5wtKjCZUkBhhj3WsiqFAoMgHK7LY210aBtMku+8SA@mail.gmail.com>
-	<20140516132451.GK967@e106497-lin.cambridge.arm.com>
-	<CA+sq2CejJFg--0rS1arr4Sactp-ssENB8Y3g4b61JPGPBCms=A@mail.gmail.com>
-Date: Wed, 21 May 2014 16:45:29 +0530
-Message-ID: <CA+sq2Ccp0_4hgbbWa27bkYcqiXY6Ckr8eckWnHwANvhWNo97fg@mail.gmail.com>
-Subject: Re: [PATCH v7 0/3] Add support for PCI in AArch64
-From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-To: Sunil Kovvuri <sunil.kovvuri@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"kdb@lurndal.org" <kdb@lurndal.org>,
-	"yu.zhao@intel.com" <yu.zhao@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [RFC Patch Part1 V1 10/30] x86, ioapic: kill unused global variable timer_through_8259
+Date: Fri, 16 May 2014 16:05:30 +0800
+Message-Id: <1400227550-5935-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Liviu,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    4 ----
+ arch/x86/kernel/apic/io_apic.c |    3 ---
+ 2 files changed, 7 deletions(-)
 
-Sorry for the trouble.
-I got why 'res->parent' is not set in my case.
-Basically my SR-IOV device has fixed resources, so resources will not
-be allocated/assigned and hence parent resource is not set.
-I will move the resource claiming to host controller driver as a fixup
-so that parent resource hierarchy is set.
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 8f472daea221..0c448ac14abf 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -130,9 +130,6 @@ extern int noioapicquirk;
+ /* -1 if "noapic" boot option passed */
+ extern int noioapicreroute;
+ 
+-/* 1 if the timer IRQ uses the '8259A Virtual Wire' mode */
+-extern int timer_through_8259;
+-
+ /*
+  * If we use the IO-APIC for IRQ routing, disable automatic
+  * assignment of PCI IRQ's.
+@@ -214,7 +211,6 @@ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
+ 
+ #define io_apic_assign_pci_irqs 0
+ #define setup_ioapic_ids_from_mpc x86_init_noop
+-static const int timer_through_8259 = 0;
+ static inline void ioapic_insert_resources(void) { }
+ #define gsi_top (NR_IRQS_LEGACY)
+ static inline int mp_find_ioapic(u32 gsi) { return 0; }
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 1041b227726a..a338d9601841 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2664,8 +2664,6 @@ static int __init disable_timer_pin_setup(char *arg)
+ }
+ early_param("disable_timer_pin_1", disable_timer_pin_setup);
+ 
+-int timer_through_8259 __initdata;
+-
+ /*
+  * This code may look a bit paranoid, but it's supposed to cooperate with
+  * a wide range of boards and BIOS bugs.  Fortunately only the timer IRQ
+@@ -2770,7 +2768,6 @@ static inline void __init check_timer(void)
+ 		legacy_pic->unmask(0);
+ 		if (timer_irq_works()) {
+ 			apic_printk(APIC_QUIET, KERN_INFO "....... works.\n");
+-			timer_through_8259 = 1;
+ 			goto out;
+ 		}
+ 		/*
+-- 
+1.7.10.4
 
-Thanks for the support.
-
-Regards,
-Sunil.
-
-
-On Fri, May 16, 2014 at 11:12 PM, Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
-> Hi Liviu,
->
-> Issue may not be only with SR-IOV resources.
->
-> I am not an expert with Linux PCI core. But i am trying to understand
-> how even for a non SR-IOV capable device's resource, gets a parent
-> associated with it.
->
-> When a PCI device driver calls pci_enable_device() which inturn calls
-> 'arch/arm64/kernel/pci.c' pcibios_enable_device() which uses Linux PCI core
-> API 'pci_enable_resources'. This API checks 'res->parent' for all
-> valid resources
-> before enabling them, otherwise it fails.
->                 if (!r->parent) {
->                         dev_err(&dev->dev, "device not available "
->                                 "(can't reserve %pR)\n", r);
->                         return -EINVAL;
->                 }
->
-> Can you please let me know where this hierarchy is being set for
-> 'pcibios_enable_resources' to work.
->
-> I could only find request_resource() API which sets the parent and
-> pci_claim_resource() uses this.
->
-> Thanks,
-> Sunil.
->
-> On Fri, May 16, 2014 at 6:54 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> Hi Sunil,
->>
->> On Fri, May 16, 2014 at 11:33:04AM +0100, Sunil Kovvuri wrote:
->>> Hi Liviu,
->>>
->>> I am using your ARM64 PCIe patches to write a PCIe host controller
->>> driver for our SOC. I am facing an issue with SR-IOV capable device.
->>>
->>> Consider an PCI Express endpoint connected to a PCI Express
->>> Root Port.  The PCI Express endpoint provides PCI-SIG SR-IOV
->>> capabilities with a single physical function and a large number
->>> of virtual functions.  The Root Port contains a pci-pci bridge in
->>> between it and the SR-IOV device.
->>>
->>> When the SR-IOV capable device's driver tries to enable sriov
->>> (pci_enable_sriov()) it fails to create/add PCI device for each
->>> virtual function reporting  "not enough MMIO resources for SR-IOV".
->>>
->>> In sriov_enable() (drivers/pci/iov.c)
->>>
->>>  296        for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->>>  297                 bars |= (1 << (i + PCI_IOV_RESOURCES));
->>>  298                 res = dev->resource + PCI_IOV_RESOURCES + i;
->>>  299                 if (res->parent)
->>>  300                         nres++;
->>>  301         }
->>>  302         if (nres != iov->nres) {
->>>  303                 dev_err(&dev->dev, "not enough MMIO resources for
->>>  SR-IOV\n");
->>>  304                 return -ENOMEM;
->>>  305         }
->>>
->>> Here its checking if physical function's IOV resource has a parent or not.
->>> Which is pci-pci bridge in this case. Otherwise it doesn't consider
->>> that resource.
->>>
->>> Added below api to your patch.
->>> This will try to claim a resource while creating a PCI device which
->>> inturn sets 'res->parent'.
->>>
->>> Let me know if this is okay.
->>>
->>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->>> index 9f29c9a..fbfb48f 100644
->>> --- a/arch/arm64/kernel/pci.c
->>> +++ b/arch/arm64/kernel/pci.c
->>> @@ -125,6 +125,21 @@ resource_size_t pcibios_align_resource(void
->>> *data, const struct resource *res,
->>>         return res->start;
->>>  }
->>>
->>> +int pcibios_add_device(struct pci_dev *pdev)
->>> +{
->>> +        unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
->>> +        struct resource *res;
->>> +
->>> +        for (i = 0; i < PCI_NUM_RESOURCES; i++) {
->>> +                res = &pdev->resource[i];
->>> +                if (res->parent || !(res->flags & type_mask))
->>> +                        continue;
->>> +                pci_claim_resource(pdev, i);
->>> +        }
->>> +
->>>
->>
->> I would like not to have to add your patch in this file as I am trying to
->> remove it entirely. I don't have an SR-IOV capable device in my setup so
->> I am not able to debug your problem, but could you have a go and try to
->> figure out why the SR-IOV resources do not get a parent associated with
->> when they get created?
->>
->> Many thanks,
->> Liviu
->>
->>
->> --
->> ====================
->> | I would like to |
->> | fix the world,  |
->> | but they're not |
->> | giving me the   |
->>  \ source code!  /
->>   ---------------
->>     ¯\_(ツ)_/¯
->>
