@@ -1,428 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f52.google.com ([209.85.216.52]:64972 "EHLO
-	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755232AbaEaO2w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:28:52 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v4 05/15] thunderbolt: Initialize root switch and ports
-Date: Sat, 31 May 2014 16:27:50 +0200
-Message-Id: <1401546480-2071-6-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+Received: from www.linutronix.de ([62.245.132.108]:34963 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932582AbaEPP2a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 May 2014 11:28:30 -0400
+Date: Fri, 16 May 2014 17:28:06 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	sfi-devel@simplefirmware.org
+Subject: Re: [RFC Patch Part1 V1 00/30] use irqdomain to dynamically allocate
+ IRQ for IOAPIC pin
+In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.02.1405161601060.4039@ionos.tec.linutronix.de>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the structures tb_switch and tb_port as well as code to
-initialize the root switch.
+Jiang,
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/Makefile |   2 +-
- drivers/thunderbolt/switch.c | 186 +++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.c     |   8 ++
- drivers/thunderbolt/tb.h     | 138 ++++++++++++++++++++++++++++++++
- 4 files changed, 333 insertions(+), 1 deletion(-)
- create mode 100644 drivers/thunderbolt/switch.c
+On Fri, 16 May 2014, Jiang Liu wrote:
 
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 1f996bb..4ac18d9 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
- obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
--thunderbolt-objs := nhi.o ctl.o tb.o
-+thunderbolt-objs := nhi.o ctl.o tb.o switch.o
+> On x86 platforms, IRQ number are statically allocated to IOAPIC pins at boot.
+> There are two issues with this design. First it causes trouble to IOAPIC
+> hotplug because we need to allocate a block of IRQ numbers for each IOAPIC.
+> Second it may waste IRQ nubmers even if some IOAPIC pins are not used because
+> IRQ numbers are statically assigned.
+> 
+> This patchset tries to enable dynamic IRQ number allocation for IOAPIC
+> by adopting the irqdomain framework, it solves the two issues mentioned
+> above. It also simplifies the IOAPIC driver by consolidating ways to
+> program IOAPIC pins with the irqdomain map interface.
+> 
+> We will enhance the IOAPIC driver core to support ACPI based IOAPIC hotplug
+> once the IOAPIC driver has been converted to irqdomain.
+
+Thanks for tackling this!
  
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-new file mode 100644
-index 0000000..e89121f
---- /dev/null
-+++ b/drivers/thunderbolt/switch.c
-@@ -0,0 +1,186 @@
-+/*
-+ * Thunderbolt Cactus Ridge driver - switch/port utility functions
-+ *
-+ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-+ */
-+
-+#include <linux/delay.h>
-+
-+#include "tb.h"
-+
-+/* port utility functions */
-+
-+static const char *tb_port_type(struct tb_regs_port_header *port)
-+{
-+	switch (port->type >> 16) {
-+	case 0:
-+		switch ((u8) port->type) {
-+		case 0:
-+			return "Inactive";
-+		case 1:
-+			return "Port";
-+		case 2:
-+			return "NHI";
-+		default:
-+			return "unknown";
-+		}
-+	case 0x2:
-+		return "Ethernet";
-+	case 0x8:
-+		return "SATA";
-+	case 0xe:
-+		return "DP/HDMI";
-+	case 0x10:
-+		return "PCIe";
-+	case 0x20:
-+		return "USB";
-+	default:
-+		return "unknown";
-+	}
-+}
-+
-+static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
-+{
-+	tb_info(tb,
-+		" Port %d: %x:%x (Revision: %d, TB Version: %d, Type: %s (%#x))\n",
-+		port->port_number, port->vendor_id, port->device_id,
-+		port->revision, port->thunderbolt_version, tb_port_type(port),
-+		port->type);
-+	tb_info(tb, "  Max hop id (in/out): %d/%d\n",
-+		port->max_in_hop_id, port->max_out_hop_id);
-+	tb_info(tb, "  Max counters: %d\n", port->max_counters);
-+	tb_info(tb, "  NFC Credits: %#x\n", port->nfc_credits);
-+}
-+
-+/**
-+ * tb_init_port() - initialize a port
-+ *
-+ * This is a helper method for tb_switch_alloc. Does not check or initialize
-+ * any downstream switches.
-+ *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+static int tb_init_port(struct tb_switch *sw, u8 port_nr)
-+{
-+	int res;
-+	struct tb_port *port = &sw->ports[port_nr];
-+	port->sw = sw;
-+	port->port = port_nr;
-+	port->remote = NULL;
-+	res = tb_port_read(port, &port->config, TB_CFG_PORT, 0, 8);
-+	if (res)
-+		return res;
-+
-+	tb_dump_port(sw->tb, &port->config);
-+
-+	/* TODO: Read dual link port, DP port and more from EEPROM. */
-+	return 0;
-+
-+}
-+
-+/* switch utility functions */
-+
-+static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
-+{
-+	tb_info(tb,
-+		" Switch: %x:%x (Revision: %d, TB Version: %d)\n",
-+		sw->vendor_id, sw->device_id, sw->revision,
-+		sw->thunderbolt_version);
-+	tb_info(tb, "  Max Port Number: %d\n", sw->max_port_number);
-+	tb_info(tb, "  Config:\n");
-+	tb_info(tb,
-+		"   Upstream Port Number: %d Depth: %d Route String: %#llx Enabled: %d, PlugEventsDelay: %dms\n",
-+		sw->upstream_port_number, sw->depth,
-+		(((u64) sw->route_hi) << 32) | sw->route_lo,
-+		sw->enabled, sw->plug_events_delay);
-+	tb_info(tb,
-+		"   unknown1: %#x unknown4: %#x\n",
-+		sw->__unknown1, sw->__unknown4);
-+}
-+
-+/**
-+ * tb_switch_free() - free a tb_switch and all downstream switches
-+ */
-+void tb_switch_free(struct tb_switch *sw)
-+{
-+	int i;
-+	/* port 0 is the switch itself and never has a remote */
-+	for (i = 1; i <= sw->config.max_port_number; i++) {
-+		if (tb_is_upstream_port(&sw->ports[i]))
-+			continue;
-+		if (sw->ports[i].remote)
-+			tb_switch_free(sw->ports[i].remote->sw);
-+		sw->ports[i].remote = NULL;
-+	}
-+
-+	kfree(sw->ports);
-+	kfree(sw);
-+}
-+
-+/**
-+ * tb_switch_alloc() - allocate and initialize a switch
-+ *
-+ * Return: Returns a NULL on failure.
-+ */
-+struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
-+{
-+	int i;
-+	struct tb_switch *sw;
-+	int upstream_port = tb_cfg_get_upstream_port(tb->ctl, route);
-+	if (upstream_port < 0)
-+		return NULL;
-+
-+	sw = kzalloc(sizeof(*sw), GFP_KERNEL);
-+	if (!sw)
-+		return NULL;
-+
-+	sw->tb = tb;
-+	if (tb_cfg_read(tb->ctl, &sw->config, route, 0, 2, 0, 5))
-+		goto err;
-+	tb_info(tb,
-+		"initializing Switch at %#llx (depth: %d, up port: %d)\n",
-+		route, tb_route_length(route), upstream_port);
-+	tb_info(tb, "old switch config:\n");
-+	tb_dump_switch(tb, &sw->config);
-+
-+	/* configure switch */
-+	sw->config.upstream_port_number = upstream_port;
-+	sw->config.depth = tb_route_length(route);
-+	sw->config.route_lo = route;
-+	sw->config.route_hi = route >> 32;
-+	sw->config.enabled = 1;
-+	/* from here on we may use the tb_sw_* functions & macros */
-+
-+	if (sw->config.vendor_id != 0x8086)
-+		tb_sw_warn(sw, "unknown switch vendor id %#x\n",
-+			   sw->config.vendor_id);
-+
-+	if (sw->config.device_id != 0x1547 && sw->config.device_id != 0x1549)
-+		tb_sw_warn(sw, "unsupported switch device id %#x\n",
-+			   sw->config.device_id);
-+
-+	/* upload configuration */
-+	if (tb_sw_write(sw, 1 + (u32 *) &sw->config, TB_CFG_SWITCH, 1, 3))
-+		goto err;
-+
-+	/* initialize ports */
-+	sw->ports = kcalloc(sw->config.max_port_number + 1, sizeof(*sw->ports),
-+	GFP_KERNEL);
-+	if (!sw->ports)
-+		goto err;
-+
-+	for (i = 0; i <= sw->config.max_port_number; i++) {
-+		if (tb_init_port(sw, i))
-+			goto err;
-+		/* TODO: check if port is disabled (EEPROM) */
-+	}
-+
-+	/* TODO: I2C, IECS, EEPROM, link controller */
-+
-+	return sw;
-+err:
-+	kfree(sw->ports);
-+	kfree(sw);
-+	return NULL;
-+}
-+
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index 164dea0..f1b6100 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -71,6 +71,10 @@ void thunderbolt_shutdown_and_free(struct tb *tb)
- {
- 	mutex_lock(&tb->lock);
+> This patchset applies to v3.15-rc4-260-g38583f095c5a and has been tested
+
+That's a bit unfortunate, as there are conflicting changes in the tip
+tree irq/core branch. Can you please rebase on top of that.
+
+> TODO list:
+> 1) check whether it affects Xen or not
+> 
+> Patch 1-17 are trivial code improvements, bugfixes and preparation.
+
+Can you please move the bugfixes before the other changes, so we can
+pick them up independently from the outcome?
  
-+	if (tb->root_switch)
-+		tb_switch_free(tb->root_switch);
-+	tb->root_switch = NULL;
-+
- 	if (tb->ctl) {
- 		tb_ctl_stop(tb->ctl);
- 		tb_ctl_free(tb->ctl);
-@@ -126,6 +130,10 @@ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
- 	 */
- 	tb_ctl_start(tb->ctl);
- 
-+	tb->root_switch = tb_switch_alloc(tb, 0);
-+	if (!tb->root_switch)
-+		goto err_locked;
-+
- 	/* Allow tb_handle_hotplug to progress events */
- 	tb->hotplug_active = true;
- 	mutex_unlock(&tb->lock);
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 6055dfd..389dbb4 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -7,9 +7,31 @@
- #ifndef TB_H_
- #define TB_H_
- 
-+#include <linux/pci.h>
-+
-+#include "tb_regs.h"
- #include "ctl.h"
- 
- /**
-+ * struct tb_switch - a thunderbolt switch
-+ */
-+struct tb_switch {
-+	struct tb_regs_switch_header config;
-+	struct tb_port *ports;
-+	struct tb *tb;
-+};
-+
-+/**
-+ * struct tb_port - a thunderbolt port, part of a tb_switch
-+ */
-+struct tb_port {
-+	struct tb_regs_port_header config;
-+	struct tb_switch *sw;
-+	struct tb_port *remote; /* remote port, NULL if not connected */
-+	u8 port; /* port number on switch */
-+};
-+
-+/**
-  * struct tb - main thunderbolt bus structure
-  */
- struct tb {
-@@ -20,6 +42,7 @@ struct tb {
- 	struct tb_nhi *nhi;
- 	struct tb_ctl *ctl;
- 	struct workqueue_struct *wq; /* ordered workqueue for plug events */
-+	struct tb_switch *root_switch;
- 	bool hotplug_active; /*
- 			      * tb_handle_hotplug will stop progressing plug
- 			      * events and exit if this is not set (it needs to
-@@ -29,7 +52,122 @@ struct tb {
- 
- };
- 
-+/* helper functions & macros */
-+
-+/**
-+ * tb_upstream_port() - return the upstream port of a switch
-+ *
-+ * Every switch has an upstream port (for the root switch it is the NHI).
-+ *
-+ * During switch alloc/init tb_upstream_port()->remote may be NULL, even for
-+ * non root switches (on the NHI port remote is always NULL).
-+ *
-+ * Return: Returns the upstream port of the switch.
-+ */
-+static inline struct tb_port *tb_upstream_port(struct tb_switch *sw)
-+{
-+	return &sw->ports[sw->config.upstream_port_number];
-+}
-+
-+static inline u64 tb_route(struct tb_switch *sw)
-+{
-+	return ((u64) sw->config.route_hi) << 32 | sw->config.route_lo;
-+}
-+
-+static inline int tb_sw_read(struct tb_switch *sw, void *buffer,
-+			     enum tb_cfg_space space, u32 offset, u32 length)
-+{
-+	return tb_cfg_read(sw->tb->ctl,
-+			   buffer,
-+			   tb_route(sw),
-+			   0,
-+			   space,
-+			   offset,
-+			   length);
-+}
-+
-+static inline int tb_sw_write(struct tb_switch *sw, void *buffer,
-+			      enum tb_cfg_space space, u32 offset, u32 length)
-+{
-+	return tb_cfg_write(sw->tb->ctl,
-+			    buffer,
-+			    tb_route(sw),
-+			    0,
-+			    space,
-+			    offset,
-+			    length);
-+}
-+
-+static inline int tb_port_read(struct tb_port *port, void *buffer,
-+			       enum tb_cfg_space space, u32 offset, u32 length)
-+{
-+	return tb_cfg_read(port->sw->tb->ctl,
-+			   buffer,
-+			   tb_route(port->sw),
-+			   port->port,
-+			   space,
-+			   offset,
-+			   length);
-+}
-+
-+static inline int tb_port_write(struct tb_port *port, void *buffer,
-+				enum tb_cfg_space space, u32 offset, u32 length)
-+{
-+	return tb_cfg_write(port->sw->tb->ctl,
-+			    buffer,
-+			    tb_route(port->sw),
-+			    port->port,
-+			    space,
-+			    offset,
-+			    length);
-+}
-+
-+#define tb_err(tb, fmt, arg...) dev_err(&(tb)->nhi->pdev->dev, fmt, ## arg)
-+#define tb_WARN(tb, fmt, arg...) dev_WARN(&(tb)->nhi->pdev->dev, fmt, ## arg)
-+#define tb_warn(tb, fmt, arg...) dev_warn(&(tb)->nhi->pdev->dev, fmt, ## arg)
-+#define tb_info(tb, fmt, arg...) dev_info(&(tb)->nhi->pdev->dev, fmt, ## arg)
-+
-+
-+#define __TB_SW_PRINT(level, sw, fmt, arg...)           \
-+	do {                                            \
-+		struct tb_switch *__sw = (sw);          \
-+		level(__sw->tb, "%llx: " fmt,           \
-+		      tb_route(__sw), ## arg);          \
-+	} while (0)
-+#define tb_sw_WARN(sw, fmt, arg...) __TB_SW_PRINT(tb_WARN, sw, fmt, ##arg)
-+#define tb_sw_warn(sw, fmt, arg...) __TB_SW_PRINT(tb_warn, sw, fmt, ##arg)
-+#define tb_sw_info(sw, fmt, arg...) __TB_SW_PRINT(tb_info, sw, fmt, ##arg)
-+
-+
-+#define __TB_PORT_PRINT(level, _port, fmt, arg...)                      \
-+	do {                                                            \
-+		struct tb_port *__port = (_port);                       \
-+		level(__port->sw->tb, "%llx:%x: " fmt,                  \
-+		      tb_route(__port->sw), __port->port, ## arg);      \
-+	} while (0)
-+#define tb_port_WARN(port, fmt, arg...) \
-+	__TB_PORT_PRINT(tb_WARN, port, fmt, ##arg)
-+#define tb_port_warn(port, fmt, arg...) \
-+	__TB_PORT_PRINT(tb_warn, port, fmt, ##arg)
-+#define tb_port_info(port, fmt, arg...) \
-+	__TB_PORT_PRINT(tb_info, port, fmt, ##arg)
-+
-+
- struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi);
- void thunderbolt_shutdown_and_free(struct tb *tb);
- 
-+struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
-+void tb_switch_free(struct tb_switch *sw);
-+
-+
-+static inline int tb_route_length(u64 route)
-+{
-+	return (fls64(route) + TB_ROUTE_SHIFT - 1) / TB_ROUTE_SHIFT;
-+}
-+
-+static inline bool tb_is_upstream_port(struct tb_port *port)
-+{
-+	return port == tb_upstream_port(port->sw);
-+}
-+
- #endif
--- 
-1.9.3
+> Patch 18-24 enable basic irqdomain support and IRQ number dynamic
+> allocation.
+> 
+> Patch 25-29 consoldate the way to program IOAPIC pins by using
+> irqdomain map() interface.
+> 
+> Patch 30 cleans up unused interfaces and functions in IOAPIC driver.
+> 
+> Tests and comments are warmly welcomed!
+
+I like the general approach, but we have now a mixture of legacy irq
+handling and irq domains. We really want to cleanup the legacy PIC no
+ioapic case as well. That will cleanup the code further.
+
+The other thing we discussed here: https://lkml.org/lkml/2014/5/7/901
+in several places of the thread is to move the vector allocation into
+a irqdomain with a generic matrix allocator as well. We have other use
+cases for this as well. It would be nice if you could look at that as
+well.
+
+Thanks,
+
+	tglx
+
+
+
 
