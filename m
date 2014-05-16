@@ -1,87 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:58208 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753925AbaEMMsM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 May 2014 08:48:12 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	'Santosh Shilimkar' <santosh.shilimkar@ti.com>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-	rogerq@ti.com, balajitk@ti.com,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Marek Vasut' <marex@denx.de>
-Subject: Re: [PATCH 06/17] pci: host: pcie-designware: Use *base-mask* for configuring the iATU
-Date: Tue, 13 May 2014 14:47:25 +0200
-Message-ID: <10531498.kYV5eO1J1m@wuerfel>
-In-Reply-To: <537210BF.2050100@ti.com>
-References: <1399383244-14556-1-git-send-email-kishon@ti.com> <6882241.amuhzvbd8n@wuerfel> <537210BF.2050100@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiri Kosina <trivial@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	sfi-devel@simplefirmware.org, linux-doc@vger.kernel.org
+Subject: [RFC Patch Part1 V1 01/30] genirq, trivial: improve documentation to match current implementation
+Date: Fri, 16 May 2014 16:05:21 +0800
+Message-Id: <1400227550-5935-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 13 May 2014 18:01:59 Kishon Vijay Abraham I wrote:
-> On Thursday 08 May 2014 02:48 PM, Arnd Bergmann wrote:
-> > On Thursday 08 May 2014 18:05:11 Jingoo Han wrote:
-> >> On Tuesday, May 06, 2014 10:59 PM, Arnd Bergmann wrote:
-> >>> On Tuesday 06 May 2014 19:03:52 Kishon Vijay Abraham I wrote:
-> >>>> In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
-> >>>> address. So whenever the cpu issues a read/write request, the 4 most
-> >>>> significant bits are used by L3 to determine the target controller.
-> >>>> For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
-> >>>> the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
-> >>>> the outbound translation window the *base* should be programmed as 0x000_0000.
-> >>>> Whenever we try to write to say 0x2000_0000, it will be translated to whatever
-> >>>> we have programmed in the translation window with base as 0x000_0000.
-> >>>>
-> >>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >>>> Cc: Marek Vasut <marex@denx.de>
-> >>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> >>>> Acked-by: Jingoo Han <jg1.han@samsung.com>
-> >>>> Acked-by: Mohit Kumar <mohit.kumar@st.com>
-> >>>
-> >>> Sorry, but NAK.
-> >>>
-> >>> We have a standard 'dma-ranges' property to handle this, so use it.
-> >>>
-> >>> See the x-gene PCIe driver patches for an example. Please also talk
-> >>> to Santosh about it, as he is implementing generic support for
-> >>> parsing dma-ranges in platform devices at the moment.
-> >>
-> >> Hi Arnd,
-> >>
-> >> Do you mean the following patch?
-> >> http://www.spinics.net/lists/kernel/msg1737725.html
-> >>
-> > 
-> > That is the patch Santosh did for platform devices, which is related but not
-> > what I meant here. For the PCI inbound window setup, please have a look
-> > at https://lkml.org/lkml/2014/3/19/607
-> 
-> Do you think it can be used for *outbound* window setup too? The problem is the
-> *ranges* property defines both the pci address and cpu address which should
-> have been enough to program the ob translation window, but the hw is designed
-> so that the controller sees only the 28 bits. (The most significant 4 bits is
-> for the l3 to address the controller).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ Documentation/IRQ-domain.txt |    3 +--
+ kernel/irq/internals.h       |    2 +-
+ kernel/irq/irqdomain.c       |    6 +++---
+ 3 files changed, 5 insertions(+), 6 deletions(-)
 
-I'm not following what the problem is. You should always be able to describe
-in the inbound window (that is from the CPU perspective) using dma-ranges
-and the outbound window using ranges.
+diff --git a/Documentation/IRQ-domain.txt b/Documentation/IRQ-domain.txt
+index 03df71aeb38c..8a8b82c9ca53 100644
+--- a/Documentation/IRQ-domain.txt
++++ b/Documentation/IRQ-domain.txt
+@@ -41,8 +41,7 @@ An interrupt controller driver creates and registers an irq_domain by
+ calling one of the irq_domain_add_*() functions (each mapping method
+ has a different allocator function, more on that later).  The function
+ will return a pointer to the irq_domain on success.  The caller must
+-provide the allocator function with an irq_domain_ops structure with
+-the .map callback populated as a minimum.
++provide the allocator function with an irq_domain_ops structure.
+ 
+ In most cases, the irq_domain will begin empty without any mappings
+ between hwirq and IRQ numbers.  Mappings are added to the irq_domain
+diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
+index ddf1ffeb79f1..9552a0c123c8 100644
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -33,7 +33,7 @@ enum {
+ };
+ 
+ /*
+- * Bit masks for desc->state
++ * Bit masks for desc->core_internal_state__do_not_mess_with_it
+  *
+  * IRQS_AUTODETECT		- autodetection in progress
+  * IRQS_SPURIOUS_DISABLED	- was disabled due to spurious interrupt
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index f14033700c25..eb5e10e32e05 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -27,14 +27,14 @@ static struct irq_domain *irq_default_domain;
+  * __irq_domain_add() - Allocate a new irq_domain data structure
+  * @of_node: optional device-tree node of the interrupt controller
+  * @size: Size of linear map; 0 for radix mapping only
++ * @hwirq_max: Maximum number of interrupts supported by controller
+  * @direct_max: Maximum value of direct maps; Use ~0 for no limit; 0 for no
+  *              direct mapping
+  * @ops: map/unmap domain callbacks
+  * @host_data: Controller private data pointer
+  *
+- * Allocates and initialize and irq_domain structure.  Caller is expected to
+- * register allocated irq_domain with irq_domain_register().  Returns pointer
+- * to IRQ domain, or NULL on failure.
++ * Allocates and initialize and irq_domain structure.
++ * Returns pointer to IRQ domain, or NULL on failure.
+  */
+ struct irq_domain *__irq_domain_add(struct device_node *of_node, int size,
+ 				    irq_hw_number_t hwirq_max, int direct_max,
+-- 
+1.7.10.4
 
-If you have a case where the outbound translation is a 256MB (i.e. 28bit)
-section of the CPU address space, that could be represented as
-
-	ranges = <0x82000000 0 0  0xb0000000  0 0x10000000>;
-
-or 
-
-	ranges = <0x82000000 0 0xb0000000  0xb0000000  0 0x10000000>;
-
-depending on whether you want the BARs to be programmed using a low
-address 0x0-0x0fffffff or an address matching the window
-0xb0000000-0xbfffffff.
-
-	Arnd
