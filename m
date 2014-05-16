@@ -1,65 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13068 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753380AbaEDKko (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 4 May 2014 06:40:44 -0400
-Message-ID: <1399200049.4302.3.camel@localhost.localdomain>
-Subject: Re: [PATCH] PCI/shpchp: fix a bus speed issue on hotplug
-From: Marcel Apfelbaum <marcel.a@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Matthew Wilcox <matthew@wil.cx>,
-	"Michael S. Tsirkin" <mst@redhat.com>
-Date: Sun, 04 May 2014 13:40:49 +0300
-In-Reply-To: <CAErSpo6SOc-OPQDyjweAataRXwjPYgXM3+P1nhK7zQ2vRjRE2g@mail.gmail.com>
-References: <1398954948-24219-1-git-send-email-marcel.a@redhat.com>
-	 <CAErSpo4KLq7m8PXzAEhv20e29Wk=sAtageDf3CgziDLno0JUCw@mail.gmail.com>
-	 <1398968025.18595.22.camel@localhost.localdomain>
-	 <1398970625.18595.24.camel@localhost.localdomain>
-	 <CAErSpo6SOc-OPQDyjweAataRXwjPYgXM3+P1nhK7zQ2vRjRE2g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mailout3.samsung.com ([203.254.224.33]:31663 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750927AbaEPAsh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 20:48:37 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Murali Karicheri' <m-karicheri2@ti.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	'Santosh Shilimkar' <santosh.shilimkar@ti.com>,
+	'Russell King' <linux@arm.linux.org.uk>,
+	'Grant Likely' <grant.likely@linaro.org>,
+	'Rob Herring' <robh+dt@kernel.org>,
+	'Mohit Kumar' <mohit.kumar@st.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Jingoo Han' <jg1.han@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Marek Vasut' <marex@denx.de>
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+In-reply-to: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+Subject: Re: [PATCH v1 0/5] Add Keystone PCIe controller driver
+Date: Fri, 16 May 2014 09:48:34 +0900
+Message-id: <004f01cf70a0$90d7e520$b287af60$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-05-01 at 14:00 -0600, Bjorn Helgaas wrote:
-> On Thu, May 1, 2014 at 12:57 PM, Marcel Apfelbaum
-> <marcel.apfelbaum@gmail.com> wrote:
-> > On Thu, 2014-05-01 at 21:13 +0300, Marcel Apfelbaum wrote:
-> >> On Thu, 2014-05-01 at 12:02 -0600, Bjorn Helgaas wrote:
-> >> > On Thu, May 1, 2014 at 8:35 AM, Marcel Apfelbaum <marcel.a@redhat.com> wrote:
-> >> > > When a board is added, the shpchp driver checks if there
-> >> > > is a mismatch between the bridge's adapter and the bus speed.
-> >> > > If there is, it sets the subordinate speed (if there is no device on it).
-> >> > >
-> >> > > However, it takes the reference of the board speed from the primary bus
-> >> > > and not from the subordinate. If the primary bus is PCI and not PCIX/PCIe,
-> >> > > its speed is not updated and remains 0xff. As a result hotplug fails
-> >> > > with error: "Speed of bus ff and adapter 0 mismatch".
-> >> >
-> >> > It'd be cool to have a bugzilla for this with lspci and dmesg output.
-> >> > I'll also have to check the other hotplug drivers for similar issues,
-> >> > unless you've already done that.
-> >> I'll open a BZ with the details, sure.
-> > Done: https://bugzilla.kernel.org/show_bug.cgi?id=75251
-> > If you need further details, please let me know.
+On Friday, May 16, 2014 1:01 AM, Murali Karicheri wrote:
 > 
-> Thanks.  Would you mind attaching the "lspci -vv" output?  That should
-> show more details, including the information used to compute the bus
-> speed.
+> This patch adds a PCIe controller driver for Keystone SoCs. This
+> is based on the origin RFC patch that I had sent earlier. I have
+> incorporated following comments:-
 > 
-> Also, you checked the "regression" box.  Can you confirm that and
-> identify a known-working kernel?  If we know which kernels are broken,
-> we can potentially mark the fix to be backported to them.
-I checked 2.6.24-26-generic that comes with Ubuntu 8.04 and it works OK.
-So we have a working version.
+>  - Add a interrupt controller node for Legacy irq chip and use
+>    interrupt map/map-mask property to map legacy IRQs A/B/C/D
+>  - Add a Phy driver to replace the original serdes driver
+>  - Move common applicaiton register handling code to a separate
+>    file to allow re-use across other platforms that use older
+>    DW PCIe h/w
+>  - PCI quirk for maximum read request size. Check and override only
+>    if the maximum is higher than what controller can handle.
+>  - Converted to a module platform driver.
+> 
+> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+> CC: Russell King <linux@arm.linux.org.uk>
+> CC: Grant Likely <grant.likely@linaro.org>
+> CC: Rob Herring <robh+dt@kernel.org>
+> CC: Mohit Kumar <mohit.kumar@st.com>
+> CC: Jingoo Han <jg1.han@samsung.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> 
 
-I hope it helps,
-Marcel
+Your patches modify 'pcie-designware.c', and affects other PCIe
+drivers using designware PCIe Core IP. Please add the following
+people to CC list. They are also related to the designware PCIe.
+
+  Pratyush Anand <pratyush.anand@st.com>
+  Richard Zhu <r65037@freescale.com>
+  Kishon Vijay Abraham I <kishon@ti.com>
+  Marek Vasut <marex@denx.de>
+
+Best regards,
+Jingoo Han
 
 > 
-> Bjorn
-
-
+> Murali Karicheri (5):
+>   ARM: keystone: add pcie related options
+>   pci: designware: enhancements to support keystone pcie
+>   phy: pci serdes phy driver for keystone
+>   pci: dw: add common functions to support old hw based pci driver
+>   pci: keystone: add pcie driver based on designware core driver
+> 
+>  .../devicetree/bindings/pci/pcie-keystone.txt      |   68 ++++
+>  arch/arm/mach-keystone/Kconfig                     |    2 +
+>  drivers/pci/host/Kconfig                           |   12 +
+>  drivers/pci/host/Makefile                          |    2 +
+>  drivers/pci/host/pci-dw-old-msi.c                  |  150 ++++++++
+>  drivers/pci/host/pci-dw-old.c                      |  371 ++++++++++++++++++
+>  drivers/pci/host/pci-dw-old.h                      |   30 ++
+>  drivers/pci/host/pci-keystone.c                    |  400 ++++++++++++++++++++
+>  drivers/pci/host/pcie-designware.c                 |  101 +++--
+>  drivers/pci/host/pcie-designware.h                 |   42 +-
+>  drivers/pci/quirks.c                               |   13 +
+>  drivers/phy/Kconfig                                |    6 +
+>  drivers/phy/Makefile                               |    1 +
+>  drivers/phy/phy-keystone.c                         |  230 +++++++++++
+>  14 files changed, 1388 insertions(+), 40 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/pcie-keystone.txt
+>  create mode 100644 drivers/pci/host/pci-dw-old-msi.c
+>  create mode 100644 drivers/pci/host/pci-dw-old.c
+>  create mode 100644 drivers/pci/host/pci-dw-old.h
+>  create mode 100644 drivers/pci/host/pci-keystone.c
+>  create mode 100644 drivers/phy/phy-keystone.c
+> 
+> --
+> 1.7.9.5
 
