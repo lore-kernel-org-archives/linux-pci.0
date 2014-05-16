@@ -1,93 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36483 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756983AbaEIP3x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 May 2014 11:29:53 -0400
-Subject: [PATCH v2 14/15] PCI: Remove pci_find_upstream_pcie_bridge()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
-Date: Fri, 09 May 2014 09:29:49 -0600
-Message-ID: <20140509152949.8321.55082.stgit@bling.home>
-In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
-References: <20140509151735.8321.22017.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
+	linux-pm@vger.kernel.org
+Subject: [RFC Patch Part1 V1 21/30] x86, ACPI, irq: provide basic irqdomain support
+Date: Fri, 16 May 2014 16:05:41 +0800
+Message-Id: <1400227550-5935-22-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It's broken and has no users.
+Enhance ACPI driver to provide basic irqdomain support for IOAPIC.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/search.c |   35 -----------------------------------
- include/linux/pci.h  |   11 -----------
- 2 files changed, 46 deletions(-)
+ arch/x86/kernel/acpi/boot.c |   20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index aea2443..473c6e8 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -244,41 +244,6 @@ struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev)
- 	return pdev;
- }
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index f70f4f318316..1ee639e74d50 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -31,6 +31,7 @@
+ #include <linux/module.h>
+ #include <linux/dmi.h>
+ #include <linux/irq.h>
++#include <linux/irqdomain.h>
+ #include <linux/slab.h>
+ #include <linux/bootmem.h>
+ #include <linux/ioport.h>
+@@ -331,6 +332,23 @@ static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 			   int polarity);
  
--/*
-- * find the upstream PCIe-to-PCI bridge of a PCI device
-- * if the device is PCIE, return NULL
-- * if the device isn't connected to a PCIe bridge (that is its parent is a
-- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
-- * parent
-- */
--struct pci_dev *
--pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
--{
--	struct pci_dev *tmp = NULL;
--
--	if (pci_is_pcie(pdev))
--		return NULL;
--	while (1) {
--		if (pci_is_root_bus(pdev->bus))
--			break;
--		pdev = pdev->bus->self;
--		/* a p2p bridge */
--		if (!pci_is_pcie(pdev)) {
--			tmp = pdev;
--			continue;
--		}
--		/* PCI device should connect to a PCIe bridge */
--		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
--			/* Busted hardware? */
--			WARN_ON_ONCE(1);
--			return NULL;
--		}
--		return pdev;
--	}
--
--	return tmp;
--}
--
- static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
++static struct irq_domain_ops acpi_irqdomain_ops;
++
++static struct irq_domain *acpi_create_irqdomain(int idx, void *arg)
++{
++	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
++
++	/*
++	 * Statically allocate IRQ number for legacy IRQs and all pins on the
++	 * first IOAPIC.
++	 */
++	if (gsi_cfg->gsi_base < NR_IRQS_LEGACY &&
++	    ioapic_dynirq_base < gsi_cfg->gsi_end)
++		ioapic_dynirq_base = gsi_cfg->gsi_end + 1;
++
++	return mp_irqdomain_create(idx, NULL, &acpi_irqdomain_ops);
++}
++
+ static int __init
+ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
  {
- 	struct pci_bus *child;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5096031..64184d5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1804,15 +1804,4 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 				     u16 alias, void *data), void *data);
- struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev);
+@@ -345,7 +363,7 @@ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
  
--/**
-- * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
-- * @pdev: the PCI device
-- *
-- * if the device is PCIE, return NULL
-- * if the device isn't connected to a PCIe bridge (that is its parent is a
-- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
-- * parent
-- */
--struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
--
- #endif /* LINUX_PCI_H */
+ 	mp_register_ioapic(ioapic->id,
+ 			   ioapic->address, ioapic->global_irq_base,
+-			   NULL, NULL);
++			   acpi_create_irqdomain, NULL);
+ 
+ 	return 0;
+ }
+-- 
+1.7.10.4
 
