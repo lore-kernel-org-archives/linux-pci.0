@@ -1,35 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:40270 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751329AbaEaRvq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 13:51:46 -0400
-Date: Sat, 31 May 2014 10:51:40 -0700
-From: Greg KH <greg@kroah.com>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 00/15] Thunderbolt driver for Apple MacBooks
-Message-ID: <20140531175140.GA28745@kroah.com>
-References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140516132451.GK967@e106497-lin.cambridge.arm.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+	<CA+sq2Ccok5wtKjCZUkBhhj3WsiqFAoMgHK7LY210aBtMku+8SA@mail.gmail.com>
+	<20140516132451.GK967@e106497-lin.cambridge.arm.com>
+Date: Fri, 16 May 2014 23:12:36 +0530
+Message-ID: <CA+sq2CejJFg--0rS1arr4Sactp-ssENB8Y3g4b61JPGPBCms=A@mail.gmail.com>
+Subject: Re: [PATCH v7 0/3] Add support for PCI in AArch64
+From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+To: Sunil Kovvuri <sunil.kovvuri@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"kdb@lurndal.org" <kdb@lurndal.org>,
+	"yu.zhao@intel.com" <yu.zhao@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 31, 2014 at 04:27:45PM +0200, Andreas Noever wrote:
-> Hi
-> 
-> This is version 4 of my Thunderbolt driver for Apple hardware (see [1] for v3).
-> 
-> Changes since v3:
->  - Fix typos and style problems caught by Bjorn.
->  - Changed the #ifdef CONFIG_ACPI block to cover the whole pci quirk.
+Hi Liviu,
 
-Looks good, want me to take this through my tree?  Matthew, any
-objections?
+Issue may not be only with SR-IOV resources.
 
-thanks,
+I am not an expert with Linux PCI core. But i am trying to understand
+how even for a non SR-IOV capable device's resource, gets a parent
+associated with it.
 
-greg k-h
+When a PCI device driver calls pci_enable_device() which inturn calls
+'arch/arm64/kernel/pci.c' pcibios_enable_device() which uses Linux PCI core
+API 'pci_enable_resources'. This API checks 'res->parent' for all
+valid resources
+before enabling them, otherwise it fails.
+                if (!r->parent) {
+                        dev_err(&dev->dev, "device not available "
+                                "(can't reserve %pR)\n", r);
+                        return -EINVAL;
+                }
+
+Can you please let me know where this hierarchy is being set for
+'pcibios_enable_resources' to work.
+
+I could only find request_resource() API which sets the parent and
+pci_claim_resource() uses this.
+
+Thanks,
+Sunil.
+
+On Fri, May 16, 2014 at 6:54 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> Hi Sunil,
+>
+> On Fri, May 16, 2014 at 11:33:04AM +0100, Sunil Kovvuri wrote:
+>> Hi Liviu,
+>>
+>> I am using your ARM64 PCIe patches to write a PCIe host controller
+>> driver for our SOC. I am facing an issue with SR-IOV capable device.
+>>
+>> Consider an PCI Express endpoint connected to a PCI Express
+>> Root Port.  The PCI Express endpoint provides PCI-SIG SR-IOV
+>> capabilities with a single physical function and a large number
+>> of virtual functions.  The Root Port contains a pci-pci bridge in
+>> between it and the SR-IOV device.
+>>
+>> When the SR-IOV capable device's driver tries to enable sriov
+>> (pci_enable_sriov()) it fails to create/add PCI device for each
+>> virtual function reporting  "not enough MMIO resources for SR-IOV".
+>>
+>> In sriov_enable() (drivers/pci/iov.c)
+>>
+>>  296        for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>>  297                 bars |= (1 << (i + PCI_IOV_RESOURCES));
+>>  298                 res = dev->resource + PCI_IOV_RESOURCES + i;
+>>  299                 if (res->parent)
+>>  300                         nres++;
+>>  301         }
+>>  302         if (nres != iov->nres) {
+>>  303                 dev_err(&dev->dev, "not enough MMIO resources for
+>>  SR-IOV\n");
+>>  304                 return -ENOMEM;
+>>  305         }
+>>
+>> Here its checking if physical function's IOV resource has a parent or not.
+>> Which is pci-pci bridge in this case. Otherwise it doesn't consider
+>> that resource.
+>>
+>> Added below api to your patch.
+>> This will try to claim a resource while creating a PCI device which
+>> inturn sets 'res->parent'.
+>>
+>> Let me know if this is okay.
+>>
+>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+>> index 9f29c9a..fbfb48f 100644
+>> --- a/arch/arm64/kernel/pci.c
+>> +++ b/arch/arm64/kernel/pci.c
+>> @@ -125,6 +125,21 @@ resource_size_t pcibios_align_resource(void
+>> *data, const struct resource *res,
+>>         return res->start;
+>>  }
+>>
+>> +int pcibios_add_device(struct pci_dev *pdev)
+>> +{
+>> +        unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+>> +        struct resource *res;
+>> +
+>> +        for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+>> +                res = &pdev->resource[i];
+>> +                if (res->parent || !(res->flags & type_mask))
+>> +                        continue;
+>> +                pci_claim_resource(pdev, i);
+>> +        }
+>> +
+>>
+>
+> I would like not to have to add your patch in this file as I am trying to
+> remove it entirely. I don't have an SR-IOV capable device in my setup so
+> I am not able to debug your problem, but could you have a go and try to
+> figure out why the SR-IOV resources do not get a parent associated with
+> when they get created?
+>
+> Many thanks,
+> Liviu
+>
+>
+> --
+> ====================
+> | I would like to |
+> | fix the world,  |
+> | but they're not |
+> | giving me the   |
+>  \ source code!  /
+>   ---------------
+>     ¯\_(ツ)_/¯
+>
