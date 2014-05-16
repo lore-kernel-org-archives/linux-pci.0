@@ -1,65 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:58363 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751079AbaEWTX0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 May 2014 15:23:26 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 3/5] phy: pci serdes phy driver for keystone
-Date: Fri, 23 May 2014 21:23:11 +0200
-Message-ID: <9828919.7tZBgbvqj4@wuerfel>
-In-Reply-To: <537F81D8.2080005@ti.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <9550746.D1ri3H0uvi@wuerfel> <537F81D8.2080005@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga11.intel.com ([192.55.52.93]:27198 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756702AbaEPIHg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 May 2014 04:07:36 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org
+Subject: [RFC Patch Part1 V1 27/30] x86, irq, mpparse: use common irqdomain map interface to program IOAPIC pins
+Date: Fri, 16 May 2014 16:05:47 +0800
+Message-Id: <1400227550-5935-28-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 23 May 2014 13:14:00 Murali Karicheri wrote:
-> On 5/15/2014 12:14 PM, Arnd Bergmann wrote:
-> > On Thursday 15 May 2014 12:01:30 Murali Karicheri wrote:
-> >> +static struct serdes_config ks_100mhz_pcie_5gbps_serdes[] = {
-> >> +       {0x0000, 0x00000800, 0x0000ff00},
-> >> +       {0x0060, 0x00041c5c, 0x00ffffff},
-> >> +       {0x0064, 0x0343c700, 0xffffff00},
-> >> +       {0x006c, 0x00000012, 0x000000ff},
-> >> +       {0x0068, 0x00070000, 0x00ff0000},
-> >> +       {0x0078, 0x0000c000, 0x0000ff00},
-> > It looks like the PHY is generic, but the configuration above is
-> > PCI specific. If this is true, you should have #phy-cells=<1>
-> > and document the possible modes, adding a lookup table here to
-> > pick the configuration based on the argument. It's fine to just
-> > implement pcie-5ghz initially, but the binding should list all
-> > the modes that the PHY can support.
-> 
-> The PCIE name needs to be dropped and as you correctly guessed, this SERDES
-> is generic.
+Refine mpparse to use common irqdomain map interface to program IOAPIC pins,
+so we can unify the callsite to progam IOAPIC pins.
 
-Ok, good.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/mpparse.c |    4 +++-
+ arch/x86/pci/irq.c        |    2 --
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-> > Also, please list the exact name of the phy if you can find it
-> > out. You mention that you don't know the register descriptions,
-> > but you should at least be able to let us know what phy this
-> > is, in case some other SoC reuses the same thing.
->
-> Unfortunately there is a NDA restriction that prevents us from using the
-> actual Phy name and keystone phy is the name what we can usel at the 
-> moment. I am checking
-> this with our IP team and if original name can  be used, I will update 
-> the driver to reflect the same.
+diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
+index b9823bea332a..55acf55b41e7 100644
+--- a/arch/x86/kernel/mpparse.c
++++ b/arch/x86/kernel/mpparse.c
+@@ -113,7 +113,9 @@ static void __init MP_bus_info(struct mpc_bus *m)
+ 		pr_warn("Unknown bustype %s - ignoring\n", str);
+ }
+ 
+-static struct irq_domain_ops mp_ioapic_irqdomain_ops;
++static struct irq_domain_ops mp_ioapic_irqdomain_ops = {
++	.map = mp_irqdomain_map,
++};
+ 
+ static struct irq_domain *mp_ioapic_create_irqdomain(int ioapic, void *arg)
+ {
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 84112f55dd7a..e4200e5e775e 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1227,8 +1227,6 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			}
+ 			dev = temp_dev;
+ 			if (irq >= 0) {
+-				io_apic_set_pci_routing(&dev->dev, irq,
+-							 &irq_attr);
+ 				dev->irq = irq;
+ 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
+ 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
+-- 
+1.7.10.4
 
-Can you please check the phy drivers that we already have in linux-next
-to see if any of those are for the same hardware then?
-
-I guess it's our best hope to catch duplications by inspecting all
-other phy drivers as they get merged then.
-
-	Arnd
