@@ -1,111 +1,160 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20832 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753487AbaEVXJI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 19:09:08 -0400
-Subject: [PATCH v4 16/16] PCI: Remove pci_get_dma_source()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
-Date: Thu, 22 May 2014 17:09:04 -0600
-Message-ID: <20140522230903.2856.11320.stgit@bling.home>
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-References: <20140522230230.2856.40017.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org, Jiri Kosina <trivial@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
+	linux-pm@vger.kernel.org
+Subject: [RFC Patch Part1 V1 06/30] x86, ACPI, trivial: minor improvements to arch/x86/kernel/acpi/boot.c
+Date: Fri, 16 May 2014 16:05:26 +0800
+Message-Id: <1400227550-5935-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It has no users; replaced by dma_alias_devfn.
+1) Remove out-of-date comment
+2) Kill unused function acpi_set_irq_model_pic()
+3) Use NR_IRQS_LEGACY instead of hard-coded 16
+4) Trivial syntax improvements
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/quirks.c |   51 --------------------------------------------------
- include/linux/pci.h  |    5 -----
- 2 files changed, 56 deletions(-)
+ arch/x86/kernel/acpi/boot.c |   50 ++++++++++++++-----------------------------
+ 1 file changed, 16 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ab620ac..f6a42bc 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3408,57 +3408,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
- /* Tundra 8113, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c43 */
- DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 8390db1f7a93..6d65850f49e9 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -370,11 +370,6 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
+ 	if (acpi_sci_flags & ACPI_MADT_POLARITY_MASK)
+ 		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
  
--static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
--{
--	if (!PCI_FUNC(dev->devfn))
--		return pci_dev_get(dev);
--
--	return pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
--}
--
--static const struct pci_dev_dma_source {
--	u16 vendor;
--	u16 device;
--	struct pci_dev *(*dma_source)(struct pci_dev *dev);
--} pci_dev_dma_source[] = {
 -	/*
--	 * https://bugzilla.redhat.com/show_bug.cgi?id=605888
--	 *
--	 * Some Ricoh devices use the function 0 source ID for DMA on
--	 * other functions of a multifunction device.  The DMA devices
--	 * is therefore function 0, which will have implications of the
--	 * iommu grouping of these devices.
+-	 * mp_config_acpi_legacy_irqs() already setup IRQs < 16
+-	 * If GSI is < 16, this will update its flags,
+-	 * else it will create a new mp_irqs[] entry.
 -	 */
--	{ PCI_VENDOR_ID_RICOH, 0xe822, pci_func_0_dma_source },
--	{ PCI_VENDOR_ID_RICOH, 0xe230, pci_func_0_dma_source },
--	{ PCI_VENDOR_ID_RICOH, 0xe832, pci_func_0_dma_source },
--	{ PCI_VENDOR_ID_RICOH, 0xe476, pci_func_0_dma_source },
--	{ 0 }
--};
--
--/*
-- * IOMMUs with isolation capabilities need to be programmed with the
-- * correct source ID of a device.  In most cases, the source ID matches
-- * the device doing the DMA, but sometimes hardware is broken and will
-- * tag the DMA as being sourced from a different device.  This function
-- * allows that translation.  Note that the reference count of the
-- * returned device is incremented on all paths.
-- */
--struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
--{
--	const struct pci_dev_dma_source *i;
--
--	for (i = pci_dev_dma_source; i->dma_source; i++) {
--		if ((i->vendor == dev->vendor ||
--		     i->vendor == (u16)PCI_ANY_ID) &&
--		    (i->device == dev->device ||
--		     i->device == (u16)PCI_ANY_ID))
--			return i->dma_source(dev);
--	}
--
--	return pci_dev_get(dev);
--}
--
- /*
-  * AMD has indicated that the devices below do not support peer-to-peer
-  * in any system where they are found in the southbridge with an AMD
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 903c7d6..388857c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1533,16 +1533,11 @@ enum pci_fixup_pass {
+ 	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
  
- #ifdef CONFIG_PCI_QUIRKS
- void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
--struct pci_dev *pci_get_dma_source(struct pci_dev *dev);
- int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
- void pci_dev_specific_enable_acs(struct pci_dev *dev);
- #else
- static inline void pci_fixup_device(enum pci_fixup_pass pass,
- 				    struct pci_dev *dev) { }
--static inline struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
+ 	/*
+@@ -573,14 +568,7 @@ void acpi_unregister_gsi(u32 gsi)
+ }
+ EXPORT_SYMBOL_GPL(acpi_unregister_gsi);
+ 
+-void __init acpi_set_irq_model_pic(void)
 -{
--	return pci_dev_get(dev);
+-	acpi_irq_model = ACPI_IRQ_MODEL_PIC;
+-	__acpi_register_gsi = acpi_register_gsi_pic;
+-	acpi_ioapic = 0;
 -}
- static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
- 					       u16 acs_flags)
+-
+-void __init acpi_set_irq_model_ioapic(void)
++static void __init acpi_set_irq_model_ioapic(void)
  {
+ 	acpi_irq_model = ACPI_IRQ_MODEL_IOAPIC;
+ 	__acpi_register_gsi = acpi_register_gsi_ioapic;
+@@ -819,9 +807,8 @@ static int __init early_acpi_parse_madt_lapic_addr_ovr(void)
+ 	 * and (optionally) overriden by a LAPIC_ADDR_OVR entry (64-bit value).
+ 	 */
+ 
+-	count =
+-	    acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_OVERRIDE,
+-				  acpi_parse_lapic_addr_ovr, 0);
++	count = acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_OVERRIDE,
++				      acpi_parse_lapic_addr_ovr, 0);
+ 	if (count < 0) {
+ 		printk(KERN_ERR PREFIX
+ 		       "Error parsing LAPIC address override entry\n");
+@@ -846,9 +833,8 @@ static int __init acpi_parse_madt_lapic_entries(void)
+ 	 * and (optionally) overriden by a LAPIC_ADDR_OVR entry (64-bit value).
+ 	 */
+ 
+-	count =
+-	    acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_OVERRIDE,
+-				  acpi_parse_lapic_addr_ovr, 0);
++	count = acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_OVERRIDE,
++				      acpi_parse_lapic_addr_ovr, 0);
+ 	if (count < 0) {
+ 		printk(KERN_ERR PREFIX
+ 		       "Error parsing LAPIC address override entry\n");
+@@ -876,11 +862,10 @@ static int __init acpi_parse_madt_lapic_entries(void)
+ 		return count;
+ 	}
+ 
+-	x2count =
+-	    acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_X2APIC_NMI,
+-				  acpi_parse_x2apic_nmi, 0);
+-	count =
+-	    acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_NMI, acpi_parse_lapic_nmi, 0);
++	x2count = acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_X2APIC_NMI,
++					acpi_parse_x2apic_nmi, 0);
++	count = acpi_table_parse_madt(ACPI_MADT_TYPE_LOCAL_APIC_NMI,
++				      acpi_parse_lapic_nmi, 0);
+ 	if (count < 0 || x2count < 0) {
+ 		printk(KERN_ERR PREFIX "Error parsing LAPIC NMI entry\n");
+ 		/* TBD: Cleanup to allow fallback to MPS */
+@@ -947,7 +932,7 @@ static void __init mp_config_acpi_legacy_irqs(void)
+ 	 * Use the default configuration for the IRQs 0-15.  Unless
+ 	 * overridden by (MADT) interrupt source override entries.
+ 	 */
+-	for (i = 0; i < 16; i++) {
++	for (i = 0; i < NR_IRQS_LEGACY; i++) {
+ 		int ioapic, pin;
+ 		unsigned int dstapic;
+ 		int idx;
+@@ -1103,9 +1088,8 @@ static int __init acpi_parse_madt_ioapic_entries(void)
+ 		return -ENODEV;
+ 	}
+ 
+-	count =
+-	    acpi_table_parse_madt(ACPI_MADT_TYPE_IO_APIC, acpi_parse_ioapic,
+-				  MAX_IO_APICS);
++	count = acpi_table_parse_madt(ACPI_MADT_TYPE_IO_APIC, acpi_parse_ioapic,
++				      MAX_IO_APICS);
+ 	if (!count) {
+ 		printk(KERN_ERR PREFIX "No IOAPIC entries present\n");
+ 		return -ENODEV;
+@@ -1114,9 +1098,8 @@ static int __init acpi_parse_madt_ioapic_entries(void)
+ 		return count;
+ 	}
+ 
+-	count =
+-	    acpi_table_parse_madt(ACPI_MADT_TYPE_INTERRUPT_OVERRIDE, acpi_parse_int_src_ovr,
+-				  nr_irqs);
++	count = acpi_table_parse_madt(ACPI_MADT_TYPE_INTERRUPT_OVERRIDE,
++				      acpi_parse_int_src_ovr, nr_irqs);
+ 	if (count < 0) {
+ 		printk(KERN_ERR PREFIX
+ 		       "Error parsing interrupt source overrides entry\n");
+@@ -1135,9 +1118,8 @@ static int __init acpi_parse_madt_ioapic_entries(void)
+ 	/* Fill in identity legacy mappings where no override */
+ 	mp_config_acpi_legacy_irqs();
+ 
+-	count =
+-	    acpi_table_parse_madt(ACPI_MADT_TYPE_NMI_SOURCE, acpi_parse_nmi_src,
+-				  nr_irqs);
++	count = acpi_table_parse_madt(ACPI_MADT_TYPE_NMI_SOURCE,
++				      acpi_parse_nmi_src, nr_irqs);
+ 	if (count < 0) {
+ 		printk(KERN_ERR PREFIX "Error parsing NMI SRC entry\n");
+ 		/* TBD: Cleanup to allow fallback to MPS */
+-- 
+1.7.10.4
 
