@@ -1,176 +1,137 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH V5 4/4] x86/PCI: Clean up and mark early_root_info_init() as
- deprecated
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Robert Richter <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	linux-kernel@vger.kernel.org,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	linux-pci@vger.kernel.org, Borislav Petkov <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Date: Wed, 21 May 2014 17:18:23 -0600
-Message-ID: <20140521231823.26447.2250.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [RFC Patch Part1 V1 12/30] x86, ioapic: kill static variable nr_irqs_gsi
+Date: Fri, 16 May 2014 16:05:32 +0800
+Message-Id: <1400227550-5935-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Static variable nr_irqs_gsi is used to maintain the lowest dynamic
+allocatable IRQ number. It may cause trouble when enabling dynamic
+IRQ allocation for IOAPIC, so use arch_dynirq_lower_bound() to
+avoid directly accessing nr_irqs_gsi and kill nr_irqs_gsi.
 
-early_root_info_init() is now deprecated in favor of info in ACPI.  Add a
-note to that effect.  Also, clean up the code a bit.
-
-There is no functional change.
-
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/pci/amd_bus.c |   68 +++++++++++++++++++++++++++---------------------
- 1 file changed, 38 insertions(+), 30 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   35 ++++++++---------------------------
+ 1 file changed, 8 insertions(+), 27 deletions(-)
 
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index 67dadf179348..cdce6ed59e2c 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -11,28 +11,33 @@
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 2c91a7fc9915..fe515583a927 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -118,9 +118,6 @@ struct mpc_intsrc mp_irqs[MAX_IRQ_SOURCES];
+ /* # of MP IRQ source entries */
+ int mp_irq_entries;
  
- #include "bus_numa.h"
- 
--/*
-- * This discovers the pcibus <-> node mapping on AMD K8.
-- * also get peer root bus resource for io,mmio
-- */
-+#define AMD_NB_F0_NODE_ID			0x60
-+#define AMD_NB_F0_UNIT_ID			0x64
-+#define AMD_NB_F1_CONFIG_MAP_REG		0xe0
-+
-+#define RANGE_NUM				16
-+#define AMD_NB_F1_CONFIG_MAP_RANGES		4
- 
--struct pci_hostbridge_probe {
-+struct amd_hostbridge {
- 	u32 bus;
- 	u32 slot;
--	u32 vendor;
- 	u32 device;
- };
- 
--static struct pci_hostbridge_probe pci_probes[] __initdata = {
--	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 }, /* K8 */
--	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 }, /* Fam10h */
--	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 }, /* Fam10h */
--	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 }, /* Fam11h */
--	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1600 }, /* Fam15h */
-+/*
-+ * IMPORTANT NOTE:
-+ * hb_probes[] and early_root_info_init() is in maintenance mode.
-+ * It only supports K8, Fam10h, Fam11h, and Fam15h_00h-0fh .
-+ * Future processor will rely on information in ACPI.
-+ */
-+static struct amd_hostbridge hb_probes[] __initdata = {
-+	{ 0, 0x18, 0x1100 }, /* K8 */
-+	{ 0, 0x18, 0x1200 }, /* Family10h */
-+	{ 0xff, 0, 0x1200 }, /* Family10h */
-+	{ 0, 0x18, 0x1300 }, /* Family11h */
-+	{ 0, 0x18, 0x1600 }, /* Family15h */
- };
- 
--#define RANGE_NUM 16
+-/* GSI interrupts */
+-static int nr_irqs_gsi = NR_IRQS_LEGACY;
 -
- static struct pci_root_info __init *find_pci_root_info(int node, int link)
+ #ifdef CONFIG_EISA
+ int mp_bus_id_to_type[MAX_MP_BUSSES];
+ #endif
+@@ -2921,9 +2918,7 @@ unsigned int __create_irqs(unsigned int from, unsigned int count, int node)
+ 	unsigned long flags;
+ 	int irq, i;
+ 
+-	if (from < nr_irqs_gsi)
+-		from = nr_irqs_gsi;
+-
++	from = arch_dynirq_lower_bound(from);
+ 	cfg = kzalloc_node(count * sizeof(cfg[0]), GFP_KERNEL, node);
+ 	if (!cfg)
+ 		return 0;
+@@ -2972,12 +2967,9 @@ unsigned int create_irq_nr(unsigned int from, int node)
+ int create_irq(void)
  {
- 	struct pci_root_info *info;
-@@ -46,12 +51,12 @@ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+ 	int node = cpu_to_node(0);
+-	unsigned int irq_want;
+ 	int irq;
+ 
+-	irq_want = nr_irqs_gsi;
+-	irq = create_irq_nr(irq_want, node);
+-
++	irq = create_irq_nr(arch_dynirq_lower_bound(0), node);
+ 	if (irq == 0)
+ 		irq = -1;
+ 
+@@ -3142,7 +3134,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 		return 1;
+ 
+ 	node = dev_to_node(&dev->dev);
+-	irq_want = nr_irqs_gsi;
++	irq_want = arch_dynirq_lower_bound(0);
+ 	list_for_each_entry(msidesc, &dev->msi_list, list) {
+ 		irq = create_irq_nr(irq_want, node);
+ 		if (irq == 0)
+@@ -3406,20 +3398,11 @@ static int __init io_apic_get_redir_entries(int ioapic)
+ 	return reg_01.bits.entries + 1;
  }
  
- /**
-- * early_fill_mp_bus_to_node()
-+ * early_root_info_init()
-  * called before pcibios_scan_root and pci_scan_bus
-- * fills the mp_bus_to_cpumask array based according to the LDT Bus Number
-- * Registers found in the K8 northbridge
-+ * fills the mp_bus_to_cpumask array based according
-+ * to the LDT Bus Number Registers found in the northbridge.
-  */
--static int __init early_fill_mp_bus_info(void)
-+static int __init early_root_info_init(void)
- {
- 	int i;
- 	unsigned bus;
-@@ -76,19 +81,21 @@ static int __init early_fill_mp_bus_info(void)
- 		return -1;
- 
- 	found = false;
--	for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
-+	for (i = 0; i < ARRAY_SIZE(hb_probes); i++) {
- 		u32 id;
- 		u16 device;
- 		u16 vendor;
- 
--		bus = pci_probes[i].bus;
--		slot = pci_probes[i].slot;
-+		bus = hb_probes[i].bus;
-+		slot = hb_probes[i].slot;
- 		id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
+-static void __init probe_nr_irqs_gsi(void)
+-{
+-	int nr;
 -
- 		vendor = id & 0xffff;
- 		device = (id>>16) & 0xffff;
--		if (pci_probes[i].vendor == vendor &&
--		    pci_probes[i].device == device) {
+-	nr = gsi_top + NR_IRQS_LEGACY;
+-	if (nr > nr_irqs_gsi)
+-		nr_irqs_gsi = nr;
+-
+-	printk(KERN_DEBUG "nr_irqs_gsi: %d\n", nr_irqs_gsi);
+-}
+-
+ unsigned int arch_dynirq_lower_bound(unsigned int from)
+ {
+-	return from < nr_irqs_gsi ? nr_irqs_gsi : from;
++	unsigned int min = gsi_top + NR_IRQS_LEGACY;
 +
-+		if (vendor != PCI_VENDOR_ID_AMD)
-+			continue;
-+
-+		if (hb_probes[i].device == device) {
- 			found = true;
- 			break;
- 		}
-@@ -102,10 +109,11 @@ static int __init early_fill_mp_bus_info(void)
- 	 * _CRS methods in the ACPI namespace.  We extract node numbers
- 	 * here to work around BIOSes that don't supply _PXM.
++	return from < min ? min : from;
+ }
+ 
+ int __init arch_probe_nr_irqs(void)
+@@ -3429,12 +3412,12 @@ int __init arch_probe_nr_irqs(void)
+ 	if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
+ 		nr_irqs = NR_VECTORS * nr_cpu_ids;
+ 
+-	nr = nr_irqs_gsi + 8 * nr_cpu_ids;
++	nr = (gsi_top + NR_IRQS_LEGACY) + 8 * nr_cpu_ids;
+ #if defined(CONFIG_PCI_MSI) || defined(CONFIG_HT_IRQ)
+ 	/*
+ 	 * for MSI and HT dyn irq
  	 */
--	for (i = 0; i < 4; i++) {
-+	for (i = 0; i < AMD_NB_F1_CONFIG_MAP_RANGES; i++) {
- 		int min_bus;
- 		int max_bus;
--		reg = read_pci_config(bus, slot, 1, 0xe0 + (i << 2));
-+		reg = read_pci_config(bus, slot, 1,
-+				AMD_NB_F1_CONFIG_MAP_REG + (i << 2));
+-	nr += nr_irqs_gsi * 16;
++	nr += (gsi_top + NR_IRQS_LEGACY) * 16;
+ #endif
+ 	if (nr < nr_irqs)
+ 		nr_irqs = nr;
+@@ -3707,8 +3690,6 @@ fake_ioapic_page:
+ 		ioapic_res->end = ioapic_phys + IO_APIC_SLOT_SIZE - 1;
+ 		ioapic_res++;
+ 	}
+-
+-	probe_nr_irqs_gsi();
+ }
  
- 		/* Check if that register is enabled for bus range */
- 		if ((reg & 7) != 3)
-@@ -131,9 +139,9 @@ static int __init early_fill_mp_bus_info(void)
- 		return 0;
- 
- 	/* get the default node and link for left over res */
--	reg = read_pci_config(bus, slot, 0, 0x60);
-+	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_NODE_ID);
- 	def_node = (reg >> 8) & 0x07;
--	reg = read_pci_config(bus, slot, 0, 0x64);
-+	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_UNIT_ID);
- 	def_link = (reg >> 8) & 0x03;
- 
- 	memset(range, 0, sizeof(range));
-@@ -380,7 +388,7 @@ static int __init pci_io_ecs_init(void)
- 	int cpu;
- 
- 	/* assume all cpus from fam10h have IO ECS */
--        if (boot_cpu_data.x86 < 0x10)
-+	if (boot_cpu_data.x86 < 0x10)
- 		return 0;
- 
- 	/* Try the PCI method first. */
-@@ -404,7 +412,7 @@ static int __init amd_postcore_init(void)
- 	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
- 		return 0;
- 
--	early_fill_mp_bus_info();
-+	early_root_info_init();
- 
- 	if (boot_cpu_data.x86 <= 0x16)
- 		pci_io_ecs_init();
+ void __init ioapic_insert_resources(void)
+-- 
+1.7.10.4
 
