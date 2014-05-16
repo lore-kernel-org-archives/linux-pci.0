@@ -1,40 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37241 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933855AbaE3VGq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 30 May 2014 17:06:46 -0400
-Message-ID: <1401484002.9207.1.camel@ul30vt.home>
-Subject: Re: [PATCH 0/4] VFIO Misc fixes
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org
-Date: Fri, 30 May 2014 15:06:42 -0600
-In-Reply-To: <1400535439.3289.284.camel@ul30vt.home>
-References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1400535439.3289.284.camel@ul30vt.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org
+Subject: [RFC Patch Part1 V1 04/30] x86, PCI, ACPI: use kmalloc_node() to optimize for performance
+Date: Fri, 16 May 2014 16:05:24 +0800
+Message-Id: <1400227550-5935-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2014-05-19 at 15:37 -0600, Alex Williamson wrote:
-> On Mon, 2014-05-19 at 13:01 +1000, Gavin Shan wrote:
-> > Changelog
-> > =========
-> > v1 -> v2:
-> >         * Change the comments and commit log in PATCH[4/4] (Alex).
-> >         * Export 2 MSI relevant functions (Alex).
-> > v2 -> v3:
-> > 	* Add missed header file in PATCH[4/4].
-> 
-> Please specify the version in the Subject for all patches.
-> 
-> It would probably be a good idea to separate this series.  Patches 2 & 3
-> stand on their own.  Send them that way so we can actually get them in.
-> Patch 4 is dependent on Patch 1, so send them as a series.
+Use kmalloc_node() instead of kmalloc() when possible to optimize
+for performance on NUMA platforms.
 
-I'm going to go ahead and grab patches 2 & 3 here because I don't want
-to see them miss another kernel.  Thanks,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/acpi.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Alex
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 01edac6c5e18..91bef49df228 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -448,7 +448,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 		return;
+ 
+ 	size = sizeof(*info->res) * info->res_num;
+-	info->res = kzalloc(size, GFP_KERNEL);
++	info->res = kzalloc_node(size, GFP_KERNEL, info->sd.node);
+ 	if (!info->res) {
+ 		info->res_num = 0;
+ 		return;
+@@ -456,7 +456,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 
+ 	size = sizeof(*info->res_offset) * info->res_num;
+ 	info->res_num = 0;
+-	info->res_offset = kzalloc(size, GFP_KERNEL);
++	info->res_offset = kzalloc_node(size, GFP_KERNEL, info->sd.node);
+ 	if (!info->res_offset) {
+ 		kfree(info->res);
+ 		info->res = NULL;
+@@ -495,7 +495,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	if (node != NUMA_NO_NODE && !node_online(node))
+ 		node = NUMA_NO_NODE;
+ 
+-	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
+ 	if (!info) {
+ 		printk(KERN_WARNING "pci_bus %04x:%02x: "
+ 		       "ignored (out of memory)\n", domain, busnum);
+-- 
+1.7.10.4
 
