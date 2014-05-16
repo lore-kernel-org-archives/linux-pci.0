@@ -1,97 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f171.google.com ([209.85.128.171]:50431 "EHLO
-	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750991AbaEWCzP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 May 2014 22:55:15 -0400
-Received: by mail-ve0-f171.google.com with SMTP id oz11so5524365veb.16
-        for <linux-pci@vger.kernel.org>; Thu, 22 May 2014 19:55:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <537E8ACF.6000103@amd.com>
-References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521233802.GA21575@pd.tnic> <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
- <20140522191746.GL4383@pd.tnic> <CAErSpo7=0-xdnu4DQufu_6eS=6AYhnDRaQvzeiMEC5a=zKU0Jg@mail.gmail.com>
- <537E8ACF.6000103@amd.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 22 May 2014 20:54:54 -0600
-Message-ID: <CAErSpo6AMGPFELx+2qJXYaxaLRhk2F2J=wn4=gLgmvYGdLup7A@mail.gmail.com>
-Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after Fam16h
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: Borislav Petkov <bp@alien8.de>, Robert Richter <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Borislav Petkov <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Tony Lindgren <tony@atomide.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org
+Subject: [RFC Patch Part1 V1 29/30] x86, irq, devicetree: use common irqdomain map interface to program IOAPIC pins
+Date: Fri, 16 May 2014 16:05:49 +0800
+Message-Id: <1400227550-5935-30-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 22, 2014 at 5:39 PM, Suravee Suthikulanit
-<suravee.suthikulpanit@amd.com> wrote:
-> On 5/22/2014 3:20 PM, Bjorn Helgaas wrote:
->> On Thu, May 22, 2014 at 1:17 PM, Borislav Petkov <bp@alien8.de> wrote:
->>> On Thu, May 22, 2014 at 11:56:03AM -0600, Bjorn Helgaas wrote:
->>>>
->>>> I chose Fam16h (0x16) because it looks like that's the newest stuff
->>>> that's in the field. I suspect things would probably work if we
->>>> changed this patch to leave ECS disabled on some Fam16h, Fam15h, etc.,
->>>> but that would change behavior on existing systems, which obviously
->>>> adds some risk. I didn't think there was much benefit that makes the
->>>> risk worthwhile.
->>>>
->>>> My goal is to stop needing CPU-specific changes in the future, not
->>>> necessarily to remove the CPU-specific code we already have.
->>>>
->>>> Does that make sense? I'm not sure whether I understood your real
->>>> question.
->>>
->>> No, you got it right. I'm just wondering why only the newest stuff.
->>> MMCONFIG is supposed to work just fine on everything from Fam10h
->>> onwards, I'm not sure all Fam10h supported it though. Maybe Suravee can
->>> verify that...
->>
->> Even if MMCONFIG does work fine on everything from Fam10h onwards, we
->> still depend on the BIOS to provide a correct MCFG table.  I don't
->> think we can guarantee that changing from ECS to MMCONFIG on a Fam16h
->> box in the field is safe, because we'd then be using a feature we've
->> never used before.
->
-> At this point, family11h and later (upto 16h which is our most current
-> processor) should already have supports for the MCFG. However, we can't
-> guarantee that all the systems currently out there would not use the ECS.
-> So, I think it is ok to say we won't support it post 16h as Bjorn suggests.
+Refine devicetree to use common irqdomain map interface to program
+IOAPIC pins, so we can unify the callsite to progam IOAPIC pins.
 
-I think this is more a BIOS question than a hardware question.  I'm
-sure all current AMD hardware supports ECAM just fine.  But it's still
-up to the BIOS to produce a valid MCFG table, so OEMs could still have
-issues, and *that's* what I'm worried about.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/devicetree.c |   12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-I've been poking around for recent dmesg logs that contain "PCI: Using
-configuration type 1 for extended access", and there are quite a few.
-In most cases there *is* an MCFG table, but apparently we decide not
-to use it for some reason (unfortunately we don't print the specific
-reason).  One example is at
-https://bugzilla.kernel.org/show_bug.cgi?id=68591 .
+diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
+index a44d45df49f5..3bd30eb92d9d 100644
+--- a/arch/x86/kernel/devicetree.c
++++ b/arch/x86/kernel/devicetree.c
+@@ -280,10 +280,8 @@ static int ioapic_xlate(struct irq_domain *domain,
+ 			const u32 *intspec, u32 intsize,
+ 			irq_hw_number_t *out_hwirq, u32 *out_type)
+ {
+-	struct io_apic_irq_attr attr;
+ 	struct of_ioapic_type *it;
+ 	u32 line, idx;
+-	int rc;
+ 
+ 	if (WARN_ON(intsize < 2))
+ 		return -EINVAL;
+@@ -296,12 +294,9 @@ static int ioapic_xlate(struct irq_domain *domain,
+ 	it = &of_ioapic_type[intspec[1]];
+ 
+ 	idx = (u32)(long)domain->host_data;
+-	set_io_apic_irq_attr(&attr, idx, line, it->trigger, it->polarity);
+-
+-	rc = io_apic_setup_irq_pin_once(irq_find_mapping(domain, line),
+-					cpu_to_node(0), &attr);
+-	if (rc)
+-		return rc;
++	if (mp_set_pin_attr(idx, line, it->trigger, it->polarity,
++			    cpu_to_node(0)))
++		return -EBUSY;
+ 
+ 	*out_hwirq = line;
+ 	*out_type = it->out_type;
+@@ -309,6 +304,7 @@ static int ioapic_xlate(struct irq_domain *domain,
+ }
+ 
+ const struct irq_domain_ops ioapic_irq_domain_ops = {
++	.map = mp_irqdomain_map,
+ 	.xlate = ioapic_xlate,
+ };
+ 
+-- 
+1.7.10.4
 
-I'm going to go out on a limb and guess that Windows does not enable
-ECS, so it probably uses ECAM.  Therefore, I suspect Linux's parsing
-of MCFG is broken in some way, and we probably *could* use ECAM in all
-these cases I'm seeing.
-
-It would probably be prudent to figure out why Linux is rejecting
-these MCFG tables.  We'll probably see similar tables on Fam17h
-systems, and if we continue rejecting them, and we don't turn on ECS,
-we won't be able to access extended config space.
-
-I opened a bugzilla for this issue:
-https://bugzilla.kernel.org/show_bug.cgi?id=76771
-
-I'm wavering on whether it's a good idea to put this patch in before
-understanding the issue.  As much as I'd like to stop fiddling with
-ECS, we'd likely end up with a v3.15 where extended config space
-doesn't work on some Fam17h systems.
-
-Bjorn
