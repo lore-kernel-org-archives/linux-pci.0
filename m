@@ -1,179 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:54108 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933095AbaEaO3I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:29:08 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v4 13/15] PCI: Suspend/resume quirks for Apple thunderbolt
-Date: Sat, 31 May 2014 16:27:58 +0200
-Message-Id: <1401546480-2071-14-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:36144 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757166AbaEPOhJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 May 2014 10:37:09 -0400
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: Jingoo Han <jg1.han@samsung.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	"'Russell King'" <linux@arm.linux.org.uk>
+Subject: RE: [PATCH v1 1/5] ARM: keystone: add pcie related options
+Date: Fri, 16 May 2014 14:36:37 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B7047413F8@DFLE11.ent.ti.com>
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+ <1400169692-9677-2-git-send-email-m-karicheri2@ti.com>
+ <004e01cf709d$a48b4240$eda1c6c0$%han@samsung.com>
+In-Reply-To: <004e01cf709d$a48b4240$eda1c6c0$%han@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add two quirks to support thunderbolt suspend/resume on Apple systems.
-We need to perform two different actions during suspend and resume:
+>-----Original Message-----
+>From: Jingoo Han [mailto:jg1.han@samsung.com]
+>Sent: Thursday, May 15, 2014 8:28 PM
+>To: Karicheri, Muralidharan
+>Cc: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org; linux-arm-
+>kernel@lists.infradead.org; Shilimkar, Santosh; 'Russell King'; 'Jingoo Han'
+>Subject: Re: [PATCH v1 1/5] ARM: keystone: add pcie related options
+>
+>On Friday, May 16, 2014 1:01 AM, Murali Karicheri wrote:
+>>
+>> Add pcie related options by default for keystone architecture
+>>
+>> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+>> CC: Russell King <linux@arm.linux.org.uk>
+>>
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>> ---
+>>  arch/arm/mach-keystone/Kconfig |    2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/arch/arm/mach-keystone/Kconfig
+>> b/arch/arm/mach-keystone/Kconfig index f50bc93..f87844d 100644
+>> --- a/arch/arm/mach-keystone/Kconfig
+>> +++ b/arch/arm/mach-keystone/Kconfig
+>> @@ -8,6 +8,8 @@ config ARCH_KEYSTONE
+>>  	select COMMON_CLK_KEYSTONE
+>>  	select ARCH_SUPPORTS_BIG_ENDIAN
+>>  	select ZONE_DMA if ARM_LPAE
+>> +	select MIGHT_HAVE_PCI
+>> +	select ARCH_SUPPORTS_MSI
+>
+>Please, don't select ARCH_SUPPORTS_MSI, because this kconfig option was already
+>removed in v3.12 by the commit ebd97be635
+>('PCI: remove ARCH_SUPPORTS_MSI kconfig option'). So. there is NO need to select
+>'ARCH_SUPPORTS_MSI'.
+>
 
-The whole controller has to be powered down before suspend. If this is
-not done then the native host interface device will be gone after resume
-if a thunderbolt device was plugged in before suspending. The controller
-represents itself as multiple PCI devices/bridges. To power it down we
-hook into the upstream bridge of the controller and call the magic ACPI
-methods.  Power will be restored automatically during resume (by the
-firmware presumably).
+Will do. Thanks.
 
-During resume we have to wait for the native host interface to
-reestablish all pci tunnels. Since there is no parent-child relationship
-between the NHI and the bridges we have to explicitly wait for them
-using device_pm_wait_for_dev. We do this in the resume_noirq phase of
-the downstream bridges of the controller (which lead into the
-thunderbolt tunnels).
-
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/quirks.c | 122 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 122 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index af2eba1..c9d6b90 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2992,6 +2992,128 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
- DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
- 			 quirk_broken_intx_masking);
- 
-+#ifdef CONFIG_ACPI
-+/* Apple systems with a Cactus Ridge Thunderbolt controller. */
-+static struct dmi_system_id apple_thunderbolt_whitelist[] = {
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_BOARD_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro9"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_BOARD_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookPro10"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_BOARD_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookAir5"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_BOARD_VENDOR, "Apple Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "MacBookAir6"),
-+		},
-+	},
-+	{ }
-+};
-+
-+/*
-+ * Apple: Shutdown Cactus Ridge Thunderbolt controller.
-+ *
-+ * On Apple hardware the Cactus Ridge Thunderbolt controller needs to be
-+ * shutdown before suspend. Otherwise the native host interface (NHI) will not
-+ * be present after resume if a device was plugged in before suspend.
-+ *
-+ * The thunderbolt controller consists of a pcie switch with downstream
-+ * bridges leading to the NHI and to the tunnel pci bridges.
-+ *
-+ * This quirk cuts power to the whole chip. Therefore we have to apply it
-+ * during suspend_noirq of the upstream bridge.
-+ *
-+ * Power is automagically restored before resume. No action is needed.
-+ */
-+static void quirk_apple_poweroff_thunderbolt(struct pci_dev *dev)
-+{
-+	acpi_handle bridge, SXIO, SXFP, SXLV;
-+
-+	if (!dmi_check_system(apple_thunderbolt_whitelist))
-+		return;
-+	if (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM)
-+		return;
-+	bridge = ACPI_HANDLE(&dev->dev);
-+	if (!bridge)
-+		return;
-+	/*
-+	 * TB bridges in external devices might have the same device id as those
-+	 * on the host, but they will not have the associated ACPI methods. This
-+	 * implicitly checks that we are at the right bridge.
-+	 */
-+	if (ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXIO", &SXIO))
-+	    || ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXFP", &SXFP))
-+	    || ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXLV", &SXLV)))
-+		return;
-+	dev_info(&dev->dev, "quirk: cutting power to thunderbolt controller...\n");
-+
-+	/* magic sequence */
-+	acpi_execute_simple_method(SXIO, NULL, 1);
-+	acpi_execute_simple_method(SXFP, NULL, 0);
-+	msleep(300);
-+	acpi_execute_simple_method(SXLV, NULL, 0);
-+	acpi_execute_simple_method(SXIO, NULL, 0);
-+	acpi_execute_simple_method(SXLV, NULL, 0);
-+}
-+DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL, 0x1547,
-+			       quirk_apple_poweroff_thunderbolt);
-+
-+/*
-+ * Apple: Wait for the thunderbolt controller to reestablish pci tunnels.
-+ *
-+ * During suspend the thunderbolt controller is reset and all pci
-+ * tunnels are lost. The NHI driver will try to reestablish all tunnels
-+ * during resume. We have to manually wait for the NHI since there is
-+ * no parent child relationship between the NHI and the tunneled
-+ * bridges.
-+ */
-+static void quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
-+{
-+	struct pci_dev *sibling = NULL;
-+	struct pci_dev *nhi = NULL;
-+
-+	if (!dmi_check_system(apple_thunderbolt_whitelist))
-+		return;
-+	if (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)
-+		return;
-+	/*
-+	 * Find the NHI and confirm that we are a bridge on the tb host
-+	 * controller and not on a tb endpoint.
-+	 */
-+	sibling = pci_get_slot(dev->bus, 0x0);
-+	if (sibling == dev)
-+		goto out; /* we are the downstream bridge to the NHI */
-+	if (!sibling || !sibling->subordinate)
-+		goto out;
-+	nhi = pci_get_slot(sibling->subordinate, 0x0);
-+	if (!nhi)
-+		goto out;
-+	if (nhi->vendor != PCI_VENDOR_ID_INTEL || nhi->device != 0x1547
-+			|| nhi->subsystem_vendor != 0x2222
-+			|| nhi->subsystem_device != 0x1111)
-+		goto out;
-+	dev_info(&dev->dev, "quirk: wating for thunderbolt to reestablish pci tunnels...\n");
-+	device_pm_wait_for_dev(&dev->dev, &nhi->dev);
-+out:
-+	pci_dev_put(nhi);
-+	pci_dev_put(sibling);
-+}
-+DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x1547,
-+			       quirk_apple_wait_for_thunderbolt);
-+#endif
-+
- static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
- 			  struct pci_fixup *end)
- {
--- 
-1.9.3
+>Best regards,
+>Jingoo Han
+>
+>>  	help
+>>  	  Support for boards based on the Texas Instruments Keystone family of
+>>  	  SoCs.
+>> --
+>> 1.7.9.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci"
+>> in the body of a message to majordomo@vger.kernel.org More majordomo
+>> info at  http://vger.kernel.org/majordomo-info.html
 
