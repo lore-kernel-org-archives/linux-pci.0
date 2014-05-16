@@ -1,90 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:47903 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752886AbaEFNmL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 09:42:11 -0400
-From: James Bottomley <jbottomley@parallels.com>
-To: "bhelgaas@google.com" <bhelgaas@google.com>
-CC: "rdunlap@infradead.org" <rdunlap@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU
- address to phys_addr_t
-Date: Tue, 6 May 2014 13:42:06 +0000
-Message-ID: <1399383725.2237.26.camel@dabdike.int.hansenpartnership.com>
-References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	 <CAErSpo7zjXg8xrV7=q36rNp_g573P93HiXTB72Z1cZfjGeeBmg@mail.gmail.com>
-	 <1399011100.2174.45.camel@dabdike> <11081303.OBX0h8mIfH@wuerfel>
-	 <20140505230104.GB8883@google.com>
-	 <1399344142.2164.67.camel@dabdike.int.hansenpartnership.com>
-	 <CAErSpo7wJTP+GyM4sNN6gAA69cV_j3m=nOsgJasi1XYFZMA2YA@mail.gmail.com>
-In-Reply-To: <CAErSpo7wJTP+GyM4sNN6gAA69cV_j3m=nOsgJasi1XYFZMA2YA@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:52794 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753218AbaEPDzZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 15 May 2014 23:55:25 -0400
+Message-ID: <1400212520.3289.156.camel@ul30vt.home>
+Subject: Re: [PATCH v2 00/15] PCI/iommu: Fix DMA alias problems
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andrew Cooks <acooks@gmail.com>
+Cc: "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	open list <linux-kernel@vger.kernel.org>
+Date: Thu, 15 May 2014 21:55:20 -0600
+In-Reply-To: <CAJtEV7ZETiGMpPhR=drGArMyqpnGFZoR3CkKEELApP+86=Oyfw@mail.gmail.com>
+References: <20140509151735.8321.22017.stgit@bling.home>
+	 <CAJtEV7YYB4W_+nZeMgiqZVDV+M4OyFJVBic09z=KbMjOpihnTQ@mail.gmail.com>
+	 <1400175834.3289.65.camel@ul30vt.home>
+	 <CAJtEV7ZETiGMpPhR=drGArMyqpnGFZoR3CkKEELApP+86=Oyfw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-05-06 at 07:18 -0600, Bjorn Helgaas wrote:
-> On Mon, May 5, 2014 at 8:42 PM, James Bottomley
-> <jbottomley@parallels.com> wrote:
-> > On Mon, 2014-05-05 at 17:01 -0600, Bjorn Helgaas wrote:
-> >> On Fri, May 02, 2014 at 10:42:18AM +0200, Arnd Bergmann wrote:
-> >
-> >> > I don't know about NCR_Q720, but all others are only used on machines
-> >> > where physical addresses and bus addresses are in the same space.
+On Fri, 2014-05-16 at 07:45 +0800, Andrew Cooks wrote:
+> Hi Alex
+> 
+> On Fri, May 16, 2014 at 1:43 AM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > On Thu, 2014-05-15 at 07:40 +0800, Andrew Cooks wrote:
+> >> Hi Alex
 > >>
-> >> In general, the driver doesn't know whether physical and bus addresses
-> >> are in the same space.  At least, I *hope* it doesn't have to know,
-> >> because it can't be very generic if it does.
+> >> On Fri, May 9, 2014 at 11:28 PM, Alex Williamson
+> >> <alex.williamson@redhat.com> wrote:
+> >> > ....
+> >> >
+> >> > Original description:
+> >> >
+> >> > This series attempts to fix a couple issues we've had outstanding in
+> >> > the PCI/IOMMU code for a while.  The first issue is with devices that
+> >> > use the wrong requester ID for DMA transactions.  We already have a
+> >> > sort of half-baked attempt to fix this for several Ricoh devices, but
+> >> > the fix only helps them be useful through IOMMU groups, not the
+> >> > general DMA case.  There are also several Marvell devices which use
+> >> > use a different wrong requester ID and don't even fit into the DMA
+> >> > source idea.  This series creates a DMA alias iterator that will
+> >> > step through each possible alias of a device, allowing IOMMUs to
+> >> > insert mappings for both the device and its aliases.
+> >> >
+> >> > Hand-in-hand with this is our broken pci_find_upstream_pcie_bridge()
+> >> > function, which is known to blowup when it finds itself suddenly at
+> >> > a PCIe device without crossing a PCIe-to-PCI bridge (as identified by
+> >> > the PCIe capability).  It also likes to make the invalid assumption
+> >> > that a PCIe device never has its requester ID masked by any usptream
+> >> > bus.  We can fix this using the above new DMA alias iterator, since
+> >> > that's effectively what this function was meant to do.
+> >> >
+> >>
+> >> There are two cases where the DMA requester id seems to use the wrong
+> >> slot (as opposed to function) in the patch I attached to
+> >> https://bugzilla.kernel.org/show_bug.cgi?id=42679
+> >> The original bug reports are listed in the patch.
+> >>
+> >> Unfortunately, I wasn't able to get test feedback on those two cases,
+> >> but I'm wondering...
+> >> Did I understand correctly that a slot alias is something that could be needed?
+> >> If so, is it a variation of the PCIe-to-PCI bridge case that's already
+> >> covered or will it require a different approach?
 > >
-> > The API was designed for the case where the memory resides on a PCI
-> > device (the Q720 case), the card config gives us a bus address, but if
-> > the system has an IOMMU, we'd have to do a dma_map of the entire region
-> > to set up the IOMMU before we can touch it.  The address it gets back
-> > from the dma_map (the dma_addr_t handle for the IOMMU mapping) is what
-> > we pass into dma_declare_coherent_memory().
+> > Wow, I didn't think that kind of broken was possible.  Maybe instead of
+> > a bitmap of function aliases we could have a single devfn alias for a
+> > device.  That means we'd only be able to support a single alias for a
+> > device, but since I don't think we've seen devices that use more than a
+> > single alias, maybe that's ok.
 > 
-> The IOMMU (if any) is only involved for DMA to system memory, and
-> there is no system memory in this picture.  The device does DMA to its
-> own memory; no dma_map is required for this.  We use
-> dma_declare_coherent_memory() to set things up so the CPU can also do
-> programmed I/O to the memory.
+> The current patch creates a context entry for the reported device
+> (function 0), plus it's alias (function 1). Is there reason to always
+> add a context entry for the reported devfn and define 'alias' to mean
+> 'one additional devfn'? That will work for all the Marvell cases.
 
-Right, but for the CPU to access memory on a device, the access has to
-go through the IOMMU: it has to be programmed to map the memory on the
-bus to a physical address.
+Right, that's effectively what it would become, probably making use of a
+flag bit to indicate whether the alias devfn is valid.  The
+pci_for_each_dma_alias() would just drop the loop over the
+dma_alias_funcs bitmap at replace it with a test of the flag and single
+dma alias devfn.  I need to think about whether the IOMMU group code can
+is such a simple replacement.
 
-> > The reason it does an
-> > ioremap is because this IOMMU mapped address is now physical to the CPU
-> > and we want to make the region available to virtual space.  Essentially
-> > the memory the allocator hands out behaves as proper virtual memory but
-> > it's backed by physical memory on the card behind the PCI bridge.
-> 
-> Yep, the programmed I/O depends on the ioremap().  But I don't think
-> it depends on any IOMMU mapping.
+I think it makes sense to always include both the actual devfn and, if
+it exists, an alias devfn.  Otherwise we'd just end up with more quirks
+to add later.
 
-At least on Parisc with U2/Uturn, unless there are IOMMU entries, you
-won't be able to address the memory on the device because it's behind
-the IOMMU.  For regions like this, the necessary IOMMU entries are set
-up at init time because without them you don't get memory mapped access
-to register space either.
+> In the testing I did, the Marvell controllers needed context entries
+> for both function 0 and 1. It would be nice if someone could confirm
+> or debunk this. I tested with a 88SE9172 with both ports of the
+> controller in use.
 
-So like I said, I can go either way.  The entries arrive properly set
-up, so perhaps we should use phys_addr_t because that's what's the other
-side of the IOMMU.  On the other hand it is a handle for something on
-the device, so perhaps it should be dma_addr_t.
+I think 0 needs to be quirked to 1, but I don't think 1 needs to be
+quirked to 0.  Unfortunately intel-iommu doesn't do any of the reference
+counting that amd_iommu does, so if we have 0 aliased to 1 and we unbind
+function 0 from the driver, intel-iommu will also teardown the mapping
+for function 1.  It's horrible.  That's a problem beyond what I'm trying
+to do here though, it already exists if you have two devices behind a
+PCIe-to-PCI bridge.  Thanks,
 
-James
-
-> > I'm still not that fussed about the difference between phys_addr_t and
-> > dma_addr_t, but if the cookie returned from a dma_map is a dma_addr_t
-> > then that's what dma_declare_coherent_memory() should use.  If it's a
-> > phys_addr_t, then likewise.
-> >
-> > James
-> >
-
+Alex
 
