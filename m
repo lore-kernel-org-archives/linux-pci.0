@@ -1,82 +1,191 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1400175834.3289.65.camel@ul30vt.home>
-References: <20140509151735.8321.22017.stgit@bling.home>
-	<CAJtEV7YYB4W_+nZeMgiqZVDV+M4OyFJVBic09z=KbMjOpihnTQ@mail.gmail.com>
-	<1400175834.3289.65.camel@ul30vt.home>
-Date: Fri, 16 May 2014 07:45:04 +0800
-Message-ID: <CAJtEV7ZETiGMpPhR=drGArMyqpnGFZoR3CkKEELApP+86=Oyfw@mail.gmail.com>
-Subject: Re: [PATCH v2 00/15] PCI/iommu: Fix DMA alias problems
-From: Andrew Cooks <acooks@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Michal Simek <monstr@monstr.eu>,
+	Tony Lindgren <tony@atomide.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org
+Subject: [RFC Patch Part1 V1 23/30] x86, devicetree, irq: use common mechanism to support irqdomain
+Date: Fri, 16 May 2014 16:05:43 +0800
+Message-Id: <1400227550-5935-24-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex
+Now the ioapic driver provides a common interface to create irqdomain,
+so replace the private implementation.
 
-On Fri, May 16, 2014 at 1:43 AM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Thu, 2014-05-15 at 07:40 +0800, Andrew Cooks wrote:
->> Hi Alex
->>
->> On Fri, May 9, 2014 at 11:28 PM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > ....
->> >
->> > Original description:
->> >
->> > This series attempts to fix a couple issues we've had outstanding in
->> > the PCI/IOMMU code for a while.  The first issue is with devices that
->> > use the wrong requester ID for DMA transactions.  We already have a
->> > sort of half-baked attempt to fix this for several Ricoh devices, but
->> > the fix only helps them be useful through IOMMU groups, not the
->> > general DMA case.  There are also several Marvell devices which use
->> > use a different wrong requester ID and don't even fit into the DMA
->> > source idea.  This series creates a DMA alias iterator that will
->> > step through each possible alias of a device, allowing IOMMUs to
->> > insert mappings for both the device and its aliases.
->> >
->> > Hand-in-hand with this is our broken pci_find_upstream_pcie_bridge()
->> > function, which is known to blowup when it finds itself suddenly at
->> > a PCIe device without crossing a PCIe-to-PCI bridge (as identified by
->> > the PCIe capability).  It also likes to make the invalid assumption
->> > that a PCIe device never has its requester ID masked by any usptream
->> > bus.  We can fix this using the above new DMA alias iterator, since
->> > that's effectively what this function was meant to do.
->> >
->>
->> There are two cases where the DMA requester id seems to use the wrong
->> slot (as opposed to function) in the patch I attached to
->> https://bugzilla.kernel.org/show_bug.cgi?id=42679
->> The original bug reports are listed in the patch.
->>
->> Unfortunately, I wasn't able to get test feedback on those two cases,
->> but I'm wondering...
->> Did I understand correctly that a slot alias is something that could be needed?
->> If so, is it a variation of the PCIe-to-PCI bridge case that's already
->> covered or will it require a different approach?
->
-> Wow, I didn't think that kind of broken was possible.  Maybe instead of
-> a bitmap of function aliases we could have a single devfn alias for a
-> device.  That means we'd only be able to support a single alias for a
-> device, but since I don't think we've seen devices that use more than a
-> single alias, maybe that's ok.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/prom.h  |    2 --
+ arch/x86/kernel/devicetree.c |   80 ++++--------------------------------------
+ arch/x86/kernel/irqinit.c    |    6 ----
+ 3 files changed, 7 insertions(+), 81 deletions(-)
 
-The current patch creates a context entry for the reported device
-(function 0), plus it's alias (function 1). Is there reason to always
-add a context entry for the reported devfn and define 'alias' to mean
-'one additional devfn'? That will work for all the Marvell cases.
+diff --git a/arch/x86/include/asm/prom.h b/arch/x86/include/asm/prom.h
+index fbeb06ed0eaa..1d081ac1cd69 100644
+--- a/arch/x86/include/asm/prom.h
++++ b/arch/x86/include/asm/prom.h
+@@ -26,12 +26,10 @@
+ extern int of_ioapic;
+ extern u64 initial_dtb;
+ extern void add_dtb(u64 data);
+-extern void x86_add_irq_domains(void);
+ void x86_of_pci_init(void);
+ void x86_dtb_init(void);
+ #else
+ static inline void add_dtb(u64 data) { }
+-static inline void x86_add_irq_domains(void) { }
+ static inline void x86_of_pci_init(void) { }
+ static inline void x86_dtb_init(void) { }
+ #define of_ioapic 0
+diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
+index 1ab002c045c9..a44d45df49f5 100644
+--- a/arch/x86/kernel/devicetree.c
++++ b/arch/x86/kernel/devicetree.c
+@@ -164,6 +164,7 @@ static void __init dtb_lapic_setup(void)
+ 
+ #ifdef CONFIG_X86_IO_APIC
+ static unsigned int ioapic_id;
++static struct irq_domain *dt_add_ioapic_domain(int ioapic_num, void *arg);
+ 
+ static void __init dtb_add_ioapic(struct device_node *dn)
+ {
+@@ -176,7 +177,8 @@ static void __init dtb_add_ioapic(struct device_node *dn)
+ 				dn->full_name);
+ 		return;
+ 	}
+-	mp_register_ioapic(++ioapic_id, r.start, gsi_top, NULL, NULL);
++	mp_register_ioapic(++ioapic_id, r.start, gsi_top,
++			   dt_add_ioapic_domain, dn);
+ }
+ 
+ static void __init dtb_ioapic_setup(void)
+@@ -293,7 +295,7 @@ static int ioapic_xlate(struct irq_domain *domain,
+ 
+ 	it = &of_ioapic_type[intspec[1]];
+ 
+-	idx = (u32) domain->host_data;
++	idx = (u32)(long)domain->host_data;
+ 	set_io_apic_irq_attr(&attr, idx, line, it->trigger, it->polarity);
+ 
+ 	rc = io_apic_setup_irq_pin_once(irq_find_mapping(domain, line),
+@@ -310,78 +312,10 @@ const struct irq_domain_ops ioapic_irq_domain_ops = {
+ 	.xlate = ioapic_xlate,
+ };
+ 
+-static void dt_add_ioapic_domain(unsigned int ioapic_num,
+-		struct device_node *np)
++static struct irq_domain *dt_add_ioapic_domain(int ioapic, void *arg)
+ {
+-	struct irq_domain *id;
+-	struct mp_ioapic_gsi *gsi_cfg;
+-	int ret;
+-	int num;
+-
+-	gsi_cfg = mp_ioapic_gsi_routing(ioapic_num);
+-	num = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
+-
+-	id = irq_domain_add_linear(np, num, &ioapic_irq_domain_ops,
+-			(void *)ioapic_num);
+-	BUG_ON(!id);
+-	if (gsi_cfg->gsi_base == 0) {
+-		/*
+-		 * The first NR_IRQS_LEGACY irq descs are allocated in
+-		 * early_irq_init() and need just a mapping. The
+-		 * remaining irqs need both. All of them are preallocated
+-		 * and assigned so we can keep the 1:1 mapping which the ioapic
+-		 * is having.
+-		 */
+-		irq_domain_associate_many(id, 0, 0, NR_IRQS_LEGACY);
+-
+-		if (num > NR_IRQS_LEGACY) {
+-			ret = irq_create_strict_mappings(id, NR_IRQS_LEGACY,
+-					NR_IRQS_LEGACY, num - NR_IRQS_LEGACY);
+-			if (ret)
+-				pr_err("Error creating mapping for the "
+-						"remaining IRQs: %d\n", ret);
+-		}
+-		irq_set_default_host(id);
+-	} else {
+-		ret = irq_create_strict_mappings(id, gsi_cfg->gsi_base, 0, num);
+-		if (ret)
+-			pr_err("Error creating IRQ mapping: %d\n", ret);
+-	}
+-}
+-
+-static void __init ioapic_add_ofnode(struct device_node *np)
+-{
+-	struct resource r;
+-	int i, ret;
++	struct device_node *np = arg;
+ 
+-	ret = of_address_to_resource(np, 0, &r);
+-	if (ret) {
+-		printk(KERN_ERR "Failed to obtain address for %s\n",
+-				np->full_name);
+-		return;
+-	}
+-
+-	for (i = 0; i < nr_ioapics; i++) {
+-		if (r.start == mpc_ioapic_addr(i)) {
+-			dt_add_ioapic_domain(i, np);
+-			return;
+-		}
+-	}
+-	printk(KERN_ERR "IOxAPIC at %s is not registered.\n", np->full_name);
+-}
+-
+-void __init x86_add_irq_domains(void)
+-{
+-	struct device_node *dp;
+-
+-	if (!of_have_populated_dt())
+-		return;
+-
+-	for_each_node_with_property(dp, "interrupt-controller") {
+-		if (of_device_is_compatible(dp, "intel,ce4100-ioapic"))
+-			ioapic_add_ofnode(dp);
+-	}
++	return mp_irqdomain_create(ioapic, np, &ioapic_irq_domain_ops);
+ }
+-#else
+-void __init x86_add_irq_domains(void) { }
+ #endif
+diff --git a/arch/x86/kernel/irqinit.c b/arch/x86/kernel/irqinit.c
+index 7f50156542fb..a9c0066762e5 100644
+--- a/arch/x86/kernel/irqinit.c
++++ b/arch/x86/kernel/irqinit.c
+@@ -87,12 +87,6 @@ void __init init_IRQ(void)
+ 	int i;
+ 
+ 	/*
+-	 * We probably need a better place for this, but it works for
+-	 * now ...
+-	 */
+-	x86_add_irq_domains();
+-
+-	/*
+ 	 * On cpu 0, Assign IRQ0_VECTOR..IRQ15_VECTOR's to IRQ 0..15.
+ 	 * If these IRQ's are handled by legacy interrupt-controllers like PIC,
+ 	 * then this configuration will likely be static after the boot. If
+-- 
+1.7.10.4
 
-In the testing I did, the Marvell controllers needed context entries
-for both function 0 and 1. It would be nice if someone could confirm
-or debunk this. I tested with a 88SE9172 with both ports of the
-controller in use.
-
-Thanks,
-
-a.
