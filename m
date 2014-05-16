@@ -1,50 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:49111 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304AbaEIFbb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 01:31:31 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N5A009UMKODQG40@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 09 May 2014 14:31:25 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] PCI: exynos: Remove unnecessary OOM messages
-Date: Fri, 09 May 2014 14:31:25 +0900
-Message-id: <000301cf6b47$eb8de9f0$c2a9bdd0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [RFC Patch Part1 V1 16/30] x86, irq: reorganize IO_APIC_get_PCI_irq_vector() to prepare for irqdomain
+Date: Fri, 16 May 2014 16:05:36 +0800
+Message-Id: <1400227550-5935-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The site-specific OOM messages are unnecessary, because they
-duplicate the MM subsystem generic OOM message.
+Reorganize function IO_APIC_get_PCI_irq_vector() a bit to better support
+coming irqdomain.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pci-exynos.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   62 ++++++++++++++++++++++------------------
+ 1 file changed, 34 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 3de6bfb..81aa700 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -568,10 +568,8 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index b74ec1183d34..dd81b58cce95 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1012,7 +1012,7 @@ static int pin_2_irq(int idx, int apic, int pin)
+ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 				struct io_apic_irq_attr *irq_attr)
+ {
+-	int ioapic_idx, i, best_guess = -1;
++	int irq, i, best_guess = -1;
  
- 	exynos_pcie = devm_kzalloc(&pdev->dev, sizeof(*exynos_pcie),
- 				GFP_KERNEL);
--	if (!exynos_pcie) {
--		dev_err(&pdev->dev, "no memory for exynos pcie\n");
-+	if (!exynos_pcie)
- 		return -ENOMEM;
--	}
+ 	apic_printk(APIC_DEBUG,
+ 		    "querying PCI -> IRQ mapping bus:%d, slot:%d, pin:%d.\n",
+@@ -1022,41 +1022,47 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 			    "PCI BIOS passed nonexistent PCI bus %d!\n", bus);
+ 		return -1;
+ 	}
++
+ 	for (i = 0; i < mp_irq_entries; i++) {
+ 		int lbus = mp_irqs[i].srcbus;
++		int ioapic_idx, found = 0;
++
++		if (test_bit(lbus, mp_bus_not_pci) || (bus != lbus) ||
++		    mp_irqs[i].irqtype != mp_INT ||
++		    (slot != ((mp_irqs[i].srcbusirq >> 2) & 0x1f)))
++			continue;
  
- 	pp = &exynos_pcie->pp;
+ 		for_each_ioapic(ioapic_idx)
+ 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic ||
+-			    mp_irqs[i].dstapic == MP_APIC_ALL)
++			    mp_irqs[i].dstapic == MP_APIC_ALL) {
++				found = 1;
+ 				break;
++			}
++		if (!found)
++			continue;
  
+-		if (!test_bit(lbus, mp_bus_not_pci) &&
+-		    mp_irqs[i].irqtype == mp_INT &&
+-		    (bus == lbus) &&
+-		    (slot == ((mp_irqs[i].srcbusirq >> 2) & 0x1f))) {
+-			int irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
+-
+-			if (!(ioapic_idx || IO_APIC_IRQ(irq)))
+-				continue;
++		/* Skip ISA IRQs */
++		irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
++		if (ioapic_idx == 0 && !IO_APIC_IRQ(irq))
++			continue;
+ 
+-			if (pin == (mp_irqs[i].srcbusirq & 3)) {
+-				set_io_apic_irq_attr(irq_attr, ioapic_idx,
+-						     mp_irqs[i].dstirq,
+-						     irq_trigger(i),
+-						     irq_polarity(i));
+-				return irq;
+-			}
+-			/*
+-			 * Use the first all-but-pin matching entry as a
+-			 * best-guess fuzzy result for broken mptables.
+-			 */
+-			if (best_guess < 0) {
+-				set_io_apic_irq_attr(irq_attr, ioapic_idx,
+-						     mp_irqs[i].dstirq,
+-						     irq_trigger(i),
+-						     irq_polarity(i));
+-				best_guess = irq;
+-			}
++		if (pin == (mp_irqs[i].srcbusirq & 3)) {
++			set_io_apic_irq_attr(irq_attr, ioapic_idx,
++					     mp_irqs[i].dstirq,
++					     irq_trigger(i),
++					     irq_polarity(i));
++			return irq;
++		}
++		/*
++		 * Use the first all-but-pin matching entry as a
++		 * best-guess fuzzy result for broken mptables.
++		 */
++		if (best_guess < 0) {
++			set_io_apic_irq_attr(irq_attr, ioapic_idx,
++					     mp_irqs[i].dstirq,
++					     irq_trigger(i),
++					     irq_polarity(i));
++			best_guess = irq;
+ 		}
+ 	}
+ 	return best_guess;
 -- 
 1.7.10.4
-
 
