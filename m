@@ -1,59 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46449 "EHLO mx1.redhat.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:46516 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934213AbaEMPN1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 May 2014 11:13:27 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org,
-	Alexander Gordeev <agordeev@redhat.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	Alexandre Bounine <alexandre.bounine@idt.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND] rapidio/tsi721: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Tue, 13 May 2014 17:01:32 +0200
-Message-Id: <1399993292-31692-1-git-send-email-agordeev@redhat.com>
+	id S1755401AbaEPJBs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 May 2014 05:01:48 -0400
+Message-ID: <5375D3C8.1060204@ti.com>
+Date: Fri, 16 May 2014 14:30:56 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Jingoo Han <jg1.han@samsung.com>,
+	"'Santosh Shilimkar'" <santosh.shilimkar@ti.com>,
+	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<rogerq@ti.com>, <balajitk@ti.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Marek Vasut'" <marex@denx.de>
+Subject: Re: [PATCH 06/17] pci: host: pcie-designware: Use *base-mask* for
+ configuring the iATU
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <4528185.oZbgyuuFKX@wuerfel> <537302CD.7000701@ti.com> <5281007.CFRjW0Yeu2@wuerfel>
+In-Reply-To: <5281007.CFRjW0Yeu2@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Hi Arnd,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Matt Porter <mporter@kernel.crashing.org>
-Cc: Alexandre Bounine <alexandre.bounine@idt.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/rapidio/devices/tsi721.c |   11 +++--------
- 1 files changed, 3 insertions(+), 8 deletions(-)
+On Wednesday 14 May 2014 06:15 PM, Arnd Bergmann wrote:
+> On Wednesday 14 May 2014 11:14:45 Kishon Vijay Abraham I wrote:
+>> hi Arnd,
+>>
+>> On Tuesday 13 May 2014 07:04 PM, Arnd Bergmann wrote:
+>>> On Tuesday 13 May 2014 15:27:46 Arnd Bergmann wrote:
+>>>> On Tuesday 13 May 2014 18:56:23 Kishon Vijay Abraham I wrote:
+>>>>>> If you have a case where the outbound translation is a 256MB (i.e. 28bit)
+>>>>>> section of the CPU address space, that could be represented as
+>>>>>>
+>>>>>>       ranges = <0x82000000 0 0  0xb0000000  0 0x10000000>;
+>>>>>>
+>>>>>> or 
+>>>>>>
+>>>>>>       ranges = <0x82000000 0 0xb0000000  0xb0000000  0 0x10000000>;
+>>>>>>
+>>>>>> depending on whether you want the BARs to be programmed using a low
+>>>>>> address 0x0-0x0fffffff or an address matching the window
+>>>>>> 0xb0000000-0xbfffffff.
+>>>>>
+>>>>> The problem is, for configuring the window starting at 0xb0000000, the ATU
+>>>>> should be programmed 0x0000000 (the cpu address for it will be 0xb0000000 though).
+>>>>>
+>>>>
+>>>> Then use the first of the two?
+>>>>
+>>>
+>>> To clarify: using <0x82000000 0 0  0xb0000000  0 0x10000000> will give you 
+>>> a mem_offset of 0xb0000000, which should work just fine for this case.
+>>>
+>>> What I don't understand is why the ATU cares about whether the outbound
+>>> address is 0x0000000 or 0xb0000000 if it just decodes the lower 28 bit
+>>> anyway. Did you mean that we have to program the BARs using low addresses
+>>> regardless of what is programmed in the ATU? That would make more sense,
+>>> and it also matches what I suggested.
+>>
+>> No, It's not like it decodes only the lower 28bits. The BARs is programmed with
+>> 32 bit value.
+>>
+>> My pcie dt node has
+>>  ranges = <0x00000800 0 0x20001000 0x20001000 0 0x00002000  /* CONFIG */
+>>            0x81000000 0 0          0x20003000 0 0x00010000  /* IO */
+>>            0x82000000 0 0x20013000 0x20013000 0 0xffed000>; /* MEM */
+>>
+>> Consider MEM address space..
+>>
+>> Here both PCI address and CPU address is 0x20013000. So when there is a write
+>> to cpu addr 0x20013000 [writel(virt_addr(0x20013000)], we want it to be
+>> translated to PCI addr 0x20013000. So in 'ATU', we would expect *base* to be
+>> programmed to *0x20013000* and target to be programmed to *0x20013000*. But
+>> that's not the case for DRA7xx. For DRA7xx *base* should be programmed to
+>> *0x0013000* and target should be programmed to *0x20013000*.
+> 
+> Ok, got it, thanks for your patience.
+> 
+> I think this would best be modeled as a separate bus node that contains the
+> restriction, like this:
+> 
+> / {
+> 	#address-cells = <1>; // or <2> if you support > 4GB address space
+> 	#size-cells = <1>;
+> 
+> 	soc {
+> 		#address-cells <1>;
+> 		#size-cells = <1>;
+> 		ranges;
+> 		dma-ranges;
+> 
+> 		... // all normal devices
+> 
+> 		axi@20000000 {
+> 			#size-cells = <1>;
+> 			#address-cells = <1>;
+> 			dma-ranges; // can access all 4GB outbound
+> 			ranges = <0 0x20000000 0x10000000>; // 28-bit bus
+> 
+> 			pci@0 {
+> 				reg = <0x0    0x1000>, // internal regs
+> 				      <0x1000 0x2000>; // config space
 
-diff --git a/drivers/rapidio/devices/tsi721.c b/drivers/rapidio/devices/tsi721.c
-index 1753dc6..2ca1a0b 100644
---- a/drivers/rapidio/devices/tsi721.c
-+++ b/drivers/rapidio/devices/tsi721.c
-@@ -768,15 +768,10 @@ static int tsi721_enable_msix(struct tsi721_device *priv)
- 	}
- #endif /* CONFIG_RAPIDIO_DMA_ENGINE */
- 
--	err = pci_enable_msix(priv->pdev, entries, ARRAY_SIZE(entries));
-+	err = pci_enable_msix_exact(priv->pdev, entries, ARRAY_SIZE(entries));
- 	if (err) {
--		if (err > 0)
--			dev_info(&priv->pdev->dev,
--				 "Only %d MSI-X vectors available, "
--				 "not using MSI-X\n", err);
--		else
--			dev_err(&priv->pdev->dev,
--				"Failed to enable MSI-X (err=%d)\n", err);
-+		dev_err(&priv->pdev->dev,
-+			"Failed to enable MSI-X (err=%d)\n", err);
- 		return err;
- 	}
- 
--- 
-1.7.7.6
+The internal reg address space starts at 0x51000000. By Using this <0
+0x20000000 0x10000000>; as ranges, we are not able to get the memory resource
+properly. Can we use multiple ranges? how do we specify which ranges the *reg*
+property to use?
 
+Btw I was using *simple-bus* as compatible to *axi*. Or should I create a new
+*axi* driver to create the pcie memory resources myself?
+
+Thanks
+Kishon
