@@ -1,93 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:57777 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751168AbaEAQuM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 May 2014 12:50:12 -0400
-Date: Thu, 1 May 2014 10:50:03 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v7 01/10] PCI: host: rcar: Add Renesas R-Car PCIe driver
-Message-ID: <20140501165003.GC3296@obsidianresearch.com>
-References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
- <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
- <20140424191901.GE29593@google.com>
- <9b8bedae9d604383ac7ec22fd0f62fdb@HKXPR06MB168.apcprd06.prod.outlook.com>
- <CAErSpo6Autto4n4A4wHtXQNJzD3RKevkVcLZHUods-2-eiRDYQ@mail.gmail.com>
- <20140428203501.GA3016@obsidianresearch.com>
- <ac795ce3bb6349708e2e96686e19d24f@HKXPR06MB168.apcprd06.prod.outlook.com>
- <20140430154345.GA1705@obsidianresearch.com>
- <b9160c7a49304270b5070dcf49482723@HKXPR06MB168.apcprd06.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b9160c7a49304270b5070dcf49482723@HKXPR06MB168.apcprd06.prod.outlook.com>
+Received: from ns.horizon.com ([71.41.210.147]:59755 "HELO ns.horizon.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754517AbaEPG2Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 16 May 2014 02:28:25 -0400
+Date: 16 May 2014 02:28:23 -0400
+Message-ID: <20140516062823.15105.qmail@ns.horizon.com>
+From: colin@horizon.com
+To: alex.williamson@redhat.com, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 00/15] PCI/iommu: Fix DMA alias problems
+Cc: acooks@gmail.com, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux@horizon.com
+In-Reply-To: <400175834.3289.65.camel@ul30vt.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 01, 2014 at 09:50:56AM +0000, Phil Edworthy wrote:
+Alex Williamson wrote:
+> Wow, I didn't think that kind of broken was possible.  Maybe instead of
+> a bitmap of function aliases we could have a single devfn alias for a
+> device.  That means we'd only be able to support a single alias for a
+> device, but since I don't think we've seen devices that use more than a
+> single alias, maybe that's ok.
 
-> > The logic should be:
-> >  if (bus == primary)
-> >     do io access to host bridge
-> >  else if (bus == secondary)
-> >     issue type 0 TLP on the wire
-> >  else if (bus > secondary && bus <= subordinate)
-> >     issue type 1 TLP on the wire
-> >  else
-> >     fail, invalid bus number
-> > Where the three values come from the register in the PCI host bridge's
-> > configuration space, and are kept in sync with the programming from
-> > the Linux PCI core.
-> > 
-> > It is just a happy hapenstance that root_bus_nr equals the value the
-> > PCI core programmed into secondary - that is not guarenteed, you must
-> > use the primary value directly.
+In my (never finished) patch set for the same problem, the first thing
+I did was
 
-> For type0 TLPs, we are not checking that root_bus_nr equals the
-> value the PCI core programmed into secondary, we are checking that
-> the (root_bus_nr == bus->parent->number). The only way this wouldn't
-> work is if root_bus_nr was not the root bus number.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a13d6825..7788870a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -251,12 +251,13 @@ struct pci_dev {
+ 	struct proc_dir_entry *procent;	/* device entry in /proc/bus/pci */
+ 	struct pci_slot	*slot;		/* Physical slot this device is in */
+ 
+-	unsigned int	devfn;		/* encoded device & function index */
+ 	unsigned short	vendor;
+ 	unsigned short	device;
+ 	unsigned short	subsystem_vendor;
+ 	unsigned short	subsystem_device;
+ 	unsigned int	class;		/* 3 bytes: (base,sub,prog-if) */
++	u8		devfn;		/* encoded device & function index */
++	u8		devfn_quirk;	/* zero is non-quirky */
+ 	u8		revision;	/* PCI revision, low byte of class word */
+ 	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
+ 	u8		pcie_cap;	/* PCIe capability offset */
 
-Okay, that isn't as sketchy, but that process still ignores the
-subordinate bus number and the failure case as required by PCI.
-
-The goal here is to have the stuff below the drivers implement the PCI
-spec so that the core code can assume everything below is
-conformant. Drivers should not introduce gratuitous differences 'just
-because'
-
-There is no reason drivers should be using PCI core structures to make
-decisions when the spec says those decisions are driven by config
-space fields.
-
-This way the PCI core code doesn't have to be aware of any weird
-non-standard edge cases.. Such as not failing bus numbers beyond the
-subordinate bus number.
-
-> Since the Synopsys DW driver also saves off sys->busnr and later
-> uses this to determine if accesses are for the host bridge, I guess
-> that means it won't always work either, right? Or is it ok because
-> the DW driver saves sys->busnr in its .scan function?
-
-Sounds like it is making the same mistake, and nobody noticed. This is
-another reason why it is important to implement correctly so people
-copying copy the right stuff :)
-
-> When would the PCI core change the root bus number to something
-> other than set in sys->busnr?
-
-I think the more likely scenario is that 'sys' in general is
-architecture specific and its use is being discouraged so that host
-drivers are not arch specific.
-
-A domain driver like rcar should always place the root complex
-integrated bus as bus 0 in the domain.
-
-Jason
+I encoded "devfn_quirk" as a delta to devfn, so that zero would mean
+"no quirk", and no existing intialization would need changing.
