@@ -1,52 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:55984 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090AbaEIG7m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 02:59:42 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Received: from comal.ext.ti.com ([198.47.26.152]:49603 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752975AbaEPUag convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 May 2014 16:30:36 -0400
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Magnus Damm <damm@opensource.se>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pci: rcar host needs OF
-Date: Fri, 09 May 2014 08:59:12 +0200
-Message-ID: <13437915.HeCZ0zGaLk@wuerfel>
-In-Reply-To: <9614403.Lyniq7F3TJ@wuerfel>
-References: <1399560433-1402630-1-git-send-email-arnd@arndb.de> <CAMuHMdWBzBneDqyDxK5HU3Bt_5CyRfTM_f_6YGJHokG_v17_sw@mail.gmail.com> <9614403.Lyniq7F3TJ@wuerfel>
-MIME-Version: 1.0
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>
+Subject: RE: [PATCH v1 5/5] pci: keystone: add pcie driver based on
+ designware core driver
+Date: Fri, 16 May 2014 20:29:56 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com>
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+ <6048322.x3M3sdDEWO@wuerfel> <5374FD24.8000806@ti.com>
+ <22200719.Jb5jnJylJH@wuerfel> <20140515183919.GC11650@obsidianresearch.com>
+ <53751DDF.40304@ti.com> <20140515205210.GB14722@obsidianresearch.com>
+In-Reply-To: <20140515205210.GB14722@obsidianresearch.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 08 May 2014 17:21:54 Arnd Bergmann wrote:
-> On Thursday 08 May 2014 17:16:32 Geert Uytterhoeven wrote:
-> > On Thu, May 8, 2014 at 5:06 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
-> > >> @@ -27,7 +27,7 @@ config PCI_TEGRA
-> > >>
-> > >>   config PCI_RCAR_GEN2
-> > >>         bool "Renesas R-Car Gen2 Internal PCI controller"
-> > >> -       depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
-> > >> +       depends on ARCH_SHMOBILE || (ARM && OF && COMPILE_TEST)
-> > >>         help
-> > >>           Say Y here if you want internal PCI support on R-Car Gen2 SoC.
-> > >>           There are 3 internal PCI controllers available with a single
-> > >>
-> > >
-> > > This driver /should/ be able to be built for just the platform case
-> > > so it sounds like f8f2fe7355fb stopped this but no-one has yet to
-> > > notice.
-> > 
-> > You mean include/linux/of_pci.h should provide a dummy version of
-> > of_irq_parse_and_map_pci() returning 0 in case OF=n?
-> 
-> Good idea, I'll give this patch some testing in the randconfig builder,
-> replacing the one above.
+>-----Original Message-----
+>From: Jason Gunthorpe [mailto:jgunthorpe@obsidianresearch.com]
+>Sent: Thursday, May 15, 2014 4:52 PM
+>To: Karicheri, Muralidharan
+>Cc: Arnd Bergmann; linux-arm-kernel@lists.infradead.org; Strashko, Grygorii; linux-
+>pci@vger.kernel.org; Jingoo Han; linux-kernel@vger.kernel.org; Shilimkar, Santosh; Mohit
+>Kumar; Bjorn Helgaas
+>Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware core
+>driver
+>
+>On Thu, May 15, 2014 at 04:04:47PM -0400, Murali Karicheri wrote:
+>
+>> Jason What you mean by "The PCI core handles setting the maximum read
+>> request size already" I see there is function pcie_write_mrrs() in the
+>> drivers/pci/probe.c that reads the mps using pcie_get_mps() and then
+>> set mrrs to mps. But this function is called only from
+>> pcie_bus_configure_set() that is called by
+>> pcie_bus_configure_settings()
+>
+>Right, that is the common code that correctly sets the MRRS that you should be using
+>instead of quirks.
+>
+>> None of them gets called on ARM platform.
+>
+>Hmm, a cursory glance tells me the same as well.
+>
+>That seems to be the root problem here, ARM needs to do the PCIE setup just as much as
+>any other arch.
+>
+>So, I would prefer to see you fix ARM common code to call
+>pcie_bus_configure_settings() properly, that seems very simple and is obviously needed for
+>any PCI-E host driver on ARM.
+>
 
-The first version was flawed, I submitted a new patch "[PATCH] of/irq:
-provide int of_irq_parse_and_map_pci wrapper" now.
+But pcie_bus_configure_settings just make sure the mrrs for a device is not greater than
+the max payload size. But the quirk that I need is to limit the size of mrr to 256 as required
+by the keystone PCI controller. So I still need to implement a quirk to enforce this limit.
 
-	Arnd
+In my reply to Arnd, I have agreed to move the quirk to keystone driver.
+
+Murali
+>Thoughts? Arnd? Bjorn?
+>
+>Jason
