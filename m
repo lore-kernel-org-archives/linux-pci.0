@@ -1,106 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52794 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753218AbaEPDzZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 May 2014 23:55:25 -0400
-Message-ID: <1400212520.3289.156.camel@ul30vt.home>
-Subject: Re: [PATCH v2 00/15] PCI/iommu: Fix DMA alias problems
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Andrew Cooks <acooks@gmail.com>
-Cc: "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	open list <linux-kernel@vger.kernel.org>
-Date: Thu, 15 May 2014 21:55:20 -0600
-In-Reply-To: <CAJtEV7ZETiGMpPhR=drGArMyqpnGFZoR3CkKEELApP+86=Oyfw@mail.gmail.com>
-References: <20140509151735.8321.22017.stgit@bling.home>
-	 <CAJtEV7YYB4W_+nZeMgiqZVDV+M4OyFJVBic09z=KbMjOpihnTQ@mail.gmail.com>
-	 <1400175834.3289.65.camel@ul30vt.home>
-	 <CAJtEV7ZETiGMpPhR=drGArMyqpnGFZoR3CkKEELApP+86=Oyfw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:55627 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030185AbaEQRba (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 17 May 2014 13:31:30 -0400
+Received: by mail-ig0-f180.google.com with SMTP id c1so2000381igq.1
+        for <linux-pci@vger.kernel.org>; Sat, 17 May 2014 10:31:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <alpine.LFD.2.11.1405170706260.536@localhost>
+References: <alpine.LFD.2.11.1405170706260.536@localhost>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 17 May 2014 11:31:09 -0600
+Message-ID: <CAErSpo6jn1gG=s9Vaz0_Lvf-ZKi=1QUz0WRZ55St--LBOUSZ7Q@mail.gmail.com>
+Subject: Re: could the [x86] Kconfig content for PCI be cleaned up at all?
+To: "Robert P. J. Day" <rpjday@crashcourse.ca>
+Cc: Linux PCI mailing list <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-05-16 at 07:45 +0800, Andrew Cooks wrote:
-> Hi Alex
-> 
-> On Fri, May 16, 2014 at 1:43 AM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Thu, 2014-05-15 at 07:40 +0800, Andrew Cooks wrote:
-> >> Hi Alex
-> >>
-> >> On Fri, May 9, 2014 at 11:28 PM, Alex Williamson
-> >> <alex.williamson@redhat.com> wrote:
-> >> > ....
-> >> >
-> >> > Original description:
-> >> >
-> >> > This series attempts to fix a couple issues we've had outstanding in
-> >> > the PCI/IOMMU code for a while.  The first issue is with devices that
-> >> > use the wrong requester ID for DMA transactions.  We already have a
-> >> > sort of half-baked attempt to fix this for several Ricoh devices, but
-> >> > the fix only helps them be useful through IOMMU groups, not the
-> >> > general DMA case.  There are also several Marvell devices which use
-> >> > use a different wrong requester ID and don't even fit into the DMA
-> >> > source idea.  This series creates a DMA alias iterator that will
-> >> > step through each possible alias of a device, allowing IOMMUs to
-> >> > insert mappings for both the device and its aliases.
-> >> >
-> >> > Hand-in-hand with this is our broken pci_find_upstream_pcie_bridge()
-> >> > function, which is known to blowup when it finds itself suddenly at
-> >> > a PCIe device without crossing a PCIe-to-PCI bridge (as identified by
-> >> > the PCIe capability).  It also likes to make the invalid assumption
-> >> > that a PCIe device never has its requester ID masked by any usptream
-> >> > bus.  We can fix this using the above new DMA alias iterator, since
-> >> > that's effectively what this function was meant to do.
-> >> >
-> >>
-> >> There are two cases where the DMA requester id seems to use the wrong
-> >> slot (as opposed to function) in the patch I attached to
-> >> https://bugzilla.kernel.org/show_bug.cgi?id=42679
-> >> The original bug reports are listed in the patch.
-> >>
-> >> Unfortunately, I wasn't able to get test feedback on those two cases,
-> >> but I'm wondering...
-> >> Did I understand correctly that a slot alias is something that could be needed?
-> >> If so, is it a variation of the PCIe-to-PCI bridge case that's already
-> >> covered or will it require a different approach?
-> >
-> > Wow, I didn't think that kind of broken was possible.  Maybe instead of
-> > a bitmap of function aliases we could have a single devfn alias for a
-> > device.  That means we'd only be able to support a single alias for a
-> > device, but since I don't think we've seen devices that use more than a
-> > single alias, maybe that's ok.
-> 
-> The current patch creates a context entry for the reported device
-> (function 0), plus it's alias (function 1). Is there reason to always
-> add a context entry for the reported devfn and define 'alias' to mean
-> 'one additional devfn'? That will work for all the Marvell cases.
+On Sat, May 17, 2014 at 5:29 AM, Robert P. J. Day <rpjday@crashcourse.ca> wrote:
+>
+>   digging through the current PCI code and Kconfig files and it seems
+> like some of that could be made simpler, but i'm willing to be
+> convinced otherwise.
 
-Right, that's effectively what it would become, probably making use of a
-flag bit to indicate whether the alias devfn is valid.  The
-pci_for_each_dma_alias() would just drop the loop over the
-dma_alias_funcs bitmap at replace it with a test of the flag and single
-dma alias devfn.  I need to think about whether the IOMMU group code can
-is such a simple replacement.
+I'm sure it could be cleaned up, and it would be great if you did!
 
-I think it makes sense to always include both the actual devfn and, if
-it exists, an alias devfn.  Otherwise we'd just end up with more quirks
-to add later.
+I don't know the reason why all the arches source
+drivers/pci/pcie/Kconfig directly; it seems like that should be done
+from drivers/pci/Kconfig.
 
-> In the testing I did, the Marvell controllers needed context entries
-> for both function 0 and 1. It would be nice if someone could confirm
-> or debunk this. I tested with a 88SE9172 with both ports of the
-> controller in use.
+>   first, from arch/x86/Kconfig, rather than simply sourcing the file
+> "drivers/pci/Kconfig" (as is done with many other drivers
+> directories), that Kconfig file defines:
+>
+>   menu "Bus options (PCI etc.)"
+>
+>   config PCI
+>         bool "PCI support"
+>         default y
+>   ... snip ...
+>
+> and later on, sources the Kconfig files for PCI and PCIe individually:
+>
+>   source "drivers/pci/pcie/Kconfig"
+>
+>   source "drivers/pci/Kconfig"
+>
+> and even further down, finally sources the file for PCI hotplug after
+> PCMCIA:
+>
+>   source "drivers/pcmcia/Kconfig"
+>
+>   source "drivers/pci/hotplug/Kconfig"
+>
+> given the dependencies, could all of this not be encapsulated in the
+> top-level Kconfig files under drivers/pci?
+>
+>   next, in drivers/Makefile, pci code is pulled in with the single
+> statement:
+>
+>   obj-$(CONFIG_PCI)               += pci/
+>
+> given that, can't one drop all the "depends on PCI" directives from
+> the file drivers/pci/Kconfig? or just wrap the whole file in a "if
+> PCI" test? (unless there's something i'm missing here.)
+>
+>   and could the same thing not be said for the pcie/ subdirectory?
+> drivers/pci/Makefile contains the line:
+>
+>   obj-$(CONFIG_PCIEPORTBUS) += pcie/
+>
+> with the dependency in drivers/pci/pcie/Kconfig:
+>
+>   config PCIEPORTBUS
+>         bool "PCI Express Port Bus support"
+>         depends on PCI
+>
+> suggesting that drivers/pci/pcie/Kconfig could also be simplified
+> quite a bit by dropping redundant dependency directives.
+>
+>   thoughts?
 
-I think 0 needs to be quirked to 1, but I don't think 1 needs to be
-quirked to 0.  Unfortunately intel-iommu doesn't do any of the reference
-counting that amd_iommu does, so if we have 0 aliased to 1 and we unbind
-function 0 from the driver, intel-iommu will also teardown the mapping
-for function 1.  It's horrible.  That's a problem beyond what I'm trying
-to do here though, it already exists if you have two devices behind a
-PCIe-to-PCI bridge.  Thanks,
+I don't know all the history behind what we have now, so I can't give
+you much advice.  I think you just have to work through the process of
+simplifying things and see whether it turns out to be feasible.
 
-Alex
-
+Bjorn
