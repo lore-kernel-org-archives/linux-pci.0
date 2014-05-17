@@ -1,33 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2lp0211.outbound.protection.outlook.com ([207.46.163.211]:31751
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752154AbaE0OW0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 May 2014 10:22:26 -0400
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: "andreas.noever@gmail.com" <andreas.noever@gmail.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"greg@kroah.com" <greg@kroah.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 13/15] pci: Suspend/resume quirks for appel
- thunderbolt
-Date: Tue, 27 May 2014 14:07:22 +0000
-Message-ID: <1401199642.7663.1.camel@x230>
-References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
-	 <1401117492-2870-14-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401117492-2870-14-git-send-email-andreas.noever@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Eli Billauer <eli.billauer@gmail.com>
+To: tj@kernel.org
+Cc: devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Eli Billauer <eli.billauer@gmail.com>
+Subject: [PATCH 3/3] dma-mapping: pci: Add devm_ interface for pci_map_single
+Date: Sat, 17 May 2014 15:22:25 +0300
+Message-Id: <1400329345-15556-3-git-send-email-eli.billauer@gmail.com>
+In-Reply-To: <1400329345-15556-1-git-send-email-eli.billauer@gmail.com>
+References: <1400329345-15556-1-git-send-email-eli.billauer@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gTW9uLCAyMDE0LTA1LTI2IGF0IDE3OjE4ICswMjAwLCBBbmRyZWFzIE5vZXZlciB3cm90ZToN
-Cj4gQWRkIHR3byBxdWlya3MgdG8gc3VwcG9ydCB0aHVuZGVyYm9sdCBzdXNwZW5kL3Jlc3VtZSBv
-biBhcHBsZSBzeXN0ZW1zLg0KPiBXZSBuZWVkIHRvIHBlcmZvcm0gdHdvIGRpZmZlcmVudCBhY3Rp
-b25zIGR1cmluZyBzdXNwZW5kIGFuZCByZXN1bWU6DQoNCkl0IHNlZW1zIGxpa2Ugd2Ugb3VnaHQg
-dG8gYmUgYWJsZSB0byBkbyB0aGlzIHdpdGggYSBwb3dlciBkb21haW4sIHJhdGhlcg0KdGhhbiBo
-YXZpbmcgdG8gYWRkIGNvZGUgdG8gdGhlIFBDSSBjb3JlPyBJJ3ZlIGdvdCBhbiBpbXBsZW1lbnRh
-dGlvbiB0aGF0DQpjdXJyZW50bHkgZmFpbHMgZm9yIHJlYXNvbnMgSSBoYXZlbid0IGRlYnVnZ2Vk
-LCBJJ2xsIHNlZSBpZiBJIGNhbiBnZXQgaXQNCndvcmtpbmcgdG9kYXkuDQoNCi0tIA0KTWF0dGhl
-dyBHYXJyZXR0IDxtYXR0aGV3LmdhcnJldHRAbmVidWxhLmNvbT4NCg==
+
+Signed-off-by: Eli Billauer <eli.billauer@gmail.com>
+---
+ Documentation/driver-model/devres.txt |    2 ++
+ include/asm-generic/pci-dma-compat.h  |   17 +++++++++++++++++
+ 2 files changed, 19 insertions(+), 0 deletions(-)
+
+diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
+index 2112a00..fea2c69 100644
+--- a/Documentation/driver-model/devres.txt
++++ b/Documentation/driver-model/devres.txt
+@@ -274,6 +274,8 @@ DMA
+ PCI
+   pcim_enable_device()	: after success, all PCI ops become managed
+   pcim_pin_device()	: keep PCI device enabled after release
++  pcim_map_single()
++  pcim_unmap_single()
+ 
+ IOMAP
+   devm_ioport_map()
+diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
+index 1437b7d..444e598 100644
+--- a/include/asm-generic/pci-dma-compat.h
++++ b/include/asm-generic/pci-dma-compat.h
+@@ -113,4 +113,21 @@ static inline int pci_set_consistent_dma_mask(struct pci_dev *dev, u64 mask)
+ }
+ #endif
+ 
++/*
++ * Managed DMA API
++ */
++
++static inline dma_addr_t
++pcim_map_single(struct pci_dev *hwdev, void *ptr, size_t size, int direction)
++{
++	return dmam_map_single(hwdev == NULL ? NULL : &hwdev->dev, ptr, size, (enum dma_data_direction)direction);
++}
++
++static inline void
++pcim_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr,
++		 size_t size, int direction)
++{
++	dmam_unmap_single(hwdev == NULL ? NULL : &hwdev->dev, dma_addr, size, (enum dma_data_direction)direction);
++}
++
+ #endif
+-- 
+1.7.2.3
+
