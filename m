@@ -1,98 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:58243 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255AbaEFTMR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 15:12:17 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [RESEND PATCH 2/3] PCI: ARM: add support for generic PCI host controller
-Date: Tue, 06 May 2014 21:11:48 +0200
-Message-ID: <12021375.dFzSuv1Afb@wuerfel>
-In-Reply-To: <20140506183811.GI13677@arm.com>
-References: <1399048876-11862-1-git-send-email-will.deacon@arm.com> <12080862.flQZBvPba4@wuerfel> <20140506183811.GI13677@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch Part1 V2 11/29] x86, ioapic: kill unused global variable timer_through_8259
+Date: Tue, 20 May 2014 00:22:55 +0800
+Message-Id: <1400516594-11544-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 06 May 2014 19:38:12 Will Deacon wrote:
-> Ok, I've respun the patch and included it below. It's turned probe() into a
-> bit of a beast, but the cleanup is a lot simpler (unless I'm missing
-> something).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    4 ----
+ arch/x86/kernel/apic/io_apic.c |    3 ---
+ 2 files changed, 7 deletions(-)
 
-Let's see if we can make it a bit more readable. None of these are important,
-but together they could improve readability.
-
-> +static int gen_pci_probe(struct platform_device *pdev)
-> +{
-> +       struct gen_pci *pci;
-> +       int err, res_valid;
-> +       struct pci_host_bridge_window *win;
-> +       struct resource *bus_range;
-> +       resource_size_t busn;
-> +       const char *type;
-> +       struct of_pci_range range;
-> +       struct of_pci_range_parser parser;
-> +       struct hw_pci hw;
-> +       const struct of_device_id *of_id;
-> +       const int *prop;
-> +       u8 bus_max;
-> +       struct device *dev = &pdev->dev;
-> +       struct device_node *np = dev->of_node;
-> +
-> +       if (!dev->of_node)
-> +               return -ENODEV;
-
-This check can go away: you don't get here without an of node.
-
-> +       pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> +       if (!pci)
-> +               return -ENOMEM;
-> +
-> +       pci->host.dev.parent = dev;
-> +       hw = (struct hw_pci) {
-> +               .nr_controllers = 1,
-> +               .private_data   = (void **)&pci,
-> +               .setup          = gen_pci_setup,
-> +               .map_irq        = of_irq_parse_and_map_pci,
-> +               .ops            = &gen_pci_ops,
-> +       };
-
-C constructors are actually a gcc extension, I think it would be more
-common to turn this into an initializer by moving it to the declaration:
-
-	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-	struct hw_pci hw = {
-               .nr_controllers = 1,
-               .private_data   = (void **)&pci,
-               .setup          = gen_pci_setup,
-               .map_irq        = of_irq_parse_and_map_pci,
-               .ops            = &gen_pci_ops,
-       };
-
-
-> +       if (of_pci_range_parser_init(&parser, np)) {
-> +               dev_err(dev, "missing \"ranges\" property\n");
-> +               return -EINVAL;
-> +       }
-
-If you move everything related to the range parser into a separate function,
-you end up with two more compact parts. 
-
-> +       /* Create and register resources from the ranges property */
-> +       res_valid = 0;
-> +       for_each_of_pci_range(&parser, &range) {
-> +               struct resource *parent, *res;
-> +               resource_size_t offset;
-> +               u32 restype = range.flags & IORESOURCE_TYPE_BITS;
-
-You could also move the body of the for loop into another function, or
-both.
-
-	Arnd
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 8dd1e13f2989..de3d8b04cf64 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -130,9 +130,6 @@ extern int noioapicquirk;
+ /* -1 if "noapic" boot option passed */
+ extern int noioapicreroute;
+ 
+-/* 1 if the timer IRQ uses the '8259A Virtual Wire' mode */
+-extern int timer_through_8259;
+-
+ /*
+  * If we use the IO-APIC for IRQ routing, disable automatic
+  * assignment of PCI IRQ's.
+@@ -212,7 +209,6 @@ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
+ 
+ #define io_apic_assign_pci_irqs 0
+ #define setup_ioapic_ids_from_mpc x86_init_noop
+-static const int timer_through_8259 = 0;
+ static inline void ioapic_insert_resources(void) { }
+ #define gsi_top (NR_IRQS_LEGACY)
+ static inline int mp_find_ioapic(u32 gsi) { return 0; }
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 4d7d46650faa..e8dd12a04cea 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2649,8 +2649,6 @@ static int __init disable_timer_pin_setup(char *arg)
+ }
+ early_param("disable_timer_pin_1", disable_timer_pin_setup);
+ 
+-int timer_through_8259 __initdata;
+-
+ /*
+  * This code may look a bit paranoid, but it's supposed to cooperate with
+  * a wide range of boards and BIOS bugs.  Fortunately only the timer IRQ
+@@ -2755,7 +2753,6 @@ static inline void __init check_timer(void)
+ 		legacy_pic->unmask(0);
+ 		if (timer_irq_works()) {
+ 			apic_printk(APIC_QUIET, KERN_INFO "....... works.\n");
+-			timer_through_8259 = 1;
+ 			goto out;
+ 		}
+ 		/*
+-- 
+1.7.10.4
 
