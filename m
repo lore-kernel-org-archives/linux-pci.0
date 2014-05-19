@@ -1,62 +1,103 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
-	<kishon@ti.com>, Rajendra Nayak <rnayak@ti.com>,
-	Tero Kristo <t-kristo@ti.com>, Paul Walmsley <paul@pwsan.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>
-Subject: [PATCH v2 10/18] ARM: dts: dra7xx-clocks: Add missing 32khz clocks used for PHY
-Date: Thu, 29 May 2014 12:08:12 +0530
-Message-ID: <1401345500-20188-11-git-send-email-kishon@ti.com>
-In-Reply-To: <1401345500-20188-1-git-send-email-kishon@ti.com>
-References: <1401345500-20188-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch Part1 V2 12/29] x86, ioapic: kill static variable nr_irqs_gsi
+Date: Tue, 20 May 2014 00:22:56 +0800
+Message-Id: <1400516594-11544-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added missing 32khz clock used by PCIe PHY.
-The documention for this node can be found @ ../bindings/clock/ti/gate.txt.
+Static variable nr_irqs_gsi is used to maintain the lowest dynamic
+allocatable IRQ number. It may cause trouble when enabling dynamic
+IRQ allocation for IOAPIC, so use arch_dynirq_lower_bound() to
+avoid directly accessing nr_irqs_gsi and kill nr_irqs_gsi.
 
-Cc: Tony Lindgren <tony@atomide.com>
-Cc: Rajendra Nayak <rnayak@ti.com>
-Cc: Tero Kristo <t-kristo@ti.com>
-Cc: Paul Walmsley <paul@pwsan.com>
-Cc: Tony Lindgren <tony@atomide.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Pawel Moll <pawel.moll@arm.com>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: Kumar Gala <galak@codeaurora.org>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/arm/boot/dts/dra7xx-clocks.dtsi |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ arch/x86/kernel/apic/io_apic.c |   24 +++++-------------------
+ 1 file changed, 5 insertions(+), 19 deletions(-)
 
-diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi b/arch/arm/boot/dts/dra7xx-clocks.dtsi
-index 44993ec..e1bd052 100644
---- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
-+++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
-@@ -1165,6 +1165,14 @@
- 		reg = <0x021c>, <0x0220>;
- 	};
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index e8dd12a04cea..397fb9a02e11 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -118,9 +118,6 @@ struct mpc_intsrc mp_irqs[MAX_IRQ_SOURCES];
+ /* # of MP IRQ source entries */
+ int mp_irq_entries;
  
-+	optfclk_pciephy_32khz: optfclk_pciephy_32khz@4a0093b0 {
-+		compatible = "ti,gate-clock";
-+		clocks = <&sys_32k_ck>;
-+		#clock-cells = <0>;
-+		reg = <0x13b0>;
-+		ti,bit-shift = <8>;
-+	};
+-/* GSI interrupts */
+-static int nr_irqs_gsi = NR_IRQS_LEGACY;
+-
+ #ifdef CONFIG_EISA
+ int mp_bus_id_to_type[MAX_MP_BUSSES];
+ #endif
+@@ -3333,20 +3330,11 @@ static int __init io_apic_get_redir_entries(int ioapic)
+ 	return reg_01.bits.entries + 1;
+ }
+ 
+-static void __init probe_nr_irqs_gsi(void)
+-{
+-	int nr;
+-
+-	nr = gsi_top + NR_IRQS_LEGACY;
+-	if (nr > nr_irqs_gsi)
+-		nr_irqs_gsi = nr;
+-
+-	printk(KERN_DEBUG "nr_irqs_gsi: %d\n", nr_irqs_gsi);
+-}
+-
+ unsigned int arch_dynirq_lower_bound(unsigned int from)
+ {
+-	return from < nr_irqs_gsi ? nr_irqs_gsi : from;
++	unsigned int min = gsi_top + NR_IRQS_LEGACY;
 +
- 	optfclk_pciephy_div: optfclk_pciephy_div@4a00821c {
- 		compatible = "ti,divider-clock";
- 		clocks = <&apll_pcie_ck>;
++	return from < min ? min : from;
+ }
+ 
+ int __init arch_probe_nr_irqs(void)
+@@ -3356,12 +3344,12 @@ int __init arch_probe_nr_irqs(void)
+ 	if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
+ 		nr_irqs = NR_VECTORS * nr_cpu_ids;
+ 
+-	nr = nr_irqs_gsi + 8 * nr_cpu_ids;
++	nr = (gsi_top + NR_IRQS_LEGACY) + 8 * nr_cpu_ids;
+ #if defined(CONFIG_PCI_MSI) || defined(CONFIG_HT_IRQ)
+ 	/*
+ 	 * for MSI and HT dyn irq
+ 	 */
+-	nr += nr_irqs_gsi * 16;
++	nr += (gsi_top + NR_IRQS_LEGACY) * 16;
+ #endif
+ 	if (nr < nr_irqs)
+ 		nr_irqs = nr;
+@@ -3634,8 +3622,6 @@ fake_ioapic_page:
+ 		ioapic_res->end = ioapic_phys + IO_APIC_SLOT_SIZE - 1;
+ 		ioapic_res++;
+ 	}
+-
+-	probe_nr_irqs_gsi();
+ }
+ 
+ void __init ioapic_insert_resources(void)
 -- 
-1.7.9.5
+1.7.10.4
 
