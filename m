@@ -1,103 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:37122 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923AbaEZXdt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 May 2014 19:33:49 -0400
-Received: by mail-ig0-f182.google.com with SMTP id uy17so448625igb.9
-        for <linux-pci@vger.kernel.org>; Mon, 26 May 2014 16:33:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMuHMdWp-dUFwSgw30SYqXxAtAsrXDgaxcgfBZwV=1pEVN3B=A@mail.gmail.com>
-References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140508204907.17877.4848.stgit@bhelgaas-glaptop.roam.corp.google.com> <CAMuHMdWp-dUFwSgw30SYqXxAtAsrXDgaxcgfBZwV=1pEVN3B=A@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 26 May 2014 17:33:28 -0600
-Message-ID: <CAErSpo708iC2UWjTwDqLnSUSXWG087DoOQEMkFcfNsGw1wvQsg@mail.gmail.com>
-Subject: Re: [PATCH v3 3/4] sh/PCI: Pass GAPSPCI_DMA_BASE CPU & bus address to dma_declare_coherent_memory()
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	James Bottomley <jbottomley@parallels.com>,
-	Magnus Damm <damm@opensource.se>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:43294 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522AbaESDGw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 May 2014 23:06:52 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 19 May 2014 13:06:49 +1000
+Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 96F6A2CE8050
+	for <linux-pci@vger.kernel.org>; Mon, 19 May 2014 13:06:47 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s4J36Wmv48234744
+	for <linux-pci@vger.kernel.org>; Mon, 19 May 2014 13:06:32 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s4J36kar017891
+	for <linux-pci@vger.kernel.org>; Mon, 19 May 2014 13:06:47 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH] PCI: Wrong register used to check pending traffic
+Date: Mon, 19 May 2014 13:06:46 +1000
+Message-Id: <1400468806-14884-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 26, 2014 at 8:46 AM, Geert Uytterhoeven
-<geert@linux-m68k.org> wrote:
-> On Thu, May 8, 2014 at 10:49 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> --- a/arch/sh/drivers/pci/fixups-dreamcast.c
->> +++ b/arch/sh/drivers/pci/fixups-dreamcast.c
->> @@ -31,6 +31,8 @@
->>  static void gapspci_fixup_resources(struct pci_dev *dev)
->>  {
->>         struct pci_channel *p = dev->sysdata;
->> +       struct resource res;
->> +       struct pci_bus_region region;
->>
->>         printk(KERN_NOTICE "PCI: Fixing up device %s\n", pci_name(dev));
->>
->> @@ -50,11 +52,21 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
->>
->>                 /*
->>                  * Redirect dma memory allocations to special memory window.
->> +                *
->> +                * If this GAPSPCI region were mapped by a BAR, the CPU
->> +                * phys_addr_t would be pci_resource_start(), and the bus
->> +                * address would be pci_bus_address(pci_resource_start()).
->> +                * But apparently there's no BAR mapping it, so we just
->> +                * "know" its CPU address is GAPSPCI_DMA_BASE.
->>                  */
->> +               res.start = GAPSPCI_DMA_BASE;
->> +               res.end = GAPSPCI_DMA_BASE + GAPSPCI_DMA_SIZE - 1;
->> +               res.flags = IORESOURCE_MEM;
->> +               pcibios_resource_to_bus(dev, &region, &resource);
->
-> In response to http://kisskb.ellerman.id.au/kisskb/buildresult/11212250/
->
-> | /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c: In
-> function 'gapspci_fixup_resources':
-> | /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c:65:42:
-> error: 'resource' undeclared (first use in this function)
-> | /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c:65:42:
-> note: each undeclared identifier is reported only once for each
-> function it appears in
->
-> "resource" seem to have been replaced by "res", but this warning still happens:
->
-> | /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c:65:3:
-> warning: passing argument 1 of 'pcibios_resource_to_bus' from
-> incompatible pointer type [enabled by default]
-> | /scratch/kisskb/src/include/linux/pci.h:737:6: note: expected
-> 'struct pci_bus *' but argument is of type 'struct pci_dev *'
+The incorrect register offset is passed to pci_wait_for_pending(),
+which is caused by commit 157e876ffe ("PCI: Add pci_wait_for_pending()
+(refactor pci_wait_for_pending_transaction())").
 
-Sheesh, this really has not been my day.  Fixed, thanks.
+Cc: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/pci/pci.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
->>                 BUG_ON(!dma_declare_coherent_memory(&dev->dev,
->> -                                               GAPSPCI_DMA_BASE,
->> -                                               GAPSPCI_DMA_BASE,
->> -                                               GAPSPCI_DMA_SIZE,
->> +                                               res.start,
->> +                                               region.start,
->> +                                               resource_size(&res),
->>                                                 DMA_MEMORY_MAP |
->>                                                 DMA_MEMORY_EXCLUSIVE));
->>                 break;
->
-> Gr{oetje,eeting}s,
->
->                         Geert
->
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
->
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                 -- Linus Torvalds
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7325d43..759475e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3067,7 +3067,8 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+ 	if (!pci_is_pcie(dev))
+ 		return 1;
+ 
+-	return pci_wait_for_pending(dev, PCI_EXP_DEVSTA, PCI_EXP_DEVSTA_TRPND);
++	return pci_wait_for_pending(dev, pci_pcie_cap(dev) + PCI_EXP_DEVSTA,
++				    PCI_EXP_DEVSTA_TRPND);
+ }
+ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+ 
+@@ -3109,7 +3110,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+ 		return 0;
+ 
+ 	/* Wait for Transaction Pending bit clean */
+-	if (pci_wait_for_pending(dev, PCI_AF_STATUS, PCI_AF_STATUS_TP))
++	if (pci_wait_for_pending(dev, pos + PCI_AF_STATUS, PCI_AF_STATUS_TP))
+ 		goto clear;
+ 
+ 	dev_err(&dev->dev, "transaction is not cleared; "
+-- 
+1.8.3.2
+
