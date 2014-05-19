@@ -1,54 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:15580 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934095AbaEFHDq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 May 2014 03:03:46 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 20 May 2014 08:35:35 +0900 (JST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 02/21] iommu/vt-d: use correct domain id to flush virtual machine domains
-Date: Tue,  6 May 2014 15:05:13 +0800
-Message-Id: <1399359932-28972-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	sfi-devel@simplefirmware.org,
+	Grant Likely <grant.likely@linaro.org>
+Subject: Re: [RFC Patch Part1 V1 00/30] use irqdomain to dynamically allocate
+ IRQ for IOAPIC pin
+In-Reply-To: <alpine.DEB.2.02.1405192250170.22305@ionos.tec.linutronix.de>
+Message-ID: <alpine.DEB.2.02.1405200823300.5204@ionos.tec.linutronix.de>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.02.1405161601060.4039@ionos.tec.linutronix.de> <53787F09.9000200@linux.intel.com> <alpine.DEB.2.02.1405192250170.22305@ionos.tec.linutronix.de>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For virtual machine domains, domain->id is a virtual id, and the real
-domain id written into context entry is dynamically allocated.
-So use the real domain id instead of domain->id when flushing iotlbs
-for virtual machine domains.
+Jiang,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Mon, 19 May 2014, Thomas Gleixner wrote:
+> > We may build hierarchy irqdomains as below for x86,
+> > [IOAPIC]      [MSI/MSI-x]  [HPET]  [DMAR] [Legacy]
+> >     |            |           |       |       |
+> >     v            v           v       |       |
+> > [           Remapping           ]    |       |
+> >                  |                   |       |
+> >                  v                   v       v
+> > [                   Root/vector                ]
+> > 
+> > For x86, irq_alloc_info_t structure will be used to host CPU mask,
+> > device pointer, IOAPIC pin attributes, NUMA node info etc.
+> 
+> Do we really need to hand all of this down?
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 612fd441b225..0b3e6981a2da 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1824,7 +1824,7 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 					   (((u16)bus) << 8) | devfn,
- 					   DMA_CCMD_MASK_NOBIT,
- 					   DMA_CCMD_DEVICE_INVL);
--		iommu->flush.flush_iotlb(iommu, domain->id, 0, 0, DMA_TLB_DSI_FLUSH);
-+		iommu->flush.flush_iotlb(iommu, id, 0, 0, DMA_TLB_DSI_FLUSH);
- 	} else {
- 		iommu_flush_write_buffer(iommu);
- 	}
--- 
-1.7.10.4
+having recovered from a 24hr travel, I think we really only need to
+hand down cpumask.
 
+If you want to allocate a vector, all the vector domain needs to know
+is the cpumask and the number of consecutive vectors you want to
+allocate.
+
+The IOAPIC pin attribute is only interesting inside the ioapic domain,
+there is no need to have it elsewhere.
+
+Numa node is encoded in the cpumask, IOW the node info selects only
+bits for that node in the mask.
+
+Same for the device. It's only relevant for setting up MSI[x] or
+legacy PCI interrupts. But the underlying vector domain does not care
+at all about it.
+
+Thanks,
+
+	tglx
