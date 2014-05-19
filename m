@@ -1,56 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f180.google.com ([209.85.128.180]:39443 "EHLO
-	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175AbaE0OCc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 10:02:32 -0400
-MIME-Version: 1.0
-In-Reply-To: <1399885183.5016.4.camel@weser.hi.pengutronix.de>
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
-	<20140424175844.GD29593@google.com>
-	<1398421265.4657.25.camel@weser.hi.pengutronix.de>
-	<CAErSpo7Boi8d+apAUC3TmmE33LuRMYJ6J+TEPLRbeyZyU3O8RQ@mail.gmail.com>
-	<1398774686.4677.12.camel@weser.hi.pengutronix.de>
-	<1399885183.5016.4.camel@weser.hi.pengutronix.de>
-Date: Tue, 27 May 2014 11:02:31 -0300
-Message-ID: <CAOMZO5BAcZi5dKvitPxqcWnB=J1LY7sDRxiDcxRAjZmSpGZBEA@mail.gmail.com>
-Subject: Re: [PATCH 0/8] i.MX6 PCIe binding change and MSI support
-From: Fabio Estevam <festevam@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Richard Zhu <r65037@freescale.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>,
 	Jingoo Han <jg1.han@samsung.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	linux-samsung-soc@vger.kernel.org,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Sean Cross <xobs@kosagi.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware core driver
+Date: Mon, 19 May 2014 14:06:36 +0200
+Message-ID: <5671513.YgJm44AVLV@wuerfel>
+In-Reply-To: <5376748B.7080302@ti.com>
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <22200719.Jb5jnJylJH@wuerfel> <5376748B.7080302@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Friday 16 May 2014 16:26:51 Murali Karicheri wrote:
+> On 5/15/2014 2:20 PM, Arnd Bergmann wrote:
+> > On Thursday 15 May 2014 13:45:08 Murali Karicheri wrote:
+> >>>> +#ifdef CONFIG_PCI_KEYSTONE
+> >>>> +/*
+> >>>> + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
+> >>>> + */
+> >>>> +static void quirk_limit_readrequest(struct pci_dev *dev)
+> >>>> +{
+> >>>> +    int readrq = pcie_get_readrq(dev);
+> >>>> +
+> >>>> +    if (readrq > 256)
+> >>>> +            pcie_set_readrq(dev, 256);
+> >>>> +}
+> >>>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
+> >>>> +#endif /* CONFIG_PCI_KEYSTONE */
+> >>> This doesn't work: you can't just limit do this for all devices just based
+> >>> on PCI_KEYSTONE being enabled, you have to check if you are actually using
+> >>> this controller.
+> >>>
+> >>>        Arnd
+> >>    I assume, I need to check if PCI controller's vendor ID/ device ID
+> >> match with the keystone
+> >>    PCI controller's ID and call pcie_set_readrq() for all of the slave
+> >> PCI devices and do this fixup.
+> >> Is this correct understanding?  If you can point me to an example code
+> >> for this that will be
+> >> really helpful so that I can avoid re-inventing the wheel.
+> > I think it would be best to move the quirk into the keystone pci driver
+> > and compare compare the dev->driver pointer of the PCI controller device.
+> >
+> >       Arnd
+> Arnd,
+> 
+> I will move this quirk to keystone pci driver. So in that case, I guess 
+> your original comment
+> is not applicable as  this quirk gets enabled only with PCI keystone 
+> driver enabled. Right?
 
-On Mon, May 12, 2014 at 5:59 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Hi Bjorn,
->
-> just a friendly reminder. It would be nice if you could pull those in.
->
-> Shawn already pulled the DT change and as it is a binding change this
-> means PCIe on i.MX6 is broken in -next, as long as the remaining patches
-> are missing.
+Of course you still have to fix the bug, not just move the code into
+the driver. Otherwise it's still broken for every machine after the keystone
+driver is enabled.
 
-We still have imx6q pcie broken in linux-next:
+I also agree with Jason that changing the PCI core to call
+pcie_bus_configure_settings() would be a better way of dealing with this
+if it solves the problem.
 
-imx6q-pcie 1ffc000.pcie: lvds_gate clock select missing or invalid
-imx6q-pcie: probe of 1ffc000.pcie failed with error -2
-
-
-Could you please apply Lucas' series?
+	Arnd
