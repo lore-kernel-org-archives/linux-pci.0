@@ -1,80 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:33825 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754547AbaEHPOG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 11:14:06 -0400
-Date: Thu, 8 May 2014 17:14:02 +0200
-From: Robert Richter <rric@kernel.org>
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	Borislav Petkov <bp@suse.de>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH V3 1/3] x86/PCI: Fix PCI root numa_node info on AMD
- family15h
-Message-ID: <20140508151402.GN32718@rric.localhost>
-References: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1399489127-6961-2-git-send-email-suravee.suthikulpanit@amd.com>
- <20140508085905.GK32718@rric.localhost>
- <20140508090148.GL32718@rric.localhost>
- <536B973B.2000207@amd.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:35057 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750754AbaESU25 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 16:28:57 -0400
+Received: by mail-ie0-f176.google.com with SMTP id rl12so2868341iec.21
+        for <linux-pci@vger.kernel.org>; Mon, 19 May 2014 13:28:57 -0700 (PDT)
+Date: Mon, 19 May 2014 14:28:53 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alan <gnomes@lxorguk.ukuu.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nikhil P Rao <nikhil.rao@intel.com>
+Subject: Re: [PATCH] pci: Allow very large resource windows
+Message-ID: <20140519202853.GA1371@google.com>
+References: <20140519130255.15364.49358.stgit@alan.etchedpixels.co.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <536B973B.2000207@amd.com>
+In-Reply-To: <20140519130255.15364.49358.stgit@alan.etchedpixels.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08.05.14 09:39:55, Suravee Suthikulanit wrote:
-> On 5/8/2014 4:01 AM, Robert Richter wrote:
-> >On 08.05.14 10:59:05, Robert Richter wrote:
-> >>On 07.05.14 13:58:45, suravee.suthikulpanit@amd.com wrote:
-> >>>@@ -113,10 +122,17 @@ static int __init early_fill_mp_bus_info(void)
-> >>>  		info = alloc_pci_root_info(min_bus, max_bus, node, link);
-> >>>  	}
-> >>>
-> >>>+	/*
-> >>>+	 * The following code is only supported until Fam11h.
-> >>>+	 * Newer processors will depend on ACPI MCFG table instead.
-> >>>+	 */
-> >>>+	if (boot_cpu_data.x86 > 0x11)
-> >>>+		return 0;
-> >>>+
-> >>>  	/* get the default node and link for left over res */
-> >>
-> >>As this is the only substantial change of your patch, I would better
-> >>drop ther rest or at least split it in two patches. Should this change
-> >>also be for stable?
-> >
-> >Of course adding the hostbridge must be also part of the patch, didn't
-> >note this due to the other noise. See why the split would be good?
-> >
-> >>
-> >>-Robert
+On Mon, May 19, 2014 at 02:03:14PM +0100, Alan wrote:
+> From: Alan <alan@linux.intel.com>
 > 
+> This is needed for some of the Xeon Phi type systems.
 > 
-> Robert,
-> 
-> I have already added the hostbridge for family15h in this patch.
-> 
-> +static struct amd_hostbridge hb_probes[] __initdata = {
-> +	{ 0, 0x18, 0x1100 }, /* K8 */
-> +	{ 0, 0x18, 0x1200 }, /* Family10h */
-> +	{ 0xff, 0, 0x1200 }, /* Family10h */
-> +	{ 0, 0x18, 0x1300 }, /* Family11h */
-> +	{ 0, 0x18, 0x1600 }, /* Family15h */ <--- HERE
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
 
-Yes, I noticed that, but later, thus my 2nd mail.
+I applied this to my pci/resource branch for v3.16.  Nikhil
+posted essentially the same patch a couple years ago, so I added
+his signed-off-by and adopted his use of ARRAY_SIZE() to connect the
+"order > 13" test with the aligns[] declaration.
 
->  };
+Bjorn
+
+> ---
+>  drivers/pci/setup-bus.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> The rest of the changes are mostly comments, some minor renaming of
-> variables for clarity, and replace hardcode values with preprocessor macro.
-> If needed, I can split them.
-
-I just would drop it, you just need the fam15h device and the cpu mode
-check.
-
--Robert
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index d219d44..4184112 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -921,7 +921,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  {
+>  	struct pci_dev *dev;
+>  	resource_size_t min_align, align, size, size0, size1;
+> -	resource_size_t aligns[12];	/* Alignments from 1Mb to 2Gb */
+> +	resource_size_t aligns[14];	/* Alignments from 1Mb to 8Gb */
+>  	int order, max_order;
+>  	struct resource *b_res = find_free_bus_resource(bus, type);
+>  	unsigned int mem64_mask = 0;
+> @@ -960,7 +960,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  			/* For bridges size != alignment */
+>  			align = pci_resource_alignment(dev, r);
+>  			order = __ffs(align) - 20;
+> -			if (order > 11) {
+> +			if (order > 13) {
+>  				dev_warn(&dev->dev, "disabling BAR %d: %pR "
+>  					 "(bad alignment %#llx)\n", i, r,
+>  					 (unsigned long long) align);
+> 
