@@ -1,98 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch Part1 V2 16/29] x86, irq: introduce some helper utilities to improve readability
-Date: Tue, 20 May 2014 00:23:00 +0800
-Message-Id: <1400516594-11544-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59767 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752221AbaESCy2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 May 2014 22:54:28 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 19 May 2014 12:54:25 +1000
+Date: Mon, 19 May 2014 12:54:22 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: kvm@vger.kernel.org, alex.williamson@redhat.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 4/4] vfio/pci: Restore MSIx message prior to enabling
+Message-ID: <20140519025422.GA2253@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1399944924-1200-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1399944924-1200-5-git-send-email-gwshan@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1399944924-1200-5-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/io_apic.c |   29 ++++++++++++++++++++++-------
- 1 file changed, 22 insertions(+), 7 deletions(-)
+On Tue, May 13, 2014 at 11:35:24AM +1000, Gavin Shan wrote:
+>The MSIx vector table lives in device memory, which may be cleared as
+>part of a backdoor device reset. This is the case on the IBM IPR HBA
+>when the BIST is run on the device. When assigned to a QEMU guest,
+>the guest driver does a pci_save_state(), issues a BIST, then does a
+>pci_restore_state(). The BIST clears the MSIx vector table, but due
+>to the way interrupts are configured the pci_restore_state() does not
+>restore the vector table as expected. Eventually this results in an
+>EEH error on Power platforms when the device attempts to signal an
+>interrupt with the zero'd table entry.
+>
+>Fix the problem by restoring the host cached MSI message prior to
+>enabling each vector.
+>
+>Reported-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>---
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index bb013e4126c3..3b6e29d29903 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -117,6 +117,24 @@ struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic_idx)
- 	return &ioapics[ioapic_idx].gsi_config;
- }
- 
-+static inline int mp_ioapic_pin_count(int ioapic)
-+{
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(ioapic);
-+
-+	return gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
-+}
-+
-+static inline u32 mp_pin_2_gsi(int ioapic, int pin)
-+{
-+	return mp_ioapic_gsi_routing(ioapic)->gsi_base + pin;
-+}
-+
-+/* Initialize all legacy IRQs and all pins on the first IOAPIC at boot */
-+static inline int mp_init_irq_at_boot(int ioapic, int irq)
-+{
-+	return ioapic == 0 || (irq >= 0 && irq < NR_IRQS_LEGACY);
-+}
-+
- int nr_ioapics;
- 
- /* The one past the highest gsi number used */
-@@ -1368,8 +1386,7 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
- 			continue;
- 
- 		irq = pin_2_irq(idx, ioapic_idx, pin);
--
--		if ((ioapic_idx > 0) && (irq > NR_IRQS_LEGACY))
-+		if (!mp_init_irq_at_boot(ioapic_idx, irq))
- 			continue;
- 
- 		/*
-@@ -1420,9 +1437,7 @@ void setup_IO_APIC_irq_extra(u32 gsi)
- 		return;
- 
- 	irq = pin_2_irq(idx, ioapic_idx, pin);
--
--	/* Only handle the non legacy irqs on secondary ioapics */
--	if (ioapic_idx == 0 || irq < NR_IRQS_LEGACY)
-+	if (mp_init_irq_at_boot(ioapic_idx, irq))
- 		return;
- 
- 	set_io_apic_irq_attr(&attr, ioapic_idx, pin, irq_trigger(idx),
-@@ -3536,9 +3551,9 @@ void __init setup_ioapic_dest(void)
- 		irq_entry = find_irq_entry(ioapic, pin, mp_INT);
- 		if (irq_entry == -1)
- 			continue;
--		irq = pin_2_irq(irq_entry, ioapic, pin);
- 
--		if ((ioapic > 0) && (irq > NR_IRQS_LEGACY))
-+		irq = pin_2_irq(irq_entry, ioapic, pin);
-+		if (!mp_init_irq_at_boot(ioapic, irq))
- 			continue;
- 
- 		idata = irq_get_irq_data(irq);
--- 
-1.7.10.4
+Sorry about that the following line was missed. I'll add that and send
+"v3" out.
+
+#include <linux/msi.h>
+
+> drivers/vfio/pci/vfio_pci_intrs.c | 14 ++++++++++++++
+> 1 file changed, 14 insertions(+)
+>
+>diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+>index 9dd49c9..409346f 100644
+>--- a/drivers/vfio/pci/vfio_pci_intrs.c
+>+++ b/drivers/vfio/pci/vfio_pci_intrs.c
+>@@ -548,6 +548,20 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
+> 		return PTR_ERR(trigger);
+> 	}
+>
+>+	/*
+>+	 * The MSIx vector table resides in device memory which may be cleared
+>+	 * via backdoor resets. We don't allow direct access to the vector
+>+	 * table so even if a userspace driver attempts to save/restore around
+>+	 * such a reset it would be unsuccessful. To avoid this, restore the
+>+	 * cached value of the message prior to enabling.
+>+	 */
+>+	if (msix) {
+>+		struct msi_msg msg;
+>+
+>+		get_cached_msi_msg(irq, &msg);
+>+		write_msi_msg(irq, &msg);
+>+	}
+>+
+> 	ret = request_irq(irq, vfio_msihandler, 0,
+> 			  vdev->ctx[vector].name, trigger);
+> 	if (ret) {
+
+Thanks,
+Gavin
 
