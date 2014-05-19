@@ -1,255 +1,364 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:61587 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252AbaEZPSa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 May 2014 11:18:30 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v3 08/15] thunderbolt: Scan for downstream switches
-Date: Mon, 26 May 2014 17:18:05 +0200
-Message-Id: <1401117492-2870-9-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
-References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch Part1 V2 13/29] x86, ioapic: introduce helper utilities to walk ioapics and pins
+Date: Tue, 20 May 2014 00:22:57 +0800
+Message-Id: <1400516594-11544-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add utility methods tb_port_state and tb_wait_for_port. Add
-tb_scan_switch which recursively checks for downstream switches.
+Introduce helper utilities for_each_ioapic(), for_each_ioapic_reverse(),
+for_each_pin() and for_each_ioapic_pin() to walk ioapics and pins.
+They will be rewritten e will rewrite later to support IOAPIC hotplug.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/thunderbolt/switch.c | 97 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.c     | 44 ++++++++++++++++++++
- drivers/thunderbolt/tb.h     | 16 ++++++++
- 3 files changed, 157 insertions(+)
+ arch/x86/kernel/apic/io_apic.c |  120 +++++++++++++++++++++-------------------
+ 1 file changed, 62 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index 21457cc..279b9c5 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -53,6 +53,92 @@ static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
- }
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 397fb9a02e11..55fb3c1385c5 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -62,6 +62,16 @@
  
- /**
-+ * tb_port_state() - get connectedness state of a port
-+ *
-+ * The port must have a TB_CAP_PHY (i.e. it should be a real port).
-+ *
-+ * Return: Returns an enum tb_port_state on success or an error code on failure.
-+ */
-+static int tb_port_state(struct tb_port *port)
-+{
-+	struct tb_cap_phy phy;
-+	int res;
-+	if (port->cap_phy == 0) {
-+		tb_port_WARN(port, "does not have a PHY\n");
-+		return -EINVAL;
-+	}
-+	res = tb_port_read(port, &phy, TB_CFG_PORT, port->cap_phy, 2);
-+	if (res)
-+		return res;
-+	return phy.state;
-+}
+ #define __apicdebuginit(type) static type __init
+ 
++#define	for_each_ioapic(idx)		\
++	for ((idx) = 0; (idx) < nr_ioapics; (idx)++)
++#define	for_each_ioapic_reverse(idx)	\
++	for ((idx) = nr_ioapics - 1; (idx) >= 0; (idx)--)
++#define	for_each_pin(idx, pin)		\
++	for ((pin) = 0; (pin) < ioapics[(idx)].nr_registers; (pin)++)
++#define	for_each_ioapic_pin(idx, pin)	\
++	for_each_ioapic((idx))		\
++		for_each_pin((idx), (pin))
 +
-+/**
-+ * tb_wait_for_port() - wait for a port to become ready
-+ *
-+ * Wait up to 1 second for a port to reach state TB_PORT_UP. If
-+ * wait_if_unplugged is set then we also wait if the port is in state
-+ * TB_PORT_UNPLUGGED (it takes a while for the device to be registered after
-+ * switch resume). Otherwise we only wait if a device is registered but the link
-+ * has not yet been established.
-+ *
-+ * Return: Returns an error code on failure. Returns 0 if the port is not
-+ * connected or failed to reach state TB_PORT_UP within one second. Returns 1
-+ * if the port is connected and in state TB_PORT_UP.
-+ */
-+int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged)
-+{
-+	int retries = 10;
-+	int state;
-+	if (!port->cap_phy) {
-+		tb_port_WARN(port, "does not have PHY\n");
-+		return -EINVAL;
-+	}
-+	if (tb_is_upstream_port(port)) {
-+		tb_port_WARN(port, "is the upstream port\n");
-+		return -EINVAL;
-+	}
-+
-+	while (retries--) {
-+		state = tb_port_state(port);
-+		if (state < 0)
-+			return state;
-+		if (state == TB_PORT_DISABLED) {
-+			tb_port_info(port, "is disabled (state: 0)\n");
-+			return 0;
-+		}
-+		if (state == TB_PORT_UNPLUGGED) {
-+			if (wait_if_unplugged) {
-+				/* used during resume */
-+				tb_port_info(port,
-+					     "is unplugged (state: 7), retrying...\n");
-+				msleep(100);
-+				continue;
-+			}
-+			tb_port_info(port, "is unplugged (state: 7)\n");
-+			return 0;
-+		}
-+		if (state == TB_PORT_UP) {
-+			tb_port_info(port,
-+				     "is connected, link is up (state: 2)\n");
-+			return 1;
-+		}
-+
-+		/*
-+		 * After plug-in the state is TB_PORT_CONNECTING. Give it some
-+		 * time.
-+		 */
-+		tb_port_info(port,
-+			     "is connected, link is not up (state: %d), retrying...\n",
-+			     state);
-+		msleep(100);
-+	}
-+	tb_port_warn(port,
-+		     "failed to reach state TB_PORT_UP. Ignoring port...\n");
-+	return 0;
-+}
-+
-+/**
-  * tb_init_port() - initialize a port
-  *
-  * This is a helper method for tb_switch_alloc. Does not check or initialize
-@@ -63,6 +149,7 @@ static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
- static int tb_init_port(struct tb_switch *sw, u8 port_nr)
+ #define for_each_irq_pin(entry, head) \
+ 	for (entry = head; entry; entry = entry->next)
+ 
+@@ -191,7 +201,7 @@ int __init arch_early_irq_init(void)
+ 	if (!legacy_pic->nr_legacy_irqs)
+ 		io_apic_irqs = ~0UL;
+ 
+-	for (i = 0; i < nr_ioapics; i++) {
++	for_each_ioapic(i) {
+ 		ioapics[i].saved_registers =
+ 			kzalloc(sizeof(struct IO_APIC_route_entry) *
+ 				ioapics[i].nr_registers, GFP_KERNEL);
+@@ -624,9 +634,8 @@ static void clear_IO_APIC (void)
  {
- 	int res;
-+	int cap;
- 	struct tb_port *port = &sw->ports[port_nr];
- 	port->sw = sw;
- 	port->port = port_nr;
-@@ -71,6 +158,16 @@ static int tb_init_port(struct tb_switch *sw, u8 port_nr)
- 	if (res)
- 		return res;
+ 	int apic, pin;
  
-+	/* Port 0 is the switch itself and has no PHY. */
-+	if (port->config.type == TB_TYPE_PORT && port_nr != 0) {
-+		cap = tb_find_cap(port, TB_CFG_PORT, TB_CAP_PHY);
-+
-+		if (cap > 0)
-+			port->cap_phy = cap;
-+		else
-+			tb_port_WARN(port, "non switch port without a PHY\n");
-+	}
-+
- 	tb_dump_port(sw->tb, &port->config);
- 
- 	/* TODO: Read dual link port, DP port and more from EEPROM. */
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index f1b6100..3b716fd 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -11,6 +11,47 @@
- #include "tb.h"
- #include "tb_regs.h"
- 
-+
-+/* enumeration & hot plug handling */
-+
-+
-+static void tb_scan_port(struct tb_port *port);
-+
-+/**
-+ * tb_scan_switch() - scan for and initialize downstream switches
-+ */
-+static void tb_scan_switch(struct tb_switch *sw)
-+{
-+	int i;
-+	for (i = 1; i <= sw->config.max_port_number; i++)
-+		tb_scan_port(&sw->ports[i]);
-+}
-+
-+/**
-+ * tb_scan_port() - check for and initialize switches below port
-+ */
-+static void tb_scan_port(struct tb_port *port)
-+{
-+	struct tb_switch *sw;
-+	if (tb_is_upstream_port(port))
-+		return;
-+	if (port->config.type != TB_TYPE_PORT)
-+		return;
-+	if (tb_wait_for_port(port, false) <= 0)
-+		return;
-+	if (port->remote) {
-+		tb_port_WARN(port, "port already has a remote!\n");
-+		return;
-+	}
-+	sw = tb_switch_alloc(port->sw->tb, tb_downstream_route(port));
-+	if (!sw)
-+		return;
-+	port->remote = tb_upstream_port(sw);
-+	tb_upstream_port(sw)->remote = port;
-+	tb_scan_switch(sw);
-+}
-+
-+
- /* hotplug handling */
- 
- struct tb_hotplug_event {
-@@ -134,6 +175,9 @@ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
- 	if (!tb->root_switch)
- 		goto err_locked;
- 
-+	/* Full scan to discover devices added before the driver was loaded. */
-+	tb_scan_switch(tb->root_switch);
-+
- 	/* Allow tb_handle_hotplug to progress events */
- 	tb->hotplug_active = true;
- 	mutex_unlock(&tb->lock);
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index af123c4..70a66fe 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -29,6 +29,7 @@ struct tb_port {
- 	struct tb_regs_port_header config;
- 	struct tb_switch *sw;
- 	struct tb_port *remote; /* remote port, NULL if not connected */
-+	int cap_phy; /* offset, zero if not found */
- 	u8 port; /* port number on switch */
- };
- 
-@@ -160,6 +161,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
- void tb_switch_free(struct tb_switch *sw);
- 
-+int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
-+
- int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
- 
- 
-@@ -173,4 +176,17 @@ static inline bool tb_is_upstream_port(struct tb_port *port)
- 	return port == tb_upstream_port(port->sw);
+-	for (apic = 0; apic < nr_ioapics; apic++)
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++)
+-			clear_IO_APIC_pin(apic, pin);
++	for_each_ioapic_pin(apic, pin)
++		clear_IO_APIC_pin(apic, pin);
  }
  
-+/**
-+ * tb_downstream_route() - get route to downstream switch
-+ *
-+ * Port must not be the upstream port (otherwise a loop is created).
-+ *
-+ * Return: Returns a route to the switch behind @port.
-+ */
-+static inline u64 tb_downstream_route(struct tb_port *port)
-+{
-+	return tb_route(port->sw)
-+	       | ((u64) port->port << (port->sw->config.depth * 8));
-+}
-+
- #endif
+ #ifdef CONFIG_X86_32
+@@ -675,13 +684,13 @@ int save_ioapic_entries(void)
+ 	int apic, pin;
+ 	int err = 0;
+ 
+-	for (apic = 0; apic < nr_ioapics; apic++) {
++	for_each_ioapic(apic) {
+ 		if (!ioapics[apic].saved_registers) {
+ 			err = -ENOMEM;
+ 			continue;
+ 		}
+ 
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++)
++		for_each_pin(apic, pin)
+ 			ioapics[apic].saved_registers[pin] =
+ 				ioapic_read_entry(apic, pin);
+ 	}
+@@ -696,11 +705,11 @@ void mask_ioapic_entries(void)
+ {
+ 	int apic, pin;
+ 
+-	for (apic = 0; apic < nr_ioapics; apic++) {
++	for_each_ioapic(apic) {
+ 		if (!ioapics[apic].saved_registers)
+ 			continue;
+ 
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++) {
++		for_each_pin(apic, pin) {
+ 			struct IO_APIC_route_entry entry;
+ 
+ 			entry = ioapics[apic].saved_registers[pin];
+@@ -719,11 +728,11 @@ int restore_ioapic_entries(void)
+ {
+ 	int apic, pin;
+ 
+-	for (apic = 0; apic < nr_ioapics; apic++) {
++	for_each_ioapic(apic) {
+ 		if (!ioapics[apic].saved_registers)
+ 			continue;
+ 
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++)
++		for_each_pin(apic, pin)
+ 			ioapic_write_entry(apic, pin,
+ 					   ioapics[apic].saved_registers[pin]);
+ 	}
+@@ -782,7 +791,7 @@ static int __init find_isa_irq_apic(int irq, int type)
+ 	if (i < mp_irq_entries) {
+ 		int ioapic_idx;
+ 
+-		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++		for_each_ioapic(ioapic_idx)
+ 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic)
+ 				return ioapic_idx;
+ 	}
+@@ -1001,7 +1010,7 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 	for (i = 0; i < mp_irq_entries; i++) {
+ 		int lbus = mp_irqs[i].srcbus;
+ 
+-		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++		for_each_ioapic(ioapic_idx)
+ 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic ||
+ 			    mp_irqs[i].dstapic == MP_APIC_ALL)
+ 				break;
+@@ -1224,12 +1233,10 @@ static inline int IO_APIC_irq_trigger(int irq)
+ {
+ 	int apic, idx, pin;
+ 
+-	for (apic = 0; apic < nr_ioapics; apic++) {
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++) {
+-			idx = find_irq_entry(apic, pin, mp_INT);
+-			if ((idx != -1) && (irq == pin_2_irq(idx, apic, pin)))
+-				return irq_trigger(idx);
+-		}
++	for_each_ioapic_pin(apic, pin) {
++		idx = find_irq_entry(apic, pin, mp_INT);
++		if ((idx != -1) && (irq == pin_2_irq(idx, apic, pin)))
++			return irq_trigger(idx);
+ 	}
+ 	/*
+          * nonexistent IRQs are edge default
+@@ -1349,7 +1356,7 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
+ 	struct io_apic_irq_attr attr;
+ 	unsigned int pin, irq;
+ 
+-	for (pin = 0; pin < ioapics[ioapic_idx].nr_registers; pin++) {
++	for_each_pin(ioapic_idx, pin) {
+ 		idx = find_irq_entry(ioapic_idx, pin, mp_INT);
+ 		if (io_apic_pin_not_connected(idx, ioapic_idx, pin))
+ 			continue;
+@@ -1380,7 +1387,7 @@ static void __init setup_IO_APIC_irqs(void)
+ 
+ 	apic_printk(APIC_VERBOSE, KERN_DEBUG "init IO_APIC IRQs\n");
+ 
+-	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++	for_each_ioapic(ioapic_idx)
+ 		__io_apic_setup_irqs(ioapic_idx);
+ }
+ 
+@@ -1583,7 +1590,7 @@ __apicdebuginit(void) print_IO_APICs(void)
+ 	struct irq_chip *chip;
+ 
+ 	printk(KERN_DEBUG "number of MP IRQ sources: %d.\n", mp_irq_entries);
+-	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++	for_each_ioapic(ioapic_idx)
+ 		printk(KERN_DEBUG "number of IO-APIC #%d registers: %d.\n",
+ 		       mpc_ioapic_id(ioapic_idx),
+ 		       ioapics[ioapic_idx].nr_registers);
+@@ -1594,7 +1601,7 @@ __apicdebuginit(void) print_IO_APICs(void)
+ 	 */
+ 	printk(KERN_INFO "testing the IO APIC.......................\n");
+ 
+-	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++	for_each_ioapic(ioapic_idx)
+ 		print_IO_APIC(ioapic_idx);
+ 
+ 	printk(KERN_DEBUG "IRQ to pin mappings:\n");
+@@ -1825,26 +1832,22 @@ static struct { int pin, apic; } ioapic_i8259 = { -1, -1 };
+ void __init enable_IO_APIC(void)
+ {
+ 	int i8259_apic, i8259_pin;
+-	int apic;
++	int apic, pin;
+ 
+ 	if (!legacy_pic->nr_legacy_irqs)
+ 		return;
+ 
+-	for(apic = 0; apic < nr_ioapics; apic++) {
+-		int pin;
++	for_each_ioapic_pin(apic, pin) {
+ 		/* See if any of the pins is in ExtINT mode */
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++) {
+-			struct IO_APIC_route_entry entry;
+-			entry = ioapic_read_entry(apic, pin);
++		struct IO_APIC_route_entry entry = ioapic_read_entry(apic, pin);
+ 
+-			/* If the interrupt line is enabled and in ExtInt mode
+-			 * I have found the pin where the i8259 is connected.
+-			 */
+-			if ((entry.mask == 0) && (entry.delivery_mode == dest_ExtINT)) {
+-				ioapic_i8259.apic = apic;
+-				ioapic_i8259.pin  = pin;
+-				goto found_i8259;
+-			}
++		/* If the interrupt line is enabled and in ExtInt mode
++		 * I have found the pin where the i8259 is connected.
++		 */
++		if ((entry.mask == 0) && (entry.delivery_mode == dest_ExtINT)) {
++			ioapic_i8259.apic = apic;
++			ioapic_i8259.pin  = pin;
++			goto found_i8259;
+ 		}
+ 	}
+  found_i8259:
+@@ -1947,7 +1950,7 @@ void __init setup_ioapic_ids_from_mpc_nocheck(void)
+ 	/*
+ 	 * Set the IOAPIC ID to the value stored in the MPC table.
+ 	 */
+-	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++) {
++	for_each_ioapic(ioapic_idx) {
+ 		/* Read the register 0 value */
+ 		raw_spin_lock_irqsave(&ioapic_lock, flags);
+ 		reg_00.raw = io_apic_read(ioapic_idx, 0);
+@@ -2874,7 +2877,7 @@ static void ioapic_resume(void)
+ {
+ 	int ioapic_idx;
+ 
+-	for (ioapic_idx = nr_ioapics - 1; ioapic_idx >= 0; ioapic_idx--)
++	for_each_ioapic_reverse(ioapic_idx)
+ 		resume_ioapic_id(ioapic_idx);
+ 
+ 	restore_ioapic_entries();
+@@ -3464,9 +3467,8 @@ static u8 __init io_apic_unique_id(u8 id)
+ 	DECLARE_BITMAP(used, 256);
+ 
+ 	bitmap_zero(used, 256);
+-	for (i = 0; i < nr_ioapics; i++) {
++	for_each_ioapic(i)
+ 		__set_bit(mpc_ioapic_id(i), used);
+-	}
+ 	if (!test_bit(id, used))
+ 		return id;
+ 	return find_first_zero_bit(used, 256);
+@@ -3524,8 +3526,7 @@ void __init setup_ioapic_dest(void)
+ 	if (skip_ioapic_setup == 1)
+ 		return;
+ 
+-	for (ioapic = 0; ioapic < nr_ioapics; ioapic++)
+-	for (pin = 0; pin < ioapics[ioapic].nr_registers; pin++) {
++	for_each_ioapic_pin(ioapic, pin) {
+ 		irq_entry = find_irq_entry(ioapic, pin, mp_INT);
+ 		if (irq_entry == -1)
+ 			continue;
+@@ -3554,29 +3555,33 @@ void __init setup_ioapic_dest(void)
+ 
+ static struct resource *ioapic_resources;
+ 
+-static struct resource * __init ioapic_setup_resources(int nr_ioapics)
++static struct resource * __init ioapic_setup_resources(void)
+ {
+ 	unsigned long n;
+ 	struct resource *res;
+ 	char *mem;
+-	int i;
++	int i, num = 0;
+ 
+-	if (nr_ioapics <= 0)
++	for_each_ioapic(i)
++		num++;
++	if (num == 0)
+ 		return NULL;
+ 
+ 	n = IOAPIC_RESOURCE_NAME_SIZE + sizeof(struct resource);
+-	n *= nr_ioapics;
++	n *= num;
+ 
+ 	mem = alloc_bootmem(n);
+ 	res = (void *)mem;
+ 
+-	mem += sizeof(struct resource) * nr_ioapics;
++	mem += sizeof(struct resource) * num;
+ 
+-	for (i = 0; i < nr_ioapics; i++) {
+-		res[i].name = mem;
+-		res[i].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
++	num = 0;
++	for_each_ioapic(i) {
++		res[num].name = mem;
++		res[num].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+ 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
+ 		mem += IOAPIC_RESOURCE_NAME_SIZE;
++		num++;
+ 	}
+ 
+ 	ioapic_resources = res;
+@@ -3590,8 +3595,8 @@ void __init native_io_apic_init_mappings(void)
+ 	struct resource *ioapic_res;
+ 	int i;
+ 
+-	ioapic_res = ioapic_setup_resources(nr_ioapics);
+-	for (i = 0; i < nr_ioapics; i++) {
++	ioapic_res = ioapic_setup_resources();
++	for_each_ioapic(i) {
+ 		if (smp_found_config) {
+ 			ioapic_phys = mpc_ioapic_addr(i);
+ #ifdef CONFIG_X86_32
+@@ -3636,7 +3641,7 @@ void __init ioapic_insert_resources(void)
+ 		return;
+ 	}
+ 
+-	for (i = 0; i < nr_ioapics; i++) {
++	for_each_ioapic(i) {
+ 		insert_resource(&iomem_resource, r);
+ 		r++;
+ 	}
+@@ -3644,16 +3649,15 @@ void __init ioapic_insert_resources(void)
+ 
+ int mp_find_ioapic(u32 gsi)
+ {
+-	int i = 0;
++	int i;
+ 
+ 	if (nr_ioapics == 0)
+ 		return -1;
+ 
+ 	/* Find the IOAPIC that manages this GSI. */
+-	for (i = 0; i < nr_ioapics; i++) {
++	for_each_ioapic(i) {
+ 		struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(i);
+-		if ((gsi >= gsi_cfg->gsi_base)
+-		    && (gsi <= gsi_cfg->gsi_end))
++		if (gsi >= gsi_cfg->gsi_base && gsi <= gsi_cfg->gsi_end)
+ 			return i;
+ 	}
+ 
+@@ -3665,7 +3669,7 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
+ {
+ 	struct mp_ioapic_gsi *gsi_cfg;
+ 
+-	if (WARN_ON(ioapic == -1))
++	if (WARN_ON(ioapic < 0))
+ 		return -1;
+ 
+ 	gsi_cfg = mp_ioapic_gsi_routing(ioapic);
 -- 
-1.9.3
+1.7.10.4
 
