@@ -1,91 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:56719 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752710AbaEUXSG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 19:18:06 -0400
-Received: by mail-ig0-f171.google.com with SMTP id c1so6887660igq.10
-        for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 16:18:05 -0700 (PDT)
-Subject: [PATCH V5 1/4] x86/PCI: Warn if we have to "guess" host bridge node
- information
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Robert Richter <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	linux-kernel@vger.kernel.org,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	linux-pci@vger.kernel.org, Borislav Petkov <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Date: Wed, 21 May 2014 17:18:03 -0600
-Message-ID: <20140521231803.26447.42420.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga01.intel.com ([192.55.52.88]:19116 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964876AbaESQWR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 May 2014 12:22:17 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch Part1 V2 08/29] x86, ACPI, irq: enhance error handling in function acpi_register_gsi()
+Date: Tue, 20 May 2014 00:22:52 +0800
+Message-Id: <1400516594-11544-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Myron Stowe <myron.stowe@redhat.com>
+Function mp_register_gsi() may return invalid GSI if error happens,
+so enhance acpi_register_gsi() to handle possible error cases.
 
-The vast majority of platforms are not supplying ACPI _PXM (proximity)
-information corresponding to host bridge (PNP0A03/PNP0A08) devices
-resulting in sysfs "numa_node" values of -1 (NUMA_NO_NODE):
-
-  # for i in /sys/devices/pci0000\:00/*/numa_node; do cat $i; done | uniq
-  -1
-
-  # find /sys/ -name "numa_node" | while read fname; do cat $fname; \
-    done | uniq
-  -1
-
-AMD based platforms provide a fall-back for this situation via amd_bus.c.
-These platforms snoop out the information by directly reading specific
-registers from the Northbridge and caching them via alloc_pci_root_info().
-
-Later during boot processing when host bridges are discovered -
-pci_acpi_scan_root() - the kernel looks for their corresponding ACPI _PXM
-method - drivers/acpi/numa.c::acpi_get_node().  If the BIOS supplied a _PXM
-method then that node (proximity) value is associated.  If the BIOS did not
-supply a _PXM method *and* the platform is AMD-based, the fall-back cached
-values obtained directly from the Northbridge are used; otherwise,
-"NUMA_NO_NODE" is associated.
-
-There are a number of issues with this fall-back mechanism the most notable
-being that amd_bus.c extracts a 3-bit number from a CPU register and uses
-it as the node number.  The node numbers used by Linux are logical and
-there's no reason they need to be identical to settings in the CPU
-registers.  So if we have some node information obtained in the normal way
-(from _PXM, SLIT, SRAT, etc.) and some from amd_bus.c, there's no reason to
-believe they will be compatible.
-
-This patch warns when this situation occurs:
-
-  pci_root PNP0A08:00: [Firmware Bug]: no _PXM; falling back to node 0 from hardware (may be inconsistent with ACPI node numbers)
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=72051
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/pci/acpi.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ arch/x86/kernel/acpi/boot.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 01edac6c5e18..5075371ab593 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -489,8 +489,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	}
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 6d65850f49e9..8b8ff786af12 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -97,6 +97,8 @@ static u32 isa_irq_to_gsi[NR_IRQS_LEGACY] __read_mostly = {
+ 	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+ };
  
- 	node = acpi_get_node(device->handle);
--	if (node == NUMA_NO_NODE)
-+	if (node == NUMA_NO_NODE) {
- 		node = x86_pci_root_bus_node(busnum);
-+		if (node != 0 && node != NUMA_NO_NODE)
-+			dev_info(&device->dev, FW_BUG "no _PXM; falling back to node %d from hardware (may be inconsistent with ACPI node numbers)\n",
-+				node);
-+	}
++#define	ACPI_INVALID_GSI		INT_MIN
++
+ static unsigned int gsi_to_irq(unsigned int gsi)
+ {
+ 	unsigned int irq = gsi + NR_IRQS_LEGACY;
+@@ -553,13 +555,13 @@ int (*acpi_suspend_lowlevel)(void);
+  */
+ int acpi_register_gsi(struct device *dev, u32 gsi, int trigger, int polarity)
+ {
+-	unsigned int irq;
+ 	unsigned int plat_gsi = gsi;
  
- 	if (node != NUMA_NO_NODE && !node_online(node))
- 		node = NUMA_NO_NODE;
+ 	plat_gsi = (*__acpi_register_gsi)(dev, gsi, trigger, polarity);
+-	irq = gsi_to_irq(plat_gsi);
++	if (plat_gsi != ACPI_INVALID_GSI)
++		return gsi_to_irq(plat_gsi);
+ 
+-	return irq;
++	return -1;
+ }
+ EXPORT_SYMBOL_GPL(acpi_register_gsi);
+ 
+@@ -1054,7 +1056,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
+ 	ret = io_apic_set_pci_routing(dev, gsi_to_irq(gsi), &irq_attr);
+ 	if (ret < 0)
+-		gsi = INT_MIN;
++		gsi = ACPI_INVALID_GSI;
+ 
+ 	return gsi;
+ }
+-- 
+1.7.10.4
 
