@@ -1,145 +1,184 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18692 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753227AbaEVXI1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 19:08:27 -0400
-Subject: [PATCH v4 09/16] iommu/amd: Update to use PCI DMA aliases
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: Joerg Roedel <joro@8bytes.org>, linux-kernel@vger.kernel.org,
-	acooks@gmail.com, linux@horizon.com, bhelgaas@google.com,
-	eddy0596@gmail.com
-Date: Thu, 22 May 2014 17:08:20 -0600
-Message-ID: <20140522230820.2856.67604.stgit@bling.home>
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-References: <20140522230230.2856.40017.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	David Rientjes <rientjes@google.com>,
+	Seiji Aguchi <seiji.aguchi@hds.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	HATAYAMA Daisuke <d.hatayama@jp.fujitsu.com>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Richard Weinberger <richard@nod.at>,
+	Andi Kleen <ak@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	"H. Peter Anvin" <hpa@linux.intel.com>, linux-pm@vger.kernel.org
+Subject: [Patch Part1 V2 04/29] x86, mpparse: simplify arch/x86/include/asm/mpspec.h
+Date: Tue, 20 May 2014 00:22:48 +0800
+Message-Id: <1400516594-11544-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AMD-Vi already has a concept of an alias provided via the IVRS table.
-Now that PCI-core also understands aliases, we need to incorporate
-both aspects when programming the IOMMU.  IVRS is generally quite
-reliable, so we continue to prefer it when an alias is present.  For
-cases where we have an IVRS alias that does not match the PCI alias
-or where PCI does not report an alias, report the mismatch to allow
-us to collect more quirks and dynamically incorporate the alias into
-the device alias quirks where possible.
+Simplify arch/x86/include/asm/mpspec.h by
+1) Change max_physical_apicid to static as it's only used in apic.c.
+2) Kill declaration of mpc_default_type, it's never defined.
+3) Delete default_acpi_madt_oem_check(), it has already been declared
+   in apic.h.
+4) Change mp_override_legacy_irq(), mp_config_acpi_legacy_irqs() and
+   mp_register_gsi() as static because they are only used in acpi/boot.c.
 
-This should allow AMD-Vi to work with devices like Marvell and Ricoh
-with DMA function alias quirks unknown to the BIOS.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <joro@8bytes.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/iommu/amd_iommu.c |   78 +++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 74 insertions(+), 4 deletions(-)
+ arch/x86/include/asm/apic.h    |    4 ++--
+ arch/x86/include/asm/io_apic.h |    3 ---
+ arch/x86/include/asm/mpspec.h  |   13 -------------
+ arch/x86/kernel/acpi/boot.c    |   12 +++++++++---
+ arch/x86/kernel/apic/apic.c    |    2 +-
+ 5 files changed, 12 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 57068e8..a73a7ed 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -427,6 +427,68 @@ use_group:
- 	return use_dev_data_iommu_group(dev_data->alias_data, dev);
+diff --git a/arch/x86/include/asm/apic.h b/arch/x86/include/asm/apic.h
+index 19b0ebafcd3e..69ed79aa9085 100644
+--- a/arch/x86/include/asm/apic.h
++++ b/arch/x86/include/asm/apic.h
+@@ -502,8 +502,6 @@ static inline unsigned default_get_apic_id(unsigned long x)
+ #define DEFAULT_TRAMPOLINE_PHYS_HIGH		0x469
+ 
+ #ifdef CONFIG_X86_64
+-extern int default_acpi_madt_oem_check(char *, char *);
+-
+ extern void apic_send_IPI_self(int vector);
+ 
+ DECLARE_PER_CPU(int, x2apic_extra_bits);
+@@ -552,6 +550,8 @@ static inline int default_apic_id_valid(int apicid)
+ 	return (apicid < 255);
  }
  
-+static int __last_alias(struct pci_dev *pdev, u16 alias, void *data)
-+{
-+	*(u16 *)data = alias;
-+	return 0;
-+}
++extern int default_acpi_madt_oem_check(char *, char *);
 +
-+static u16 get_alias(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	u16 devid, ivrs_alias, pci_alias;
-+
-+	devid = get_device_id(dev);
-+	ivrs_alias = amd_iommu_alias_table[devid];
-+	pci_for_each_dma_alias(pdev, __last_alias, &pci_alias);
-+
-+	if (ivrs_alias == pci_alias)
-+		return ivrs_alias;
-+
-+	/*
-+	 * DMA alias showdown
-+	 *
-+	 * The IVRS is fairly reliable in telling us about aliases, but it
-+	 * can't know about every screwy device.  If we don't have an IVRS
-+	 * reported alias, use the PCI reported alias.  In that case we may
-+	 * still need to initialize the rlookup and dev_table entries if the
-+	 * alias is to a non-existent device.
-+	 */
-+	if (ivrs_alias == devid) {
-+		if (!amd_iommu_rlookup_table[pci_alias]) {
-+			amd_iommu_rlookup_table[pci_alias] =
-+				amd_iommu_rlookup_table[devid];
-+			memcpy(amd_iommu_dev_table[pci_alias].data,
-+			       amd_iommu_dev_table[devid].data,
-+			       sizeof(amd_iommu_dev_table[pci_alias].data));
-+		}
-+
-+		return pci_alias;
-+	}
-+
-+	pr_info("AMD-Vi: Using IVRS reported alias %02x:%02x.%d "
-+		"for device %s[%04x:%04x], kernel reported alias "
-+		"%02x:%02x.%d\n", PCI_BUS_NUM(ivrs_alias), PCI_SLOT(ivrs_alias),
-+		PCI_FUNC(ivrs_alias), dev_name(dev), pdev->vendor, pdev->device,
-+		PCI_BUS_NUM(pci_alias), PCI_SLOT(pci_alias),
-+		PCI_FUNC(pci_alias));
-+
-+	/*
-+	 * If we don't have a PCI DMA alias and the IVRS alias is on the same
-+	 * bus, then the IVRS table may know about a quirk that we don't.
-+	 */
-+	if (pci_alias == devid &&
-+	    PCI_BUS_NUM(ivrs_alias) == pdev->bus->number) {
-+		pdev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-+		pdev->dma_alias_devfn = ivrs_alias & 0xff;
-+		pr_info("AMD-Vi: Added PCI DMA alias %02x.%d for %s\n",
-+			PCI_SLOT(ivrs_alias), PCI_FUNC(ivrs_alias),
-+			dev_name(dev));
-+	}
-+
-+	return ivrs_alias;
-+}
-+
- static int iommu_init_device(struct device *dev)
+ extern void default_setup_apic_routing(void);
+ 
+ extern struct apic apic_noop;
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 90f97b4b9347..9121abbc8c8f 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -118,9 +118,6 @@ extern int mp_irq_entries;
+ /* MP IRQ source entries */
+ extern struct mpc_intsrc mp_irqs[MAX_IRQ_SOURCES];
+ 
+-/* non-0 if default (table-less) MP configuration */
+-extern int mpc_default_type;
+-
+ /* Older SiS APIC requires we rewrite the index register */
+ extern int sis_apic_bug;
+ 
+diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
+index f5a617956735..7bef40a01a1d 100644
+--- a/arch/x86/include/asm/mpspec.h
++++ b/arch/x86/include/asm/mpspec.h
+@@ -40,8 +40,6 @@ extern int mp_bus_id_to_type[MAX_MP_BUSSES];
+ extern DECLARE_BITMAP(mp_bus_not_pci, MAX_MP_BUSSES);
+ 
+ extern unsigned int boot_cpu_physical_apicid;
+-extern unsigned int max_physical_apicid;
+-extern int mpc_default_type;
+ extern unsigned long mp_lapic_addr;
+ 
+ #ifdef CONFIG_X86_LOCAL_APIC
+@@ -88,15 +86,6 @@ static inline void early_reserve_e820_mpc_new(void) { }
+ #endif
+ 
+ int generic_processor_info(int apicid, int version);
+-#ifdef CONFIG_ACPI
+-extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
+-extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+-				   u32 gsi);
+-extern void mp_config_acpi_legacy_irqs(void);
+-struct device;
+-extern int mp_register_gsi(struct device *dev, u32 gsi, int edge_level,
+-				 int active_high_low);
+-#endif /* CONFIG_ACPI */
+ 
+ #define PHYSID_ARRAY_SIZE	BITS_TO_LONGS(MAX_LOCAL_APIC)
+ 
+@@ -163,6 +152,4 @@ extern physid_mask_t phys_cpu_present_map;
+ 
+ extern int generic_mps_oem_check(struct mpc_table *, char *, char *);
+ 
+-extern int default_acpi_madt_oem_check(char *, char *);
+-
+ #endif /* _ASM_X86_MPSPEC_H */
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 86281ffb96d6..b41b47021f53 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -345,6 +345,10 @@ acpi_parse_lapic_nmi(struct acpi_subtable_header * header, const unsigned long e
+ #endif				/*CONFIG_X86_LOCAL_APIC */
+ 
+ #ifdef CONFIG_X86_IO_APIC
++static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
++				    u32 gsi);
++static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
++			   int polarity);
+ 
+ static int __init
+ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
+@@ -903,7 +907,8 @@ static int __init acpi_parse_madt_lapic_entries(void)
+ #ifdef	CONFIG_X86_IO_APIC
+ #define MP_ISA_BUS		0
+ 
+-void __init mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger, u32 gsi)
++static void __init mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
++					  u32 gsi)
  {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-@@ -441,7 +503,8 @@ static int iommu_init_device(struct device *dev)
- 	if (!dev_data)
- 		return -ENOMEM;
- 
--	alias = amd_iommu_alias_table[dev_data->devid];
-+	alias = get_alias(dev);
-+
- 	if (alias != dev_data->devid) {
- 		struct iommu_dev_data *alias_data;
- 
-@@ -489,12 +552,19 @@ static void iommu_ignore_device(struct device *dev)
- 
- static void iommu_uninit_device(struct device *dev)
- {
-+	struct iommu_dev_data *dev_data = search_dev_data(get_device_id(dev));
-+
-+	if (!dev_data)
-+		return;
-+
- 	iommu_group_remove_device(dev);
- 
-+	/* Unlink from alias, it may change if another device is re-plugged */
-+	dev_data->alias_data = NULL;
-+
- 	/*
--	 * Nothing to do here - we keep dev_data around for unplugged devices
--	 * and reuse it when the device is re-plugged - not doing so would
--	 * introduce a ton of races.
-+	 * We keep dev_data around for unplugged devices and reuse it when the
-+	 * device is re-plugged - not doing so would introduce a ton of races.
- 	 */
+ 	int ioapic;
+ 	int pin;
+@@ -938,7 +943,7 @@ void __init mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger, u32 gsi)
+ 	isa_irq_to_gsi[bus_irq] = gsi;
  }
  
+-void __init mp_config_acpi_legacy_irqs(void)
++static void __init mp_config_acpi_legacy_irqs(void)
+ {
+ 	int i;
+ 	struct mpc_intsrc mp_irq;
+@@ -1040,7 +1045,8 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
+ 	return 0;
+ }
+ 
+-int mp_register_gsi(struct device *dev, u32 gsi, int trigger, int polarity)
++static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
++			   int polarity)
+ {
+ 	int ioapic;
+ 	int ioapic_pin;
+diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
+index ad28db7e6bde..ca1bd75e3de2 100644
+--- a/arch/x86/kernel/apic/apic.c
++++ b/arch/x86/kernel/apic/apic.c
+@@ -67,7 +67,7 @@ EXPORT_SYMBOL_GPL(boot_cpu_physical_apicid);
+ /*
+  * The highest APIC ID seen during enumeration.
+  */
+-unsigned int max_physical_apicid;
++static unsigned int max_physical_apicid;
+ 
+ /*
+  * Bitmask of physically existing CPUs:
+-- 
+1.7.10.4
 
