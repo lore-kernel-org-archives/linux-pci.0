@@ -1,49 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.horizon.com ([71.41.210.147]:59755 "HELO ns.horizon.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754517AbaEPG2Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 May 2014 02:28:25 -0400
-Date: 16 May 2014 02:28:23 -0400
-Message-ID: <20140516062823.15105.qmail@ns.horizon.com>
-From: colin@horizon.com
-To: alex.williamson@redhat.com, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 00/15] PCI/iommu: Fix DMA alias problems
-Cc: acooks@gmail.com, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux@horizon.com
-In-Reply-To: <400175834.3289.65.camel@ul30vt.home>
+Received: from mout.kundenserver.de ([212.227.126.131]:53842 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752631AbaESMqU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 08:46:20 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	'Santosh Shilimkar' <santosh.shilimkar@ti.com>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	rogerq@ti.com, balajitk@ti.com,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Marek Vasut' <marex@denx.de>
+Subject: Re: [PATCH 06/17] pci: host: pcie-designware: Use *base-mask* for configuring the iATU
+Date: Mon, 19 May 2014 14:45:47 +0200
+Message-ID: <5193704.9YxYic1Nyf@wuerfel>
+In-Reply-To: <5375D3C8.1060204@ti.com>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com> <5281007.CFRjW0Yeu2@wuerfel> <5375D3C8.1060204@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson wrote:
-> Wow, I didn't think that kind of broken was possible.  Maybe instead of
-> a bitmap of function aliases we could have a single devfn alias for a
-> device.  That means we'd only be able to support a single alias for a
-> device, but since I don't think we've seen devices that use more than a
-> single alias, maybe that's ok.
+On Friday 16 May 2014 14:30:56 Kishon Vijay Abraham I wrote:
+> On Wednesday 14 May 2014 06:15 PM, Arnd Bergmann wrote:
+> > On Wednesday 14 May 2014 11:14:45 Kishon Vijay Abraham I wrote:
+> > / {
+> >       #address-cells = <1>; // or <2> if you support > 4GB address space
+> >       #size-cells = <1>;
+> > 
+> >       soc {
+> >               #address-cells <1>;
+> >               #size-cells = <1>;
+> >               ranges;
+> >               dma-ranges;
+> > 
+> >               ... // all normal devices
+> > 
+> >               axi@20000000 {
+> >                       #size-cells = <1>;
+> >                       #address-cells = <1>;
+> >                       dma-ranges; // can access all 4GB outbound
+> >                       ranges = <0 0x20000000 0x10000000>; // 28-bit bus
+> > 
+> >                       pci@0 {
+> >                               reg = <0x0    0x1000>, // internal regs
+> >                                     <0x1000 0x2000>; // config space
+> 
+> The internal reg address space starts at 0x51000000. By Using this <0
+> 0x20000000 0x10000000>; as ranges, we are not able to get the memory resource
+> properly. Can we use multiple ranges? how do we specify which ranges the *reg*
+> property to use?
 
-In my (never finished) patch set for the same problem, the first thing
-I did was
+Yes, multiple ranges will work fine. You can make up a representation
+yourself if you don't know what the hardware really does.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a13d6825..7788870a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -251,12 +251,13 @@ struct pci_dev {
- 	struct proc_dir_entry *procent;	/* device entry in /proc/bus/pci */
- 	struct pci_slot	*slot;		/* Physical slot this device is in */
- 
--	unsigned int	devfn;		/* encoded device & function index */
- 	unsigned short	vendor;
- 	unsigned short	device;
- 	unsigned short	subsystem_vendor;
- 	unsigned short	subsystem_device;
- 	unsigned int	class;		/* 3 bytes: (base,sub,prog-if) */
-+	u8		devfn;		/* encoded device & function index */
-+	u8		devfn_quirk;	/* zero is non-quirky */
- 	u8		revision;	/* PCI revision, low byte of class word */
- 	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
- 	u8		pcie_cap;	/* PCIe capability offset */
+Two possible ways of doing this would be
 
-I encoded "devfn_quirk" as a delta to devfn, so that zero would mean
-"no quirk", and no existing intialization would need changing.
+a)
+
+	/* two separate physical connections represented as one logical bus */
+	axi@20000000 {
+		#address-cells = <2>;
+		#size-cells = <1>;
+		ranges = <0 0 0x20000000 0x10000000>, /* configurable registers */
+			 <1 0 0x51000000 0x01000000>; /* PCI host registers */
+
+		pci@1.0 {
+			reg = <1 0 0x01000000>, /* host registers */
+				<0 0x1000 0x2000>; /* config space */
+		}
+
+	};
+
+b) 
+
+	/* one physical bus, with some address munging */
+	axi@20000000 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0 0x20000000 0x10000000>, /* configurable registers */
+			 <0x51000000 0x51000000 0x01000000>; /* PCI host registers */
+
+		pci@1.0 {
+			reg = <0x51000000 0x01000000>, /* host registers */
+				<0x1000 0x2000>; /* config space */
+		}
+
+	};
+
+
+> Btw I was using *simple-bus* as compatible to *axi*. Or should I create a new
+> *axi* driver to create the pcie memory resources myself?
+
+simple-bus is best here, since you don't have a complex bus that needs to
+be set up using register accesses or that generates interrupts.
+
+	Arnd
