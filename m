@@ -1,68 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 20 May 2014 08:35:35 +0900 (JST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:52980 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753420AbaESNCf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 09:02:35 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	sfi-devel@simplefirmware.org,
-	Grant Likely <grant.likely@linaro.org>
-Subject: Re: [RFC Patch Part1 V1 00/30] use irqdomain to dynamically allocate
- IRQ for IOAPIC pin
-In-Reply-To: <alpine.DEB.2.02.1405192250170.22305@ionos.tec.linutronix.de>
-Message-ID: <alpine.DEB.2.02.1405200823300.5204@ionos.tec.linutronix.de>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.02.1405161601060.4039@ionos.tec.linutronix.de> <53787F09.9000200@linux.intel.com> <alpine.DEB.2.02.1405192250170.22305@ionos.tec.linutronix.de>
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>, kdb@lurndal.org,
+	yu.zhao@intel.com
+Subject: Re: [PATCH v7 0/3] Add support for PCI in AArch64
+Date: Mon, 19 May 2014 15:01:59 +0200
+Message-ID: <4292818.mI6kZGgTzd@wuerfel>
+In-Reply-To: <CA+sq2Ccok5wtKjCZUkBhhj3WsiqFAoMgHK7LY210aBtMku+8SA@mail.gmail.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com> <CA+sq2Ccok5wtKjCZUkBhhj3WsiqFAoMgHK7LY210aBtMku+8SA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Jiang,
+On Friday 16 May 2014 16:03:04 Sunil Kovvuri wrote:
+> When the SR-IOV capable device's driver tries to enable sriov
+> (pci_enable_sriov()) it fails to create/add PCI device for each
+> virtual function reporting  "not enough MMIO resources for SR-IOV".
 
-On Mon, 19 May 2014, Thomas Gleixner wrote:
-> > We may build hierarchy irqdomains as below for x86,
-> > [IOAPIC]      [MSI/MSI-x]  [HPET]  [DMAR] [Legacy]
-> >     |            |           |       |       |
-> >     v            v           v       |       |
-> > [           Remapping           ]    |       |
-> >                  |                   |       |
-> >                  v                   v       v
-> > [                   Root/vector                ]
-> > 
-> > For x86, irq_alloc_info_t structure will be used to host CPU mask,
-> > device pointer, IOAPIC pin attributes, NUMA node info etc.
+I assume you have checked that there is indeed enough MMIO space
+available, right?
+
+> In sriov_enable() (drivers/pci/iov.c)
 > 
-> Do we really need to hand all of this down?
+>  296        for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>  297                 bars |= (1 << (i + PCI_IOV_RESOURCES));
+>  298                 res = dev->resource + PCI_IOV_RESOURCES + i;
+>  299                 if (res->parent)
+>  300                         nres++;
+>  301         }
+>  302         if (nres != iov->nres) {
+>  303                 dev_err(&dev->dev, "not enough MMIO resources for
+>  SR-IOV\n");
+>  304                 return -ENOMEM;
+>  305         }
+> 
+> Here its checking if physical function's IOV resource has a parent or not.
+> Which is pci-pci bridge in this case. Otherwise it doesn't consider
+> that resource.
+> 
+> Added below api to your patch.
+> This will try to claim a resource while creating a PCI device which
+> inturn sets 'res->parent'.
 
-having recovered from a 24hr travel, I think we really only need to
-hand down cpumask.
+This looks like the wrong approach. The PCI host controller should
+really have been registered with the root 'iomem_resource' during
+the probe of the host controller.
 
-If you want to allocate a vector, all the vector domain needs to know
-is the cpumask and the number of consecutive vectors you want to
-allocate.
-
-The IOAPIC pin attribute is only interesting inside the ioapic domain,
-there is no need to have it elsewhere.
-
-Numa node is encoded in the cpumask, IOW the node info selects only
-bits for that node in the mask.
-
-Same for the device. It's only relevant for setting up MSI[x] or
-legacy PCI interrupts. But the underlying vector domain does not care
-at all about it.
-
-Thanks,
-
-	tglx
+	Arnd
