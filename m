@@ -1,178 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:49739 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752657AbaEZPS2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 May 2014 11:18:28 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v3 06/15] thunderbolt: Add thunderbolt capability handling
-Date: Mon, 26 May 2014 17:18:03 +0200
-Message-Id: <1401117492-2870-7-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
-References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:44420 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751897AbaESDBS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 May 2014 23:01:18 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 19 May 2014 13:01:17 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 2/4] drivers/vfio: Rework offsetofend()
+Date: Mon, 19 May 2014 13:01:08 +1000
+Message-Id: <1400468470-11262-3-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thunderbolt config areas contain capability lists similar to those found
-on pci devices. This patch introduces a tb_find_cap utility method to
-search for capabilities.
+The macro offsetofend() introduces unnecessary temporary variable
+"tmp". The patch avoids that and saves a bit memory in stack.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/thunderbolt/Makefile |   2 +-
- drivers/thunderbolt/cap.c    | 116 +++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.h     |   2 +
- 3 files changed, 119 insertions(+), 1 deletion(-)
- create mode 100644 drivers/thunderbolt/cap.c
+ include/linux/vfio.h | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 4ac18d9..617b314 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
- obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
--thunderbolt-objs := nhi.o ctl.o tb.o switch.o
-+thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o
+diff --git a/include/linux/vfio.h b/include/linux/vfio.h
+index 81022a52..8ec980b 100644
+--- a/include/linux/vfio.h
++++ b/include/linux/vfio.h
+@@ -86,9 +86,8 @@ extern void vfio_unregister_iommu_driver(
+  * from user space.  This allows us to easily determine if the provided
+  * structure is sized to include various fields.
+  */
+-#define offsetofend(TYPE, MEMBER) ({				\
+-	TYPE tmp;						\
+-	offsetof(TYPE, MEMBER) + sizeof(tmp.MEMBER); })		\
++#define offsetofend(TYPE, MEMBER) \
++	(offsetof(TYPE, MEMBER)	+ sizeof(((TYPE *)0)->MEMBER))
  
-diff --git a/drivers/thunderbolt/cap.c b/drivers/thunderbolt/cap.c
-new file mode 100644
-index 0000000..a7b47e7
---- /dev/null
-+++ b/drivers/thunderbolt/cap.c
-@@ -0,0 +1,116 @@
-+/*
-+ * Thunderbolt Cactus Ridge driver - capabilities lookup
-+ *
-+ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-+ */
-+
-+#include <linux/slab.h>
-+#include <linux/errno.h>
-+
-+#include "tb.h"
-+
-+
-+struct tb_cap_any {
-+	union {
-+		struct tb_cap_basic basic;
-+		struct tb_cap_extended_short extended_short;
-+		struct tb_cap_extended_long extended_long;
-+	};
-+} __packed;
-+
-+static bool tb_cap_is_basic(struct tb_cap_any *cap)
-+{
-+	/* basic.cap is u8. This checks only the lower 8 bit of cap. */
-+	return cap->basic.cap != 5;
-+}
-+
-+static bool tb_cap_is_long(struct tb_cap_any *cap)
-+{
-+	return !tb_cap_is_basic(cap)
-+	       && cap->extended_short.next == 0
-+	       && cap->extended_short.length == 0;
-+}
-+
-+static enum tb_cap tb_cap(struct tb_cap_any *cap)
-+{
-+	if (tb_cap_is_basic(cap))
-+		return cap->basic.cap;
-+	else
-+		/* extended_short/long have cap at the same offset. */
-+		return cap->extended_short.cap;
-+}
-+
-+static u32 tb_cap_next(struct tb_cap_any *cap, u32 offset)
-+{
-+	int next;
-+	if (offset == 1) {
-+		/*
-+		 * The first pointer is part of the switch header and always
-+		 * a simple pointer.
-+		 */
-+		next = cap->basic.next;
-+	} else {
-+		/*
-+		 * Somehow Intel decided to use 3 different types of capability
-+		 * headers. It is not like anyone could have predicted that
-+		 * single byte offsets are not enough...
-+		 */
-+		if (tb_cap_is_basic(cap))
-+			next = cap->basic.next;
-+		else if (!tb_cap_is_long(cap))
-+			next = cap->extended_short.next;
-+		else
-+			next = cap->extended_long.next;
-+	}
-+	/*
-+	 * "Hey, we could terminate some capability lists with a null offset
-+	 *  and others with a pointer to the last element." - "Great idea!"
-+	 */
-+	if (next == offset)
-+		return 0;
-+	return next;
-+}
-+
-+/**
-+ * tb_find_cap() - find a capability
-+ *
-+ * Return: Returns a positive offset if the capability was found and 0 if not.
-+ * Returns an error code on failure.
-+ */
-+int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, enum tb_cap cap)
-+{
-+	u32 offset = 1;
-+	struct tb_cap_any header;
-+	int res;
-+	int retries = 10;
-+	while (retries--) {
-+		res = tb_port_read(port, &header, space, offset, 1);
-+		if (res) {
-+			/* Intel needs some help with linked lists. */
-+			if (space == TB_CFG_PORT && offset == 0xa
-+			    && port->config.type == TB_TYPE_DP_HDMI_OUT) {
-+				offset = 0x39;
-+				continue;
-+			}
-+			return res;
-+		}
-+		if (offset != 1) {
-+			if (tb_cap(&header) == cap)
-+				return offset;
-+			if (tb_cap_is_long(&header)) {
-+				/* tb_cap_extended_long is 2 dwords */
-+				res = tb_port_read(port, &header, space,
-+						   offset, 2);
-+				if (res)
-+					return res;
-+			}
-+		}
-+		offset = tb_cap_next(&header, offset);
-+		if (!offset)
-+			return 0;
-+	}
-+	tb_port_WARN(port,
-+		     "run out of retries while looking for cap %#x in config space %d, last offset: %#x\n",
-+		     cap, space, offset);
-+	return -EIO;
-+}
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 389dbb4..38e4c23 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -159,6 +159,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
- void tb_switch_free(struct tb_switch *sw);
- 
-+int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
-+
- 
- static inline int tb_route_length(u64 route)
- {
+ /*
+  * External user API
 -- 
-1.9.3
+1.8.3.2
 
