@@ -1,89 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:31551 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756445AbaEPIEb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 May 2014 04:04:31 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Paul Gortmaker <paul.gortmaker@windriver.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
-	linux-pm@vger.kernel.org
-Subject: [RFC Patch Part1 V1 05/30] x86, acpi, irq: kill static function irq_to_gsi()
-Date: Fri, 16 May 2014 16:05:25 +0800
-Message-Id: <1400227550-5935-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch Part1 V2 15/29] x86, irq: reorganize IO_APIC_get_PCI_irq_vector() to prepare for irqdomain
+Date: Tue, 20 May 2014 00:22:59 +0800
+Message-Id: <1400516594-11544-16-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Static function irq_to_gsi() is only called by acpi_isa_irq_to_gsi(),
-so kill function irq_to_gsi() and simplify acpi_isa_irq_to_gsi().
+Reorganize function IO_APIC_get_PCI_irq_vector() a bit to better support
+coming irqdomain.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/kernel/acpi/boot.c |   26 ++++++--------------------
- 1 file changed, 6 insertions(+), 20 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   62 ++++++++++++++++++++++------------------
+ 1 file changed, 34 insertions(+), 28 deletions(-)
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index b41b47021f53..8390db1f7a93 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -120,22 +120,6 @@ static unsigned int gsi_to_irq(unsigned int gsi)
- 	return irq;
- }
- 
--static u32 irq_to_gsi(int irq)
--{
--	unsigned int gsi;
--
--	if (irq < NR_IRQS_LEGACY)
--		gsi = isa_irq_to_gsi[irq];
--	else if (irq < gsi_top)
--		gsi = irq;
--	else if (irq < (gsi_top + NR_IRQS_LEGACY))
--		gsi = irq - gsi_top;
--	else
--		gsi = 0xffffffff;
--
--	return gsi;
--}
--
- /*
-  * This is just a simple wrapper around early_ioremap(),
-  * with sanity checks for phys == 0 and size == 0.
-@@ -527,10 +511,12 @@ EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
- 
- int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 18d0e8a831c0..bb013e4126c3 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -997,7 +997,7 @@ static int pin_2_irq(int idx, int apic, int pin)
+ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 				struct io_apic_irq_attr *irq_attr)
  {
--	if (isa_irq >= 16)
--		return -1;
--	*gsi = irq_to_gsi(isa_irq);
--	return 0;
-+	if (isa_irq < NR_IRQS_LEGACY) {
-+		*gsi = isa_irq_to_gsi[isa_irq];
-+		return 0;
-+	}
-+
-+	return -1;
- }
+-	int ioapic_idx, i, best_guess = -1;
++	int irq, i, best_guess = -1;
  
- static int acpi_register_gsi_pic(struct device *dev, u32 gsi,
+ 	apic_printk(APIC_DEBUG,
+ 		    "querying PCI -> IRQ mapping bus:%d, slot:%d, pin:%d.\n",
+@@ -1007,41 +1007,47 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 			    "PCI BIOS passed nonexistent PCI bus %d!\n", bus);
+ 		return -1;
+ 	}
++
+ 	for (i = 0; i < mp_irq_entries; i++) {
+ 		int lbus = mp_irqs[i].srcbus;
++		int ioapic_idx, found = 0;
++
++		if (test_bit(lbus, mp_bus_not_pci) || (bus != lbus) ||
++		    mp_irqs[i].irqtype != mp_INT ||
++		    (slot != ((mp_irqs[i].srcbusirq >> 2) & 0x1f)))
++			continue;
+ 
+ 		for_each_ioapic(ioapic_idx)
+ 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic ||
+-			    mp_irqs[i].dstapic == MP_APIC_ALL)
++			    mp_irqs[i].dstapic == MP_APIC_ALL) {
++				found = 1;
+ 				break;
++			}
++		if (!found)
++			continue;
+ 
+-		if (!test_bit(lbus, mp_bus_not_pci) &&
+-		    mp_irqs[i].irqtype == mp_INT &&
+-		    (bus == lbus) &&
+-		    (slot == ((mp_irqs[i].srcbusirq >> 2) & 0x1f))) {
+-			int irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
+-
+-			if (!(ioapic_idx || IO_APIC_IRQ(irq)))
+-				continue;
++		/* Skip ISA IRQs */
++		irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
++		if (ioapic_idx == 0 && !IO_APIC_IRQ(irq))
++			continue;
+ 
+-			if (pin == (mp_irqs[i].srcbusirq & 3)) {
+-				set_io_apic_irq_attr(irq_attr, ioapic_idx,
+-						     mp_irqs[i].dstirq,
+-						     irq_trigger(i),
+-						     irq_polarity(i));
+-				return irq;
+-			}
+-			/*
+-			 * Use the first all-but-pin matching entry as a
+-			 * best-guess fuzzy result for broken mptables.
+-			 */
+-			if (best_guess < 0) {
+-				set_io_apic_irq_attr(irq_attr, ioapic_idx,
+-						     mp_irqs[i].dstirq,
+-						     irq_trigger(i),
+-						     irq_polarity(i));
+-				best_guess = irq;
+-			}
++		if (pin == (mp_irqs[i].srcbusirq & 3)) {
++			set_io_apic_irq_attr(irq_attr, ioapic_idx,
++					     mp_irqs[i].dstirq,
++					     irq_trigger(i),
++					     irq_polarity(i));
++			return irq;
++		}
++		/*
++		 * Use the first all-but-pin matching entry as a
++		 * best-guess fuzzy result for broken mptables.
++		 */
++		if (best_guess < 0) {
++			set_io_apic_irq_attr(irq_attr, ioapic_idx,
++					     mp_irqs[i].dstirq,
++					     irq_trigger(i),
++					     irq_polarity(i));
++			best_guess = irq;
+ 		}
+ 	}
+ 	return best_guess;
 -- 
 1.7.10.4
 
