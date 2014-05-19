@@ -1,73 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:3429 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722AbaEDE02 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 May 2014 00:26:28 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	<x86@kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 00/13] Refactor pci_is_brdige() to simplify code
-Date: Sun, 4 May 2014 12:23:35 +0800
-Message-ID: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:18904 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932164AbaESQVP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 May 2014 12:21:15 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch Part1 V2 01/29] x86, irq: update high address field when updating affinity for MSI IRQ
+Date: Tue, 20 May 2014 00:22:45 +0800
+Message-Id: <1400516594-11544-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v1->v2: Add comments for new pci_is_bridge().
+If x2apic is enabled, the MSI high address field should also be aslo
+updated when setting affinity for MSI IRQ, otherwise the MSI IRQ may
+target wrong APIC IDs.
 
-This patchset rename the current pci_is_bridge() to pci_has_subordinate(), 
-and introduce a new pci_is_bridge() which determine pci bridge by check
-dev->hdr_type. The new one is more accurate. PCI Spec define the pci
-device is a bridge by the dev->hdr_type = 0x01 || 0x02.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-There is no guarantee that a PCI bridge must attached a subordinate bus.
-When PCI bridge is created but before the scan child bus, it has no 
-subordinate bus. Also users can remove the pci bus using
-interface pci_remove_bus() in remove.c. 
-
-So use new pci_is_bridge() check if the PCI device is bridge is better
-choice. If user want check PCI bridge whether has a subordinate bus,
-pci_has_subordinate() is a candidate.
-
-
-Yijing Wang (13):
-  PCI: rename pci_is_bridge() to pci_has_subordinate()
-  PCI: Introduce new pci_is_bridge() helper function
-  PCI: Use new pci_is_bridge() to simplify code
-  x86/PCI: Use new pci_is_bridge() to simplify code
-  IA64/PCI: Use new pci_is_bridge() to simplify code
-  powerpc/PCI: Use new pci_is_bridge() to simplify code
-  sparc/PCI: Use new pci_is_bridge() to simplify code
-  PCI, rpaphp: Use new pci_is_bridge() to simplify code
-  PCI, shpchp: Use new pci_is_bridge() to simplify code
-  PCI, cpcihp: Use new pci_is_bridge() to simplify code
-  PCI, acpiphp: Use new pci_is_bridge() to simplify code
-  PCI, pcmcia: Use new pci_is_bridge() to simplify code
-  PCI, pciehp: Use new pci_is_bridge() to simplify code
-
- arch/ia64/pci/fixup.c                  |    4 +---
- arch/powerpc/kernel/pci-hotplug.c      |    3 +--
- arch/powerpc/kernel/pci_of_scan.c      |    3 +--
- arch/sparc/kernel/pci.c                |    3 +--
- arch/x86/pci/fixup.c                   |    4 +---
- drivers/pci/hotplug/acpiphp_glue.c     |    3 +--
- drivers/pci/hotplug/cpci_hotplug_pci.c |    3 +--
- drivers/pci/hotplug/pciehp_pci.c       |    3 +--
- drivers/pci/hotplug/rpadlpar_core.c    |    3 +--
- drivers/pci/hotplug/shpchp_pci.c       |    3 +--
- drivers/pci/pci-acpi.c                 |    8 +-------
- drivers/pci/pci-driver.c               |    8 ++++----
- drivers/pci/pci.h                      |    2 +-
- drivers/pci/probe.c                    |    3 +--
- drivers/pci/setup-bus.c                |    4 +---
- drivers/pcmcia/cardbus.c               |    3 +--
- include/linux/pci.h                    |   13 +++++++++++++
- 17 files changed, 32 insertions(+), 41 deletions(-)
-
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 9d0a9795a0f8..2de992501a1b 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3007,6 +3007,10 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 
+ 	__get_cached_msi_msg(data->msi_desc, &msg);
+ 
++	msg.address_hi = MSI_ADDR_BASE_HI;
++	if (x2apic_enabled())
++		msg.address_hi |= MSI_ADDR_EXT_DEST_ID(dest);
++
+ 	msg.data &= ~MSI_DATA_VECTOR_MASK;
+ 	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+ 	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+-- 
+1.7.10.4
 
