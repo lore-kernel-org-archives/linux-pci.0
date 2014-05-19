@@ -1,61 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:55466 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916AbaE1DWR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 23:22:17 -0400
-Received: by mail-ie0-f170.google.com with SMTP id at1so9774627iec.15
-        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 20:22:17 -0700 (PDT)
-Date: Tue, 27 May 2014 21:22:13 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] PCI: fix return in pci_bus_add_device
-Message-ID: <20140528032213.GP11907@google.com>
-References: <1400729544-7940-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 19 May 2014 23:04:22 +0900 (JST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	sfi-devel@simplefirmware.org,
+	Grant Likely <grant.likely@linaro.org>
+Subject: Re: [RFC Patch Part1 V1 00/30] use irqdomain to dynamically allocate
+ IRQ for IOAPIC pin
+In-Reply-To: <53787F09.9000200@linux.intel.com>
+Message-ID: <alpine.DEB.2.02.1405192250170.22305@ionos.tec.linutronix.de>
+References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.02.1405161601060.4039@ionos.tec.linutronix.de> <53787F09.9000200@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1400729544-7940-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+Jiang,
 
-On Thu, May 22, 2014 at 11:32:24AM +0800, Yijing Wang wrote:
-> Fix device_attach() return vaule in pci_bus_add_device
-> instead of meaningless 0.
+On Sun, 18 May 2014, Jiang Liu wrote:
+> On 2014/5/16 23:28, Thomas Gleixner wrote:
+> >> Patch 1-17 are trivial code improvements, bugfixes and preparation.
+> > 
+> > Can you please move the bugfixes before the other changes, so we can
+> > pick them up independently from the outcome?
+> Sure, will reorder the patch set in next version.
+
+Thanks.
+ 
+> >  
+> >> Patch 18-24 enable basic irqdomain support and IRQ number dynamic
+> >> allocation.
+> >>
+> >> Patch 25-29 consoldate the way to program IOAPIC pins by using
+> >> irqdomain map() interface.
+> >>
+> >> Patch 30 cleans up unused interfaces and functions in IOAPIC driver.
+> >>
+> >> Tests and comments are warmly welcomed!
+> > 
+> > I like the general approach, but we have now a mixture of legacy irq
+> > handling and irq domains. We really want to cleanup the legacy PIC no
+> > ioapic case as well. That will cleanup the code further.
+> > 
+> > The other thing we discussed here: https://lkml.org/lkml/2014/5/7/901
+> > in several places of the thread is to move the vector allocation into
+> > a irqdomain with a generic matrix allocator as well. We have other use
+> > cases for this as well. It would be nice if you could look at that as
+> > well.
+> I have read through the thread, it's an interesting discussion.
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/bus.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> After my first thought, I have gotten some ideas about how to reorganize
+> x86 interrupt subsystem using irqdomain framework based on ideas from
+> the thread. Because I'm newbie to interrupt subsystem, I will share my
+> naive ideas first and RFC for whether it's the right direction.
 > 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index ba2bf55..42b42b7 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -253,7 +253,7 @@ int pci_bus_add_device(struct pci_dev *dev)
->  
->  	dev->is_added = 1;
->  
-> -	return 0;
-> +	return retval;
+> We may build hierarchy irqdomains as below for x86,
+> [IOAPIC]      [MSI/MSI-x]  [HPET]  [DMAR] [Legacy]
+>     |            |           |       |       |
+>     v            v           v       |       |
+> [           Remapping           ]    |       |
+>                  |                   |       |
+>                  v                   v       v
+> [                   Root/vector                ]
+> 
+> The remapping domain is optional and used to support IRQ remapping unit.
+> We abstract remapping entry as hardware interrupt pin and will extend
+> irqdomain interface to support automatic assignment of hardware
+> interrupt pin.
+> 
+> The root/vector domain is used to manage per CPU vector numbers and
+> CPU vector is abstracted as hardware interrupt pin. It will support
+> automatic vector number assignment. To support root/vector domain,
+> we need to extend irqdomain interface to pass down information
+> or constraints about the IRQ allocation.
+> 
+> So how about following extension to current irqdomain interfaces?
 
-I'd like to see a Reviewed-by: from Yinghai, since he recently changed
-this area, e.g.,
+I cc'ed Grant Likely. He might have some opinion on this as well.
 
-  4f535093cf8f PCI: Put pci_dev in device tree as early as possible
-  58d9a38f6fac PCI: Skip attaching driver in device_add()
-
-Bjorn
-
->  }
->  
+> diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+> index c983ed18c332..2fd7e50cde32 100644
+> --- a/include/linux/irqdomain.h
+> +++ b/include/linux/irqdomain.h
+> @@ -42,6 +42,13 @@ struct of_device_id;
+>  /* Number of irqs reserved for a legacy isa controller */
+>  #define NUM_ISA_INTERRUPTS     16
+> 
+> +#define        IRQDOMAIN_AUTO_ASSIGN_HWIRQ     ULONG_MAX
+> +#ifdef arch_irq_alloc_info_t
+> +typedef        arch_irq_alloc_info_t irq_alloc_info_t;
+> +#else
+> +typedef        void irq_alloc_info_t;
+> +#endif
+> 
 >  /**
-> -- 
-> 1.7.1
+>   * struct irq_domain_ops - Methods for irq_domain objects
+>   * @match: Match an interrupt controller device node to a host, returns
+> @@ -59,7 +66,11 @@ struct of_device_id;
+>   */
+>  struct irq_domain_ops {
+>         int (*match)(struct irq_domain *d, struct device_node *node);
+> -       int (*map)(struct irq_domain *d, unsigned int virq,
+> irq_hw_number_t hw);
+> +       int (*alloc)(struct irq_domain *d, irq_hw_number_t hw,
+> +                    irq_alloc_info_t *info);
+> +       int (*free)(struct irq_domain *d, unsigned int virq);
+> +       int (*map)(struct irq_domain *d, unsigned int virq,
+> irq_hw_number_t hw,
+> +                  irq_alloc_info_t *info);
+>         void (*unmap)(struct irq_domain *d, unsigned int virq);
+>         int (*xlate)(struct irq_domain *d, struct device_node *node,
+>                      const u32 *intspec, unsigned int intsize,
 > 
+> alloc()/free() interfaces will be used allocate/free IRQ from parent
+> domain. And irq_alloc_info_t structure is used to host parameters
+> and constraints for IRQ allocation.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> For x86, irq_alloc_info_t structure will be used to host CPU mask,
+> device pointer, IOAPIC pin attributes, NUMA node info etc.
+
+Do we really need to hand all of this down?
+
+Thanks,
+
+	tglx
