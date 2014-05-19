@@ -1,54 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:53971 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754254AbaEONdX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 09:33:23 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Rob Herring <robherring2@gmail.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	srikanth t <sthokal@xilinx.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v6 1/3] ARM: kconfig: allow PCI support to be selected with ARCH_MULTIPLATFORM
-Date: Thu, 15 May 2014 15:32:46 +0200
-Message-ID: <10281549.JzWby2ApEY@wuerfel>
-In-Reply-To: <CAL_JsqLbWL136=dGZZfzPbPdF5HjhktYwLaVfbkOoo7Tr+g9Pg@mail.gmail.com>
-References: <1399478839-3564-1-git-send-email-will.deacon@arm.com> <20140515123948.GD27594@arm.com> <CAL_JsqLbWL136=dGZZfzPbPdF5HjhktYwLaVfbkOoo7Tr+g9Pg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch Part1 V2 00/29] use irqdomain to dynamically allocate IRQ for IOAPIC
+Date: Tue, 20 May 2014 00:22:44 +0800
+Message-Id: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 15 May 2014 08:16:16 Rob Herring wrote:
-> On Thu, May 15, 2014 at 7:39 AM, Will Deacon <will.deacon@arm.com> wrote:
-> > On Wed, May 14, 2014 at 03:01:35PM +0100, Rob Herring wrote:
-> >> On Wed, May 7, 2014 at 11:07 AM, Will Deacon <will.deacon@arm.com> wrote:
-> >> > When targetting ARCH_MULTIPLATFORM, we may include support for SoCs with
-> >> > PCI-capable devices (e.g. mach-virt with virtio-pci).
-> >> >
-> >> > This patch allows PCI support to be selected for these SoCs by selecting
-> >> > CONFIG_MIGHT_HAVE_PCI when CONFIG_ARCH_MULTIPLATFORM=y.
-> >>
-> >> I generally think we should select all options for multi-platform that
-> >> only serve to hide other options like this.
-> >>
-> >> You should remove the MIGHT_HAVE_PCI selections from all the
-> >> multi-platform enabled platforms as well.
-> >
-> > Something like the diff below?
-> 
-> Yes, but that raises another question as to what do we do with
-> PCI_DOMAINS? Probably should be a PCI host driver select, or given how
-> little code it controls it could just be removed. Anyway, that's a
-> problem for another day (or patch).
-> 
-> So with the below part added:
-> 
-> Acked-by: Rob Herring <robh@kernel.org>
+On x86 platforms, IRQ number are statically allocated to IOAPIC pins at boot.
+There are two issues with this design. First it causes trouble to IOAPIC
+hotplug because we need to allocate a block of IRQ numbers for each IOAPIC.
+Second it may waste IRQ nubmers even if some IOAPIC pins are not used because
+IRQ numbers are statically assigned.
 
-I think we should also 'select PCI_DOMAINS if PCI' for multiplatform, but
-I agree it doesn't have to be in this patch.
+This patchset tries to enable dynamic IRQ number allocation for IOAPIC
+by adopting the irqdomain framework, it solves the two issues mentioned
+above. It also simplifies the IOAPIC driver by consolidating ways to
+program IOAPIC pins with the irqdomain map interface.
 
-	Arnd
+We will enhance the IOAPIC driver core to support ACPI based IOAPIC hotplug
+once the IOAPIC driver has been converted to irqdomain.
+
+This patchset applies to tip/irq/core and has been tested on a two socket 64
+bit Intel platforms with:
+1) ACPI and mpparse enabled (boot successfully)
+2) Mpparse enabled with ACPI disabled (boot successfully)
+3) ACPI enabled with Mpparse disabled (boot successfully)
+
+It also builds successfully (but without booting due to hardware resource
+constraints) for 32 bit platforms with following configuraitons:
+1) IOAPIC diabled
+2) SFI enabled
+3) devicetree (CE4100) enabled
+
+TODO list:
+1) check whether it affects Xen or not
+
+Patch 1 is simple bugfix for MSI.
+
+Patch 2-16 are trivial code improvements, bugfixes and preparation.
+
+Patch 17-23 enable basic irqdomain support and IRQ number dynamic
+allocation.
+
+Patch 24-28 consoldate the way to program IOAPIC pins by using
+irqdomain map() interface.
+
+Patch 29 cleans up unused interfaces and functions in IOAPIC driver.
+
+Tests and comments are warmly welcomed!
+
+V1->V2
+1) Rebase to tip/irq/core
+2) reorder patches to put bugfixes at the head
+3) fix bug in handling shared ISA IRQs
+4) refine commit messages
+
+Jiang Liu (29):
+  x86, irq: update high address field when updating affinity for MSI
+    IRQ
+  genirq, trivial: improve documentation to match current
+    implementation
+  x86, mpparse: use pr_lvl() helper utilities to replace
+    printk(KERN_LVL)
+  x86, mpparse: simplify arch/x86/include/asm/mpspec.h
+  x86, PCI, ACPI: use kmalloc_node() to optimize for performance
+  x86, acpi, irq: kill static function irq_to_gsi()
+  x86, ACPI, trivial: minor improvements to arch/x86/kernel/acpi/boot.c
+  x86, ACPI, irq: enhance error handling in function
+    acpi_register_gsi()
+  x86, ACPI, irq: fix possible eror in GSI to IRQ mapping for legacy
+    IRQ
+  x86, irq, trivial: minor improvements of IRQ related code
+  x86, ioapic: kill unused global variable timer_through_8259
+  x86, ioapic: kill static variable nr_irqs_gsi
+  x86, ioapic: introduce helper utilities to walk ioapics and pins
+  x86, ioapic: use irq_cfg() instead of irq_get_chip_data() for better
+    readability
+  x86, irq: reorganize IO_APIC_get_PCI_irq_vector() to prepare for
+    irqdomain
+  x86, irq: introduce some helper utilities to improve readability
+  x86, ACPI, irq: consolidate algorithm of mapping (ioapic, pin) to IRQ
+    number
+  x86, irq: introduce mechanisms to support dynamically allocate IRQ
+    for IOAPIC
+  x86, irq: enhance mp_register_ioapic() to support irqdomain
+  x86, ACPI, irq: provide basic irqdomain support
+  x86, mpparse, irq: provide basic irqdomain support
+  x86, devicetree, irq: use common mechanism to support irqdomain
+  x86, SFI, irq: provide basic irqdomain support
+  x86, irq: introduce two helper functions to support irqdomain map
+    operation
+  x86, irq, ACPI: use common irqdomain map interface to program IOAPIC
+    pins
+  x86, irq, mpparse: use common irqdomain map interface to program
+    IOAPIC pins
+  x86, irq, SFI: use common irqdomain map interface to program IOAPIC
+    pins
+  x86, irq, devicetree: use common irqdomain map interface to program
+    IOAPIC pins
+  x86, irq: clean up unused IOAPIC interface
+
+ Documentation/IRQ-domain.txt      |    3 +-
+ arch/x86/include/asm/apic.h       |    4 +-
+ arch/x86/include/asm/hardirq.h    |    3 -
+ arch/x86/include/asm/io_apic.h    |   45 ++--
+ arch/x86/include/asm/mpspec.h     |   13 -
+ arch/x86/include/asm/prom.h       |    2 -
+ arch/x86/kernel/acpi/boot.c       |  205 +++++++-------
+ arch/x86/kernel/apic/apic.c       |    2 +-
+ arch/x86/kernel/apic/io_apic.c    |  536 ++++++++++++++++++++++---------------
+ arch/x86/kernel/devicetree.c      |   92 +------
+ arch/x86/kernel/irqinit.c         |    6 -
+ arch/x86/kernel/mpparse.c         |   97 +++----
+ arch/x86/pci/acpi.c               |    6 +-
+ arch/x86/pci/intel_mid_pci.c      |   17 +-
+ arch/x86/pci/irq.c                |    2 -
+ arch/x86/platform/intel-mid/sfi.c |   18 +-
+ arch/x86/platform/sfi/sfi.c       |   12 +-
+ kernel/irq/internals.h            |    2 +-
+ kernel/irq/irqdomain.c            |    6 +-
+ 19 files changed, 550 insertions(+), 521 deletions(-)
+
+-- 
+1.7.10.4
+
