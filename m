@@ -1,63 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f178.google.com ([209.85.220.178]:35479 "EHLO
-	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887AbaENXk0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 May 2014 19:40:26 -0400
+Received: from mout.kundenserver.de ([212.227.126.187]:65345 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932164AbaESQ7k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 12:59:40 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Srikanth Thokala <sthokal@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"michals@xilinx.com" <michals@xilinx.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Generic Configuration Access Mechanism support
+Date: Mon, 19 May 2014 18:59:36 +0200
+Message-ID: <10203370.xOnWqK3Vx4@wuerfel>
+In-Reply-To: <20140519163223.GP15130@arm.com>
+References: <1400422125-2209-1-git-send-email-sthokal@xilinx.com> <20140519163223.GP15130@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
-References: <20140509151735.8321.22017.stgit@bling.home>
-Date: Thu, 15 May 2014 07:40:25 +0800
-Message-ID: <CAJtEV7YYB4W_+nZeMgiqZVDV+M4OyFJVBic09z=KbMjOpihnTQ@mail.gmail.com>
-Subject: Re: [PATCH v2 00/15] PCI/iommu: Fix DMA alias problems
-From: Andrew Cooks <acooks@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex
+On Monday 19 May 2014 17:32:23 Will Deacon wrote:
+> On Sun, May 18, 2014 at 03:08:45PM +0100, Srikanth Thokala wrote:
+> > This patch adds support for a generic CAM and ECAM configuration
+> > space accesses.
+> 
+> Looks good to me, thanks Srikanth!
+> 
+> Arnd: is this the sort of thing you were expecting? The
+> ->is_valid_cfg_access callback is a bit horrible, but I can't think of
+> anything better.
+> 
+> I can include this in the next posting of my PCI patches.
 
-On Fri, May 9, 2014 at 11:28 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> ....
->
-> Original description:
->
-> This series attempts to fix a couple issues we've had outstanding in
-> the PCI/IOMMU code for a while.  The first issue is with devices that
-> use the wrong requester ID for DMA transactions.  We already have a
-> sort of half-baked attempt to fix this for several Ricoh devices, but
-> the fix only helps them be useful through IOMMU groups, not the
-> general DMA case.  There are also several Marvell devices which use
-> use a different wrong requester ID and don't even fit into the DMA
-> source idea.  This series creates a DMA alias iterator that will
-> step through each possible alias of a device, allowing IOMMUs to
-> insert mappings for both the device and its aliases.
->
-> Hand-in-hand with this is our broken pci_find_upstream_pcie_bridge()
-> function, which is known to blowup when it finds itself suddenly at
-> a PCIe device without crossing a PCIe-to-PCI bridge (as identified by
-> the PCIe capability).  It also likes to make the invalid assumption
-> that a PCIe device never has its requester ID masked by any usptream
-> bus.  We can fix this using the above new DMA alias iterator, since
-> that's effectively what this function was meant to do.
->
+Yes, this is roughly what I had in mind, thanks a lot!
 
-There are two cases where the DMA requester id seems to use the wrong
-slot (as opposed to function) in the patch I attached to
-https://bugzilla.kernel.org/show_bug.cgi?id=42679
-The original bug reports are listed in the patch.
+I'll comment a bit more on the patch itself
 
-Unfortunately, I wasn't able to get test feedback on those two cases,
-but I'm wondering...
-Did I understand correctly that a slot alias is something that could be needed?
-If so, is it a variation of the PCIe-to-PCI bridge case that's already
-covered or will it require a different approach?
-
-Thanks,
-
-a.
+	Arnd
