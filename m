@@ -1,186 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20687 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755420AbaEIP3L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 May 2014 11:29:11 -0400
-Subject: [PATCH v2 07/15] PCI: Consolidate isolation domain code
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
-Date: Fri, 09 May 2014 09:29:07 -0600
-Message-ID: <20140509152907.8321.17741.stgit@bling.home>
-In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
-References: <20140509151735.8321.22017.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch Part1 V2 25/29] x86, irq, ACPI: use common irqdomain map interface to program IOAPIC pins
+Date: Tue, 20 May 2014 00:23:09 +0800
+Message-Id: <1400516594-11544-26-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each of the IOMMU drivers supporting IOMMU groups has their own
-implementation of an algorithm to find the base device for an IOMMU
-group.  This N:1 function takes into account visibility of a PCI
-device on the bus using DMA aliases, as well as the isolation of
-devices using ACS.  Since these are all generic PCI properties,
-provide this helper in PCI code to create a single, standard
-implementation.
+Refine ACPI to use common irqdomain map interface to program IOAPIC pins,
+so we can unify the callsite to progam IOAPIC pins.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/search.c |  130 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |    1 
- 2 files changed, 131 insertions(+)
+ arch/x86/kernel/acpi/boot.c |   48 ++++++++++++++++---------------------------
+ 1 file changed, 18 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index dab4561..aea2443 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -115,6 +115,136 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 4e8566b071c1..68baa34b8346 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -332,7 +332,9 @@ static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 			   int polarity);
+ 
+-static struct irq_domain_ops acpi_irqdomain_ops;
++static struct irq_domain_ops acpi_irqdomain_ops = {
++	.map = mp_irqdomain_map,
++};
+ 
+ static struct irq_domain *acpi_create_irqdomain(int idx, void *arg)
+ {
+@@ -512,10 +514,6 @@ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
+ 	int irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
+ 
+ 	if (irq >= 0) {
+-#ifdef CONFIG_X86_IO_APIC
+-		if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
+-			setup_IO_APIC_irq_extra(gsi);
+-#endif
+ 		*irqp = irq;
+ 		return 0;
+ 	}
+@@ -1047,11 +1045,7 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
+ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 			   int polarity)
+ {
+-	int irq;
+-	int ioapic;
+-	int ioapic_pin;
+-	struct io_apic_irq_attr irq_attr;
+-	int ret;
++	int irq, ioapic, pin, node;
+ 
+ 	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
+ 		return gsi;
+@@ -1060,35 +1054,29 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 	if (acpi_gbl_FADT.sci_interrupt == gsi)
+ 		return gsi;
+ 
+-	irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
+-	if (irq < 0)
+-		return ACPI_INVALID_GSI;
+-
+ 	ioapic = mp_find_ioapic(gsi);
+ 	if (ioapic < 0) {
+-		printk(KERN_WARNING "No IOAPIC for GSI %u\n", gsi);
+-		return gsi;
++		pr_warn("No IOAPIC for GSI %u\n", gsi);
++		return ACPI_INVALID_GSI;
+ 	}
+ 
+-	ioapic_pin = mp_find_ioapic_pin(ioapic, gsi);
+-
+-	if (ioapic_pin > MP_MAX_IOAPIC_PIN) {
+-		printk(KERN_ERR "Invalid reference to IOAPIC pin "
+-		       "%d-%d\n", mpc_ioapic_id(ioapic),
+-		       ioapic_pin);
+-		return gsi;
++	pin = mp_find_ioapic_pin(ioapic, gsi);
++	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
++	if (mp_set_pin_attr(ioapic, pin,
++			    trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
++			    polarity == ACPI_ACTIVE_HIGH ? 0 : 1,
++			    node)) {
++		pr_warn("Failed to set pin attr for GSI%d\n", gsi);
++		return ACPI_INVALID_GSI;
+ 	}
+ 
++	irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
++	if (irq < 0)
++		return ACPI_INVALID_GSI;
++
+ 	if (enable_update_mptable)
+ 		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
+ 
+-	set_io_apic_irq_attr(&irq_attr, ioapic, ioapic_pin,
+-			     trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
+-			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
+-	ret = io_apic_set_pci_routing(dev, irq, &irq_attr);
+-	if (ret < 0)
+-		gsi = ACPI_INVALID_GSI;
+-
+ 	return gsi;
  }
  
- /*
-+ * last_dma_alias_dev - Isolation root helper to record the last DMA alias pdev
-+ */
-+static int last_dma_alias_dev(struct pci_dev *pdev, u16 alias, void *data)
-+{
-+	*(struct pci_dev **)data = pdev;
-+	return 0;
-+}
-+
-+/*
-+ * To consider a device isolated, we require ACS to support Source Validation,
-+ * Request Redirection, Completer Redirection, and Upstream Forwarding.  This
-+ * effectively means that devices cannot spoof their requester ID, requests
-+ * and commpletions cannot be redirected, and all transactions are forwarded
-+ * upstream, even as it passes through a bridge where the target device is
-+ * downstream.
-+ */
-+#define REQ_ACS_FLAGS   (PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
-+
-+/*
-+ * pci_find_dma_isolation_root - Given a PCI device, find the root device for
-+ *				 an isolation domain.
-+ * @pdev: target device
-+ *
-+ * This function takes DMA alias quirks, bus topology, and PCI ACS into
-+ * account to find the root device for an isolation domain.  The root device
-+ * is a consistent and representative device within the isolation domain.
-+ * Passing any device within a given isolation domain results in the same
-+ * returned root device, allowing this root device to be used for lookup
-+ * for structures like IOMMU groups.  Note that the root device is not
-+ * necessarily a bridge, in the case of a multifunction device without
-+ * DMA isolation between functions, the root device is the lowest function
-+ * without isolation.
-+ */
-+struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev)
-+{
-+	struct pci_bus *bus;
-+
-+	/*
-+	 * Step 1: Find the upstream DMA alias device
-+	 *
-+	 * A device can be aliased by bridges or DMA alias quirks.  Being able
-+	 * to differentiate devices is a minimum requirement for isolation.
-+	 */
-+	pci_for_each_dma_alias(pdev, &last_dma_alias_dev, &pdev);
-+
-+	/*
-+	 * Step 2: Find the upstream ACS device
-+	 *
-+	 * Beyond differentiation, ACS prevents uncontrolled peer-to-peer
-+	 * transactions.  Therefore the next step is to find the upstream
-+	 * ACS device.
-+	 */
-+	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
-+		if (!bus->self)
-+			continue;
-+
-+		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
-+			break;
-+
-+		pdev = bus->self;
-+	}
-+
-+	/*
-+	 * Step 3: Handle DMA function aliases
-+	 *
-+	 * PCI functions are sometimes broken and use the wrong requester
-+	 * ID for DMA transactions.  The requester ID for this device may
-+	 * actually be used by another function in this slot.  If such a
-+	 * function exists, use it.
-+	 */
-+	if (pdev->multifunction) {
-+		u8 func, func_mask = 1 << PCI_FUNC(pdev->devfn);
-+
-+		for (func = 0; func < 8; func++) {
-+			struct pci_dev *tmp;
-+
-+			if (func == PCI_FUNC(pdev->devfn))
-+				continue;
-+
-+			tmp = pci_get_slot(pdev->bus,
-+					   PCI_DEVFN(PCI_SLOT(pdev->devfn),
-+						     func));
-+			if (!tmp)
-+				continue;
-+
-+			pci_dev_put(tmp);
-+			/*
-+			 * If this device has a DMA alias to us, it becomes
-+			 * the base device regardless of ACS.
-+			 */
-+			if (tmp->dma_func_alias & func_mask) {
-+				pdev = tmp;
-+				break;
-+			}
-+		}
-+	}
-+
-+	/*
-+	 * Step 4: Handle multifunction ACS
-+	 *
-+	 * If the resulting device is multifunction and does not itself
-+	 * support ACS then we cannot assume isolation between functions.
-+	 * The root device needs to be consistent, therefore we return the
-+	 * lowest numbered function that also lacks ACS support.
-+	 */
-+	if (pdev->multifunction && !pci_acs_enabled(pdev, REQ_ACS_FLAGS)) {
-+		u8 func;
-+
-+		for (func = 0; func < PCI_FUNC(pdev->devfn); func++) {
-+			struct pci_dev *tmp;
-+
-+			tmp = pci_get_slot(pdev->bus,
-+					   PCI_DEVFN(PCI_SLOT(pdev->devfn),
-+						     func));
-+			if (!tmp)
-+				continue;
-+
-+			pci_dev_put(tmp);
-+
-+			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
-+				pdev = tmp;
-+				break;
-+			}
-+		}
-+	}
-+
-+	return pdev;
-+}
-+
-+/*
-  * find the upstream PCIe-to-PCI bridge of a PCI device
-  * if the device is PCIE, return NULL
-  * if the device isn't connected to a PCIe bridge (that is its parent is a
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 31d9a90..5096031 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1802,6 +1802,7 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
- int pci_for_each_dma_alias(struct pci_dev *pdev,
- 			   int (*fn)(struct pci_dev *pdev,
- 				     u16 alias, void *data), void *data);
-+struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev);
- 
- /**
-  * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+-- 
+1.7.10.4
 
