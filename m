@@ -1,8 +1,11 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 27 May 2014 10:11:19 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:34782 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755051AbaESQXP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 19 May 2014 12:23:15 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Grant Likely <grant.likely@linaro.org>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
@@ -10,7 +13,8 @@ cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
@@ -18,45 +22,116 @@ cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [Patch V3 01/37] x86, irq: update high address field when updating
- affinity for MSI IRQ
-In-Reply-To: <1401178092-1228-2-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.02.1405271010570.21720@ionos.tec.linutronix.de>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com> <1401178092-1228-2-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Subject: [Patch Part1 V2 14/29] x86, ioapic: use irq_cfg() instead of irq_get_chip_data() for better readability
+Date: Tue, 20 May 2014 00:22:58 +0800
+Message-Id: <1400516594-11544-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 27 May 2014, Jiang Liu wrote:
+Use defined helper function irq_cfg() instead of irq_get_chip_data() for
+better readability.
 
-> If x2apic is enabled, the MSI high address field should also be aslo
-> updated when setting affinity for MSI IRQ, otherwise the MSI IRQ may
-> target wrong APIC IDs.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-That should be tagged for stable, right?
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 55fb3c1385c5..18d0e8a831c0 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -230,7 +230,7 @@ int __init arch_early_irq_init(void)
+ 	return 0;
+ }
  
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  arch/x86/kernel/apic/io_apic.c |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> index 9d0a9795a0f8..2de992501a1b 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -3007,6 +3007,10 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
->  
->  	__get_cached_msi_msg(data->msi_desc, &msg);
->  
-> +	msg.address_hi = MSI_ADDR_BASE_HI;
-> +	if (x2apic_enabled())
-> +		msg.address_hi |= MSI_ADDR_EXT_DEST_ID(dest);
-> +
->  	msg.data &= ~MSI_DATA_VECTOR_MASK;
->  	msg.data |= MSI_DATA_VECTOR(cfg->vector);
->  	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
-> -- 
-> 1.7.10.4
-> 
-> 
+-static struct irq_cfg *irq_cfg(unsigned int irq)
++static inline struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+ 	return irq_get_chip_data(irq);
+ }
+@@ -272,7 +272,7 @@ static struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
+ 	if (res < 0) {
+ 		if (res != -EEXIST)
+ 			return NULL;
+-		cfg = irq_get_chip_data(at);
++		cfg = irq_cfg(at);
+ 		if (cfg)
+ 			return cfg;
+ 	}
+@@ -1204,7 +1204,7 @@ void __setup_vector_irq(int cpu)
+ 	raw_spin_lock(&vector_lock);
+ 	/* Mark the inuse vectors */
+ 	for_each_active_irq(irq) {
+-		cfg = irq_get_chip_data(irq);
++		cfg = irq_cfg(irq);
+ 		if (!cfg)
+ 			continue;
+ 
+@@ -1612,7 +1612,7 @@ __apicdebuginit(void) print_IO_APICs(void)
+ 		if (chip != &ioapic_chip)
+ 			continue;
+ 
+-		cfg = irq_get_chip_data(irq);
++		cfg = irq_cfg(irq);
+ 		if (!cfg)
+ 			continue;
+ 		entry = cfg->irq_2_pin;
+@@ -2253,7 +2253,7 @@ static void irq_complete_move(struct irq_cfg *cfg)
+ 
+ void irq_force_complete_move(int irq)
+ {
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+ 	if (!cfg)
+ 		return;
+@@ -2526,7 +2526,7 @@ static inline void init_IO_APIC_traps(void)
+ 	 * 0x80, because int 0x80 is hm, kind of importantish. ;)
+ 	 */
+ 	for_each_active_irq(irq) {
+-		cfg = irq_get_chip_data(irq);
++		cfg = irq_cfg(irq);
+ 		if (IO_APIC_IRQ(irq) && cfg && !cfg->vector) {
+ 			/*
+ 			 * Hmm.. We don't have an entry for this,
+@@ -2659,7 +2659,7 @@ early_param("disable_timer_pin_1", disable_timer_pin_setup);
+  */
+ static inline void __init check_timer(void)
+ {
+-	struct irq_cfg *cfg = irq_get_chip_data(0);
++	struct irq_cfg *cfg = irq_cfg(0);
+ 	int node = cpu_to_node(0);
+ 	int apic1, pin1, apic2, pin2;
+ 	unsigned long flags;
+@@ -2923,7 +2923,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
+ 
+ void arch_teardown_hwirq(unsigned int irq)
+ {
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned long flags;
+ 
+ 	free_remapped_irq(irq);
+@@ -3052,7 +3052,7 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 	if (!irq_offset)
+ 		write_msi_msg(irq, &msg);
+ 
+-	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
++	setup_remapped_irq(irq, irq_cfg(irq), chip);
+ 
+ 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 
+@@ -3187,7 +3187,7 @@ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+ 
+ 	hpet_msi_write(irq_get_handler_data(irq), &msg);
+ 	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+-	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
++	setup_remapped_irq(irq, irq_cfg(irq), chip);
+ 
+ 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 	return 0;
+-- 
+1.7.10.4
+
