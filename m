@@ -1,64 +1,147 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:34107 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbaEVFKT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 May 2014 01:10:19 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 22 May 2014 15:10:17 +1000
-Date: Thu, 22 May 2014 15:10:14 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, alex.williamson@redhat.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/4] PCI: Export MSI message relevant functions
-Message-ID: <20140522051013.GB20348@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1400468470-11262-2-git-send-email-gwshan@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1400468470-11262-2-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Kuppuswamy Sathyanarayanan
+	<sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>,
+	sfi-devel@simplefirmware.org
+Subject: [Patch Part1 V2 27/29] x86, irq, SFI: use common irqdomain map interface to program IOAPIC pins
+Date: Tue, 20 May 2014 00:23:11 +0800
+Message-Id: <1400516594-11544-28-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 19, 2014 at 01:01:07PM +1000, Gavin Shan wrote:
->The patch exports 2 MSI message relevant functions, which will be
->used by VFIO PCI driver. The VFIO PCI driver would be built as
->a module.
->
->Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Refine SFI to use common irqdomain map interface to program IOAPIC pins,
+so we can unify the callsite to progam IOAPIC pins.
 
-Bjorn, could you help ack it if you don't have objection to it?
-I guess Alex is probably waiting to merge the subsequent patch,
-which depends on this one.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/intel_mid_pci.c      |   17 +++++++----------
+ arch/x86/platform/intel-mid/sfi.c |   18 +++++++++---------
+ arch/x86/platform/sfi/sfi.c       |    4 +++-
+ 3 files changed, 19 insertions(+), 20 deletions(-)
 
->---
-> drivers/pci/msi.c | 2 ++
-> 1 file changed, 2 insertions(+)
->
->diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->index 955ab79..2350271 100644
->--- a/drivers/pci/msi.c
->+++ b/drivers/pci/msi.c
->@@ -324,6 +324,7 @@ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
->
-> 	__get_cached_msi_msg(entry, msg);
-> }
->+EXPORT_SYMBOL_GPL(get_cached_msi_msg);
->
-> void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
-> {
->@@ -368,6 +369,7 @@ void write_msi_msg(unsigned int irq, struct msi_msg *msg)
->
-> 	__write_msi_msg(entry, msg);
-> }
->+EXPORT_SYMBOL_GPL(write_msi_msg);
->
-> static void free_msi_irqs(struct pci_dev *dev)
-> {
-
-Thanks,
-Gavin
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 84b9d672843d..f6f3de857baa 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -208,23 +208,20 @@ static int pci_write(struct pci_bus *bus, unsigned int devfn, int where,
+ 
+ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ {
+-	u8 pin;
+-	struct io_apic_irq_attr irq_attr;
+-
+-	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
++	int ioapic, polarity;
+ 
+ 	/*
+ 	 * MRST only have IOAPIC, the PCI irq lines are 1:1 mapped to
+ 	 * IOAPIC RTE entries, so we just enable RTE for the device.
+ 	 */
+-	irq_attr.ioapic = mp_find_ioapic(dev->irq);
+-	irq_attr.ioapic_pin = dev->irq;
+-	irq_attr.trigger = 1; /* level */
++	ioapic = mp_find_ioapic(dev->irq);
+ 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
+-		irq_attr.polarity = 0; /* active high */
++		polarity = 0; /* active high */
+ 	else
+-		irq_attr.polarity = 1; /* active low */
+-	io_apic_set_pci_routing(&dev->dev, dev->irq, &irq_attr);
++		polarity = 1; /* active low */
++	if (mp_set_pin_attr(ioapic, dev->irq, 1, polarity, dev_to_node(dev)))
++		return -EBUSY;
++	mp_map_gsi_to_irq(dev->irq, 1);
+ 
+ 	return 0;
+ }
+diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
+index 994c40bd7cb7..3fe5c23ba1c5 100644
+--- a/arch/x86/platform/intel-mid/sfi.c
++++ b/arch/x86/platform/intel-mid/sfi.c
+@@ -434,6 +434,7 @@ static int __init sfi_parse_devs(struct sfi_table_header *table)
+ 	struct devs_id *dev = NULL;
+ 	int num, i;
+ 	int ioapic;
++	int polarity;
+ 	struct io_apic_irq_attr irq_attr;
+ 
+ 	sb = (struct sfi_table_simple *)table;
+@@ -450,30 +451,29 @@ static int __init sfi_parse_devs(struct sfi_table_header *table)
+ 			 */
+ 			ioapic = mp_find_ioapic(irq);
+ 			if (ioapic >= 0) {
+-				irq_attr.ioapic = ioapic;
+-				irq_attr.ioapic_pin = irq;
+-				irq_attr.trigger = 1;
+ 				if (intel_mid_identify_cpu() ==
+ 						INTEL_MID_CPU_CHIP_TANGIER) {
+ 					if (!strncmp(pentry->name,
+ 							"r69001-ts-i2c", 13))
+ 						/* active low */
+-						irq_attr.polarity = 1;
++						polarity = 1;
+ 					else if (!strncmp(pentry->name,
+ 							"synaptics_3202", 14))
+ 						/* active low */
+-						irq_attr.polarity = 1;
++						polarity = 1;
+ 					else if (irq == 41)
+ 						/* fast_int_1 */
+-						irq_attr.polarity = 1;
++						polarity = 1;
+ 					else
+ 						/* active high */
+-						irq_attr.polarity = 0;
++						polarity = 0;
+ 				} else {
+ 					/* PNW and CLV go with active low */
+-					irq_attr.polarity = 1;
++					polarity = 1;
+ 				}
+-				io_apic_set_pci_routing(NULL, irq, &irq_attr);
++				if (mp_set_pin_attr(ioapic, irq, 1, polarity, NUMA_NO_NODE))
++					return -EBUSY;
++				mp_map_gsi_to_irq(dev->irq, 1);
+ 			}
+ 		} else {
+ 			irq = 0; /* No irq */
+diff --git a/arch/x86/platform/sfi/sfi.c b/arch/x86/platform/sfi/sfi.c
+index 2c3522dfa05d..91e5046efae9 100644
+--- a/arch/x86/platform/sfi/sfi.c
++++ b/arch/x86/platform/sfi/sfi.c
+@@ -71,7 +71,9 @@ static int __init sfi_parse_cpus(struct sfi_table_header *table)
+ #endif /* CONFIG_X86_LOCAL_APIC */
+ 
+ #ifdef CONFIG_X86_IO_APIC
+-static struct irq_domain_ops sfi_ioapic_irqdomain_ops;
++static struct irq_domain_ops sfi_ioapic_irqdomain_ops = {
++	.map = mp_irqdomain_map,
++};
+ 
+ static struct irq_domain *sfi_ioapic_create_irqdomain(int ioapic, void *arg)
+ {
+-- 
+1.7.10.4
 
