@@ -1,100 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0238.outbound.protection.outlook.com ([207.46.163.238]:32125
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750954AbaEWAng (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 20:43:36 -0400
-Message-ID: <537E99B1.60908@amd.com>
-Date: Thu, 22 May 2014 19:43:29 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Robert Richter <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	<linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	<linux-pci@vger.kernel.org>, "Borislav Petkov" <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH V5 0/4] x86/pci Fix numa_node info for AMD hostbridge
- and misc clean up
-References: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
- <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:44423 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752370AbaESDBT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 May 2014 23:01:19 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 19 May 2014 13:01:17 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 1/4] PCI: Export MSI message relevant functions
+Date: Mon, 19 May 2014 13:01:07 +1000
+Message-Id: <1400468470-11262-2-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/21/2014 6:17 PM, Bjorn Helgaas wrote:
-> [resending because I forgot to copy the lists, sorry guys]
->
-> Hi Suravee,
->
-> Sorry it took me so long to get to these patches.  Here's my proposal.  I
-> reordered them and added some comments in the code and changelogs, but I
-> think your patches look fine as-is.
->
-> So I just need comments on these two significant changes:
->
->    1) I added a patch to stop enabling ECS after Fam16h, because that's
->    another case of CPU-dependent code that we should not need to keep
->    carrying.  I don't think there are any post-Fam16h CPUs yet, but I
->    certainly don't want to do anything that will keep them from working when
->    they do arrive.  It would be useful if somebody could test this on
->    current platforms by tweaking the patch so we don't enable ECS on Fam15h.
+The patch exports 2 MSI message relevant functions, which will be
+used by VFIO PCI driver. The VFIO PCI driver would be built as
+a module.
 
-I'm okay with this. In my V4 patch, I also tested disabling ECS on 
-family15h already and that seems to work fine.  But I would not mind 
-deprecate this for post fam16h processors.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/pci/msi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
->
->    2) I dropped the quirk_amd_nb_node() removal.  I could be convinced
->    otherwise, but I don't really object to the quirk because it is already
->    explicitly limited to specific devices, and removing it will change
->    things in sysfs.  I think the changes would be harmless as far as the
->    kernel is concerned, since there are no drivers for these devices.  But
->    Andreas added the quirk because of complaints, so apparently somebody is
->    looking at what's in sysfs, and I don't want to get the same complaints
->    again by removing it.  However, I will certainly ask questions if I see
->    the quirk being extended to more devices.
-
-I'm okay with keeping this.
-
->
-> The AMD BKDG does say the BIOS should provide an MCFG table (sec 2.8 of
-> 42301), so I think it provides guidance matching the intent of my "stop
-> enabling ECS" patch.  But the BKDG doesn't mention _PXM at all.  Is there
-> any chance you could squeeze in a mention of that, so BIOS writers know
-> that they *should* provide it?  I want to avoid more fire-drills in the
-> future.
-
-The ship for family15h stuff have sailed and we probably would not be 
-able to get them to change.  We are going to have to keep an eye on the 
-future platforms to make sure that the _PXM info is documented for 
-future platforms.
-
-I have tested this patch set and they seems to be ok now.
-
-Suravee
-
->
-> Bjorn
->
-> ---
->
-> Bjorn Helgaas (1):
->        x86/PCI: Stop enabling ECS for AMD CPUs after Fam16h
->
-> Myron Stowe (1):
->        x86/PCI: Warn if we have to "guess" host bridge node information
->
-> Suravee Suthikulpanit (2):
->        x86/PCI: Work around AMD Fam15h BIOSes that fail to provide _PXM
->        x86/PCI: Clean up and mark early_root_info_init() as deprecated
->
->
->   arch/x86/pci/acpi.c    |    6 +++
->   arch/x86/pci/amd_bus.c |   87 +++++++++++++++++++++++++++++++-----------------
->   2 files changed, 62 insertions(+), 31 deletions(-)
->
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 955ab79..2350271 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -324,6 +324,7 @@ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
+ 
+ 	__get_cached_msi_msg(entry, msg);
+ }
++EXPORT_SYMBOL_GPL(get_cached_msi_msg);
+ 
+ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+@@ -368,6 +369,7 @@ void write_msi_msg(unsigned int irq, struct msi_msg *msg)
+ 
+ 	__write_msi_msg(entry, msg);
+ }
++EXPORT_SYMBOL_GPL(write_msi_msg);
+ 
+ static void free_msi_irqs(struct pci_dev *dev)
+ {
+-- 
+1.8.3.2
 
