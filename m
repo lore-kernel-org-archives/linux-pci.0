@@ -1,54 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54636 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S935005AbaEaAi6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 20:38:58 -0400
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kumar Gala <galak@codeaurora.org>,
-	Rob Herring <robherring2@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:41182 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932356AbaESQc3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 12:32:29 -0400
+Date: Mon, 19 May 2014 17:32:23 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Srikanth Thokala <sthokal@xilinx.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"michals@xilinx.com" <michals@xilinx.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM resources.
-Date: Sat, 31 May 2014 01:36:40 +0100
-Message-Id: <1401496601-31983-2-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com>
-References: <20140530233034.GH1677@bart.dudau.co.uk>
- <1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Generic Configuration Access Mechanism support
+Message-ID: <20140519163223.GP15130@arm.com>
+References: <1400422125-2209-1-git-send-email-sthokal@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1400422125-2209-1-git-send-email-sthokal@xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We would like to be able to describe PCIe ECAM resources as
-IORESOURCE_MEM blocks while distinguish them from standard
-memory resources. Add an IORESOURCE_BIT entry for this case.
+On Sun, May 18, 2014 at 03:08:45PM +0100, Srikanth Thokala wrote:
+> This patch adds support for a generic CAM and ECAM configuration
+> space accesses.
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- include/linux/ioport.h | 1 +
- 1 file changed, 1 insertion(+)
+Looks good to me, thanks Srikanth!
 
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 5e3a906..9672533 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -103,6 +103,7 @@ struct resource {
- 
- /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
- #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
-+#define IORESOURCE_PCI_ECFG		(1<<5)  /* ECAM config resource */
- 
- 
- /* helpers to define resources */
--- 
-1.9.2
+Arnd: is this the sort of thing you were expecting? The
+->is_valid_cfg_access callback is a bit horrible, but I can't think of
+anything better.
 
+I can include this in the next posting of my PCI patches.
+
+Will
