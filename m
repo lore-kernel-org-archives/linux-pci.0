@@ -1,58 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after Fam16h
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Robert Richter <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	linux-kernel@vger.kernel.org,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	linux-pci@vger.kernel.org, Borislav Petkov <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Date: Wed, 21 May 2014 17:18:17 -0600
-Message-ID: <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from astoria.ccjclearline.com ([64.235.106.9]:44675 "EHLO
+	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752868AbaESHtZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 03:49:25 -0400
+Received: from [99.240.204.5] (port=58016 helo=crashcourse.ca)
+	by astoria.ccjclearline.com with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
+	(Exim 4.80)
+	(envelope-from <rpjday@crashcourse.ca>)
+	id 1WmIK8-0004qv-Jm
+	for linux-pci@vger.kernel.org; Mon, 19 May 2014 03:49:28 -0400
+Date: Mon, 19 May 2014 03:47:03 -0400 (EDT)
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+To: Linux PCI mailing list <linux-pci@vger.kernel.org>
+Subject: "help" info for CONFIG_PCIEAER_INJECT seems to have broken link
+Message-ID: <alpine.LFD.2.11.1405190344460.1943@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ECS is an AMD mechanism that allows access to extended PCI config space
-(offsets 256-4096) via I/O ports CF8/CFCh.  We normally use ECAM, i.e.,
-MMCONFIG, to access that space, but apparently old machines have issues
-that meant we couldn't use ECAM.
 
-The solution was to enable ECS so we could use configuration mechanism #1
-(I/O ports CF8/CFCh) to access extended config space.  See 831d991821da
-("x86: add PCI extended config space access for AMD Barcelona").
+  "make *config" help info refers to the URL
 
-New machines should be able to use ECAM, which means they don't need the
-CPU-specific code to enable ECS.  This patch leaves ECS the same on all
-existing platforms, but stops enabling it on platforms after Fam16h.
+http://www.kernel.org/pub/linux/utils/pci/aer-inject/
 
-Those future platforms should be able to use the standard ACPI MCFG/_CBA
-descriptions of the PCIe ECAM mechanism.
+but there's nothing there. this *seems* to be the correct link:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Robert Richter <rric@kernel.org>
----
- arch/x86/pci/amd_bus.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+https://www.kernel.org/pub/scm/linux/kernel/git/gong.chen/
 
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index aa936e3a2019..67dadf179348 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -405,7 +405,9 @@ static int __init amd_postcore_init(void)
- 		return 0;
- 
- 	early_fill_mp_bus_info();
--	pci_io_ecs_init();
-+
-+	if (boot_cpu_data.x86 <= 0x16)
-+		pci_io_ecs_init();
- 
- 	return 0;
- }
+but i'll leave it to someone else to resolve that.
 
+rday
+
+-- 
+
+========================================================================
+Robert P. J. Day                                 Ottawa, Ontario, CANADA
+                        http://crashcourse.ca
+
+Twitter:                                       http://twitter.com/rpjday
+LinkedIn:                               http://ca.linkedin.com/in/rpjday
+========================================================================
