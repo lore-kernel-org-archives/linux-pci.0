@@ -1,53 +1,153 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <537FBF4F.4050406@amd.com>
-Date: Fri, 23 May 2014 16:36:15 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-To: Robert Richter <rric@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Borislav Petkov <bp@alien8.de>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Aravind Gopalakrishnan" <Aravind.Gopalakrishnan@amd.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Borislav Petkov <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after
- Fam16h
-References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521233802.GA21575@pd.tnic>
- <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
- <20140522191746.GL4383@pd.tnic>
- <CAErSpo7=0-xdnu4DQufu_6eS=6AYhnDRaQvzeiMEC5a=zKU0Jg@mail.gmail.com>
- <537E8ACF.6000103@amd.com>
- <CAErSpo6AMGPFELx+2qJXYaxaLRhk2F2J=wn4=gLgmvYGdLup7A@mail.gmail.com>
- <20140523115622.GU27560@rric.localhost>
-In-Reply-To: <20140523115622.GU27560@rric.localhost>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiri Kosina <trivial@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch Part1 V2 10/29] x86, irq, trivial: minor improvements of IRQ related code
+Date: Tue, 20 May 2014 00:22:54 +0800
+Message-Id: <1400516594-11544-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/23/2014 6:56 AM, Robert Richter wrote:
-> On 22.05.14 20:54:54, Bjorn Helgaas wrote:
->> I'm going to go out on a limb and guess that Windows does not enable
->> ECS, so it probably uses ECAM.  Therefore, I suspect Linux's parsing
->> of MCFG is broken in some way, and we probably *could* use ECAM in all
->> these cases I'm seeing.
->
-> Even if ECS is not enabled the system should be fine anyway, as ECS is
-> only used to enable certain features. For family 10h this was
-> originally the IBS EILVT (extended interrupt local vector table,
-> needed for hw profiling) setup which need to be set by the OS which
-> the BIOS didn't right. This should be fixed now and properly set by
-> the BIOS on 15h+ systems.
->
-> I don't remember what was added to 16h where ECS was needed, I think
-> there was one (Suravee?). Not sure if this is essential.
+1) Kill unused MAX_HARDIRQS_PER_CPU.
+2) Improve function prototype declararions.
+3) simple typo fix, change "gsit" to "gsi".
+4) use macro VECTOR_UNDEFINED instead of hard-coded -1.
 
-I am not aware of anything specific in the family16h which require 
-IO_ECS to be enabled.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hardirq.h |    3 ---
+ arch/x86/include/asm/io_apic.h |   16 +++++++---------
+ arch/x86/kernel/apic/io_apic.c |   10 +++++-----
+ 3 files changed, 12 insertions(+), 17 deletions(-)
 
-Suravee
+diff --git a/arch/x86/include/asm/hardirq.h b/arch/x86/include/asm/hardirq.h
+index 230853da4ec0..0f5fb6b6567e 100644
+--- a/arch/x86/include/asm/hardirq.h
++++ b/arch/x86/include/asm/hardirq.h
+@@ -40,9 +40,6 @@ typedef struct {
+ 
+ DECLARE_PER_CPU_SHARED_ALIGNED(irq_cpustat_t, irq_stat);
+ 
+-/* We can have at most NR_VECTORS irqs routed to a cpu at a time */
+-#define MAX_HARDIRQS_PER_CPU NR_VECTORS
+-
+ #define __ARCH_IRQ_STAT
+ 
+ #define inc_irq_stat(member)	this_cpu_inc(irq_stat.member)
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 9121abbc8c8f..8dd1e13f2989 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -144,22 +144,20 @@ struct io_apic_irq_attr;
+ struct irq_cfg;
+ extern int io_apic_set_pci_routing(struct device *dev, int irq,
+ 		 struct io_apic_irq_attr *irq_attr);
+-void setup_IO_APIC_irq_extra(u32 gsi);
++extern void setup_IO_APIC_irq_extra(u32 gsi);
+ extern void ioapic_insert_resources(void);
+ 
+ extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
+ 				     unsigned int, int,
+ 				     struct io_apic_irq_attr *);
+-extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
+-				     unsigned int, int,
+-				     struct io_apic_irq_attr *);
+ extern void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg);
+ 
+ extern void native_compose_msi_msg(struct pci_dev *pdev,
+ 				   unsigned int irq, unsigned int dest,
+ 				   struct msi_msg *msg, u8 hpet_id);
+ extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
+-int io_apic_setup_irq_pin_once(unsigned int irq, int node, struct io_apic_irq_attr *attr);
++extern int io_apic_setup_irq_pin_once(unsigned int irq, int node,
++				      struct io_apic_irq_attr *attr);
+ 
+ extern int save_ioapic_entries(void);
+ extern void mask_ioapic_entries(void);
+@@ -172,11 +170,11 @@ struct mp_ioapic_gsi{
+ 	u32 gsi_base;
+ 	u32 gsi_end;
+ };
+-extern struct mp_ioapic_gsi  mp_gsi_routing[];
+ extern u32 gsi_top;
+-int mp_find_ioapic(u32 gsi);
+-int mp_find_ioapic_pin(int ioapic, u32 gsi);
+-void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
++
++extern int mp_find_ioapic(u32 gsi);
++extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
++extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
+ extern void __init pre_init_apic_IRQ0(void);
+ 
+ extern void mp_save_irq(struct mpc_intsrc *m);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 2de992501a1b..4d7d46650faa 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1010,7 +1010,7 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 				break;
+ 
+ 		if (!test_bit(lbus, mp_bus_not_pci) &&
+-		    !mp_irqs[i].irqtype &&
++		    mp_irqs[i].irqtype == mp_INT &&
+ 		    (bus == lbus) &&
+ 		    (slot == ((mp_irqs[i].srcbusirq >> 2) & 0x1f))) {
+ 			int irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
+@@ -1359,7 +1359,7 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
+ 
+ 		irq = pin_2_irq(idx, ioapic_idx, pin);
+ 
+-		if ((ioapic_idx > 0) && (irq > 16))
++		if ((ioapic_idx > 0) && (irq > NR_IRQS_LEGACY))
+ 			continue;
+ 
+ 		/*
+@@ -1388,7 +1388,7 @@ static void __init setup_IO_APIC_irqs(void)
+ }
+ 
+ /*
+- * for the gsit that is not in first ioapic
++ * for the gsi that is not in first ioapic
+  * but could not use acpi_register_gsi()
+  * like some special sci in IBM x3330
+  */
+@@ -2225,7 +2225,7 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
+ 			apic->send_IPI_self(IRQ_MOVE_CLEANUP_VECTOR);
+ 			goto unlock;
+ 		}
+-		__this_cpu_write(vector_irq[vector], -1);
++		__this_cpu_write(vector_irq[vector], VECTOR_UNDEFINED);
+ unlock:
+ 		raw_spin_unlock(&desc->lock);
+ 	}
+@@ -3546,7 +3546,7 @@ void __init setup_ioapic_dest(void)
+ 			continue;
+ 		irq = pin_2_irq(irq_entry, ioapic, pin);
+ 
+-		if ((ioapic > 0) && (irq > 16))
++		if ((ioapic > 0) && (irq > NR_IRQS_LEGACY))
+ 			continue;
+ 
+ 		idata = irq_get_irq_data(irq);
+-- 
+1.7.10.4
 
