@@ -1,56 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:48606 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbaEVRAK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 May 2014 13:00:10 -0400
-Received: by mail-ig0-f172.google.com with SMTP id uy17so7880804igb.5
-        for <linux-pci@vger.kernel.org>; Thu, 22 May 2014 10:00:10 -0700 (PDT)
+Received: from mail-ob0-f195.google.com ([209.85.214.195]:44692 "EHLO
+	mail-ob0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745AbaETIzM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 04:55:12 -0400
 MIME-Version: 1.0
-In-Reply-To: <20140522082033.GA13988@richard>
-References: <20140520033233.11972.49094.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140520034558.11972.74795.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140522082033.GA13988@richard>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 22 May 2014 10:59:48 -0600
-Message-ID: <CAErSpo5rA20EqgZ=R9EvDaKsVU4B4RSg069=cFQyY5R_mUQTBQ@mail.gmail.com>
-Subject: Re: [PATCH v10 2/4] PCI: Change pbus_size_mem() return values to be
- more conventional
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, talal@mellanox.com,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
+In-Reply-To: <5759329.P75jKFdv3B@wuerfel>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+	<4292818.mI6kZGgTzd@wuerfel>
+	<CA+sq2Ce+8YB+02B7zhxTXwropZXv9spy-w=AJ8YXCP69kr-_1A@mail.gmail.com>
+	<5759329.P75jKFdv3B@wuerfel>
+Date: Tue, 20 May 2014 14:25:11 +0530
+Message-ID: <CA+sq2CeyUkg6ELYrWYqtxaXhNVeQ9UWiMC=GY4ADE-ZWS1bf9g@mail.gmail.com>
+Subject: Re: [PATCH v7 0/3] Add support for PCI in AArch64
+From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Amir Vadai <amirv@mellanox.com>,
-	Eugenia Emantayev <eugenia@mellanox.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Scott Lurndal <kdb@lurndal.org>,
+	"yu.zhao@intel.com" <yu.zhao@intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 22, 2014 at 2:20 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> On Mon, May 19, 2014 at 09:45:58PM -0600, Bjorn Helgaas wrote:
->>pbus_size_mem() previously returned 0 for failure and 1 for success.
->>Change it to return -ENOSPC for failure and 0 for success.
->>
->>No functional change.
->>
->>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>---
->> drivers/pci/setup-bus.c |   35 +++++++++++++++++++++--------------
->> 1 file changed, 21 insertions(+), 14 deletions(-)
->>
->>diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->>index 589f2261ab0e..caa07fe6a23a 100644
->>--- a/drivers/pci/setup-bus.c
->>+++ b/drivers/pci/setup-bus.c
->>@@ -915,6 +915,10 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
->>  *
->>  * Calculate the size of the bus and minimal alignment which
->>  * guarantees that all child resources fit in this size.
->>+ *
->>+ * Returns -ENOSPC 0 if there's no available bus resource of the desired type.
->                     ^^^
-> One small question, the 0 here means?
+On Tue, May 20, 2014 at 2:14 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Tuesday 20 May 2014 09:52:33 Sunil Kovvuri wrote:
+>> >> In sriov_enable() (drivers/pci/iov.c)
+>> >>
+>> >>  296        for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> >>  297                 bars |= (1 << (i + PCI_IOV_RESOURCES));
+>> >>  298                 res = dev->resource + PCI_IOV_RESOURCES + i;
+>> >>  299                 if (res->parent)
+>> >>  300                         nres++;
+>> >>  301         }
+>> >>  302         if (nres != iov->nres) {
+>> >>  303                 dev_err(&dev->dev, "not enough MMIO resources for
+>> >>  SR-IOV\n");
+>> >>  304                 return -ENOMEM;
+>> >>  305         }
+>> >>
+>> >> Here its checking if physical function's IOV resource has a parent or not.
+>> >> Which is pci-pci bridge in this case. Otherwise it doesn't consider
+>> >> that resource.
+>> >>
+>> >> Added below api to your patch.
+>> >> This will try to claim a resource while creating a PCI device which
+>> >> inturn sets 'res->parent'.
+>> >
+>> > This looks like the wrong approach. The PCI host controller should
+>> > really have been registered with the root 'iomem_resource' during
+>> > the probe of the host controller.
+>> >
+>> I didn't get this, if a SR-IOV device is connected to a PCI-PCI bridge
+>> and inturn bridge connected to root port. Then the parent bus is not root,
+>> but the bridge.  The issue is either hierarchy should not be checked for
+>> SR-IOV resources or someone should set the hierarchy (i.e parent resources).
+>
+> Ah, I misunderstood the problem, I thought the PCI core was complaining
+> about lack of space in the resources, not about a lack of BARs.
+>
+> It seems there is code like yours in a couple of architectures, but they
+> only claim the resources of bridges, not the actual devices as you
+> seem to be doing. Can you check if the x86 version of
+> pcibios_allocate_bus_resources() does the trick for you? Maybe we can
+> turn that into a generic helper.
+>
+Thanks for the suggestion. Will try that once.
+FYI, IA64 architecture does claim resources for devices as well.
+arch/ia64/pci/pci.c  'pcibios_fixup_device_resources()'
 
-Just a typo.  Fixed, thanks!
+Thanks,
+Sunil.
