@@ -1,66 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.130]:53267 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750808AbaETIow (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 04:44:52 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch V3 32/37] genirq: export irq_domain_disassociate() to architecture interrupt drivers
-Date: Tue, 27 May 2014 16:08:07 +0800
-Message-Id: <1401178092-1228-33-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Scott Lurndal <kdb@lurndal.org>,
+	"yu.zhao@intel.com" <yu.zhao@intel.com>
+Subject: Re: [PATCH v7 0/3] Add support for PCI in AArch64
+Date: Tue, 20 May 2014 10:44:30 +0200
+Message-ID: <5759329.P75jKFdv3B@wuerfel>
+In-Reply-To: <CA+sq2Ce+8YB+02B7zhxTXwropZXv9spy-w=AJ8YXCP69kr-_1A@mail.gmail.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com> <4292818.mI6kZGgTzd@wuerfel> <CA+sq2Ce+8YB+02B7zhxTXwropZXv9spy-w=AJ8YXCP69kr-_1A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Export irq_domain_disassociate() to architecture interrupt drivers,
-so it could be used to handle legacy IRQ descriptors on x86.
+On Tuesday 20 May 2014 09:52:33 Sunil Kovvuri wrote:
+> >> In sriov_enable() (drivers/pci/iov.c)
+> >>
+> >>  296        for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+> >>  297                 bars |= (1 << (i + PCI_IOV_RESOURCES));
+> >>  298                 res = dev->resource + PCI_IOV_RESOURCES + i;
+> >>  299                 if (res->parent)
+> >>  300                         nres++;
+> >>  301         }
+> >>  302         if (nres != iov->nres) {
+> >>  303                 dev_err(&dev->dev, "not enough MMIO resources for
+> >>  SR-IOV\n");
+> >>  304                 return -ENOMEM;
+> >>  305         }
+> >>
+> >> Here its checking if physical function's IOV resource has a parent or not.
+> >> Which is pci-pci bridge in this case. Otherwise it doesn't consider
+> >> that resource.
+> >>
+> >> Added below api to your patch.
+> >> This will try to claim a resource while creating a PCI device which
+> >> inturn sets 'res->parent'.
+> >
+> > This looks like the wrong approach. The PCI host controller should
+> > really have been registered with the root 'iomem_resource' during
+> > the probe of the host controller.
+> >
+> I didn't get this, if a SR-IOV device is connected to a PCI-PCI bridge
+> and inturn bridge connected to root port. Then the parent bus is not root,
+> but the bridge.  The issue is either hierarchy should not be checked for
+> SR-IOV resources or someone should set the hierarchy (i.e parent resources).
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/irqdomain.h |    2 ++
- kernel/irq/irqdomain.c    |    2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+Ah, I misunderstood the problem, I thought the PCI core was complaining
+about lack of space in the resources, not about a lack of BARs.
 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index c983ed18c332..b0f9d16e48f6 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -172,6 +172,8 @@ extern int irq_domain_associate(struct irq_domain *domain, unsigned int irq,
- extern void irq_domain_associate_many(struct irq_domain *domain,
- 				      unsigned int irq_base,
- 				      irq_hw_number_t hwirq_base, int count);
-+extern void irq_domain_disassociate(struct irq_domain *domain,
-+				    unsigned int irq);
- 
- extern unsigned int irq_create_mapping(struct irq_domain *host,
- 				       irq_hw_number_t hwirq);
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index eb5e10e32e05..6534ff6ce02e 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -231,7 +231,7 @@ void irq_set_default_host(struct irq_domain *domain)
- }
- EXPORT_SYMBOL_GPL(irq_set_default_host);
- 
--static void irq_domain_disassociate(struct irq_domain *domain, unsigned int irq)
-+void irq_domain_disassociate(struct irq_domain *domain, unsigned int irq)
- {
- 	struct irq_data *irq_data = irq_get_irq_data(irq);
- 	irq_hw_number_t hwirq;
--- 
-1.7.10.4
+It seems there is code like yours in a couple of architectures, but they
+only claim the resources of bridges, not the actual devices as you
+seem to be doing. Can you check if the x86 version of
+pcibios_allocate_bus_resources() does the trick for you? Maybe we can
+turn that into a generic helper.
 
+	Arnd
