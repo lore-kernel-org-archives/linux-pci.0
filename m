@@ -1,137 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13994 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:46884 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756946AbaEIP2f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 May 2014 11:28:35 -0400
-Subject: [PATCH v2 01/15] PCI: Add DMA alias iterator
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com, linux-kernel@vger.kernel.org
-Date: Fri, 09 May 2014 09:28:31 -0600
-Message-ID: <20140509152831.8321.20833.stgit@bling.home>
-In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
-References: <20140509151735.8321.22017.stgit@bling.home>
+	id S1752937AbaETRmj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 20 May 2014 13:42:39 -0400
+Date: Tue, 20 May 2014 11:42:26 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on
+ designware core driver
+Message-ID: <20140520174226.GC5130@obsidianresearch.com>
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+ <6048322.x3M3sdDEWO@wuerfel>
+ <5374FD24.8000806@ti.com>
+ <22200719.Jb5jnJylJH@wuerfel>
+ <20140515183919.GC11650@obsidianresearch.com>
+ <53751DDF.40304@ti.com>
+ <20140515205210.GB14722@obsidianresearch.com>
+ <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com>
+ <20140520170221.GA5130@obsidianresearch.com>
+ <CAErSpo667uWybiHOh4tVQDh_JFpF0EbvxKwo_GQm+B1-wMtT1Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo667uWybiHOh4tVQDh_JFpF0EbvxKwo_GQm+B1-wMtT1Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In a mixed PCI/PCI-X/PCI-e topology, bridges can take ownership of
-transactions, replacing the original requester ID with their own.
-Sometimes we just want to know the resulting device or resulting
-alias, sometimes we want each step in the chain.  This iterator
-allows either usage.  When an endpoint is connected via an unbroken
-chain of PCIe switches and root ports, it has no alias and its
-requester ID is visible to the root bus.  When PCI/X get in the way,
-we pick up aliases for bridges.
+On Tue, May 20, 2014 at 11:22:22AM -0600, Bjorn Helgaas wrote:
+> On Tue, May 20, 2014 at 11:02 AM, Jason Gunthorpe
+> <jgunthorpe@obsidianresearch.com> wrote:
+> > On Fri, May 16, 2014 at 08:29:56PM +0000, Karicheri, Muralidharan wrote:
+> >
+> >> But pcie_bus_configure_settings just make sure the mrrs for a device
+> >> is not greater than the max payload size.
+> >
+> > Not quite, it first scans the network checking the Maximum Payload Size
+> > Supported (MPSS) for each device, and chooses the highest supported by
+> > all as the MPS for all.
+> 
+> The "performance" setting, e.g., "pci=pcie_bus_perf", adds a few
+> wrinkles by setting MRRS in ways that allow some devices to have
+> larger MPS than others.  I don't think this is exactly what was
+> envisioned in the spec, and it is not guaranteed to work if there is
+> peer-to-peer DMA.  This isn't documented very well; the best I know of
+> is the changelogs for:
+> 
+>   a1c473aa11e6 pci: Clamp pcie_set_readrq() when using "performance" settings
+>   b03e7495a862 PCI: Set PCI-E Max Payload Size on fabric
 
-The reason why we potentially care about each step in the path is
-because of PCI-X.  PCI-X has the concept of a requester ID, but
-bridges may or may not take ownership of various types of
-transactions.  We therefore leave it to the consumer of this function
-to prune out what they don't care about rather than attempt to flatten
-the alias ourselves.
+Neat, and does pretty much confirm that setting the host bridge MPSS
+properly is necessary to support all drivers, particularly the ones
+that call pcie_set_readrq with any old value.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/search.c |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |    4 +++
- 2 files changed, 74 insertions(+)
+The 'performance' setting is a bit scary, it isn't just peer-to-peer
+DMA that would be impacted but also CPU initiated burst writes. Eg
+InfiniBand drivers burst a WQE to the NIC via the CPU. The MPS on the
+root port bridge is used to segment the write. Probably not a problem
+in practice because I think this is rare, and even rarer that a burst
+would be > 128 bytes - but as you say, not really what the spec
+intended..
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 4a1b972..5601cdb 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -18,6 +18,76 @@ DECLARE_RWSEM(pci_bus_sem);
- EXPORT_SYMBOL_GPL(pci_bus_sem);
- 
- /*
-+ * pci_for_each_dma_alias - Iterate over DMA aliases for a device
-+ * @pdev: starting downstream device
-+ * @fn: function to call for each alias
-+ * @data: opaque data to pass to @fn
-+ *
-+ * Starting @pdev, walk up the bus calling @fn for each possible alias
-+ * of @pdev at the root bus.
-+ */
-+int pci_for_each_dma_alias(struct pci_dev *pdev,
-+			   int (*fn)(struct pci_dev *pdev,
-+				     u16 alias, void *data), void *data)
-+{
-+	struct pci_bus *bus;
-+	int ret;
-+
-+	ret = fn(pdev, PCI_DEVID(pdev->bus->number, pdev->devfn), data);
-+	if (ret)
-+		return ret;
-+
-+	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
-+		struct pci_dev *tmp;
-+
-+		/* Skip virtual buses */
-+		if (!bus->self)
-+			continue;
-+
-+		tmp = bus->self;
-+
-+		/*
-+		 * PCIe-to-PCI/X bridges alias transactions from downstream
-+		 * devices using the subordinate bus number (PCI Express to
-+		 * PCI/PCI-X Bridge Spec, rev 1.0, sec 2.3).  For all cases
-+		 * where the upstream bus is PCI/X we alias to the bridge
-+		 * (there are various conditions in the previous reference
-+		 * where the bridge may take ownership of transactions, even
-+		 * when the secondary interface is PCI-X).
-+		 */
-+		if (pci_is_pcie(tmp)) {
-+			switch (pci_pcie_type(tmp)) {
-+			case PCI_EXP_TYPE_ROOT_PORT:
-+			case PCI_EXP_TYPE_UPSTREAM:
-+			case PCI_EXP_TYPE_DOWNSTREAM:
-+				continue;
-+			case PCI_EXP_TYPE_PCI_BRIDGE:
-+				ret = fn(tmp,
-+					 PCI_DEVID(tmp->subordinate->number,
-+						   PCI_DEVFN(0, 0)), data);
-+				if (ret)
-+					return ret;
-+				continue;
-+			case PCI_EXP_TYPE_PCIE_BRIDGE:
-+				ret = fn(tmp,
-+					 PCI_DEVID(tmp->bus->number,
-+						   tmp->devfn), data);
-+				if (ret)
-+					return ret;
-+				continue;
-+			}
-+		} else {
-+			ret = fn(tmp, PCI_DEVID(tmp->bus->number, tmp->devfn),
-+				 data);
-+			if (ret)
-+				return ret;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
-+/*
-  * find the upstream PCIe-to-PCI bridge of a PCI device
-  * if the device is PCIE, return NULL
-  * if the device isn't connected to a PCIe bridge (that is its parent is a
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..14b074b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1795,6 +1795,10 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
- }
- #endif
- 
-+int pci_for_each_dma_alias(struct pci_dev *pdev,
-+			   int (*fn)(struct pci_dev *pdev,
-+				     u16 alias, void *data), void *data);
-+
- /**
-  * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
-  * @pdev: the PCI device
-
+Jason
