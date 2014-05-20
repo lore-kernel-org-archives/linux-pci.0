@@ -1,102 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:47848 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752145AbaEFWsE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 18:48:04 -0400
-Received: by mail-ig0-f180.google.com with SMTP id c1so330305igq.13
-        for <linux-pci@vger.kernel.org>; Tue, 06 May 2014 15:48:03 -0700 (PDT)
-Subject: [PATCH v2 0/5] Clean up DMA API & IOMMU dma_addr_t usage
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-kernel@vger.kernel.org,
-	James Bottomley <jbottomley@parallels.com>,
-	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
-Date: Tue, 06 May 2014 16:48:13 -0600
-Message-ID: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:52823 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750808AbaETRRp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 13:17:45 -0400
+Received: by mail-ig0-f174.google.com with SMTP id h3so5129889igd.13
+        for <linux-pci@vger.kernel.org>; Tue, 20 May 2014 10:17:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-To: unlisted-recipients:; (no To-header on input)
+In-Reply-To: <4769015.Y4xoyoQxYb@wuerfel>
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+ <5671513.YgJm44AVLV@wuerfel> <537A735A.9070607@ti.com> <4769015.Y4xoyoQxYb@wuerfel>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 20 May 2014 11:17:25 -0600
+Message-ID: <CAErSpo5iehwoDAuETCxCEHHj1_0jHCJUnn+wj1OUAn6PpxbtyQ@mail.gmail.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware
+ core driver
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I thought this was going to be a simple doc clarification patch, but
-it's suffered a bit of feature creep.
+On Tue, May 20, 2014 at 1:55 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday 19 May 2014 17:10:50 Murali Karicheri wrote:
 
-The main point is that the DMA API uses "dma_addr_t" as the type for
-addresses to be programmed into devices for doing DMA, but the
-documentation sometimes refers to these as "bus addresses" and sometimes as
-"physical addresses."  So I tried to use "bus address" consistently.
+>> On ARM, by default pci_bus_config seems to be set to 0
+>> (PCIE_BUS_TUNE_OFF). So the code doesn't get
+>> executed for this default. But for PCIE_BUS_SAFE, it doesn't change the
+>> mrrs at the EP and is not
+>> good for our platform w.r.t mrrs settings. For PCIE_BUS_PERFORMANCE, it
+>> seems to increase the payload
+>> size as well and Keystone Payload size is limited to 128 bytes. So it is
+>> not safe to increase the payload
+>> size to 256 based on the log.
+>>
+>> On other platforms, Why the PCI core try to set the payload size equal
+>> to mrrs? Is this explained in any
+>> PCI spec?  Looks like this is done for performance? Let me know if you
+>> want me to send a patch for
+>> review to add the pcie_bus_configure_settings() code to
+>> arch/arm/kernel/bios32.c
+>>
+>> For the Keystone PCI driver, I believe. it is safe to have the quirk so
+>> that controller can handle the
+>> read requests properly. Let me know if the quirk code above looks good
+>> to go.
+>
+> I don't know enough about these to give you a definite answer, but
+> I'd still prefer to handle this in generic code. A quirk seems to
+> be the wrong answer here. If this isn't something we can do in generic
+> fashion, can you do it in the add_bus() callback perhaps?
 
-I added a few comments about what dma_addr_t is.  These are likely the most
-controversial changes.  For example:
+I definitely prefer a more generic approach than a quirk.
+Unfortunately the MPS management was implemented originally just for
+x86, not because there's anything arch-specific about it, but because
+the author was only concerned about x86.  Making that more generic has
+been an open issue all along.
 
-  A dma_addr_t can hold any valid DMA or bus address for the platform.
-  It can be given to a device to use as a DMA source or target, or it
-  may appear on the bus when a cpu performs programmed I/O.  A cpu
-  cannot reference a dma_addr_t directly because there may be
-  translation between its physical address space and the bus address
-  space.
-
-  This type can hold any valid DMA or bus address for the platform and
-  should be used everywhere you hold a DMA address returned from the DMA
-  mapping functions or a bus address read from a device register such as a
-  PCI BAR.
-
-I also made minor capitalization, punctuation, and wording changes for
-consistency and clarity.
-
-Secondly, dma_declare_coherent_memory() takes two addresses for a region of
-memory: a "dma_addr_t bus_addr" and a "dma_addr_t device_addr".  I thought
-this was misleading, so the second patch converts "bus_addr" to a
-"phys_addr_t phys_addr" since it should be a CPU physical address suitable
-for ioremapping.
-
-The third patch fixes up one dma_declare_coherent_memory() caller to
-convert a PCI bus address to a CPU physical address (only a theoretical
-issue, since they are identical on the affected platform).
-
-Some of the IOMMU API uses dma_addr_t for bus addresses (also known as
-IOVAs), but not all of it, so the fourth patch uses dma_addr_t more
-consistently.
-
-The last patch is a trivial cleanup of exynos_iommu_ops to be consistent
-with other iommu_ops structures.
-
----
-
-Bjorn Helgaas (5):
-      DMA-API: Clarify physical/bus address distinction
-      DMA-API: Change dma_declare_coherent_memory() CPU address to phys_addr_t
-      sh/PCI: Pass GAPSPCI_DMA_BASE CPU address to dma_declare_coherent_memory()
-      iommu: Use dma_addr_t for IOVA arguments
-      iommu/exynos: Remove unnecessary "&" from function pointers
-
-
- Documentation/DMA-API-HOWTO.txt          |  122 +++++++++++--------------
- Documentation/DMA-API.txt                |  149 ++++++++++++++++--------------
- Documentation/DMA-ISA-LPC.txt            |    4 -
- arch/sh/drivers/pci/fixups-dreamcast.c   |    8 +-
- drivers/base/dma-coherent.c              |   10 +-
- drivers/base/dma-mapping.c               |    6 +
- drivers/gpu/drm/msm/msm_iommu.c          |    2 
- drivers/infiniband/hw/usnic/usnic_uiom.c |    2 
- drivers/iommu/amd_iommu.c                |    4 -
- drivers/iommu/arm-smmu.c                 |    4 -
- drivers/iommu/exynos-iommu.c             |   18 ++--
- drivers/iommu/intel-iommu.c              |    4 -
- drivers/iommu/iommu.c                    |    6 +
- drivers/iommu/msm_iommu.c                |    6 +
- drivers/iommu/omap-iommu.c               |    4 -
- drivers/iommu/shmobile-iommu.c           |    4 -
- drivers/iommu/tegra-gart.c               |    4 -
- drivers/iommu/tegra-smmu.c               |    4 -
- drivers/remoteproc/remoteproc_core.c     |    2 
- include/asm-generic/dma-coherent.h       |   13 +--
- include/linux/dma-mapping.h              |   14 ++-
- include/linux/iommu.h                    |   16 ++-
- include/linux/types.h                    |    1 
- 23 files changed, 208 insertions(+), 199 deletions(-)
+Bjorn
