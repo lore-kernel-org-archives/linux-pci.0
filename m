@@ -1,335 +1,184 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:55383 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754071AbaEOQCH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 May 2014 12:02:07 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>
-Subject: [PATCH v1 2/5] pci: designware: enhancements to support keystone pcie
-Date: Thu, 15 May 2014 12:01:29 -0400
-Message-ID: <1400169692-9677-3-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:50401 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766AbaETTuz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 15:50:55 -0400
+Date: Tue, 20 May 2014 12:50:41 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Francesco Ruggeri <fruggeri@arista.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Francesco Ruggeri <fruggeri@aristanetworks.com>
+Subject: Re: pci: kernel crash in bus_find_device
+Message-ID: <20140520195041.GA28913@roeck-us.net>
+References: <CA+HUmGjvHgWB3vcPnXAEVFdFuy9sOaB1BjaDW1-7ai933XEGWQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+HUmGjvHgWB3vcPnXAEVFdFuy9sOaB1BjaDW1-7ai933XEGWQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-keystone pcie hardware is based on designware hw version 3.65.
-There is no support for ATU port and has registers in
-application space to configure inbound/outbound access. Also
-doesn't support PCI PVM option. The MSI IRQ registers available
-in application space is used to mask/unmask/enable the MSI IRQs.
+On Tue, May 20, 2014 at 12:17:57PM -0700, Francesco Ruggeri wrote:
+> I posted this about a week ago but I did not get any replies.
+> Re-trying.
+> 
+> While traversing devices on pci_bus_type I ran into the crash below.
+> The immediate cause of the crash is that bus_find_device is trying to resume
+> a scan starting from a device that has been unregistered (and whose knode_bus
+> has already been klist_del' ed).
+> The main issue seems to be that when resuming a scan the caller should
+> be holding a
+> reference to the klist_node, but instead it relies on holding a
+> reference to the device.
+> I played with a couple of narrow fixes, but a clean solution would
+> affect quite a bit of code.
+> 
+> Has anybody run into this before?
+> 
 
-DW core driver is a set of common functions that are abstracted
-to support DW pci drivers. To allow re-use of these functions for
-keystone pci driver, core driver is to be enhanced.
+Hi Francesco,
 
-Following are done to allow re-use of the functions on keystone pci
-driver.
+I may be missing something, but I don't find a pci_scan symbol in the 3.4
+kernel. Also, the process name suggests that you may possibly trigger pci
+rescans from user space. Both suggest that you may possibly run third party
+code in your kernel.
 
- 1. Some of the variables in pcie_port struct is folded inside
-    a union that now contains both new DW hw related variables as well
-    as old hardware related variables such as application reg base.
- 2. Added a dw_pcie_common_host_init() function that holds common
-    host initialization code for old and new hw.
- 3. dw_pcie_parse_resource() is used for parsing resource related
-    information from DT bindings.
- 4. dw_pcie_host_init() is called by new DW hw drivers as before.
-    Added dw_old_pcie_host_init() is it's counter part on old dw hw.
-    Both these functions now call dw_pcie_common_host_init().
- 5. Some of the static functions are made global to allow use from
-    dw old pci drivers such as pci-keystone.
+Either case, I ran into similar problems myself with pci rescans triggered
+from user space. The 3.4 kernel has no synchronization for rescans triggered
+from user space with those triggered from the kernel. In a nutshell, when
+triggering rescans and removals from user space you must ensure that only
+one such rescan/removal is active at any given time. Under no circumstances
+trigger rescans from user space if a rescan can also be triggered from the
+kernel. Obviously that also applies if rescans can be triggered multiple times
+in parallel by some third party kernel module. Maybe that explains your
+problem ?
 
-CC: Mohit Kumar <mohit.kumar@st.com>
-CC: Jingoo Han <jg1.han@samsung.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+The problem has been addressed recently with commit 9d16947 (PCI: Add
+global pci_lock_rescan_remove) and several subsequent patches.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/pci/host/pcie-designware.c |  101 ++++++++++++++++++++++++------------
- drivers/pci/host/pcie-designware.h |   42 ++++++++++++---
- 2 files changed, 103 insertions(+), 40 deletions(-)
+Guenter
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index c4e3732..9ea8e79 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -277,11 +277,15 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
- 		}
- 		set_bit(pos0 + i, pp->msi_irq_in_use);
- 		/*Enable corresponding interrupt in MSI interrupt controller */
--		res = ((pos0 + i) / 32) * 12;
--		bit = (pos0 + i) % 32;
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
--		val |= 1 << bit;
--		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
-+		if (!(pp->version & DW_VERSION_OLD)) {
-+			res = ((pos0 + i) / 32) * 12;
-+			bit = (pos0 + i) % 32;
-+			dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
-+						 4, &val);
-+			val |= 1 << bit;
-+			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
-+						 4, val);
-+		}
- 	}
- 
- 	*pos = pos0;
-@@ -349,7 +353,10 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
- 	 */
- 	desc->msi_attrib.multiple = msgvec;
- 
--	msg.address_lo = virt_to_phys((void *)pp->msi_data);
-+	if (pp->ops->get_msi_data)
-+		msg.address_lo = pp->ops->get_msi_data(pp);
-+	else
-+		msg.address_lo = virt_to_phys((void *)pp->msi_data);
- 	msg.address_hi = 0x0;
- 	msg.data = pos;
- 	write_msi_msg(irq, &msg);
-@@ -389,13 +396,11 @@ static const struct irq_domain_ops msi_domain_ops = {
- 	.map = dw_pcie_msi_map,
- };
- 
--int __init dw_pcie_host_init(struct pcie_port *pp)
-+int __init dw_pcie_parse_resource(struct pcie_port *pp)
- {
- 	struct device_node *np = pp->dev->of_node;
--	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
--	u32 val;
--	int i;
-+	struct of_pci_range range;
- 
- 	if (of_pci_range_parser_init(&parser, np)) {
- 		dev_err(pp->dev, "missing ranges property\n");
-@@ -440,23 +445,17 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 			return -ENOMEM;
- 		}
- 	}
--
--	pp->cfg0_base = pp->cfg.start;
--	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
- 	pp->mem_base = pp->mem.start;
- 
--	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
--					pp->config.cfg0_size);
--	if (!pp->va_cfg0_base) {
--		dev_err(pp->dev, "error with ioremap in function\n");
--		return -ENOMEM;
--	}
--	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
--					pp->config.cfg1_size);
--	if (!pp->va_cfg1_base) {
--		dev_err(pp->dev, "error with ioremap\n");
--		return -ENOMEM;
--	}
-+	return 0;
-+}
-+
-+int __init dw_pcie_common_host_init(struct pcie_port *pp, struct hw_pci *hw,
-+				const struct irq_domain_ops *irq_msi_ops)
-+{
-+	struct device_node *np = pp->dev->of_node;
-+	u32 val;
-+	int i;
- 
- 	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
- 		dev_err(pp->dev, "Failed to parse the number of lanes\n");
-@@ -465,7 +464,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
--					MAX_MSI_IRQS, &msi_domain_ops,
-+					MAX_MSI_IRQS, irq_msi_ops,
- 					&dw_pcie_msi_chip);
- 		if (!pp->irq_domain) {
- 			dev_err(pp->dev, "irq domain init failed\n");
-@@ -488,10 +487,10 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	val |= PORT_LOGIC_SPEED_CHANGE;
- 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
- 
--	dw_pci.nr_controllers = 1;
--	dw_pci.private_data = (void **)&pp;
-+	hw->nr_controllers = 1;
-+	hw->private_data = (void **)&pp;
- 
--	pci_common_init_dev(pp->dev, &dw_pci);
-+	pci_common_init_dev(pp->dev, hw);
- 	pci_assign_unassigned_resources();
- #ifdef CONFIG_PCI_DOMAINS
- 	dw_pci.domain++;
-@@ -500,6 +499,32 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
- 
-+int __init dw_pcie_host_init(struct pcie_port *pp)
-+{
-+	int ret;
-+
-+	ret = dw_pcie_parse_resource(pp);
-+	if (ret)
-+		return ret;
-+
-+	pp->cfg0_base = pp->cfg.start;
-+	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-+	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-+					pp->config.cfg0_size);
-+	if (!pp->va_cfg0_base) {
-+		dev_err(pp->dev, "error with ioremap in function\n");
-+		return -ENOMEM;
-+	}
-+	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
-+					pp->config.cfg1_size);
-+	if (!pp->va_cfg1_base) {
-+		dev_err(pp->dev, "error with ioremap\n");
-+		return -ENOMEM;
-+	}
-+
-+	return dw_pcie_common_host_init(pp, &dw_pci, &msi_domain_ops);
-+}
-+
- static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
- {
- 	/* Program viewport 0 : OUTBOUND : CFG0 */
-@@ -654,7 +679,11 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 
- 	spin_lock_irqsave(&pp->conf_lock, flags);
- 	if (bus->number != pp->root_bus_nr)
--		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
-+		if (pp->ops->rd_other_conf)
-+			ret = pp->ops->rd_other_conf(pp, bus, devfn,
-+						where, size, val);
-+		else
-+			ret = dw_pcie_rd_other_conf(pp, bus, devfn,
- 						where, size, val);
- 	else
- 		ret = dw_pcie_rd_own_conf(pp, where, size, val);
-@@ -680,7 +709,11 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 
- 	spin_lock_irqsave(&pp->conf_lock, flags);
- 	if (bus->number != pp->root_bus_nr)
--		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
-+		if (pp->ops->wr_other_conf)
-+			ret = pp->ops->wr_other_conf(pp, bus, devfn,
-+						where, size, val);
-+		else
-+			ret = dw_pcie_wr_other_conf(pp, bus, devfn,
- 						where, size, val);
- 	else
- 		ret = dw_pcie_wr_own_conf(pp, where, size, val);
-@@ -694,7 +727,7 @@ static struct pci_ops dw_pcie_ops = {
- 	.write = dw_pcie_wr_conf,
- };
- 
--static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-+int dw_pcie_setup(int nr, struct pci_sys_data *sys)
- {
- 	struct pcie_port *pp;
- 
-@@ -717,7 +750,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
- 
--static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-+struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- {
- 	struct pci_bus *bus;
- 	struct pcie_port *pp = sys_to_pcie(sys);
-@@ -746,7 +779,7 @@ static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- 	return irq;
- }
- 
--static void dw_pcie_add_bus(struct pci_bus *bus)
-+void dw_pcie_add_bus(struct pci_bus *bus)
- {
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		struct pcie_port *pp = sys_to_pcie(bus->sysdata);
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 3063b35..e97f4d7 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -35,21 +35,39 @@ struct pcie_port {
- 	struct device		*dev;
- 	u8			root_bus_nr;
- 	void __iomem		*dbi_base;
--	u64			cfg0_base;
--	void __iomem		*va_cfg0_base;
--	u64			cfg1_base;
--	void __iomem		*va_cfg1_base;
-+	/*
-+	 * Old DW version implement application register space for
-+	 * MSI and has no ATU view port
-+	 */
-+#define DW_VERSION_OLD	BIT(0)
-+	u32			version;
-+	union {
-+		/* new dw core specific */
-+		struct {
-+			u64		cfg0_base;
-+			void __iomem	*va_cfg0_base;
-+			u64		cfg1_base;
-+			void __iomem	*va_cfg1_base;
-+			int		msi_irq;
-+		};
-+
-+		/* old dw core specific */
-+		struct  {
-+			struct irq_domain	*legacy_irq_domain;
-+			void __iomem		*va_app_base;
-+			u64			app_base;
-+		};
-+	};
- 	u64			io_base;
- 	u64			mem_base;
- 	spinlock_t		conf_lock;
--	struct resource		cfg;
- 	struct resource		io;
- 	struct resource		mem;
-+	struct resource		cfg;
- 	struct pcie_port_info	config;
- 	int			irq;
- 	u32			lanes;
- 	struct pcie_host_ops	*ops;
--	int			msi_irq;
- 	struct irq_domain	*irq_domain;
- 	unsigned long		msi_data;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
-@@ -62,8 +80,13 @@ struct pcie_host_ops {
- 			u32 val, void __iomem *dbi_base);
- 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
- 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
-+	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
-+			unsigned int devfn, int where, int size, u32 *val);
-+	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
-+			unsigned int devfn, int where, int size, u32 val);
- 	int (*link_up)(struct pcie_port *pp);
- 	void (*host_init)(struct pcie_port *pp);
-+	u32 (*get_msi_data)(struct pcie_port *pp);
- };
- 
- int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
-@@ -73,5 +96,12 @@ void dw_pcie_msi_init(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
-+int dw_pcie_setup(int nr, struct pci_sys_data *sys);
-+struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys);
-+void dw_pcie_add_bus(struct pci_bus *bus);
-+int dw_pcie_parse_resource(struct pcie_port *pp);
- 
-+/* internal to dw core */
-+int dw_pcie_common_host_init(struct pcie_port *pp, struct hw_pci *hw,
-+			const struct irq_domain_ops *irq_ops);
- #endif /* _PCIE_DESIGNWARE_H */
--- 
-1.7.9.5
-
+> Thanks,
+> Francesco Ruggeri
+> 
+> 
+> ------------[ cut here ]------------
+> WARNING: at /bld/EosKernel/Artools-rpmbuild/linux-3.4/include/linux/kref.h:41
+> klist_iter_init_node+0x30/0x38()
+> Modules linked in: pci_scan(O) sch_prio sand_dma(PO) arista_bde(PO)
+> macvlan ip6table_mangle iptable_mangle msr nf_conntrack_ipv6
+> nf_defrag_ipv6 ip6t_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 xt_LOG
+> xt_limit ipt_REJECT xt_hl xt_state xt_multiport xt_tcpudp kbfd(O)
+> 8021q garp stp llc tun scd_em_driver(O) nf_conntrack_tftp iptable_raw
+> iptable_filter ip_tables xt_NOTRACK nf_conntrack xt_mark ip6table_raw
+> ip6table_filter ip6_tables x_tables scd(O) k8temp amd64_edac_mod hwmon
+> kvm_amd kvm
+> Pid: 6861, comm: pci_scan_0 Tainted: P           O
+> 3.4.43.Ar-1797671.flbocafruggeri #1
+> Call Trace:
+>  [<ffffffff81029dc4>] warn_slowpath_common+0x80/0x98
+>  [<ffffffff811b57f1>] ? pci_do_find_bus+0x49/0x49
+>  [<ffffffff81029df1>] warn_slowpath_null+0x15/0x17
+>  [<ffffffff813a43ce>] klist_iter_init_node+0x30/0x38
+>  [<ffffffff8120e57e>] bus_find_device+0x48/0x90
+>  [<ffffffff811b5908>] pci_get_dev_by_id+0x5e/0x81
+>  [<ffffffff811b5a6a>] pci_get_subsys+0x5c/0x7f
+>  [<ffffffff811b5a9e>] pci_get_device+0x11/0x13
+>  [<ffffffffa00b2087>] pci_scan+0x39/0x8a [pci_scan]
+>  [<ffffffffa00b204e>] ? init_module+0x3c/0x3c [pci_scan]
+>  [<ffffffff81040e6e>] kthread+0x84/0x8c
+>  [<ffffffff813c8b14>] kernel_thread_helper+0x4/0x10
+>  [<ffffffff81040dea>] ? __init_kthread_worker+0x37/0x37
+>  [<ffffffff813c8b10>] ? gs_change+0xb/0xb
+> ---[ end trace 79cea1ec476672fe ]---
+> ------------[ cut here ]------------
+> WARNING: at /bld/EosKernel/Artools-rpmbuild/linux-3.4/lib/klist.c:189
+> klist_release+0x2b/0xeb()
+> Modules linked in: pci_scan(O) sch_prio sand_dma(PO) arista_bde(PO)
+> macvlan ip6table_mangle iptable_mangle msr nf_conntrack_ipv6
+> nf_defrag_ipv6 ip6t_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 xt_LOG
+> xt_limit ipt_REJECT xt_hl xt_state xt_multiport xt_tcpudp kbfd(O)
+> 8021q garp stp llc tun scd_em_driver(O) nf_conntrack_tftp iptable_raw
+> iptable_filter ip_tables xt_NOTRACK nf_conntrack xt_mark ip6table_raw
+> ip6table_filter ip6_tables x_tables scd(O) k8temp amd64_edac_mod hwmon
+> kvm_amd kvm
+> Pid: 6861, comm: pci_scan_0 Tainted: P        W  O
+> 3.4.43.Ar-1797671.flbocafruggeri #1
+> Call Trace:
+>  [<ffffffff81029dc4>] warn_slowpath_common+0x80/0x98
+>  [<ffffffff8120de13>] ? bus_get_device_klist+0x10/0x10
+>  [<ffffffff81029df1>] warn_slowpath_null+0x15/0x17
+>  [<ffffffff813a440e>] klist_release+0x2b/0xeb
+>  [<ffffffff813a44ec>] klist_dec_and_del+0x1e/0x25
+>  [<ffffffff813a4528>] klist_next+0x35/0xc9
+>  [<ffffffff811b57f1>] ? pci_do_find_bus+0x49/0x49
+>  [<ffffffff8120deb3>] next_device+0x9/0x19
+>  [<ffffffff8120e5a2>] bus_find_device+0x6c/0x90
+>  [<ffffffff811b5908>] pci_get_dev_by_id+0x5e/0x81
+>  [<ffffffff811b5a6a>] pci_get_subsys+0x5c/0x7f
+>  [<ffffffff811b5a9e>] pci_get_device+0x11/0x13
+>  [<ffffffffa00b2087>] pci_scan+0x39/0x8a [pci_scan]
+>  [<ffffffffa00b204e>] ? init_module+0x3c/0x3c [pci_scan]
+>  [<ffffffff81040e6e>] kthread+0x84/0x8c
+>  [<ffffffff813c8b14>] kernel_thread_helper+0x4/0x10
+>  [<ffffffff81040dea>] ? __init_kthread_worker+0x37/0x37
+>  [<ffffffff813c8b10>] ? gs_change+0xb/0xb
+> ---[ end trace 79cea1ec476672ff ]---
+> general protection fault: 0000 [#1] PREEMPT SMP
+> CPU 1
+> Modules linked in: pci_scan(O) sch_prio sand_dma(PO) arista_bde(PO)
+> macvlan ip6table_mangle iptable_mangle msr nf_conntrack_ipv6
+> nf_defrag_ipv6 ip6t_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 xt_LOG
+> xt_limit ipt_REJECT xt_hl xt_state xt_multiport xt_tcpudp kbfd(O)
+> 8021q garp stp llc tun scd_em_driver(O) nf_conntrack_tftp iptable_raw
+> iptable_filter ip_tables xt_NOTRACK nf_conntrack xt_mark ip6table_raw
+> ip6table_filter ip6_tables x_tables scd(O) k8temp amd64_edac_mod hwmon
+> kvm_amd kvm
+> 
+> Pid: 6861, comm: pci_scan_0 Tainted: P        W  O
+> 3.4.43.Ar-1797671.flbocafruggeri #1
+> RIP: 0010:[<ffffffff813a442c>]  [<ffffffff813a442c>] klist_release+0x49/0xeb
+> RSP: 0018:ffff88001c55bd50  EFLAGS: 00010293
+> RAX: dead000000200200 RBX: ffff880030949e78 RCX: ffff880000000010
+> RDX: dead000000100100 RSI: 0000000000000000 RDI: dead000000200200
+> RBP: ffff88001c55bd70 R08: dead000000100100 R09: 000000000000000a
+> R10: 0000000000000000 R11: ffffffff81619920 R12: ffff880030949e90
+> R13: ffff880030949e78 R14: ffffffff8120de13 R15: ffff880027e717e0
+> FS:  0000000000000000(0000) GS:ffff88013fb00000(0000) knlGS:00000000f73bc6d0
+> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> CR2: 0000000009012644 CR3: 0000000069f9e000 CR4: 00000000000007e0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> Process pci_scan_0 (pid: 6861, threadinfo ffff88001c55a000, task
+> ffff880032ffd340)
+> Stack:
+>  ffff880030949e78 ffff88001c55bde0 dead000000100100 ffff880030949e78
+>  ffff88001c55bd80 ffffffff813a44ec ffff88001c55bdc0 ffffffff813a4528
+>  ffff88001c55bde0 ffff880027e717e0 ffffffff811b57f1 ffff88001c55bde0
+> Call Trace:
+>  [<ffffffff813a44ec>] klist_dec_and_del+0x1e/0x25
+>  [<ffffffff813a4528>] klist_next+0x35/0xc9
+>  [<ffffffff811b57f1>] ? pci_do_find_bus+0x49/0x49
+>  [<ffffffff8120deb3>] next_device+0x9/0x19
+>  [<ffffffff8120e5a2>] bus_find_device+0x6c/0x90
+>  [<ffffffff811b5908>] pci_get_dev_by_id+0x5e/0x81
+>  [<ffffffff811b5a6a>] pci_get_subsys+0x5c/0x7f
+>  [<ffffffff811b5a9e>] pci_get_device+0x11/0x13
+>  [<ffffffffa00b2087>] pci_scan+0x39/0x8a [pci_scan]
+>  [<ffffffffa00b204e>] ? init_module+0x3c/0x3c [pci_scan]
+>  [<ffffffff81040e6e>] kthread+0x84/0x8c
+>  [<ffffffff813c8b14>] kernel_thread_helper+0x4/0x10
+>  [<ffffffff81040dea>] ? __init_kthread_worker+0x37/0x37
+>  [<ffffffff813c8b10>] ? gs_change+0xb/0xb
+> Code: 00 48 c7 c7 a1 01 51 81 e8 ce 59 c8 ff 49 8b 54 24 f0 49 8b 44
+> 24 f8 49 b8 00 01 10 00 00 00 ad de 48 bf 00 02 20 00 00 00 ad de <48>
+> 89 42 08 48 89 10 49 89 7c 24 f8 4d 89 44 24 f0 48 c7 c7 30
+> RIP  [<ffffffff813a442c>] klist_release+0x49/0xeb
+>  RSP <ffff88001c55bd50>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> 
+> 
