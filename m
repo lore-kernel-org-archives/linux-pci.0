@@ -1,64 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16652 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751995AbaEAQ2R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 May 2014 12:28:17 -0400
-Subject: [PATCH 11/13] iommu: Remove pci.h
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>,
-	acooks@gmail.com, linux-kernel@vger.kernel.org
-Date: Thu, 01 May 2014 10:28:12 -0600
-Message-ID: <20140501162812.17512.28070.stgit@bling.home>
-In-Reply-To: <20140501160128.17512.23609.stgit@bling.home>
-References: <20140501160128.17512.23609.stgit@bling.home>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:57878 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753300AbaETRWm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 13:22:42 -0400
+Received: by mail-ie0-f179.google.com with SMTP id rd18so790982iec.38
+        for <linux-pci@vger.kernel.org>; Tue, 20 May 2014 10:22:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20140520170221.GA5130@obsidianresearch.com>
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+ <6048322.x3M3sdDEWO@wuerfel> <5374FD24.8000806@ti.com> <22200719.Jb5jnJylJH@wuerfel>
+ <20140515183919.GC11650@obsidianresearch.com> <53751DDF.40304@ti.com>
+ <20140515205210.GB14722@obsidianresearch.com> <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com>
+ <20140520170221.GA5130@obsidianresearch.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 20 May 2014 11:22:22 -0600
+Message-ID: <CAErSpo667uWybiHOh4tVQDh_JFpF0EbvxKwo_GQm+B1-wMtT1Q@mail.gmail.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware
+ core driver
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The single helper here no longer has any users.
+On Tue, May 20, 2014 at 11:02 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Fri, May 16, 2014 at 08:29:56PM +0000, Karicheri, Muralidharan wrote:
+>
+>> But pcie_bus_configure_settings just make sure the mrrs for a device
+>> is not greater than the max payload size.
+>
+> Not quite, it first scans the network checking the Maximum Payload Size
+> Supported (MPSS) for each device, and chooses the highest supported by
+> all as the MPS for all.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/pci.h |   29 -----------------------------
- 1 file changed, 29 deletions(-)
- delete mode 100644 drivers/iommu/pci.h
+The "performance" setting, e.g., "pci=pcie_bus_perf", adds a few
+wrinkles by setting MRRS in ways that allow some devices to have
+larger MPS than others.  I don't think this is exactly what was
+envisioned in the spec, and it is not guaranteed to work if there is
+peer-to-peer DMA.  This isn't documented very well; the best I know of
+is the changelogs for:
 
-diff --git a/drivers/iommu/pci.h b/drivers/iommu/pci.h
-deleted file mode 100644
-index 352d80a..0000000
---- a/drivers/iommu/pci.h
-+++ /dev/null
-@@ -1,29 +0,0 @@
--/*
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License, version 2, as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-- *
-- * Copyright (C) 2013 Red Hat, Inc.
-- * Copyright (C) 2013 Freescale Semiconductor, Inc.
-- *
-- */
--#ifndef __IOMMU_PCI_H
--#define __IOMMU_PCI_H
--
--/* Helper function for swapping pci device reference */
--static inline void swap_pci_ref(struct pci_dev **from, struct pci_dev *to)
--{
--	pci_dev_put(*from);
--	*from = to;
--}
--
--#endif  /* __IOMMU_PCI_H */
+  a1c473aa11e6 pci: Clamp pcie_set_readrq() when using "performance" settings
+  b03e7495a862 PCI: Set PCI-E Max Payload Size on fabric
 
+Bjorn
