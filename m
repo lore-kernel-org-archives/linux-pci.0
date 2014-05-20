@@ -1,114 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0184.outbound.protection.outlook.com ([207.46.163.184]:28888
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751331AbaEGS7Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 7 May 2014 14:59:16 -0400
-From: <suravee.suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	Borislav Petkov <bp@suse.de>,
-	"Robert Richter" <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V3 3/3] PCI: Remove unnecessary 'quirk_amd_nb_node'
-Date: Wed, 7 May 2014 13:58:47 -0500
-Message-ID: <1399489127-6961-4-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from mail-vc0-f175.google.com ([209.85.220.175]:32980 "EHLO
+	mail-vc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750963AbaETWfQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 18:35:16 -0400
+Received: by mail-vc0-f175.google.com with SMTP id hu19so1486509vcb.34
+        for <linux-pci@vger.kernel.org>; Tue, 20 May 2014 15:35:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20140520195041.GA28913@roeck-us.net>
+References: <CA+HUmGjvHgWB3vcPnXAEVFdFuy9sOaB1BjaDW1-7ai933XEGWQ@mail.gmail.com>
+	<20140520195041.GA28913@roeck-us.net>
+Date: Tue, 20 May 2014 15:35:15 -0700
+Message-ID: <CA+HUmGg4mE5RDxShNCK78yLi9gdX_FnHtWPKfGD4LaEqrCdj2Q@mail.gmail.com>
+Subject: Re: pci: kernel crash in bus_find_device
+From: Francesco Ruggeri <fruggeri@arista.com>
+To: Guenter Roeck <linux@roeck-us.net>, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Francesco Ruggeri <fruggeri@aristanetworks.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Myron Stowe <myron.stowe@redhat.com>
+Hi Guenter,
+thank you for your reply. I will check out the changes that you pointed to.
+The problem we are seeing is a race condition between for_each_pci_dev
+(or similar) and device_unregisters. I am not sure if use of the new
+lock should be extended to all code using for_each_pci_dev as well.
 
-The quirk is used for fixing up the numa_node information in sysfs for AMD hostbridge
-devices (i.e. PCI device 00:[18-1f].x).  However, this is currently unused.
-and is becoming maintenance burden. Therefore, it is removed.
+pci_scan is a kernel thread that I used for testing purposes, to
+mimick the dynamics that we saw in our crashes in
+edac_pci_clear_parity_errors:
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Robert Richter <rric@kernel.org>
-Cc: Daniel J Blueman <daniel@numascale.com>
-Cc: Andreas Herrmann <herrmann.der.user@googlemail.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- arch/x86/kernel/quirks.c | 58 ------------------------------------------------
- 1 file changed, 58 deletions(-)
+        for (;;) {
+                pci_dev = NULL;
+                while ((pci_dev = pci_get_device(PCI_ANY_ID,
+PCI_ANY_ID, pci_dev)) != NULL)
+                        ;
+        }
 
-diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
-index ff898bb..abbd6bc 100644
---- a/arch/x86/kernel/quirks.c
-+++ b/arch/x86/kernel/quirks.c
-@@ -514,64 +514,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
- 
- #endif
- 
--#if defined(CONFIG_PCI) && defined(CONFIG_NUMA)
--/* Set correct numa_node information for AMD NB functions */
--static void quirk_amd_nb_node(struct pci_dev *dev)
--{
--	struct pci_dev *nb_ht;
--	unsigned int devfn;
--	u32 node;
--	u32 val;
--
--	devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
--	nb_ht = pci_get_slot(dev->bus, devfn);
--	if (!nb_ht)
--		return;
--
--	pci_read_config_dword(nb_ht, 0x60, &val);
--	node = pcibus_to_node(dev->bus) | (val & 7);
--	/*
--	 * Some hardware may return an invalid node ID,
--	 * so check it first:
--	 */
--	if (node_online(node))
--		set_dev_node(&dev->dev, node);
--	pci_dev_put(nb_ht);
--}
--
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_K8_NB,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_K8_NB_ADDRMAP,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_K8_NB_MEMCTL,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_K8_NB_MISC,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_HT,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MAP,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_DRAM,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_LINK,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F0,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F1,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F2,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4,
--			quirk_amd_nb_node);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F5,
--			quirk_amd_nb_node);
--
--#endif
--
- #ifdef CONFIG_PCI
- /*
-  * Processor does not ensure DRAM scrub read/write sequence
--- 
-1.9.0
+It keeps traversing klist_devices in pci_bus_type using
+bus_find_device, costantly resuming its search for the next element
+starting from the one it got in the previous round.
+There are several loops of this kind in linux. In case of this thread
+no action is taken on the elements as they are "found".
 
+The race condition occurs when bus_find_device resumes its search from
+a device that has been unregistered. Because device_unregister resets
+klist_bus in the device, bus_find device cannot resume from where it
+left off in the klist.
+The sequence is device_unregister, device_del, bus_remove_device,
+klist_del(&dev->p->knode_bus.).
+
+Francesco
