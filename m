@@ -1,85 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:38567 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826AbaETEWe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 00:22:34 -0400
 MIME-Version: 1.0
-In-Reply-To: <20140530214643.GL28131@pd.tnic>
-References: <1367969371-27414-1-git-send-email-yinghai@kernel.org>
- <20140530170103.GE4607@google.com> <20140530214643.GL28131@pd.tnic>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 30 May 2014 16:00:17 -0600
-Message-ID: <CAErSpo4kQViCtaG9Fs_Amyr0pp96fsmdX2puJueK6Jf_XXdm1Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI, EDAC: fix ordering assign resource and bus_add
-To: Borislav Petkov <bp@alien8.de>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Doug Thompson <dougthompson@xmission.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-edac@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <4292818.mI6kZGgTzd@wuerfel>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+	<CA+sq2Ccok5wtKjCZUkBhhj3WsiqFAoMgHK7LY210aBtMku+8SA@mail.gmail.com>
+	<4292818.mI6kZGgTzd@wuerfel>
+Date: Tue, 20 May 2014 09:52:33 +0530
+Message-ID: <CA+sq2Ce+8YB+02B7zhxTXwropZXv9spy-w=AJ8YXCP69kr-_1A@mail.gmail.com>
+Subject: Re: [PATCH v7 0/3] Add support for PCI in AArch64
+From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Scott Lurndal <kdb@lurndal.org>,
+	"yu.zhao@intel.com" <yu.zhao@intel.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 30, 2014 at 3:46 PM, Borislav Petkov <bp@alien8.de> wrote:
-> On Fri, May 30, 2014 at 11:01:03AM -0600, Bjorn Helgaas wrote:
->> On Tue, May 07, 2013 at 04:29:31PM -0700, Yinghai Lu wrote:
->> > We should assign unassigned resource before pci_bus_add_device.
->> >
->> > as late one will enable driver and create sysfs file that will need
->> > pci io resources from assign unassigned code.
->> >
->> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On Mon, May 19, 2014 at 6:31 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Friday 16 May 2014 16:03:04 Sunil Kovvuri wrote:
+>> When the SR-IOV capable device's driver tries to enable sriov
+>> (pci_enable_sriov()) it fails to create/add PCI device for each
+>> virtual function reporting  "not enough MMIO resources for SR-IOV".
+>
+> I assume you have checked that there is indeed enough MMIO space
+> available, right?
+>
+Yes, i have checked for enough MMIO space multiple times.
+
+>> In sriov_enable() (drivers/pci/iov.c)
 >>
->> Applied to pci/resource for v3.16, thanks!
+>>  296        for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>>  297                 bars |= (1 << (i + PCI_IOV_RESOURCES));
+>>  298                 res = dev->resource + PCI_IOV_RESOURCES + i;
+>>  299                 if (res->parent)
+>>  300                         nres++;
+>>  301         }
+>>  302         if (nres != iov->nres) {
+>>  303                 dev_err(&dev->dev, "not enough MMIO resources for
+>>  SR-IOV\n");
+>>  304                 return -ENOMEM;
+>>  305         }
+>>
+>> Here its checking if physical function's IOV resource has a parent or not.
+>> Which is pci-pci bridge in this case. Otherwise it doesn't consider
+>> that resource.
+>>
+>> Added below api to your patch.
+>> This will try to claim a resource while creating a PCI device which
+>> inturn sets 'res->parent'.
 >
-> This is touching drivers/edac/ and I guess I'm fine with it,
+> This looks like the wrong approach. The PCI host controller should
+> really have been registered with the root 'iomem_resource' during
+> the probe of the host controller.
 >
-> Acked-by: Borislav Petkov <bp@suse.de>
+>         Arnd
+I didn't get this, if a SR-IOV device is connected to a PCI-PCI bridge
+and inturn bridge connected to root port. Then the parent bus is not root,
+but the bridge.  The issue is either hierarchy should not be checked for
+SR-IOV resources or someone should set the hierarchy (i.e parent resources).
 
-Thanks, I should have waited for you.  I was assuming the merge window
-would open on Monday, and I hoped for a day or two in -next, but now
-it sounds like we might have an -rc8, so I needn't have been in such a
-hurry.
-
->> > ---
->> >  drivers/edac/i82875p_edac.c |    3 ++-
->> >  1 file changed, 2 insertions(+), 1 deletion(-)
->> >
->> > Index: linux-2.6/drivers/edac/i82875p_edac.c
->> > ===================================================================
->> > --- linux-2.6.orig/drivers/edac/i82875p_edac.c
->> > +++ linux-2.6/drivers/edac/i82875p_edac.c
->> > @@ -293,13 +293,14 @@ static int i82875p_setup_overfl_dev(stru
->> >             if (dev == NULL)
->> >                     return 1;
->> >
->> > +           pci_bus_assign_resources(dev->bus);
->> > +
->> >             err = pci_bus_add_device(dev);
->> >             if (err) {
->> >                     i82875p_printk(KERN_ERR,
->> >                             "%s(): pci_bus_add_device() Failed\n",
->> >                             __func__);
->> >             }
->> > -           pci_bus_assign_resources(dev->bus);a
->
->
-> ... one question though: how are people using those pci_bus*
-> functions supposed to know that pci_bus_assign_resources needs to
-> go before pci_bus_add_device? The comment in pci_bus_add_device()
-> mentions something about it but wouldn't it be possible to call
-> pci_bus_assign_resources() in pci_bus_add_device() when resources are
-> not assigned?
-
-Yeah, this is really a mess.  The pci_bus_*() functions (at least
-pci_bus_add_device() and pci_bus_assign_resources()) are not really
-intended to be called by drivers at all -- they should only be used by
-the arch code that drives PCI enumeration.  Eventually I'd like to
-even move them out of the arch code and into the PCI core.
-
-In this i82875p case, it looks like this is basically a quirk that
-unhides a device.  I think it's sort of dubious to poke at things the
-BIOS has explicitly hidden from the OS, but apart from that, if we
-turned this into an actual DECLARE_PCI_FIXUP_CLASS_EARLY() quirk on
-the 82875_0 device, I think the normal PCI enumeration process would
-find the 82875_6 device, and we could get rid of the whole "if (dev ==
-NULL)" chunk.
-
-Bjorn
+Regards,
+Sunil.
