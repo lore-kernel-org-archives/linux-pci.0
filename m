@@ -1,137 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [RFC Patch Part1 V1 12/30] x86, ioapic: kill static variable nr_irqs_gsi
-Date: Fri, 16 May 2014 16:05:32 +0800
-Message-Id: <1400227550-5935-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:51545 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751266AbaETRCe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 20 May 2014 13:02:34 -0400
+Date: Tue, 20 May 2014 11:02:21 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on
+ designware core driver
+Message-ID: <20140520170221.GA5130@obsidianresearch.com>
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
+ <6048322.x3M3sdDEWO@wuerfel>
+ <5374FD24.8000806@ti.com>
+ <22200719.Jb5jnJylJH@wuerfel>
+ <20140515183919.GC11650@obsidianresearch.com>
+ <53751DDF.40304@ti.com>
+ <20140515205210.GB14722@obsidianresearch.com>
+ <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Static variable nr_irqs_gsi is used to maintain the lowest dynamic
-allocatable IRQ number. It may cause trouble when enabling dynamic
-IRQ allocation for IOAPIC, so use arch_dynirq_lower_bound() to
-avoid directly accessing nr_irqs_gsi and kill nr_irqs_gsi.
+On Fri, May 16, 2014 at 08:29:56PM +0000, Karicheri, Muralidharan wrote:
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/io_apic.c |   35 ++++++++---------------------------
- 1 file changed, 8 insertions(+), 27 deletions(-)
+> But pcie_bus_configure_settings just make sure the mrrs for a device
+> is not greater than the max payload size. 
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 2c91a7fc9915..fe515583a927 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -118,9 +118,6 @@ struct mpc_intsrc mp_irqs[MAX_IRQ_SOURCES];
- /* # of MP IRQ source entries */
- int mp_irq_entries;
- 
--/* GSI interrupts */
--static int nr_irqs_gsi = NR_IRQS_LEGACY;
--
- #ifdef CONFIG_EISA
- int mp_bus_id_to_type[MAX_MP_BUSSES];
- #endif
-@@ -2921,9 +2918,7 @@ unsigned int __create_irqs(unsigned int from, unsigned int count, int node)
- 	unsigned long flags;
- 	int irq, i;
- 
--	if (from < nr_irqs_gsi)
--		from = nr_irqs_gsi;
--
-+	from = arch_dynirq_lower_bound(from);
- 	cfg = kzalloc_node(count * sizeof(cfg[0]), GFP_KERNEL, node);
- 	if (!cfg)
- 		return 0;
-@@ -2972,12 +2967,9 @@ unsigned int create_irq_nr(unsigned int from, int node)
- int create_irq(void)
- {
- 	int node = cpu_to_node(0);
--	unsigned int irq_want;
- 	int irq;
- 
--	irq_want = nr_irqs_gsi;
--	irq = create_irq_nr(irq_want, node);
--
-+	irq = create_irq_nr(arch_dynirq_lower_bound(0), node);
- 	if (irq == 0)
- 		irq = -1;
- 
-@@ -3142,7 +3134,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 		return 1;
- 
- 	node = dev_to_node(&dev->dev);
--	irq_want = nr_irqs_gsi;
-+	irq_want = arch_dynirq_lower_bound(0);
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
- 		irq = create_irq_nr(irq_want, node);
- 		if (irq == 0)
-@@ -3406,20 +3398,11 @@ static int __init io_apic_get_redir_entries(int ioapic)
- 	return reg_01.bits.entries + 1;
- }
- 
--static void __init probe_nr_irqs_gsi(void)
--{
--	int nr;
--
--	nr = gsi_top + NR_IRQS_LEGACY;
--	if (nr > nr_irqs_gsi)
--		nr_irqs_gsi = nr;
--
--	printk(KERN_DEBUG "nr_irqs_gsi: %d\n", nr_irqs_gsi);
--}
--
- unsigned int arch_dynirq_lower_bound(unsigned int from)
- {
--	return from < nr_irqs_gsi ? nr_irqs_gsi : from;
-+	unsigned int min = gsi_top + NR_IRQS_LEGACY;
-+
-+	return from < min ? min : from;
- }
- 
- int __init arch_probe_nr_irqs(void)
-@@ -3429,12 +3412,12 @@ int __init arch_probe_nr_irqs(void)
- 	if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
- 		nr_irqs = NR_VECTORS * nr_cpu_ids;
- 
--	nr = nr_irqs_gsi + 8 * nr_cpu_ids;
-+	nr = (gsi_top + NR_IRQS_LEGACY) + 8 * nr_cpu_ids;
- #if defined(CONFIG_PCI_MSI) || defined(CONFIG_HT_IRQ)
- 	/*
- 	 * for MSI and HT dyn irq
- 	 */
--	nr += nr_irqs_gsi * 16;
-+	nr += (gsi_top + NR_IRQS_LEGACY) * 16;
- #endif
- 	if (nr < nr_irqs)
- 		nr_irqs = nr;
-@@ -3707,8 +3690,6 @@ fake_ioapic_page:
- 		ioapic_res->end = ioapic_phys + IO_APIC_SLOT_SIZE - 1;
- 		ioapic_res++;
- 	}
--
--	probe_nr_irqs_gsi();
- }
- 
- void __init ioapic_insert_resources(void)
--- 
-1.7.10.4
+Not quite, it first scans the network checking the Maximum Payload Size
+Supported (MPSS) for each device, and chooses the highest supported by
+all as the MPS for all.
 
+PCI-E requires that an end point support all packets up to the MPS, so
+if your bridge can't generate a 512 byte read response packet, then it
+must not advertise a MPSS greater than 256 bytes.
+
+Setting your MPSS to 128, 256, then using the
+pcie_bus_configure_settings to run the standard algorithm should
+properly limit the readrq to 256 and be able to properly support all
+the fun edge cases like hot plug.
+
+If the config space in your root port bridge is correct and already
+declares a MPSS of 256 then you have nothing else to do but make sure
+pcie_bus_configure_settings gets calls.
+
+If it is broken and claims a higher MPSS than it can support then you
+need to use a quirk only for the root port bridge or edit the config
+reply in the driver only to fix the MPSS.
+
+Jason
