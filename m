@@ -1,103 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62051 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755781AbaE1W36 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 May 2014 18:29:58 -0400
-Subject: [PATCH 2/2] iov: Use pci_walk_vbus for tasks where we must search
- for VFs
-From: Alexander Duyck <alexander.h.duyck@intel.com>
-To: bhelgaas@google.com, ddutile@redhat.com
-Cc: linux-pci@vger.kernel.org, alex.williamson@redhat.com,
-	linux-kernel@vger.kernel.org
-Date: Wed, 28 May 2014 15:29:28 -0700
-Message-ID: <20140528222914.18898.42967.stgit@ahduyck-cp2.jf.intel.com>
-In-Reply-To: <20140528222901.18898.48031.stgit@ahduyck-cp2.jf.intel.com>
-References: <20140528222901.18898.48031.stgit@ahduyck-cp2.jf.intel.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:43653 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751291AbaETDqC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 23:46:02 -0400
+Received: by mail-ig0-f182.google.com with SMTP id uy17so226571igb.3
+        for <linux-pci@vger.kernel.org>; Mon, 19 May 2014 20:46:01 -0700 (PDT)
+Subject: [PATCH v10 2/4] PCI: Change pbus_size_mem() return values to be
+ more conventional
+To: Yinghai Lu <yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: talal@mellanox.com, Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	amirv@mellanox.com, eugenia@mellanox.com,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>
+Date: Mon, 19 May 2014 21:45:58 -0600
+Message-ID: <20140520034558.11972.74795.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140520033233.11972.49094.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140520033233.11972.49094.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This change makes it so that we use pci_walk_vbus to go though and search
-for all devices that are contained within the local bus of our device.
+pbus_size_mem() previously returned 0 for failure and 1 for success.
+Change it to return -ENOSPC for failure and 0 for success.
 
-Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+No functional change.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/iov.c |   50 +++++++++++++++++++++++++++-----------------------
- 1 files changed, 27 insertions(+), 23 deletions(-)
+ drivers/pci/setup-bus.c |   35 +++++++++++++++++++++--------------
+ 1 file changed, 21 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index de7a747..717f202 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -602,6 +602,30 @@ int pci_num_vf(struct pci_dev *dev)
- }
- EXPORT_SYMBOL_GPL(pci_num_vf);
- 
-+struct vfs_assigned {
-+	struct pci_dev *physfn;
-+	unsigned int count;
-+};
-+
-+/**
-+ * pci_vfs_assigned_cb - callback used by pci_vfs_assigned
-+ * @dev: the PCI device
-+ * @data: Pointer to structure used by pci_vfs_assigned
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 589f2261ab0e..caa07fe6a23a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -915,6 +915,10 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
+  *
+  * Calculate the size of the bus and minimal alignment which
+  * guarantees that all child resources fit in this size.
 + *
-+ * If the device is a virtual function and belongs to the provided PF
-+ * and is assigned this will increment the count by 1.
-+ */
-+static int pci_vfs_assigned_cb(struct pci_dev *dev, void *data)
-+{
-+	struct vfs_assigned *vfa = data;
-+
-+	if (dev->is_virtfn && (dev->physfn == vfa->physfn) &&
-+	    (dev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
-+		vfa->count++;
-+
-+	return 0;
-+}
-+
- /**
-  * pci_vfs_assigned - returns number of VFs are assigned to a guest
-  * @dev: the PCI device
-@@ -611,35 +635,15 @@ EXPORT_SYMBOL_GPL(pci_num_vf);
++ * Returns -ENOSPC 0 if there's no available bus resource of the desired type.
++ * Otherwise, sets the bus resource start/end to indicate the required
++ * size, adds things to realloc_head (if supplied), and returns 0.
   */
- int pci_vfs_assigned(struct pci_dev *dev)
- {
--	struct pci_dev *vfdev;
--	unsigned int vfs_assigned = 0;
--	unsigned short dev_id;
-+	struct vfs_assigned vfa = { .physfn = dev, .count = 0 };
+ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			 unsigned long type, unsigned long type2,
+@@ -931,7 +935,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	resource_size_t children_add_size = 0;
  
- 	/* only search if we are a PF */
- 	if (!dev->is_physfn)
- 		return 0;
+ 	if (!b_res)
+-		return 0;
++		return -ENOSPC;
  
--	/*
--	 * determine the device ID for the VFs, the vendor ID will be the
--	 * same as the PF so there is no need to check for that one
--	 */
--	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
--
--	/* loop through all the VFs to see if we own any that are assigned */
--	vfdev = pci_get_device(dev->vendor, dev_id, NULL);
--	while (vfdev) {
--		/*
--		 * It is considered assigned if it is a virtual function with
--		 * our dev as the physical function and the assigned bit is set
--		 */
--		if (vfdev->is_virtfn && (vfdev->physfn == dev) &&
--		    (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
--			vfs_assigned++;
--
--		vfdev = pci_get_device(dev->vendor, dev_id, vfdev);
--	}
-+	pci_walk_vbus(dev->bus, pci_vfs_assigned_cb, &vfa);
- 
--	return vfs_assigned;
-+	return vfa.count;
+ 	memset(aligns, 0, sizeof(aligns));
+ 	max_order = 0;
+@@ -998,7 +1002,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				 "%pR to %pR (unused)\n", b_res,
+ 				 &bus->busn_res);
+ 		b_res->flags = 0;
+-		return 1;
++		return 0;
+ 	}
+ 	b_res->start = min_align;
+ 	b_res->end = size0 + min_align - 1;
+@@ -1009,7 +1013,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				 "%pR to %pR add_size %llx\n", b_res,
+ 				 &bus->busn_res, (unsigned long long)size1-size0);
+ 	}
+-	return 1;
++	return 0;
  }
- EXPORT_SYMBOL_GPL(pci_vfs_assigned);
  
+ unsigned long pci_cardbus_resource_alignment(struct resource *res)
+@@ -1121,6 +1125,7 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+ 	resource_size_t additional_mem_size = 0, additional_io_size = 0;
+ 	struct resource *b_res;
++	int ret;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		struct pci_bus *b = dev->subordinate;
+@@ -1170,25 +1175,27 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+ 		if (b_res[2].flags & IORESOURCE_MEM_64) {
+ 			prefmask |= IORESOURCE_MEM_64;
+-			if (pbus_size_mem(bus, prefmask, prefmask,
++			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+ 				  realloc_head ? 0 : additional_mem_size,
+-				  additional_mem_size, realloc_head)) {
+-					/*
+-					 * Success, with pref mmio64,
+-					 * next will size non-pref or
+-					 * non-mmio64 */
+-					mask = prefmask;
+-					type2 = prefmask & ~IORESOURCE_MEM_64;
+-					type3 = prefmask & ~IORESOURCE_PREFETCH;
++				  additional_mem_size, realloc_head);
++			if (ret == 0) {
++				/*
++				 * Success, with pref mmio64,
++				 * next will size non-pref or
++				 * non-mmio64 */
++				mask = prefmask;
++				type2 = prefmask & ~IORESOURCE_MEM_64;
++				type3 = prefmask & ~IORESOURCE_PREFETCH;
+ 			}
+ 		}
+ 		if (!type2) {
+ 			prefmask &= ~IORESOURCE_MEM_64;
+-			if (pbus_size_mem(bus, prefmask, prefmask,
++			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 					 prefmask, prefmask,
+ 					 realloc_head ? 0 : additional_mem_size,
+-					 additional_mem_size, realloc_head)) {
++					 additional_mem_size, realloc_head);
++			if (ret == 0) {
+ 				/* Success, next will size non-prefetch. */
+ 				mask = prefmask;
+ 			} else
 
