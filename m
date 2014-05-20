@@ -1,44 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:45512 "EHLO mail.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754623AbaENKey (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 May 2014 06:34:54 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id 5C25712B14F
-	for <linux-pci@vger.kernel.org>; Wed, 14 May 2014 12:34:53 +0200 (CEST)
-Date: Wed, 14 May 2014 12:34:50 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, linux@horizon.com
-Subject: Re: [PATCH v3 08/15] iommu/amd: Use pci_find_dma_isolation_root()
- for IOMMU groups
-Message-ID: <20140514103449.GE6026@8bytes.org>
-References: <20140510145619.2997.429.stgit@bling.home>
- <20140510150311.2997.62903.stgit@bling.home>
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:39087 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752704AbaETObE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 10:31:04 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140510150311.2997.62903.stgit@bling.home>
+In-Reply-To: <4223392.yrWc3QAXY9@wuerfel>
+References: <1400422125-2209-1-git-send-email-sthokal@xilinx.com>
+	<4223392.yrWc3QAXY9@wuerfel>
+Date: Tue, 20 May 2014 20:01:01 +0530
+Message-ID: <CA+mB=1KsxjJR0Yswmo2y_Gej64OPZLddXxJ+qn8YOx7=_EsqeA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Generic Configuration Access Mechanism support
+From: Srikanth Thokala <sthokal@xilinx.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Srikanth Thokala <sthokal@xilinx.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, will.deacon@arm.com,
+	michals@xilinx.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 10, 2014 at 09:03:11AM -0600, Alex Williamson wrote:
-> The expectation is that the kernel and IVRS will produce the same
-> result for topology based aliases while the kernel will also include
-> device specific DMA quirks.
+Hi Arnd,
 
-Is that expectation really true? There are PCIe devices out there that
-don't use their own device-id for requests but another one that isn't
-even visible as a PCI device (so the kernel has no pci_dev structure for
-it). The IVRS table contains such information, but I am not sure whether
-the PCI core finds the right requestor-id for those devices.
+On Mon, May 19, 2014 at 10:33 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Sunday 18 May 2014 19:38:45 Srikanth Thokala wrote:
+>> +
+>> +     if (cfg->ops->is_valid_cfg_access) {
+>> +             if (!cfg->ops->is_valid_cfg_access(bus, devfn)) {
+>> +                     *val = PCI_CFG_INVALID_DEVFN;
+>> +                     return PCIBIOS_DEVICE_NOT_FOUND;
+>> +             }
+>> +     }
+>
+> Can you explain why this callback is needed? If the space for the
+> bus is mapped, any access should just work.
 
-I've seen this on PCIe cards that where the vendor just used an PCI-X
-chip with a PCIe-to-PCI-X bridge on the card. The PCI-X device is
-visible for the OS but uses the requestor-id of the invisible bridge.
+As I was explaining to Will, there are some controllers which doesn't
+return FF's
+when a device is not found on the bus (as per the PCI specification) and
+accessing such a device address from the kernel results in an external abort.
+So, I added this additional logic in my driver to bypass this and
+return FF's. Our IP
+and even other controllers like Tegra, Renesas have similar implementation.
+We cant think of a better solution and please let you us know if you
+have any inputs.
 
+Thanks
+Srikanth
 
-	Joerg
-
-
+>
+>> +
+>> +/* Generic PCI CAM/ECAM Configuration Bus Operations */
+>> +
+>> +struct pci_cfg_bus_ops pci_cfg_cam_bus_ops = {
+>> +     .bus_shift      = PCI_CFG_CAM_BUS_NUM,
+>> +     .map_bus        = pci_cfg_map_bus_cam,
+>> +};
+>> +EXPORT_SYMBOL_GPL(pci_cfg_cam_bus_ops);
+>> +
+>> +struct pci_cfg_bus_ops pci_cfg_ecam_bus_ops = {
+>> +     .bus_shift      = PCI_CFG_ECAM_BUS_NUM,
+>> +     .map_bus        = pci_cfg_map_bus_ecam,
+>> +};
+>> +EXPORT_SYMBOL_GPL(pci_cfg_ecam_bus_ops);
+>> +
+>> +struct pci_ops pci_cfg_ops = {
+>> +     .read   = pci_cfg_read,
+>> +     .write  = pci_cfg_write,
+>> +};
+>> +EXPORT_SYMBOL_GPL(pci_cfg_ops);
+>
+>
+> If we can find a way to remove the is_valid_cfg_access() check, we're
+> probably better off removing the cfg_bus_ops as well, and exporting
+> two sets of pci_ops. There will be a little more duplication here, but
+> also less complexity in this module, and more importantly in the drivers
+> using it.
+>
+>         Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
