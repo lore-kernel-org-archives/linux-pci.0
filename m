@@ -1,76 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46064 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751339AbaE1UeI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 May 2014 16:34:08 -0400
-Message-ID: <5386483C.60506@redhat.com>
-Date: Wed, 28 May 2014 16:34:04 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:39277 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750760AbaEURjr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 13:39:47 -0400
+Date: Wed, 21 May 2014 10:39:32 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Francesco Ruggeri <fruggeri@arista.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Francesco Ruggeri <fruggeri@aristanetworks.com>
+Subject: Re: pci: kernel crash in bus_find_device
+Message-ID: <20140521173932.GA31583@roeck-us.net>
+References: <CA+HUmGjvHgWB3vcPnXAEVFdFuy9sOaB1BjaDW1-7ai933XEGWQ@mail.gmail.com>
+ <20140520195041.GA28913@roeck-us.net>
+ <CA+HUmGg4mE5RDxShNCK78yLi9gdX_FnHtWPKfGD4LaEqrCdj2Q@mail.gmail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Alexander Duyck <alexander.h.duyck@intel.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
-Subject: Re: [PATCH] pci: Save and restore VFs as a part of a reset
-References: <20140505212346.18767.34117.stgit@ahduyck-cp2.jf.intel.com> <20140527222256.GC11907@google.com> <5385255D.5060204@intel.com> <CAErSpo5QU1LsKVqyGbT07mhF-t5L1y3NxD4JhJ6N3AM0XT0c2A@mail.gmail.com> <1401250378.3289.774.camel@ul30vt.home> <53861154.4080402@intel.com> <CAErSpo4htYwi3jfoxdj=W9VjVdd5gDjYcxg_i52VVz1sYQHL5A@mail.gmail.com>
-In-Reply-To: <CAErSpo4htYwi3jfoxdj=W9VjVdd5gDjYcxg_i52VVz1sYQHL5A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+HUmGg4mE5RDxShNCK78yLi9gdX_FnHtWPKfGD4LaEqrCdj2Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/28/2014 04:14 PM, Bjorn Helgaas wrote:
-> On Wed, May 28, 2014 at 10:39 AM, Alexander Duyck
-> <alexander.h.duyck@intel.com> wrote:
->> On 05/27/2014 09:12 PM, Alex Williamson wrote:
->>> On Tue, 2014-05-27 at 19:19 -0600, Bjorn Helgaas wrote:
->
->>>> Maybe resetting the PF should just fail if there's an active VF.  If
->>>> you need to reset the PF, you'd have to unbind the VFs first.
->>>
->>> The use case is certainly questionable, personally I'm not going to
->>> expect VFs to continue working after the PF is reset.  Driver binding
->>> gets complicated, especially when KVM doesn't actually bind devices to
->>> use them.  Hopefully we'll get that out of the tree some day though.  I
->>> suppose we could -EBUSY the PF reset as long as VFs are enabled.
->>
->> What I could do is go through and notify the VFs that they are about to
->> get hit by a reset.  What they do with that information would be up to them.
->>
->> So if the VFs are loaded on the host I could then at least allow them to
->> recover by saving and restoring the config space within the driver
->> themselves.
->
-> I really like the idea of punting by failing the PF reset if there are
-> any active VFs.  That's a really easy way of making sure we aren't
-> going to blow up any guests.  What problems would it cause if we went
-> this route?
->
-I think this is the safest route.  PF<->VF interaction isn't architected,
-and resetting the PF with active VFs will probably hang a number of SRIOV
-implementations, requiring a system-level reset to correct the compounded problem.
+On Tue, May 20, 2014 at 03:35:15PM -0700, Francesco Ruggeri wrote:
+> Hi Guenter,
+> thank you for your reply. I will check out the changes that you pointed to.
+> The problem we are seeing is a race condition between for_each_pci_dev
+> (or similar) and device_unregisters. I am not sure if use of the new
+> lock should be extended to all code using for_each_pci_dev as well.
+> 
+> pci_scan is a kernel thread that I used for testing purposes, to
+> mimick the dynamics that we saw in our crashes in
+> edac_pci_clear_parity_errors:
+> 
+>         for (;;) {
+>                 pci_dev = NULL;
+>                 while ((pci_dev = pci_get_device(PCI_ANY_ID,
+> PCI_ANY_ID, pci_dev)) != NULL)
+>                         ;
+>         }
+> 
+> It keeps traversing klist_devices in pci_bus_type using
+> bus_find_device, costantly resuming its search for the next element
+> starting from the one it got in the previous round.
+> There are several loops of this kind in linux. In case of this thread
+> no action is taken on the elements as they are "found".
+> 
+> The race condition occurs when bus_find_device resumes its search from
+> a device that has been unregistered. Because device_unregister resets
+> klist_bus in the device, bus_find device cannot resume from where it
+> left off in the klist.
+> The sequence is device_unregister, device_del, bus_remove_device,
+> klist_del(&dev->p->knode_bus.).
+> 
 
->>>> This reminds me about an open problem: VFs can be on "virtual" buses,
->>>> which aren't really connected in the hierarchy, and I don't think we
->>>> have a nice way to iterate over them.  So probably pci_get_device() is
->>>> the best we can do now.
->>>
->>> Yeah, those virtual buses don't have a bus->self, we just have to skip
->>> to bus->parent->self.  pci_walk_bus() goes in the opposite direction,
->>> but without an actual device hosting the bus, I don't see how it finds
->>> it.  Thanks,
->>
->> It seems like we should be able to come up with something like
->> pci_walk_vbus() though or something similar.  All we would need to do is
->> search the VFs on the bus of the PF and all child busses to that bus if
->> I am not mistaken.
->
-> I don't think that's going to work because the virtual buses don't
-> appear as the child bus of anything.
->
-+1.
+Problem is confirmed to exist in 3.14, and can be reproduced easily
+with the following dummy driver, courtesy to Francesco. I added
+usleep_range() to make it easier to reproduce. It took only about
+half a dozen hot insertion/removal events to make it happen.
 
-> Bjorn
->
+Here are the tracebacks:
+
+------------[ cut here ]------------
+WARNING: at /home/p2020/linux-freescale/include/linux/kref.h:47
+Modules linked in: jnx_connector leds_gpio sam_flash gpio_sam i2c_sam sam_core uio_pci_hostif pci_scan [last unloaded: sam_core]
+CPU: 0 PID: 2641 Comm: pci_scan Not tainted 3.14.4-juniper-00422-gf428c34 #47
+task: e7ce8ea0 ti: e73e6000 task.ti: e73e6000
+NIP: c04e0988 LR: c02baa28 CTR: c0268ca4
+REGS: e73e7da0 TRAP: 0700   Not tainted (3.14.4-juniper-00422-gf428c34)
+MSR: 00029000 <CE,EE,ME>  CR: 24038382  XER: 00000000
+GPR00: c0268b38 e73e7e50 e7ce8ea0 e7c96f94 e73e7e58 e725a264 c0268a38 eedaa2c0 
+GPR08: 00000002 00000001 00000000 00021000 2403d382 00000000 c00576f8 e7377750 
+GPR16: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+GPR24: 00000000 00000000 f170f000 00000000 c056c33c c0268a38 e73e7ea8 eedaa2c0 
+NIP [c04e0988] klist_iter_init_node.part.0+0xc/0x684
+LR [c02baa28] bus_find_device+0x48/0xac
+Call Trace:
+[e73e7e80] [c0268b38] pci_get_dev_by_id+0x5c/0x94
+[e73e7ea0] [c0268c94] pci_get_subsys+0x38/0x48
+[e73e7ed0] [f170f02c] pci_scan+0x2c/0x64 [pci_scan]
+[e73e7ee0] [c00577bc] kthread+0xc4/0xd8
+[e73e7f40] [c000f004] ret_from_kernel_thread+0x5c/0x64
+
+and:
+
+------------[ cut here ]------------
+WARNING: at /home/p2020/linux-freescale/lib/klist.c:189
+Modules linked in: jnx_connector leds_gpio sam_flash gpio_sam i2c_sam sam_core uio_pci_hostif pci_scan [last unloaded: sam_core]
+CPU: 0 PID: 2641 Comm: pci_scan Tainted: G        W 3.14.4-juniper-00422-gf428c34 #47
+task: e7ce8ea0 ti: e73e6000 task.ti: e73e6000
+NIP: c04d7ad0 LR: c04d7be4 CTR: c0268ca4
+REGS: e73e7d30 TRAP: 0700   Tainted: G        W (3.14.4-juniper-00422-gf428c34)
+MSR: 00029000 <CE,EE,ME>  CR: 24038382  XER: 00000000
+GPR00: c04d7be4 e73e7de0 e7ce8ea0 e725a264 e73e7e58 e725a264 c0268a38 eedaa2c0 
+GPR08: 00000002 00000001 00000001 00021000 24038384 00000000 c00576f8 e7377750 
+GPR16: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+GPR24: 00000000 00000000 f170f000 00000000 c02ba364 e725a258 e725a258 e73e7e58 
+NIP [c04d7ad0] klist_release+0x20/0xec
+LR [c04d7be4] klist_dec_and_del+0x48/0x5c
+Call Trace:
+[e73e7e10] [c04d7be4] klist_dec_and_del+0x48/0x5c
+[e73e7e20] [c04d7c3c] klist_next+0x44/0x138
+[e73e7e40] [c02ba444] next_device+0x10/0x34
+[e73e7e50] [c02baa30] bus_find_device+0x50/0xac
+[e73e7e80] [c0268b38] pci_get_dev_by_id+0x5c/0x94
+[e73e7ea0] [c0268c94] pci_get_subsys+0x38/0x48
+[e73e7ed0] [f170f02c] pci_scan+0x2c/0x64 [pci_scan]
+[e73e7ee0] [c00577bc] kthread+0xc4/0xd8
+[e73e7f40] [c000f004] ret_from_kernel_thread+0x5c/0x64
+
+Francesco, I'll test the patches you sent me next.
+
+Guenter
+
+---
+
+/*
+ * PCI scan test driver
+ */
+
+#include <linux/delay.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/sched.h>
+#include <linux/kprobes.h>
+#include <linux/kallsyms.h>
+#include <linux/kthread.h>
+#include <linux/pci.h>
+#include <linux/pcieport_if.h>
+
+static struct task_struct *pci_scan_task = NULL;
+
+static int pci_scan(void *unused)
+{
+	for (;;) {
+		struct pci_dev *dev = NULL;
+
+		while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL)
+			usleep_range(1000, 2000);
+		schedule();
+		if (kthread_should_stop())
+			break;
+	}
+	return 0;
+}
+
+static int __init pci_scan_init(void)
+{
+	pci_scan_task = kthread_create(pci_scan, NULL, "pci_scan");
+	if (!pci_scan_task)
+		return -ENODEV;
+
+	wake_up_process(pci_scan_task);
+	return 0;
+}
+
+static void __exit pci_scan_exit(void)
+{
+	if (pci_scan_task)
+		kthread_stop(pci_scan_task);
+}
+
+module_init(pci_scan_init);
+module_exit(pci_scan_exit);
+
+MODULE_LICENSE("GPL");
 
