@@ -1,127 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch Part1 V2 15/29] x86, irq: reorganize IO_APIC_get_PCI_irq_vector() to prepare for irqdomain
-Date: Tue, 20 May 2014 00:22:59 +0800
-Message-Id: <1400516594-11544-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.skyhub.de ([78.46.96.112]:51741 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752292AbaEUXi1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 May 2014 19:38:27 -0400
+Date: Thu, 22 May 2014 01:38:02 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Robert Richter <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	linux-kernel@vger.kernel.org,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	linux-pci@vger.kernel.org, Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after
+ Fam16h
+Message-ID: <20140521233802.GA21575@pd.tnic>
+References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reorganize function IO_APIC_get_PCI_irq_vector() a bit to better support
-coming irqdomain.
+On Wed, May 21, 2014 at 05:18:17PM -0600, Bjorn Helgaas wrote:
+> ECS is an AMD mechanism that allows access to extended PCI config space
+> (offsets 256-4096) via I/O ports CF8/CFCh.  We normally use ECAM, i.e.,
+> MMCONFIG, to access that space, but apparently old machines have issues
+> that meant we couldn't use ECAM.
+> 
+> The solution was to enable ECS so we could use configuration mechanism #1
+> (I/O ports CF8/CFCh) to access extended config space.  See 831d991821da
+> ("x86: add PCI extended config space access for AMD Barcelona").
+> 
+> New machines should be able to use ECAM, which means they don't need the
+> CPU-specific code to enable ECS.  This patch leaves ECS the same on all
+> existing platforms, but stops enabling it on platforms after Fam16h.
+> 
+> Those future platforms should be able to use the standard ACPI MCFG/_CBA
+> descriptions of the PCIe ECAM mechanism.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Robert Richter <rric@kernel.org>
+> ---
+>  arch/x86/pci/amd_bus.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+> index aa936e3a2019..67dadf179348 100644
+> --- a/arch/x86/pci/amd_bus.c
+> +++ b/arch/x86/pci/amd_bus.c
+> @@ -405,7 +405,9 @@ static int __init amd_postcore_init(void)
+>  		return 0;
+>  
+>  	early_fill_mp_bus_info();
+> -	pci_io_ecs_init();
+> +
+> +	if (boot_cpu_data.x86 <= 0x16)
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/io_apic.c |   62 ++++++++++++++++++++++------------------
- 1 file changed, 34 insertions(+), 28 deletions(-)
+Fam 0x16, i.e. hex? I think we talked about fam 0x10, i.e. 16 decimal.
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 18d0e8a831c0..bb013e4126c3 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -997,7 +997,7 @@ static int pin_2_irq(int idx, int apic, int pin)
- int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 				struct io_apic_irq_attr *irq_attr)
- {
--	int ioapic_idx, i, best_guess = -1;
-+	int irq, i, best_guess = -1;
- 
- 	apic_printk(APIC_DEBUG,
- 		    "querying PCI -> IRQ mapping bus:%d, slot:%d, pin:%d.\n",
-@@ -1007,41 +1007,47 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 			    "PCI BIOS passed nonexistent PCI bus %d!\n", bus);
- 		return -1;
- 	}
-+
- 	for (i = 0; i < mp_irq_entries; i++) {
- 		int lbus = mp_irqs[i].srcbus;
-+		int ioapic_idx, found = 0;
-+
-+		if (test_bit(lbus, mp_bus_not_pci) || (bus != lbus) ||
-+		    mp_irqs[i].irqtype != mp_INT ||
-+		    (slot != ((mp_irqs[i].srcbusirq >> 2) & 0x1f)))
-+			continue;
- 
- 		for_each_ioapic(ioapic_idx)
- 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic ||
--			    mp_irqs[i].dstapic == MP_APIC_ALL)
-+			    mp_irqs[i].dstapic == MP_APIC_ALL) {
-+				found = 1;
- 				break;
-+			}
-+		if (!found)
-+			continue;
- 
--		if (!test_bit(lbus, mp_bus_not_pci) &&
--		    mp_irqs[i].irqtype == mp_INT &&
--		    (bus == lbus) &&
--		    (slot == ((mp_irqs[i].srcbusirq >> 2) & 0x1f))) {
--			int irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
--
--			if (!(ioapic_idx || IO_APIC_IRQ(irq)))
--				continue;
-+		/* Skip ISA IRQs */
-+		irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
-+		if (ioapic_idx == 0 && !IO_APIC_IRQ(irq))
-+			continue;
- 
--			if (pin == (mp_irqs[i].srcbusirq & 3)) {
--				set_io_apic_irq_attr(irq_attr, ioapic_idx,
--						     mp_irqs[i].dstirq,
--						     irq_trigger(i),
--						     irq_polarity(i));
--				return irq;
--			}
--			/*
--			 * Use the first all-but-pin matching entry as a
--			 * best-guess fuzzy result for broken mptables.
--			 */
--			if (best_guess < 0) {
--				set_io_apic_irq_attr(irq_attr, ioapic_idx,
--						     mp_irqs[i].dstirq,
--						     irq_trigger(i),
--						     irq_polarity(i));
--				best_guess = irq;
--			}
-+		if (pin == (mp_irqs[i].srcbusirq & 3)) {
-+			set_io_apic_irq_attr(irq_attr, ioapic_idx,
-+					     mp_irqs[i].dstirq,
-+					     irq_trigger(i),
-+					     irq_polarity(i));
-+			return irq;
-+		}
-+		/*
-+		 * Use the first all-but-pin matching entry as a
-+		 * best-guess fuzzy result for broken mptables.
-+		 */
-+		if (best_guess < 0) {
-+			set_io_apic_irq_attr(irq_attr, ioapic_idx,
-+					     mp_irqs[i].dstirq,
-+					     irq_trigger(i),
-+					     irq_polarity(i));
-+			best_guess = irq;
- 		}
- 	}
- 	return best_guess;
+Oh well, that's an AMD call now.
+
 -- 
-1.7.10.4
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
