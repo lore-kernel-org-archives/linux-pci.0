@@ -1,137 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:39150 "EHLO arroyo.ext.ti.com"
+Received: from cantor2.suse.de ([195.135.220.15]:39469 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752445AbaENPT7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 May 2014 11:19:59 -0400
-Message-ID: <5373897C.6080504@ti.com>
-Date: Wed, 14 May 2014 20:49:24 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+	id S1751073AbaEUIZd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 21 May 2014 04:25:33 -0400
+Message-ID: <537C62F7.10409@suse.de>
+Date: Wed, 21 May 2014 10:25:27 +0200
+From: Alexander Graf <agraf@suse.de>
 MIME-Version: 1.0
-To: Roger Quadros <rogerq@ti.com>, <devicetree@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: <balajitk@ti.com>, Rajendra Nayak <rnayak@ti.com>,
-	Tero Kristo <t-kristo@ti.com>, Paul Walmsley <paul@pwsan.com>
-Subject: Re: [PATCH 03/17] phy: ti-pipe3: add external clock support for PCIe
- PHY
-References: <1399383244-14556-1-git-send-email-kishon@ti.com> <1399383244-14556-4-git-send-email-kishon@ti.com> <53736CBC.2060702@ti.com>
-In-Reply-To: <53736CBC.2060702@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Alex Williamson <alex.williamson@redhat.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+CC: kvm@vger.kernel.org, konrad.wilk@oracle.com,
+	kim.phillips@linaro.org, gregkh@linuxfoundation.org,
+	stuart.yoder@freescale.com, libvir-list@redhat.com,
+	iommu@lists.linux-foundation.org, christoffer.dall@linaro.org,
+	tech@virtualopensystems.com, kvmarm@lists.cs.columbia.edu,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: Introduce new device binding path using pci_dev.driver_override
+References: <20140520145136.28232.90707.stgit@bling.home>
+In-Reply-To: <20140520145136.28232.90707.stgit@bling.home>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Roger,
 
-On Wednesday 14 May 2014 06:46 PM, Roger Quadros wrote:
-> Hi Kishon,
-> 
-> On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
->> APLL used by PCIE phy can either use external clock as input or the clock
->> from DPLL. Added support for the APLL to use external clock as input here.
->>
->> Cc: Rajendra Nayak <rnayak@ti.com>
->> Cc: Tero Kristo <t-kristo@ti.com>
->> Cc: Paul Walmsley <paul@pwsan.com>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  Documentation/devicetree/bindings/phy/ti-phy.txt |    4 ++
->>  drivers/phy/phy-ti-pipe3.c                       |   75 ++++++++++++++--------
->>  2 files changed, 52 insertions(+), 27 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
->> index bc9afb5..d50f8ee 100644
->> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
->> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
->> @@ -76,6 +76,10 @@ Required properties:
->>     * "dpll_ref_m2" - external dpll ref clk
->>     * "phy-div" - divider for apll
->>     * "div-clk" - apll clock
->> +   * "apll_mux" - mux for pcie apll
->> +   * "refclk_ext" - external reference clock for pcie apll
->> + - ti,ext-clk: To specifiy if PCIE apll should use external clock. Applicable
->> +   only to PCIE PHY.
-> 
-> Instead of specifying both clock sources "dpll_ref_clock", "refclk_ext" and then specifying a 3rd control option "ti,ext-clk" to select one of the 2 sources, why can't the DT just supply one clock source, i.e. the one that is being used in the board instance? The driver should then just configure the clock rate that is needed at that node. Shouldn't the clock framework automatically take care of muxing and parent rates?
+On 20.05.14 16:53, Alex Williamson wrote:
+> The driver_override field allows us to specify the driver for a device
+> rather than relying on the driver to provide a positive match of the
+> device.  This shortcuts the existing process of looking up the vendor
+> and device ID, adding them to the driver new_id, binding the device,
+> then removing the ID, but it also provides a couple advantages.
+>
+> First, the above existing process allows the driver to bind to any
+> device matching the new_id for the window where it's enabled.  This is
+> often not desired, such as the case of trying to bind a single device
+> to a meta driver like pci-stub or vfio-pci.  Using driver_override we
+> can do this deterministically using:
+>
+> echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+>
+> Previously we could not invoke drivers_probe after adding a device
+> to new_id for a driver as we get non-deterministic behavior whether
+> the driver we intend or the standard driver will claim the device.
+> Now it becomes a deterministic process, only the driver matching
+> driver_override will probe the device.
+>
+> To return the device to the standard driver, we simply clear the
+> driver_override and reprobe the device:
+>
+> echo > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+>
+> Another advantage to this approach is that we can specify a driver
+> override to force a specific binding or prevent any binding.  For
+> instance when an IOMMU group is exposed to userspace through VFIO
+> we require that all devices within that group are owned by VFIO.
+> However, devices can be hot-added into an IOMMU group, in which case
+> we want to prevent the device from binding to any driver (override
+> driver = "none") or perhaps have it automatically bind to vfio-pci.
+> With driver_override it's a simple matter for this field to be set
+> internally when the device is first discovered to prevent driver
+> matches.
+>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Want the dt to have all the clocks used by the controller. "ti,ext-clk" should
-go in the board dt file (suggested by Nishanth).
-The point is at some point later if some one wants to change the clock source,
-it should be a simple enabling "ti,ext-clk" flag instead of finding the clock
-phandle etc..
-> 
->>  
->>  Optional properties:
->>   - ctrl-module : phandle of the control module used by PHY driver to power on
->> diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
->> index d43019d..5513aa0 100644
->> --- a/drivers/phy/phy-ti-pipe3.c
->> +++ b/drivers/phy/phy-ti-pipe3.c
->> @@ -293,7 +293,7 @@ static int ti_pipe3_probe(struct platform_device *pdev)
->>  	struct device_node *control_node;
->>  	struct platform_device *control_pdev;
->>  	const struct of_device_id *match;
->> -	struct clk *clk;
->> +	struct clk *clk, *pclk;
->>  
->>  	phy = devm_kzalloc(&pdev->dev, sizeof(*phy), GFP_KERNEL);
->>  	if (!phy) {
->> @@ -302,6 +302,20 @@ static int ti_pipe3_probe(struct platform_device *pdev)
->>  	}
->>  	phy->dev		= &pdev->dev;
->>  
->> +	control_node = of_parse_phandle(node, "ctrl-module", 0);
->> +	if (!control_node) {
->> +		dev_err(&pdev->dev, "Failed to get control device phandle\n");
->> +		return -EINVAL;
->> +	}
->> +
->> +	control_pdev = of_find_device_by_node(control_node);
->> +	if (!control_pdev) {
->> +		dev_err(&pdev->dev, "Failed to get control device\n");
->> +		return -EINVAL;
->> +	}
->> +
->> +	phy->control_dev = &control_pdev->dev;
->> +
-> 
-> Why this code was moved move is not part of patch description/subject.
+Reviewed-by: Alexander Graf <agraf@suse.de>
 
-external clock support needs 'control_dev', so had to move the get control
-device part before configuring the clocks.
-> 
->>  	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
->>  		match = of_match_device(of_match_ptr(ti_pipe3_id_table),
->>  					&pdev->dev);
->> @@ -345,19 +359,40 @@ static int ti_pipe3_probe(struct platform_device *pdev)
->>  	}
->>  
->>  	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
->> -		clk = devm_clk_get(phy->dev, "dpll_ref");
->> -		if (IS_ERR(clk)) {
->> -			dev_err(&pdev->dev, "unable to get dpll ref clk\n");
->> -			return PTR_ERR(clk);
->> +		if (!of_property_read_bool(node, "ti,ext-clk")) {
->> +			clk = devm_clk_get(phy->dev, "dpll_ref");
->> +			if (IS_ERR(clk)) {
->> +				dev_err(&pdev->dev,
->> +					"unable to get dpll ref clk\n");
->> +				return PTR_ERR(clk);
->> +			}
->> +			clk_set_rate(clk, 1500000000);
->> +
->> +			clk = devm_clk_get(phy->dev, "dpll_ref_m2");
->> +			if (IS_ERR(clk)) {
->> +				dev_err(&pdev->dev,
->> +					"unable to get dpll ref m2 clk\n");
->> +				return PTR_ERR(clk);
->> +			}
->> +			clk_set_rate(clk, 100000000);
->> +		} else {
->> +			omap_control_pcie_tx_rx_control(phy->control_dev,
->> +						OMAP_CTRL_PCIE_PHY_RX_ACSPCIE);
+I suppose Konrad's RB stays as well?
 
-                        ^^here
 
-Thanks
-Kishon
+Alex
+
