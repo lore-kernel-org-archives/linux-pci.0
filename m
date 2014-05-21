@@ -1,59 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:57153 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751342AbaEYKsr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 May 2014 06:48:47 -0400
-Date: Sun, 25 May 2014 11:48:15 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>,
-	"sthokal@xilinx.com" <sthokal@xilinx.com>
-Subject: Re: [PATCH v7 4/4] PCI: Generic Configuration Access Mechanism
- support
-Message-ID: <20140525104815.GB2343@arm.com>
-References: <1400863915-24135-1-git-send-email-will.deacon@arm.com>
- <1400863915-24135-5-git-send-email-will.deacon@arm.com>
- <201405232122.18995.arnd@arndb.de>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:56719 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752710AbaEUXSG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 19:18:06 -0400
+Received: by mail-ig0-f171.google.com with SMTP id c1so6887660igq.10
+        for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 16:18:05 -0700 (PDT)
+Subject: [PATCH V5 1/4] x86/PCI: Warn if we have to "guess" host bridge node
+ information
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Robert Richter <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	linux-kernel@vger.kernel.org,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	linux-pci@vger.kernel.org, Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
+Date: Wed, 21 May 2014 17:18:03 -0600
+Message-ID: <20140521231803.26447.42420.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201405232122.18995.arnd@arndb.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 23, 2014 at 08:22:18PM +0100, Arnd Bergmann wrote:
-> On Friday 23 May 2014, Will Deacon wrote:
-> > +static void __iomem *pci_cfg_map_bus_ecam(struct pci_bus *bus,
-> > +                                         unsigned int devfn,
-> > +                                         int where)
-> > +{
-> > +       struct pci_sys_data *sys = bus->sysdata;
-> > +       struct pci_cfg_windows *cfg = sys->private_data;
-> > +       resource_size_t idx = bus->number - cfg->bus_range.start;
-> > +
-> > +       return cfg->win[idx] + ((devfn << PCI_CFG_ECAM_DEV_NUM) | where);
-> > +}
-> 
-> I just noticed that this function makes the code rather non-generic, because
-> struct pci_sys_data is the ARM specific structure that doesn't exist elsewhere,
-> and sys->private_data wouldn't typically point to struct pci_cfg_windows on
-> anything other than your generic PCI host.
+From: Myron Stowe <myron.stowe@redhat.com>
 
-Indeed. That's what I was refering to initially when I suggested some
-potential alignment on the private_data across host controller drivers
-trying to use this.
+The vast majority of platforms are not supplying ACPI _PXM (proximity)
+information corresponding to host bridge (PNP0A03/PNP0A08) devices
+resulting in sysfs "numa_node" values of -1 (NUMA_NO_NODE):
 
-> I'd say let's drop this for now. I know it was my idea to do it like this,
-> but it seems it's more complex than I had hoped to get this right, and
-> I'd really prefer to merge the other three patches for 3.16 if possible.
-> We can factor it out later if we get more users.
+  # for i in /sys/devices/pci0000\:00/*/numa_node; do cat $i; done | uniq
+  -1
 
-Sure, I think we all had good intentions. I'll send a pull for the first
-three patches -- should it go via arm-soc or Bjorn's PCI tree?
+  # find /sys/ -name "numa_node" | while read fname; do cat $fname; \
+    done | uniq
+  -1
 
-Cheers,
+AMD based platforms provide a fall-back for this situation via amd_bus.c.
+These platforms snoop out the information by directly reading specific
+registers from the Northbridge and caching them via alloc_pci_root_info().
 
-Will
+Later during boot processing when host bridges are discovered -
+pci_acpi_scan_root() - the kernel looks for their corresponding ACPI _PXM
+method - drivers/acpi/numa.c::acpi_get_node().  If the BIOS supplied a _PXM
+method then that node (proximity) value is associated.  If the BIOS did not
+supply a _PXM method *and* the platform is AMD-based, the fall-back cached
+values obtained directly from the Northbridge are used; otherwise,
+"NUMA_NO_NODE" is associated.
+
+There are a number of issues with this fall-back mechanism the most notable
+being that amd_bus.c extracts a 3-bit number from a CPU register and uses
+it as the node number.  The node numbers used by Linux are logical and
+there's no reason they need to be identical to settings in the CPU
+registers.  So if we have some node information obtained in the normal way
+(from _PXM, SLIT, SRAT, etc.) and some from amd_bus.c, there's no reason to
+believe they will be compatible.
+
+This patch warns when this situation occurs:
+
+  pci_root PNP0A08:00: [Firmware Bug]: no _PXM; falling back to node 0 from hardware (may be inconsistent with ACPI node numbers)
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=72051
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/acpi.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 01edac6c5e18..5075371ab593 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -489,8 +489,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	}
+ 
+ 	node = acpi_get_node(device->handle);
+-	if (node == NUMA_NO_NODE)
++	if (node == NUMA_NO_NODE) {
+ 		node = x86_pci_root_bus_node(busnum);
++		if (node != 0 && node != NUMA_NO_NODE)
++			dev_info(&device->dev, FW_BUG "no _PXM; falling back to node %d from hardware (may be inconsistent with ACPI node numbers)\n",
++				node);
++	}
+ 
+ 	if (node != NUMA_NO_NODE && !node_online(node))
+ 		node = NUMA_NO_NODE;
+
