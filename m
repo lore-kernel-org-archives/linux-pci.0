@@ -1,177 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Kuppuswamy Sathyanarayanan
-	<sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>,
-	sfi-devel@simplefirmware.org
-Subject: [Patch V3 28/37] x86, irq, SFI: use common irqdomain map interface to program IOAPIC pins
-Date: Tue, 27 May 2014 16:08:03 +0800
-Message-Id: <1401178092-1228-29-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:51498 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751899AbaEUXdl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 19:33:41 -0400
+Message-ID: <537D37AA.5030303@ti.com>
+Date: Wed, 21 May 2014 19:32:58 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware
+ core driver
+References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <6048322.x3M3sdDEWO@wuerfel> <5374FD24.8000806@ti.com> <22200719.Jb5jnJylJH@wuerfel> <20140515183919.GC11650@obsidianresearch.com> <53751DDF.40304@ti.com> <20140515205210.GB14722@obsidianresearch.com> <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com> <20140520170221.GA5130@obsidianresearch.com>
+In-Reply-To: <20140520170221.GA5130@obsidianresearch.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine SFI to use common irqdomain map interface to program IOAPIC pins,
-so we can unify the callsite to progam IOAPIC pins.
+On 5/20/2014 1:02 PM, Jason Gunthorpe wrote:
+> On Fri, May 16, 2014 at 08:29:56PM +0000, Karicheri, Muralidharan wrote:
+>
+>> But pcie_bus_configure_settings just make sure the mrrs for a device
+>> is not greater than the max payload size.
+> Not quite, it first scans the network checking the Maximum Payload Size
+> Supported (MPSS) for each device, and chooses the highest supported by
+> all as the MPS for all.
+Why highest? It should be lowest so that all on the bus can handle it??
+>
+> PCI-E requires that an end point support all packets up to the MPS, so
+> if your bridge can't generate a 512 byte read response packet, then it
+> must not advertise a MPSS greater than 256 bytes.
+What is MPSS? Is it the payload size in a message TLP? I read the PCIe 
+spec and find
+MRSS is the maxumum read request size. So memory reads completion data 
+size is limited
+to this size, right? So for DMA from EP to RC can't be greater than what 
+RC publishes.
+Not sure how they are related?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/intel_mid_pci.c      |   19 +++++-------
- arch/x86/platform/intel-mid/sfi.c |   58 ++++++++++++++++---------------------
- arch/x86/platform/sfi/sfi.c       |    4 ++-
- 3 files changed, 35 insertions(+), 46 deletions(-)
+I have checked that root port is advertising 256 bytes for mrrs and 128 
+bytes for mps
+in the config space. So keystone pcie bridge is doing as expected.
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index fcbdc5fac2c6..337d165c64f1 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -208,27 +208,22 @@ static int pci_write(struct pci_bus *bus, unsigned int devfn, int where,
- 
- static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- {
--	u8 pin;
--	struct io_apic_irq_attr irq_attr;
-+	int polarity;
- 
--	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
-+	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
-+		polarity = 0; /* active high */
-+	else
-+		polarity = 1; /* active low */
- 
- 	/*
- 	 * MRST only have IOAPIC, the PCI irq lines are 1:1 mapped to
- 	 * IOAPIC RTE entries, so we just enable RTE for the device.
- 	 */
-+	if (mp_set_gsi_attr(dev->irq, 1, polarity, dev_to_node(&dev->dev)))
-+		return -EBUSY;
- 	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC) < 0)
- 		return -EBUSY;
- 
--	irq_attr.ioapic = mp_find_ioapic(dev->irq);
--	irq_attr.ioapic_pin = dev->irq;
--	irq_attr.trigger = 1; /* level */
--	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
--		irq_attr.polarity = 0; /* active high */
--	else
--		irq_attr.polarity = 1; /* active low */
--	io_apic_set_pci_routing(&dev->dev, dev->irq, &irq_attr);
--
- 	return 0;
- }
- 
-diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
-index 7161395e7de7..3c53a90fdb18 100644
---- a/arch/x86/platform/intel-mid/sfi.c
-+++ b/arch/x86/platform/intel-mid/sfi.c
-@@ -432,9 +432,8 @@ static int __init sfi_parse_devs(struct sfi_table_header *table)
- 	struct sfi_table_simple *sb;
- 	struct sfi_device_table_entry *pentry;
- 	struct devs_id *dev = NULL;
--	int num, i;
--	int ioapic;
--	struct io_apic_irq_attr irq_attr;
-+	int num, i, ret;
-+	int polarity;
- 
- 	sb = (struct sfi_table_simple *)table;
- 	num = SFI_GET_NUM_ENTRIES(sb, struct sfi_device_table_entry);
-@@ -448,37 +447,30 @@ static int __init sfi_parse_devs(struct sfi_table_header *table)
- 			 * devices, but they have separate RTE entry in IOAPIC
- 			 * so we have to enable them one by one here
- 			 */
--			ioapic = mp_find_ioapic(irq);
--			if (ioapic >= 0) {
--				irq_attr.ioapic = ioapic;
--				irq_attr.ioapic_pin = irq;
--				irq_attr.trigger = 1;
--				if (intel_mid_identify_cpu() ==
--						INTEL_MID_CPU_CHIP_TANGIER) {
--					if (!strncmp(pentry->name,
--							"r69001-ts-i2c", 13))
--						/* active low */
--						irq_attr.polarity = 1;
--					else if (!strncmp(pentry->name,
--							"synaptics_3202", 14))
--						/* active low */
--						irq_attr.polarity = 1;
--					else if (irq == 41)
--						/* fast_int_1 */
--						irq_attr.polarity = 1;
--					else
--						/* active high */
--						irq_attr.polarity = 0;
--				} else {
--					/* PNW and CLV go with active low */
--					irq_attr.polarity = 1;
--				}
--				WARN_ON(mp_map_gsi_to_irq(irq,
--						IOAPIC_MAP_ALLOC) < 0);
--				io_apic_set_pci_routing(NULL, irq, &irq_attr);
-+			if (intel_mid_identify_cpu() ==
-+					INTEL_MID_CPU_CHIP_TANGIER) {
-+				if (!strncmp(pentry->name, "r69001-ts-i2c", 13))
-+					/* active low */
-+					polarity = 1;
-+				else if (!strncmp(pentry->name,
-+						"synaptics_3202", 14))
-+					/* active low */
-+					polarity = 1;
-+				else if (irq == 41)
-+					/* fast_int_1 */
-+					polarity = 1;
-+				else
-+					/* active high */
-+					polarity = 0;
-+			} else {
-+				/* PNW and CLV go with active low */
-+				polarity = 1;
- 			}
--		} else {
--			irq = 0; /* No irq */
-+
-+			ret = mp_set_gsi_attr(irq, 1, polarity, NUMA_NO_NODE);
-+			if (ret == 0)
-+				ret = mp_map_gsi_to_irq(irq, IOAPIC_MAP_ALLOC);
-+			WARN_ON(ret < 0);
- 		}
- 
- 		dev = get_device_id(pentry->type, pentry->name);
-diff --git a/arch/x86/platform/sfi/sfi.c b/arch/x86/platform/sfi/sfi.c
-index cda31be8dbe5..ed0e131c1202 100644
---- a/arch/x86/platform/sfi/sfi.c
-+++ b/arch/x86/platform/sfi/sfi.c
-@@ -71,7 +71,9 @@ static int __init sfi_parse_cpus(struct sfi_table_header *table)
- #endif /* CONFIG_X86_LOCAL_APIC */
- 
- #ifdef CONFIG_X86_IO_APIC
--static struct irq_domain_ops sfi_ioapic_irqdomain_ops;
-+static struct irq_domain_ops sfi_ioapic_irqdomain_ops = {
-+	.map = mp_irqdomain_map,
-+};
- 
- static struct irq_domain *sfi_ioapic_create_irqdomain(int ioapic, void *arg)
- {
--- 
-1.7.10.4
+In Keystone case, what I see is after  adding 
+pcie_bus_configure_settings() with pci=pcie_bus_safe,
+I get following log.
+
+[    1.988851] pcie_bus_configure_settings, config 1
+[    1.988860] pcie_bus_configure_set
+[    1.988879] pcieport 0000:00:00.0: Max Payload Size set to  256/ 256 
+(was  128), Max Read Rq  512
+[    1.988887] pcie_bus_configure_set
+[    1.988921] pci 0000:01:00.0: Max Payload Size set to  256/ 256 (was  
+128), Max Read Rq  512
+[    1.988928] pcie_bus_configure_set
+[    1.988961] pci 0000:01:00.1: Max Payload Size set to  256/ 256 (was  
+128), Max Read Rq  512
+
+So it is not limiting MRRS to 256 bytes.
+
+With pci=pcie_bus_perf
+
+[    1.985777] pcie_bus_configure_settings, config 2
+[    1.985783] pcie_bus_configure_set
+[    1.985810] pcieport 0000:00:00.0: Max Payload Size set to  256/ 256 
+(was  128), Max Read Rq  256
+[    1.985818] pcie_bus_configure_set
+[    1.985875] pci 0000:01:00.0: Max Payload Size set to  256/ 256 (was  
+128), Max Read Rq  256
+[    1.985882] pcie_bus_configure_set
+[    1.985939] pci 0000:01:00.1: Max Payload Size set to  256/ 256 (was  
+128), Max Read Rq  256
+
+Is this log what you expect?
+
+>
+> Setting your MPSS to 128, 256, then using the
+> pcie_bus_configure_settings to run the standard algorithm should
+> properly limit the readrq to 256 and be able to properly support all
+> the fun edge cases like hot plug.
+
+> If the config space in your root port bridge is correct and already
+> declares a MPSS of 256 then you have nothing else to do but make sure
+> pcie_bus_configure_settings gets calls.
+>
+> If it is broken and claims a higher MPSS than it can support then you
+> need to use a quirk only for the root port bridge or edit the config
+> reply in the driver only to fix the MPSS
+If MRSS is clamped to lowest, then this would work with out a quirk, and 
+has to
+be unconditional (all cases, safe, performance etc).
+
+I would like to go with the quirk approach until this discussion 
+concludes the next
+step to fix this issue. May be someone can take owner ship of this 
+change at PCI
+core level?
+
+My quirk can be removed once the fix is accepted into the tree. Is that 
+an acceptable path forward?
+
+Murali
+>
+> Jason
 
