@@ -1,71 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:39543 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750783AbaEIJJ6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 05:09:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <5744457.bgUFy9g0ST@wuerfel>
-References: <4527717.yJh2gX3xCP@wuerfel>
-	<1399624119.4833.3.camel@weser.hi.pengutronix.de>
-	<5744457.bgUFy9g0ST@wuerfel>
-Date: Fri, 9 May 2014 11:09:57 +0200
-Message-ID: <CAMuHMdXXFmxmq9H1fuc7fRg8BHQ+3m6=4mPDe5FjL0hLLvwUUw@mail.gmail.com>
-Subject: Re: [PATCH v2] of/irq: provide int of_irq_parse_and_map_pci wrapper
-From: Geert Uytterhoeven <geert@linux-m68k.org>
+Received: from mail-by2lp0241.outbound.protection.outlook.com ([207.46.163.241]:3316
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751919AbaEUIzo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 04:55:44 -0400
+From: Srikanth Thokala <srikanth.thokala@xilinx.com>
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <damm@opensource.se>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	Michal Simek <michals@xilinx.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] PCI: Generic Configuration Access Mechanism support
+Date: Wed, 21 May 2014 08:54:02 +0000
+References: <1400422125-2209-1-git-send-email-sthokal@xilinx.com>
+ <4223392.yrWc3QAXY9@wuerfel>
+ <CA+mB=1KsxjJR0Yswmo2y_Gej64OPZLddXxJ+qn8YOx7=_EsqeA@mail.gmail.com>
+ <4459842.TR2Vcq3XUx@wuerfel>
+In-Reply-To: <4459842.TR2Vcq3XUx@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Message-ID: <3cbd2d6c-20ba-49c2-af73-898ba28b5c9e@BN1BFFO11FD052.protection.gbl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
 
-On Fri, May 9, 2014 at 11:03 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> The pci-rcar driver is enabled for compile tests, and this has
-> now shown that the driver cannot build without CONFIG_OF,
-> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
-> interrupt mapping when possible":
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Wednesday, May 21, 2014 1:23 PM
+> To: Srikanth Thokala
+> Cc: Bjorn Helgaas; will.deacon@arm.com; Michal Simek; linux-
+> kernel@vger.kernel.org; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH] PCI: Generic Configuration Access Mechanism support
 >
-> drivers/built-in.o: In function `rcar_pci_map_irq':
-> :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
+> On Tuesday 20 May 2014 20:01:01 Srikanth Thokala wrote:
+> > On Mon, May 19, 2014 at 10:33 PM, Arnd Bergmann <arnd@arndb.de>
+> wrote:
+> > > On Sunday 18 May 2014 19:38:45 Srikanth Thokala wrote:
+> > >> +
+> > >> +     if (cfg->ops->is_valid_cfg_access) {
+> > >> +             if (!cfg->ops->is_valid_cfg_access(bus, devfn)) {
+> > >> +                     *val = PCI_CFG_INVALID_DEVFN;
+> > >> +                     return PCIBIOS_DEVICE_NOT_FOUND;
+> > >> +             }
+> > >> +     }
+> > >
+> > > Can you explain why this callback is needed? If the space for the
+> > > bus is mapped, any access should just work.
+> >
+> > As I was explaining to Will, there are some controllers which doesn't
+> > return FF's when a device is not found on the bus (as per the PCI
+> > specification) and accessing such a device address from the kernel
+> > results in an external abort.
+> > So, I added this additional logic in my driver to bypass this and
+> > return FF's. Our IP and even other controllers like Tegra, Renesas
+> > have similar implementation.
+> > We cant think of a better solution and please let you us know if you
+> > have any inputs.
 >
-> As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
-> supposed to build fine, which we can achieve if we make the
-> declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
-> and provide an empty inline function otherwise, as we do for
-> a lot of other of interfaces.
+> Does your hardware need this? My first response would otherwise be to
+> treat that as noncompliant and not handle this case in the generic
+> implementation.
+
+Yes, my hardware needs this additional logic.
+
+Srikanth
+
 >
-> This lets us build the rcar_pci driver again without CONFIG_OF
-> for build testing. All platforms using this driver select OF,
-> so this doesn't change anything for the users.
+>       Arnd
 
-Thanks!
 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Magnus Damm <damm@opensource.se>
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: Ben Dooks <ben.dooks@codethink.co.uk>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-sh@vger.kernel.org
+This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
