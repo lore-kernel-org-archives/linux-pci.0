@@ -1,90 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:38209 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755272AbaEaO22 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:28:28 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v4 00/15] Thunderbolt driver for Apple MacBooks
-Date: Sat, 31 May 2014 16:27:45 +0200
-Message-Id: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:43077 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752312AbaEUXR7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 19:17:59 -0400
+Received: by mail-ig0-f175.google.com with SMTP id uq10so6884019igb.8
+        for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 16:17:58 -0700 (PDT)
+Subject: [PATCH V5 0/4] x86/pci Fix numa_node info for AMD hostbridge and
+ misc clean up
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Robert Richter <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	linux-kernel@vger.kernel.org,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	linux-pci@vger.kernel.org, Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
+Date: Wed, 21 May 2014 17:17:57 -0600
+Message-ID: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi
+[resending because I forgot to copy the lists, sorry guys]
 
-This is version 4 of my Thunderbolt driver for Apple hardware (see [1] for v3).
+Hi Suravee,
 
-Changes since v3:
- - Fix typos and style problems caught by Bjorn.
- - Changed the #ifdef CONFIG_ACPI block to cover the whole pci quirk.
+Sorry it took me so long to get to these patches.  Here's my proposal.  I
+reordered them and added some comments in the code and changelogs, but I
+think your patches look fine as-is.
 
-Andreas
+So I just need comments on these two significant changes:
 
-[1]: https://lkml.org/lkml/2014/5/26/308
+  1) I added a patch to stop enabling ECS after Fam16h, because that's
+  another case of CPU-dependent code that we should not need to keep
+  carrying.  I don't think there are any post-Fam16h CPUs yet, but I
+  certainly don't want to do anything that will keep them from working when
+  they do arrive.  It would be useful if somebody could test this on
+  current platforms by tweaking the patch so we don't enable ECS on Fam15h.
+
+  2) I dropped the quirk_amd_nb_node() removal.  I could be convinced
+  otherwise, but I don't really object to the quirk because it is already
+  explicitly limited to specific devices, and removing it will change
+  things in sysfs.  I think the changes would be harmless as far as the
+  kernel is concerned, since there are no drivers for these devices.  But
+  Andreas added the quirk because of complaints, so apparently somebody is
+  looking at what's in sysfs, and I don't want to get the same complaints
+  again by removing it.  However, I will certainly ask questions if I see
+  the quirk being extended to more devices.
+
+The AMD BKDG does say the BIOS should provide an MCFG table (sec 2.8 of
+42301), so I think it provides guidance matching the intent of my "stop
+enabling ECS" patch.  But the BKDG doesn't mention _PXM at all.  Is there
+any chance you could squeeze in a mention of that, so BIOS writers know
+that they *should* provide it?  I want to avoid more fire-drills in the
+future.
+
+Bjorn
+
+---
+
+Bjorn Helgaas (1):
+      x86/PCI: Stop enabling ECS for AMD CPUs after Fam16h
+
+Myron Stowe (1):
+      x86/PCI: Warn if we have to "guess" host bridge node information
+
+Suravee Suthikulpanit (2):
+      x86/PCI: Work around AMD Fam15h BIOSes that fail to provide _PXM
+      x86/PCI: Clean up and mark early_root_info_init() as deprecated
 
 
-Andreas Noever (15):
-  thunderbolt: Add initial cactus ridge NHI support
-  thunderbolt: Add control channel interface
-  thunderbolt: Setup control channel
-  thunderbolt: Add tb_regs.h
-  thunderbolt: Initialize root switch and ports
-  thunderbolt: Add thunderbolt capability handling
-  thunderbolt: Enable plug events
-  thunderbolt: Scan for downstream switches
-  thunderbolt: Handle hotplug events
-  thunderbolt: Add path setup code.
-  thunderbolt: Add support for simple pci tunnels
-  PCI: Add pci_fixup_suspend_late quirk pass
-  PCI: Suspend/resume quirks for Apple thunderbolt
-  thunderbolt: Read switch uid from EEPROM
-  thunderbolt: Add suspend/hibernate support
-
- drivers/Kconfig                   |   2 +
- drivers/Makefile                  |   1 +
- drivers/pci/pci-driver.c          |  18 +-
- drivers/pci/quirks.c              | 129 +++++++
- drivers/thunderbolt/Kconfig       |  12 +
- drivers/thunderbolt/Makefile      |   3 +
- drivers/thunderbolt/cap.c         | 116 ++++++
- drivers/thunderbolt/ctl.c         | 731 ++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/ctl.h         |  75 ++++
- drivers/thunderbolt/eeprom.c      | 189 ++++++++++
- drivers/thunderbolt/nhi.c         | 672 +++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/nhi.h         | 114 ++++++
- drivers/thunderbolt/nhi_regs.h    | 101 ++++++
- drivers/thunderbolt/path.c        | 215 +++++++++++
- drivers/thunderbolt/switch.c      | 492 +++++++++++++++++++++++++
- drivers/thunderbolt/tb.c          | 431 ++++++++++++++++++++++
- drivers/thunderbolt/tb.h          | 266 ++++++++++++++
- drivers/thunderbolt/tb_regs.h     | 213 +++++++++++
- drivers/thunderbolt/tunnel_pci.c  | 232 ++++++++++++
- drivers/thunderbolt/tunnel_pci.h  |  30 ++
- include/asm-generic/vmlinux.lds.h |   3 +
- include/linux/pci.h               |  12 +-
- 22 files changed, 4052 insertions(+), 5 deletions(-)
- create mode 100644 drivers/thunderbolt/Kconfig
- create mode 100644 drivers/thunderbolt/Makefile
- create mode 100644 drivers/thunderbolt/cap.c
- create mode 100644 drivers/thunderbolt/ctl.c
- create mode 100644 drivers/thunderbolt/ctl.h
- create mode 100644 drivers/thunderbolt/eeprom.c
- create mode 100644 drivers/thunderbolt/nhi.c
- create mode 100644 drivers/thunderbolt/nhi.h
- create mode 100644 drivers/thunderbolt/nhi_regs.h
- create mode 100644 drivers/thunderbolt/path.c
- create mode 100644 drivers/thunderbolt/switch.c
- create mode 100644 drivers/thunderbolt/tb.c
- create mode 100644 drivers/thunderbolt/tb.h
- create mode 100644 drivers/thunderbolt/tb_regs.h
- create mode 100644 drivers/thunderbolt/tunnel_pci.c
- create mode 100644 drivers/thunderbolt/tunnel_pci.h
-
--- 
-1.9.3
-
+ arch/x86/pci/acpi.c    |    6 +++
+ arch/x86/pci/amd_bus.c |   87 +++++++++++++++++++++++++++++++-----------------
+ 2 files changed, 62 insertions(+), 31 deletions(-)
