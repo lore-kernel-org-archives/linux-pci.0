@@ -1,49 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:8777 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722AbaEDE1H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 May 2014 00:27:07 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	<x86@kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 10/13] PCI, cpcihp: Use new pci_is_bridge() to simplify code
-Date: Sun, 4 May 2014 12:23:45 +0800
-Message-ID: <1399177428-3784-11-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
-References: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:49088 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbaEUFJG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 01:09:06 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 21 May 2014 15:09:04 +1000
+Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 7A0362BB0047
+	for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 15:09:01 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s4L58kdI11600246
+	for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 15:08:46 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s4L590hJ003106
+	for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 15:09:01 +1000
+Date: Wed, 21 May 2014 15:09:00 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Greg Thelen <gthelen@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: [PATCH] PCI: Fix return value from
+ pci_user_{read,write}_config_*()
+Message-ID: <20140521050900.GA9553@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1399942683-23898-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAErSpo5brfq1uPqPs3es_-S=awxuAX_f8ruSvL8Mnr=Vv1SAPw@mail.gmail.com>
+ <xr93tx8ln4im.fsf@gthelen.mtv.corp.google.com>
+ <20140520110630.GA13175@shangw>
+ <xr93r43omoqm.fsf@gthelen.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <xr93r43omoqm.fsf@gthelen.mtv.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we can use new pci_is_bridge() helper function
-to simplify code.
+On Tue, May 20, 2014 at 08:52:33AM -0700, Greg Thelen wrote:
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/hotplug/cpci_hotplug_pci.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+.../...
 
-diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
-index 8c14648..9843371 100644
---- a/drivers/pci/hotplug/cpci_hotplug_pci.c
-+++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
-@@ -289,8 +289,7 @@ int __ref cpci_configure_slot(struct slot *slot)
- 	list_for_each_entry(dev, &parent->devices, bus_list)
- 		if (PCI_SLOT(dev->devfn) != PCI_SLOT(slot->devfn))
- 			continue;
--		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
--		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
-+		if (pci_is_bridge(dev))
- 			pci_hp_add_bridge(dev);
- 
- 
--- 
-1.7.1
+>>
+>> Perhaps, I just need remove the "default" case. I think the PCI config accessors
+>> of individual platforms should return one of the following values, which are
+>> defined in include/linux/pci.h. The unrecognized return value should be translated
+>> to "-ERANGE" directly.
+>
+>Sounds good to me.
+>
 
+Thanks, Greg. I'm going to change it accordingly and send "v2" out.
+
+Thanks,
+Gavin
 
