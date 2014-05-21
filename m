@@ -1,209 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:35966 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753426AbaE1Wgk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 18:36:40 -0400
-Received: by mail-ig0-f171.google.com with SMTP id c1so3057189igq.10
-        for <linux-pci@vger.kernel.org>; Wed, 28 May 2014 15:36:39 -0700 (PDT)
-Date: Wed, 28 May 2014 16:36:37 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after Fam16h
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 12/15] pci: Add pci_fixup_suspend_late quirk pass.
-Message-ID: <20140528223637.GY11907@google.com>
-References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
- <1401117492-2870-13-git-send-email-andreas.noever@gmail.com>
+Cc: Robert Richter <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	linux-kernel@vger.kernel.org,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	linux-pci@vger.kernel.org, Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
+Date: Wed, 21 May 2014 17:18:17 -0600
+Message-ID: <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401117492-2870-13-git-send-email-andreas.noever@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 26, 2014 at 05:18:09PM +0200, Andreas Noever wrote:
+ECS is an AMD mechanism that allows access to extended PCI config space
+(offsets 256-4096) via I/O ports CF8/CFCh.  We normally use ECAM, i.e.,
+MMCONFIG, to access that space, but apparently old machines have issues
+that meant we couldn't use ECAM.
 
-Please adjust the subject to match the drivers/pci convention, i.e., change
+The solution was to enable ECS so we could use configuration mechanism #1
+(I/O ports CF8/CFCh) to access extended config space.  See 831d991821da
+("x86: add PCI extended config space access for AMD Barcelona").
 
-  pci: Add pci_fixup_suspend_late quirk pass.
+New machines should be able to use ECAM, which means they don't need the
+CPU-specific code to enable ECS.  This patch leaves ECS the same on all
+existing platforms, but stops enabling it on platforms after Fam16h.
 
-to
+Those future platforms should be able to use the standard ACPI MCFG/_CBA
+descriptions of the PCIe ECAM mechanism.
 
-  PCI: Add pci_fixup_suspend_late quirk pass
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Robert Richter <rric@kernel.org>
+---
+ arch/x86/pci/amd_bus.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-> Add pci_fixup_suspend_late as a new pci_fixup_pass. The pass is called
-> from suspend_noirq and poweroff_noirq. Using the same pass for suspend
-> and hibernate is consistent with resume_early which is called by
-> resume_noirq and restore_noirq.
-> 
-> The new quirk pass is required for Thunderbolt support on Apple
-> hardware.
-> 
-> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index aa936e3a2019..67dadf179348 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -405,7 +405,9 @@ static int __init amd_postcore_init(void)
+ 		return 0;
+ 
+ 	early_fill_mp_bus_info();
+-	pci_io_ecs_init();
++
++	if (boot_cpu_data.x86 <= 0x16)
++		pci_io_ecs_init();
+ 
+ 	return 0;
+ }
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-I assume you'll merge this along with the rest of the series, not through
-my PCI tree.
-
-Bjorn
-
-> ---
->  drivers/pci/pci-driver.c          | 18 ++++++++++++++----
->  drivers/pci/quirks.c              |  7 +++++++
->  include/asm-generic/vmlinux.lds.h |  3 +++
->  include/linux/pci.h               | 12 +++++++++++-
->  4 files changed, 35 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index d911e0c..55dc1b8 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -542,7 +542,7 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
->  			WARN_ONCE(pci_dev->current_state != prev,
->  				"PCI PM: Device state not saved by %pF\n",
->  				drv->suspend_late);
-> -			return 0;
-> +			goto Fixup;
->  		}
->  	}
->  
-> @@ -551,6 +551,9 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
->  
->  	pci_pm_set_unknown_state(pci_dev);
->  
-> +Fixup:
-> +	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
-> +
->  	return 0;
->  }
->  
-> @@ -694,7 +697,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
->  
->  	if (!pm) {
->  		pci_save_state(pci_dev);
-> -		return 0;
-> +		goto Fixup;
->  	}
->  
->  	if (pm->suspend_noirq) {
-> @@ -711,7 +714,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
->  			WARN_ONCE(pci_dev->current_state != prev,
->  				"PCI PM: State of device not saved by %pF\n",
->  				pm->suspend_noirq);
-> -			return 0;
-> +			goto Fixup;
->  		}
->  	}
->  
-> @@ -735,6 +738,9 @@ static int pci_pm_suspend_noirq(struct device *dev)
->  	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
->  		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
->  
-> +Fixup:
-> +	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
-> +
->  	return 0;
->  }
->  
-> @@ -959,8 +965,10 @@ static int pci_pm_poweroff_noirq(struct device *dev)
->  	if (pci_has_legacy_pm_support(to_pci_dev(dev)))
->  		return pci_legacy_suspend_late(dev, PMSG_HIBERNATE);
->  
-> -	if (!drv || !drv->pm)
-> +	if (!drv || !drv->pm) {
-> +		pci_fixup_device(pci_fixup_suspend_late, pci_dev);
->  		return 0;
-> +	}
->  
->  	if (drv->pm->poweroff_noirq) {
->  		int error;
-> @@ -981,6 +989,8 @@ static int pci_pm_poweroff_noirq(struct device *dev)
->  	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
->  		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
->  
-> +	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
-> +
->  	if (pcibios_pm_ops.poweroff_noirq)
->  		return pcibios_pm_ops.poweroff_noirq(dev);
->  
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index e729206..af2eba1 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3024,6 +3024,8 @@ extern struct pci_fixup __start_pci_fixups_resume_early[];
->  extern struct pci_fixup __end_pci_fixups_resume_early[];
->  extern struct pci_fixup __start_pci_fixups_suspend[];
->  extern struct pci_fixup __end_pci_fixups_suspend[];
-> +extern struct pci_fixup __start_pci_fixups_suspend_late[];
-> +extern struct pci_fixup __end_pci_fixups_suspend_late[];
->  
->  static bool pci_apply_fixup_final_quirks;
->  
-> @@ -3069,6 +3071,11 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
->  		end = __end_pci_fixups_suspend;
->  		break;
->  
-> +	case pci_fixup_suspend_late:
-> +		start = __start_pci_fixups_suspend_late;
-> +		end = __end_pci_fixups_suspend_late;
-> +		break;
-> +
->  	default:
->  		/* stupid compiler warning, you would think with an enum... */
->  		return;
-> diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-> index 146e4ff..2dea636 100644
-> --- a/include/asm-generic/vmlinux.lds.h
-> +++ b/include/asm-generic/vmlinux.lds.h
-> @@ -288,6 +288,9 @@
->  		VMLINUX_SYMBOL(__start_pci_fixups_suspend) = .;		\
->  		*(.pci_fixup_suspend)					\
->  		VMLINUX_SYMBOL(__end_pci_fixups_suspend) = .;		\
-> +		VMLINUX_SYMBOL(__start_pci_fixups_suspend_late) = .;	\
-> +		*(.pci_fixup_suspend_late)				\
-> +		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
->  	}								\
->  									\
->  	/* Built-in firmware blobs */					\
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index aab57b4..4724806 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1458,8 +1458,9 @@ enum pci_fixup_pass {
->  	pci_fixup_final,	/* Final phase of device fixups */
->  	pci_fixup_enable,	/* pci_enable_device() time */
->  	pci_fixup_resume,	/* pci_device_resume() */
-> -	pci_fixup_suspend,	/* pci_device_suspend */
-> +	pci_fixup_suspend,	/* pci_device_suspend() */
->  	pci_fixup_resume_early, /* pci_device_resume_early() */
-> +	pci_fixup_suspend_late,	/* pci_device_suspend_late() */
->  };
->  
->  /* Anonymous variables would be nice... */
-> @@ -1500,6 +1501,11 @@ enum pci_fixup_pass {
->  	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
->  		suspend##hook, vendor, device, class,	\
->  		class_shift, hook)
-> +#define DECLARE_PCI_FIXUP_CLASS_SUSPEND_LATE(vendor, device, class,	\
-> +					 class_shift, hook)		\
-> +	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
-> +		suspend_late##hook, vendor, device,	\
-> +		class, class_shift, hook)
->  
->  #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
->  	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
-> @@ -1525,6 +1531,10 @@ enum pci_fixup_pass {
->  	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
->  		suspend##hook, vendor, device,		\
->  		PCI_ANY_ID, 0, hook)
-> +#define DECLARE_PCI_FIXUP_SUSPEND_LATE(vendor, device, hook)		\
-> +	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
-> +		suspend_late##hook, vendor, device,	\
-> +		PCI_ANY_ID, 0, hook)
->  
->  #ifdef CONFIG_PCI_QUIRKS
->  void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
-> -- 
-> 1.9.3
-> 
