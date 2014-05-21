@@ -1,55 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34948 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934095AbaEFHDf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 May 2014 03:03:35 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 01/21] iommu/vt-d: match segment number when searching for dev_iotlb capable devices
-Date: Tue,  6 May 2014 15:05:12 +0800
-Message-Id: <1399359932-28972-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:37558 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752716AbaEUXSN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 19:18:13 -0400
+Received: by mail-ig0-f180.google.com with SMTP id c1so2802641igq.13
+        for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 16:18:12 -0700 (PDT)
+Subject: [PATCH V5 2/4] x86/PCI: Work around AMD Fam15h BIOSes that fail to
+ provide _PXM
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Robert Richter <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	linux-kernel@vger.kernel.org,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	linux-pci@vger.kernel.org, Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
+Date: Wed, 21 May 2014 17:18:10 -0600
+Message-ID: <20140521231810.26447.62482.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For virtual machine and static identity domains, there may be devices
-from different PCI segments associated with the same domain.
-So function iommu_support_dev_iotlb() should also match PCI segment
-number (iommu unit) when searching for dev_iotlb capable devices.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+The BIOS is supposed to provide ACPI _PXM methods for PCI host bridges if
+it cares about platform topology.  But some BIOSes do not, so add Fam15h
+to the list of CPUs for which we fall back to reading node numbers from the
+hardware.
+
+Note that pci_acpi_scan_root() warns about the BIOS bug if we use this
+information because (1) the hardware node numbers are not necessarily
+compatible with other logical node numbers from ACPI, and (2) the lack of
+_PXM forces OS updates that would not otherwise be required.
+
+[bhelgaas: changelog, comments]
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=72051
+Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Robert Richter <rric@kernel.org>
+Cc: Daniel J Blueman <daniel@numascale.com>
+Cc: Andreas Herrmann <herrmann.der.user@googlemail.com>
 ---
- drivers/iommu/intel-iommu.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ arch/x86/pci/amd_bus.c |   25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index f256ffc02e29..612fd441b225 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1274,7 +1274,8 @@ iommu_support_dev_iotlb (struct dmar_domain *domain, struct intel_iommu *iommu,
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index e88f4c53d7f6..aa936e3a2019 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -24,10 +24,11 @@ struct pci_hostbridge_probe {
+ };
  
- 	spin_lock_irqsave(&device_domain_lock, flags);
- 	list_for_each_entry(info, &domain->devices, link)
--		if (info->bus == bus && info->devfn == devfn) {
-+		if (info->iommu == iommu && info->bus == bus &&
-+		    info->devfn == devfn) {
- 			found = 1;
- 			break;
- 		}
--- 
-1.7.10.4
+ static struct pci_hostbridge_probe pci_probes[] __initdata = {
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 },
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 },
+-	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 },
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
++	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 }, /* K8 */
++	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 }, /* Fam10h */
++	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 }, /* Fam10h */
++	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 }, /* Fam11h */
++	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1600 }, /* Fam15h */
+ };
+ 
+ #define RANGE_NUM 16
+@@ -96,6 +97,11 @@ static int __init early_fill_mp_bus_info(void)
+ 	if (!found)
+ 		return 0;
+ 
++	/*
++	 * We should learn topology and routing information from _PXM and
++	 * _CRS methods in the ACPI namespace.  We extract node numbers
++	 * here to work around BIOSes that don't supply _PXM.
++	 */
+ 	for (i = 0; i < 4; i++) {
+ 		int min_bus;
+ 		int max_bus;
+@@ -113,6 +119,17 @@ static int __init early_fill_mp_bus_info(void)
+ 		info = alloc_pci_root_info(min_bus, max_bus, node, link);
+ 	}
+ 
++	/*
++	 * The following code extracts routing information for use on old
++	 * systems where Linux doesn't automatically use host bridge _CRS
++	 * methods (or when the user specifies "pci=nocrs").
++	 *
++	 * We only do this through Fam11h, because _CRS should be enough on
++	 * newer systems.
++	 */
++	if (boot_cpu_data.x86 > 0x11)
++		return 0;
++
+ 	/* get the default node and link for left over res */
+ 	reg = read_pci_config(bus, slot, 0, 0x60);
+ 	def_node = (reg >> 8) & 0x07;
 
