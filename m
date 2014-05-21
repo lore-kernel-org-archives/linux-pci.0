@@ -1,129 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:9298 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932129AbaEPIFx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 16 May 2014 04:05:53 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [RFC Patch Part1 V1 17/30] x86, irq: introduce some helper utilities to improve readability
-Date: Fri, 16 May 2014 16:05:37 +0800
-Message-Id: <1400227550-5935-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:38699 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751786AbaEUPkL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 11:40:11 -0400
+Received: by mail-qg0-f50.google.com with SMTP id z60so3435239qgd.37
+        for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 08:40:10 -0700 (PDT)
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+Subject: Re: Frustrating PCI x ACPI x APIC(?) interaction/bug
+From: Micah Dombrowski <mpdwibble@gmail.com>
+In-Reply-To: <CAErSpo5U4UpMdBC8nGTJcsatste17THf7Ko1RPZpaC01UyS6tw@mail.gmail.com>
+Date: Wed, 21 May 2014 11:40:07 -0400
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Message-Id: <9F1CDCD7-94EC-43C3-9568-D5C348531D85@gmail.com>
+References: <EF1232FA-308B-4261-82E6-6E3B932181E2@gmail.com> <CAErSpo5U4UpMdBC8nGTJcsatste17THf7Ko1RPZpaC01UyS6tw@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/io_apic.c |   41 +++++++++++++++++++++++++++++-----------
- 1 file changed, 30 insertions(+), 11 deletions(-)
+On May 20, 2014, at 10:02 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index dd81b58cce95..faed9b62977d 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -117,6 +117,26 @@ struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic_idx)
- 	return &ioapics[ioapic_idx].gsi_config;
- }
- 
-+static inline int mp_ioapic_pin_count(int ioapic)
-+{
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(ioapic);
-+
-+	return gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
-+}
-+
-+static inline u32 mp_pin_2_gsi(int ioapic, int pin)
-+{
-+	return mp_ioapic_gsi_routing(ioapic)->gsi_base + pin;
-+}
-+
-+/* Initialize all legacy IRQs and all pins on the first IOAPIC at boot */
-+static inline int mp_init_pin_at_boot(int ioapic, int pin)
-+{
-+	u32 gsi = mp_pin_2_gsi(ioapic, pin);
-+
-+	return ioapic == 0 || gsi < NR_IRQS_LEGACY;
-+}
-+
- int nr_ioapics;
- 
- /* The one past the highest gsi number used */
-@@ -1378,15 +1398,15 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
- 	unsigned int pin, irq;
- 
- 	for_each_pin(ioapic_idx, pin) {
-+		if (!mp_init_pin_at_boot(ioapic_idx, pin))
-+			continue;
-+
- 		idx = find_irq_entry(ioapic_idx, pin, mp_INT);
- 		if (io_apic_pin_not_connected(idx, ioapic_idx, pin))
- 			continue;
- 
- 		irq = pin_2_irq(idx, ioapic_idx, pin);
- 
--		if ((ioapic_idx > 0) && (irq > NR_IRQS_LEGACY))
--			continue;
--
- 		/*
- 		 * Skip the timer IRQ if there's a quirk handler
- 		 * installed and if it returns 1:
-@@ -1430,16 +1450,15 @@ void setup_IO_APIC_irq_extra(u32 gsi)
- 		return;
- 
- 	pin = mp_find_ioapic_pin(ioapic_idx, gsi);
-+	if (mp_init_pin_at_boot(ioapic_idx, pin))
-+		return;
-+
- 	idx = find_irq_entry(ioapic_idx, pin, mp_INT);
- 	if (idx == -1)
- 		return;
- 
- 	irq = pin_2_irq(idx, ioapic_idx, pin);
- 
--	/* Only handle the non legacy irqs on secondary ioapics */
--	if (ioapic_idx == 0 || irq < NR_IRQS_LEGACY)
--		return;
--
- 	set_io_apic_irq_attr(&attr, ioapic_idx, pin, irq_trigger(idx),
- 			     irq_polarity(idx));
- 
-@@ -3605,14 +3624,14 @@ void __init setup_ioapic_dest(void)
- 		return;
- 
- 	for_each_ioapic_pin(ioapic, pin) {
--		irq_entry = find_irq_entry(ioapic, pin, mp_INT);
--		if (irq_entry == -1)
-+		if (!mp_init_pin_at_boot(ioapic, pin))
- 			continue;
--		irq = pin_2_irq(irq_entry, ioapic, pin);
- 
--		if ((ioapic > 0) && (irq > NR_IRQS_LEGACY))
-+		irq_entry = find_irq_entry(ioapic, pin, mp_INT);
-+		if (irq_entry == -1)
- 			continue;
- 
-+		irq = pin_2_irq(irq_entry, ioapic, pin);
- 		idata = irq_get_irq_data(irq);
- 
- 		/*
--- 
-1.7.10.4
+> On Mon, May 19, 2014 at 6:37 PM, Micah Dombrowski <mpdwibble@gmail.com> wrote:
+> Thanks for the problem report.  If I understand correctly, the 4020
+> works fine when connected to a desktop PC, but not when connected to
+> the Lenovo T530 laptop.
 
+Correct.
+
+> I use http://bugzilla.kernel.org as a place to collect info like this,
+> so if you want, you can open a report there and attach the logs.  Or
+> I'd be glad to do that for you if you just include them in email.
+
+I opened a report https://bugzilla.kernel.org/show_bug.cgi?id=76641
+
+And attached dmesg and lspci -vv output from both systems.
+
+Thanks,
+MPD
