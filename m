@@ -1,292 +1,160 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:44452 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933196AbaEaO3M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:29:12 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v4 15/15] thunderbolt: Add suspend/hibernate support
-Date: Sat, 31 May 2014 16:28:00 +0200
-Message-Id: <1401546480-2071-16-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CA+sq2CejJFg--0rS1arr4Sactp-ssENB8Y3g4b61JPGPBCms=A@mail.gmail.com>
+References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
+	<CA+sq2Ccok5wtKjCZUkBhhj3WsiqFAoMgHK7LY210aBtMku+8SA@mail.gmail.com>
+	<20140516132451.GK967@e106497-lin.cambridge.arm.com>
+	<CA+sq2CejJFg--0rS1arr4Sactp-ssENB8Y3g4b61JPGPBCms=A@mail.gmail.com>
+Date: Wed, 21 May 2014 16:45:29 +0530
+Message-ID: <CA+sq2Ccp0_4hgbbWa27bkYcqiXY6Ckr8eckWnHwANvhWNo97fg@mail.gmail.com>
+Subject: Re: [PATCH v7 0/3] Add support for PCI in AArch64
+From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+To: Sunil Kovvuri <sunil.kovvuri@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"kdb@lurndal.org" <kdb@lurndal.org>,
+	"yu.zhao@intel.com" <yu.zhao@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We use _noirq since we have to restore the pci tunnels before the pci
-core wakes the tunneled devices.
+Hi Liviu,
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/nhi.c    | 33 +++++++++++++++++
- drivers/thunderbolt/switch.c | 84 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.c     | 61 ++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.h     |  5 +++
- 4 files changed, 183 insertions(+)
+Sorry for the trouble.
+I got why 'res->parent' is not set in my case.
+Basically my SR-IOV device has fixed resources, so resources will not
+be allocated/assigned and hence parent resource is not set.
+I will move the resource claiming to host controller driver as a fixup
+so that parent resource hierarchy is set.
 
-diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
-index f3a4ac2..6f666fa 100644
---- a/drivers/thunderbolt/nhi.c
-+++ b/drivers/thunderbolt/nhi.c
-@@ -7,6 +7,7 @@
-  * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-  */
- 
-+#include <linux/pm_runtime.h>
- #include <linux/slab.h>
- #include <linux/errno.h>
- #include <linux/pci.h>
-@@ -492,6 +493,22 @@ static irqreturn_t nhi_msi(int irq, void *data)
- 	return IRQ_HANDLED;
- }
- 
-+static int nhi_suspend_noirq(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct tb *tb = pci_get_drvdata(pdev);
-+	thunderbolt_suspend(tb);
-+	return 0;
-+}
-+
-+static int nhi_resume_noirq(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct tb *tb = pci_get_drvdata(pdev);
-+	thunderbolt_resume(tb);
-+	return 0;
-+}
-+
- static void nhi_shutdown(struct tb_nhi *nhi)
- {
- 	int i;
-@@ -600,6 +617,21 @@ static void nhi_remove(struct pci_dev *pdev)
- 	nhi_shutdown(nhi);
- }
- 
-+/*
-+ * The tunneled pci bridges are siblings of us. Use resume_noirq to reenable
-+ * the tunnels asap. A corresponding pci quirk blocks the downstream bridges
-+ * resume_noirq until we are done.
-+ */
-+static const struct dev_pm_ops nhi_pm_ops = {
-+	.suspend_noirq = nhi_suspend_noirq,
-+	.resume_noirq = nhi_resume_noirq,
-+	.freeze_noirq = nhi_suspend_noirq, /*
-+					    * we just disable hotplug, the
-+					    * pci-tunnels stay alive.
-+					    */
-+	.restore_noirq = nhi_resume_noirq,
-+};
-+
- struct pci_device_id nhi_ids[] = {
- 	{
- 		/*
-@@ -621,6 +653,7 @@ static struct pci_driver nhi_driver = {
- 	.id_table = nhi_ids,
- 	.probe = nhi_probe,
- 	.remove = nhi_remove,
-+	.driver.pm = &nhi_pm_ops,
- };
- 
- static int __init nhi_init(void)
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index eef5f1c..2e19045 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -229,6 +229,30 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
- 		sw->__unknown1, sw->__unknown4);
- }
- 
-+/**
-+ * reset_switch() - reconfigure route, enable and send TB_CFG_PKG_RESET
-+ *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+int tb_switch_reset(struct tb *tb, u64 route)
-+{
-+	struct tb_cfg_result res;
-+	struct tb_regs_switch_header header = {
-+		header.route_hi = route >> 32,
-+		header.route_lo = route,
-+		header.enabled = true,
-+	};
-+	tb_info(tb, "resetting switch at %llx\n", route);
-+	res.err = tb_cfg_write(tb->ctl, ((u32 *) &header) + 2, route,
-+			0, 2, 2, 2);
-+	if (res.err)
-+		return res.err;
-+	res = tb_cfg_reset(tb->ctl, route, TB_CFG_DEFAULT_TIMEOUT);
-+	if (res.err > 0)
-+		return -EIO;
-+	return res.err;
-+}
-+
- struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route)
- {
- 	u8 next_port = route; /*
-@@ -406,3 +430,63 @@ void tb_sw_set_unpplugged(struct tb_switch *sw)
- 	}
- }
- 
-+int tb_switch_resume(struct tb_switch *sw)
-+{
-+	int i, err;
-+	u64 uid;
-+	tb_sw_info(sw, "resuming switch\n");
-+
-+	err = tb_eeprom_read_uid(sw, &uid);
-+	if (err) {
-+		tb_sw_warn(sw, "uid read failed\n");
-+		return err;
-+	}
-+	if (sw->uid != uid) {
-+		tb_sw_info(sw,
-+			"changed while suspended (uid %#llx -> %#llx)\n",
-+			sw->uid, uid);
-+		return -ENODEV;
-+	}
-+
-+	/* upload configuration */
-+	err = tb_sw_write(sw, 1 + (u32 *) &sw->config, TB_CFG_SWITCH, 1, 3);
-+	if (err)
-+		return err;
-+
-+	err = tb_plug_events_active(sw, true);
-+	if (err)
-+		return err;
-+
-+	/* check for surviving downstream switches */
-+	for (i = 1; i <= sw->config.max_port_number; i++) {
-+		struct tb_port *port = &sw->ports[i];
-+		if (tb_is_upstream_port(port))
-+			continue;
-+		if (!port->remote)
-+			continue;
-+		if (tb_wait_for_port(port, true) <= 0
-+			|| tb_switch_resume(port->remote->sw)) {
-+			tb_port_warn(port,
-+				     "lost during suspend, disconnecting\n");
-+			tb_sw_set_unpplugged(port->remote->sw);
-+		}
-+	}
-+	return 0;
-+}
-+
-+void tb_switch_suspend(struct tb_switch *sw)
-+{
-+	int i, err;
-+	err = tb_plug_events_active(sw, false);
-+	if (err)
-+		return;
-+
-+	for (i = 1; i <= sw->config.max_port_number; i++) {
-+		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
-+			tb_switch_suspend(sw->ports[i].remote->sw);
-+	}
-+	/*
-+	 * TODO: invoke tb_cfg_prepare_to_sleep here? does not seem to have any
-+	 * effect?
-+	 */
-+}
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index 177f61d..1aa6dd7 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -69,6 +69,28 @@ static void tb_free_invalid_tunnels(struct tb *tb)
- }
- 
- /**
-+ * tb_free_unplugged_children() - traverse hierarchy and free unplugged switches
-+ */
-+static void tb_free_unplugged_children(struct tb_switch *sw)
-+{
-+	int i;
-+	for (i = 1; i <= sw->config.max_port_number; i++) {
-+		struct tb_port *port = &sw->ports[i];
-+		if (tb_is_upstream_port(port))
-+			continue;
-+		if (!port->remote)
-+			continue;
-+		if (port->remote->sw->is_unplugged) {
-+			tb_switch_free(port->remote->sw);
-+			port->remote = NULL;
-+		} else {
-+			tb_free_unplugged_children(port->remote->sw);
-+		}
-+	}
-+}
-+
-+
-+/**
-  * find_pci_up_port() - return the first PCIe up port on @sw or NULL
-  */
- static struct tb_port *tb_find_pci_up_port(struct tb_switch *sw)
-@@ -368,3 +390,42 @@ err_locked:
- 	return NULL;
- }
- 
-+void thunderbolt_suspend(struct tb *tb)
-+{
-+	tb_info(tb, "suspending...\n");
-+	mutex_lock(&tb->lock);
-+	tb_switch_suspend(tb->root_switch);
-+	tb_ctl_stop(tb->ctl);
-+	tb->hotplug_active = false; /* signal tb_handle_hotplug to quit */
-+	mutex_unlock(&tb->lock);
-+	tb_info(tb, "suspend finished\n");
-+}
-+
-+void thunderbolt_resume(struct tb *tb)
-+{
-+	struct tb_pci_tunnel *tunnel, *n;
-+	tb_info(tb, "resuming...\n");
-+	mutex_lock(&tb->lock);
-+	tb_ctl_start(tb->ctl);
-+
-+	/* remove any pci devices the firmware might have setup */
-+	tb_switch_reset(tb, 0);
-+
-+	tb_switch_resume(tb->root_switch);
-+	tb_free_invalid_tunnels(tb);
-+	tb_free_unplugged_children(tb->root_switch);
-+	list_for_each_entry_safe(tunnel, n, &tb->tunnel_list, list)
-+		tb_pci_restart(tunnel);
-+	if (!list_empty(&tb->tunnel_list)) {
-+		/*
-+		 * the pcie links need some time to get going.
-+		 * 100ms works for me...
-+		 */
-+		tb_info(tb, "tunnels restarted, sleeping for 100ms\n");
-+		msleep(100);
-+	}
-+	 /* Allow tb_handle_hotplug to progress events */
-+	tb->hotplug_active = true;
-+	mutex_unlock(&tb->lock);
-+	tb_info(tb, "resume finished\n");
-+}
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index a89087f..63e89d0 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -214,9 +214,14 @@ static inline int tb_port_write(struct tb_port *port, void *buffer,
- 
- struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi);
- void thunderbolt_shutdown_and_free(struct tb *tb);
-+void thunderbolt_suspend(struct tb *tb);
-+void thunderbolt_resume(struct tb *tb);
- 
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
- void tb_switch_free(struct tb_switch *sw);
-+void tb_switch_suspend(struct tb_switch *sw);
-+int tb_switch_resume(struct tb_switch *sw);
-+int tb_switch_reset(struct tb *tb, u64 route);
- void tb_sw_set_unpplugged(struct tb_switch *sw);
- struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
- 
--- 
-1.9.3
+Thanks for the support.
 
+Regards,
+Sunil.
+
+
+On Fri, May 16, 2014 at 11:12 PM, Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
+> Hi Liviu,
+>
+> Issue may not be only with SR-IOV resources.
+>
+> I am not an expert with Linux PCI core. But i am trying to understand
+> how even for a non SR-IOV capable device's resource, gets a parent
+> associated with it.
+>
+> When a PCI device driver calls pci_enable_device() which inturn calls
+> 'arch/arm64/kernel/pci.c' pcibios_enable_device() which uses Linux PCI core
+> API 'pci_enable_resources'. This API checks 'res->parent' for all
+> valid resources
+> before enabling them, otherwise it fails.
+>                 if (!r->parent) {
+>                         dev_err(&dev->dev, "device not available "
+>                                 "(can't reserve %pR)\n", r);
+>                         return -EINVAL;
+>                 }
+>
+> Can you please let me know where this hierarchy is being set for
+> 'pcibios_enable_resources' to work.
+>
+> I could only find request_resource() API which sets the parent and
+> pci_claim_resource() uses this.
+>
+> Thanks,
+> Sunil.
+>
+> On Fri, May 16, 2014 at 6:54 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> Hi Sunil,
+>>
+>> On Fri, May 16, 2014 at 11:33:04AM +0100, Sunil Kovvuri wrote:
+>>> Hi Liviu,
+>>>
+>>> I am using your ARM64 PCIe patches to write a PCIe host controller
+>>> driver for our SOC. I am facing an issue with SR-IOV capable device.
+>>>
+>>> Consider an PCI Express endpoint connected to a PCI Express
+>>> Root Port.  The PCI Express endpoint provides PCI-SIG SR-IOV
+>>> capabilities with a single physical function and a large number
+>>> of virtual functions.  The Root Port contains a pci-pci bridge in
+>>> between it and the SR-IOV device.
+>>>
+>>> When the SR-IOV capable device's driver tries to enable sriov
+>>> (pci_enable_sriov()) it fails to create/add PCI device for each
+>>> virtual function reporting  "not enough MMIO resources for SR-IOV".
+>>>
+>>> In sriov_enable() (drivers/pci/iov.c)
+>>>
+>>>  296        for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>>>  297                 bars |= (1 << (i + PCI_IOV_RESOURCES));
+>>>  298                 res = dev->resource + PCI_IOV_RESOURCES + i;
+>>>  299                 if (res->parent)
+>>>  300                         nres++;
+>>>  301         }
+>>>  302         if (nres != iov->nres) {
+>>>  303                 dev_err(&dev->dev, "not enough MMIO resources for
+>>>  SR-IOV\n");
+>>>  304                 return -ENOMEM;
+>>>  305         }
+>>>
+>>> Here its checking if physical function's IOV resource has a parent or not.
+>>> Which is pci-pci bridge in this case. Otherwise it doesn't consider
+>>> that resource.
+>>>
+>>> Added below api to your patch.
+>>> This will try to claim a resource while creating a PCI device which
+>>> inturn sets 'res->parent'.
+>>>
+>>> Let me know if this is okay.
+>>>
+>>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+>>> index 9f29c9a..fbfb48f 100644
+>>> --- a/arch/arm64/kernel/pci.c
+>>> +++ b/arch/arm64/kernel/pci.c
+>>> @@ -125,6 +125,21 @@ resource_size_t pcibios_align_resource(void
+>>> *data, const struct resource *res,
+>>>         return res->start;
+>>>  }
+>>>
+>>> +int pcibios_add_device(struct pci_dev *pdev)
+>>> +{
+>>> +        unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+>>> +        struct resource *res;
+>>> +
+>>> +        for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+>>> +                res = &pdev->resource[i];
+>>> +                if (res->parent || !(res->flags & type_mask))
+>>> +                        continue;
+>>> +                pci_claim_resource(pdev, i);
+>>> +        }
+>>> +
+>>>
+>>
+>> I would like not to have to add your patch in this file as I am trying to
+>> remove it entirely. I don't have an SR-IOV capable device in my setup so
+>> I am not able to debug your problem, but could you have a go and try to
+>> figure out why the SR-IOV resources do not get a parent associated with
+>> when they get created?
+>>
+>> Many thanks,
+>> Liviu
+>>
+>>
+>> --
+>> ====================
+>> | I would like to |
+>> | fix the world,  |
+>> | but they're not |
+>> | giving me the   |
+>>  \ source code!  /
+>>   ---------------
+>>     ¯\_(ツ)_/¯
+>>
