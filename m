@@ -1,94 +1,77 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch V3 35/37] x86, irq, mpparse: release IOAPIC pin when PCI device is disabled
-Date: Tue, 27 May 2014 16:08:10 +0800
-Message-Id: <1401178092-1228-36-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58723 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753121AbaEVXH7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:07:59 -0400
+Subject: [PATCH v4 05/16] PCI: quirk dma_alias_devfn for Marvell devices
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
+Date: Thu, 22 May 2014 17:07:55 -0600
+Message-ID: <20140522230755.2856.19714.stgit@bling.home>
+In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
+References: <20140522230230.2856.40017.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Release IOAPIC pin associated with PCI device when the PCI device
-is disabled.
+Several Marvell devices and a JMicron device have a similar DMA
+requester ID problem to Ricoh, except they use function 1 as the
+PCIe requester ID.  Add a quirk for these to populate the DMA
+function alias bitmap.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- arch/x86/kernel/mpparse.c |    1 +
- arch/x86/pci/irq.c        |   13 +++++++++++--
- 2 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/pci/quirks.c |   36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
-diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
-index 55acf55b41e7..f6559942952d 100644
---- a/arch/x86/kernel/mpparse.c
-+++ b/arch/x86/kernel/mpparse.c
-@@ -115,6 +115,7 @@ static void __init MP_bus_info(struct mpc_bus *m)
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index bc8ebd9..923689f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3349,6 +3349,42 @@ static void quirk_dma_func0_alias(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe476, quirk_dma_func0_alias);
  
- static struct irq_domain_ops mp_ioapic_irqdomain_ops = {
- 	.map = mp_irqdomain_map,
-+	.unmap = mp_irqdomain_unmap,
- };
- 
- static struct irq_domain *mp_ioapic_create_irqdomain(int ioapic, void *arg)
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index e4200e5e775e..748cfe8ab322 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -26,6 +26,7 @@ static int acer_tm360_irqrouting;
- static struct irq_routing_table *pirq_table;
- 
- static int pirq_enable_irq(struct pci_dev *dev);
-+static void pirq_disable_irq(struct pci_dev *dev);
- 
- /*
-  * Never use: 0, 1, 2 (timer, keyboard, and cascade)
-@@ -53,7 +54,7 @@ struct irq_router_handler {
- };
- 
- int (*pcibios_enable_irq)(struct pci_dev *dev) = pirq_enable_irq;
--void (*pcibios_disable_irq)(struct pci_dev *dev) = NULL;
-+void (*pcibios_disable_irq)(struct pci_dev *dev) = pirq_disable_irq;
- 
- /*
-  *  Check passed address for the PCI IRQ Routing Table signature
-@@ -1186,7 +1187,7 @@ void pcibios_penalize_isa_irq(int irq, int active)
- 
- static int pirq_enable_irq(struct pci_dev *dev)
- {
--	u8 pin;
-+	u8 pin = 0;
- 
- 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
- 	if (pin && !pcibios_lookup_irq(dev, 1)) {
-@@ -1252,3 +1253,11 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 	}
- 	return 0;
- }
-+
-+static void pirq_disable_irq(struct pci_dev *dev)
++static void quirk_dma_func1_alias(struct pci_dev *dev)
 +{
-+	if (io_apic_assign_pci_irqs && dev->irq) {
-+		mp_unmap_irq(dev->irq);
-+		dev->irq = 0;
++	if (PCI_FUNC(dev->devfn) != 1) {
++		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 1);
++		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
 +	}
 +}
--- 
-1.7.10.4
++
++/*
++ * Marvell 88SE9123 uses function 1 as the requester ID for DMA.  In some
++ * SKUs function 1 is present and is a legacy IDE controller, in other
++ * SKUs this function is not present, making this a ghost requester.
++ * https://bugzilla.kernel.org/show_bug.cgi?id=42679
++ */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9123,
++			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c14 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9130,
++			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c47 + c57 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9172,
++			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c59 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x917a,
++			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c46 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
++			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c49 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9230,
++			 quirk_dma_func1_alias);
++/* https://bugs.gentoo.org/show_bug.cgi?id=497630 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
++			 PCI_DEVICE_ID_JMICRON_JMB388_ESD,
++			 quirk_dma_func1_alias);
++
+ static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+ {
+ 	if (!PCI_FUNC(dev->devfn))
 
