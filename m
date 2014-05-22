@@ -1,118 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v4 07/15] thunderbolt: Enable plug events
-Date: Sat, 31 May 2014 16:27:52 +0200
-Message-Id: <1401546480-2071-8-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:7537 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753028AbaEVXHl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:07:41 -0400
+Subject: [PATCH v4 02/16] PCI: define pci_dev_flags as bit shifts
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
+Date: Thu, 22 May 2014 17:07:36 -0600
+Message-ID: <20140522230736.2856.30635.stgit@bling.home>
+In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
+References: <20140522230230.2856.40017.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thunderbolt switches have a plug events capability. This patch adds the
-tb_plug_events_active method and uses it to activate plug events during
-switch allocation.
+We're only a few entries away from where using the decimal value
+becomes cumbersome.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/thunderbolt/switch.c | 46 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.h     |  1 +
- 2 files changed, 47 insertions(+)
+ include/linux/pci.h |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index e89121f..21457cc 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -99,6 +99,39 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
- }
- 
- /**
-+ * tb_plug_events_active() - enable/disable plug events on a switch
-+ *
-+ * Also configures a sane plug_events_delay of 255ms.
-+ *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+static int tb_plug_events_active(struct tb_switch *sw, bool active)
-+{
-+	u32 data;
-+	int res;
-+
-+	sw->config.plug_events_delay = 0xff;
-+	res = tb_sw_write(sw, ((u32 *) &sw->config) + 4, TB_CFG_SWITCH, 4, 1);
-+	if (res)
-+		return res;
-+
-+	res = tb_sw_read(sw, &data, TB_CFG_SWITCH, sw->cap_plug_events + 1, 1);
-+	if (res)
-+		return res;
-+
-+	if (active) {
-+		data = data & 0xFFFFFF83;
-+		if (sw->config.device_id == 0x1547)
-+			data |= 4;
-+	} else {
-+		data = data | 0x7c;
-+	}
-+	return tb_sw_write(sw, &data, TB_CFG_SWITCH,
-+			   sw->cap_plug_events + 1, 1);
-+}
-+
-+
-+/**
-  * tb_switch_free() - free a tb_switch and all downstream switches
-  */
- void tb_switch_free(struct tb_switch *sw)
-@@ -113,6 +146,8 @@ void tb_switch_free(struct tb_switch *sw)
- 		sw->ports[i].remote = NULL;
- 	}
- 
-+	tb_plug_events_active(sw, false);
-+
- 	kfree(sw->ports);
- 	kfree(sw);
- }
-@@ -125,6 +160,7 @@ void tb_switch_free(struct tb_switch *sw)
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
- {
- 	int i;
-+	int cap;
- 	struct tb_switch *sw;
- 	int upstream_port = tb_cfg_get_upstream_port(tb->ctl, route);
- 	if (upstream_port < 0)
-@@ -177,6 +213,16 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
- 
- 	/* TODO: I2C, IECS, EEPROM, link controller */
- 
-+	cap = tb_find_cap(&sw->ports[0], TB_CFG_SWITCH, TB_CAP_PLUG_EVENTS);
-+	if (cap < 0) {
-+		tb_sw_warn(sw, "cannot find TB_CAP_PLUG_EVENTS aborting\n");
-+		goto err;
-+	}
-+	sw->cap_plug_events = cap;
-+
-+	if (tb_plug_events_active(sw, true))
-+		goto err;
-+
- 	return sw;
- err:
- 	kfree(sw->ports);
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 38e4c23..af123c4 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -19,6 +19,7 @@ struct tb_switch {
- 	struct tb_regs_switch_header config;
- 	struct tb_port *ports;
- 	struct tb *tb;
-+	int cap_plug_events; /* offset, zero if not found */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 14b074b..545903d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -164,13 +164,13 @@ enum pci_dev_flags {
+ 	/* INTX_DISABLE in PCI_COMMAND register disables MSI
+ 	 * generation too.
+ 	 */
+-	PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG = (__force pci_dev_flags_t) 1,
++	PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG = (__force pci_dev_flags_t) (1 << 0),
+ 	/* Device configuration is irrevocably lost if disabled into D3 */
+-	PCI_DEV_FLAGS_NO_D3 = (__force pci_dev_flags_t) 2,
++	PCI_DEV_FLAGS_NO_D3 = (__force pci_dev_flags_t) (1 << 1),
+ 	/* Provide indication device is assigned by a Virtual Machine Manager */
+-	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) 4,
++	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) (1 << 2),
+ 	/* Flag for quirk use to store if quirk-specific ACS is enabled */
+-	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) 8,
++	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
  };
  
- /**
--- 
-1.9.3
+ enum pci_irq_reroute_variant {
 
