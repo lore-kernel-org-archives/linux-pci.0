@@ -1,76 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39469 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751073AbaEUIZd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 21 May 2014 04:25:33 -0400
-Message-ID: <537C62F7.10409@suse.de>
-Date: Wed, 21 May 2014 10:25:27 +0200
-From: Alexander Graf <agraf@suse.de>
+Received: from mail-bn1blp0182.outbound.protection.outlook.com ([207.46.163.182]:38667
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751243AbaEVXkG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:40:06 -0400
+Message-ID: <537E8ACF.6000103@amd.com>
+Date: Thu, 22 May 2014 18:39:59 -0500
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-CC: kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	kim.phillips@linaro.org, gregkh@linuxfoundation.org,
-	stuart.yoder@freescale.com, libvir-list@redhat.com,
-	iommu@lists.linux-foundation.org, christoffer.dall@linaro.org,
-	tech@virtualopensystems.com, kvmarm@lists.cs.columbia.edu,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: Introduce new device binding path using pci_dev.driver_override
-References: <20140520145136.28232.90707.stgit@bling.home>
-In-Reply-To: <20140520145136.28232.90707.stgit@bling.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Bjorn Helgaas <bhelgaas@google.com>, Borislav Petkov <bp@alien8.de>
+CC: Robert Richter <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Aravind Gopalakrishnan" <Aravind.Gopalakrishnan@amd.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after
+ Fam16h
+References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521233802.GA21575@pd.tnic>
+ <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
+ <20140522191746.GL4383@pd.tnic>
+ <CAErSpo7=0-xdnu4DQufu_6eS=6AYhnDRaQvzeiMEC5a=zKU0Jg@mail.gmail.com>
+In-Reply-To: <CAErSpo7=0-xdnu4DQufu_6eS=6AYhnDRaQvzeiMEC5a=zKU0Jg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 5/22/2014 3:20 PM, Bjorn Helgaas wrote:
+> On Thu, May 22, 2014 at 1:17 PM, Borislav Petkov <bp@alien8.de> wrote:
+>> On Thu, May 22, 2014 at 11:56:03AM -0600, Bjorn Helgaas wrote:
+>>> I chose Fam16h (0x16) because it looks like that's the newest stuff
+>>> that's in the field. I suspect things would probably work if we
+>>> changed this patch to leave ECS disabled on some Fam16h, Fam15h, etc.,
+>>> but that would change behavior on existing systems, which obviously
+>>> adds some risk. I didn't think there was much benefit that makes the
+>>> risk worthwhile.
+>>>
+>>> My goal is to stop needing CPU-specific changes in the future, not
+>>> necessarily to remove the CPU-specific code we already have.
+>>>
+>>> Does that make sense? I'm not sure whether I understood your real
+>>> question.
+>>
+>> No, you got it right. I'm just wondering why only the newest stuff.
+>> MMCONFIG is supposed to work just fine on everything from Fam10h
+>> onwards, I'm not sure all Fam10h supported it though. Maybe Suravee can
+>> verify that...
+>
+> Even if MMCONFIG does work fine on everything from Fam10h onwards, we
+> still depend on the BIOS to provide a correct MCFG table.  I don't
+> think we can guarantee that changing from ECS to MMCONFIG on a Fam16h
+> box in the field is safe, because we'd then be using a feature we've
+> never used before.
+>
+> Bjorn
+>
 
-On 20.05.14 16:53, Alex Williamson wrote:
-> The driver_override field allows us to specify the driver for a device
-> rather than relying on the driver to provide a positive match of the
-> device.  This shortcuts the existing process of looking up the vendor
-> and device ID, adding them to the driver new_id, binding the device,
-> then removing the ID, but it also provides a couple advantages.
->
-> First, the above existing process allows the driver to bind to any
-> device matching the new_id for the window where it's enabled.  This is
-> often not desired, such as the case of trying to bind a single device
-> to a meta driver like pci-stub or vfio-pci.  Using driver_override we
-> can do this deterministically using:
->
-> echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
-> echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-> echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
->
-> Previously we could not invoke drivers_probe after adding a device
-> to new_id for a driver as we get non-deterministic behavior whether
-> the driver we intend or the standard driver will claim the device.
-> Now it becomes a deterministic process, only the driver matching
-> driver_override will probe the device.
->
-> To return the device to the standard driver, we simply clear the
-> driver_override and reprobe the device:
->
-> echo > /sys/bus/pci/devices/0000:03:00.0/driver_override
-> echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-> echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
->
-> Another advantage to this approach is that we can specify a driver
-> override to force a specific binding or prevent any binding.  For
-> instance when an IOMMU group is exposed to userspace through VFIO
-> we require that all devices within that group are owned by VFIO.
-> However, devices can be hot-added into an IOMMU group, in which case
-> we want to prevent the device from binding to any driver (override
-> driver = "none") or perhaps have it automatically bind to vfio-pci.
-> With driver_override it's a simple matter for this field to be set
-> internally when the device is first discovered to prevent driver
-> matches.
->
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+At this point, family11h and later (upto 16h which is our most current 
+processor) should already have supports for the MCFG. However, we can't 
+guarantee that all the systems currently out there would not use the 
+ECS. So, I think it is ok to say we won't support it post 16h as Bjorn 
+suggests.
 
-Reviewed-by: Alexander Graf <agraf@suse.de>
-
-I suppose Konrad's RB stays as well?
-
-
-Alex
-
+Suravee
