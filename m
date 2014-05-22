@@ -1,101 +1,244 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:14810 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S934579AbaEFKq1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 May 2014 06:46:27 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v7 01/10] PCI: host: rcar: Add Renesas R-Car PCIe driver
-Date: Tue, 6 May 2014 10:46:22 +0000
-Message-ID: <0b36805160b7426faa481d5603bebb6c@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
- <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
- <20140424191901.GE29593@google.com>
- <9b8bedae9d604383ac7ec22fd0f62fdb@HKXPR06MB168.apcprd06.prod.outlook.com>
- <CAErSpo6Autto4n4A4wHtXQNJzD3RKevkVcLZHUods-2-eiRDYQ@mail.gmail.com>
- <20140428203501.GA3016@obsidianresearch.com>
- <ac795ce3bb6349708e2e96686e19d24f@HKXPR06MB168.apcprd06.prod.outlook.com>
- <20140430154345.GA1705@obsidianresearch.com>
- <b9160c7a49304270b5070dcf49482723@HKXPR06MB168.apcprd06.prod.outlook.com>
- <20140501165003.GC3296@obsidianresearch.com>
-In-Reply-To: <20140501165003.GC3296@obsidianresearch.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:18573 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753227AbaEVXIS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:08:18 -0400
+Subject: [PATCH v4 08/16] iommu: Create central IOMMU group lookup/creation
+ interface
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
+Date: Thu, 22 May 2014 17:08:13 -0600
+Message-ID: <20140522230813.2856.34249.stgit@bling.home>
+In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
+References: <20140522230230.2856.40017.stgit@bling.home>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jason,
+Currently each IOMMU driver that supports IOMMU groups has its own
+code for discovering the base device used in grouping.  This code
+is generally not specific to the IOMMU hardware, but to the bus of
+the devices managed by the IOMMU.  We can therefore create a common
+interface for supporting devices on different buses.
 
-On 01 May 2014 17:50, Jason wrote:
-> On Thu, May 01, 2014 at 09:50:56AM +0000, Phil Edworthy wrote:
-> 
-> > > The logic should be:
-> > >  if (bus == primary)
-> > >     do io access to host bridge
-> > >  else if (bus == secondary)
-> > >     issue type 0 TLP on the wire
-> > >  else if (bus > secondary && bus <= subordinate)
-> > >     issue type 1 TLP on the wire
-> > >  else
-> > >     fail, invalid bus number
-> > > Where the three values come from the register in the PCI host bridge's
-> > > configuration space, and are kept in sync with the programming from
-> > > the Linux PCI core.
-> > >
-> > > It is just a happy hapenstance that root_bus_nr equals the value the
-> > > PCI core programmed into secondary - that is not guarenteed, you must
-> > > use the primary value directly.
-> 
-> > For type0 TLPs, we are not checking that root_bus_nr equals the
-> > value the PCI core programmed into secondary, we are checking that
-> > the (root_bus_nr == bus->parent->number). The only way this wouldn't
-> > work is if root_bus_nr was not the root bus number.
-> 
-> Okay, that isn't as sketchy, but that process still ignores the
-> subordinate bus number and the failure case as required by PCI.
-> 
-> The goal here is to have the stuff below the drivers implement the PCI
-> spec so that the core code can assume everything below is
-> conformant. Drivers should not introduce gratuitous differences 'just
-> because'
-> 
-> There is no reason drivers should be using PCI core structures to make
-> decisions when the spec says those decisions are driven by config
-> space fields.
-> 
-> This way the PCI core code doesn't have to be aware of any weird
-> non-standard edge cases.. Such as not failing bus numbers beyond the
-> subordinate bus number.
-> 
-> > Since the Synopsys DW driver also saves off sys->busnr and later
-> > uses this to determine if accesses are for the host bridge, I guess
-> > that means it won't always work either, right? Or is it ok because
-> > the DW driver saves sys->busnr in its .scan function?
-> 
-> Sounds like it is making the same mistake, and nobody noticed. This is
-> another reason why it is important to implement correctly so people
-> copying copy the right stuff :)
-> 
-> > When would the PCI core change the root bus number to something
-> > other than set in sys->busnr?
-> 
-> I think the more likely scenario is that 'sys' in general is
-> architecture specific and its use is being discouraged so that host
-> drivers are not arch specific.
-> 
-> A domain driver like rcar should always place the root complex
-> integrated bus as bus 0 in the domain.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/iommu/iommu.c |  181 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iommu.h |    1 
+ 2 files changed, 182 insertions(+)
 
-Ok, I now understand the reason for removing the dependency on sys->busnr. That makes sense & I'll update the driver for this.
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index e5555fc..db55fe6 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -29,6 +29,7 @@
+ #include <linux/idr.h>
+ #include <linux/notifier.h>
+ #include <linux/err.h>
++#include <linux/pci.h>
+ #include <trace/events/iommu.h>
+ 
+ static struct kset *iommu_group_kset;
+@@ -514,6 +515,186 @@ int iommu_group_id(struct iommu_group *group)
+ }
+ EXPORT_SYMBOL_GPL(iommu_group_id);
+ 
++/*
++ * To consider a PCI device isolated, we require ACS to support Source
++ * Validation, Request Redirection, Completer Redirection, and Upstream
++ * Forwarding.  This effectively means that devices cannot spoof their
++ * requester ID, requests and completions cannot be redirected, and all
++ * transactions are forwarded upstream, even as it passes through a
++ * bridge where the target device is downstream.
++ */
++#define REQ_ACS_FLAGS   (PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
++
++struct group_for_pci_data {
++	struct pci_dev *pdev;
++	struct iommu_group *group;
++};
++
++/*
++ * DMA alias iterator callback, return the last seen device.  Stop and return
++ * the IOMMU group if we find one along the way.
++ */
++static int get_pci_alias_or_group(struct pci_dev *pdev, u16 alias, void *opaque)
++{
++	struct group_for_pci_data *data = opaque;
++
++	data->pdev = pdev;
++	data->group = iommu_group_get(&pdev->dev);
++
++	return data->group != NULL;
++}
++
++/*
++ * Use standard PCI bus topology, isolation features, and DMA alias quirks
++ * to find or create an IOMMU group for a device.
++ */
++static struct iommu_group *iommu_group_get_for_pci_dev(struct pci_dev *pdev)
++{
++	struct group_for_pci_data data;
++	struct pci_bus *bus;
++	struct iommu_group *group = NULL;
++	struct pci_dev *tmp;
++
++	/*
++	 * Find the upstream DMA alias for the device.  A device must not
++	 * be aliased due to topology in order to have its own IOMMU group.
++	 * If we find an alias along the way that already belongs to a
++	 * group, use it.
++	 */
++	if (pci_for_each_dma_alias(pdev, get_pci_alias_or_group, &data))
++		return data.group;
++
++	pdev = data.pdev;
++
++	/*
++	 * Continue upstream from the point of minimum IOMMU granularity
++	 * due to aliases to the point where devices are protected from
++	 * peer-to-peer DMA by PCI ACS.  Again, if we find an existing
++	 * group, use it.
++	 */
++	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
++		if (!bus->self)
++			continue;
++
++		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
++			break;
++
++		pdev = bus->self;
++
++		group = iommu_group_get(&pdev->dev);
++		if (group)
++			return group;
++	}
++
++	/*
++	 * Next we need to consider DMA alias quirks.  If one device aliases
++	 * to another, they should be grouped together.  It's theoretically
++	 * possible that aliases could create chains of devices where each
++	 * device aliases another device.  If we then factor in multifunction
++	 * ACS grouping requirements, each alias could incorporate a new slot
++	 * with multiple functions, each with aliases.  This is all extremely
++	 * unlikely as DMA alias quirks are typically only used for PCIe
++	 * devices where we usually have a single slot per bus.  Furthermore,
++	 * the alias quirk is usually to another function within the slot
++	 * (and ACS multifunction is not supported) or to a different slot
++	 * that doesn't physically exist.  The likely scenario is therefore
++	 * that everything on the bus gets grouped together.  To reduce the
++	 * problem space, share the IOMMU group for all devices on the bus
++	 * if a DMA alias quirk is present on the bus.
++	 */
++	tmp = NULL;
++	for_each_pci_dev(tmp) {
++		if (tmp->bus != pdev->bus ||
++		    !(tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN))
++			continue;
++
++		pci_dev_put(tmp);
++		tmp = NULL;
++
++		/* We have an alias quirk, search for an existing group */
++		for_each_pci_dev(tmp) {
++			struct iommu_group *group_tmp;
++			if (tmp->bus != pdev->bus)
++				continue;
++
++			group_tmp = iommu_group_get(&tmp->dev);
++			if (!group) {
++				group = group_tmp;
++				continue;
++			}
++
++			if (group_tmp) {
++				WARN_ON(group != group_tmp);
++				iommu_group_put(group_tmp);
++			}
++		}
++
++		return group ? group : iommu_group_alloc();
++	}
++
++	/*
++	 * Non-multifunction devices or multifunction devices supporting
++	 * ACS get their own group.
++	 */
++	if (!pdev->multifunction || pci_acs_enabled(pdev, REQ_ACS_FLAGS))
++		return iommu_group_alloc();
++
++	/*
++	 * Multifunction devices not supporting ACS share a group with other
++	 * similar devices in the same slot.
++	 */
++	tmp = NULL;
++	for_each_pci_dev(tmp) {
++		if (tmp == pdev || tmp->bus != pdev->bus ||
++		    PCI_SLOT(tmp->devfn) !=  PCI_SLOT(pdev->devfn) ||
++		    pci_acs_enabled(tmp, REQ_ACS_FLAGS))
++			continue;
++
++		group = iommu_group_get(&tmp->dev);
++		if (group) {
++			pci_dev_put(tmp);
++			return group;
++		}
++	}
++
++	/* No shared group found, allocate new */
++	return iommu_group_alloc();
++}
++
++/**
++ * iommu_group_get_for_dev - Find or create the IOMMU group for a device
++ * @dev: target device
++ *
++ * This function is intended to be called by IOMMU drivers and extended to
++ * support common, bus-defined algorithms when determining or creating the
++ * IOMMU group for a device.  On success, the caller will hold a reference
++ * to the returned IOMMU group, which will already include the provided
++ * device.  The reference should be released with iommu_group_put().
++ */
++struct iommu_group *iommu_group_get_for_dev(struct device *dev)
++{
++	struct iommu_group *group = ERR_PTR(-EIO);
++	int ret;
++
++	group = iommu_group_get(dev);
++	if (group)
++		return group;
++
++	if (dev_is_pci(dev))
++		group = iommu_group_get_for_pci_dev(to_pci_dev(dev));
++
++	if (IS_ERR(group))
++		return group;
++
++	ret = iommu_group_add_device(group, dev);
++	if (ret) {
++		iommu_group_put(group);
++		return ERR_PTR(ret);
++	}
++
++	return group;
++}
++
+ static int add_iommu_group(struct device *dev, void *data)
+ {
+ 	struct iommu_ops *ops = data;
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index b96a5b2..a2e5843 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -181,6 +181,7 @@ extern int iommu_group_register_notifier(struct iommu_group *group,
+ extern int iommu_group_unregister_notifier(struct iommu_group *group,
+ 					   struct notifier_block *nb);
+ extern int iommu_group_id(struct iommu_group *group);
++extern struct iommu_group *iommu_group_get_for_dev(struct device *dev);
+ 
+ extern int iommu_domain_get_attr(struct iommu_domain *domain, enum iommu_attr,
+ 				 void *data);
 
-Thanks for your patience :)
-Phil
