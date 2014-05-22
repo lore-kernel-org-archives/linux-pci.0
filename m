@@ -1,255 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f42.google.com ([209.85.216.42]:33017 "EHLO
-	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756674AbaEaO25 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:28:57 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v4 08/15] thunderbolt: Scan for downstream switches
-Date: Sat, 31 May 2014 16:27:53 +0200
-Message-Id: <1401546480-2071-9-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:24082 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752617AbaEVXI5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:08:57 -0400
+Subject: [PATCH v4 14/16] iommu: Remove pci.h
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: Joerg Roedel <joro@8bytes.org>, linux-kernel@vger.kernel.org,
+	acooks@gmail.com, linux@horizon.com, bhelgaas@google.com,
+	eddy0596@gmail.com
+Date: Thu, 22 May 2014 17:08:51 -0600
+Message-ID: <20140522230851.2856.41363.stgit@bling.home>
+In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
+References: <20140522230230.2856.40017.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add utility methods tb_port_state and tb_wait_for_port. Add
-tb_scan_switch which recursively checks for downstream switches.
+The single helper here no longer has any users.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Joerg Roedel <joro@8bytes.org>
 ---
- drivers/thunderbolt/switch.c | 97 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.c     | 44 ++++++++++++++++++++
- drivers/thunderbolt/tb.h     | 16 ++++++++
- 3 files changed, 157 insertions(+)
+ drivers/iommu/pci.h |   29 -----------------------------
+ 1 file changed, 29 deletions(-)
+ delete mode 100644 drivers/iommu/pci.h
 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index 21457cc..279b9c5 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -53,6 +53,92 @@ static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
- }
- 
- /**
-+ * tb_port_state() - get connectedness state of a port
-+ *
-+ * The port must have a TB_CAP_PHY (i.e. it should be a real port).
-+ *
-+ * Return: Returns an enum tb_port_state on success or an error code on failure.
-+ */
-+static int tb_port_state(struct tb_port *port)
-+{
-+	struct tb_cap_phy phy;
-+	int res;
-+	if (port->cap_phy == 0) {
-+		tb_port_WARN(port, "does not have a PHY\n");
-+		return -EINVAL;
-+	}
-+	res = tb_port_read(port, &phy, TB_CFG_PORT, port->cap_phy, 2);
-+	if (res)
-+		return res;
-+	return phy.state;
-+}
-+
-+/**
-+ * tb_wait_for_port() - wait for a port to become ready
-+ *
-+ * Wait up to 1 second for a port to reach state TB_PORT_UP. If
-+ * wait_if_unplugged is set then we also wait if the port is in state
-+ * TB_PORT_UNPLUGGED (it takes a while for the device to be registered after
-+ * switch resume). Otherwise we only wait if a device is registered but the link
-+ * has not yet been established.
-+ *
-+ * Return: Returns an error code on failure. Returns 0 if the port is not
-+ * connected or failed to reach state TB_PORT_UP within one second. Returns 1
-+ * if the port is connected and in state TB_PORT_UP.
-+ */
-+int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged)
-+{
-+	int retries = 10;
-+	int state;
-+	if (!port->cap_phy) {
-+		tb_port_WARN(port, "does not have PHY\n");
-+		return -EINVAL;
-+	}
-+	if (tb_is_upstream_port(port)) {
-+		tb_port_WARN(port, "is the upstream port\n");
-+		return -EINVAL;
-+	}
-+
-+	while (retries--) {
-+		state = tb_port_state(port);
-+		if (state < 0)
-+			return state;
-+		if (state == TB_PORT_DISABLED) {
-+			tb_port_info(port, "is disabled (state: 0)\n");
-+			return 0;
-+		}
-+		if (state == TB_PORT_UNPLUGGED) {
-+			if (wait_if_unplugged) {
-+				/* used during resume */
-+				tb_port_info(port,
-+					     "is unplugged (state: 7), retrying...\n");
-+				msleep(100);
-+				continue;
-+			}
-+			tb_port_info(port, "is unplugged (state: 7)\n");
-+			return 0;
-+		}
-+		if (state == TB_PORT_UP) {
-+			tb_port_info(port,
-+				     "is connected, link is up (state: 2)\n");
-+			return 1;
-+		}
-+
-+		/*
-+		 * After plug-in the state is TB_PORT_CONNECTING. Give it some
-+		 * time.
-+		 */
-+		tb_port_info(port,
-+			     "is connected, link is not up (state: %d), retrying...\n",
-+			     state);
-+		msleep(100);
-+	}
-+	tb_port_warn(port,
-+		     "failed to reach state TB_PORT_UP. Ignoring port...\n");
-+	return 0;
-+}
-+
-+/**
-  * tb_init_port() - initialize a port
-  *
-  * This is a helper method for tb_switch_alloc. Does not check or initialize
-@@ -63,6 +149,7 @@ static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
- static int tb_init_port(struct tb_switch *sw, u8 port_nr)
- {
- 	int res;
-+	int cap;
- 	struct tb_port *port = &sw->ports[port_nr];
- 	port->sw = sw;
- 	port->port = port_nr;
-@@ -71,6 +158,16 @@ static int tb_init_port(struct tb_switch *sw, u8 port_nr)
- 	if (res)
- 		return res;
- 
-+	/* Port 0 is the switch itself and has no PHY. */
-+	if (port->config.type == TB_TYPE_PORT && port_nr != 0) {
-+		cap = tb_find_cap(port, TB_CFG_PORT, TB_CAP_PHY);
-+
-+		if (cap > 0)
-+			port->cap_phy = cap;
-+		else
-+			tb_port_WARN(port, "non switch port without a PHY\n");
-+	}
-+
- 	tb_dump_port(sw->tb, &port->config);
- 
- 	/* TODO: Read dual link port, DP port and more from EEPROM. */
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index f1b6100..3b716fd 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -11,6 +11,47 @@
- #include "tb.h"
- #include "tb_regs.h"
- 
-+
-+/* enumeration & hot plug handling */
-+
-+
-+static void tb_scan_port(struct tb_port *port);
-+
-+/**
-+ * tb_scan_switch() - scan for and initialize downstream switches
-+ */
-+static void tb_scan_switch(struct tb_switch *sw)
-+{
-+	int i;
-+	for (i = 1; i <= sw->config.max_port_number; i++)
-+		tb_scan_port(&sw->ports[i]);
-+}
-+
-+/**
-+ * tb_scan_port() - check for and initialize switches below port
-+ */
-+static void tb_scan_port(struct tb_port *port)
-+{
-+	struct tb_switch *sw;
-+	if (tb_is_upstream_port(port))
-+		return;
-+	if (port->config.type != TB_TYPE_PORT)
-+		return;
-+	if (tb_wait_for_port(port, false) <= 0)
-+		return;
-+	if (port->remote) {
-+		tb_port_WARN(port, "port already has a remote!\n");
-+		return;
-+	}
-+	sw = tb_switch_alloc(port->sw->tb, tb_downstream_route(port));
-+	if (!sw)
-+		return;
-+	port->remote = tb_upstream_port(sw);
-+	tb_upstream_port(sw)->remote = port;
-+	tb_scan_switch(sw);
-+}
-+
-+
- /* hotplug handling */
- 
- struct tb_hotplug_event {
-@@ -134,6 +175,9 @@ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
- 	if (!tb->root_switch)
- 		goto err_locked;
- 
-+	/* Full scan to discover devices added before the driver was loaded. */
-+	tb_scan_switch(tb->root_switch);
-+
- 	/* Allow tb_handle_hotplug to progress events */
- 	tb->hotplug_active = true;
- 	mutex_unlock(&tb->lock);
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index af123c4..70a66fe 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -29,6 +29,7 @@ struct tb_port {
- 	struct tb_regs_port_header config;
- 	struct tb_switch *sw;
- 	struct tb_port *remote; /* remote port, NULL if not connected */
-+	int cap_phy; /* offset, zero if not found */
- 	u8 port; /* port number on switch */
- };
- 
-@@ -160,6 +161,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
- void tb_switch_free(struct tb_switch *sw);
- 
-+int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
-+
- int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
- 
- 
-@@ -173,4 +176,17 @@ static inline bool tb_is_upstream_port(struct tb_port *port)
- 	return port == tb_upstream_port(port->sw);
- }
- 
-+/**
-+ * tb_downstream_route() - get route to downstream switch
-+ *
-+ * Port must not be the upstream port (otherwise a loop is created).
-+ *
-+ * Return: Returns a route to the switch behind @port.
-+ */
-+static inline u64 tb_downstream_route(struct tb_port *port)
-+{
-+	return tb_route(port->sw)
-+	       | ((u64) port->port << (port->sw->config.depth * 8));
-+}
-+
- #endif
--- 
-1.9.3
+diff --git a/drivers/iommu/pci.h b/drivers/iommu/pci.h
+deleted file mode 100644
+index 352d80a..0000000
+--- a/drivers/iommu/pci.h
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/*
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License, version 2, as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+- *
+- * Copyright (C) 2013 Red Hat, Inc.
+- * Copyright (C) 2013 Freescale Semiconductor, Inc.
+- *
+- */
+-#ifndef __IOMMU_PCI_H
+-#define __IOMMU_PCI_H
+-
+-/* Helper function for swapping pci device reference */
+-static inline void swap_pci_ref(struct pci_dev **from, struct pci_dev *to)
+-{
+-	pci_dev_put(*from);
+-	*from = to;
+-}
+-
+-#endif  /* __IOMMU_PCI_H */
 
