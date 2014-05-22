@@ -1,120 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <53674C6E.1070909@linux.intel.com>
-Date: Mon, 05 May 2014 16:31:42 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:40808 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061AbaEVR4Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 May 2014 13:56:24 -0400
+Received: by mail-ie0-f176.google.com with SMTP id rl12so3944775iec.35
+        for <linux-pci@vger.kernel.org>; Thu, 22 May 2014 10:56:24 -0700 (PDT)
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Len Brown <lenb@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Patch Part3 V1 17/22] pci, ACPI, iommu: enhance pci_root to
- support DMAR device hotplug
-References: <1398150453-28141-1-git-send-email-jiang.liu@linux.intel.com> <1398150453-28141-18-git-send-email-jiang.liu@linux.intel.com> <2370777.I1hYvaFUEg@vostro.rjw.lan>
-In-Reply-To: <2370777.I1hYvaFUEg@vostro.rjw.lan>
+In-Reply-To: <20140521233802.GA21575@pd.tnic>
+References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140521233802.GA21575@pd.tnic>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 22 May 2014 11:56:03 -0600
+Message-ID: <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
+Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after Fam16h
+To: Borislav Petkov <bp@alien8.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Robert Richter <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 2014/4/22 17:49, Rafael J. Wysocki wrote:
-> On Tuesday, April 22, 2014 03:07:28 PM Jiang Liu wrote:
->> Finally enhance pci_root driver to support DMAR device hotplug when
->> hot-plugging PCI host bridges.
+On Wed, May 21, 2014 at 5:38 PM, Borislav Petkov <bp@alien8.de> wrote:
+> On Wed, May 21, 2014 at 05:18:17PM -0600, Bjorn Helgaas wrote:
+>> ECS is an AMD mechanism that allows access to extended PCI config space
+>> (offsets 256-4096) via I/O ports CF8/CFCh.  We normally use ECAM, i.e.,
+>> MMCONFIG, to access that space, but apparently old machines have issues
+>> that meant we couldn't use ECAM.
 >>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> The solution was to enable ECS so we could use configuration mechanism #1
+>> (I/O ports CF8/CFCh) to access extended config space.  See 831d991821da
+>> ("x86: add PCI extended config space access for AMD Barcelona").
+>>
+>> New machines should be able to use ECAM, which means they don't need the
+>> CPU-specific code to enable ECS.  This patch leaves ECS the same on all
+>> existing platforms, but stops enabling it on platforms after Fam16h.
+>>
+>> Those future platforms should be able to use the standard ACPI MCFG/_CBA
+>> descriptions of the PCIe ECAM mechanism.
+>>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Robert Richter <rric@kernel.org>
 >> ---
->>  drivers/acpi/pci_root.c |   16 ++++++++++++++--
->>  1 file changed, 14 insertions(+), 2 deletions(-)
+>>  arch/x86/pci/amd_bus.c |    4 +++-
+>>  1 file changed, 3 insertions(+), 1 deletion(-)
 >>
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index d388f13d48b4..aa8f549869f3 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -33,6 +33,7 @@
->>  #include <linux/pci.h>
->>  #include <linux/pci-acpi.h>
->>  #include <linux/pci-aspm.h>
->> +#include <linux/dmar.h>
->>  #include <linux/acpi.h>
->>  #include <linux/slab.h>
->>  #include <acpi/apei.h>	/* for acpi_hest_init() */
->> @@ -511,6 +512,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->>  	struct acpi_pci_root *root;
->>  	acpi_handle handle = device->handle;
->>  	int no_aspm = 0, clear_aspm = 0;
->> +	bool hotadd = (system_state != SYSTEM_BOOTING);
-> 
-> The parens are not necessary in the above instruction.
-Hi Rafael,
-	Thanks! Will fix it in next version.
-
-> 
->>  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
->>  	if (!root)
->> @@ -557,6 +559,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
->>  	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->>  	device->driver_data = root;
->>  
->> +	if (hotadd && dmar_device_hotplug(handle, true)) {
->> +		result = -ENXIO;
->> +		goto end;
->> +	}
->> +
->>  	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
->>  	       acpi_device_name(device), acpi_device_bid(device),
->>  	       root->segment, &root->secondary);
->> @@ -583,7 +590,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->>  			root->segment, (unsigned int)root->secondary.start);
->>  		device->driver_data = NULL;
->>  		result = -ENODEV;
->> -		goto end;
->> +		goto remove_dmar;
->>  	}
->>  
->>  	if (clear_aspm) {
->> @@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->>  	if (device->wakeup.flags.run_wake)
->>  		device_set_run_wake(root->bus->bridge, true);
->>  
->> -	if (system_state != SYSTEM_BOOTING) {
->> +	if (hotadd) {
->>  		pcibios_resource_survey_bus(root->bus);
->>  		pci_assign_unassigned_root_bus_resources(root->bus);
->>  	}
->> @@ -607,6 +614,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
->>  	pci_unlock_rescan_remove();
->>  	return 1;
->>  
->> +remove_dmar:
->> +	if (hotadd)
->> +		dmar_device_hotplug(handle, false);
-> 
-> I suppose that works if dmar_device_hotplug() returned false before?
-Yes, it's for error recover only.
-
-> 
->>  end:
->>  	kfree(root);
->>  	return result;
->> @@ -625,6 +635,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
->>  
->>  	pci_remove_root_bus(root->bus);
->>  
->> +	dmar_device_hotplug(device->handle, false);
->> +
->>  	pci_unlock_rescan_remove();
->>  
->>  	kfree(root);
+>> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+>> index aa936e3a2019..67dadf179348 100644
+>> --- a/arch/x86/pci/amd_bus.c
+>> +++ b/arch/x86/pci/amd_bus.c
+>> @@ -405,7 +405,9 @@ static int __init amd_postcore_init(void)
+>>               return 0;
 >>
-> 
+>>       early_fill_mp_bus_info();
+>> -     pci_io_ecs_init();
+>> +
+>> +     if (boot_cpu_data.x86 <= 0x16)
+>
+> Fam 0x16, i.e. hex? I think we talked about fam 0x10, i.e. 16 decimal.
+>
+> Oh well, that's an AMD call now.
+
+I chose Fam16h (0x16) because it looks like that's the newest stuff
+that's in the field.  I suspect things would probably work if we
+changed this patch to leave ECS disabled on some Fam16h, Fam15h, etc.,
+but that would change behavior on existing systems, which obviously
+adds some risk.  I didn't think there was much benefit that makes the
+risk worthwhile.
+
+My goal is to stop needing CPU-specific changes in the future, not
+necessarily to remove the CPU-specific code we already have.
+
+Does that make sense?  I'm not sure whether I understood your real question.
+
+Bjorn
