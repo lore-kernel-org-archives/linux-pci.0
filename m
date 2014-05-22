@@ -1,48 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:35436 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758174AbaEMBff (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 May 2014 21:35:35 -0400
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 13 May 2014 11:35:34 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 3/4] drivers/vfio/pci: Fix wrong MSI interrupt count
-Date: Tue, 13 May 2014 11:35:23 +1000
-Message-Id: <1399944924-1200-4-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1399944924-1200-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1399944924-1200-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:55783 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901AbaEVUUZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 May 2014 16:20:25 -0400
+Received: by mail-ie0-f177.google.com with SMTP id y20so3946679ier.8
+        for <linux-pci@vger.kernel.org>; Thu, 22 May 2014 13:20:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140522191746.GL4383@pd.tnic>
+References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521233802.GA21575@pd.tnic> <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
+ <20140522191746.GL4383@pd.tnic>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 22 May 2014 14:20:04 -0600
+Message-ID: <CAErSpo7=0-xdnu4DQufu_6eS=6AYhnDRaQvzeiMEC5a=zKU0Jg@mail.gmail.com>
+Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after Fam16h
+To: Borislav Petkov <bp@alien8.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Robert Richter <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According PCI local bus specification, the register of Message
-Control for MSI (offset: 2, length: 2) has bit#0 to enable or
-disable MSI logic and it shouldn't be part contributing to the
-calculation of MSI interrupt count. The patch fixes the issue.
+On Thu, May 22, 2014 at 1:17 PM, Borislav Petkov <bp@alien8.de> wrote:
+> On Thu, May 22, 2014 at 11:56:03AM -0600, Bjorn Helgaas wrote:
+>> I chose Fam16h (0x16) because it looks like that's the newest stuff
+>> that's in the field. I suspect things would probably work if we
+>> changed this patch to leave ECS disabled on some Fam16h, Fam15h, etc.,
+>> but that would change behavior on existing systems, which obviously
+>> adds some risk. I didn't think there was much benefit that makes the
+>> risk worthwhile.
+>>
+>> My goal is to stop needing CPU-specific changes in the future, not
+>> necessarily to remove the CPU-specific code we already have.
+>>
+>> Does that make sense? I'm not sure whether I understood your real
+>> question.
+>
+> No, you got it right. I'm just wondering why only the newest stuff.
+> MMCONFIG is supposed to work just fine on everything from Fam10h
+> onwards, I'm not sure all Fam10h supported it though. Maybe Suravee can
+> verify that...
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/vfio/pci/vfio_pci.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Even if MMCONFIG does work fine on everything from Fam10h onwards, we
+still depend on the BIOS to provide a correct MCFG table.  I don't
+think we can guarantee that changing from ECS to MMCONFIG on a Fam16h
+box in the field is safe, because we'd then be using a feature we've
+never used before.
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 7ba0424..6b8cd07 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -196,8 +196,7 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
- 		if (pos) {
- 			pci_read_config_word(vdev->pdev,
- 					     pos + PCI_MSI_FLAGS, &flags);
--
--			return 1 << (flags & PCI_MSI_FLAGS_QMASK);
-+			return 1 << ((flags & PCI_MSI_FLAGS_QMASK) >> 1);
- 		}
- 	} else if (irq_type == VFIO_PCI_MSIX_IRQ_INDEX) {
- 		u8 pos;
--- 
-1.8.3.2
-
+Bjorn
