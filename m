@@ -1,525 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:60988 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756723AbaEaO3D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:29:03 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v4 11/15] thunderbolt: Add support for simple pci tunnels
-Date: Sat, 31 May 2014 16:27:56 +0200
-Message-Id: <1401546480-2071-12-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:15529 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752870AbaEVXHb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:07:31 -0400
+Subject: [PATCH v4 00/16] PCI/iommu: Fix DMA alias problems
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
+Date: Thu, 22 May 2014 17:07:23 -0600
+Message-ID: <20140522230230.2856.40017.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A pci downstream and pci upstream port can be connected through a
-tunnel. To establish the tunnel we have to setup two unidirectional
-paths between the two ports.
+For testing, this version can be found in my git tree:
 
-Right now we only support paths with two hops (i.e. no chaining) and at
-most one pci device per thunderbolt device.
+git://github.com/awilliam/linux-vfio.git dma-alias-v4
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+Please report any issues.
+
+v4:
+ - Change dma_func_alias to dma_alias_devfn, holding a single
+   devfn to alias, thereby supporting aliases to the wrong slot.
+   The DMA alias iterator is easily changed, but IOMMU grouping
+   requires significant rework.  This is now done in IOMMU code
+   rather than PCI code.
+
+ - AMD-Vi - try to incorporate IVRS aliases dynamically into
+   PCI alias quirks to make sure that our grouping remains the
+   same.  Potentially this could end up reporting BIOS aliases
+   that we can add to our list of quirks.
+
+v3:
+ - Found several instances where I had PCI_SLOT when I meant
+   PCI_FUNC.  Thanks to Andrew for spotting this.  This should
+   fix the problem he was having with Ricoh quirks.  We also
+   pruned down the func0 quirks to only those that we know are
+   needed.  We can always add them back later.
+
+ - Found a case in intel-iommu of using dev_is_pci() where I
+   really wanted !dev_is_pci().  Fixed.
+
+v2:
+ - Several new Marvell controllers added to quirks.  There's been
+   a lot of success reported with this series in
+   https://bugzilla.kernel.org/show_bug.cgi?id=42679
+
+ - Add quirk for ASMedia and Tundra PCIe-to-PCI bridges that do
+   not expose a PCIe capability.  These have been shown to use
+   the standard PCIe-to-PCI bridge requester ID.
+
+ - Fix copy/paste duplicate Ricoh quirk ID
+
+ - Fixed AMD IOMMU for the "ghost" function case where the DMA
+   alias is for an absent device.  The iommu rlookup table and
+   data fields need to be initializes.
+
+ - Fixed Intel interrupt remapping, I wasn't passing the target
+   bus number, only the alias bus number.
+
+These patches are split across PCI and IOMMU, but I've front-loaded
+all of the PCI infrastructure so that the first 7 patches can be
+applied to PCI-core, the IOMMU maintainers can pickup their patches,
+then we can finish with dead code removal.  Bjorn might also be
+willing to carry the IOMMU changes if the maintainers want to ack
+them.
+
+Original description:
+
+This series attempts to fix a couple issues we've had outstanding in
+the PCI/IOMMU code for a while.  The first issue is with devices that
+use the wrong requester ID for DMA transactions.  We already have a
+sort of half-baked attempt to fix this for several Ricoh devices, but
+the fix only helps them be useful through IOMMU groups, not the
+general DMA case.  There are also several Marvell devices which use
+use a different wrong requester ID and don't even fit into the DMA
+source idea.  This series creates a DMA alias iterator that will
+step through each possible alias of a device, allowing IOMMUs to
+insert mappings for both the device and its aliases.
+
+Hand-in-hand with this is our broken pci_find_upstream_pcie_bridge()
+function, which is known to blowup when it finds itself suddenly at
+a PCIe device without crossing a PCIe-to-PCI bridge (as identified by
+the PCIe capability).  It also likes to make the invalid assumption
+that a PCIe device never has its requester ID masked by any usptream
+bus.  We can fix this using the above new DMA alias iterator, since
+that's effectively what this function was meant to do.
+
+Finally, with all these helpers, it makes sense to consolidate code
+for determining IOMMU groups.  The first step in finding the root
+of a group is finding the final upstream DMA alias for the device,
+then applying additional ACS rules and incorporating device specific
+aliases.  As this is all common to PCI, create a single implementation
+and remove piles of code from the individual IOMMU drivers.
+
+This series allows devices like the Marvell 88SE9123 to finally work
+on Linux with either AMD-Vi or VT-d enabled on the box.  I've
+collected device IDs from various bugs to support as many SKUs of
+these devices as possible, but I'm sure there are others that I've
+missed.
+
+This should also enable motherboards with an onboard ASmedia
+ASM1083/1085 PCIe-to-PCI bridge to work with VT-d enabled.  I've
+acquired an adapter board with this chip, but it actually exposes
+a PCIe capability, unlike most of the onboard controllers.  Therefore
+I expect this series will fix the WARN_ON currently hit during boot,
+but there's a 50/50 chance whether the device behaves like a PCI
+bridge or a PCIe bridge with regard to the requester ID that it uses
+to take ownership of the transaction.  If it turns out to use the
+PCIe bridge model, I expect we can quirk it using a dev_flags bit
+to identify a PCI bridge that takes ownership as if it was a PCIe
+bridge.
+
+Please test and provide feedback.  I expect IOMMU group topology
+should not change from this series, but if a case is found where it
+does, please share.  Also, if there are additional quirks we need
+to add, please either file new or add to the existing bugs.  Thanks,
+
+Alex
+
 ---
- drivers/thunderbolt/Makefile     |   2 +-
- drivers/thunderbolt/tb.c         | 135 +++++++++++++++++++++++
- drivers/thunderbolt/tb.h         |   1 +
- drivers/thunderbolt/tunnel_pci.c | 232 +++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tunnel_pci.h |  30 +++++
- 5 files changed, 399 insertions(+), 1 deletion(-)
- create mode 100644 drivers/thunderbolt/tunnel_pci.c
- create mode 100644 drivers/thunderbolt/tunnel_pci.h
 
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 3532f36..0122ca6 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
- obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
--thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o
-+thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o
- 
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index 1efcacc..177f61d 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -10,6 +10,7 @@
- 
- #include "tb.h"
- #include "tb_regs.h"
-+#include "tunnel_pci.h"
- 
- 
- /* enumeration & hot plug handling */
-@@ -51,6 +52,124 @@ static void tb_scan_port(struct tb_port *port)
- 	tb_scan_switch(sw);
- }
- 
-+/**
-+ * tb_free_invalid_tunnels() - destroy tunnels of devices that have gone away
-+ */
-+static void tb_free_invalid_tunnels(struct tb *tb)
-+{
-+	struct tb_pci_tunnel *tunnel;
-+	struct tb_pci_tunnel *n;
-+	list_for_each_entry_safe(tunnel, n, &tb->tunnel_list, list)
-+	{
-+		if (tb_pci_is_invalid(tunnel)) {
-+			tb_pci_deactivate(tunnel);
-+			tb_pci_free(tunnel);
-+		}
-+	}
-+}
-+
-+/**
-+ * find_pci_up_port() - return the first PCIe up port on @sw or NULL
-+ */
-+static struct tb_port *tb_find_pci_up_port(struct tb_switch *sw)
-+{
-+	int i;
-+	for (i = 1; i <= sw->config.max_port_number; i++)
-+		if (sw->ports[i].config.type == TB_TYPE_PCIE_UP)
-+			return &sw->ports[i];
-+	return NULL;
-+}
-+
-+/**
-+ * find_unused_down_port() - return the first inactive PCIe down port on @sw
-+ */
-+static struct tb_port *tb_find_unused_down_port(struct tb_switch *sw)
-+{
-+	int i;
-+	int cap;
-+	int res;
-+	int data;
-+	for (i = 1; i <= sw->config.max_port_number; i++) {
-+		if (tb_is_upstream_port(&sw->ports[i]))
-+			continue;
-+		if (sw->ports[i].config.type != TB_TYPE_PCIE_DOWN)
-+			continue;
-+		cap = tb_find_cap(&sw->ports[i], TB_CFG_PORT, TB_CAP_PCIE);
-+		if (cap <= 0)
-+			continue;
-+		res = tb_port_read(&sw->ports[i], &data, TB_CFG_PORT, cap, 1);
-+		if (res < 0)
-+			continue;
-+		if (data & 0x80000000)
-+			continue;
-+		return &sw->ports[i];
-+	}
-+	return NULL;
-+}
-+
-+/**
-+ * tb_activate_pcie_devices() - scan for and activate PCIe devices
-+ *
-+ * This method is somewhat ad hoc. For now it only supports one device
-+ * per port and only devices at depth 1.
-+ */
-+static void tb_activate_pcie_devices(struct tb *tb)
-+{
-+	int i;
-+	int cap;
-+	u32 data;
-+	struct tb_switch *sw;
-+	struct tb_port *up_port;
-+	struct tb_port *down_port;
-+	struct tb_pci_tunnel *tunnel;
-+	/* scan for pcie devices at depth 1*/
-+	for (i = 1; i <= tb->root_switch->config.max_port_number; i++) {
-+		if (tb_is_upstream_port(&tb->root_switch->ports[i]))
-+			continue;
-+		if (tb->root_switch->ports[i].config.type != TB_TYPE_PORT)
-+			continue;
-+		if (!tb->root_switch->ports[i].remote)
-+			continue;
-+		sw = tb->root_switch->ports[i].remote->sw;
-+		up_port = tb_find_pci_up_port(sw);
-+		if (!up_port) {
-+			tb_sw_info(sw, "no PCIe devices found, aborting\n");
-+			continue;
-+		}
-+
-+		/* check whether port is already activated */
-+		cap = tb_find_cap(up_port, TB_CFG_PORT, TB_CAP_PCIE);
-+		if (cap <= 0)
-+			continue;
-+		if (tb_port_read(up_port, &data, TB_CFG_PORT, cap, 1))
-+			continue;
-+		if (data & 0x80000000) {
-+			tb_port_info(up_port,
-+				     "PCIe port already activated, aborting\n");
-+			continue;
-+		}
-+
-+		down_port = tb_find_unused_down_port(tb->root_switch);
-+		if (!down_port) {
-+			tb_port_info(up_port,
-+				     "All PCIe down ports are occupied, aborting\n");
-+			continue;
-+		}
-+		tunnel = tb_pci_alloc(tb, up_port, down_port);
-+		if (!tunnel) {
-+			tb_port_info(up_port,
-+				     "PCIe tunnel allocation failed, aborting\n");
-+			continue;
-+		}
-+
-+		if (tb_pci_activate(tunnel)) {
-+			tb_port_info(up_port,
-+				     "PCIe tunnel activation failed, aborting\n");
-+			tb_pci_free(tunnel);
-+		}
-+
-+	}
-+}
- 
- /* hotplug handling */
- 
-@@ -101,6 +220,7 @@ static void tb_handle_hotplug(struct work_struct *work)
- 		if (port->remote) {
- 			tb_port_info(port, "unplugged\n");
- 			tb_sw_set_unpplugged(port->remote->sw);
-+			tb_free_invalid_tunnels(tb);
- 			tb_switch_free(port->remote->sw);
- 			port->remote = NULL;
- 		} else {
-@@ -118,6 +238,10 @@ static void tb_handle_hotplug(struct work_struct *work)
- 		} else if (port->remote->sw->config.depth > 1) {
- 			tb_sw_warn(port->remote->sw,
- 				   "hotplug: chaining not supported\n");
-+		} else {
-+			tb_sw_info(port->remote->sw,
-+				   "hotplug: activating pcie devices\n");
-+			tb_activate_pcie_devices(tb);
- 		}
- 	}
- out:
-@@ -154,8 +278,17 @@ static void tb_schedule_hotplug_handler(void *data, u64 route, u8 port,
-  */
- void thunderbolt_shutdown_and_free(struct tb *tb)
- {
-+	struct tb_pci_tunnel *tunnel;
-+	struct tb_pci_tunnel *n;
-+
- 	mutex_lock(&tb->lock);
- 
-+	/* tunnels are only present after everything has been initialized */
-+	list_for_each_entry_safe(tunnel, n, &tb->tunnel_list, list) {
-+		tb_pci_deactivate(tunnel);
-+		tb_pci_free(tunnel);
-+	}
-+
- 	if (tb->root_switch)
- 		tb_switch_free(tb->root_switch);
- 	tb->root_switch = NULL;
-@@ -201,6 +334,7 @@ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
- 	tb->nhi = nhi;
- 	mutex_init(&tb->lock);
- 	mutex_lock(&tb->lock);
-+	INIT_LIST_HEAD(&tb->tunnel_list);
- 
- 	tb->wq = alloc_ordered_workqueue("thunderbolt", 0);
- 	if (!tb->wq)
-@@ -221,6 +355,7 @@ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
- 
- 	/* Full scan to discover devices added before the driver was loaded. */
- 	tb_scan_switch(tb->root_switch);
-+	tb_activate_pcie_devices(tb);
- 
- 	/* Allow tb_handle_hotplug to progress events */
- 	tb->hotplug_active = true;
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 8bbdc2b..508abc4 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -100,6 +100,7 @@ struct tb {
- 	struct tb_ctl *ctl;
- 	struct workqueue_struct *wq; /* ordered workqueue for plug events */
- 	struct tb_switch *root_switch;
-+	struct list_head tunnel_list; /* list of active PCIe tunnels */
- 	bool hotplug_active; /*
- 			      * tb_handle_hotplug will stop progressing plug
- 			      * events and exit if this is not set (it needs to
-diff --git a/drivers/thunderbolt/tunnel_pci.c b/drivers/thunderbolt/tunnel_pci.c
-new file mode 100644
-index 0000000..baf1cd3
---- /dev/null
-+++ b/drivers/thunderbolt/tunnel_pci.c
-@@ -0,0 +1,232 @@
-+/*
-+ * Thunderbolt Cactus Ridge driver - PCIe tunnel
-+ *
-+ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-+ */
-+
-+#include <linux/slab.h>
-+#include <linux/list.h>
-+
-+#include "tunnel_pci.h"
-+#include "tb.h"
-+
-+#define __TB_TUNNEL_PRINT(level, tunnel, fmt, arg...)                   \
-+	do {                                                            \
-+		struct tb_pci_tunnel *__tunnel = (tunnel);              \
-+		level(__tunnel->tb, "%llx:%x <-> %llx:%x (PCI): " fmt,  \
-+		      tb_route(__tunnel->down_port->sw),                \
-+		      __tunnel->down_port->port,                        \
-+		      tb_route(__tunnel->up_port->sw),                  \
-+		      __tunnel->up_port->port,                          \
-+		      ## arg);                                          \
-+	} while (0)
-+
-+#define tb_tunnel_WARN(tunnel, fmt, arg...) \
-+	__TB_TUNNEL_PRINT(tb_WARN, tunnel, fmt, ##arg)
-+#define tb_tunnel_warn(tunnel, fmt, arg...) \
-+	__TB_TUNNEL_PRINT(tb_warn, tunnel, fmt, ##arg)
-+#define tb_tunnel_info(tunnel, fmt, arg...) \
-+	__TB_TUNNEL_PRINT(tb_info, tunnel, fmt, ##arg)
-+
-+static void tb_pci_init_path(struct tb_path *path)
-+{
-+	path->egress_fc_enable = TB_PATH_SOURCE | TB_PATH_INTERNAL;
-+	path->egress_shared_buffer = TB_PATH_NONE;
-+	path->ingress_fc_enable = TB_PATH_ALL;
-+	path->ingress_shared_buffer = TB_PATH_NONE;
-+	path->priority = 3;
-+	path->weight = 1;
-+	path->drop_packages = 0;
-+	path->nfc_credits = 0;
-+}
-+
-+/**
-+ * tb_pci_alloc() - allocate a pci tunnel
-+ *
-+ * Allocate a PCI tunnel. The ports must be of type TB_TYPE_PCIE_UP and
-+ * TB_TYPE_PCIE_DOWN.
-+ *
-+ * Currently only paths consisting of two hops are supported (that is the
-+ * ports must be on "adjacent" switches).
-+ *
-+ * The paths are hard-coded to use hop 8 (the only working hop id available on
-+ * my thunderbolt devices). Therefore at most ONE path per device may be
-+ * activated.
-+ *
-+ * Return: Returns a tb_pci_tunnel on success or NULL on failure.
-+ */
-+struct tb_pci_tunnel *tb_pci_alloc(struct tb *tb, struct tb_port *up,
-+				   struct tb_port *down)
-+{
-+	struct tb_pci_tunnel *tunnel = kzalloc(sizeof(*tunnel), GFP_KERNEL);
-+	if (!tunnel)
-+		goto err;
-+	tunnel->tb = tb;
-+	tunnel->down_port = down;
-+	tunnel->up_port = up;
-+	INIT_LIST_HEAD(&tunnel->list);
-+	tunnel->path_to_up = tb_path_alloc(up->sw->tb, 2);
-+	if (!tunnel->path_to_up)
-+		goto err;
-+	tunnel->path_to_down = tb_path_alloc(up->sw->tb, 2);
-+	if (!tunnel->path_to_down)
-+		goto err;
-+	tb_pci_init_path(tunnel->path_to_up);
-+	tb_pci_init_path(tunnel->path_to_down);
-+
-+	tunnel->path_to_up->hops[0].in_port = down;
-+	tunnel->path_to_up->hops[0].in_hop_index = 8;
-+	tunnel->path_to_up->hops[0].in_counter_index = -1;
-+	tunnel->path_to_up->hops[0].out_port = tb_upstream_port(up->sw)->remote;
-+	tunnel->path_to_up->hops[0].next_hop_index = 8;
-+
-+	tunnel->path_to_up->hops[1].in_port = tb_upstream_port(up->sw);
-+	tunnel->path_to_up->hops[1].in_hop_index = 8;
-+	tunnel->path_to_up->hops[1].in_counter_index = -1;
-+	tunnel->path_to_up->hops[1].out_port = up;
-+	tunnel->path_to_up->hops[1].next_hop_index = 8;
-+
-+	tunnel->path_to_down->hops[0].in_port = up;
-+	tunnel->path_to_down->hops[0].in_hop_index = 8;
-+	tunnel->path_to_down->hops[0].in_counter_index = -1;
-+	tunnel->path_to_down->hops[0].out_port = tb_upstream_port(up->sw);
-+	tunnel->path_to_down->hops[0].next_hop_index = 8;
-+
-+	tunnel->path_to_down->hops[1].in_port =
-+		tb_upstream_port(up->sw)->remote;
-+	tunnel->path_to_down->hops[1].in_hop_index = 8;
-+	tunnel->path_to_down->hops[1].in_counter_index = -1;
-+	tunnel->path_to_down->hops[1].out_port = down;
-+	tunnel->path_to_down->hops[1].next_hop_index = 8;
-+	return tunnel;
-+
-+err:
-+	if (tunnel) {
-+		if (tunnel->path_to_down)
-+			tb_path_free(tunnel->path_to_down);
-+		if (tunnel->path_to_up)
-+			tb_path_free(tunnel->path_to_up);
-+		kfree(tunnel);
-+	}
-+	return NULL;
-+}
-+
-+/**
-+ * tb_pci_free() - free a tunnel
-+ *
-+ * The tunnel must have been deactivated.
-+ */
-+void tb_pci_free(struct tb_pci_tunnel *tunnel)
-+{
-+	if (tunnel->path_to_up->activated || tunnel->path_to_down->activated) {
-+		tb_tunnel_WARN(tunnel, "trying to free an activated tunnel\n");
-+		return;
-+	}
-+	tb_path_free(tunnel->path_to_up);
-+	tb_path_free(tunnel->path_to_down);
-+	kfree(tunnel);
-+}
-+
-+/**
-+ * tb_pci_is_invalid - check whether an activated path is still valid
-+ */
-+bool tb_pci_is_invalid(struct tb_pci_tunnel *tunnel)
-+{
-+	WARN_ON(!tunnel->path_to_up->activated);
-+	WARN_ON(!tunnel->path_to_down->activated);
-+
-+	return tb_path_is_invalid(tunnel->path_to_up)
-+	       || tb_path_is_invalid(tunnel->path_to_down);
-+}
-+
-+/**
-+ * tb_pci_port_active() - activate/deactivate PCI capability
-+ *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+static int tb_pci_port_active(struct tb_port *port, bool active)
-+{
-+	u32 word = active ? 0x80000000 : 0x0;
-+	int cap = tb_find_cap(port, TB_CFG_PORT, TB_CAP_PCIE);
-+	if (cap <= 0) {
-+		tb_port_warn(port, "TB_CAP_PCIE not found: %d\n", cap);
-+		return cap ? cap : -ENXIO;
-+	}
-+	return tb_port_write(port, &word, TB_CFG_PORT, cap, 1);
-+}
-+
-+/**
-+ * tb_pci_restart() - activate a tunnel after a hardware reset
-+ */
-+int tb_pci_restart(struct tb_pci_tunnel *tunnel)
-+{
-+	int res;
-+	tunnel->path_to_up->activated = false;
-+	tunnel->path_to_down->activated = false;
-+
-+	tb_tunnel_info(tunnel, "activating\n");
-+
-+	res = tb_path_activate(tunnel->path_to_up);
-+	if (res)
-+		goto err;
-+	res = tb_path_activate(tunnel->path_to_down);
-+	if (res)
-+		goto err;
-+
-+	res = tb_pci_port_active(tunnel->down_port, true);
-+	if (res)
-+		goto err;
-+
-+	res = tb_pci_port_active(tunnel->up_port, true);
-+	if (res)
-+		goto err;
-+	return 0;
-+err:
-+	tb_tunnel_warn(tunnel, "activation failed\n");
-+	tb_pci_deactivate(tunnel);
-+	return res;
-+}
-+
-+/**
-+ * tb_pci_activate() - activate a tunnel
-+ *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+int tb_pci_activate(struct tb_pci_tunnel *tunnel)
-+{
-+	int res;
-+	if (tunnel->path_to_up->activated || tunnel->path_to_down->activated) {
-+		tb_tunnel_WARN(tunnel,
-+			       "trying to activate an already activated tunnel\n");
-+		return -EINVAL;
-+	}
-+
-+	res = tb_pci_restart(tunnel);
-+	if (res)
-+		return res;
-+
-+	list_add(&tunnel->list, &tunnel->tb->tunnel_list);
-+	return 0;
-+}
-+
-+
-+
-+/**
-+ * tb_pci_deactivate() - deactivate a tunnel
-+ */
-+void tb_pci_deactivate(struct tb_pci_tunnel *tunnel)
-+{
-+	tb_tunnel_info(tunnel, "deactivating\n");
-+	/*
-+	 * TODO: enable reset by writing 0x04000000 to TB_CAP_PCIE + 1 on up
-+	 * port. Seems to have no effect?
-+	 */
-+	tb_pci_port_active(tunnel->up_port, false);
-+	tb_pci_port_active(tunnel->down_port, false);
-+	if (tunnel->path_to_down->activated)
-+		tb_path_deactivate(tunnel->path_to_down);
-+	if (tunnel->path_to_up->activated)
-+		tb_path_deactivate(tunnel->path_to_up);
-+	list_del_init(&tunnel->list);
-+}
-+
-diff --git a/drivers/thunderbolt/tunnel_pci.h b/drivers/thunderbolt/tunnel_pci.h
-new file mode 100644
-index 0000000..a67f93c
---- /dev/null
-+++ b/drivers/thunderbolt/tunnel_pci.h
-@@ -0,0 +1,30 @@
-+/*
-+ * Thunderbolt Cactus Ridge driver - PCIe tunnel
-+ *
-+ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-+ */
-+
-+#ifndef TB_PCI_H_
-+#define TB_PCI_H_
-+
-+#include "tb.h"
-+
-+struct tb_pci_tunnel {
-+	struct tb *tb;
-+	struct tb_port *up_port;
-+	struct tb_port *down_port;
-+	struct tb_path *path_to_up;
-+	struct tb_path *path_to_down;
-+	struct list_head list;
-+};
-+
-+struct tb_pci_tunnel *tb_pci_alloc(struct tb *tb, struct tb_port *up,
-+				   struct tb_port *down);
-+void tb_pci_free(struct tb_pci_tunnel *tunnel);
-+int tb_pci_activate(struct tb_pci_tunnel *tunnel);
-+int tb_pci_restart(struct tb_pci_tunnel *tunnel);
-+void tb_pci_deactivate(struct tb_pci_tunnel *tunnel);
-+bool tb_pci_is_invalid(struct tb_pci_tunnel *tunnel);
-+
-+#endif
-+
--- 
-1.9.3
+Alex Williamson (16):
+      PCI: Add DMA alias iterator
+      PCI: define pci_dev_flags as bit shifts
+      PCI: quirk pci_for_each_dma_alias()
+      PCI: quirk dma_alias_devfn for Ricoh devices
+      PCI: quirk dma_alias_devfn for Marvell devices
+      PCI: Quirk pci_for_each_dma_alias() for bridges
+      PCI: Add quirks for ASMedia and Tundra bridges
+      iommu: Create central IOMMU group lookup/creation interface
+      iommu/amd: Update to use PCI DMA aliases
+      iommu/amd: Use iommu_group_get_for_dev()
+      iommu/intel: Use iommu_group_get_for_dev()
+      iommu/intel: Update to use PCI DMA aliases
+      iommu/fsl: Use iommu_group_get_for_dev() for IOMMU groups
+      iommu: Remove pci.h
+      PCI: Remove pci_find_upstream_pcie_bridge()
+      PCI: Remove pci_get_dma_source()
 
+
+ drivers/iommu/amd_iommu.c           |  214 +++++++-----------------
+ drivers/iommu/amd_iommu_types.h     |    1 
+ drivers/iommu/fsl_pamu_domain.c     |   66 --------
+ drivers/iommu/intel-iommu.c         |  307 +++++++++++++----------------------
+ drivers/iommu/intel_irq_remapping.c |   55 ++++--
+ drivers/iommu/iommu.c               |  181 +++++++++++++++++++++
+ drivers/iommu/pci.h                 |   29 ---
+ drivers/pci/quirks.c                |  116 ++++++++-----
+ drivers/pci/search.c                |  104 +++++++++---
+ include/linux/iommu.h               |    1 
+ include/linux/pci.h                 |   31 +---
+ 11 files changed, 557 insertions(+), 548 deletions(-)
+ delete mode 100644 drivers/iommu/pci.h
