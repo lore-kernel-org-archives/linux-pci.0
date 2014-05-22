@@ -1,194 +1,240 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55442 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:28097 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751776AbaE1Upc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 May 2014 16:45:32 -0400
-Message-ID: <1401309923.2412.71.camel@ul30vt.home>
-Subject: Re: [PATCH v4 00/16] PCI/iommu: Fix DMA alias problems
+	id S1752617AbaEVXIc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:08:32 -0400
+Subject: [PATCH v4 10/16] iommu/amd: Use iommu_group_get_for_dev()
 From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	acooks@gmail.com, linux-kernel@vger.kernel.org, eddy0596@gmail.com,
-	linux@horizon.com
-Date: Wed, 28 May 2014 14:45:23 -0600
-In-Reply-To: <20140528202922.GT11907@google.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: Joerg Roedel <joro@8bytes.org>, linux-kernel@vger.kernel.org,
+	acooks@gmail.com, linux@horizon.com, bhelgaas@google.com,
+	eddy0596@gmail.com
+Date: Thu, 22 May 2014 17:08:26 -0600
+Message-ID: <20140522230826.2856.70391.stgit@bling.home>
+In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
 References: <20140522230230.2856.40017.stgit@bling.home>
-	 <20140528202922.GT11907@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-05-28 at 14:29 -0600, Bjorn Helgaas wrote:
-> On Thu, May 22, 2014 at 05:07:23PM -0600, Alex Williamson wrote:
-> > For testing, this version can be found in my git tree:
-> > 
-> > git://github.com/awilliam/linux-vfio.git dma-alias-v4
-> > 
-> > Please report any issues.
-> > 
-> > v4:
-> >  - Change dma_func_alias to dma_alias_devfn, holding a single
-> >    devfn to alias, thereby supporting aliases to the wrong slot.
-> >    The DMA alias iterator is easily changed, but IOMMU grouping
-> >    requires significant rework.  This is now done in IOMMU code
-> >    rather than PCI code.
-> > 
-> >  - AMD-Vi - try to incorporate IVRS aliases dynamically into
-> >    PCI alias quirks to make sure that our grouping remains the
-> >    same.  Potentially this could end up reporting BIOS aliases
-> >    that we can add to our list of quirks.
-> > 
-> > v3:
-> >  - Found several instances where I had PCI_SLOT when I meant
-> >    PCI_FUNC.  Thanks to Andrew for spotting this.  This should
-> >    fix the problem he was having with Ricoh quirks.  We also
-> >    pruned down the func0 quirks to only those that we know are
-> >    needed.  We can always add them back later.
-> > 
-> >  - Found a case in intel-iommu of using dev_is_pci() where I
-> >    really wanted !dev_is_pci().  Fixed.
-> > 
-> > v2:
-> >  - Several new Marvell controllers added to quirks.  There's been
-> >    a lot of success reported with this series in
-> >    https://bugzilla.kernel.org/show_bug.cgi?id=42679
-> > 
-> >  - Add quirk for ASMedia and Tundra PCIe-to-PCI bridges that do
-> >    not expose a PCIe capability.  These have been shown to use
-> >    the standard PCIe-to-PCI bridge requester ID.
-> > 
-> >  - Fix copy/paste duplicate Ricoh quirk ID
-> > 
-> >  - Fixed AMD IOMMU for the "ghost" function case where the DMA
-> >    alias is for an absent device.  The iommu rlookup table and
-> >    data fields need to be initializes.
-> > 
-> >  - Fixed Intel interrupt remapping, I wasn't passing the target
-> >    bus number, only the alias bus number.
-> > 
-> > These patches are split across PCI and IOMMU, but I've front-loaded
-> > all of the PCI infrastructure so that the first 7 patches can be
-> > applied to PCI-core, the IOMMU maintainers can pickup their patches,
-> > then we can finish with dead code removal.  Bjorn might also be
-> > willing to carry the IOMMU changes if the maintainers want to ack
-> > them.
-> 
-> I put 1-7 on a pci/iommu branch for v3.16.  I'm happy to include the rest,
-> too, given acks from Joerg and David.  Or if they prefer to take them all,
-> which might be easier than coordinating two trees, especially since there's
-> PCI stuff at the beginning and end, here's my ack for the PCI bits (patches
-> 1-7 and 15-16):
-> 
->     Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+The common iommu_group_get_for_dev() allows us to greatly simplify
+our group lookup for a new device.  Also, since we insert IVRS
+aliases into the PCI DMA alias quirks, we should alway come up with
+the same results as the existing code.
 
-Awesome, thanks!
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/iommu/amd_iommu.c       |  164 +--------------------------------------
+ drivers/iommu/amd_iommu_types.h |    1 
+ 2 files changed, 5 insertions(+), 160 deletions(-)
 
-> If you want to send me updated changelogs for patches 5 & 6, I'll drop
-> those in.
-
-Yep, I'll send changelog updates for 5 & 6 in a few minutes.
-
-> Didn't you have more testing reports?  I see George's, but I thought there
-> were some others, too.
-
-I also see:
-
-https://lkml.org/lkml/2014/5/28/24
-Tested-by: Pat Erley <pat-lkml@erley.org>
-
-There are several reports of success in the bzs, but I don't see any
-official tested-by tags there.  Thanks,
-
-Alex
-
-> > Original description:
-> > 
-> > This series attempts to fix a couple issues we've had outstanding in
-> > the PCI/IOMMU code for a while.  The first issue is with devices that
-> > use the wrong requester ID for DMA transactions.  We already have a
-> > sort of half-baked attempt to fix this for several Ricoh devices, but
-> > the fix only helps them be useful through IOMMU groups, not the
-> > general DMA case.  There are also several Marvell devices which use
-> > use a different wrong requester ID and don't even fit into the DMA
-> > source idea.  This series creates a DMA alias iterator that will
-> > step through each possible alias of a device, allowing IOMMUs to
-> > insert mappings for both the device and its aliases.
-> > 
-> > Hand-in-hand with this is our broken pci_find_upstream_pcie_bridge()
-> > function, which is known to blowup when it finds itself suddenly at
-> > a PCIe device without crossing a PCIe-to-PCI bridge (as identified by
-> > the PCIe capability).  It also likes to make the invalid assumption
-> > that a PCIe device never has its requester ID masked by any usptream
-> > bus.  We can fix this using the above new DMA alias iterator, since
-> > that's effectively what this function was meant to do.
-> > 
-> > Finally, with all these helpers, it makes sense to consolidate code
-> > for determining IOMMU groups.  The first step in finding the root
-> > of a group is finding the final upstream DMA alias for the device,
-> > then applying additional ACS rules and incorporating device specific
-> > aliases.  As this is all common to PCI, create a single implementation
-> > and remove piles of code from the individual IOMMU drivers.
-> > 
-> > This series allows devices like the Marvell 88SE9123 to finally work
-> > on Linux with either AMD-Vi or VT-d enabled on the box.  I've
-> > collected device IDs from various bugs to support as many SKUs of
-> > these devices as possible, but I'm sure there are others that I've
-> > missed.
-> > 
-> > This should also enable motherboards with an onboard ASmedia
-> > ASM1083/1085 PCIe-to-PCI bridge to work with VT-d enabled.  I've
-> > acquired an adapter board with this chip, but it actually exposes
-> > a PCIe capability, unlike most of the onboard controllers.  Therefore
-> > I expect this series will fix the WARN_ON currently hit during boot,
-> > but there's a 50/50 chance whether the device behaves like a PCI
-> > bridge or a PCIe bridge with regard to the requester ID that it uses
-> > to take ownership of the transaction.  If it turns out to use the
-> > PCIe bridge model, I expect we can quirk it using a dev_flags bit
-> > to identify a PCI bridge that takes ownership as if it was a PCIe
-> > bridge.
-> > 
-> > Please test and provide feedback.  I expect IOMMU group topology
-> > should not change from this series, but if a case is found where it
-> > does, please share.  Also, if there are additional quirks we need
-> > to add, please either file new or add to the existing bugs.  Thanks,
-> > 
-> > Alex
-> > 
-> > ---
-> > 
-> > Alex Williamson (16):
-> >       PCI: Add DMA alias iterator
-> >       PCI: define pci_dev_flags as bit shifts
-> >       PCI: quirk pci_for_each_dma_alias()
-> >       PCI: quirk dma_alias_devfn for Ricoh devices
-> >       PCI: quirk dma_alias_devfn for Marvell devices
-> >       PCI: Quirk pci_for_each_dma_alias() for bridges
-> >       PCI: Add quirks for ASMedia and Tundra bridges
-> >       iommu: Create central IOMMU group lookup/creation interface
-> >       iommu/amd: Update to use PCI DMA aliases
-> >       iommu/amd: Use iommu_group_get_for_dev()
-> >       iommu/intel: Use iommu_group_get_for_dev()
-> >       iommu/intel: Update to use PCI DMA aliases
-> >       iommu/fsl: Use iommu_group_get_for_dev() for IOMMU groups
-> >       iommu: Remove pci.h
-> >       PCI: Remove pci_find_upstream_pcie_bridge()
-> >       PCI: Remove pci_get_dma_source()
-> > 
-> > 
-> >  drivers/iommu/amd_iommu.c           |  214 +++++++-----------------
-> >  drivers/iommu/amd_iommu_types.h     |    1 
-> >  drivers/iommu/fsl_pamu_domain.c     |   66 --------
-> >  drivers/iommu/intel-iommu.c         |  307 +++++++++++++----------------------
-> >  drivers/iommu/intel_irq_remapping.c |   55 ++++--
-> >  drivers/iommu/iommu.c               |  181 +++++++++++++++++++++
-> >  drivers/iommu/pci.h                 |   29 ---
-> >  drivers/pci/quirks.c                |  116 ++++++++-----
-> >  drivers/pci/search.c                |  104 +++++++++---
-> >  include/linux/iommu.h               |    1 
-> >  include/linux/pci.h                 |   31 +---
-> >  11 files changed, 557 insertions(+), 548 deletions(-)
-> >  delete mode 100644 drivers/iommu/pci.h
-
-
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index a73a7ed..ca85615 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -46,7 +46,6 @@
+ #include "amd_iommu_proto.h"
+ #include "amd_iommu_types.h"
+ #include "irq_remapping.h"
+-#include "pci.h"
+ 
+ #define CMD_SET_TYPE(cmd, t) ((cmd)->data[1] |= ((t) << 28))
+ 
+@@ -133,9 +132,6 @@ static void free_dev_data(struct iommu_dev_data *dev_data)
+ 	list_del(&dev_data->dev_data_list);
+ 	spin_unlock_irqrestore(&dev_data_list_lock, flags);
+ 
+-	if (dev_data->group)
+-		iommu_group_put(dev_data->group);
+-
+ 	kfree(dev_data);
+ }
+ 
+@@ -264,167 +260,17 @@ static bool check_device(struct device *dev)
+ 	return true;
+ }
+ 
+-static struct pci_bus *find_hosted_bus(struct pci_bus *bus)
+-{
+-	while (!bus->self) {
+-		if (!pci_is_root_bus(bus))
+-			bus = bus->parent;
+-		else
+-			return ERR_PTR(-ENODEV);
+-	}
+-
+-	return bus;
+-}
+-
+-#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
+-
+-static struct pci_dev *get_isolation_root(struct pci_dev *pdev)
+-{
+-	struct pci_dev *dma_pdev = pdev;
+-
+-	/* Account for quirked devices */
+-	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
+-
+-	/*
+-	 * If it's a multifunction device that does not support our
+-	 * required ACS flags, add to the same group as lowest numbered
+-	 * function that also does not suport the required ACS flags.
+-	 */
+-	if (dma_pdev->multifunction &&
+-	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
+-		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
+-
+-		for (i = 0; i < 8; i++) {
+-			struct pci_dev *tmp;
+-
+-			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
+-			if (!tmp)
+-				continue;
+-
+-			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
+-				swap_pci_ref(&dma_pdev, tmp);
+-				break;
+-			}
+-			pci_dev_put(tmp);
+-		}
+-	}
+-
+-	/*
+-	 * Devices on the root bus go through the iommu.  If that's not us,
+-	 * find the next upstream device and test ACS up to the root bus.
+-	 * Finding the next device may require skipping virtual buses.
+-	 */
+-	while (!pci_is_root_bus(dma_pdev->bus)) {
+-		struct pci_bus *bus = find_hosted_bus(dma_pdev->bus);
+-		if (IS_ERR(bus))
+-			break;
+-
+-		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
+-			break;
+-
+-		swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
+-	}
+-
+-	return dma_pdev;
+-}
+-
+-static int use_pdev_iommu_group(struct pci_dev *pdev, struct device *dev)
+-{
+-	struct iommu_group *group = iommu_group_get(&pdev->dev);
+-	int ret;
+-
+-	if (!group) {
+-		group = iommu_group_alloc();
+-		if (IS_ERR(group))
+-			return PTR_ERR(group);
+-
+-		WARN_ON(&pdev->dev != dev);
+-	}
+-
+-	ret = iommu_group_add_device(group, dev);
+-	iommu_group_put(group);
+-	return ret;
+-}
+-
+-static int use_dev_data_iommu_group(struct iommu_dev_data *dev_data,
+-				    struct device *dev)
+-{
+-	if (!dev_data->group) {
+-		struct iommu_group *group = iommu_group_alloc();
+-		if (IS_ERR(group))
+-			return PTR_ERR(group);
+-
+-		dev_data->group = group;
+-	}
+-
+-	return iommu_group_add_device(dev_data->group, dev);
+-}
+-
+ static int init_iommu_group(struct device *dev)
+ {
+-	struct iommu_dev_data *dev_data;
+ 	struct iommu_group *group;
+-	struct pci_dev *dma_pdev;
+-	int ret;
+ 
+-	group = iommu_group_get(dev);
+-	if (group) {
+-		iommu_group_put(group);
+-		return 0;
+-	}
++	group = iommu_group_get_for_dev(dev);
+ 
+-	dev_data = find_dev_data(get_device_id(dev));
+-	if (!dev_data)
+-		return -ENOMEM;
+-
+-	if (dev_data->alias_data) {
+-		u16 alias;
+-		struct pci_bus *bus;
+-
+-		if (dev_data->alias_data->group)
+-			goto use_group;
++	if (IS_ERR(group))
++		return PTR_ERR(group);
+ 
+-		/*
+-		 * If the alias device exists, it's effectively just a first
+-		 * level quirk for finding the DMA source.
+-		 */
+-		alias = amd_iommu_alias_table[dev_data->devid];
+-		dma_pdev = pci_get_bus_and_slot(alias >> 8, alias & 0xff);
+-		if (dma_pdev) {
+-			dma_pdev = get_isolation_root(dma_pdev);
+-			goto use_pdev;
+-		}
+-
+-		/*
+-		 * If the alias is virtual, try to find a parent device
+-		 * and test whether the IOMMU group is actualy rooted above
+-		 * the alias.  Be careful to also test the parent device if
+-		 * we think the alias is the root of the group.
+-		 */
+-		bus = pci_find_bus(0, alias >> 8);
+-		if (!bus)
+-			goto use_group;
+-
+-		bus = find_hosted_bus(bus);
+-		if (IS_ERR(bus) || !bus->self)
+-			goto use_group;
+-
+-		dma_pdev = get_isolation_root(pci_dev_get(bus->self));
+-		if (dma_pdev != bus->self || (dma_pdev->multifunction &&
+-		    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)))
+-			goto use_pdev;
+-
+-		pci_dev_put(dma_pdev);
+-		goto use_group;
+-	}
+-
+-	dma_pdev = get_isolation_root(pci_dev_get(to_pci_dev(dev)));
+-use_pdev:
+-	ret = use_pdev_iommu_group(dma_pdev, dev);
+-	pci_dev_put(dma_pdev);
+-	return ret;
+-use_group:
+-	return use_dev_data_iommu_group(dev_data->alias_data, dev);
++	iommu_group_put(group);
++	return 0;
+ }
+ 
+ static int __last_alias(struct pci_dev *pdev, u16 alias, void *data)
+diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
+index f1a5abf..7277a20 100644
+--- a/drivers/iommu/amd_iommu_types.h
++++ b/drivers/iommu/amd_iommu_types.h
+@@ -432,7 +432,6 @@ struct iommu_dev_data {
+ 	struct iommu_dev_data *alias_data;/* The alias dev_data */
+ 	struct protection_domain *domain; /* Domain the device is bound to */
+ 	atomic_t bind;			  /* Domain attach reference count */
+-	struct iommu_group *group;	  /* IOMMU group for virtual aliases */
+ 	u16 devid;			  /* PCI Device ID */
+ 	bool iommu_v2;			  /* Device can make use of IOMMUv2 */
+ 	bool passthrough;		  /* Default for device is pt_domain */
 
