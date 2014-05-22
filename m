@@ -1,118 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30910 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755432AbaE3XHT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 19:07:19 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5] pciehp: only wait command complete for really hotplug control
-Date: Fri, 30 May 2014 16:06:59 -0700
-Message-Id: <1401491219-1496-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:31413 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753072AbaEVXHr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:07:47 -0400
+Subject: [PATCH v4 03/16] PCI: quirk pci_for_each_dma_alias()
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
+Date: Thu, 22 May 2014 17:07:43 -0600
+Message-ID: <20140522230742.2856.25341.stgit@bling.home>
+In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
+References: <20140522230230.2856.40017.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On system with 16 PCI express hotplug slots, customer complain every slot
-will report "Command not completed in 1000 msec" during initialization.
+Some devices are broken and use a requester ID other than their
+physical devfn.  Add a byte, using an existing gap in the pci_dev
+structure, to store an alternate "alias" devfn.  A bit in the
+dev_flags tells us when this is valid.  We then add the alias as
+one more step in the pci_for_each_dma_alias() iterator.
 
-Intel says that we should only wait command complete only for
-           Electromechanical Interlock Control
-           Power Controller Control
-           Power Indicator Control
-           Attention Indicator Control
-
-For detail please check CF118 on
-  http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
-
-To address the problem:
-change to only wait when (EIC, PCC, PIC, AIC) bits get changed.
-
-With that we could save 16 seconds during booting, later with 32 sockets system
-with 64 pcie hotplug slots we could save 64 seconds.
-
--v5: only add checking for intel chipset.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/hotplug/pciehp.h     |    1 +
- drivers/pci/hotplug/pciehp_hpc.c |   25 ++++++++++++++++++++-----
- 2 files changed, 21 insertions(+), 5 deletions(-)
+ drivers/pci/search.c |   11 +++++++++++
+ include/linux/pci.h  |    3 +++
+ 2 files changed, 14 insertions(+)
 
-Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-@@ -143,6 +143,11 @@ static void pcie_wait_cmd(struct control
- 		ctrl_dbg(ctrl, "Command not completed in 1000 msec\n");
- }
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 5601cdb..2c19f3f 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -37,6 +37,17 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 	if (ret)
+ 		return ret;
  
-+/* Some vendors only set CC for real hotplug events */
-+#define  PCI_EXP_SLTCTL_REAL_WAIT_MASK (PCI_EXP_SLTCTL_EIC | \
-+					PCI_EXP_SLTCTL_PCC | \
-+					PCI_EXP_SLTCTL_PIC | \
-+					PCI_EXP_SLTCTL_AIC)
- /**
-  * pcie_write_cmd - Issue controller command
-  * @ctrl: controller to which the command is issued
-@@ -152,8 +157,9 @@ static void pcie_wait_cmd(struct control
- static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
- {
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
-+	u16 slot_ctrl, old_slot_ctrl;
- 	u16 slot_status;
--	u16 slot_ctrl;
-+	int wait = 1;
- 
- 	mutex_lock(&ctrl->ctrl_lock);
- 
-@@ -181,9 +187,8 @@ static void pcie_write_cmd(struct contro
- 		}
- 	}
- 
--	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
--	slot_ctrl &= ~mask;
--	slot_ctrl |= (cmd & mask);
-+	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &old_slot_ctrl);
-+	slot_ctrl = (old_slot_ctrl & ~mask) | (cmd & mask);
- 	ctrl->cmd_busy = 1;
- 	smp_mb();
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
-@@ -191,7 +196,13 @@ static void pcie_write_cmd(struct contro
- 	/*
- 	 * Wait for command completion.
- 	 */
--	if (!ctrl->no_cmd_complete) {
-+	if (ctrl->no_cmd_complete)
-+		wait = 0;
-+	else if (ctrl->real_cmd_complete &&
-+		 ((PCI_EXP_SLTCTL_REAL_WAIT_MASK & old_slot_ctrl) ==
-+		  (PCI_EXP_SLTCTL_REAL_WAIT_MASK & slot_ctrl)))
-+		wait = 0;
-+	if (wait) {
- 		int poll = 0;
- 		/*
- 		 * if hotplug interrupt is not enabled or command
-@@ -783,6 +794,10 @@ struct controller *pcie_init(struct pcie
- 	    !(POWER_CTRL(ctrl) | ATTN_LED(ctrl) | PWR_LED(ctrl) | EMI(ctrl)))
- 	    ctrl->no_cmd_complete = 1;
- 
-+	/* Intel current only support "real" hotplug event with CC */
-+	if (pdev->vendor == PCI_VENDOR_ID_INTEL)
-+		ctrl->real_cmd_complete = 1;
++	/*
++	 * If the device is broken and uses an alias requester ID for
++	 * DMA, iterate over that too.
++	 */
++	if (unlikely(pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN)) {
++		ret = fn(pdev, PCI_DEVID(pdev->bus->number,
++					 pdev->dma_alias_devfn), data);
++		if (ret)
++			return ret;
++	}
 +
-         /* Check if Data Link Layer Link Active Reporting is implemented */
-         pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
-         if (link_cap & PCI_EXP_LNKCAP_DLLLARC) {
-Index: linux-2.6/drivers/pci/hotplug/pciehp.h
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp.h
-+++ linux-2.6/drivers/pci/hotplug/pciehp.h
-@@ -97,6 +97,7 @@ struct controller {
- 	unsigned int no_cmd_complete:1;
- 	unsigned int link_active_reporting:1;
- 	unsigned int notification_enabled:1;
-+	unsigned int real_cmd_complete:1;
- 	unsigned int power_fault_detected;
+ 	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
+ 		struct pci_dev *tmp;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 545903d..9d4035c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -171,6 +171,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) (1 << 2),
+ 	/* Flag for quirk use to store if quirk-specific ACS is enabled */
+ 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
++	/* Flag to indicate the device uses dma_alias_devfn */
++	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
  };
  
+ enum pci_irq_reroute_variant {
+@@ -268,6 +270,7 @@ struct pci_dev {
+ 	u8		rom_base_reg;	/* which config register controls the ROM */
+ 	u8		pin;		/* which interrupt pin this device uses */
+ 	u16		pcie_flags_reg;	/* cached PCIe Capabilities Register */
++	u8		dma_alias_devfn;/* devfn of DMA alias, if any */
+ 
+ 	struct pci_driver *driver;	/* which driver has allocated this device */
+ 	u64		dma_mask;	/* Mask of the bits of bus address this
+
