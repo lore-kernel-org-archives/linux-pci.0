@@ -1,120 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:55233 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762AbaENPE4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 May 2014 11:04:56 -0400
-Message-ID: <537385EA.2070302@ti.com>
-Date: Wed, 14 May 2014 20:34:10 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Received: from mail.skyhub.de ([78.46.96.112]:47749 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750760AbaEVTRu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 15:17:50 -0400
+Date: Thu, 22 May 2014 21:17:46 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Robert Richter <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after
+ Fam16h
+Message-ID: <20140522191746.GL4383@pd.tnic>
+References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521233802.GA21575@pd.tnic>
+ <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Jingoo Han <jg1.han@samsung.com>,
-	"'Santosh Shilimkar'" <santosh.shilimkar@ti.com>,
-	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<rogerq@ti.com>, <balajitk@ti.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Marek Vasut'" <marex@denx.de>
-Subject: Re: [PATCH 06/17] pci: host: pcie-designware: Use *base-mask* for
- configuring the iATU
-References: <1399383244-14556-1-git-send-email-kishon@ti.com> <4528185.oZbgyuuFKX@wuerfel> <537302CD.7000701@ti.com> <5281007.CFRjW0Yeu2@wuerfel>
-In-Reply-To: <5281007.CFRjW0Yeu2@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+On Thu, May 22, 2014 at 11:56:03AM -0600, Bjorn Helgaas wrote:
+> I chose Fam16h (0x16) because it looks like that's the newest stuff
+> that's in the field. I suspect things would probably work if we
+> changed this patch to leave ECS disabled on some Fam16h, Fam15h, etc.,
+> but that would change behavior on existing systems, which obviously
+> adds some risk. I didn't think there was much benefit that makes the
+> risk worthwhile.
+>
+> My goal is to stop needing CPU-specific changes in the future, not
+> necessarily to remove the CPU-specific code we already have.
+>
+> Does that make sense? I'm not sure whether I understood your real
+> question.
 
-On Wednesday 14 May 2014 06:15 PM, Arnd Bergmann wrote:
-> On Wednesday 14 May 2014 11:14:45 Kishon Vijay Abraham I wrote:
->> hi Arnd,
->>
->> On Tuesday 13 May 2014 07:04 PM, Arnd Bergmann wrote:
->>> On Tuesday 13 May 2014 15:27:46 Arnd Bergmann wrote:
->>>> On Tuesday 13 May 2014 18:56:23 Kishon Vijay Abraham I wrote:
->>>>>> If you have a case where the outbound translation is a 256MB (i.e. 28bit)
->>>>>> section of the CPU address space, that could be represented as
->>>>>>
->>>>>>       ranges = <0x82000000 0 0  0xb0000000  0 0x10000000>;
->>>>>>
->>>>>> or 
->>>>>>
->>>>>>       ranges = <0x82000000 0 0xb0000000  0xb0000000  0 0x10000000>;
->>>>>>
->>>>>> depending on whether you want the BARs to be programmed using a low
->>>>>> address 0x0-0x0fffffff or an address matching the window
->>>>>> 0xb0000000-0xbfffffff.
->>>>>
->>>>> The problem is, for configuring the window starting at 0xb0000000, the ATU
->>>>> should be programmed 0x0000000 (the cpu address for it will be 0xb0000000 though).
->>>>>
->>>>
->>>> Then use the first of the two?
->>>>
->>>
->>> To clarify: using <0x82000000 0 0  0xb0000000  0 0x10000000> will give you 
->>> a mem_offset of 0xb0000000, which should work just fine for this case.
->>>
->>> What I don't understand is why the ATU cares about whether the outbound
->>> address is 0x0000000 or 0xb0000000 if it just decodes the lower 28 bit
->>> anyway. Did you mean that we have to program the BARs using low addresses
->>> regardless of what is programmed in the ATU? That would make more sense,
->>> and it also matches what I suggested.
->>
->> No, It's not like it decodes only the lower 28bits. The BARs is programmed with
->> 32 bit value.
->>
->> My pcie dt node has
->>  ranges = <0x00000800 0 0x20001000 0x20001000 0 0x00002000  /* CONFIG */
->>            0x81000000 0 0          0x20003000 0 0x00010000  /* IO */
->>            0x82000000 0 0x20013000 0x20013000 0 0xffed000>; /* MEM */
->>
->> Consider MEM address space..
->>
->> Here both PCI address and CPU address is 0x20013000. So when there is a write
->> to cpu addr 0x20013000 [writel(virt_addr(0x20013000)], we want it to be
->> translated to PCI addr 0x20013000. So in 'ATU', we would expect *base* to be
->> programmed to *0x20013000* and target to be programmed to *0x20013000*. But
->> that's not the case for DRA7xx. For DRA7xx *base* should be programmed to
->> *0x0013000* and target should be programmed to *0x20013000*.
-> 
-> Ok, got it, thanks for your patience.
-> 
-> I think this would best be modeled as a separate bus node that contains the
-> restriction, like this:
-> 
-> / {
-> 	#address-cells = <1>; // or <2> if you support > 4GB address space
-> 	#size-cells = <1>;
-> 
-> 	soc {
-> 		#address-cells <1>;
-> 		#size-cells = <1>;
-> 		ranges;
-> 		dma-ranges;
-> 
-> 		... // all normal devices
-> 
-> 		axi@20000000 {
-> 			#size-cells = <1>;
-> 			#address-cells = <1>;
-> 			dma-ranges; // can access all 4GB outbound
-> 			ranges = <0 0x20000000 0x10000000>; // 28-bit bus
-> 
-> 			pci@0 {
-> 				reg = <0x0    0x1000>, // internal regs
-> 				      <0x1000 0x2000>; // config space
-> 				dma-ranges; // 32-bit outbound
-> 				ranges = <0x81000000 0 0           0x3000 0 0x00010000  /* IO */
-> 					  0x82000000 0 0x20013000 0x13000 0 0xffed000>; /* MEM */
-> 			};
-> 		};
-> 	};
-> };
+No, you got it right. I'm just wondering why only the newest stuff.
+MMCONFIG is supposed to work just fine on everything from Fam10h
+onwards, I'm not sure all Fam10h supported it though. Maybe Suravee can
+verify that...
 
-Nice :-)
+-- 
+Regards/Gruss,
+    Boris.
 
-Thanks
-Kishon
+Sent from a fat crate under my desk. Formatting is fine.
+--
