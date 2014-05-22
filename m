@@ -1,62 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:35057 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750754AbaESU25 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 16:28:57 -0400
-Received: by mail-ie0-f176.google.com with SMTP id rl12so2868341iec.21
-        for <linux-pci@vger.kernel.org>; Mon, 19 May 2014 13:28:57 -0700 (PDT)
-Date: Mon, 19 May 2014 14:28:53 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alan <gnomes@lxorguk.ukuu.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nikhil P Rao <nikhil.rao@intel.com>
-Subject: Re: [PATCH] pci: Allow very large resource windows
-Message-ID: <20140519202853.GA1371@google.com>
-References: <20140519130255.15364.49358.stgit@alan.etchedpixels.co.uk>
+Received: from mx1.redhat.com ([209.132.183.28]:25879 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753169AbaEVXIF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:08:05 -0400
+Subject: [PATCH v4 06/16] PCI: Quirk pci_for_each_dma_alias() for bridges
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
+Date: Thu, 22 May 2014 17:08:01 -0600
+Message-ID: <20140522230801.2856.18629.stgit@bling.home>
+In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
+References: <20140522230230.2856.40017.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140519130255.15364.49358.stgit@alan.etchedpixels.co.uk>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 19, 2014 at 02:03:14PM +0100, Alan wrote:
-> From: Alan <alan@linux.intel.com>
-> 
-> This is needed for some of the Xeon Phi type systems.
-> 
-> Signed-off-by: Alan Cox <alan@linux.intel.com>
+Several PCIe-to-PCI bridges fail to provide a PCIe capability, causing
+us to handle them as conventional PCI devices.  In some cases, this
+may be correct, in others it's not.  Add a dev_flag bit to identify
+devices to be handled as standard PCIe-to-PCI bridges.
 
-I applied this to my pci/resource branch for v3.16.  Nikhil
-posted essentially the same patch a couple years ago, so I added
-his signed-off-by and adopted his use of ARRAY_SIZE() to connect the
-"order > 13" test with the aligns[] declaration.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/search.c |   10 ++++++++--
+ include/linux/pci.h  |    2 ++
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 2c19f3f..df38f73 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -88,8 +88,14 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 				continue;
+ 			}
+ 		} else {
+-			ret = fn(tmp, PCI_DEVID(tmp->bus->number, tmp->devfn),
+-				 data);
++			if (tmp->dev_flags & PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS)
++				ret = fn(tmp,
++					 PCI_DEVID(tmp->subordinate->number,
++						   PCI_DEVFN(0, 0)), data);
++			else
++				ret = fn(tmp,
++					 PCI_DEVID(tmp->bus->number,
++						   tmp->devfn), data);
+ 			if (ret)
+ 				return ret;
+ 		}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9d4035c..85ab35e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -173,6 +173,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
+ 	/* Flag to indicate the device uses dma_alias_devfn */
+ 	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
++	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
++	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
+ };
+ 
+ enum pci_irq_reroute_variant {
 
-> ---
->  drivers/pci/setup-bus.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index d219d44..4184112 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -921,7 +921,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  {
->  	struct pci_dev *dev;
->  	resource_size_t min_align, align, size, size0, size1;
-> -	resource_size_t aligns[12];	/* Alignments from 1Mb to 2Gb */
-> +	resource_size_t aligns[14];	/* Alignments from 1Mb to 8Gb */
->  	int order, max_order;
->  	struct resource *b_res = find_free_bus_resource(bus, type);
->  	unsigned int mem64_mask = 0;
-> @@ -960,7 +960,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  			/* For bridges size != alignment */
->  			align = pci_resource_alignment(dev, r);
->  			order = __ffs(align) - 20;
-> -			if (order > 11) {
-> +			if (order > 13) {
->  				dev_warn(&dev->dev, "disabling BAR %d: %pR "
->  					 "(bad alignment %#llx)\n", i, r,
->  					 (unsigned long long) align);
-> 
