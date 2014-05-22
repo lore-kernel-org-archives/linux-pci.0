@@ -1,374 +1,131 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: [Patch Part1 V2 18/29] x86, irq: introduce mechanisms to support dynamically allocate IRQ for IOAPIC
-Date: Tue, 20 May 2014 00:23:02 +0800
-Message-Id: <1400516594-11544-19-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:53358 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751247AbaEVWj2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 May 2014 18:39:28 -0400
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+CC: Tim Harvey <tharvey@gateworks.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Marek Vasut <marex@denx.de>,
+	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
+	Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>
+Subject: RE: [Q] Synopsys PCIe interrupts
+Date: Thu, 22 May 2014 22:38:56 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B70476722C@DFLE11.ent.ti.com>
+References: <fd5f29f175b2499e9d972629f1ccd74a@HKXPR06MB168.apcprd06.prod.outlook.com>
+	 <001801cf6f0f$cfd4b510$6f7e1f30$%han@samsung.com>
+	 <CAJ+vNU29uZn+TRx+X8miLuRXhQS32QQZkEF53y09ijNYm9NX7w@mail.gmail.com>
+	 <48f8fbc1569e49df8fe8e15e4138d8d9@HKXPR06MB168.apcprd06.prod.outlook.com>
+ <1400056898.4837.11.camel@weser.hi.pengutronix.de>
+In-Reply-To: <1400056898.4837.11.camel@weser.hi.pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently x86 support identity mapping between GSI(IOAPIC pin) and IRQ
-number, so continous IRQs at low end are statically allocated to IOAPICs
-at boot time. This design causes trouble to support IOAPIC hotplug.
-
-This patch implements basic mechanism to dynamically allocate IRQ on
-demand for IOAPIC pins by using irqdomain framework.
-
-It first adds several fields into struct ioapic to support irqdomain.
-Then it implements an algorithm to dynamically allocate IRQ number
-on demand.
-1) Legacy(ISA) IRQs is not managed by irqdomain because there may be
-   multiple pins sharing the same IRQ number and current irqdomain
-   only supports 1:1 mapping between pins and IRQ.
-2) Build identity mapping for GSIs between NR_IRQS_LEGACY and
-   arch_dynirq_lower_bound(0). This is typically used to support legacy
-   IRQs and simple platforms.
-3) Dynamically allocate IRQs for GSIs above arch_dynirq_lower_bound(0).
-   This may be used to support big system and IOAPIC hotplug.
-4) Dynamically allocate IRQs for non-ISA IRQs below NR_IRQS_LEGACY. This
-   is to support some really weired platforms.
-
-Function arch_dynirq_lower_bound(0) will be enhanced in coming patch
-to enable dynamic IRQ allocation for IOAPIC. To ease our life,
-arch_dynirq_lower_bound(0) must be greater than or equal to
-NR_IRQS_LEGACY, otherwise it may break backward compatibilities.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |   12 ++++-
- arch/x86/kernel/acpi/boot.c    |   10 ++--
- arch/x86/kernel/apic/io_apic.c |  111 ++++++++++++++++++++++++++++------------
- 3 files changed, 94 insertions(+), 39 deletions(-)
-
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index f4fd0be26cec..2e593832ec6f 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -98,6 +98,8 @@ struct IR_IO_APIC_route_entry {
- #define IOAPIC_AUTO     -1
- #define IOAPIC_EDGE     0
- #define IOAPIC_LEVEL    1
-+#define	IOAPIC_MAP_ALLOC		0x1
-+#define	IOAPIC_MAP_CHECK		0x2
- 
- #ifdef CONFIG_X86_IO_APIC
- 
-@@ -169,9 +171,11 @@ struct mp_ioapic_gsi{
- };
- extern u32 gsi_top;
- 
-+typedef struct irq_domain *(*ioapic_create_domain_fn)(int idx, void *arg);
-+
- extern int mp_find_ioapic(u32 gsi);
- extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
--extern int mp_map_pin_to_irq(int ioapic, int pin);
-+extern int mp_map_pin_to_irq(int ioapic, int pin, int idx, unsigned int flags);
- extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void __init pre_init_apic_IRQ0(void);
- 
-@@ -213,7 +217,11 @@ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
- static inline void ioapic_insert_resources(void) { }
- #define gsi_top (NR_IRQS_LEGACY)
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
--static inline int mp_map_pin_to_irq(int ioapic, int pin) { return -1; }
-+static inline int mp_map_pin_to_irq(int ioapic, int pin, int idx,
-+				    unsigned int flags)
-+{
-+	return -1;
-+}
- 
- struct io_apic_irq_attr;
- static inline int io_apic_set_pci_routing(struct device *dev, int irq,
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 6eae9a7231c4..9aa02b30a8bc 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -99,7 +99,7 @@ static u32 isa_irq_to_gsi[NR_IRQS_LEGACY] __read_mostly = {
- 
- #define	ACPI_INVALID_GSI		INT_MIN
- 
--static int map_gsi_to_irq(unsigned int gsi)
-+static int map_gsi_to_irq(unsigned int gsi, unsigned int flags)
- {
- 	int i, ioapic, pin;
- 
-@@ -110,7 +110,7 @@ static int map_gsi_to_irq(unsigned int gsi)
- 	ioapic = mp_find_ioapic(gsi);
- 	if (ioapic >= 0) {
- 		pin = mp_find_ioapic_pin(ioapic, gsi);
--		return mp_map_pin_to_irq(ioapic, pin);
-+		return mp_map_pin_to_irq(ioapic, pin, -1, flags);
- 	}
- 
- 	pr_err("Failed to map GSI%d to IRQ number.\n", gsi);
-@@ -490,7 +490,7 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
- 
- int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- {
--	int irq = map_gsi_to_irq(gsi);
-+	int irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
- 
- 	if (irq >= 0) {
- #ifdef CONFIG_X86_IO_APIC
-@@ -559,7 +559,7 @@ int acpi_register_gsi(struct device *dev, u32 gsi, int trigger, int polarity)
- 
- 	plat_gsi = (*__acpi_register_gsi)(dev, gsi, trigger, polarity);
- 	if (plat_gsi != ACPI_INVALID_GSI)
--		return map_gsi_to_irq(plat_gsi);
-+		return map_gsi_to_irq(plat_gsi, 0);
- 
- 	return -1;
- }
-@@ -1041,7 +1041,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	if (acpi_gbl_FADT.sci_interrupt == gsi)
- 		return gsi;
- 
--	irq = map_gsi_to_irq(gsi);
-+	irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
- 	if (irq < 0)
- 		return ACPI_INVALID_GSI;
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 2d776f69f4e8..d0dd904007aa 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -31,6 +31,7 @@
- #include <linux/acpi.h>
- #include <linux/module.h>
- #include <linux/syscore_ops.h>
-+#include <linux/irqdomain.h>
- #include <linux/msi.h>
- #include <linux/htirq.h>
- #include <linux/freezer.h>
-@@ -83,6 +84,7 @@ int sis_apic_bug = -1;
- 
- static DEFINE_RAW_SPINLOCK(ioapic_lock);
- static DEFINE_RAW_SPINLOCK(vector_lock);
-+static DEFINE_MUTEX(ioapic_mutex);
- 
- static struct ioapic {
- 	/*
-@@ -97,6 +99,9 @@ static struct ioapic {
- 	struct mpc_ioapic mp_config;
- 	/* IO APIC gsi routing info */
- 	struct mp_ioapic_gsi  gsi_config;
-+	struct irq_domain *irqdomain;
-+	ioapic_create_domain_fn irqdomain_cb;
-+	void *irqdomain_arg;
- 	DECLARE_BITMAP(pin_programmed, MP_MAX_IOAPIC_PIN + 1);
- } ioapics[MAX_IO_APICS];
- 
-@@ -135,6 +140,11 @@ static inline int mp_init_irq_at_boot(int ioapic, int irq)
- 	return ioapic == 0 || (irq >= 0 && irq < NR_IRQS_LEGACY);
- }
- 
-+static inline struct irq_domain *mp_ioapic_irqdomain(int ioapic)
-+{
-+	return ioapics[ioapic].irqdomain;
-+}
-+
- int nr_ioapics;
- 
- /* The one past the highest gsi number used */
-@@ -963,19 +973,47 @@ static int irq_trigger(int idx)
- 	return trigger;
- }
- 
--int mp_map_pin_to_irq(int apic, int pin)
-+int mp_map_pin_to_irq(int ioapic, int pin, int idx, unsigned int flags)
- {
--	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(apic);
--	u32 gsi = gsi_cfg->gsi_base + pin;
-+	int irq = -1;
-+	u32 gsi = mp_pin_2_gsi(ioapic, pin);
-+	struct irq_domain *domain = mp_ioapic_irqdomain(ioapic);
- 
--	/*
--	 * Provide an identity mapping of gsi == irq except on truly weird
--	 * platforms that have non isa irqs in the first 16 gsis.
--	 */
--	return gsi >= NR_IRQS_LEGACY ? gsi : gsi_top + gsi;
-+	if (!domain) {
-+		/*
-+		 * Provide an identity mapping of gsi == irq except on truly
-+		 * weird platforms that have non isa irqs in the first 16 gsis.
-+		 */
-+		return gsi >= NR_IRQS_LEGACY ? gsi : gsi_top + gsi;
-+	}
-+
-+	mutex_lock(&ioapic_mutex);
-+	irq = irq_find_mapping(domain, pin);
-+	if (irq <= 0 && (flags & IOAPIC_MAP_ALLOC)) {
-+		if ((flags & IOAPIC_MAP_CHECK) && idx < 0) {
-+			idx = find_irq_entry(ioapic, pin, mp_INT);
-+			if (idx < 0)
-+				goto out;
-+		}
-+
-+		/*
-+		 * Dynamically allocate IRQ for GSI above
-+		 * arch_dynirq_lower_bound(0), and build identity mapping for
-+		 * statically assigned IRQ, and specially handle non-ISA IRQs
-+		 * below NR_IRQS_LEGACY.
-+		 */
-+		if (gsi >= arch_dynirq_lower_bound(0) || gsi < NR_IRQS_LEGACY)
-+			irq = irq_create_mapping(domain, pin);
-+		else if (irq_create_strict_mappings(domain, gsi, pin, 1) == 0)
-+			irq = gsi;
-+	}
-+out:
-+	mutex_unlock(&ioapic_mutex);
-+
-+	return irq > 0 ? irq : -1;
- }
- 
--static int pin_2_irq(int idx, int apic, int pin)
-+static int pin_2_irq(int idx, int ioapic, int pin, unsigned int flags)
- {
- 	int irq;
- 	int bus = mp_irqs[idx].srcbus;
-@@ -1009,7 +1047,7 @@ static int pin_2_irq(int idx, int apic, int pin)
- 	if (test_bit(bus, mp_bus_not_pci))
- 		irq = mp_irqs[idx].srcbusirq;
- 	else
--		irq = mp_map_pin_to_irq(apic, pin);
-+		irq = mp_map_pin_to_irq(ioapic, pin, idx, flags);
- 
- 	return irq;
- }
-@@ -1021,7 +1059,7 @@ static int pin_2_irq(int idx, int apic, int pin)
- int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 				struct io_apic_irq_attr *irq_attr)
- {
--	int irq, i, best_guess = -1;
-+	int irq, i, best_ioapic = -1, best_idx = -1;
- 
- 	apic_printk(APIC_DEBUG,
- 		    "querying PCI -> IRQ mapping bus:%d, slot:%d, pin:%d.\n",
-@@ -1035,6 +1073,7 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 	for (i = 0; i < mp_irq_entries; i++) {
- 		int lbus = mp_irqs[i].srcbus;
- 		int ioapic_idx, found = 0;
-+		int gsi;
- 
- 		if (test_bit(lbus, mp_bus_not_pci) || (bus != lbus) ||
- 		    mp_irqs[i].irqtype != mp_INT ||
-@@ -1051,30 +1090,37 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 			continue;
- 
- 		/* Skip ISA IRQs */
--		irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
--		if (ioapic_idx == 0 && !IO_APIC_IRQ(irq))
-+		gsi = mp_pin_2_gsi(ioapic_idx, mp_irqs[i].dstirq);
-+		if (gsi < arch_dynirq_lower_bound(0) && !IO_APIC_IRQ(gsi))
- 			continue;
- 
- 		if (pin == (mp_irqs[i].srcbusirq & 3)) {
--			set_io_apic_irq_attr(irq_attr, ioapic_idx,
--					     mp_irqs[i].dstirq,
--					     irq_trigger(i),
--					     irq_polarity(i));
--			return irq;
-+			best_idx = i;
-+			best_ioapic = ioapic_idx;
-+			goto out;
- 		}
-+
- 		/*
- 		 * Use the first all-but-pin matching entry as a
- 		 * best-guess fuzzy result for broken mptables.
- 		 */
--		if (best_guess < 0) {
--			set_io_apic_irq_attr(irq_attr, ioapic_idx,
--					     mp_irqs[i].dstirq,
--					     irq_trigger(i),
--					     irq_polarity(i));
--			best_guess = irq;
-+		if (best_idx < 0) {
-+			best_idx = i;
-+			best_ioapic = ioapic_idx;
- 		}
- 	}
--	return best_guess;
-+	if (best_idx < 0)
-+		return -1;
-+
-+out:
-+	irq = pin_2_irq(best_idx, best_ioapic, mp_irqs[best_idx].dstirq,
-+			IOAPIC_MAP_ALLOC);
-+	if (irq > 0)
-+		set_io_apic_irq_attr(irq_attr, best_ioapic,
-+				     mp_irqs[best_idx].dstirq,
-+				     irq_trigger(best_idx),
-+				     irq_polarity(best_idx));
-+	return irq;
- }
- EXPORT_SYMBOL(IO_APIC_get_PCI_irq_vector);
- 
-@@ -1265,7 +1311,7 @@ static inline int IO_APIC_irq_trigger(int irq)
- 
- 	for_each_ioapic_pin(apic, pin) {
- 		idx = find_irq_entry(apic, pin, mp_INT);
--		if ((idx != -1) && (irq == pin_2_irq(idx, apic, pin)))
-+		if ((idx != -1) && (irq == pin_2_irq(idx, apic, pin, 0)))
- 			return irq_trigger(idx);
- 	}
- 	/*
-@@ -1391,8 +1437,9 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
- 		if (io_apic_pin_not_connected(idx, ioapic_idx, pin))
- 			continue;
- 
--		irq = pin_2_irq(idx, ioapic_idx, pin);
--		if (!mp_init_irq_at_boot(ioapic_idx, irq))
-+		irq = pin_2_irq(idx, ioapic_idx, pin,
-+				ioapic_idx ? 0 : IOAPIC_MAP_ALLOC);
-+		if (irq < 0 || !mp_init_irq_at_boot(ioapic_idx, irq))
- 			continue;
- 
- 		/*
-@@ -1442,8 +1489,8 @@ void setup_IO_APIC_irq_extra(u32 gsi)
- 	if (idx == -1)
- 		return;
- 
--	irq = pin_2_irq(idx, ioapic_idx, pin);
--	if (mp_init_irq_at_boot(ioapic_idx, irq))
-+	irq = pin_2_irq(idx, ioapic_idx, pin, IOAPIC_MAP_ALLOC);
-+	if (irq < 0 || mp_init_irq_at_boot(ioapic_idx, irq))
- 		return;
- 
- 	set_io_apic_irq_attr(&attr, ioapic_idx, pin, irq_trigger(idx),
-@@ -3558,8 +3605,8 @@ void __init setup_ioapic_dest(void)
- 		if (irq_entry == -1)
- 			continue;
- 
--		irq = pin_2_irq(irq_entry, ioapic, pin);
--		if (!mp_init_irq_at_boot(ioapic, irq))
-+		irq = pin_2_irq(irq_entry, ioapic, pin, 0);
-+		if (irq < 0 || !mp_init_irq_at_boot(ioapic, irq))
- 			continue;
- 
- 		idata = irq_get_irq_data(irq);
--- 
-1.7.10.4
-
+Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogbGludXgtcGNpLW93bmVyQHZnZXIu
+a2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uDQo+
+QmVoYWxmIE9mIEx1Y2FzIFN0YWNoDQo+U2VudDogV2VkbmVzZGF5LCBNYXkgMTQsIDIwMTQgNDo0
+MiBBTQ0KPlRvOiBQaGlsIEVkd29ydGh5DQo+Q2M6IFRpbSBIYXJ2ZXk7IGxpbnV4LXBjaUB2Z2Vy
+Lmtlcm5lbC5vcmc7IFJpY2hhcmQgWmh1OyBTaGF3biBHdW87IE1vaGl0IEt1bWFyOw0KPlByYXR5
+dXNoIEFuYW5kOyBNYXJlayBWYXN1dDsgQUJSQUhBTSwgS0lTSE9OIFZJSkFZOyBBcm5kIEJlcmdt
+YW5uOyBKaW5nb28gSGFuDQo+U3ViamVjdDogUmU6IFtRXSBTeW5vcHN5cyBQQ0llIGludGVycnVw
+dHMNCj4NCj5IaSBQaGlsLA0KPg0KPnBsZWFzZSBsaW1pdCB5b3VyIGxpbmVzIHRvIGEgcmVhc29u
+YWJsZSBhbW91bnQgb2YgY2hhcmFjdGVycywgdGhhbmtzLg0KPg0KPkFtIE1pdHR3b2NoLCBkZW4g
+MTQuMDUuMjAxNCwgMDg6MTMgKzAwMDAgc2NocmllYiBQaGlsIEVkd29ydGh5Og0KPj4gSGkgVGlt
+LA0KPj4NCj4+IE9uIDE0IE1heSAyMDE0IDA1OjU1LCBUaW0gd3JvdGU6DQo+PiA+IE9uIFR1ZSwg
+TWF5IDEzLCAyMDE0IGF0IDU6NTkgUE0sIEppbmdvbyBIYW4gPGpnMS5oYW5Ac2Ftc3VuZy5jb20+
+DQo+PiA+IHdyb3RlOg0KPj4gPiA+IE9uIFdlZG5lc2RheSwgTWF5IDE0LCAyMDE0IDE6MTQgQU0s
+IFBoaWwgRWR3b3J0aHkgd3JvdGU6DQo+PiA+ID4+DQo+PiA+ID4+IEhpLA0KPj4gPiA+Pg0KPj4g
+PiA+PiBJIGFtIGN1cnJlbnRseSB3cml0aW5nIGFub3RoZXIgZHJpdmVyIHRoYXQgdXNlcyB0aGUg
+U3lub3BzeXMNCj4+ID4gPj4gRGVzaWdud2FyZSBQQ0llIGhvc3QgY29udHJvbGxlciBkcml2ZXIu
+DQo+PiA+ID4+DQo+PiA+ID4+IEluIGdlbmVyYWwsIGl0IGFsbCBsb29rcyBnb29kIHRoYW5rcyB0
+byBhbGwgaW52b2x2ZWQgaW4gdGhpcyBkcml2ZXIuDQo+PiA+ID4+IE9uZSBhcmVhIHRoYXQgSSBh
+bSBoYXZpbmcgYSBsaXR0bGUgcHJvYmxlbSB3aXRoIGlzIHRoZSBpbnRlcnJ1cHRzLg0KPj4gPiA+
+PiAgQWNjb3JkaW5nIHRvIHRoZSBkb2N1bWVudGF0aW9uIEkgaGF2ZSwgdGhlIG1vZHVsZSBoYXMg
+c2VwYXJhdGUNCj4+ID4gPj4gaW50ZXJydXB0cyBmb3IgSU5UQSwgSU5UQiwgSU5UQywgSU5URCwg
+TVNJLCBBRVIsIGJhbmR3aWR0aA0KPj4gPiA+PiBtYW5hZ2VtZW50LCAgUE1FIChhbmQgcG9zc2li
+bHkgYSBjb3VwbGUgb2Ygb3RoZXJzIGFzIHdlbGwpLg0KPj4gPiA+Pg0KPj4gPiA+PiBIb3dldmVy
+LCBzbyBmYXIgaXQgbG9va3MgbGlrZSB0aGUgdXBzdHJlYW0gaW1wbGVtZW50YXRpb25zIGp1c3QN
+Cj4+ID4gPj4gdXNlIGEgc2luZ2xlIGludGVycnVwdCBmb3IgdGhlIG1vZHVsZSwgaXMgdGhhdCBj
+b3JyZWN0PyBJIG5vdGljZQ0KPj4gPiA+PiB0aGF0IHNvbWUgIERUIGJpbmRpbmdzIGluY2x1ZGUg
+b3RoZXIgaW50ZXJydXB0cyB0aGF0IGFyZSBub3QgcGFydA0KPj4gPiA+PiBvZiB0aGUgRGVzaWdu
+d2FyZSBQQ0llIGNvbnRyb2xsZXIsIGJ1dCB0aGF0J3Mgbm90IHdoYXQgSSdtIHRhbGtpbmcgYWJv
+dXQuDQo+PiA+ID4NCj4+ID4gPiAoK2NjIE1vaGl0IEt1bWFyLCBQcmF0eXVzaCBBbmFuZCwgTWFy
+ZWsgVmFzdXQsIEtpc2hvbiBWaWpheSBBYnJhaGFtIEksDQo+PiA+ID4gICAgICAgIEx1Y2FzIFN0
+YWNoLCBUaW0gSGFydmV5LCBBcm5kIEJlcmdtYW5uKQ0KPj4gPiA+DQo+PiA+ID4gUENJZSBJbnRl
+cnJ1cHQgbWFwcGluZyBpcyBzcGVjaWZpYyBmb3IgU29DLg0KPj4gPiA+DQo+PiA+ID4gSW4gdGhl
+IGNhc2Ugb2YgRXh5bm9zLCB0aGVyZSBhcmUgdGhyZWUgaW50ZXJydXB0cyBmb3IgRXh5bm9zIFBD
+SWU7DQo+PiA+ID4gSU5UeCwgTVNJLCBQSFkgTGluaywgcmVzcGVjdGl2ZWx5IGFzIGJlbG93Lg0K
+Pj4gPiA+DQo+PiA+ID4gLi9hcmNoL2FybS9ib290L2R0cy9leHlub3M1NDQwLmR0c2kNCj4+ID4g
+PiAgICAgICAgIGludGVycnVwdHMgPSA8MCAyMCAwPiwgPDAgMjEgMD4sIDwwIDIyIDA+Ow0KPj4g
+PiA+DQo+PiA+ID4gPDAgMjAgMD46IFBDSWUgUkMwIHB1bHNlIGludGVycnVwdCwNCj4+ID4gPiAg
+ICAgICAgICAgICAgSU5UQSwgSU5UQiwgSU5UQyBhbmQgSU5URCwgZXRjDQo+PiA+ID4gPDAgMjEg
+MD46IFBDSWUgUkMwIGxldmVsIGludGVycnVwdCwNCj4+ID4gPiAgICAgICAgICAgICAgTVNJLCBl
+dGMNCj4+ID4gPiA8MCAyMiAwPjogUENJZSBSQzAgc3BlY2lhbCBpbnRlcnJ1cHQsDQo+PiA+ID4g
+ICAgICAgICAgICAgIFBIWSBMaW5rIHJlbGF0ZWQgaW50ZXJydXB0cywgZXRjDQo+PiA+ID4NCj4+
+ID4gPiBTbywgdGhlcmUgYXJlIHRocmVlIGxpbmVzIGJldHdlZW4gR0lDIGFuZCBQQ0llLiBBbHNv
+LCBJUlEgbWFwcGluZ3MNCj4+ID4gPiBmb3Igb3RoZXIgU29DcyBhcmUgZGlmZmVyZW50Lg0KPj4g
+PiA+DQo+PiA+ID4gRm9yIGV4YW1wbGUsIHRoZSBJTVg2IG1hcHMgSU5UQS9CL0MvRCB0byBBUk0g
+R0lDIElSUQ0KPj4gPiA+IDE1NS8xNTQvMTUzLzE1MiByZXNwZWN0aXZlbHkuDQo+PiA+ID4NCj4+
+ID4gPiBUaGVuLCBob3cgbWFueSBsaW5lcyBhcmUgdGhlcmUgYmV0d2VlbiBHSUMgYW5kIFBDSWUg
+aW4geW91ciBTb0M/DQo+PiA+ID4gSG93IGRvZXMgeW91ciBTb0MgbWFwIGludGVycnVwdHMgdG8g
+R0lDPw0KPj4gPiA+DQo+PiA+ID4+DQo+PiA+ID4+IEluIGV4aXN0aW5nIGltcGxlbWVudGF0aW9u
+cywgZG9lcyB0aGUgaGFyZHdhcmUganVzdCBPUiBhbGwgdGhlc2UNCj4+ID4gPj4gaW50ZXJydXB0
+cyB0b2dldGhlcj8NCj4+ID4gPj4NCj4+ID4NCj4+ID4gUGhpbCwNCj4+ID4NCj4+ID4gVGhlcmUg
+aXMgbm90IGp1c3QgYSBzaW5nbGUgaW50ZXJydXB0IGZvciB0aGUgdXBzdHJlYW0gaW1wbGVtZW50
+YXRpb25zLg0KPj4gPiBTZWU6DQo+PiA+IGh0dHA6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4
+L2tlcm5lbC9naXQvdG9ydmFsZHMvbGludXguZ2l0L3RyZWUvDQo+PiA+IGRyaXZlcnMvcGNpLw0K
+Pj4gPiBob3N0L3BjaWUtZGVzaWdud2FyZS5jI243NDINCj4+ID4NCj4+ID4gb2ZfaXJxX3BhcnNl
+X2FuZF9tYXBfcGNpKGRldiwgc2xvdCwgcGluKSBpcyB1c2VkIHRvIHBhcnNlIHRoZQ0KPj4gPiBk
+ZXZpY2UtdHJlZSBpbnRlcnJ1cHQgbWFwIHdoaWNoIGRlZmluZXMgdGhlIG11bHRpcGxlIElSUSdz
+IHRoYXQNCj4+ID4gSmluZ29vIG1lbnRpb25zIGFib3ZlLiBGb3IgSU1YNiB0aGVzZSBhcmUgZGVm
+aW5lZCBpbiB0aGUgaW14NnFkbC5kdHNpIGhlcmU6DQo+PiA+IGh0dHA6Ly9naXQua2VybmVsLm9y
+Zy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvdG9ydmFsZHMvbGludXguZ2l0L3RyZWUvDQo+PiA+IGFy
+Y2gvYXJtL2INCj4+ID4gb290L2R0cy9pbXg2cWRsLmR0c2kjbjE0Ni4NCj4+ID4NCj4+ID4gU28g
+aW4gb3RoZXIgd29yZHMsIGRlcGVuZGluZyBvbiB0aGUgc2xvdCBhbmQgcGluIChlYWNoIGxlZ2Fj
+eSBQQ0kNCj4+ID4gZGV2aWNlIGNhbiBoYXZlIDQgaW50ZXJydXB0IHBpbnMsIElOVEEvQi9DL0Qp
+IHRoZSBpcnEgd291bGQgZ2V0DQo+PiA+IG1hcHBlZCB0byBhIGRpZmZlcmVudCBpbnRlcnJ1cHQu
+IFRoZSBpbnRlcnJ1cHRzIGFyZSBub3QgT1InZCB0b2dldGhlci4NCj4+DQo+PiBJJ3ZlIGp1c3Qg
+aGFkIGEgbG9vayB0aHJvdWdoIEx1Y2FzJyBwYXRjaGVzIGZvciBhZGRpbmcgTVNJIGludGVycnVw
+dHMNCj4+IHRvIGlteDZxZGwuIEZyb20gdGhpcyBpdCBsb29rcyBsaWtlIGlteDZxZGwgaGFzIDQg
+aW50ZXJydXB0cywgb25lIGlzIGENCj4+IGNvbWJpbmVkIGludGVycnVwdCBmb3IgSU5UQSBhbmQg
+TVNJLCBhbmQgdGhlIG90aGVyIHRocmVlIGFyZSBmb3IgSU5UQiwNCj4+IElOVEMsIElOVEQuIElz
+IHRoYXQgY29ycmVjdD8NCj4+DQo+SXQncyB0aGUgb3RoZXIgd2F5IGFyb3VuZDogTVNJIGFuZCBJ
+TlREIHNoYXJlIGEgc2luZ2xlIGlycSBsaW5lLCBidXQgaW4gcHJpbmNpcGxlIHlvdXINCj5kZXNj
+cmlwdGlvbiBpcyBjb3JyZWN0Lg0KPg0KPj4gQXMgSSBtZW50aW9uZWQgcHJldmlvdXNseSwgdGhl
+IFN5bm9wc3lzIERXIFBDSWUgSG9zdCBJUCAob3IgYXQgbGVhc3QNCj4+IHRoZSB2ZXJzaW9uIDQu
+MjFhIHRoYXQgSSBhbSBsb29raW5nIGF0KSBhY3R1YWxseSBvdXRwdXRzIGFsbCBvZiB0aGVzZQ0K
+Pj4gaW50ZXJydXB0cyAoYW5kIG90aGVycyBmb3IgQUVSLCBldGMpIGFzIHNlcGFyYXRlIHNpZ25h
+bHMuIEJvdGggdGhlDQo+PiBFeHlub3MgYW5kIGlteDZxZGwgU29DcyBhcHBlYXIgdG8gY29tYmlu
+ZSBzb21lIG9mIHRoZXNlIGludGVycnVwdHMuDQo+Pg0KPkkgZG9uJ3QgaGF2ZSBhY2Nlc3MgdG8g
+dGhlIHVuZGVybHlpbmcgRFcgSVAgY29yZSBkb2N1bWVudGF0aW9uLCBvbmx5IHRvIGEgaS5NWCBz
+cGVjaWZpYyBvbmUsDQo+c28gSSBvbmx5IGtub3cgYWJvdXQgdGhpcyBzcGVjaWZpYyBpbXBsZW1l
+bnRhdGlvbi4NCj4NCj5pLk1YIGRvZXNuJ3Qgc2VlbSB0byBoYXZlIHRoZSBBRVIgaXJxIHdpcmVk
+IHVwLg0KPg0KPkJlY2F1c2Ugb2YgdGhvc2UgZGlmZmVyZW5jZXMgSSd2ZSBwdXNoZWQgdGhlIGly
+cSBwcm9wZXJ0aWVzIG9mIHRoZSBiaW5kaW5nIGludG8gdGhlIFNvQw0KPnNwZWNpZmljIHBhcnQu
+DQo+SWYgd2UgY2FuIGVudW1lcmF0ZSBhbGwgaXJxIHNpZ25hbHMgZnJvbSB0aGUgRFcgY29yZSB3
+ZSBjb3VsZCBtYXliZSBwdXNoIHRoaXMgc3R1ZmYgYmFjaw0KPmludG8gY29tbW9uIGRvYy9jb2Rl
+LCBidXQgSSdtIG5vdCBzdXJlIGFib3V0IGhvdyB0byBoYW5kbGUgdGhpcyB3aXRob3V0IGJyZWFr
+aW5nIHRoZQ0KPkV4eW5vcyBiaW5kaW5nLiBpLk1YIHdvbid0IGNhcmUgYXMgdGhlIG9ubHkgaXJx
+IGl0IHVzZXMgYmVzaWRlcyB0aGUgbGVnYWN5IGlycXMsIHdoaWNoIGFyZQ0KPm1hcHBlZCB0aHJv
+dWdoIERULCBpcyBub3cgYSBuYW1lZCBpcnEuDQo+DQo+UmVnYXJkcywNCj5MdWNhcw0KPg0KPi0t
+DQo+UGVuZ3V0cm9uaXggZS5LLiAgICAgICAgICAgICB8IEx1Y2FzIFN0YWNoICAgICAgICAgICAg
+ICAgICB8DQo+SW5kdXN0cmlhbCBMaW51eCBTb2x1dGlvbnMgICB8IGh0dHA6Ly93d3cucGVuZ3V0
+cm9uaXguZGUvICB8DQo+DQo+LS0NCj5UbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2Vu
+ZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcGNpIiBpbiB0aGUgYm9keSBvZiBhIG1lc3Nh
+Z2UNCj50byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vIGluZm8gYXQN
+Cj5odHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg0KQlRXLCBJIGFt
+IHdvcmtpbmcgb24gYSBkZXNpZ253YXJlIFBDSUUgZHJpdmVyIGZvciBrZXlzdG9uZSBTb0MgKHYx
+IGlzIG9uIHRoZSBsaXN0DQpub3cgYmVpbmcgcmV2aWV3ZWQpIGFuZCBpdCB1c2VzIGEgb2xkZXIg
+dmVyc2lvbiBvZiB0aGUgSVAgKHYzLjY1KSBhbmQgaGFzIDQNCmRlZGljYXRlZCBJUlFzIGZvciBM
+ZWdhY3ksIDggTVNJIElSUXMgYW5kIDIgbWlzYyAoUE1FLCBFcnJvcikuIEN1cnJlbnRseSBJIGhh
+dmUNCmRlZmluZWQgSVJRcyBwYXJ0IG9mIHRoZSBwbGF0Zm9ybSBkZXZpY2UgYW5kIHVzZWQuIFBs
+ZWFzZSByZXZpZXcgbXkgZHJpdmVyIGFuZA0Kc2VlIGlmIHdlIGNhbiBtb3ZlIHRoaXMgdG8gRFcg
+UENJIGNvcmUuDQoNCg0KTXVyYWxpDQoNCg==
