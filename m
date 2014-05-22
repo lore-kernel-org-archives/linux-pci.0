@@ -1,130 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
-	linux-pm@vger.kernel.org
-Subject: [RFC Patch Part1 V1 26/30] x86, irq, ACPI: use common irqdomain map interface to program IOAPIC pins
-Date: Fri, 16 May 2014 16:05:46 +0800
-Message-Id: <1400227550-5935-27-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:1375 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753201AbaEVXIL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:08:11 -0400
+Subject: [PATCH v4 07/16] PCI: Add quirks for ASMedia and Tundra bridges
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
+Date: Thu, 22 May 2014 17:08:07 -0600
+Message-ID: <20140522230807.2856.76394.stgit@bling.home>
+In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
+References: <20140522230230.2856.40017.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine ACPI to use common irqdomain map interface to program IOAPIC pins,
-so we can unify the callsite to progam IOAPIC pins.
+The quirk is intended to be extremely generic, but we only apply it
+to known offending devices.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- arch/x86/kernel/acpi/boot.c |   48 ++++++++++++++++---------------------------
- 1 file changed, 18 insertions(+), 30 deletions(-)
+ drivers/pci/quirks.c |   23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 1ee639e74d50..50f06c9d1e2a 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -332,7 +332,9 @@ static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 923689f..ab620ac 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3385,6 +3385,29 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
+ 			 PCI_DEVICE_ID_JMICRON_JMB388_ESD,
+ 			 quirk_dma_func1_alias);
  
--static struct irq_domain_ops acpi_irqdomain_ops;
-+static struct irq_domain_ops acpi_irqdomain_ops = {
-+	.map = mp_irqdomain_map,
-+};
- 
- static struct irq_domain *acpi_create_irqdomain(int idx, void *arg)
- {
-@@ -512,10 +514,6 @@ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- 	int irq = map_gsi_to_irq(gsi, 1);
- 
- 	if (irq >= 0) {
--#ifdef CONFIG_X86_IO_APIC
--		if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
--			setup_IO_APIC_irq_extra(gsi);
--#endif
- 		*irqp = irq;
- 		return 0;
- 	}
-@@ -1047,11 +1045,7 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity)
- {
--	int irq;
--	int ioapic;
--	int ioapic_pin;
--	struct io_apic_irq_attr irq_attr;
--	int ret;
-+	int irq, ioapic, pin, node;
- 
- 	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
- 		return gsi;
-@@ -1060,35 +1054,29 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	if (acpi_gbl_FADT.sci_interrupt == gsi)
- 		return gsi;
- 
--	irq = map_gsi_to_irq(gsi, 1);
--	if (irq < 0)
--		return ACPI_INVALID_GSI;
--
- 	ioapic = mp_find_ioapic(gsi);
- 	if (ioapic < 0) {
--		printk(KERN_WARNING "No IOAPIC for GSI %u\n", gsi);
--		return gsi;
-+		pr_warn("No IOAPIC for GSI %u\n", gsi);
-+		return ACPI_INVALID_GSI;
- 	}
- 
--	ioapic_pin = mp_find_ioapic_pin(ioapic, gsi);
--
--	if (ioapic_pin > MP_MAX_IOAPIC_PIN) {
--		printk(KERN_ERR "Invalid reference to IOAPIC pin "
--		       "%d-%d\n", mpc_ioapic_id(ioapic),
--		       ioapic_pin);
--		return gsi;
-+	pin = mp_find_ioapic_pin(ioapic, gsi);
-+	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
-+	if (mp_set_pin_attr(ioapic, pin,
-+			    trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
-+			    polarity == ACPI_ACTIVE_HIGH ? 0 : 1,
-+			    node)) {
-+		pr_warn("Failed to set pin attr for GSI%d\n", gsi);
-+		return ACPI_INVALID_GSI;
- 	}
- 
-+	irq = map_gsi_to_irq(gsi, 1);
-+	if (irq < 0)
-+		return ACPI_INVALID_GSI;
++/*
++ * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
++ * using the wrong DMA alias for the device.  Some of these devices can be
++ * used as either forward or reverse bridges, so we need to test whether the
++ * device is operating in the correct mode.  We could probably apply this
++ * quirk to PCI_ANY_ID, but for now we'll just use known offenders.  The test
++ * is for a non-root, non-PCIe bridge where the upstream device is PCIe and
++ * is not a PCIe-to-PCI bridge, then @pdev is actually a PCIe-to-PCI bridge.
++ */
++static void quirk_use_pcie_bridge_dma_alias(struct pci_dev *pdev)
++{
++	if (!pci_is_root_bus(pdev->bus) &&
++	    pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
++	    !pci_is_pcie(pdev) && pci_is_pcie(pdev->bus->self) &&
++	    pci_pcie_type(pdev->bus->self) != PCI_EXP_TYPE_PCI_BRIDGE)
++		pdev->dev_flags |= PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS;
++}
++/* ASM1083/1085, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c46 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
++			 quirk_use_pcie_bridge_dma_alias);
++/* Tundra 8113, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c43 */
++DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
 +
- 	if (enable_update_mptable)
- 		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
- 
--	set_io_apic_irq_attr(&irq_attr, ioapic, ioapic_pin,
--			     trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
--			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
--	ret = io_apic_set_pci_routing(dev, irq, &irq_attr);
--	if (ret < 0)
--		gsi = ACPI_INVALID_GSI;
--
- 	return gsi;
- }
- 
--- 
-1.7.10.4
+ static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+ {
+ 	if (!PCI_FUNC(dev->devfn))
 
