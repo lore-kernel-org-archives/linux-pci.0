@@ -1,58 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:55783 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901AbaEVUUZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 May 2014 16:20:25 -0400
-Received: by mail-ie0-f177.google.com with SMTP id y20so3946679ier.8
-        for <linux-pci@vger.kernel.org>; Thu, 22 May 2014 13:20:24 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:16891 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753114AbaEVXHx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:07:53 -0400
+Subject: [PATCH v4 04/16] PCI: quirk dma_alias_devfn for Ricoh devices
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: bhelgaas@google.com, acooks@gmail.com,
+	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
+Date: Thu, 22 May 2014 17:07:49 -0600
+Message-ID: <20140522230749.2856.5415.stgit@bling.home>
+In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
+References: <20140522230230.2856.40017.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <20140522191746.GL4383@pd.tnic>
-References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521233802.GA21575@pd.tnic> <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
- <20140522191746.GL4383@pd.tnic>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 22 May 2014 14:20:04 -0600
-Message-ID: <CAErSpo7=0-xdnu4DQufu_6eS=6AYhnDRaQvzeiMEC5a=zKU0Jg@mail.gmail.com>
-Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after Fam16h
-To: Borislav Petkov <bp@alien8.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Robert Richter <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Borislav Petkov <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 22, 2014 at 1:17 PM, Borislav Petkov <bp@alien8.de> wrote:
-> On Thu, May 22, 2014 at 11:56:03AM -0600, Bjorn Helgaas wrote:
->> I chose Fam16h (0x16) because it looks like that's the newest stuff
->> that's in the field. I suspect things would probably work if we
->> changed this patch to leave ECS disabled on some Fam16h, Fam15h, etc.,
->> but that would change behavior on existing systems, which obviously
->> adds some risk. I didn't think there was much benefit that makes the
->> risk worthwhile.
->>
->> My goal is to stop needing CPU-specific changes in the future, not
->> necessarily to remove the CPU-specific code we already have.
->>
->> Does that make sense? I'm not sure whether I understood your real
->> question.
->
-> No, you got it right. I'm just wondering why only the newest stuff.
-> MMCONFIG is supposed to work just fine on everything from Fam10h
-> onwards, I'm not sure all Fam10h supported it though. Maybe Suravee can
-> verify that...
+The existing quirk for these devices doesn't really solve the problem;
+re-implement it using the DMA alias iterator.  We'll come back later
+and remove the existing quirk and dma_source interface.  Note that
+device ID 0xe822 is typically function 0 and 0xe230 has been tested to
+not need the quirk and are therefore removed versus the equivalent
+dma_source quirk.  If there exist in other configurations we can
+re-add them.
 
-Even if MMCONFIG does work fine on everything from Fam10h onwards, we
-still depend on the BIOS to provide a correct MCFG table.  I don't
-think we can guarantee that changing from ECS to MMCONFIG on a Fam16h
-box in the field is safe, because we'd then be using a feature we've
-never used before.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/quirks.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-Bjorn
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e729206..bc8ebd9 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3333,6 +3333,22 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ 	return -ENOTTY;
+ }
+ 
++static void quirk_dma_func0_alias(struct pci_dev *dev)
++{
++	if (PCI_FUNC(dev->devfn) != 0) {
++		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
++		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
++	}
++}
++
++/*
++ * https://bugzilla.redhat.com/show_bug.cgi?id=605888
++ *
++ * Some Ricoh devices use function 0 as the PCIe requester ID for DMA.
++ */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe476, quirk_dma_func0_alias);
++
+ static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+ {
+ 	if (!PCI_FUNC(dev->devfn))
+
