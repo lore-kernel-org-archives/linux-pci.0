@@ -1,97 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:44885 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751588AbaEZOqG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 May 2014 10:46:06 -0400
-MIME-Version: 1.0
-In-Reply-To: <20140508204907.17877.4848.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<20140508204907.17877.4848.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Date: Mon, 26 May 2014 16:46:06 +0200
-Message-ID: <CAMuHMdWp-dUFwSgw30SYqXxAtAsrXDgaxcgfBZwV=1pEVN3B=A@mail.gmail.com>
-Subject: Re: [PATCH v3 3/4] sh/PCI: Pass GAPSPCI_DMA_BASE CPU & bus address to dma_declare_coherent_memory()
-From: Geert Uytterhoeven <geert@linux-m68k.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:10583 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706AbaEVDha (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 23:37:30 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	James Bottomley <jbottomley@parallels.com>,
-	Magnus Damm <damm@opensource.se>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>
-Content-Type: text/plain; charset=UTF-8
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI: fix return in pci_bus_add_device
+Date: Thu, 22 May 2014 11:32:24 +0800
+Message-ID: <1400729544-7940-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 8, 2014 at 10:49 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> --- a/arch/sh/drivers/pci/fixups-dreamcast.c
-> +++ b/arch/sh/drivers/pci/fixups-dreamcast.c
-> @@ -31,6 +31,8 @@
->  static void gapspci_fixup_resources(struct pci_dev *dev)
->  {
->         struct pci_channel *p = dev->sysdata;
-> +       struct resource res;
-> +       struct pci_bus_region region;
->
->         printk(KERN_NOTICE "PCI: Fixing up device %s\n", pci_name(dev));
->
-> @@ -50,11 +52,21 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
->
->                 /*
->                  * Redirect dma memory allocations to special memory window.
-> +                *
-> +                * If this GAPSPCI region were mapped by a BAR, the CPU
-> +                * phys_addr_t would be pci_resource_start(), and the bus
-> +                * address would be pci_bus_address(pci_resource_start()).
-> +                * But apparently there's no BAR mapping it, so we just
-> +                * "know" its CPU address is GAPSPCI_DMA_BASE.
->                  */
-> +               res.start = GAPSPCI_DMA_BASE;
-> +               res.end = GAPSPCI_DMA_BASE + GAPSPCI_DMA_SIZE - 1;
-> +               res.flags = IORESOURCE_MEM;
-> +               pcibios_resource_to_bus(dev, &region, &resource);
+Fix device_attach() return vaule in pci_bus_add_device
+instead of meaningless 0.
 
-In response to http://kisskb.ellerman.id.au/kisskb/buildresult/11212250/
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/bus.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-| /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c: In
-function 'gapspci_fixup_resources':
-| /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c:65:42:
-error: 'resource' undeclared (first use in this function)
-| /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c:65:42:
-note: each undeclared identifier is reported only once for each
-function it appears in
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index ba2bf55..42b42b7 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -253,7 +253,7 @@ int pci_bus_add_device(struct pci_dev *dev)
+ 
+ 	dev->is_added = 1;
+ 
+-	return 0;
++	return retval;
+ }
+ 
+ /**
+-- 
+1.7.1
 
-"resource" seem to have been replaced by "res", but this warning still happens:
 
-| /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c:65:3:
-warning: passing argument 1 of 'pcibios_resource_to_bus' from
-incompatible pointer type [enabled by default]
-| /scratch/kisskb/src/include/linux/pci.h:737:6: note: expected
-'struct pci_bus *' but argument is of type 'struct pci_dev *'
-
->                 BUG_ON(!dma_declare_coherent_memory(&dev->dev,
-> -                                               GAPSPCI_DMA_BASE,
-> -                                               GAPSPCI_DMA_BASE,
-> -                                               GAPSPCI_DMA_SIZE,
-> +                                               res.start,
-> +                                               region.start,
-> +                                               resource_size(&res),
->                                                 DMA_MEMORY_MAP |
->                                                 DMA_MEMORY_EXCLUSIVE));
->                 break;
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
