@@ -1,172 +1,145 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <53787F09.9000200@linux.intel.com>
-Date: Sun, 18 May 2014 17:36:09 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:18692 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753227AbaEVXI1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 19:08:27 -0400
+Subject: [PATCH v4 09/16] iommu/amd: Update to use PCI DMA aliases
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Cc: Joerg Roedel <joro@8bytes.org>, linux-kernel@vger.kernel.org,
+	acooks@gmail.com, linux@horizon.com, bhelgaas@google.com,
+	eddy0596@gmail.com
+Date: Thu, 22 May 2014 17:08:20 -0600
+Message-ID: <20140522230820.2856.67604.stgit@bling.home>
+In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
+References: <20140522230230.2856.40017.stgit@bling.home>
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	sfi-devel@simplefirmware.org
-Subject: Re: [RFC Patch Part1 V1 00/30] use irqdomain to dynamically allocate
- IRQ for IOAPIC pin
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.02.1405161601060.4039@ionos.tec.linutronix.de>
-In-Reply-To: <alpine.DEB.2.02.1405161601060.4039@ionos.tec.linutronix.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
-	Thanks for review and please refer to inline comments below.
+AMD-Vi already has a concept of an alias provided via the IVRS table.
+Now that PCI-core also understands aliases, we need to incorporate
+both aspects when programming the IOMMU.  IVRS is generally quite
+reliable, so we continue to prefer it when an alias is present.  For
+cases where we have an IVRS alias that does not match the PCI alias
+or where PCI does not report an alias, report the mismatch to allow
+us to collect more quirks and dynamically incorporate the alias into
+the device alias quirks where possible.
 
-On 2014/5/16 23:28, Thomas Gleixner wrote:
-> Jiang,
-> 
-> On Fri, 16 May 2014, Jiang Liu wrote:
-> 
->> On x86 platforms, IRQ number are statically allocated to IOAPIC pins at boot.
->> There are two issues with this design. First it causes trouble to IOAPIC
->> hotplug because we need to allocate a block of IRQ numbers for each IOAPIC.
->> Second it may waste IRQ nubmers even if some IOAPIC pins are not used because
->> IRQ numbers are statically assigned.
->>
->> This patchset tries to enable dynamic IRQ number allocation for IOAPIC
->> by adopting the irqdomain framework, it solves the two issues mentioned
->> above. It also simplifies the IOAPIC driver by consolidating ways to
->> program IOAPIC pins with the irqdomain map interface.
->>
->> We will enhance the IOAPIC driver core to support ACPI based IOAPIC hotplug
->> once the IOAPIC driver has been converted to irqdomain.
-> 
-> Thanks for tackling this!
->  
->> This patchset applies to v3.15-rc4-260-g38583f095c5a and has been tested
-> 
-> That's a bit unfortunate, as there are conflicting changes in the tip
-> tree irq/core branch. Can you please rebase on top of that.
-I have rebased onto tip/irq/core. The conflict is easy to solve.
+This should allow AMD-Vi to work with devices like Marvell and Ricoh
+with DMA function alias quirks unknown to the BIOS.
 
-> 
->> TODO list:
->> 1) check whether it affects Xen or not
->>
->> Patch 1-17 are trivial code improvements, bugfixes and preparation.
-> 
-> Can you please move the bugfixes before the other changes, so we can
-> pick them up independently from the outcome?
-Sure, will reorder the patch set in next version.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/iommu/amd_iommu.c |   78 +++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 74 insertions(+), 4 deletions(-)
 
->  
->> Patch 18-24 enable basic irqdomain support and IRQ number dynamic
->> allocation.
->>
->> Patch 25-29 consoldate the way to program IOAPIC pins by using
->> irqdomain map() interface.
->>
->> Patch 30 cleans up unused interfaces and functions in IOAPIC driver.
->>
->> Tests and comments are warmly welcomed!
-> 
-> I like the general approach, but we have now a mixture of legacy irq
-> handling and irq domains. We really want to cleanup the legacy PIC no
-> ioapic case as well. That will cleanup the code further.
-> 
-> The other thing we discussed here: https://lkml.org/lkml/2014/5/7/901
-> in several places of the thread is to move the vector allocation into
-> a irqdomain with a generic matrix allocator as well. We have other use
-> cases for this as well. It would be nice if you could look at that as
-> well.
-I have read through the thread, it's an interesting discussion.
-
-After my first thought, I have gotten some ideas about how to reorganize
-x86 interrupt subsystem using irqdomain framework based on ideas from
-the thread. Because I'm newbie to interrupt subsystem, I will share my
-naive ideas first and RFC for whether it's the right direction.
-
-We may build hierarchy irqdomains as below for x86,
-[IOAPIC]      [MSI/MSI-x]  [HPET]  [DMAR] [Legacy]
-    |            |           |       |       |
-    v            v           v       |       |
-[           Remapping           ]    |       |
-                 |                   |       |
-                 v                   v       v
-[                   Root/vector                ]
-
-The remapping domain is optional and used to support IRQ remapping unit.
-We abstract remapping entry as hardware interrupt pin and will extend
-irqdomain interface to support automatic assignment of hardware
-interrupt pin.
-
-The root/vector domain is used to manage per CPU vector numbers and
-CPU vector is abstracted as hardware interrupt pin. It will support
-automatic vector number assignment. To support root/vector domain,
-we need to extend irqdomain interface to pass down information
-or constraints about the IRQ allocation.
-
-So how about following extension to current irqdomain interfaces?
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index c983ed18c332..2fd7e50cde32 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -42,6 +42,13 @@ struct of_device_id;
- /* Number of irqs reserved for a legacy isa controller */
- #define NUM_ISA_INTERRUPTS     16
-
-+#define        IRQDOMAIN_AUTO_ASSIGN_HWIRQ     ULONG_MAX
-+#ifdef arch_irq_alloc_info_t
-+typedef        arch_irq_alloc_info_t irq_alloc_info_t;
-+#else
-+typedef        void irq_alloc_info_t;
-+#endif
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 57068e8..a73a7ed 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -427,6 +427,68 @@ use_group:
+ 	return use_dev_data_iommu_group(dev_data->alias_data, dev);
+ }
+ 
++static int __last_alias(struct pci_dev *pdev, u16 alias, void *data)
++{
++	*(u16 *)data = alias;
++	return 0;
++}
 +
- /**
-  * struct irq_domain_ops - Methods for irq_domain objects
-  * @match: Match an interrupt controller device node to a host, returns
-@@ -59,7 +66,11 @@ struct of_device_id;
-  */
- struct irq_domain_ops {
-        int (*match)(struct irq_domain *d, struct device_node *node);
--       int (*map)(struct irq_domain *d, unsigned int virq,
-irq_hw_number_t hw);
-+       int (*alloc)(struct irq_domain *d, irq_hw_number_t hw,
-+                    irq_alloc_info_t *info);
-+       int (*free)(struct irq_domain *d, unsigned int virq);
-+       int (*map)(struct irq_domain *d, unsigned int virq,
-irq_hw_number_t hw,
-+                  irq_alloc_info_t *info);
-        void (*unmap)(struct irq_domain *d, unsigned int virq);
-        int (*xlate)(struct irq_domain *d, struct device_node *node,
-                     const u32 *intspec, unsigned int intsize,
++static u16 get_alias(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	u16 devid, ivrs_alias, pci_alias;
++
++	devid = get_device_id(dev);
++	ivrs_alias = amd_iommu_alias_table[devid];
++	pci_for_each_dma_alias(pdev, __last_alias, &pci_alias);
++
++	if (ivrs_alias == pci_alias)
++		return ivrs_alias;
++
++	/*
++	 * DMA alias showdown
++	 *
++	 * The IVRS is fairly reliable in telling us about aliases, but it
++	 * can't know about every screwy device.  If we don't have an IVRS
++	 * reported alias, use the PCI reported alias.  In that case we may
++	 * still need to initialize the rlookup and dev_table entries if the
++	 * alias is to a non-existent device.
++	 */
++	if (ivrs_alias == devid) {
++		if (!amd_iommu_rlookup_table[pci_alias]) {
++			amd_iommu_rlookup_table[pci_alias] =
++				amd_iommu_rlookup_table[devid];
++			memcpy(amd_iommu_dev_table[pci_alias].data,
++			       amd_iommu_dev_table[devid].data,
++			       sizeof(amd_iommu_dev_table[pci_alias].data));
++		}
++
++		return pci_alias;
++	}
++
++	pr_info("AMD-Vi: Using IVRS reported alias %02x:%02x.%d "
++		"for device %s[%04x:%04x], kernel reported alias "
++		"%02x:%02x.%d\n", PCI_BUS_NUM(ivrs_alias), PCI_SLOT(ivrs_alias),
++		PCI_FUNC(ivrs_alias), dev_name(dev), pdev->vendor, pdev->device,
++		PCI_BUS_NUM(pci_alias), PCI_SLOT(pci_alias),
++		PCI_FUNC(pci_alias));
++
++	/*
++	 * If we don't have a PCI DMA alias and the IVRS alias is on the same
++	 * bus, then the IVRS table may know about a quirk that we don't.
++	 */
++	if (pci_alias == devid &&
++	    PCI_BUS_NUM(ivrs_alias) == pdev->bus->number) {
++		pdev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
++		pdev->dma_alias_devfn = ivrs_alias & 0xff;
++		pr_info("AMD-Vi: Added PCI DMA alias %02x.%d for %s\n",
++			PCI_SLOT(ivrs_alias), PCI_FUNC(ivrs_alias),
++			dev_name(dev));
++	}
++
++	return ivrs_alias;
++}
++
+ static int iommu_init_device(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+@@ -441,7 +503,8 @@ static int iommu_init_device(struct device *dev)
+ 	if (!dev_data)
+ 		return -ENOMEM;
+ 
+-	alias = amd_iommu_alias_table[dev_data->devid];
++	alias = get_alias(dev);
++
+ 	if (alias != dev_data->devid) {
+ 		struct iommu_dev_data *alias_data;
+ 
+@@ -489,12 +552,19 @@ static void iommu_ignore_device(struct device *dev)
+ 
+ static void iommu_uninit_device(struct device *dev)
+ {
++	struct iommu_dev_data *dev_data = search_dev_data(get_device_id(dev));
++
++	if (!dev_data)
++		return;
++
+ 	iommu_group_remove_device(dev);
+ 
++	/* Unlink from alias, it may change if another device is re-plugged */
++	dev_data->alias_data = NULL;
++
+ 	/*
+-	 * Nothing to do here - we keep dev_data around for unplugged devices
+-	 * and reuse it when the device is re-plugged - not doing so would
+-	 * introduce a ton of races.
++	 * We keep dev_data around for unplugged devices and reuse it when the
++	 * device is re-plugged - not doing so would introduce a ton of races.
+ 	 */
+ }
+ 
 
-alloc()/free() interfaces will be used allocate/free IRQ from parent
-domain. And irq_alloc_info_t structure is used to host parameters
-and constraints for IRQ allocation.
-
-For x86, irq_alloc_info_t structure will be used to host CPU mask,
-device pointer, IOAPIC pin attributes, NUMA node info etc.
-But I still more thoughts about how to convert set_affinity() to
-use irqdomain interfaces.
-
-Any comments about the proposal?
-Best regards!
-Gerry
-> 
-> Thanks,
-> 
-> 	tglx
-> 
-> 
-> 
-> 
