@@ -1,99 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:49781 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751354AbaEOL7p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 May 2014 07:59:45 -0400
-Message-ID: <5374AC0A.7070709@ti.com>
-Date: Thu, 15 May 2014 17:29:06 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <537E9B0A.9050704@amd.com>
+Date: Thu, 22 May 2014 19:49:14 -0500
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-To: Nishanth Menon <nm@ti.com>, Roger Quadros <rogerq@ti.com>
-CC: dt list <devicetree@vger.kernel.org>,
-	Paul Walmsley <paul@pwsan.com>,
-	"Krishnamoorthy, Balaji T" <balajitk@ti.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Rajendra Nayak <rnayak@ti.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	Tero Kristo <t-kristo@ti.com>,
-	linux-omap <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 03/17] phy: ti-pipe3: add external clock support for PCIe
- PHY
-References: <1399383244-14556-1-git-send-email-kishon@ti.com>	<1399383244-14556-4-git-send-email-kishon@ti.com>	<53736CBC.2060702@ti.com>	<5373897C.6080504@ti.com>	<CAGo_u6qw1OomEw_ueb3x+xT+qZLAfGv7Se1K=o725aOoD3ankQ@mail.gmail.com>	<5374859F.5080902@ti.com>	<53748819.8060705@ti.com> <CAGo_u6qbbdAbdvrB3AFXSH1qD5MaBkJbi6oJJvvTWW4xfbmd_Q@mail.gmail.com>
-In-Reply-To: <CAGo_u6qbbdAbdvrB3AFXSH1qD5MaBkJbi6oJJvvTWW4xfbmd_Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Robert Richter <rric@kernel.org>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	<linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	<linux-pci@vger.kernel.org>, "Borislav Petkov" <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH V5 0/4] x86/pci Fix numa_node info for AMD hostbridge
+ and misc clean up
+References: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Nishant,
+[Resending due to mail client crashing]
 
-On Thursday 15 May 2014 05:16 PM, Nishanth Menon wrote:
-> On Thu, May 15, 2014 at 4:25 AM, Roger Quadros <rogerq@ti.com> wrote:
->> On 05/15/2014 12:15 PM, Kishon Vijay Abraham I wrote:
->>> Hi Nishanth,
->>>
->>> On Wednesday 14 May 2014 09:04 PM, Nishanth Menon wrote:
->>>> On Wed, May 14, 2014 at 10:19 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
->>>>> Hi Roger,
->>>>>
->>>>> On Wednesday 14 May 2014 06:46 PM, Roger Quadros wrote:
->>>>>> Hi Kishon,
->>>>>>
->>>>>> On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
->>>>>>> APLL used by PCIE phy can either use external clock as input or the clock
->>>>>>> from DPLL. Added support for the APLL to use external clock as input here.
->>>>>>>
->>>>>>> Cc: Rajendra Nayak <rnayak@ti.com>
->>>>>>> Cc: Tero Kristo <t-kristo@ti.com>
->>>>>>> Cc: Paul Walmsley <paul@pwsan.com>
->>>>>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->>>>>>> ---
->>>>>>>  Documentation/devicetree/bindings/phy/ti-phy.txt |    4 ++
->>>>>>>  drivers/phy/phy-ti-pipe3.c                       |   75 ++++++++++++++--------
->>>>>>>  2 files changed, 52 insertions(+), 27 deletions(-)
->>>>>>>
->>>>>>> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
->>>>>>> index bc9afb5..d50f8ee 100644
->>>>>>> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
->>>>>>> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
->>>>>>> @@ -76,6 +76,10 @@ Required properties:
->>>>>>>     * "dpll_ref_m2" - external dpll ref clk
->>>>>>>     * "phy-div" - divider for apll
->>>>>>>     * "div-clk" - apll clock
->>>>>>> +   * "apll_mux" - mux for pcie apll
->>>>>>> +   * "refclk_ext" - external reference clock for pcie apll
->>>>>>> + - ti,ext-clk: To specifiy if PCIE apll should use external clock. Applicable
->>>>>>> +   only to PCIE PHY.
->>>>>>
->>>>>> Instead of specifying both clock sources "dpll_ref_clock", "refclk_ext" and then specifying a 3rd control option "ti,ext-clk" to select one of the 2 sources, why can't the DT just supply one clock source, i.e. the one that is being used in the board instance? The driver should then just configure the clock rate that is needed at that node. Shouldn't the clock framework automatically take care of muxing and parent rates?
->>>>>
->>>>> Want the dt to have all the clocks used by the controller. "ti,ext-clk" should
->>>>> go in the board dt file (suggested by Nishanth).
->>>>> The point is at some point later if some one wants to change the clock source,
->>>>> it should be a simple enabling "ti,ext-clk" flag instead of finding the clock
->>>>> phandle etc..
->>>>
->>>> Wonder if that is implicit by the presence of  "refclk_ext" in the
->>>> clocks provided?
->>>
->>> IMO the presence of "refclk_ext" is useless unless the board indicates it
->>> provides the clock source.
->>>
->>> refclk_ext holds phandle for *fixed-clock*, so irrespective of whether the
->>> board provides a clock or not, it can have that handle for configuring in PRCM.
->>> However if the board does not provide the clock source, configuring refclk_ext
->>> in PRCM is useless.
->>
->> I think what Nishant meant is that if "refclk_ext" is provided it means that the driver
->> should use that over "dpll_ref_clock" so no need of a separate "ti,ext-clk" flag.
-> 
-> yes, thank you for clarifying - it does indeed redundant to have
-> "ti,ext-clk". and apologies on being a little obscure in the comment.
+On 5/21/2014 6:17 PM, Bjorn Helgaas wrote:
+> [resending because I forgot to copy the lists, sorry guys]
+>
+> Hi Suravee,
+>
+> Sorry it took me so long to get to these patches.  Here's my proposal.  I
+> reordered them and added some comments in the code and changelogs, but I
+> think your patches look fine as-is.
+>
+> So I just need comments on these two significant changes:
+>
+>    1) I added a patch to stop enabling ECS after Fam16h, because that's
+>    another case of CPU-dependent code that we should not need to keep
+>    carrying.  I don't think there are any post-Fam16h CPUs yet, but I
+>    certainly don't want to do anything that will keep them from working when
+>    they do arrive.  It would be useful if somebody could test this on
+>    current platforms by tweaking the patch so we don't enable ECS on Fam15h.
 
-Irrespective of whether external reference clock is used or not, all DRA7
-(apll) has an input for external reference clock (and also a PRCM register for
-programming it) and it has to be specified in dt no?
+I'm okay with this. In my V4 patch, I also tested disabling ECS on 
+family15h already and that seems to work fine.  But I would not mind 
+deprecate this for post fam16h processors.
 
-Thanks
-Kishon
+>
+>    2) I dropped the quirk_amd_nb_node() removal.  I could be convinced
+>    otherwise, but I don't really object to the quirk because it is already
+>    explicitly limited to specific devices, and removing it will change
+>    things in sysfs.  I think the changes would be harmless as far as the
+>    kernel is concerned, since there are no drivers for these devices.  But
+>    Andreas added the quirk because of complaints, so apparently somebody is
+>    looking at what's in sysfs, and I don't want to get the same complaints
+>    again by removing it.  However, I will certainly ask questions if I see
+>    the quirk being extended to more devices.
+
+I'm okay with keeping this.
+
+> The AMD BKDG does say the BIOS should provide an MCFG table (sec 2.8 of
+> 42301), so I think it provides guidance matching the intent of my "stop
+> enabling ECS" patch.  But the BKDG doesn't mention _PXM at all.  Is there
+> any chance you could squeeze in a mention of that, so BIOS writers know
+> that they *should* provide it?  I want to avoid more fire-drills in the
+> future.
+>
+> Bjorn
+
+The ship for family15h stuff have sailed and we probably would not be 
+able to get them to change.  We are going to have to keep an eye on the 
+future platforms to make sure that the _PXM info is documented for 
+future platforms.
+
+I have tested this patch set and they seems to be ok now.
+
+Suravee
+
+>
+> ---
+>
+> Bjorn Helgaas (1):
+>        x86/PCI: Stop enabling ECS for AMD CPUs after Fam16h
+>
+> Myron Stowe (1):
+>        x86/PCI: Warn if we have to "guess" host bridge node information
+>
+> Suravee Suthikulpanit (2):
+>        x86/PCI: Work around AMD Fam15h BIOSes that fail to provide _PXM
+>        x86/PCI: Clean up and mark early_root_info_init() as deprecated
+>
+>
+>   arch/x86/pci/acpi.c    |    6 +++
+>   arch/x86/pci/amd_bus.c |   87 +++++++++++++++++++++++++++++++-----------------
+>   2 files changed, 62 insertions(+), 31 deletions(-)
+>
+
