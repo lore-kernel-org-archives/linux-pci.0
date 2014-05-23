@@ -1,89 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:39460 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbaESHBU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 03:01:20 -0400
-Date: Mon, 19 May 2014 02:59:00 -0400 (EDT)
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-To: Bjorn Helgaas <bhelgaas@google.com>
-cc: Linux PCI mailing list <linux-pci@vger.kernel.org>
-Subject: Re: could the [x86] Kconfig content for PCI be cleaned up at all?
-In-Reply-To: <CAErSpo6jn1gG=s9Vaz0_Lvf-ZKi=1QUz0WRZ55St--LBOUSZ7Q@mail.gmail.com>
-Message-ID: <alpine.LFD.2.11.1405190256070.31506@localhost>
-References: <alpine.LFD.2.11.1405170706260.536@localhost> <CAErSpo6jn1gG=s9Vaz0_Lvf-ZKi=1QUz0WRZ55St--LBOUSZ7Q@mail.gmail.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:41205 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751605AbaEWQuI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 May 2014 12:50:08 -0400
+Received: by mail-ie0-f173.google.com with SMTP id lx4so5320618iec.18
+        for <linux-pci@vger.kernel.org>; Fri, 23 May 2014 09:50:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <CA+r1ZhjZoDK-rxZ8EGDk==b7EXNDsdxo8EAt2WFhdHt4-W0k=g@mail.gmail.com>
+References: <CA+r1ZhjZoDK-rxZ8EGDk==b7EXNDsdxo8EAt2WFhdHt4-W0k=g@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 23 May 2014 10:49:47 -0600
+Message-ID: <CAErSpo6vJAEd2-qSCWt_j5L2sFDeh1iK3=G+_5pz32WdsNfhKA@mail.gmail.com>
+Subject: Re: randconfig build error with next-20140523, in arch/x86/pci/fixup.c
+To: Jim Davis <jim.epost@gmail.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next <linux-next@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	tglx <tglx@linutronix.de>, hpa <hpa@zytor.com>,
+	x86 <x86@kernel.org>, linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 17 May 2014, Bjorn Helgaas wrote:
-
-> On Sat, May 17, 2014 at 5:29 AM, Robert P. J. Day <rpjday@crashcourse.ca> wrote:
-> >
-> >   digging through the current PCI code and Kconfig files and it seems
-> > like some of that could be made simpler, but i'm willing to be
-> > convinced otherwise.
+On Fri, May 23, 2014 at 10:13 AM, Jim Davis <jim.epost@gmail.com> wrote:
+> Building with the attached random configuration file,
 >
-> I'm sure it could be cleaned up, and it would be great if you did!
->
-> I don't know the reason why all the arches source
-> drivers/pci/pcie/Kconfig directly; it seems like that should be done
-> from drivers/pci/Kconfig.
->
-> >   first, from arch/x86/Kconfig, rather than simply sourcing the file
-> > "drivers/pci/Kconfig" (as is done with many other drivers
-> > directories), that Kconfig file defines:
-> >
-> >   menu "Bus options (PCI etc.)"
-> >
-> >   config PCI
-> >         bool "PCI support"
-> >         default y
-> >   ... snip ...
-> >
-> > and later on, sources the Kconfig files for PCI and PCIe individually:
-> >
-> >   source "drivers/pci/pcie/Kconfig"
-> >
-> >   source "drivers/pci/Kconfig"
-> >
-> > and even further down, finally sources the file for PCI hotplug after
-> > PCMCIA:
-> >
-> >   source "drivers/pcmcia/Kconfig"
-> >
-> >   source "drivers/pci/hotplug/Kconfig"
+> arch/x86/pci/fixup.c: In function ‘sb600_hpet_quirk’:
+> arch/x86/pci/fixup.c:534:47: error: ‘hpet_address’ undeclared (first use in this
+>  function)
+>   if (r->flags & IORESOURCE_MEM && r->start == hpet_address) {
+>                                                ^
+> arch/x86/pci/fixup.c:534:47: note: each undeclared identifier is reported only o
+> nce for each function it appears in
+> make[1]: *** [arch/x86/pci/fixup.o] Error 1
 
-   ... snip ...
+Thanks, I updated that patch to test CONFIG_HPET_TIMER.
 
-> I don't know all the history behind what we have now, so I can't
-> give you much advice.  I think you just have to work through the
-> process of simplifying things and see whether it turns out to be
-> feasible.
-
-  one of the quirky features of the current Kconfig layout is that, in
-some arch Kconfig files, the main PCI content is included, then
-pcmcia, *then* PCI hotplug, which means that when you pop into
-something like "make menuconfig" and wander over to the PCI menu, you
-see the majority of PCI selections, then the selection for PCCard, and
-*then* the choice for PCI hotplug, which strikes me as just, well, odd
-and confusing since, if you deselect PCI entirely, almost everything
-goes away except for (you guessed it) PCCard. (and that framebuffer
-selection as well.)
-
-  as you say, there may be some historical inertia as to why things
-were done this way, but is there any *technical* reason why everything
-PCI-related can't just hang off of the drivers/pci/ directory via a
-single "source" directive?
-
-rday
-
--- 
-
-========================================================================
-Robert P. J. Day                                 Ottawa, Ontario, CANADA
-                        http://crashcourse.ca
-
-Twitter:                                       http://twitter.com/rpjday
-LinkedIn:                               http://ca.linkedin.com/in/rpjday
-========================================================================
+Bjorn
