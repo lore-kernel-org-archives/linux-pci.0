@@ -1,244 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org,
-	Ingo Molnar <mingo@kernel.org>, linux-pm@vger.kernel.org
-Subject: [RFC Patch Part1 V1 18/30] x86, ACPI, irq: consolidate algorithm of mapping (ioapic, pin) to IRQ number
-Date: Fri, 16 May 2014 16:05:38 +0800
-Message-Id: <1400227550-5935-19-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:50101 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752991AbaEWQwg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 May 2014 12:52:36 -0400
+From: Will Deacon <will.deacon@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	jgunthorpe@obsidianresearch.com, sthokal@xilinx.com,
+	Will Deacon <will.deacon@arm.com>
+Subject: [PATCH v7 1/4] ARM: kconfig: allow PCI support to be selected with ARCH_MULTIPLATFORM
+Date: Fri, 23 May 2014 17:51:52 +0100
+Message-Id: <1400863915-24135-2-git-send-email-will.deacon@arm.com>
+In-Reply-To: <1400863915-24135-1-git-send-email-will.deacon@arm.com>
+References: <1400863915-24135-1-git-send-email-will.deacon@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently ACPI and ioapic both implement algorithms to map (ioapic, pin)
-to IRQ number. So consolidate the common part into one place, which is
-also preparing for irqdomain support.
+When targetting ARCH_MULTIPLATFORM, we may include support for SoCs with
+PCI-capable devices (e.g. mach-virt with virtio-pci).
 
-It introduces mp_map_pin_to_irq(), which will be used to allocate IRQ
-number IOAPIC pins when irqdomain is enabled.
+This patch allows PCI support to be selected for these SoCs by selecting
+CONFIG_MIGHT_HAVE_PCI when CONFIG_ARCH_MULTIPLATFORM=y and removes the
+individual selections from multi-platform enabled SoCs.
 
-Also rename gsi_to_irq() to map_gsi_to_irq(), later we will introduce
-unmap_gsi_to_irq() when enabling IOAPIC hotplug.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Will Deacon <will.deacon@arm.com>
 ---
- arch/x86/include/asm/io_apic.h |    2 ++
- arch/x86/kernel/acpi/boot.c    |   52 +++++++++++++++++++++-------------------
- arch/x86/kernel/apic/io_apic.c |   30 +++++++++++++----------
- 3 files changed, 48 insertions(+), 36 deletions(-)
+ arch/arm/Kconfig               | 1 +
+ arch/arm/mach-bcm/Kconfig      | 1 -
+ arch/arm/mach-cns3xxx/Kconfig  | 1 -
+ arch/arm/mach-imx/Kconfig      | 1 -
+ arch/arm/mach-mvebu/Kconfig    | 1 -
+ arch/arm/mach-shmobile/Kconfig | 1 -
+ arch/arm/mach-tegra/Kconfig    | 1 -
+ 7 files changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index de3d8b04cf64..f4fd0be26cec 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -171,6 +171,7 @@ extern u32 gsi_top;
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index db3c5414223e..860bea828ac4 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -314,6 +314,7 @@ config ARCH_MULTIPLATFORM
+ 	select CLKSRC_OF
+ 	select COMMON_CLK
+ 	select GENERIC_CLOCKEVENTS
++	select MIGHT_HAVE_PCI
+ 	select MULTI_IRQ_HANDLER
+ 	select SPARSE_IRQ
+ 	select USE_OF
+diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
+index 49c914cd9c7a..764c129b5eee 100644
+--- a/arch/arm/mach-bcm/Kconfig
++++ b/arch/arm/mach-bcm/Kconfig
+@@ -55,7 +55,6 @@ config ARCH_BCM_5301X
+ 	select GENERIC_CLOCKEVENTS
+ 	select ARM_GLOBAL_TIMER
+ 	select CLKSRC_ARM_GLOBAL_TIMER_SCHED_CLOCK
+-	select MIGHT_HAVE_PCI
+ 	help
+ 	  Support for Broadcom BCM470X and BCM5301X SoCs with ARM CPU cores.
  
- extern int mp_find_ioapic(u32 gsi);
- extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
-+extern int mp_map_pin_to_irq(int ioapic, int pin);
- extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void __init pre_init_apic_IRQ0(void);
+diff --git a/arch/arm/mach-cns3xxx/Kconfig b/arch/arm/mach-cns3xxx/Kconfig
+index dce8decd5d46..66838f42037f 100644
+--- a/arch/arm/mach-cns3xxx/Kconfig
++++ b/arch/arm/mach-cns3xxx/Kconfig
+@@ -1,7 +1,6 @@
+ config ARCH_CNS3XXX
+ 	bool "Cavium Networks CNS3XXX family" if ARCH_MULTI_V6
+ 	select ARM_GIC
+-	select MIGHT_HAVE_PCI
+ 	select PCI_DOMAINS if PCI
+ 	help
+ 	  Support for Cavium Networks CNS3XXX platform.
+diff --git a/arch/arm/mach-imx/Kconfig b/arch/arm/mach-imx/Kconfig
+index 5740296dc429..50bb546b893a 100644
+--- a/arch/arm/mach-imx/Kconfig
++++ b/arch/arm/mach-imx/Kconfig
+@@ -796,7 +796,6 @@ config SOC_IMX6Q
+ 	select ARM_ERRATA_764369 if SMP
+ 	select HAVE_ARM_SCU if SMP
+ 	select HAVE_ARM_TWD if SMP
+-	select MIGHT_HAVE_PCI
+ 	select PCI_DOMAINS if PCI
+ 	select PINCTRL_IMX6Q
+ 	select SOC_IMX6
+diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
+index 3f73eecbcfb0..120301ebd324 100644
+--- a/arch/arm/mach-mvebu/Kconfig
++++ b/arch/arm/mach-mvebu/Kconfig
+@@ -9,7 +9,6 @@ config ARCH_MVEBU
+ 	select MVEBU_MBUS
+ 	select ZONE_DMA if ARM_LPAE
+ 	select ARCH_REQUIRE_GPIOLIB
+-	select MIGHT_HAVE_PCI
+ 	select PCI_QUIRKS if PCI
+ 	select OF_ADDRESS_PCI
  
-@@ -212,6 +213,7 @@ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
- static inline void ioapic_insert_resources(void) { }
- #define gsi_top (NR_IRQS_LEGACY)
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
-+static inline int mp_map_pin_to_irq(int ioapic, int pin) { return -1; }
- 
- struct io_apic_irq_attr;
- static inline int io_apic_set_pci_routing(struct device *dev, int irq,
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index dccf9e88db30..6eae9a7231c4 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -99,27 +99,22 @@ static u32 isa_irq_to_gsi[NR_IRQS_LEGACY] __read_mostly = {
- 
- #define	ACPI_INVALID_GSI		INT_MIN
- 
--static unsigned int gsi_to_irq(unsigned int gsi)
-+static int map_gsi_to_irq(unsigned int gsi)
- {
--	unsigned int irq = gsi + NR_IRQS_LEGACY;
--	unsigned int i;
-+	int i, ioapic, pin;
- 
--	for (i = 0; i < NR_IRQS_LEGACY; i++) {
--		if (isa_irq_to_gsi[i] == gsi) {
-+	for (i = 0; i < NR_IRQS_LEGACY; i++)
-+		if (isa_irq_to_gsi[i] == gsi)
- 			return i;
--		}
--	}
- 
--	/* Provide an identity mapping of gsi == irq
--	 * except on truly weird platforms that have
--	 * non isa irqs in the first 16 gsis.
--	 */
--	if (gsi >= NR_IRQS_LEGACY)
--		irq = gsi;
--	else
--		irq = gsi_top + gsi;
-+	ioapic = mp_find_ioapic(gsi);
-+	if (ioapic >= 0) {
-+		pin = mp_find_ioapic_pin(ioapic, gsi);
-+		return mp_map_pin_to_irq(ioapic, pin);
-+	}
- 
--	return irq;
-+	pr_err("Failed to map GSI%d to IRQ number.\n", gsi);
-+	return -1;
- }
- 
- /*
-@@ -493,16 +488,20 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
- 	outb(new >> 8, 0x4d1);
- }
- 
--int acpi_gsi_to_irq(u32 gsi, unsigned int *irq)
-+int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- {
--	*irq = gsi_to_irq(gsi);
-+	int irq = map_gsi_to_irq(gsi);
- 
-+	if (irq >= 0) {
- #ifdef CONFIG_X86_IO_APIC
--	if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
--		setup_IO_APIC_irq_extra(gsi);
-+		if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
-+			setup_IO_APIC_irq_extra(gsi);
- #endif
-+		*irqp = irq;
-+		return 0;
-+	}
- 
--	return 0;
-+	return -1;
- }
- EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
- 
-@@ -556,11 +555,11 @@ int (*acpi_suspend_lowlevel)(void);
-  */
- int acpi_register_gsi(struct device *dev, u32 gsi, int trigger, int polarity)
- {
--	unsigned int plat_gsi = gsi;
-+	unsigned int plat_gsi;
- 
- 	plat_gsi = (*__acpi_register_gsi)(dev, gsi, trigger, polarity);
- 	if (plat_gsi != ACPI_INVALID_GSI)
--		return gsi_to_irq(plat_gsi);
-+		return map_gsi_to_irq(plat_gsi);
- 
- 	return -1;
- }
-@@ -1029,6 +1028,7 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity)
- {
-+	int irq;
- 	int ioapic;
- 	int ioapic_pin;
- 	struct io_apic_irq_attr irq_attr;
-@@ -1041,6 +1041,10 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	if (acpi_gbl_FADT.sci_interrupt == gsi)
- 		return gsi;
- 
-+	irq = map_gsi_to_irq(gsi);
-+	if (irq < 0)
-+		return ACPI_INVALID_GSI;
-+
- 	ioapic = mp_find_ioapic(gsi);
- 	if (ioapic < 0) {
- 		printk(KERN_WARNING "No IOAPIC for GSI %u\n", gsi);
-@@ -1062,7 +1066,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	set_io_apic_irq_attr(&irq_attr, ioapic, ioapic_pin,
- 			     trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
- 			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
--	ret = io_apic_set_pci_routing(dev, gsi_to_irq(gsi), &irq_attr);
-+	ret = io_apic_set_pci_routing(dev, irq, &irq_attr);
- 	if (ret < 0)
- 		gsi = ACPI_INVALID_GSI;
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index faed9b62977d..f55357bd0e07 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -980,11 +980,22 @@ static int irq_trigger(int idx)
- 	return trigger;
- }
- 
-+int mp_map_pin_to_irq(int apic, int pin)
-+{
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(apic);
-+	u32 gsi = gsi_cfg->gsi_base + pin;
-+
-+	/*
-+	 * Provide an identity mapping of gsi == irq except on truly weird
-+	 * platforms that have non isa irqs in the first 16 gsis.
-+	 */
-+	return gsi >= NR_IRQS_LEGACY ? gsi : gsi_top + gsi;
-+}
-+
- static int pin_2_irq(int idx, int apic, int pin)
- {
- 	int irq;
- 	int bus = mp_irqs[idx].srcbus;
--	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(apic);
- 
- 	/*
- 	 * Debugging check, we are in big trouble if this message pops up!
-@@ -992,17 +1003,6 @@ static int pin_2_irq(int idx, int apic, int pin)
- 	if (mp_irqs[idx].dstirq != pin)
- 		pr_err("broken BIOS or MPTABLE parser, ayiee!!\n");
- 
--	if (test_bit(bus, mp_bus_not_pci)) {
--		irq = mp_irqs[idx].srcbusirq;
--	} else {
--		u32 gsi = gsi_cfg->gsi_base + pin;
--
--		if (gsi >= NR_IRQS_LEGACY)
--			irq = gsi;
--		else
--			irq = gsi_top + gsi;
--	}
--
- #ifdef CONFIG_X86_32
- 	/*
- 	 * PCI IRQ command line redirection. Yes, limits are hardcoded.
-@@ -1017,11 +1017,17 @@ static int pin_2_irq(int idx, int apic, int pin)
- 				apic_printk(APIC_VERBOSE, KERN_DEBUG
- 						"using PIRQ%d -> IRQ %d\n",
- 						pin-16, irq);
-+				return irq;
- 			}
- 		}
- 	}
- #endif
- 
-+	if (test_bit(bus, mp_bus_not_pci))
-+		irq = mp_irqs[idx].srcbusirq;
-+	else
-+		irq = mp_map_pin_to_irq(apic, pin);
-+
- 	return irq;
- }
- 
+diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
+index 0f92ba8e7884..905003898913 100644
+--- a/arch/arm/mach-shmobile/Kconfig
++++ b/arch/arm/mach-shmobile/Kconfig
+@@ -8,7 +8,6 @@ config ARCH_SHMOBILE_MULTI
+ 	select HAVE_ARM_SCU if SMP
+ 	select HAVE_ARM_TWD if SMP
+ 	select ARM_GIC
+-	select MIGHT_HAVE_PCI
+ 	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
+ 	select NO_IOPORT_MAP
+ 	select PINCTRL
+diff --git a/arch/arm/mach-tegra/Kconfig b/arch/arm/mach-tegra/Kconfig
+index 55b305d51669..e16999e5b735 100644
+--- a/arch/arm/mach-tegra/Kconfig
++++ b/arch/arm/mach-tegra/Kconfig
+@@ -7,7 +7,6 @@ config ARCH_TEGRA
+ 	select CLKSRC_MMIO
+ 	select HAVE_ARM_SCU if SMP
+ 	select HAVE_ARM_TWD if SMP
+-	select MIGHT_HAVE_PCI
+ 	select PINCTRL
+ 	select ARCH_HAS_RESET_CONTROLLER
+ 	select RESET_CONTROLLER
 -- 
-1.7.10.4
+1.9.2
 
