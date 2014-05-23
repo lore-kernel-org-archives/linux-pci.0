@@ -1,65 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:52108 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933703AbaE3QF5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 12:05:57 -0400
-Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id B366521286
-	for <linux-pci@vger.kernel.org>; Fri, 30 May 2014 12:05:56 -0400 (EDT)
-Date: Fri, 30 May 2014 09:09:33 -0700
-From: Greg KH <greg@kroah.com>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v3 12/15] pci: Add pci_fixup_suspend_late quirk pass.
-Message-ID: <20140530160933.GA11279@kroah.com>
-References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
- <1401117492-2870-13-git-send-email-andreas.noever@gmail.com>
- <20140528223637.GY11907@google.com>
- <CAMxnaaVwSev1EuEUghxFFzp0M2mMy3qYHgJA+rXpLhiJQH7Psg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMxnaaVwSev1EuEUghxFFzp0M2mMy3qYHgJA+rXpLhiJQH7Psg@mail.gmail.com>
+Received: from mail-qc0-f179.google.com ([209.85.216.179]:64458 "EHLO
+	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650AbaEWJIX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 May 2014 05:08:23 -0400
+Received: by mail-qc0-f179.google.com with SMTP id x3so7602008qcv.38
+        for <linux-pci@vger.kernel.org>; Fri, 23 May 2014 02:08:23 -0700 (PDT)
+Content-Type: text/plain; charset=windows-1252
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+Subject: Re: Frustrating PCI x ACPI x APIC(?) interaction/bug
+From: Micah Dombrowski <mpdwibble@gmail.com>
+In-Reply-To: <CAErSpo76JQpLQ9g5tvcx4qBt+hyOZV7_H0MJ+z+1ndKBjZQQjA@mail.gmail.com>
+Date: Fri, 23 May 2014 05:08:20 -0400
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	H Hartley Sweeten <hsweeten@visionengravers.com>,
+	Ian Abbott <abbotti@mev.co.uk>
+Message-Id: <ED32BC36-997C-47B4-A618-53C0657DE592@gmail.com>
+References: <EF1232FA-308B-4261-82E6-6E3B932181E2@gmail.com> <CAErSpo5U4UpMdBC8nGTJcsatste17THf7Ko1RPZpaC01UyS6tw@mail.gmail.com> <9F1CDCD7-94EC-43C3-9568-D5C348531D85@gmail.com> <CAErSpo7HY9vbWrpKWXjvrOX+e0GguGe+7U0eg8vNrEpcEUiHVQ@mail.gmail.com> <D2E49FCA-B019-45C7-A30F-FD63B9684629@gmail.com> <CAErSpo76JQpLQ9g5tvcx4qBt+hyOZV7_H0MJ+z+1ndKBjZQQjA@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 30, 2014 at 04:33:20PM +0200, Andreas Noever wrote:
-> On Thu, May 29, 2014 at 12:36 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Mon, May 26, 2014 at 05:18:09PM +0200, Andreas Noever wrote:
-> >
-> > Please adjust the subject to match the drivers/pci convention, i.e., change
-> >
-> >   pci: Add pci_fixup_suspend_late quirk pass.
-> >
-> > to
-> >
-> >   PCI: Add pci_fixup_suspend_late quirk pass
-> >
-> >> Add pci_fixup_suspend_late as a new pci_fixup_pass. The pass is called
-> >> from suspend_noirq and poweroff_noirq. Using the same pass for suspend
-> >> and hibernate is consistent with resume_early which is called by
-> >> resume_noirq and restore_noirq.
-> >>
-> >> The new quirk pass is required for Thunderbolt support on Apple
-> >> hardware.
-> >>
-> >> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
-> >
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Thanks for reading through the series. I will make those changes for
-> the next version.
-> 
-> > I assume you'll merge this along with the rest of the series, not through
-> > my PCI tree.
-> Agreed, since I am the only user of this pass. Can you tell me whose
-> tree normally carries new drivers?
+On May 22, 2014, at 12:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-That's mine.  But if Matthew wants to take this in his trees, I'll have
-no objection.
+> Does the T530 have enough oomph to do all this?
+> ...
+> Can the T530 keep up if you drop the
+> processing and output side of the equation?
 
-thanks,
+It should have plenty of bandwidth for the 4020 side, as we returned one of these to Lenovo for them to test, and they were able to get well over 100 MBps through the Expresscard slot under Windows.  We found similar results with a USB 3.0 Expresscard under Linux.
 
-greg k-h
+As far as the disk side, I should have mentioned, but I’ve been writing to /tmp which is mounted as a ramdisk.  I’ve also done this test with no output at all (just reading from the comedi buffer and discarding), and found the same oddities in timing.  For looking at the data I’ve also cut the file size saved to /tmp down to only 16 MB.
+
+> I don't understand how the "apci=off noapic" thing would make a
+> difference here, so maybe that's a good clue.  Can you collect the
+> same sort of info (dmesg, lspci -vv, /proc/interrupts info) with that
+> configuration?
+
+I’ve attached these to the report, but after much more fiddling with it in this mode (looking closely at the incoming data), I now don’t believe this is actually fixing anything.  It makes some of the timing _appear_ better, sometimes, but I think that’s just due to random slowdowns or something.
+
+I’ve looked at the data with some slow triangle-wave input, and in either 40 MBps mode (1 channel at 20 MHz or 2 at 10 MHz), the discontinuities appear to occur at around the 800 KB mark.  That is, the card properly transfers over around 400k 2-byte samples (of either one 20 MHz or two 10 MHz channels), and then skips what I eyeball to be about half that.
+
+At 2x20 MHz, this drops to around 120k continuous 2-byte samples, though the skipped number is more like 260k (actually may be the same amount of skip as seen in the above modes).
+
+1x10 MHz remains the fastest sane-appearing mode.
+
+The most strange thing in the data is shown in the .jpeg file I’ve attached to the report: https://bugzilla.kernel.org/show_bug.cgi?id=76641#c11  …I have no idea.
+
+One more thing: I made one change to the comedi driver that I knew about, which is to change the size of the ‘DMA buffer’ that the card uses.  The driver comes with this set to 0x1000, but I was advised years ago to set this to 0x8000 for our continuous high-speed stuff, and that’s what all of the prior testing has been at.  I tried changing this to 0x2000 and 0x1000—neither made any difference to the sane sample lengths above.
+
+MPD
