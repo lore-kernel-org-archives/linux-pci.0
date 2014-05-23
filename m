@@ -1,92 +1,20 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:62068 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934490AbaEFJ31 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 05:29:27 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"rdunlap@infradead.org" <rdunlap@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU address to phys_addr_t
-Date: Tue, 06 May 2014 11:29:12 +0200
-Message-ID: <4242492.CmiQ52tgWu@wuerfel>
-In-Reply-To: <1399344142.2164.67.camel@dabdike.int.hansenpartnership.com>
-References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140505230104.GB8883@google.com> <1399344142.2164.67.camel@dabdike.int.hansenpartnership.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from ns.horizon.com ([71.41.210.147]:33236 "HELO ns.horizon.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750990AbaEWB3g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 22 May 2014 21:29:36 -0400
+Date: 22 May 2014 21:29:33 -0400
+Message-ID: <20140523012933.7078.qmail@ns.horizon.com>
+From: "George Spelvin" <linux@horizon.com>
+To: alex.williamson@redhat.com, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 05/16] PCI: quirk dma_alias_devfn for Marvell devices
+Cc: acooks@gmail.com, bhelgaas@google.com, eddy0596@gmail.com,
+	linux-kernel@vger.kernel.org, linux@horizon.com
+In-Reply-To: <20140522230755.2856.19714.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 06 May 2014 02:42:22 James Bottomley wrote:
-> On Mon, 2014-05-05 at 17:01 -0600, Bjorn Helgaas wrote:
-> > On Fri, May 02, 2014 at 10:42:18AM +0200, Arnd Bergmann wrote:
-> 
-> > > I don't know about NCR_Q720, but all others are only used on machines
-> > > where physical addresses and bus addresses are in the same space.
-> > 
-> > In general, the driver doesn't know whether physical and bus addresses
-> > are in the same space.  At least, I *hope* it doesn't have to know,
-> > because it can't be very generic if it does.
-> 
-> The API was designed for the case where the memory resides on a PCI
-> device (the Q720 case), the card config gives us a bus address, but if
-> the system has an IOMMU, we'd have to do a dma_map of the entire region
-> to set up the IOMMU before we can touch it.  The address it gets back
-> from the dma_map (the dma_addr_t handle for the IOMMU mapping) is what
-> we pass into dma_declare_coherent_memory().  The reason it does an
-> ioremap is because this IOMMU mapped address is now physical to the CPU
-> and we want to make the region available to virtual space.  Essentially
-> the memory the allocator hands out behaves as proper virtual memory but
-> it's backed by physical memory on the card behind the PCI bridge.
-> 
-> I'm still not that fussed about the difference between phys_addr_t and
-> dma_addr_t, but if the cookie returned from a dma_map is a dma_addr_t
-> then that's what dma_declare_coherent_memory() should use.  If it's a
-> phys_addr_t, then likewise.
+Tested-by: George Spelvin <linux@horizon.com>
 
-I think the 'bus_addr' argument should be renamed to 'phys_addr' and
-changed to type 'phys_addr_t' from the currentn code, the device_addr
-should stay as dma_addr_t. This is what the code looks like today:
-
-struct dma_coherent_mem {
-        void            *virt_base;
-        dma_addr_t      device_base;
-        phys_addr_t     pfn_base;
-	...
-};
-
-int dma_declare_coherent_memory(struct device *dev, dma_addr_t bus_addr,
-                                dma_addr_t device_addr, size_t size, int flags)
-{
-	...
-	dev->dma_mem->virt_base = ioremap(bus_addr, size);
-	dev->dma_mem->pfn_base = PFN_DOWN(bus_addr);
-	dev->dma_mem->device_base = device_addr;
-	...
-}
-
-* ioremap() takes a phys_addr_t argument, we feed it a dma_addr_t,
-  which should get corrected.
-* a PFN by convention is an 'unsigned long', not a phys_addr_t,
-  PFN_DOWN essentially converts phys_addr_t to 'unsigned long'.
-
-If we change these, it's all consistent.
-
-Unrelated to that, there is the problem that most callers (including Q720)
-pass the same address as bus_addr and device_addr into
-dma_declare_coherent_memory(), but that would be an issue with the caller,
-and it's sort of ok when the caller knows they are the same (i.e. no IOMMU).
-
-Normally dma_map_single() is used to convert from phys_addr_t to dma_addr_t,
-and you seem to argue that this is what the callers should do. However,
-that doesn't work here, because dma_map_single() is only defined for
-actual RAM in the linear kernel mapping, not for a physical address on
-a device. We have a similar problem in passing FIFO addresses from slave
-devices to dma engines, and that is also unsolved right now, and we rely
-on them to be on the same bus, with no IOMMU between them.
-
-	Arnd
+(I'm running the whole series, but 1b4b:9172 are the devices I have.)
