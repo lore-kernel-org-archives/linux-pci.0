@@ -1,51 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:55969 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751112AbaEVVA1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 17:00:27 -0400
-Date: Thu, 22 May 2014 23:00:22 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Robert Richter <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Borislav Petkov <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after
- Fam16h
-Message-ID: <20140522210022.GN4383@pd.tnic>
-References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521233802.GA21575@pd.tnic>
- <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
- <20140522191746.GL4383@pd.tnic>
- <CAErSpo7=0-xdnu4DQufu_6eS=6AYhnDRaQvzeiMEC5a=zKU0Jg@mail.gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.131]:57827 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079AbaEWTXC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 May 2014 15:23:02 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Will Deacon <will.deacon@arm.com>
+Subject: Re: [PATCH v7 4/4] PCI: Generic Configuration Access Mechanism support
+Date: Fri, 23 May 2014 21:22:18 +0200
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, jgunthorpe@obsidianresearch.com,
+	sthokal@xilinx.com
+References: <1400863915-24135-1-git-send-email-will.deacon@arm.com> <1400863915-24135-5-git-send-email-will.deacon@arm.com>
+In-Reply-To: <1400863915-24135-5-git-send-email-will.deacon@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAErSpo7=0-xdnu4DQufu_6eS=6AYhnDRaQvzeiMEC5a=zKU0Jg@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201405232122.18995.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 22, 2014 at 02:20:04PM -0600, Bjorn Helgaas wrote:
-> Even if MMCONFIG does work fine on everything from Fam10h onwards, we
-> still depend on the BIOS to provide a correct MCFG table.
+On Friday 23 May 2014, Will Deacon wrote:
+> +static void __iomem *pci_cfg_map_bus_ecam(struct pci_bus *bus,
+> +                                         unsigned int devfn,
+> +                                         int where)
+> +{
+> +       struct pci_sys_data *sys = bus->sysdata;
+> +       struct pci_cfg_windows *cfg = sys->private_data;
+> +       resource_size_t idx = bus->number - cfg->bus_range.start;
+> +
+> +       return cfg->win[idx] + ((devfn << PCI_CFG_ECAM_DEV_NUM) | where);
+> +}
 
-It is very hazy memory of mine that starting with F10h, we had an MCFG
-table always present but I don't remember anymore. Maybe I'm even
-remembering it wrong.
+I just noticed that this function makes the code rather non-generic, because
+struct pci_sys_data is the ARM specific structure that doesn't exist elsewhere,
+and sys->private_data wouldn't typically point to struct pci_cfg_windows on
+anything other than your generic PCI host.
 
-In any case, as Andreas and I pointed out, this is AMD's decision so if
-they're fine with F16h, then it is definitely not my place to disagree.
+I'd say let's drop this for now. I know it was my idea to do it like this,
+but it seems it's more complex than I had hoped to get this right, and
+I'd really prefer to merge the other three patches for 3.16 if possible.
+We can factor it out later if we get more users.
 
-:-)
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+	Arnd
