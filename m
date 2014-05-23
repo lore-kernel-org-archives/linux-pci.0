@@ -1,43 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:44733 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752793AbaEOO2F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 May 2014 10:28:05 -0400
-From: Andrew Lunn <andrew@lunn.ch>
-To: linux ARM <linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: Andrew Lunn <andrew@lunn.ch>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RFC 08/11] PCI: Remove ARCH_KIRKWOOD dependency
-Date: Thu, 15 May 2014 16:23:53 +0200
-Message-Id: <1400163836-9831-13-git-send-email-andrew@lunn.ch>
-In-Reply-To: <1400163836-9831-1-git-send-email-andrew@lunn.ch>
-References: <1400163836-9831-1-git-send-email-andrew@lunn.ch>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:50096 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751861AbaEWQwc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 May 2014 12:52:32 -0400
+From: Will Deacon <will.deacon@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	jgunthorpe@obsidianresearch.com, sthokal@xilinx.com,
+	Will Deacon <will.deacon@arm.com>
+Subject: [PATCH v7 3/4] MAINTAINERS: add entry for generic PCI host controller driver
+Date: Fri, 23 May 2014 17:51:54 +0100
+Message-Id: <1400863915-24135-4-git-send-email-will.deacon@arm.com>
+In-Reply-To: <1400863915-24135-1-git-send-email-will.deacon@arm.com>
+References: <1400863915-24135-1-git-send-email-will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mach-kirkwood has been removed, now that kirkwood lives in mach-mvebu.
+Add myself as the maintainer for the generic PCI host controller driver.
 
-Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Will Deacon <will.deacon@arm.com>
 ---
- drivers/pci/host/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ MAINTAINERS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index a6f67ec8882f..1b32836d435a 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -3,7 +3,7 @@ menu "PCI host controller drivers"
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 51ebb779c5f3..fc1d6ff43067 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6751,6 +6751,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*designware*
  
- config PCI_MVEBU
- 	bool "Marvell EBU PCIe controller"
--	depends on ARCH_MVEBU || ARCH_DOVE || ARCH_KIRKWOOD
-+	depends on ARCH_MVEBU || ARCH_DOVE
- 	depends on OF
- 
- config PCIE_DW
++PCI DRIVER FOR GENERIC OF HOSTS
++M:	Will Deacon <will.deacon@arm.com>
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
++F:	drivers/pci/host/pci-host-generic.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-2.0.0.rc2
+1.9.2
 
