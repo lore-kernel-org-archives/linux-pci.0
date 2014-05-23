@@ -1,42 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:52592 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752428AbaEHPI3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 11:08:29 -0400
-Message-ID: <536B9DE9.80100@wwwdotorg.org>
-Date: Thu, 08 May 2014 09:08:25 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <537FBF4F.4050406@amd.com>
+Date: Fri, 23 May 2014 16:36:15 -0500
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-To: Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org
-CC: arnd@arndb.de, linux-pci@vger.kernel.org, sthokal@xilinx.com,
-	jgunthorpe@obsidianresearch.com, bhelgaas@google.com
-Subject: Re: [PATCH v6 1/3] ARM: kconfig: allow PCI support to be selected
- with ARCH_MULTIPLATFORM
-References: <1399478839-3564-1-git-send-email-will.deacon@arm.com> <1399478839-3564-2-git-send-email-will.deacon@arm.com>
-In-Reply-To: <1399478839-3564-2-git-send-email-will.deacon@arm.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Robert Richter <rric@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Borislav Petkov <bp@alien8.de>,
+	Daniel J Blueman <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Aravind Gopalakrishnan" <Aravind.Gopalakrishnan@amd.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after
+ Fam16h
+References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521233802.GA21575@pd.tnic>
+ <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
+ <20140522191746.GL4383@pd.tnic>
+ <CAErSpo7=0-xdnu4DQufu_6eS=6AYhnDRaQvzeiMEC5a=zKU0Jg@mail.gmail.com>
+ <537E8ACF.6000103@amd.com>
+ <CAErSpo6AMGPFELx+2qJXYaxaLRhk2F2J=wn4=gLgmvYGdLup7A@mail.gmail.com>
+ <20140523115622.GU27560@rric.localhost>
+In-Reply-To: <20140523115622.GU27560@rric.localhost>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/07/2014 10:07 AM, Will Deacon wrote:
-> When targetting ARCH_MULTIPLATFORM, we may include support for SoCs with
-> PCI-capable devices (e.g. mach-virt with virtio-pci).
-> 
-> This patch allows PCI support to be selected for these SoCs by selecting
-> CONFIG_MIGHT_HAVE_PCI when CONFIG_ARCH_MULTIPLATFORM=y.
+On 5/23/2014 6:56 AM, Robert Richter wrote:
+> On 22.05.14 20:54:54, Bjorn Helgaas wrote:
+>> I'm going to go out on a limb and guess that Windows does not enable
+>> ECS, so it probably uses ECAM.  Therefore, I suspect Linux's parsing
+>> of MCFG is broken in some way, and we probably *could* use ECAM in all
+>> these cases I'm seeing.
+>
+> Even if ECS is not enabled the system should be fine anyway, as ECS is
+> only used to enable certain features. For family 10h this was
+> originally the IBS EILVT (extended interrupt local vector table,
+> needed for hw profiling) setup which need to be set by the OS which
+> the BIOS didn't right. This should be fixed now and properly set by
+> the BIOS on 15h+ systems.
+>
+> I don't remember what was added to 16h where ECS was needed, I think
+> there was one (Suravee?). Not sure if this is essential.
 
-> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+I am not aware of anything specific in the family16h which require 
+IO_ECS to be enabled.
 
-> @@ -314,6 +314,7 @@ config ARCH_MULTIPLATFORM
->  	select CLKSRC_OF
->  	select COMMON_CLK
->  	select GENERIC_CLOCKEVENTS
-> +	select MIGHT_HAVE_PCI
+Suravee
 
-Doesn't ARCH_MULTIPLATFORM allow ARCH_$soc to be selected, and ARCH_$soc
-selects MIGHT_HAVE_PCI?
-
-That way, you can only enable PCI support if you have actually enabled
-an SoC that has PCI, and equally ARCH_$soc selects MIGHT_HAVE_PCI just
-like it always used to work before ARCH_MULTIPLATFORM.
