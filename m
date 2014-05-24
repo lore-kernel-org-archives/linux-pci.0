@@ -1,341 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"pratyush.anand@st.com" <pratyush.anand@st.com>,
-	"r65037@freescale.com" <r65037@freescale.com>,
-	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
-	"marex@denx.de" <marex@denx.de>
-CC: Mohit Kumar <mohit.kumar@st.com>, Jingoo Han <jg1.han@samsung.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>
-Subject: RE: [PATCH v1 2/5] pci: designware: enhancements to support
- keystone pcie
-Date: Fri, 16 May 2014 20:46:55 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B7047421B6@DFLE11.ent.ti.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
- <1400169692-9677-3-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1400169692-9677-3-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1lp0141.outbound.protection.outlook.com ([207.46.163.141]:47686
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751010AbaEXAbf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 23 May 2014 20:31:35 -0400
+Message-ID: <537FE860.9000802@amd.com>
+Date: Fri, 23 May 2014 19:31:28 -0500
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Borislav Petkov <bp@alien8.de>, Robert Richter <rric@kernel.org>,
+	"Daniel J Blueman" <daniel@numascale.com>,
+	Andreas Herrmann <herrmann.der.user@googlemail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Borislav Petkov <bp@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after
+ Fam16h
+References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140521233802.GA21575@pd.tnic>
+ <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
+ <20140522191746.GL4383@pd.tnic>
+ <CAErSpo7=0-xdnu4DQufu_6eS=6AYhnDRaQvzeiMEC5a=zKU0Jg@mail.gmail.com>
+ <537E8ACF.6000103@amd.com>
+ <CAErSpo6AMGPFELx+2qJXYaxaLRhk2F2J=wn4=gLgmvYGdLup7A@mail.gmail.com>
+In-Reply-To: <CAErSpo6AMGPFELx+2qJXYaxaLRhk2F2J=wn4=gLgmvYGdLup7A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding more to list.
+On 5/22/2014 9:54 PM, Bjorn Helgaas wrote:
+> I've been poking around for recent dmesg logs that contain "PCI: Using
+> configuration type 1 for extended access", and there are quite a few.
+> In most cases there*is*  an MCFG table, but apparently we decide not
+> to use it for some reason (unfortunately we don't print the specific
+> reason).  One example is at
+> https://bugzilla.kernel.org/show_bug.cgi?id=68591  .
+>
+> I'm going to go out on a limb and guess that Windows does not enable
+> ECS, so it probably uses ECAM.  Therefore, I suspect Linux's parsing
+> of MCFG is broken in some way, and we probably*could*  use ECAM in all
+> these cases I'm seeing.
+>
+> It would probably be prudent to figure out why Linux is rejecting
+> these MCFG tables.  We'll probably see similar tables on Fam17h
+> systems, and if we continue rejecting them, and we don't turn on ECS,
+> we won't be able to access extended config space.
+>
+> I opened a bugzilla for this issue:
+> https://bugzilla.kernel.org/show_bug.cgi?id=76771
+>
+> I'm wavering on whether it's a good idea to put this patch in before
+> understanding the issue.  As much as I'd like to stop fiddling with
+> ECS, we'd likely end up with a v3.15 where extended config space
+> doesn't work on some Fam17h systems.
 
->-----Original Message-----
->From: Karicheri, Muralidharan
->Sent: Thursday, May 15, 2014 12:01 PM
->To: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org; linux-arm-
->kernel@lists.infradead.org
->Cc: Karicheri, Muralidharan; Mohit Kumar; Jingoo Han; Bjorn Helgaas; Shilimkar, Santosh
->Subject: [PATCH v1 2/5] pci: designware: enhancements to support keystone pcie
->
->keystone pcie hardware is based on designware hw version 3.65.
->There is no support for ATU port and has registers in application space to configure
->inbound/outbound access. Also doesn't support PCI PVM option. The MSI IRQ registers
->available in application space is used to mask/unmask/enable the MSI IRQs.
->
->DW core driver is a set of common functions that are abstracted to support DW pci drivers.
->To allow re-use of these functions for keystone pci driver, core driver is to be enhanced.
->
->Following are done to allow re-use of the functions on keystone pci driver.
->
-> 1. Some of the variables in pcie_port struct is folded inside
->    a union that now contains both new DW hw related variables as well
->    as old hardware related variables such as application reg base.
-> 2. Added a dw_pcie_common_host_init() function that holds common
->    host initialization code for old and new hw.
-> 3. dw_pcie_parse_resource() is used for parsing resource related
->    information from DT bindings.
-> 4. dw_pcie_host_init() is called by new DW hw drivers as before.
->    Added dw_old_pcie_host_init() is it's counter part on old dw hw.
->    Both these functions now call dw_pcie_common_host_init().
-> 5. Some of the static functions are made global to allow use from
->    dw old pci drivers such as pci-keystone.
->
->CC: Mohit Kumar <mohit.kumar@st.com>
->CC: Jingoo Han <jg1.han@samsung.com>
->CC: Bjorn Helgaas <bhelgaas@google.com>
->CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
->
->Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->---
-> drivers/pci/host/pcie-designware.c |  101 ++++++++++++++++++++++++------------
-> drivers/pci/host/pcie-designware.h |   42 ++++++++++++---
-> 2 files changed, 103 insertions(+), 40 deletions(-)
->
->diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->index c4e3732..9ea8e79 100644
->--- a/drivers/pci/host/pcie-designware.c
->+++ b/drivers/pci/host/pcie-designware.c
->@@ -277,11 +277,15 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
-> 		}
-> 		set_bit(pos0 + i, pp->msi_irq_in_use);
-> 		/*Enable corresponding interrupt in MSI interrupt controller */
->-		res = ((pos0 + i) / 32) * 12;
->-		bit = (pos0 + i) % 32;
->-		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
->-		val |= 1 << bit;
->-		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
->+		if (!(pp->version & DW_VERSION_OLD)) {
->+			res = ((pos0 + i) / 32) * 12;
->+			bit = (pos0 + i) % 32;
->+			dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
->+						 4, &val);
->+			val |= 1 << bit;
->+			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
->+						 4, val);
->+		}
-> 	}
->
-> 	*pos = pos0;
->@@ -349,7 +353,10 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev
->*pdev,
-> 	 */
-> 	desc->msi_attrib.multiple = msgvec;
->
->-	msg.address_lo = virt_to_phys((void *)pp->msi_data);
->+	if (pp->ops->get_msi_data)
->+		msg.address_lo = pp->ops->get_msi_data(pp);
->+	else
->+		msg.address_lo = virt_to_phys((void *)pp->msi_data);
-> 	msg.address_hi = 0x0;
-> 	msg.data = pos;
-> 	write_msi_msg(irq, &msg);
->@@ -389,13 +396,11 @@ static const struct irq_domain_ops msi_domain_ops = {
-> 	.map = dw_pcie_msi_map,
-> };
->
->-int __init dw_pcie_host_init(struct pcie_port *pp)
->+int __init dw_pcie_parse_resource(struct pcie_port *pp)
-> {
-> 	struct device_node *np = pp->dev->of_node;
->-	struct of_pci_range range;
-> 	struct of_pci_range_parser parser;
->-	u32 val;
->-	int i;
->+	struct of_pci_range range;
->
-> 	if (of_pci_range_parser_init(&parser, np)) {
-> 		dev_err(pp->dev, "missing ranges property\n"); @@ -440,23 +445,17 @@ int
->__init dw_pcie_host_init(struct pcie_port *pp)
-> 			return -ENOMEM;
-> 		}
-> 	}
->-
->-	pp->cfg0_base = pp->cfg.start;
->-	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-> 	pp->mem_base = pp->mem.start;
->
->-	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
->-					pp->config.cfg0_size);
->-	if (!pp->va_cfg0_base) {
->-		dev_err(pp->dev, "error with ioremap in function\n");
->-		return -ENOMEM;
->-	}
->-	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
->-					pp->config.cfg1_size);
->-	if (!pp->va_cfg1_base) {
->-		dev_err(pp->dev, "error with ioremap\n");
->-		return -ENOMEM;
->-	}
->+	return 0;
->+}
->+
->+int __init dw_pcie_common_host_init(struct pcie_port *pp, struct hw_pci *hw,
->+				const struct irq_domain_ops *irq_msi_ops) {
->+	struct device_node *np = pp->dev->of_node;
->+	u32 val;
->+	int i;
->
-> 	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
-> 		dev_err(pp->dev, "Failed to parse the number of lanes\n"); @@ -465,7 +464,7
->@@ int __init dw_pcie_host_init(struct pcie_port *pp)
->
-> 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> 		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
->-					MAX_MSI_IRQS, &msi_domain_ops,
->+					MAX_MSI_IRQS, irq_msi_ops,
-> 					&dw_pcie_msi_chip);
-> 		if (!pp->irq_domain) {
-> 			dev_err(pp->dev, "irq domain init failed\n"); @@ -488,10 +487,10 @@
->int __init dw_pcie_host_init(struct pcie_port *pp)
-> 	val |= PORT_LOGIC_SPEED_CHANGE;
-> 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
->
->-	dw_pci.nr_controllers = 1;
->-	dw_pci.private_data = (void **)&pp;
->+	hw->nr_controllers = 1;
->+	hw->private_data = (void **)&pp;
->
->-	pci_common_init_dev(pp->dev, &dw_pci);
->+	pci_common_init_dev(pp->dev, hw);
-> 	pci_assign_unassigned_resources();
-> #ifdef CONFIG_PCI_DOMAINS
-> 	dw_pci.domain++;
->@@ -500,6 +499,32 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> 	return 0;
-> }
->
->+int __init dw_pcie_host_init(struct pcie_port *pp) {
->+	int ret;
->+
->+	ret = dw_pcie_parse_resource(pp);
->+	if (ret)
->+		return ret;
->+
->+	pp->cfg0_base = pp->cfg.start;
->+	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
->+	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
->+					pp->config.cfg0_size);
->+	if (!pp->va_cfg0_base) {
->+		dev_err(pp->dev, "error with ioremap in function\n");
->+		return -ENOMEM;
->+	}
->+	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
->+					pp->config.cfg1_size);
->+	if (!pp->va_cfg1_base) {
->+		dev_err(pp->dev, "error with ioremap\n");
->+		return -ENOMEM;
->+	}
->+
->+	return dw_pcie_common_host_init(pp, &dw_pci, &msi_domain_ops); }
->+
-> static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)  {
-> 	/* Program viewport 0 : OUTBOUND : CFG0 */ @@ -654,7 +679,11 @@ static int
->dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
->
-> 	spin_lock_irqsave(&pp->conf_lock, flags);
-> 	if (bus->number != pp->root_bus_nr)
->-		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
->+		if (pp->ops->rd_other_conf)
->+			ret = pp->ops->rd_other_conf(pp, bus, devfn,
->+						where, size, val);
->+		else
->+			ret = dw_pcie_rd_other_conf(pp, bus, devfn,
-> 						where, size, val);
-> 	else
-> 		ret = dw_pcie_rd_own_conf(pp, where, size, val); @@ -680,7 +709,11 @@
->static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
->
-> 	spin_lock_irqsave(&pp->conf_lock, flags);
-> 	if (bus->number != pp->root_bus_nr)
->-		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
->+		if (pp->ops->wr_other_conf)
->+			ret = pp->ops->wr_other_conf(pp, bus, devfn,
->+						where, size, val);
->+		else
->+			ret = dw_pcie_wr_other_conf(pp, bus, devfn,
-> 						where, size, val);
-> 	else
-> 		ret = dw_pcie_wr_own_conf(pp, where, size, val); @@ -694,7 +727,7 @@
->static struct pci_ops dw_pcie_ops = {
-> 	.write = dw_pcie_wr_conf,
-> };
->
->-static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
->+int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> {
-> 	struct pcie_port *pp;
->
->@@ -717,7 +750,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> 	return 1;
-> }
->
->-static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->+struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> {
-> 	struct pci_bus *bus;
-> 	struct pcie_port *pp = sys_to_pcie(sys); @@ -746,7 +779,7 @@ static int
->dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-> 	return irq;
-> }
->
->-static void dw_pcie_add_bus(struct pci_bus *bus)
->+void dw_pcie_add_bus(struct pci_bus *bus)
-> {
-> 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> 		struct pcie_port *pp = sys_to_pcie(bus->sysdata); diff --git
->a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
->index 3063b35..e97f4d7 100644
->--- a/drivers/pci/host/pcie-designware.h
->+++ b/drivers/pci/host/pcie-designware.h
->@@ -35,21 +35,39 @@ struct pcie_port {
-> 	struct device		*dev;
-> 	u8			root_bus_nr;
-> 	void __iomem		*dbi_base;
->-	u64			cfg0_base;
->-	void __iomem		*va_cfg0_base;
->-	u64			cfg1_base;
->-	void __iomem		*va_cfg1_base;
->+	/*
->+	 * Old DW version implement application register space for
->+	 * MSI and has no ATU view port
->+	 */
->+#define DW_VERSION_OLD	BIT(0)
->+	u32			version;
->+	union {
->+		/* new dw core specific */
->+		struct {
->+			u64		cfg0_base;
->+			void __iomem	*va_cfg0_base;
->+			u64		cfg1_base;
->+			void __iomem	*va_cfg1_base;
->+			int		msi_irq;
->+		};
->+
->+		/* old dw core specific */
->+		struct  {
->+			struct irq_domain	*legacy_irq_domain;
->+			void __iomem		*va_app_base;
->+			u64			app_base;
->+		};
->+	};
-> 	u64			io_base;
-> 	u64			mem_base;
-> 	spinlock_t		conf_lock;
->-	struct resource		cfg;
-> 	struct resource		io;
-> 	struct resource		mem;
->+	struct resource		cfg;
-> 	struct pcie_port_info	config;
-> 	int			irq;
-> 	u32			lanes;
-> 	struct pcie_host_ops	*ops;
->-	int			msi_irq;
-> 	struct irq_domain	*irq_domain;
-> 	unsigned long		msi_data;
-> 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS); @@ -62,8 +80,13 @@ struct
->pcie_host_ops {
-> 			u32 val, void __iomem *dbi_base);
-> 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
-> 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
->+	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
->+			unsigned int devfn, int where, int size, u32 *val);
->+	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
->+			unsigned int devfn, int where, int size, u32 val);
-> 	int (*link_up)(struct pcie_port *pp);
-> 	void (*host_init)(struct pcie_port *pp);
->+	u32 (*get_msi_data)(struct pcie_port *pp);
-> };
->
-> int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val); @@ -73,5
->+96,12 @@ void dw_pcie_msi_init(struct pcie_port *pp);  int dw_pcie_link_up(struct
->pcie_port *pp);  void dw_pcie_setup_rc(struct pcie_port *pp);  int dw_pcie_host_init(struct
->pcie_port *pp);
->+int dw_pcie_setup(int nr, struct pci_sys_data *sys); struct pci_bus
->+*dw_pcie_scan_bus(int nr, struct pci_sys_data *sys); void
->+dw_pcie_add_bus(struct pci_bus *bus); int dw_pcie_parse_resource(struct
->+pcie_port *pp);
->
->+/* internal to dw core */
->+int dw_pcie_common_host_init(struct pcie_port *pp, struct hw_pci *hw,
->+			const struct irq_domain_ops *irq_ops);
-> #endif /* _PCIE_DESIGNWARE_H */
->--
->1.7.9.5
+So, I have located a system which presents issue with MMCONFIG. Here is 
+my investigation:
 
+DEBUG: pci_io_ecs_init: pci_probe = 4000f
+ACPI: bus type PCI registered
+DEBUG: -----> pci_mmcfg_early_init
+DEBUG: pci_parse_mcfg
+PCI: MMCONFIG for domain 0000 [bus 00-01] at [mem 0xe0000000-0xe01fffff] 
+(base 0xe0000000)
+DEBUG: pci_mmcfg_check_reserved
+DEBUG: is_mmconf_reserved: method = E820
+PCI: not using MMCONFIG
+DEBUG: pci_direct_init
+PCI: Using configuration type 1 for base access
+PCI: Using configuration type 1 for extended access
+ACPI: Added _OSI(Module Device)
+ACPI: Added _OSI(Processor Device)
+ACPI: Added _OSI(3.0 _SCP Extensions)
+ACPI: Added _OSI(Processor Aggregator Device)
+[Firmware Bug]: ACPI: BIOS _OSI(Linux) query ignored
+\_SB_:_OSC invalid UUID
+_OSC request data:1 1f
+ACPI: Interpreter enabled
+ACPI Exception: AE_NOT_FOUND, While evaluating Sleep State [\_S1_] 
+(20140214/hwxface-580)
+ACPI Exception: AE_NOT_FOUND, While evaluating Sleep State [\_S2_] 
+(20140214/hwxface-580)
+ACPI Exception: AE_NOT_FOUND, While evaluating Sleep State [\_S4_] 
+(20140214/hwxface-580)
+ACPI: (supports S0 S3 S5)
+ACPI: Using IOAPIC for interrupt routing
+DEBUG: ----> pci_mmcfg_late_init
+DEBUG: pci_parse_mcfg
+PCI: MMCONFIG for domain 0000 [bus 00-01] at [mem 0xe0000000-0xe01fffff] 
+(base 0xe0000000)
+DEBUG: pci_mmcfg_check_reserved
+DEBUG: is_mmconf_reserved: method = ACPI motherboard resources
+PCI: MMCONFIG at [mem 0xe0000000-0xe01fffff] reserved in ACPI 
+motherboard resources
+
+During pci_mmcfg_early_init(), the MMCONFIG failed because the range 
+0xe0000000 is not showing as reserved in the E820 mapping.  Here is the 
+snippet of E820 mapping from the system:
+........
+BIOS-e820: [mem 0x00000000c7eb0000-0x00000000c7ec0fff] ACPI data
+BIOS-e820: [mem 0x00000000c7ec1000-0x00000000c7ec2fff] ACPI NVS
+BIOS-e820: [mem 0x00000000c7ec3000-0x00000000c7efefff] reserved
+BIOS-e820: [mem 0x00000000c7f00000-0x00000000c7ffffff] reserved
+BIOS-e820: [mem 0x00000000fec00000-0x00000000fec0ffff] reserved
+
+However, during pci_mmcfg_late_init(), the area is reserved in the "ACPI 
+motherboard resources", and the pci_mmcfg_check_reserved() does not fail 
+here.  But this is too late since we already setup the "raw_pci_ext_ops" 
+in the "arch/x86/pci/direct.c: pci_direct_init()" (during to use the IO_ECS.
+
+Suravee
