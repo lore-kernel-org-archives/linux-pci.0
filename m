@@ -1,50 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:46564 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494AbaEIJnn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 05:43:43 -0400
-Date: Fri, 9 May 2014 11:43:30 +0200
-From: Pavel Machek <pavel@denx.de>
-To: Marek Vasut <marex@denx.de>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org, rogerq@ti.com, balajitk@ti.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 05/17] pci: host: pcie-dra7xx: add support for
- pcie-dra7xx controller
-Message-ID: <20140509094330.GB4877@xo-6d-61-c0.localdomain>
-References: <1399383244-14556-1-git-send-email-kishon@ti.com>
- <1399383244-14556-6-git-send-email-kishon@ti.com>
- <201405061544.28738.marex@denx.de>
+Received: from mail-we0-f177.google.com ([74.125.82.177]:45558 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342AbaEYKmg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 25 May 2014 06:42:36 -0400
+Received: by mail-we0-f177.google.com with SMTP id x48so6792407wes.36
+        for <linux-pci@vger.kernel.org>; Sun, 25 May 2014 03:42:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201405061544.28738.marex@denx.de>
+Date: Sun, 25 May 2014 16:12:35 +0530
+Message-ID: <CALWEwrp0DejpH=rVgeaCaC4Bi=7HLKY3RKEq7mXg0jOVtBHdng@mail.gmail.com>
+Subject: Regarding ARI capability
+From: kumar git <kumar.git@gmail.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > +	writel(value, base + offset);
-> > +}
-> > +
-> > +static int dra7xx_pcie_link_up(struct pcie_port *pp)
-> > +{
-> > +	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-> > +	u32 reg = dra7xx_pcie_readl(dra7xx->base, PCIECTRL_DRA7XX_CONF_PHY_CS);
-> > +
-> > +	if (reg & LINK_UP)
-> > +		return true;
-> > +	return false;
-> 
-> return reg & LINK_UP;
+Hi,
 
-Function int returning true. I'd change the prototype and would
-return !!(reg & ...);
+My device connect like below
+\-[0000:00]-+-00.0
+              .
+             +-03.2-[04]--+-00.0
+             |            +-00.1
+             |            +-00.2
+             |            +-00.3
+             |            +-00.4
+             |            +-00.5
+             |            +-00.6
+             |            \-00.7
 
-									Pavel
+Host bridge (00:00.0 Host bridge: Intel Corporation Haswell-E DMI2 (rev 01))
+ARIFwd-  is not enabled. Seems like AMI BIOS is disabled ARI on host bridge.
+                DevCap2: Completion Timeout: Range BCD, TimeoutDis+,
+LTR-, OBFF Not Supported ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms,
+TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+But ARIFwd+ is enabled on root port where my device is connected.
+00:03.2 PCI bridge: Intel Corporation Haswell-E PCI Express Root Port 3
+                DevCap2: Completion Timeout: Range BCD, TimeoutDis+,
+LTR-, OBFF Not Supported ARIFwd+
+                DevCtl2: Completion Timeout: 50us to 50ms,
+TimeoutDis-, LTR-, OBFF Disabled ARIFwd+
+
+>From lspci out I am able to see next-function – 8 from ARI capability
+structure of 7th function (since device firmware is exposing all 0 –
+15 functions).
+
+Below are my query's
+1) Is it mandatory to enable ARIFwd on Host Bridge?
+
+   If yes, please let me know how can i enable through OS or host bridge driver.
+
+2) SR-IOV capability structure has the ARIHierarchy field. What is the
+main use of this field?
+
+   Is there any relation between ARI and SR-IOV?
 
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Many Thanks.
+
+Best Regards,
+ravikumar.
