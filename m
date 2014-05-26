@@ -1,78 +1,183 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:44399 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869AbaEVQe6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 May 2014 12:34:58 -0400
-Received: by mail-ie0-f173.google.com with SMTP id lx4so3818413iec.32
-        for <linux-pci@vger.kernel.org>; Thu, 22 May 2014 09:34:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <D2E49FCA-B019-45C7-A30F-FD63B9684629@gmail.com>
-References: <EF1232FA-308B-4261-82E6-6E3B932181E2@gmail.com>
- <CAErSpo5U4UpMdBC8nGTJcsatste17THf7Ko1RPZpaC01UyS6tw@mail.gmail.com>
- <9F1CDCD7-94EC-43C3-9568-D5C348531D85@gmail.com> <CAErSpo7HY9vbWrpKWXjvrOX+e0GguGe+7U0eg8vNrEpcEUiHVQ@mail.gmail.com>
- <D2E49FCA-B019-45C7-A30F-FD63B9684629@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 22 May 2014 10:34:36 -0600
-Message-ID: <CAErSpo76JQpLQ9g5tvcx4qBt+hyOZV7_H0MJ+z+1ndKBjZQQjA@mail.gmail.com>
-Subject: Re: Frustrating PCI x ACPI x APIC(?) interaction/bug
-To: Micah Dombrowski <mpdwibble@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	H Hartley Sweeten <hsweeten@visionengravers.com>,
-	Ian Abbott <abbotti@mev.co.uk>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v3 12/15] pci: Add pci_fixup_suspend_late quirk pass.
+Date: Mon, 26 May 2014 17:18:09 +0200
+Message-Id: <1401117492-2870-13-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci, linux-kernel, Hartley, Ian; please keep CCs so others
-can help or maybe benefit]
+Add pci_fixup_suspend_late as a new pci_fixup_pass. The pass is called
+from suspend_noirq and poweroff_noirq. Using the same pass for suspend
+and hibernate is consistent with resume_early which is called by
+resume_noirq and restore_noirq.
 
-On Wed, May 21, 2014 at 8:32 PM, Micah Dombrowski <mpdwibble@gmail.com> wrote:
-> On May 21, 2014, at 1:16 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> You seem to have comedi driver version 0.7.76.1 on the PC (where it
->> works) and version 0.7.76 on the T530 (where it doesn't).  I'd try the
->> same driver version on both.
->
-> It was actually a much older driver on the PC up until a few minutes before those runs.  They are now both running the latest driver from the comedi git repo—no difference.
->
->> From your initial description, I suspect some sort of interrupt
->> problem.  Can you use /proc/interrupts to get an idea of how many
->> interrupts per second the driver is handling, and compare that between
->> the two systems?
->
-> Just added some output to the report https://bugzilla.kernel.org/show_bug.cgi?id=76641#c6
->
-> Summary, assuming it’s valid to just sum over all of the CPUs: it seems like, for the same amount of data attempted to be acquired, the PC always does approximately 16500 ints no matter what the data rate, while the Laptop does about 13000 in 20 MBps modes, 5000 in 40 MBps, and 2-3000 in 80 MBps.  Uhhhh...
+The new quirk pass is required for Thunderbolt support on Apple
+hardware.
 
-It's valid to sum all the CPUs, and yes, that definitely seems wonky.
-You're seeing a very consistent 128 interrupts/4MB chunk on the PC,
-but on the T530, it's only about 100/chunk at 20MBps, 38/chunk at
-40MBps, and 20/chunk at 80MBps.
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+---
+ drivers/pci/pci-driver.c          | 18 ++++++++++++++----
+ drivers/pci/quirks.c              |  7 +++++++
+ include/asm-generic/vmlinux.lds.h |  3 +++
+ include/linux/pci.h               | 12 +++++++++++-
+ 4 files changed, 35 insertions(+), 5 deletions(-)
 
-But I can't tell if there's a functional problem.  The DMA does seem
-to work (even if you don't get all the data, the path seems
-functional), and you are getting *some* interrupts from the 4020, so
-the interrupt path seems wired up correctly, too.  And of course, both
-paths are used by lots of drivers and the T530 is a common machine, so
-it's doubtful that there's a huge issue that nobody else has tripped
-over.
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index d911e0c..55dc1b8 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -542,7 +542,7 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
+ 			WARN_ONCE(pci_dev->current_state != prev,
+ 				"PCI PM: Device state not saved by %pF\n",
+ 				drv->suspend_late);
+-			return 0;
++			goto Fixup;
+ 		}
+ 	}
+ 
+@@ -551,6 +551,9 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
+ 
+ 	pci_pm_set_unknown_state(pci_dev);
+ 
++Fixup:
++	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
++
+ 	return 0;
+ }
+ 
+@@ -694,7 +697,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 
+ 	if (!pm) {
+ 		pci_save_state(pci_dev);
+-		return 0;
++		goto Fixup;
+ 	}
+ 
+ 	if (pm->suspend_noirq) {
+@@ -711,7 +714,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 			WARN_ONCE(pci_dev->current_state != prev,
+ 				"PCI PM: State of device not saved by %pF\n",
+ 				pm->suspend_noirq);
+-			return 0;
++			goto Fixup;
+ 		}
+ 	}
+ 
+@@ -735,6 +738,9 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+ 		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
+ 
++Fixup:
++	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
++
+ 	return 0;
+ }
+ 
+@@ -959,8 +965,10 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+ 	if (pci_has_legacy_pm_support(to_pci_dev(dev)))
+ 		return pci_legacy_suspend_late(dev, PMSG_HIBERNATE);
+ 
+-	if (!drv || !drv->pm)
++	if (!drv || !drv->pm) {
++		pci_fixup_device(pci_fixup_suspend_late, pci_dev);
+ 		return 0;
++	}
+ 
+ 	if (drv->pm->poweroff_noirq) {
+ 		int error;
+@@ -981,6 +989,8 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+ 	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+ 		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
+ 
++	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
++
+ 	if (pcibios_pm_ops.poweroff_noirq)
+ 		return pcibios_pm_ops.poweroff_noirq(dev);
+ 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e729206..af2eba1 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3024,6 +3024,8 @@ extern struct pci_fixup __start_pci_fixups_resume_early[];
+ extern struct pci_fixup __end_pci_fixups_resume_early[];
+ extern struct pci_fixup __start_pci_fixups_suspend[];
+ extern struct pci_fixup __end_pci_fixups_suspend[];
++extern struct pci_fixup __start_pci_fixups_suspend_late[];
++extern struct pci_fixup __end_pci_fixups_suspend_late[];
+ 
+ static bool pci_apply_fixup_final_quirks;
+ 
+@@ -3069,6 +3071,11 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
+ 		end = __end_pci_fixups_suspend;
+ 		break;
+ 
++	case pci_fixup_suspend_late:
++		start = __start_pci_fixups_suspend_late;
++		end = __end_pci_fixups_suspend_late;
++		break;
++
+ 	default:
+ 		/* stupid compiler warning, you would think with an enum... */
+ 		return;
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 146e4ff..2dea636 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -288,6 +288,9 @@
+ 		VMLINUX_SYMBOL(__start_pci_fixups_suspend) = .;		\
+ 		*(.pci_fixup_suspend)					\
+ 		VMLINUX_SYMBOL(__end_pci_fixups_suspend) = .;		\
++		VMLINUX_SYMBOL(__start_pci_fixups_suspend_late) = .;	\
++		*(.pci_fixup_suspend_late)				\
++		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
+ 	}								\
+ 									\
+ 	/* Built-in firmware blobs */					\
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aab57b4..4724806 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1458,8 +1458,9 @@ enum pci_fixup_pass {
+ 	pci_fixup_final,	/* Final phase of device fixups */
+ 	pci_fixup_enable,	/* pci_enable_device() time */
+ 	pci_fixup_resume,	/* pci_device_resume() */
+-	pci_fixup_suspend,	/* pci_device_suspend */
++	pci_fixup_suspend,	/* pci_device_suspend() */
+ 	pci_fixup_resume_early, /* pci_device_resume_early() */
++	pci_fixup_suspend_late,	/* pci_device_suspend_late() */
+ };
+ 
+ /* Anonymous variables would be nice... */
+@@ -1500,6 +1501,11 @@ enum pci_fixup_pass {
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
+ 		suspend##hook, vendor, device, class,	\
+ 		class_shift, hook)
++#define DECLARE_PCI_FIXUP_CLASS_SUSPEND_LATE(vendor, device, class,	\
++					 class_shift, hook)		\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
++		suspend_late##hook, vendor, device,	\
++		class, class_shift, hook)
+ 
+ #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
+@@ -1525,6 +1531,10 @@ enum pci_fixup_pass {
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
+ 		suspend##hook, vendor, device,		\
+ 		PCI_ANY_ID, 0, hook)
++#define DECLARE_PCI_FIXUP_SUSPEND_LATE(vendor, device, hook)		\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
++		suspend_late##hook, vendor, device,	\
++		PCI_ANY_ID, 0, hook)
+ 
+ #ifdef CONFIG_PCI_QUIRKS
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+-- 
+1.9.3
 
-Does the T530 have enough oomph to do all this?  If you want to
-sustain transfers like this, all that data has to come in via DMA from
-the 4020, then go out to a disk or something at the same rate.  80MB/s
-seems like a lot to expect for sustained writes through a filesystem
-on a laptop (but I'm certainly not a filesystem expert).
-
-Each acquisition is "only" 500MB (128 chunks *4MB), so if you don't
-need to sustain it continuously, you might be able to preallocate the
-whole buffer and keep it in RAM.  Can the T530 keep up if you drop the
-processing and output side of the equation?
-
-I don't understand how the "apci=off noapic" thing would make a
-difference here, so maybe that's a good clue.  Can you collect the
-same sort of info (dmesg, lspci -vv, /proc/interrupts info) with that
-configuration?
-
-> Because I note that the Laptop seems to spread the interrupts out over all four hyperthreading ‘cores’, I’ll mention that we’ve also tried the Laptop with hyperthreading and dual-core disabled.  Didn’t seem to make a difference to the data acquisition.
->
-> MPD
