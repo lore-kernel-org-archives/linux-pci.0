@@ -1,88 +1,275 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:31119 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753170AbaENINx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 May 2014 04:13:53 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Tim Harvey <tharvey@gateworks.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Marek Vasut <marex@denx.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>
-Subject: RE: [Q] Synopsys PCIe interrupts
-Date: Wed, 14 May 2014 08:13:46 +0000
-Message-ID: <48f8fbc1569e49df8fe8e15e4138d8d9@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <fd5f29f175b2499e9d972629f1ccd74a@HKXPR06MB168.apcprd06.prod.outlook.com>
-	<001801cf6f0f$cfd4b510$6f7e1f30$%han@samsung.com>
- <CAJ+vNU29uZn+TRx+X8miLuRXhQS32QQZkEF53y09ijNYm9NX7w@mail.gmail.com>
-In-Reply-To: <CAJ+vNU29uZn+TRx+X8miLuRXhQS32QQZkEF53y09ijNYm9NX7w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-we0-f176.google.com ([74.125.82.176]:55341 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752466AbaEZPSe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 May 2014 11:18:34 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v3 14/15] thunderbolt: Read switch uid from EEPROM
+Date: Mon, 26 May 2014 17:18:11 +0200
+Message-Id: <1401117492-2870-15-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgVGltLA0KDQpPbiAxNCBNYXkgMjAxNCAwNTo1NSwgVGltIHdyb3RlOg0KPiBPbiBUdWUsIE1h
-eSAxMywgMjAxNCBhdCA1OjU5IFBNLCBKaW5nb28gSGFuIDxqZzEuaGFuQHNhbXN1bmcuY29tPg0K
-PiB3cm90ZToNCj4gPiBPbiBXZWRuZXNkYXksIE1heSAxNCwgMjAxNCAxOjE0IEFNLCBQaGlsIEVk
-d29ydGh5IHdyb3RlOg0KPiA+Pg0KPiA+PiBIaSwNCj4gPj4NCj4gPj4gSSBhbSBjdXJyZW50bHkg
-d3JpdGluZyBhbm90aGVyIGRyaXZlciB0aGF0IHVzZXMgdGhlIFN5bm9wc3lzIERlc2lnbndhcmUN
-Cj4gPj4gUENJZSBob3N0IGNvbnRyb2xsZXIgZHJpdmVyLg0KPiA+Pg0KPiA+PiBJbiBnZW5lcmFs
-LCBpdCBhbGwgbG9va3MgZ29vZCB0aGFua3MgdG8gYWxsIGludm9sdmVkIGluIHRoaXMgZHJpdmVy
-Lg0KPiA+PiBPbmUgYXJlYSB0aGF0IEkgYW0gaGF2aW5nIGEgbGl0dGxlIHByb2JsZW0gd2l0aCBp
-cyB0aGUgaW50ZXJydXB0cy4NCj4gPj4gIEFjY29yZGluZyB0byB0aGUgZG9jdW1lbnRhdGlvbiBJ
-IGhhdmUsIHRoZSBtb2R1bGUgaGFzIHNlcGFyYXRlDQo+ID4+IGludGVycnVwdHMgZm9yIElOVEEs
-IElOVEIsIElOVEMsIElOVEQsIE1TSSwgQUVSLCBiYW5kd2lkdGggbWFuYWdlbWVudCwNCj4gPj4g
-IFBNRSAoYW5kIHBvc3NpYmx5IGEgY291cGxlIG9mIG90aGVycyBhcyB3ZWxsKS4NCj4gPj4NCj4g
-Pj4gSG93ZXZlciwgc28gZmFyIGl0IGxvb2tzIGxpa2UgdGhlIHVwc3RyZWFtIGltcGxlbWVudGF0
-aW9ucyBqdXN0IHVzZQ0KPiA+PiBhIHNpbmdsZSBpbnRlcnJ1cHQgZm9yIHRoZSBtb2R1bGUsIGlz
-IHRoYXQgY29ycmVjdD8gSSBub3RpY2UgdGhhdCBzb21lDQo+ID4+ICBEVCBiaW5kaW5ncyBpbmNs
-dWRlIG90aGVyIGludGVycnVwdHMgdGhhdCBhcmUgbm90IHBhcnQgb2YgdGhlIERlc2lnbndhcmUN
-Cj4gPj4gUENJZSBjb250cm9sbGVyLCBidXQgdGhhdCdzIG5vdCB3aGF0IEknbSB0YWxraW5nIGFi
-b3V0Lg0KPiA+DQo+ID4gKCtjYyBNb2hpdCBLdW1hciwgUHJhdHl1c2ggQW5hbmQsIE1hcmVrIFZh
-c3V0LCBLaXNob24gVmlqYXkgQWJyYWhhbSBJLA0KPiA+ICAgICAgICBMdWNhcyBTdGFjaCwgVGlt
-IEhhcnZleSwgQXJuZCBCZXJnbWFubikNCj4gPg0KPiA+IFBDSWUgSW50ZXJydXB0IG1hcHBpbmcg
-aXMgc3BlY2lmaWMgZm9yIFNvQy4NCj4gPg0KPiA+IEluIHRoZSBjYXNlIG9mIEV4eW5vcywgdGhl
-cmUgYXJlIHRocmVlIGludGVycnVwdHMgZm9yDQo+ID4gRXh5bm9zIFBDSWU7IElOVHgsIE1TSSwg
-UEhZIExpbmssIHJlc3BlY3RpdmVseSBhcyBiZWxvdy4NCj4gPg0KPiA+IC4vYXJjaC9hcm0vYm9v
-dC9kdHMvZXh5bm9zNTQ0MC5kdHNpDQo+ID4gICAgICAgICBpbnRlcnJ1cHRzID0gPDAgMjAgMD4s
-IDwwIDIxIDA+LCA8MCAyMiAwPjsNCj4gPg0KPiA+IDwwIDIwIDA+OiBQQ0llIFJDMCBwdWxzZSBp
-bnRlcnJ1cHQsDQo+ID4gICAgICAgICAgICAgIElOVEEsIElOVEIsIElOVEMgYW5kIElOVEQsIGV0
-Yw0KPiA+IDwwIDIxIDA+OiBQQ0llIFJDMCBsZXZlbCBpbnRlcnJ1cHQsDQo+ID4gICAgICAgICAg
-ICAgIE1TSSwgZXRjDQo+ID4gPDAgMjIgMD46IFBDSWUgUkMwIHNwZWNpYWwgaW50ZXJydXB0LA0K
-PiA+ICAgICAgICAgICAgICBQSFkgTGluayByZWxhdGVkIGludGVycnVwdHMsIGV0Yw0KPiA+DQo+
-ID4gU28sIHRoZXJlIGFyZSB0aHJlZSBsaW5lcyBiZXR3ZWVuIEdJQyBhbmQgUENJZS4gQWxzbywg
-SVJRIG1hcHBpbmdzDQo+ID4gZm9yIG90aGVyIFNvQ3MgYXJlIGRpZmZlcmVudC4NCj4gPg0KPiA+
-IEZvciBleGFtcGxlLCB0aGUgSU1YNiBtYXBzIElOVEEvQi9DL0QgdG8gQVJNIEdJQyBJUlEgMTU1
-LzE1NC8xNTMvMTUyDQo+ID4gcmVzcGVjdGl2ZWx5Lg0KPiA+DQo+ID4gVGhlbiwgaG93IG1hbnkg
-bGluZXMgYXJlIHRoZXJlIGJldHdlZW4gR0lDIGFuZCBQQ0llIGluIHlvdXIgU29DPw0KPiA+IEhv
-dyBkb2VzIHlvdXIgU29DIG1hcCBpbnRlcnJ1cHRzIHRvIEdJQz8NCj4gPg0KPiA+Pg0KPiA+PiBJ
-biBleGlzdGluZyBpbXBsZW1lbnRhdGlvbnMsIGRvZXMgdGhlIGhhcmR3YXJlIGp1c3QgT1INCj4g
-Pj4gYWxsIHRoZXNlIGludGVycnVwdHMgdG9nZXRoZXI/DQo+ID4+DQo+IA0KPiBQaGlsLA0KPiAN
-Cj4gVGhlcmUgaXMgbm90IGp1c3QgYSBzaW5nbGUgaW50ZXJydXB0IGZvciB0aGUgdXBzdHJlYW0g
-aW1wbGVtZW50YXRpb25zLg0KPiBTZWU6DQo+IGh0dHA6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xp
-bnV4L2tlcm5lbC9naXQvdG9ydmFsZHMvbGludXguZ2l0L3RyZWUvZHJpdmVycy9wY2kvDQo+IGhv
-c3QvcGNpZS1kZXNpZ253YXJlLmMjbjc0Mg0KPiANCj4gb2ZfaXJxX3BhcnNlX2FuZF9tYXBfcGNp
-KGRldiwgc2xvdCwgcGluKSBpcyB1c2VkIHRvIHBhcnNlIHRoZQ0KPiBkZXZpY2UtdHJlZSBpbnRl
-cnJ1cHQgbWFwIHdoaWNoIGRlZmluZXMgdGhlIG11bHRpcGxlIElSUSdzIHRoYXQgSmluZ29vDQo+
-IG1lbnRpb25zIGFib3ZlLiBGb3IgSU1YNiB0aGVzZSBhcmUgZGVmaW5lZCBpbiB0aGUgaW14NnFk
-bC5kdHNpIGhlcmU6DQo+IGh0dHA6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9n
-aXQvdG9ydmFsZHMvbGludXguZ2l0L3RyZWUvYXJjaC9hcm0vYg0KPiBvb3QvZHRzL2lteDZxZGwu
-ZHRzaSNuMTQ2Lg0KPiANCj4gU28gaW4gb3RoZXIgd29yZHMsIGRlcGVuZGluZyBvbiB0aGUgc2xv
-dCBhbmQgcGluIChlYWNoIGxlZ2FjeSBQQ0kNCj4gZGV2aWNlIGNhbiBoYXZlIDQgaW50ZXJydXB0
-IHBpbnMsIElOVEEvQi9DL0QpIHRoZSBpcnEgd291bGQgZ2V0IG1hcHBlZA0KPiB0byBhIGRpZmZl
-cmVudCBpbnRlcnJ1cHQuIFRoZSBpbnRlcnJ1cHRzIGFyZSBub3QgT1InZCB0b2dldGhlci4NCg0K
-SSd2ZSBqdXN0IGhhZCBhIGxvb2sgdGhyb3VnaCBMdWNhcycgcGF0Y2hlcyBmb3IgYWRkaW5nIE1T
-SSBpbnRlcnJ1cHRzIHRvIGlteDZxZGwuIEZyb20gdGhpcyBpdCBsb29rcyBsaWtlIGlteDZxZGwg
-aGFzIDQgaW50ZXJydXB0cywgb25lIGlzIGEgY29tYmluZWQgaW50ZXJydXB0IGZvciBJTlRBIGFu
-ZCBNU0ksIGFuZCB0aGUgb3RoZXIgdGhyZWUgYXJlIGZvciBJTlRCLCBJTlRDLCBJTlRELiBJcyB0
-aGF0IGNvcnJlY3Q/DQoNCkFzIEkgbWVudGlvbmVkIHByZXZpb3VzbHksIHRoZSBTeW5vcHN5cyBE
-VyBQQ0llIEhvc3QgSVAgKG9yIGF0IGxlYXN0IHRoZSB2ZXJzaW9uIDQuMjFhIHRoYXQgSSBhbSBs
-b29raW5nIGF0KSBhY3R1YWxseSBvdXRwdXRzIGFsbCBvZiB0aGVzZSBpbnRlcnJ1cHRzIChhbmQg
-b3RoZXJzIGZvciBBRVIsIGV0YykgYXMgc2VwYXJhdGUgc2lnbmFscy4gQm90aCB0aGUgRXh5bm9z
-IGFuZCBpbXg2cWRsIFNvQ3MgYXBwZWFyIHRvIGNvbWJpbmUgc29tZSBvZiB0aGVzZSBpbnRlcnJ1
-cHRzLg0KDQpUaGFua3MNClBoaWwNCg==
+Add eeprom access code and read the uid during switch initialization.
+The UID will be used to check device identity after suspend.
+
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+---
+ drivers/thunderbolt/Makefile |   2 +-
+ drivers/thunderbolt/eeprom.c | 189 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/switch.c |   5 ++
+ drivers/thunderbolt/tb.h     |   3 +
+ 4 files changed, 198 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/thunderbolt/eeprom.c
+
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 0122ca6..5d1053c 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+ obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
+-thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o
++thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
+ 
+diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
+new file mode 100644
+index 0000000..d1ae1e4
+--- /dev/null
++++ b/drivers/thunderbolt/eeprom.c
+@@ -0,0 +1,189 @@
++/*
++ * Thunderbolt Cactus Ridge driver - eeprom access
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#include "tb.h"
++
++/**
++ * tb_eeprom_ctl_write() - write control word
++ */
++static int tb_eeprom_ctl_write(struct tb_switch *sw, struct tb_eeprom_ctl *ctl)
++{
++	return tb_sw_write(sw, ctl, TB_CFG_SWITCH, sw->cap_plug_events + 4, 1);
++}
++
++/**
++ * tb_eeprom_ctl_write() - read control word
++ */
++static int tb_eeprom_ctl_read(struct tb_switch *sw, struct tb_eeprom_ctl *ctl)
++{
++	return tb_sw_read(sw, ctl, TB_CFG_SWITCH, sw->cap_plug_events + 4, 1);
++}
++
++enum tb_eeprom_transfer {
++	TB_EEPROM_IN,
++	TB_EEPROM_OUT,
++};
++
++/**
++ * tb_eeprom_active - enable rom access
++ *
++ * WARNING: Always disable access after usage. Otherwise the controller will
++ * fail to reprobe.
++ */
++static int tb_eeprom_active(struct tb_switch *sw, bool enable)
++{
++	struct tb_eeprom_ctl ctl;
++	int res = tb_eeprom_ctl_read(sw, &ctl);
++	if (res)
++		return res;
++	if (enable) {
++		ctl.access_high = 1;
++		res = tb_eeprom_ctl_write(sw, &ctl);
++		if (res)
++			return res;
++		ctl.access_low = 0;
++		return tb_eeprom_ctl_write(sw, &ctl);
++	} else {
++		ctl.access_low = 1;
++		res = tb_eeprom_ctl_write(sw, &ctl);
++		if (res)
++			return res;
++		ctl.access_high = 0;
++		return tb_eeprom_ctl_write(sw, &ctl);
++	}
++}
++
++/**
++ * tb_eeprom_transfer - transfer one bit
++ *
++ * If TB_EEPROM_IN is passed, then the bit can be retrieved from ctl->data_in.
++ * IF TB_EEPROM_OUT is passed, then ctl->data_out will be written.
++ */
++static int tb_eeprom_transfer(struct tb_switch *sw, struct tb_eeprom_ctl *ctl,
++			      enum tb_eeprom_transfer direction)
++{
++	int res;
++	if (direction == TB_EEPROM_OUT) {
++		res = tb_eeprom_ctl_write(sw, ctl);
++		if (res)
++			return res;
++	}
++	ctl->clock = 1;
++	res = tb_eeprom_ctl_write(sw, ctl);
++	if (res)
++		return res;
++	if (direction == TB_EEPROM_IN) {
++		res = tb_eeprom_ctl_read(sw, ctl);
++		if (res)
++			return res;
++	}
++	ctl->clock = 0;
++	return tb_eeprom_ctl_write(sw, ctl);
++}
++
++/**
++ * tb_eeprom_out - write one byte to the bus
++ */
++static int tb_eeprom_out(struct tb_switch *sw, u8 val)
++{
++	struct tb_eeprom_ctl ctl;
++	int i;
++	int res = tb_eeprom_ctl_read(sw, &ctl);
++	if (res)
++		return res;
++	for (i = 0; i < 8; i++) {
++		ctl.data_out = val & 0x80;
++		res = tb_eeprom_transfer(sw, &ctl, TB_EEPROM_OUT);
++		if (res)
++			return res;
++		val <<= 1;
++	}
++	return 0;
++}
++
++/**
++ * tb_eeprom_in - read one byte from the bus
++ */
++static int tb_eeprom_in(struct tb_switch *sw, u8 *val)
++{
++	struct tb_eeprom_ctl ctl;
++	int i;
++	int res = tb_eeprom_ctl_read(sw, &ctl);
++	if (res)
++		return res;
++	*val = 0;
++	for (i = 0; i < 8; i++) {
++		*val <<= 1;
++		res = tb_eeprom_transfer(sw, &ctl, TB_EEPROM_IN);
++		if (res)
++			return res;
++		*val |= ctl.data_in;
++	}
++	return 0;
++}
++
++/**
++ * tb_eeprom_read_n - read count bytes from offset into val
++ */
++static int tb_eeprom_read_n(struct tb_switch *sw, u16 offset, u8 *val,
++		size_t count)
++{
++	int i, res;
++	res = tb_eeprom_active(sw, true);
++	if (res)
++		return res;
++	res = tb_eeprom_out(sw, 3);
++	if (res)
++		return res;
++	res = tb_eeprom_out(sw, offset >> 8);
++	if (res)
++		return res;
++	res = tb_eeprom_out(sw, offset);
++	if (res)
++		return res;
++	for (i = 0; i < count; i++) {
++		res = tb_eeprom_in(sw, val + i);
++		if (res)
++			return res;
++	}
++	return tb_eeprom_active(sw, false);
++}
++
++int tb_eeprom_read_uid(struct tb_switch *sw, u64 *uid)
++{
++	u8 data[9];
++	struct tb_cap_plug_events cap;
++	int res;
++	if (!sw->cap_plug_events) {
++		tb_sw_warn(sw, "no TB_CAP_PLUG_EVENTS, cannot read eeprom\n");
++		return -ENOSYS;
++	}
++	res = tb_sw_read(sw, &cap, TB_CFG_SWITCH, sw->cap_plug_events,
++			     sizeof(cap) / 4);
++	if (res)
++		return res;
++	if (!cap.eeprom_ctl.present || cap.eeprom_ctl.not_present) {
++		tb_sw_warn(sw, "no NVM\n");
++		return -ENOSYS;
++	}
++
++	if (cap.drom_offset > 0xffff) {
++		tb_sw_warn(sw, "drom offset is larger than 0xffff: %#x\n",
++				cap.drom_offset);
++		return -ENXIO;
++	}
++
++	/* read uid */
++	res = tb_eeprom_read_n(sw, cap.drom_offset, data, 9);
++	if (res)
++		return res;
++	/* TODO: check checksum in data[0] */
++	*uid = *(u64 *)(data+1);
++	return 0;
++}
++
++
++
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index a6968cc..eef5f1c 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -370,6 +370,11 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 	}
+ 	sw->cap_plug_events = cap;
+ 
++	if (tb_eeprom_read_uid(sw, &sw->uid))
++		tb_sw_warn(sw, "could not read uid from eeprom\n");
++	else
++		tb_sw_info(sw, "uid: %#llx\n", sw->uid);
++
+ 	if (tb_plug_events_active(sw, true))
+ 		goto err;
+ 
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 508abc4..a89087f 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -19,6 +19,7 @@ struct tb_switch {
+ 	struct tb_regs_switch_header config;
+ 	struct tb_port *ports;
+ 	struct tb *tb;
++	u64 uid;
+ 	int cap_plug_events; /* offset, zero if not found */
+ 	bool is_unplugged; /* unplugged, will go away */
+ };
+@@ -231,6 +232,8 @@ int tb_path_activate(struct tb_path *path);
+ void tb_path_deactivate(struct tb_path *path);
+ bool tb_path_is_invalid(struct tb_path *path);
+ 
++int tb_eeprom_read_uid(struct tb_switch *sw, u64 *uid);
++
+ 
+ static inline int tb_route_length(u64 route)
+ {
+-- 
+1.9.3
+
