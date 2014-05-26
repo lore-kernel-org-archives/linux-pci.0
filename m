@@ -1,428 +1,953 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: [Patch V3 19/37] x86, irq: introduce mechanisms to support dynamically allocate IRQ for IOAPIC
-Date: Tue, 27 May 2014 16:07:54 +0800
-Message-Id: <1401178092-1228-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f178.google.com ([74.125.82.178]:43540 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752466AbaEZPSY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 May 2014 11:18:24 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v3 01/15] thunderbolt: Add initial cactus ridge NHI support
+Date: Mon, 26 May 2014 17:17:58 +0200
+Message-Id: <1401117492-2870-2-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently x86 support identity mapping between GSI(IOAPIC pin) and IRQ
-number, so continous IRQs at low end are statically allocated to IOAPICs
-at boot time. This design causes trouble to support IOAPIC hotplug.
+Thunderbolt hotplug is supposed to be handled by the firmware. But Apple
+decided to implement thunderbolt at the operating system level. The
+firmare only initializes thunderbolt devices that are present at boot
+time. This driver enables hotplug of thunderbolt of non-chained
+thunderbolt devices on Apple systems with a cactus ridge controller.
 
-This patch implements basic mechanism to dynamically allocate IRQ on
-demand for IOAPIC pins by using irqdomain framework.
+This first patch adds the Kconfig file as well the parts of the driver
+which talk directly to the hardware (that is pci device setup, interrupt
+handling and RX/TX ring management).
 
-It first adds several fields into struct ioapic to support irqdomain.
-Then it implements an algorithm to dynamically allocate IRQ number
-for IOAPIC pins on demand as below:
-1) Legacy(ISA) IRQs is not managed by irqdomain because there may be
-   multiple pins sharing the same IRQ number and current irqdomain
-   only supports 1:1 mapping between pins and IRQ.
-2) Build identity mapping for GSIs between NR_IRQS_LEGACY and
-   arch_dynirq_lower_bound(0). This is typically used to support legacy
-   IRQs and simple platforms.
-3) Dynamically allocate IRQs for GSIs above arch_dynirq_lower_bound(0).
-   This may be used to support big system and IOAPIC hotplug.
-4) Dynamically allocate IRQs for non-ISA IRQs below NR_IRQS_LEGACY
-   if platform doens't request identity mapping. This is to support
-   some really weired platforms.
-5) Build identity mapping for GSIs below NR_IRQS_LEGACY if platform requests
-   identity mapping. This is to support MID and CE41000 etc.
-
-Function arch_dynirq_lower_bound(0) will be enhanced in coming patch
-to enable dynamic IRQ allocation for IOAPIC. To ease our life,
-arch_dynirq_lower_bound(0) must be greater than or equal to
-NR_IRQS_LEGACY, otherwise it may break backward compatibilities.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- arch/x86/Kconfig               |    1 +
- arch/x86/include/asm/io_apic.h |   11 +++-
- arch/x86/kernel/acpi/boot.c    |    8 +--
- arch/x86/kernel/apic/io_apic.c |  142 ++++++++++++++++++++++++++++++----------
- 4 files changed, 120 insertions(+), 42 deletions(-)
+ drivers/Kconfig                |   2 +
+ drivers/Makefile               |   1 +
+ drivers/thunderbolt/Kconfig    |  12 +
+ drivers/thunderbolt/Makefile   |   3 +
+ drivers/thunderbolt/nhi.c      | 625 +++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/nhi.h      | 114 ++++++++
+ drivers/thunderbolt/nhi_regs.h | 101 +++++++
+ 7 files changed, 858 insertions(+)
+ create mode 100644 drivers/thunderbolt/Kconfig
+ create mode 100644 drivers/thunderbolt/Makefile
+ create mode 100644 drivers/thunderbolt/nhi.c
+ create mode 100644 drivers/thunderbolt/nhi.h
+ create mode 100644 drivers/thunderbolt/nhi_regs.h
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 47247708c9eb..ebdb1193821b 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -832,6 +832,7 @@ config X86_IO_APIC
- 	def_bool y
- 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC || PCI_MSI
- 	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-+	select IRQ_DOMAIN
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index 0a0a90f..07e3a73 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -174,4 +174,6 @@ source "drivers/powercap/Kconfig"
  
- config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
- 	bool "Reroute for broken boot IRQs"
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 978e51fdcb59..4778d129f225 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -98,6 +98,8 @@ struct IR_IO_APIC_route_entry {
- #define IOAPIC_AUTO     -1
- #define IOAPIC_EDGE     0
- #define IOAPIC_LEVEL    1
-+#define	IOAPIC_MAP_ALLOC		0x1
-+#define	IOAPIC_MAP_CHECK		0x2
+ source "drivers/mcb/Kconfig"
  
- #ifdef CONFIG_X86_IO_APIC
- 
-@@ -130,6 +132,9 @@ extern int noioapicquirk;
- /* -1 if "noapic" boot option passed */
- extern int noioapicreroute;
- 
-+/* Build identity mapping for non-ISA IRQs below NR_IRQS_LEGACY */
-+extern int ioapic_identity_map;
++source "drivers/thunderbolt/Kconfig"
 +
- /*
-  * If we use the IO-APIC for IRQ routing, disable automatic
-  * assignment of PCI IRQ's.
-@@ -169,10 +174,12 @@ struct mp_ioapic_gsi{
- };
- extern u32 gsi_top;
- 
-+typedef struct irq_domain *(*ioapic_create_domain_fn)(int idx, void *arg);
+ endmenu
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 7183b6a..ce134d0 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -157,3 +157,4 @@ obj-$(CONFIG_NTB)		+= ntb/
+ obj-$(CONFIG_FMC)		+= fmc/
+ obj-$(CONFIG_POWERCAP)		+= powercap/
+ obj-$(CONFIG_MCB)		+= mcb/
++obj-$(CONFIG_THUNDERBOLT)	+= thunderbolt/
+diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
+new file mode 100644
+index 0000000..3a25529
+--- /dev/null
++++ b/drivers/thunderbolt/Kconfig
+@@ -0,0 +1,12 @@
++menuconfig THUNDERBOLT
++	tristate "Thunderbolt support for Apple devices"
++	default no
++	help
++	  Cactus Ridge Thunderbolt Controller driver
++	  This driver is required if you want to hotplug Thunderbolt devices on
++	  Apple hardware.
 +
- extern int mp_find_ioapic(u32 gsi);
- extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern u32 mp_pin_to_gsi(int ioapic, int pin);
--extern int mp_map_gsi_to_irq(u32 gsi);
-+extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
- extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void __init pre_init_apic_IRQ0(void);
- 
-@@ -215,7 +222,7 @@ static inline void ioapic_insert_resources(void) { }
- #define gsi_top (NR_IRQS_LEGACY)
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
- static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
--static inline int mp_map_gsi_to_irq(u32 gsi) { return gsi; }
-+static inline int mp_map_gsi_to_irq(u32 gsi, unsigned int flags) { return gsi; }
- 
- struct io_apic_irq_attr;
- static inline int io_apic_set_pci_routing(struct device *dev, int irq,
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index f740d2766c42..9bbdd685df64 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -99,7 +99,7 @@ static u32 isa_irq_to_gsi[NR_IRQS_LEGACY] __read_mostly = {
- 
- #define	ACPI_INVALID_GSI		INT_MIN
- 
--static int map_gsi_to_irq(unsigned int gsi)
-+static int map_gsi_to_irq(unsigned int gsi, unsigned int flags)
- {
- 	int i;
- 
-@@ -107,7 +107,7 @@ static int map_gsi_to_irq(unsigned int gsi)
- 		if (isa_irq_to_gsi[i] == gsi)
- 			return i;
- 
--	return mp_map_gsi_to_irq(gsi);
-+	return mp_map_gsi_to_irq(gsi, flags);
- }
- 
- /*
-@@ -483,7 +483,7 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
- 
- int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- {
--	int irq = map_gsi_to_irq(gsi);
-+	int irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
- 
- 	if (irq >= 0) {
- #ifdef CONFIG_X86_IO_APIC
-@@ -1030,7 +1030,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	if (acpi_gbl_FADT.sci_interrupt == gsi)
- 		return gsi;
- 
--	irq = map_gsi_to_irq(gsi);
-+	irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
- 	if (irq < 0)
- 		return irq;
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index cd3a886431b8..b16e74133686 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -31,6 +31,7 @@
- #include <linux/acpi.h>
- #include <linux/module.h>
- #include <linux/syscore_ops.h>
-+#include <linux/irqdomain.h>
- #include <linux/msi.h>
- #include <linux/htirq.h>
- #include <linux/freezer.h>
-@@ -83,6 +84,7 @@ int sis_apic_bug = -1;
- 
- static DEFINE_RAW_SPINLOCK(ioapic_lock);
- static DEFINE_RAW_SPINLOCK(vector_lock);
-+static DEFINE_MUTEX(ioapic_mutex);
- 
- static struct ioapic {
- 	/*
-@@ -97,6 +99,9 @@ static struct ioapic {
- 	struct mpc_ioapic mp_config;
- 	/* IO APIC gsi routing info */
- 	struct mp_ioapic_gsi  gsi_config;
-+	struct irq_domain *irqdomain;
-+	ioapic_create_domain_fn irqdomain_cb;
-+	void *irqdomain_arg;
- 	DECLARE_BITMAP(pin_programmed, MP_MAX_IOAPIC_PIN + 1);
- } ioapics[MAX_IO_APICS];
- 
-@@ -135,6 +140,11 @@ static inline int mp_init_irq_at_boot(int ioapic, int irq)
- 	return ioapic == 0 || (irq >= 0 && irq < NR_IRQS_LEGACY);
- }
- 
-+static inline struct irq_domain *mp_ioapic_irqdomain(int ioapic)
++	  Device chaining is currently not supported.
++
++	  To compile this driver a module, choose M here. The module will be
++	  called thunderbolt.
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+new file mode 100644
+index 0000000..d473ab9
+--- /dev/null
++++ b/drivers/thunderbolt/Makefile
+@@ -0,0 +1,3 @@
++obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
++thunderbolt-objs := nhi.o
++
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+new file mode 100644
+index 0000000..d73a744
+--- /dev/null
++++ b/drivers/thunderbolt/nhi.c
+@@ -0,0 +1,625 @@
++/*
++ * Thunderbolt Cactus Ridge driver - NHI driver
++ *
++ * The NHI (native host interface) is the pci device that allows us to send and
++ * receive frames from the thunderbolt bus.
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#include <linux/slab.h>
++#include <linux/errno.h>
++#include <linux/pci.h>
++#include <linux/interrupt.h>
++#include <linux/module.h>
++#include <linux/dmi.h>
++
++#include "nhi.h"
++#include "nhi_regs.h"
++
++#define RING_TYPE(ring) ((ring)->is_tx ? "TX ring" : "RX ring")
++
++
++static int ring_interrupt_index(struct tb_ring *ring)
 +{
-+	return ioapics[ioapic].irqdomain;
++	int bit = ring->hop;
++	if (!ring->is_tx)
++		bit += ring->nhi->hop_count;
++	return bit;
 +}
 +
- int nr_ioapics;
- 
- /* The one past the highest gsi number used */
-@@ -153,6 +163,7 @@ int mp_bus_id_to_type[MAX_MP_BUSSES];
- DECLARE_BITMAP(mp_bus_not_pci, MAX_MP_BUSSES);
- 
- int skip_ioapic_setup;
-+int ioapic_identity_map;
- 
- /**
-  * disable_ioapic_support() - disables ioapic support at runtime
-@@ -963,19 +974,75 @@ static int irq_trigger(int idx)
- 	return trigger;
- }
- 
--int mp_map_gsi_to_irq(u32 gsi)
-+static int alloc_irq_from_domain(struct irq_domain *domain, u32 gsi, int pin)
- {
-+	int irq = -1;
++/**
++ * ring_interrupt_active() - activate/deactivate interrupts for a single ring
++ *
++ * ring->nhi->lock must be held.
++ */
++static void ring_interrupt_active(struct tb_ring *ring, bool active)
++{
++	int reg = REG_RING_INTERRUPT_BASE + ring_interrupt_index(ring) / 32;
++	int bit = ring_interrupt_index(ring) & 31;
++	int mask = 1 << bit;
++	u32 old, new;
++	old = ioread32(ring->nhi->iobase + reg);
++	if (active)
++		new = old | mask;
++	else
++		new = old & ~mask;
 +
-+	if (gsi >= arch_dynirq_lower_bound(0)) {
-+		irq = irq_create_mapping(domain, pin);
-+	} else if (gsi < NR_IRQS_LEGACY) {
-+		if (!ioapic_identity_map)
-+			irq = irq_create_mapping(domain, pin);
-+		else if (irq_domain_associate(domain, gsi, pin) == 0)
-+			irq = gsi;
-+	} else if (irq_create_strict_mappings(domain, gsi, pin, 1) == 0) {
-+		irq = gsi;
++	dev_info(&ring->nhi->pdev->dev,
++		 "%s interrupt at register %#x bit %d (%#x -> %#x)\n",
++		 active ? "enabling" : "disabling", reg, bit, old, new);
++
++	if (new == old)
++		dev_WARN(&ring->nhi->pdev->dev,
++					 "interrupt for %s %d is already %s\n",
++					 RING_TYPE(ring), ring->hop,
++					 active ? "enabled" : "disabled");
++	iowrite32(new, ring->nhi->iobase + reg);
++}
++
++/**
++ * nhi_disable_interrupts() - disable interrupts for all rings
++ *
++ * Use only during init and shutdown.
++ */
++static void nhi_disable_interrupts(struct tb_nhi *nhi)
++{
++	int i = 0;
++	/* disable interrupts */
++	for (i = 0; i < RING_INTERRUPT_REG_COUNT(nhi); i++)
++		iowrite32(0, nhi->iobase + REG_RING_INTERRUPT_BASE + 4 * i);
++
++	/* clear interrupt status bits */
++	for (i = 0; i < RING_NOTIFY_REG_COUNT(nhi); i++)
++		ioread32(nhi->iobase + REG_RING_NOTIFY_BASE + 4 * i);
++}
++
++/* ring helper methods */
++
++static void __iomem *ring_desc_base(struct tb_ring *ring)
++{
++	void __iomem *io = ring->nhi->iobase;
++	io += ring->is_tx ? REG_TX_RING_BASE : REG_RX_RING_BASE;
++	io += ring->hop * 16;
++	return io;
++}
++
++static void __iomem *ring_options_base(struct tb_ring *ring)
++{
++	void __iomem *io = ring->nhi->iobase;
++	io += ring->is_tx ? REG_TX_OPTIONS_BASE : REG_RX_OPTIONS_BASE;
++	io += ring->hop * 32;
++	return io;
++}
++
++static void ring_iowrite16desc(struct tb_ring *ring, u32 value, u32 offset)
++{
++	iowrite16(value, ring_desc_base(ring) + offset);
++}
++
++static void ring_iowrite32desc(struct tb_ring *ring, u32 value, u32 offset)
++{
++	iowrite32(value, ring_desc_base(ring) + offset);
++}
++
++static void ring_iowrite64desc(struct tb_ring *ring, u64 value, u32 offset)
++{
++	iowrite32(value, ring_desc_base(ring) + offset);
++	iowrite32(value >> 32, ring_desc_base(ring) + offset + 4);
++}
++
++static void ring_iowrite32options(struct tb_ring *ring, u32 value, u32 offset)
++{
++	iowrite32(value, ring_options_base(ring) + offset);
++}
++
++static bool ring_full(struct tb_ring *ring)
++{
++	return ((ring->head + 1) % ring->size) == ring->tail;
++}
++
++static bool ring_empty(struct tb_ring *ring)
++{
++	return ring->head == ring->tail;
++}
++
++/**
++ * ring_write_descriptors() - post frames from ring->queue to the controller
++ *
++ * ring->lock is held.
++ */
++static void ring_write_descriptors(struct tb_ring *ring)
++{
++	struct ring_frame *frame, *n;
++	struct ring_desc *descriptor;
++	list_for_each_entry_safe(frame, n, &ring->queue, list) {
++		if (ring_full(ring))
++			break;
++		list_move_tail(&frame->list, &ring->in_flight);
++		descriptor = &ring->descriptors[ring->head];
++		descriptor->phys = frame->buffer_phy;
++		descriptor->time = 0;
++		descriptor->flags = RING_DESC_POSTED | RING_DESC_INTERRUPT;
++		if (ring->is_tx) {
++			descriptor->length = frame->size;
++			descriptor->eof = frame->eof;
++			descriptor->sof = frame->sof;
++		}
++		ring->head = (ring->head + 1) % ring->size;
++		ring_iowrite16desc(ring, ring->head, ring->is_tx ? 10 : 8);
++	}
++}
++
++/**
++ * ring_work() - progress completed frames
++ *
++ * If the ring is shutting down then all frames are marked as canceled and
++ * their callbacks are invoked.
++ *
++ * Otherwise we collect all completed frame from the ring buffer, write new
++ * frame to the ring buffer and invoke the callbacks for the completed frames.
++ */
++static void ring_work(struct work_struct *work)
++{
++	struct tb_ring *ring = container_of(work, typeof(*ring), work);
++	struct ring_frame *frame;
++	bool canceled = false;
++	LIST_HEAD(done);
++	mutex_lock(&ring->lock);
++
++	if (!ring->running) {
++		/*  Move all frames to done and mark them as canceled. */
++		list_splice_tail_init(&ring->in_flight, &done);
++		list_splice_tail_init(&ring->queue, &done);
++		canceled = true;
++		goto invoke_callback;
 +	}
 +
-+	return irq > 0 ? irq : -1;
-+}
++	while (!ring_empty(ring)) {
++		if (!(ring->descriptors[ring->tail].flags
++				& RING_DESC_COMPLETED))
++			break;
++		frame = list_first_entry(&ring->in_flight, typeof(*frame),
++					 list);
++		list_move_tail(&frame->list, &done);
++		if (!ring->is_tx) {
++			frame->size = ring->descriptors[ring->tail].length;
++			frame->eof = ring->descriptors[ring->tail].eof;
++			frame->sof = ring->descriptors[ring->tail].sof;
++			frame->flags = ring->descriptors[ring->tail].flags;
++			if (frame->sof != 0)
++				dev_WARN(&ring->nhi->pdev->dev,
++					 "%s %d got unexpected SOF: %#x\n",
++					 RING_TYPE(ring), ring->hop,
++					 frame->sof);
++			/*
++			 * known flags:
++			 * raw not enabled, interupt not set: 0x2=0010
++			 * raw enabled: 0xa=1010
++			 * raw not enabled: 0xb=1011
++			 * partial frame (>MAX_FRAME_SIZE): 0xe=1110
++			 */
++			if (frame->flags != 0xa)
++				dev_WARN(&ring->nhi->pdev->dev,
++					 "%s %d got unexpected flags: %#x\n",
++					 RING_TYPE(ring), ring->hop,
++					 frame->flags);
++		}
++		ring->tail = (ring->tail + 1) % ring->size;
++	}
++	ring_write_descriptors(ring);
 +
-+static int mp_map_pin_to_irq(u32 gsi, int idx, int ioapic, int pin,
-+			     unsigned int flags)
-+{
-+	int irq;
-+	struct irq_domain *domain = mp_ioapic_irqdomain(ioapic);
-+
- 	/*
--	 * Provide an identity mapping of gsi == irq except on truly weird
--	 * platforms that have non isa irqs in the first 16 gsis.
-+	 * Don't use irqdomain to manage ISA IRQs because there may be
-+	 * multiple IOAPIC pins sharing the same ISA IRQ number and
-+	 * irqdomain only supports 1:1 mapping between IOAPIC pin and
-+	 * IRQ number.
- 	 */
--	return gsi >= NR_IRQS_LEGACY ? gsi : gsi_top + gsi;
-+	if (idx >= 0 && test_bit(mp_irqs[idx].srcbus, mp_bus_not_pci))
-+		return mp_irqs[idx].srcbusirq;
-+
-+	if (!domain) {
++invoke_callback:
++	mutex_unlock(&ring->lock); /* allow callbacks to schedule new work */
++	while (!list_empty(&done)) {
++		frame = list_first_entry(&done, typeof(*frame), list);
 +		/*
-+		 * Provide an identity mapping of gsi == irq except on truly
-+		 * weird platforms that have non isa irqs in the first 16 gsis.
++		 * The callback may reenqueue or delete frame.
++		 * Do not hold on to it.
 +		 */
-+		return gsi >= NR_IRQS_LEGACY ? gsi : gsi_top + gsi;
++		list_del_init(&frame->list);
++		frame->callback(ring, frame, canceled);
 +	}
-+
-+	mutex_lock(&ioapic_mutex);
-+	irq = irq_find_mapping(domain, pin);
-+	if (irq <= 0 && (flags & IOAPIC_MAP_ALLOC))
-+		irq = alloc_irq_from_domain(domain, gsi, pin);
-+	mutex_unlock(&ioapic_mutex);
-+
-+	return irq > 0 ? irq : -1;
- }
- 
--static int pin_2_irq(int idx, int apic, int pin)
-+int mp_map_gsi_to_irq(u32 gsi, unsigned int flags)
- {
--	int irq;
--	int bus = mp_irqs[idx].srcbus;
-+	int ioapic, pin, idx;
-+
-+	ioapic = mp_find_ioapic(gsi);
-+	if (ioapic < 0)
-+		return -1;
-+
-+	pin = mp_find_ioapic_pin(ioapic, gsi);
-+	idx = find_irq_entry(ioapic, pin, mp_INT);
-+	if ((flags & IOAPIC_MAP_CHECK) && idx < 0)
-+		return -1;
-+
-+	return mp_map_pin_to_irq(gsi, idx, ioapic, pin, flags);
 +}
 +
-+static int pin_2_irq(int idx, int ioapic, int pin, unsigned int flags)
++int __ring_enqueue(struct tb_ring *ring, struct ring_frame *frame)
 +{
-+	u32 gsi = mp_pin_to_gsi(ioapic, pin);
- 
- 	/*
- 	 * Debugging check, we are in big trouble if this message pops up!
-@@ -993,7 +1060,7 @@ static int pin_2_irq(int idx, int apic, int pin)
- 				apic_printk(APIC_VERBOSE, KERN_DEBUG
- 						"disabling PIRQ%d\n", pin-16);
- 			} else {
--				irq = pirq_entries[pin-16];
-+				int irq = pirq_entries[pin-16];
- 				apic_printk(APIC_VERBOSE, KERN_DEBUG
- 						"using PIRQ%d -> IRQ %d\n",
- 						pin-16, irq);
-@@ -1003,12 +1070,7 @@ static int pin_2_irq(int idx, int apic, int pin)
- 	}
- #endif
- 
--	if (test_bit(bus, mp_bus_not_pci))
--		irq = mp_irqs[idx].srcbusirq;
--	else
--		irq = mp_map_gsi_to_irq(mp_pin_to_gsi(apic, pin));
--
--	return irq;
-+	return  mp_map_pin_to_irq(gsi, idx, ioapic, pin, flags);
- }
- 
- /*
-@@ -1018,7 +1080,7 @@ static int pin_2_irq(int idx, int apic, int pin)
- int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 				struct io_apic_irq_attr *irq_attr)
- {
--	int irq, i, best_guess = -1;
-+	int irq, i, best_ioapic = -1, best_idx = -1;
- 
- 	apic_printk(APIC_DEBUG,
- 		    "querying PCI -> IRQ mapping bus:%d, slot:%d, pin:%d.\n",
-@@ -1047,30 +1109,37 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 			continue;
- 
- 		/* Skip ISA IRQs */
--		irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
--		if (ioapic_idx == 0 && !IO_APIC_IRQ(irq))
-+		irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq, 0);
-+		if (irq > 0 && !IO_APIC_IRQ(irq))
- 			continue;
- 
- 		if (pin == (mp_irqs[i].srcbusirq & 3)) {
--			set_io_apic_irq_attr(irq_attr, ioapic_idx,
--					     mp_irqs[i].dstirq,
--					     irq_trigger(i),
--					     irq_polarity(i));
--			return irq;
-+			best_idx = i;
-+			best_ioapic = ioapic_idx;
-+			goto out;
- 		}
++	int ret = 0;
++	mutex_lock(&ring->lock);
++	if (ring->running) {
++		list_add_tail(&frame->list, &ring->queue);
++		ring_write_descriptors(ring);
++	} else {
++		ret = -ESHUTDOWN;
++	}
++	mutex_unlock(&ring->lock);
++	return ret;
++}
 +
- 		/*
- 		 * Use the first all-but-pin matching entry as a
- 		 * best-guess fuzzy result for broken mptables.
- 		 */
--		if (best_guess < 0) {
--			set_io_apic_irq_attr(irq_attr, ioapic_idx,
--					     mp_irqs[i].dstirq,
--					     irq_trigger(i),
--					     irq_polarity(i));
--			best_guess = irq;
-+		if (best_idx < 0) {
-+			best_idx = i;
-+			best_ioapic = ioapic_idx;
- 		}
- 	}
--	return best_guess;
-+	if (best_idx < 0)
-+		return -1;
++static struct tb_ring *ring_alloc(struct tb_nhi *nhi, u32 hop, int size,
++				  bool transmit)
++{
++	struct tb_ring *ring = NULL;
++	dev_info(&nhi->pdev->dev, "allocating %s ring %d of size %d\n",
++		 transmit ? "TX" : "RX", hop, size);
 +
-+out:
-+	irq = pin_2_irq(best_idx, best_ioapic, mp_irqs[best_idx].dstirq,
-+			IOAPIC_MAP_ALLOC);
-+	if (irq > 0)
-+		set_io_apic_irq_attr(irq_attr, best_ioapic,
-+				     mp_irqs[best_idx].dstirq,
-+				     irq_trigger(best_idx),
-+				     irq_polarity(best_idx));
-+	return irq;
- }
- EXPORT_SYMBOL(IO_APIC_get_PCI_irq_vector);
- 
-@@ -1261,7 +1330,7 @@ static inline int IO_APIC_irq_trigger(int irq)
- 
- 	for_each_ioapic_pin(apic, pin) {
- 		idx = find_irq_entry(apic, pin, mp_INT);
--		if ((idx != -1) && (irq == pin_2_irq(idx, apic, pin)))
-+		if ((idx != -1) && (irq == pin_2_irq(idx, apic, pin, 0)))
- 			return irq_trigger(idx);
- 	}
- 	/*
-@@ -1387,8 +1456,9 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
- 		if (io_apic_pin_not_connected(idx, ioapic_idx, pin))
- 			continue;
- 
--		irq = pin_2_irq(idx, ioapic_idx, pin);
--		if (!mp_init_irq_at_boot(ioapic_idx, irq))
-+		irq = pin_2_irq(idx, ioapic_idx, pin,
-+				ioapic_idx ? 0 : IOAPIC_MAP_ALLOC);
-+		if (irq < 0 || !mp_init_irq_at_boot(ioapic_idx, irq))
- 			continue;
- 
- 		/*
-@@ -1438,8 +1508,8 @@ void setup_IO_APIC_irq_extra(u32 gsi)
- 	if (idx == -1)
- 		return;
- 
--	irq = pin_2_irq(idx, ioapic_idx, pin);
--	if (mp_init_irq_at_boot(ioapic_idx, irq))
-+	irq = pin_2_irq(idx, ioapic_idx, pin, IOAPIC_MAP_ALLOC);
-+	if (irq < 0 || mp_init_irq_at_boot(ioapic_idx, irq))
- 		return;
- 
- 	set_io_apic_irq_attr(&attr, ioapic_idx, pin, irq_trigger(idx),
-@@ -3554,8 +3624,8 @@ void __init setup_ioapic_dest(void)
- 		if (irq_entry == -1)
- 			continue;
- 
--		irq = pin_2_irq(irq_entry, ioapic, pin);
--		if (!mp_init_irq_at_boot(ioapic, irq))
-+		irq = pin_2_irq(irq_entry, ioapic, pin, 0);
-+		if (irq < 0 || !mp_init_irq_at_boot(ioapic, irq))
- 			continue;
- 
- 		idata = irq_get_irq_data(irq);
++	mutex_lock(&nhi->lock);
++	if (hop >= nhi->hop_count) {
++		dev_WARN(&nhi->pdev->dev, "invalid hop: %d\n", hop);
++		goto err;
++	}
++	if (transmit && nhi->tx_rings[hop]) {
++		dev_WARN(&nhi->pdev->dev, "TX hop %d already allocated\n", hop);
++		goto err;
++	} else if (!transmit && nhi->rx_rings[hop]) {
++		dev_WARN(&nhi->pdev->dev, "RX hop %d already allocated\n", hop);
++		goto err;
++	}
++	ring = kzalloc(sizeof(*ring), GFP_KERNEL);
++	if (!ring)
++		goto err;
++
++	mutex_init(&ring->lock);
++	INIT_LIST_HEAD(&ring->queue);
++	INIT_LIST_HEAD(&ring->in_flight);
++	INIT_WORK(&ring->work, ring_work);
++
++	ring->nhi = nhi;
++	ring->hop = hop;
++	ring->is_tx = transmit;
++	ring->size = size;
++	ring->head = 0;
++	ring->tail = 0;
++	ring->running = false;
++	ring->descriptors = dma_alloc_coherent(&ring->nhi->pdev->dev,
++			size * sizeof(*ring->descriptors),
++			&ring->descriptors_dma, GFP_KERNEL | __GFP_ZERO);
++	if (!ring->descriptors)
++		goto err;
++
++	if (transmit)
++		nhi->tx_rings[hop] = ring;
++	else
++		nhi->rx_rings[hop] = ring;
++	mutex_unlock(&nhi->lock);
++	return ring;
++
++err:
++	if (ring)
++		mutex_destroy(&ring->lock);
++	kfree(ring);
++	mutex_unlock(&nhi->lock);
++	return NULL;
++}
++
++struct tb_ring *ring_alloc_tx(struct tb_nhi *nhi, int hop, int size)
++{
++	return ring_alloc(nhi, hop, size, true);
++}
++
++struct tb_ring *ring_alloc_rx(struct tb_nhi *nhi, int hop, int size)
++{
++	return ring_alloc(nhi, hop, size, false);
++}
++
++/**
++ * ring_start() - enable a ring
++ *
++ * Must not be invoked in parallel with ring_stop().
++ */
++void ring_start(struct tb_ring *ring)
++{
++	mutex_lock(&ring->nhi->lock);
++	mutex_lock(&ring->lock);
++	if (ring->running) {
++		dev_WARN(&ring->nhi->pdev->dev, "ring already started\n");
++		goto err;
++	}
++	dev_info(&ring->nhi->pdev->dev, "starting %s %d\n",
++		 RING_TYPE(ring), ring->hop);
++
++	ring_iowrite64desc(ring, ring->descriptors_dma, 0);
++	if (ring->is_tx) {
++		ring_iowrite32desc(ring, ring->size, 12);
++		ring_iowrite32options(ring, 0, 4); /* time releated ? */
++		ring_iowrite32options(ring,
++				      RING_FLAG_ENABLE | RING_FLAG_RAW, 0);
++	} else {
++		ring_iowrite32desc(ring,
++				   (TB_FRAME_SIZE << 16) | ring->size, 12);
++		ring_iowrite32options(ring, 0xffffffff, 4); /* SOF EOF mask */
++		ring_iowrite32options(ring,
++				      RING_FLAG_ENABLE | RING_FLAG_RAW, 0);
++	}
++	ring_interrupt_active(ring, true);
++	ring->running = true;
++err:
++	mutex_unlock(&ring->lock);
++	mutex_unlock(&ring->nhi->lock);
++}
++
++
++/**
++ * ring_stop() - shutdown a ring
++ *
++ * Must not be invoked from a callback.
++ *
++ * This method will disable the ring. Further calls to ring_tx/ring_rx will
++ * return -ESHUTDOWN until ring_stop has been called.
++ *
++ * All enqueued frames will be canceled and their callbacks will be executed
++ * with frame->canceled set to true (on the callback thread). This method
++ * returns only after all callback invocations have finished.
++ */
++void ring_stop(struct tb_ring *ring)
++{
++	mutex_lock(&ring->nhi->lock);
++	mutex_lock(&ring->lock);
++	dev_info(&ring->nhi->pdev->dev, "stopping %s %d\n",
++		 RING_TYPE(ring), ring->hop);
++	if (!ring->running) {
++		dev_WARN(&ring->nhi->pdev->dev, "%s %d already stopped\n",
++			 RING_TYPE(ring), ring->hop);
++		goto err;
++	}
++	ring_interrupt_active(ring, false);
++
++	ring_iowrite32options(ring, 0, 0);
++	ring_iowrite64desc(ring, 0, 0);
++	ring_iowrite16desc(ring, 0, ring->is_tx ? 10 : 8);
++	ring_iowrite32desc(ring, 0, 12);
++	ring->head = 0;
++	ring->tail = 0;
++	ring->running = false;
++
++err:
++	mutex_unlock(&ring->lock);
++	mutex_unlock(&ring->nhi->lock);
++
++	/*
++	 * schedule ring->work to invoke callbacks on all remaining frames.
++	 */
++	schedule_work(&ring->work);
++	flush_work(&ring->work);
++}
++
++/*
++ * ring_free() - free ring
++ *
++ * When this method returns all invocations of ring->callback will have
++ * finished.
++ *
++ * Ring must be stopped.
++ *
++ * Must NOT be called from ring_frame->callback!
++ */
++void ring_free(struct tb_ring *ring)
++{
++	mutex_lock(&ring->nhi->lock);
++	/*
++	 * Dissociate the ring from the NHI. This also ensures that
++	 * nhi_interrupt_work cannot reschedule ring->work.
++	 */
++	if (ring->is_tx)
++		ring->nhi->tx_rings[ring->hop] = NULL;
++	else
++		ring->nhi->rx_rings[ring->hop] = NULL;
++
++	if (ring->running) {
++		dev_WARN(&ring->nhi->pdev->dev, "%s %d still running\n",
++			 RING_TYPE(ring), ring->hop);
++	}
++
++	dma_free_coherent(&ring->nhi->pdev->dev,
++			  ring->size * sizeof(*ring->descriptors),
++			  ring->descriptors, ring->descriptors_dma);
++
++	ring->descriptors = 0;
++	ring->descriptors_dma = 0;
++
++
++	dev_info(&ring->nhi->pdev->dev,
++		 "freeing %s %d\n",
++		 RING_TYPE(ring),
++		 ring->hop);
++
++	mutex_unlock(&ring->nhi->lock);
++	/**
++	 * ring->work can no longer be scheduled (it is scheduled only by
++	 * nhi_interrupt_work and ring_stop). Wait for it to finish before
++	 * freeing the ring.
++	 */
++	flush_work(&ring->work);
++	mutex_destroy(&ring->lock);
++	kfree(ring);
++}
++
++static void nhi_interrupt_work(struct work_struct *work)
++{
++	struct tb_nhi *nhi = container_of(work, typeof(*nhi), interrupt_work);
++	int value = 0; /* Suppress uninitialized usage warning. */
++	int bit;
++	int hop = -1;
++	int type = 0; /* current interrupt type 0: TX, 1: RX, 2: RX overflow */
++	struct tb_ring *ring;
++
++	mutex_lock(&nhi->lock);
++
++	/*
++	 * Starting at REG_RING_NOTIFY_BASE there are three status bitfields
++	 * (TX, RX, RX overflow). We iterate over the bits and read a new
++	 * dwords as required. The registers are cleared on read.
++	 */
++	for (bit = 0; bit < 3 * nhi->hop_count; bit++) {
++		if (bit % 32 == 0)
++			value = ioread32(nhi->iobase
++					 + REG_RING_NOTIFY_BASE
++					 + 4 * (bit / 32));
++		if (++hop == nhi->hop_count) {
++			hop = 0;
++			type++;
++		}
++		if ((value & (1 << (bit % 32))) == 0)
++			continue;
++		if (type == 2) {
++			dev_warn(&nhi->pdev->dev,
++				 "RX overflow for ring %d\n",
++				 hop);
++			continue;
++		}
++		if (type == 0)
++			ring = nhi->tx_rings[hop];
++		else
++			ring = nhi->rx_rings[hop];
++		if (ring == NULL) {
++			dev_warn(&nhi->pdev->dev,
++				 "got interrupt for inactive %s ring %d\n",
++				 type ? "RX" : "TX",
++				 hop);
++			continue;
++		}
++		/* we do not check ring->running, this is done in ring->work */
++		schedule_work(&ring->work);
++	}
++	mutex_unlock(&nhi->lock);
++}
++
++static irqreturn_t nhi_msi(int irq, void *data)
++{
++	struct tb_nhi *nhi = data;
++	schedule_work(&nhi->interrupt_work);
++	return IRQ_HANDLED;
++}
++
++static void nhi_shutdown(struct tb_nhi *nhi)
++{
++	int i;
++	dev_info(&nhi->pdev->dev, "shutdown\n");
++
++	for (i = 0; i < nhi->hop_count; i++) {
++		if (nhi->tx_rings[i])
++			dev_WARN(&nhi->pdev->dev,
++				 "TX ring %d is still active\n", i);
++		if (nhi->rx_rings[i])
++			dev_WARN(&nhi->pdev->dev,
++				 "RX ring %d is still active\n", i);
++	}
++	nhi_disable_interrupts(nhi);
++	/*
++	 * We have to release the irq before calling flush_work. Otherwise an
++	 * already executing IRQ handler could call schedule_work again.
++	 */
++	devm_free_irq(&nhi->pdev->dev, nhi->pdev->irq, nhi);
++	flush_work(&nhi->interrupt_work);
++	mutex_destroy(&nhi->lock);
++}
++
++static int nhi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++{
++	struct tb_nhi *nhi;
++	int res;
++
++	res = pcim_enable_device(pdev);
++	if (res) {
++		dev_err(&pdev->dev, "cannot enable PCI device, aborting\n");
++		return res;
++	}
++
++	res = pci_enable_msi(pdev);
++	if (res) {
++		dev_err(&pdev->dev, "cannot enable MSI, aborting\n");
++		return res;
++	}
++
++	res = pcim_iomap_regions(pdev, 1 << 0, "thunderbolt");
++	if (res) {
++		dev_err(&pdev->dev, "cannot obtain PCI resources, aborting\n");
++		return res;
++	}
++
++	nhi = devm_kzalloc(&pdev->dev, sizeof(*nhi), GFP_KERNEL);
++	if (!nhi)
++		return -ENOMEM;
++
++	nhi->pdev = pdev;
++	/* cannot fail - table is allocated bin pcim_iomap_regions */
++	nhi->iobase = pcim_iomap_table(pdev)[0];
++	nhi->hop_count = ioread32(nhi->iobase + REG_HOP_COUNT) & 0x3ff;
++	if (nhi->hop_count != 12)
++		dev_warn(&pdev->dev, "unexpected hop count: %d\n",
++			 nhi->hop_count);
++	INIT_WORK(&nhi->interrupt_work, nhi_interrupt_work);
++
++	nhi->tx_rings = devm_kzalloc(&pdev->dev,
++				     nhi->hop_count * sizeof(struct tb_ring),
++				     GFP_KERNEL);
++	nhi->rx_rings = devm_kzalloc(&pdev->dev,
++				     nhi->hop_count * sizeof(struct tb_ring),
++				     GFP_KERNEL);
++	if (!nhi->tx_rings || !nhi->rx_rings)
++		return -ENOMEM;
++
++	nhi_disable_interrupts(nhi); /* In case someone left them on. */
++	res = devm_request_irq(&pdev->dev, pdev->irq, nhi_msi,
++			       IRQF_NO_SUSPEND, /* must work during _noirq */
++			       "thunderbolt", nhi);
++	if (res) {
++		dev_err(&pdev->dev, "request_irq failed, aborting\n");
++		return res;
++	}
++
++	mutex_init(&nhi->lock);
++
++	pci_set_master(pdev);
++
++	/* magic value - clock related? */
++	iowrite32(3906250 / 10000, nhi->iobase + 0x38c00);
++
++	pci_set_drvdata(pdev, nhi);
++
++	return 0;
++}
++
++static void nhi_remove(struct pci_dev *pdev)
++{
++	struct tb_nhi *nhi = pci_get_drvdata(pdev);
++	nhi_shutdown(nhi);
++}
++
++struct pci_device_id nhi_ids[] = {
++	{
++		/*
++		 * We have to specify class, the TB bridges use the same device
++		 * and vendor (sub)id.
++		 */
++		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
++		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x1547,
++		.subvendor = 0x2222, .subdevice = 0x1111,
++	},
++	{ 0,}
++};
++
++MODULE_DEVICE_TABLE(pci, nhi_ids);
++MODULE_LICENSE("GPL");
++
++static struct pci_driver nhi_driver = {
++	.name = "thunderbolt",
++	.id_table = nhi_ids,
++	.probe = nhi_probe,
++	.remove = nhi_remove,
++};
++
++static int __init nhi_init(void)
++{
++	if (!dmi_match(DMI_BOARD_VENDOR, "Apple Inc."))
++		return -ENOSYS;
++	return pci_register_driver(&nhi_driver);
++}
++
++static void __exit nhi_unload(void)
++{
++	pci_unregister_driver(&nhi_driver);
++}
++
++module_init(nhi_init);
++module_exit(nhi_unload);
+diff --git a/drivers/thunderbolt/nhi.h b/drivers/thunderbolt/nhi.h
+new file mode 100644
+index 0000000..3172429
+--- /dev/null
++++ b/drivers/thunderbolt/nhi.h
+@@ -0,0 +1,114 @@
++/*
++ * Thunderbolt Cactus Ridge driver - NHI driver
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#ifndef DSL3510_H_
++#define DSL3510_H_
++
++#include <linux/mutex.h>
++#include <linux/workqueue.h>
++
++/**
++ * struct tb_nhi - thunderbolt native host interface
++ */
++struct tb_nhi {
++	struct mutex lock; /*
++			    * Must be held during ring creation/destruction.
++			    * Is acquired by interrupt_work when dispatching
++			    * interrupts to individual rings.
++			    **/
++	struct pci_dev *pdev;
++	void __iomem *iobase;
++	struct tb_ring **tx_rings;
++	struct tb_ring **rx_rings;
++	struct work_struct interrupt_work;
++	u32 hop_count; /* Number of rings (end point hops) supported by NHI. */
++};
++
++/**
++ * struct tb_ring - thunderbolt TX or RX ring associated with a NHI
++ */
++struct tb_ring {
++	struct mutex lock; /* must be acquired after nhi->lock */
++	struct tb_nhi *nhi;
++	int size;
++	int hop;
++	int head; /* write next descriptor here */
++	int tail; /* complete next descriptor here */
++	struct ring_desc *descriptors;
++	dma_addr_t descriptors_dma;
++	struct list_head queue;
++	struct list_head in_flight;
++	struct work_struct work;
++	bool is_tx:1; /* rx otherwise */
++	bool running:1;
++};
++
++struct ring_frame;
++typedef void (*ring_cb)(struct tb_ring*, struct ring_frame*, bool canceled);
++
++/**
++ * struct ring_frame - for use with ring_rx/ring_tx
++ */
++struct ring_frame {
++	dma_addr_t buffer_phy;
++	ring_cb callback;
++	struct list_head list;
++	u32 size:12; /* TX: in, RX: out*/
++	u32 flags:12; /* RX: out */
++	u32 eof:4; /* TX:in, RX: out */
++	u32 sof:4; /* TX:in, RX: out */
++};
++
++#define TB_FRAME_SIZE 0x100    /* minimum size for ring_rx */
++
++struct tb_ring *ring_alloc_tx(struct tb_nhi *nhi, int hop, int size);
++struct tb_ring *ring_alloc_rx(struct tb_nhi *nhi, int hop, int size);
++void ring_start(struct tb_ring *ring);
++void ring_stop(struct tb_ring *ring);
++void ring_free(struct tb_ring *ring);
++
++int __ring_enqueue(struct tb_ring *ring, struct ring_frame *frame);
++
++/**
++ * ring_rx() - enqueue a frame on an RX ring
++ *
++ * frame->buffer, frame->buffer_phy and frame->callback have to be set. The
++ * buffer must contain at least TB_FRAME_SIZE bytes.
++ *
++ * frame->callback will be invoked with frame->size, frame->flags, frame->eof,
++ * frame->sof set once the frame has been received.
++ *
++ * If ring_stop is called after the packet has been enqueued frame->callback
++ * will be called with canceled set to true.
++ *
++ * Return: Returns ESHUTDOWN if ring_stop has been called. Zero otherwise.
++ */
++static inline int ring_rx(struct tb_ring *ring, struct ring_frame *frame)
++{
++	WARN_ON(ring->is_tx);
++	return __ring_enqueue(ring, frame);
++}
++
++/**
++ * ring_tx() - enqueue a frame on an TX ring
++ *
++ * frame->buffer, frame->buffer_phy, frame->callback, frame->size, frame->eof
++ * and frame->sof have to be set.
++ *
++ * frame->callback will be invoked with once the frame has been transmitted.
++ *
++ * If ring_stop is called after the packet has been enqueued frame->callback
++ * will be called with canceled set to true.
++ *
++ * Return: Returns ESHUTDOWN if ring_stop has been called. Zero otherwise.
++ */
++static inline int ring_tx(struct tb_ring *ring, struct ring_frame *frame)
++{
++	WARN_ON(!ring->is_tx);
++	return __ring_enqueue(ring, frame);
++}
++
++#endif
+diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
+new file mode 100644
+index 0000000..86b996c
+--- /dev/null
++++ b/drivers/thunderbolt/nhi_regs.h
+@@ -0,0 +1,101 @@
++/*
++ * Thunderbolt Cactus Ridge driver - NHI registers
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#ifndef DSL3510_REGS_H_
++#define DSL3510_REGS_H_
++
++#include <linux/types.h>
++
++enum ring_flags {
++	RING_FLAG_ISOCH_ENABLE = 1 << 27, /* TX only? */
++	RING_FLAG_E2E_FLOW_CONTROL = 1 << 28,
++	RING_FLAG_PCI_NO_SNOOP = 1 << 29,
++	RING_FLAG_RAW = 1 << 30, /* ignore EOF/SOF mask, include checksum */
++	RING_FLAG_ENABLE = 1 << 31,
++};
++
++enum ring_desc_flags {
++	RING_DESC_ISOCH = 0x1, /* TX only? */
++	RING_DESC_COMPLETED = 0x2, /* set by NHI */
++	RING_DESC_POSTED = 0x4, /* always set this */
++	RING_DESC_INTERRUPT = 0x8, /* request an interrupt on completion */
++};
++
++/**
++ * struct ring_desc - TX/RX ring entry
++ *
++ * For TX set length/eof/sof.
++ * For RX length/eof/sof are set by the NHI.
++ */
++struct ring_desc {
++	u64 phys;
++	u32 length:12;
++	u32 eof:4;
++	u32 sof:4;
++	enum ring_desc_flags flags:12;
++	u32 time; /* write zero */
++} __packed;
++
++/* NHI registers in bar 0 */
++
++/*
++ * 16 bytes per entry, one entry for every hop (REG_HOP_COUNT)
++ * 00: physical pointer to an array of struct ring_desc
++ * 08: ring tail (set by NHI)
++ * 10: ring head (index of first non posted descriptor)
++ * 12: descriptor count
++ */
++#define REG_TX_RING_BASE	0x00000
++
++/*
++ * 16 bytes per entry, one entry for every hop (REG_HOP_COUNT)
++ * 00: physical pointer to an array of struct ring_desc
++ * 08: ring head (index of first not posted descriptor)
++ * 10: ring tail (set by NHI)
++ * 12: descriptor count
++ * 14: max frame sizes (anything larger than 0x100 has no effect)
++ */
++#define REG_RX_RING_BASE	0x08000
++
++/*
++ * 32 bytes per entry, one entry for every hop (REG_HOP_COUNT)
++ * 00: enum_ring_flags
++ * 04: isoch time stamp ?? (write 0)
++ * ..: unknown
++ */
++#define REG_TX_OPTIONS_BASE	0x19800
++
++/*
++ * 32 bytes per entry, one entry for every hop (REG_HOP_COUNT)
++ * 00: enum ring_flags
++ *     If RING_FLAG_E2E_FLOW_CONTROL is set then bits 13-23 must be set to
++ *     the corresponding TX hop id.
++ * 04: EOF/SOF mask (ignored for RING_FLAG_RAW rings)
++ * ..: unknown
++ */
++#define REG_RX_OPTIONS_BASE	0x29800
++
++/*
++ * three bitfields: tx, rx, rx overflow
++ * Every bitfield contains one bit for every hop (REG_HOP_COUNT). Registers are
++ * cleared on read. New interrupts are fired only after ALL registers have been
++ * read (even those containing only disabled rings).
++ */
++#define REG_RING_NOTIFY_BASE	0x37800
++#define RING_NOTIFY_REG_COUNT(nhi) ((31 + 3 * nhi->hop_count) / 32)
++
++/*
++ * two bitfields: rx, tx
++ * Both bitfields contains one bit for every hop (REG_HOP_COUNT). To
++ * enable/disable interrupts set/clear the corresponding bits.
++ */
++#define REG_RING_INTERRUPT_BASE	0x38200
++#define RING_INTERRUPT_REG_COUNT(nhi) ((31 + 2 * nhi->hop_count) / 32)
++
++/* The last 11 bits contain the number of hops supported by the NHI port. */
++#define REG_HOP_COUNT		0x39640
++
++#endif
 -- 
-1.7.10.4
+1.9.3
 
