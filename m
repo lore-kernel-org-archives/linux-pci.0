@@ -1,52 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:42870 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756143AbaE2PEB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 11:04:01 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.2 \(1874\))
-Subject: Re: [PATCH v2 03/18] PCI: designware: Configuration space should be specified in 'reg'
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <1401345500-20188-4-git-send-email-kishon@ti.com>
-Date: Thu, 29 May 2014 10:03:54 -0500
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Marek Vasut <marex@denx.de>, arnd@arndb.de, tony@atomide.com,
-	Mohit Kumar <mohit.kumar@st.com>, jg1.han@samsung.com,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Message-Id: <98E18225-3C63-4106-901A-A5D3DEC268C8@codeaurora.org>
-References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-4-git-send-email-kishon@ti.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:37122 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751923AbaEZXdt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 May 2014 19:33:49 -0400
+Received: by mail-ig0-f182.google.com with SMTP id uy17so448625igb.9
+        for <linux-pci@vger.kernel.org>; Mon, 26 May 2014 16:33:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAMuHMdWp-dUFwSgw30SYqXxAtAsrXDgaxcgfBZwV=1pEVN3B=A@mail.gmail.com>
+References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140508204907.17877.4848.stgit@bhelgaas-glaptop.roam.corp.google.com> <CAMuHMdWp-dUFwSgw30SYqXxAtAsrXDgaxcgfBZwV=1pEVN3B=A@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 26 May 2014 17:33:28 -0600
+Message-ID: <CAErSpo708iC2UWjTwDqLnSUSXWG087DoOQEMkFcfNsGw1wvQsg@mail.gmail.com>
+Subject: Re: [PATCH v3 3/4] sh/PCI: Pass GAPSPCI_DMA_BASE CPU & bus address to dma_declare_coherent_memory()
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	James Bottomley <jbottomley@parallels.com>,
+	Magnus Damm <damm@opensource.se>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, May 26, 2014 at 8:46 AM, Geert Uytterhoeven
+<geert@linux-m68k.org> wrote:
+> On Thu, May 8, 2014 at 10:49 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> --- a/arch/sh/drivers/pci/fixups-dreamcast.c
+>> +++ b/arch/sh/drivers/pci/fixups-dreamcast.c
+>> @@ -31,6 +31,8 @@
+>>  static void gapspci_fixup_resources(struct pci_dev *dev)
+>>  {
+>>         struct pci_channel *p = dev->sysdata;
+>> +       struct resource res;
+>> +       struct pci_bus_region region;
+>>
+>>         printk(KERN_NOTICE "PCI: Fixing up device %s\n", pci_name(dev));
+>>
+>> @@ -50,11 +52,21 @@ static void gapspci_fixup_resources(struct pci_dev *dev)
+>>
+>>                 /*
+>>                  * Redirect dma memory allocations to special memory window.
+>> +                *
+>> +                * If this GAPSPCI region were mapped by a BAR, the CPU
+>> +                * phys_addr_t would be pci_resource_start(), and the bus
+>> +                * address would be pci_bus_address(pci_resource_start()).
+>> +                * But apparently there's no BAR mapping it, so we just
+>> +                * "know" its CPU address is GAPSPCI_DMA_BASE.
+>>                  */
+>> +               res.start = GAPSPCI_DMA_BASE;
+>> +               res.end = GAPSPCI_DMA_BASE + GAPSPCI_DMA_SIZE - 1;
+>> +               res.flags = IORESOURCE_MEM;
+>> +               pcibios_resource_to_bus(dev, &region, &resource);
+>
+> In response to http://kisskb.ellerman.id.au/kisskb/buildresult/11212250/
+>
+> | /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c: In
+> function 'gapspci_fixup_resources':
+> | /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c:65:42:
+> error: 'resource' undeclared (first use in this function)
+> | /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c:65:42:
+> note: each undeclared identifier is reported only once for each
+> function it appears in
+>
+> "resource" seem to have been replaced by "res", but this warning still happens:
+>
+> | /scratch/kisskb/src/arch/sh/drivers/pci/fixups-dreamcast.c:65:3:
+> warning: passing argument 1 of 'pcibios_resource_to_bus' from
+> incompatible pointer type [enabled by default]
+> | /scratch/kisskb/src/include/linux/pci.h:737:6: note: expected
+> 'struct pci_bus *' but argument is of type 'struct pci_dev *'
 
-On May 29, 2014, at 1:38 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+Sheesh, this really has not been my day.  Fixed, thanks.
 
-> The configuration address space has so far been specified in *ranges*,
-> however it should be specified in *reg* making it a platform MEM resource.
-> Hence used 'platform_get_resource_*' API to get configuration address
-> space in the designware driver.
-> 
-> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Mohit Kumar <mohit.kumar@st.com>
-> Cc: Jingoo Han <jg1.han@samsung.com>
-> Cc: Marek Vasut <marex@denx.de>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
-> .../devicetree/bindings/pci/designware-pcie.txt    |    1 +
-> drivers/pci/host/pcie-designware.c                 |   17 +++++++++++++++--
-> 2 files changed, 16 insertions(+), 2 deletions(-)
-
-Why should the cfg space be defined in *reg* instead of ranges?
-
-- k
-
--- 
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
+>>                 BUG_ON(!dma_declare_coherent_memory(&dev->dev,
+>> -                                               GAPSPCI_DMA_BASE,
+>> -                                               GAPSPCI_DMA_BASE,
+>> -                                               GAPSPCI_DMA_SIZE,
+>> +                                               res.start,
+>> +                                               region.start,
+>> +                                               resource_size(&res),
+>>                                                 DMA_MEMORY_MAP |
+>>                                                 DMA_MEMORY_EXCLUSIVE));
+>>                 break;
+>
+> Gr{oetje,eeting}s,
+>
+>                         Geert
+>
+> --
+> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+>
+> In personal conversations with technical people, I call myself a hacker. But
+> when I'm talking to journalists I just say "programmer" or something like that.
+>                                 -- Linus Torvalds
