@@ -1,577 +1,292 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:54280 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933956AbaEFHFB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 May 2014 03:05:01 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 16/21] iommu/vt-d: implement DMAR unit hotplug framework
-Date: Tue,  6 May 2014 15:05:27 +0800
-Message-Id: <1399359932-28972-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:35996 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752750AbaEZPSf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 May 2014 11:18:35 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v3 15/15] thunderbolt: Add suspend/hibernate support
+Date: Mon, 26 May 2014 17:18:12 +0200
+Message-Id: <1401117492-2870-16-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Intel platforms, an IO Hub (PCI/PCIe host bridge) may contain DMAR
-units, so we need to support DMAR hotplug when supporting PCI host
-bridge hotplug on Intel platforms.
+We use _noirq since we have to restore the pci tunnels before the pci
+core wakes the tunneled devices.
 
-According to Section 8.8 "Remapping Hardware Unit Hot Plug" in "Intel
-Virtualization Technology for Directed IO Architecture Specification
-Rev 2.2", ACPI BIOS should implement ACPI _DSM method under the ACPI
-object for the PCI host bridge to support DMAR hotplug.
-
-This patch introduces interfaces to parse ACPI _DSM method for
-DMAR unit hotplug. It also implements state machines for DMAR unit
-hot-addition and hot-removal.
-
-The PCI host bridge hotplug driver should call dmar_hotplug_hotplug()
-before scanning PCI devices connected for hot-addition and after
-destroying all PCI devices for hot-removal.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- drivers/iommu/dmar.c                |  268 +++++++++++++++++++++++++++++++++--
- drivers/iommu/intel-iommu.c         |   78 +++++++++-
- drivers/iommu/intel_irq_remapping.c |    5 +
- include/linux/dmar.h                |   33 +++++
- 4 files changed, 370 insertions(+), 14 deletions(-)
+ drivers/thunderbolt/nhi.c    | 33 +++++++++++++++++
+ drivers/thunderbolt/switch.c | 84 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.c     | 61 ++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.h     |  5 +++
+ 4 files changed, 183 insertions(+)
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 7a871607cedb..2006e1cd8c0f 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -74,7 +74,7 @@ static unsigned long dmar_seq_ids[BITS_TO_LONGS(DMAR_UNITS_SUPPORTED)];
- static int alloc_iommu(struct dmar_drhd_unit *drhd);
- static void free_iommu(struct intel_iommu *iommu);
- 
--static void __init dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
-+static void dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
- {
- 	/*
- 	 * add INCLUDE_ALL at the tail, so scan the list will find it at
-@@ -335,24 +335,45 @@ static struct notifier_block dmar_pci_bus_nb = {
- 	.priority = INT_MIN,
- };
- 
-+static struct dmar_drhd_unit *
-+dmar_find_dmaru(struct acpi_dmar_hardware_unit *drhd)
-+{
-+	struct dmar_drhd_unit *dmaru;
-+
-+	list_for_each_entry_rcu(dmaru, &dmar_drhd_units, list)
-+		if (dmaru->segment == drhd->segment &&
-+		    dmaru->reg_base_addr == drhd->address)
-+			return dmaru;
-+
-+	return NULL;
-+}
-+
- /**
-  * dmar_parse_one_drhd - parses exactly one DMA remapping hardware definition
-  * structure which uniquely represent one DMA remapping hardware unit
-  * present in the platform
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index f3a4ac2..6f666fa 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -7,6 +7,7 @@
+  * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
   */
--static int __init
--dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
-+static int dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_hardware_unit *drhd;
- 	struct dmar_drhd_unit *dmaru;
- 	int ret = 0;
  
- 	drhd = (struct acpi_dmar_hardware_unit *)header;
--	dmaru = kzalloc(sizeof(*dmaru), GFP_KERNEL);
-+	dmaru = dmar_find_dmaru(drhd);
-+	if (dmaru)
-+		goto out;
-+
-+	dmaru = kzalloc(sizeof(*dmaru) + header->length, GFP_KERNEL);
- 	if (!dmaru)
- 		return -ENOMEM;
- 
--	dmaru->hdr = header;
-+	/*
-+	 * If header is allocated from slab by ACPI _DSM method, we need to
-+	 * copy the content because the memory buffer will be freed on return.
-+	 */
-+	dmaru->hdr = (void *)(dmaru + 1);
-+	memcpy(dmaru->hdr, header, header->length);
- 	dmaru->reg_base_addr = drhd->address;
- 	dmaru->segment = drhd->segment;
- 	dmaru->include_all = drhd->flags & 0x1; /* BIT0: INCLUDE_ALL */
-@@ -373,6 +394,7 @@ dmar_parse_one_drhd(struct acpi_dmar_header *header, void *arg)
- 	}
- 	dmar_register_drhd_unit(dmaru);
- 
-+out:
- 	if (arg)
- 		(*(int *)arg)++;
- 
-@@ -410,8 +432,7 @@ static int __init dmar_parse_one_andd(struct acpi_dmar_header *header,
++#include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ #include <linux/errno.h>
+ #include <linux/pci.h>
+@@ -492,6 +493,22 @@ static irqreturn_t nhi_msi(int irq, void *data)
+ 	return IRQ_HANDLED;
  }
  
- #ifdef CONFIG_ACPI_NUMA
--static int __init
--dmar_parse_one_rhsa(struct acpi_dmar_header *header, void *arg)
-+static int dmar_parse_one_rhsa(struct acpi_dmar_header *header, void *arg)
- {
- 	struct acpi_dmar_rhsa *rhsa;
- 	struct dmar_drhd_unit *drhd;
-@@ -805,14 +826,22 @@ dmar_validate_one_drhd(struct acpi_dmar_header *entry, void *arg)
- 		return -EINVAL;
- 	}
- 
--	addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
-+	if (arg)
-+		addr = ioremap(drhd->address, VTD_PAGE_SIZE);
-+	else
-+		addr = early_ioremap(drhd->address, VTD_PAGE_SIZE);
- 	if (!addr) {
- 		pr_warn("IOMMU: can't validate: %llx\n", drhd->address);
- 		return -EINVAL;
- 	}
-+
- 	cap = dmar_readq(addr + DMAR_CAP_REG);
- 	ecap = dmar_readq(addr + DMAR_ECAP_REG);
--	early_iounmap(addr, VTD_PAGE_SIZE);
-+
-+	if (arg)
-+		iounmap(addr);
-+	else
-+		early_iounmap(addr, VTD_PAGE_SIZE);
- 
- 	if (cap == (uint64_t)-1 && ecap == (uint64_t)-1) {
- 		warn_invalid_dmar(drhd->address, " returns all ones");
-@@ -1681,12 +1710,17 @@ int __init dmar_ir_support(void)
- 	return dmar->flags & 0x1;
- }
- 
-+/* Check whether DMAR units are in use */
-+static inline bool dmar_in_use(void)
++static int nhi_suspend_noirq(struct device *dev)
 +{
-+	return irq_remapping_enabled || intel_iommu_enabled;
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct tb *tb = pci_get_drvdata(pdev);
++	thunderbolt_suspend(tb);
++	return 0;
 +}
 +
- static int __init dmar_free_unused_resources(void)
- {
- 	struct dmar_drhd_unit *dmaru, *dmaru_n;
- 
--	/* DMAR units are in use */
--	if (irq_remapping_enabled || intel_iommu_enabled)
-+	if (dmar_in_use())
- 		return 0;
- 
- 	if (dmar_dev_scope_status != 1 && !list_empty(&dmar_drhd_units))
-@@ -1704,3 +1738,215 @@ static int __init dmar_free_unused_resources(void)
- 
- late_initcall(dmar_free_unused_resources);
- IOMMU_INIT_POST(detect_intel_iommu);
++static int nhi_resume_noirq(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct tb *tb = pci_get_drvdata(pdev);
++	thunderbolt_resume(tb);
++	return 0;
++}
 +
+ static void nhi_shutdown(struct tb_nhi *nhi)
+ {
+ 	int i;
+@@ -600,6 +617,21 @@ static void nhi_remove(struct pci_dev *pdev)
+ 	nhi_shutdown(nhi);
+ }
+ 
 +/*
-+ * DMAR Hotplug Support
-+ * For more details, please refer to Intel(R) Virtualization Technology
-+ * for Directed-IO Architecture Specifiction, Rev 2.2, Section 8.8
-+ * "Remapping Hardware Unit Hot Plug".
++ * The tunneled pci bridges are siblings of us. Use resume_noirq to reenable
++ * the tunnels asap. A corresponding pci quirk blocks the downstream bridges
++ * resume_noirq until we are done.
 + */
-+static u8 dmar_hp_uuid[] = {
-+	/* 0000 */    0xA6, 0xA3, 0xC1, 0xD8, 0x9B, 0xBE, 0x9B, 0x4C,
-+	/* 0008 */    0x91, 0xBF, 0xC3, 0xCB, 0x81, 0xFC, 0x5D, 0xAF
++static const struct dev_pm_ops nhi_pm_ops = {
++	.suspend_noirq = nhi_suspend_noirq,
++	.resume_noirq = nhi_resume_noirq,
++	.freeze_noirq = nhi_suspend_noirq, /*
++					    * we just disable hotplug, the
++					    * pci-tunnels stay alive.
++					    */
++	.restore_noirq = nhi_resume_noirq,
 +};
 +
-+/*
-+ * Currently there's only one revision and BIOS will not check the revision id,
-+ * so use 0 for safety.
+ struct pci_device_id nhi_ids[] = {
+ 	{
+ 		/*
+@@ -621,6 +653,7 @@ static struct pci_driver nhi_driver = {
+ 	.id_table = nhi_ids,
+ 	.probe = nhi_probe,
+ 	.remove = nhi_remove,
++	.driver.pm = &nhi_pm_ops,
+ };
+ 
+ static int __init nhi_init(void)
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index eef5f1c..2e19045 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -229,6 +229,30 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
+ 		sw->__unknown1, sw->__unknown4);
+ }
+ 
++/**
++ * reset_switch() - reconfigure route, enable and send TB_CFG_PKG_RESET
++ *
++ * Return: Returns 0 on success or an error code on failure.
 + */
-+#define	DMAR_DSM_REV_ID			0
-+#define	DMAR_DSM_FUNC_DRHD		1
-+#define	DMAR_DSM_FUNC_ATSR		2
-+#define	DMAR_DSM_FUNC_RHSA		3
-+
-+static inline bool dmar_detect_dsm(acpi_handle handle, int func)
++int tb_switch_reset(struct tb *tb, u64 route)
 +{
-+	return acpi_check_dsm(handle, dmar_hp_uuid, DMAR_DSM_REV_ID, 1 << func);
-+}
-+
-+static int dmar_walk_dsm_resource(acpi_handle handle, int func,
-+				  dmar_res_handler_t handler, void *arg)
-+{
-+	int ret = -ENODEV;
-+	union acpi_object *obj;
-+	struct acpi_dmar_header *start;
-+	struct dmar_res_callback callback;
-+	static int res_type[] = {
-+		[DMAR_DSM_FUNC_DRHD] = ACPI_DMAR_TYPE_HARDWARE_UNIT,
-+		[DMAR_DSM_FUNC_ATSR] = ACPI_DMAR_TYPE_ATSR,
-+		[DMAR_DSM_FUNC_RHSA] = ACPI_DMAR_HARDWARE_AFFINITY,
++	struct tb_cfg_result res;
++	struct tb_regs_switch_header header = {
++		header.route_hi = route >> 32,
++		header.route_lo = route,
++		header.enabled = true,
 +	};
-+
-+	if (!dmar_detect_dsm(handle, func))
-+		return 0;
-+
-+	obj = acpi_evaluate_dsm_typed(handle, dmar_hp_uuid, DMAR_DSM_REV_ID,
-+				      func, NULL, ACPI_TYPE_BUFFER);
-+	if (!obj)
-+		return -ENODEV;
-+
-+	memset(&callback, 0, sizeof(callback));
-+	callback.cb[res_type[func]] = handler;
-+	callback.arg[res_type[func]] = arg;
-+	start = (struct acpi_dmar_header *)obj->buffer.pointer;
-+	ret = dmar_walk_resources(start, obj->buffer.length, &callback);
-+
-+	ACPI_FREE(obj);
-+
-+	return ret;
++	tb_info(tb, "resetting switch at %llx\n", route);
++	res.err = tb_cfg_write(tb->ctl, ((u32 *) &header) + 2, route,
++			0, 2, 2, 2);
++	if (res.err)
++		return res.err;
++	res = tb_cfg_reset(tb->ctl, route, TB_CFG_DEFAULT_TIMEOUT);
++	if (res.err > 0)
++		return -EIO;
++	return res.err;
 +}
 +
-+static int dmar_hp_add_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	int ret;
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (!dmaru)
-+		return -ENODEV;
-+
-+	ret = dmar_ir_hotplug(dmaru, true);
-+	if (ret == 0)
-+		ret = dmar_iommu_hotplug(dmaru, true);
-+
-+	return ret;
-+}
-+
-+static int dmar_hp_remove_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	int i, ret;
-+	struct device *dev;
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (!dmaru)
-+		return 0;
-+
-+	/*
-+	 * All PCI devices managed by this unit should have been destroyed.
-+	 */
-+	if (!dmaru->include_all && dmaru->devices && dmaru->devices_cnt)
-+		for_each_active_dev_scope(dmaru->devices,
-+					  dmaru->devices_cnt, i, dev)
-+			return -EBUSY;
-+
-+	ret = dmar_ir_hotplug(dmaru, false);
-+	if (ret == 0)
-+		ret = dmar_iommu_hotplug(dmaru, false);
-+
-+	return ret;
-+}
-+
-+static int dmar_hp_release_drhd(struct acpi_dmar_header *header, void *arg)
-+{
-+	struct dmar_drhd_unit *dmaru;
-+
-+	dmaru = dmar_find_dmaru((struct acpi_dmar_hardware_unit *)header);
-+	if (dmaru) {
-+		list_del_rcu(&dmaru->list);
-+		synchronize_rcu();
-+		dmar_free_drhd(dmaru);
-+	}
-+
-+	return 0;
-+}
-+
-+static int dmar_hotplug_insert(acpi_handle handle)
-+{
-+	int ret;
-+	int drhd_count = 0;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_validate_one_drhd, (void *)1);
-+	if (ret)
-+		goto out;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_parse_one_drhd, (void *)&drhd_count);
-+	if (ret == 0 && drhd_count == 0) {
-+		pr_warn(FW_BUG "No DRHD structures in buffer returned by _DSM method\n");
-+		goto out;
-+	} else if (ret) {
-+		goto release_drhd;
-+	}
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_RHSA,
-+				     &dmar_parse_one_rhsa, NULL);
-+	if (ret)
-+		goto release_drhd;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+				     &dmar_parse_one_atsr, NULL);
-+	if (ret)
-+		goto release_atsr;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_hp_add_drhd, NULL);
-+	if (!ret)
-+		return 0;
-+
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+			       &dmar_hp_remove_drhd, NULL);
-+release_atsr:
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+			       &dmar_release_one_atsr, NULL);
-+release_drhd:
-+	dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+			       &dmar_hp_release_drhd, NULL);
-+out:
-+	return ret;
-+}
-+
-+static int dmar_hotplug_remove(acpi_handle handle)
-+{
-+	int ret;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+				     &dmar_check_one_atsr, NULL);
-+	if (ret)
-+		return ret;
-+
-+	ret = dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				     &dmar_hp_remove_drhd, NULL);
-+	if (ret == 0) {
-+		WARN_ON(dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_ATSR,
-+					       &dmar_release_one_atsr, NULL));
-+		WARN_ON(dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+					       &dmar_hp_release_drhd, NULL));
-+	} else {
-+		dmar_walk_dsm_resource(handle, DMAR_DSM_FUNC_DRHD,
-+				       &dmar_hp_add_drhd, NULL);
-+	}
-+
-+	return ret;
-+}
-+
-+static int dmar_device_hotplug(acpi_handle handle, bool insert)
-+{
-+	int ret;
-+
-+	if (!dmar_in_use())
-+		return 0;
-+
-+	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
-+		return 0;
-+
-+	down_write(&dmar_global_lock);
-+	if (insert)
-+		ret = dmar_hotplug_insert(handle);
-+	else
-+		ret = dmar_hotplug_remove(handle);
-+	up_write(&dmar_global_lock);
-+
-+	return ret;
-+}
-+
-+int dmar_device_add(acpi_handle handle)
-+{
-+	return dmar_device_hotplug(handle, true);
-+}
-+
-+int dmar_device_remove(acpi_handle handle)
-+{
-+	return dmar_device_hotplug(handle, false);
-+}
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 361de6697d8a..f8db3788d08a 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3671,17 +3671,48 @@ int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg)
- 	return 0;
- }
- 
--int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr, void *arg)
-+static struct dmar_atsr_unit *dmar_find_atsr(struct acpi_dmar_atsr *atsr)
-+{
-+	struct dmar_atsr_unit *atsru;
-+	struct acpi_dmar_atsr *tmp;
-+
-+	list_for_each_entry_rcu(atsru, &dmar_atsr_units, list) {
-+		tmp = (struct acpi_dmar_atsr *)atsru->hdr;
-+		if (atsr->segment != tmp->segment)
-+			continue;
-+		if (atsr->header.length != tmp->header.length)
-+			continue;
-+		if (memcmp(atsr, tmp, atsr->header.length) == 0)
-+			return atsru;
-+	}
-+
-+	return NULL;
-+}
-+
-+int dmar_parse_one_atsr(struct acpi_dmar_header *hdr, void *arg)
+ struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route)
  {
- 	struct acpi_dmar_atsr *atsr;
- 	struct dmar_atsr_unit *atsru;
- 
-+	if (system_state != SYSTEM_BOOTING && !intel_iommu_enabled)
-+		return 0;
-+
- 	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
--	atsru = kzalloc(sizeof(*atsru), GFP_KERNEL);
-+	atsru = dmar_find_atsr(atsr);
-+	if (atsru)
-+		return 0;
-+
-+	atsru = kzalloc(sizeof(*atsru) + hdr->length, GFP_KERNEL);
- 	if (!atsru)
- 		return -ENOMEM;
- 
--	atsru->hdr = hdr;
-+	/*
-+	 * If memory is allocated from slab by ACPI _DSM method, we need to
-+	 * copy the memory content because the memory buffer will be freed
-+	 * on return.
-+	 */
-+	atsru->hdr = (void *)(atsru + 1);
-+	memcpy(atsru->hdr, hdr, hdr->length);
- 	atsru->include_all = atsr->flags & 0x1;
- 	if (!atsru->include_all) {
- 		atsru->devices = dmar_alloc_dev_scope((void *)(atsr + 1),
-@@ -3704,6 +3735,47 @@ static void intel_iommu_free_atsr(struct dmar_atsr_unit *atsru)
- 	kfree(atsru);
+ 	u8 next_port = route; /*
+@@ -406,3 +430,63 @@ void tb_sw_set_unpplugged(struct tb_switch *sw)
+ 	}
  }
  
-+int dmar_release_one_atsr(struct acpi_dmar_header *hdr, void *arg)
++int tb_switch_resume(struct tb_switch *sw)
 +{
-+	struct acpi_dmar_atsr *atsr;
-+	struct dmar_atsr_unit *atsru;
++	int i, err;
++	u64 uid;
++	tb_sw_info(sw, "resuming switch\n");
 +
-+	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
-+	atsru = dmar_find_atsr(atsr);
-+	if (atsru) {
-+		list_del_rcu(&atsru->list);
-+		synchronize_rcu();
-+		intel_iommu_free_atsr(atsru);
++	err = tb_eeprom_read_uid(sw, &uid);
++	if (err) {
++		tb_sw_warn(sw, "uid read failed\n");
++		return err;
++	}
++	if (sw->uid != uid) {
++		tb_sw_info(sw,
++			"changed while suspended (uid %#llx -> %#llx)\n",
++			sw->uid, uid);
++		return -ENODEV;
 +	}
 +
++	/* upload configuration */
++	err = tb_sw_write(sw, 1 + (u32 *) &sw->config, TB_CFG_SWITCH, 1, 3);
++	if (err)
++		return err;
++
++	err = tb_plug_events_active(sw, true);
++	if (err)
++		return err;
++
++	/* check for surviving downstream switches */
++	for (i = 1; i <= sw->config.max_port_number; i++) {
++		struct tb_port *port = &sw->ports[i];
++		if (tb_is_upstream_port(port))
++			continue;
++		if (!port->remote)
++			continue;
++		if (tb_wait_for_port(port, true) <= 0
++			|| tb_switch_resume(port->remote->sw)) {
++			tb_port_warn(port,
++				     "lost during suspend, disconnecting\n");
++			tb_sw_set_unpplugged(port->remote->sw);
++		}
++	}
 +	return 0;
 +}
 +
-+int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg)
++void tb_switch_suspend(struct tb_switch *sw)
++{
++	int i, err;
++	err = tb_plug_events_active(sw, false);
++	if (err)
++		return;
++
++	for (i = 1; i <= sw->config.max_port_number; i++) {
++		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
++			tb_switch_suspend(sw->ports[i].remote->sw);
++	}
++	/*
++	 * TODO: invoke tb_cfg_prepare_to_sleep here? does not seem to have any
++	 * effect?
++	 */
++}
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 177f61d..1aa6dd7 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -69,6 +69,28 @@ static void tb_free_invalid_tunnels(struct tb *tb)
+ }
+ 
+ /**
++ * tb_free_unplugged_children() - traverse hierarchy and free unplugged switches
++ */
++static void tb_free_unplugged_children(struct tb_switch *sw)
 +{
 +	int i;
-+	struct device *dev;
-+	struct acpi_dmar_atsr *atsr;
-+	struct dmar_atsr_unit *atsru;
-+
-+	atsr = container_of(hdr, struct acpi_dmar_atsr, header);
-+	atsru = dmar_find_atsr(atsr);
-+	if (!atsru)
-+		return 0;
-+
-+	if (!atsru->include_all && atsru->devices && atsru->devices_cnt)
-+		for_each_active_dev_scope(atsru->devices, atsru->devices_cnt,
-+					  i, dev)
-+			return -EBUSY;
-+
-+	return 0;
++	for (i = 1; i <= sw->config.max_port_number; i++) {
++		struct tb_port *port = &sw->ports[i];
++		if (tb_is_upstream_port(port))
++			continue;
++		if (!port->remote)
++			continue;
++		if (port->remote->sw->is_unplugged) {
++			tb_switch_free(port->remote->sw);
++			port->remote = NULL;
++		} else {
++			tb_free_unplugged_children(port->remote->sw);
++		}
++	}
 +}
 +
-+int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return intel_iommu_enabled ? -ENOSYS : 0;
-+}
 +
- static void intel_iommu_free_dmars(void)
- {
- 	struct dmar_rmrr_unit *rmrru, *rmrr_n;
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 9b174893f0f5..aa309a8e4d3a 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -1144,3 +1144,8 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.msi_setup_irq		= intel_msi_setup_irq,
- 	.setup_hpet_msi		= intel_setup_hpet_msi,
- };
-+
-+int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return irq_remapping_enabled ? -ENOSYS : 0;
-+}
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index c8a576bc3a98..9c06bb4b5b14 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -120,6 +120,8 @@ extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
- /* Intel IOMMU detection */
- extern int detect_intel_iommu(void);
- extern int enable_drhd_fault_handling(void);
-+extern int dmar_device_add(acpi_handle handle);
-+extern int dmar_device_remove(acpi_handle handle);
- 
- static inline int dmar_res_noop(struct acpi_dmar_header *hdr, void *arg)
- {
-@@ -131,17 +133,48 @@ extern int iommu_detected, no_iommu;
- extern int intel_iommu_init(void);
- extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header, void *arg);
- extern int dmar_parse_one_atsr(struct acpi_dmar_header *header, void *arg);
-+extern int dmar_check_one_atsr(struct acpi_dmar_header *hdr, void *arg);
-+extern int dmar_release_one_atsr(struct acpi_dmar_header *hdr, void *arg);
-+extern int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert);
- extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
- #else /* !CONFIG_INTEL_IOMMU: */
- static inline int intel_iommu_init(void) { return -ENODEV; }
-+
- #define	dmar_parse_one_rmrr		dmar_res_noop
- #define	dmar_parse_one_atsr		dmar_res_noop
-+#define	dmar_check_one_atsr		dmar_res_noop
-+#define	dmar_release_one_atsr		dmar_res_noop
-+
- static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
- {
- 	return 0;
++/**
+  * find_pci_up_port() - return the first PCIe up port on @sw or NULL
+  */
+ static struct tb_port *tb_find_pci_up_port(struct tb_switch *sw)
+@@ -368,3 +390,42 @@ err_locked:
+ 	return NULL;
  }
-+
-+static inline int dmar_iommu_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_INTEL_IOMMU */
  
-+#ifdef CONFIG_IRQ_REMAP
-+extern int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert);
-+#else  /* CONFIG_IRQ_REMAP */
-+static inline int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
-+{ return 0; }
-+#endif /* CONFIG_IRQ_REMAP */
-+
-+#else /* CONFIG_DMAR_TABLE */
-+
-+static inline int dmar_device_add(acpi_handle handle)
++void thunderbolt_suspend(struct tb *tb)
 +{
-+	return 0;
++	tb_info(tb, "suspending...\n");
++	mutex_lock(&tb->lock);
++	tb_switch_suspend(tb->root_switch);
++	tb_ctl_stop(tb->ctl);
++	tb->hotplug_active = false; /* signal tb_handle_hotplug to quit */
++	mutex_unlock(&tb->lock);
++	tb_info(tb, "suspend finished\n");
 +}
 +
-+static inline int dmar_device_remove(acpi_handle handle)
++void thunderbolt_resume(struct tb *tb)
 +{
-+	return 0;
-+}
++	struct tb_pci_tunnel *tunnel, *n;
++	tb_info(tb, "resuming...\n");
++	mutex_lock(&tb->lock);
++	tb_ctl_start(tb->ctl);
 +
- #endif /* CONFIG_DMAR_TABLE */
++	/* remove any pci devices the firmware might have setup */
++	tb_switch_reset(tb, 0);
++
++	tb_switch_resume(tb->root_switch);
++	tb_free_invalid_tunnels(tb);
++	tb_free_unplugged_children(tb->root_switch);
++	list_for_each_entry_safe(tunnel, n, &tb->tunnel_list, list)
++		tb_pci_restart(tunnel);
++	if (!list_empty(&tb->tunnel_list)) {
++		/*
++		 * the pcie links need some time to get going.
++		 * 100ms works for me...
++		 */
++		tb_info(tb, "tunnels restarted, sleeping for 100ms\n");
++		msleep(100);
++	}
++	 /* Allow tb_handle_hotplug to progress events */
++	tb->hotplug_active = true;
++	mutex_unlock(&tb->lock);
++	tb_info(tb, "resume finished\n");
++}
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index a89087f..63e89d0 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -214,9 +214,14 @@ static inline int tb_port_write(struct tb_port *port, void *buffer,
  
- struct irte {
+ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi);
+ void thunderbolt_shutdown_and_free(struct tb *tb);
++void thunderbolt_suspend(struct tb *tb);
++void thunderbolt_resume(struct tb *tb);
+ 
+ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
+ void tb_switch_free(struct tb_switch *sw);
++void tb_switch_suspend(struct tb_switch *sw);
++int tb_switch_resume(struct tb_switch *sw);
++int tb_switch_reset(struct tb *tb, u64 route);
+ void tb_sw_set_unpplugged(struct tb_switch *sw);
+ struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
+ 
 -- 
-1.7.10.4
+1.9.3
 
