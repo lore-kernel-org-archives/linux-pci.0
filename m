@@ -1,64 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch V3 36/37] x86, irq, SFI: release IOAPIC pin when PCI device is disabled
-Date: Tue, 27 May 2014 16:08:11 +0800
-Message-Id: <1401178092-1228-37-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:41786 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751128AbaEZXbt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 26 May 2014 19:31:49 -0400
+Date: Mon, 26 May 2014 17:31:32 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on
+ designware core driver
+Message-ID: <20140526233132.GA12179@obsidianresearch.com>
+References: <5374FD24.8000806@ti.com>
+ <22200719.Jb5jnJylJH@wuerfel>
+ <20140515183919.GC11650@obsidianresearch.com>
+ <53751DDF.40304@ti.com>
+ <20140515205210.GB14722@obsidianresearch.com>
+ <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com>
+ <20140520170221.GA5130@obsidianresearch.com>
+ <537D37AA.5030303@ti.com>
+ <20140522005506.GB17244@obsidianresearch.com>
+ <537E7823.5060609@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <537E7823.5060609@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Release IOAPIC pin associated with PCI device when the PCI device
-is disabled.
+On Thu, May 22, 2014 at 06:20:19PM -0400, Murali Karicheri wrote:
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/intel_mid_pci.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+>> What is the MPSS?
+> 
+>    MPS published in DEV CAP is 1 (256 bytes). In our IP for some reason,
+>    mrss is set to 2 though IP
+>    support only 256 bytes. I am trying to resolve this with IP team. If
+>    this is an IP issue, then
+>    software will overwrite this to 1.
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 337d165c64f1..09fece368592 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -227,6 +227,12 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	return 0;
- }
- 
-+static void intel_mid_pci_irq_disable(struct pci_dev *dev)
-+{
-+	if (dev->irq > 0)
-+		mp_unmap_irq(dev->irq);
-+}
-+
- struct pci_ops intel_mid_pci_ops = {
- 	.read = pci_read,
- 	.write = pci_write,
-@@ -243,6 +249,7 @@ int __init intel_mid_pci_init(void)
- 	pr_info("Intel MID platform detected, using MID PCI ops\n");
- 	pci_mmcfg_late_init();
- 	pcibios_enable_irq = intel_mid_pci_irq_enable;
-+	pcibios_disable_irq = intel_mid_pci_irq_disable;
- 	pci_root_ops = intel_mid_pci_ops;
- 	pci_soc_mode = 1;
- 	/* Continue with standard init */
--- 
-1.7.10.4
+The MRSS of the root port bridge is very rarely used, it is OK to be
+larger than the MPS, but I'm not sure it makes much sense as a
+default.
 
+>    So the mps  will not get written to mrss for performance mode. So the
+>    check seems not right. It should be changed to
+
+So, looking at this more closely, the MRRS does not *have* to be
+smaller than the MPS, but it probably performs better if it is.
+
+I think that reflects what the code is doing.
+
+The fact your root complex can't segment replies is a serious defect,
+and there is no infrastructure to support that in the kernel.
+
+Adding something to this generic code might be your best option to
+cover the majority of cases.
+
+It would also be good to know for sure that it can correctly segment a
+256 byte read into 128 byte packets, and that only 512 is mishandled.
+
+Jason
