@@ -1,147 +1,424 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:59525 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751554AbaE1BUI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 21:20:08 -0400
-Received: by mail-ig0-f180.google.com with SMTP id c1so1871713igq.7
-        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 18:20:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5385255D.5060204@intel.com>
-References: <20140505212346.18767.34117.stgit@ahduyck-cp2.jf.intel.com>
- <20140527222256.GC11907@google.com> <5385255D.5060204@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 27 May 2014 19:19:47 -0600
-Message-ID: <CAErSpo5QU1LsKVqyGbT07mhF-t5L1y3NxD4JhJ6N3AM0XT0c2A@mail.gmail.com>
-Subject: Re: [PATCH] pci: Save and restore VFs as a part of a reset
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	Don Dutile <ddutile@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v3 05/15] thunderbolt: Initialize root switch and ports
+Date: Mon, 26 May 2014 17:18:02 +0200
+Message-Id: <1401117492-2870-6-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex, Don]
+This patch adds the structures tb_switch and tb_port as well as code to
+initialize the root switch.
 
-On Tue, May 27, 2014 at 5:53 PM, Alexander Duyck
-<alexander.h.duyck@intel.com> wrote:
-> On 05/27/2014 03:22 PM, Bjorn Helgaas wrote:
->> On Mon, May 05, 2014 at 02:25:17PM -0700, Alexander Duyck wrote:
->>> This fixes an issue I found in which triggering a reset via the PCI sysfs
->>> reset while SR-IOV was enabled would leave the VFs in a state in which the
->>> BME and MSI-X enable bits were all cleared.
->>>
->>> To correct that I have added code so that the VF state is saved and restored
->>> as a part of the PF save and restore state functions.  By doing this the VF
->>> state is restored as well as the IOV state allowing the VFs to resume function
->>> following a reset.
->>>
->>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
->>> ---
->>>  drivers/pci/iov.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++--
->>>  drivers/pci/pci.c |    2 ++
->>>  drivers/pci/pci.h |    5 +++++
->>>  3 files changed, 53 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>> index de7a747..645ed71 100644
->>> --- a/drivers/pci/iov.c
->>> +++ b/drivers/pci/iov.c
->>> @@ -521,13 +521,57 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
->>>  }
->>>
->>>  /**
->>> + * pci_save_iov_state - Save the state of the VF configurations
->>> + * @dev: the PCI device
->>> + */
->>> +int pci_save_iov_state(struct pci_dev *dev)
->>> +{
->>> +    struct pci_dev *vfdev = NULL;
->>> +    unsigned short dev_id;
->>> +
->>> +    /* only search if we are a PF */
->>> +    if (!dev->is_physfn)
->>> +            return 0;
->>> +
->>> +    /* retrieve VF device ID */
->>> +    pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
-...
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+---
+ drivers/thunderbolt/Makefile |   2 +-
+ drivers/thunderbolt/switch.c | 186 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.c     |   8 ++
+ drivers/thunderbolt/tb.h     | 138 ++++++++++++++++++++++++++++++++
+ 4 files changed, 333 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/thunderbolt/switch.c
 
->>> +    /* loop through all the VFs and save their state information */
->>> +    while ((vfdev = pci_get_device(dev->vendor, dev_id, vfdev))) {
->>> +            if (vfdev->is_virtfn && (vfdev->physfn == dev)) {
->>> +                    int err = pci_save_state(vfdev);
->>
->> It makes me uneasy to operate on another device (we're resetting A, and
->> here we save state for B).  I know B is dependent on A, since B is a VF
->> related to PF A, but what synchronization is there to serialize this
->> against any other save/restore operations that may be in progress by B's
->> driver or by a sysfs operation on B?
->
-> I don't believe there is any synchronization mechanism in place
-> currently.  I can look into that as well.  Odds are we probably need to
-> have the VFs check the parent lock before they take any independent action.
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 1f996bb..4ac18d9 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+ obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
+-thunderbolt-objs := nhi.o ctl.o tb.o
++thunderbolt-objs := nhi.o ctl.o tb.o switch.o
+ 
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+new file mode 100644
+index 0000000..e89121f
+--- /dev/null
++++ b/drivers/thunderbolt/switch.c
+@@ -0,0 +1,186 @@
++/*
++ * Thunderbolt Cactus Ridge driver - switch/port utility functions
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#include <linux/delay.h>
++
++#include "tb.h"
++
++/* port utility functions */
++
++static const char *tb_port_type(struct tb_regs_port_header *port)
++{
++	switch (port->type >> 16) {
++	case 0:
++		switch ((u8) port->type) {
++		case 0:
++			return "Inactive";
++		case 1:
++			return "Port";
++		case 2:
++			return "NHI";
++		default:
++			return "unknown";
++		}
++	case 0x2:
++		return "Ethernet";
++	case 0x8:
++		return "SATA";
++	case 0xe:
++		return "DP/HDMI";
++	case 0x10:
++		return "PCIe";
++	case 0x20:
++		return "USB";
++	default:
++		return "unknown";
++	}
++}
++
++static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
++{
++	tb_info(tb,
++		" Port %d: %x:%x (Revision: %d, TB Version: %d, Type: %s (%#x))\n",
++		port->port_number, port->vendor_id, port->device_id,
++		port->revision, port->thunderbolt_version, tb_port_type(port),
++		port->type);
++	tb_info(tb, "  Max hop id (in/out): %d/%d\n",
++		port->max_in_hop_id, port->max_out_hop_id);
++	tb_info(tb, "  Max counters: %d\n", port->max_counters);
++	tb_info(tb, "  NFC Credits: %#x\n", port->nfc_credits);
++}
++
++/**
++ * tb_init_port() - initialize a port
++ *
++ * This is a helper method for tb_switch_alloc. Does not check or initialize
++ * any downstream switches.
++ *
++ * Return: Returns 0 on success or an error code on failure.
++ */
++static int tb_init_port(struct tb_switch *sw, u8 port_nr)
++{
++	int res;
++	struct tb_port *port = &sw->ports[port_nr];
++	port->sw = sw;
++	port->port = port_nr;
++	port->remote = NULL;
++	res = tb_port_read(port, &port->config, TB_CFG_PORT, 0, 8);
++	if (res)
++		return res;
++
++	tb_dump_port(sw->tb, &port->config);
++
++	/* TODO: Read dual link port, DP port and more from EEPROM. */
++	return 0;
++
++}
++
++/* switch utility functions */
++
++static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
++{
++	tb_info(tb,
++		" Switch: %x:%x (Revision: %d, TB Version: %d)\n",
++		sw->vendor_id, sw->device_id, sw->revision,
++		sw->thunderbolt_version);
++	tb_info(tb, "  Max Port Number: %d\n", sw->max_port_number);
++	tb_info(tb, "  Config:\n");
++	tb_info(tb,
++		"   Upstream Port Number: %d Depth: %d Route String: %#llx Enabled: %d, PlugEventsDelay: %dms\n",
++		sw->upstream_port_number, sw->depth,
++		(((u64) sw->route_hi) << 32) | sw->route_lo,
++		sw->enabled, sw->plug_events_delay);
++	tb_info(tb,
++		"   unknown1: %#x unknown4: %#x\n",
++		sw->__unknown1, sw->__unknown4);
++}
++
++/**
++ * tb_switch_free() - free a tb_switch and all downstream switches
++ */
++void tb_switch_free(struct tb_switch *sw)
++{
++	int i;
++	/* port 0 is the switch itself and never has a remote */
++	for (i = 1; i <= sw->config.max_port_number; i++) {
++		if (tb_is_upstream_port(&sw->ports[i]))
++			continue;
++		if (sw->ports[i].remote)
++			tb_switch_free(sw->ports[i].remote->sw);
++		sw->ports[i].remote = NULL;
++	}
++
++	kfree(sw->ports);
++	kfree(sw);
++}
++
++/**
++ * tb_switch_alloc() - allocate and initialize a switch
++ *
++ * Return: Returns a NULL on failure.
++ */
++struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
++{
++	int i;
++	struct tb_switch *sw;
++	int upstream_port = tb_cfg_get_upstream_port(tb->ctl, route);
++	if (upstream_port < 0)
++		return NULL;
++
++	sw = kzalloc(sizeof(*sw), GFP_KERNEL);
++	if (!sw)
++		return NULL;
++
++	sw->tb = tb;
++	if (tb_cfg_read(tb->ctl, &sw->config, route, 0, 2, 0, 5))
++		goto err;
++	tb_info(tb,
++		"initializing Switch at %#llx (depth: %d, up port: %d)\n",
++		route, tb_route_length(route), upstream_port);
++	tb_info(tb, "old switch config:\n");
++	tb_dump_switch(tb, &sw->config);
++
++	/* configure switch */
++	sw->config.upstream_port_number = upstream_port;
++	sw->config.depth = tb_route_length(route);
++	sw->config.route_lo = route;
++	sw->config.route_hi = route >> 32;
++	sw->config.enabled = 1;
++	/* from here on we may use the tb_sw_* functions & macros */
++
++	if (sw->config.vendor_id != 0x8086)
++		tb_sw_warn(sw, "unknown switch vendor id %#x\n",
++			   sw->config.vendor_id);
++
++	if (sw->config.device_id != 0x1547 && sw->config.device_id != 0x1549)
++		tb_sw_warn(sw, "unsupported switch device id %#x\n",
++			   sw->config.device_id);
++
++	/* upload configuration */
++	if (tb_sw_write(sw, 1 + (u32 *) &sw->config, TB_CFG_SWITCH, 1, 3))
++		goto err;
++
++	/* initialize ports */
++	sw->ports = kcalloc(sw->config.max_port_number + 1, sizeof(*sw->ports),
++	GFP_KERNEL);
++	if (!sw->ports)
++		goto err;
++
++	for (i = 0; i <= sw->config.max_port_number; i++) {
++		if (tb_init_port(sw, i))
++			goto err;
++		/* TODO: check if port is disabled (EEPROM) */
++	}
++
++	/* TODO: I2C, IECS, EEPROM, link controller */
++
++	return sw;
++err:
++	kfree(sw->ports);
++	kfree(sw);
++	return NULL;
++}
++
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 164dea0..f1b6100 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -71,6 +71,10 @@ void thunderbolt_shutdown_and_free(struct tb *tb)
+ {
+ 	mutex_lock(&tb->lock);
+ 
++	if (tb->root_switch)
++		tb_switch_free(tb->root_switch);
++	tb->root_switch = NULL;
++
+ 	if (tb->ctl) {
+ 		tb_ctl_stop(tb->ctl);
+ 		tb_ctl_free(tb->ctl);
+@@ -126,6 +130,10 @@ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
+ 	 */
+ 	tb_ctl_start(tb->ctl);
+ 
++	tb->root_switch = tb_switch_alloc(tb, 0);
++	if (!tb->root_switch)
++		goto err_locked;
++
+ 	/* Allow tb_handle_hotplug to progress events */
+ 	tb->hotplug_active = true;
+ 	mutex_unlock(&tb->lock);
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 6055dfd..389dbb4 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -7,9 +7,31 @@
+ #ifndef TB_H_
+ #define TB_H_
+ 
++#include <linux/pci.h>
++
++#include "tb_regs.h"
+ #include "ctl.h"
+ 
+ /**
++ * struct tb_switch - a thunderbolt switch
++ */
++struct tb_switch {
++	struct tb_regs_switch_header config;
++	struct tb_port *ports;
++	struct tb *tb;
++};
++
++/**
++ * struct tb_port - a thunderbolt port, part of a tb_switch
++ */
++struct tb_port {
++	struct tb_regs_port_header config;
++	struct tb_switch *sw;
++	struct tb_port *remote; /* remote port, NULL if not connected */
++	u8 port; /* port number on switch */
++};
++
++/**
+  * struct tb - main thunderbolt bus structure
+  */
+ struct tb {
+@@ -20,6 +42,7 @@ struct tb {
+ 	struct tb_nhi *nhi;
+ 	struct tb_ctl *ctl;
+ 	struct workqueue_struct *wq; /* ordered workqueue for plug events */
++	struct tb_switch *root_switch;
+ 	bool hotplug_active; /*
+ 			      * tb_handle_hotplug will stop progressing plug
+ 			      * events and exit if this is not set (it needs to
+@@ -29,7 +52,122 @@ struct tb {
+ 
+ };
+ 
++/* helper functions & macros */
++
++/**
++ * tb_upstream_port() - return the upstream port of a switch
++ *
++ * Every switch has an upstream port (for the root switch it is the NHI).
++ *
++ * During switch alloc/init tb_upstream_port()->remote may be NULL, even for
++ * non root switches (on the NHI port remote is always NULL).
++ *
++ * Return: Returns the upstream port of the switch.
++ */
++static inline struct tb_port *tb_upstream_port(struct tb_switch *sw)
++{
++	return &sw->ports[sw->config.upstream_port_number];
++}
++
++static inline u64 tb_route(struct tb_switch *sw)
++{
++	return ((u64) sw->config.route_hi) << 32 | sw->config.route_lo;
++}
++
++static inline int tb_sw_read(struct tb_switch *sw, void *buffer,
++			     enum tb_cfg_space space, u32 offset, u32 length)
++{
++	return tb_cfg_read(sw->tb->ctl,
++			   buffer,
++			   tb_route(sw),
++			   0,
++			   space,
++			   offset,
++			   length);
++}
++
++static inline int tb_sw_write(struct tb_switch *sw, void *buffer,
++			      enum tb_cfg_space space, u32 offset, u32 length)
++{
++	return tb_cfg_write(sw->tb->ctl,
++			    buffer,
++			    tb_route(sw),
++			    0,
++			    space,
++			    offset,
++			    length);
++}
++
++static inline int tb_port_read(struct tb_port *port, void *buffer,
++			       enum tb_cfg_space space, u32 offset, u32 length)
++{
++	return tb_cfg_read(port->sw->tb->ctl,
++			   buffer,
++			   tb_route(port->sw),
++			   port->port,
++			   space,
++			   offset,
++			   length);
++}
++
++static inline int tb_port_write(struct tb_port *port, void *buffer,
++				enum tb_cfg_space space, u32 offset, u32 length)
++{
++	return tb_cfg_write(port->sw->tb->ctl,
++			    buffer,
++			    tb_route(port->sw),
++			    port->port,
++			    space,
++			    offset,
++			    length);
++}
++
++#define tb_err(tb, fmt, arg...) dev_err(&(tb)->nhi->pdev->dev, fmt, ## arg)
++#define tb_WARN(tb, fmt, arg...) dev_WARN(&(tb)->nhi->pdev->dev, fmt, ## arg)
++#define tb_warn(tb, fmt, arg...) dev_warn(&(tb)->nhi->pdev->dev, fmt, ## arg)
++#define tb_info(tb, fmt, arg...) dev_info(&(tb)->nhi->pdev->dev, fmt, ## arg)
++
++
++#define __TB_SW_PRINT(level, sw, fmt, arg...)           \
++	do {                                            \
++		struct tb_switch *__sw = (sw);          \
++		level(__sw->tb, "%llx: " fmt,           \
++		      tb_route(__sw), ## arg);          \
++	} while (0)
++#define tb_sw_WARN(sw, fmt, arg...) __TB_SW_PRINT(tb_WARN, sw, fmt, ##arg)
++#define tb_sw_warn(sw, fmt, arg...) __TB_SW_PRINT(tb_warn, sw, fmt, ##arg)
++#define tb_sw_info(sw, fmt, arg...) __TB_SW_PRINT(tb_info, sw, fmt, ##arg)
++
++
++#define __TB_PORT_PRINT(level, _port, fmt, arg...)                      \
++	do {                                                            \
++		struct tb_port *__port = (_port);                       \
++		level(__port->sw->tb, "%llx:%x: " fmt,                  \
++		      tb_route(__port->sw), __port->port, ## arg);      \
++	} while (0)
++#define tb_port_WARN(port, fmt, arg...) \
++	__TB_PORT_PRINT(tb_WARN, port, fmt, ##arg)
++#define tb_port_warn(port, fmt, arg...) \
++	__TB_PORT_PRINT(tb_warn, port, fmt, ##arg)
++#define tb_port_info(port, fmt, arg...) \
++	__TB_PORT_PRINT(tb_info, port, fmt, ##arg)
++
++
+ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi);
+ void thunderbolt_shutdown_and_free(struct tb *tb);
+ 
++struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
++void tb_switch_free(struct tb_switch *sw);
++
++
++static inline int tb_route_length(u64 route)
++{
++	return (fls64(route) + TB_ROUTE_SHIFT - 1) / TB_ROUTE_SHIFT;
++}
++
++static inline bool tb_is_upstream_port(struct tb_port *port)
++{
++	return port == tb_upstream_port(port->sw);
++}
++
+ #endif
+-- 
+1.9.3
 
-It's just the whole question of how we manage the single "saved-state"
-area.  Right now, I think almost all use of it is under control of the
-driver that owns the device, in suspend/resume methods.  The
-exceptions are the PM suspend/freeze/etc. routines in
-pci/pci-driver.c, which I assume prevent the driver from running and
-are therefore safe, and the reset path.  I don't know how the
-
->> Is there anything in the reset path that pays attention to whether
->> resetting this PF will clobber VFs?  Do we care whether those VFs are in
->> use?  I assume they might be in use by guests?
->
-> The problem I found was that the sysfs reset call doesn't bother to
-> check with the PF driver at all.  It just clobbers the PF and any VFs on
-> it without talking to the PF driver.
-
-There is Keith Busch's recent patch:
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/hotplug&id=3ebe7f9f7e4a4fd1f6461ecd01ff2961317a483a
-.  I dunno if that's useful to you or not.
-
-And I'm not sure there's actually a requirement to *have* a PF driver.
- Obviously there has to be a way to enable the VFs, but once they're
-enabled, it might be possible to keep using them via VF drivers even
-without a PF driver in the picture.
-
-Maybe resetting the PF should just fail if there's an active VF.  If
-you need to reset the PF, you'd have to unbind the VFs first.
-
->>> +                    if (err)
->>> +                            return err;
->>> +            }
->>> +    }
->>
->> pci_get_device() acquires a reference on each device it returns, so this
->> strategy would require a pci_dev_put().
->
-> Yes, if I am not mistaken the pci_dev_put is called as a part of
-> pci_get_dev_by_id which is what pci_get_device ends up being.
-
-Oh, yeah, you're right.  I forgot about that.  Since you call it in a
-loop until you get NULL back, you're OK.  It's only when you stop
-before you get NULL that you have to deal with the extra reference.
-
->> But I'm not really keen on pci_get_device() in the first place.  It works
->> by iterating over all PCI devices in the system, which seems like a
->> sledgehammer approach.  It *is* widely used, but mostly in quirk-type code
->> from which I avert my eyes.
->>
->> Maybe you could do something based on pci_walk_bus()?  If you did that, I
->> think the PCI_SRIOV_VF_DID would become superfluous.
->>
->
-> I can look into that, I'm not familiar with the interface.  I'll have to
-> see what the relationship is between the PF and VF in terms of busses as
-> I don't recall it off of the top of my head.
-
-This reminds me about an open problem: VFs can be on "virtual" buses,
-which aren't really connected in the hierarchy, and I don't think we
-have a nice way to iterate over them.  So probably pci_get_device() is
-the best we can do now.
-
-Bjorn
