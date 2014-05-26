@@ -1,131 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46986 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751247AbaDARQV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Apr 2014 13:16:21 -0400
-Message-ID: <1396372540.476.160.camel@ul30vt.home>
-Subject: Re: [RFC PATCH] PCI: Introduce new device binding path using
- pci_dev.driver_override
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: stuart.yoder@freescale.com, kvm@vger.kernel.org,
-	jan.kiszka@siemens.com, will.deacon@arm.com,
-	linux-kernel@vger.kernel.org, mhocko@suse.cz, bhelgaas@google.com,
-	Varun.Sethi@freescale.com, kvmarm@lists.cs.columbia.edu,
-	rafael.j.wysocki@intel.com, agraf@suse.de,
-	linux-pci@vger.kernel.org, linux@roeck-us.net,
-	konrad.wilk@oracle.com, d.kasatkin@samsung.com, tj@kernel.org,
-	scottwood@freescale.com, a.motakis@virtualopensystems.com,
-	tech@virtualopensystems.com, Bharat.Bhushan@freescale.com,
-	toshi.kani@hp.com, kim.phillips@linaro.org,
-	a.rigo@virtualopensystems.com, iommu@lists.linux-foundation.org,
-	joe@perches.com, christoffer.dall@linaro.org
-Date: Tue, 01 Apr 2014 11:15:40 -0600
-In-Reply-To: <20140401164725.GA4649@kroah.com>
-References: <20140401161851.18815.31108.stgit@bling.home>
-	 <20140401164725.GA4649@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:42669 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752662AbaEZPS3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 May 2014 11:18:29 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v3 07/15] thunderbolt: Enable plug events
+Date: Mon, 26 May 2014 17:18:04 +0200
+Message-Id: <1401117492-2870-8-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-04-01 at 09:47 -0700, Greg KH wrote:
-> On Tue, Apr 01, 2014 at 10:28:54AM -0600, Alex Williamson wrote:
-> > The driver_override field allows us to specify the driver for a device
-> > rather than relying on the driver to provide a positive match of the
-> > device.  This shortcuts the existing process of looking up the vendor
-> > and device ID, adding them to the driver new_id, binding the device,
-> > then removing the ID, but it also provides a couple advantages.
-> > 
-> > First, the above process allows the driver to bind to any device
-> > matching the new_id for the window where it's enabled.  This is often
-> > not desired, such as the case of trying to bind a single device to a
-> > meta driver like pci-stub or vfio-pci.  Using driver_override we can
-> > do this deterministically using:
-> > 
-> > echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
-> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
-> > 
-> > Previously we could not invoke drivers_probe after adding a device
-> > to new_id for a driver as we get non-deterministic behavior whether
-> > the driver we intend or the standard driver will claim the device.
-> > Now it becomes a deterministic process, only the driver matching
-> > driver_override will probe the device.
-> > 
-> > To return the device to the standard driver, we simply clear the
-> > driver_override and reprobe the device, ex:
-> > 
-> > echo > /sys/bus/pci/devices/0000:03:00.0/preferred_driver
-> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
-> > 
-> > Another advantage to this approach is that we can specify a driver
-> > override to force a specific binding or prevent any binding.  For
-> > instance when an IOMMU group is exposed to userspace through VFIO
-> > we require that all devices within that group are owned by VFIO.
-> > However, devices can be hot-added into an IOMMU group, in which case
-> > we want to prevent the device from binding to any driver (preferred
-> > driver = "none") or perhaps have it automatically bind to vfio-pci.
-> > With driver_override it's a simple matter for this field to be set
-> > internally when the device is first discovered to prevent driver
-> > matches.
-> > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> > 
-> > Apologies for the exceptionally long cc list, this is a follow-up to
-> > Stuart's "Subject: mechanism to allow a driver to bind to any device"
-> > thread.  This is effectively a v2 of the proof-of-concept patch I
-> > posted in that thread.  This version changes to use a dummy id struct
-> > to return on an "override" match, which removes the collateral damage
-> > and greatly simplifies the patch.  This feels fairly well baked for
-> > PCI and I would expect that platform drivers could do a similar
-> > implementation.  From there perhaps we can discuss whether there's
-> > any advantage to placing driver_override on struct device.  The logic
-> > for incorporating it into the match still needs to happen per bus
-> > driver, so it might only contribute to consistency of the show/store
-> > sysfs attributes to move it up to struct device.  Please comment.
-> > Thanks,
-> > 
-> > Alex
-> > 
-> >  drivers/pci/pci-driver.c |   25 ++++++++++++++++++++++---
-> >  drivers/pci/pci-sysfs.c  |   40 ++++++++++++++++++++++++++++++++++++++++
-> >  include/linux/pci.h      |    1 +
-> >  3 files changed, 63 insertions(+), 3 deletions(-)
-> 
-> No Documentation/ABI/ update to reflect the ABI you are creating?
+Thunderbolt switches have a plug events capability. This patch adds the
+tb_plug_events_active method and uses it to activate plug events during
+switch allocation.
 
-Oops, thanks for the reminder.  I'd propose this:
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+---
+ drivers/thunderbolt/switch.c | 46 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.h     |  1 +
+ 2 files changed, 47 insertions(+)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index a3c5a66..55ca6e5 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -250,3 +250,21 @@ Description:
- 		valid.  For example, writing a 2 to this file when sriov_numvfs
- 		is not 0 and not 2 already will return an error. Writing a 10
- 		when the value of sriov_totalvfs is 8 will return an error.
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index e89121f..21457cc 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -99,6 +99,39 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
+ }
+ 
+ /**
++ * tb_plug_events_active() - enable/disable plug events on a switch
++ *
++ * Also configures a sane plug_events_delay of 255ms.
++ *
++ * Return: Returns 0 on success or an error code on failure.
++ */
++static int tb_plug_events_active(struct tb_switch *sw, bool active)
++{
++	u32 data;
++	int res;
 +
-+What:		/sys/bus/pci/devices/.../driver_override
-+Date:		April 2014
-+Contact:	Alex Williamson <alex.williamson@redhat.com>
-+Description:
-+		This file allows the driver for a device to be specified
-+		which will override standard static and dynamic ID matching.
-+		When specified, only a driver with a name matching the value
-+		written to driver_override will have an opportunity to bind
-+		to the device.  The override may be cleared by writing an
-+		empty string (ex. echo > driver_override), returning the
-+		device to standard matching rules binding.  Writing to
-+		driver_override does not automatically unbind the device from
-+		its current driver or make any attempt to automatically load
-+		the specified driver name.  If no driver with a matching name
-+		is currently loaded in the kernel, no match will be found.
-+		This also allows devices to opt-out of driver binding using
-+		a driver_override name such as "none".
-
-Thanks,
-Alex
++	sw->config.plug_events_delay = 0xff;
++	res = tb_sw_write(sw, ((u32 *) &sw->config) + 4, TB_CFG_SWITCH, 4, 1);
++	if (res)
++		return res;
++
++	res = tb_sw_read(sw, &data, TB_CFG_SWITCH, sw->cap_plug_events + 1, 1);
++	if (res)
++		return res;
++
++	if (active) {
++		data = data & 0xFFFFFF83;
++		if (sw->config.device_id == 0x1547)
++			data |= 4;
++	} else {
++		data = data | 0x7c;
++	}
++	return tb_sw_write(sw, &data, TB_CFG_SWITCH,
++			   sw->cap_plug_events + 1, 1);
++}
++
++
++/**
+  * tb_switch_free() - free a tb_switch and all downstream switches
+  */
+ void tb_switch_free(struct tb_switch *sw)
+@@ -113,6 +146,8 @@ void tb_switch_free(struct tb_switch *sw)
+ 		sw->ports[i].remote = NULL;
+ 	}
+ 
++	tb_plug_events_active(sw, false);
++
+ 	kfree(sw->ports);
+ 	kfree(sw);
+ }
+@@ -125,6 +160,7 @@ void tb_switch_free(struct tb_switch *sw)
+ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ {
+ 	int i;
++	int cap;
+ 	struct tb_switch *sw;
+ 	int upstream_port = tb_cfg_get_upstream_port(tb->ctl, route);
+ 	if (upstream_port < 0)
+@@ -177,6 +213,16 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 
+ 	/* TODO: I2C, IECS, EEPROM, link controller */
+ 
++	cap = tb_find_cap(&sw->ports[0], TB_CFG_SWITCH, TB_CAP_PLUG_EVENTS);
++	if (cap < 0) {
++		tb_sw_warn(sw, "cannot find TB_CAP_PLUG_EVENTS aborting\n");
++		goto err;
++	}
++	sw->cap_plug_events = cap;
++
++	if (tb_plug_events_active(sw, true))
++		goto err;
++
+ 	return sw;
+ err:
+ 	kfree(sw->ports);
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 38e4c23..af123c4 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -19,6 +19,7 @@ struct tb_switch {
+ 	struct tb_regs_switch_header config;
+ 	struct tb_port *ports;
+ 	struct tb *tb;
++	int cap_plug_events; /* offset, zero if not found */
+ };
+ 
+ /**
+-- 
+1.9.3
 
