@@ -1,236 +1,179 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39594 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751686AbaE0IKd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 May 2014 04:10:33 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V3 25/37] x86, irq: introduce two helper functions to support irqdomain map operation
-Date: Tue, 27 May 2014 16:08:00 +0800
-Message-Id: <1401178092-1228-26-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:55590 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752673AbaEZPSa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 May 2014 11:18:30 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v3 09/15] thunderbolt: Handle hotplug events
+Date: Mon, 26 May 2014 17:18:06 +0200
+Message-Id: <1401117492-2870-10-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently there are multiple entries to program IOAPIC pins, such as
-io_apic_setup_irq_pin_once(), io_apic_set_pci_routing() and
-setup_IO_APIC_irq_extra() etc.
+We reveive a plug event callback whenever a thunderbolt device is added
+or removed. This patch fills in the tb_handle_hotplug method and starts
+reacting to these events by adding/removing switches from the hierarchy.
 
-This patch introduces two functions to help consolidate the code to
-program IOAPIC pins. Function mp_set_pin_attr() is used to optionally
-set trigger, polarity and NUMA node property for an IOAPIC pin.
-If mp_set_pin_attr() is not invoked for a pin, the default configuration
-from BIOS will be used.
-
-Function mp_irqdomain_map() is an common implementation of irqdomain map()
-operation. It figures out attribures for pin and then actually programs
-the IOAPIC pin. We hope this will be the only entrance for programming
-IOAPIC pin.
-
-And the flow will:
-1) caller such as xxx_pci_irq_enable figures out pin attributes.
-2) Invoke mp_set_pin_attr() to set attributes for a pin. If the pin has
-   already bin programmed,  mp_set_pin_attr() will aslo detects attribute
-   confictions.
-3) Invoke mp_map_pin_to_irq()
-3.1) If IRQ has already been assigned, return irq_find_mapping()
-3.2) Else irq_create_mapping()
-		->irq_domain_associate()
-			->mp_irqdomain_map()
-				->io_apic_setup_irq_pin()
-
-So every pin will only programmed once by mp_irqdomain_map(), so we
-could kill io_apic_setup_irq_pin_once(), io_apic_set_pci_routing() and
-setup_IO_APIC_irq_extra() etc.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- arch/x86/include/asm/io_apic.h |    3 ++
- arch/x86/kernel/apic/io_apic.c |   93 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 95 insertions(+), 1 deletion(-)
+ drivers/thunderbolt/switch.c | 42 +++++++++++++++++++++++++++++++++++++++-
+ drivers/thunderbolt/tb.c     | 46 +++++++++++++++++++++++++++++++++++++++++++-
+ drivers/thunderbolt/tb.h     |  3 +++
+ 3 files changed, 89 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 8837074dfd64..6d7a856ae045 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -189,6 +189,9 @@ extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 				      ioapic_create_domain_fn cb, void *arg);
- extern struct irq_domain *mp_irqdomain_create(int ioapic,
- 		struct device_node *np, const struct irq_domain_ops *ops);
-+extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
-+			    irq_hw_number_t hwirq);
-+extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
- extern void __init pre_init_apic_IRQ0(void);
- 
- extern void mp_save_irq(struct mpc_intsrc *m);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 86c0497257c4..6bb3485693dc 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -86,6 +86,14 @@ static DEFINE_RAW_SPINLOCK(ioapic_lock);
- static DEFINE_RAW_SPINLOCK(vector_lock);
- static DEFINE_MUTEX(ioapic_mutex);
- 
-+struct mp_pin_info {
-+	int trigger;
-+	int polarity;
-+	int node;
-+	int set;
-+	u32 count;
-+};
-+
- static struct ioapic {
- 	/*
- 	 * # of IRQ routing registers
-@@ -99,6 +107,7 @@ static struct ioapic {
- 	struct mpc_ioapic mp_config;
- 	/* IO APIC gsi routing info */
- 	struct mp_ioapic_gsi  gsi_config;
-+	struct mp_pin_info *pin_info;
- 	struct irq_domain *irqdomain;
- 	ioapic_create_domain_fn irqdomain_cb;
- 	void *irqdomain_arg;
-@@ -140,6 +149,11 @@ static inline int mp_init_irq_at_boot(int ioapic, int irq)
- 	return ioapic == 0 || (irq >= 0 && irq < NR_IRQS_LEGACY);
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index 279b9c5..c092f7c 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -195,6 +195,24 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
+ 		sw->__unknown1, sw->__unknown4);
  }
  
-+static inline struct mp_pin_info *mp_pin_info(int ioapic_idx, int pin)
++struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route)
 +{
-+	return ioapics[ioapic_idx].pin_info + pin;
-+}
-+
- static inline struct irq_domain *mp_ioapic_irqdomain(int ioapic)
- {
- 	return ioapics[ioapic].irqdomain;
-@@ -1006,6 +1020,7 @@ static int mp_map_pin_to_irq(u32 gsi, int idx, int ioapic, int pin,
- {
- 	int irq;
- 	struct irq_domain *domain = mp_ioapic_irqdomain(ioapic);
-+	struct mp_pin_info *info = mp_pin_info(ioapic, pin);
- 
- 	/*
- 	 * Don't use irqdomain to manage ISA IRQs because there may be
-@@ -1028,6 +1043,13 @@ static int mp_map_pin_to_irq(u32 gsi, int idx, int ioapic, int pin,
- 	irq = irq_find_mapping(domain, pin);
- 	if (irq <= 0 && (flags & IOAPIC_MAP_ALLOC))
- 		irq = alloc_irq_from_domain(domain, gsi, pin);
-+
-+	if (flags & IOAPIC_MAP_ALLOC) {
-+		if (irq > 0)
-+			info->count++;
-+		else if (info->count == 0)
-+			info->set = 0;
-+	}
- 	mutex_unlock(&ioapic_mutex);
- 
- 	return irq > 0 ? irq : -1;
-@@ -2928,11 +2950,14 @@ out:
- 
- static void ioapic_create_irqdomains(void)
- {
--	int i;
-+	int i, size;
- 	struct ioapic *ip;
- 
- 	for_each_ioapic(i) {
- 		ip = &ioapics[i];
-+		size = sizeof(struct mp_pin_info) * mp_ioapic_pin_count(i);
-+		ip->pin_info = kzalloc(size, GFP_KERNEL);
-+		BUG_ON(!ip->pin_info);
- 		if (ip->irqdomain_cb)
- 			ip->irqdomain = ip->irqdomain_cb(i, ip->irqdomain_arg);
- 	}
-@@ -3899,6 +3924,72 @@ struct irq_domain *mp_irqdomain_create(int ioapic, struct device_node *np,
- 	return domain;
- }
- 
-+int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
-+		     irq_hw_number_t hwirq)
-+{
-+	int ioapic = (int)(long)domain->host_data;
-+	struct mp_pin_info *info = mp_pin_info(ioapic, hwirq);
-+	struct io_apic_irq_attr attr;
-+
-+	/*
-+	 * Skip the timer IRQ if there's a quirk handler installed and if it
-+	 * returns 1:
-+	 */
-+	if (apic->multi_timer_check &&
-+	    apic->multi_timer_check(ioapic, virq))
++	u8 next_port = route; /*
++			       * Routes use a stride of 8 bits,
++			       * eventhough a port index has 6 bits at most.
++			       * */
++	if (route == 0)
++		return sw;
++	if (next_port > sw->config.max_port_number)
 +		return 0;
-+
-+	/* Get default attribute if not set by caller yet */
-+	if (!info->set) {
-+		u32 gsi = mp_pin_to_gsi(ioapic, hwirq);
-+
-+		if (acpi_get_override_irq(gsi, &info->trigger,
-+					  &info->polarity) < 0) {
-+			/*
-+			 * PCI interrupts are always polarity one level
-+			 * triggered.
-+			 */
-+			info->trigger = 1;
-+			info->polarity = 1;
-+		}
-+		info->node = NUMA_NO_NODE;
-+		info->set = 1;
-+	}
-+	set_io_apic_irq_attr(&attr, ioapic, hwirq, info->trigger,
-+			     info->polarity);
-+
-+	return io_apic_setup_irq_pin(virq, info->node, &attr);
++	if (tb_is_upstream_port(&sw->ports[next_port]))
++		return 0;
++	if (!sw->ports[next_port].remote)
++		return 0;
++	return get_switch_at_route(sw->ports[next_port].remote->sw,
++				   route >> TB_ROUTE_SHIFT);
 +}
 +
-+int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+ /**
+  * tb_plug_events_active() - enable/disable plug events on a switch
+  *
+@@ -243,7 +261,8 @@ void tb_switch_free(struct tb_switch *sw)
+ 		sw->ports[i].remote = NULL;
+ 	}
+ 
+-	tb_plug_events_active(sw, false);
++	if (!sw->is_unplugged)
++		tb_plug_events_active(sw, false);
+ 
+ 	kfree(sw->ports);
+ 	kfree(sw);
+@@ -327,3 +346,24 @@ err:
+ 	return NULL;
+ }
+ 
++/**
++ * tb_sw_set_unpplugged() - set is_unplugged on switch and downstream switches
++ */
++void tb_sw_set_unpplugged(struct tb_switch *sw)
 +{
-+	int ret = 0;
-+	int ioapic, pin;
-+	struct mp_pin_info *info;
-+
-+	ioapic = mp_find_ioapic(gsi);
-+	if (ioapic < 0)
-+		return -ENODEV;
-+
-+	pin = mp_find_ioapic_pin(ioapic, gsi);
-+	info = mp_pin_info(ioapic, pin);
-+	trigger = trigger ? 1 : 0;
-+	polarity = polarity ? 1 : 0;
-+
-+	mutex_lock(&ioapic_mutex);
-+	if (!info->set) {
-+		info->trigger = trigger;
-+		info->polarity = polarity;
-+		info->node = node;
-+		info->set = 1;
-+	} else if (info->trigger != trigger || info->polarity != polarity) {
-+		ret = -EBUSY;
++	int i;
++	if (sw == sw->tb->root_switch) {
++		tb_sw_WARN(sw, "cannot unplug root switch\n");
++		return;
 +	}
-+	mutex_unlock(&ioapic_mutex);
-+
-+	return ret;
++	if (sw->is_unplugged) {
++		tb_sw_WARN(sw, "is_unplugged already set\n");
++		return;
++	}
++	sw->is_unplugged = true;
++	for (i = 0; i <= sw->config.max_port_number; i++) {
++		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
++			tb_sw_set_unpplugged(sw->ports[i].remote->sw);
++	}
 +}
 +
- /* Enable IOAPIC early just for system timer */
- void __init pre_init_apic_IRQ0(void)
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 3b716fd..1efcacc 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -71,11 +71,55 @@ static void tb_handle_hotplug(struct work_struct *work)
  {
+ 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
+ 	struct tb *tb = ev->tb;
++	struct tb_switch *sw;
++	struct tb_port *port;
+ 	mutex_lock(&tb->lock);
+ 	if (!tb->hotplug_active)
+ 		goto out; /* during init, suspend or shutdown */
+ 
+-	/* do nothing for now */
++	sw = get_switch_at_route(tb->root_switch, ev->route);
++	if (!sw) {
++		tb_warn(tb,
++			"hotplug event from non existent switch %llx:%x (unplug: %d)\n",
++			ev->route, ev->port, ev->unplug);
++		goto out;
++	}
++	if (ev->port > sw->config.max_port_number) {
++		tb_warn(tb,
++			"hotplug event from non existent port %llx:%x (unplug: %d)\n",
++			ev->route, ev->port, ev->unplug);
++		goto out;
++	}
++	port = &sw->ports[ev->port];
++	if (tb_is_upstream_port(port)) {
++		tb_warn(tb,
++			"hotplug event for upstream port %llx:%x (unplug: %d)\n",
++			ev->route, ev->port, ev->unplug);
++		goto out;
++	}
++	if (ev->unplug) {
++		if (port->remote) {
++			tb_port_info(port, "unplugged\n");
++			tb_sw_set_unpplugged(port->remote->sw);
++			tb_switch_free(port->remote->sw);
++			port->remote = NULL;
++		} else {
++			tb_port_info(port,
++				     "got unplug event for disconnected port, ignoring\n");
++		}
++	} else if (port->remote) {
++		tb_port_info(port,
++			     "got plug event for connected port, ignoring\n");
++	} else {
++		tb_port_info(port, "hotplug: scanning\n");
++		tb_scan_port(port);
++		if (!port->remote) {
++			tb_port_info(port, "hotplug: no switch found\n");
++		} else if (port->remote->sw->config.depth > 1) {
++			tb_sw_warn(port->remote->sw,
++				   "hotplug: chaining not supported\n");
++		}
++	}
+ out:
+ 	mutex_unlock(&tb->lock);
+ 	kfree(ev);
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 70a66fe..661f182 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -20,6 +20,7 @@ struct tb_switch {
+ 	struct tb_port *ports;
+ 	struct tb *tb;
+ 	int cap_plug_events; /* offset, zero if not found */
++	bool is_unplugged; /* unplugged, will go away */
+ };
+ 
+ /**
+@@ -160,6 +161,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
+ 
+ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
+ void tb_switch_free(struct tb_switch *sw);
++void tb_sw_set_unpplugged(struct tb_switch *sw);
++struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
+ 
+ int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
+ 
 -- 
-1.7.10.4
+1.9.3
 
