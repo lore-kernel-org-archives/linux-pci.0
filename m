@@ -1,75 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:39089 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751186AbaE0XTy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 19:19:54 -0400
-Received: by mail-ie0-f171.google.com with SMTP id to1so9610042ieb.30
-        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 16:19:53 -0700 (PDT)
-Date: Tue, 27 May 2014 17:19:50 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org,
-	Matt Porter <mporter@kernel.crashing.org>,
-	Alexandre Bounine <alexandre.bounine@idt.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND] rapidio/tsi721: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Message-ID: <20140527231950.GI11907@google.com>
-References: <1399993292-31692-1-git-send-email-agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1399993292-31692-1-git-send-email-agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch V3 26/37] x86, irq, ACPI: use common irqdomain map interface to program IOAPIC pins
+Date: Tue, 27 May 2014 16:08:01 +0800
+Message-Id: <1401178092-1228-27-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 13, 2014 at 05:01:32PM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Matt Porter <mporter@kernel.crashing.org>
-> Cc: Alexandre Bounine <alexandre.bounine@idt.com>
-> Cc: linux-pci@vger.kernel.org
+Refine ACPI to use common irqdomain map interface to program IOAPIC pins,
+so we can unify the callsite to progam IOAPIC pins.
 
-I assume this is being handled by Matt and/or Alexandre (listed in
-MAINTAINERS).  Let me know if I should do anything.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/acpi/boot.c |   44 ++++++++++++-------------------------------
+ 1 file changed, 12 insertions(+), 32 deletions(-)
 
-> ---
->  drivers/rapidio/devices/tsi721.c |   11 +++--------
->  1 files changed, 3 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/rapidio/devices/tsi721.c b/drivers/rapidio/devices/tsi721.c
-> index 1753dc6..2ca1a0b 100644
-> --- a/drivers/rapidio/devices/tsi721.c
-> +++ b/drivers/rapidio/devices/tsi721.c
-> @@ -768,15 +768,10 @@ static int tsi721_enable_msix(struct tsi721_device *priv)
->  	}
->  #endif /* CONFIG_RAPIDIO_DMA_ENGINE */
->  
-> -	err = pci_enable_msix(priv->pdev, entries, ARRAY_SIZE(entries));
-> +	err = pci_enable_msix_exact(priv->pdev, entries, ARRAY_SIZE(entries));
->  	if (err) {
-> -		if (err > 0)
-> -			dev_info(&priv->pdev->dev,
-> -				 "Only %d MSI-X vectors available, "
-> -				 "not using MSI-X\n", err);
-> -		else
-> -			dev_err(&priv->pdev->dev,
-> -				"Failed to enable MSI-X (err=%d)\n", err);
-> +		dev_err(&priv->pdev->dev,
-> +			"Failed to enable MSI-X (err=%d)\n", err);
->  		return err;
->  	}
->  
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 0632622a3798..4788b3f50f69 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -325,7 +325,9 @@ static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 			   int polarity);
+ 
+-static struct irq_domain_ops acpi_irqdomain_ops;
++static struct irq_domain_ops acpi_irqdomain_ops = {
++	.map = mp_irqdomain_map,
++};
+ 
+ static struct irq_domain *acpi_create_irqdomain(int idx, void *arg)
+ {
+@@ -505,10 +507,6 @@ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
+ 	int irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
+ 
+ 	if (irq >= 0) {
+-#ifdef CONFIG_X86_IO_APIC
+-		if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
+-			setup_IO_APIC_irq_extra(gsi);
+-#endif
+ 		*irqp = irq;
+ 		return 0;
+ 	}
+@@ -1036,11 +1034,7 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
+ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 			   int polarity)
+ {
+-	int irq;
+-	int ioapic;
+-	int ioapic_pin;
+-	struct io_apic_irq_attr irq_attr;
+-	int ret;
++	int irq, node;
+ 
+ 	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
+ 		return gsi;
+@@ -1049,35 +1043,21 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 	if (acpi_gbl_FADT.sci_interrupt == gsi)
+ 		return gsi;
+ 
++	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
++	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
++	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
++	if (mp_set_gsi_attr(gsi, trigger, polarity, node)) {
++		pr_warn("Failed to set pin attr for GSI%d\n", gsi);
++		return -1;
++	}
++
+ 	irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
+ 	if (irq < 0)
+ 		return irq;
+ 
+-	ioapic = mp_find_ioapic(gsi);
+-	if (ioapic < 0) {
+-		printk(KERN_WARNING "No IOAPIC for GSI %u\n", gsi);
+-		return gsi;
+-	}
+-
+-	ioapic_pin = mp_find_ioapic_pin(ioapic, gsi);
+-
+-	if (ioapic_pin > MP_MAX_IOAPIC_PIN) {
+-		printk(KERN_ERR "Invalid reference to IOAPIC pin "
+-		       "%d-%d\n", mpc_ioapic_id(ioapic),
+-		       ioapic_pin);
+-		return gsi;
+-	}
+-
+ 	if (enable_update_mptable)
+ 		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
+ 
+-	set_io_apic_irq_attr(&irq_attr, ioapic, ioapic_pin,
+-			     trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
+-			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
+-	ret = io_apic_set_pci_routing(dev, irq, &irq_attr);
+-	if (ret < 0)
+-		irq = -1;
+-
+ 	return irq;
+ }
+ 
+-- 
+1.7.10.4
+
