@@ -1,143 +1,166 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:47453 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751823AbaE0WXA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 18:23:00 -0400
+Received: by mail-ie0-f178.google.com with SMTP id rl12so9511996iec.37
+        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 15:22:59 -0700 (PDT)
+Date: Tue, 27 May 2014 16:22:56 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	jeffrey.t.kirsher@intel.com
+Subject: Re: [PATCH] pci: Save and restore VFs as a part of a reset
+Message-ID: <20140527222256.GC11907@google.com>
+References: <20140505212346.18767.34117.stgit@ahduyck-cp2.jf.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20140516132451.GK967@e106497-lin.cambridge.arm.com>
-References: <1394811258-1500-1-git-send-email-Liviu.Dudau@arm.com>
-	<CA+sq2Ccok5wtKjCZUkBhhj3WsiqFAoMgHK7LY210aBtMku+8SA@mail.gmail.com>
-	<20140516132451.GK967@e106497-lin.cambridge.arm.com>
-Date: Fri, 16 May 2014 23:12:36 +0530
-Message-ID: <CA+sq2CejJFg--0rS1arr4Sactp-ssENB8Y3g4b61JPGPBCms=A@mail.gmail.com>
-Subject: Re: [PATCH v7 0/3] Add support for PCI in AArch64
-From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-To: Sunil Kovvuri <sunil.kovvuri@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"kdb@lurndal.org" <kdb@lurndal.org>,
-	"yu.zhao@intel.com" <yu.zhao@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140505212346.18767.34117.stgit@ahduyck-cp2.jf.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Liviu,
+On Mon, May 05, 2014 at 02:25:17PM -0700, Alexander Duyck wrote:
+> This fixes an issue I found in which triggering a reset via the PCI sysfs
+> reset while SR-IOV was enabled would leave the VFs in a state in which the
+> BME and MSI-X enable bits were all cleared.
+> 
+> To correct that I have added code so that the VF state is saved and restored
+> as a part of the PF save and restore state functions.  By doing this the VF
+> state is restored as well as the IOV state allowing the VFs to resume function
+> following a reset.
+> 
+> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> ---
+>  drivers/pci/iov.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++--
+>  drivers/pci/pci.c |    2 ++
+>  drivers/pci/pci.h |    5 +++++
+>  3 files changed, 53 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index de7a747..645ed71 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -521,13 +521,57 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+>  }
+>  
+>  /**
+> + * pci_save_iov_state - Save the state of the VF configurations
+> + * @dev: the PCI device
+> + */
+> +int pci_save_iov_state(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *vfdev = NULL;
+> +	unsigned short dev_id;
+> +
+> +	/* only search if we are a PF */
+> +	if (!dev->is_physfn)
+> +		return 0;
+> +
+> +	/* retrieve VF device ID */
+> +	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
 
-Issue may not be only with SR-IOV resources.
+This is just an optimization to reduce the number of things you get
+back from pci_get_device(), and hence reduce the number of times the
+"vfdev->is_virtfn && (vfdev->physfn == dev)" condition is false, right?
 
-I am not an expert with Linux PCI core. But i am trying to understand
-how even for a non SR-IOV capable device's resource, gets a parent
-associated with it.
+> +	/* loop through all the VFs and save their state information */
+> +	while ((vfdev = pci_get_device(dev->vendor, dev_id, vfdev))) {
+> +		if (vfdev->is_virtfn && (vfdev->physfn == dev)) {
+> +			int err = pci_save_state(vfdev);
 
-When a PCI device driver calls pci_enable_device() which inturn calls
-'arch/arm64/kernel/pci.c' pcibios_enable_device() which uses Linux PCI core
-API 'pci_enable_resources'. This API checks 'res->parent' for all
-valid resources
-before enabling them, otherwise it fails.
-                if (!r->parent) {
-                        dev_err(&dev->dev, "device not available "
-                                "(can't reserve %pR)\n", r);
-                        return -EINVAL;
-                }
+It makes me uneasy to operate on another device (we're resetting A, and
+here we save state for B).  I know B is dependent on A, since B is a VF
+related to PF A, but what synchronization is there to serialize this
+against any other save/restore operations that may be in progress by B's
+driver or by a sysfs operation on B?
 
-Can you please let me know where this hierarchy is being set for
-'pcibios_enable_resources' to work.
+Is there anything in the reset path that pays attention to whether
+resetting this PF will clobber VFs?  Do we care whether those VFs are in
+use?  I assume they might be in use by guests?
 
-I could only find request_resource() API which sets the parent and
-pci_claim_resource() uses this.
+> +			if (err)
+> +				return err;
+> +		}
+> +	}
 
-Thanks,
-Sunil.
+pci_get_device() acquires a reference on each device it returns, so this
+strategy would require a pci_dev_put().
 
-On Fri, May 16, 2014 at 6:54 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> Hi Sunil,
->
-> On Fri, May 16, 2014 at 11:33:04AM +0100, Sunil Kovvuri wrote:
->> Hi Liviu,
->>
->> I am using your ARM64 PCIe patches to write a PCIe host controller
->> driver for our SOC. I am facing an issue with SR-IOV capable device.
->>
->> Consider an PCI Express endpoint connected to a PCI Express
->> Root Port.  The PCI Express endpoint provides PCI-SIG SR-IOV
->> capabilities with a single physical function and a large number
->> of virtual functions.  The Root Port contains a pci-pci bridge in
->> between it and the SR-IOV device.
->>
->> When the SR-IOV capable device's driver tries to enable sriov
->> (pci_enable_sriov()) it fails to create/add PCI device for each
->> virtual function reporting  "not enough MMIO resources for SR-IOV".
->>
->> In sriov_enable() (drivers/pci/iov.c)
->>
->>  296        for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->>  297                 bars |= (1 << (i + PCI_IOV_RESOURCES));
->>  298                 res = dev->resource + PCI_IOV_RESOURCES + i;
->>  299                 if (res->parent)
->>  300                         nres++;
->>  301         }
->>  302         if (nres != iov->nres) {
->>  303                 dev_err(&dev->dev, "not enough MMIO resources for
->>  SR-IOV\n");
->>  304                 return -ENOMEM;
->>  305         }
->>
->> Here its checking if physical function's IOV resource has a parent or not.
->> Which is pci-pci bridge in this case. Otherwise it doesn't consider
->> that resource.
->>
->> Added below api to your patch.
->> This will try to claim a resource while creating a PCI device which
->> inturn sets 'res->parent'.
->>
->> Let me know if this is okay.
->>
->> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->> index 9f29c9a..fbfb48f 100644
->> --- a/arch/arm64/kernel/pci.c
->> +++ b/arch/arm64/kernel/pci.c
->> @@ -125,6 +125,21 @@ resource_size_t pcibios_align_resource(void
->> *data, const struct resource *res,
->>         return res->start;
->>  }
->>
->> +int pcibios_add_device(struct pci_dev *pdev)
->> +{
->> +        unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
->> +        struct resource *res;
->> +
->> +        for (i = 0; i < PCI_NUM_RESOURCES; i++) {
->> +                res = &pdev->resource[i];
->> +                if (res->parent || !(res->flags & type_mask))
->> +                        continue;
->> +                pci_claim_resource(pdev, i);
->> +        }
->> +
->>
->
-> I would like not to have to add your patch in this file as I am trying to
-> remove it entirely. I don't have an SR-IOV capable device in my setup so
-> I am not able to debug your problem, but could you have a go and try to
-> figure out why the SR-IOV resources do not get a parent associated with
-> when they get created?
->
-> Many thanks,
-> Liviu
->
->
-> --
-> ====================
-> | I would like to |
-> | fix the world,  |
-> | but they're not |
-> | giving me the   |
->  \ source code!  /
->   ---------------
->     ¯\_(ツ)_/¯
->
+But I'm not really keen on pci_get_device() in the first place.  It works
+by iterating over all PCI devices in the system, which seems like a
+sledgehammer approach.  It *is* widely used, but mostly in quirk-type code
+from which I avert my eyes.
+
+Maybe you could do something based on pci_walk_bus()?  If you did that, I
+think the PCI_SRIOV_VF_DID would become superfluous.
+
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+>   * pci_restore_iov_state - restore the state of the IOV capability
+>   * @dev: the PCI device
+>   */
+>  void pci_restore_iov_state(struct pci_dev *dev)
+>  {
+> -	if (dev->is_physfn)
+> -		sriov_restore_state(dev);
+> +	struct pci_dev *vfdev = NULL;
+> +	unsigned short dev_id;
+> +
+> +	if (!dev->is_physfn)
+> +		return;
+> +
+> +	sriov_restore_state(dev);
+> +
+> +	/* retrieve VF device ID */
+> +	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
+> +
+> +	/* loop through all VFs and restore state for any of our VFs */
+> +	while ((vfdev = pci_get_device(dev->vendor, dev_id, vfdev))) {
+> +		if (vfdev->is_virtfn && (vfdev->physfn == dev))
+> +			pci_restore_state(vfdev);
+> +	}
+> +
+> +	return 0;
+>  }
+>  
+>  /**
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 7325d43..120a432 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1015,6 +1015,8 @@ pci_save_state(struct pci_dev *dev)
+>  		return i;
+>  	if ((i = pci_save_vc_state(dev)) != 0)
+>  		return i;
+> +	if ((i = pci_save_iov_state(dev)) != 0)
+> +		return i;
+>  	return 0;
+>  }
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 6bd0822..9185edd 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -254,6 +254,7 @@ void pci_iov_release(struct pci_dev *dev);
+>  int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+>  			 enum pci_bar_type *type);
+>  resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
+> +int pci_save_iov_state(struct pci_dev *dev);
+>  void pci_restore_iov_state(struct pci_dev *dev);
+>  int pci_iov_bus_range(struct pci_bus *bus);
+>  
+> @@ -271,6 +272,10 @@ static inline int pci_iov_resource_bar(struct pci_dev *dev, int resno,
+>  {
+>  	return 0;
+>  }
+> +static inline void pci_save_iov_state(struct pci_dev *dev)
+> +{
+> +	return 0;
+> +}
+>  static inline void pci_restore_iov_state(struct pci_dev *dev)
+>  {
+>  }
+> 
