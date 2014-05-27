@@ -1,146 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <537694DC.3060507@ti.com>
-Date: Fri, 16 May 2014 18:44:44 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:47673 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966AbaE0VFX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 17:05:23 -0400
+Received: by mail-ie0-f181.google.com with SMTP id rp18so7922070iec.12
+        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 14:05:22 -0700 (PDT)
+Date: Tue, 27 May 2014 15:05:19 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	x86@kernel.org
+Subject: Re: [PATCH v2 00/13] Refactor pci_is_brdige() to simplify code
+Message-ID: <20140527210519.GA11907@google.com>
+References: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	<xobs@kosagi.com>, "Strashko, Grygorii" <grygorii.strashko@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware
- core driver
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <1400169692-9677-6-git-send-email-m-karicheri2@ti.com> <4195791.GS9XG8RaXW@wuerfel>
-In-Reply-To: <4195791.GS9XG8RaXW@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/15/2014 12:28 PM, Arnd Bergmann wrote:
-> On Thursday 15 May 2014 12:01:32 Murali Karicheri wrote:
->> +Sample bindings shown below:-
->> +
->> + - Remove ti,enable-linktrain if boot loader already does Link training and do EP
->> +   configuration.
->> + - Remove ti,init-phy if boot loader already initialize the phy and sets up pcie
->> +   link
-> You actually have to document all the properties. Have a look at the
-> other bindings for what this means.
+On Sun, May 04, 2014 at 12:23:35PM +0800, Yijing Wang wrote:
+> v1->v2: Add comments for new pci_is_bridge().
+> 
+> This patchset rename the current pci_is_bridge() to pci_has_subordinate(), 
+> and introduce a new pci_is_bridge() which determine pci bridge by check
+> dev->hdr_type. The new one is more accurate. PCI Spec define the pci
+> device is a bridge by the dev->hdr_type = 0x01 || 0x02.
+> 
+> There is no guarantee that a PCI bridge must attached a subordinate bus.
+> When PCI bridge is created but before the scan child bus, it has no 
+> subordinate bus. Also users can remove the pci bus using
+> interface pci_remove_bus() in remove.c. 
+> 
+> So use new pci_is_bridge() check if the PCI device is bridge is better
+> choice. If user want check PCI bridge whether has a subordinate bus,
+> pci_has_subordinate() is a candidate.
+> 
+> 
+> Yijing Wang (13):
+>   PCI: rename pci_is_bridge() to pci_has_subordinate()
+>   PCI: Introduce new pci_is_bridge() helper function
+>   PCI: Use new pci_is_bridge() to simplify code
+>   x86/PCI: Use new pci_is_bridge() to simplify code
+>   IA64/PCI: Use new pci_is_bridge() to simplify code
+>   powerpc/PCI: Use new pci_is_bridge() to simplify code
+>   sparc/PCI: Use new pci_is_bridge() to simplify code
+>   PCI, rpaphp: Use new pci_is_bridge() to simplify code
+>   PCI, shpchp: Use new pci_is_bridge() to simplify code
+>   PCI, cpcihp: Use new pci_is_bridge() to simplify code
+>   PCI, acpiphp: Use new pci_is_bridge() to simplify code
+>   PCI, pcmcia: Use new pci_is_bridge() to simplify code
+>   PCI, pciehp: Use new pci_is_bridge() to simplify code
+> 
+>  arch/ia64/pci/fixup.c                  |    4 +---
+>  arch/powerpc/kernel/pci-hotplug.c      |    3 +--
+>  arch/powerpc/kernel/pci_of_scan.c      |    3 +--
+>  arch/sparc/kernel/pci.c                |    3 +--
+>  arch/x86/pci/fixup.c                   |    4 +---
+>  drivers/pci/hotplug/acpiphp_glue.c     |    3 +--
+>  drivers/pci/hotplug/cpci_hotplug_pci.c |    3 +--
+>  drivers/pci/hotplug/pciehp_pci.c       |    3 +--
+>  drivers/pci/hotplug/rpadlpar_core.c    |    3 +--
+>  drivers/pci/hotplug/shpchp_pci.c       |    3 +--
+>  drivers/pci/pci-acpi.c                 |    8 +-------
+>  drivers/pci/pci-driver.c               |    8 ++++----
+>  drivers/pci/pci.h                      |    2 +-
+>  drivers/pci/probe.c                    |    3 +--
+>  drivers/pci/setup-bus.c                |    4 +---
+>  drivers/pcmcia/cardbus.c               |    3 +--
+>  include/linux/pci.h                    |   13 +++++++++++++
+>  17 files changed, 32 insertions(+), 41 deletions(-)
 
-Actually this is dw pcie variant. So I will document if there are any 
-deviations from the dw-designware
-bindings. Based on comments from Jingo, I think I need to add a new DT 
-property for old hw that we
-use in keystone. May be a compatibility string for older dw h/w like 
-"snps ,dw-pcie-v3.65" is that we
-could use and do things differently in the common code.
+Applied to pci/pci_is_bridge for v3.16, thanks,
 
-So I will update the Documentation of dw bindings  once we agree on this.
->> +
->> +               pcie@21800000 {
->> +                       compatible = "ti,keystone-pcie";
->> +                       device_type = "pci";
->> +                       clocks = <&clkpcie>;
->> +                       clock-names = "pcie";
-> The dw-pcie binding lists two clocks.
-Ok. As per dw documentation, pcie and pcie_bus are the clocks. But 
-pci-imx6 is currently not using pcie_bus. So the pcie_bus
-clock is actually optional. In the case of keystone pcie, bus clock is 
-provided by the phy hardware and if I need to provide
-a clock for bus, it has to be a dummy or change documentation to make 
-pcie_bus an optional clock. I prefer later, but want
-to know if this is true for pci-imx6. There is also a plan to move the 
-pcie clock API call to designware core. So making pcie_bus
-clock optional looks correct to me.
-
-Seen/Jingoo,  any comments?
-
->> +                       #address-cells = >;
->> +                       #size-cells = <2>;
->> +                       reg =  <0x21800000 0x1000>, <0x0262014c 4>;
->> +                       reg-names = "reg_rc_app", "reg_devcfg";
-> There should be standard names that are documented in the binding.
-
-Currently  Documentation says
-
-- reg: base addresses and lengths of the pcie controller,
-     the phy controller, additional register for the phy controller.
-
-And following dw drivers defines as
-
-samsung,exynos5440-pcie
-
-         reg = <0x290000 0x1000
-             0x270000 0x1000
-             0x271000 0x40>;
-
-fsl,imx6q-pcie"
-         reg = <0x01ffc000 0x4000>; /* DBI */
-
-There are no names used for registers. So this needs to be documented in 
-the dw-designware
-bindings. reg_dbi is what is common to pci controller assuming at index 
-0 of the both above drivers use
-reg_dbi address for config space. Shall I modify the documentation to 
-include optional reg name
-reg_dbi  for config space base address registers? Additional registers 
-are optional and varies from
-platform to platform. Phy registers are actually part of Phy driver and 
-should be removed from
-the dw-documentation bindings. Agree?
-
->
->> +                       interrupts = <GIC_SPI 30 IRQ_TYPE_EDGE_RISING>,
->> +                                       <GIC_SPI 31 IRQ_TYPE_EDGE_RISING>,
->> +                                       <GIC_SPI 32 IRQ_TYPE_EDGE_RISING>,
->> +                                       <GIC_SPI 33 IRQ_TYPE_EDGE_RISING>,
->> +                                       <GIC_SPI 34 IRQ_TYPE_EDGE_RISING>,
->> +                                       <GIC_SPI 35 IRQ_TYPE_EDGE_RISING>,
->> +                                       <GIC_SPI 36 IRQ_TYPE_EDGE_RISING>,
->> +                                       <GIC_SPI 37 IRQ_TYPE_EDGE_RISING>,
->> +                                       <GIC_SPI 38 IRQ_TYPE_EDGE_RISING>; /* Error IRQ */
-> What are all these interrupts?
-These are MSI interrupts tied to the GIC over which MSI interrupts are 
-multiplexed.  I will document
-it in the keystone PCI DT bindings.
->> +                       ranges = <0x00000800 0 0x21801000 0x21801000 0 0x0002000    /* Configuration space */
->> +                                 0x81000000 0 0          0x24000000 0 0x4000       /* downstream I/O */
->> +                                 0x82000000 0 0x50000000 0x50000000 0 0x10000000>; /* non-prefetchable memory */
-> Please move the config space into 'reg' now instead of 'ranges'.
-> This was a mistake earlier, and there are already other front-ends
-> doing the same thing.
-  This has to be coordinated with other drivers when DW core makes the 
-change.
-
-Jingoo, Sean,
-
-What is the plan for this change? I  have to defer this currently.
-
->
->> +                       num-lanes = <2>;
->> +                       ti,enable-linktrain;
->> +                       ti,init-phy;
->> +
->> +                       /* PCIE phy */
->> +                       phys = <&pcie0_phy>;
->> +                       phy-names = "pcie-phy";
->> +
->> +                       #interrupt-cells = <1>;
->> +                       interrupt-map-mask = <0 0 0 0>;
->> +                       interrupt-map = <0 0 0 1 &pcie_intc 1>, // INT A
->> +                                       <0 0 0 2 &pcie_intc 2>, // INT B
->> +                                       <0 0 0 3 &pcie_intc 3>, // INT C
->> +                                       <0 0 0 4 &pcie_intc 4>; // INT D
-> I think this is the wrong map-mask.
-I think this should be changed to
-
-interrupt-map-mask = <0 0 0 0x7> ?
-
->
-> 	Arnd
-
+Bjorn
