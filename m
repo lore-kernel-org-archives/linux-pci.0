@@ -1,126 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch V3 34/37] x86, irq, ACPI: release IOAPIC pin when PCI device is disabled
-Date: Tue, 27 May 2014 16:08:09 +0800
-Message-Id: <1401178092-1228-35-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:45990 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752121AbaE0XJ1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 19:09:27 -0400
+Received: by mail-ie0-f173.google.com with SMTP id lx4so9571842iec.18
+        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 16:09:26 -0700 (PDT)
+Date: Tue, 27 May 2014 17:09:23 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH v8 0/3] R-Car Gen2 PCIe host driver
+Message-ID: <20140527230923.GG11907@google.com>
+References: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Release IOAPIC pin associated with PCI device when the PCI device
-is disabled.
+On Mon, May 12, 2014 at 11:57:47AM +0100, Phil Edworthy wrote:
+> This is version 8 of a PCIe Host driver for the R-Car Gen2 devices,
+> i.e. R-Car H2 (r8a7790) and R-Car M2 (r8a7791).
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   28 ++++++++++++++++++++++++++++
- drivers/acpi/pci_irq.c      |    3 ++-
- 2 files changed, 30 insertions(+), 1 deletion(-)
+How do we want to handle maintenance of this new file (pcie-rcar.c)?
+MAINTAINERS currently contains drivers/pci/host/*rcar*, which matches it
+and says Simon maintains it.  If he wants it, I'd like an ack from him
+before merging it.  If not, I'd like to update MAINTAINERS to show who I
+should look for acks from.
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 0592c38d9952..c8e8fe67bbc8 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -313,9 +313,11 @@ static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- 				    u32 gsi);
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity);
-+static void mp_unregister_gsi(u32 gsi);
- 
- static struct irq_domain_ops acpi_irqdomain_ops = {
- 	.map = mp_irqdomain_map,
-+	.unmap = mp_irqdomain_unmap,
- };
- 
- static struct irq_domain *acpi_create_irqdomain(int idx, void *arg)
-@@ -541,8 +543,16 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
- 	return irq;
- }
- 
-+static void acpi_unregister_gsi_ioapic(u32 gsi)
-+{
-+#ifdef CONFIG_X86_IO_APIC
-+	mp_unregister_gsi(gsi);
-+#endif
-+}
-+
- int (*__acpi_register_gsi)(struct device *dev, u32 gsi,
- 			   int trigger, int polarity) = acpi_register_gsi_pic;
-+void (*__acpi_unregister_gsi)(u32 gsi) = NULL;
- 
- #ifdef CONFIG_ACPI_SLEEP
- int (*acpi_suspend_lowlevel)(void) = x86_acpi_suspend_lowlevel;
-@@ -562,6 +572,8 @@ EXPORT_SYMBOL_GPL(acpi_register_gsi);
- 
- void acpi_unregister_gsi(u32 gsi)
- {
-+	if (__acpi_unregister_gsi)
-+		(*__acpi_unregister_gsi)(gsi);
- }
- EXPORT_SYMBOL_GPL(acpi_unregister_gsi);
- 
-@@ -569,6 +581,7 @@ static void __init acpi_set_irq_model_ioapic(void)
- {
- 	acpi_irq_model = ACPI_IRQ_MODEL_IOAPIC;
- 	__acpi_register_gsi = acpi_register_gsi_ioapic;
-+	__acpi_unregister_gsi = acpi_unregister_gsi_ioapic;
- 	acpi_ioapic = 1;
- }
- 
-@@ -1050,6 +1063,21 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	return irq;
- }
- 
-+static void mp_unregister_gsi(u32 gsi)
-+{
-+	int irq;
-+
-+	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
-+		return;
-+
-+	if (acpi_gbl_FADT.sci_interrupt == gsi)
-+		return;
-+
-+	irq = mp_map_gsi_to_irq(gsi, 0);
-+	if (irq > 0)
-+		mp_unmap_irq(irq);
-+}
-+
- /*
-  * Parse IOAPIC related entries in MADT
-  * returns 0 on success, < 0 on error
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 9c62340c2360..6ba463ceccc6 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -498,5 +498,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	 */
- 
- 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
--	acpi_unregister_gsi(gsi);
-+	if (gsi >= 0 && dev->irq > 0)
-+		acpi_unregister_gsi(gsi);
- }
--- 
-1.7.10.4
+I don't care either way; I just don't know what to do with this right now.
 
+Bjorn
+
+> v8:
+>  - Platform changes removed from this patch set
+>  - Moved header file contents into c file
+>  - Formatting cleaned up
+>  - Remove bus/dev/func range checks for config access
+>  - Add comment about config access serialization
+>  - Made rcar_pcie_setup_window() return void as no errors possible
+>  - Remove unused register definitions
+>  - Removed __init markers to fix section mismatches
+>  - Add explicit bus number range
+>  - Get the root bus nr from config writes instead of sys->busnr
+>  - Use PCI domains
+>  - Removed unused variable in rcar_msi_free()
+>  - Split interrupt bindings into separate cells
+> 
+> v7:
+>  - Change binding description of clocks to 'clock specifiers'
+> 
+> v6:
+>  - Correct DT bindings description for reg and clocks
+>  - Split device and board DT changes
+>  - Add shmobile to subject for shmobile DT patches
+>  - Don't check MSI irq number is valid, as upper level checks this
+>  - Change "Unexpected MSI" msg to debug level
+>  - Reword "Unexpected MSI" comment so that it's one line
+>  - Remove patch that adds HAVE_ARM_ARCH_TIMER to koelsch defconfig as not needed
+> 
+> v5:
+>  - Use module_platform_driver instead of subsys_initcall
+>  - Use the of_device_id data field for HW init function
+>  - Init hw_pci struct in declaration
+>  - Renesas SoC compatible string has peripheral before device name
+>  - Add PCIe bus clock reference
+>  - Use dma-ranges property to specify inbound memory regions
+>  - Support multiple IO windows and correct resources
+>  - Return IRQ_NONE from MSI isr when there is no pending MSI
+>  - Add additional interrupt bindings
+> 
+> v4:
+>  - Use runtime PM properly
+> 
+> Phil Edworthy (3):
+>   PCI: host: rcar: Add Renesas R-Car PCIe driver
+>   PCI: host: rcar: Add MSI support
+>   dt-bindings: pci: rcar pcie device tree bindings
+> 
+>  Documentation/devicetree/bindings/pci/rcar-pci.txt |   47 +
+>  drivers/pci/host/Kconfig                           |    6 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pcie-rcar.c                       | 1008 ++++++++++++++++++++
+>  4 files changed, 1062 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
+>  create mode 100644 drivers/pci/host/pcie-rcar.c
+> 
+> -- 
+> 1.9.1
+> 
