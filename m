@@ -1,48 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:44420 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751897AbaESDBS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 18 May 2014 23:01:18 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 19 May 2014 13:01:17 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 2/4] drivers/vfio: Rework offsetofend()
-Date: Mon, 19 May 2014 13:01:08 +1000
-Message-Id: <1400468470-11262-3-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch V3 22/37] x86, mpparse, irq: provide basic irqdomain support
+Date: Tue, 27 May 2014 16:07:57 +0800
+Message-Id: <1401178092-1228-23-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The macro offsetofend() introduces unnecessary temporary variable
-"tmp". The patch avoids that and saves a bit memory in stack.
+Enhance mpparse to provide basic support of irqdomain with identity
+mapping between GSIs and IRQs.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- include/linux/vfio.h | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ arch/x86/kernel/mpparse.c |   11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/vfio.h b/include/linux/vfio.h
-index 81022a52..8ec980b 100644
---- a/include/linux/vfio.h
-+++ b/include/linux/vfio.h
-@@ -86,9 +86,8 @@ extern void vfio_unregister_iommu_driver(
-  * from user space.  This allows us to easily determine if the provided
-  * structure is sized to include various fields.
-  */
--#define offsetofend(TYPE, MEMBER) ({				\
--	TYPE tmp;						\
--	offsetof(TYPE, MEMBER) + sizeof(tmp.MEMBER); })		\
-+#define offsetofend(TYPE, MEMBER) \
-+	(offsetof(TYPE, MEMBER)	+ sizeof(((TYPE *)0)->MEMBER))
+diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
+index 6cb9a43ecde1..b9823bea332a 100644
+--- a/arch/x86/kernel/mpparse.c
++++ b/arch/x86/kernel/mpparse.c
+@@ -19,6 +19,7 @@
+ #include <linux/module.h>
+ #include <linux/smp.h>
+ #include <linux/pci.h>
++#include <linux/irqdomain.h>
  
- /*
-  * External user API
+ #include <asm/mtrr.h>
+ #include <asm/mpspec.h>
+@@ -112,10 +113,18 @@ static void __init MP_bus_info(struct mpc_bus *m)
+ 		pr_warn("Unknown bustype %s - ignoring\n", str);
+ }
+ 
++static struct irq_domain_ops mp_ioapic_irqdomain_ops;
++
++static struct irq_domain *mp_ioapic_create_irqdomain(int ioapic, void *arg)
++{
++	return mp_irqdomain_create(ioapic, NULL, &mp_ioapic_irqdomain_ops);
++}
++
+ static void __init MP_ioapic_info(struct mpc_ioapic *m)
+ {
+ 	if (m->flags & MPC_APIC_USABLE)
+-		mp_register_ioapic(m->apicid, m->apicaddr, gsi_top, NULL, NULL);
++		mp_register_ioapic(m->apicid, m->apicaddr, gsi_top,
++				   mp_ioapic_create_irqdomain, NULL);
+ }
+ 
+ static void __init print_mp_irq_info(struct mpc_intsrc *mp_irq)
 -- 
-1.8.3.2
+1.7.10.4
 
