@@ -1,39 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f73.google.com ([209.85.213.73]:49236 "EHLO
-	mail-yh0-f73.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751336AbaEUQIf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 12:08:35 -0400
-Received: by mail-yh0-f73.google.com with SMTP id f73so372094yha.4
-        for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 09:08:34 -0700 (PDT)
-References: <1400649810-11065-1-git-send-email-gwshan@linux.vnet.ibm.com>
-From: Greg Thelen <gthelen@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH v2] PCI: Fix return value from pci_user_{read,write}_config_*()
-In-reply-to: <1400649810-11065-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Date: Wed, 21 May 2014 09:00:34 -0700
-Message-ID: <xr93lhtvm89p.fsf@gthelen.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch V3 34/37] x86, irq, ACPI: release IOAPIC pin when PCI device is disabled
+Date: Tue, 27 May 2014 16:08:09 +0800
+Message-Id: <1401178092-1228-35-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Release IOAPIC pin associated with PCI device when the PCI device
+is disabled.
 
-On Tue, May 20 2014, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/acpi/boot.c |   28 ++++++++++++++++++++++++++++
+ drivers/acpi/pci_irq.c      |    3 ++-
+ 2 files changed, 30 insertions(+), 1 deletion(-)
 
-> PCI accessors from user space pci_user_{read,write}_config_*()
-> return negative error number, which was introduced by commit
-> 34e32072 ("PCI: handle positive error codes"). That patch coverts
-> all positive error numbers from platform specific PCI config
-> accessors to -EINVAL. The upper layer calling to those PCI config
-> accessors hardly know the specific cause from the return value
-> when hitting failures.
->
-> The patch fixes the issue by doing the conversion (from positive
-> to negative) using existing function pcibios_err_to_errno().
->
-> v2: pcibios_err_to_errno() translates unrecognized value to -ERANGE.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 0592c38d9952..c8e8fe67bbc8 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -313,9 +313,11 @@ static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+ 				    u32 gsi);
+ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 			   int polarity);
++static void mp_unregister_gsi(u32 gsi);
+ 
+ static struct irq_domain_ops acpi_irqdomain_ops = {
+ 	.map = mp_irqdomain_map,
++	.unmap = mp_irqdomain_unmap,
+ };
+ 
+ static struct irq_domain *acpi_create_irqdomain(int idx, void *arg)
+@@ -541,8 +543,16 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ 	return irq;
+ }
+ 
++static void acpi_unregister_gsi_ioapic(u32 gsi)
++{
++#ifdef CONFIG_X86_IO_APIC
++	mp_unregister_gsi(gsi);
++#endif
++}
++
+ int (*__acpi_register_gsi)(struct device *dev, u32 gsi,
+ 			   int trigger, int polarity) = acpi_register_gsi_pic;
++void (*__acpi_unregister_gsi)(u32 gsi) = NULL;
+ 
+ #ifdef CONFIG_ACPI_SLEEP
+ int (*acpi_suspend_lowlevel)(void) = x86_acpi_suspend_lowlevel;
+@@ -562,6 +572,8 @@ EXPORT_SYMBOL_GPL(acpi_register_gsi);
+ 
+ void acpi_unregister_gsi(u32 gsi)
+ {
++	if (__acpi_unregister_gsi)
++		(*__acpi_unregister_gsi)(gsi);
+ }
+ EXPORT_SYMBOL_GPL(acpi_unregister_gsi);
+ 
+@@ -569,6 +581,7 @@ static void __init acpi_set_irq_model_ioapic(void)
+ {
+ 	acpi_irq_model = ACPI_IRQ_MODEL_IOAPIC;
+ 	__acpi_register_gsi = acpi_register_gsi_ioapic;
++	__acpi_unregister_gsi = acpi_unregister_gsi_ioapic;
+ 	acpi_ioapic = 1;
+ }
+ 
+@@ -1050,6 +1063,21 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 	return irq;
+ }
+ 
++static void mp_unregister_gsi(u32 gsi)
++{
++	int irq;
++
++	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
++		return;
++
++	if (acpi_gbl_FADT.sci_interrupt == gsi)
++		return;
++
++	irq = mp_map_gsi_to_irq(gsi, 0);
++	if (irq > 0)
++		mp_unmap_irq(irq);
++}
++
+ /*
+  * Parse IOAPIC related entries in MADT
+  * returns 0 on success, < 0 on error
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 9c62340c2360..6ba463ceccc6 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -498,5 +498,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	 */
+ 
+ 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+-	acpi_unregister_gsi(gsi);
++	if (gsi >= 0 && dev->irq > 0)
++		acpi_unregister_gsi(gsi);
+ }
+-- 
+1.7.10.4
 
-Acked-by: Greg Thelen <gthelen@google.com>
