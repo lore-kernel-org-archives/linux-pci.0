@@ -1,51 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:45513 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752914AbaEBQmJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 May 2014 12:42:09 -0400
-From: Will Deacon <will.deacon@arm.com>
-To: linux-arm-kernel@lists.infradead.org
-Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	jgunthorpe@obsidianresearch.com, Will Deacon <will.deacon@arm.com>
-Subject: [RESEND PATCH 0/3] Support for Generic PCI Host Controller
-Date: Fri,  2 May 2014 17:41:13 +0100
-Message-Id: <1399048876-11862-1-git-send-email-will.deacon@arm.com>
+Received: from mga02.intel.com ([134.134.136.20]:9494 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751434AbaE0XxD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 May 2014 19:53:03 -0400
+Message-ID: <5385255D.5060204@intel.com>
+Date: Tue, 27 May 2014 16:53:01 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	jeffrey.t.kirsher@intel.com
+Subject: Re: [PATCH] pci: Save and restore VFs as a part of a reset
+References: <20140505212346.18767.34117.stgit@ahduyck-cp2.jf.intel.com> <20140527222256.GC11907@google.com>
+In-Reply-To: <20140527222256.GC11907@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+On 05/27/2014 03:22 PM, Bjorn Helgaas wrote:
+> On Mon, May 05, 2014 at 02:25:17PM -0700, Alexander Duyck wrote:
+>> This fixes an issue I found in which triggering a reset via the PCI sysfs
+>> reset while SR-IOV was enabled would leave the VFs in a state in which the
+>> BME and MSI-X enable bits were all cleared.
+>>
+>> To correct that I have added code so that the VF state is saved and restored
+>> as a part of the PF save and restore state functions.  By doing this the VF
+>> state is restored as well as the IOV state allowing the VFs to resume function
+>> following a reset.
+>>
+>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>> ---
+>>  drivers/pci/iov.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++--
+>>  drivers/pci/pci.c |    2 ++
+>>  drivers/pci/pci.h |    5 +++++
+>>  3 files changed, 53 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index de7a747..645ed71 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -521,13 +521,57 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+>>  }
+>>  
+>>  /**
+>> + * pci_save_iov_state - Save the state of the VF configurations
+>> + * @dev: the PCI device
+>> + */
+>> +int pci_save_iov_state(struct pci_dev *dev)
+>> +{
+>> +	struct pci_dev *vfdev = NULL;
+>> +	unsigned short dev_id;
+>> +
+>> +	/* only search if we are a PF */
+>> +	if (!dev->is_physfn)
+>> +		return 0;
+>> +
+>> +	/* retrieve VF device ID */
+>> +	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
+> 
+> This is just an optimization to reduce the number of things you get
+> back from pci_get_device(), and hence reduce the number of times the
+> "vfdev->is_virtfn && (vfdev->physfn == dev)" condition is false, right?
+> 
 
-This is a resend of the generic PCI host controller patch I last posted
-in March:
+Yes, this is just a mechanism to reduce the number of items we have to test.
 
-  http://lists.infradead.org/pipermail/linux-arm-kernel/2014-March/237540.html
+>> +	/* loop through all the VFs and save their state information */
+>> +	while ((vfdev = pci_get_device(dev->vendor, dev_id, vfdev))) {
+>> +		if (vfdev->is_virtfn && (vfdev->physfn == dev)) {
+>> +			int err = pci_save_state(vfdev);
+> 
+> It makes me uneasy to operate on another device (we're resetting A, and
+> here we save state for B).  I know B is dependent on A, since B is a VF
+> related to PF A, but what synchronization is there to serialize this
+> against any other save/restore operations that may be in progress by B's
+> driver or by a sysfs operation on B?
 
-I've also included two additional patches to enable PCI for mach-virt
-and add a MAINTAINERS entry for the new driver (Arnd -- I'm happy to add
-you here as well if you like).
+I don't believe there is any synchronization mechanism in place
+currently.  I can look into that as well.  Odds are we probably need to
+have the VFs check the parent lock before they take any independent action.
 
-I've tested successfully on a 3.15-rc3-based kernel with kvmtool and would
-really like to see this merged for 3.16.
+> 
+> Is there anything in the reset path that pays attention to whether
+> resetting this PF will clobber VFs?  Do we care whether those VFs are in
+> use?  I assume they might be in use by guests?
 
-All feedback welcome,
+The problem I found was that the sysfs reset call doesn't bother to
+check with the PF driver at all.  It just clobbers the PF and any VFs on
+it without talking to the PF driver.
 
-Will
+> 
+>> +			if (err)
+>> +				return err;
+>> +		}
+>> +	}
+> 
+> pci_get_device() acquires a reference on each device it returns, so this
+> strategy would require a pci_dev_put().
 
-Will Deacon (3):
-  ARM: mach-virt: allow PCI support to be selected
-  PCI: ARM: add support for generic PCI host controller
-  MAINTAINERS: add entry for generic PCI host controller driver
+Yes, if I am not mistaken the pci_dev_put is called as a part of
+pci_get_dev_by_id which is what pci_get_device ends up being.
 
- .../devicetree/bindings/pci/host-generic-pci.txt   | 100 ++++++
- MAINTAINERS                                        |   8 +
- arch/arm/Kconfig                                   |   1 +
- drivers/pci/host/Kconfig                           |   7 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-host-generic.c                | 369 +++++++++++++++++++++
- 6 files changed, 486 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/host-generic-pci.txt
- create mode 100644 drivers/pci/host/pci-host-generic.c
+> 
+> But I'm not really keen on pci_get_device() in the first place.  It works
+> by iterating over all PCI devices in the system, which seems like a
+> sledgehammer approach.  It *is* widely used, but mostly in quirk-type code
+> from which I avert my eyes.
+> 
+> Maybe you could do something based on pci_walk_bus()?  If you did that, I
+> think the PCI_SRIOV_VF_DID would become superfluous.
+> 
 
--- 
-1.9.2
+I can look into that, I'm not familiar with the interface.  I'll have to
+see what the relationship is between the PF and VF in terms of busses as
+I don't recall it off of the top of my head.
+
+If it is simple enough I might submit a second patch to update the
+pci_vfs_assigned since it is using similar logic.
+
+Thanks,
+
+Alex
 
