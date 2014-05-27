@@ -1,58 +1,124 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v3 06/15] PCI: Add quirks for ASMedia and Tundra bridges
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, linux@horizon.com
-Date: Sat, 10 May 2014 09:02:59 -0600
-Message-ID: <20140510150259.2997.67187.stgit@bling.home>
-In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
-References: <20140510145619.2997.429.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch V3 16/37] x86, irq: introduce some helper utilities to improve readability
+Date: Tue, 27 May 2014 16:07:51 +0800
+Message-Id: <1401178092-1228-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The quirk is intended to be extremely generic, but we only apply it
-to known offending devices.
+It also fixes an off by one bug in
+	if ((ioapic_idx > 0) && (irq > NR_IRQS_LEGACY))
+It should be
+	if ((ioapic_idx > 0) && (irq >= NR_IRQS_LEGACY))
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/quirks.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ arch/x86/include/asm/io_apic.h |    2 ++
+ arch/x86/kernel/apic/io_apic.c |   29 ++++++++++++++++++++++-------
+ 2 files changed, 24 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c6ae46f..652b49e 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3354,6 +3354,29 @@ static void quirk_dma_func1_alias(struct pci_dev *dev)
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index de3d8b04cf64..b775cf3622c3 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -171,6 +171,7 @@ extern u32 gsi_top;
+ 
+ extern int mp_find_ioapic(u32 gsi);
+ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
++extern u32 mp_pin_to_gsi(int ioapic, int pin);
+ extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
+ extern void __init pre_init_apic_IRQ0(void);
+ 
+@@ -212,6 +213,7 @@ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
+ static inline void ioapic_insert_resources(void) { }
+ #define gsi_top (NR_IRQS_LEGACY)
+ static inline int mp_find_ioapic(u32 gsi) { return 0; }
++static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
+ 
+ struct io_apic_irq_attr;
+ static inline int io_apic_set_pci_routing(struct device *dev, int irq,
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index b14241915262..99acd633287b 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -117,6 +117,24 @@ struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic_idx)
+ 	return &ioapics[ioapic_idx].gsi_config;
  }
  
- /*
-+ * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
-+ * using the wrong DMA alias for the device.  Some of these devices can be
-+ * used as either forward or reverse bridges, so we need to test whether the
-+ * device is operating in the correct mode.  We could probably apply this
-+ * quirk to PCI_ANY_ID, but for now we'll just use known offenders.  The test
-+ * is for a non-root, non-PCIe bridge where the upstream device is PCIe and
-+ * is not a PCIe-to-PCI bridge, then @pdev is actually a PCIe-to-PCI bridge.
-+ */
-+static void quirk_use_pcie_bridge_dma_alias(struct pci_dev *pdev)
++static inline int mp_ioapic_pin_count(int ioapic)
 +{
-+	if (!pci_is_root_bus(pdev->bus) &&
-+	    pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
-+	    !pci_is_pcie(pdev) && pci_is_pcie(pdev->bus->self) &&
-+	    pci_pcie_type(pdev->bus->self) != PCI_EXP_TYPE_PCI_BRIDGE)
-+		pdev->dev_flags |= PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS;
-+}
-+/* ASM1083/1085, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c46 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
-+			 quirk_use_pcie_bridge_dma_alias);
-+/* Tundra 8113, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c43 */
-+DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
++	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(ioapic);
 +
-+/*
-  * Marvell 88SE9123 uses function 1 as the requester ID for DMA.  In some
-  * SKUs function 1 is present and is a legacy IDE controller, in other
-  * SKUs this function is not present, making this a ghost requester.
++	return gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
++}
++
++u32 mp_pin_to_gsi(int ioapic, int pin)
++{
++	return mp_ioapic_gsi_routing(ioapic)->gsi_base + pin;
++}
++
++/* Initialize all legacy IRQs and all pins on the first IOAPIC at boot */
++static inline int mp_init_irq_at_boot(int ioapic, int irq)
++{
++	return ioapic == 0 || (irq >= 0 && irq < NR_IRQS_LEGACY);
++}
++
+ int nr_ioapics;
+ 
+ /* The one past the highest gsi number used */
+@@ -1367,8 +1385,7 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
+ 			continue;
+ 
+ 		irq = pin_2_irq(idx, ioapic_idx, pin);
+-
+-		if ((ioapic_idx > 0) && (irq > NR_IRQS_LEGACY))
++		if (!mp_init_irq_at_boot(ioapic_idx, irq))
+ 			continue;
+ 
+ 		/*
+@@ -1419,9 +1436,7 @@ void setup_IO_APIC_irq_extra(u32 gsi)
+ 		return;
+ 
+ 	irq = pin_2_irq(idx, ioapic_idx, pin);
+-
+-	/* Only handle the non legacy irqs on secondary ioapics */
+-	if (ioapic_idx == 0 || irq < NR_IRQS_LEGACY)
++	if (mp_init_irq_at_boot(ioapic_idx, irq))
+ 		return;
+ 
+ 	set_io_apic_irq_attr(&attr, ioapic_idx, pin, irq_trigger(idx),
+@@ -3535,9 +3550,9 @@ void __init setup_ioapic_dest(void)
+ 		irq_entry = find_irq_entry(ioapic, pin, mp_INT);
+ 		if (irq_entry == -1)
+ 			continue;
+-		irq = pin_2_irq(irq_entry, ioapic, pin);
+ 
+-		if ((ioapic > 0) && (irq > NR_IRQS_LEGACY))
++		irq = pin_2_irq(irq_entry, ioapic, pin);
++		if (!mp_init_irq_at_boot(ioapic, irq))
+ 			continue;
+ 
+ 		idata = irq_get_irq_data(irq);
+-- 
+1.7.10.4
 
