@@ -1,62 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1375 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753201AbaEVXIL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 19:08:11 -0400
-Subject: [PATCH v4 07/16] PCI: Add quirks for ASMedia and Tundra bridges
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
-Date: Thu, 22 May 2014 17:08:07 -0600
-Message-ID: <20140522230807.2856.76394.stgit@bling.home>
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-References: <20140522230230.2856.40017.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: [RFC Patch V1 3/4] x86, irq, ACPI: implement interface to support ACPI based IOAPIC hot-addition
+Date: Tue, 27 May 2014 16:24:36 +0800
+Message-Id: <1401179077-2020-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1401179077-2020-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1401179077-2020-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The quirk is intended to be extremely generic, but we only apply it
-to known offending devices.
+Implement acpi_register_ioapic() and enhance mp_register_ioapic()
+to support ACPI based IOAPIC hot-addition.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/quirks.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ arch/x86/kernel/acpi/boot.c    |   18 ++++++++++++++++--
+ arch/x86/kernel/apic/io_apic.c |   24 +++++++++++++++++++++---
+ 2 files changed, 37 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 923689f..ab620ac 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3385,6 +3385,29 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
- 			 PCI_DEVICE_ID_JMICRON_JMB388_ESD,
- 			 quirk_dma_func1_alias);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index a1b388e88bcb..d807e16f8fec 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -655,8 +655,22 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
  
-+/*
-+ * A few PCIe-to-PCI bridges fail to expose a PCIe capability, resulting in
-+ * using the wrong DMA alias for the device.  Some of these devices can be
-+ * used as either forward or reverse bridges, so we need to test whether the
-+ * device is operating in the correct mode.  We could probably apply this
-+ * quirk to PCI_ANY_ID, but for now we'll just use known offenders.  The test
-+ * is for a non-root, non-PCIe bridge where the upstream device is PCIe and
-+ * is not a PCIe-to-PCI bridge, then @pdev is actually a PCIe-to-PCI bridge.
-+ */
-+static void quirk_use_pcie_bridge_dma_alias(struct pci_dev *pdev)
-+{
-+	if (!pci_is_root_bus(pdev->bus) &&
-+	    pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
-+	    !pci_is_pcie(pdev) && pci_is_pcie(pdev->bus->self) &&
-+	    pci_pcie_type(pdev->bus->self) != PCI_EXP_TYPE_PCI_BRIDGE)
-+		pdev->dev_flags |= PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS;
-+}
-+/* ASM1083/1085, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c46 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
-+			 quirk_use_pcie_bridge_dma_alias);
-+/* Tundra 8113, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c43 */
-+DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
-+
- static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
  {
- 	if (!PCI_FUNC(dev->devfn))
+-	/* TBD */
+-	return -EINVAL;
++	int ret = -ENOSYS;
++#ifdef CONFIG_X86_IO_APIC
++	unsigned long long uid;
++	acpi_status status;
++
++	status = acpi_evaluate_integer(handle, METHOD_NAME__UID, NULL, &uid);
++	if (ACPI_FAILURE(status))
++		uid = 0;
++
++	down_write(&acpi_ioapic_rwsem);
++	ret  = mp_register_ioapic((int)uid, phys_addr, gsi_base,
++				  acpi_create_irqdomain, NULL);
++	up_write(&acpi_ioapic_rwsem);
++#endif
++
++	return ret;
+ }
+ 
+ EXPORT_SYMBOL(acpi_register_ioapic);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index f70fa239f34b..4bddff760ff4 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3802,7 +3802,13 @@ static int bad_ioapic_register(int idx)
+ 
+ static int find_free_ioapic_entry(void)
+ {
+-	return nr_ioapics;
++	int idx;
++
++	for (idx = 0; idx < MAX_IO_APICS; idx++)
++		if (ioapics[idx].nr_registers == 0)
++			return idx;
++
++	return MAX_IO_APICS;
+ }
+ 
+ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+@@ -3818,8 +3824,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	}
+ 	for_each_ioapic(ioapic)
+ 		if (ioapics[ioapic].mp_config.apicaddr == address) {
+-			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
+-				address, ioapic);
++			/*
++			 * IOAPIC unit may also be visible in PCI scope.
++			 * When ioapic PCI driver's probe() is called,
++			 * the IOAPIC unit may have already been initialized
++			 * at boot time.
++			 */
++			if (!ioapic_initialized)
++				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
++					address, ioapic);
+ 			return -EEXIST;
+ 		}
+ 
+@@ -3875,6 +3888,11 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	if (nr_ioapics <= idx)
+ 		nr_ioapics = idx + 1;
+ 
++	if (ioapic_initialized && ioapic_create_irqdomain(idx)) {
++		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++		return -ENOMEM;
++	}
++
+ 	/* Set nr_registers to mark entry present */
+ 	ioapics[idx].nr_registers = entries;
+ 
+-- 
+1.7.10.4
 
