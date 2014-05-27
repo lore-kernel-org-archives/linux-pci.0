@@ -1,153 +1,157 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Eli Billauer <eli.billauer@gmail.com>
-To: tj@kernel.org
-Cc: devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Eli Billauer <eli.billauer@gmail.com>
-Subject: [PATCH 1/3] dma-mapping: Add devm_ interface for dma_map_single()
-Date: Sat, 17 May 2014 15:22:23 +0300
-Message-Id: <1400329345-15556-1-git-send-email-eli.billauer@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:12123 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752256AbaE0IH3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 May 2014 04:07:29 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiri Kosina <trivial@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch V3 10/37] x86, irq, trivial: minor improvements of IRQ related code
+Date: Tue, 27 May 2014 16:07:45 +0800
+Message-Id: <1401178092-1228-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-dmam_map_single() and dmam_unmap_single() are the managed counterparts
-for the respective dma_* functions.
+1) Kill unused MAX_HARDIRQS_PER_CPU.
+2) Improve function prototype declararions.
+3) simple typo fix, change "gsit" to "gsi".
+4) use macro VECTOR_UNDEFINED instead of hard-coded -1.
 
-Note that dmam_map_single() returns zero on failure, and not a value to
-be handled by dma_mapping_error(): The error check is done by
-dmam_map_single() to avoid the registration of a mapping that failed.
-
-Signed-off-by: Eli Billauer <eli.billauer@gmail.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- Documentation/driver-model/devres.txt |    2 +
- drivers/base/dma-mapping.c            |   80 +++++++++++++++++++++++++++++++++
- include/linux/dma-mapping.h           |    5 ++-
- 3 files changed, 86 insertions(+), 1 deletions(-)
+ arch/x86/include/asm/hardirq.h |    3 ---
+ arch/x86/include/asm/io_apic.h |   16 +++++++---------
+ arch/x86/kernel/apic/io_apic.c |   10 +++++-----
+ 3 files changed, 12 insertions(+), 17 deletions(-)
 
-diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
-index e1a2707..13b8be0 100644
---- a/Documentation/driver-model/devres.txt
-+++ b/Documentation/driver-model/devres.txt
-@@ -266,6 +266,8 @@ DMA
-   dmam_declare_coherent_memory()
-   dmam_pool_create()
-   dmam_pool_destroy()
-+  dmam_map_single()
-+  dmam_unmap_single()
+diff --git a/arch/x86/include/asm/hardirq.h b/arch/x86/include/asm/hardirq.h
+index 230853da4ec0..0f5fb6b6567e 100644
+--- a/arch/x86/include/asm/hardirq.h
++++ b/arch/x86/include/asm/hardirq.h
+@@ -40,9 +40,6 @@ typedef struct {
  
- PCI
-   pcim_enable_device()	: after success, all PCI ops become managed
-diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-index 0ce39a3..db1c496 100644
---- a/drivers/base/dma-mapping.c
-+++ b/drivers/base/dma-mapping.c
-@@ -19,6 +19,7 @@ struct dma_devres {
- 	size_t		size;
- 	void		*vaddr;
- 	dma_addr_t	dma_handle;
-+	enum dma_data_direction direction;
- };
+ DECLARE_PER_CPU_SHARED_ALIGNED(irq_cpustat_t, irq_stat);
  
- static void dmam_coherent_release(struct device *dev, void *res)
-@@ -267,3 +268,82 @@ int dma_common_mmap(struct device *dev, struct vm_area_struct *vma,
- 	return ret;
- }
- EXPORT_SYMBOL(dma_common_mmap);
-+
-+static int dmam_map_match(struct device *dev, void *res, void *match_data)
-+{
-+	struct dma_devres *this = res, *match = match_data;
-+
-+	if (this->dma_handle == match->dma_handle) {
-+		WARN_ON(this->size != match->size ||
-+			this->direction != match->direction);
-+		return 1;
-+	}
-+	return 0;
-+}
-+
-+static void dmam_map_single_release(struct device *dev, void *res)
-+{
-+	struct dma_devres *this = res;
-+
-+	dma_unmap_single(dev, this->dma_handle, this->size, this->direction);
-+}
-+
-+/**
-+ * dmam_map_single - Managed dma_map_single()
-+ * @dev: Device to map DMA region for
-+ * @ptr: Pointer to region
-+ * @size: Size to map
-+ * @direction: The mapping's direction
-+ *
-+ * Managed dma_map_single().  The region mapped using this
-+ * function will be automatically unmapped on driver detach.
-+ *
-+ * RETURNS:
-+ * The DMA handle of the mapped region upon success, 0 otherwise.
-+ */
-+dma_addr_t dmam_map_single(struct device *dev, void *ptr, size_t size,
-+			   enum dma_data_direction direction)
-+
-+{
-+	struct dma_devres *dr;
-+	dma_addr_t dma_handle;
-+
-+	dr = devres_alloc(dmam_map_single_release, sizeof(*dr), GFP_KERNEL);
-+	if (!dr)
-+		return 0;
-+
-+	dma_handle = dma_map_single(dev, ptr, size, direction);
-+	if (dma_mapping_error(dev, dma_handle)) {
-+		devres_free(dr);
-+		return 0;
-+	}
-+
-+	dr->vaddr = ptr;
-+	dr->dma_handle = dma_handle;
-+	dr->size = size;
-+	dr->direction = direction;
-+
-+	devres_add(dev, dr);
-+
-+	return dma_handle;
-+}
-+EXPORT_SYMBOL(dmam_map_single);
-+
-+/**
-+ * dmam_unmap_single - Managed dma_unmap_single()
-+ * @dev: Device to map DMA region for
-+ * @dma_handle: DMA handle of the region to unmap
-+ * @size: Size to unmap
-+ * @direction: The mapping's direction
-+ *
-+ * Managed dma_unmap_single().
-+ */
-+void dmam_unmap_single(struct device *dev, dma_addr_t dma_handle,
-+		       size_t size, enum dma_data_direction direction)
-+{
-+	struct dma_devres match_data = { size, NULL, dma_handle, direction };
-+
-+	WARN_ON(devres_release(dev, dmam_map_single_release, dmam_map_match,
-+			       &match_data));
-+}
-+EXPORT_SYMBOL(dmam_unmap_single);
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index fd4aee2..cdb14a8 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -233,7 +233,10 @@ static inline void dmam_release_declared_memory(struct device *dev)
- {
- }
- #endif /* ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY */
+-/* We can have at most NR_VECTORS irqs routed to a cpu at a time */
+-#define MAX_HARDIRQS_PER_CPU NR_VECTORS
 -
-+dma_addr_t dmam_map_single(struct device *dev, void *ptr, size_t size,
-+			   enum dma_data_direction direction);
-+void dmam_unmap_single(struct device *dev, dma_addr_t dma_handle,
-+		       size_t size, enum dma_data_direction direction);
- #ifndef CONFIG_HAVE_DMA_ATTRS
- struct dma_attrs;
+ #define __ARCH_IRQ_STAT
  
+ #define inc_irq_stat(member)	this_cpu_inc(irq_stat.member)
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 9121abbc8c8f..8dd1e13f2989 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -144,22 +144,20 @@ struct io_apic_irq_attr;
+ struct irq_cfg;
+ extern int io_apic_set_pci_routing(struct device *dev, int irq,
+ 		 struct io_apic_irq_attr *irq_attr);
+-void setup_IO_APIC_irq_extra(u32 gsi);
++extern void setup_IO_APIC_irq_extra(u32 gsi);
+ extern void ioapic_insert_resources(void);
+ 
+ extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
+ 				     unsigned int, int,
+ 				     struct io_apic_irq_attr *);
+-extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
+-				     unsigned int, int,
+-				     struct io_apic_irq_attr *);
+ extern void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg);
+ 
+ extern void native_compose_msi_msg(struct pci_dev *pdev,
+ 				   unsigned int irq, unsigned int dest,
+ 				   struct msi_msg *msg, u8 hpet_id);
+ extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
+-int io_apic_setup_irq_pin_once(unsigned int irq, int node, struct io_apic_irq_attr *attr);
++extern int io_apic_setup_irq_pin_once(unsigned int irq, int node,
++				      struct io_apic_irq_attr *attr);
+ 
+ extern int save_ioapic_entries(void);
+ extern void mask_ioapic_entries(void);
+@@ -172,11 +170,11 @@ struct mp_ioapic_gsi{
+ 	u32 gsi_base;
+ 	u32 gsi_end;
+ };
+-extern struct mp_ioapic_gsi  mp_gsi_routing[];
+ extern u32 gsi_top;
+-int mp_find_ioapic(u32 gsi);
+-int mp_find_ioapic_pin(int ioapic, u32 gsi);
+-void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
++
++extern int mp_find_ioapic(u32 gsi);
++extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
++extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
+ extern void __init pre_init_apic_IRQ0(void);
+ 
+ extern void mp_save_irq(struct mpc_intsrc *m);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 2de992501a1b..4d7d46650faa 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1010,7 +1010,7 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 				break;
+ 
+ 		if (!test_bit(lbus, mp_bus_not_pci) &&
+-		    !mp_irqs[i].irqtype &&
++		    mp_irqs[i].irqtype == mp_INT &&
+ 		    (bus == lbus) &&
+ 		    (slot == ((mp_irqs[i].srcbusirq >> 2) & 0x1f))) {
+ 			int irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
+@@ -1359,7 +1359,7 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
+ 
+ 		irq = pin_2_irq(idx, ioapic_idx, pin);
+ 
+-		if ((ioapic_idx > 0) && (irq > 16))
++		if ((ioapic_idx > 0) && (irq > NR_IRQS_LEGACY))
+ 			continue;
+ 
+ 		/*
+@@ -1388,7 +1388,7 @@ static void __init setup_IO_APIC_irqs(void)
+ }
+ 
+ /*
+- * for the gsit that is not in first ioapic
++ * for the gsi that is not in first ioapic
+  * but could not use acpi_register_gsi()
+  * like some special sci in IBM x3330
+  */
+@@ -2225,7 +2225,7 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
+ 			apic->send_IPI_self(IRQ_MOVE_CLEANUP_VECTOR);
+ 			goto unlock;
+ 		}
+-		__this_cpu_write(vector_irq[vector], -1);
++		__this_cpu_write(vector_irq[vector], VECTOR_UNDEFINED);
+ unlock:
+ 		raw_spin_unlock(&desc->lock);
+ 	}
+@@ -3546,7 +3546,7 @@ void __init setup_ioapic_dest(void)
+ 			continue;
+ 		irq = pin_2_irq(irq_entry, ioapic, pin);
+ 
+-		if ((ioapic > 0) && (irq > 16))
++		if ((ioapic > 0) && (irq > NR_IRQS_LEGACY))
+ 			continue;
+ 
+ 		idata = irq_get_irq_data(irq);
 -- 
-1.7.2.3
+1.7.10.4
 
