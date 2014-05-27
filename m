@@ -1,80 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:57819 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916AbaE1DaV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 23:30:21 -0400
-Date: Tue, 27 May 2014 20:30:19 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	konrad.wilk@oracle.com, kim.phillips@linaro.org,
-	stuart.yoder@freescale.com, agraf@suse.de, libvir-list@redhat.com,
-	iommu@lists.linux-foundation.org, christoffer.dall@linaro.org,
-	tech@virtualopensystems.com, kvmarm@lists.cs.columbia.edu,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: Introduce new device binding path using
- pci_dev.driver_override
-Message-ID: <20140528033019.GA11547@kroah.com>
-References: <20140520145136.28232.90707.stgit@bling.home>
- <20140528030742.GO11907@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140528030742.GO11907@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch V3 12/37] x86, ioapic: kill static variable nr_irqs_gsi
+Date: Tue, 27 May 2014 16:07:47 +0800
+Message-Id: <1401178092-1228-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 27, 2014 at 09:07:42PM -0600, Bjorn Helgaas wrote:
-> On Tue, May 20, 2014 at 08:53:21AM -0600, Alex Williamson wrote:
-> > The driver_override field allows us to specify the driver for a device
-> > rather than relying on the driver to provide a positive match of the
-> > device.  This shortcuts the existing process of looking up the vendor
-> > and device ID, adding them to the driver new_id, binding the device,
-> > then removing the ID, but it also provides a couple advantages.
-> > 
-> > First, the above existing process allows the driver to bind to any
-> > device matching the new_id for the window where it's enabled.  This is
-> > often not desired, such as the case of trying to bind a single device
-> > to a meta driver like pci-stub or vfio-pci.  Using driver_override we
-> > can do this deterministically using:
-> > 
-> > echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
-> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
-> > 
-> > Previously we could not invoke drivers_probe after adding a device
-> > to new_id for a driver as we get non-deterministic behavior whether
-> > the driver we intend or the standard driver will claim the device.
-> > Now it becomes a deterministic process, only the driver matching
-> > driver_override will probe the device.
-> > 
-> > To return the device to the standard driver, we simply clear the
-> > driver_override and reprobe the device:
-> > 
-> > echo > /sys/bus/pci/devices/0000:03:00.0/driver_override
-> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
-> > 
-> > Another advantage to this approach is that we can specify a driver
-> > override to force a specific binding or prevent any binding.  For
-> > instance when an IOMMU group is exposed to userspace through VFIO
-> > we require that all devices within that group are owned by VFIO.
-> > However, devices can be hot-added into an IOMMU group, in which case
-> > we want to prevent the device from binding to any driver (override
-> > driver = "none") or perhaps have it automatically bind to vfio-pci.
-> > With driver_override it's a simple matter for this field to be set
-> > internally when the device is first discovered to prevent driver
-> > matches.
-> > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> 
-> Greg, are you going to weigh in on this?  It does seem to solve some real
-> problems.  ISTR you had an opinion once, but I don't know your current
-> thoughts.
+Static variable nr_irqs_gsi is used to maintain the lowest dynamic
+allocatable IRQ number. It may cause trouble when enabling dynamic
+IRQ allocation for IOAPIC, so use arch_dynirq_lower_bound() to
+avoid directly accessing nr_irqs_gsi and kill nr_irqs_gsi.
 
-Give me a few more days, still digging through my patch backlog...
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c |   24 +++++-------------------
+ 1 file changed, 5 insertions(+), 19 deletions(-)
 
-thanks,
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index e8dd12a04cea..397fb9a02e11 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -118,9 +118,6 @@ struct mpc_intsrc mp_irqs[MAX_IRQ_SOURCES];
+ /* # of MP IRQ source entries */
+ int mp_irq_entries;
+ 
+-/* GSI interrupts */
+-static int nr_irqs_gsi = NR_IRQS_LEGACY;
+-
+ #ifdef CONFIG_EISA
+ int mp_bus_id_to_type[MAX_MP_BUSSES];
+ #endif
+@@ -3333,20 +3330,11 @@ static int __init io_apic_get_redir_entries(int ioapic)
+ 	return reg_01.bits.entries + 1;
+ }
+ 
+-static void __init probe_nr_irqs_gsi(void)
+-{
+-	int nr;
+-
+-	nr = gsi_top + NR_IRQS_LEGACY;
+-	if (nr > nr_irqs_gsi)
+-		nr_irqs_gsi = nr;
+-
+-	printk(KERN_DEBUG "nr_irqs_gsi: %d\n", nr_irqs_gsi);
+-}
+-
+ unsigned int arch_dynirq_lower_bound(unsigned int from)
+ {
+-	return from < nr_irqs_gsi ? nr_irqs_gsi : from;
++	unsigned int min = gsi_top + NR_IRQS_LEGACY;
++
++	return from < min ? min : from;
+ }
+ 
+ int __init arch_probe_nr_irqs(void)
+@@ -3356,12 +3344,12 @@ int __init arch_probe_nr_irqs(void)
+ 	if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
+ 		nr_irqs = NR_VECTORS * nr_cpu_ids;
+ 
+-	nr = nr_irqs_gsi + 8 * nr_cpu_ids;
++	nr = (gsi_top + NR_IRQS_LEGACY) + 8 * nr_cpu_ids;
+ #if defined(CONFIG_PCI_MSI) || defined(CONFIG_HT_IRQ)
+ 	/*
+ 	 * for MSI and HT dyn irq
+ 	 */
+-	nr += nr_irqs_gsi * 16;
++	nr += (gsi_top + NR_IRQS_LEGACY) * 16;
+ #endif
+ 	if (nr < nr_irqs)
+ 		nr_irqs = nr;
+@@ -3634,8 +3622,6 @@ fake_ioapic_page:
+ 		ioapic_res->end = ioapic_phys + IO_APIC_SLOT_SIZE - 1;
+ 		ioapic_res++;
+ 	}
+-
+-	probe_nr_irqs_gsi();
+ }
+ 
+ void __init ioapic_insert_resources(void)
+-- 
+1.7.10.4
 
-greg k-h
