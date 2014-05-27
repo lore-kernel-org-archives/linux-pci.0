@@ -1,80 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:54271 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751189AbaENFp3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 May 2014 01:45:29 -0400
-Message-ID: <537302CD.7000701@ti.com>
-Date: Wed, 14 May 2014 11:14:45 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:63877 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751434AbaE0XQa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 19:16:30 -0400
+Received: by mail-ig0-f172.google.com with SMTP id uy17so1745962igb.5
+        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 16:16:30 -0700 (PDT)
+Date: Tue, 27 May 2014 17:16:26 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, gthelen@google.com
+Subject: Re: [PATCH v2] PCI: Fix return value from
+ pci_user_{read,write}_config_*()
+Message-ID: <20140527231626.GH11907@google.com>
+References: <1400649810-11065-1-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Jingoo Han <jg1.han@samsung.com>,
-	"'Santosh Shilimkar'" <santosh.shilimkar@ti.com>,
-	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<rogerq@ti.com>, <balajitk@ti.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Marek Vasut'" <marex@denx.de>
-Subject: Re: [PATCH 06/17] pci: host: pcie-designware: Use *base-mask* for
- configuring the iATU
-References: <1399383244-14556-1-git-send-email-kishon@ti.com> <53721D7F.9070200@ti.com> <202752041.rgamje4etj@wuerfel> <4528185.oZbgyuuFKX@wuerfel>
-In-Reply-To: <4528185.oZbgyuuFKX@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1400649810-11065-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-hi Arnd,
-
-On Tuesday 13 May 2014 07:04 PM, Arnd Bergmann wrote:
-> On Tuesday 13 May 2014 15:27:46 Arnd Bergmann wrote:
->> On Tuesday 13 May 2014 18:56:23 Kishon Vijay Abraham I wrote:
->>>> If you have a case where the outbound translation is a 256MB (i.e. 28bit)
->>>> section of the CPU address space, that could be represented as
->>>>
->>>>       ranges = <0x82000000 0 0  0xb0000000  0 0x10000000>;
->>>>
->>>> or 
->>>>
->>>>       ranges = <0x82000000 0 0xb0000000  0xb0000000  0 0x10000000>;
->>>>
->>>> depending on whether you want the BARs to be programmed using a low
->>>> address 0x0-0x0fffffff or an address matching the window
->>>> 0xb0000000-0xbfffffff.
->>>
->>> The problem is, for configuring the window starting at 0xb0000000, the ATU
->>> should be programmed 0x0000000 (the cpu address for it will be 0xb0000000 though).
->>>
->>
->> Then use the first of the two?
->>
+On Wed, May 21, 2014 at 03:23:30PM +1000, Gavin Shan wrote:
+> PCI accessors from user space pci_user_{read,write}_config_*()
+> return negative error number, which was introduced by commit
+> 34e32072 ("PCI: handle positive error codes"). That patch coverts
+> all positive error numbers from platform specific PCI config
+> accessors to -EINVAL. The upper layer calling to those PCI config
+> accessors hardly know the specific cause from the return value
+> when hitting failures.
 > 
-> To clarify: using <0x82000000 0 0  0xb0000000  0 0x10000000> will give you 
-> a mem_offset of 0xb0000000, which should work just fine for this case.
+> The patch fixes the issue by doing the conversion (from positive
+> to negative) using existing function pcibios_err_to_errno().
 > 
-> What I don't understand is why the ATU cares about whether the outbound
-> address is 0x0000000 or 0xb0000000 if it just decodes the lower 28 bit
-> anyway. Did you mean that we have to program the BARs using low addresses
-> regardless of what is programmed in the ATU? That would make more sense,
-> and it also matches what I suggested.
+> v2: pcibios_err_to_errno() translates unrecognized value to -ERANGE.
+> 
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-No, It's not like it decodes only the lower 28bits. The BARs is programmed with
-32 bit value.
+Applied with Greg's ack to pci/misc for v3.16, thanks!
 
-My pcie dt node has
- ranges = <0x00000800 0 0x20001000 0x20001000 0 0x00002000  /* CONFIG */
-           0x81000000 0 0          0x20003000 0 0x00010000  /* IO */
-           0x82000000 0 0x20013000 0x20013000 0 0xffed000>; /* MEM */
-
-Consider MEM address space..
-
-Here both PCI address and CPU address is 0x20013000. So when there is a write
-to cpu addr 0x20013000 [writel(virt_addr(0x20013000)], we want it to be
-translated to PCI addr 0x20013000. So in 'ATU', we would expect *base* to be
-programmed to *0x20013000* and target to be programmed to *0x20013000*. But
-that's not the case for DRA7xx. For DRA7xx *base* should be programmed to
-*0x0013000* and target should be programmed to *0x20013000*.
-
-Thanks
-Kishon
+> ---
+>  drivers/pci/access.c | 12 ++++--------
+>  include/linux/pci.h  |  4 ++--
+>  2 files changed, 6 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 7f8b78c..8c148f3 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -148,7 +148,7 @@ static noinline void pci_wait_cfg(struct pci_dev *dev)
+>  int pci_user_read_config_##size						\
+>  	(struct pci_dev *dev, int pos, type *val)			\
+>  {									\
+> -	int ret = 0;							\
+> +	int ret = PCIBIOS_SUCCESSFUL;					\
+>  	u32 data = -1;							\
+>  	if (PCI_##size##_BAD)						\
+>  		return -EINVAL;						\
+> @@ -159,9 +159,7 @@ int pci_user_read_config_##size						\
+>  					pos, sizeof(type), &data);	\
+>  	raw_spin_unlock_irq(&pci_lock);				\
+>  	*val = (type)data;						\
+> -	if (ret > 0)							\
+> -		ret = -EINVAL;						\
+> -	return ret;							\
+> +	return pcibios_err_to_errno(ret);				\
+>  }									\
+>  EXPORT_SYMBOL_GPL(pci_user_read_config_##size);
+>  
+> @@ -170,7 +168,7 @@ EXPORT_SYMBOL_GPL(pci_user_read_config_##size);
+>  int pci_user_write_config_##size					\
+>  	(struct pci_dev *dev, int pos, type val)			\
+>  {									\
+> -	int ret = -EIO;							\
+> +	int ret = PCIBIOS_SUCCESSFUL;					\
+>  	if (PCI_##size##_BAD)						\
+>  		return -EINVAL;						\
+>  	raw_spin_lock_irq(&pci_lock);				\
+> @@ -179,9 +177,7 @@ int pci_user_write_config_##size					\
+>  	ret = dev->bus->ops->write(dev->bus, dev->devfn,		\
+>  					pos, sizeof(type), val);	\
+>  	raw_spin_unlock_irq(&pci_lock);				\
+> -	if (ret > 0)							\
+> -		ret = -EINVAL;						\
+> -	return ret;							\
+> +	return pcibios_err_to_errno(ret);				\
+>  }									\
+>  EXPORT_SYMBOL_GPL(pci_user_write_config_##size);
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index aab57b4..ece7bef 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -518,7 +518,7 @@ static inline int pcibios_err_to_errno(int err)
+>  	case PCIBIOS_FUNC_NOT_SUPPORTED:
+>  		return -ENOENT;
+>  	case PCIBIOS_BAD_VENDOR_ID:
+> -		return -EINVAL;
+> +		return -ENOTTY;
+>  	case PCIBIOS_DEVICE_NOT_FOUND:
+>  		return -ENODEV;
+>  	case PCIBIOS_BAD_REGISTER_NUMBER:
+> @@ -529,7 +529,7 @@ static inline int pcibios_err_to_errno(int err)
+>  		return -ENOSPC;
+>  	}
+>  
+> -	return -ENOTTY;
+> +	return -ERANGE;
+>  }
+>  
+>  /* Low-level architecture-dependent routines */
+> -- 
+> 1.8.3.2
+> 
