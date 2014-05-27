@@ -1,47 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:56146 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754153AbaE1OwA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 10:52:00 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 4/5] PCI: tegra: Remove deprecated power supply properties
-Date: Wed, 28 May 2014 16:49:14 +0200
-Message-Id: <1401288555-24197-5-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
-References: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:1440 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752527AbaE0IJq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 May 2014 04:09:46 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch V3 21/37] x86, ACPI, irq: provide basic irqdomain support
+Date: Tue, 27 May 2014 16:07:56 +0800
+Message-Id: <1401178092-1228-22-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+Enhance ACPI driver to provide basic irqdomain support for IOAPIC.
 
-These power supply properties are no longer needed since the binding now
-contains the full set properties to accurately describe the power supply
-inputs of the Tegra PCIe block.
-
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt | 5 -----
- 1 file changed, 5 deletions(-)
+ arch/x86/kernel/acpi/boot.c |   20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-index f56d89998a44..0823362548dc 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-@@ -84,11 +84,6 @@ Power supplies for Tegra30:
-     - avdd-pexb-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
-     - vdd-pexb-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 9525498e41d5..0632622a3798 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -31,6 +31,7 @@
+ #include <linux/module.h>
+ #include <linux/dmi.h>
+ #include <linux/irq.h>
++#include <linux/irqdomain.h>
+ #include <linux/slab.h>
+ #include <linux/bootmem.h>
+ #include <linux/ioport.h>
+@@ -324,6 +325,23 @@ static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 			   int polarity);
  
--Deprecated supplies:
--- pex-clk-supply: Supply voltage for internal reference clock
--- vdd-supply: Power supply for controller (1.05V)
--- avdd-supply: Power supply for controller (1.05V) (not required for Tegra20)
--
- Root ports are defined as subnodes of the PCIe controller node.
++static struct irq_domain_ops acpi_irqdomain_ops;
++
++static struct irq_domain *acpi_create_irqdomain(int idx, void *arg)
++{
++	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
++
++	/*
++	 * Statically allocate IRQ number for legacy IRQs and all pins on the
++	 * first IOAPIC.
++	 */
++	if (gsi_cfg->gsi_base < NR_IRQS_LEGACY &&
++	    ioapic_dynirq_base < gsi_cfg->gsi_end)
++		ioapic_dynirq_base = gsi_cfg->gsi_end + 1;
++
++	return mp_irqdomain_create(idx, NULL, &acpi_irqdomain_ops);
++}
++
+ static int __init
+ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
+ {
+@@ -338,7 +356,7 @@ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
  
- Required properties:
+ 	mp_register_ioapic(ioapic->id,
+ 			   ioapic->address, ioapic->global_irq_base,
+-			   NULL, NULL);
++			   acpi_create_irqdomain, NULL);
+ 
+ 	return 0;
+ }
 -- 
-1.9.2
+1.7.10.4
 
