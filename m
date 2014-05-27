@@ -1,77 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:61073 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055AbaEIJD3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 05:03:29 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: devicetree@vger.kernel.org, Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <damm@opensource.se>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org
-Subject: [PATCH v2] of/irq: provide int of_irq_parse_and_map_pci wrapper
-Date: Fri, 09 May 2014 11:03:11 +0200
-Message-ID: <5744457.bgUFy9g0ST@wuerfel>
-In-Reply-To: <1399624119.4833.3.camel@weser.hi.pengutronix.de>
-References: <4527717.yJh2gX3xCP@wuerfel> <1399624119.4833.3.camel@weser.hi.pengutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch V3 35/37] x86, irq, mpparse: release IOAPIC pin when PCI device is disabled
+Date: Tue, 27 May 2014 16:08:10 +0800
+Message-Id: <1401178092-1228-36-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci-rcar driver is enabled for compile tests, and this has
-now shown that the driver cannot build without CONFIG_OF,
-following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
-interrupt mapping when possible":
+Release IOAPIC pin associated with PCI device when the PCI device
+is disabled.
 
-drivers/built-in.o: In function `rcar_pci_map_irq':
-:(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
-
-As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
-supposed to build fine, which we can achieve if we make the
-declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
-and provide an empty inline function otherwise, as we do for
-a lot of other of interfaces.
-
-This lets us build the rcar_pci driver again without CONFIG_OF
-for build testing. All platforms using this driver select OF,
-so this doesn't change anything for the users.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Magnus Damm <damm@opensource.se>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
-v2: clarified commit text.
+ arch/x86/kernel/mpparse.c |    1 +
+ arch/x86/pci/irq.c        |   13 +++++++++++--
+ 2 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 1a1f5ff..1e29bf4 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -7,13 +7,18 @@
- struct pci_dev;
- struct of_phandle_args;
- int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq);
--int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
+index 55acf55b41e7..f6559942952d 100644
+--- a/arch/x86/kernel/mpparse.c
++++ b/arch/x86/kernel/mpparse.c
+@@ -115,6 +115,7 @@ static void __init MP_bus_info(struct mpc_bus *m)
  
- struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_devfn(struct device_node *np);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
-+#ifdef CONFIG_OF
-+int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
-+#else
-+static inline int
-+of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin) { return 0; }
-+#endif
+ static struct irq_domain_ops mp_ioapic_irqdomain_ops = {
+ 	.map = mp_irqdomain_map,
++	.unmap = mp_irqdomain_unmap,
+ };
  
- #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
- int of_pci_msi_chip_add(struct msi_chip *chip);
+ static struct irq_domain *mp_ioapic_create_irqdomain(int ioapic, void *arg)
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index e4200e5e775e..748cfe8ab322 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -26,6 +26,7 @@ static int acer_tm360_irqrouting;
+ static struct irq_routing_table *pirq_table;
+ 
+ static int pirq_enable_irq(struct pci_dev *dev);
++static void pirq_disable_irq(struct pci_dev *dev);
+ 
+ /*
+  * Never use: 0, 1, 2 (timer, keyboard, and cascade)
+@@ -53,7 +54,7 @@ struct irq_router_handler {
+ };
+ 
+ int (*pcibios_enable_irq)(struct pci_dev *dev) = pirq_enable_irq;
+-void (*pcibios_disable_irq)(struct pci_dev *dev) = NULL;
++void (*pcibios_disable_irq)(struct pci_dev *dev) = pirq_disable_irq;
+ 
+ /*
+  *  Check passed address for the PCI IRQ Routing Table signature
+@@ -1186,7 +1187,7 @@ void pcibios_penalize_isa_irq(int irq, int active)
+ 
+ static int pirq_enable_irq(struct pci_dev *dev)
+ {
+-	u8 pin;
++	u8 pin = 0;
+ 
+ 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+ 	if (pin && !pcibios_lookup_irq(dev, 1)) {
+@@ -1252,3 +1253,11 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 	}
+ 	return 0;
+ }
++
++static void pirq_disable_irq(struct pci_dev *dev)
++{
++	if (io_apic_assign_pci_irqs && dev->irq) {
++		mp_unmap_irq(dev->irq);
++		dev->irq = 0;
++	}
++}
+-- 
+1.7.10.4
 
