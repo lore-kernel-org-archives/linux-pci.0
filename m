@@ -1,106 +1,27 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch V3 18/37] x86, irq, ACPI: change __acpi_register_gsi to return IRQ number instead of GSI
-Date: Tue, 27 May 2014 16:07:53 +0800
-Message-Id: <1401178092-1228-19-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1blp0190.outbound.protection.outlook.com ([207.46.163.190]:23636
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751753AbaE0OJO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 May 2014 10:09:14 -0400
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: "andreas.noever@gmail.com" <andreas.noever@gmail.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"greg@kroah.com" <greg@kroah.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v3 00/15] Thunderbolt driver for Apple MacBooks
+Date: Tue, 27 May 2014 14:09:10 +0000
+Message-ID: <1401199750.7663.3.camel@x230>
+References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently __acpi_register_gsi is defined to return GSI number and
-may be set to acpi_register_gsi_pic(), acpi_register_gsi_ioapic(),
-acpi_register_gsi_xen_hvm() and acpi_register_gsi_xen().
-
-Among which, acpi_register_gsi_ioapic() returns GSI number, but
-acpi_register_gsi_xen_hvm() and acpi_register_gsi_xen() actually
-returns IRQ number instead of GSI. And for acpi_register_gsi_pic(),
-GSI number equals to IRQ number.
-
-So change acpi_register_gsi_ioapic() to return IRQ number, it also
-simplifies the code.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   20 ++++++++------------
- 1 file changed, 8 insertions(+), 12 deletions(-)
-
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 932fdbb5f254..f740d2766c42 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -526,11 +526,13 @@ static int acpi_register_gsi_pic(struct device *dev, u32 gsi,
- static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
- 				    int trigger, int polarity)
- {
-+	int irq = gsi;
-+
- #ifdef CONFIG_X86_IO_APIC
--	gsi = mp_register_gsi(dev, gsi, trigger, polarity);
-+	irq = mp_register_gsi(dev, gsi, trigger, polarity);
- #endif
- 
--	return gsi;
-+	return irq;
- }
- 
- int (*__acpi_register_gsi)(struct device *dev, u32 gsi,
-@@ -548,13 +550,7 @@ int (*acpi_suspend_lowlevel)(void);
-  */
- int acpi_register_gsi(struct device *dev, u32 gsi, int trigger, int polarity)
- {
--	unsigned int plat_gsi;
--
--	plat_gsi = (*__acpi_register_gsi)(dev, gsi, trigger, polarity);
--	if (plat_gsi != ACPI_INVALID_GSI)
--		return map_gsi_to_irq(plat_gsi);
--
--	return -1;
-+	return (*__acpi_register_gsi)(dev, gsi, trigger, polarity);
- }
- EXPORT_SYMBOL_GPL(acpi_register_gsi);
- 
-@@ -1036,7 +1032,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 
- 	irq = map_gsi_to_irq(gsi);
- 	if (irq < 0)
--		return ACPI_INVALID_GSI;
-+		return irq;
- 
- 	ioapic = mp_find_ioapic(gsi);
- 	if (ioapic < 0) {
-@@ -1061,9 +1057,9 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
- 	ret = io_apic_set_pci_routing(dev, irq, &irq_attr);
- 	if (ret < 0)
--		gsi = ACPI_INVALID_GSI;
-+		irq = -1;
- 
--	return gsi;
-+	return irq;
- }
- 
- /*
--- 
-1.7.10.4
-
+QWRkaW5nIHRoZSBQQ0kgSURzIGZvciB0aGUgVGh1bmRlcmJvbHQgMiBkZXZpY2UgaW4gdGhlIE1h
+YyBQcm8gc2VlbXMgdG8NCndvcmssIHdpdGggdGhlIHBvc3NpYmxlIGV4Y2VwdGlvbiBvZiBob3Rw
+bHVnIC0gSSdsbCBsb29rIGludG8gdGhhdCBzb21lDQptb3JlLiBJIGFsc28gaGF2ZSBhIG5ldyBz
+ZXQgb2YgdGhlIEFDUEkgcGF0Y2hlcywgd2hpY2ggSSdsbCB0cnkgdG8gc2VuZA0Kb3V0IHRvZGF5
+Lg0KDQotLSANCk1hdHRoZXcgR2FycmV0dCA8bWF0dGhldy5nYXJyZXR0QG5lYnVsYS5jb20+DQo=
