@@ -1,427 +1,462 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:51226 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751369AbaEFSir (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 14:38:47 -0400
-Date: Tue, 6 May 2014 19:38:12 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [RESEND PATCH 2/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140506183811.GI13677@arm.com>
-References: <1399048876-11862-1-git-send-email-will.deacon@arm.com>
- <20140502184421.GF14645@arm.com>
- <20140502190318.GE3179@obsidianresearch.com>
- <12080862.flQZBvPba4@wuerfel>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:39151 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751697AbaE0Xm7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 19:42:59 -0400
+Received: by mail-ig0-f182.google.com with SMTP id uy17so1788292igb.9
+        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 16:42:58 -0700 (PDT)
+Date: Tue, 27 May 2014 17:42:55 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>
+Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@linux.ie>
+Subject: Re: [Patch] x86, ia64, efifb: Move boot_vga fixup from pci to vgaarb
+Message-ID: <20140527234255.GJ11907@google.com>
+References: <20140514224339.7f8be3a9@neptune.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <12080862.flQZBvPba4@wuerfel>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20140514224339.7f8be3a9@neptune.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 02, 2014 at 08:29:30PM +0100, Arnd Bergmann wrote:
-> On Friday 02 May 2014 13:03:18 Jason Gunthorpe wrote:
-> > > Given that the idea was to separate setup() and probe(), I didn't want to
-> > > make the assumption that I was called in probe context.
-> > 
-> > It doesn't matter for this driver, but look at mvebu, you cannot move
-> > the interrupt, gpio and clock acquisitions from probe() to setup(), as
-> > they could all trigger a defered probe. Better to be consistent,
-> > especially if this is the golden reference driver we want everyone to
-> > follow (sorry Will)
+On Wed, May 14, 2014 at 10:43:39PM +0200, Bruno Prémont wrote:
+> With commit b4aa0163056b6c70029b6e8619ce07c274351f42 Matthew Garret
+
+I think there's an emerging convention to use reference commits as
+<12-char-SHA1> ("subject"), i.e.,
+
+    b4aa0163056b ("efifb: Implement vga_default_device() (v2)")
+
+for this case.  Also, s/Garret/Garrett/.
+
+> introduced a efifb vga_default_device() so that EFI systems that do not
+> load shadow VBIOS or setup VGA get proper value for boot_vga PCI sysfs
+> attribute on the corresponding PCI device.
 > 
-> Fair enough. It shouldn't be hard to move.
-
-[...]
-
-> It should be fine to have a trivial setup function like this
+> Xorg is refusing to autodetect devices when boot_vga=0 which is the case
+> on some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
+> the dri device but then bails out with "no devices detected".
 > 
-> static int gen_pci_setup(int nr, struct pci_sys_data *sys)
-> {
-> 	struct gen_pci *pci = sys->private_data;
-> 	list_splice_init(pci->resource, sys->resources);
-> 	return 1;
-> }
+> With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
+> while having native drivers for the GPU also makes selecting
+> sysfb/efifb optional.
 > 
-> and do everything in probe().
+> Remove the efifb implementation of vga_default_device() and initialize
+> vgaarb's vga_default_device() with the PCI GPU that matches boot
+> screen_info in pci_fixup_video() [x86 and ia64 pci_fixup_video merged
+> into common function in vgaarb.c].
 
-Ok, I've respun the patch and included it below. It's turned probe() into a
-bit of a beast, but the cleanup is a lot simpler (unless I'm missing
-something).
+I think it would be good to split this into two patches:
 
-Will
+  1) Merge the x86 and ia64 pci_fixup_video() implementations.  This should
+  have no functional change at all.
 
---->8
+  2) Whatever else you need to actually fix the bug.  This will be much
+  smaller, and the actual bug fix will be easier to see.
 
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-new file mode 100644
-index 000000000000..199a8795cb77
---- /dev/null
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -0,0 +1,361 @@
-+/*
-+ * Simple, generic PCI host controller driver targetting firmware-initialised
-+ * systems and virtual machines (e.g. the PCI emulation provided by kvmtool).
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ * Copyright (C) 2014 ARM Limited
-+ *
-+ * Author: Will Deacon <will.deacon@arm.com>
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/platform_device.h>
-+
-+struct gen_pci_cfg_bus_ops {
-+	u32 bus_shift;
-+	void __iomem *(*map_bus)(struct pci_bus *, unsigned int, int);
-+};
-+
-+struct gen_pci_cfg_windows {
-+	struct resource				res;
-+	struct resource				bus_range;
-+	void __iomem				**win;
-+
-+	const struct gen_pci_cfg_bus_ops	*ops;
-+};
-+
-+struct gen_pci {
-+	struct pci_host_bridge			host;
-+	struct gen_pci_cfg_windows		cfg;
-+	struct list_head			resources;
-+};
-+
-+static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
-+					     unsigned int devfn,
-+					     int where)
-+{
-+	struct pci_sys_data *sys = bus->sysdata;
-+	struct gen_pci *pci = sys->private_data;
-+	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
-+
-+	return pci->cfg.win[idx] + ((devfn << 8) | where);
-+}
-+
-+static struct gen_pci_cfg_bus_ops gen_pci_cfg_cam_bus_ops = {
-+	.bus_shift	= 16,
-+	.map_bus	= gen_pci_map_cfg_bus_cam,
-+};
-+
-+static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
-+					      unsigned int devfn,
-+					      int where)
-+{
-+	struct pci_sys_data *sys = bus->sysdata;
-+	struct gen_pci *pci = sys->private_data;
-+	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
-+
-+	return pci->cfg.win[idx] + ((devfn << 12) | where);
-+}
-+
-+static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
-+	.bus_shift	= 20,
-+	.map_bus	= gen_pci_map_cfg_bus_ecam,
-+};
-+
-+static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
-+				int where, int size, u32 *val)
-+{
-+	void __iomem *addr;
-+	struct pci_sys_data *sys = bus->sysdata;
-+	struct gen_pci *pci = sys->private_data;
-+
-+	addr = pci->cfg.ops->map_bus(bus, devfn, where);
-+
-+	switch (size) {
-+	case 1:
-+		*val = readb(addr);
-+		break;
-+	case 2:
-+		*val = readw(addr);
-+		break;
-+	default:
-+		*val = readl(addr);
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
-+				 int where, int size, u32 val)
-+{
-+	void __iomem *addr;
-+	struct pci_sys_data *sys = bus->sysdata;
-+	struct gen_pci *pci = sys->private_data;
-+
-+	addr = pci->cfg.ops->map_bus(bus, devfn, where);
-+
-+	switch (size) {
-+	case 1:
-+		writeb(val, addr);
-+		break;
-+	case 2:
-+		writew(val, addr);
-+		break;
-+	default:
-+		writel(val, addr);
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static struct pci_ops gen_pci_ops = {
-+	.read	= gen_pci_config_read,
-+	.write	= gen_pci_config_write,
-+};
-+
-+static int gen_pci_calc_io_offset(struct device *dev,
-+				  struct of_pci_range *range,
-+				  struct resource *res,
-+				  resource_size_t *offset)
-+{
-+	static atomic_t wins = ATOMIC_INIT(0);
-+	int err, idx, max_win;
-+	unsigned int window;
-+
-+	if (!PAGE_ALIGNED(range->cpu_addr))
-+		return -EINVAL;
-+
-+	max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
-+	idx = atomic_inc_return(&wins);
-+	if (idx >= max_win)
-+		return -ENOSPC;
-+
-+	window = (idx - 1) * SZ_64K;
-+	err = pci_ioremap_io(window, range->cpu_addr);
-+	if (err)
-+		return err;
-+
-+	of_pci_range_to_resource(range, dev->of_node, res);
-+	res->start = window;
-+	res->end = res->start + range->size - 1;
-+	*offset = window - range->pci_addr;
-+	return 0;
-+}
-+
-+static int gen_pci_calc_mem_offset(struct device *dev,
-+				   struct of_pci_range *range,
-+				   struct resource *res,
-+				   resource_size_t *offset)
-+{
-+	of_pci_range_to_resource(range, dev->of_node, res);
-+	*offset = range->cpu_addr - range->pci_addr;
-+	return 0;
-+}
-+
-+static const struct of_device_id gen_pci_of_match[] = {
-+	{ .compatible = "pci-host-cam-generic",
-+	  .data = &gen_pci_cfg_cam_bus_ops },
-+
-+	{ .compatible = "pci-host-ecam-generic",
-+	  .data = &gen_pci_cfg_ecam_bus_ops },
-+
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, gen_pci_of_match);
-+
-+static int gen_pci_setup(int nr, struct pci_sys_data *sys)
-+{
-+	struct gen_pci *pci = sys->private_data;
-+	list_splice_init(&pci->resources, &sys->resources);
-+	return 1;
-+}
-+
-+static int gen_pci_probe(struct platform_device *pdev)
-+{
-+	struct gen_pci *pci;
-+	int err, res_valid;
-+	struct pci_host_bridge_window *win;
-+	struct resource *bus_range;
-+	resource_size_t busn;
-+	const char *type;
-+	struct of_pci_range range;
-+	struct of_pci_range_parser parser;
-+	struct hw_pci hw;
-+	const struct of_device_id *of_id;
-+	const int *prop;
-+	u8 bus_max;
-+	struct device *dev = &pdev->dev;
-+	struct device_node *np = dev->of_node;
-+
-+	if (!dev->of_node)
-+		return -ENODEV;
-+
-+	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-+	if (!pci)
-+		return -ENOMEM;
-+
-+	pci->host.dev.parent = dev;
-+	hw = (struct hw_pci) {
-+		.nr_controllers	= 1,
-+		.private_data	= (void **)&pci,
-+		.setup		= gen_pci_setup,
-+		.map_irq	= of_irq_parse_and_map_pci,
-+		.ops		= &gen_pci_ops,
-+	};
-+
-+	type = of_get_property(np, "device_type", NULL);
-+	if (!type || strcmp(type, "pci")) {
-+		dev_err(dev, "invalid \"device_type\" %s\n", type);
-+		return -EINVAL;
-+	}
-+
-+	if (of_pci_range_parser_init(&parser, np)) {
-+		dev_err(dev, "missing \"ranges\" property\n");
-+		return -EINVAL;
-+	}
-+
-+	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
-+	if (prop) {
-+		if (*prop)
-+			pci_add_flags(PCI_PROBE_ONLY);
-+		else
-+			pci_clear_flags(PCI_PROBE_ONLY);
-+	}
-+
-+	if (of_pci_parse_bus_range(np, &pci->cfg.bus_range))
-+		pci->cfg.bus_range = (struct resource) {
-+			.name	= np->name,
-+			.start	= 0,
-+			.end	= 0xff,
-+			.flags	= IORESOURCE_BUS,
-+		};
-+
-+	err = of_address_to_resource(np, 0, &pci->cfg.res);
-+	if (err) {
-+		dev_err(dev, "missing \"reg\" property\n");
-+		return err;
-+	}
-+
-+	pci->cfg.win = devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
-+				    sizeof(*pci->cfg.win), GFP_KERNEL);
-+	if (!pci->cfg.win)
-+		return -ENOMEM;
-+
-+	of_id = of_match_node(gen_pci_of_match, np);
-+	pci->cfg.ops = of_id->data;
-+	INIT_LIST_HEAD(&pci->host.windows);
-+	INIT_LIST_HEAD(&pci->resources);
-+
-+	/* Limit the bus-range to fit within reg */
-+	bus_max = pci->cfg.bus_range.start +
-+		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
-+	pci->cfg.bus_range.end = min_t(resource_size_t, pci->cfg.bus_range.end,
-+				       bus_max);
-+
-+	/* Create and register resources from the ranges property */
-+	res_valid = 0;
-+	for_each_of_pci_range(&parser, &range) {
-+		struct resource *parent, *res;
-+		resource_size_t offset;
-+		u32 restype = range.flags & IORESOURCE_TYPE_BITS;
-+
-+		res = devm_kmalloc(dev, sizeof(*res), GFP_KERNEL);
-+		if (!res) {
-+			err = -ENOMEM;
-+			goto out_release_res;
-+		}
-+
-+		switch (restype) {
-+		case IORESOURCE_IO:
-+			parent = &ioport_resource;
-+			err = gen_pci_calc_io_offset(dev, &range, res, &offset);
-+			break;
-+		case IORESOURCE_MEM:
-+			parent = &iomem_resource;
-+			err = gen_pci_calc_mem_offset(dev, &range, res, &offset);
-+			res_valid |= !(res->flags & IORESOURCE_PREFETCH || err);
-+			break;
-+		default:
-+			err = -EINVAL;
-+			continue;
-+		}
-+
-+		if (err) {
-+			dev_warn(dev,
-+				 "error %d: failed to add resource [type 0x%x, %lld bytes]\n",
-+				 err, restype, range.size);
-+			continue;
-+		}
-+
-+		err = request_resource(parent, res);
-+		if (err)
-+			goto out_release_res;
-+
-+		pci_add_resource_offset(&pci->resources, res, offset);
-+	}
-+
-+	if (!res_valid) {
-+		dev_err(dev, "non-prefetchable memory resource required\n");
-+		err = -EINVAL;
-+		goto out_release_res;
-+	}
-+
-+	/* Map our Configuration Space windows */
-+	err = -ENOMEM;
-+	if (!devm_request_mem_region(dev, pci->cfg.res.start,
-+				     resource_size(&pci->cfg.res),
-+				     "Configuration Space"))
-+		goto out_release_res;
-+
-+	bus_range = &pci->cfg.bus_range;
-+	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
-+		u32 idx = busn - bus_range->start;
-+		u32 sz = 1 << pci->cfg.ops->bus_shift;
-+
-+		pci->cfg.win[idx] = devm_ioremap(dev,
-+						 pci->cfg.res.start + busn * sz,
-+						 sz);
-+		if (!pci->cfg.win[idx])
-+			goto out_release_res;
-+	}
-+
-+	/* Register bus resource */
-+	pci_add_resource(&pci->resources, bus_range);
-+	pci_common_init_dev(dev, &hw);
-+	return 0;
-+
-+out_release_res:
-+	list_for_each_entry(win, &pci->resources, list)
-+		release_resource(win->res);
-+
-+	pci_free_resource_list(&pci->resources);
-+	return err;
-+}
-+
-+static struct platform_driver gen_pci_driver = {
-+	.driver = {
-+		.name = "pci-host-generic",
-+		.owner = THIS_MODULE,
-+		.of_match_table = gen_pci_of_match,
-+	},
-+	.probe = gen_pci_probe,
-+};
-+module_platform_driver(gen_pci_driver);
-+
-+MODULE_DESCRIPTION("Generic PCI host driver");
-+MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
-+MODULE_LICENSE("GPLv2");
+It would also be nice to have a URL for a bugzilla or mailing list report
+of the problem, where there might be dmesg and/or Xorg logs.
+
+This sounds like it might be applicable for the stable kernels.  If so, you
+probably should order these so the small bug-fix comes first (even though
+this may mean applying the same bugfix for x86 and ia64), and the merge
+second.  That way the fix can be applied to the stable kernels without the
+merge.
+
+> Other architectures with PCI GPU might need a similar fixup.
+> 
+> Note: If CONFIG_VGA_ARB is unset vga_default_device() is only available
+>       as a stub that returns NULL, making this adjustment insufficient.
+>       In addition, with the merge of x86/ia64 fixup code, this would
+>       also result in disabled fixup.
+>       Unsetting CONFIG_VGA_ARB requires CONFIG_EXPERT=y though.
+
+I'm not quite sure what this means, or if this is hint that something is
+still wrong even with this patch.  Do you mean that if CONFIG_VGA_ARB is
+unset, something still doesn't work?
+
+Maybe this will become obvious to me when you split up the patch.
+
+> Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
+> ---
+> This is ported to changes in pci/fixup.c that landed in 3.15-rcs.
+> 
+> Is this fine to go in, if so who will take it?
+> 
+> I got no feedback on my last respin (on top of 3.14 a couple of weeks ago,
+> which added moving the ia64 pci boot_vga fixup).
+> I've been running this revision for a week or so on 3.15-rc kernels here
+> (mostly EFI-enabled system, the mentioned MBA as wells as non-Apple systems
+> where the patch was not required).
+> 
+> 
+>  arch/ia64/pci/fixup.c       | 56 ++-------------------------------
+>  arch/x86/include/asm/vga.h  |  6 ----
+>  arch/x86/pci/fixup.c        | 55 +--------------------------------
+>  drivers/gpu/vga/vgaarb.c    | 75 +++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/video/fbdev/efifb.c | 38 -----------------------
+>  include/linux/vgaarb.h      | 37 ++++++++++++++++++++++
+>  6 files changed, 116 insertions(+), 151 deletions(-)
+> 
+> diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
+> index eee069a..5df22f9 100644
+> --- a/arch/ia64/pci/fixup.c
+> +++ b/arch/ia64/pci/fixup.c
+> @@ -9,64 +9,14 @@
+>  
+>  #include <asm/machvec.h>
+>  
+> -/*
+> - * Fixup to mark boot BIOS video selected by BIOS before it changes
+> - *
+> - * From information provided by "Jon Smirl" <jonsmirl@gmail.com>
+> - *
+> - * The standard boot ROM sequence for an x86 machine uses the BIOS
+> - * to select an initial video card for boot display. This boot video
+> - * card will have it's BIOS copied to C0000 in system RAM.
+> - * IORESOURCE_ROM_SHADOW is used to associate the boot video
+> - * card with this copy. On laptops this copy has to be used since
+> - * the main ROM may be compressed or combined with another image.
+> - * See pci_map_rom() for use of this flag. Before marking the device
+> - * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
+> - * by either arch cde or vga-arbitration, if so only apply the fixup to this
+> - * already determined primary video card.
+> - */
+> -
+> -static void pci_fixup_video(struct pci_dev *pdev)
+> +static void pci_ia64_fixup_video(struct pci_dev *pdev)
+>  {
+> -	struct pci_dev *bridge;
+> -	struct pci_bus *bus;
+> -	u16 config;
+> -
+>  	if ((strcmp(ia64_platform_name, "dig") != 0)
+>  	    && (strcmp(ia64_platform_name, "hpzx1")  != 0))
+>  		return;
+>  	/* Maybe, this machine supports legacy memory map. */
+>  
+> -	/* Is VGA routed to us? */
+> -	bus = pdev->bus;
+> -	while (bus) {
+> -		bridge = bus->self;
+> -
+> -		/*
+> -		 * From information provided by
+> -		 * "David Miller" <davem@davemloft.net>
+> -		 * The bridge control register is valid for PCI header
+> -		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
+> -		 * PCI header type NORMAL.
+> -		 */
+> -		if (bridge
+> -		    &&((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+> -		       ||(bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
+> -			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
+> -						&config);
+> -			if (!(config & PCI_BRIDGE_CTL_VGA))
+> -				return;
+> -		}
+> -		bus = bus->parent;
+> -	}
+> -	if (!vga_default_device() || pdev == vga_default_device()) {
+> -		pci_read_config_word(pdev, PCI_COMMAND, &config);
+> -		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+> -			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
+> -			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
+> -			vga_set_default_device(pdev);
+> -		}
+> -	}
+> +	pci_fixup_video(pdev);
+>  }
+>  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+> -				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_video);
+> +				PCI_CLASS_DISPLAY_VGA, 8, pci_ia64_fixup_video);
+> diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
+> index 44282fb..c4b9dc2 100644
+> --- a/arch/x86/include/asm/vga.h
+> +++ b/arch/x86/include/asm/vga.h
+> @@ -17,10 +17,4 @@
+>  #define vga_readb(x) (*(x))
+>  #define vga_writeb(x, y) (*(y) = (x))
+>  
+> -#ifdef CONFIG_FB_EFI
+> -#define __ARCH_HAS_VGA_DEFAULT_DEVICE
+> -extern struct pci_dev *vga_default_device(void);
+> -extern void vga_set_default_device(struct pci_dev *pdev);
+> -#endif
+> -
+>  #endif /* _ASM_X86_VGA_H */
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 94ae9ae..b599847 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -302,60 +302,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PB1,	pcie_r
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC,	pcie_rootport_aspm_quirk);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC1,	pcie_rootport_aspm_quirk);
+>  
+> -/*
+> - * Fixup to mark boot BIOS video selected by BIOS before it changes
+> - *
+> - * From information provided by "Jon Smirl" <jonsmirl@gmail.com>
+> - *
+> - * The standard boot ROM sequence for an x86 machine uses the BIOS
+> - * to select an initial video card for boot display. This boot video
+> - * card will have it's BIOS copied to C0000 in system RAM.
+> - * IORESOURCE_ROM_SHADOW is used to associate the boot video
+> - * card with this copy. On laptops this copy has to be used since
+> - * the main ROM may be compressed or combined with another image.
+> - * See pci_map_rom() for use of this flag. Before marking the device
+> - * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
+> - * by either arch cde or vga-arbitration, if so only apply the fixup to this
+> - * already determined primary video card.
+> - */
+> -
+> -static void pci_fixup_video(struct pci_dev *pdev)
+> -{
+> -	struct pci_dev *bridge;
+> -	struct pci_bus *bus;
+> -	u16 config;
+> -
+> -	/* Is VGA routed to us? */
+> -	bus = pdev->bus;
+> -	while (bus) {
+> -		bridge = bus->self;
+> -
+> -		/*
+> -		 * From information provided by
+> -		 * "David Miller" <davem@davemloft.net>
+> -		 * The bridge control register is valid for PCI header
+> -		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
+> -		 * PCI header type NORMAL.
+> -		 */
+> -		if (bridge
+> -		    && ((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+> -		       || (bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
+> -			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
+> -						&config);
+> -			if (!(config & PCI_BRIDGE_CTL_VGA))
+> -				return;
+> -		}
+> -		bus = bus->parent;
+> -	}
+> -	if (!vga_default_device() || pdev == vga_default_device()) {
+> -		pci_read_config_word(pdev, PCI_COMMAND, &config);
+> -		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+> -			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
+> -			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
+> -			vga_set_default_device(pdev);
+> -		}
+> -	}
+> -}
+> +/* pci_fixup_video shared in vgaarb.c */
+>  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+>  				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_video);
+>  
+> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+> index af02597..f0fbdf6 100644
+> --- a/drivers/gpu/vga/vgaarb.c
+> +++ b/drivers/gpu/vga/vgaarb.c
+> @@ -149,6 +149,81 @@ void vga_set_default_device(struct pci_dev *pdev)
+>  }
+>  #endif
+>  
+> +/*
+> + * Fixup to mark boot BIOS video selected by BIOS before it changes
+> + *
+> + * From information provided by "Jon Smirl" <jonsmirl@gmail.com>
+> + *
+> + * The standard boot ROM sequence for an x86 machine uses the BIOS
+> + * to select an initial video card for boot display. This boot video
+> + * card will have it's BIOS copied to C0000 in system RAM.
+> + * IORESOURCE_ROM_SHADOW is used to associate the boot video
+> + * card with this copy. On laptops this copy has to be used since
+> + * the main ROM may be compressed or combined with another image.
+> + * See pci_map_rom() for use of this flag. Before marking the device
+> + * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
+> + * by either arch cde or vga-arbitration, if so only apply the fixup to this
+> + * already determined primary video card.
+> + */
+> +
+> +void pci_fixup_video(struct pci_dev *pdev)
+> +{
+> +	struct pci_dev *bridge;
+> +	struct pci_bus *bus;
+> +	u16 config;
+> +
+> +	if (!vga_default_device()) {
+> +		resource_size_t start, end;
+> +		int i;
+> +
+> +		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+> +			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
+> +				continue;
+> +
+> +			start = pci_resource_start(pdev, i);
+> +			end  = pci_resource_end(pdev, i);
+> +
+> +			if (!start || !end)
+> +				continue;
+> +
+> +			if (screen_info.lfb_base >= start &&
+> +				(screen_info.lfb_base + screen_info.lfb_size) < end)
+> +				vga_set_default_device(pdev);
+> +		}
+> +	}
+> +
+> +	/* Is VGA routed to us? */
+> +	bus = pdev->bus;
+> +	while (bus) {
+> +		bridge = bus->self;
+> +
+> +		/*
+> +		 * From information provided by
+> +		 * "David Miller" <davem@davemloft.net>
+> +		 * The bridge control register is valid for PCI header
+> +		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
+> +		 * PCI header type NORMAL.
+> +		 */
+> +		if (bridge
+> +		    && ((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+> +		       || (bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
+
+I have a patch in my pci/pci_is_bridge branch that will conflict with this,
+but I'll take care of sorting that out.  You can continue to base your
+patch on v3.15-rc1 or whatever you're using.
+
+> +			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
+> +						&config);
+> +			if (!(config & PCI_BRIDGE_CTL_VGA))
+> +				return;
+> +		}
+> +		bus = bus->parent;
+> +	}
+> +	if (!vga_default_device() || pdev == vga_default_device()) {
+> +		pci_read_config_word(pdev, PCI_COMMAND, &config);
+> +		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+> +			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
+> +			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
+> +			vga_set_default_device(pdev);
+> +		}
+> +	}
+> +}
+> +
+>  static inline void vga_irq_set_state(struct vga_device *vgadev, bool state)
+>  {
+>  	if (vgadev->irq_set_state)
+> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+> index ae9618f..a033180 100644
+> --- a/drivers/video/fbdev/efifb.c
+> +++ b/drivers/video/fbdev/efifb.c
+> @@ -19,8 +19,6 @@
+>  
+>  static bool request_mem_succeeded = false;
+>  
+> -static struct pci_dev *default_vga;
+> -
+>  static struct fb_var_screeninfo efifb_defined = {
+>  	.activate		= FB_ACTIVATE_NOW,
+>  	.height			= -1,
+> @@ -84,18 +82,6 @@ static struct fb_ops efifb_ops = {
+>  	.fb_imageblit	= cfb_imageblit,
+>  };
+>  
+> -struct pci_dev *vga_default_device(void)
+> -{
+> -	return default_vga;
+> -}
+> -
+> -EXPORT_SYMBOL_GPL(vga_default_device);
+> -
+> -void vga_set_default_device(struct pci_dev *pdev)
+> -{
+> -	default_vga = pdev;
+> -}
+> -
+>  static int efifb_setup(char *options)
+>  {
+>  	char *this_opt;
+> @@ -126,30 +112,6 @@ static int efifb_setup(char *options)
+>  		}
+>  	}
+>  
+> -	for_each_pci_dev(dev) {
+> -		int i;
+> -
+> -		if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
+> -			continue;
+> -
+> -		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+> -			resource_size_t start, end;
+> -
+> -			if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
+> -				continue;
+> -
+> -			start = pci_resource_start(dev, i);
+> -			end  = pci_resource_end(dev, i);
+> -
+> -			if (!start || !end)
+> -				continue;
+> -
+> -			if (screen_info.lfb_base >= start &&
+> -			    (screen_info.lfb_base + screen_info.lfb_size) < end)
+> -				default_vga = dev;
+> -		}
+> -	}
+> -
+>  	return 0;
+>  }
+>  
+> diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
+> index 2c02f3a..6518460 100644
+> --- a/include/linux/vgaarb.h
+> +++ b/include/linux/vgaarb.h
+> @@ -162,6 +162,43 @@ extern void vga_put(struct pci_dev *pdev, unsigned int rsrc);
+>  #define vga_put(pdev, rsrc)
+>  #endif
+>  
+> +/**
+> + *     pci_fixup_video
+> + *
+> + *     This can be called by arch PCI to fixup boot VGA tagging
+> + *     of VGA PCI devices (e.g. for X86, IA64)
+> + *
+> + *     This code was initially spread/duplicated across:
+> + *     - X86 PCI-fixup
+> + *     - IA64 PCI-fixup
+> + *     - EFI_FB
+> + *
+> + *     * PCI-fixup part:
+> + *     Fixup to mark boot BIOS video selected by BIOS before it changes
+> + *
+> + *     From information provided by "Jon Smirl" <jonsmirl@gmail.com>
+> + *
+> + *     The standard boot ROM sequence for an x86 machine uses the BIOS
+> + *     to select an initial video card for boot display. This boot video
+> + *     card will have it's BIOS copied to C0000 in system RAM.
+> + *     IORESOURCE_ROM_SHADOW is used to associate the boot video
+> + *     card with this copy. On laptops this copy has to be used since
+> + *     the main ROM may be compressed or combined with another image.
+> + *     See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
+> + *     is marked here since the boot video device will be the only enabled
+> + *     video device at this point.
+> + *
+> + *     * EFI_FB part:
+> + *     Some EFI-based system (e.g. Intel-Macs from Apple) do not setup
+> + *     shadow Video-BIOS and thus can only be detected by framebuffer
+> + *     IO memory range. Flag the corresponding GPU as boot_vga.
+> + */
+
+I would fold this information into the comment at the function definition.
+It looks like pci_fixup_video() is only called as a quirk, so there aren't
+going to be random callers that will look for information at this
+declaration.
+
+> +
+> +#if defined(CONFIG_VGA_ARB)
+> +void pci_fixup_video(struct pci_dev *pdev);
+> +#else
+> +static inline void pci_fixup_video(struct pci_dev *pdev) { }
+> +#endif
+>  
+>  /**
+>   *     vga_default_device
