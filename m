@@ -1,65 +1,126 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
-	<kishon@ti.com>, Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>
-Subject: [PATCH v2 11/18] ARM: dts: dra7: Add dt data for PCIe PHY control module
-Date: Thu, 29 May 2014 12:08:13 +0530
-Message-ID: <1401345500-20188-12-git-send-email-kishon@ti.com>
-In-Reply-To: <1401345500-20188-1-git-send-email-kishon@ti.com>
-References: <1401345500-20188-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch V3 15/37] x86, irq: reorganize IO_APIC_get_PCI_irq_vector() to prepare for irqdomain
+Date: Tue, 27 May 2014 16:07:50 +0800
+Message-Id: <1401178092-1228-16-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added dt data for PCIe PHY control module used by PCIe PHY.
-The documention for this node can be found @ ../bindings/phy/ti-phy.txt
+Reorganize function IO_APIC_get_PCI_irq_vector() a bit to better support
+coming irqdomain.
 
-Cc: Tony Lindgren <tony@atomide.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Pawel Moll <pawel.moll@arm.com>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: Kumar Gala <galak@codeaurora.org>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/arm/boot/dts/dra7.dtsi |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ arch/x86/kernel/apic/io_apic.c |   61 ++++++++++++++++++++++------------------
+ 1 file changed, 33 insertions(+), 28 deletions(-)
 
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
-index f0ca46d..3c7e7f2 100644
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -803,6 +803,23 @@
- 			status = "disabled";
- 		};
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 18d0e8a831c0..b14241915262 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -997,7 +997,7 @@ static int pin_2_irq(int idx, int apic, int pin)
+ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 				struct io_apic_irq_attr *irq_attr)
+ {
+-	int ioapic_idx, i, best_guess = -1;
++	int irq, i, best_guess = -1;
  
-+		omap_control_pcie1phy: omap-control-pciephy@0x4a003c40 {
-+			compatible = "ti,control-phy-pcie";
-+			reg = <0x4a003c40 0x4>, <0x4a003c14 0x4>, <0x4a003c34 0x4>;
-+			reg-names = "power", "control_sma", "pcie_pcs";
-+			clocks = <&sys_clkin1>;
-+			clock-names = "sysclk";
-+		};
+ 	apic_printk(APIC_DEBUG,
+ 		    "querying PCI -> IRQ mapping bus:%d, slot:%d, pin:%d.\n",
+@@ -1007,41 +1007,46 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 			    "PCI BIOS passed nonexistent PCI bus %d!\n", bus);
+ 		return -1;
+ 	}
 +
-+		omap_control_pcie2phy: omap-control-pciephy@0x4a003c44 {
-+			compatible = "ti,control-phy-pcie";
-+			reg = <0x4a003c44 0x4>, <0x4a003c14 0x4>, <0x4a003c34 0x4>;
-+			reg-names = "power", "control_sma", "pcie_pcs";
-+			clocks = <&sys_clkin1>;
-+			clock-names = "sysclk";
-+			status = "disabled";
-+		};
+ 	for (i = 0; i < mp_irq_entries; i++) {
+ 		int lbus = mp_irqs[i].srcbus;
++		int ioapic_idx, found = 0;
 +
- 		omap_control_usb2phy1: control-phy@4a002300 {
- 			compatible = "ti,control-phy-usb2";
- 			reg = <0x4a002300 0x4>;
++		if (bus != lbus || mp_irqs[i].irqtype != mp_INT ||
++		    slot != ((mp_irqs[i].srcbusirq >> 2) & 0x1f))
++			continue;
+ 
+ 		for_each_ioapic(ioapic_idx)
+ 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic ||
+-			    mp_irqs[i].dstapic == MP_APIC_ALL)
++			    mp_irqs[i].dstapic == MP_APIC_ALL) {
++				found = 1;
+ 				break;
++			}
++		if (!found)
++			continue;
+ 
+-		if (!test_bit(lbus, mp_bus_not_pci) &&
+-		    mp_irqs[i].irqtype == mp_INT &&
+-		    (bus == lbus) &&
+-		    (slot == ((mp_irqs[i].srcbusirq >> 2) & 0x1f))) {
+-			int irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
+-
+-			if (!(ioapic_idx || IO_APIC_IRQ(irq)))
+-				continue;
++		/* Skip ISA IRQs */
++		irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
++		if (ioapic_idx == 0 && !IO_APIC_IRQ(irq))
++			continue;
+ 
+-			if (pin == (mp_irqs[i].srcbusirq & 3)) {
+-				set_io_apic_irq_attr(irq_attr, ioapic_idx,
+-						     mp_irqs[i].dstirq,
+-						     irq_trigger(i),
+-						     irq_polarity(i));
+-				return irq;
+-			}
+-			/*
+-			 * Use the first all-but-pin matching entry as a
+-			 * best-guess fuzzy result for broken mptables.
+-			 */
+-			if (best_guess < 0) {
+-				set_io_apic_irq_attr(irq_attr, ioapic_idx,
+-						     mp_irqs[i].dstirq,
+-						     irq_trigger(i),
+-						     irq_polarity(i));
+-				best_guess = irq;
+-			}
++		if (pin == (mp_irqs[i].srcbusirq & 3)) {
++			set_io_apic_irq_attr(irq_attr, ioapic_idx,
++					     mp_irqs[i].dstirq,
++					     irq_trigger(i),
++					     irq_polarity(i));
++			return irq;
++		}
++		/*
++		 * Use the first all-but-pin matching entry as a
++		 * best-guess fuzzy result for broken mptables.
++		 */
++		if (best_guess < 0) {
++			set_io_apic_irq_attr(irq_attr, ioapic_idx,
++					     mp_irqs[i].dstirq,
++					     irq_trigger(i),
++					     irq_polarity(i));
++			best_guess = irq;
+ 		}
+ 	}
+ 	return best_guess;
 -- 
-1.7.9.5
+1.7.10.4
 
