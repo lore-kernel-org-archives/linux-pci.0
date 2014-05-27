@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:19116 "EHLO mga01.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:9853 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964876AbaESQWR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 May 2014 12:22:17 -0400
+	id S1751847AbaE0IV7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 27 May 2014 04:21:59 -0400
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -12,9 +12,7 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
+	Yinghai Lu <yinghai@kernel.org>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
@@ -22,63 +20,38 @@ Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Paul Gortmaker <paul.gortmaker@windriver.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch Part1 V2 08/29] x86, ACPI, irq: enhance error handling in function acpi_register_gsi()
-Date: Tue, 20 May 2014 00:22:52 +0800
-Message-Id: <1400516594-11544-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Patch V1 0/4] enhance IOAPIC core to support hotplug
+Date: Tue, 27 May 2014 16:24:33 +0800
+Message-Id: <1401179077-2020-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function mp_register_gsi() may return invalid GSI if error happens,
-so enhance acpi_register_gsi() to handle possible error cases.
+This patch set enhances IOAPIC core to support IOAPIC hotplug on x86
+platforms. It's based on another patch set "use irqdomain to dynamically
+allocate IRQ for IOAPIC" at https://lkml.org/lkml/2014/5/27/86
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+You may pull from 
+https://github.com/jiangliu/linux.git ioapic/hotplug
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 6d65850f49e9..8b8ff786af12 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -97,6 +97,8 @@ static u32 isa_irq_to_gsi[NR_IRQS_LEGACY] __read_mostly = {
- 	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
- };
- 
-+#define	ACPI_INVALID_GSI		INT_MIN
-+
- static unsigned int gsi_to_irq(unsigned int gsi)
- {
- 	unsigned int irq = gsi + NR_IRQS_LEGACY;
-@@ -553,13 +555,13 @@ int (*acpi_suspend_lowlevel)(void);
-  */
- int acpi_register_gsi(struct device *dev, u32 gsi, int trigger, int polarity)
- {
--	unsigned int irq;
- 	unsigned int plat_gsi = gsi;
- 
- 	plat_gsi = (*__acpi_register_gsi)(dev, gsi, trigger, polarity);
--	irq = gsi_to_irq(plat_gsi);
-+	if (plat_gsi != ACPI_INVALID_GSI)
-+		return gsi_to_irq(plat_gsi);
- 
--	return irq;
-+	return -1;
- }
- EXPORT_SYMBOL_GPL(acpi_register_gsi);
- 
-@@ -1054,7 +1056,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
- 	ret = io_apic_set_pci_routing(dev, gsi_to_irq(gsi), &irq_attr);
- 	if (ret < 0)
--		gsi = INT_MIN;
-+		gsi = ACPI_INVALID_GSI;
- 
- 	return gsi;
- }
+Once passed review, we will use Yinghai's patches to glue IOAPIC
+driver and ACPI PCI root driver to handle hotplug events.
+
+Jiang Liu (4):
+  x86, irq: refine mp_register_ioapic() to prepare for IOAPIC hotplug
+  x86, irq, ACPI: introduce a rwsem to protect IOAPIC operations from
+    hotplug
+  x86, irq, ACPI: implement interface to support ACPI based IOAPIC
+    hot-addition
+  x86, irq, ACPI: implement interface to support ACPI based IOAPIC
+    hot-removal
+
+ arch/x86/include/asm/io_apic.h |    5 +-
+ arch/x86/kernel/acpi/boot.c    |   44 +++++++--
+ arch/x86/kernel/apic/io_apic.c |  207 ++++++++++++++++++++++++++++++----------
+ 3 files changed, 196 insertions(+), 60 deletions(-)
+
 -- 
 1.7.10.4
 
