@@ -1,117 +1,384 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:49430 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934548AbaE3XRN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 19:17:13 -0400
-Received: by mail-ig0-f177.google.com with SMTP id l13so1446375iga.4
-        for <linux-pci@vger.kernel.org>; Fri, 30 May 2014 16:17:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140530230830.GG1677@bart.dudau.co.uk>
-References: <1401379426-9701-1-git-send-email-galak@codeaurora.org>
- <CAL_JsqLPFDwtd-QYDqCwx1JVj1Aa8=nof-e0P6R9CZra+fXHfw@mail.gmail.com>
- <47B1E3D0-4336-4529-80B0-172F4ACA5C97@codeaurora.org> <20140530005602.GE1677@bart.dudau.co.uk>
- <CAErSpo7qEhJyUAu58R8g6+AEhRGo_+Vv0EMgkK+3ZQOU9+jmhg@mail.gmail.com>
- <20140530014116.GF1677@bart.dudau.co.uk> <F22EE9D6-8F58-4AF0-9684-71B7A3BFF868@codeaurora.org>
- <20140530230830.GG1677@bart.dudau.co.uk>
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:38289 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751386AbaE0Wel (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 18:34:41 -0400
+Received: by mail-ig0-f169.google.com with SMTP id hl10so1633497igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 15:34:40 -0700 (PDT)
+Date: Tue, 27 May 2014 16:34:36 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 30 May 2014 17:16:52 -0600
-Message-ID: <CAErSpo7ViLMCgR7rBmOxYJsVK1DBvkZTWpEDOPDQ0NjvQmwiiA@mail.gmail.com>
-Subject: Re: [PATCH] of: treat PCI config space as IORESOURCE_MEM type
-To: Kumar Gala <galak@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset=UTF-8
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-ia64@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org
+Subject: Re: [PATCH] PCI: Turn pcibios_penalize_isa_irq() into __weak function
+Message-ID: <20140527223436.GD11907@google.com>
+References: <1399346992-6584-1-git-send-email-hanjun.guo@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1399346992-6584-1-git-send-email-hanjun.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 30, 2014 at 5:11 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
-> On Fri, May 30, 2014 at 03:45:05PM -0500, Kumar Gala wrote:
->>
->> On May 29, 2014, at 8:41 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
->>
->> > On Thu, May 29, 2014 at 07:29:31PM -0600, Bjorn Helgaas wrote:
->> >> On Thu, May 29, 2014 at 6:56 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
->> >>> On Thu, May 29, 2014 at 03:51:28PM -0500, Kumar Gala wrote:
->> >>>>
->> >>>> On May 29, 2014, at 3:44 PM, Rob Herring <robherring2@gmail.com> wrote:
->> >>>>
->> >>>>> On Thu, May 29, 2014 at 11:03 AM, Kumar Gala <galak@codeaurora.org> wrote:
->> >>>>>> If we have a PCI config space specified in something like a ranges
->> >>>>>> property we should treat it as memory type resource.
->> >>>>>
->> >>>>> Config space should not be in ranges[1]. We have some cases that are,
->> >>>>> but we don't want new ones.
->> >>>>
->> >>>> For the cases we have I agree, however an ECAM based cfg seems completely legit.
->> >>>>
->> >>>>>> Signed-off-by: Kumar Gala <galak@codeaurora.org>
->> >>>>>> ---
->> >>>>>> drivers/of/address.c | 3 +++
->> >>>>>> 1 file changed, 3 insertions(+)
->> >>>>>>
->> >>>>>> diff --git a/drivers/of/address.c b/drivers/of/address.c
->> >>>>>> index cb4242a..4e7ee59 100644
->> >>>>>> --- a/drivers/of/address.c
->> >>>>>> +++ b/drivers/of/address.c
->> >>>>>> @@ -122,6 +122,9 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
->> >>>>>>       u32 w = be32_to_cpup(addr);
->> >>>>>>
->> >>>>>>       switch((w >> 24) & 0x03) {
->> >>>>>> +       case 0x00: /* cfg space */
->> >>>>>> +               flags |= IORESOURCE_MEM;
->> >>>>>> +               break;
->> >>>>>
->> >>>>> How would you then distinguish actual memory ranges?
->> >>>>
->> >>>> One assumes you are still looking at pci_space as part of of_pci_range
->> >>>
->> >>> That doesn't happen when you start scanning the bus. The existing code will
->> >>> use the IORESOURCE_MEM for allocating memory space for devices, which is
->> >>> not what you want. Did you test your patch on any PCI system? I'm pretty
->> >>> sure that with my patch series that tries to make a generic framework for
->> >>> host controllers this will fail.
->> >>>
->> >>> We really need a IORESOURCE_CFG flag for this space.
->> >>
->> >> Maybe, but I'm not convinced yet.  The existing IORESOURCE_TYPE_BITS
->> >> types are for things that are mutually exclusive address spaces.  I
->> >> think this discussion is about ECAM, where the CPU side is definitely
->> >> in the same address space (IORESOURCE_MEM) as RAM, APICs, host bridge
->> >> apertures, device MMIO, etc.  The ECAM area must appear in the
->> >> iomem_resource tree so we avoid it when allocating other areas.
->> >
->> > Agree, I'm only concerned that if this ECAM config space gets added to
->> > the list of pci_host_bridge windows it will be indistinguishable from
->> > IORESOURCE_MEM resources and pci_create_root_bus() will add it to the
->> > bus and allow devices present on that bus to be assigned addresses from
->> > that range. Which might not be what one wants for certain BARs.
->> >
->> > I've had an aborted attempt to parse ECAM ranges in one version of my
->> > series (granted, I was trying to hack the IORESOURCE_TYPE_BITS as well)
->> > and things got horribly wrong quickly. I could give this patch a go with
->> > my series tomorrow when I'm in the office and report back.
->>
->> We need to fix the parsing code to be smarter about this case.
->
-> Wow, what a sweeping statement! Did you not understand that the issue is not
-> the parsing code but the way the rest of the core code uses an IORESOURCE_MEM
-> once you have parsed it into a resource structure and added it to the list
-> of pci_host_bridge_windows?
+On Tue, May 06, 2014 at 11:29:52AM +0800, Hanjun Guo wrote:
+> pcibios_penalize_isa_irq() is only useful for x86 now, and
+> legacy ISA is not used by some architectures, so make
+> pcibios_penalize_isa_irq() as __weak function to simplify
+> the code, this will prevent new platform from introducing
+> dummy stub function for pcibios_penalize_isa_irq() too.
+> 
+> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-Why do you want to add the ECAM area to the list of host bridge
-windows?  My intent was that the windows tell the core what resources
-are available for devices behind the bridge.
+Applied with Arnd's ack to pci/misc for v3.16, thanks.
 
-Bjorn
+> ---
+>  arch/alpha/include/asm/pci.h        |    5 -----
+>  arch/arm/include/asm/pci.h          |    5 -----
+>  arch/blackfin/include/asm/pci.h     |    5 -----
+>  arch/cris/include/asm/pci.h         |    1 -
+>  arch/frv/include/asm/pci.h          |    2 --
+>  arch/frv/mb93090-mb00/pci-irq.c     |    4 ----
+>  arch/ia64/include/asm/pci.h         |    6 ------
+>  arch/microblaze/include/asm/pci.h   |    5 -----
+>  arch/mips/include/asm/pci.h         |    5 -----
+>  arch/mn10300/include/asm/pci.h      |    1 -
+>  arch/mn10300/unit-asb2305/pci-irq.c |    4 ----
+>  arch/parisc/include/asm/pci.h       |    5 -----
+>  arch/powerpc/include/asm/pci.h      |    5 -----
+>  arch/sh/include/asm/pci.h           |    5 -----
+>  arch/sparc/include/asm/pci_32.h     |    5 -----
+>  arch/sparc/include/asm/pci_64.h     |    5 -----
+>  arch/unicore32/include/asm/pci.h    |    5 -----
+>  arch/x86/include/asm/pci.h          |    1 -
+>  arch/xtensa/include/asm/pci.h       |    5 -----
+>  drivers/pci/pci.c                   |   11 +++++++++++
+>  include/linux/pci.h                 |    1 +
+>  21 files changed, 12 insertions(+), 79 deletions(-)
+> 
+> diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+> index d01afb7..f7f680f 100644
+> --- a/arch/alpha/include/asm/pci.h
+> +++ b/arch/alpha/include/asm/pci.h
+> @@ -59,11 +59,6 @@ struct pci_controller {
+>  
+>  extern void pcibios_set_master(struct pci_dev *dev);
+>  
+> -extern inline void pcibios_penalize_isa_irq(int irq, int active)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  /* IOMMU controls.  */
+>  
+>  /* The PCI address space does not equal the physical memory address space.
+> diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
+> index 680a83e..7e95d85 100644
+> --- a/arch/arm/include/asm/pci.h
+> +++ b/arch/arm/include/asm/pci.h
+> @@ -31,11 +31,6 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+>  }
+>  #endif /* CONFIG_PCI_DOMAINS */
+>  
+> -static inline void pcibios_penalize_isa_irq(int irq, int active)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  /*
+>   * The PCI address space does equal the physical memory address space.
+>   * The networking and block device layers use this boolean for bounce
+> diff --git a/arch/blackfin/include/asm/pci.h b/arch/blackfin/include/asm/pci.h
+> index 74352c4..c737909 100644
+> --- a/arch/blackfin/include/asm/pci.h
+> +++ b/arch/blackfin/include/asm/pci.h
+> @@ -10,9 +10,4 @@
+>  #define PCIBIOS_MIN_IO 0x00001000
+>  #define PCIBIOS_MIN_MEM 0x10000000
+>  
+> -static inline void pcibios_penalize_isa_irq(int irq)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  #endif				/* _ASM_BFIN_PCI_H */
+> diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
+> index f666734..cc2399c 100644
+> --- a/arch/cris/include/asm/pci.h
+> +++ b/arch/cris/include/asm/pci.h
+> @@ -20,7 +20,6 @@ void pcibios_config_init(void);
+>  struct pci_bus * pcibios_scan_root(int bus);
+>  
+>  void pcibios_set_master(struct pci_dev *dev);
+> -void pcibios_penalize_isa_irq(int irq);
+>  struct irq_routing_table *pcibios_get_irq_routing_table(void);
+>  int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+>  
+> diff --git a/arch/frv/include/asm/pci.h b/arch/frv/include/asm/pci.h
+> index ef03baf..2035a4d 100644
+> --- a/arch/frv/include/asm/pci.h
+> +++ b/arch/frv/include/asm/pci.h
+> @@ -24,8 +24,6 @@ struct pci_dev;
+>  
+>  extern void pcibios_set_master(struct pci_dev *dev);
+>  
+> -extern void pcibios_penalize_isa_irq(int irq);
+> -
+>  #ifdef CONFIG_MMU
+>  extern void *consistent_alloc(gfp_t gfp, size_t size, dma_addr_t *dma_handle);
+>  extern void consistent_free(void *vaddr);
+> diff --git a/arch/frv/mb93090-mb00/pci-irq.c b/arch/frv/mb93090-mb00/pci-irq.c
+> index c677b9d..1c35c93 100644
+> --- a/arch/frv/mb93090-mb00/pci-irq.c
+> +++ b/arch/frv/mb93090-mb00/pci-irq.c
+> @@ -55,10 +55,6 @@ void __init pcibios_fixup_irqs(void)
+>  	}
+>  }
+>  
+> -void __init pcibios_penalize_isa_irq(int irq)
+> -{
+> -}
+> -
+>  void pcibios_enable_irq(struct pci_dev *dev)
+>  {
+>  	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
+> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+> index 7d41cc0..52af5ed 100644
+> --- a/arch/ia64/include/asm/pci.h
+> +++ b/arch/ia64/include/asm/pci.h
+> @@ -50,12 +50,6 @@ struct pci_dev;
+>  extern unsigned long ia64_max_iommu_merge_mask;
+>  #define PCI_DMA_BUS_IS_PHYS	(ia64_max_iommu_merge_mask == ~0UL)
+>  
+> -static inline void
+> -pcibios_penalize_isa_irq (int irq, int active)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  #include <asm-generic/pci-dma-compat.h>
+>  
+>  #ifdef CONFIG_PCI
+> diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
+> index 935f9be..3355240 100644
+> --- a/arch/microblaze/include/asm/pci.h
+> +++ b/arch/microblaze/include/asm/pci.h
+> @@ -44,11 +44,6 @@ struct pci_dev;
+>   */
+>  #define pcibios_assign_all_busses()	0
+>  
+> -static inline void pcibios_penalize_isa_irq(int irq, int active)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  #ifdef CONFIG_PCI
+>  extern void set_pci_dma_ops(struct dma_map_ops *dma_ops);
+>  extern struct dma_map_ops *get_pci_dma_ops(void);
+> diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+> index 12d6842..974b0e3 100644
+> --- a/arch/mips/include/asm/pci.h
+> +++ b/arch/mips/include/asm/pci.h
+> @@ -73,11 +73,6 @@ extern unsigned long PCIBIOS_MIN_MEM;
+>  
+>  extern void pcibios_set_master(struct pci_dev *dev);
+>  
+> -static inline void pcibios_penalize_isa_irq(int irq, int active)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  #define HAVE_PCI_MMAP
+>  
+>  extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+> diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
+> index 1663238..5f70af2 100644
+> --- a/arch/mn10300/include/asm/pci.h
+> +++ b/arch/mn10300/include/asm/pci.h
+> @@ -48,7 +48,6 @@ extern void unit_pci_init(void);
+>  #define PCIBIOS_MIN_MEM		0xB8000000
+>  
+>  void pcibios_set_master(struct pci_dev *dev);
+> -void pcibios_penalize_isa_irq(int irq);
+>  
+>  /* Dynamic DMA mapping stuff.
+>   * i386 has everything mapped statically.
+> diff --git a/arch/mn10300/unit-asb2305/pci-irq.c b/arch/mn10300/unit-asb2305/pci-irq.c
+> index 77439da..fcb28ce 100644
+> --- a/arch/mn10300/unit-asb2305/pci-irq.c
+> +++ b/arch/mn10300/unit-asb2305/pci-irq.c
+> @@ -40,10 +40,6 @@ void __init pcibios_fixup_irqs(void)
+>  	}
+>  }
+>  
+> -void __init pcibios_penalize_isa_irq(int irq)
+> -{
+> -}
+> -
+>  void pcibios_enable_irq(struct pci_dev *dev)
+>  {
+>  	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
+> diff --git a/arch/parisc/include/asm/pci.h b/arch/parisc/include/asm/pci.h
+> index 4651540..20df2b0 100644
+> --- a/arch/parisc/include/asm/pci.h
+> +++ b/arch/parisc/include/asm/pci.h
+> @@ -215,11 +215,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+>  }
+>  #endif
+>  
+> -static inline void pcibios_penalize_isa_irq(int irq, int active)
+> -{
+> -	/* We don't need to penalize isa irq's */
+> -}
+> -
+>  static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+>  {
+>  	return channel ? 15 : 14;
+> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+> index 95145a1..1b0739b 100644
+> --- a/arch/powerpc/include/asm/pci.h
+> +++ b/arch/powerpc/include/asm/pci.h
+> @@ -46,11 +46,6 @@ struct pci_dev;
+>  #define pcibios_assign_all_busses() \
+>  	(pci_has_flag(PCI_REASSIGN_ALL_BUS))
+>  
+> -static inline void pcibios_penalize_isa_irq(int irq, int active)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  #define HAVE_ARCH_PCI_GET_LEGACY_IDE_IRQ
+>  static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+>  {
+> diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+> index bff96c2..5b45115 100644
+> --- a/arch/sh/include/asm/pci.h
+> +++ b/arch/sh/include/asm/pci.h
+> @@ -70,11 +70,6 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+>  	enum pci_mmap_state mmap_state, int write_combine);
+>  extern void pcibios_set_master(struct pci_dev *dev);
+>  
+> -static inline void pcibios_penalize_isa_irq(int irq, int active)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  /* Dynamic DMA mapping stuff.
+>   * SuperH has everything mapped statically like x86.
+>   */
+> diff --git a/arch/sparc/include/asm/pci_32.h b/arch/sparc/include/asm/pci_32.h
+> index dc50329..53e9b49 100644
+> --- a/arch/sparc/include/asm/pci_32.h
+> +++ b/arch/sparc/include/asm/pci_32.h
+> @@ -16,11 +16,6 @@
+>  
+>  #define PCI_IRQ_NONE		0xffffffff
+>  
+> -static inline void pcibios_penalize_isa_irq(int irq, int active)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  /* Dynamic DMA mapping stuff.
+>   */
+>  #define PCI_DMA_BUS_IS_PHYS	(0)
+> diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
+> index 1633b71..c6c7396 100644
+> --- a/arch/sparc/include/asm/pci_64.h
+> +++ b/arch/sparc/include/asm/pci_64.h
+> @@ -16,11 +16,6 @@
+>  
+>  #define PCI_IRQ_NONE		0xffffffff
+>  
+> -static inline void pcibios_penalize_isa_irq(int irq, int active)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  /* The PCI address space does not equal the physical memory
+>   * address space.  The networking and block device layers use
+>   * this boolean for bounce buffer decisions.
+> diff --git a/arch/unicore32/include/asm/pci.h b/arch/unicore32/include/asm/pci.h
+> index f5e108f..654407e 100644
+> --- a/arch/unicore32/include/asm/pci.h
+> +++ b/arch/unicore32/include/asm/pci.h
+> @@ -18,11 +18,6 @@
+>  #include <asm-generic/pci.h>
+>  #include <mach/hardware.h> /* for PCIBIOS_MIN_* */
+>  
+> -static inline void pcibios_penalize_isa_irq(int irq, int active)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  #ifdef CONFIG_PCI
+>  static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+>  					enum pci_dma_burst_strategy *strat,
+> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+> index 96ae4f4..0892ea0 100644
+> --- a/arch/x86/include/asm/pci.h
+> +++ b/arch/x86/include/asm/pci.h
+> @@ -68,7 +68,6 @@ void pcibios_config_init(void);
+>  void pcibios_scan_root(int bus);
+>  
+>  void pcibios_set_master(struct pci_dev *dev);
+> -void pcibios_penalize_isa_irq(int irq, int active);
+>  struct irq_routing_table *pcibios_get_irq_routing_table(void);
+>  int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+>  
+> diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
+> index 614be03..5d52dc4 100644
+> --- a/arch/xtensa/include/asm/pci.h
+> +++ b/arch/xtensa/include/asm/pci.h
+> @@ -22,11 +22,6 @@
+>  
+>  extern struct pci_controller* pcibios_alloc_controller(void);
+>  
+> -static inline void pcibios_penalize_isa_irq(int irq)
+> -{
+> -	/* We don't do dynamic PCI IRQ allocation */
+> -}
+> -
+>  /* Assume some values. (We should revise them, if necessary) */
+>  
+>  #define PCIBIOS_MIN_IO		0x2000
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 7325d43..57c330f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1468,6 +1468,17 @@ void __weak pcibios_release_device(struct pci_dev *dev) {}
+>   */
+>  void __weak pcibios_disable_device (struct pci_dev *dev) {}
+>  
+> +/**
+> + * pcibios_penalize_isa_irq - provide arch specific hooks when penalize isa irq
+> + * @irq: isa irq to penalize
+> + * @active: irq active or not
+> + *
+> + * Permits the platform to provide architecture specific functionality when
+> + * penalize isa irq. This is the default implementation. Architecture
+> + * implementations can override this.
+> + */
+> +void __weak pcibios_penalize_isa_irq(int irq, int active) {}
+> +
+>  static void do_pci_disable_device(struct pci_dev *dev)
+>  {
+>  	u16 pci_command;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index aab57b4..da8f7d5 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1579,6 +1579,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>  				 enum pcie_reset_state state);
+>  int pcibios_add_device(struct pci_dev *dev);
+>  void pcibios_release_device(struct pci_dev *dev);
+> +void pcibios_penalize_isa_irq(int irq, int active);
+>  
+>  #ifdef CONFIG_HIBERNATE_CALLBACKS
+>  extern struct dev_pm_ops pcibios_pm_ops;
+> -- 
+> 1.7.9.5
+> 
