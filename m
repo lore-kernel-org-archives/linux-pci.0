@@ -1,56 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:50882 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932790AbaE2QvH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 12:51:07 -0400
-Content-Type: text/plain; charset=windows-1252
-Mime-Version: 1.0 (Mac OS X Mail 7.2 \(1874\))
-Subject: Re: [PATCH v2 03/18] PCI: designware: Configuration space should be specified in 'reg'
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <20140529163037.GC2552@obsidianresearch.com>
-Date: Thu, 29 May 2014 11:51:00 -0500
-Cc: Marek Vasut <marex@denx.de>, Liviu Dudau <liviu@dudau.co.uk>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	devicetree <devicetree@vger.kernel.org>, tony@atomide.com,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Message-Id: <A9B853EE-65C6-4B2E-ABC0-1E64DE584E91@codeaurora.org>
-References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-4-git-send-email-kishon@ti.com> <98E18225-3C63-4106-901A-A5D3DEC268C8@codeaurora.org> <20140529151840.GD1677@bart.dudau.co.uk> <CF1BAF3F-E16E-4864-8052-8C3EC29000B0@codeaurora.org> <20140529163037.GC2552@obsidianresearch.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:50864 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108AbaE0VJv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 17:09:51 -0400
+Received: by mail-ie0-f176.google.com with SMTP id rl12so9390573iec.21
+        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 14:09:51 -0700 (PDT)
+Date: Tue, 27 May 2014 15:09:48 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Test for std config alias when testing extended
+ config space
+Message-ID: <20140527210948.GB11907@google.com>
+References: <20140505201835.2466.46125.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140505201835.2466.46125.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-On May 29, 2014, at 11:30 AM, Jason Gunthorpe <jgunthorpe@obsidianresearch.com> wrote:
-
-> On Thu, May 29, 2014 at 11:03:36AM -0500, Kumar Gala wrote:
+On Mon, May 05, 2014 at 02:20:51PM -0600, Alex Williamson wrote:
+> When a PCI-to-PCIe bridge is stacked on a PCIe-to-PCI bridge, we can
+> have PCIe endpoints masked by a conventional PCI bus.  This makes the
+> extended config space of the PCIe endpoing inaccessible.  The PCIe-to-
+> PCI bridge is supposed to handle any type 1 configuration transactions
+> where the extended config offset bits are non-zero as an Unsupported
+> Request rather than forward it to the secondary interface.  As noted
+> here, there are a couple known offenders to this rule.  These bridges
+> drop the extended offset bits, resulting in the conventional config
+> space being aliased many times across the extended config space.  For
+> Intel NICs, this alias often seems to expose a bogus SR-IOV cap.
 > 
->> Just because the kernel doesn’t handle this is NO reason to change
->> the way the DT works.
+> Stacking bridges may seem like an uncommon scenario, but note that the
+> any conventional PCI slot in a modern PC is already the secondary
+> interface of an onboard PCIe-to-PCI bridge.  The user need only add
+> a PCI-to-PCIe adapter and PCIe device to encounter this problem.
 > 
-> The OF specs do not specify how to process a config type ranges entry,
-> and we all mutually agreed that the only sane interpretation for such
-> a thing would be to describe an ECAM memory space so generic code
-> could potentially make use of it.
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+
+Applied to pci/misc for v3.16, thanks!
+
+> ---
+>  drivers/pci/probe.c |   39 ++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 38 insertions(+), 1 deletion(-)
 > 
-> Since designware is not ECAM it should not use config ranges.
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ef09f5f..fdb0182 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -984,6 +984,43 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
+>  
+>  
+>  /**
+> + * pci_ext_cfg_is_aliased - is ext config space just an alias of std config?
+> + * @dev: PCI device
+> + *
+> + * PCI Express to PCI/PCI-X Bridge Specification, rev 1.0, 4.1.4 says that
+> + * when forwarding a type1 configuration request the bridge must check that
+> + * the extended register address field is zero.  The bridge is not permitted
+> + * to forward the transactions and must handle it as an Unsupported Request.
+> + * Some bridges do not follow this rule and simply drop the extended register
+> + * bits, resulting in the standard config space being aliased, every 256
+> + * bytes across the entire configuration space.  Test for this condition by
+> + * comparing the first dword of each potential alias to the vendor/device ID.
+> + * Known offenders:
+> + *   ASM1083/1085 PCIe-to-PCI Reversible Bridge (1b21:1080, rev 01 & 03)
+> + *   AMD/ATI SBx00 PCI to PCI Bridge (1002:4384, rev 40)
+> + */
+> +static bool pci_ext_cfg_is_aliased(struct pci_dev *dev)
+> +{
+> +#ifdef CONFIG_PCI_QUIRKS
+> +	int pos;
+> +	u32 header, tmp;
+> +
+> +	pci_read_config_dword(dev, PCI_VENDOR_ID, &header);
+> +
+> +	for (pos = PCI_CFG_SPACE_SIZE;
+> +	     pos < PCI_CFG_SPACE_EXP_SIZE; pos += PCI_CFG_SPACE_SIZE) {
+> +		if (pci_read_config_dword(dev, pos, &tmp) != PCIBIOS_SUCCESSFUL
+> +		    || header != tmp)
+> +			return false;
+> +	}
+> +
+> +	return true;
+> +#else
+> +	return false;
+> +#endif
+> +}
+> +
+> +/**
+>   * pci_cfg_space_size - get the configuration space size of the PCI device.
+>   * @dev: PCI device
+>   *
+> @@ -1001,7 +1038,7 @@ static int pci_cfg_space_size_ext(struct pci_dev *dev)
+>  
+>  	if (pci_read_config_dword(dev, pos, &status) != PCIBIOS_SUCCESSFUL)
+>  		goto fail;
+> -	if (status == 0xffffffff)
+> +	if (status == 0xffffffff || pci_ext_cfg_is_aliased(dev))
+>  		goto fail;
+>  
+>  	return PCI_CFG_SPACE_EXP_SIZE;
 > 
-> This has come up multiple times now, and the above is the consensus.
-> 
-> Jason
-
-Well the designware controller does support ECAM, just that the current in kernel users don’t do cfg space that way.
-
-So do we continue to support the current users that use a cfg range for a non-ECAM space?  Or break their DT and convert them to using regs?
-
-- k
-
--- 
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
