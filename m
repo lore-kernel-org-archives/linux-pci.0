@@ -1,4 +1,4 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -8,48 +8,82 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiri Kosina <trivial@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Paul Gortmaker <paul.gortmaker@windriver.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V3 01/37] x86, irq: update high address field when updating affinity for MSI IRQ
-Date: Tue, 27 May 2014 16:07:36 +0800
-Message-Id: <1401178092-1228-2-git-send-email-jiang.liu@linux.intel.com>
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-doc@vger.kernel.org
+Subject: [Patch V3 02/37] genirq, trivial: improve documentation to match current implementation
+Date: Tue, 27 May 2014 16:07:37 +0800
+Message-Id: <1401178092-1228-3-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
-
-If x2apic is enabled, the MSI high address field should also be aslo
-updated when setting affinity for MSI IRQ, otherwise the MSI IRQ may
-target wrong APIC IDs.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/kernel/apic/io_apic.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ Documentation/IRQ-domain.txt |    3 +--
+ kernel/irq/internals.h       |    2 +-
+ kernel/irq/irqdomain.c       |    6 +++---
+ 3 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 9d0a9795a0f8..2de992501a1b 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3007,6 +3007,10 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+diff --git a/Documentation/IRQ-domain.txt b/Documentation/IRQ-domain.txt
+index 03df71aeb38c..8a8b82c9ca53 100644
+--- a/Documentation/IRQ-domain.txt
++++ b/Documentation/IRQ-domain.txt
+@@ -41,8 +41,7 @@ An interrupt controller driver creates and registers an irq_domain by
+ calling one of the irq_domain_add_*() functions (each mapping method
+ has a different allocator function, more on that later).  The function
+ will return a pointer to the irq_domain on success.  The caller must
+-provide the allocator function with an irq_domain_ops structure with
+-the .map callback populated as a minimum.
++provide the allocator function with an irq_domain_ops structure.
  
- 	__get_cached_msi_msg(data->msi_desc, &msg);
+ In most cases, the irq_domain will begin empty without any mappings
+ between hwirq and IRQ numbers.  Mappings are added to the irq_domain
+diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
+index c4065e3edbc3..099ea2e0eb88 100644
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -33,7 +33,7 @@ enum {
+ };
  
-+	msg.address_hi = MSI_ADDR_BASE_HI;
-+	if (x2apic_enabled())
-+		msg.address_hi |= MSI_ADDR_EXT_DEST_ID(dest);
-+
- 	msg.data &= ~MSI_DATA_VECTOR_MASK;
- 	msg.data |= MSI_DATA_VECTOR(cfg->vector);
- 	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+ /*
+- * Bit masks for desc->state
++ * Bit masks for desc->core_internal_state__do_not_mess_with_it
+  *
+  * IRQS_AUTODETECT		- autodetection in progress
+  * IRQS_SPURIOUS_DISABLED	- was disabled due to spurious interrupt
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index f14033700c25..eb5e10e32e05 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -27,14 +27,14 @@ static struct irq_domain *irq_default_domain;
+  * __irq_domain_add() - Allocate a new irq_domain data structure
+  * @of_node: optional device-tree node of the interrupt controller
+  * @size: Size of linear map; 0 for radix mapping only
++ * @hwirq_max: Maximum number of interrupts supported by controller
+  * @direct_max: Maximum value of direct maps; Use ~0 for no limit; 0 for no
+  *              direct mapping
+  * @ops: map/unmap domain callbacks
+  * @host_data: Controller private data pointer
+  *
+- * Allocates and initialize and irq_domain structure.  Caller is expected to
+- * register allocated irq_domain with irq_domain_register().  Returns pointer
+- * to IRQ domain, or NULL on failure.
++ * Allocates and initialize and irq_domain structure.
++ * Returns pointer to IRQ domain, or NULL on failure.
+  */
+ struct irq_domain *__irq_domain_add(struct device_node *of_node, int size,
+ 				    irq_hw_number_t hwirq_max, int direct_max,
 -- 
 1.7.10.4
 
