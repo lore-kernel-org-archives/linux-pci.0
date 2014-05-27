@@ -1,56 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:61103 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751575AbaE0Wl0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 18:41:26 -0400
-Date: Tue, 27 May 2014 23:40:51 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: bhelgaas@google.com, arnd@arndb.de
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	jgunthorpe@obsidianresearch.com
-Subject: [GIT PULL] Generic PCI host controller driver for 3.16
-Message-ID: <20140527224051.GA13786@arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1401178092-1228-6-git-send-email-jiang.liu@linux.intel.com>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com> <1401178092-1228-6-git-send-email-jiang.liu@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 27 May 2014 07:50:31 -0600
+Message-ID: <CAErSpo7A17+VfQ524-VpdpCCtf93d980h-u+z6DnBtR6BoNmPg@mail.gmail.com>
+Subject: Re: [Patch V3 05/37] x86, PCI, ACPI: use kmalloc_node() to optimize
+ for performance
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Tue, May 27, 2014 at 2:07 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> Use kmalloc_node() instead of kmalloc() when possible to optimize
+> for performance on NUMA platforms.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-Please can you pull my generic PCI host controller driver for 3.16?
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-It's been doing the rounds on the lists for some time and things have
-settled down now, despite a recent failed attempt at factoring out the
-configuration space accessors.
+I think this is micro-optimization, because I don't think these
+structures are referenced often.  It might be nicer if we could
+arrange to run this path on the local node, as we do in
+pci_call_probe(), so all allocs would happen there.  But I'm OK with
+this as-is.
 
-Cheers,
-
-Will
-
---->8
-
-The following changes since commit d6d211db37e75de2ddc3a4f979038c40df7cc79c:
-
-  Linux 3.15-rc5 (2014-05-09 13:10:52 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/will/linux.git for-bjorn/pci-host-generic
-
-for you to fetch changes up to 97725ee5aef64b2056c10eabafc92ff89994733d:
-
-  MAINTAINERS: add entry for generic PCI host controller driver (2014-05-27 23:18:09 +0100)
-
-----------------------------------------------------------------
-Will Deacon (2):
-      PCI: ARM: add support for generic PCI host controller
-      MAINTAINERS: add entry for generic PCI host controller driver
-
- .../devicetree/bindings/pci/host-generic-pci.txt   | 100 ++++++
- MAINTAINERS                                        |   8 +
- drivers/pci/host/Kconfig                           |   7 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-host-generic.c                | 388 +++++++++++++++++++++
- 5 files changed, 504 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/host-generic-pci.txt
- create mode 100644 drivers/pci/host/pci-host-generic.c
+> ---
+>  arch/x86/pci/acpi.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 01edac6c5e18..91bef49df228 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -448,7 +448,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+>                 return;
+>
+>         size = sizeof(*info->res) * info->res_num;
+> -       info->res = kzalloc(size, GFP_KERNEL);
+> +       info->res = kzalloc_node(size, GFP_KERNEL, info->sd.node);
+>         if (!info->res) {
+>                 info->res_num = 0;
+>                 return;
+> @@ -456,7 +456,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+>
+>         size = sizeof(*info->res_offset) * info->res_num;
+>         info->res_num = 0;
+> -       info->res_offset = kzalloc(size, GFP_KERNEL);
+> +       info->res_offset = kzalloc_node(size, GFP_KERNEL, info->sd.node);
+>         if (!info->res_offset) {
+>                 kfree(info->res);
+>                 info->res = NULL;
+> @@ -495,7 +495,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>         if (node != NUMA_NO_NODE && !node_online(node))
+>                 node = NUMA_NO_NODE;
+>
+> -       info = kzalloc(sizeof(*info), GFP_KERNEL);
+> +       info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
+>         if (!info) {
+>                 printk(KERN_WARNING "pci_bus %04x:%02x: "
+>                        "ignored (out of memory)\n", domain, busnum);
+> --
+> 1.7.10.4
+>
