@@ -1,89 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:49380 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014AbaEOQ2G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 May 2014 12:28:06 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on designware core driver
-Date: Thu, 15 May 2014 18:28 +0200
-Message-ID: <4195791.GS9XG8RaXW@wuerfel>
-In-Reply-To: <1400169692-9677-6-git-send-email-m-karicheri2@ti.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com> <1400169692-9677-6-git-send-email-m-karicheri2@ti.com>
+Received: from mga11.intel.com ([192.55.52.93]:62051 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755781AbaE1W36 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 May 2014 18:29:58 -0400
+Subject: [PATCH 2/2] iov: Use pci_walk_vbus for tasks where we must search
+ for VFs
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+To: bhelgaas@google.com, ddutile@redhat.com
+Cc: linux-pci@vger.kernel.org, alex.williamson@redhat.com,
+	linux-kernel@vger.kernel.org
+Date: Wed, 28 May 2014 15:29:28 -0700
+Message-ID: <20140528222914.18898.42967.stgit@ahduyck-cp2.jf.intel.com>
+In-Reply-To: <20140528222901.18898.48031.stgit@ahduyck-cp2.jf.intel.com>
+References: <20140528222901.18898.48031.stgit@ahduyck-cp2.jf.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 15 May 2014 12:01:32 Murali Karicheri wrote:
-> +Sample bindings shown below:-
-> +
-> + - Remove ti,enable-linktrain if boot loader already does Link training and do EP
-> +   configuration.
-> + - Remove ti,init-phy if boot loader already initialize the phy and sets up pcie
-> +   link
+This change makes it so that we use pci_walk_vbus to go though and search
+for all devices that are contained within the local bus of our device.
 
-You actually have to document all the properties. Have a look at the
-other bindings for what this means.
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+---
+ drivers/pci/iov.c |   50 +++++++++++++++++++++++++++-----------------------
+ 1 files changed, 27 insertions(+), 23 deletions(-)
 
-> +
-> +               pcie@21800000 {
-> +                       compatible = "ti,keystone-pcie";
-> +                       device_type = "pci";
-> +                       clocks = <&clkpcie>;
-> +                       clock-names = "pcie";
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index de7a747..717f202 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -602,6 +602,30 @@ int pci_num_vf(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(pci_num_vf);
+ 
++struct vfs_assigned {
++	struct pci_dev *physfn;
++	unsigned int count;
++};
++
++/**
++ * pci_vfs_assigned_cb - callback used by pci_vfs_assigned
++ * @dev: the PCI device
++ * @data: Pointer to structure used by pci_vfs_assigned
++ *
++ * If the device is a virtual function and belongs to the provided PF
++ * and is assigned this will increment the count by 1.
++ */
++static int pci_vfs_assigned_cb(struct pci_dev *dev, void *data)
++{
++	struct vfs_assigned *vfa = data;
++
++	if (dev->is_virtfn && (dev->physfn == vfa->physfn) &&
++	    (dev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
++		vfa->count++;
++
++	return 0;
++}
++
+ /**
+  * pci_vfs_assigned - returns number of VFs are assigned to a guest
+  * @dev: the PCI device
+@@ -611,35 +635,15 @@ EXPORT_SYMBOL_GPL(pci_num_vf);
+  */
+ int pci_vfs_assigned(struct pci_dev *dev)
+ {
+-	struct pci_dev *vfdev;
+-	unsigned int vfs_assigned = 0;
+-	unsigned short dev_id;
++	struct vfs_assigned vfa = { .physfn = dev, .count = 0 };
+ 
+ 	/* only search if we are a PF */
+ 	if (!dev->is_physfn)
+ 		return 0;
+ 
+-	/*
+-	 * determine the device ID for the VFs, the vendor ID will be the
+-	 * same as the PF so there is no need to check for that one
+-	 */
+-	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
+-
+-	/* loop through all the VFs to see if we own any that are assigned */
+-	vfdev = pci_get_device(dev->vendor, dev_id, NULL);
+-	while (vfdev) {
+-		/*
+-		 * It is considered assigned if it is a virtual function with
+-		 * our dev as the physical function and the assigned bit is set
+-		 */
+-		if (vfdev->is_virtfn && (vfdev->physfn == dev) &&
+-		    (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
+-			vfs_assigned++;
+-
+-		vfdev = pci_get_device(dev->vendor, dev_id, vfdev);
+-	}
++	pci_walk_vbus(dev->bus, pci_vfs_assigned_cb, &vfa);
+ 
+-	return vfs_assigned;
++	return vfa.count;
+ }
+ EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+ 
 
-The dw-pcie binding lists two clocks.
-
-> +                       #address-cells = >;
-> +                       #size-cells = <2>;
-> +                       reg =  <0x21800000 0x1000>, <0x0262014c 4>;
-> +                       reg-names = "reg_rc_app", "reg_devcfg";
-
-There should be standard names that are documented in the binding.
-
-> +                       interrupts = <GIC_SPI 30 IRQ_TYPE_EDGE_RISING>,
-> +                                       <GIC_SPI 31 IRQ_TYPE_EDGE_RISING>,
-> +                                       <GIC_SPI 32 IRQ_TYPE_EDGE_RISING>,
-> +                                       <GIC_SPI 33 IRQ_TYPE_EDGE_RISING>,
-> +                                       <GIC_SPI 34 IRQ_TYPE_EDGE_RISING>,
-> +                                       <GIC_SPI 35 IRQ_TYPE_EDGE_RISING>,
-> +                                       <GIC_SPI 36 IRQ_TYPE_EDGE_RISING>,
-> +                                       <GIC_SPI 37 IRQ_TYPE_EDGE_RISING>,
-> +                                       <GIC_SPI 38 IRQ_TYPE_EDGE_RISING>; /* Error IRQ */
-
-What are all these interrupts?
-
-> +                       ranges = <0x00000800 0 0x21801000 0x21801000 0 0x0002000    /* Configuration space */
-> +                                 0x81000000 0 0          0x24000000 0 0x4000       /* downstream I/O */
-> +                                 0x82000000 0 0x50000000 0x50000000 0 0x10000000>; /* non-prefetchable memory */
-
-Please move the config space into 'reg' now instead of 'ranges'.
-This was a mistake earlier, and there are already other front-ends
-doing the same thing.
-
-> +                       num-lanes = <2>;
-> +                       ti,enable-linktrain;
-> +                       ti,init-phy;
-> +
-> +                       /* PCIE phy */
-> +                       phys = <&pcie0_phy>;
-> +                       phy-names = "pcie-phy";
-> +
-> +                       #interrupt-cells = <1>;
-> +                       interrupt-map-mask = <0 0 0 0>;
-> +                       interrupt-map = <0 0 0 1 &pcie_intc 1>, // INT A
-> +                                       <0 0 0 2 &pcie_intc 2>, // INT B
-> +                                       <0 0 0 3 &pcie_intc 3>, // INT C
-> +                                       <0 0 0 4 &pcie_intc 4>; // INT D
-
-I think this is the wrong map-mask.
-
-	Arnd
