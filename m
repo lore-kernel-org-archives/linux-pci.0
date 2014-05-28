@@ -1,173 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:32942 "EHLO arroyo.ext.ti.com"
+Received: from mga02.intel.com ([134.134.136.20]:5954 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755203AbaENNRL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 May 2014 09:17:11 -0400
-Message-ID: <53736CBC.2060702@ti.com>
-Date: Wed, 14 May 2014 16:16:44 +0300
-From: Roger Quadros <rogerq@ti.com>
+	id S932337AbaE1WYV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 May 2014 18:24:21 -0400
+Message-ID: <538661FD.1040706@intel.com>
+Date: Wed, 28 May 2014 15:23:57 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 MIME-Version: 1.0
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: <balajitk@ti.com>, Rajendra Nayak <rnayak@ti.com>,
-	Tero Kristo <t-kristo@ti.com>, Paul Walmsley <paul@pwsan.com>
-Subject: Re: [PATCH 03/17] phy: ti-pipe3: add external clock support for PCIe
- PHY
-References: <1399383244-14556-1-git-send-email-kishon@ti.com> <1399383244-14556-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1399383244-14556-4-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
+Subject: Re: [PATCH] pci: Save and restore VFs as a part of a reset
+References: <20140505212346.18767.34117.stgit@ahduyck-cp2.jf.intel.com> <20140527222256.GC11907@google.com> <5385255D.5060204@intel.com> <CAErSpo5QU1LsKVqyGbT07mhF-t5L1y3NxD4JhJ6N3AM0XT0c2A@mail.gmail.com> <1401250378.3289.774.camel@ul30vt.home> <53861154.4080402@intel.com> <CAErSpo4htYwi3jfoxdj=W9VjVdd5gDjYcxg_i52VVz1sYQHL5A@mail.gmail.com> <5386483C.60506@redhat.com>
+In-Reply-To: <5386483C.60506@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+On 05/28/2014 01:34 PM, Don Dutile wrote:
+> On 05/28/2014 04:14 PM, Bjorn Helgaas wrote:
+>> On Wed, May 28, 2014 at 10:39 AM, Alexander Duyck
+>> <alexander.h.duyck@intel.com> wrote:
+>>> On 05/27/2014 09:12 PM, Alex Williamson wrote:
+>>>> On Tue, 2014-05-27 at 19:19 -0600, Bjorn Helgaas wrote:
+>>
+>>>>> Maybe resetting the PF should just fail if there's an active VF.  If
+>>>>> you need to reset the PF, you'd have to unbind the VFs first.
+>>>>
+>>>> The use case is certainly questionable, personally I'm not going to
+>>>> expect VFs to continue working after the PF is reset.  Driver binding
+>>>> gets complicated, especially when KVM doesn't actually bind devices to
+>>>> use them.  Hopefully we'll get that out of the tree some day though.  I
+>>>> suppose we could -EBUSY the PF reset as long as VFs are enabled.
+>>>
+>>> What I could do is go through and notify the VFs that they are about to
+>>> get hit by a reset.  What they do with that information would be up
+>>> to them.
+>>>
+>>> So if the VFs are loaded on the host I could then at least allow them to
+>>> recover by saving and restoring the config space within the driver
+>>> themselves.
+>>
+>> I really like the idea of punting by failing the PF reset if there are
+>> any active VFs.  That's a really easy way of making sure we aren't
+>> going to blow up any guests.  What problems would it cause if we went
+>> this route?
+>>
+> I think this is the safest route.  PF<->VF interaction isn't architected,
+> and resetting the PF with active VFs will probably hang a number of SRIOV
+> implementations, requiring a system-level reset to correct the
+> compounded problem.
 
-On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
-> APLL used by PCIE phy can either use external clock as input or the clock
-> from DPLL. Added support for the APLL to use external clock as input here.
+Well it still might be worth while to allow a full PCIe reset in cases
+where the hardware has gotten into a bad state.  It seems like it might
+be worthwhile to update the newly added reset notifier to allow for the
+device to indicate if it ready for a reset or not, with the default
+being to return -ENOTTY if the function is not implemented.
+
 > 
-> Cc: Rajendra Nayak <rnayak@ti.com>
-> Cc: Tero Kristo <t-kristo@ti.com>
-> Cc: Paul Walmsley <paul@pwsan.com>
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  Documentation/devicetree/bindings/phy/ti-phy.txt |    4 ++
->  drivers/phy/phy-ti-pipe3.c                       |   75 ++++++++++++++--------
->  2 files changed, 52 insertions(+), 27 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
-> index bc9afb5..d50f8ee 100644
-> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
-> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
-> @@ -76,6 +76,10 @@ Required properties:
->     * "dpll_ref_m2" - external dpll ref clk
->     * "phy-div" - divider for apll
->     * "div-clk" - apll clock
-> +   * "apll_mux" - mux for pcie apll
-> +   * "refclk_ext" - external reference clock for pcie apll
-> + - ti,ext-clk: To specifiy if PCIE apll should use external clock. Applicable
-> +   only to PCIE PHY.
-
-Instead of specifying both clock sources "dpll_ref_clock", "refclk_ext" and then specifying a 3rd control option "ti,ext-clk" to select one of the 2 sources, why can't the DT just supply one clock source, i.e. the one that is being used in the board instance? The driver should then just configure the clock rate that is needed at that node. Shouldn't the clock framework automatically take care of muxing and parent rates?
-
->  
->  Optional properties:
->   - ctrl-module : phandle of the control module used by PHY driver to power on
-> diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
-> index d43019d..5513aa0 100644
-> --- a/drivers/phy/phy-ti-pipe3.c
-> +++ b/drivers/phy/phy-ti-pipe3.c
-> @@ -293,7 +293,7 @@ static int ti_pipe3_probe(struct platform_device *pdev)
->  	struct device_node *control_node;
->  	struct platform_device *control_pdev;
->  	const struct of_device_id *match;
-> -	struct clk *clk;
-> +	struct clk *clk, *pclk;
->  
->  	phy = devm_kzalloc(&pdev->dev, sizeof(*phy), GFP_KERNEL);
->  	if (!phy) {
-> @@ -302,6 +302,20 @@ static int ti_pipe3_probe(struct platform_device *pdev)
->  	}
->  	phy->dev		= &pdev->dev;
->  
-> +	control_node = of_parse_phandle(node, "ctrl-module", 0);
-> +	if (!control_node) {
-> +		dev_err(&pdev->dev, "Failed to get control device phandle\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	control_pdev = of_find_device_by_node(control_node);
-> +	if (!control_pdev) {
-> +		dev_err(&pdev->dev, "Failed to get control device\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	phy->control_dev = &control_pdev->dev;
-> +
-
-Why this code was moved move is not part of patch description/subject.
-
->  	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
->  		match = of_match_device(of_match_ptr(ti_pipe3_id_table),
->  					&pdev->dev);
-> @@ -345,19 +359,40 @@ static int ti_pipe3_probe(struct platform_device *pdev)
->  	}
->  
->  	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
-> -		clk = devm_clk_get(phy->dev, "dpll_ref");
-> -		if (IS_ERR(clk)) {
-> -			dev_err(&pdev->dev, "unable to get dpll ref clk\n");
-> -			return PTR_ERR(clk);
-> +		if (!of_property_read_bool(node, "ti,ext-clk")) {
-> +			clk = devm_clk_get(phy->dev, "dpll_ref");
-> +			if (IS_ERR(clk)) {
-> +				dev_err(&pdev->dev,
-> +					"unable to get dpll ref clk\n");
-> +				return PTR_ERR(clk);
-> +			}
-> +			clk_set_rate(clk, 1500000000);
-> +
-> +			clk = devm_clk_get(phy->dev, "dpll_ref_m2");
-> +			if (IS_ERR(clk)) {
-> +				dev_err(&pdev->dev,
-> +					"unable to get dpll ref m2 clk\n");
-> +				return PTR_ERR(clk);
-> +			}
-> +			clk_set_rate(clk, 100000000);
-> +		} else {
-> +			omap_control_pcie_tx_rx_control(phy->control_dev,
-> +						OMAP_CTRL_PCIE_PHY_RX_ACSPCIE);
-> +
-> +			clk = clk_get(phy->dev, "apll_mux");
-> +			if (IS_ERR(clk)) {
-> +				dev_err(&pdev->dev, "unable to get apll mux clk\n");
-> +				return PTR_ERR(clk);
-> +			}
-> +
-> +			pclk = clk_get(phy->dev, "refclk_ext");
-> +			if (IS_ERR(pclk)) {
-> +				dev_err(&pdev->dev, "unable to get ext ref clk for apll\n");
-> +				return PTR_ERR(pclk);
-> +			}
-> +
-> +			clk_set_parent(clk, pclk);
->  		}
-> -		clk_set_rate(clk, 1500000000);
-> -
-> -		clk = devm_clk_get(phy->dev, "dpll_ref_m2");
-> -		if (IS_ERR(clk)) {
-> -			dev_err(&pdev->dev, "unable to get dpll ref m2 clk\n");
-> -			return PTR_ERR(clk);
-> -		}
-> -		clk_set_rate(clk, 100000000);
->  
->  		clk = devm_clk_get(phy->dev, "phy-div");
->  		if (IS_ERR(clk)) {
-> @@ -375,20 +410,6 @@ static int ti_pipe3_probe(struct platform_device *pdev)
->  		phy->div_clk = ERR_PTR(-ENODEV);
->  	}
->  
-> -	control_node = of_parse_phandle(node, "ctrl-module", 0);
-> -	if (!control_node) {
-> -		dev_err(&pdev->dev, "Failed to get control device phandle\n");
-> -		return -EINVAL;
-> -	}
-> -
-> -	control_pdev = of_find_device_by_node(control_node);
-> -	if (!control_pdev) {
-> -		dev_err(&pdev->dev, "Failed to get control device\n");
-> -		return -EINVAL;
-> -	}
-> -
-> -	phy->control_dev = &control_pdev->dev;
-> -
->  	omap_control_phy_power(phy->control_dev, 0);
->  
->  	platform_set_drvdata(pdev, phy);
+>>>>> This reminds me about an open problem: VFs can be on "virtual" buses,
+>>>>> which aren't really connected in the hierarchy, and I don't think we
+>>>>> have a nice way to iterate over them.  So probably pci_get_device() is
+>>>>> the best we can do now.
+>>>>
+>>>> Yeah, those virtual buses don't have a bus->self, we just have to skip
+>>>> to bus->parent->self.  pci_walk_bus() goes in the opposite direction,
+>>>> but without an actual device hosting the bus, I don't see how it finds
+>>>> it.  Thanks,
+>>>
+>>> It seems like we should be able to come up with something like
+>>> pci_walk_vbus() though or something similar.  All we would need to do is
+>>> search the VFs on the bus of the PF and all child busses to that bus if
+>>> I am not mistaken.
+>>
+>> I don't think that's going to work because the virtual buses don't
+>> appear as the child bus of anything.
+>>
+> +1.
 > 
 
---
-cheers,
--roger
+Maybe I don't understand something but I have a function that I am
+already testing that seems to work for what I need.  Is there any reason
+I couldn't use the bus->children list to navigate through the bus list
+and get all of the children of a given bus?
+
+I'll submit a couple patches for feedback on those bits.
+
+Thanks,
+
+Alex
+
