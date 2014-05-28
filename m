@@ -1,40 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33982 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752769AbaEHJYg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 05:24:36 -0400
-Date: Thu, 8 May 2014 02:24:28 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-kernel@vger.kernel.org,
-	James Bottomley <jbottomley@parallels.com>,
-	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH v2 1/5] DMA-API: Clarify physical/bus address distinction
-Message-ID: <20140508092428.GB27651@kroah.com>
-References: <20140506223250.17968.27054.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140506224819.17968.2922.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140506224819.17968.2922.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-we0-f171.google.com ([74.125.82.171]:56146 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754153AbaE1OwA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 10:52:00 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 4/5] PCI: tegra: Remove deprecated power supply properties
+Date: Wed, 28 May 2014 16:49:14 +0200
+Message-Id: <1401288555-24197-5-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
+References: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 06, 2014 at 04:48:19PM -0600, Bjorn Helgaas wrote:
-> The DMA-API documentation sometimes refers to "physical addresses" when it
-> really means "bus addresses."  Sometimes these are identical, but they may
-> be different if the bridge leading to the bus performs address translation.
-> Update the documentation to use "bus address" when appropriate.
-> 
-> Also, consistently capitalize "DMA", use parens with function names, use
-> dev_printk() in examples, and reword a few sections for clarity.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+From: Thierry Reding <treding@nvidia.com>
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+These power supply properties are no longer needed since the binding now
+contains the full set properties to accurately describe the power supply
+inputs of the Tegra PCIe block.
 
-Thanks for cleaning this up.
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+index f56d89998a44..0823362548dc 100644
+--- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+@@ -84,11 +84,6 @@ Power supplies for Tegra30:
+     - avdd-pexb-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
+     - vdd-pexb-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
+ 
+-Deprecated supplies:
+-- pex-clk-supply: Supply voltage for internal reference clock
+-- vdd-supply: Power supply for controller (1.05V)
+-- avdd-supply: Power supply for controller (1.05V) (not required for Tegra20)
+-
+ Root ports are defined as subnodes of the PCIe controller node.
+ 
+ Required properties:
+-- 
+1.9.2
 
