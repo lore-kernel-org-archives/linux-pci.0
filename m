@@ -1,162 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17885 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44562 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750871AbaEJFTb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 10 May 2014 01:19:31 -0400
-Message-ID: <1399699165.17639.151.camel@ul30vt.home>
-Subject: Re: [PATCH 03/13] PCI: quirk dma_func_alias for Ricoh devices
+	id S1751158AbaE1SEs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 May 2014 14:04:48 -0400
+Message-ID: <1401300278.2412.52.camel@ul30vt.home>
+Subject: Re: [PATCH v4 05/16] PCI: quirk dma_alias_devfn for Marvell devices
 From: Alex Williamson <alex.williamson@redhat.com>
-To: Andrew Cooks <acooks@gmail.com>
-Cc: "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	open list <linux-kernel@vger.kernel.org>
-Date: Fri, 09 May 2014 23:19:25 -0600
-In-Reply-To: <CAJtEV7YxdSWjOpaxCDF7e4MHT9axZbp5f==_k3OMYEwejnQiug@mail.gmail.com>
-References: <20140501160128.17512.23609.stgit@bling.home>
-	 <20140501162723.17512.96286.stgit@bling.home>
-	 <CAJtEV7bZ10fAE-JoTO6Gg1rg8sWxwzQUR5FkQpLZ1nTF_+dk5w@mail.gmail.com>
-	 <1399094110.24318.505.camel@ul30vt.home>
-	 <CAJtEV7YxdSWjOpaxCDF7e4MHT9axZbp5f==_k3OMYEwejnQiug@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+	acooks@gmail.com, linux-kernel@vger.kernel.org, eddy0596@gmail.com,
+	linux@horizon.com
+Date: Wed, 28 May 2014 12:04:38 -0600
+In-Reply-To: <20140528175530.GR11907@google.com>
+References: <20140522230230.2856.40017.stgit@bling.home>
+	 <20140522230755.2856.19714.stgit@bling.home>
+	 <20140528175530.GR11907@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2014-05-10 at 12:46 +0800, Andrew Cooks wrote:
-> Hi Alex
+On Wed, 2014-05-28 at 11:55 -0600, Bjorn Helgaas wrote:
+> On Thu, May 22, 2014 at 05:07:55PM -0600, Alex Williamson wrote:
+> > Several Marvell devices and a JMicron device have a similar DMA
+> > requester ID problem to Ricoh, except they use function 1 as the
+> > PCIe requester ID.  Add a quirk for these to populate the DMA
+> > function alias bitmap.
 > 
-> On Sat, May 3, 2014 at 1:15 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Sat, 2014-05-03 at 10:29 +0800, Andrew Cooks wrote:
-> >> Hi Alex
-> >>
-> >> On Fri, May 2, 2014 at 12:27 AM, Alex Williamson
-> >> <alex.williamson@redhat.com> wrote:
-> >> > The existing quirk for these devices doesn't really solve the problem,
-> >> > re-implement it using the DMA alias iterator.  We'll come back later
-> >> > and remove the existing quirk and dma_source interface.
-> >> >
-> >> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> >> > ---
-> >> >  drivers/pci/quirks.c |   16 ++++++++++++++++
-> >> >  1 file changed, 16 insertions(+)
-> >> >
-> >> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> >> > index e729206..a458c6b 100644
-> >> > --- a/drivers/pci/quirks.c
-> >> > +++ b/drivers/pci/quirks.c
-> >> > @@ -3333,6 +3333,22 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
-> >> >         return -ENOTTY;
-> >> >  }
-> >> >
-> >> > +static void quirk_dma_func0_alias(struct pci_dev *dev)
-> >> > +{
-> >> > +       if (PCI_SLOT(dev->devfn) != 0)
-> >> > +               dev->dma_func_alias |= (1 << 0);
-> >> > +}
-> >> > +
-> >> > +/*
-> >> > + * https://bugzilla.redhat.com/show_bug.cgi?id=605888
-> >> > + *
-> >> > + * Some Ricoh devices use function 0 as the PCIe requester ID for DMA.
-> >> > + */
-> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe822, quirk_dma_func0_alias);
-> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe230, quirk_dma_func0_alias);
-> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
-> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
-> >>
-> >> 0xe832 is listed twice.
-> >
-> > oops, copy-paste error
-> >
-> >> Previously only 0xe832 needed the dma alias on my thinkpad T410, which
-> >> has all three devices.
-> >>
-> >> > +
-> >> >  static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
-> >> >  {
-> >> >         if (!PCI_FUNC(dev->devfn))
-> >> >
-> >>
-> >> Unfortunately, this quirk doesn't work for me. I tried it without
-> >> modification, as well as with each alias individually. I get:
-> >>
-> >> Set context mapping for 0d:00.3
-> >> firewire_ohci 0000:0d:00.3: added OHCI v1.10 device as card 0, 4 IR +
-> >> 4 IT contexts, quirks 0x11
-> >> dmar: DRHD: handling fault status reg 2
-> >> dmar: DMAR:[DMA Read] Request device [0d:00.0] fault addr fffff000
-> >> DMAR:[fault reason 02] Present bit in context entry is clear
-> >>
-> >> I think I need to see
-> >> Set context mapping for 0d:00.0
-> >> before
-> >> Set context mapping for 0d:00.3
-> >
-> > It would actually be the reverse, we always set the device, then the
-> > alias for the device.
-> 
-> Ok, excuse my ignorance, but is there a window where the driver can
-> start doing DMA, before the alias is registered?
-> 
-> >
-> >> in the log, but it's not there. I'd love to look into this and
-> >> understand it properly, but I don't have time for the next four weeks.
-> >>
-> >> The devices are attached as follows:
-> >> BDF, device ID
-> >> 0d:00.0, e822
-> >> 0d:00.1, e230
-> >> 0d:00.3, e832
-> >>
-> >> The kernel log is attached.
-> >
-> > Hmm, there are only a few reasons why you'd never see 0d:00.3 followed
-> > by 0d:00.0...
-> >
-> > 1) dma_func_alias bit 0 isn't getting set on 0d:00.3; we are building
-> > with CONFIG_PCI_QUIRKS=y, right?
-> 
-> Yes.
-> 
-> > 2) domain_context_mapping_one called from domain_context_mapping_cb
-> > returns !0; there's only one possible non-zero return for a non-vm,
-> > non-si domain
-> 
-> domain_context_mapping_one returns 0 - I've checked.
-> 
-> > 3) something is broken in the first loop of pci_for_each_dma_alias; I'm
-> > not seeing anything obvious
-> >
-> > Anyway, appreciate an debugging you're able to fit in, my only ricoh
-> > device has only function 0.  Thanks,
-> >
-> 
-> Please note that this device works with the patch I attached to
-> https://bugzilla.kernel.org/show_bug.cgi?id=42679 (despite its many
-> faults).
+> What's the DMA function alias bitmap?
 
-Is it by chance this:
+Guess I missed updating this comment for v4.  Let me know if you have
+other comments and I can either resend this individually or respin the
+series.  Thanks,
 
-drivers/iommu/intel-iommu.c:
-static int domain_context_mapped(struct device *dev)
-{
-        struct intel_iommu *iommu;
-        u8 bus, devfn;
+Alex
 
-        iommu = device_to_iommu(dev, &bus, &devfn);
-        if (!iommu)
-                return -ENODEV;
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> >  drivers/pci/quirks.c |   36 ++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 36 insertions(+)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index bc8ebd9..923689f 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -3349,6 +3349,42 @@ static void quirk_dma_func0_alias(struct pci_dev *dev)
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe832, quirk_dma_func0_alias);
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe476, quirk_dma_func0_alias);
+> >  
+> > +static void quirk_dma_func1_alias(struct pci_dev *dev)
+> > +{
+> > +	if (PCI_FUNC(dev->devfn) != 1) {
+> > +		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 1);
+> > +		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
+> > +	}
+> > +}
+> > +
+> > +/*
+> > + * Marvell 88SE9123 uses function 1 as the requester ID for DMA.  In some
+> > + * SKUs function 1 is present and is a legacy IDE controller, in other
+> > + * SKUs this function is not present, making this a ghost requester.
+> > + * https://bugzilla.kernel.org/show_bug.cgi?id=42679
+> > + */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9123,
+> > +			 quirk_dma_func1_alias);
+> > +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c14 */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9130,
+> > +			 quirk_dma_func1_alias);
+> > +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c47 + c57 */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9172,
+> > +			 quirk_dma_func1_alias);
+> > +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c59 */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x917a,
+> > +			 quirk_dma_func1_alias);
+> > +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c46 */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
+> > +			 quirk_dma_func1_alias);
+> > +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c49 */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9230,
+> > +			 quirk_dma_func1_alias);
+> > +/* https://bugs.gentoo.org/show_bug.cgi?id=497630 */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
+> > +			 PCI_DEVICE_ID_JMICRON_JMB388_ESD,
+> > +			 quirk_dma_func1_alias);
+> > +
+> >  static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+> >  {
+> >  	if (!PCI_FUNC(dev->devfn))
+> > 
 
-        if (dev_is_pci(dev))
-
-// Should be !dev_is_pci
-
-                return device_context_mapped(iommu, bus, devfn);
-
-        return !pci_for_each_dma_alias(to_pci_dev(dev),
-                                       domain_context_mapped_cb, iommu);
-}
 
 
