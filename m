@@ -1,259 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:50095 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752283AbaEWQwc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 May 2014 12:52:32 -0400
-From: Will Deacon <will.deacon@arm.com>
-To: linux-arm-kernel@lists.infradead.org
-Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	jgunthorpe@obsidianresearch.com, sthokal@xilinx.com,
-	Will Deacon <will.deacon@arm.com>
-Subject: [PATCH v7 4/4] PCI: Generic Configuration Access Mechanism support
-Date: Fri, 23 May 2014 17:51:55 +0100
-Message-Id: <1400863915-24135-5-git-send-email-will.deacon@arm.com>
-In-Reply-To: <1400863915-24135-1-git-send-email-will.deacon@arm.com>
-References: <1400863915-24135-1-git-send-email-will.deacon@arm.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:44784 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753019AbaE1Bfq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 21:35:46 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Geert Uytterhoeven' <geert@linux-m68k.org>,
+	'Arnd Bergmann' <arnd@arndb.de>
+Cc: 'Lucas Stach' <l.stach@pengutronix.de>, devicetree@vger.kernel.org,
+	'Grant Likely' <grant.likely@linaro.org>,
+	'Rob Herring' <robh+dt@kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Magnus Damm' <damm@opensource.se>,
+	'Ben Dooks' <ben.dooks@codethink.co.uk>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	'Linux-sh list' <linux-sh@vger.kernel.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <4527717.yJh2gX3xCP@wuerfel>
+ <1399624119.4833.3.camel@weser.hi.pengutronix.de> <5744457.bgUFy9g0ST@wuerfel>
+ <CAMuHMdXXFmxmq9H1fuc7fRg8BHQ+3m6=4mPDe5FjL0hLLvwUUw@mail.gmail.com>
+In-reply-to: <CAMuHMdXXFmxmq9H1fuc7fRg8BHQ+3m6=4mPDe5FjL0hLLvwUUw@mail.gmail.com>
+Subject: Re: [PATCH v2] of/irq: provide int of_irq_parse_and_map_pci wrapper
+Date: Wed, 28 May 2014 10:35:43 +0900
+Message-id: <002301cf7a15$23eb5180$6bc1f480$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Srikanth Thokala <sthokal@xilinx.com>
+On Friday, May 09, 2014 6:10 PM, Geert Uytterhoeven wrote:
+> On Fri, May 9, 2014 at 11:03 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > The pci-rcar driver is enabled for compile tests, and this has
+> > now shown that the driver cannot build without CONFIG_OF,
+> > following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
+> > interrupt mapping when possible":
+> >
+> > drivers/built-in.o: In function `rcar_pci_map_irq':
+> > :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
+> >
+> > As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
+> > supposed to build fine, which we can achieve if we make the
+> > declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
+> > and provide an empty inline function otherwise, as we do for
+> > a lot of other of interfaces.
+> >
+> > This lets us build the rcar_pci driver again without CONFIG_OF
+> > for build testing. All platforms using this driver select OF,
+> > so this doesn't change anything for the users.
+> 
+> Thanks!
+> 
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Magnus Damm <damm@opensource.se>
+> > Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> > Cc: Ben Dooks <ben.dooks@codethink.co.uk>
+> > Cc: linux-pci@vger.kernel.org
+> > Cc: linux-sh@vger.kernel.org
+> 
+> Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-This patch adds support for a generic CAM and ECAM configuration
-space accesses.
+Reviewed-by: Jingoo Han <jg1.han@samsung.com>
 
-Signed-off-by: Srikanth Thokala <sthokal@xilinx.com>
-Signed-off-by: Will Deacon <will.deacon@arm.com>
----
- drivers/pci/Makefile  |   2 +-
- drivers/pci/pci-cfg.c | 162 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h   |  34 +++++++++++
- 3 files changed, 197 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/pci-cfg.c
-
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index e04fe2d9df3b..37cfc3356e84 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -4,7 +4,7 @@
- 
- obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
- 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
--			irq.o vpd.o setup-bus.o vc.o
-+			irq.o vpd.o setup-bus.o vc.o pci-cfg.o
- obj-$(CONFIG_PROC_FS) += proc.o
- obj-$(CONFIG_SYSFS) += slot.o
- 
-diff --git a/drivers/pci/pci-cfg.c b/drivers/pci/pci-cfg.c
-new file mode 100644
-index 000000000000..2b15fe4c3c20
---- /dev/null
-+++ b/drivers/pci/pci-cfg.c
-@@ -0,0 +1,162 @@
-+/*
-+ * PCI generic configuration access mechanism
-+ *
-+ * Copyright (C) 2014 ARM Limited
-+ * Copyright (c) 2014 Xilinx, Inc.
-+ *
-+ * Author: Will Deacon <will.deacon@arm.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/of_pci.h>
-+
-+/* CAM definitions */
-+#define PCI_CFG_CAM_BUS_NUM	16
-+#define PCI_CFG_CAM_DEV_NUM	8
-+
-+/* ECAM definitions */
-+#define PCI_CFG_ECAM_BUS_NUM	20
-+#define PCI_CFG_ECAM_DEV_NUM	12
-+
-+/* Invalid device/function value */
-+#define PCI_CFG_INVALID_DEVFN	0xFFFFFFFF
-+
-+/**
-+ * pci_cfg_map_bus_cam - Get the CAM based configuration space address
-+ * @bus: PCI Bus pointer
-+ * @devfn: Device/Function
-+ * @where: Offset from base
-+ *
-+ * Return: Configuration Space address
-+ */
-+static void __iomem *pci_cfg_map_bus_cam(struct pci_bus *bus,
-+					 unsigned int devfn,
-+					 int where)
-+{
-+	struct pci_sys_data *sys = bus->sysdata;
-+	struct pci_cfg_windows *cfg = sys->private_data;
-+	resource_size_t idx = bus->number - cfg->bus_range.start;
-+
-+	return cfg->win[idx] + ((devfn << PCI_CFG_CAM_DEV_NUM) | where);
-+}
-+
-+/**
-+ * pci_cfg_map_bus_ecam - Get the ECAM based configuration space address
-+ * @bus: PCI bus pointer
-+ * @devfn: Device/Function
-+ * @where: Offset from base
-+ *
-+ * Return: Configuration space address
-+ */
-+static void __iomem *pci_cfg_map_bus_ecam(struct pci_bus *bus,
-+					  unsigned int devfn,
-+					  int where)
-+{
-+	struct pci_sys_data *sys = bus->sysdata;
-+	struct pci_cfg_windows *cfg = sys->private_data;
-+	resource_size_t idx = bus->number - cfg->bus_range.start;
-+
-+	return cfg->win[idx] + ((devfn << PCI_CFG_ECAM_DEV_NUM) | where);
-+}
-+
-+/**
-+ * pci_cfg_read - Read configuration space
-+ * @bus: PCI bus pointer
-+ * @devfn: Device/function
-+ * @where: Offset from base
-+ * @size: Byte/word/dword
-+ * @val: Value to be read
-+ *
-+ * Return: PCIBIOS_SUCCESSFUL on success
-+ *	   PCIBIOS_DEVICE_NOT_FOUND on failure
-+ */
-+static int pci_cfg_read(struct pci_bus *bus, unsigned int devfn,
-+			int where, int size, unsigned int *val)
-+{
-+	void __iomem *addr;
-+	struct pci_sys_data *sys = bus->sysdata;
-+	struct pci_cfg_windows *cfg = sys->private_data;
-+
-+	if (cfg->ops->is_valid_cfg_access) {
-+		if (!cfg->ops->is_valid_cfg_access(bus, devfn)) {
-+			*val = PCI_CFG_INVALID_DEVFN;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+	}
-+
-+	addr = cfg->ops->map_bus(bus, devfn, where);
-+
-+	switch (size) {
-+	case 1:
-+		*val = readb(addr);
-+		break;
-+	case 2:
-+		*val = readw(addr);
-+		break;
-+	default:
-+		*val = readl(addr);
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+/**
-+ * pci_cfg_write - Write configuration space
-+ * @bus: PCI bus pointer
-+ * @devfn: Device/function
-+ * @where: Offset from base
-+ * @size: Byte/word/dword
-+ * @val: Value to write
-+ *
-+ * Return: PCIBIOS_SUCCESSFUL on success
-+ *	   PCIBIOS_DEVICE_NOT_FOUND on failure
-+ */
-+static int pci_cfg_write(struct pci_bus *bus, unsigned int devfn,
-+			 int where, int size, unsigned int val)
-+{
-+	void __iomem *addr;
-+	struct pci_sys_data *sys = bus->sysdata;
-+	struct pci_cfg_windows *cfg = sys->private_data;
-+
-+	if (cfg->ops->is_valid_cfg_access)
-+		if (!cfg->ops->is_valid_cfg_access(bus, devfn))
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	addr = cfg->ops->map_bus(bus, devfn, where);
-+
-+	switch (size) {
-+	case 1:
-+		writeb(val, addr);
-+		break;
-+	case 2:
-+		writew(val, addr);
-+		break;
-+	default:
-+		writel(val, addr);
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+/* Generic PCI CAM/ECAM Configuration Bus Operations */
-+
-+struct pci_cfg_bus_ops pci_cfg_cam_bus_ops = {
-+	.bus_shift	= PCI_CFG_CAM_BUS_NUM,
-+	.map_bus	= pci_cfg_map_bus_cam,
-+};
-+EXPORT_SYMBOL_GPL(pci_cfg_cam_bus_ops);
-+
-+struct pci_cfg_bus_ops pci_cfg_ecam_bus_ops = {
-+	.bus_shift	= PCI_CFG_ECAM_BUS_NUM,
-+	.map_bus	= pci_cfg_map_bus_ecam,
-+};
-+EXPORT_SYMBOL_GPL(pci_cfg_ecam_bus_ops);
-+
-+struct pci_ops pci_cfg_ops = {
-+	.read	= pci_cfg_read,
-+	.write	= pci_cfg_write,
-+};
-+EXPORT_SYMBOL_GPL(pci_cfg_ops);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4abe7f..6ebe21ebec1a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1806,4 +1806,38 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
-  */
- struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
- 
-+/**
-+ * struct pci_cfg_bus_ops - PCI bus configuration operations
-+ * @bus_shift: Bus number
-+ * @map_bus: Function pointer to get the configuration space address
-+ * @is_valid_cfg_access: Function pointer to check for a valid device/function
-+ */
-+struct pci_cfg_bus_ops {
-+	u32 bus_shift;
-+	void __iomem *(*map_bus)(struct pci_bus *, unsigned int, int);
-+	/*
-+	 * This function pointer is to check if we are addressing a valid
-+	 * device's function under a particular bus.
-+	 */
-+	int (*is_valid_cfg_access)(struct pci_bus *, unsigned int);
-+};
-+
-+/**
-+ * struct pci_cfg_windows - PCI bus configuration memory windows
-+ * @res: Configuration space resource
-+ * @bus_range: Bus range
-+ * @win: Configuration space memory windows
-+ * @ops: PCI bus configuration operations
-+ */
-+struct pci_cfg_windows {
-+	struct resource	res;
-+	struct resource	bus_range;
-+	void __iomem **win;
-+	struct pci_cfg_bus_ops *ops;
-+};
-+
-+extern struct pci_ops pci_cfg_ops;
-+extern struct pci_cfg_bus_ops pci_cfg_ecam_bus_ops;
-+extern struct pci_cfg_bus_ops pci_cfg_cam_bus_ops;
-+
- #endif /* LINUX_PCI_H */
--- 
-1.9.2
+Best regards,
+Jingoo Han
 
