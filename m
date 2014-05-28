@@ -1,244 +1,252 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18573 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753227AbaEVXIS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 19:08:18 -0400
-Subject: [PATCH v4 08/16] iommu: Create central IOMMU group lookup/creation
- interface
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
-Date: Thu, 22 May 2014 17:08:13 -0600
-Message-ID: <20140522230813.2856.34249.stgit@bling.home>
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-References: <20140522230230.2856.40017.stgit@bling.home>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:62785 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755796AbaE1WJb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 18:09:31 -0400
+Received: by mail-ig0-f175.google.com with SMTP id uq10so3037127igb.2
+        for <linux-pci@vger.kernel.org>; Wed, 28 May 2014 15:09:30 -0700 (PDT)
+Date: Wed, 28 May 2014 16:09:27 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	konrad.wilk@oracle.com, kim.phillips@linaro.org,
+	gregkh@linuxfoundation.org, stuart.yoder@freescale.com,
+	agraf@suse.de, libvir-list@redhat.com,
+	iommu@lists.linux-foundation.org, christoffer.dall@linaro.org,
+	tech@virtualopensystems.com, kvmarm@lists.cs.columbia.edu,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: Introduce new device binding path using
+ pci_dev.driver_override
+Message-ID: <20140528220927.GV11907@google.com>
+References: <20140520145136.28232.90707.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140520145136.28232.90707.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently each IOMMU driver that supports IOMMU groups has its own
-code for discovering the base device used in grouping.  This code
-is generally not specific to the IOMMU hardware, but to the bus of
-the devices managed by the IOMMU.  We can therefore create a common
-interface for supporting devices on different buses.
+On Tue, May 20, 2014 at 08:53:21AM -0600, Alex Williamson wrote:
+> The driver_override field allows us to specify the driver for a device
+> rather than relying on the driver to provide a positive match of the
+> device.  This shortcuts the existing process of looking up the vendor
+> and device ID, adding them to the driver new_id, binding the device,
+> then removing the ID, but it also provides a couple advantages.
+> 
+> First, the above existing process allows the driver to bind to any
+> device matching the new_id for the window where it's enabled.  This is
+> often not desired, such as the case of trying to bind a single device
+> to a meta driver like pci-stub or vfio-pci.  Using driver_override we
+> can do this deterministically using:
+> 
+> echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> 
+> Previously we could not invoke drivers_probe after adding a device
+> to new_id for a driver as we get non-deterministic behavior whether
+> the driver we intend or the standard driver will claim the device.
+> Now it becomes a deterministic process, only the driver matching
+> driver_override will probe the device.
+> 
+> To return the device to the standard driver, we simply clear the
+> driver_override and reprobe the device:
+> 
+> echo > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> 
+> Another advantage to this approach is that we can specify a driver
+> override to force a specific binding or prevent any binding.  For
+> instance when an IOMMU group is exposed to userspace through VFIO
+> we require that all devices within that group are owned by VFIO.
+> However, devices can be hot-added into an IOMMU group, in which case
+> we want to prevent the device from binding to any driver (override
+> driver = "none") or perhaps have it automatically bind to vfio-pci.
+> With driver_override it's a simple matter for this field to be set
+> internally when the device is first discovered to prevent driver
+> matches.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/iommu/iommu.c |  181 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iommu.h |    1 
- 2 files changed, 182 insertions(+)
+I applied this with Reviewed-bys/Acks from Konrad, Alexander, and Greg to
+pci/virtualization for v3.16, thanks!
 
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index e5555fc..db55fe6 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -29,6 +29,7 @@
- #include <linux/idr.h>
- #include <linux/notifier.h>
- #include <linux/err.h>
-+#include <linux/pci.h>
- #include <trace/events/iommu.h>
- 
- static struct kset *iommu_group_kset;
-@@ -514,6 +515,186 @@ int iommu_group_id(struct iommu_group *group)
- }
- EXPORT_SYMBOL_GPL(iommu_group_id);
- 
-+/*
-+ * To consider a PCI device isolated, we require ACS to support Source
-+ * Validation, Request Redirection, Completer Redirection, and Upstream
-+ * Forwarding.  This effectively means that devices cannot spoof their
-+ * requester ID, requests and completions cannot be redirected, and all
-+ * transactions are forwarded upstream, even as it passes through a
-+ * bridge where the target device is downstream.
-+ */
-+#define REQ_ACS_FLAGS   (PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
-+
-+struct group_for_pci_data {
-+	struct pci_dev *pdev;
-+	struct iommu_group *group;
-+};
-+
-+/*
-+ * DMA alias iterator callback, return the last seen device.  Stop and return
-+ * the IOMMU group if we find one along the way.
-+ */
-+static int get_pci_alias_or_group(struct pci_dev *pdev, u16 alias, void *opaque)
-+{
-+	struct group_for_pci_data *data = opaque;
-+
-+	data->pdev = pdev;
-+	data->group = iommu_group_get(&pdev->dev);
-+
-+	return data->group != NULL;
-+}
-+
-+/*
-+ * Use standard PCI bus topology, isolation features, and DMA alias quirks
-+ * to find or create an IOMMU group for a device.
-+ */
-+static struct iommu_group *iommu_group_get_for_pci_dev(struct pci_dev *pdev)
-+{
-+	struct group_for_pci_data data;
-+	struct pci_bus *bus;
-+	struct iommu_group *group = NULL;
-+	struct pci_dev *tmp;
-+
-+	/*
-+	 * Find the upstream DMA alias for the device.  A device must not
-+	 * be aliased due to topology in order to have its own IOMMU group.
-+	 * If we find an alias along the way that already belongs to a
-+	 * group, use it.
-+	 */
-+	if (pci_for_each_dma_alias(pdev, get_pci_alias_or_group, &data))
-+		return data.group;
-+
-+	pdev = data.pdev;
-+
-+	/*
-+	 * Continue upstream from the point of minimum IOMMU granularity
-+	 * due to aliases to the point where devices are protected from
-+	 * peer-to-peer DMA by PCI ACS.  Again, if we find an existing
-+	 * group, use it.
-+	 */
-+	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
-+		if (!bus->self)
-+			continue;
-+
-+		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
-+			break;
-+
-+		pdev = bus->self;
-+
-+		group = iommu_group_get(&pdev->dev);
-+		if (group)
-+			return group;
-+	}
-+
-+	/*
-+	 * Next we need to consider DMA alias quirks.  If one device aliases
-+	 * to another, they should be grouped together.  It's theoretically
-+	 * possible that aliases could create chains of devices where each
-+	 * device aliases another device.  If we then factor in multifunction
-+	 * ACS grouping requirements, each alias could incorporate a new slot
-+	 * with multiple functions, each with aliases.  This is all extremely
-+	 * unlikely as DMA alias quirks are typically only used for PCIe
-+	 * devices where we usually have a single slot per bus.  Furthermore,
-+	 * the alias quirk is usually to another function within the slot
-+	 * (and ACS multifunction is not supported) or to a different slot
-+	 * that doesn't physically exist.  The likely scenario is therefore
-+	 * that everything on the bus gets grouped together.  To reduce the
-+	 * problem space, share the IOMMU group for all devices on the bus
-+	 * if a DMA alias quirk is present on the bus.
-+	 */
-+	tmp = NULL;
-+	for_each_pci_dev(tmp) {
-+		if (tmp->bus != pdev->bus ||
-+		    !(tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN))
-+			continue;
-+
-+		pci_dev_put(tmp);
-+		tmp = NULL;
-+
-+		/* We have an alias quirk, search for an existing group */
-+		for_each_pci_dev(tmp) {
-+			struct iommu_group *group_tmp;
-+			if (tmp->bus != pdev->bus)
-+				continue;
-+
-+			group_tmp = iommu_group_get(&tmp->dev);
-+			if (!group) {
-+				group = group_tmp;
-+				continue;
-+			}
-+
-+			if (group_tmp) {
-+				WARN_ON(group != group_tmp);
-+				iommu_group_put(group_tmp);
-+			}
-+		}
-+
-+		return group ? group : iommu_group_alloc();
-+	}
-+
-+	/*
-+	 * Non-multifunction devices or multifunction devices supporting
-+	 * ACS get their own group.
-+	 */
-+	if (!pdev->multifunction || pci_acs_enabled(pdev, REQ_ACS_FLAGS))
-+		return iommu_group_alloc();
-+
-+	/*
-+	 * Multifunction devices not supporting ACS share a group with other
-+	 * similar devices in the same slot.
-+	 */
-+	tmp = NULL;
-+	for_each_pci_dev(tmp) {
-+		if (tmp == pdev || tmp->bus != pdev->bus ||
-+		    PCI_SLOT(tmp->devfn) !=  PCI_SLOT(pdev->devfn) ||
-+		    pci_acs_enabled(tmp, REQ_ACS_FLAGS))
-+			continue;
-+
-+		group = iommu_group_get(&tmp->dev);
-+		if (group) {
-+			pci_dev_put(tmp);
-+			return group;
-+		}
-+	}
-+
-+	/* No shared group found, allocate new */
-+	return iommu_group_alloc();
-+}
-+
-+/**
-+ * iommu_group_get_for_dev - Find or create the IOMMU group for a device
-+ * @dev: target device
-+ *
-+ * This function is intended to be called by IOMMU drivers and extended to
-+ * support common, bus-defined algorithms when determining or creating the
-+ * IOMMU group for a device.  On success, the caller will hold a reference
-+ * to the returned IOMMU group, which will already include the provided
-+ * device.  The reference should be released with iommu_group_put().
-+ */
-+struct iommu_group *iommu_group_get_for_dev(struct device *dev)
-+{
-+	struct iommu_group *group = ERR_PTR(-EIO);
-+	int ret;
-+
-+	group = iommu_group_get(dev);
-+	if (group)
-+		return group;
-+
-+	if (dev_is_pci(dev))
-+		group = iommu_group_get_for_pci_dev(to_pci_dev(dev));
-+
-+	if (IS_ERR(group))
-+		return group;
-+
-+	ret = iommu_group_add_device(group, dev);
-+	if (ret) {
-+		iommu_group_put(group);
-+		return ERR_PTR(ret);
-+	}
-+
-+	return group;
-+}
-+
- static int add_iommu_group(struct device *dev, void *data)
- {
- 	struct iommu_ops *ops = data;
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index b96a5b2..a2e5843 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -181,6 +181,7 @@ extern int iommu_group_register_notifier(struct iommu_group *group,
- extern int iommu_group_unregister_notifier(struct iommu_group *group,
- 					   struct notifier_block *nb);
- extern int iommu_group_id(struct iommu_group *group);
-+extern struct iommu_group *iommu_group_get_for_dev(struct device *dev);
- 
- extern int iommu_domain_get_attr(struct iommu_domain *domain, enum iommu_attr,
- 				 void *data);
-
+> ---
+> 
+> v3: kfree() override buffer on device release, noted by Alex Graf
+> 
+> v2: Use strchr() as suggested by Guenter Roeck and adopted by the
+>     platform driver version of this same interface.
+> 
+>  Documentation/ABI/testing/sysfs-bus-pci |   21 ++++++++++++++++
+>  drivers/pci/pci-driver.c                |   25 +++++++++++++++++--
+>  drivers/pci/pci-sysfs.c                 |   40 +++++++++++++++++++++++++++++++
+>  drivers/pci/probe.c                     |    1 +
+>  include/linux/pci.h                     |    1 +
+>  5 files changed, 85 insertions(+), 3 deletions(-)
+> 
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index a3c5a66..898ddc4 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -250,3 +250,24 @@ Description:
+>  		valid.  For example, writing a 2 to this file when sriov_numvfs
+>  		is not 0 and not 2 already will return an error. Writing a 10
+>  		when the value of sriov_totalvfs is 8 will return an error.
+> +
+> +What:		/sys/bus/pci/devices/.../driver_override
+> +Date:		April 2014
+> +Contact:	Alex Williamson <alex.williamson@redhat.com>
+> +Description:
+> +		This file allows the driver for a device to be specified which
+> +		will override standard static and dynamic ID matching.  When
+> +		specified, only a driver with a name matching the value written
+> +		to driver_override will have an opportunity to bind to the
+> +		device.  The override is specified by writing a string to the
+> +		driver_override file (echo pci-stub > driver_override) and
+> +		may be cleared with an empty string (echo > driver_override).
+> +		This returns the device to standard matching rules binding.
+> +		Writing to driver_override does not automatically unbind the
+> +		device from its current driver or make any attempt to
+> +		automatically load the specified driver.  If no driver with a
+> +		matching name is currently loaded in the kernel, the device
+> +		will not bind to any driver.  This also allows devices to
+> +		opt-out of driver binding using a driver_override name such as
+> +		"none".  Only a single driver may be specified in the override,
+> +		there is no support for parsing delimiters.
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index d911e0c..4393c12 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -216,6 +216,13 @@ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
+>  	return NULL;
+>  }
+>  
+> +static const struct pci_device_id pci_device_id_any = {
+> +	.vendor = PCI_ANY_ID,
+> +	.device = PCI_ANY_ID,
+> +	.subvendor = PCI_ANY_ID,
+> +	.subdevice = PCI_ANY_ID,
+> +};
+> +
+>  /**
+>   * pci_match_device - Tell if a PCI device structure has a matching PCI device id structure
+>   * @drv: the PCI driver to match against
+> @@ -229,18 +236,30 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
+>  						    struct pci_dev *dev)
+>  {
+>  	struct pci_dynid *dynid;
+> +	const struct pci_device_id *found_id = NULL;
+> +
+> +	/* When driver_override is set, only bind to the matching driver */
+> +	if (dev->driver_override && strcmp(dev->driver_override, drv->name))
+> +		return NULL;
+>  
+>  	/* Look at the dynamic ids first, before the static ones */
+>  	spin_lock(&drv->dynids.lock);
+>  	list_for_each_entry(dynid, &drv->dynids.list, node) {
+>  		if (pci_match_one_device(&dynid->id, dev)) {
+> -			spin_unlock(&drv->dynids.lock);
+> -			return &dynid->id;
+> +			found_id = &dynid->id;
+> +			break;
+>  		}
+>  	}
+>  	spin_unlock(&drv->dynids.lock);
+>  
+> -	return pci_match_id(drv->id_table, dev);
+> +	if (!found_id)
+> +		found_id = pci_match_id(drv->id_table, dev);
+> +
+> +	/* driver_override will always match, send a dummy id */
+> +	if (!found_id && dev->driver_override)
+> +		found_id = &pci_device_id_any;
+> +
+> +	return found_id;
+>  }
+>  
+>  struct drv_dev_and_id {
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 4e0acef..faa4ab5 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -499,6 +499,45 @@ static struct device_attribute sriov_numvfs_attr =
+>  		       sriov_numvfs_show, sriov_numvfs_store);
+>  #endif /* CONFIG_PCI_IOV */
+>  
+> +static ssize_t driver_override_store(struct device *dev,
+> +				     struct device_attribute *attr,
+> +				     const char *buf, size_t count)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +	char *driver_override, *old = pdev->driver_override, *cp;
+> +
+> +	if (count > PATH_MAX)
+> +		return -EINVAL;
+> +
+> +	driver_override = kstrndup(buf, count, GFP_KERNEL);
+> +	if (!driver_override)
+> +		return -ENOMEM;
+> +
+> +	cp = strchr(driver_override, '\n');
+> +	if (cp)
+> +		*cp = '\0';
+> +
+> +	if (strlen(driver_override)) {
+> +		pdev->driver_override = driver_override;
+> +	} else {
+> +		kfree(driver_override);
+> +		pdev->driver_override = NULL;
+> +	}
+> +
+> +	kfree(old);
+> +
+> +	return count;
+> +}
+> +
+> +static ssize_t driver_override_show(struct device *dev,
+> +				    struct device_attribute *attr, char *buf)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	return sprintf(buf, "%s\n", pdev->driver_override);
+> +}
+> +static DEVICE_ATTR_RW(driver_override);
+> +
+>  static struct attribute *pci_dev_attrs[] = {
+>  	&dev_attr_resource.attr,
+>  	&dev_attr_vendor.attr,
+> @@ -521,6 +560,7 @@ static struct attribute *pci_dev_attrs[] = {
+>  #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
+>  	&dev_attr_d3cold_allowed.attr,
+>  #endif
+> +	&dev_attr_driver_override.attr,
+>  	NULL,
+>  };
+>  
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ef09f5f..54268de 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1215,6 +1215,7 @@ static void pci_release_dev(struct device *dev)
+>  	pci_release_of_node(pci_dev);
+>  	pcibios_release_device(pci_dev);
+>  	pci_bus_put(pci_dev->bus);
+> +	kfree(pci_dev->driver_override);
+>  	kfree(pci_dev);
+>  }
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index aab57b4..b72af27 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -365,6 +365,7 @@ struct pci_dev {
+>  #endif
+>  	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+>  	size_t romlen; /* Length of ROM if it's not from the BAR */
+> +	char *driver_override; /* Driver name to force a match */
+>  };
+>  
+>  static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+> 
