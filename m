@@ -1,96 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45725 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755450AbaENRTC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 May 2014 13:19:02 -0400
-Message-ID: <1400087937.17639.223.camel@ul30vt.home>
-Subject: Re: [PATCH v3 00/15] PCI/iommu: Fix DMA alias problems
-From: Alex Williamson <alex.williamson@redhat.com>
-To: eddy0596 <eddy0596@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	iommu <iommu@lists.linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Date: Wed, 14 May 2014 11:18:57 -0600
-In-Reply-To: <1400020520427-859747.post@n7.nabble.com>
-References: <20140510145619.2997.429.stgit@bling.home>
-	 <1400020520427-859747.post@n7.nabble.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f179.google.com ([74.125.82.179]:53569 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752909AbaE1Ovv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 10:51:51 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 0/5] PCI: tegra: Overhaul regulator usage
+Date: Wed, 28 May 2014 16:49:10 +0200
+Message-Id: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc original lists]
+From: Thierry Reding <treding@nvidia.com>
 
-Hi Edward,
+The current device tree binding for the regulator setup on Tegra PCIe is
+not accurate. While it does work for current use-cases, that's likely by
+accident rather than design. This series replaces the existing set of
+power-supply properties with a new set that accurately describes the
+inputs of the IP block (depending on SoC generation).
 
-On Tue, 2014-05-13 at 15:35 -0700, eddy0596 wrote:
-> Hello Alex,
-> 
-> Thanks for working on a fix on this long standing issue. I have applied the
-> amd portion of the IOMMU patches against the 3.14.3 kernel and found the
-> followings:
-> 1) The computer would not boot up if it's from a cold start. The kernel log
-> shows that it hangs at the point the kernel attempt to attach the scsi disk
-> [sdk] that connects to the LSI-SAS2008 controller at pci 04:00.0. I can use
-> Ctrl+Alt+Del to reboot the computer. So, I guess the kernel didn't "hang"
-> and I don't see any oops either.
-> 2) After a warm reboot with Ctrl+Alt+Del, the kernel will boot up fine. And,
-> the Marvell controller behaves properly (More stress test needed) and so as
-> the two LSI-SAS2008. A warm reboot after a hard reset at BIOS prompt will
-> also boot up fine.
+As a heads-up, this breaks backwards compatibility with prior versions
+of the device tree bindings, but I don't see a reason why that should
+keep us from fixing this properly. Not many people are currently using
+these bindings and those who are are most likely tracking upstream
+development closely enough not to be impacted by this.
 
-Both of these indicate that the hand-off state of the system is
-different between a warm an cold reset.  Can you capture the boot
-messages (serial console or netconsole) of each case and add the
-pci=earlydump option so we can compare the PCI state?
+I've aimed to keep the series bisectible, which has the downside of
+interleaving patches to unrelated trees (ARM and PCI). I'm hoping that
+perhaps we can find a way to merge this as a whole to keep it possible
+to bisect across the series. Although again, I guess it wouldn't be all
+that bad if that wasn't the case, given how little PCIe is actually
+being used.
 
-> 3) Removing sdk and perform a cold reboot, the kernel stops after attaching
-> all the ST3000DM001 harddisks that connects to the LSI-SAS2008 at pci
-> 01:00:0. The kernel stops at "ata12: SATA link down (SStatus 0 SControl
-> 300)".
-> 4) Removing sda and sdl that connects to the Marvell 88SE9172 at pci
-> 09:00.0, the kernel stops after attaching the eight ST3000DM001 that
-> connects to the LSI-SAS2008 at pci 01:00:0.
+This second version of the series has Bjorn's Acked-by for patch 3 from
+the RFC. Stephen, it would be great if you can take this through the
+Tegra tree so that the bisectability can be preserved. I have a bunch of
+other smaller changes for the PCIe driver (mostly cleanups). I don't
+think any of them will conflict, but for extra safety Bjorn may want to
+pull this as a stable branch into his tree.
 
-So it's not an issue with those specific disks.  Is it possible to
-remove or disable the controller in the BIOS to further isolate?
+Thanks,
+Thierry
 
-> 5) Cold start with a kernel without the IOMMU patches starts up fine except
-> a number of kernel oops related to the Marvell controller complaining about
-> invalid PCI access from the AMD IOMMU.
+Thierry Reding (5):
+  PCI: tegra: Overhaul regulator usage
+  ARM: tegra: Add new PCIe regulator properties
+  PCI: tegra: Implement accurate power supply scheme
+  PCI: tegra: Remove deprecated power supply properties
+  ARM: tegra: Remove legacy PCIe power supply properties
 
-Is this kernel built from the same source tree as below without the
-indicated IOMMU patches applied?
+ .../bindings/pci/nvidia,tegra20-pcie.txt           |  30 ++++-
+ arch/arm/boot/dts/tegra20-harmony.dts              |   8 +-
+ arch/arm/boot/dts/tegra20-tamonten.dtsi            |   7 +-
+ arch/arm/boot/dts/tegra20-trimslice.dts            |   8 +-
+ arch/arm/boot/dts/tegra30-beaver.dts               |  12 +-
+ arch/arm/boot/dts/tegra30-cardhu.dtsi              |  11 +-
+ drivers/pci/host/pci-tegra.c                       | 148 ++++++++++++---------
+ 7 files changed, 148 insertions(+), 76 deletions(-)
 
-> Attached is the kernel boot log that's obtained with all HDDs attached and
-> successfully boot up after a warm reboot and some information on my setup.
-> Let me know if you need more information/log to help with debuging. 
-
-The mailing list doesn't like attachments, but it was included in the
-re-send to me where it was inline.  An unsuccessful boot log is probably
-the most interesting, preferably with the pci=earlydump option (and
-continue to use the amd_iommu_dump option as well).  Also, what happens
-with amd_iommu=off?  If we're not getting any IOMMU faults, it seems
-like the patches are doing their job and I'm at a bit of a loss to
-understand how it would fail only on a cold boot.
-
-It might also be useful to test the branch provided in case there's an
-issue with backporting the patches to 3.14.
-
-> Best Regards,
-> 
-> Edward Cheung
-> 
-> Motherboard: Gigabyte GA-990FXA-UD5 Revision 1.0. Note that the kernel is
-> using software IO TLB belief due to broken IVRS table. I am still trying to
-> find a fix for this.
-
-What brings you to the conclusion that the IVRS table is broken?  IIRC,
-AMD-Vi initializes the swiotlb to support pasthrough devices that can
-only do 32bit DMA... or something like that.  So I don't think it's
-unusual to see it initialized alongside AMD IOMMU.  Thanks,
-
-Alex
-
+-- 
+1.9.2
 
