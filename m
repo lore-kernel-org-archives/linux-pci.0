@@ -1,39 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:38699 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751786AbaEUPkL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 11:40:11 -0400
-Received: by mail-qg0-f50.google.com with SMTP id z60so3435239qgd.37
-        for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 08:40:10 -0700 (PDT)
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Subject: Re: Frustrating PCI x ACPI x APIC(?) interaction/bug
-From: Micah Dombrowski <mpdwibble@gmail.com>
-In-Reply-To: <CAErSpo5U4UpMdBC8nGTJcsatste17THf7Ko1RPZpaC01UyS6tw@mail.gmail.com>
-Date: Wed, 21 May 2014 11:40:07 -0400
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Message-Id: <9F1CDCD7-94EC-43C3-9568-D5C348531D85@gmail.com>
-References: <EF1232FA-308B-4261-82E6-6E3B932181E2@gmail.com> <CAErSpo5U4UpMdBC8nGTJcsatste17THf7Ko1RPZpaC01UyS6tw@mail.gmail.com>
+Received: from mout.kundenserver.de ([212.227.17.10]:50532 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752710AbaE1Msg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 08:48:36 -0400
+From: Arnd Bergmann <arnd@arndb.de>
 To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	horms@verge.net.au, grant.likely@linaro.org,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	rdunlap@infradead.org, linux-doc@vger.kernel.org,
+	linux-sh@vger.kernel.org
+Subject: Re: [PATCH v4] pci-rcar-gen2: add device tree support
+Date: Wed, 28 May 2014 14:47:46 +0200
+Message-ID: <7670579.laOqWDiO2F@wuerfel>
+In-Reply-To: <20140528030418.GN11907@google.com>
+References: <201405200110.21914.sergei.shtylyov@cogentembedded.com> <20140528030418.GN11907@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On May 20, 2014, at 10:02 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Tuesday 27 May 2014 21:04:18 Bjorn Helgaas wrote:
+> [+cc Arnd]
+> 
+> On Tue, May 20, 2014 at 01:10:20AM +0400, Sergei Shtylyov wrote:
+> > From: Ben Dooks <ben.dooks@codethink.co.uk>
+> > 
+> > Add device tree probing support to the 'pci-rcar-gen2' driver.
+> > 
+> > Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+> > [Sergei: numerous fixes/cleanups/additions]
+> > Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> 
+> I'd like to see an ack from Simon (since it changes pci-rcar-gen2.c) and
+> Arnd (since he pointed out some issues with the devicetree binding).
+> 
 
-> On Mon, May 19, 2014 at 6:37 PM, Micah Dombrowski <mpdwibble@gmail.com> wrote:
-> Thanks for the problem report.  If I understand correctly, the 4020
-> works fine when connected to a desktop PC, but not when connected to
-> the Lenovo T530 laptop.
+Yes, looks good to me now,
 
-Correct.
-
-> I use http://bugzilla.kernel.org as a place to collect info like this,
-> so if you want, you can open a report there and attach the logs.  Or
-> I'd be glad to do that for you if you just include them in email.
-
-I opened a report https://bugzilla.kernel.org/show_bug.cgi?id=76641
-
-And attached dmesg and lspci -vv output from both systems.
-
-Thanks,
-MPD
+Acked-by: Arnd Bergmann <arnd@arndb.de>
