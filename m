@@ -1,69 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:41786 "EHLO quartz.orcorp.ca"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:33824 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751128AbaEZXbt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 26 May 2014 19:31:49 -0400
-Date: Mon, 26 May 2014 17:31:32 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
+	id S1754425AbaE1O0w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 May 2014 10:26:52 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-pci@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on
- designware core driver
-Message-ID: <20140526233132.GA12179@obsidianresearch.com>
-References: <5374FD24.8000806@ti.com>
- <22200719.Jb5jnJylJH@wuerfel>
- <20140515183919.GC11650@obsidianresearch.com>
- <53751DDF.40304@ti.com>
- <20140515205210.GB14722@obsidianresearch.com>
- <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com>
- <20140520170221.GA5130@obsidianresearch.com>
- <537D37AA.5030303@ti.com>
- <20140522005506.GB17244@obsidianresearch.com>
- <537E7823.5060609@ti.com>
+	<linux-kernel@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: [PATCH] ARM: pci: add call to pcie_bus_configure_settings()
+Date: Wed, 28 May 2014 10:26:16 -0400
+Message-ID: <1401287176-4986-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <537E7823.5060609@ti.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 22, 2014 at 06:20:19PM -0400, Murali Karicheri wrote:
+PCI core supports PCIE_BUS_SAFE and PCIE_BUS_PERFORMANCE modes.
+PCI controllers may not be able to handle pay load size higher
+than MPS and also read data size higher than MRSS. So limit the
+max to the least common supported payload size by calling
+pcie_bus_configure_settings(). Using pci=pcie_bus_safe do a walk
+and set the MPS to least common value used by devices on the bus.
+pci=pcie_bus_perf does do a walk and set MRSS to MPS.
 
->> What is the MPSS?
-> 
->    MPS published in DEV CAP is 1 (256 bytes). In our IP for some reason,
->    mrss is set to 2 though IP
->    support only 256 bytes. I am trying to resolve this with IP team. If
->    this is an IP issue, then
->    software will overwrite this to 1.
+This is suggested as a better solution than pci quirk to do similar
+thing.
 
-The MRSS of the root port bridge is very rarely used, it is OK to be
-larger than the MPS, but I'm not sure it makes much sense as a
-default.
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 
->    So the mps  will not get written to mrss for performance mode. So the
->    check seems not right. It should be changed to
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+---
+ arch/arm/kernel/bios32.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-So, looking at this more closely, the MRRS does not *have* to be
-smaller than the MPS, but it probably performs better if it is.
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 16d43cd..537f99e 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -545,6 +545,18 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+ 		 */
+ 		pci_bus_add_devices(bus);
+ 	}
++
++	list_for_each_entry(sys, &head, node) {
++		struct pci_bus *bus = sys->bus;
++
++		/* Configure PCI Express settings */
++		if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
++			struct pci_bus *child;
++
++			list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++		}
++	}
+ }
+ 
+ #ifndef CONFIG_PCI_HOST_ITE8152
+-- 
+1.7.9.5
 
-I think that reflects what the code is doing.
-
-The fact your root complex can't segment replies is a serious defect,
-and there is no infrastructure to support that in the kernel.
-
-Adding something to this generic code might be your best option to
-cover the majority of cases.
-
-It would also be good to know for sure that it can correctly segment a
-256 byte read into 128 byte packets, and that only 512 is mishandled.
-
-Jason
