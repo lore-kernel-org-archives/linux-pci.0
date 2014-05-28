@@ -1,63 +1,209 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Eli Billauer <eli.billauer@gmail.com>
-To: tj@kernel.org
-Cc: devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Eli Billauer <eli.billauer@gmail.com>
-Subject: [PATCH 3/3] dma-mapping: pci: Add devm_ interface for pci_map_single
-Date: Sat, 17 May 2014 15:22:25 +0300
-Message-Id: <1400329345-15556-3-git-send-email-eli.billauer@gmail.com>
-In-Reply-To: <1400329345-15556-1-git-send-email-eli.billauer@gmail.com>
-References: <1400329345-15556-1-git-send-email-eli.billauer@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:35966 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753426AbaE1Wgk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 18:36:40 -0400
+Received: by mail-ig0-f171.google.com with SMTP id c1so3057189igq.10
+        for <linux-pci@vger.kernel.org>; Wed, 28 May 2014 15:36:39 -0700 (PDT)
+Date: Wed, 28 May 2014 16:36:37 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 12/15] pci: Add pci_fixup_suspend_late quirk pass.
+Message-ID: <20140528223637.GY11907@google.com>
+References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+ <1401117492-2870-13-git-send-email-andreas.noever@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1401117492-2870-13-git-send-email-andreas.noever@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, May 26, 2014 at 05:18:09PM +0200, Andreas Noever wrote:
 
-Signed-off-by: Eli Billauer <eli.billauer@gmail.com>
----
- Documentation/driver-model/devres.txt |    2 ++
- include/asm-generic/pci-dma-compat.h  |   17 +++++++++++++++++
- 2 files changed, 19 insertions(+), 0 deletions(-)
+Please adjust the subject to match the drivers/pci convention, i.e., change
 
-diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
-index 2112a00..fea2c69 100644
---- a/Documentation/driver-model/devres.txt
-+++ b/Documentation/driver-model/devres.txt
-@@ -274,6 +274,8 @@ DMA
- PCI
-   pcim_enable_device()	: after success, all PCI ops become managed
-   pcim_pin_device()	: keep PCI device enabled after release
-+  pcim_map_single()
-+  pcim_unmap_single()
- 
- IOMAP
-   devm_ioport_map()
-diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
-index 1437b7d..444e598 100644
---- a/include/asm-generic/pci-dma-compat.h
-+++ b/include/asm-generic/pci-dma-compat.h
-@@ -113,4 +113,21 @@ static inline int pci_set_consistent_dma_mask(struct pci_dev *dev, u64 mask)
- }
- #endif
- 
-+/*
-+ * Managed DMA API
-+ */
-+
-+static inline dma_addr_t
-+pcim_map_single(struct pci_dev *hwdev, void *ptr, size_t size, int direction)
-+{
-+	return dmam_map_single(hwdev == NULL ? NULL : &hwdev->dev, ptr, size, (enum dma_data_direction)direction);
-+}
-+
-+static inline void
-+pcim_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr,
-+		 size_t size, int direction)
-+{
-+	dmam_unmap_single(hwdev == NULL ? NULL : &hwdev->dev, dma_addr, size, (enum dma_data_direction)direction);
-+}
-+
- #endif
--- 
-1.7.2.3
+  pci: Add pci_fixup_suspend_late quirk pass.
 
+to
+
+  PCI: Add pci_fixup_suspend_late quirk pass
+
+> Add pci_fixup_suspend_late as a new pci_fixup_pass. The pass is called
+> from suspend_noirq and poweroff_noirq. Using the same pass for suspend
+> and hibernate is consistent with resume_early which is called by
+> resume_noirq and restore_noirq.
+> 
+> The new quirk pass is required for Thunderbolt support on Apple
+> hardware.
+> 
+> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+I assume you'll merge this along with the rest of the series, not through
+my PCI tree.
+
+Bjorn
+
+> ---
+>  drivers/pci/pci-driver.c          | 18 ++++++++++++++----
+>  drivers/pci/quirks.c              |  7 +++++++
+>  include/asm-generic/vmlinux.lds.h |  3 +++
+>  include/linux/pci.h               | 12 +++++++++++-
+>  4 files changed, 35 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index d911e0c..55dc1b8 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -542,7 +542,7 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
+>  			WARN_ONCE(pci_dev->current_state != prev,
+>  				"PCI PM: Device state not saved by %pF\n",
+>  				drv->suspend_late);
+> -			return 0;
+> +			goto Fixup;
+>  		}
+>  	}
+>  
+> @@ -551,6 +551,9 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
+>  
+>  	pci_pm_set_unknown_state(pci_dev);
+>  
+> +Fixup:
+> +	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
+> +
+>  	return 0;
+>  }
+>  
+> @@ -694,7 +697,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+>  
+>  	if (!pm) {
+>  		pci_save_state(pci_dev);
+> -		return 0;
+> +		goto Fixup;
+>  	}
+>  
+>  	if (pm->suspend_noirq) {
+> @@ -711,7 +714,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+>  			WARN_ONCE(pci_dev->current_state != prev,
+>  				"PCI PM: State of device not saved by %pF\n",
+>  				pm->suspend_noirq);
+> -			return 0;
+> +			goto Fixup;
+>  		}
+>  	}
+>  
+> @@ -735,6 +738,9 @@ static int pci_pm_suspend_noirq(struct device *dev)
+>  	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+>  		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
+>  
+> +Fixup:
+> +	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
+> +
+>  	return 0;
+>  }
+>  
+> @@ -959,8 +965,10 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+>  	if (pci_has_legacy_pm_support(to_pci_dev(dev)))
+>  		return pci_legacy_suspend_late(dev, PMSG_HIBERNATE);
+>  
+> -	if (!drv || !drv->pm)
+> +	if (!drv || !drv->pm) {
+> +		pci_fixup_device(pci_fixup_suspend_late, pci_dev);
+>  		return 0;
+> +	}
+>  
+>  	if (drv->pm->poweroff_noirq) {
+>  		int error;
+> @@ -981,6 +989,8 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+>  	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+>  		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
+>  
+> +	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
+> +
+>  	if (pcibios_pm_ops.poweroff_noirq)
+>  		return pcibios_pm_ops.poweroff_noirq(dev);
+>  
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index e729206..af2eba1 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3024,6 +3024,8 @@ extern struct pci_fixup __start_pci_fixups_resume_early[];
+>  extern struct pci_fixup __end_pci_fixups_resume_early[];
+>  extern struct pci_fixup __start_pci_fixups_suspend[];
+>  extern struct pci_fixup __end_pci_fixups_suspend[];
+> +extern struct pci_fixup __start_pci_fixups_suspend_late[];
+> +extern struct pci_fixup __end_pci_fixups_suspend_late[];
+>  
+>  static bool pci_apply_fixup_final_quirks;
+>  
+> @@ -3069,6 +3071,11 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
+>  		end = __end_pci_fixups_suspend;
+>  		break;
+>  
+> +	case pci_fixup_suspend_late:
+> +		start = __start_pci_fixups_suspend_late;
+> +		end = __end_pci_fixups_suspend_late;
+> +		break;
+> +
+>  	default:
+>  		/* stupid compiler warning, you would think with an enum... */
+>  		return;
+> diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+> index 146e4ff..2dea636 100644
+> --- a/include/asm-generic/vmlinux.lds.h
+> +++ b/include/asm-generic/vmlinux.lds.h
+> @@ -288,6 +288,9 @@
+>  		VMLINUX_SYMBOL(__start_pci_fixups_suspend) = .;		\
+>  		*(.pci_fixup_suspend)					\
+>  		VMLINUX_SYMBOL(__end_pci_fixups_suspend) = .;		\
+> +		VMLINUX_SYMBOL(__start_pci_fixups_suspend_late) = .;	\
+> +		*(.pci_fixup_suspend_late)				\
+> +		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
+>  	}								\
+>  									\
+>  	/* Built-in firmware blobs */					\
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index aab57b4..4724806 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1458,8 +1458,9 @@ enum pci_fixup_pass {
+>  	pci_fixup_final,	/* Final phase of device fixups */
+>  	pci_fixup_enable,	/* pci_enable_device() time */
+>  	pci_fixup_resume,	/* pci_device_resume() */
+> -	pci_fixup_suspend,	/* pci_device_suspend */
+> +	pci_fixup_suspend,	/* pci_device_suspend() */
+>  	pci_fixup_resume_early, /* pci_device_resume_early() */
+> +	pci_fixup_suspend_late,	/* pci_device_suspend_late() */
+>  };
+>  
+>  /* Anonymous variables would be nice... */
+> @@ -1500,6 +1501,11 @@ enum pci_fixup_pass {
+>  	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
+>  		suspend##hook, vendor, device, class,	\
+>  		class_shift, hook)
+> +#define DECLARE_PCI_FIXUP_CLASS_SUSPEND_LATE(vendor, device, class,	\
+> +					 class_shift, hook)		\
+> +	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
+> +		suspend_late##hook, vendor, device,	\
+> +		class, class_shift, hook)
+>  
+>  #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
+>  	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
+> @@ -1525,6 +1531,10 @@ enum pci_fixup_pass {
+>  	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
+>  		suspend##hook, vendor, device,		\
+>  		PCI_ANY_ID, 0, hook)
+> +#define DECLARE_PCI_FIXUP_SUSPEND_LATE(vendor, device, hook)		\
+> +	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
+> +		suspend_late##hook, vendor, device,	\
+> +		PCI_ANY_ID, 0, hook)
+>  
+>  #ifdef CONFIG_PCI_QUIRKS
+>  void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+> -- 
+> 1.9.3
+> 
