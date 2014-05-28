@@ -1,66 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:64204 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941AbaE1VAA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 17:00:00 -0400
-Received: by mail-ig0-f178.google.com with SMTP id hl10so3010070igb.5
-        for <linux-pci@vger.kernel.org>; Wed, 28 May 2014 13:59:59 -0700 (PDT)
-Date: Wed, 28 May 2014 14:59:56 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: arnd@arndb.de, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, jgunthorpe@obsidianresearch.com
-Subject: Re: [GIT PULL] Generic PCI host controller driver for 3.16
-Message-ID: <20140528205956.GU11907@google.com>
-References: <20140527224051.GA13786@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140527224051.GA13786@arm.com>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:43581 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753841AbaE1Ov4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 10:51:56 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 1/5] PCI: tegra: Overhaul regulator usage
+Date: Wed, 28 May 2014 16:49:11 +0200
+Message-Id: <1401288555-24197-2-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
+References: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 27, 2014 at 11:40:51PM +0100, Will Deacon wrote:
-> Hi Bjorn,
-> 
-> Please can you pull my generic PCI host controller driver for 3.16?
-> 
-> It's been doing the rounds on the lists for some time and things have
-> settled down now, despite a recent failed attempt at factoring out the
-> configuration space accessors.
+From: Thierry Reding <treding@nvidia.com>
 
-Is this the same as patches 2 & 3 of your v7 series of May 23?
+The current usage of regulators for the Tegra PCIe block is wrong. It
+doesn't accurately reflect the actual supply inputs of the IP block and
+therefore isn't as flexible as it should be. Rectify this by describing
+all possible supply inputs in the device tree binding documentation and
+deprecate the old supply properties.
 
-The only thing I see that is actually ARM-specific is the
-pci_common_init_dev() call and struct hw_pci usage.  That makes sense at
-this stage of development.  Maybe someday we'll be able to abstract this
-enough to make it truly arch-agnostic.
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+Changes in v2:
+- fix power rail assignment on Tegra30
 
-Bjorn
+ .../bindings/pci/nvidia,tegra20-pcie.txt           | 35 ++++++++++++++++++++--
+ 1 file changed, 32 insertions(+), 3 deletions(-)
 
-> --->8
-> 
-> The following changes since commit d6d211db37e75de2ddc3a4f979038c40df7cc79c:
-> 
->   Linux 3.15-rc5 (2014-05-09 13:10:52 -0700)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/will/linux.git for-bjorn/pci-host-generic
-> 
-> for you to fetch changes up to 97725ee5aef64b2056c10eabafc92ff89994733d:
-> 
->   MAINTAINERS: add entry for generic PCI host controller driver (2014-05-27 23:18:09 +0100)
-> 
-> ----------------------------------------------------------------
-> Will Deacon (2):
->       PCI: ARM: add support for generic PCI host controller
->       MAINTAINERS: add entry for generic PCI host controller driver
-> 
->  .../devicetree/bindings/pci/host-generic-pci.txt   | 100 ++++++
->  MAINTAINERS                                        |   8 +
->  drivers/pci/host/Kconfig                           |   7 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pci-host-generic.c                | 388 +++++++++++++++++++++
->  5 files changed, 504 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/host-generic-pci.txt
->  create mode 100644 drivers/pci/host/pci-host-generic.c
+diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+index c300391e8d3e..f56d89998a44 100644
+--- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+@@ -14,9 +14,6 @@ Required properties:
+ - interrupt-names: Must include the following entries:
+   "intr": The Tegra interrupt that is asserted for controller interrupts
+   "msi": The Tegra interrupt that is asserted when an MSI is received
+-- pex-clk-supply: Supply voltage for internal reference clock
+-- vdd-supply: Power supply for controller (1.05V)
+-- avdd-supply: Power supply for controller (1.05V) (not required for Tegra20)
+ - bus-range: Range of bus numbers associated with this controller
+ - #address-cells: Address representation for root ports (must be 3)
+   - cell 0 specifies the bus and device numbers of the root port:
+@@ -60,6 +57,38 @@ Required properties:
+   - afi
+   - pcie_x
+ 
++Power supplies for Tegra20:
++- avdd-pex-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
++- vdd-pex-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
++- avdd-pex-pll-supply: Power supply for dedicated (internal) PCIe PLL. Must
++  supply 1.05 V.
++- avdd-plle-supply: Power supply for PLLE, which is shared with SATA. Must
++  supply 1.05 V.
++- vddio-pex-clk-supply: Power supply for PCIe clock. Must supply 3.3 V.
++
++Power supplies for Tegra30:
++- Required:
++  - avdd-pex-pll-supply: Power supply for dedicated (internal) PCIe PLL. Must
++    supply 1.05 V.
++  - avdd-plle-supply: Power supply for PLLE, which is shared with SATA. Must
++    supply 1.05 V.
++  - vddio-pex-ctl-supply: Power supply for PCIe control I/O partition. Must
++    supply 1.8 V.
++  - hvdd-pex-supply: High-voltage supply for PCIe I/O and PCIe output clocks.
++    Must supply 3.3 V.
++- Optional:
++  - If lanes 0 to 3 are used:
++    - avdd-pexa-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
++    - vdd-pexa-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
++  - If lanes 4 or 5 are used:
++    - avdd-pexb-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
++    - vdd-pexb-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
++
++Deprecated supplies:
++- pex-clk-supply: Supply voltage for internal reference clock
++- vdd-supply: Power supply for controller (1.05V)
++- avdd-supply: Power supply for controller (1.05V) (not required for Tegra20)
++
+ Root ports are defined as subnodes of the PCIe controller node.
+ 
+ Required properties:
+-- 
+1.9.2
+
