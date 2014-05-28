@@ -1,52 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f174.google.com ([209.85.128.174]:40653 "EHLO
-	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752845AbaEJMxg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 May 2014 08:53:36 -0400
-Received: by mail-ve0-f174.google.com with SMTP id jw12so6610953veb.19
-        for <linux-pci@vger.kernel.org>; Sat, 10 May 2014 05:53:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140510121542.5359.qmail@ns.horizon.com>
-References: <20140510121542.5359.qmail@ns.horizon.com>
-Date: Sat, 10 May 2014 20:53:35 +0800
-Message-ID: <CAJtEV7bbyvqBbtj+SDo_HrVubAZjs7Zn75zeKLZq3b6ga=qALA@mail.gmail.com>
-Subject: Re: [PATCH v2 00/15] PCI/iommu: Fix DMA alias problems
-From: Andrew Cooks <acooks@gmail.com>
-To: George Spelvin <linux@horizon.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	linux-kernel@vger.kernrl.org,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:50831 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753823AbaE1Ovz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 10:51:55 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 2/5] ARM: tegra: Add new PCIe regulator properties
+Date: Wed, 28 May 2014 16:49:12 +0200
+Message-Id: <1401288555-24197-3-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
+References: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 10, 2014 at 8:15 PM, George Spelvin <linux@horizon.com> wrote:
-> Well, chalk up one test failure.
->
-> I'm running a GA-X79-UP4 motherboard with VT-d enabled.
-> It has 3x Marvell SATA controllers:
-> 05:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller (rev 11)
-> 06:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller (rev 11)
-> 07:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9172 SATA 6Gb/s Controller (rev 11)
->
-> With Andrew's patch from https://bugzilla.kernel.org/show_bug.cgi?id=42679#c22
-> the Marvell SATA ports work.  With your dma-alias branch (rebased onto 3.15-rc5),
-> the ports don't work:
->
-> -ata7.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
-> -dmar: DRHD: handling fault status reg 502
-> -dmar: DMAR:[DMA Write] Request device [05:00.1] fault addr fffc0000
-> -DMAR:[fault reason 02] Present bit in context entry is clear
+From: Thierry Reding <treding@nvidia.com>
 
+These new properties more accurately reflect the real connections of the
+boards and therefore make it easier to match them up with schematics.
 
-When I checked, about 12 hours ago, the dma-alias branch on github
-didn't have all the v2 changes, so I applied the v2 patch set on
-3.15-rc5. You may want to try that as well.
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+Changes in v2:
+- reword comment in Cardhu DTS
 
-I didn't notice any problems on the board I used: GA-X79-UD5, with the
-same 88SE9172 controllers as above and with drives attached to each of
-the internal SATA ports.
+ arch/arm/boot/dts/tegra20-harmony.dts   | 10 +++++++++-
+ arch/arm/boot/dts/tegra20-tamonten.dtsi |  7 +++++++
+ arch/arm/boot/dts/tegra20-trimslice.dts |  8 ++++++++
+ arch/arm/boot/dts/tegra30-beaver.dts    | 11 +++++++++++
+ arch/arm/boot/dts/tegra30-cardhu.dtsi   | 10 ++++++++++
+ 5 files changed, 45 insertions(+), 1 deletion(-)
 
-a.
+diff --git a/arch/arm/boot/dts/tegra20-harmony.dts b/arch/arm/boot/dts/tegra20-harmony.dts
+index f45aad688d9b..c8008247ead7 100644
+--- a/arch/arm/boot/dts/tegra20-harmony.dts
++++ b/arch/arm/boot/dts/tegra20-harmony.dts
+@@ -562,9 +562,17 @@
+ 	};
+ 
+ 	pcie-controller@80003000 {
++		status = "okay";
++
++		avdd-pex-supply = <&pci_vdd_reg>;
++		vdd-pex-supply = <&pci_vdd_reg>;
++		avdd-pex-pll-supply = <&pci_vdd_reg>;
++		avdd-plle-supply = <&pci_vdd_reg>;
++		vddio-pex-clk-supply = <&pci_clk_reg>;
++
++		/* deprecated */
+ 		pex-clk-supply = <&pci_clk_reg>;
+ 		vdd-supply = <&pci_vdd_reg>;
+-		status = "okay";
+ 
+ 		pci@1,0 {
+ 			status = "okay";
+diff --git a/arch/arm/boot/dts/tegra20-tamonten.dtsi b/arch/arm/boot/dts/tegra20-tamonten.dtsi
+index a1b0d965757f..0e33577750ae 100644
+--- a/arch/arm/boot/dts/tegra20-tamonten.dtsi
++++ b/arch/arm/boot/dts/tegra20-tamonten.dtsi
+@@ -473,6 +473,13 @@
+ 	};
+ 
+ 	pcie-controller@80003000 {
++		avdd-pex-supply = <&pci_vdd_reg>;
++		vdd-pex-supply = <&pci_vdd_reg>;
++		avdd-pex-pll-supply = <&pci_vdd_reg>;
++		avdd-plle-supply = <&pci_vdd_reg>;
++		vddio-pex-clk-supply = <&pci_clk_reg>;
++
++		/* deprecated */
+ 		pex-clk-supply = <&pci_clk_reg>;
+ 		vdd-supply = <&pci_vdd_reg>;
+ 	};
+diff --git a/arch/arm/boot/dts/tegra20-trimslice.dts b/arch/arm/boot/dts/tegra20-trimslice.dts
+index 216fa6d50c65..401b32e44369 100644
+--- a/arch/arm/boot/dts/tegra20-trimslice.dts
++++ b/arch/arm/boot/dts/tegra20-trimslice.dts
+@@ -318,6 +318,14 @@
+ 
+ 	pcie-controller@80003000 {
+ 		status = "okay";
++
++		avdd-pex-supply = <&pci_vdd_reg>;
++		vdd-pex-supply = <&pci_vdd_reg>;
++		avdd-pex-pll-supply = <&pci_vdd_reg>;
++		avdd-plle-supply = <&pci_vdd_reg>;
++		vddio-pex-clk-supply = <&pci_clk_reg>;
++
++		/* deprecated */
+ 		pex-clk-supply = <&pci_clk_reg>;
+ 		vdd-supply = <&pci_vdd_reg>;
+ 
+diff --git a/arch/arm/boot/dts/tegra30-beaver.dts b/arch/arm/boot/dts/tegra30-beaver.dts
+index 3189791a9289..d3ddfa067e7d 100644
+--- a/arch/arm/boot/dts/tegra30-beaver.dts
++++ b/arch/arm/boot/dts/tegra30-beaver.dts
+@@ -17,6 +17,17 @@
+ 
+ 	pcie-controller@00003000 {
+ 		status = "okay";
++
++		avdd-pexa-supply = <&ldo1_reg>;
++		vdd-pexa-supply = <&ldo1_reg>;
++		avdd-pexb-supply = <&ldo1_reg>;
++		vdd-pexb-supply = <&ldo1_reg>;
++		avdd-pex-pll-supply = <&ldo1_reg>;
++		avdd-plle-supply = <&ldo1_reg>;
++		vddio-pex-ctl-supply = <&sys_3v3_reg>;
++		hvdd-pex-supply = <&sys_3v3_pexs_reg>;
++
++		/* deprecated */
+ 		pex-clk-supply = <&sys_3v3_pexs_reg>;
+ 		vdd-supply = <&ldo1_reg>;
+ 		avdd-supply = <&ldo2_reg>;
+diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+index 0cf0848a82d8..636d62e27a6d 100644
+--- a/arch/arm/boot/dts/tegra30-cardhu.dtsi
++++ b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+@@ -38,6 +38,16 @@
+ 
+ 	pcie-controller@00003000 {
+ 		status = "okay";
++
++		/* AVDD_PEXA and VDD_PEXA inputs are grounded on Cardhu. */
++		avdd-pexb-supply = <&ldo1_reg>;
++		vdd-pexb-supply = <&ldo1_reg>;
++		avdd-pex-pll-supply = <&ldo1_reg>;
++		hvdd-pex-supply = <&pex_hvdd_3v3_reg>;
++		vddio-pex-ctl-supply = <&sys_3v3_reg>;
++		avdd-plle-supply = <&ldo2_reg>;
++
++		/* deprecated */
+ 		pex-clk-supply = <&pex_hvdd_3v3_reg>;
+ 		vdd-supply = <&ldo1_reg>;
+ 		avdd-supply = <&ldo2_reg>;
+-- 
+1.9.2
+
