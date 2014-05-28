@@ -1,82 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:40808 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbaEVR4Y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 May 2014 13:56:24 -0400
-Received: by mail-ie0-f176.google.com with SMTP id rl12so3944775iec.35
-        for <linux-pci@vger.kernel.org>; Thu, 22 May 2014 10:56:24 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:46064 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751339AbaE1UeI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 May 2014 16:34:08 -0400
+Message-ID: <5386483C.60506@redhat.com>
+Date: Wed, 28 May 2014 16:34:04 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20140521233802.GA21575@pd.tnic>
-References: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140521231817.26447.55150.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140521233802.GA21575@pd.tnic>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 22 May 2014 11:56:03 -0600
-Message-ID: <CAErSpo4hcitey+jtZkgpbZsEswJJekStXONct9rrh0aQ_R0h8g@mail.gmail.com>
-Subject: Re: [PATCH V5 3/4] x86/PCI: Stop enabling ECS for AMD CPUs after Fam16h
-To: Borislav Petkov <bp@alien8.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Robert Richter <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Alexander Duyck <alexander.h.duyck@intel.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Borislav Petkov <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
+Subject: Re: [PATCH] pci: Save and restore VFs as a part of a reset
+References: <20140505212346.18767.34117.stgit@ahduyck-cp2.jf.intel.com> <20140527222256.GC11907@google.com> <5385255D.5060204@intel.com> <CAErSpo5QU1LsKVqyGbT07mhF-t5L1y3NxD4JhJ6N3AM0XT0c2A@mail.gmail.com> <1401250378.3289.774.camel@ul30vt.home> <53861154.4080402@intel.com> <CAErSpo4htYwi3jfoxdj=W9VjVdd5gDjYcxg_i52VVz1sYQHL5A@mail.gmail.com>
+In-Reply-To: <CAErSpo4htYwi3jfoxdj=W9VjVdd5gDjYcxg_i52VVz1sYQHL5A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 21, 2014 at 5:38 PM, Borislav Petkov <bp@alien8.de> wrote:
-> On Wed, May 21, 2014 at 05:18:17PM -0600, Bjorn Helgaas wrote:
->> ECS is an AMD mechanism that allows access to extended PCI config space
->> (offsets 256-4096) via I/O ports CF8/CFCh.  We normally use ECAM, i.e.,
->> MMCONFIG, to access that space, but apparently old machines have issues
->> that meant we couldn't use ECAM.
->>
->> The solution was to enable ECS so we could use configuration mechanism #1
->> (I/O ports CF8/CFCh) to access extended config space.  See 831d991821da
->> ("x86: add PCI extended config space access for AMD Barcelona").
->>
->> New machines should be able to use ECAM, which means they don't need the
->> CPU-specific code to enable ECS.  This patch leaves ECS the same on all
->> existing platforms, but stops enabling it on platforms after Fam16h.
->>
->> Those future platforms should be able to use the standard ACPI MCFG/_CBA
->> descriptions of the PCIe ECAM mechanism.
->>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> CC: Robert Richter <rric@kernel.org>
->> ---
->>  arch/x86/pci/amd_bus.c |    4 +++-
->>  1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
->> index aa936e3a2019..67dadf179348 100644
->> --- a/arch/x86/pci/amd_bus.c
->> +++ b/arch/x86/pci/amd_bus.c
->> @@ -405,7 +405,9 @@ static int __init amd_postcore_init(void)
->>               return 0;
->>
->>       early_fill_mp_bus_info();
->> -     pci_io_ecs_init();
->> +
->> +     if (boot_cpu_data.x86 <= 0x16)
+On 05/28/2014 04:14 PM, Bjorn Helgaas wrote:
+> On Wed, May 28, 2014 at 10:39 AM, Alexander Duyck
+> <alexander.h.duyck@intel.com> wrote:
+>> On 05/27/2014 09:12 PM, Alex Williamson wrote:
+>>> On Tue, 2014-05-27 at 19:19 -0600, Bjorn Helgaas wrote:
 >
-> Fam 0x16, i.e. hex? I think we talked about fam 0x10, i.e. 16 decimal.
+>>>> Maybe resetting the PF should just fail if there's an active VF.  If
+>>>> you need to reset the PF, you'd have to unbind the VFs first.
+>>>
+>>> The use case is certainly questionable, personally I'm not going to
+>>> expect VFs to continue working after the PF is reset.  Driver binding
+>>> gets complicated, especially when KVM doesn't actually bind devices to
+>>> use them.  Hopefully we'll get that out of the tree some day though.  I
+>>> suppose we could -EBUSY the PF reset as long as VFs are enabled.
+>>
+>> What I could do is go through and notify the VFs that they are about to
+>> get hit by a reset.  What they do with that information would be up to them.
+>>
+>> So if the VFs are loaded on the host I could then at least allow them to
+>> recover by saving and restoring the config space within the driver
+>> themselves.
 >
-> Oh well, that's an AMD call now.
+> I really like the idea of punting by failing the PF reset if there are
+> any active VFs.  That's a really easy way of making sure we aren't
+> going to blow up any guests.  What problems would it cause if we went
+> this route?
+>
+I think this is the safest route.  PF<->VF interaction isn't architected,
+and resetting the PF with active VFs will probably hang a number of SRIOV
+implementations, requiring a system-level reset to correct the compounded problem.
 
-I chose Fam16h (0x16) because it looks like that's the newest stuff
-that's in the field.  I suspect things would probably work if we
-changed this patch to leave ECS disabled on some Fam16h, Fam15h, etc.,
-but that would change behavior on existing systems, which obviously
-adds some risk.  I didn't think there was much benefit that makes the
-risk worthwhile.
+>>>> This reminds me about an open problem: VFs can be on "virtual" buses,
+>>>> which aren't really connected in the hierarchy, and I don't think we
+>>>> have a nice way to iterate over them.  So probably pci_get_device() is
+>>>> the best we can do now.
+>>>
+>>> Yeah, those virtual buses don't have a bus->self, we just have to skip
+>>> to bus->parent->self.  pci_walk_bus() goes in the opposite direction,
+>>> but without an actual device hosting the bus, I don't see how it finds
+>>> it.  Thanks,
+>>
+>> It seems like we should be able to come up with something like
+>> pci_walk_vbus() though or something similar.  All we would need to do is
+>> search the VFs on the bus of the PF and all child busses to that bus if
+>> I am not mistaken.
+>
+> I don't think that's going to work because the virtual buses don't
+> appear as the child bus of anything.
+>
++1.
 
-My goal is to stop needing CPU-specific changes in the future, not
-necessarily to remove the CPU-specific code we already have.
+> Bjorn
+>
 
-Does that make sense?  I'm not sure whether I understood your real question.
-
-Bjorn
