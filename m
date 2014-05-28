@@ -1,7 +1,12 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:40467 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751695AbaE1VWe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 17:22:34 -0400
+Date: Wed, 28 May 2014 23:22:06 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Grant Likely <grant.likely@linaro.org>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
@@ -9,72 +14,49 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Paul Gortmaker <paul.gortmaker@windriver.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch Part1 V2 11/29] x86, ioapic: kill unused global variable timer_through_8259
-Date: Tue, 20 May 2014 00:22:55 +0800
-Message-Id: <1400516594-11544-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: Re: [Patch V3 19/37] x86, irq: introduce mechanisms to support
+ dynamically allocate IRQ for IOAPIC
+In-Reply-To: <alpine.DEB.2.10.1405282301310.3952@nanos>
+Message-ID: <alpine.DEB.2.10.1405282320430.3952@nanos>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com> <1401178092-1228-20-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.02.1405271445050.21720@ionos.tec.linutronix.de> <53856D8E.3010401@linux.intel.com>
+ <alpine.DEB.2.10.1405282301310.3952@nanos>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    4 ----
- arch/x86/kernel/apic/io_apic.c |    3 ---
- 2 files changed, 7 deletions(-)
+On Wed, 28 May 2014, Thomas Gleixner wrote:
+> On Wed, 28 May 2014, Jiang Liu wrote:
+> > This is used to work around special non-ISA interrupts with GSI below
+> > NR_IRQS_LEGACY. The original code for the special case is:
+> > /*
+> >  * Provide an identity mapping of gsi == irq except on truly
+> >  * weird platforms that have non isa irqs in the first 16 gsis.
+> >  */
+> > return gsi >= NR_IRQS_LEGACY ? gsi : gsi_top + gsi;
+> 
+> That looks really, really wrong. What's wrong with assigning that irq
+> irq number on those platforms?
+> 
+> The weird stuff is SFI and devicetree, if I understand your code
+> correctly.
+> 
+> So if those platforms do not have actual legacy irqs, what's wrong
+> with giving out the legacy numbers?
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 8dd1e13f2989..de3d8b04cf64 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -130,9 +130,6 @@ extern int noioapicquirk;
- /* -1 if "noapic" boot option passed */
- extern int noioapicreroute;
- 
--/* 1 if the timer IRQ uses the '8259A Virtual Wire' mode */
--extern int timer_through_8259;
--
- /*
-  * If we use the IO-APIC for IRQ routing, disable automatic
-  * assignment of PCI IRQ's.
-@@ -212,7 +209,6 @@ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
- 
- #define io_apic_assign_pci_irqs 0
- #define setup_ioapic_ids_from_mpc x86_init_noop
--static const int timer_through_8259 = 0;
- static inline void ioapic_insert_resources(void) { }
- #define gsi_top (NR_IRQS_LEGACY)
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 4d7d46650faa..e8dd12a04cea 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2649,8 +2649,6 @@ static int __init disable_timer_pin_setup(char *arg)
- }
- early_param("disable_timer_pin_1", disable_timer_pin_setup);
- 
--int timer_through_8259 __initdata;
--
- /*
-  * This code may look a bit paranoid, but it's supposed to cooperate with
-  * a wide range of boards and BIOS bugs.  Fortunately only the timer IRQ
-@@ -2755,7 +2753,6 @@ static inline void __init check_timer(void)
- 		legacy_pic->unmask(0);
- 		if (timer_irq_works()) {
- 			apic_printk(APIC_QUIET, KERN_INFO "....... works.\n");
--			timer_through_8259 = 1;
- 			goto out;
- 		}
- 		/*
--- 
-1.7.10.4
+Though if it's a real issue, we can simply mark the ioapic on those
+devices as DYNAMIC and avoid that whole magic.
 
+Thanks,
+
+	tglx
