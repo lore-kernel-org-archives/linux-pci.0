@@ -1,88 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:42009 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752951AbaE1CsY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 22:48:24 -0400
-Received: by mail-ie0-f171.google.com with SMTP id to1so9760276ieb.16
-        for <linux-pci@vger.kernel.org>; Tue, 27 May 2014 19:48:24 -0700 (PDT)
-Date: Tue, 27 May 2014 20:48:20 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v8 0/3] R-Car Gen2 PCIe host driver
-Message-ID: <20140528024820.GL11907@google.com>
-References: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:57819 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916AbaE1DaV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 May 2014 23:30:21 -0400
+Date: Tue, 27 May 2014 20:30:19 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	konrad.wilk@oracle.com, kim.phillips@linaro.org,
+	stuart.yoder@freescale.com, agraf@suse.de, libvir-list@redhat.com,
+	iommu@lists.linux-foundation.org, christoffer.dall@linaro.org,
+	tech@virtualopensystems.com, kvmarm@lists.cs.columbia.edu,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: Introduce new device binding path using
+ pci_dev.driver_override
+Message-ID: <20140528033019.GA11547@kroah.com>
+References: <20140520145136.28232.90707.stgit@bling.home>
+ <20140528030742.GO11907@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com>
+In-Reply-To: <20140528030742.GO11907@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 12, 2014 at 11:57:47AM +0100, Phil Edworthy wrote:
-> This is version 8 of a PCIe Host driver for the R-Car Gen2 devices,
-> i.e. R-Car H2 (r8a7790) and R-Car M2 (r8a7791).
+On Tue, May 27, 2014 at 09:07:42PM -0600, Bjorn Helgaas wrote:
+> On Tue, May 20, 2014 at 08:53:21AM -0600, Alex Williamson wrote:
+> > The driver_override field allows us to specify the driver for a device
+> > rather than relying on the driver to provide a positive match of the
+> > device.  This shortcuts the existing process of looking up the vendor
+> > and device ID, adding them to the driver new_id, binding the device,
+> > then removing the ID, but it also provides a couple advantages.
+> > 
+> > First, the above existing process allows the driver to bind to any
+> > device matching the new_id for the window where it's enabled.  This is
+> > often not desired, such as the case of trying to bind a single device
+> > to a meta driver like pci-stub or vfio-pci.  Using driver_override we
+> > can do this deterministically using:
+> > 
+> > echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> > 
+> > Previously we could not invoke drivers_probe after adding a device
+> > to new_id for a driver as we get non-deterministic behavior whether
+> > the driver we intend or the standard driver will claim the device.
+> > Now it becomes a deterministic process, only the driver matching
+> > driver_override will probe the device.
+> > 
+> > To return the device to the standard driver, we simply clear the
+> > driver_override and reprobe the device:
+> > 
+> > echo > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> > 
+> > Another advantage to this approach is that we can specify a driver
+> > override to force a specific binding or prevent any binding.  For
+> > instance when an IOMMU group is exposed to userspace through VFIO
+> > we require that all devices within that group are owned by VFIO.
+> > However, devices can be hot-added into an IOMMU group, in which case
+> > we want to prevent the device from binding to any driver (override
+> > driver = "none") or perhaps have it automatically bind to vfio-pci.
+> > With driver_override it's a simple matter for this field to be set
+> > internally when the device is first discovered to prevent driver
+> > matches.
+> > 
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 > 
-> v8:
->  - Platform changes removed from this patch set
->  - Moved header file contents into c file
->  - Formatting cleaned up
->  - Remove bus/dev/func range checks for config access
->  - Add comment about config access serialization
->  - Made rcar_pcie_setup_window() return void as no errors possible
->  - Remove unused register definitions
->  - Removed __init markers to fix section mismatches
->  - Add explicit bus number range
->  - Get the root bus nr from config writes instead of sys->busnr
->  - Use PCI domains
->  - Removed unused variable in rcar_msi_free()
->  - Split interrupt bindings into separate cells
-> 
-> v7:
->  - Change binding description of clocks to 'clock specifiers'
-> 
-> v6:
->  - Correct DT bindings description for reg and clocks
->  - Split device and board DT changes
->  - Add shmobile to subject for shmobile DT patches
->  - Don't check MSI irq number is valid, as upper level checks this
->  - Change "Unexpected MSI" msg to debug level
->  - Reword "Unexpected MSI" comment so that it's one line
->  - Remove patch that adds HAVE_ARM_ARCH_TIMER to koelsch defconfig as not needed
-> 
-> v5:
->  - Use module_platform_driver instead of subsys_initcall
->  - Use the of_device_id data field for HW init function
->  - Init hw_pci struct in declaration
->  - Renesas SoC compatible string has peripheral before device name
->  - Add PCIe bus clock reference
->  - Use dma-ranges property to specify inbound memory regions
->  - Support multiple IO windows and correct resources
->  - Return IRQ_NONE from MSI isr when there is no pending MSI
->  - Add additional interrupt bindings
-> 
-> v4:
->  - Use runtime PM properly
-> 
-> Phil Edworthy (3):
->   PCI: host: rcar: Add Renesas R-Car PCIe driver
->   PCI: host: rcar: Add MSI support
->   dt-bindings: pci: rcar pcie device tree bindings
-> 
->  Documentation/devicetree/bindings/pci/rcar-pci.txt |   47 +
->  drivers/pci/host/Kconfig                           |    6 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pcie-rcar.c                       | 1008 ++++++++++++++++++++
->  4 files changed, 1062 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/rcar-pci.txt
->  create mode 100644 drivers/pci/host/pcie-rcar.c
+> Greg, are you going to weigh in on this?  It does seem to solve some real
+> problems.  ISTR you had an opinion once, but I don't know your current
+> thoughts.
 
-Applied with Simon's ack to pci/host-rcar for v3.16, thanks!
+Give me a few more days, still digging through my patch backlog...
 
-Bjorn
+thanks,
+
+greg k-h
