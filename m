@@ -1,91 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:4447 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864AbaEDE0d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 May 2014 00:26:33 -0400
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:41896 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755028AbaE1V4V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 17:56:21 -0400
+Date: Wed, 28 May 2014 14:59:56 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	<x86@kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 01/13] PCI: rename pci_is_bridge() to pci_has_subordinate()
-Date: Sun, 4 May 2014 12:23:36 +0800
-Message-ID: <1399177428-3784-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
-References: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	konrad.wilk@oracle.com, kim.phillips@linaro.org,
+	stuart.yoder@freescale.com, agraf@suse.de, libvir-list@redhat.com,
+	iommu@lists.linux-foundation.org, christoffer.dall@linaro.org,
+	tech@virtualopensystems.com, kvmarm@lists.cs.columbia.edu,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: Introduce new device binding path using
+ pci_dev.driver_override
+Message-ID: <20140528215956.GA7339@kroah.com>
+References: <20140520145136.28232.90707.stgit@bling.home>
+ <20140528030742.GO11907@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140528030742.GO11907@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_is_bridge() which seems to determine whether device is a bridge,
-returns true only when the subordinate bus exists. This confuses
-people. PCI device is a bridge means its header type(bit 0 through 6)
-is 0x1(PCI bridge) or 0x2(CardBus bridge). Rename the current
-pci_is_bridge() helper function to pci_has_subordinate().
+On Tue, May 27, 2014 at 09:07:42PM -0600, Bjorn Helgaas wrote:
+> On Tue, May 20, 2014 at 08:53:21AM -0600, Alex Williamson wrote:
+> > The driver_override field allows us to specify the driver for a device
+> > rather than relying on the driver to provide a positive match of the
+> > device.  This shortcuts the existing process of looking up the vendor
+> > and device ID, adding them to the driver new_id, binding the device,
+> > then removing the ID, but it also provides a couple advantages.
+> > 
+> > First, the above existing process allows the driver to bind to any
+> > device matching the new_id for the window where it's enabled.  This is
+> > often not desired, such as the case of trying to bind a single device
+> > to a meta driver like pci-stub or vfio-pci.  Using driver_override we
+> > can do this deterministically using:
+> > 
+> > echo pci-stub > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> > 
+> > Previously we could not invoke drivers_probe after adding a device
+> > to new_id for a driver as we get non-deterministic behavior whether
+> > the driver we intend or the standard driver will claim the device.
+> > Now it becomes a deterministic process, only the driver matching
+> > driver_override will probe the device.
+> > 
+> > To return the device to the standard driver, we simply clear the
+> > driver_override and reprobe the device:
+> > 
+> > echo > /sys/bus/pci/devices/0000:03:00.0/driver_override
+> > echo 0000:03:00.0 > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+> > echo 0000:03:00.0 > /sys/bus/pci/drivers_probe
+> > 
+> > Another advantage to this approach is that we can specify a driver
+> > override to force a specific binding or prevent any binding.  For
+> > instance when an IOMMU group is exposed to userspace through VFIO
+> > we require that all devices within that group are owned by VFIO.
+> > However, devices can be hot-added into an IOMMU group, in which case
+> > we want to prevent the device from binding to any driver (override
+> > driver = "none") or perhaps have it automatically bind to vfio-pci.
+> > With driver_override it's a simple matter for this field to be set
+> > internally when the device is first discovered to prevent driver
+> > matches.
+> > 
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> 
+> Greg, are you going to weigh in on this?  It does seem to solve some real
+> problems.  ISTR you had an opinion once, but I don't know your current
+> thoughts.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pci-driver.c |    8 ++++----
- drivers/pci/pci.h        |    2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+This looks good to me:
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index d911e0c..b7850cb 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -580,14 +580,14 @@ static void pci_pm_default_resume(struct pci_dev *pci_dev)
- {
- 	pci_fixup_device(pci_fixup_resume, pci_dev);
- 
--	if (!pci_is_bridge(pci_dev))
-+	if (!pci_has_subordinate(pci_dev))
- 		pci_enable_wake(pci_dev, PCI_D0, false);
- }
- 
- static void pci_pm_default_suspend(struct pci_dev *pci_dev)
- {
- 	/* Disable non-bridge devices without PM support */
--	if (!pci_is_bridge(pci_dev))
-+	if (!pci_has_subordinate(pci_dev))
- 		pci_disable_enabled_device(pci_dev);
- }
- 
-@@ -717,7 +717,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 
- 	if (!pci_dev->state_saved) {
- 		pci_save_state(pci_dev);
--		if (!pci_is_bridge(pci_dev))
-+		if (!pci_has_subordinate(pci_dev))
- 			pci_prepare_to_sleep(pci_dev);
- 	}
- 
-@@ -971,7 +971,7 @@ static int pci_pm_poweroff_noirq(struct device *dev)
- 			return error;
- 	}
- 
--	if (!pci_dev->state_saved && !pci_is_bridge(pci_dev))
-+	if (!pci_dev->state_saved && !pci_has_subordinate(pci_dev))
- 		pci_prepare_to_sleep(pci_dev);
- 
- 	/*
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6bd0822..65108fc 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -77,7 +77,7 @@ static inline void pci_wakeup_event(struct pci_dev *dev)
- 	pm_wakeup_event(&dev->dev, 100);
- }
- 
--static inline bool pci_is_bridge(struct pci_dev *pci_dev)
-+static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
- {
- 	return !!(pci_dev->subordinate);
- }
--- 
-1.7.1
-
-
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
