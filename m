@@ -1,14 +1,19 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:40310 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751443AbaE1UuI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 16:50:08 -0400
+Date: Wed, 28 May 2014 22:49:34 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Grant Likely <grant.likely@linaro.org>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
@@ -16,54 +21,30 @@ Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Paul Gortmaker <paul.gortmaker@windriver.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sfi-devel@simplefirmware.org
-Subject: [RFC Patch Part1 V1 04/30] x86, PCI, ACPI: use kmalloc_node() to optimize for performance
-Date: Fri, 16 May 2014 16:05:24 +0800
-Message-Id: <1400227550-5935-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400227550-5935-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: Re: [RFC Patch V1 1/4] x86, irq: refine mp_register_ioapic() to
+ prepare for IOAPIC hotplug
+In-Reply-To: <1401179077-2020-2-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.10.1405282247530.3952@nanos>
+References: <1401179077-2020-1-git-send-email-jiang.liu@linux.intel.com> <1401179077-2020-2-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use kmalloc_node() instead of kmalloc() when possible to optimize
-for performance on NUMA platforms.
+On Tue, 27 May 2014, Jiang Liu wrote:
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/acpi.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> -static void ioapic_create_irqdomains(void)
+> +static int ioapic_create_irqdomain(int idx)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 01edac6c5e18..91bef49df228 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -448,7 +448,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 		return;
- 
- 	size = sizeof(*info->res) * info->res_num;
--	info->res = kzalloc(size, GFP_KERNEL);
-+	info->res = kzalloc_node(size, GFP_KERNEL, info->sd.node);
- 	if (!info->res) {
- 		info->res_num = 0;
- 		return;
-@@ -456,7 +456,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 
- 	size = sizeof(*info->res_offset) * info->res_num;
- 	info->res_num = 0;
--	info->res_offset = kzalloc(size, GFP_KERNEL);
-+	info->res_offset = kzalloc_node(size, GFP_KERNEL, info->sd.node);
- 	if (!info->res_offset) {
- 		kfree(info->res);
- 		info->res = NULL;
-@@ -495,7 +495,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	if (node != NUMA_NO_NODE && !node_online(node))
- 		node = NUMA_NO_NODE;
- 
--	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
- 	if (!info) {
- 		printk(KERN_WARNING "pci_bus %04x:%02x: "
- 		       "ignored (out of memory)\n", domain, busnum);
--- 
-1.7.10.4
+...
 
+> -static int __init io_apic_get_redir_entries(int ioapic)
+> +static int io_apic_get_redir_entries(int ioapic)
+
+Can you please split the functional changes from the trivial __init
+removal ones?
+
+Thanks,
+
+	tglx
