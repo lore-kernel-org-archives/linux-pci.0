@@ -1,94 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1306 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753410AbaEVXJF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 19:09:05 -0400
-Subject: [PATCH v4 15/16] PCI: Remove pci_find_upstream_pcie_bridge()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
-Date: Thu, 22 May 2014 17:08:58 -0600
-Message-ID: <20140522230857.2856.60347.stgit@bling.home>
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-References: <20140522230230.2856.40017.stgit@bling.home>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:54998 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752387AbaE1Pwr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 11:52:47 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20140528015441.7816.62452@quantum>
+References: <1399383244-14556-1-git-send-email-kishon@ti.com>
+	<5373897C.6080504@ti.com>
+	<CAGo_u6qw1OomEw_ueb3x+xT+qZLAfGv7Se1K=o725aOoD3ankQ@mail.gmail.com>
+	<5374859F.5080902@ti.com>
+	<53748819.8060705@ti.com>
+	<CAGo_u6qbbdAbdvrB3AFXSH1qD5MaBkJbi6oJJvvTWW4xfbmd_Q@mail.gmail.com>
+	<5374AC0A.7070709@ti.com>
+	<CAGo_u6r8XtGHOvsfJKQMZ2ghFRz8x8_UhzyKE9jnwO6mJ2HYpQ@mail.gmail.com>
+	<5374B09F.2080803@ti.com>
+	<5374B409.3000607@ti.com>
+	<20140528015441.7816.62452@quantum>
+Date: Wed, 28 May 2014 10:52:45 -0500
+Message-ID: <CAGo_u6pyoAr7RbhmSwmuk_vPhkBOb9F5YA=m7dNtJWsfprvu5Q@mail.gmail.com>
+Subject: Re: [PATCH 03/17] phy: ti-pipe3: add external clock support for PCIe PHY
+From: Nishanth Menon <nm@ti.com>
+To: Mike Turquette <mturquette@linaro.org>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+	Tero Kristo <t-kristo@ti.com>,
+	dt list <devicetree@vger.kernel.org>,
+	Paul Walmsley <paul@pwsan.com>,
+	"Krishnamoorthy, Balaji T" <balajitk@ti.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Rajendra Nayak <rnayak@ti.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	linux-omap <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Roger Quadros <rogerq@ti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It's broken and has no users.
+On Tue, May 27, 2014 at 8:54 PM, Mike Turquette <mturquette@linaro.org> wrote:
+> Quoting Nishanth Menon (2014-05-15 05:33:13)
+>> On 05/15/2014 07:18 AM, Kishon Vijay Abraham I wrote:
+>> > Hi,
+>> >
+>> > On Thursday 15 May 2014 05:42 PM, Nishanth Menon wrote:
+>> >> On Thu, May 15, 2014 at 6:59 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>> >>> Hi Nishant,
+>> >>>
+>> >>> On Thursday 15 May 2014 05:16 PM, Nishanth Menon wrote:
+>> >>>> On Thu, May 15, 2014 at 4:25 AM, Roger Quadros <rogerq@ti.com> wrote:
+>> >>>>> On 05/15/2014 12:15 PM, Kishon Vijay Abraham I wrote:
+>> >>>>>> Hi Nishanth,
+>> >>>>>>
+>> >>>>>> On Wednesday 14 May 2014 09:04 PM, Nishanth Menon wrote:
+>> >>>>>>> On Wed, May 14, 2014 at 10:19 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>> >>>>>>>> Hi Roger,
+>> >>>>>>>>
+>> >>>>>>>> On Wednesday 14 May 2014 06:46 PM, Roger Quadros wrote:
+>> >>>>>>>>> Hi Kishon,
+>> >>>>>>>>>
+>> >>>>>>>>> On 05/06/2014 04:33 PM, Kishon Vijay Abraham I wrote:
+>> >>>>>>>>>> APLL used by PCIE phy can either use external clock as input or the clock
+>> >>>>>>>>>> from DPLL. Added support for the APLL to use external clock as input here.
+>> >>>>>>>>>>
+>> >>>>>>>>>> Cc: Rajendra Nayak <rnayak@ti.com>
+>> >>>>>>>>>> Cc: Tero Kristo <t-kristo@ti.com>
+>> >>>>>>>>>> Cc: Paul Walmsley <paul@pwsan.com>
+>> >>>>>>>>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> >>>>>>>>>> ---
+>> >>>>>>>>>>  Documentation/devicetree/bindings/phy/ti-phy.txt |    4 ++
+>> >>>>>>>>>>  drivers/phy/phy-ti-pipe3.c                       |   75 ++++++++++++++--------
+>> >>>>>>>>>>  2 files changed, 52 insertions(+), 27 deletions(-)
+>> >>>>>>>>>>
+>> >>>>>>>>>> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>> >>>>>>>>>> index bc9afb5..d50f8ee 100644
+>> >>>>>>>>>> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
+>> >>>>>>>>>> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>> >>>>>>>>>> @@ -76,6 +76,10 @@ Required properties:
+>> >>>>>>>>>>     * "dpll_ref_m2" - external dpll ref clk
+>> >>>>>>>>>>     * "phy-div" - divider for apll
+>> >>>>>>>>>>     * "div-clk" - apll clock
+>> >>>>>>>>>> +   * "apll_mux" - mux for pcie apll
+>> >>>>>>>>>> +   * "refclk_ext" - external reference clock for pcie apll
+>> >>>>>>>>>> + - ti,ext-clk: To specifiy if PCIE apll should use external clock. Applicable
+>> >>>>>>>>>> +   only to PCIE PHY.
+>> >>>>>>>>>
+>> >>>>>>>>> Instead of specifying both clock sources "dpll_ref_clock", "refclk_ext" and then specifying a 3rd control option "ti,ext-clk" to select one of the 2 sources, why can't the DT just supply one clock source, i.e. the one that is being used in the board instance? The driver should then just configure the clock rate that is needed at that node. Shouldn't the clock framework automatically take care of muxing and parent rates?
+>> >>>>>>>>
+>> >>>>>>>> Want the dt to have all the clocks used by the controller. "ti,ext-clk" should
+>> >>>>>>>> go in the board dt file (suggested by Nishanth).
+>> >>>>>>>> The point is at some point later if some one wants to change the clock source,
+>> >>>>>>>> it should be a simple enabling "ti,ext-clk" flag instead of finding the clock
+>> >>>>>>>> phandle etc..
+>> >>>>>>>
+>> >>>>>>> Wonder if that is implicit by the presence of  "refclk_ext" in the
+>> >>>>>>> clocks provided?
+>> >>>>>>
+>> >>>>>> IMO the presence of "refclk_ext" is useless unless the board indicates it
+>> >>>>>> provides the clock source.
+>> >>>>>>
+>> >>>>>> refclk_ext holds phandle for *fixed-clock*, so irrespective of whether the
+>> >>>>>> board provides a clock or not, it can have that handle for configuring in PRCM.
+>> >>>>>> However if the board does not provide the clock source, configuring refclk_ext
+>> >>>>>> in PRCM is useless.
+>> >>>>>
+>> >>>>> I think what Nishant meant is that if "refclk_ext" is provided it means that the driver
+>> >>>>> should use that over "dpll_ref_clock" so no need of a separate "ti,ext-clk" flag.
+>> >>>>
+>> >>>> yes, thank you for clarifying - it does indeed redundant to have
+>> >>>> "ti,ext-clk". and apologies on being a little obscure in the comment.
+>> >>>
+>> >>> Irrespective of whether external reference clock is used or not, all DRA7
+>> >>> (apll) has an input for external reference clock (and also a PRCM register for
+>> >>> programming it) and it has to be specified in dt no?
+>> >>
+>> >> Why is that a binding for ti-phy? that is a problem for the APLL clock
+>> >> driver (selecting it's own source). PHY properties should describe
+>> >> itself -> let the bindings of the APLL describe itself. please dont
+>> >> mix the two up.
+>> >
+>> > The apll clock node is like this
+>> >
+>> > apll_pcie_in_clk_mux: apll_pcie_in_clk_mux@4ae06118 {
+>> >         compatible = "mux-clock";
+>> >         clocks = <&dpll_pcie_ref_m2ldo_ck>, <&pciesref_acs_clk_ck>;
+>> >         #clock-cells = <0>;
+>> >         reg = <0x4a00821c 0x4>;
+>> >         bit-mask = <0x80>;
+>> > };
+>> >
+>> > The external reference clock is denoted by *pciesref_acs_clk_ck*.
+>> >
+>> > refclk_ext holds the phandle to *pciesref_acs_clk_ck* and is used in
+>> > "clk_set_parent" to set the parent of apll mux.
+>>
+>> So, How about this: if refclk_ext is not defined, dont do setparent,
+>> if it is defined, do setparent.
+>> in short:
+>> Optional Properties:
+>> * "refclk_ext" - external reference clock for pcie apll - if defined,
+>> used as the parent to "apll_mux"
+>>
+>> That said, my problem in general with this approach(which many folks
+>> have taken of describing parent of clock X in hardware block binding
+>> for Y) is the following:
+>>
+>> The binding now has dependency on clock tree hierarchy. What if
+>> towmorrow, we have a tree where refclk_ext parent of muxZ parent of
+>> apll_mux? the binding breaks down. Lets not forget that we consider DT
+>> as an ABI - we dont want to change the binding in the future.
+>>
+>> I had always preferred describing parent-child relationship of clocks
+>> by the approach Tero posted: https://patchwork.kernel.org/patch/3871551/
+>>
+>> Maybe Mike and Tero could help here?
+>
+> Hi all,
+>
+> I didn't read all of this context, but it seems like
+> https://lkml.org/lkml/2014/5/19/539
+>
+> might be a good fit here. Assuming that the PIPE3 PHY consumes the APLL
+> clock, then it reasonable for the dts phy node to specify
+> assigned-clock-parent.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/search.c |   35 -----------------------------------
- include/linux/pci.h  |   11 -----------
- 2 files changed, 46 deletions(-)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index df38f73..b8e65c2 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -104,41 +104,6 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 	return ret;
- }
- 
--/*
-- * find the upstream PCIe-to-PCI bridge of a PCI device
-- * if the device is PCIE, return NULL
-- * if the device isn't connected to a PCIe bridge (that is its parent is a
-- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
-- * parent
-- */
--struct pci_dev *
--pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
--{
--	struct pci_dev *tmp = NULL;
--
--	if (pci_is_pcie(pdev))
--		return NULL;
--	while (1) {
--		if (pci_is_root_bus(pdev->bus))
--			break;
--		pdev = pdev->bus->self;
--		/* a p2p bridge */
--		if (!pci_is_pcie(pdev)) {
--			tmp = pdev;
--			continue;
--		}
--		/* PCI device should connect to a PCIe bridge */
--		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
--			/* Busted hardware? */
--			WARN_ON_ONCE(1);
--			return NULL;
--		}
--		return pdev;
--	}
--
--	return tmp;
--}
--
- static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
- {
- 	struct pci_bus *child;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 85ab35e..903c7d6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1804,15 +1804,4 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 			   int (*fn)(struct pci_dev *pdev,
- 				     u16 alias, void *data), void *data);
- 
--/**
-- * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
-- * @pdev: the PCI device
-- *
-- * if the device is PCIE, return NULL
-- * if the device isn't connected to a PCIe bridge (that is its parent is a
-- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
-- * parent
-- */
--struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
--
- #endif /* LINUX_PCI_H */
+Yes indeed. Seems like the need to describe some sort of parent
+description in dt makes sense for other users as well. I wonder if we
+will see some alignment soonish enough for us to start using them.
 
+Regards,
+Nishanth Menon
