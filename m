@@ -1,53 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f175.google.com ([209.85.220.175]:32980 "EHLO
-	mail-vc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963AbaETWfQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 18:35:16 -0400
-Received: by mail-vc0-f175.google.com with SMTP id hu19so1486509vcb.34
-        for <linux-pci@vger.kernel.org>; Tue, 20 May 2014 15:35:15 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 28 May 2014 12:07:50 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: Re: [Patch V3 19/37] x86, irq: introduce mechanisms to support
+ dynamically allocate IRQ for IOAPIC
+In-Reply-To: <538597F0.1040003@linutronix.de>
+Message-ID: <alpine.DEB.2.02.1405281159030.21720@ionos.tec.linutronix.de>
+References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com> <1401178092-1228-20-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.02.1405271445050.21720@ionos.tec.linutronix.de> <538597F0.1040003@linutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <20140520195041.GA28913@roeck-us.net>
-References: <CA+HUmGjvHgWB3vcPnXAEVFdFuy9sOaB1BjaDW1-7ai933XEGWQ@mail.gmail.com>
-	<20140520195041.GA28913@roeck-us.net>
-Date: Tue, 20 May 2014 15:35:15 -0700
-Message-ID: <CA+HUmGg4mE5RDxShNCK78yLi9gdX_FnHtWPKfGD4LaEqrCdj2Q@mail.gmail.com>
-Subject: Re: pci: kernel crash in bus_find_device
-From: Francesco Ruggeri <fruggeri@arista.com>
-To: Guenter Roeck <linux@roeck-us.net>, linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Francesco Ruggeri <fruggeri@aristanetworks.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Guenter,
-thank you for your reply. I will check out the changes that you pointed to.
-The problem we are seeing is a race condition between for_each_pci_dev
-(or similar) and device_unregisters. I am not sure if use of the new
-lock should be extended to all code using for_each_pci_dev as well.
+On Wed, 28 May 2014, Sebastian Andrzej Siewior wrote:
+> On 05/27/2014 09:58 PM, Thomas Gleixner wrote:
+> > ce4100 is an oddball though. The ioapic is registered way before the
+> > interrupt subsystem is initialized and I have a hard time to
+> > understand that comment:
+> > 
+> >         /* We can't set this earlier, because we need to calibrate the timer */
+> >         legacy_pic = &null_legacy_pic;
+> > 
+> > The timer calibration happens after the interrupts are set up. I
+> > assume it's check_timer() which wants that, but we know exactly how
+> > the ce4100 works, so we might be able to avoid that whole "testing"
+> > stuff. Sebastian, any input on this?
+> 
+> According to my memory there was some PIC init we need but I don't
+> recall the details. However, booting the system with "legacy_pic =
+> &null_legacy_pic;" in x86_ce4100_early_setup() gives me this:
+> 
+> [    0.001000] Enabling APIC mode:  Flat.  Using 2 I/O APICs
+> [    0.001000] leaving PIC mode, enabling APIC mode.
+> [    0.001000] enabled ExtINT on CPU#0
+> [    0.001000] ENABLING IO-APIC IRQs
+> [    0.001000] Setting 1 in the phys_id_present_map
+> [    0.001000] ...changing IO-APIC physical APIC ID to 1 ... ok.
+> [    0.001000] Setting 2 in the phys_id_present_map
+> [    0.001000] ...changing IO-APIC physical APIC ID to 2 ... ok.
+> [    0.001000] smpboot: CPU0: Intel(R) Atom(TM) CPU CE4150   @ 1.20GHz
+> (fam: 06, model: 1c, stepping: 0a)
+> [    0.001000] Using local APIC timer interrupts.
+> [    0.001000] calibrating APIC timer ...
+> 
+> and we stand still. With the assignment as it is now:
+> 
+> [    0.001000] Enabling APIC mode:  Flat.  Using 2 I/O APICs
+> [    0.001000] leaving PIC mode, enabling APIC mode.
+> [    0.001000] enabled ExtINT on CPU#0
+> [    0.002312] ENABLING IO-APIC IRQs
+> [    0.003009] Setting 1 in the phys_id_present_map
+> [    0.004007] ...changing IO-APIC physical APIC ID to 1 ... ok.
+> [    0.005533] Setting 2 in the phys_id_present_map
+> [    0.006006] ...changing IO-APIC physical APIC ID to 2 ... ok.
+> [    0.008373] ..TIMER: vector=0x30 apic1=-1 pin1=-1 apic2=-1 pin2=-1
+> [    0.009000] ...trying to set up timer as Virtual Wire IRQ...
+> [    0.019490] ..... works.
 
-pci_scan is a kernel thread that I used for testing purposes, to
-mimick the dynamics that we saw in our crashes in
-edac_pci_clear_parity_errors:
+Right, so it needs the setup of irq 0 and that only happens when the
+legacy_pic->nr_legacy_irqs > 0.
 
-        for (;;) {
-                pci_dev = NULL;
-                while ((pci_dev = pci_get_device(PCI_ANY_ID,
-PCI_ANY_ID, pci_dev)) != NULL)
-                        ;
-        }
+Do you remember, why we switch to the null_pic later on?
 
-It keeps traversing klist_devices in pci_bus_type using
-bus_find_device, costantly resuming its search for the next element
-starting from the one it got in the previous round.
-There are several loops of this kind in linux. In case of this thread
-no action is taken on the elements as they are "found".
+Thanks,
 
-The race condition occurs when bus_find_device resumes its search from
-a device that has been unregistered. Because device_unregister resets
-klist_bus in the device, bus_find device cannot resume from where it
-left off in the klist.
-The sequence is device_unregister, device_del, bus_remove_device,
-klist_del(&dev->p->knode_bus.).
+	tglx
 
-Francesco
+
