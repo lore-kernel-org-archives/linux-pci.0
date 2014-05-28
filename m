@@ -1,57 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44452 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751670AbaEAUgh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 May 2014 16:36:37 -0400
-Subject: [PATCH] PCI: quirk RTL8110SC INTx masking
-From: Alex Williamson <alex.williamson@redhat.com>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:41701 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752787AbaE1JvH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 05:51:07 -0400
+Received: by mail-pa0-f45.google.com with SMTP id ey11so10743188pad.32
+        for <linux-pci@vger.kernel.org>; Wed, 28 May 2014 02:51:07 -0700 (PDT)
+From: Sachin Kamat <sachin.kamat@linaro.org>
 To: linux-pci@vger.kernel.org
-Cc: nic_swsd@realtek.com, linux-kernel@vger.kernel.org
-Date: Thu, 01 May 2014 14:36:31 -0600
-Message-ID: <20140501203525.27822.98248.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-samsung-soc@vger.kernel.org, jg1.han@samsung.com,
+	bhelgaas@google.com, sachin.kamat@linaro.org
+Subject: [PATCH 1/1] PCI: exynos: Fix section mismatch warning
+Date: Wed, 28 May 2014 15:18:45 +0530
+Message-Id: <1401270525-27139-1-git-send-email-sachin.kamat@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-INTx masking does not work on this device.  To see this, configure
-the network device UP on an active network, note that the interrupt
-count continues to increment for the device in /proc/interrupts.  Use
-setpci to set the PCI_COMMAND_INTX_DISABLE bit in the PCI_COMMAND
-register.  As expected, the interrupt count ceases to increment.
-However, reading the PCI_STATUS_INTERRUPT bit of the PCI_STATUS
-register does not indicate that interrupts are pending and clearing
-PCI_COMMAND_INTX_DISABLE in the PCI_COMMAND register does not allow
-the device to continue operation.
+add_pcie_port is called from probe which is annotated with __init.
+add_pcie_port calls dw_pcie_host_init which is also annotated with
+__init. Thus it makes sense to annotate add_pcie_port with __init
+to avoid the following section mismatch warning:
 
-This does not affect operation of the host r8169 driver, but it does
-prevent the device from being functional when assigned to a VM, such
-as with QEMU and VFIO.  The guest driver successfully probes the
-device, but there is no traffic.  Mark INTx masking as broken,
-allowing the more restrictive APIC masking to be used instead.
+WARNING: drivers/pci/built-in.o(.text.unlikely+0xf8): Section mismatch in reference from the function add_pcie_port() to the function .init.text:dw_pcie_host_init()
+   The function add_pcie_port() references
+   the function __init dw_pcie_host_init().
+   This is often because add_pcie_port lacks a __init
+   annotation or the annotation of dw_pcie_host_init is wrong.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
 ---
- drivers/pci/quirks.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/pci/host/pci-exynos.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ea55b0f..e15a5da 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2991,6 +2991,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
- 			 quirk_broken_intx_masking);
- DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
- 			 quirk_broken_intx_masking);
-+/*
-+ * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
-+ * Subsystem: Realtek RTL8169/8110 Family PCI Gigabit Ethernet NIC
-+ *
-+ * RTL8110SC - Fails under PCI device assignment using DisINTx masking.
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
-+			 quirk_broken_intx_masking);
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 3de6bfbbe8e9..3c1ff89829ec 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -511,7 +511,8 @@ static struct pcie_host_ops exynos_pcie_host_ops = {
+ 	.host_init = exynos_pcie_host_init,
+ };
  
- static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
- 			  struct pci_fixup *end)
+-static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
++static int __init add_pcie_port(struct pcie_port *pp,
++				struct platform_device *pdev)
+ {
+ 	int ret;
+ 
+-- 
+1.7.9.5
 
