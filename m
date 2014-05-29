@@ -1,79 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:43077 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752312AbaEUXR7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 May 2014 19:17:59 -0400
-Received: by mail-ig0-f175.google.com with SMTP id uq10so6884019igb.8
-        for <linux-pci@vger.kernel.org>; Wed, 21 May 2014 16:17:58 -0700 (PDT)
-Subject: [PATCH V5 0/4] x86/pci Fix numa_node info for AMD hostbridge and
- misc clean up
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Robert Richter <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	linux-kernel@vger.kernel.org,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	linux-pci@vger.kernel.org, Borislav Petkov <bp@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>
-Date: Wed, 21 May 2014 17:17:57 -0600
-Message-ID: <20140521231615.26447.38060.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:43903 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754261AbaE2Uot (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 16:44:49 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1401379426-9701-1-git-send-email-galak@codeaurora.org>
+References: <1401379426-9701-1-git-send-email-galak@codeaurora.org>
+Date: Thu, 29 May 2014 15:44:47 -0500
+Message-ID: <CAL_JsqLPFDwtd-QYDqCwx1JVj1Aa8=nof-e0P6R9CZra+fXHfw@mail.gmail.com>
+Subject: Re: [PATCH] of: treat PCI config space as IORESOURCE_MEM type
+From: Rob Herring <robherring2@gmail.com>
+To: Kumar Gala <galak@codeaurora.org>
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[resending because I forgot to copy the lists, sorry guys]
+On Thu, May 29, 2014 at 11:03 AM, Kumar Gala <galak@codeaurora.org> wrote:
+> If we have a PCI config space specified in something like a ranges
+> property we should treat it as memory type resource.
 
-Hi Suravee,
+Config space should not be in ranges[1]. We have some cases that are,
+but we don't want new ones.
 
-Sorry it took me so long to get to these patches.  Here's my proposal.  I
-reordered them and added some comments in the code and changelogs, but I
-think your patches look fine as-is.
+>
+> Signed-off-by: Kumar Gala <galak@codeaurora.org>
+> ---
+>  drivers/of/address.c | 3 +++
+>  1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index cb4242a..4e7ee59 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -122,6 +122,9 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
+>         u32 w = be32_to_cpup(addr);
+>
+>         switch((w >> 24) & 0x03) {
+> +       case 0x00: /* cfg space */
+> +               flags |= IORESOURCE_MEM;
+> +               break;
 
-So I just need comments on these two significant changes:
+How would you then distinguish actual memory ranges?
 
-  1) I added a patch to stop enabling ECS after Fam16h, because that's
-  another case of CPU-dependent code that we should not need to keep
-  carrying.  I don't think there are any post-Fam16h CPUs yet, but I
-  certainly don't want to do anything that will keep them from working when
-  they do arrive.  It would be useful if somebody could test this on
-  current platforms by tweaking the patch so we don't enable ECS on Fam15h.
+Rob
 
-  2) I dropped the quirk_amd_nb_node() removal.  I could be convinced
-  otherwise, but I don't really object to the quirk because it is already
-  explicitly limited to specific devices, and removing it will change
-  things in sysfs.  I think the changes would be harmless as far as the
-  kernel is concerned, since there are no drivers for these devices.  But
-  Andreas added the quirk because of complaints, so apparently somebody is
-  looking at what's in sysfs, and I don't want to get the same complaints
-  again by removing it.  However, I will certainly ask questions if I see
-  the quirk being extended to more devices.
-
-The AMD BKDG does say the BIOS should provide an MCFG table (sec 2.8 of
-42301), so I think it provides guidance matching the intent of my "stop
-enabling ECS" patch.  But the BKDG doesn't mention _PXM at all.  Is there
-any chance you could squeeze in a mention of that, so BIOS writers know
-that they *should* provide it?  I want to avoid more fire-drills in the
-future.
-
-Bjorn
-
----
-
-Bjorn Helgaas (1):
-      x86/PCI: Stop enabling ECS for AMD CPUs after Fam16h
-
-Myron Stowe (1):
-      x86/PCI: Warn if we have to "guess" host bridge node information
-
-Suravee Suthikulpanit (2):
-      x86/PCI: Work around AMD Fam15h BIOSes that fail to provide _PXM
-      x86/PCI: Clean up and mark early_root_info_init() as deprecated
-
-
- arch/x86/pci/acpi.c    |    6 +++
- arch/x86/pci/amd_bus.c |   87 +++++++++++++++++++++++++++++++-----------------
- 2 files changed, 62 insertions(+), 31 deletions(-)
+[1] http://www.spinics.net/lists/linux-pci/msg30585.html
