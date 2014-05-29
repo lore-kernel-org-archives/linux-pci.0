@@ -1,60 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:5669 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031AbaEDEeM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 May 2014 00:34:12 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<sparclinux@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	<x86@kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 02/13] PCI: Introduce new pci_is_bridge() helper function
-Date: Sun, 4 May 2014 12:23:37 +0800
-Message-ID: <1399177428-3784-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
-References: <1399177428-3784-1-git-send-email-wangyijing@huawei.com>
+Received: from dliviu.plus.com ([80.229.23.120]:36713 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757550AbaE2PRU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 29 May 2014 11:17:20 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id E0C91FF6D2
+	for <linux-pci@vger.kernel.org>; Thu, 29 May 2014 16:17:18 +0100 (BST)
+From: "Liviu Dudau" <liviu@dudau.co.uk>
+Date: Thu, 29 May 2014 16:18:40 +0100
+To: Kumar Gala <galak@codeaurora.org>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Marek Vasut <marex@denx.de>,
+	arnd@arndb.de, tony@atomide.com, Mohit Kumar <mohit.kumar@st.com>,
+	jg1.han@samsung.com,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 03/18] PCI: designware: Configuration space should be
+ specified in 'reg'
+Message-ID: <20140529151840.GD1677@bart.dudau.co.uk>
+References: <1401345500-20188-1-git-send-email-kishon@ti.com>
+ <1401345500-20188-4-git-send-email-kishon@ti.com>
+ <98E18225-3C63-4106-901A-A5D3DEC268C8@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <98E18225-3C63-4106-901A-A5D3DEC268C8@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe Spec define the PCI bridge is the PCI device
-which header type(bit 0 through 6) is 0x1(PCI bridge)
-or 0x2(CardBus bridge).
+On Thu, May 29, 2014 at 10:03:54AM -0500, Kumar Gala wrote:
+> 
+> On May 29, 2014, at 1:38 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+> 
+> > The configuration address space has so far been specified in *ranges*,
+> > however it should be specified in *reg* making it a platform MEM resource.
+> > Hence used 'platform_get_resource_*' API to get configuration address
+> > space in the designware driver.
+> > 
+> > Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Mohit Kumar <mohit.kumar@st.com>
+> > Cc: Jingoo Han <jg1.han@samsung.com>
+> > Cc: Marek Vasut <marex@denx.de>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> > ---
+> > .../devicetree/bindings/pci/designware-pcie.txt    |    1 +
+> > drivers/pci/host/pcie-designware.c                 |   17 +++++++++++++++--
+> > 2 files changed, 16 insertions(+), 2 deletions(-)
+> 
+> Why should the cfg space be defined in *reg* instead of ranges?
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- include/linux/pci.h |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+Because what you end up using is a struct resource to represent the cfg space and
+the conversion between ranges and resources breaks down for CFG space (we don't
+have a flag in the resource flags to say this is CFG resource). Specifying it
+as a *reg* property makes it a MEM resource and no special casing is needed.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..9f5f89e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -477,6 +477,19 @@ static inline bool pci_is_root_bus(struct pci_bus *pbus)
- 	return !(pbus->parent);
- }
- 
-+/**
-+ * pci_is_bridge - check if the PCI device is a bridge
-+ * @dev: PCI device
-+ *
-+ * Return true if the PCI device is bridge whether it has subordinate
-+ * or not.
-+ */
-+static inline bool pci_is_bridge(struct pci_dev *dev)
-+{
-+	return dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
-+		dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
-+}
-+
- static inline struct pci_dev *pci_upstream_bridge(struct pci_dev *dev)
- {
- 	dev = pci_physfn(dev);
+Best regards,
+Liviu
+
+> 
+> - k
+> 
+> -- 
+> Employee of Qualcomm Innovation Center, Inc.
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.7.1
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
 
+ One small step
+   for me ...
 
