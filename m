@@ -1,65 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25879 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753169AbaEVXIF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 19:08:05 -0400
-Subject: [PATCH v4 06/16] PCI: Quirk pci_for_each_dma_alias() for bridges
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
-Date: Thu, 22 May 2014 17:08:01 -0600
-Message-ID: <20140522230801.2856.18629.stgit@bling.home>
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-References: <20140522230230.2856.40017.stgit@bling.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
+	<kishon@ti.com>, Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>
+Subject: [PATCH v2 11/18] ARM: dts: dra7: Add dt data for PCIe PHY control module
+Date: Thu, 29 May 2014 12:08:13 +0530
+Message-ID: <1401345500-20188-12-git-send-email-kishon@ti.com>
+In-Reply-To: <1401345500-20188-1-git-send-email-kishon@ti.com>
+References: <1401345500-20188-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Several PCIe-to-PCI bridges fail to provide a PCIe capability, causing
-us to handle them as conventional PCI devices.  In some cases, this
-may be correct, in others it's not.  Add a dev_flag bit to identify
-devices to be handled as standard PCIe-to-PCI bridges.
+Added dt data for PCIe PHY control module used by PCIe PHY.
+The documention for this node can be found @ ../bindings/phy/ti-phy.txt
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Tony Lindgren <tony@atomide.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Pawel Moll <pawel.moll@arm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Kumar Gala <galak@codeaurora.org>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/search.c |   10 ++++++++--
- include/linux/pci.h  |    2 ++
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ arch/arm/boot/dts/dra7.dtsi |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 2c19f3f..df38f73 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -88,8 +88,14 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 				continue;
- 			}
- 		} else {
--			ret = fn(tmp, PCI_DEVID(tmp->bus->number, tmp->devfn),
--				 data);
-+			if (tmp->dev_flags & PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS)
-+				ret = fn(tmp,
-+					 PCI_DEVID(tmp->subordinate->number,
-+						   PCI_DEVFN(0, 0)), data);
-+			else
-+				ret = fn(tmp,
-+					 PCI_DEVID(tmp->bus->number,
-+						   tmp->devfn), data);
- 			if (ret)
- 				return ret;
- 		}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9d4035c..85ab35e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -173,6 +173,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
- 	/* Flag to indicate the device uses dma_alias_devfn */
- 	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
-+	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
-+	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
- };
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index f0ca46d..3c7e7f2 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -803,6 +803,23 @@
+ 			status = "disabled";
+ 		};
  
- enum pci_irq_reroute_variant {
++		omap_control_pcie1phy: omap-control-pciephy@0x4a003c40 {
++			compatible = "ti,control-phy-pcie";
++			reg = <0x4a003c40 0x4>, <0x4a003c14 0x4>, <0x4a003c34 0x4>;
++			reg-names = "power", "control_sma", "pcie_pcs";
++			clocks = <&sys_clkin1>;
++			clock-names = "sysclk";
++		};
++
++		omap_control_pcie2phy: omap-control-pciephy@0x4a003c44 {
++			compatible = "ti,control-phy-pcie";
++			reg = <0x4a003c44 0x4>, <0x4a003c14 0x4>, <0x4a003c34 0x4>;
++			reg-names = "power", "control_sma", "pcie_pcs";
++			clocks = <&sys_clkin1>;
++			clock-names = "sysclk";
++			status = "disabled";
++		};
++
+ 		omap_control_usb2phy1: control-phy@4a002300 {
+ 			compatible = "ti,control-phy-usb2";
+ 			reg = <0x4a002300 0x4>;
+-- 
+1.7.9.5
 
