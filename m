@@ -1,68 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:14279 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752121AbaENKCG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 May 2014 06:02:06 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Lucas Stach <l.stach@pengutronix.de>,
-	Tim Harvey <tharvey@gateworks.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.2 \(1874\))
+Subject: Re: [PATCH] of: treat PCI config space as IORESOURCE_MEM type
+From: Kumar Gala <galak@codeaurora.org>
+In-Reply-To: <CAL_JsqLPFDwtd-QYDqCwx1JVj1Aa8=nof-e0P6R9CZra+fXHfw@mail.gmail.com>
+Date: Thu, 29 May 2014 15:51:28 -0500
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Marek Vasut <marex@denx.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: RE: [Q] Synopsys PCIe interrupts
-Date: Wed, 14 May 2014 10:01:59 +0000
-Message-ID: <4ee9333cda8b4b46897882837a58b5ae@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <fd5f29f175b2499e9d972629f1ccd74a@HKXPR06MB168.apcprd06.prod.outlook.com>
- <1400056898.4837.11.camel@weser.hi.pengutronix.de>
- <4335be621d0e47b38580c54658b1702b@HKXPR06MB168.apcprd06.prod.outlook.com>
- <5605248.nZXVxazLBk@wuerfel>
-In-Reply-To: <5605248.nZXVxazLBk@wuerfel>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Message-Id: <47B1E3D0-4336-4529-80B0-172F4ACA5C97@codeaurora.org>
+References: <1401379426-9701-1-git-send-email-galak@codeaurora.org> <CAL_JsqLPFDwtd-QYDqCwx1JVj1Aa8=nof-e0P6R9CZra+fXHfw@mail.gmail.com>
+To: Rob Herring <robherring2@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQXJuZCwNCg0KT24gMTQgTWF5IDIwMTQgMTA6MjYsIEFybmQgd3JvdGU6DQo+IE9uIFdlZG5l
-c2RheSAxNCBNYXkgMjAxNCAwOToxMzo0NSBQaGlsIEVkd29ydGh5IHdyb3RlOg0KPiA+ID4gQmVj
-YXVzZSBvZiB0aG9zZSBkaWZmZXJlbmNlcyBJJ3ZlIHB1c2hlZCB0aGUgaXJxIHByb3BlcnRpZXMg
-b2YgdGhlDQo+ID4gPiBiaW5kaW5nIGludG8gdGhlIFNvQyBzcGVjaWZpYyBwYXJ0Lg0KPiA+ID4g
-SWYgd2UgY2FuIGVudW1lcmF0ZSBhbGwgaXJxIHNpZ25hbHMgZnJvbSB0aGUgRFcgY29yZSB3ZSBj
-b3VsZCBtYXliZQ0KPiBwdXNoDQo+ID4gPiB0aGlzIHN0dWZmIGJhY2sgaW50byBjb21tb24gZG9j
-L2NvZGUsIGJ1dCBJJ20gbm90IHN1cmUgYWJvdXQgaG93IHRvDQo+ID4gPiBoYW5kbGUgdGhpcyB3
-aXRob3V0IGJyZWFraW5nIHRoZSBFeHlub3MgYmluZGluZy4gaS5NWCB3b24ndCBjYXJlIGFzIHRo
-ZQ0KPiA+ID4gb25seSBpcnEgaXQgdXNlcyBiZXNpZGVzIHRoZSBsZWdhY3kgaXJxcywgd2hpY2gg
-YXJlIG1hcHBlZCB0aHJvdWdoIERULA0KPiA+ID4gaXMgbm93IGEgbmFtZWQgaXJxLg0KPiA+IEkg
-ZG9u4oCZdCBoYXZlIGEgbG90IG9mIGV4cGVyaWVuY2Ugd2l0aCBEVCBiaW5kaW5ncywgdGhvdWdo
-IGl0IGFwcGVhcnMgYXMNCj4gPiB0aG91Z2ggaXQgd291bGQgYmUgZ29vZCBpZiB3ZSBjb3VsZCBz
-cGVjaWZ5IGludGVycnVwdHMgYnkgdGhlaXIgbmFtZSwNCj4gPiByYXRoZXIgdGhhbiB0aGUgb3Jk
-ZXIgaW4gd2hpY2ggdGhleSBhcmUgbGlzdGVkLiBPZiBjb3Vyc2UsIHRoYXQgd291bGQgYWRkDQo+
-ID4gc29tZSBvdmVyaGVhZCB0byBEVCBwYXJzaW5nLg0KPiANCj4gSW4gZ2VuZXJhbCwgaXQncyBw
-cmVmZXJyZWQgdG8gc3BlY2lmeSBhIHBhcnRpY3VsYXIgb3JkZXIgYW5kIHVzZSB0aGF0DQo+IGFz
-IHRoZSBwcmltYXJ5IGlkZW50aWZpY2F0aW9uLCB3aXRoIHRoZSBuYW1lcyBiZWluZyBhbiBhZGRp
-dGlvbmFsIHdheQ0KPiB0byBpZGVudGlmeSB0aGVtLiBUaGlzIGlzIGRvbmUgZm9yIGhpc3Rvcmlj
-IHJlYXNvbnM6IHRyYWRpdGlvbmFsIE9GDQo+IGRvZXMgbm90IGhhdmUgYW4gaW50ZXJydXB0LW5h
-bWVzIHByb3BlcnR5LCBhbmQgcmVxdWlyZXMgdGhlIG9yZGVyIHRvDQo+IGJlIGZpeGVkLiBUaGUg
-bmFtZXMgYXJlIGEgTGludXggZXh0ZW5zaW9uIG9yaWdpbmFsbHkgYWRkZWQgdG8gYWxsb3cNCj4g
-cGxhdGZvcm0gZHJpdmVycyB0byBrZWVwIHdvcmtpbmcgd2hlbiB0aGV5IGFscmVhZHkgdXNlZCBu
-YW1lZCBpbnRlcnJ1cHRzLg0KVGhhbmtzIGZvciB0aGUgY2xhcmlmaWNhdGlvbiwgSSB3b25kZXJl
-ZCB3aHkgd2UgaGFkIHRoZSBpbnRlcnJ1cHQtbmFtZXMNCnByb3BlcnR5Lg0KDQoNCj4gPiBJIGNh
-biBpbWFnaW5lIHRoaXMgc29ydCBvZiBwcm9ibGVtIGhhcHBlbmluZyB3aXRoIGxvdHMgb2Ygb3Ro
-ZXIgSVAgYmxvY2tzLg0KPiANCj4gSXQncyB1c3VhbGx5IG5vdCBhcyBiYWQsIGJ1dCB0aGVyZSBh
-cmUgb3RoZXIgSVAgYmxvY2tzIHRoYXQgYXJlIGNvbmZ1c2VkDQo+IGUuZy4gYWJvdXQgdGhlIG51
-bWJlciBvZiBjbG9ja3MgdGhhdCBnZXQgcm91dGVkIGludG8gdGhlbSwgYmFzZWQgb24NCj4gd2hp
-Y2ggZG9jdW1lbnRhdGlvbiAob3IgdmVuZG9yIHNvdXJjZWNvZGUpIHlvdSByZWFkLg0KPiANCj4g
-VGhlIG90aGVyIHByb2JsZW0gd2l0aCBJbnRBL0ludEIvSW50Qy9JbnREIG9uIFBDSSBpcyB5b3Ug
-Y2FuIHdpcmUNCj4gcGFyYWxsZWwgUENJIGRldmljZXMgdG8gaGF2ZSB0aGVpciBpbnRlcnJ1cHRz
-IGNvbm5lY3RlZCBkaXJlY3RseSB0bw0KPiB0aGUgR0lDLiBXaXRoIFBDSWUgZGV2aWNlcyB0aGlz
-IGRvZXMgbm90IGhhcHBlbiAodGhlIGludGVycnVwdHMgYXJlDQo+IG1lc3NhZ2VzIHNlbnQgdG8g
-dGhlIGhvc3QgYnJpZGdlKSwgYnV0IG5vdGhpbmcgcHJldmVudHMgYSBib2FyZA0KPiBkZXNpZ24g
-ZnJvbSBhZGRpbmcgYSBQQ0llLXRvLVBDSSBicmlkZ2UgY2hpcCB3aXRoIGhhcmR3aXJlZCBQQ0kN
-Cj4gZGV2aWNlcyBvciBhY3R1YWwgc2xvdHMuIFRoaXMgbWVhbnMgd2UgaGF2ZSB0byBkZXNjcmli
-ZSB0aGVtIGluDQo+IHRoZSBpbnRlcnJ1cHQtbWFwIHByb3BlcnR5IHRoYXQgY2FuIGFjdHVhbGx5
-IGhhbmRsZSB0aGVtLg0KDQpQaGlsDQo=
+
+On May 29, 2014, at 3:44 PM, Rob Herring <robherring2@gmail.com> wrote:
+
+> On Thu, May 29, 2014 at 11:03 AM, Kumar Gala <galak@codeaurora.org> wrote:
+>> If we have a PCI config space specified in something like a ranges
+>> property we should treat it as memory type resource.
+> 
+> Config space should not be in ranges[1]. We have some cases that are,
+> but we don't want new ones.
+
+For the cases we have I agree, however an ECAM based cfg seems completely legit.
+
+>> Signed-off-by: Kumar Gala <galak@codeaurora.org>
+>> ---
+>> drivers/of/address.c | 3 +++
+>> 1 file changed, 3 insertions(+)
+>> 
+>> diff --git a/drivers/of/address.c b/drivers/of/address.c
+>> index cb4242a..4e7ee59 100644
+>> --- a/drivers/of/address.c
+>> +++ b/drivers/of/address.c
+>> @@ -122,6 +122,9 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
+>>        u32 w = be32_to_cpup(addr);
+>> 
+>>        switch((w >> 24) & 0x03) {
+>> +       case 0x00: /* cfg space */
+>> +               flags |= IORESOURCE_MEM;
+>> +               break;
+> 
+> How would you then distinguish actual memory ranges?
+
+One assumes you are still looking at pci_space as part of of_pci_range
+
+> 
+> Rob
+> 
+> [1] http://www.spinics.net/lists/linux-pci/msg30585.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
