@@ -1,85 +1,146 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, devicetree@vger.kernel.org,
-	balajitk@ti.com, linux-doc@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
-	linux-kernel@vger.kernel.org, Mohit Kumar <mohit.kumar@st.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:36436 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752460AbaE2HMZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 29 May 2014 03:12:25 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "arnd@arndb.de" <arnd@arndb.de>,
+	"tony@atomide.com" <tony@atomide.com>,
+	"jg1.han@samsung.com" <jg1.han@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-omap@vger.kernel.org, rogerq@ti.com
-Subject: Re: [PATCH 05/17] pci: host: pcie-dra7xx: add support for pcie-dra7xx controller
-Date: Wed, 07 May 2014 11:30:35 +0200
-Message-ID: <6485683.q96o7U6vf8@wuerfel>
-In-Reply-To: <5369F287.6000103@ti.com>
-References: <1399383244-14556-1-git-send-email-kishon@ti.com> <4300084.bc6ByDTk7W@wuerfel> <5369F287.6000103@ti.com>
+	Marek Vasut <marex@denx.de>
+Date: Thu, 29 May 2014 15:11:08 +0800
+Subject: RE: [PATCH v2 03/18] PCI: designware: Configuration space should be
+ specified in 'reg'
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB6619B94AD3904@EAPEX1MAIL1.st.com>
+References: <1401345500-20188-1-git-send-email-kishon@ti.com>
+ <1401345500-20188-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1401345500-20188-4-git-send-email-kishon@ti.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 07 May 2014 14:14:55 Kishon Vijay Abraham I wrote:
-> >> +static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
-> >> +{
-> >> +    struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-> >> +
-> >> +    dra7xx_pcie_writel(dra7xx->base, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
-> >> +                       ~INTERRUPTS);
-> >> +    dra7xx_pcie_writel(dra7xx->base,
-> >> +                       PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
-> >> +    dra7xx_pcie_writel(dra7xx->base, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
-> >> +                       ~LEG_EP_INTERRUPTS & ~MSI);
-> >> +
-> >> +    if (IS_ENABLED(CONFIG_PCI_MSI))
-> >> +            dra7xx_pcie_writel(dra7xx->base,
-> >> +                               PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
-> >> +    else
-> >> +            dra7xx_pcie_writel(dra7xx->base,
-> >> +                               PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
-> >> +                               LEG_EP_INTERRUPTS);
-> > 
-> > Doesn't this just enable one or the other? In general I'd assume you need
-> > both INTx and MSI, at least if MSI is available.
+Hello Kishon,
+
+> -----Original Message-----
+> From: Kishon Vijay Abraham I [mailto:kishon@ti.com]
+> Sent: Thursday, May 29, 2014 12:08 PM
+> To: devicetree@vger.kernel.org; linux-doc@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; linux-omap@vger.kernel.org; linux-
+> pci@vger.kernel.org; linux-kernel@vger.kernel.org
+> Cc: arnd@arndb.de; tony@atomide.com; jg1.han@samsung.com;
+> kishon@ti.com; Jason Gunthorpe; Bjorn Helgaas; Mohit KUMAR DCG; Marek
+> Vasut
+> Subject: [PATCH v2 03/18] PCI: designware: Configuration space should be
+> specified in 'reg'
 > 
-> Not sure since the programming sequence in the TRM explicitly states either
-> legacy interrupts or MSI interrupts should be enabled but not both.
-
-Hmm, I think that means you can't have MSI at all. You have to support
-legacy PCI devices that can't do MSI.
-
-Do you know if you have a modern GIC implementation with MSI support
-in these SoCs? It would be better anyway to use the GIC for doing
-MSI, so you can just ignore the internal MSI controller here.
-
-> >> +static int add_pcie_port(struct dra7xx_pcie *dra7xx,
-> >> +                      struct platform_device *pdev)
-> >> +{
-> >> +    int ret;
-> >> +    struct pcie_port *pp;
-> >> +    struct resource *res;
-> >> +    struct device *dev = &pdev->dev;
-> >> +
-> >> +    pp = &dra7xx->pp;
-> >> +    pp->dev = dev;
-> >> +    pp->ops = &dra7xx_pcie_host_ops;
-> >> +
-> >> +    spin_lock_init(&pp->conf_lock);
-> >> +
-> >> +    pp->irq = platform_get_irq(pdev, 1);
-> >> +    if (pp->irq < 0) {
-> >> +            dev_err(dev, "missing IRQ resource\n");
-> >> +            return -EINVAL;
-> >> +    }
-> >>
-> > 
-> > The binding does not list a mandatory "interrupts" property, so
-> > this should not be treated as an error.
+> The configuration address space has so far been specified in *ranges*,
+> however it should be specified in *reg* making it a platform MEM resource.
+> Hence used 'platform_get_resource_*' API to get configuration address
+> space in the designware driver.
 > 
-> actually the 'interrupts' property is documented in pci/designware-pcie.txt.
+> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Mohit Kumar <mohit.kumar@st.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Marek Vasut <marex@denx.de>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  .../devicetree/bindings/pci/designware-pcie.txt    |    1 +
+>  drivers/pci/host/pcie-designware.c                 |   17 +++++++++++++++--
+>  2 files changed, 16 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> index d6fae13..8314360 100644
+> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> @@ -6,6 +6,7 @@ Required properties:
+>  	as "samsung,exynos5440-pcie" or "fsl,imx6q-pcie".
+>  - reg: base addresses and lengths of the pcie controller,
+>  	the phy controller, additional register for the phy controller.
+> +	The configuration address space should also be specified here.
+>  - interrupts: interrupt values for level interrupt,
+>  	pulse interrupt, special interrupt.
+>  - clocks: from common clock binding: handle to pci clock.
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
+> designware.c
+> index c4e3732..603b386 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -20,6 +20,7 @@
+>  #include <linux/of_pci.h>
+>  #include <linux/pci.h>
+>  #include <linux/pci_regs.h>
+> +#include <linux/platform_device.h>
+>  #include <linux/types.h>
+> 
+>  #include "pcie-designware.h"
+> @@ -392,11 +393,23 @@ static const struct irq_domain_ops
+> msi_domain_ops = {  int __init dw_pcie_host_init(struct pcie_port *pp)  {
+>  	struct device_node *np = pp->dev->of_node;
+> +	struct platform_device *pdev = to_platform_device(pp->dev);
+>  	struct of_pci_range range;
+>  	struct of_pci_range_parser parser;
+> +	struct resource *cfg_res;
+>  	u32 val;
+>  	int i;
+> 
+> +	cfg_res = platform_get_resource_byname(pdev,
+> IORESOURCE_MEM, "config");
+> +	if (cfg_res) {
+> +		pp->config.cfg0_size = resource_size(cfg_res)/2;
+> +		pp->config.cfg1_size = resource_size(cfg_res)/2;
+> +		pp->cfg0_base = cfg_res->start;
+> +		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
+> +	} else {
+> +		dev_err(pp->dev, "missing *config* reg space\n");
+> +	}
+> +
+>  	if (of_pci_range_parser_init(&parser, np)) {
+>  		dev_err(pp->dev, "missing ranges property\n");
+>  		return -EINVAL;
+> @@ -429,6 +442,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  			of_pci_range_to_resource(&range, np, &pp->cfg);
+>  			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
+>  			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
+> +			pp->cfg0_base = pp->cfg.start;
+> +			pp->cfg1_base = pp->cfg.start + pp-
+> >config.cfg0_size;
 
-Hmm, but you don't seem to use it the same way as documented there.
-I'm not sure what 'level interrupt, pulse interrupt, special interrupt'
-in the parent binding are, but they don't seem to be the ones you use
-here.
+- As you are getting cfg address space as MEM resource, so remove above code that
+ gets the configuration space from dt range. Also correct dt for pcie cfg space for the platforms
+ based on this driver.
 
-	Arnd
+Otherwise looks fine to me.
+
+Thanks
+Mohit
+
+>  		}
+>  	}
+> 
+> @@ -441,8 +456,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  		}
+>  	}
+> 
+> -	pp->cfg0_base = pp->cfg.start;
+> -	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+>  	pp->mem_base = pp->mem.start;
+> 
+>  	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+> --
+> 1.7.9.5
+
