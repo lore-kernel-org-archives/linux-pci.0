@@ -1,157 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12123 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752256AbaE0IH3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 May 2014 04:07:29 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiri Kosina <trivial@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V3 10/37] x86, irq, trivial: minor improvements of IRQ related code
-Date: Tue, 27 May 2014 16:07:45 +0800
-Message-Id: <1401178092-1228-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:35569 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754044AbaE2WT3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 18:19:29 -0400
+Received: by mail-ig0-f180.google.com with SMTP id c1so100273igq.13
+        for <linux-pci@vger.kernel.org>; Thu, 29 May 2014 15:19:28 -0700 (PDT)
+Date: Thu, 29 May 2014 16:19:24 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	jg1.han@samsung.com
+Subject: Re: [PATCH 1/1] PCI: exynos: Fix section mismatch warning
+Message-ID: <20140529221924.GA11907@google.com>
+References: <1401270525-27139-1-git-send-email-sachin.kamat@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1401270525-27139-1-git-send-email-sachin.kamat@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1) Kill unused MAX_HARDIRQS_PER_CPU.
-2) Improve function prototype declararions.
-3) simple typo fix, change "gsit" to "gsi".
-4) use macro VECTOR_UNDEFINED instead of hard-coded -1.
+On Wed, May 28, 2014 at 03:18:45PM +0530, Sachin Kamat wrote:
+> add_pcie_port is called from probe which is annotated with __init.
+> add_pcie_port calls dw_pcie_host_init which is also annotated with
+> __init. Thus it makes sense to annotate add_pcie_port with __init
+> to avoid the following section mismatch warning:
+> 
+> WARNING: drivers/pci/built-in.o(.text.unlikely+0xf8): Section mismatch in reference from the function add_pcie_port() to the function .init.text:dw_pcie_host_init()
+>    The function add_pcie_port() references
+>    the function __init dw_pcie_host_init().
+>    This is often because add_pcie_port lacks a __init
+>    annotation or the annotation of dw_pcie_host_init is wrong.
+> 
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/hardirq.h |    3 ---
- arch/x86/include/asm/io_apic.h |   16 +++++++---------
- arch/x86/kernel/apic/io_apic.c |   10 +++++-----
- 3 files changed, 12 insertions(+), 17 deletions(-)
+Applied with Jingoo's ack to pci/host-exynos for v3.16, thanks!
 
-diff --git a/arch/x86/include/asm/hardirq.h b/arch/x86/include/asm/hardirq.h
-index 230853da4ec0..0f5fb6b6567e 100644
---- a/arch/x86/include/asm/hardirq.h
-+++ b/arch/x86/include/asm/hardirq.h
-@@ -40,9 +40,6 @@ typedef struct {
- 
- DECLARE_PER_CPU_SHARED_ALIGNED(irq_cpustat_t, irq_stat);
- 
--/* We can have at most NR_VECTORS irqs routed to a cpu at a time */
--#define MAX_HARDIRQS_PER_CPU NR_VECTORS
--
- #define __ARCH_IRQ_STAT
- 
- #define inc_irq_stat(member)	this_cpu_inc(irq_stat.member)
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 9121abbc8c8f..8dd1e13f2989 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -144,22 +144,20 @@ struct io_apic_irq_attr;
- struct irq_cfg;
- extern int io_apic_set_pci_routing(struct device *dev, int irq,
- 		 struct io_apic_irq_attr *irq_attr);
--void setup_IO_APIC_irq_extra(u32 gsi);
-+extern void setup_IO_APIC_irq_extra(u32 gsi);
- extern void ioapic_insert_resources(void);
- 
- extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
- 				     unsigned int, int,
- 				     struct io_apic_irq_attr *);
--extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
--				     unsigned int, int,
--				     struct io_apic_irq_attr *);
- extern void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg);
- 
- extern void native_compose_msi_msg(struct pci_dev *pdev,
- 				   unsigned int irq, unsigned int dest,
- 				   struct msi_msg *msg, u8 hpet_id);
- extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
--int io_apic_setup_irq_pin_once(unsigned int irq, int node, struct io_apic_irq_attr *attr);
-+extern int io_apic_setup_irq_pin_once(unsigned int irq, int node,
-+				      struct io_apic_irq_attr *attr);
- 
- extern int save_ioapic_entries(void);
- extern void mask_ioapic_entries(void);
-@@ -172,11 +170,11 @@ struct mp_ioapic_gsi{
- 	u32 gsi_base;
- 	u32 gsi_end;
- };
--extern struct mp_ioapic_gsi  mp_gsi_routing[];
- extern u32 gsi_top;
--int mp_find_ioapic(u32 gsi);
--int mp_find_ioapic_pin(int ioapic, u32 gsi);
--void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
-+
-+extern int mp_find_ioapic(u32 gsi);
-+extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
-+extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void __init pre_init_apic_IRQ0(void);
- 
- extern void mp_save_irq(struct mpc_intsrc *m);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 2de992501a1b..4d7d46650faa 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1010,7 +1010,7 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 				break;
- 
- 		if (!test_bit(lbus, mp_bus_not_pci) &&
--		    !mp_irqs[i].irqtype &&
-+		    mp_irqs[i].irqtype == mp_INT &&
- 		    (bus == lbus) &&
- 		    (slot == ((mp_irqs[i].srcbusirq >> 2) & 0x1f))) {
- 			int irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
-@@ -1359,7 +1359,7 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
- 
- 		irq = pin_2_irq(idx, ioapic_idx, pin);
- 
--		if ((ioapic_idx > 0) && (irq > 16))
-+		if ((ioapic_idx > 0) && (irq > NR_IRQS_LEGACY))
- 			continue;
- 
- 		/*
-@@ -1388,7 +1388,7 @@ static void __init setup_IO_APIC_irqs(void)
- }
- 
- /*
-- * for the gsit that is not in first ioapic
-+ * for the gsi that is not in first ioapic
-  * but could not use acpi_register_gsi()
-  * like some special sci in IBM x3330
-  */
-@@ -2225,7 +2225,7 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
- 			apic->send_IPI_self(IRQ_MOVE_CLEANUP_VECTOR);
- 			goto unlock;
- 		}
--		__this_cpu_write(vector_irq[vector], -1);
-+		__this_cpu_write(vector_irq[vector], VECTOR_UNDEFINED);
- unlock:
- 		raw_spin_unlock(&desc->lock);
- 	}
-@@ -3546,7 +3546,7 @@ void __init setup_ioapic_dest(void)
- 			continue;
- 		irq = pin_2_irq(irq_entry, ioapic, pin);
- 
--		if ((ioapic > 0) && (irq > 16))
-+		if ((ioapic > 0) && (irq > NR_IRQS_LEGACY))
- 			continue;
- 
- 		idata = irq_get_irq_data(irq);
--- 
-1.7.10.4
-
+> ---
+>  drivers/pci/host/pci-exynos.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index 3de6bfbbe8e9..3c1ff89829ec 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -511,7 +511,8 @@ static struct pcie_host_ops exynos_pcie_host_ops = {
+>  	.host_init = exynos_pcie_host_init,
+>  };
+>  
+> -static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+> +static int __init add_pcie_port(struct pcie_port *pp,
+> +				struct platform_device *pdev)
+>  {
+>  	int ret;
+>  
+> -- 
+> 1.7.9.5
+> 
