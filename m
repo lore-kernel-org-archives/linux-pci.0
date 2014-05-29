@@ -1,69 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:58813 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754293AbaEOSjc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 May 2014 14:39:32 -0400
-Date: Thu, 15 May 2014 12:39:19 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on
- designware core driver
-Message-ID: <20140515183919.GC11650@obsidianresearch.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
- <6048322.x3M3sdDEWO@wuerfel>
- <5374FD24.8000806@ti.com>
- <22200719.Jb5jnJylJH@wuerfel>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:63994 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756236AbaE2HCr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 03:02:47 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 2/3] platform/x86: remove the unnecessary checking for pci_bus_add_device
+Date: Thu, 29 May 2014 15:01:05 +0800
+Message-ID: <1401346866-11648-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1401346866-11648-1-git-send-email-wangyijing@huawei.com>
+References: <1401346866-11648-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <22200719.Jb5jnJylJH@wuerfel>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 15, 2014 at 08:20:13PM +0200, Arnd Bergmann wrote:
-> On Thursday 15 May 2014 13:45:08 Murali Karicheri wrote:
-> > >> +#ifdef CONFIG_PCI_KEYSTONE
-> > >> +/*
-> > >> + * The KeyStone PCIe controller has maximum read request size of 256 bytes.
-> > >> + */
-> > >> +static void quirk_limit_readrequest(struct pci_dev *dev)
-> > >> +{
-> > >> +    int readrq = pcie_get_readrq(dev);
-> > >> +
-> > >> +    if (readrq > 256)
-> > >> +            pcie_set_readrq(dev, 256);
-> > >> +}
-> > >> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_readrequest);
-> > >> +#endif /* CONFIG_PCI_KEYSTONE */
-> > > This doesn't work: you can't just limit do this for all devices just based
-> > > on PCI_KEYSTONE being enabled, you have to check if you are actually using
-> > > this controller.
-> > >
-> > >       Arnd
-> >   I assume, I need to check if PCI controller's vendor ID/ device ID 
-> > match with the keystone
-> >   PCI controller's ID and call pcie_set_readrq() for all of the slave 
-> > PCI devices and do this fixup.
-> > Is this correct understanding?  If you can point me to an example code 
-> > for this that will be
-> > really helpful so that I can avoid re-inventing the wheel.
-> 
-> I think it would be best to move the quirk into the keystone pci driver
-> and compare compare the dev->driver pointer of the PCI controller device.
+Pci_bus_add_device() always return 0, remove the unnecessary checking
+for pci_bus_add_device().
 
-The PCI core handles setting the maximum read request size already,
-can you figure out why the core code isn't doing what you need and
-correct the root problem?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/platform/x86/asus-wmi.c     |    3 +--
+ drivers/platform/x86/eeepc-laptop.c |    3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-I'm guessing the values in the root port bridge config space are not
-correct or something like that??
+diff --git a/drivers/platform/x86/asus-wmi.c b/drivers/platform/x86/asus-wmi.c
+index c5e082f..91ef69a 100644
+--- a/drivers/platform/x86/asus-wmi.c
++++ b/drivers/platform/x86/asus-wmi.c
+@@ -642,8 +642,7 @@ static void asus_rfkill_hotplug(struct asus_wmi *asus)
+ 			dev = pci_scan_single_device(bus, 0);
+ 			if (dev) {
+ 				pci_bus_assign_resources(bus);
+-				if (pci_bus_add_device(dev))
+-					pr_err("Unable to hotplug wifi\n");
++				pci_bus_add_device(dev);
+ 			}
+ 		} else {
+ 			dev = pci_get_slot(bus, 0);
+diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
+index 399e8c5..9b0c57c 100644
+--- a/drivers/platform/x86/eeepc-laptop.c
++++ b/drivers/platform/x86/eeepc-laptop.c
+@@ -633,8 +633,7 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
+ 			dev = pci_scan_single_device(bus, 0);
+ 			if (dev) {
+ 				pci_bus_assign_resources(bus);
+-				if (pci_bus_add_device(dev))
+-					pr_err("Unable to hotplug wifi\n");
++				pci_bus_add_device(dev);
+ 			}
+ 		} else {
+ 			dev = pci_get_slot(bus, 0);
+-- 
+1.7.1
 
-Jason
+
