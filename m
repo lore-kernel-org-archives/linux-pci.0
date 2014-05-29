@@ -1,52 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:41947 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754082AbaEAOIR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 May 2014 10:08:17 -0400
-From: James Bottomley <jbottomley@parallels.com>
-To: "bhelgaas@google.com" <bhelgaas@google.com>
-CC: "rdunlap@infradead.org" <rdunlap@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] DMA-API: Change dma_declare_coherent_memory() CPU
- address to phys_addr_t
-Date: Thu, 1 May 2014 14:08:12 +0000
-Message-ID: <1398953290.2313.15.camel@dabdike.int.hansenpartnership.com>
-References: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140430203321.30056.14833.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mailout1.samsung.com ([203.254.224.24]:15639 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010AbaE2GIv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 02:08:51 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Sachin Kamat' <sachin.kamat@linaro.org>, linux-pci@vger.kernel.org
+Cc: linux-samsung-soc@vger.kernel.org, bhelgaas@google.com,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1401270525-27139-1-git-send-email-sachin.kamat@linaro.org>
+In-reply-to: <1401270525-27139-1-git-send-email-sachin.kamat@linaro.org>
+Subject: Re: [PATCH 1/1] PCI: exynos: Fix section mismatch warning
+Date: Thu, 29 May 2014 15:08:48 +0900
+Message-id: <000301cf7b04$74ecdf00$5ec69d00$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-04-30 at 14:33 -0600, Bjorn Helgaas wrote:
-> dma_declare_coherent_memory() takes two addresses for a region of memory: a
-> "bus_addr" and a "device_addr".  I think the intent is that "bus_addr" is
-> the physical address a *CPU* would use to access the region, and
-> "device_addr" is the bus address the *device* would use to address the
-> region.
+On Wednesday, May 28, 2014 6:49 PM, Sachin Kamat wrote:
 > 
-> Rename "bus_addr" to "phys_addr" and change its type to phys_addr_t.
+> add_pcie_port is called from probe which is annotated with __init.
+> add_pcie_port calls dw_pcie_host_init which is also annotated with
+> __init. Thus it makes sense to annotate add_pcie_port with __init
+> to avoid the following section mismatch warning:
+> 
+> WARNING: drivers/pci/built-in.o(.text.unlikely+0xf8): Section mismatch in reference from the function
+> add_pcie_port() to the function .init.text:dw_pcie_host_init()
+>    The function add_pcie_port() references
+>    the function __init dw_pcie_host_init().
+>    This is often because add_pcie_port lacks a __init
+>    annotation or the annotation of dw_pcie_host_init is wrong.
+> 
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
 
-Remind me what the difference between phys_addr_t and dma_addr_t are.
+Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-I thought phys_addr_t was the maximum address the CPU could reach after
-address translation and dma_addr_t was the maximum physical address any
-bus attached memory mapped devices could appear at. (of course, mostly
-they're the same).
+Best regards,
+Jingoo Han
 
-The intent of dma_declare_coherent_memory() is to take a range of memory
-provided by some device on the bus and allow the CPU to allocate regions
-from it for use as things like descriptors.  The CPU treats it as real
-memory, but, in fact, it is a mapped region of an attached device.
-
-If my definition is correct, then bus_addr should be dma_addr_t because
-it has to be mapped from a device and dma_addr_t is the correct type for
-device addresses.  If I've got the definition wrong, then we should
-document it somewhere, because it's probably confusing other people as
-well.
-
-James
+> ---
+>  drivers/pci/host/pci-exynos.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index 3de6bfbbe8e9..3c1ff89829ec 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -511,7 +511,8 @@ static struct pcie_host_ops exynos_pcie_host_ops = {
+>  	.host_init = exynos_pcie_host_init,
+>  };
+> 
+> -static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+> +static int __init add_pcie_port(struct pcie_port *pp,
+> +				struct platform_device *pdev)
+>  {
+>  	int ret;
+> 
+> --
+> 1.7.9.5
 
