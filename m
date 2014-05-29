@@ -1,182 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:59850 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932730AbaE2Gjs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 29 May 2014 02:39:48 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
+	<kishon@ti.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 15/21] iommu/vt-d: dynamically allocate and free seq_id for DMAR units
-Date: Tue,  6 May 2014 15:05:26 +0800
-Message-Id: <1399359932-28972-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Mohit Kumar <mohit.kumar@st.com>, Marek Vasut <marex@denx.de>
+Subject: [PATCH v2 03/18] PCI: designware: Configuration space should be specified in 'reg'
+Date: Thu, 29 May 2014 12:08:05 +0530
+Message-ID: <1401345500-20188-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1401345500-20188-1-git-send-email-kishon@ti.com>
+References: <1401345500-20188-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce functions to support dynamic IOMMU seq_id allocating and
-releasing, which will be used to support DMAR hotplug.
+The configuration address space has so far been specified in *ranges*,
+however it should be specified in *reg* making it a platform MEM resource.
+Hence used 'platform_get_resource_*' API to get configuration address
+space in the designware driver.
 
-Also rename IOMMU_UNITS_SUPPORTED as DMAR_UNITS_SUPPORTED.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mohit Kumar <mohit.kumar@st.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Marek Vasut <marex@denx.de>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/iommu/dmar.c        |   40 ++++++++++++++++++++++++++++++++++------
- drivers/iommu/intel-iommu.c |   13 +++----------
- include/linux/dmar.h        |    6 ++++++
- 3 files changed, 43 insertions(+), 16 deletions(-)
+ .../devicetree/bindings/pci/designware-pcie.txt    |    1 +
+ drivers/pci/host/pcie-designware.c                 |   17 +++++++++++++++--
+ 2 files changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index acfceb25a2d2..7a871607cedb 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -69,6 +69,7 @@ LIST_HEAD(dmar_drhd_units);
- struct acpi_table_header * __initdata dmar_tbl;
- static acpi_size dmar_tbl_size;
- static int dmar_dev_scope_status = 1;
-+static unsigned long dmar_seq_ids[BITS_TO_LONGS(DMAR_UNITS_SUPPORTED)];
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index d6fae13..8314360 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -6,6 +6,7 @@ Required properties:
+ 	as "samsung,exynos5440-pcie" or "fsl,imx6q-pcie".
+ - reg: base addresses and lengths of the pcie controller,
+ 	the phy controller, additional register for the phy controller.
++	The configuration address space should also be specified here.
+ - interrupts: interrupt values for level interrupt,
+ 	pulse interrupt, special interrupt.
+ - clocks: from common clock binding: handle to pci clock.
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index c4e3732..603b386 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -20,6 +20,7 @@
+ #include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/pci_regs.h>
++#include <linux/platform_device.h>
+ #include <linux/types.h>
  
- static int alloc_iommu(struct dmar_drhd_unit *drhd);
- static void free_iommu(struct intel_iommu *iommu);
-@@ -928,11 +929,32 @@ out:
- 	return err;
- }
- 
-+static int dmar_alloc_seq_id(struct intel_iommu *iommu)
-+{
-+	iommu->seq_id = find_first_zero_bit(dmar_seq_ids,
-+					    DMAR_UNITS_SUPPORTED);
-+	if (iommu->seq_id >= DMAR_UNITS_SUPPORTED) {
-+		iommu->seq_id = -1;
-+	} else {
-+		set_bit(iommu->seq_id, dmar_seq_ids);
-+		sprintf(iommu->name, "dmar%d", iommu->seq_id);
-+	}
-+
-+	return iommu->seq_id;
-+}
-+
-+static void dmar_free_seq_id(struct intel_iommu *iommu)
-+{
-+	if (iommu->seq_id >= 0) {
-+		clear_bit(iommu->seq_id, dmar_seq_ids);
-+		iommu->seq_id = -1;
-+	}
-+}
-+
- static int alloc_iommu(struct dmar_drhd_unit *drhd)
+ #include "pcie-designware.h"
+@@ -392,11 +393,23 @@ static const struct irq_domain_ops msi_domain_ops = {
+ int __init dw_pcie_host_init(struct pcie_port *pp)
  {
- 	struct intel_iommu *iommu;
- 	u32 ver, sts;
--	static int iommu_allocated = 0;
- 	int agaw = 0;
- 	int msagaw = 0;
- 	int err;
-@@ -946,13 +968,16 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
- 	if (!iommu)
- 		return -ENOMEM;
+ 	struct device_node *np = pp->dev->of_node;
++	struct platform_device *pdev = to_platform_device(pp->dev);
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
++	struct resource *cfg_res;
+ 	u32 val;
+ 	int i;
  
--	iommu->seq_id = iommu_allocated++;
--	sprintf (iommu->name, "dmar%d", iommu->seq_id);
-+	if (dmar_alloc_seq_id(iommu) < 0) {
-+		pr_err("IOMMU: failed to allocate seq_id\n");
-+		err = -ENOSPC;
-+		goto error;
++	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
++	if (cfg_res) {
++		pp->config.cfg0_size = resource_size(cfg_res)/2;
++		pp->config.cfg1_size = resource_size(cfg_res)/2;
++		pp->cfg0_base = cfg_res->start;
++		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
++	} else {
++		dev_err(pp->dev, "missing *config* reg space\n");
 +	}
- 
- 	err = map_iommu(iommu, drhd->reg_base_addr);
- 	if (err) {
- 		pr_err("IOMMU: failed to map %s\n", iommu->name);
--		goto error;
-+		goto error_free_seq_id;
- 	}
- 
- 	err = -EINVAL;
-@@ -996,9 +1021,11 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
- 	drhd->iommu = iommu;
- 	return 0;
- 
-- err_unmap:
-+err_unmap:
- 	unmap_iommu(iommu);
-- error:
-+error_free_seq_id:
-+	dmar_free_seq_id(iommu);
-+error:
- 	kfree(iommu);
- 	return err;
- }
-@@ -1020,6 +1047,7 @@ static void free_iommu(struct intel_iommu *iommu)
- 	if (iommu->reg)
- 		unmap_iommu(iommu);
- 
-+	dmar_free_seq_id(iommu);
- 	kfree(iommu);
- }
- 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index b696bcd3f6e0..361de6697d8a 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -328,17 +328,10 @@ static int hw_pass_through = 1;
- /* si_domain contains mulitple devices */
- #define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 1)
- 
--/* define the limit of IOMMUs supported in each domain */
--#ifdef	CONFIG_X86
--# define	IOMMU_UNITS_SUPPORTED	MAX_IO_APICS
--#else
--# define	IOMMU_UNITS_SUPPORTED	64
--#endif
--
- struct dmar_domain {
- 	int	id;			/* domain id */
- 	int	nid;			/* node id */
--	DECLARE_BITMAP(iommu_bmp, IOMMU_UNITS_SUPPORTED);
-+	DECLARE_BITMAP(iommu_bmp, DMAR_UNITS_SUPPORTED);
- 					/* bitmap of iommus this domain uses*/
- 
- 	struct list_head devices; 	/* all devices' list */
-@@ -2719,12 +2712,12 @@ static int __init init_dmars(void)
- 		 * threaded kernel __init code path all other access are read
- 		 * only
- 		 */
--		if (g_num_of_iommus < IOMMU_UNITS_SUPPORTED) {
-+		if (g_num_of_iommus < DMAR_UNITS_SUPPORTED) {
- 			g_num_of_iommus++;
- 			continue;
- 		}
- 		printk_once(KERN_ERR "intel-iommu: exceeded %d IOMMUs\n",
--			  IOMMU_UNITS_SUPPORTED);
-+			  DMAR_UNITS_SUPPORTED);
- 	}
- 
- 	g_iommus = kcalloc(g_num_of_iommus, sizeof(struct intel_iommu *),
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index fac8ca34f9a8..c8a576bc3a98 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -30,6 +30,12 @@
- 
- struct acpi_dmar_header;
- 
-+#ifdef	CONFIG_X86
-+# define	DMAR_UNITS_SUPPORTED	MAX_IO_APICS
-+#else
-+# define	DMAR_UNITS_SUPPORTED	64
-+#endif
 +
- /* DMAR Flags */
- #define DMAR_INTR_REMAP		0x1
- #define DMAR_X2APIC_OPT_OUT	0x2
+ 	if (of_pci_range_parser_init(&parser, np)) {
+ 		dev_err(pp->dev, "missing ranges property\n");
+ 		return -EINVAL;
+@@ -429,6 +442,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 			of_pci_range_to_resource(&range, np, &pp->cfg);
+ 			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
+ 			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
++			pp->cfg0_base = pp->cfg.start;
++			pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+ 		}
+ 	}
+ 
+@@ -441,8 +456,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
+ 
+-	pp->cfg0_base = pp->cfg.start;
+-	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+ 	pp->mem_base = pp->mem.start;
+ 
+ 	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
 -- 
-1.7.10.4
+1.7.9.5
 
