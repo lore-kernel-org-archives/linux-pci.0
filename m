@@ -1,110 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:50229 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753282AbaE1OwD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 10:52:03 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 5/5] ARM: tegra: Remove legacy PCIe power supply properties
-Date: Wed, 28 May 2014 16:49:15 +0200
-Message-Id: <1401288555-24197-6-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
-References: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:47330 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754728AbaE2VuZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 17:50:25 -0400
+MIME-Version: 1.0
+In-Reply-To: <47B1E3D0-4336-4529-80B0-172F4ACA5C97@codeaurora.org>
+References: <1401379426-9701-1-git-send-email-galak@codeaurora.org>
+	<CAL_JsqLPFDwtd-QYDqCwx1JVj1Aa8=nof-e0P6R9CZra+fXHfw@mail.gmail.com>
+	<47B1E3D0-4336-4529-80B0-172F4ACA5C97@codeaurora.org>
+Date: Thu, 29 May 2014 16:50:24 -0500
+Message-ID: <CAL_JsqK8PJHUgb0-i=6MdydAo-97iUTBfnqVgTchgghY8R9XZA@mail.gmail.com>
+Subject: Re: [PATCH] of: treat PCI config space as IORESOURCE_MEM type
+From: Rob Herring <robherring2@gmail.com>
+To: Kumar Gala <galak@codeaurora.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+Adding Jason Gunthorpe...
 
-These properties are deprecated and no longer of any use.
+On Thu, May 29, 2014 at 3:51 PM, Kumar Gala <galak@codeaurora.org> wrote:
+>
+> On May 29, 2014, at 3:44 PM, Rob Herring <robherring2@gmail.com> wrote:
+>
+>> On Thu, May 29, 2014 at 11:03 AM, Kumar Gala <galak@codeaurora.org> wrote:
+>>> If we have a PCI config space specified in something like a ranges
+>>> property we should treat it as memory type resource.
+>>
+>> Config space should not be in ranges[1]. We have some cases that are,
+>> but we don't want new ones.
+>
+> For the cases we have I agree, however an ECAM based cfg seems completely legit.
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- arch/arm/boot/dts/tegra20-harmony.dts   | 4 ----
- arch/arm/boot/dts/tegra20-tamonten.dtsi | 4 ----
- arch/arm/boot/dts/tegra20-trimslice.dts | 4 ----
- arch/arm/boot/dts/tegra30-beaver.dts    | 5 -----
- arch/arm/boot/dts/tegra30-cardhu.dtsi   | 5 -----
- 5 files changed, 22 deletions(-)
+The previous discussion concluded otherwise. Debate it with Jason. I
+don't really have an opinion other than it be done one way.
 
-diff --git a/arch/arm/boot/dts/tegra20-harmony.dts b/arch/arm/boot/dts/tegra20-harmony.dts
-index c8008247ead7..a37279af687c 100644
---- a/arch/arm/boot/dts/tegra20-harmony.dts
-+++ b/arch/arm/boot/dts/tegra20-harmony.dts
-@@ -570,10 +570,6 @@
- 		avdd-plle-supply = <&pci_vdd_reg>;
- 		vddio-pex-clk-supply = <&pci_clk_reg>;
- 
--		/* deprecated */
--		pex-clk-supply = <&pci_clk_reg>;
--		vdd-supply = <&pci_vdd_reg>;
--
- 		pci@1,0 {
- 			status = "okay";
- 		};
-diff --git a/arch/arm/boot/dts/tegra20-tamonten.dtsi b/arch/arm/boot/dts/tegra20-tamonten.dtsi
-index 0e33577750ae..a4914bba1a39 100644
---- a/arch/arm/boot/dts/tegra20-tamonten.dtsi
-+++ b/arch/arm/boot/dts/tegra20-tamonten.dtsi
-@@ -478,10 +478,6 @@
- 		avdd-pex-pll-supply = <&pci_vdd_reg>;
- 		avdd-plle-supply = <&pci_vdd_reg>;
- 		vddio-pex-clk-supply = <&pci_clk_reg>;
--
--		/* deprecated */
--		pex-clk-supply = <&pci_clk_reg>;
--		vdd-supply = <&pci_vdd_reg>;
- 	};
- 
- 	usb@c5008000 {
-diff --git a/arch/arm/boot/dts/tegra20-trimslice.dts b/arch/arm/boot/dts/tegra20-trimslice.dts
-index 401b32e44369..5ad87979ab13 100644
---- a/arch/arm/boot/dts/tegra20-trimslice.dts
-+++ b/arch/arm/boot/dts/tegra20-trimslice.dts
-@@ -325,10 +325,6 @@
- 		avdd-plle-supply = <&pci_vdd_reg>;
- 		vddio-pex-clk-supply = <&pci_clk_reg>;
- 
--		/* deprecated */
--		pex-clk-supply = <&pci_clk_reg>;
--		vdd-supply = <&pci_vdd_reg>;
--
- 		pci@1,0 {
- 			status = "okay";
- 		};
-diff --git a/arch/arm/boot/dts/tegra30-beaver.dts b/arch/arm/boot/dts/tegra30-beaver.dts
-index d3ddfa067e7d..cee8f2246fdb 100644
---- a/arch/arm/boot/dts/tegra30-beaver.dts
-+++ b/arch/arm/boot/dts/tegra30-beaver.dts
-@@ -27,11 +27,6 @@
- 		vddio-pex-ctl-supply = <&sys_3v3_reg>;
- 		hvdd-pex-supply = <&sys_3v3_pexs_reg>;
- 
--		/* deprecated */
--		pex-clk-supply = <&sys_3v3_pexs_reg>;
--		vdd-supply = <&ldo1_reg>;
--		avdd-supply = <&ldo2_reg>;
--
- 		pci@1,0 {
- 			status = "okay";
- 			nvidia,num-lanes = <2>;
-diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
-index 636d62e27a6d..206379546244 100644
---- a/arch/arm/boot/dts/tegra30-cardhu.dtsi
-+++ b/arch/arm/boot/dts/tegra30-cardhu.dtsi
-@@ -47,11 +47,6 @@
- 		vddio-pex-ctl-supply = <&sys_3v3_reg>;
- 		avdd-plle-supply = <&ldo2_reg>;
- 
--		/* deprecated */
--		pex-clk-supply = <&pex_hvdd_3v3_reg>;
--		vdd-supply = <&ldo1_reg>;
--		avdd-supply = <&ldo2_reg>;
--
- 		pci@1,0 {
- 			nvidia,num-lanes = <4>;
- 		};
--- 
-1.9.2
+Rob
 
+>>> Signed-off-by: Kumar Gala <galak@codeaurora.org>
+>>> ---
+>>> drivers/of/address.c | 3 +++
+>>> 1 file changed, 3 insertions(+)
+>>>
+>>> diff --git a/drivers/of/address.c b/drivers/of/address.c
+>>> index cb4242a..4e7ee59 100644
+>>> --- a/drivers/of/address.c
+>>> +++ b/drivers/of/address.c
+>>> @@ -122,6 +122,9 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
+>>>        u32 w = be32_to_cpup(addr);
+>>>
+>>>        switch((w >> 24) & 0x03) {
+>>> +       case 0x00: /* cfg space */
+>>> +               flags |= IORESOURCE_MEM;
+>>> +               break;
+>>
+>> How would you then distinguish actual memory ranges?
+>
+> One assumes you are still looking at pci_space as part of of_pci_range
+>
+>>
+>> Rob
+>>
+>> [1] http://www.spinics.net/lists/linux-pci/msg30585.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> --
+> Employee of Qualcomm Innovation Center, Inc.
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+>
