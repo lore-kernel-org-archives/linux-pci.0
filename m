@@ -1,112 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20452 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757513AbaEJPDY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 10 May 2014 11:03:24 -0400
-Subject: [PATCH v3 09/15] iommu/amd: Update to use PCI DMA aliases
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>,
-	acooks@gmail.com, linux-kernel@vger.kernel.org, linux@horizon.com
-Date: Sat, 10 May 2014 09:03:18 -0600
-Message-ID: <20140510150318.2997.67408.stgit@bling.home>
-In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
-References: <20140510145619.2997.429.stgit@bling.home>
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:52369 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934810AbaE2RwP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 13:52:15 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1401345500-20188-17-git-send-email-kishon@ti.com>
+References: <1401345500-20188-1-git-send-email-kishon@ti.com>
+	<1401345500-20188-17-git-send-email-kishon@ti.com>
+Date: Thu, 29 May 2014 12:52:14 -0500
+Message-ID: <CAL_JsqJifZqs9MpL=n4FRB+Z1OMtkw0sns8Vwec=_boGqRL8-w@mail.gmail.com>
+Subject: Re: [PATCH v2 16/18] ARM: OMAP: Enable PCI for DRA7
+From: Rob Herring <robherring2@gmail.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linux-omap <linux-omap@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Tony Lindgren <tony@atomide.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Will Deacon <will.deacon@arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AMD-Vi already has a concept of an alias provided via the IVRS table.
-This alias only handles topology based aliases, such as PCIe-to-PCI
-bridges.  When such an alias is present, we continue to use it.  When
-a platform alias is not present, we can now add a check of the device
-dma_func_alias to create our own.  Note that the current code can
-only handle a single alias of a device, and we don't attempt to change
-that here.  It would only become a factor for the requester ID seen by
-the IOMMU if PCI-X were involved anway.
+On Thu, May 29, 2014 at 1:38 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+> Now that we have added PCIe driver for DRA7 SOCs, enable PCI on
+> DRA7 SOCs.
+>
+> Cc: Tony Lindgren <tony@atomide.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Pawel Moll <pawel.moll@arm.com>
+> Cc: Mark Rutland <mark.rutland@arm.com>
+> Cc: Kumar Gala <galak@codeaurora.org>
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  arch/arm/mach-omap2/Kconfig |    2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/arch/arm/mach-omap2/Kconfig b/arch/arm/mach-omap2/Kconfig
+> index cb31d43..b179e80 100644
+> --- a/arch/arm/mach-omap2/Kconfig
+> +++ b/arch/arm/mach-omap2/Kconfig
+> @@ -75,6 +75,8 @@ config SOC_DRA7XX
+>         select ARM_GIC
+>         select HAVE_ARM_ARCH_TIMER
+>         select IRQ_CROSSBAR
+> +       select MIGHT_HAVE_PCI
 
-Since the alias is now potentially device specific rather than the
-topology based alias provided by the platform, we need to clear it
-when the device goes away.
+I believe we moved or intend to move this under MULTI_PLATFORM, so you
+don't need this. Will D. had a patch, but I don't think I saw a final
+version to merge.
 
-With the DMA alias and isolation infrastructure now in PCI-core, we
-could opt to ignore IVRS provided aliases.  We now do this for IOMMU
-groups.  However, for this more common use case, the "don't fix what
-isn't broken" mantra seems like the safer route.
+Rob
 
-This should allow AMD-Vi to work with devices like Marvell and Ricoh
-with DMA function alias quirks.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/amd_iommu.c |   37 ++++++++++++++++++++++++++++++++++---
- 1 file changed, 34 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 3d58de4..97a2f0b 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -294,6 +294,7 @@ static int iommu_init_device(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct iommu_dev_data *dev_data;
- 	u16 alias;
-+	u8 func_alias;
- 	int ret;
- 
- 	if (dev->archdata.iommu)
-@@ -304,6 +305,29 @@ static int iommu_init_device(struct device *dev)
- 		return -ENOMEM;
- 
- 	alias = amd_iommu_alias_table[dev_data->devid];
-+
-+	/*
-+	 * If there is no platform provided alias (topology-based) check for
-+	 * a device quirk-based alias.  Note that a non-existent alias (ie.
-+	 * ghost alias) will also need their rlookup and dev_table setup.
-+	 * Copy these from the original device since they're both functions
-+	 * in the same slot.
-+	 */
-+	func_alias = pdev->dma_func_alias & ~(1 << PCI_FUNC(pdev->devfn));
-+	if (func_alias && alias == dev_data->devid) {
-+		WARN_ON(hweight8(func_alias) > 1);
-+		alias = PCI_DEVID(pdev->bus->number,
-+				  PCI_DEVFN(PCI_SLOT(pdev->devfn),
-+					    ffs(func_alias) - 1));
-+		if (!amd_iommu_rlookup_table[alias]) {
-+			amd_iommu_rlookup_table[alias] =
-+				amd_iommu_rlookup_table[dev_data->devid];
-+			memcpy(amd_iommu_dev_table[alias].data,
-+			       amd_iommu_dev_table[dev_data->devid].data,
-+			       sizeof(amd_iommu_dev_table[alias].data));
-+		}
-+	}
-+
- 	if (alias != dev_data->devid) {
- 		struct iommu_dev_data *alias_data;
- 
-@@ -351,12 +375,19 @@ static void iommu_ignore_device(struct device *dev)
- 
- static void iommu_uninit_device(struct device *dev)
- {
-+	struct iommu_dev_data *dev_data = search_dev_data(get_device_id(dev));
-+
-+	if (!dev_data)
-+		return;
-+
- 	iommu_group_remove_device(dev);
- 
-+	/* Unlink from alias, it may change if another device is re-plugged */
-+	dev_data->alias_data = NULL;
-+
- 	/*
--	 * Nothing to do here - we keep dev_data around for unplugged devices
--	 * and reuse it when the device is re-plugged - not doing so would
--	 * introduce a ton of races.
-+	 * We keep dev_data around for unplugged devices and reuse it when the
-+	 * device is re-plugged - not doing so would introduce a ton of races.
- 	 */
- }
- 
-
+> +       select ARCH_SUPPORTS_MSI
+>
+>  config ARCH_OMAP2PLUS
+>         bool
+> --
+> 1.7.9.5
+>
