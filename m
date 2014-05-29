@@ -1,188 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:50788 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932311AbaEaO3F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:29:05 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v4 12/15] PCI: Add pci_fixup_suspend_late quirk pass
-Date: Sat, 31 May 2014 16:27:57 +0200
-Message-Id: <1401546480-2071-13-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:25880 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751696AbaE2Bhh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 21:37:37 -0400
+Message-ID: <53868F40.8000909@huawei.com>
+Date: Thu, 29 May 2014 09:37:04 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: fix return in pci_bus_add_device
+References: <1400729544-7940-1-git-send-email-wangyijing@huawei.com>	<20140528032213.GP11907@google.com>	<538558D2.3050706@huawei.com> <CAE9FiQWM15UHvX=7wv4aMXfTp5QLsB+J9c1qjOzpZ1vU0ePB4A@mail.gmail.com>
+In-Reply-To: <CAE9FiQWM15UHvX=7wv4aMXfTp5QLsB+J9c1qjOzpZ1vU0ePB4A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pci_fixup_suspend_late as a new pci_fixup_pass. The pass is called
-from suspend_noirq and poweroff_noirq. Using the same pass for suspend
-and hibernate is consistent with resume_early which is called by
-resume_noirq and restore_noirq.
+>> I found some kernel code still check this return value, and I also think return the
+>> real retval make sense.
+> 
+> No, that is not right.
+> 
+> If you look closely,
+> 
+> device_attach() returns
+> 1: success
+> 0: not attached
+> <0: fail.
 
-The new quirk pass is required for Thunderbolt support on Apple
-hardware.
+Hi Yinghai,
+   Thanks for your explanation.
+I found all the kernel code to check its return value, only for print a warning for users.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci-driver.c          | 18 ++++++++++++++----
- drivers/pci/quirks.c              |  7 +++++++
- include/asm-generic/vmlinux.lds.h |  3 +++
- include/linux/pci.h               | 12 +++++++++++-
- 4 files changed, 35 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index d911e0c..55dc1b8 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -542,7 +542,7 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
- 			WARN_ONCE(pci_dev->current_state != prev,
- 				"PCI PM: Device state not saved by %pF\n",
- 				drv->suspend_late);
--			return 0;
-+			goto Fixup;
- 		}
- 	}
- 
-@@ -551,6 +551,9 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
- 
- 	pci_pm_set_unknown_state(pci_dev);
- 
-+Fixup:
-+	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
-+
- 	return 0;
- }
- 
-@@ -694,7 +697,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 
- 	if (!pm) {
- 		pci_save_state(pci_dev);
--		return 0;
-+		goto Fixup;
- 	}
- 
- 	if (pm->suspend_noirq) {
-@@ -711,7 +714,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 			WARN_ONCE(pci_dev->current_state != prev,
- 				"PCI PM: State of device not saved by %pF\n",
- 				pm->suspend_noirq);
--			return 0;
-+			goto Fixup;
- 		}
- 	}
- 
-@@ -735,6 +738,9 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
- 		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
- 
-+Fixup:
-+	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
-+
- 	return 0;
- }
- 
-@@ -959,8 +965,10 @@ static int pci_pm_poweroff_noirq(struct device *dev)
- 	if (pci_has_legacy_pm_support(to_pci_dev(dev)))
- 		return pci_legacy_suspend_late(dev, PMSG_HIBERNATE);
- 
--	if (!drv || !drv->pm)
-+	if (!drv || !drv->pm) {
-+		pci_fixup_device(pci_fixup_suspend_late, pci_dev);
- 		return 0;
-+	}
- 
- 	if (drv->pm->poweroff_noirq) {
- 		int error;
-@@ -981,6 +989,8 @@ static int pci_pm_poweroff_noirq(struct device *dev)
- 	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
- 		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
- 
-+	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
-+
- 	if (pcibios_pm_ops.poweroff_noirq)
- 		return pcibios_pm_ops.poweroff_noirq(dev);
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e729206..af2eba1 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3024,6 +3024,8 @@ extern struct pci_fixup __start_pci_fixups_resume_early[];
- extern struct pci_fixup __end_pci_fixups_resume_early[];
- extern struct pci_fixup __start_pci_fixups_suspend[];
- extern struct pci_fixup __end_pci_fixups_suspend[];
-+extern struct pci_fixup __start_pci_fixups_suspend_late[];
-+extern struct pci_fixup __end_pci_fixups_suspend_late[];
- 
- static bool pci_apply_fixup_final_quirks;
- 
-@@ -3069,6 +3071,11 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
- 		end = __end_pci_fixups_suspend;
- 		break;
- 
-+	case pci_fixup_suspend_late:
-+		start = __start_pci_fixups_suspend_late;
-+		end = __end_pci_fixups_suspend_late;
-+		break;
-+
- 	default:
- 		/* stupid compiler warning, you would think with an enum... */
- 		return;
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index 146e4ff..2dea636 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -288,6 +288,9 @@
- 		VMLINUX_SYMBOL(__start_pci_fixups_suspend) = .;		\
- 		*(.pci_fixup_suspend)					\
- 		VMLINUX_SYMBOL(__end_pci_fixups_suspend) = .;		\
-+		VMLINUX_SYMBOL(__start_pci_fixups_suspend_late) = .;	\
-+		*(.pci_fixup_suspend_late)				\
-+		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
- 	}								\
- 									\
- 	/* Built-in firmware blobs */					\
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..4724806 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1458,8 +1458,9 @@ enum pci_fixup_pass {
- 	pci_fixup_final,	/* Final phase of device fixups */
- 	pci_fixup_enable,	/* pci_enable_device() time */
- 	pci_fixup_resume,	/* pci_device_resume() */
--	pci_fixup_suspend,	/* pci_device_suspend */
-+	pci_fixup_suspend,	/* pci_device_suspend() */
- 	pci_fixup_resume_early, /* pci_device_resume_early() */
-+	pci_fixup_suspend_late,	/* pci_device_suspend_late() */
- };
- 
- /* Anonymous variables would be nice... */
-@@ -1500,6 +1501,11 @@ enum pci_fixup_pass {
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
- 		suspend##hook, vendor, device, class,	\
- 		class_shift, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_SUSPEND_LATE(vendor, device, class,	\
-+					 class_shift, hook)		\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
-+		suspend_late##hook, vendor, device,	\
-+		class, class_shift, hook)
- 
- #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
-@@ -1525,6 +1531,10 @@ enum pci_fixup_pass {
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
- 		suspend##hook, vendor, device,		\
- 		PCI_ANY_ID, 0, hook)
-+#define DECLARE_PCI_FIXUP_SUSPEND_LATE(vendor, device, hook)		\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
-+		suspend_late##hook, vendor, device,	\
-+		PCI_ANY_ID, 0, hook)
- 
- #ifdef CONFIG_PCI_QUIRKS
- void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+So I think we can drop all return checking from calling path, or rework pci_bus_add_device(),
+return 0 if device_attach success, otherwise return -1, indicates the device not bound to a driver.
+
+int pci_bus_add_device(struct pci_dev *dev)
+{
+	int retval;
+
+	/*
+	 * Can not put in pci_device_add yet because resources
+	 * are not assigned yet for some devices.
+	 */
+	pci_fixup_device(pci_fixup_final, dev);
+	pci_create_sysfs_dev_files(dev);
+	pci_proc_attach_device(dev);
+
+	dev->match_driver = true;
+	retval = device_attach(&dev->dev);
+	WARN_ON(retval < 0);
+
+	dev->is_added = 1;
+
+	return retval >=0 ? 0:-1;
+}
+
+Yinghai, which solution would you prefer?
+
+Thanks!
+Yijing.
+
+> 
+> so if you return ret directly, you have false warning from
+> 
+> drivers/edac/i82875p_edac.c:            err = pci_bus_add_device(dev);
+> drivers/edac/i82875p_edac.c:                            "%s():
+> pci_bus_add_device() Failed\n",
+> drivers/platform/x86/asus-wmi.c:                                if
+> (pci_bus_add_device(dev))
+> drivers/platform/x86/eeepc-laptop.c:                            if
+> (pci_bus_add_device(dev))
+> 
+> We already have
+>     WARN_ON(retval < 0);
+> 
+> so please just remove all return checking from calling path.
+> compiler already drop them...
+> 
+>>
+>> eg.
+>>
+>>         list_for_each_entry(dev, &bus->devices, bus_list) {
+>>                 /* Skip already-added devices */
+>>                 if (dev->is_added)
+>>                         continue;
+>>                 retval = pci_bus_add_device(dev);
+>>                 if (retval)
+>>                         dev_err(&dev->dev, "Error adding device (%d)\n",
+>>                                 retval);
+> 
+> should be dropped.
+> 
+>>         }
+>>
+>>
+>>
+>>         if (!blocked) {
+>>                 dev = pci_get_slot(bus, 0);
+>>                 if (dev) {
+>>                         /* Device already present */
+>>                         pci_dev_put(dev);
+>>                         goto out_put_dev;
+>>                 }
+>>                 dev = pci_scan_single_device(bus, 0);
+>>                 if (dev) {
+>>                         pci_bus_assign_resources(bus);
+>>                         if (pci_bus_add_device(dev))
+>>                                 pr_err("Unable to hotplug wifi\n");
+> oh, no, no one have that report. instead if should have trace printed out.
+>>                 }
+> 
+> Thanks
+> 
+> Yinghai
+> 
+> .
+> 
+
+
 -- 
-1.9.3
+Thanks!
+Yijing
 
