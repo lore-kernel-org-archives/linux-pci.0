@@ -1,45 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:64068 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753257AbaEHI7O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 May 2014 04:59:14 -0400
-Date: Thu, 8 May 2014 10:59:05 +0200
-From: Robert Richter <rric@kernel.org>
-To: suravee.suthikulpanit@amd.com
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	Borislav Petkov <bp@suse.de>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Andreas Herrmann <herrmann.der.user@googlemail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH V3 1/3] x86/PCI: Fix PCI root numa_node info on AMD
- family15h
-Message-ID: <20140508085905.GK32718@rric.localhost>
-References: <1399489127-6961-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1399489127-6961-2-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:6415 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755951AbaE2HCP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 03:02:15 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 1/3] PCI: remove the unnecssary checking for pci_bus_add_device
+Date: Thu, 29 May 2014 15:01:04 +0800
+Message-ID: <1401346866-11648-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1401346866-11648-1-git-send-email-wangyijing@huawei.com>
+References: <1401346866-11648-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1399489127-6961-2-git-send-email-suravee.suthikulpanit@amd.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07.05.14 13:58:45, suravee.suthikulpanit@amd.com wrote:
-> @@ -113,10 +122,17 @@ static int __init early_fill_mp_bus_info(void)
->  		info = alloc_pci_root_info(min_bus, max_bus, node, link);
->  	}
->  
-> +	/*
-> +	 * The following code is only supported until Fam11h.
-> +	 * Newer processors will depend on ACPI MCFG table instead.
-> +	 */
-> +	if (boot_cpu_data.x86 > 0x11)
-> +		return 0;
-> +
->  	/* get the default node and link for left over res */
+Kernel will WARN_ON(retval < 0) if device_attach() fail with
+error in pci_bus_add_device(). currently, all the kernel code
+to check pci_bus_add_device() return value only for printing
+warning message, no other actions. So we can remove the
+unnecessary checking codes.
 
-As this is the only substantial change of your patch, I would better
-drop ther rest or at least split it in two patches. Should this change
-also be for stable?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/bus.c   |    6 +-----
+ drivers/pci/iov.c   |    2 +-
+ include/linux/pci.h |    2 +-
+ 3 files changed, 3 insertions(+), 7 deletions(-)
 
--Robert
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index ba2bf55..f0efbee 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -266,16 +266,12 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+ 	struct pci_bus *child;
+-	int retval;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		/* Skip already-added devices */
+ 		if (dev->is_added)
+ 			continue;
+-		retval = pci_bus_add_device(dev);
+-		if (retval)
+-			dev_err(&dev->dev, "Error adding device (%d)\n",
+-				retval);
++		pci_bus_add_device(dev);
+ 	}
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index de7a747..cb6f247 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -106,7 +106,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	pci_device_add(virtfn, virtfn->bus);
+ 	mutex_unlock(&iov->dev->sriov->lock);
+ 
+-	rc = pci_bus_add_device(virtfn);
++	pci_bus_add_device(virtfn);
+ 	sprintf(buf, "virtfn%u", id);
+ 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+ 	if (rc)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 65f22e8..3c4c0cf 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -781,7 +781,7 @@ int pci_scan_slot(struct pci_bus *bus, int devfn);
+ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
+ unsigned int pci_scan_child_bus(struct pci_bus *bus);
+-int __must_check pci_bus_add_device(struct pci_dev *dev);
++int pci_bus_add_device(struct pci_dev *dev);
+ void pci_read_bridge_bases(struct pci_bus *child);
+ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 					  struct resource *res);
+-- 
+1.7.1
+
+
