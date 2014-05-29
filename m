@@ -1,183 +1,194 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v3 12/15] pci: Add pci_fixup_suspend_late quirk pass.
-Date: Mon, 26 May 2014 17:18:09 +0200
-Message-Id: <1401117492-2870-13-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
-References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
+	<kishon@ti.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>, Marek Vasut <marex@denx.de>
+Subject: [PATCH v2 04/18] PCI: designware: use untranslated address while programming ATU
+Date: Thu, 29 May 2014 12:08:06 +0530
+Message-ID: <1401345500-20188-5-git-send-email-kishon@ti.com>
+In-Reply-To: <1401345500-20188-1-git-send-email-kishon@ti.com>
+References: <1401345500-20188-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pci_fixup_suspend_late as a new pci_fixup_pass. The pass is called
-from suspend_noirq and poweroff_noirq. Using the same pass for suspend
-and hibernate is consistent with resume_early which is called by
-resume_noirq and restore_noirq.
+In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
+address. So whenever the cpu issues a read/write request, the 4 most
+significant bits are used by L3 to determine the target controller.
+For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
+the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
+the outbound translation window the *base* should be programmed as 0x000_0000.
+Whenever we try to write to say 0x2000_0000, it will be translated to whatever
+we have programmed in the translation window with base as 0x000_0000.
 
-The new quirk pass is required for Thunderbolt support on Apple
-hardware.
+This is needed when the dt node is modelled something like below
+axi {
+	compatible = "simple-bus";
+	#size-cells = <1>;
+	#address-cells = <1>;
+	ranges = <0x0        0x20000000 0x10000000 // 28-bit bus
+		  0x51000000 0x51000000 0x3000>;
+	pcie@51000000 {
+		reg = <0x1000 0x2000>, <0x51002000 0x14c>, <0x51000000 0x2000>;
+		reg-names = "config", "ti_conf", "rc_dbics";
+		#address-cells = <3>;
+		#size-cells = <2>;
+		ranges = <0x81000000 0 0          0x03000 0 0x00010000
+			  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
+	};
+};
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+Here the CPU address for configuration space is 0x20013000 and the controller
+address for configuration space is 0x13000. The controller address should be
+used while programming the ATU (in order for translation to happen properly in
+DRA7xx).
+
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mohit Kumar <mohit.kumar@st.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Marek Vasut <marex@denx.de>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/pci-driver.c          | 18 ++++++++++++++----
- drivers/pci/quirks.c              |  7 +++++++
- include/asm-generic/vmlinux.lds.h |  3 +++
- include/linux/pci.h               | 12 +++++++++++-
- 4 files changed, 35 insertions(+), 5 deletions(-)
+ drivers/pci/host/pcie-designware.c |   49 ++++++++++++++++++++++++++++--------
+ drivers/pci/host/pcie-designware.h |    4 +++
+ 2 files changed, 42 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index d911e0c..55dc1b8 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -542,7 +542,7 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
- 			WARN_ONCE(pci_dev->current_state != prev,
- 				"PCI PM: Device state not saved by %pF\n",
- 				drv->suspend_late);
--			return 0;
-+			goto Fixup;
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 603b386..9dfd2d4 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -397,8 +397,15 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
+ 	struct resource *cfg_res;
+-	u32 val;
+-	int i;
++	u32 val, na, ns;
++	const __be32 *addrp;
++	int i, index;
++
++	/* Find the address cell size and the number of cells in order to get
++	 * the untranslated address.
++	 */
++	of_property_read_u32(np, "#address-cells", &na);
++	ns = of_n_size_cells(np);
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+ 	if (cfg_res) {
+@@ -406,6 +413,12 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 		pp->config.cfg1_size = resource_size(cfg_res)/2;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
++
++		/* Find the untranslated configuration space address */
++		index = of_property_match_string(np, "reg-names", "config");
++		addrp = of_get_address(np, index, false, false);
++		pp->cfg0_mod_addr = of_read_number(addrp, ns);
++		pp->cfg1_mod_addr = pp->cfg0_mod_addr + pp->config.cfg0_size;
+ 	} else {
+ 		dev_err(pp->dev, "missing *config* reg space\n");
+ 	}
+@@ -431,12 +444,20 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->config.io_size = resource_size(&pp->io);
+ 			pp->config.io_bus_addr = range.pci_addr;
+ 			pp->io_base = range.cpu_addr;
++
++			/* Find the untranslated IO space address */
++			pp->io_mod_addr = of_read_number(parser.range -
++							 parser.np + na, ns);
+ 		}
+ 		if (restype == IORESOURCE_MEM) {
+ 			of_pci_range_to_resource(&range, np, &pp->mem);
+ 			pp->mem.name = "MEM";
+ 			pp->config.mem_size = resource_size(&pp->mem);
+ 			pp->config.mem_bus_addr = range.pci_addr;
++
++			/* Find the untranslated MEM space address */
++			pp->mem_mod_addr = of_read_number(parser.range -
++							  parser.np + na, ns);
+ 		}
+ 		if (restype == 0) {
+ 			of_pci_range_to_resource(&range, np, &pp->cfg);
+@@ -444,6 +465,12 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
+ 			pp->cfg0_base = pp->cfg.start;
+ 			pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
++
++			/* Find the untranslated configuration space address */
++			pp->cfg0_mod_addr = of_read_number(parser.range -
++							   parser.np + na, ns);
++			pp->cfg1_mod_addr = pp->cfg0_mod_addr +
++					    pp->config.cfg0_size;
  		}
  	}
  
-@@ -551,6 +551,9 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
- 
- 	pci_pm_set_unknown_state(pci_dev);
- 
-+Fixup:
-+	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
-+
- 	return 0;
- }
- 
-@@ -694,7 +697,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 
- 	if (!pm) {
- 		pci_save_state(pci_dev);
--		return 0;
-+		goto Fixup;
- 	}
- 
- 	if (pm->suspend_noirq) {
-@@ -711,7 +714,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 			WARN_ONCE(pci_dev->current_state != prev,
- 				"PCI PM: State of device not saved by %pF\n",
- 				pm->suspend_noirq);
--			return 0;
-+			goto Fixup;
- 		}
- 	}
- 
-@@ -735,6 +738,9 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
- 		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
- 
-+Fixup:
-+	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
-+
- 	return 0;
- }
- 
-@@ -959,8 +965,10 @@ static int pci_pm_poweroff_noirq(struct device *dev)
- 	if (pci_has_legacy_pm_support(to_pci_dev(dev)))
- 		return pci_legacy_suspend_late(dev, PMSG_HIBERNATE);
- 
--	if (!drv || !drv->pm)
-+	if (!drv || !drv->pm) {
-+		pci_fixup_device(pci_fixup_suspend_late, pci_dev);
- 		return 0;
-+	}
- 
- 	if (drv->pm->poweroff_noirq) {
- 		int error;
-@@ -981,6 +989,8 @@ static int pci_pm_poweroff_noirq(struct device *dev)
- 	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
- 		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
- 
-+	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
-+
- 	if (pcibios_pm_ops.poweroff_noirq)
- 		return pcibios_pm_ops.poweroff_noirq(dev);
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e729206..af2eba1 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3024,6 +3024,8 @@ extern struct pci_fixup __start_pci_fixups_resume_early[];
- extern struct pci_fixup __end_pci_fixups_resume_early[];
- extern struct pci_fixup __start_pci_fixups_suspend[];
- extern struct pci_fixup __end_pci_fixups_suspend[];
-+extern struct pci_fixup __start_pci_fixups_suspend_late[];
-+extern struct pci_fixup __end_pci_fixups_suspend_late[];
- 
- static bool pci_apply_fixup_final_quirks;
- 
-@@ -3069,6 +3071,11 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
- 		end = __end_pci_fixups_suspend;
- 		break;
- 
-+	case pci_fixup_suspend_late:
-+		start = __start_pci_fixups_suspend_late;
-+		end = __end_pci_fixups_suspend_late;
-+		break;
-+
- 	default:
- 		/* stupid compiler warning, you would think with an enum... */
- 		return;
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index 146e4ff..2dea636 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -288,6 +288,9 @@
- 		VMLINUX_SYMBOL(__start_pci_fixups_suspend) = .;		\
- 		*(.pci_fixup_suspend)					\
- 		VMLINUX_SYMBOL(__end_pci_fixups_suspend) = .;		\
-+		VMLINUX_SYMBOL(__start_pci_fixups_suspend_late) = .;	\
-+		*(.pci_fixup_suspend_late)				\
-+		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
- 	}								\
- 									\
- 	/* Built-in firmware blobs */					\
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index aab57b4..4724806 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1458,8 +1458,9 @@ enum pci_fixup_pass {
- 	pci_fixup_final,	/* Final phase of device fixups */
- 	pci_fixup_enable,	/* pci_enable_device() time */
- 	pci_fixup_resume,	/* pci_device_resume() */
--	pci_fixup_suspend,	/* pci_device_suspend */
-+	pci_fixup_suspend,	/* pci_device_suspend() */
- 	pci_fixup_resume_early, /* pci_device_resume_early() */
-+	pci_fixup_suspend_late,	/* pci_device_suspend_late() */
- };
- 
- /* Anonymous variables would be nice... */
-@@ -1500,6 +1501,11 @@ enum pci_fixup_pass {
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
- 		suspend##hook, vendor, device, class,	\
- 		class_shift, hook)
-+#define DECLARE_PCI_FIXUP_CLASS_SUSPEND_LATE(vendor, device, class,	\
-+					 class_shift, hook)		\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
-+		suspend_late##hook, vendor, device,	\
-+		class, class_shift, hook)
- 
- #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
-@@ -1525,6 +1531,10 @@ enum pci_fixup_pass {
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
- 		suspend##hook, vendor, device,		\
- 		PCI_ANY_ID, 0, hook)
-+#define DECLARE_PCI_FIXUP_SUSPEND_LATE(vendor, device, hook)		\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
-+		suspend_late##hook, vendor, device,	\
-+		PCI_ANY_ID, 0, hook)
- 
- #ifdef CONFIG_PCI_QUIRKS
- void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+@@ -518,9 +545,9 @@ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
+ 	/* Program viewport 0 : OUTBOUND : CFG0 */
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
+ 			  PCIE_ATU_VIEWPORT);
+-	dw_pcie_writel_rc(pp, pp->cfg0_base, PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, (pp->cfg0_base >> 32), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, pp->cfg0_base + pp->config.cfg0_size - 1,
++	dw_pcie_writel_rc(pp, pp->cfg0_mod_addr, PCIE_ATU_LOWER_BASE);
++	dw_pcie_writel_rc(pp, (pp->cfg0_mod_addr >> 32), PCIE_ATU_UPPER_BASE);
++	dw_pcie_writel_rc(pp, pp->cfg0_mod_addr + pp->config.cfg0_size - 1,
+ 			  PCIE_ATU_LIMIT);
+ 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
+@@ -534,9 +561,9 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
+ 			  PCIE_ATU_VIEWPORT);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
+-	dw_pcie_writel_rc(pp, pp->cfg1_base, PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, (pp->cfg1_base >> 32), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, pp->cfg1_base + pp->config.cfg1_size - 1,
++	dw_pcie_writel_rc(pp, pp->cfg1_mod_addr, PCIE_ATU_LOWER_BASE);
++	dw_pcie_writel_rc(pp, (pp->cfg1_mod_addr >> 32), PCIE_ATU_UPPER_BASE);
++	dw_pcie_writel_rc(pp, pp->cfg1_mod_addr + pp->config.cfg1_size - 1,
+ 			  PCIE_ATU_LIMIT);
+ 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
+@@ -549,9 +576,9 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
+ 			  PCIE_ATU_VIEWPORT);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
+-	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
++	dw_pcie_writel_rc(pp, pp->mem_mod_addr, PCIE_ATU_LOWER_BASE);
++	dw_pcie_writel_rc(pp, (pp->mem_mod_addr >> 32), PCIE_ATU_UPPER_BASE);
++	dw_pcie_writel_rc(pp, pp->mem_mod_addr + pp->config.mem_size - 1,
+ 			  PCIE_ATU_LIMIT);
+ 	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 3063b35..d1f7d5e 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -36,11 +36,15 @@ struct pcie_port {
+ 	u8			root_bus_nr;
+ 	void __iomem		*dbi_base;
+ 	u64			cfg0_base;
++	u64			cfg0_mod_addr;
+ 	void __iomem		*va_cfg0_base;
+ 	u64			cfg1_base;
++	u64			cfg1_mod_addr;
+ 	void __iomem		*va_cfg1_base;
+ 	u64			io_base;
++	u64			io_mod_addr;
+ 	u64			mem_base;
++	u64			mem_mod_addr;
+ 	spinlock_t		conf_lock;
+ 	struct resource		cfg;
+ 	struct resource		io;
 -- 
-1.9.3
+1.7.9.5
 
