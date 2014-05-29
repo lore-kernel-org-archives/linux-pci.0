@@ -1,94 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52582 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757806AbaEJPDw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 10 May 2014 11:03:52 -0400
-Subject: [PATCH v3 14/15] PCI: Remove pci_find_upstream_pcie_bridge()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, linux@horizon.com
-Date: Sat, 10 May 2014 09:03:48 -0600
-Message-ID: <20140510150348.2997.36661.stgit@bling.home>
-In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
-References: <20140510145619.2997.429.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.11.231]:47207 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752294AbaE2QDn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 12:03:43 -0400
+Content-Type: text/plain; charset=windows-1252
+Mime-Version: 1.0 (Mac OS X Mail 7.2 \(1874\))
+Subject: Re: [PATCH v2 03/18] PCI: designware: Configuration space should be specified in 'reg'
+From: Kumar Gala <galak@codeaurora.org>
+In-Reply-To: <20140529151840.GD1677@bart.dudau.co.uk>
+Date: Thu, 29 May 2014 11:03:36 -0500
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-doc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Marek Vasut <marex@denx.de>,
+	Arnd Bergmann <arnd@arndb.de>, tony@atomide.com,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Message-Id: <CF1BAF3F-E16E-4864-8052-8C3EC29000B0@codeaurora.org>
+References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-4-git-send-email-kishon@ti.com> <98E18225-3C63-4106-901A-A5D3DEC268C8@codeaurora.org> <20140529151840.GD1677@bart.dudau.co.uk>
+To: Liviu Dudau <liviu@dudau.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It's broken and has no users.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/search.c |   35 -----------------------------------
- include/linux/pci.h  |   11 -----------
- 2 files changed, 46 deletions(-)
+On May 29, 2014, at 10:18 AM, Liviu Dudau <liviu@dudau.co.uk> wrote:
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index aea2443..473c6e8 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -244,41 +244,6 @@ struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev)
- 	return pdev;
- }
- 
--/*
-- * find the upstream PCIe-to-PCI bridge of a PCI device
-- * if the device is PCIE, return NULL
-- * if the device isn't connected to a PCIe bridge (that is its parent is a
-- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
-- * parent
-- */
--struct pci_dev *
--pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
--{
--	struct pci_dev *tmp = NULL;
--
--	if (pci_is_pcie(pdev))
--		return NULL;
--	while (1) {
--		if (pci_is_root_bus(pdev->bus))
--			break;
--		pdev = pdev->bus->self;
--		/* a p2p bridge */
--		if (!pci_is_pcie(pdev)) {
--			tmp = pdev;
--			continue;
--		}
--		/* PCI device should connect to a PCIe bridge */
--		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
--			/* Busted hardware? */
--			WARN_ON_ONCE(1);
--			return NULL;
--		}
--		return pdev;
--	}
--
--	return tmp;
--}
--
- static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
- {
- 	struct pci_bus *child;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5096031..64184d5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1804,15 +1804,4 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 				     u16 alias, void *data), void *data);
- struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev);
- 
--/**
-- * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
-- * @pdev: the PCI device
-- *
-- * if the device is PCIE, return NULL
-- * if the device isn't connected to a PCIe bridge (that is its parent is a
-- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
-- * parent
-- */
--struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
--
- #endif /* LINUX_PCI_H */
+> On Thu, May 29, 2014 at 10:03:54AM -0500, Kumar Gala wrote:
+>> 
+>> On May 29, 2014, at 1:38 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>> 
+>>> The configuration address space has so far been specified in *ranges*,
+>>> however it should be specified in *reg* making it a platform MEM resource.
+>>> Hence used 'platform_get_resource_*' API to get configuration address
+>>> space in the designware driver.
+>>> 
+>>> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>> Cc: Mohit Kumar <mohit.kumar@st.com>
+>>> Cc: Jingoo Han <jg1.han@samsung.com>
+>>> Cc: Marek Vasut <marex@denx.de>
+>>> Cc: Arnd Bergmann <arnd@arndb.de>
+>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>> ---
+>>> .../devicetree/bindings/pci/designware-pcie.txt    |    1 +
+>>> drivers/pci/host/pcie-designware.c                 |   17 +++++++++++++++--
+>>> 2 files changed, 16 insertions(+), 2 deletions(-)
+>> 
+>> Why should the cfg space be defined in *reg* instead of ranges?
+> 
+> Because what you end up using is a struct resource to represent the cfg space and
+> the conversion between ranges and resources breaks down for CFG space (we don't
+> have a flag in the resource flags to say this is CFG resource). Specifying it
+> as a *reg* property makes it a MEM resource and no special casing is needed.
+> 
+> Best regards,
+> Liviu
+
+Just because the kernel doesn’t handle this is NO reason to change the way the DT works.
+
+We are probably better of changing of_bus_pci_get_flags() to set IORESOURCE_MEM for cfg type.  Will send a patch for this.
+
+- k
+
+-- 
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
