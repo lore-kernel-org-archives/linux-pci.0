@@ -1,90 +1,233 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34948 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933838AbaEFHDd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 May 2014 03:03:33 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 00/21] Enable support of Intel DMAR device hotplug
-Date: Tue,  6 May 2014 15:05:11 +0800
-Message-Id: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:56644 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932930AbaE2Gj0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 02:39:26 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
+	<kishon@ti.com>
+Subject: [PATCH v2 01/18] phy: phy-omap-pipe3: Add support for PCIe PHY
+Date: Thu, 29 May 2014 12:08:03 +0530
+Message-ID: <1401345500-20188-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1401345500-20188-1-git-send-email-kishon@ti.com>
+References: <1401345500-20188-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When hot plugging a descrete IOH or a physical processor with embedded
-IIO, we need to handle DMAR(or IOMMU) unit in the PCIe host bridge if
-DMAR is in use. This patch set tries to enhance current DMAR/IOMMU/IR
-drivers to support hotplug and is based on latest mainstream kernel
-v3.15-rc3-177-g0384dcae2b18.
+PCIe PHY uses an external pll instead of the internal pll used by SATA
+and USB3. So added support in pipe3 PHY to use external pll.
 
-Patch 1-13 are bugfixes and code improvement for current drivers.
-Patch 14-17 enhances DMAR framework to support hotplug
-Patch 18 enhances Intel interrupt remapping driver to support hotplug
-Patch 19 enhances error handling in Intel IR driver
-Patch 20 enhance Intel IOMMU to support hotplug
-Patch 21 enhance ACPI pci_root driver to handle DMAR units
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Reviewed-by: Roger Quadros <rogerq@ti.com>
+---
+ Documentation/devicetree/bindings/phy/ti-phy.txt |    8 +-
+ drivers/phy/phy-ti-pipe3.c                       |   99 +++++++++++++++++-----
+ 2 files changed, 84 insertions(+), 23 deletions(-)
 
-This patch set has been tested on Intel development machine.
-Appreciate any comments and tests.
-
-V1->V2:
-1) enhance the way to simplify intel_unmap_sg()
-2) rename dmar_device_hotplug() to dmar_device_add/remove()
-3) coding style improvment
-
-Best Regards!
-
-Jiang Liu (21):
-  iommu/vt-d: match segment number when searching for dev_iotlb capable
-    devices
-  iommu/vt-d: use correct domain id to flush virtual machine domains
-  iommu/vt-d: introduce helper functions to improve code readability
-  iommu/vt-d: introduce helper functions to make code symmetric for
-    readability
-  iommu/vt-d: only dynamically allocate domain id for virtual domains
-  iommu/vt-d: fix possible invalid memory access caused by
-    free_dmar_iommu()
-  iommu/vt-d: avoid freeing virtual machine domain in free_dmar_iommu()
-  iommu/VT-d: simplify include/linux/dmar.h
-  iommu/vt-d: change iommu_enable/disable_translation to return void
-  iommu/vt-d: simplify intel_unmap_sg() and kill duplicated code
-  iommu/vt-d: introduce helper domain_pfn_within_range() to simplify
-    code
-  iommu/vt-d: introduce helper function iova_size() to improve code
-    readability
-  iommu/vt-d: fix bug in computing domain's iommu_snooping flag
-  IOMMU/vt-d: introduce helper function dmar_walk_resources()
-  iommu/vt-d: dynamically allocate and free seq_id for DMAR units
-  iommu/vt-d: implement DMAR unit hotplug framework
-  iommu/vt-d: search _DSM method for DMAR hotplug
-  iommu/vt-d: enhance intel_irq_remapping driver to support DMAR unit
-    hotplug
-  iommu/vt-d: enhance error recovery in function
-    intel_enable_irq_remapping()
-  iommu/vt-d: enhance intel-iommu driver to support DMAR unit hotplug
-  pci, ACPI, iommu: enhance pci_root to support DMAR device hotplug
-
- drivers/acpi/pci_root.c             |   16 +-
- drivers/iommu/dmar.c                |  531 +++++++++++++++++++------
- drivers/iommu/intel-iommu.c         |  725 +++++++++++++++++++++--------------
- drivers/iommu/intel_irq_remapping.c |  233 ++++++++---
- include/linux/dmar.h                |   86 +++--
- include/linux/iova.h                |    5 +
- 6 files changed, 1105 insertions(+), 491 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+index 9ce458f..cf3de7e 100644
+--- a/Documentation/devicetree/bindings/phy/ti-phy.txt
++++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+@@ -56,8 +56,8 @@ usb2phy@4a0ad080 {
+ TI PIPE3 PHY
+ 
+ Required properties:
+- - compatible: Should be "ti,phy-usb3" or "ti,phy-pipe3-sata".
+-   "ti,omap-usb3" is deprecated.
++ - compatible: Should be "ti,phy-usb3", "ti,phy-pipe3-sata" or
++   "ti,phy-pipe3-pcie. "ti,omap-usb3" is deprecated.
+  - reg : Address and length of the register set for the device.
+  - reg-names: The names of the register addresses corresponding to the registers
+    filled in "reg".
+@@ -69,6 +69,10 @@ Required properties:
+    * "wkupclk" - wakeup clock.
+    * "sysclk" - system clock.
+    * "refclk" - reference clock.
++   * "dpll_ref" - external dpll ref clk
++   * "dpll_ref_m2" - external dpll ref clk
++   * "phy-div" - divider for apll
++   * "div-clk" - apll clock
+ 
+ Optional properties:
+  - ctrl-module : phandle of the control module used by PHY driver to power on
+diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
+index 5913676..d43019d 100644
+--- a/drivers/phy/phy-ti-pipe3.c
++++ b/drivers/phy/phy-ti-pipe3.c
+@@ -80,6 +80,7 @@ struct ti_pipe3 {
+ 	struct clk		*wkupclk;
+ 	struct clk		*sys_clk;
+ 	struct clk		*refclk;
++	struct clk		*div_clk;
+ 	struct pipe3_dpll_map	*dpll_map;
+ };
+ 
+@@ -215,6 +216,9 @@ static int ti_pipe3_init(struct phy *x)
+ 	u32 val;
+ 	int ret = 0;
+ 
++	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-pcie"))
++		return 0;
++
+ 	/* Bring it out of IDLE if it is IDLE */
+ 	val = ti_pipe3_readl(phy->pll_ctrl_base, PLL_CONFIGURATION2);
+ 	if (val & PLL_IDLE) {
+@@ -238,8 +242,11 @@ static int ti_pipe3_exit(struct phy *x)
+ 	u32 val;
+ 	unsigned long timeout;
+ 
+-	/* SATA DPLL can't be powered down due to Errata i783 */
+-	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-sata"))
++	/* SATA DPLL can't be powered down due to Errata i783 and PCIe
++	 * does not have internal DPLL
++	 */
++	if (of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-sata") ||
++	    of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-pcie"))
+ 		return 0;
+ 
+ 	/* Put DPLL in IDLE mode */
+@@ -286,32 +293,41 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+ 	struct device_node *control_node;
+ 	struct platform_device *control_pdev;
+ 	const struct of_device_id *match;
+-
+-	match = of_match_device(of_match_ptr(ti_pipe3_id_table), &pdev->dev);
+-	if (!match)
+-		return -EINVAL;
++	struct clk *clk;
+ 
+ 	phy = devm_kzalloc(&pdev->dev, sizeof(*phy), GFP_KERNEL);
+ 	if (!phy) {
+ 		dev_err(&pdev->dev, "unable to alloc mem for TI PIPE3 PHY\n");
+ 		return -ENOMEM;
+ 	}
++	phy->dev		= &pdev->dev;
+ 
+-	phy->dpll_map = (struct pipe3_dpll_map *)match->data;
+-	if (!phy->dpll_map) {
+-		dev_err(&pdev->dev, "no DPLL data\n");
+-		return -EINVAL;
+-	}
++	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
++		match = of_match_device(of_match_ptr(ti_pipe3_id_table),
++					&pdev->dev);
++		if (!match)
++			return -EINVAL;
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pll_ctrl");
+-	phy->pll_ctrl_base = devm_ioremap_resource(&pdev->dev, res);
+-	if (IS_ERR(phy->pll_ctrl_base))
+-		return PTR_ERR(phy->pll_ctrl_base);
++		phy->dpll_map = (struct pipe3_dpll_map *)match->data;
++		if (!phy->dpll_map) {
++			dev_err(&pdev->dev, "no DPLL data\n");
++			return -EINVAL;
++		}
+ 
+-	phy->dev		= &pdev->dev;
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++						   "pll_ctrl");
++		phy->pll_ctrl_base = devm_ioremap_resource(&pdev->dev, res);
++		if (IS_ERR(phy->pll_ctrl_base))
++			return PTR_ERR(phy->pll_ctrl_base);
+ 
+-	if (!of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
++		phy->sys_clk = devm_clk_get(phy->dev, "sysclk");
++		if (IS_ERR(phy->sys_clk)) {
++			dev_err(&pdev->dev, "unable to get sysclk\n");
++			return -EINVAL;
++		}
++	}
+ 
++	if (!of_device_is_compatible(node, "ti,phy-pipe3-sata")) {
+ 		phy->wkupclk = devm_clk_get(phy->dev, "wkupclk");
+ 		if (IS_ERR(phy->wkupclk)) {
+ 			dev_err(&pdev->dev, "unable to get wkupclk\n");
+@@ -328,10 +344,35 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+ 		phy->refclk = ERR_PTR(-ENODEV);
+ 	}
+ 
+-	phy->sys_clk = devm_clk_get(phy->dev, "sysclk");
+-	if (IS_ERR(phy->sys_clk)) {
+-		dev_err(&pdev->dev, "unable to get sysclk\n");
+-		return -EINVAL;
++	if (of_device_is_compatible(node, "ti,phy-pipe3-pcie")) {
++		clk = devm_clk_get(phy->dev, "dpll_ref");
++		if (IS_ERR(clk)) {
++			dev_err(&pdev->dev, "unable to get dpll ref clk\n");
++			return PTR_ERR(clk);
++		}
++		clk_set_rate(clk, 1500000000);
++
++		clk = devm_clk_get(phy->dev, "dpll_ref_m2");
++		if (IS_ERR(clk)) {
++			dev_err(&pdev->dev, "unable to get dpll ref m2 clk\n");
++			return PTR_ERR(clk);
++		}
++		clk_set_rate(clk, 100000000);
++
++		clk = devm_clk_get(phy->dev, "phy-div");
++		if (IS_ERR(clk)) {
++			dev_err(&pdev->dev, "unable to get phy-div clk\n");
++			return PTR_ERR(clk);
++		}
++		clk_set_rate(clk, 100000000);
++
++		phy->div_clk = devm_clk_get(phy->dev, "div-clk");
++		if (IS_ERR(phy->div_clk)) {
++			dev_err(&pdev->dev, "unable to get div-clk\n");
++			return PTR_ERR(phy->div_clk);
++		}
++	} else {
++		phy->div_clk = ERR_PTR(-ENODEV);
+ 	}
+ 
+ 	control_node = of_parse_phandle(node, "ctrl-module", 0);
+@@ -387,6 +428,8 @@ static int ti_pipe3_runtime_suspend(struct device *dev)
+ 		clk_disable_unprepare(phy->wkupclk);
+ 	if (!IS_ERR(phy->refclk))
+ 		clk_disable_unprepare(phy->refclk);
++	if (!IS_ERR(phy->div_clk))
++		clk_disable_unprepare(phy->div_clk);
+ 
+ 	return 0;
+ }
+@@ -412,8 +455,19 @@ static int ti_pipe3_runtime_resume(struct device *dev)
+ 		}
+ 	}
+ 
++	if (!IS_ERR(phy->div_clk)) {
++		ret = clk_prepare_enable(phy->div_clk);
++		if (ret) {
++			dev_err(phy->dev, "Failed to enable div_clk %d\n", ret);
++			goto err3;
++		}
++	}
+ 	return 0;
+ 
++err3:
++	if (!IS_ERR(phy->wkupclk))
++		clk_disable_unprepare(phy->wkupclk);
++
+ err2:
+ 	if (!IS_ERR(phy->refclk))
+ 		clk_disable_unprepare(phy->refclk);
+@@ -446,6 +500,9 @@ static const struct of_device_id ti_pipe3_id_table[] = {
+ 		.compatible = "ti,phy-pipe3-sata",
+ 		.data = dpll_map_sata,
+ 	},
++	{
++		.compatible = "ti,phy-pipe3-pcie",
++	},
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(of, ti_pipe3_id_table);
 -- 
-1.7.10.4
+1.7.9.5
 
