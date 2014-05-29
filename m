@@ -1,99 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:54280 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934364AbaEFHFG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 May 2014 03:05:06 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 17/21] iommu/vt-d: search _DSM method for DMAR hotplug
-Date: Tue,  6 May 2014 15:05:28 +0800
-Message-Id: <1399359932-28972-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:35049 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037AbaE2XAX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 19:00:23 -0400
+Received: by mail-ig0-f179.google.com with SMTP id hn18so137158igb.6
+        for <linux-pci@vger.kernel.org>; Thu, 29 May 2014 16:00:22 -0700 (PDT)
+Date: Thu, 29 May 2014 17:00:17 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: ddutile@redhat.com, linux-pci@vger.kernel.org,
+	alex.williamson@redhat.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] pci: Add pci_walk_vbus for walking virtual busses
+ associated with SR-IOV
+Message-ID: <20140529230017.GB11907@google.com>
+References: <20140528222901.18898.48031.stgit@ahduyck-cp2.jf.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140528222901.18898.48031.stgit@ahduyck-cp2.jf.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to Intel VT-d specification, _DSM method to support DMAR
-hotplug should exist directly under corresponding ACPI object
-representing PCI host bridge. But some BIOSes doesn't conform to
-this, so search for _DSM method in the subtree starting from the
-ACPI object representing the PCI host bridge.
+On Wed, May 28, 2014 at 03:29:09PM -0700, Alexander Duyck wrote:
+> This function provides a simple means for applying a given function to all
+> devices on bus and all of it's children, including virtual busses.  To do
+> this the function begins by processing all devices on the bus, then it will
+> proceed through bus->children and process each of the child busses.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c |   35 +++++++++++++++++++++++++++++++----
- 1 file changed, 31 insertions(+), 4 deletions(-)
+Yeah, I think this makes sense.  I forgot that the pci_bus has a list of
+all child buses, and the virtual buses *are* on that list.  It's just that
+there's no bridge pci_dev where dev->subordinate is the virtual bus, so if
+we iterate over the bus->devices list as pci_walk_bus() does, we won't find
+a bridge leading to the virtual bus.
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 2006e1cd8c0f..a1b436b105a0 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1921,21 +1921,48 @@ static int dmar_hotplug_remove(acpi_handle handle)
- 	return ret;
- }
- 
--static int dmar_device_hotplug(acpi_handle handle, bool insert)
-+static acpi_status dmar_get_dsm_handle(acpi_handle handle, u32 lvl,
-+				       void *context, void **retval)
-+{
-+	acpi_handle *phdl = retval;
-+
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		*phdl = handle;
-+		return AE_CTRL_TERMINATE;
-+	}
-+
-+	return AE_OK;
-+}
-+
-+int dmar_device_hotplug(acpi_handle handle, bool insert)
- {
- 	int ret;
-+	acpi_handle tmp = NULL;
-+	acpi_status status;
- 
- 	if (!dmar_in_use())
- 		return 0;
- 
--	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		tmp = handle;
-+	} else {
-+		status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-+					     ACPI_UINT32_MAX,
-+					     dmar_get_dsm_handle,
-+					     NULL, NULL, &tmp);
-+		if (ACPI_FAILURE(status)) {
-+			pr_warn("Failed to locate _DSM method.\n");
-+			return -ENXIO;
-+		}
-+	}
-+	if (tmp == NULL)
- 		return 0;
- 
- 	down_write(&dmar_global_lock);
- 	if (insert)
--		ret = dmar_hotplug_insert(handle);
-+		ret = dmar_hotplug_insert(tmp);
- 	else
--		ret = dmar_hotplug_remove(handle);
-+		ret = dmar_hotplug_remove(tmp);
- 	up_write(&dmar_global_lock);
- 
- 	return ret;
--- 
-1.7.10.4
+But it seems like we could use pci_walk_vbus() as you implemented it here
+for both purposes, i.e., we could just change pci_walk_bus() to work this
+way.  Would that break anything?  It'd be nicer to just have one "walk bus"
+interface, especially since these differ in a pretty subtle way.
 
+I don't really want to elevate the "virtual bus" idea, i.e., the idea that
+we have a bus that is not the secondary bus of a bridge, to a first-class
+PCI citizen.  It seems like a wart that I'd like to get rid of if we had a
+way to do it.
+
+I'm curious about what Windows does for this situation.  I have a dim
+memory that it creates some kind of virtual bridge device leading to a bus
+like this.  But I have no reference, and maybe I just made that up.
+
+Bjorn
+
+> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> ---
+>  drivers/pci/bus.c   |   44 ++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |    2 ++
+>  2 files changed, 46 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index fb8aed3..769bbcb 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -336,6 +336,50 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+>  }
+>  EXPORT_SYMBOL_GPL(pci_walk_bus);
+>  
+> +/** pci_walk_vbus - walk devices on/under bus, calling callback.
+> + *  @top      bus whose devices should be walked
+> + *  @cb       callback to be called for each device found
+> + *  @userdata arbitrary pointer to be passed to callback.
+> + *
+> + *  Walk the given bus, including any child buses under this bus.
+> + *  Call the provided callback on each device found.
+> + *
+> + *  We check the return of @cb each time. If it returns anything
+> + *  other than 0, we break out.
+> + *
+> + */
+> +void pci_walk_vbus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+> +		   void *userdata)
+> +{
+> +	struct list_head *bus_next;
+> +	struct pci_bus *bus;
+> +	struct pci_dev *dev;
+> +
+> +	down_read(&pci_bus_sem);
+> +	bus_next = &top->node;
+> +	for (;;) {
+> +		/* prep bus for next iteration */
+> +		bus = list_entry(bus_next, struct pci_bus, node);
+> +
+> +		/* process each device on this bus */
+> +		list_for_each_entry(dev, &bus->devices, bus_list) {
+> +			if (cb(dev, userdata))
+> +				goto release_semaphore;
+> +		}
+> +
+> +		/* end of this bus, go to child, next bus, or finish */
+> +		for (bus_next = bus->children.next;
+> +		     bus_next == &bus->children;
+> +		     bus_next = bus->node.next, bus = bus->parent) {
+> +			if (bus == top)
+> +				goto release_semaphore;
+> +		}
+> +	}
+> +release_semaphore:
+> +	up_read(&pci_bus_sem);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_walk_vbus);
+> +
+>  struct pci_bus *pci_bus_get(struct pci_bus *bus)
+>  {
+>  	if (bus)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index aab57b4..1fb18a8 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1118,6 +1118,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+>  
+>  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+>  		  void *userdata);
+> +void pci_walk_vbus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+> +		   void *userdata);
+>  int pci_cfg_space_size(struct pci_dev *dev);
+>  unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+>  void pci_setup_bridge(struct pci_bus *bus);
+> 
