@@ -1,35 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:44791 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895AbaESPJ7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 11:09:59 -0400
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id s4JF9xeg011291
-	for <linux-pci@vger.kernel.org>; Mon, 19 May 2014 10:09:59 -0500
-Received: from DLEE70.ent.ti.com (dlee70.ent.ti.com [157.170.170.113])
-	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id s4JF9xqX022294
-	for <linux-pci@vger.kernel.org>; Mon, 19 May 2014 10:09:59 -0500
-Received: from [158.218.103.123] (ileax41-snat.itg.ti.com [10.172.224.153])	by
- dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id s4JF9wOw013109	for
- <linux-pci@vger.kernel.org>; Mon, 19 May 2014 10:09:58 -0500
-Message-ID: <537A1EC6.30800@ti.com>
-Date: Mon, 19 May 2014 11:09:58 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:35161 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752878AbaE2AKz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 May 2014 20:10:55 -0400
+Date: Thu, 29 May 2014 09:10:51 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	grant.likely@linaro.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, rdunlap@infradead.org,
+	linux-doc@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: Re: [PATCH v4] pci-rcar-gen2: add device tree support
+Message-ID: <20140529001050.GC22705@verge.net.au>
+References: <201405200110.21914.sergei.shtylyov@cogentembedded.com>
+ <20140528135154.GQ11907@google.com>
 MIME-Version: 1.0
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: What is the right way to initialize the VendorID info of the RC's
- config space?
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140528135154.GQ11907@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Wed, May 28, 2014 at 07:51:54AM -0600, Bjorn Helgaas wrote:
+> On Tue, May 20, 2014 at 01:10:20AM +0400, Sergei Shtylyov wrote:
+> > From: Ben Dooks <ben.dooks@codethink.co.uk>
+> > 
+> > Add device tree probing support to the 'pci-rcar-gen2' driver.
+> > 
+> > Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+> > [Sergei: numerous fixes/cleanups/additions]
+> > Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> 
+> Applied to pci/host-rcar for v3.16, thanks everybody!
 
-Keystone PCI controller's config space doesn't have the vendorID 
-information set and s/w is expected to
-read this info from the SoC's register and update. Is adding a quirk for 
-this the right thing to do?
-
-Murali
-
-
+Thanks Bjorn.
