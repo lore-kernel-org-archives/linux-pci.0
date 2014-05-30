@@ -1,114 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:47014 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964846AbaE2Gjz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 May 2014 02:39:55 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+Received: from smtp.codeaurora.org ([198.145.11.231]:57661 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754167AbaE3UoZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 16:44:25 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+Subject: Re: [PATCH] of: treat PCI config space as IORESOURCE_MEM type
+From: Kumar Gala <galak@codeaurora.org>
+In-Reply-To: <20140530203741.GA30134@obsidianresearch.com>
+Date: Fri, 30 May 2014 15:44:18 -0500
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robherring2@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
-	<kishon@ti.com>, Russell King <linux@arm.linux.org.uk>
-Subject: [PATCH v2 09/18] arm: dra7xx: Add hwmod data for pcie1 and pcie2 subsystems
-Date: Thu, 29 May 2014 12:08:11 +0530
-Message-ID: <1401345500-20188-10-git-send-email-kishon@ti.com>
-In-Reply-To: <1401345500-20188-1-git-send-email-kishon@ti.com>
-References: <1401345500-20188-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Kishon Vijay Abraham I <kishon@ti.com>
+Message-Id: <69822442-4373-4CDA-916D-77450AADF6A3@codeaurora.org>
+References: <1401379426-9701-1-git-send-email-galak@codeaurora.org> <CAL_JsqLPFDwtd-QYDqCwx1JVj1Aa8=nof-e0P6R9CZra+fXHfw@mail.gmail.com> <47B1E3D0-4336-4529-80B0-172F4ACA5C97@codeaurora.org> <20140530005602.GE1677@bart.dudau.co.uk> <CAErSpo7qEhJyUAu58R8g6+AEhRGo_+Vv0EMgkK+3ZQOU9+jmhg@mail.gmail.com> <20140530014116.GF1677@bart.dudau.co.uk> <20140530203741.GA30134@obsidianresearch.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added hwmod data for pcie1 and pcie2 subsystem present in DRA7xx SOC.
 
-Cc: Tony Lindgren <tony@atomide.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- arch/arm/mach-omap2/omap_hwmod_7xx_data.c |   55 +++++++++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
+On May 30, 2014, at 3:37 PM, Jason Gunthorpe <jgunthorpe@obsidianresearch.com> wrote:
 
-diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-index 1282a42..a51fa7f 100644
---- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-+++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-@@ -1231,6 +1231,43 @@ static struct omap_hwmod dra7xx_ocp2scp3_hwmod = {
- };
- 
- /*
-+ * 'PCIE' class
-+ *
-+ */
-+
-+static struct omap_hwmod_class dra7xx_pcie_hwmod_class = {
-+	.name	= "pcie",
-+};
-+
-+/* pcie1 */
-+static struct omap_hwmod dra7xx_pcie1_hwmod = {
-+	.name		= "pcie1",
-+	.class		= &dra7xx_pcie_hwmod_class,
-+	.clkdm_name	= "l3init_clkdm",
-+	.main_clk	= "l4_root_clk_div",
-+	.prcm = {
-+		.omap4 = {
-+			.clkctrl_offs	= DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET,
-+			.modulemode	= MODULEMODE_SWCTRL,
-+		},
-+	},
-+};
-+
-+/* pcie2 */
-+static struct omap_hwmod dra7xx_pcie2_hwmod = {
-+	.name		= "pcie2",
-+	.class		= &dra7xx_pcie_hwmod_class,
-+	.clkdm_name	= "l3init_clkdm",
-+	.main_clk	= "l4_root_clk_div",
-+	.prcm = {
-+		.omap4 = {
-+			.clkctrl_offs = DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET,
-+			.modulemode   = MODULEMODE_SWCTRL,
-+		},
-+	},
-+};
-+
-+/*
-  * 'PCIE PHY' class
-  *
-  */
-@@ -2388,6 +2425,22 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__ocp2scp1 = {
- 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
- };
- 
-+/* l4_cfg -> pcie1 */
-+static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1 = {
-+	.master		= &dra7xx_l4_cfg_hwmod,
-+	.slave		= &dra7xx_pcie1_hwmod,
-+	.clk		= "l4_root_clk_div",
-+	.user		= OCP_USER_MPU | OCP_USER_SDMA,
-+};
-+
-+/* l4_cfg -> pcie2 */
-+static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie2 = {
-+	.master		= &dra7xx_l4_cfg_hwmod,
-+	.slave		= &dra7xx_pcie2_hwmod,
-+	.clk		= "l4_root_clk_div",
-+	.user		= OCP_USER_MPU | OCP_USER_SDMA,
-+};
-+
- /* l4_cfg -> pcie1 phy */
- static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1_phy = {
- 	.master		= &dra7xx_l4_cfg_hwmod,
-@@ -2751,6 +2804,8 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
- 	&dra7xx_l4_cfg__mpu,
- 	&dra7xx_l4_cfg__ocp2scp1,
- 	&dra7xx_l4_cfg__ocp2scp3,
-+	&dra7xx_l4_cfg__pcie1,
-+	&dra7xx_l4_cfg__pcie2,
- 	&dra7xx_l4_cfg__pcie1_phy,
- 	&dra7xx_l4_cfg__pcie2_phy,
- 	&dra7xx_l3_main_1__qspi,
+> On Fri, May 30, 2014 at 02:41:17AM +0100, Liviu Dudau wrote:
+> 
+>> Agree, I'm only concerned that if this ECAM config space gets added to
+>> the list of pci_host_bridge windows it will be indistinguishable from
+>> IORESOURCE_MEM resources and pci_create_root_bus() will add it to the
+>> bus and allow devices present on that bus to be assigned addresses from
+>> that range. Which might not be what one wants for certain BARs.
+> 
+> I wouldn't worry about supporting config in ranges. ECAM is the
+> logical use for config ranges, but it isn't specified and probably
+> will never be.
+> 
+> Will's driver the is the only driver I've seen to support ECAM and it
+> didn't use ranges.
+
+I expect with 64-bit parts we will see more use of ECAM, I think the reason its not used much is because of the address space it chews up, but that becomes less of an issue with LPAE or 64-bit parts with larger physical address spaces.
+
+- k
+
 -- 
-1.7.9.5
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
