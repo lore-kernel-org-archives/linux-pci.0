@@ -1,66 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0098.outbound.protection.outlook.com ([207.46.100.98]:26794
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751253AbaENI0u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 14 May 2014 04:26:50 -0400
-Message-ID: <53730504.4080201@amd.com>
-Date: Wed, 14 May 2014 00:54:12 -0500
-From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:58608 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933058AbaE3WMg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 18:12:36 -0400
+Received: by mail-ie0-f178.google.com with SMTP id rl12so2367119iec.37
+        for <linux-pci@vger.kernel.org>; Fri, 30 May 2014 15:12:35 -0700 (PDT)
+Date: Fri, 30 May 2014 16:12:32 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: kvm@vger.kernel.org, alex.williamson@redhat.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 4/4] vfio/pci: Restore MSIx message prior to enabling
+Message-ID: <20140530221232.GG4607@google.com>
+References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1400468470-11262-5-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	Borislav Petkov <bp@suse.de>,
-	"Robert Richter" <rric@kernel.org>,
-	Daniel J Blueman <daniel@numascale.com>,
-	"Andreas Herrmann" <herrmann.der.user@googlemail.com>
-Subject: Re: [PATCH V4 0/4] x86/pci Fix numa_node info for AMD hostbridge
- and misc clean up.
-References: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1399567461-15928-1-git-send-email-suravee.suthikulpanit@amd.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1400468470-11262-5-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+On Mon, May 19, 2014 at 01:01:10PM +1000, Gavin Shan wrote:
+> The MSIx vector table lives in device memory, which may be cleared as
+> part of a backdoor device reset. This is the case on the IBM IPR HBA
+> when the BIST is run on the device. When assigned to a QEMU guest,
+> the guest driver does a pci_save_state(), issues a BIST, then does a
+> pci_restore_state(). The BIST clears the MSIx vector table, but due
+> to the way interrupts are configured the pci_restore_state() does not
+> restore the vector table as expected. Eventually this results in an
+> EEH error on Power platforms when the device attempts to signal an
+> interrupt with the zero'd table entry.
+> 
+> Fix the problem by restoring the host cached MSI message prior to
+> enabling each vector.
+> 
+> Reported-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/vfio/pci/vfio_pci_intrs.c | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+> index 9dd49c9..553212f 100644
+> --- a/drivers/vfio/pci/vfio_pci_intrs.c
+> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
+> @@ -16,6 +16,7 @@
+>  #include <linux/device.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/eventfd.h>
+> +#include <linux/msi.h>
+>  #include <linux/pci.h>
+>  #include <linux/file.h>
+>  #include <linux/poll.h>
+> @@ -548,6 +549,20 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
+>  		return PTR_ERR(trigger);
+>  	}
+>  
+> +	/*
+> +	 * The MSIx vector table resides in device memory which may be cleared
+> +	 * via backdoor resets. We don't allow direct access to the vector
+> +	 * table so even if a userspace driver attempts to save/restore around
+> +	 * such a reset it would be unsuccessful. To avoid this, restore the
+> +	 * cached value of the message prior to enabling.
+> +	 */
+> +	if (msix) {
+> +		struct msi_msg msg;
+> +
+> +		get_cached_msi_msg(irq, &msg);
+> +		write_msi_msg(irq, &msg);
+> +	}
 
-I am following up on this patch set.  Do you have any other concerns?
+I think this is pretty ugly.  Drivers should not be writing to the
+MSI-X vector table, so I don't really want to export these internal
+implementation functions if we can avoid it.
 
-Thank you,
+I chatted with Alex about this last week on IRC, trying to understand
+what's going on here, but I'm afraid I didn't get very far.
 
-Suravee
+I think I understand what happens when there's no virtualization
+involved.  The driver enables MSI-X and writes the vector table via
+this path:
 
-On 05/08/2014 11:44 AM, suravee.suthikulpanit@amd.com wrote:
-> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->
-> This in the V4 of the patch set which trys to fixed up numa_node for AMD hostbridges.
-> This topic was discussed in the following threads:
->
-> V1: https://lkml.org/lkml/2014/3/5/898
-> V2: https://lkml.org/lkml/2014/4/18/623
-> V3: https://lkml.org/lkml/2014/5/7/588
->
-> Change from V3:
-> Split up the changes in patch1 into two per Robert's suggestions. The second patch has
-> no functional change.
->
-> Change from V2:
-> As requested by Bjorn, the patch set will only add supports for family15h, and
-> also deprecating the mechanism, as future platforms should be relying on the ACPI info.
-> He has also requested to keep the changes to the minimum. Therefore, the V2 patch 2 and 3
-> has been removed.
->
-> Suravee Suthikulpanit (2):
->    Patch1: x86/PCI: Fix PCI root numa_node info on AMD family15h
->    Patch2: x86/PCI: Clean up and mark early_root_info_init as deprecated
->
-> Myron Stowe (2):
->    Patch3: ACPI/PCI: Warn if we have to "guess" host bridge node information
->    Patch4: X86/PCI: Remove unnecessary 'quirk_amd_nb_node'
->
->   arch/x86/kernel/quirks.c | 58 -------------------------------------
->   arch/x86/pci/acpi.c      |  6 +++-
->   arch/x86/pci/amd_bus.c   | 75 +++++++++++++++++++++++++++++-------------------
->   3 files changed, 51 insertions(+), 88 deletions(-)
->
+    pci_enable_msix
+      msix_capability_init
+	arch_setup_msi_irqs
+	  native_setup_msi_irqs		# .setup_msi_irqs (on x86)
+	    setup_msi_irq
+	      write_msi_msg
+		__write_msi_msg		# write vector table
+
+When a device is reset, its MSI-X vector table is cleared.  The type
+of reset (FLR, "backdoor", etc.) doesn't really matter.
+
+After a device reset, the driver would use this path to restore the
+vector table:
+
+    pci_restore_state
+      pci_restore_msi_state
+        __pci_restore_msix_state
+          arch_restore_msi_irqs
+            default_restore_msi_irqs	# .restore_msi_irqs (on x86)
+              default_restore_msi_irq
+                write_msi_msg
+                  __write_msi_msg	# write vector table
+
+This rewrites the MSI-X vector table (it doesn't use any data that was
+saved by pci_save_state(), so it's not really a "restore" in that
+sense; it writes the vector table from scratch based on the data
+structures maintained by the MSI core).
+
+If the same driver is running in a qemu guest, it still calls
+pci_enable_msix() and pci_restore_state(), but apparently the restore
+path doesn't work.  Alex mentioned that qemu virtualizes the vector
+table, so I assume it traps the writel() to the vector table when
+enabling MSI-X?  And I assume qemu would also trap the writel() in the
+restore path, but it sounded like it ignores the write because we're
+writing the same data qemu believes to be there?
+
+I'd like to understand more details about how those writel()s
+performed by the guest kernel are handled.  Alex mentioned that the
+vector table is inaccessible to the guest, and I see code in
+vfio_pci_bar_rw() that looks like it excludes the table area, so I
+assume that is involved somehow, but I don't know how to connect the
+dots.  Obviously the enable path must be handled differently from the
+restore path somehow, because if the enable used vfio_pci_bar_rw(),
+that write would just be dropped, too, and it's not.
+
+>  	ret = request_irq(irq, vfio_msihandler, 0,
+>  			  vdev->ctx[vector].name, trigger);
+>  	if (ret) {
+> -- 
+> 1.8.3.2
+> 
