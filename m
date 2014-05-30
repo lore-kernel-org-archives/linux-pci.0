@@ -1,66 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:50097 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754104AbaETRHo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 May 2014 13:07:44 -0400
-Received: by mail-ig0-f169.google.com with SMTP id hl10so5754202igb.4
-        for <linux-pci@vger.kernel.org>; Tue, 20 May 2014 10:07:43 -0700 (PDT)
-Date: Tue, 20 May 2014 11:07:40 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Marcel Apfelbaum <marcel.a@redhat.com>,
-	en Hutchings <ben@decadent.org.uk>
-Subject: [GIT PULL] PCI updates for v3.15
-Message-ID: <20140520170740.GA15835@google.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:16634 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304AbaE3DB2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 23:01:28 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2] PCI: make pci_bus_add_device() void
+Date: Fri, 30 May 2014 11:01:03 +0800
+Message-ID: <1401418863-10884-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+Kernel will WARN_ON(retval < 0) if device_attach() fail with
+error in pci_bus_add_device(). currently, all the kernel code
+to check pci_bus_add_device() return value only for printing
+warning message, no other actions. So make pci_bus_add_device()
+void and clean all the unnecessary checkingi codes.
 
-These are fixes for an SHPCHP hotplug regression, a "wait for pending
-transaction" problem (used in device reset paths), and an email address
-update.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+v1->v2: Convert pci_bus_add_device() void, squash all changes into a single patch
+---
+ drivers/edac/i82875p_edac.c         |    7 +------
+ drivers/pci/bus.c                   |   10 ++--------
+ drivers/pci/iov.c                   |    2 +-
+ drivers/platform/x86/asus-wmi.c     |    3 +--
+ drivers/platform/x86/eeepc-laptop.c |    3 +--
+ include/linux/pci.h                 |    2 +-
+ 6 files changed, 7 insertions(+), 20 deletions(-)
 
-Bjorn
+diff --git a/drivers/edac/i82875p_edac.c b/drivers/edac/i82875p_edac.c
+index 8d0450b..8705ba6 100644
+--- a/drivers/edac/i82875p_edac.c
++++ b/drivers/edac/i82875p_edac.c
+@@ -293,12 +293,7 @@ static int i82875p_setup_overfl_dev(struct pci_dev *pdev,
+ 		if (dev == NULL)
+ 			return 1;
+ 
+-		err = pci_bus_add_device(dev);
+-		if (err) {
+-			i82875p_printk(KERN_ERR,
+-				"%s(): pci_bus_add_device() Failed\n",
+-				__func__);
+-		}
++		pci_bus_add_device(dev);
+ 		pci_bus_assign_resources(dev->bus);
+ 	}
+ 
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index ba2bf55..447d393 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -235,7 +235,7 @@ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
+  *
+  * This adds add sysfs entries and start device drivers
+  */
+-int pci_bus_add_device(struct pci_dev *dev)
++void pci_bus_add_device(struct pci_dev *dev)
+ {
+ 	int retval;
+ 
+@@ -252,8 +252,6 @@ int pci_bus_add_device(struct pci_dev *dev)
+ 	WARN_ON(retval < 0);
+ 
+ 	dev->is_added = 1;
+-
+-	return 0;
+ }
+ 
+ /**
+@@ -266,16 +264,12 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+ 	struct pci_bus *child;
+-	int retval;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		/* Skip already-added devices */
+ 		if (dev->is_added)
+ 			continue;
+-		retval = pci_bus_add_device(dev);
+-		if (retval)
+-			dev_err(&dev->dev, "Error adding device (%d)\n",
+-				retval);
++		pci_bus_add_device(dev);
+ 	}
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index de7a747..cb6f247 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -106,7 +106,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	pci_device_add(virtfn, virtfn->bus);
+ 	mutex_unlock(&iov->dev->sriov->lock);
+ 
+-	rc = pci_bus_add_device(virtfn);
++	pci_bus_add_device(virtfn);
+ 	sprintf(buf, "virtfn%u", id);
+ 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+ 	if (rc)
+diff --git a/drivers/platform/x86/asus-wmi.c b/drivers/platform/x86/asus-wmi.c
+index c5e082f..91ef69a 100644
+--- a/drivers/platform/x86/asus-wmi.c
++++ b/drivers/platform/x86/asus-wmi.c
+@@ -642,8 +642,7 @@ static void asus_rfkill_hotplug(struct asus_wmi *asus)
+ 			dev = pci_scan_single_device(bus, 0);
+ 			if (dev) {
+ 				pci_bus_assign_resources(bus);
+-				if (pci_bus_add_device(dev))
+-					pr_err("Unable to hotplug wifi\n");
++				pci_bus_add_device(dev);
+ 			}
+ 		} else {
+ 			dev = pci_get_slot(bus, 0);
+diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
+index 399e8c5..9b0c57c 100644
+--- a/drivers/platform/x86/eeepc-laptop.c
++++ b/drivers/platform/x86/eeepc-laptop.c
+@@ -633,8 +633,7 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
+ 			dev = pci_scan_single_device(bus, 0);
+ 			if (dev) {
+ 				pci_bus_assign_resources(bus);
+-				if (pci_bus_add_device(dev))
+-					pr_err("Unable to hotplug wifi\n");
++				pci_bus_add_device(dev);
+ 			}
+ 		} else {
+ 			dev = pci_get_slot(bus, 0);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 65f22e8..71d9673 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -781,7 +781,7 @@ int pci_scan_slot(struct pci_bus *bus, int devfn);
+ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
+ unsigned int pci_scan_child_bus(struct pci_bus *bus);
+-int __must_check pci_bus_add_device(struct pci_dev *dev);
++void pci_bus_add_device(struct pci_dev *dev);
+ void pci_read_bridge_bases(struct pci_bus *child);
+ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 					  struct resource *res);
+-- 
+1.7.1
 
 
-The following changes since commit f5d3352b2751f8de7e06e23a04ac0b4c474075e9:
-
-  PCI: tegra: Use new OF interrupt mapping when possible (2014-04-16 10:24:32 -0600)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-v3.15-fixes-2
-
-for you to fetch changes up to d0b4cc4e32705ff00d90d32da7783c266c702c04:
-
-  PCI: Wrong register used to check pending traffic (2014-05-19 12:51:48 -0600)
-
-----------------------------------------------------------------
-PCI updates for v3.15:
-
-  PCI device hotplug
-    - Fix SHPCHP bus speed mismatch issue (Marcel Apfelbaum)
-
-  Miscellaneous
-    - Fix pci_wait_for_pending_transaction() (Gavin Shan)
-    - Update email address (Ben Hutchings)
-
-----------------------------------------------------------------
-Ben Hutchings (1):
-      PCI: Update my email address
-
-Gavin Shan (1):
-      PCI: Wrong register used to check pending traffic
-
-Marcel Apfelbaum (1):
-      PCI: shpchp: Check bridge's secondary (not primary) bus speed
-
- Documentation/ABI/testing/sysfs-bus-pci | 2 +-
- drivers/pci/hotplug/shpchp_ctrl.c       | 4 ++--
- drivers/pci/pci.c                       | 5 +++--
- 3 files changed, 6 insertions(+), 5 deletions(-)
