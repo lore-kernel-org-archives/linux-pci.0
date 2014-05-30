@@ -1,131 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:53358 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbaEVWj2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 May 2014 18:39:28 -0400
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-CC: Tim Harvey <tharvey@gateworks.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Marek Vasut <marex@denx.de>,
-	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>
-Subject: RE: [Q] Synopsys PCIe interrupts
-Date: Thu, 22 May 2014 22:38:56 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B70476722C@DFLE11.ent.ti.com>
-References: <fd5f29f175b2499e9d972629f1ccd74a@HKXPR06MB168.apcprd06.prod.outlook.com>
-	 <001801cf6f0f$cfd4b510$6f7e1f30$%han@samsung.com>
-	 <CAJ+vNU29uZn+TRx+X8miLuRXhQS32QQZkEF53y09ijNYm9NX7w@mail.gmail.com>
-	 <48f8fbc1569e49df8fe8e15e4138d8d9@HKXPR06MB168.apcprd06.prod.outlook.com>
- <1400056898.4837.11.camel@weser.hi.pengutronix.de>
-In-Reply-To: <1400056898.4837.11.camel@weser.hi.pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:57428 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751983AbaE3WuF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 18:50:05 -0400
+Received: by mail-ie0-f177.google.com with SMTP id y20so2373150ier.22
+        for <linux-pci@vger.kernel.org>; Fri, 30 May 2014 15:50:03 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAE9FiQWCsKwb3aqUQ96x__xwR_+K=k5LzjxWCCS1+xz2Wd5baA@mail.gmail.com>
+References: <1398966055-19325-1-git-send-email-yinghai@kernel.org>
+	<20140520205340.GA22821@google.com>
+	<CAE9FiQWCsKwb3aqUQ96x__xwR_+K=k5LzjxWCCS1+xz2Wd5baA@mail.gmail.com>
+Date: Fri, 30 May 2014 15:50:03 -0700
+Message-ID: <CAE9FiQX=YqnB_eW-ejRjH6biyLXJqEUevPrQ+7r6TUbvYq2b8g@mail.gmail.com>
+Subject: Re: [PATCH v4] pciehp: only wait command complete for real hotplug control
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogbGludXgtcGNpLW93bmVyQHZnZXIu
-a2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uDQo+
-QmVoYWxmIE9mIEx1Y2FzIFN0YWNoDQo+U2VudDogV2VkbmVzZGF5LCBNYXkgMTQsIDIwMTQgNDo0
-MiBBTQ0KPlRvOiBQaGlsIEVkd29ydGh5DQo+Q2M6IFRpbSBIYXJ2ZXk7IGxpbnV4LXBjaUB2Z2Vy
-Lmtlcm5lbC5vcmc7IFJpY2hhcmQgWmh1OyBTaGF3biBHdW87IE1vaGl0IEt1bWFyOw0KPlByYXR5
-dXNoIEFuYW5kOyBNYXJlayBWYXN1dDsgQUJSQUhBTSwgS0lTSE9OIFZJSkFZOyBBcm5kIEJlcmdt
-YW5uOyBKaW5nb28gSGFuDQo+U3ViamVjdDogUmU6IFtRXSBTeW5vcHN5cyBQQ0llIGludGVycnVw
-dHMNCj4NCj5IaSBQaGlsLA0KPg0KPnBsZWFzZSBsaW1pdCB5b3VyIGxpbmVzIHRvIGEgcmVhc29u
-YWJsZSBhbW91bnQgb2YgY2hhcmFjdGVycywgdGhhbmtzLg0KPg0KPkFtIE1pdHR3b2NoLCBkZW4g
-MTQuMDUuMjAxNCwgMDg6MTMgKzAwMDAgc2NocmllYiBQaGlsIEVkd29ydGh5Og0KPj4gSGkgVGlt
-LA0KPj4NCj4+IE9uIDE0IE1heSAyMDE0IDA1OjU1LCBUaW0gd3JvdGU6DQo+PiA+IE9uIFR1ZSwg
-TWF5IDEzLCAyMDE0IGF0IDU6NTkgUE0sIEppbmdvbyBIYW4gPGpnMS5oYW5Ac2Ftc3VuZy5jb20+
-DQo+PiA+IHdyb3RlOg0KPj4gPiA+IE9uIFdlZG5lc2RheSwgTWF5IDE0LCAyMDE0IDE6MTQgQU0s
-IFBoaWwgRWR3b3J0aHkgd3JvdGU6DQo+PiA+ID4+DQo+PiA+ID4+IEhpLA0KPj4gPiA+Pg0KPj4g
-PiA+PiBJIGFtIGN1cnJlbnRseSB3cml0aW5nIGFub3RoZXIgZHJpdmVyIHRoYXQgdXNlcyB0aGUg
-U3lub3BzeXMNCj4+ID4gPj4gRGVzaWdud2FyZSBQQ0llIGhvc3QgY29udHJvbGxlciBkcml2ZXIu
-DQo+PiA+ID4+DQo+PiA+ID4+IEluIGdlbmVyYWwsIGl0IGFsbCBsb29rcyBnb29kIHRoYW5rcyB0
-byBhbGwgaW52b2x2ZWQgaW4gdGhpcyBkcml2ZXIuDQo+PiA+ID4+IE9uZSBhcmVhIHRoYXQgSSBh
-bSBoYXZpbmcgYSBsaXR0bGUgcHJvYmxlbSB3aXRoIGlzIHRoZSBpbnRlcnJ1cHRzLg0KPj4gPiA+
-PiAgQWNjb3JkaW5nIHRvIHRoZSBkb2N1bWVudGF0aW9uIEkgaGF2ZSwgdGhlIG1vZHVsZSBoYXMg
-c2VwYXJhdGUNCj4+ID4gPj4gaW50ZXJydXB0cyBmb3IgSU5UQSwgSU5UQiwgSU5UQywgSU5URCwg
-TVNJLCBBRVIsIGJhbmR3aWR0aA0KPj4gPiA+PiBtYW5hZ2VtZW50LCAgUE1FIChhbmQgcG9zc2li
-bHkgYSBjb3VwbGUgb2Ygb3RoZXJzIGFzIHdlbGwpLg0KPj4gPiA+Pg0KPj4gPiA+PiBIb3dldmVy
-LCBzbyBmYXIgaXQgbG9va3MgbGlrZSB0aGUgdXBzdHJlYW0gaW1wbGVtZW50YXRpb25zIGp1c3QN
-Cj4+ID4gPj4gdXNlIGEgc2luZ2xlIGludGVycnVwdCBmb3IgdGhlIG1vZHVsZSwgaXMgdGhhdCBj
-b3JyZWN0PyBJIG5vdGljZQ0KPj4gPiA+PiB0aGF0IHNvbWUgIERUIGJpbmRpbmdzIGluY2x1ZGUg
-b3RoZXIgaW50ZXJydXB0cyB0aGF0IGFyZSBub3QgcGFydA0KPj4gPiA+PiBvZiB0aGUgRGVzaWdu
-d2FyZSBQQ0llIGNvbnRyb2xsZXIsIGJ1dCB0aGF0J3Mgbm90IHdoYXQgSSdtIHRhbGtpbmcgYWJv
-dXQuDQo+PiA+ID4NCj4+ID4gPiAoK2NjIE1vaGl0IEt1bWFyLCBQcmF0eXVzaCBBbmFuZCwgTWFy
-ZWsgVmFzdXQsIEtpc2hvbiBWaWpheSBBYnJhaGFtIEksDQo+PiA+ID4gICAgICAgIEx1Y2FzIFN0
-YWNoLCBUaW0gSGFydmV5LCBBcm5kIEJlcmdtYW5uKQ0KPj4gPiA+DQo+PiA+ID4gUENJZSBJbnRl
-cnJ1cHQgbWFwcGluZyBpcyBzcGVjaWZpYyBmb3IgU29DLg0KPj4gPiA+DQo+PiA+ID4gSW4gdGhl
-IGNhc2Ugb2YgRXh5bm9zLCB0aGVyZSBhcmUgdGhyZWUgaW50ZXJydXB0cyBmb3IgRXh5bm9zIFBD
-SWU7DQo+PiA+ID4gSU5UeCwgTVNJLCBQSFkgTGluaywgcmVzcGVjdGl2ZWx5IGFzIGJlbG93Lg0K
-Pj4gPiA+DQo+PiA+ID4gLi9hcmNoL2FybS9ib290L2R0cy9leHlub3M1NDQwLmR0c2kNCj4+ID4g
-PiAgICAgICAgIGludGVycnVwdHMgPSA8MCAyMCAwPiwgPDAgMjEgMD4sIDwwIDIyIDA+Ow0KPj4g
-PiA+DQo+PiA+ID4gPDAgMjAgMD46IFBDSWUgUkMwIHB1bHNlIGludGVycnVwdCwNCj4+ID4gPiAg
-ICAgICAgICAgICAgSU5UQSwgSU5UQiwgSU5UQyBhbmQgSU5URCwgZXRjDQo+PiA+ID4gPDAgMjEg
-MD46IFBDSWUgUkMwIGxldmVsIGludGVycnVwdCwNCj4+ID4gPiAgICAgICAgICAgICAgTVNJLCBl
-dGMNCj4+ID4gPiA8MCAyMiAwPjogUENJZSBSQzAgc3BlY2lhbCBpbnRlcnJ1cHQsDQo+PiA+ID4g
-ICAgICAgICAgICAgIFBIWSBMaW5rIHJlbGF0ZWQgaW50ZXJydXB0cywgZXRjDQo+PiA+ID4NCj4+
-ID4gPiBTbywgdGhlcmUgYXJlIHRocmVlIGxpbmVzIGJldHdlZW4gR0lDIGFuZCBQQ0llLiBBbHNv
-LCBJUlEgbWFwcGluZ3MNCj4+ID4gPiBmb3Igb3RoZXIgU29DcyBhcmUgZGlmZmVyZW50Lg0KPj4g
-PiA+DQo+PiA+ID4gRm9yIGV4YW1wbGUsIHRoZSBJTVg2IG1hcHMgSU5UQS9CL0MvRCB0byBBUk0g
-R0lDIElSUQ0KPj4gPiA+IDE1NS8xNTQvMTUzLzE1MiByZXNwZWN0aXZlbHkuDQo+PiA+ID4NCj4+
-ID4gPiBUaGVuLCBob3cgbWFueSBsaW5lcyBhcmUgdGhlcmUgYmV0d2VlbiBHSUMgYW5kIFBDSWUg
-aW4geW91ciBTb0M/DQo+PiA+ID4gSG93IGRvZXMgeW91ciBTb0MgbWFwIGludGVycnVwdHMgdG8g
-R0lDPw0KPj4gPiA+DQo+PiA+ID4+DQo+PiA+ID4+IEluIGV4aXN0aW5nIGltcGxlbWVudGF0aW9u
-cywgZG9lcyB0aGUgaGFyZHdhcmUganVzdCBPUiBhbGwgdGhlc2UNCj4+ID4gPj4gaW50ZXJydXB0
-cyB0b2dldGhlcj8NCj4+ID4gPj4NCj4+ID4NCj4+ID4gUGhpbCwNCj4+ID4NCj4+ID4gVGhlcmUg
-aXMgbm90IGp1c3QgYSBzaW5nbGUgaW50ZXJydXB0IGZvciB0aGUgdXBzdHJlYW0gaW1wbGVtZW50
-YXRpb25zLg0KPj4gPiBTZWU6DQo+PiA+IGh0dHA6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4
-L2tlcm5lbC9naXQvdG9ydmFsZHMvbGludXguZ2l0L3RyZWUvDQo+PiA+IGRyaXZlcnMvcGNpLw0K
-Pj4gPiBob3N0L3BjaWUtZGVzaWdud2FyZS5jI243NDINCj4+ID4NCj4+ID4gb2ZfaXJxX3BhcnNl
-X2FuZF9tYXBfcGNpKGRldiwgc2xvdCwgcGluKSBpcyB1c2VkIHRvIHBhcnNlIHRoZQ0KPj4gPiBk
-ZXZpY2UtdHJlZSBpbnRlcnJ1cHQgbWFwIHdoaWNoIGRlZmluZXMgdGhlIG11bHRpcGxlIElSUSdz
-IHRoYXQNCj4+ID4gSmluZ29vIG1lbnRpb25zIGFib3ZlLiBGb3IgSU1YNiB0aGVzZSBhcmUgZGVm
-aW5lZCBpbiB0aGUgaW14NnFkbC5kdHNpIGhlcmU6DQo+PiA+IGh0dHA6Ly9naXQua2VybmVsLm9y
-Zy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvdG9ydmFsZHMvbGludXguZ2l0L3RyZWUvDQo+PiA+IGFy
-Y2gvYXJtL2INCj4+ID4gb290L2R0cy9pbXg2cWRsLmR0c2kjbjE0Ni4NCj4+ID4NCj4+ID4gU28g
-aW4gb3RoZXIgd29yZHMsIGRlcGVuZGluZyBvbiB0aGUgc2xvdCBhbmQgcGluIChlYWNoIGxlZ2Fj
-eSBQQ0kNCj4+ID4gZGV2aWNlIGNhbiBoYXZlIDQgaW50ZXJydXB0IHBpbnMsIElOVEEvQi9DL0Qp
-IHRoZSBpcnEgd291bGQgZ2V0DQo+PiA+IG1hcHBlZCB0byBhIGRpZmZlcmVudCBpbnRlcnJ1cHQu
-IFRoZSBpbnRlcnJ1cHRzIGFyZSBub3QgT1InZCB0b2dldGhlci4NCj4+DQo+PiBJJ3ZlIGp1c3Qg
-aGFkIGEgbG9vayB0aHJvdWdoIEx1Y2FzJyBwYXRjaGVzIGZvciBhZGRpbmcgTVNJIGludGVycnVw
-dHMNCj4+IHRvIGlteDZxZGwuIEZyb20gdGhpcyBpdCBsb29rcyBsaWtlIGlteDZxZGwgaGFzIDQg
-aW50ZXJydXB0cywgb25lIGlzIGENCj4+IGNvbWJpbmVkIGludGVycnVwdCBmb3IgSU5UQSBhbmQg
-TVNJLCBhbmQgdGhlIG90aGVyIHRocmVlIGFyZSBmb3IgSU5UQiwNCj4+IElOVEMsIElOVEQuIElz
-IHRoYXQgY29ycmVjdD8NCj4+DQo+SXQncyB0aGUgb3RoZXIgd2F5IGFyb3VuZDogTVNJIGFuZCBJ
-TlREIHNoYXJlIGEgc2luZ2xlIGlycSBsaW5lLCBidXQgaW4gcHJpbmNpcGxlIHlvdXINCj5kZXNj
-cmlwdGlvbiBpcyBjb3JyZWN0Lg0KPg0KPj4gQXMgSSBtZW50aW9uZWQgcHJldmlvdXNseSwgdGhl
-IFN5bm9wc3lzIERXIFBDSWUgSG9zdCBJUCAob3IgYXQgbGVhc3QNCj4+IHRoZSB2ZXJzaW9uIDQu
-MjFhIHRoYXQgSSBhbSBsb29raW5nIGF0KSBhY3R1YWxseSBvdXRwdXRzIGFsbCBvZiB0aGVzZQ0K
-Pj4gaW50ZXJydXB0cyAoYW5kIG90aGVycyBmb3IgQUVSLCBldGMpIGFzIHNlcGFyYXRlIHNpZ25h
-bHMuIEJvdGggdGhlDQo+PiBFeHlub3MgYW5kIGlteDZxZGwgU29DcyBhcHBlYXIgdG8gY29tYmlu
-ZSBzb21lIG9mIHRoZXNlIGludGVycnVwdHMuDQo+Pg0KPkkgZG9uJ3QgaGF2ZSBhY2Nlc3MgdG8g
-dGhlIHVuZGVybHlpbmcgRFcgSVAgY29yZSBkb2N1bWVudGF0aW9uLCBvbmx5IHRvIGEgaS5NWCBz
-cGVjaWZpYyBvbmUsDQo+c28gSSBvbmx5IGtub3cgYWJvdXQgdGhpcyBzcGVjaWZpYyBpbXBsZW1l
-bnRhdGlvbi4NCj4NCj5pLk1YIGRvZXNuJ3Qgc2VlbSB0byBoYXZlIHRoZSBBRVIgaXJxIHdpcmVk
-IHVwLg0KPg0KPkJlY2F1c2Ugb2YgdGhvc2UgZGlmZmVyZW5jZXMgSSd2ZSBwdXNoZWQgdGhlIGly
-cSBwcm9wZXJ0aWVzIG9mIHRoZSBiaW5kaW5nIGludG8gdGhlIFNvQw0KPnNwZWNpZmljIHBhcnQu
-DQo+SWYgd2UgY2FuIGVudW1lcmF0ZSBhbGwgaXJxIHNpZ25hbHMgZnJvbSB0aGUgRFcgY29yZSB3
-ZSBjb3VsZCBtYXliZSBwdXNoIHRoaXMgc3R1ZmYgYmFjaw0KPmludG8gY29tbW9uIGRvYy9jb2Rl
-LCBidXQgSSdtIG5vdCBzdXJlIGFib3V0IGhvdyB0byBoYW5kbGUgdGhpcyB3aXRob3V0IGJyZWFr
-aW5nIHRoZQ0KPkV4eW5vcyBiaW5kaW5nLiBpLk1YIHdvbid0IGNhcmUgYXMgdGhlIG9ubHkgaXJx
-IGl0IHVzZXMgYmVzaWRlcyB0aGUgbGVnYWN5IGlycXMsIHdoaWNoIGFyZQ0KPm1hcHBlZCB0aHJv
-dWdoIERULCBpcyBub3cgYSBuYW1lZCBpcnEuDQo+DQo+UmVnYXJkcywNCj5MdWNhcw0KPg0KPi0t
-DQo+UGVuZ3V0cm9uaXggZS5LLiAgICAgICAgICAgICB8IEx1Y2FzIFN0YWNoICAgICAgICAgICAg
-ICAgICB8DQo+SW5kdXN0cmlhbCBMaW51eCBTb2x1dGlvbnMgICB8IGh0dHA6Ly93d3cucGVuZ3V0
-cm9uaXguZGUvICB8DQo+DQo+LS0NCj5UbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2Vu
-ZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcGNpIiBpbiB0aGUgYm9keSBvZiBhIG1lc3Nh
-Z2UNCj50byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vIGluZm8gYXQN
-Cj5odHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg0KQlRXLCBJIGFt
-IHdvcmtpbmcgb24gYSBkZXNpZ253YXJlIFBDSUUgZHJpdmVyIGZvciBrZXlzdG9uZSBTb0MgKHYx
-IGlzIG9uIHRoZSBsaXN0DQpub3cgYmVpbmcgcmV2aWV3ZWQpIGFuZCBpdCB1c2VzIGEgb2xkZXIg
-dmVyc2lvbiBvZiB0aGUgSVAgKHYzLjY1KSBhbmQgaGFzIDQNCmRlZGljYXRlZCBJUlFzIGZvciBM
-ZWdhY3ksIDggTVNJIElSUXMgYW5kIDIgbWlzYyAoUE1FLCBFcnJvcikuIEN1cnJlbnRseSBJIGhh
-dmUNCmRlZmluZWQgSVJRcyBwYXJ0IG9mIHRoZSBwbGF0Zm9ybSBkZXZpY2UgYW5kIHVzZWQuIFBs
-ZWFzZSByZXZpZXcgbXkgZHJpdmVyIGFuZA0Kc2VlIGlmIHdlIGNhbiBtb3ZlIHRoaXMgdG8gRFcg
-UENJIGNvcmUuDQoNCg0KTXVyYWxpDQoNCg==
+On Fri, May 30, 2014 at 3:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, May 20, 2014 at 1:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> I don't understand this change.  Why do you test "slot_status &
+>> PCI_EXP_SLTSTA_CC" here?  Did you mean to write this:
+>>
+>>   if (!ctrl->no_cmd_complete && !(slot_status & PCI_EXP_SLTSTA_CC) && ...
+>>
+>> instead?  I think we want to wait if (1) the controller generates Command
+>> Complete events and (2) Slot Status indicates that a command is still in
+>> progress.
+>
+> Yes. your logic is right for those real hotplug event, that means
+> CC is not set, and isr is not called to clear cmd_busy.
+>
+> but it will wait for real or non-real cmd right after non-real hotplug cmd.
+>
+> looks like we need to start one timer for non-real hotplug to clear cmd_busy?
+
+That looks make it too complicated.
+
+I would revert back to first way
+   change to only wait when (EIC, PCC, PIC, AIC) bits get changed.
+and add one flag in ctrl to see if need to apply the rule.
+
+Thanks
+
+Yinghai
