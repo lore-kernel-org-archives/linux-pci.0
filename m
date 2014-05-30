@@ -1,50 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: James Bottomley <jbottomley@parallels.com>
-To: "arnd@arndb.de" <arnd@arndb.de>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"rdunlap@infradead.org" <rdunlap@infradead.org>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
-Subject: Re: [PATCH v3 1/4] DMA-API: Clarify physical/bus address distinction
-Date: Fri, 9 May 2014 14:09:31 +0000
-Message-ID: <1399644571.2166.1.camel@dabdike.int.hansenpartnership.com>
-References: <20140508204257.17877.4639.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	 <20140508204854.17877.59304.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	 <119388463.n2RtThRsle@wuerfel>
-In-Reply-To: <119388463.n2RtThRsle@wuerfel>
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:35617 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775AbaE3CmS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 22:42:18 -0400
+Message-ID: <5387EFFE.8020707@huawei.com>
+Date: Fri, 30 May 2014 10:42:06 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 1/3] PCI: remove the unnecssary checking for pci_bus_add_device
+References: <1401346866-11648-1-git-send-email-wangyijing@huawei.com> <1401346866-11648-2-git-send-email-wangyijing@huawei.com> <20140530020751.GA4607@google.com>
+In-Reply-To: <20140530020751.GA4607@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-05-09 at 08:12 +0200, Arnd Bergmann wrote:
-> On Thursday 08 May 2014 14:48:54 Bjorn Helgaas wrote:
-> > The DMA-API documentation sometimes refers to "physical addresses" when it
-> > really means "bus addresses."  Sometimes these are identical, but they may
-> > be different if the bridge leading to the bus performs address translation.
-> > Update the documentation to use "bus address" when appropriate.
-> > 
-> > Also, consistently capitalize "DMA", use parens with function names, use
-> > dev_printk() in examples, and reword a few sections for clarity.
-> > 
-> > No functional change; documentation changes only.
-> > 
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On 2014/5/30 10:07, Bjorn Helgaas wrote:
+> On Thu, May 29, 2014 at 03:01:04PM +0800, Yijing Wang wrote:
+>> Kernel will WARN_ON(retval < 0) if device_attach() fail with
+>> error in pci_bus_add_device(). currently, all the kernel code
+>> to check pci_bus_add_device() return value only for printing
+>> warning message, no other actions. So we can remove the
+>> unnecessary checking codes.
 > 
-> Looks great!
+> If we remove all the checks of the return value, why wouldn't we convert it
+> to a void function?  If we keep the return value, it seems like we're
+> saying "this function could fail someday," but we removing all the code
+> that would actually *check* for that failure.
 > 
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
+> If you convert it to void, please just squash them all into a single patch.
 
-Yes, from me too (probably only patches 1-2, since that's only what I
-directly wrote originally); thanks for listening to the arguments and
-persevering.
+Hi Bjorn,
+   I didn't convert it to void because the device_attach() has a __must_check prefix
+which need a retval to avoid compiler warning. But as you mentioned, maybe this will
+make people confuse. I will rework it and squash them into a single one.
 
-Acked-by: James Bottomley <jbottomley@Parallels.com>
+Thanks!
+Yijing.
 
-James
+> 
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/bus.c   |    6 +-----
+>>  drivers/pci/iov.c   |    2 +-
+>>  include/linux/pci.h |    2 +-
+>>  3 files changed, 3 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>> index ba2bf55..f0efbee 100644
+>> --- a/drivers/pci/bus.c
+>> +++ b/drivers/pci/bus.c
+>> @@ -266,16 +266,12 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+>>  {
+>>  	struct pci_dev *dev;
+>>  	struct pci_bus *child;
+>> -	int retval;
+>>  
+>>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>>  		/* Skip already-added devices */
+>>  		if (dev->is_added)
+>>  			continue;
+>> -		retval = pci_bus_add_device(dev);
+>> -		if (retval)
+>> -			dev_err(&dev->dev, "Error adding device (%d)\n",
+>> -				retval);
+>> +		pci_bus_add_device(dev);
+>>  	}
+>>  
+>>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index de7a747..cb6f247 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -106,7 +106,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>>  	pci_device_add(virtfn, virtfn->bus);
+>>  	mutex_unlock(&iov->dev->sriov->lock);
+>>  
+>> -	rc = pci_bus_add_device(virtfn);
+>> +	pci_bus_add_device(virtfn);
+>>  	sprintf(buf, "virtfn%u", id);
+>>  	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+>>  	if (rc)
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 65f22e8..3c4c0cf 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -781,7 +781,7 @@ int pci_scan_slot(struct pci_bus *bus, int devfn);
+>>  struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
+>>  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
+>>  unsigned int pci_scan_child_bus(struct pci_bus *bus);
+>> -int __must_check pci_bus_add_device(struct pci_dev *dev);
+>> +int pci_bus_add_device(struct pci_dev *dev);
+>>  void pci_read_bridge_bases(struct pci_bus *child);
+>>  struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+>>  					  struct resource *res);
+>> -- 
+>> 1.7.1
+>>
+>>
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
 
