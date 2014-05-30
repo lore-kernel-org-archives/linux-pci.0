@@ -1,63 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:39074 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751721AbaEIHLW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 May 2014 03:11:22 -0400
+Received: from mail.skyhub.de ([78.46.96.112]:35632 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934492AbaE3WVS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 30 May 2014 18:21:18 -0400
+Date: Sat, 31 May 2014 00:21:08 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Doug Thompson <dougthompson@xmission.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-edac@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI, EDAC: fix ordering assign resource and bus_add
+Message-ID: <20140530222108.GN28131@pd.tnic>
+References: <1367969371-27414-1-git-send-email-yinghai@kernel.org>
+ <20140530170103.GE4607@google.com>
+ <20140530214643.GL28131@pd.tnic>
+ <CAErSpo4kQViCtaG9Fs_Amyr0pp96fsmdX2puJueK6Jf_XXdm1Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4527717.yJh2gX3xCP@wuerfel>
-References: <4527717.yJh2gX3xCP@wuerfel>
-Date: Fri, 9 May 2014 09:11:21 +0200
-Message-ID: <CAMuHMdVn3UTKymxq3uqXbNVjkBhuSWzSG5GzhXWW89ceviLYzA@mail.gmail.com>
-Subject: Re: [PATCH] of/irq: provide int of_irq_parse_and_map_pci wrapper
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <damm@opensource.se>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAErSpo4kQViCtaG9Fs_Amyr0pp96fsmdX2puJueK6Jf_XXdm1Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 9, 2014 at 8:58 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> The pci-rcar driver is enabled for compile tests, and this has
-> now shown that the driver cannot build without CONFIG_OF,
-> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
-> interrupt mapping when possible":
->
-> drivers/built-in.o: In function `rcar_pci_map_irq':
-> :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
->
-> As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
-> supposed to build fine, which we can achieve if we make the
-> declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
-> and provide an empty inline function otherwise, as we do for
-> a lot of other of interfaces.
->
-> This lets us build the rcar_pci driver again without CONFIG_OF,
-> which won't work but give us compile time coverage.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Magnus Damm <damm@opensource.se>
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: Ben Dooks <ben.dooks@codethink.co.uk>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-sh@vger.kernel.org
+On Fri, May 30, 2014 at 04:00:17PM -0600, Bjorn Helgaas wrote:
+> Thanks, I should have waited for you. I was assuming the merge window
+> would open on Monday, and I hoped for a day or two in -next, but now
+> it sounds like we might have an -rc8, so I needn't have been in such a
+> hurry.
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Bah, no worries. :-) The patch is simple enough and is requiring your
+expertise so I wouldnt've said anything, except I wanted to ask about
+that pci_bus* functions ordering situation, so... :-)
 
-Gr{oetje,eeting}s,
+> Yeah, this is really a mess.  The pci_bus_*() functions (at least
+> pci_bus_add_device() and pci_bus_assign_resources()) are not really
+> intended to be called by drivers at all -- they should only be used by
+> the arch code that drives PCI enumeration.  Eventually I'd like to
+> even move them out of the arch code and into the PCI core.
 
-                        Geert
+Ah, ok. pci_bus_add_device is called also in some x86 platform drivers,
+except the pci core itself, so yeah, it looks like you're trying to hide
+it. :)
 
+> In this i82875p case, it looks like this is basically a quirk that
+> unhides a device.  I think it's sort of dubious to poke at things the
+> BIOS has explicitly hidden from the OS, but apart from that, if we
+> turned this into an actual DECLARE_PCI_FIXUP_CLASS_EARLY() quirk on
+> the 82875_0 device, I think the normal PCI enumeration process would
+> find the 82875_6 device, and we could get rid of the whole "if (dev ==
+> NULL)" chunk.
+
+Yeah, I don't think that's worth it - this driver is probably ancient
+now, if I trust this:
+
+http://ark.intel.com/products/27711/Intel-82875P-Memory-Controller
+
+Launch Date: Q1'02 - that's a century ago in HW years. :-P
+
+I guess we can leave it at that - even if we did a quirk, I'm at a loss
+as to where or who could test it. :-)
+
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
 --
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
