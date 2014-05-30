@@ -1,183 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v3 07/15] PCI: Consolidate isolation domain code
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, linux@horizon.com
-Date: Sat, 10 May 2014 09:03:05 -0600
-Message-ID: <20140510150305.2997.53429.stgit@bling.home>
-In-Reply-To: <20140510145619.2997.429.stgit@bling.home>
-References: <20140510145619.2997.429.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:42742 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934345AbaE3X2S (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 19:28:18 -0400
+Received: by mail-ig0-f170.google.com with SMTP id uy17so1379011igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 30 May 2014 16:28:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1401491219-1496-1-git-send-email-yinghai@kernel.org>
+References: <1401491219-1496-1-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 30 May 2014 17:27:57 -0600
+Message-ID: <CAErSpo64Xdnn-Y5UyA3dzR_8eprn-gyMaX9ydogd-mBajP-uew@mail.gmail.com>
+Subject: Re: [PATCH v5] pciehp: only wait command complete for really hotplug control
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each of the IOMMU drivers supporting IOMMU groups has their own
-implementation of an algorithm to find the base device for an IOMMU
-group.  This N:1 function takes into account visibility of a PCI
-device on the bus using DMA aliases, as well as the isolation of
-devices using ACS.  Since these are all generic PCI properties,
-provide this helper in PCI code to create a single, standard
-implementation.
+On Fri, May 30, 2014 at 5:06 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On system with 16 PCI express hotplug slots, customer complain every slot
+> will report "Command not completed in 1000 msec" during initialization.
+>
+> Intel says that we should only wait command complete only for
+>            Electromechanical Interlock Control
+>            Power Controller Control
+>            Power Indicator Control
+>            Attention Indicator Control
+>
+> For detail please check CF118 on
+>   http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
+>
+> To address the problem:
+> change to only wait when (EIC, PCC, PIC, AIC) bits get changed.
+>
+> With that we could save 16 seconds during booting, later with 32 sockets system
+> with 64 pcie hotplug slots we could save 64 seconds.
+>
+> -v5: only add checking for intel chipset.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> ---
+>  drivers/pci/hotplug/pciehp.h     |    1 +
+>  drivers/pci/hotplug/pciehp_hpc.c |   25 ++++++++++++++++++++-----
+>  2 files changed, 21 insertions(+), 5 deletions(-)
+>
+> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
+> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -143,6 +143,11 @@ static void pcie_wait_cmd(struct control
+>                 ctrl_dbg(ctrl, "Command not completed in 1000 msec\n");
+>  }
+>
+> +/* Some vendors only set CC for real hotplug events */
+> +#define  PCI_EXP_SLTCTL_REAL_WAIT_MASK (PCI_EXP_SLTCTL_EIC | \
+> +                                       PCI_EXP_SLTCTL_PCC | \
+> +                                       PCI_EXP_SLTCTL_PIC | \
+> +                                       PCI_EXP_SLTCTL_AIC)
+>  /**
+>   * pcie_write_cmd - Issue controller command
+>   * @ctrl: controller to which the command is issued
+> @@ -152,8 +157,9 @@ static void pcie_wait_cmd(struct control
+>  static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+>  {
+>         struct pci_dev *pdev = ctrl_dev(ctrl);
+> +       u16 slot_ctrl, old_slot_ctrl;
+>         u16 slot_status;
+> -       u16 slot_ctrl;
+> +       int wait = 1;
+>
+>         mutex_lock(&ctrl->ctrl_lock);
+>
+> @@ -181,9 +187,8 @@ static void pcie_write_cmd(struct contro
+>                 }
+>         }
+>
+> -       pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+> -       slot_ctrl &= ~mask;
+> -       slot_ctrl |= (cmd & mask);
+> +       pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &old_slot_ctrl);
+> +       slot_ctrl = (old_slot_ctrl & ~mask) | (cmd & mask);
+>         ctrl->cmd_busy = 1;
+>         smp_mb();
+>         pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
+> @@ -191,7 +196,13 @@ static void pcie_write_cmd(struct contro
+>         /*
+>          * Wait for command completion.
+>          */
+> -       if (!ctrl->no_cmd_complete) {
+> +       if (ctrl->no_cmd_complete)
+> +               wait = 0;
+> +       else if (ctrl->real_cmd_complete &&
+> +                ((PCI_EXP_SLTCTL_REAL_WAIT_MASK & old_slot_ctrl) ==
+> +                 (PCI_EXP_SLTCTL_REAL_WAIT_MASK & slot_ctrl)))
+> +               wait = 0;
+> +       if (wait) {
+>                 int poll = 0;
+>                 /*
+>                  * if hotplug interrupt is not enabled or command
+> @@ -783,6 +794,10 @@ struct controller *pcie_init(struct pcie
+>             !(POWER_CTRL(ctrl) | ATTN_LED(ctrl) | PWR_LED(ctrl) | EMI(ctrl)))
+>             ctrl->no_cmd_complete = 1;
+>
+> +       /* Intel current only support "real" hotplug event with CC */
+> +       if (pdev->vendor == PCI_VENDOR_ID_INTEL)
+> +               ctrl->real_cmd_complete = 1;
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/search.c |  130 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |    1 
- 2 files changed, 131 insertions(+)
+Do you have information that says this Intel erratum will never be
+fixed, even in future hardware?  If it ever is fixed, this code will
+stop working.
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index dab4561..aea2443 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -115,6 +115,136 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- }
- 
- /*
-+ * last_dma_alias_dev - Isolation root helper to record the last DMA alias pdev
-+ */
-+static int last_dma_alias_dev(struct pci_dev *pdev, u16 alias, void *data)
-+{
-+	*(struct pci_dev **)data = pdev;
-+	return 0;
-+}
-+
-+/*
-+ * To consider a device isolated, we require ACS to support Source Validation,
-+ * Request Redirection, Completer Redirection, and Upstream Forwarding.  This
-+ * effectively means that devices cannot spoof their requester ID, requests
-+ * and commpletions cannot be redirected, and all transactions are forwarded
-+ * upstream, even as it passes through a bridge where the target device is
-+ * downstream.
-+ */
-+#define REQ_ACS_FLAGS   (PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
-+
-+/*
-+ * pci_find_dma_isolation_root - Given a PCI device, find the root device for
-+ *				 an isolation domain.
-+ * @pdev: target device
-+ *
-+ * This function takes DMA alias quirks, bus topology, and PCI ACS into
-+ * account to find the root device for an isolation domain.  The root device
-+ * is a consistent and representative device within the isolation domain.
-+ * Passing any device within a given isolation domain results in the same
-+ * returned root device, allowing this root device to be used for lookup
-+ * for structures like IOMMU groups.  Note that the root device is not
-+ * necessarily a bridge, in the case of a multifunction device without
-+ * DMA isolation between functions, the root device is the lowest function
-+ * without isolation.
-+ */
-+struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev)
-+{
-+	struct pci_bus *bus;
-+
-+	/*
-+	 * Step 1: Find the upstream DMA alias device
-+	 *
-+	 * A device can be aliased by bridges or DMA alias quirks.  Being able
-+	 * to differentiate devices is a minimum requirement for isolation.
-+	 */
-+	pci_for_each_dma_alias(pdev, &last_dma_alias_dev, &pdev);
-+
-+	/*
-+	 * Step 2: Find the upstream ACS device
-+	 *
-+	 * Beyond differentiation, ACS prevents uncontrolled peer-to-peer
-+	 * transactions.  Therefore the next step is to find the upstream
-+	 * ACS device.
-+	 */
-+	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
-+		if (!bus->self)
-+			continue;
-+
-+		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
-+			break;
-+
-+		pdev = bus->self;
-+	}
-+
-+	/*
-+	 * Step 3: Handle DMA function aliases
-+	 *
-+	 * PCI functions are sometimes broken and use the wrong requester
-+	 * ID for DMA transactions.  The requester ID for this device may
-+	 * actually be used by another function in this slot.  If such a
-+	 * function exists, use it.
-+	 */
-+	if (pdev->multifunction) {
-+		u8 func, func_mask = 1 << PCI_FUNC(pdev->devfn);
-+
-+		for (func = 0; func < 8; func++) {
-+			struct pci_dev *tmp;
-+
-+			if (func == PCI_FUNC(pdev->devfn))
-+				continue;
-+
-+			tmp = pci_get_slot(pdev->bus,
-+					   PCI_DEVFN(PCI_SLOT(pdev->devfn),
-+						     func));
-+			if (!tmp)
-+				continue;
-+
-+			pci_dev_put(tmp);
-+			/*
-+			 * If this device has a DMA alias to us, it becomes
-+			 * the base device regardless of ACS.
-+			 */
-+			if (tmp->dma_func_alias & func_mask) {
-+				pdev = tmp;
-+				break;
-+			}
-+		}
-+	}
-+
-+	/*
-+	 * Step 4: Handle multifunction ACS
-+	 *
-+	 * If the resulting device is multifunction and does not itself
-+	 * support ACS then we cannot assume isolation between functions.
-+	 * The root device needs to be consistent, therefore we return the
-+	 * lowest numbered function that also lacks ACS support.
-+	 */
-+	if (pdev->multifunction && !pci_acs_enabled(pdev, REQ_ACS_FLAGS)) {
-+		u8 func;
-+
-+		for (func = 0; func < PCI_FUNC(pdev->devfn); func++) {
-+			struct pci_dev *tmp;
-+
-+			tmp = pci_get_slot(pdev->bus,
-+					   PCI_DEVFN(PCI_SLOT(pdev->devfn),
-+						     func));
-+			if (!tmp)
-+				continue;
-+
-+			pci_dev_put(tmp);
-+
-+			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
-+				pdev = tmp;
-+				break;
-+			}
-+		}
-+	}
-+
-+	return pdev;
-+}
-+
-+/*
-  * find the upstream PCIe-to-PCI bridge of a PCI device
-  * if the device is PCIE, return NULL
-  * if the device isn't connected to a PCIe bridge (that is its parent is a
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 31d9a90..5096031 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1802,6 +1802,7 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
- int pci_for_each_dma_alias(struct pci_dev *pdev,
- 			   int (*fn)(struct pci_dev *pdev,
- 				     u16 alias, void *data), void *data);
-+struct pci_dev *pci_find_dma_isolation_root(struct pci_dev *pdev);
- 
- /**
-  * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+And of course, this only helps Intel hardware, and you said the AMD
+and Nvidia have similar issues.  If we're going to make a change here,
+we should try to deal with all of this hardware.
 
+I'd like to know what happens if you use the v4 patch but just change
+the test to:
+
+  if (!ctrl->no_cmd_complete && !(slot_status & PCI_EXP_SLTSTA_CC) && ...
+
+I think that should fix the boot delay.  I think there will still be a
+timeout when the first "real" hotplug operation happens, but that's a
+rare event with a human involved, so I doubt it's a big problem.  And
+if it is a problem, I suggested a simple way to deal with it.
+
+Bjorn
+
+>          /* Check if Data Link Layer Link Active Reporting is implemented */
+>          pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
+>          if (link_cap & PCI_EXP_LNKCAP_DLLLARC) {
+> Index: linux-2.6/drivers/pci/hotplug/pciehp.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/hotplug/pciehp.h
+> +++ linux-2.6/drivers/pci/hotplug/pciehp.h
+> @@ -97,6 +97,7 @@ struct controller {
+>         unsigned int no_cmd_complete:1;
+>         unsigned int link_active_reporting:1;
+>         unsigned int notification_enabled:1;
+> +       unsigned int real_cmd_complete:1;
+>         unsigned int power_fault_detected;
+>  };
+>
