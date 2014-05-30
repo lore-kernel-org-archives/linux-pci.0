@@ -1,59 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:41820 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751291AbaETDps (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 May 2014 23:45:48 -0400
-Received: by mail-ie0-f177.google.com with SMTP id y20so3391776ier.8
-        for <linux-pci@vger.kernel.org>; Mon, 19 May 2014 20:45:47 -0700 (PDT)
-Subject: [PATCH v10 0/4] PCI: Restrict 64-bit prefetchable bridge windows to
- 64-bit resources
-To: Yinghai Lu <yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: talal@mellanox.com, Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	amirv@mellanox.com, eugenia@mellanox.com,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>
-Date: Mon, 19 May 2014 21:45:45 -0600
-Message-ID: <20140520033233.11972.49094.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <1397752819-17326-1-git-send-email-yinghai@kernel.org>
-References: <1397752819-17326-1-git-send-email-yinghai@kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:50864 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755135AbaE3OP4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 10:15:56 -0400
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
+	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tony@atomide.com" <tony@atomide.com>,
+	"jg1.han@samsung.com" <jg1.han@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>, "Marek Vasut" <marex@denx.de>
+Subject: RE: [PATCH v2 03/18] PCI: designware: Configuration space should be
+ specified in 'reg'
+Date: Fri, 30 May 2014 14:15:13 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B70477D2A4@DFLE11.ent.ti.com>
+References: <1401345500-20188-1-git-send-email-kishon@ti.com>
+ <1401345500-20188-4-git-send-email-kishon@ti.com> <53876116.90504@ti.com>
+In-Reply-To: <53876116.90504@ti.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'd like to merge these for v3.16.  The first is Yinghai's v9 patch
-unchanged except to resolve minor merge conflicts, write a changelog, and
-fold in the mem64_mask removal posted previously as [1].
+>-----Original Message-----
+>From: Murali Karicheri [mailto:m-karicheri2@ti.com]
+>Sent: Thursday, May 29, 2014 12:32 PM
+>To: ABRAHAM, KISHON VIJAY
+>Cc: devicetree@vger.kernel.org; linux-doc@vger.kernel.org; linux-arm-
+>kernel@lists.infradead.org; linux-omap@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+>kernel@vger.kernel.org; arnd@arndb.de; tony@atomide.com; jg1.han@samsung.com;
+>Jason Gunthorpe; Bjorn Helgaas; Mohit Kumar; Marek Vasut
+>Subject: Re: [PATCH v2 03/18] PCI: designware: Configuration space should be specified
+>in 'reg'
+>
+>On 5/29/2014 2:38 AM, ABRAHAM, KISHON VIJAY wrote:
+>> The configuration address space has so far been specified in *ranges*,
+>> however it should be specified in *reg* making it a platform MEM resource.
+>> Hence used 'platform_get_resource_*' API to get configuration address
+>> space in the designware driver.
+>>
+>> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Mohit Kumar <mohit.kumar@st.com>
+>> Cc: Jingoo Han <jg1.han@samsung.com>
+>> Cc: Marek Vasut <marex@denx.de>
+>> Cc: Arnd Bergmann <arnd@arndb.de>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>   .../devicetree/bindings/pci/designware-pcie.txt    |    1 +
+>>   drivers/pci/host/pcie-designware.c                 |   17 +++++++++++++++--
+>>   2 files changed, 16 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>> b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>> index d6fae13..8314360 100644
+>> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>> @@ -6,6 +6,7 @@ Required properties:
+>>   	as "samsung,exynos5440-pcie" or "fsl,imx6q-pcie".
+>>   - reg: base addresses and lengths of the pcie controller,
+>>   	the phy controller, additional register for the phy controller.
+>> +	The configuration address space should also be specified here.
+>Kishon,
+>
+>I am working on the Keystone PCI driver for which v1 is already posted.
+>Want to clarify
+>following.
+>1. Original text for reg states "base addresses and lengths of the pcie controller,
+>         the phy controller, additional register for the phy controller"
+>and you added
+>         "The configuration address space should also be specified here"
+>
+>    and the code below added resource name "config"
+>
+>Does PCI designware follow some convention? Does it mean after applying this patch
+>config name is mandatory or optional? Below code you are not returning error. Can you or
+>author of PCI designware clarify what is expected to be present as mandatory and what is
+>optional.
+>
+>Does config refers to RC's config space or EP's config space or both?
+>The code below divide
+>the size by 2. So it appears to be RC's + EP's config space. Please clarify.
+>
+>>   - interrupts: interrupt values for level interrupt,
+>>   	pulse interrupt, special interrupt.
+>>   - clocks: from common clock binding: handle to pci clock.
+>> diff --git a/drivers/pci/host/pcie-designware.c
+>> b/drivers/pci/host/pcie-designware.c
+>> index c4e3732..603b386 100644
+>> --- a/drivers/pci/host/pcie-designware.c
+>> +++ b/drivers/pci/host/pcie-designware.c
+>> @@ -20,6 +20,7 @@
+>>   #include <linux/of_pci.h>
+>>   #include <linux/pci.h>
+>>   #include <linux/pci_regs.h>
+>> +#include <linux/platform_device.h>
+>>   #include <linux/types.h>
+>>
+>>   #include "pcie-designware.h"
+>> @@ -392,11 +393,23 @@ static const struct irq_domain_ops msi_domain_ops = {
+>>   int __init dw_pcie_host_init(struct pcie_port *pp)
+>>   {
+>>   	struct device_node *np = pp->dev->of_node;
+>> +	struct platform_device *pdev = to_platform_device(pp->dev);
+>>   	struct of_pci_range range;
+>>   	struct of_pci_range_parser parser;
+>> +	struct resource *cfg_res;
+>>   	u32 val;
+>>   	int i;
+>>
+>> +	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+>> +	if (cfg_res) {
+>> +		pp->config.cfg0_size = resource_size(cfg_res)/2;
+>> +		pp->config.cfg1_size = resource_size(cfg_res)/2;
+>> +		pp->cfg0_base = cfg_res->start;
+>> +		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
+>> +	} else {
+>> +		dev_err(pp->dev, "missing *config* reg space\n");
+>This should return error -EINVAL.
+>
+>> +	}
+>> +
+>>   	if (of_pci_range_parser_init(&parser, np)) {
+>>   		dev_err(pp->dev, "missing ranges property\n");
+>>   		return -EINVAL;
+>> @@ -429,6 +442,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>>   			of_pci_range_to_resource(&range, np, &pp->cfg);
+>>   			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
+>>   			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
+>> +			pp->cfg0_base = pp->cfg.start;
+>> +			pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+>>   		}
+>>   	}
+>>
+>> @@ -441,8 +456,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>>   		}
+>>   	}
+>>
+>> -	pp->cfg0_base = pp->cfg.start;
+>> -	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+>>   	pp->mem_base = pp->mem.start;
+>>
+>>   	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+>BTW, Please also review my Keystone series so that we could discuss this topic in that
+>context as well.
 
-The rest are cleanups and comment changes to try to make the code more
-readable.
-
-This does fix a real bug -- in some cases we can't assign space to large
-64-bit BARs even though there is plenty of 64-bit space available.  But I
-am concerned that we are giving up performance in some cases (32-bit
-prefetchable resources below a bridge with a 64-bit prefetchable window
-will no longer be prefetchable).  With some additional work, it should be
-possible to get that performance back.
-
-Comments welcome.
-
-[1] http://lkml.kernel.org/r/CAE9FiQUKYMPvXLsk84o-gH-j0-wiJGL0Wt1aTW2o4FPSm0PvbQ@mail.gmail.com
-
----
-
-Bjorn Helgaas (3):
-      PCI: Change pbus_size_mem() return values to be more conventional
-      PCI: Simplify __pci_assign_resource() coding style
-      PCI: Add resource allocation comments
-
-Yinghai Lu (1):
-      PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources
-
-
- drivers/pci/setup-bus.c |  207 +++++++++++++++++++++++++++++++++--------------
- drivers/pci/setup-res.c |   41 +++++++--
- 2 files changed, 176 insertions(+), 72 deletions(-)
