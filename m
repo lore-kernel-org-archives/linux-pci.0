@@ -1,170 +1,80 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+MIME-Version: 1.0
+In-Reply-To: <20140530005602.GE1677@bart.dudau.co.uk>
+References: <1401379426-9701-1-git-send-email-galak@codeaurora.org>
+ <CAL_JsqLPFDwtd-QYDqCwx1JVj1Aa8=nof-e0P6R9CZra+fXHfw@mail.gmail.com>
+ <47B1E3D0-4336-4529-80B0-172F4ACA5C97@codeaurora.org> <20140530005602.GE1677@bart.dudau.co.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 29 May 2014 19:29:31 -0600
+Message-ID: <CAErSpo7qEhJyUAu58R8g6+AEhRGo_+Vv0EMgkK+3ZQOU9+jmhg@mail.gmail.com>
+Subject: Re: [PATCH] of: treat PCI config space as IORESOURCE_MEM type
+To: Kumar Gala <galak@codeaurora.org>,
+	Rob Herring <robherring2@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 10/21] iommu/vt-d: simplify intel_unmap_sg() and kill duplicated code
-Date: Tue,  6 May 2014 15:05:21 +0800
-Message-Id: <1399359932-28972-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce intel_unmap() to reduce duplicated code in intel_unmap_sg()
-and intel_unmap_page().
+On Thu, May 29, 2014 at 6:56 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+> On Thu, May 29, 2014 at 03:51:28PM -0500, Kumar Gala wrote:
+>>
+>> On May 29, 2014, at 3:44 PM, Rob Herring <robherring2@gmail.com> wrote:
+>>
+>> > On Thu, May 29, 2014 at 11:03 AM, Kumar Gala <galak@codeaurora.org> wrote:
+>> >> If we have a PCI config space specified in something like a ranges
+>> >> property we should treat it as memory type resource.
+>> >
+>> > Config space should not be in ranges[1]. We have some cases that are,
+>> > but we don't want new ones.
+>>
+>> For the cases we have I agree, however an ECAM based cfg seems completely legit.
+>>
+>> >> Signed-off-by: Kumar Gala <galak@codeaurora.org>
+>> >> ---
+>> >> drivers/of/address.c | 3 +++
+>> >> 1 file changed, 3 insertions(+)
+>> >>
+>> >> diff --git a/drivers/of/address.c b/drivers/of/address.c
+>> >> index cb4242a..4e7ee59 100644
+>> >> --- a/drivers/of/address.c
+>> >> +++ b/drivers/of/address.c
+>> >> @@ -122,6 +122,9 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
+>> >>        u32 w = be32_to_cpup(addr);
+>> >>
+>> >>        switch((w >> 24) & 0x03) {
+>> >> +       case 0x00: /* cfg space */
+>> >> +               flags |= IORESOURCE_MEM;
+>> >> +               break;
+>> >
+>> > How would you then distinguish actual memory ranges?
+>>
+>> One assumes you are still looking at pci_space as part of of_pci_range
+>
+> That doesn't happen when you start scanning the bus. The existing code will
+> use the IORESOURCE_MEM for allocating memory space for devices, which is
+> not what you want. Did you test your patch on any PCI system? I'm pretty
+> sure that with my patch series that tries to make a generic framework for
+> host controllers this will fail.
+>
+> We really need a IORESOURCE_CFG flag for this space.
 
-Also let dma_pte_free_pagetable() to call dma_pte_clear_range() directly,
-so caller only needs to call dma_pte_free_pagetable().
+Maybe, but I'm not convinced yet.  The existing IORESOURCE_TYPE_BITS
+types are for things that are mutually exclusive address spaces.  I
+think this discussion is about ECAM, where the CPU side is definitely
+in the same address space (IORESOURCE_MEM) as RAM, APICs, host bridge
+apertures, device MMIO, etc.  The ECAM area must appear in the
+iomem_resource tree so we avoid it when allocating other areas.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   77 +++++++++++--------------------------------
- 1 file changed, 20 insertions(+), 57 deletions(-)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 75d7c5e3f77d..cf083c8a223e 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -986,6 +986,8 @@ static void dma_pte_free_pagetable(struct dmar_domain *domain,
- 	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
- 	BUG_ON(start_pfn > last_pfn);
- 
-+	dma_pte_clear_range(domain, start_pfn, last_pfn);
-+
- 	/* We don't need lock here; nobody else touches the iova range */
- 	dma_pte_free_level(domain, agaw_to_level(domain->agaw),
- 			   domain->pgd, 0, start_pfn, last_pfn);
-@@ -2030,12 +2032,14 @@ static int __domain_mapping(struct dmar_domain *domain, unsigned long iov_pfn,
- 			/* It is large page*/
- 			if (largepage_lvl > 1) {
- 				pteval |= DMA_PTE_LARGE_PAGE;
--				/* Ensure that old small page tables are removed to make room
--				   for superpage, if they exist. */
--				dma_pte_clear_range(domain, iov_pfn,
--						    iov_pfn + lvl_to_nr_pages(largepage_lvl) - 1);
-+				lvl_pages = lvl_to_nr_pages(largepage_lvl);
-+				/*
-+				 * Ensure that old small page tables are
-+				 * removed to make room for superpage,
-+				 * if they exist.
-+				 */
- 				dma_pte_free_pagetable(domain, iov_pfn,
--						       iov_pfn + lvl_to_nr_pages(largepage_lvl) - 1);
-+						       iov_pfn + lvl_pages - 1);
- 			} else {
- 				pteval &= ~(uint64_t)DMA_PTE_LARGE_PAGE;
- 			}
-@@ -3163,9 +3167,7 @@ static void add_unmap(struct dmar_domain *dom, struct iova *iova, struct page *f
- 	spin_unlock_irqrestore(&async_umap_flush_lock, flags);
- }
- 
--static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
--			     size_t size, enum dma_data_direction dir,
--			     struct dma_attrs *attrs)
-+static void intel_unmap(struct device *dev, dma_addr_t dev_addr)
- {
- 	struct dmar_domain *domain;
- 	unsigned long start_pfn, last_pfn;
-@@ -3209,6 +3211,13 @@ static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
- 	}
- }
- 
-+static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
-+			     size_t size, enum dma_data_direction dir,
-+			     struct dma_attrs *attrs)
-+{
-+	intel_unmap(dev, dev_addr);
-+}
-+
- static void *intel_alloc_coherent(struct device *dev, size_t size,
- 				  dma_addr_t *dma_handle, gfp_t flags,
- 				  struct dma_attrs *attrs)
-@@ -3245,56 +3254,15 @@ static void *intel_alloc_coherent(struct device *dev, size_t size,
- static void intel_free_coherent(struct device *dev, size_t size, void *vaddr,
- 				dma_addr_t dma_handle, struct dma_attrs *attrs)
- {
--	int order;
--
--	size = PAGE_ALIGN(size);
--	order = get_order(size);
--
--	intel_unmap_page(dev, dma_handle, size, DMA_BIDIRECTIONAL, NULL);
--	free_pages((unsigned long)vaddr, order);
-+	intel_unmap(dev, dma_handle);
-+	free_pages((unsigned long)vaddr, get_order(PAGE_ALIGN(size)));
- }
- 
- static void intel_unmap_sg(struct device *dev, struct scatterlist *sglist,
- 			   int nelems, enum dma_data_direction dir,
- 			   struct dma_attrs *attrs)
- {
--	struct dmar_domain *domain;
--	unsigned long start_pfn, last_pfn;
--	struct iova *iova;
--	struct intel_iommu *iommu;
--	struct page *freelist;
--
--	if (iommu_no_mapping(dev))
--		return;
--
--	domain = find_domain(dev);
--	BUG_ON(!domain);
--
--	iommu = domain_get_iommu(domain);
--
--	iova = find_iova(&domain->iovad, IOVA_PFN(sglist[0].dma_address));
--	if (WARN_ONCE(!iova, "Driver unmaps unmatched sglist at PFN %llx\n",
--		      (unsigned long long)sglist[0].dma_address))
--		return;
--
--	start_pfn = mm_to_dma_pfn(iova->pfn_lo);
--	last_pfn = mm_to_dma_pfn(iova->pfn_hi + 1) - 1;
--
--	freelist = domain_unmap(domain, start_pfn, last_pfn);
--
--	if (intel_iommu_strict) {
--		iommu_flush_iotlb_psi(iommu, domain->id, start_pfn,
--				      last_pfn - start_pfn + 1, !freelist, 0);
--		/* free iova */
--		__free_iova(&domain->iovad, iova);
--		dma_free_pagelist(freelist);
--	} else {
--		add_unmap(domain, iova, freelist);
--		/*
--		 * queue up the release of the unmap to save the 1/6th of the
--		 * cpu used up by the iotlb flush operation...
--		 */
--	}
-+	intel_unmap(dev, sglist[0].dma_address);
- }
- 
- static int intel_nontranslate_map_sg(struct device *hddev,
-@@ -3358,13 +3326,8 @@ static int intel_map_sg(struct device *dev, struct scatterlist *sglist, int nele
- 
- 	ret = domain_sg_mapping(domain, start_vpfn, sglist, size, prot);
- 	if (unlikely(ret)) {
--		/*  clear the page */
--		dma_pte_clear_range(domain, start_vpfn,
--				    start_vpfn + size - 1);
--		/* free page tables */
- 		dma_pte_free_pagetable(domain, start_vpfn,
- 				       start_vpfn + size - 1);
--		/* free iova */
- 		__free_iova(&domain->iovad, iova);
- 		return 0;
- 	}
--- 
-1.7.10.4
-
+>> > [1] http://www.spinics.net/lists/linux-pci/msg30585.html
