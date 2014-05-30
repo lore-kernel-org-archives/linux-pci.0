@@ -1,112 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41665 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932362AbaEIP30 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 May 2014 11:29:26 -0400
-Subject: [PATCH v2 09/15] iommu/amd: Update to use PCI DMA aliases
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>,
-	acooks@gmail.com, linux-kernel@vger.kernel.org
-Date: Fri, 09 May 2014 09:29:19 -0600
-Message-ID: <20140509152919.8321.89317.stgit@bling.home>
-In-Reply-To: <20140509151735.8321.22017.stgit@bling.home>
-References: <20140509151735.8321.22017.stgit@bling.home>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:49430 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934548AbaE3XRN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 19:17:13 -0400
+Received: by mail-ig0-f177.google.com with SMTP id l13so1446375iga.4
+        for <linux-pci@vger.kernel.org>; Fri, 30 May 2014 16:17:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20140530230830.GG1677@bart.dudau.co.uk>
+References: <1401379426-9701-1-git-send-email-galak@codeaurora.org>
+ <CAL_JsqLPFDwtd-QYDqCwx1JVj1Aa8=nof-e0P6R9CZra+fXHfw@mail.gmail.com>
+ <47B1E3D0-4336-4529-80B0-172F4ACA5C97@codeaurora.org> <20140530005602.GE1677@bart.dudau.co.uk>
+ <CAErSpo7qEhJyUAu58R8g6+AEhRGo_+Vv0EMgkK+3ZQOU9+jmhg@mail.gmail.com>
+ <20140530014116.GF1677@bart.dudau.co.uk> <F22EE9D6-8F58-4AF0-9684-71B7A3BFF868@codeaurora.org>
+ <20140530230830.GG1677@bart.dudau.co.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 30 May 2014 17:16:52 -0600
+Message-ID: <CAErSpo7ViLMCgR7rBmOxYJsVK1DBvkZTWpEDOPDQ0NjvQmwiiA@mail.gmail.com>
+Subject: Re: [PATCH] of: treat PCI config space as IORESOURCE_MEM type
+To: Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robherring2@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AMD-Vi already has a concept of an alias provided via the IVRS table.
-This alias only handles topology based aliases, such as PCIe-to-PCI
-bridges.  When such an alias is present, we continue to use it.  When
-a platform alias is not present, we can now add a check of the device
-dma_func_alias to create our own.  Note that the current code can
-only handle a single alias of a device, and we don't attempt to change
-that here.  It would only become a factor for the requester ID seen by
-the IOMMU if PCI-X were involved anway.
+On Fri, May 30, 2014 at 5:11 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+> On Fri, May 30, 2014 at 03:45:05PM -0500, Kumar Gala wrote:
+>>
+>> On May 29, 2014, at 8:41 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+>>
+>> > On Thu, May 29, 2014 at 07:29:31PM -0600, Bjorn Helgaas wrote:
+>> >> On Thu, May 29, 2014 at 6:56 PM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+>> >>> On Thu, May 29, 2014 at 03:51:28PM -0500, Kumar Gala wrote:
+>> >>>>
+>> >>>> On May 29, 2014, at 3:44 PM, Rob Herring <robherring2@gmail.com> wrote:
+>> >>>>
+>> >>>>> On Thu, May 29, 2014 at 11:03 AM, Kumar Gala <galak@codeaurora.org> wrote:
+>> >>>>>> If we have a PCI config space specified in something like a ranges
+>> >>>>>> property we should treat it as memory type resource.
+>> >>>>>
+>> >>>>> Config space should not be in ranges[1]. We have some cases that are,
+>> >>>>> but we don't want new ones.
+>> >>>>
+>> >>>> For the cases we have I agree, however an ECAM based cfg seems completely legit.
+>> >>>>
+>> >>>>>> Signed-off-by: Kumar Gala <galak@codeaurora.org>
+>> >>>>>> ---
+>> >>>>>> drivers/of/address.c | 3 +++
+>> >>>>>> 1 file changed, 3 insertions(+)
+>> >>>>>>
+>> >>>>>> diff --git a/drivers/of/address.c b/drivers/of/address.c
+>> >>>>>> index cb4242a..4e7ee59 100644
+>> >>>>>> --- a/drivers/of/address.c
+>> >>>>>> +++ b/drivers/of/address.c
+>> >>>>>> @@ -122,6 +122,9 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
+>> >>>>>>       u32 w = be32_to_cpup(addr);
+>> >>>>>>
+>> >>>>>>       switch((w >> 24) & 0x03) {
+>> >>>>>> +       case 0x00: /* cfg space */
+>> >>>>>> +               flags |= IORESOURCE_MEM;
+>> >>>>>> +               break;
+>> >>>>>
+>> >>>>> How would you then distinguish actual memory ranges?
+>> >>>>
+>> >>>> One assumes you are still looking at pci_space as part of of_pci_range
+>> >>>
+>> >>> That doesn't happen when you start scanning the bus. The existing code will
+>> >>> use the IORESOURCE_MEM for allocating memory space for devices, which is
+>> >>> not what you want. Did you test your patch on any PCI system? I'm pretty
+>> >>> sure that with my patch series that tries to make a generic framework for
+>> >>> host controllers this will fail.
+>> >>>
+>> >>> We really need a IORESOURCE_CFG flag for this space.
+>> >>
+>> >> Maybe, but I'm not convinced yet.  The existing IORESOURCE_TYPE_BITS
+>> >> types are for things that are mutually exclusive address spaces.  I
+>> >> think this discussion is about ECAM, where the CPU side is definitely
+>> >> in the same address space (IORESOURCE_MEM) as RAM, APICs, host bridge
+>> >> apertures, device MMIO, etc.  The ECAM area must appear in the
+>> >> iomem_resource tree so we avoid it when allocating other areas.
+>> >
+>> > Agree, I'm only concerned that if this ECAM config space gets added to
+>> > the list of pci_host_bridge windows it will be indistinguishable from
+>> > IORESOURCE_MEM resources and pci_create_root_bus() will add it to the
+>> > bus and allow devices present on that bus to be assigned addresses from
+>> > that range. Which might not be what one wants for certain BARs.
+>> >
+>> > I've had an aborted attempt to parse ECAM ranges in one version of my
+>> > series (granted, I was trying to hack the IORESOURCE_TYPE_BITS as well)
+>> > and things got horribly wrong quickly. I could give this patch a go with
+>> > my series tomorrow when I'm in the office and report back.
+>>
+>> We need to fix the parsing code to be smarter about this case.
+>
+> Wow, what a sweeping statement! Did you not understand that the issue is not
+> the parsing code but the way the rest of the core code uses an IORESOURCE_MEM
+> once you have parsed it into a resource structure and added it to the list
+> of pci_host_bridge_windows?
 
-Since the alias is now potentially device specific rather than the
-topology based alias provided by the platform, we need to clear it
-when the device goes away.
+Why do you want to add the ECAM area to the list of host bridge
+windows?  My intent was that the windows tell the core what resources
+are available for devices behind the bridge.
 
-With the DMA alias and isolation infrastructure now in PCI-core, we
-could opt to ignore IVRS provided aliases.  We now do this for IOMMU
-groups.  However, for this more common use case, the "don't fix what
-isn't broken" mantra seems like the safer route.
-
-This should allow AMD-Vi to work with devices like Marvell and Ricoh
-with DMA function alias quirks.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/amd_iommu.c |   37 ++++++++++++++++++++++++++++++++++---
- 1 file changed, 34 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 3d58de4..9b2da00 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -294,6 +294,7 @@ static int iommu_init_device(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct iommu_dev_data *dev_data;
- 	u16 alias;
-+	u8 func_alias;
- 	int ret;
- 
- 	if (dev->archdata.iommu)
-@@ -304,6 +305,29 @@ static int iommu_init_device(struct device *dev)
- 		return -ENOMEM;
- 
- 	alias = amd_iommu_alias_table[dev_data->devid];
-+
-+	/*
-+	 * If there is no platform provided alias (topology-based) check for
-+	 * a device quirk-based alias.  Note that a non-existent alias (ie.
-+	 * ghost alias) will also need their rlookup and dev_table setup.
-+	 * Copy these from the original device since they're both functions
-+	 * in the same slot.
-+	 */
-+	func_alias = pdev->dma_func_alias & ~(1 << PCI_SLOT(pdev->devfn));
-+	if (func_alias && alias == dev_data->devid) {
-+		WARN_ON(hweight8(func_alias) > 1);
-+		alias = PCI_DEVID(pdev->bus->number,
-+				  PCI_DEVFN(PCI_SLOT(pdev->devfn),
-+					    ffs(func_alias) - 1));
-+		if (!amd_iommu_rlookup_table[alias]) {
-+			amd_iommu_rlookup_table[alias] =
-+				amd_iommu_rlookup_table[dev_data->devid];
-+			memcpy(amd_iommu_dev_table[alias].data,
-+			       amd_iommu_dev_table[dev_data->devid].data,
-+			       sizeof(amd_iommu_dev_table[alias].data));
-+		}
-+	}
-+
- 	if (alias != dev_data->devid) {
- 		struct iommu_dev_data *alias_data;
- 
-@@ -351,12 +375,19 @@ static void iommu_ignore_device(struct device *dev)
- 
- static void iommu_uninit_device(struct device *dev)
- {
-+	struct iommu_dev_data *dev_data = search_dev_data(get_device_id(dev));
-+
-+	if (!dev_data)
-+		return;
-+
- 	iommu_group_remove_device(dev);
- 
-+	/* Unlink from alias, it may change if another device is re-plugged */
-+	dev_data->alias_data = NULL;
-+
- 	/*
--	 * Nothing to do here - we keep dev_data around for unplugged devices
--	 * and reuse it when the device is re-plugged - not doing so would
--	 * introduce a ton of races.
-+	 * We keep dev_data around for unplugged devices and reuse it when the
-+	 * device is re-plugged - not doing so would introduce a ton of races.
- 	 */
- }
- 
-
+Bjorn
