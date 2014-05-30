@@ -1,99 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22803 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751338AbaE1TJj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 May 2014 15:09:39 -0400
-Message-ID: <1401304172.2412.65.camel@ul30vt.home>
-Subject: Re: [PATCH v4 06/16] PCI: Quirk pci_for_each_dma_alias() for bridges
-From: Alex Williamson <alex.williamson@redhat.com>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:55307 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755212AbaE3Odo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 10:33:44 -0400
+MIME-Version: 1.0
+In-Reply-To: <20140528223637.GY11907@google.com>
+References: <1401117492-2870-1-git-send-email-andreas.noever@gmail.com>
+ <1401117492-2870-13-git-send-email-andreas.noever@gmail.com> <20140528223637.GY11907@google.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Fri, 30 May 2014 16:33:20 +0200
+Message-ID: <CAMxnaaVwSev1EuEUghxFFzp0M2mMy3qYHgJA+rXpLhiJQH7Psg@mail.gmail.com>
+Subject: Re: [PATCH v3 12/15] pci: Add pci_fixup_suspend_late quirk pass.
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	acooks@gmail.com, linux-kernel@vger.kernel.org, eddy0596@gmail.com,
-	linux@horizon.com
-Date: Wed, 28 May 2014 13:09:32 -0600
-In-Reply-To: <20140528180018.GS11907@google.com>
-References: <20140522230230.2856.40017.stgit@bling.home>
-	 <20140522230801.2856.18629.stgit@bling.home>
-	 <20140528180018.GS11907@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-05-28 at 12:00 -0600, Bjorn Helgaas wrote:
-> On Thu, May 22, 2014 at 05:08:01PM -0600, Alex Williamson wrote:
-> > Several PCIe-to-PCI bridges fail to provide a PCIe capability, causing
-> > us to handle them as conventional PCI devices.  In some cases, this
-> > may be correct, in others it's not.  Add a dev_flag bit to identify
-> > devices to be handled as standard PCIe-to-PCI bridges.
-> 
-> Can you expand on the "in some cases, this may be correct, in others it's
-> not"?  Do you mean that for some *devices* it's correct to handle them as
-> conventional PCI, or in some *situations* it's correct?  Something else?
+On Thu, May 29, 2014 at 12:36 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, May 26, 2014 at 05:18:09PM +0200, Andreas Noever wrote:
+>
+> Please adjust the subject to match the drivers/pci convention, i.e., change
+>
+>   pci: Add pci_fixup_suspend_late quirk pass.
+>
+> to
+>
+>   PCI: Add pci_fixup_suspend_late quirk pass
+>
+>> Add pci_fixup_suspend_late as a new pci_fixup_pass. The pass is called
+>> from suspend_noirq and poweroff_noirq. Using the same pass for suspend
+>> and hibernate is consistent with resume_early which is called by
+>> resume_noirq and restore_noirq.
+>>
+>> The new quirk pass is required for Thunderbolt support on Apple
+>> hardware.
+>>
+>> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Yes, the example that I know of is the PCI bridge found on the root
-complex of many Intel chipsets.  Older generations do not have a PCIe
-capability and the requester ID behaves as a conventional PCI device,
-using the bridge itself as the requester ID, newer version include a
-PCIe capability and use the secondary bus as the requester ID.  Those
-devices work correctly without this quirk.  The bridges in the next
-patch obviously don't.
+Thanks for reading through the series. I will make those changes for
+the next version.
 
-> I'd like to either remove that sentence or add a little more information to
-> make it useful.
+> I assume you'll merge this along with the rest of the series, not through
+> my PCI tree.
+Agreed, since I am the only user of this pass. Can you tell me whose
+tree normally carries new drivers?
 
-Ok, I'll note some of the above in a new commit log.
-
-> I guess this probably goes along with the tests in
-> quirk_use_pcie_bridge_dma_alias().
-
-Yep.  For that, we need to look at the upstream device of the bridge, so
-it won't flag any root complex bridges like those above, which is why it
-could probably be applied to any bridge.  Thanks,
-
-Alex
-
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> >  drivers/pci/search.c |   10 ++++++++--
-> >  include/linux/pci.h  |    2 ++
-> >  2 files changed, 10 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> > index 2c19f3f..df38f73 100644
-> > --- a/drivers/pci/search.c
-> > +++ b/drivers/pci/search.c
-> > @@ -88,8 +88,14 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
-> >  				continue;
-> >  			}
-> >  		} else {
-> > -			ret = fn(tmp, PCI_DEVID(tmp->bus->number, tmp->devfn),
-> > -				 data);
-> > +			if (tmp->dev_flags & PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS)
-> > +				ret = fn(tmp,
-> > +					 PCI_DEVID(tmp->subordinate->number,
-> > +						   PCI_DEVFN(0, 0)), data);
-> > +			else
-> > +				ret = fn(tmp,
-> > +					 PCI_DEVID(tmp->bus->number,
-> > +						   tmp->devfn), data);
-> >  			if (ret)
-> >  				return ret;
-> >  		}
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 9d4035c..85ab35e 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -173,6 +173,8 @@ enum pci_dev_flags {
-> >  	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
-> >  	/* Flag to indicate the device uses dma_alias_devfn */
-> >  	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
-> > +	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
-> > +	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
-> >  };
-> >  
-> >  enum pci_irq_reroute_variant {
-> > 
-
-
-
+Thanks,
+Andreas
