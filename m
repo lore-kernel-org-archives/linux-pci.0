@@ -1,72 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:46884 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752937AbaETRmj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 May 2014 13:42:39 -0400
-Date: Tue, 20 May 2014 11:42:26 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Strashko, Grygorii" <grygorii.strashko@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>
-Subject: Re: [PATCH v1 5/5] pci: keystone: add pcie driver based on
- designware core driver
-Message-ID: <20140520174226.GC5130@obsidianresearch.com>
-References: <1400169692-9677-1-git-send-email-m-karicheri2@ti.com>
- <6048322.x3M3sdDEWO@wuerfel>
- <5374FD24.8000806@ti.com>
- <22200719.Jb5jnJylJH@wuerfel>
- <20140515183919.GC11650@obsidianresearch.com>
- <53751DDF.40304@ti.com>
- <20140515205210.GB14722@obsidianresearch.com>
- <3E54258959B69E4282D79E01AB1F32B704742133@DFLE11.ent.ti.com>
- <20140520170221.GA5130@obsidianresearch.com>
- <CAErSpo667uWybiHOh4tVQDh_JFpF0EbvxKwo_GQm+B1-wMtT1Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo667uWybiHOh4tVQDh_JFpF0EbvxKwo_GQm+B1-wMtT1Q@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v4 06/15] thunderbolt: Add thunderbolt capability handling
+Date: Sat, 31 May 2014 16:27:51 +0200
+Message-Id: <1401546480-2071-7-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 20, 2014 at 11:22:22AM -0600, Bjorn Helgaas wrote:
-> On Tue, May 20, 2014 at 11:02 AM, Jason Gunthorpe
-> <jgunthorpe@obsidianresearch.com> wrote:
-> > On Fri, May 16, 2014 at 08:29:56PM +0000, Karicheri, Muralidharan wrote:
-> >
-> >> But pcie_bus_configure_settings just make sure the mrrs for a device
-> >> is not greater than the max payload size.
-> >
-> > Not quite, it first scans the network checking the Maximum Payload Size
-> > Supported (MPSS) for each device, and chooses the highest supported by
-> > all as the MPS for all.
-> 
-> The "performance" setting, e.g., "pci=pcie_bus_perf", adds a few
-> wrinkles by setting MRRS in ways that allow some devices to have
-> larger MPS than others.  I don't think this is exactly what was
-> envisioned in the spec, and it is not guaranteed to work if there is
-> peer-to-peer DMA.  This isn't documented very well; the best I know of
-> is the changelogs for:
-> 
->   a1c473aa11e6 pci: Clamp pcie_set_readrq() when using "performance" settings
->   b03e7495a862 PCI: Set PCI-E Max Payload Size on fabric
+Thunderbolt config areas contain capability lists similar to those found
+on pci devices. This patch introduces a tb_find_cap utility method to
+search for capabilities.
 
-Neat, and does pretty much confirm that setting the host bridge MPSS
-properly is necessary to support all drivers, particularly the ones
-that call pcie_set_readrq with any old value.
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+---
+ drivers/thunderbolt/Makefile |   2 +-
+ drivers/thunderbolt/cap.c    | 116 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.h     |   2 +
+ 3 files changed, 119 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/thunderbolt/cap.c
 
-The 'performance' setting is a bit scary, it isn't just peer-to-peer
-DMA that would be impacted but also CPU initiated burst writes. Eg
-InfiniBand drivers burst a WQE to the NIC via the CPU. The MPS on the
-root port bridge is used to segment the write. Probably not a problem
-in practice because I think this is rare, and even rarer that a burst
-would be > 128 bytes - but as you say, not really what the spec
-intended..
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 4ac18d9..617b314 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+ obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
+-thunderbolt-objs := nhi.o ctl.o tb.o switch.o
++thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o
+ 
+diff --git a/drivers/thunderbolt/cap.c b/drivers/thunderbolt/cap.c
+new file mode 100644
+index 0000000..a7b47e7
+--- /dev/null
++++ b/drivers/thunderbolt/cap.c
+@@ -0,0 +1,116 @@
++/*
++ * Thunderbolt Cactus Ridge driver - capabilities lookup
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#include <linux/slab.h>
++#include <linux/errno.h>
++
++#include "tb.h"
++
++
++struct tb_cap_any {
++	union {
++		struct tb_cap_basic basic;
++		struct tb_cap_extended_short extended_short;
++		struct tb_cap_extended_long extended_long;
++	};
++} __packed;
++
++static bool tb_cap_is_basic(struct tb_cap_any *cap)
++{
++	/* basic.cap is u8. This checks only the lower 8 bit of cap. */
++	return cap->basic.cap != 5;
++}
++
++static bool tb_cap_is_long(struct tb_cap_any *cap)
++{
++	return !tb_cap_is_basic(cap)
++	       && cap->extended_short.next == 0
++	       && cap->extended_short.length == 0;
++}
++
++static enum tb_cap tb_cap(struct tb_cap_any *cap)
++{
++	if (tb_cap_is_basic(cap))
++		return cap->basic.cap;
++	else
++		/* extended_short/long have cap at the same offset. */
++		return cap->extended_short.cap;
++}
++
++static u32 tb_cap_next(struct tb_cap_any *cap, u32 offset)
++{
++	int next;
++	if (offset == 1) {
++		/*
++		 * The first pointer is part of the switch header and always
++		 * a simple pointer.
++		 */
++		next = cap->basic.next;
++	} else {
++		/*
++		 * Somehow Intel decided to use 3 different types of capability
++		 * headers. It is not like anyone could have predicted that
++		 * single byte offsets are not enough...
++		 */
++		if (tb_cap_is_basic(cap))
++			next = cap->basic.next;
++		else if (!tb_cap_is_long(cap))
++			next = cap->extended_short.next;
++		else
++			next = cap->extended_long.next;
++	}
++	/*
++	 * "Hey, we could terminate some capability lists with a null offset
++	 *  and others with a pointer to the last element." - "Great idea!"
++	 */
++	if (next == offset)
++		return 0;
++	return next;
++}
++
++/**
++ * tb_find_cap() - find a capability
++ *
++ * Return: Returns a positive offset if the capability was found and 0 if not.
++ * Returns an error code on failure.
++ */
++int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, enum tb_cap cap)
++{
++	u32 offset = 1;
++	struct tb_cap_any header;
++	int res;
++	int retries = 10;
++	while (retries--) {
++		res = tb_port_read(port, &header, space, offset, 1);
++		if (res) {
++			/* Intel needs some help with linked lists. */
++			if (space == TB_CFG_PORT && offset == 0xa
++			    && port->config.type == TB_TYPE_DP_HDMI_OUT) {
++				offset = 0x39;
++				continue;
++			}
++			return res;
++		}
++		if (offset != 1) {
++			if (tb_cap(&header) == cap)
++				return offset;
++			if (tb_cap_is_long(&header)) {
++				/* tb_cap_extended_long is 2 dwords */
++				res = tb_port_read(port, &header, space,
++						   offset, 2);
++				if (res)
++					return res;
++			}
++		}
++		offset = tb_cap_next(&header, offset);
++		if (!offset)
++			return 0;
++	}
++	tb_port_WARN(port,
++		     "run out of retries while looking for cap %#x in config space %d, last offset: %#x\n",
++		     cap, space, offset);
++	return -EIO;
++}
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 389dbb4..38e4c23 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -159,6 +159,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
+ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
+ void tb_switch_free(struct tb_switch *sw);
+ 
++int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
++
+ 
+ static inline int tb_route_length(u64 route)
+ {
+-- 
+1.9.3
 
-Jason
