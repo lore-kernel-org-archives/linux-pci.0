@@ -1,124 +1,168 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch V3 26/37] x86, irq, ACPI: use common irqdomain map interface to program IOAPIC pins
-Date: Tue, 27 May 2014 16:08:01 +0800
-Message-Id: <1401178092-1228-27-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:35211 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754547AbaEaLnC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 07:43:02 -0400
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Sat, 31 May 2014 17:12:59 +0530
+Date: Sat, 31 May 2014 21:42:52 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, kvm@vger.kernel.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 4/4] vfio/pci: Restore MSIx message prior to enabling
+Message-ID: <20140531114252.GA8509@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1400468470-11262-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1400468470-11262-5-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20140530221232.GG4607@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140530221232.GG4607@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine ACPI to use common irqdomain map interface to program IOAPIC pins,
-so we can unify the callsite to progam IOAPIC pins.
+On Fri, May 30, 2014 at 04:12:32PM -0600, Bjorn Helgaas wrote:
+>On Mon, May 19, 2014 at 01:01:10PM +1000, Gavin Shan wrote:
+>> The MSIx vector table lives in device memory, which may be cleared as
+>> part of a backdoor device reset. This is the case on the IBM IPR HBA
+>> when the BIST is run on the device. When assigned to a QEMU guest,
+>> the guest driver does a pci_save_state(), issues a BIST, then does a
+>> pci_restore_state(). The BIST clears the MSIx vector table, but due
+>> to the way interrupts are configured the pci_restore_state() does not
+>> restore the vector table as expected. Eventually this results in an
+>> EEH error on Power platforms when the device attempts to signal an
+>> interrupt with the zero'd table entry.
+>> 
+>> Fix the problem by restoring the host cached MSI message prior to
+>> enabling each vector.
+>> 
+>> Reported-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>> ---
+>>  drivers/vfio/pci/vfio_pci_intrs.c | 15 +++++++++++++++
+>>  1 file changed, 15 insertions(+)
+>> 
+>> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+>> index 9dd49c9..553212f 100644
+>> --- a/drivers/vfio/pci/vfio_pci_intrs.c
+>> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
+>> @@ -16,6 +16,7 @@
+>>  #include <linux/device.h>
+>>  #include <linux/interrupt.h>
+>>  #include <linux/eventfd.h>
+>> +#include <linux/msi.h>
+>>  #include <linux/pci.h>
+>>  #include <linux/file.h>
+>>  #include <linux/poll.h>
+>> @@ -548,6 +549,20 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
+>>  		return PTR_ERR(trigger);
+>>  	}
+>>  
+>> +	/*
+>> +	 * The MSIx vector table resides in device memory which may be cleared
+>> +	 * via backdoor resets. We don't allow direct access to the vector
+>> +	 * table so even if a userspace driver attempts to save/restore around
+>> +	 * such a reset it would be unsuccessful. To avoid this, restore the
+>> +	 * cached value of the message prior to enabling.
+>> +	 */
+>> +	if (msix) {
+>> +		struct msi_msg msg;
+>> +
+>> +		get_cached_msi_msg(irq, &msg);
+>> +		write_msi_msg(irq, &msg);
+>> +	}
+>
+>I think this is pretty ugly.  Drivers should not be writing to the
+>MSI-X vector table, so I don't really want to export these internal
+>implementation functions if we can avoid it.
+>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   44 ++++++++++++-------------------------------
- 1 file changed, 12 insertions(+), 32 deletions(-)
+I agree that it's ugly and I need discuss with Alex about the potential
+solutions: fix the issue either from guest or qemu.
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 0632622a3798..4788b3f50f69 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -325,7 +325,9 @@ static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity);
- 
--static struct irq_domain_ops acpi_irqdomain_ops;
-+static struct irq_domain_ops acpi_irqdomain_ops = {
-+	.map = mp_irqdomain_map,
-+};
- 
- static struct irq_domain *acpi_create_irqdomain(int idx, void *arg)
- {
-@@ -505,10 +507,6 @@ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- 	int irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
- 
- 	if (irq >= 0) {
--#ifdef CONFIG_X86_IO_APIC
--		if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
--			setup_IO_APIC_irq_extra(gsi);
--#endif
- 		*irqp = irq;
- 		return 0;
- 	}
-@@ -1036,11 +1034,7 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity)
- {
--	int irq;
--	int ioapic;
--	int ioapic_pin;
--	struct io_apic_irq_attr irq_attr;
--	int ret;
-+	int irq, node;
- 
- 	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
- 		return gsi;
-@@ -1049,35 +1043,21 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	if (acpi_gbl_FADT.sci_interrupt == gsi)
- 		return gsi;
- 
-+	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
-+	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
-+	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
-+	if (mp_set_gsi_attr(gsi, trigger, polarity, node)) {
-+		pr_warn("Failed to set pin attr for GSI%d\n", gsi);
-+		return -1;
-+	}
-+
- 	irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
- 	if (irq < 0)
- 		return irq;
- 
--	ioapic = mp_find_ioapic(gsi);
--	if (ioapic < 0) {
--		printk(KERN_WARNING "No IOAPIC for GSI %u\n", gsi);
--		return gsi;
--	}
--
--	ioapic_pin = mp_find_ioapic_pin(ioapic, gsi);
--
--	if (ioapic_pin > MP_MAX_IOAPIC_PIN) {
--		printk(KERN_ERR "Invalid reference to IOAPIC pin "
--		       "%d-%d\n", mpc_ioapic_id(ioapic),
--		       ioapic_pin);
--		return gsi;
--	}
--
- 	if (enable_update_mptable)
- 		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
- 
--	set_io_apic_irq_attr(&irq_attr, ioapic, ioapic_pin,
--			     trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
--			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
--	ret = io_apic_set_pci_routing(dev, irq, &irq_attr);
--	if (ret < 0)
--		irq = -1;
--
- 	return irq;
- }
- 
--- 
-1.7.10.4
+- If the "reset" is special backdoor for some devices, the device driver
+  on guest side should have something like: disable MSIx entries that have
+  been enabled (updating MSIx entries maintained by QEMU), pci_save_state(),
+  reset(), pci_restore_state(), enable MSIx entries (updating MSIx entries
+  maintained by QEMU). Disadvantage of this way would be guest driver has
+  to accomodate QEMU, which sounds bad.
+
+- In QEMU, we could have some quirk to trap when writting to registers
+  for reset on basis of devices. From there, to clear the MSIx entries
+  maintained by QEMU. It's similar thing to be applied when having FLR
+  reset. We have to have separate quirk to accomodate every kind of devices.
+
+- Last one is what we had. However, it's really "hack".
+
+>I chatted with Alex about this last week on IRC, trying to understand
+>what's going on here, but I'm afraid I didn't get very far.
+>
+>I think I understand what happens when there's no virtualization
+>involved.  The driver enables MSI-X and writes the vector table via
+>this path:
+>
+>    pci_enable_msix
+>      msix_capability_init
+>	arch_setup_msi_irqs
+>	  native_setup_msi_irqs		# .setup_msi_irqs (on x86)
+>	    setup_msi_irq
+>	      write_msi_msg
+>		__write_msi_msg		# write vector table
+>
+>When a device is reset, its MSI-X vector table is cleared.  The type
+>of reset (FLR, "backdoor", etc.) doesn't really matter.
+>
+>After a device reset, the driver would use this path to restore the
+>vector table:
+>
+>    pci_restore_state
+>      pci_restore_msi_state
+>        __pci_restore_msix_state
+>          arch_restore_msi_irqs
+>            default_restore_msi_irqs	# .restore_msi_irqs (on x86)
+>              default_restore_msi_irq
+>                write_msi_msg
+>                  __write_msi_msg	# write vector table
+>
+>This rewrites the MSI-X vector table (it doesn't use any data that was
+>saved by pci_save_state(), so it's not really a "restore" in that
+>sense; it writes the vector table from scratch based on the data
+>structures maintained by the MSI core).
+>
+>If the same driver is running in a qemu guest, it still calls
+>pci_enable_msix() and pci_restore_state(), but apparently the restore
+>path doesn't work.  Alex mentioned that qemu virtualizes the vector
+>table, so I assume it traps the writel() to the vector table when
+>enabling MSI-X?  And I assume qemu would also trap the writel() in the
+>restore path, but it sounded like it ignores the write because we're
+>writing the same data qemu believes to be there?
+>
+>I'd like to understand more details about how those writel()s
+>performed by the guest kernel are handled.  Alex mentioned that the
+>vector table is inaccessible to the guest, and I see code in
+>vfio_pci_bar_rw() that looks like it excludes the table area, so I
+>assume that is involved somehow, but I don't know how to connect the
+>dots.  Obviously the enable path must be handled differently from the
+>restore path somehow, because if the enable used vfio_pci_bar_rw(),
+>that write would just be dropped, too, and it's not.
+>
+
+The problem is basically the MSIx entries maintained in QEMU mismatched
+with those in hardware (host kernel), which is caused by backdoor "reset":
+
+- Guest driver enables MSIx entries. MSIx entries are marked as "enabled"
+  in hardware, QEMU, guest.
+- Guest driver calls pci_save_state() and then issues backdoor reset. We
+  lose everything in MSIx table in hardware. QEMU still maintains "enabled"
+  MSIx entries.
+- Guest driver calls to pci_restore_state() and tries to enable MSIx entries.
+  Writing to MSIx entries trapped in QEMU. QEMU won't update MSIx entries in
+  hardware because the MSIx entries are marked as "enabled" in QEMU.
+
+Thanks,
+Gavin
 
