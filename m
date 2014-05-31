@@ -1,61 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:54206 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752757AbaEBQkx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 2 May 2014 12:40:53 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 2/2] NVMe: Implement PCI-e reset notification callback
-Date: Fri,  2 May 2014 10:40:43 -0600
-Message-Id: <1399048843-9376-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1399048843-9376-1-git-send-email-keith.busch@intel.com>
-References: <1399048843-9376-1-git-send-email-keith.busch@intel.com>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54636 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S935005AbaEaAi6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 20:38:58 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kumar Gala <galak@codeaurora.org>,
+	Rob Herring <robherring2@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM resources.
+Date: Sat, 31 May 2014 01:36:40 +0100
+Message-Id: <1401496601-31983-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com>
+References: <20140530233034.GH1677@bart.dudau.co.uk>
+ <1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Quiesce and shutdown the device prior to reset, then restart the device
-and resume IO after.
+We would like to be able to describe PCIe ECAM resources as
+IORESOURCE_MEM blocks while distinguish them from standard
+memory resources. Add an IORESOURCE_BIT entry for this case.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 ---
-v1 -> v2:
+ include/linux/ioport.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-fixed compile warning for wrong data type in function (int -> bool).
-
- drivers/block/nvme-core.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-index 7c64fa7..a842c71 100644
---- a/drivers/block/nvme-core.c
-+++ b/drivers/block/nvme-core.c
-@@ -2775,6 +2775,16 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return result;
- }
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 5e3a906..9672533 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -103,6 +103,7 @@ struct resource {
  
-+static void nvme_reset_notify(struct pci_dev *pdev, bool prepare)
-+{
-+       struct nvme_dev *dev = pci_get_drvdata(pdev);
-+
-+       if (prepare)
-+               nvme_dev_shutdown(dev);
-+       else
-+               nvme_dev_resume(dev);
-+}
-+
- static void nvme_shutdown(struct pci_dev *pdev)
- {
- 	struct nvme_dev *dev = pci_get_drvdata(pdev);
-@@ -2839,6 +2849,7 @@ static const struct pci_error_handlers nvme_err_handler = {
- 	.link_reset	= nvme_link_reset,
- 	.slot_reset	= nvme_slot_reset,
- 	.resume		= nvme_error_resume,
-+	.reset_notify	= nvme_reset_notify,
- };
+ /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
+ #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
++#define IORESOURCE_PCI_ECFG		(1<<5)  /* ECAM config resource */
  
- /* Move to pci_ids.h later */
+ 
+ /* helpers to define resources */
 -- 
-1.7.10.4
+1.9.2
 
