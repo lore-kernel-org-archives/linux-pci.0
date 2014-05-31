@@ -1,221 +1,179 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39650 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934095AbaEFHDx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 6 May 2014 03:03:53 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V2 03/21] iommu/vt-d: introduce helper functions to improve code readability
-Date: Tue,  6 May 2014 15:05:14 +0800
-Message-Id: <1399359932-28972-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1399359932-28972-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-qg0-f51.google.com ([209.85.192.51]:53505 "EHLO
+	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756662AbaEaO27 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:28:59 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v4 09/15] thunderbolt: Handle hotplug events
+Date: Sat, 31 May 2014 16:27:54 +0200
+Message-Id: <1401546480-2071-10-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce domain_type_is_vm() and domain_type_is_vm_or_si() to improve
-code readability.
+We receive a plug event callback whenever a thunderbolt device is added
+or removed. This patch fills in the tb_handle_hotplug method and starts
+reacting to these events by adding/removing switches from the hierarchy.
 
-Also kill useless macro DOMAIN_FLAG_P2P_MULTIPLE_DEVICES.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- drivers/iommu/intel-iommu.c |   59 +++++++++++++++++++------------------------
- 1 file changed, 26 insertions(+), 33 deletions(-)
+ drivers/thunderbolt/switch.c | 42 +++++++++++++++++++++++++++++++++++++++-
+ drivers/thunderbolt/tb.c     | 46 +++++++++++++++++++++++++++++++++++++++++++-
+ drivers/thunderbolt/tb.h     |  3 +++
+ 3 files changed, 89 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 0b3e6981a2da..63f351a39c63 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -320,16 +320,13 @@ static inline int first_pte_in_page(struct dma_pte *pte)
- static struct dmar_domain *si_domain;
- static int hw_pass_through = 1;
- 
--/* devices under the same p2p bridge are owned in one domain */
--#define DOMAIN_FLAG_P2P_MULTIPLE_DEVICES (1 << 0)
--
- /* domain represents a virtual machine, more than one devices
-  * across iommus may be owned in one domain, e.g. kvm guest.
-  */
--#define DOMAIN_FLAG_VIRTUAL_MACHINE	(1 << 1)
-+#define DOMAIN_FLAG_VIRTUAL_MACHINE	(1 << 0)
- 
- /* si_domain contains mulitple devices */
--#define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 2)
-+#define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 1)
- 
- /* define the limit of IOMMUs supported in each domain */
- #ifdef	CONFIG_X86
-@@ -539,6 +536,16 @@ void free_iova_mem(struct iova *iova)
- 	kmem_cache_free(iommu_iova_cache, iova);
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index 279b9c5..c092f7c 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -195,6 +195,24 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
+ 		sw->__unknown1, sw->__unknown4);
  }
  
-+static inline int domain_type_is_vm(struct dmar_domain *domain)
++struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route)
 +{
-+	return domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE;
++	u8 next_port = route; /*
++			       * Routes use a stride of 8 bits,
++			       * eventhough a port index has 6 bits at most.
++			       * */
++	if (route == 0)
++		return sw;
++	if (next_port > sw->config.max_port_number)
++		return 0;
++	if (tb_is_upstream_port(&sw->ports[next_port]))
++		return 0;
++	if (!sw->ports[next_port].remote)
++		return 0;
++	return get_switch_at_route(sw->ports[next_port].remote->sw,
++				   route >> TB_ROUTE_SHIFT);
 +}
 +
-+static inline int domain_type_is_vm_or_si(struct dmar_domain *domain)
+ /**
+  * tb_plug_events_active() - enable/disable plug events on a switch
+  *
+@@ -243,7 +261,8 @@ void tb_switch_free(struct tb_switch *sw)
+ 		sw->ports[i].remote = NULL;
+ 	}
+ 
+-	tb_plug_events_active(sw, false);
++	if (!sw->is_unplugged)
++		tb_plug_events_active(sw, false);
+ 
+ 	kfree(sw->ports);
+ 	kfree(sw);
+@@ -327,3 +346,24 @@ err:
+ 	return NULL;
+ }
+ 
++/**
++ * tb_sw_set_unpplugged() - set is_unplugged on switch and downstream switches
++ */
++void tb_sw_set_unpplugged(struct tb_switch *sw)
 +{
-+	return domain->flags & (DOMAIN_FLAG_VIRTUAL_MACHINE |
-+				DOMAIN_FLAG_STATIC_IDENTITY);
++	int i;
++	if (sw == sw->tb->root_switch) {
++		tb_sw_WARN(sw, "cannot unplug root switch\n");
++		return;
++	}
++	if (sw->is_unplugged) {
++		tb_sw_WARN(sw, "is_unplugged already set\n");
++		return;
++	}
++	sw->is_unplugged = true;
++	for (i = 0; i <= sw->config.max_port_number; i++) {
++		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
++			tb_sw_set_unpplugged(sw->ports[i].remote->sw);
++	}
 +}
- 
- static int __iommu_calculate_agaw(struct intel_iommu *iommu, int max_gaw)
++
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 3b716fd..1efcacc 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -71,11 +71,55 @@ static void tb_handle_hotplug(struct work_struct *work)
  {
-@@ -579,9 +586,7 @@ static struct intel_iommu *domain_get_iommu(struct dmar_domain *domain)
- 	int iommu_id;
+ 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
+ 	struct tb *tb = ev->tb;
++	struct tb_switch *sw;
++	struct tb_port *port;
+ 	mutex_lock(&tb->lock);
+ 	if (!tb->hotplug_active)
+ 		goto out; /* during init, suspend or shutdown */
  
- 	/* si_domain and vm domain should not get here. */
--	BUG_ON(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE);
--	BUG_ON(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY);
--
-+	BUG_ON(domain_type_is_vm_or_si(domain));
- 	iommu_id = find_first_bit(domain->iommu_bmp, g_num_of_iommus);
- 	if (iommu_id < 0 || iommu_id >= g_num_of_iommus)
- 		return NULL;
-@@ -1499,7 +1504,7 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
- 	free_context_table(iommu);
- }
+-	/* do nothing for now */
++	sw = get_switch_at_route(tb->root_switch, ev->route);
++	if (!sw) {
++		tb_warn(tb,
++			"hotplug event from non existent switch %llx:%x (unplug: %d)\n",
++			ev->route, ev->port, ev->unplug);
++		goto out;
++	}
++	if (ev->port > sw->config.max_port_number) {
++		tb_warn(tb,
++			"hotplug event from non existent port %llx:%x (unplug: %d)\n",
++			ev->route, ev->port, ev->unplug);
++		goto out;
++	}
++	port = &sw->ports[ev->port];
++	if (tb_is_upstream_port(port)) {
++		tb_warn(tb,
++			"hotplug event for upstream port %llx:%x (unplug: %d)\n",
++			ev->route, ev->port, ev->unplug);
++		goto out;
++	}
++	if (ev->unplug) {
++		if (port->remote) {
++			tb_port_info(port, "unplugged\n");
++			tb_sw_set_unpplugged(port->remote->sw);
++			tb_switch_free(port->remote->sw);
++			port->remote = NULL;
++		} else {
++			tb_port_info(port,
++				     "got unplug event for disconnected port, ignoring\n");
++		}
++	} else if (port->remote) {
++		tb_port_info(port,
++			     "got plug event for connected port, ignoring\n");
++	} else {
++		tb_port_info(port, "hotplug: scanning\n");
++		tb_scan_port(port);
++		if (!port->remote) {
++			tb_port_info(port, "hotplug: no switch found\n");
++		} else if (port->remote->sw->config.depth > 1) {
++			tb_sw_warn(port->remote->sw,
++				   "hotplug: chaining not supported\n");
++		}
++	}
+ out:
+ 	mutex_unlock(&tb->lock);
+ 	kfree(ev);
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 70a66fe..661f182 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -20,6 +20,7 @@ struct tb_switch {
+ 	struct tb_port *ports;
+ 	struct tb *tb;
+ 	int cap_plug_events; /* offset, zero if not found */
++	bool is_unplugged; /* unplugged, will go away */
+ };
  
--static struct dmar_domain *alloc_domain(bool vm)
-+static struct dmar_domain *alloc_domain(int flags)
- {
- 	/* domain id for virtual machine, it won't be set in context */
- 	static atomic_t vm_domid = ATOMIC_INIT(0);
-@@ -1509,16 +1514,13 @@ static struct dmar_domain *alloc_domain(bool vm)
- 	if (!domain)
- 		return NULL;
+ /**
+@@ -160,6 +161,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
  
-+	memset(domain, 0, sizeof(*domain));
- 	domain->nid = -1;
--	domain->iommu_count = 0;
--	memset(domain->iommu_bmp, 0, sizeof(domain->iommu_bmp));
--	domain->flags = 0;
-+	domain->flags = flags;
- 	spin_lock_init(&domain->iommu_lock);
- 	INIT_LIST_HEAD(&domain->devices);
--	if (vm) {
-+	if (flags & DOMAIN_FLAG_VIRTUAL_MACHINE)
- 		domain->id = atomic_inc_return(&vm_domid);
--		domain->flags = DOMAIN_FLAG_VIRTUAL_MACHINE;
--	}
+ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
+ void tb_switch_free(struct tb_switch *sw);
++void tb_sw_set_unpplugged(struct tb_switch *sw);
++struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
  
- 	return domain;
- }
-@@ -1706,7 +1708,7 @@ static void domain_exit(struct dmar_domain *domain)
- 	/* clear attached or cached domains */
- 	rcu_read_lock();
- 	for_each_active_iommu(iommu, drhd)
--		if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
-+		if (domain_type_is_vm(domain) ||
- 		    test_bit(iommu->seq_id, domain->iommu_bmp))
- 			iommu_detach_domain(domain, iommu);
- 	rcu_read_unlock();
-@@ -1748,8 +1750,7 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 	id = domain->id;
- 	pgd = domain->pgd;
+ int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
  
--	if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
--	    domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) {
-+	if (domain_type_is_vm_or_si(domain)) {
- 		int found = 0;
- 
- 		/* find an available domain id for this device in iommu */
-@@ -2115,7 +2116,7 @@ static void domain_remove_dev_info(struct dmar_domain *domain)
- 		iommu_disable_dev_iotlb(info);
- 		iommu_detach_dev(info->iommu, info->bus, info->devfn);
- 
--		if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) {
-+		if (domain_type_is_vm(domain)) {
- 			iommu_detach_dependent_devices(info->iommu, info->dev);
- 			/* clear this iommu in iommu_bmp, update iommu count
- 			 * and capabilities
-@@ -2181,8 +2182,6 @@ static struct dmar_domain *dmar_insert_dev_info(struct intel_iommu *iommu,
- 	info->dev = dev;
- 	info->domain = domain;
- 	info->iommu = iommu;
--	if (!dev)
--		domain->flags |= DOMAIN_FLAG_P2P_MULTIPLE_DEVICES;
- 
- 	spin_lock_irqsave(&device_domain_lock, flags);
- 	if (dev)
-@@ -2257,7 +2256,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 		goto error;
- 
- 	/* Allocate and initialize new domain for the device */
--	domain = alloc_domain(false);
-+	domain = alloc_domain(0);
- 	if (!domain)
- 		goto error;
- 	if (iommu_attach_domain(domain, iommu)) {
-@@ -2421,12 +2420,10 @@ static int __init si_domain_init(int hw)
- 	struct intel_iommu *iommu;
- 	int nid, ret = 0;
- 
--	si_domain = alloc_domain(false);
-+	si_domain = alloc_domain(DOMAIN_FLAG_STATIC_IDENTITY);
- 	if (!si_domain)
- 		return -EFAULT;
- 
--	si_domain->flags = DOMAIN_FLAG_STATIC_IDENTITY;
--
- 	for_each_active_iommu(iommu, drhd) {
- 		ret = iommu_attach_domain(si_domain, iommu);
- 		if (ret) {
-@@ -3860,9 +3857,7 @@ static int device_notifier(struct notifier_block *nb,
- 
- 	down_read(&dmar_global_lock);
- 	domain_remove_one_dev_info(domain, dev);
--	if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
--	    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) &&
--	    list_empty(&domain->devices))
-+	if (!domain_type_is_vm_or_si(domain) && list_empty(&domain->devices))
- 		domain_exit(domain);
- 	up_read(&dmar_global_lock);
- 
-@@ -4111,8 +4106,7 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
- 		domain_update_iommu_cap(domain);
- 		spin_unlock_irqrestore(&domain->iommu_lock, tmp_flags);
- 
--		if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
--		    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY)) {
-+		if (!domain_type_is_vm_or_si(domain)) {
- 			spin_lock_irqsave(&iommu->lock, tmp_flags);
- 			clear_bit(domain->id, iommu->domain_ids);
- 			iommu->domains[domain->id] = NULL;
-@@ -4151,7 +4145,7 @@ static int intel_iommu_domain_init(struct iommu_domain *domain)
- {
- 	struct dmar_domain *dmar_domain;
- 
--	dmar_domain = alloc_domain(true);
-+	dmar_domain = alloc_domain(DOMAIN_FLAG_VIRTUAL_MACHINE);
- 	if (!dmar_domain) {
- 		printk(KERN_ERR
- 			"intel_iommu_domain_init: dmar_domain == NULL\n");
-@@ -4195,8 +4189,7 @@ static int intel_iommu_attach_device(struct iommu_domain *domain,
- 
- 		old_domain = find_domain(dev);
- 		if (old_domain) {
--			if (dmar_domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
--			    dmar_domain->flags & DOMAIN_FLAG_STATIC_IDENTITY)
-+			if (domain_type_is_vm_or_si(dmar_domain))
- 				domain_remove_one_dev_info(old_domain, dev);
- 			else
- 				domain_remove_dev_info(old_domain);
 -- 
-1.7.10.4
+1.9.3
 
