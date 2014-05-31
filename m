@@ -1,157 +1,275 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15529 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752870AbaEVXHb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 22 May 2014 19:07:31 -0400
-Subject: [PATCH v4 00/16] PCI/iommu: Fix DMA alias problems
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
-Cc: bhelgaas@google.com, acooks@gmail.com,
-	linux-kernel@vger.kernel.org, eddy0596@gmail.com, linux@horizon.com
-Date: Thu, 22 May 2014 17:07:23 -0600
-Message-ID: <20140522230230.2856.40017.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-qa0-f47.google.com ([209.85.216.47]:57150 "EHLO
+	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933107AbaEaO3K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:29:10 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v4 14/15] thunderbolt: Read switch uid from EEPROM
+Date: Sat, 31 May 2014 16:27:59 +0200
+Message-Id: <1401546480-2071-15-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For testing, this version can be found in my git tree:
+Add eeprom access code and read the uid during switch initialization.
+The UID will be used to check device identity after suspend.
 
-git://github.com/awilliam/linux-vfio.git dma-alias-v4
-
-Please report any issues.
-
-v4:
- - Change dma_func_alias to dma_alias_devfn, holding a single
-   devfn to alias, thereby supporting aliases to the wrong slot.
-   The DMA alias iterator is easily changed, but IOMMU grouping
-   requires significant rework.  This is now done in IOMMU code
-   rather than PCI code.
-
- - AMD-Vi - try to incorporate IVRS aliases dynamically into
-   PCI alias quirks to make sure that our grouping remains the
-   same.  Potentially this could end up reporting BIOS aliases
-   that we can add to our list of quirks.
-
-v3:
- - Found several instances where I had PCI_SLOT when I meant
-   PCI_FUNC.  Thanks to Andrew for spotting this.  This should
-   fix the problem he was having with Ricoh quirks.  We also
-   pruned down the func0 quirks to only those that we know are
-   needed.  We can always add them back later.
-
- - Found a case in intel-iommu of using dev_is_pci() where I
-   really wanted !dev_is_pci().  Fixed.
-
-v2:
- - Several new Marvell controllers added to quirks.  There's been
-   a lot of success reported with this series in
-   https://bugzilla.kernel.org/show_bug.cgi?id=42679
-
- - Add quirk for ASMedia and Tundra PCIe-to-PCI bridges that do
-   not expose a PCIe capability.  These have been shown to use
-   the standard PCIe-to-PCI bridge requester ID.
-
- - Fix copy/paste duplicate Ricoh quirk ID
-
- - Fixed AMD IOMMU for the "ghost" function case where the DMA
-   alias is for an absent device.  The iommu rlookup table and
-   data fields need to be initializes.
-
- - Fixed Intel interrupt remapping, I wasn't passing the target
-   bus number, only the alias bus number.
-
-These patches are split across PCI and IOMMU, but I've front-loaded
-all of the PCI infrastructure so that the first 7 patches can be
-applied to PCI-core, the IOMMU maintainers can pickup their patches,
-then we can finish with dead code removal.  Bjorn might also be
-willing to carry the IOMMU changes if the maintainers want to ack
-them.
-
-Original description:
-
-This series attempts to fix a couple issues we've had outstanding in
-the PCI/IOMMU code for a while.  The first issue is with devices that
-use the wrong requester ID for DMA transactions.  We already have a
-sort of half-baked attempt to fix this for several Ricoh devices, but
-the fix only helps them be useful through IOMMU groups, not the
-general DMA case.  There are also several Marvell devices which use
-use a different wrong requester ID and don't even fit into the DMA
-source idea.  This series creates a DMA alias iterator that will
-step through each possible alias of a device, allowing IOMMUs to
-insert mappings for both the device and its aliases.
-
-Hand-in-hand with this is our broken pci_find_upstream_pcie_bridge()
-function, which is known to blowup when it finds itself suddenly at
-a PCIe device without crossing a PCIe-to-PCI bridge (as identified by
-the PCIe capability).  It also likes to make the invalid assumption
-that a PCIe device never has its requester ID masked by any usptream
-bus.  We can fix this using the above new DMA alias iterator, since
-that's effectively what this function was meant to do.
-
-Finally, with all these helpers, it makes sense to consolidate code
-for determining IOMMU groups.  The first step in finding the root
-of a group is finding the final upstream DMA alias for the device,
-then applying additional ACS rules and incorporating device specific
-aliases.  As this is all common to PCI, create a single implementation
-and remove piles of code from the individual IOMMU drivers.
-
-This series allows devices like the Marvell 88SE9123 to finally work
-on Linux with either AMD-Vi or VT-d enabled on the box.  I've
-collected device IDs from various bugs to support as many SKUs of
-these devices as possible, but I'm sure there are others that I've
-missed.
-
-This should also enable motherboards with an onboard ASmedia
-ASM1083/1085 PCIe-to-PCI bridge to work with VT-d enabled.  I've
-acquired an adapter board with this chip, but it actually exposes
-a PCIe capability, unlike most of the onboard controllers.  Therefore
-I expect this series will fix the WARN_ON currently hit during boot,
-but there's a 50/50 chance whether the device behaves like a PCI
-bridge or a PCIe bridge with regard to the requester ID that it uses
-to take ownership of the transaction.  If it turns out to use the
-PCIe bridge model, I expect we can quirk it using a dev_flags bit
-to identify a PCI bridge that takes ownership as if it was a PCIe
-bridge.
-
-Please test and provide feedback.  I expect IOMMU group topology
-should not change from this series, but if a case is found where it
-does, please share.  Also, if there are additional quirks we need
-to add, please either file new or add to the existing bugs.  Thanks,
-
-Alex
-
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
+ drivers/thunderbolt/Makefile |   2 +-
+ drivers/thunderbolt/eeprom.c | 189 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/switch.c |   5 ++
+ drivers/thunderbolt/tb.h     |   3 +
+ 4 files changed, 198 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/thunderbolt/eeprom.c
 
-Alex Williamson (16):
-      PCI: Add DMA alias iterator
-      PCI: define pci_dev_flags as bit shifts
-      PCI: quirk pci_for_each_dma_alias()
-      PCI: quirk dma_alias_devfn for Ricoh devices
-      PCI: quirk dma_alias_devfn for Marvell devices
-      PCI: Quirk pci_for_each_dma_alias() for bridges
-      PCI: Add quirks for ASMedia and Tundra bridges
-      iommu: Create central IOMMU group lookup/creation interface
-      iommu/amd: Update to use PCI DMA aliases
-      iommu/amd: Use iommu_group_get_for_dev()
-      iommu/intel: Use iommu_group_get_for_dev()
-      iommu/intel: Update to use PCI DMA aliases
-      iommu/fsl: Use iommu_group_get_for_dev() for IOMMU groups
-      iommu: Remove pci.h
-      PCI: Remove pci_find_upstream_pcie_bridge()
-      PCI: Remove pci_get_dma_source()
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 0122ca6..5d1053c 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+ obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
+-thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o
++thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
+ 
+diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
+new file mode 100644
+index 0000000..f28e402
+--- /dev/null
++++ b/drivers/thunderbolt/eeprom.c
+@@ -0,0 +1,189 @@
++/*
++ * Thunderbolt Cactus Ridge driver - eeprom access
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#include "tb.h"
++
++/**
++ * tb_eeprom_ctl_write() - write control word
++ */
++static int tb_eeprom_ctl_write(struct tb_switch *sw, struct tb_eeprom_ctl *ctl)
++{
++	return tb_sw_write(sw, ctl, TB_CFG_SWITCH, sw->cap_plug_events + 4, 1);
++}
++
++/**
++ * tb_eeprom_ctl_write() - read control word
++ */
++static int tb_eeprom_ctl_read(struct tb_switch *sw, struct tb_eeprom_ctl *ctl)
++{
++	return tb_sw_read(sw, ctl, TB_CFG_SWITCH, sw->cap_plug_events + 4, 1);
++}
++
++enum tb_eeprom_transfer {
++	TB_EEPROM_IN,
++	TB_EEPROM_OUT,
++};
++
++/**
++ * tb_eeprom_active - enable rom access
++ *
++ * WARNING: Always disable access after usage. Otherwise the controller will
++ * fail to reprobe.
++ */
++static int tb_eeprom_active(struct tb_switch *sw, bool enable)
++{
++	struct tb_eeprom_ctl ctl;
++	int res = tb_eeprom_ctl_read(sw, &ctl);
++	if (res)
++		return res;
++	if (enable) {
++		ctl.access_high = 1;
++		res = tb_eeprom_ctl_write(sw, &ctl);
++		if (res)
++			return res;
++		ctl.access_low = 0;
++		return tb_eeprom_ctl_write(sw, &ctl);
++	} else {
++		ctl.access_low = 1;
++		res = tb_eeprom_ctl_write(sw, &ctl);
++		if (res)
++			return res;
++		ctl.access_high = 0;
++		return tb_eeprom_ctl_write(sw, &ctl);
++	}
++}
++
++/**
++ * tb_eeprom_transfer - transfer one bit
++ *
++ * If TB_EEPROM_IN is passed, then the bit can be retrieved from ctl->data_in.
++ * If TB_EEPROM_OUT is passed, then ctl->data_out will be written.
++ */
++static int tb_eeprom_transfer(struct tb_switch *sw, struct tb_eeprom_ctl *ctl,
++			      enum tb_eeprom_transfer direction)
++{
++	int res;
++	if (direction == TB_EEPROM_OUT) {
++		res = tb_eeprom_ctl_write(sw, ctl);
++		if (res)
++			return res;
++	}
++	ctl->clock = 1;
++	res = tb_eeprom_ctl_write(sw, ctl);
++	if (res)
++		return res;
++	if (direction == TB_EEPROM_IN) {
++		res = tb_eeprom_ctl_read(sw, ctl);
++		if (res)
++			return res;
++	}
++	ctl->clock = 0;
++	return tb_eeprom_ctl_write(sw, ctl);
++}
++
++/**
++ * tb_eeprom_out - write one byte to the bus
++ */
++static int tb_eeprom_out(struct tb_switch *sw, u8 val)
++{
++	struct tb_eeprom_ctl ctl;
++	int i;
++	int res = tb_eeprom_ctl_read(sw, &ctl);
++	if (res)
++		return res;
++	for (i = 0; i < 8; i++) {
++		ctl.data_out = val & 0x80;
++		res = tb_eeprom_transfer(sw, &ctl, TB_EEPROM_OUT);
++		if (res)
++			return res;
++		val <<= 1;
++	}
++	return 0;
++}
++
++/**
++ * tb_eeprom_in - read one byte from the bus
++ */
++static int tb_eeprom_in(struct tb_switch *sw, u8 *val)
++{
++	struct tb_eeprom_ctl ctl;
++	int i;
++	int res = tb_eeprom_ctl_read(sw, &ctl);
++	if (res)
++		return res;
++	*val = 0;
++	for (i = 0; i < 8; i++) {
++		*val <<= 1;
++		res = tb_eeprom_transfer(sw, &ctl, TB_EEPROM_IN);
++		if (res)
++			return res;
++		*val |= ctl.data_in;
++	}
++	return 0;
++}
++
++/**
++ * tb_eeprom_read_n - read count bytes from offset into val
++ */
++static int tb_eeprom_read_n(struct tb_switch *sw, u16 offset, u8 *val,
++		size_t count)
++{
++	int i, res;
++	res = tb_eeprom_active(sw, true);
++	if (res)
++		return res;
++	res = tb_eeprom_out(sw, 3);
++	if (res)
++		return res;
++	res = tb_eeprom_out(sw, offset >> 8);
++	if (res)
++		return res;
++	res = tb_eeprom_out(sw, offset);
++	if (res)
++		return res;
++	for (i = 0; i < count; i++) {
++		res = tb_eeprom_in(sw, val + i);
++		if (res)
++			return res;
++	}
++	return tb_eeprom_active(sw, false);
++}
++
++int tb_eeprom_read_uid(struct tb_switch *sw, u64 *uid)
++{
++	u8 data[9];
++	struct tb_cap_plug_events cap;
++	int res;
++	if (!sw->cap_plug_events) {
++		tb_sw_warn(sw, "no TB_CAP_PLUG_EVENTS, cannot read eeprom\n");
++		return -ENOSYS;
++	}
++	res = tb_sw_read(sw, &cap, TB_CFG_SWITCH, sw->cap_plug_events,
++			     sizeof(cap) / 4);
++	if (res)
++		return res;
++	if (!cap.eeprom_ctl.present || cap.eeprom_ctl.not_present) {
++		tb_sw_warn(sw, "no NVM\n");
++		return -ENOSYS;
++	}
++
++	if (cap.drom_offset > 0xffff) {
++		tb_sw_warn(sw, "drom offset is larger than 0xffff: %#x\n",
++				cap.drom_offset);
++		return -ENXIO;
++	}
++
++	/* read uid */
++	res = tb_eeprom_read_n(sw, cap.drom_offset, data, 9);
++	if (res)
++		return res;
++	/* TODO: check checksum in data[0] */
++	*uid = *(u64 *)(data+1);
++	return 0;
++}
++
++
++
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index a6968cc..eef5f1c 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -370,6 +370,11 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 	}
+ 	sw->cap_plug_events = cap;
+ 
++	if (tb_eeprom_read_uid(sw, &sw->uid))
++		tb_sw_warn(sw, "could not read uid from eeprom\n");
++	else
++		tb_sw_info(sw, "uid: %#llx\n", sw->uid);
++
+ 	if (tb_plug_events_active(sw, true))
+ 		goto err;
+ 
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 508abc4..a89087f 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -19,6 +19,7 @@ struct tb_switch {
+ 	struct tb_regs_switch_header config;
+ 	struct tb_port *ports;
+ 	struct tb *tb;
++	u64 uid;
+ 	int cap_plug_events; /* offset, zero if not found */
+ 	bool is_unplugged; /* unplugged, will go away */
+ };
+@@ -231,6 +232,8 @@ int tb_path_activate(struct tb_path *path);
+ void tb_path_deactivate(struct tb_path *path);
+ bool tb_path_is_invalid(struct tb_path *path);
+ 
++int tb_eeprom_read_uid(struct tb_switch *sw, u64 *uid);
++
+ 
+ static inline int tb_route_length(u64 route)
+ {
+-- 
+1.9.3
 
-
- drivers/iommu/amd_iommu.c           |  214 +++++++-----------------
- drivers/iommu/amd_iommu_types.h     |    1 
- drivers/iommu/fsl_pamu_domain.c     |   66 --------
- drivers/iommu/intel-iommu.c         |  307 +++++++++++++----------------------
- drivers/iommu/intel_irq_remapping.c |   55 ++++--
- drivers/iommu/iommu.c               |  181 +++++++++++++++++++++
- drivers/iommu/pci.h                 |   29 ---
- drivers/pci/quirks.c                |  116 ++++++++-----
- drivers/pci/search.c                |  104 +++++++++---
- include/linux/iommu.h               |    1 
- include/linux/pci.h                 |   31 +---
- 11 files changed, 557 insertions(+), 548 deletions(-)
- delete mode 100644 drivers/iommu/pci.h
