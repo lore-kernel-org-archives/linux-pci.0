@@ -1,87 +1,278 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:63128 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754840AbaEFMtX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 6 May 2014 08:49:23 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: RE: [PATCH v7 01/10] PCI: host: rcar: Add Renesas R-Car PCIe driver
-Date: Tue, 6 May 2014 12:49:17 +0000
-Message-ID: <adb16b87e1b54911b02d5d0cd720b02c@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
- <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
- <20140424191901.GE29593@google.com>
- <9b8bedae9d604383ac7ec22fd0f62fdb@HKXPR06MB168.apcprd06.prod.outlook.com>
- <CAErSpo6Autto4n4A4wHtXQNJzD3RKevkVcLZHUods-2-eiRDYQ@mail.gmail.com>
- <20140428203501.GA3016@obsidianresearch.com>
- <ac795ce3bb6349708e2e96686e19d24f@HKXPR06MB168.apcprd06.prod.outlook.com>
- <20140430154345.GA1705@obsidianresearch.com>
- <b9160c7a49304270b5070dcf49482723@HKXPR06MB168.apcprd06.prod.outlook.com>
- <CAErSpo4xJ36UabUcCDLsA_Q+r-C2ZV_q16y=Os8vVGFm-iMBxw@mail.gmail.com>
-In-Reply-To: <CAErSpo4xJ36UabUcCDLsA_Q+r-C2ZV_q16y=Os8vVGFm-iMBxw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:59832 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755232AbaEaO2q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:28:46 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v4 03/15] thunderbolt: Setup control channel
+Date: Sat, 31 May 2014 16:27:48 +0200
+Message-Id: <1401546480-2071-4-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNCk9uIDAxIE1heSAyMDE0IDE4OjMxLCBCam9ybiB3cm90ZToNCj4gWytjYyBT
-cmlrYW50aCwgTWljaGFsLCBHcmFudCBiZWNhdXNlIHdlJ3JlIGhhdmluZyB0aGUgc2FtZSBkaXNj
-dXNzaW9uDQo+IGFib3V0IHJvb3QgYnVzIG51bWJlcnMgaW4gdGhlIFhpbGlueCBob3N0IGJyaWRn
-ZSBkcml2ZXJdDQo+IA0KPiBPbiBUaHUsIE1heSAxLCAyMDE0IGF0IDM6NTAgQU0sIFBoaWwgRWR3
-b3J0aHkNCj4gPHBoaWwuZWR3b3J0aHlAcmVuZXNhcy5jb20+IHdyb3RlOg0KPiANCj4gPiBXaGVu
-IHdvdWxkIHRoZSBQQ0kgY29yZSBjaGFuZ2UgdGhlIHJvb3QgYnVzIG51bWJlciB0byBzb21ldGhp
-bmcgb3RoZXINCj4gdGhhbiBzZXQgaW4gc3lzLT5idXNucj8NCj4gDQo+IFRoZSBQQ0kgY29yZSBu
-ZXZlciBjaGFuZ2VzIHRoZSByb290IGJ1cyBudW1iZXIgb2YgYSBob3N0IGJyaWRnZSwgYnV0DQo+
-IGl0J3MgaW1wb3J0YW50IGZvciB0aGUgY29yZSB0byBrbm93IGV4YWN0bHkgd2hhdCBidXMgbnVt
-YmVycyBhcmUNCj4gYmVoaW5kIGVhY2ggaG9zdCBicmlkZ2Ugc28gd2UgY2FuIGNvcnJlY3RseSBh
-c3NpZ24gYnVzIG51bWJlcnMsIE1NSU8sDQo+IGFuZCBJL08gcG9ydCByZXNvdXJjZXMuDQo+IA0K
-PiBUaGUgcmVhc29uIGlzIHRoYXQgd2hlbiB3ZSBlbnVtZXJhdGUgYSBQQ0ktdG8tUENJIGJyaWRn
-ZSwgd2UgaGF2ZSB0bw0KPiBrbm93IHdoZXRoZXIgYnVzIG51bWJlcnMgYXJlIGF2YWlsYWJsZSBm
-b3IgdGhlIHNlY29uZGFyeSBidXMuICBGb3INCj4gZXhhbXBsZSwgYXNzdW1lIHR3byBob3N0IGJy
-aWRnZXMgY29uZmlndXJlZCAob3Igd2lyZWQpIGFzIGZvbGxvd3M6DQo+IA0KPiAgIEEgbGVhZHMg
-dG8gW2J1cyAwMC0xZl0sIHdpdGggYXBlcnR1cmUgW21lbSAweDgwMDAwMDAwLTB4OGZmZmZmZmZd
-DQo+ICAgQiBsZWFkcyB0byBbYnVzIDIwLWZmXSwgd2l0aCBhcGVydHVyZSBbbWVtIDB4OTAwMDAw
-MDAtMHg5ZmZmZmZmZl0NCj4gDQo+IEZ1cnRoZXIsIGFzc3VtZSBhIFBDSS10by1QQ0kgYnJpZGdl
-IGF0IDFmOjAwLjAuICBJZiB0aGUgaG9zdCBicmlkZ2UNCj4gZHJpdmVyIGRvZXNuJ3QgdGVsbCB1
-cyB0aGUgW2J1cyAwMC0xZl0gcmFuZ2UgZm9yIGhvc3QgYnJpZGdlIEEsIHRoZQ0KPiBQQ0kgY29y
-ZSB3aWxsIGFzc3VtZSBbYnVzIDAwLWZmXS4gIFdoZW4gdGhlIGNvcmUgZW51bWVyYXRlcyB0aGUN
-Cj4gMWY6MDAuMCBicmlkZ2UsIGl0IHdpbGwgYXNzaWduIGJ1cyBudW1iZXIgMjAgdG8gaXRzIHNl
-Y29uZGFyeSBidXMuDQo+IE5vdyBpdCBlbnVtZXJhdGVzIGRldmljZXMgb24gYnVzIDIwLiAgVGhl
-IGNvcmUgZXhwZWN0cyB0aGlzIHRvIGJlIGRvbmUNCj4gdmlhIGhvc3QgYnJpZGdlIEEsIGJ1dCBl
-bnVtZXJhdGlvbiB1c2VzIElELXJvdXRlZCBjb25maWcgdHJhbnNhY3Rpb25zLA0KPiBzbyB0aGV5
-IGFyZSBjbGFpbWVkIGJ5IGhvc3QgYnJpZGdlIEIgaW5zdGVhZC4gIElmIHdlIGZpbmQgYSBkZXZp
-Y2UNCj4gMjA6MDAuMCwgdGhlIGNvcmUgdGhpbmtzIGl0IGlzIGJlbG93IEEsIGJ1dCBpdCBpcyBy
-ZWFsbHkgYmVsb3cgQi4NCj4gDQo+IE5vdyB3ZSBhc3NpZ24gcmVzb3VyY2VzIHRvIDIwOjAwLjAs
-IGFuZCBzaW5jZSB3ZSB0aGluayBpdCdzIGJlbG93IEEsDQo+IHdlIGFzc2lnbiB0aGVtIGZyb20g
-dGhlIFttZW0gMHg4MDAwMDAwMC0weDhmZmZmZmZmXSBhcGVydHVyZS4gIFRoaXMNCj4gb2J2aW91
-c2x5IGRvZXNuJ3Qgd29yaywgYmVjYXVzZSB3aGVuIHRoZSBkcml2ZXIgcGVyZm9ybXMgTU1JTw0K
-PiBhY2Nlc3Nlcywgd2hpY2ggYXJlIGFkZHJlc3Mtcm91dGVkLCB0aGV5IGFyZSBjbGFpbWVkIGJ5
-IGhvc3QgYnJpZGdlIEEsDQo+IG5vdCBCLCBzbyB0aGUgMjA6MDAuMCBkZXZpY2UgbmV2ZXIgc2Vl
-cyB0aGVtLg0KVGhhbmtzIGZvciB0aGUgY2xlYXIgZXhwbGFuYXRpb24uDQoNCj4gSWYgeW91ciBo
-b3N0IGJyaWRnZSByZWFsbHkgY2xhaW1zIEFMTCBidXMgbnVtYmVycyAoMDAtZmYpLCB0aGF0J3MN
-Cj4gZmluZSwgYW5kIHlvdSBjYW4gdGVsbCB0aGUgUENJIGNvcmUgdGhhdC4gIEJ1dCBpZiB5b3Ug
-aGF2ZSBzZXZlcmFsDQo+IHN1Y2ggYnJpZGdlcywgdGhleSBzaG91bGQgYmUgcGxhY2VkIGluIHNl
-cGFyYXRlIGRvbWFpbnMuDQpUaGF0IG1ha2VzIHNlbnNlLg0KDQpJbiB0aGUgY2FzZSBvZiB0aGUg
-Ui1DYXIgUENJZSBob3N0IGJyaWRnZSwgYXMgZmFyIGFzIEkgY2FuIHRlbGwsIHRoZSBoYXJkd2Fy
-ZSBkb2VzbuKAmXQgY2FyZSBhYm91dCBidXMgbnVtYmVycyBhdCBhbGwsIHdpdGggdGhlIGV4Y2Vw
-dGlvbiB0aGF0IHRoZSBkcml2ZXIgdXNlcyBvbmUgYnVzIG51bWJlciB0byB0YXJnZXQgdGhlIGJy
-aWRnZSBpdHNlbGYuIFdlIGNhbiB1c2UgYXMgbWFueSBvciBhcyBmZXcgYnVzIG51bWJlcnMgZm9y
-IHRoZSBzZWNvbmRhcnkgYnVzIGFzIHlvdSBsaWtlLg0KDQpTbywgdGhlIFItQ2FyIFBDSWUgZHJp
-dmVyIHNob3VsZCBpbXBsZW1lbnQgYnVzIHJhbmdlcywgYnV0IHNob3VsZCBpdCBhbHNvIHVzZSBz
-ZXBhcmF0ZSBQQ0kgZG9tYWlucyBmb3IgbXVsdGlwbGUgY29udHJvbGxlcnM/DQoNCj4gVGhpcyBp
-cyBwcm9iYWJseSBtb3JlIGRldGFpbCB0aGFuIHlvdSB3YW50ZWQsIGFuZCBtYXliZSB5b3UgZG9u
-J3QgZXZlcg0KPiBleHBlY3QgdG8gaGF2ZSBtdWx0aXBsZSBob3N0IGJyaWRnZXMgb3IgY29tcGxp
-Y2F0ZWQgaGllcmFyY2hpZXMgb2YNCj4gZGV2aWNlcy4gIEJ1dCB0aGUgUENJIGNvcmUgaGFzIHRv
-IGRlYWwgd2l0aCB0aGVzZSBpc3N1ZXMgb24gb3RoZXINCj4gc3lzdGVtcywgc28gaXQncyBpbXBv
-cnRhbnQgdG8gZ2V0IHRoZXNlIGRldGFpbHMgcmlnaHQuDQoNClRoYW5rcw0KUGhpbA0K
+Add struct tb which will contain our view of the thunderbolt bus.  For
+now it just contains a pointer to the control channel and a workqueue
+for hotplug events.
+
+Add thunderbolt_alloc_and_start() and thunderbolt_shutdown_and_free()
+which are responsible for setup and teardown of struct tb.
+
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+---
+ drivers/thunderbolt/Makefile |   2 +-
+ drivers/thunderbolt/nhi.c    |  18 +++++-
+ drivers/thunderbolt/tb.c     | 134 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.h     |  35 +++++++++++
+ 4 files changed, 186 insertions(+), 3 deletions(-)
+ create mode 100644 drivers/thunderbolt/tb.c
+ create mode 100644 drivers/thunderbolt/tb.h
+
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 4b21c99..1f996bb 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+ obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
+-thunderbolt-objs := nhi.o ctl.o
++thunderbolt-objs := nhi.o ctl.o tb.o
+ 
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index d73a744..f3a4ac2 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -16,6 +16,7 @@
+ 
+ #include "nhi.h"
+ #include "nhi_regs.h"
++#include "tb.h"
+ 
+ #define RING_TYPE(ring) ((ring)->is_tx ? "TX ring" : "RX ring")
+ 
+@@ -517,6 +518,7 @@ static void nhi_shutdown(struct tb_nhi *nhi)
+ static int nhi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	struct tb_nhi *nhi;
++	struct tb *tb;
+ 	int res;
+ 
+ 	res = pcim_enable_device(pdev);
+@@ -575,14 +577,26 @@ static int nhi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* magic value - clock related? */
+ 	iowrite32(3906250 / 10000, nhi->iobase + 0x38c00);
+ 
+-	pci_set_drvdata(pdev, nhi);
++	dev_info(&nhi->pdev->dev, "NHI initialized, starting thunderbolt\n");
++	tb = thunderbolt_alloc_and_start(nhi);
++	if (!tb) {
++		/*
++		 * At this point the RX/TX rings might already have been
++		 * activated. Do a proper shutdown.
++		 */
++		nhi_shutdown(nhi);
++		return -EIO;
++	}
++	pci_set_drvdata(pdev, tb);
+ 
+ 	return 0;
+ }
+ 
+ static void nhi_remove(struct pci_dev *pdev)
+ {
+-	struct tb_nhi *nhi = pci_get_drvdata(pdev);
++	struct tb *tb = pci_get_drvdata(pdev);
++	struct tb_nhi *nhi = tb->nhi;
++	thunderbolt_shutdown_and_free(tb);
+ 	nhi_shutdown(nhi);
+ }
+ 
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+new file mode 100644
+index 0000000..6920979
+--- /dev/null
++++ b/drivers/thunderbolt/tb.c
+@@ -0,0 +1,134 @@
++/*
++ * Thunderbolt Cactus Ridge driver - bus logic (NHI independent)
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#include <linux/slab.h>
++#include <linux/errno.h>
++#include <linux/delay.h>
++
++#include "tb.h"
++
++/* hotplug handling */
++
++struct tb_hotplug_event {
++	struct work_struct work;
++	struct tb *tb;
++	u64 route;
++	u8 port;
++	bool unplug;
++};
++
++/**
++ * tb_handle_hotplug() - handle hotplug event
++ *
++ * Executes on tb->wq.
++ */
++static void tb_handle_hotplug(struct work_struct *work)
++{
++	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
++	struct tb *tb = ev->tb;
++	mutex_lock(&tb->lock);
++	if (!tb->hotplug_active)
++		goto out; /* during init, suspend or shutdown */
++
++	/* do nothing for now */
++out:
++	mutex_unlock(&tb->lock);
++	kfree(ev);
++}
++
++/**
++ * tb_schedule_hotplug_handler() - callback function for the control channel
++ *
++ * Delegates to tb_handle_hotplug.
++ */
++static void tb_schedule_hotplug_handler(void *data, u64 route, u8 port,
++					bool unplug)
++{
++	struct tb *tb = data;
++	struct tb_hotplug_event *ev = kmalloc(sizeof(*ev), GFP_KERNEL);
++	if (!ev)
++		return;
++	INIT_WORK(&ev->work, tb_handle_hotplug);
++	ev->tb = tb;
++	ev->route = route;
++	ev->port = port;
++	ev->unplug = unplug;
++	queue_work(tb->wq, &ev->work);
++}
++
++/**
++ * thunderbolt_shutdown_and_free() - shutdown everything
++ *
++ * Free all switches and the config channel.
++ *
++ * Used in the error path of thunderbolt_alloc_and_start.
++ */
++void thunderbolt_shutdown_and_free(struct tb *tb)
++{
++	mutex_lock(&tb->lock);
++
++	if (tb->ctl) {
++		tb_ctl_stop(tb->ctl);
++		tb_ctl_free(tb->ctl);
++	}
++	tb->ctl = NULL;
++	tb->hotplug_active = false; /* signal tb_handle_hotplug to quit */
++
++	/* allow tb_handle_hotplug to acquire the lock */
++	mutex_unlock(&tb->lock);
++	if (tb->wq) {
++		flush_workqueue(tb->wq);
++		destroy_workqueue(tb->wq);
++		tb->wq = NULL;
++	}
++	mutex_destroy(&tb->lock);
++	kfree(tb);
++}
++
++/**
++ * thunderbolt_alloc_and_start() - setup the thunderbolt bus
++ *
++ * Allocates a tb_cfg control channel, initializes the root switch, enables
++ * plug events and activates pci devices.
++ *
++ * Return: Returns NULL on error.
++ */
++struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
++{
++	struct tb *tb;
++
++	tb = kzalloc(sizeof(*tb), GFP_KERNEL);
++	if (!tb)
++		return NULL;
++
++	tb->nhi = nhi;
++	mutex_init(&tb->lock);
++	mutex_lock(&tb->lock);
++
++	tb->wq = alloc_ordered_workqueue("thunderbolt", 0);
++	if (!tb->wq)
++		goto err_locked;
++
++	tb->ctl = tb_ctl_alloc(tb->nhi, tb_schedule_hotplug_handler, tb);
++	if (!tb->ctl)
++		goto err_locked;
++	/*
++	 * tb_schedule_hotplug_handler may be called as soon as the config
++	 * channel is started. Thats why we have to hold the lock here.
++	 */
++	tb_ctl_start(tb->ctl);
++
++	/* Allow tb_handle_hotplug to progress events */
++	tb->hotplug_active = true;
++	mutex_unlock(&tb->lock);
++	return tb;
++
++err_locked:
++	mutex_unlock(&tb->lock);
++	thunderbolt_shutdown_and_free(tb);
++	return NULL;
++}
++
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+new file mode 100644
+index 0000000..6055dfd
+--- /dev/null
++++ b/drivers/thunderbolt/tb.h
+@@ -0,0 +1,35 @@
++/*
++ * Thunderbolt Cactus Ridge driver - bus logic (NHI independent)
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#ifndef TB_H_
++#define TB_H_
++
++#include "ctl.h"
++
++/**
++ * struct tb - main thunderbolt bus structure
++ */
++struct tb {
++	struct mutex lock;	/*
++				 * Big lock. Must be held when accessing cfg or
++				 * any struct tb_switch / struct tb_port.
++				 */
++	struct tb_nhi *nhi;
++	struct tb_ctl *ctl;
++	struct workqueue_struct *wq; /* ordered workqueue for plug events */
++	bool hotplug_active; /*
++			      * tb_handle_hotplug will stop progressing plug
++			      * events and exit if this is not set (it needs to
++			      * acquire the lock one more time). Used to drain
++			      * wq after cfg has been paused.
++			      */
++
++};
++
++struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi);
++void thunderbolt_shutdown_and_free(struct tb *tb);
++
++#endif
+-- 
+1.9.3
+
