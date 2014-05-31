@@ -1,59 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:18904 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932164AbaESQVP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 May 2014 12:21:15 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54602 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S934624AbaEaAio (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 May 2014 20:38:44 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kumar Gala <galak@codeaurora.org>,
+	Rob Herring <robherring2@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
 	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch Part1 V2 01/29] x86, irq: update high address field when updating affinity for MSI IRQ
-Date: Tue, 20 May 2014 00:22:45 +0800
-Message-Id: <1400516594-11544-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1400516594-11544-1-git-send-email-jiang.liu@linux.intel.com>
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH 2/2] of: treat PCI config space as IORESOURCE_MEM type with special flags.
+Date: Sat, 31 May 2014 01:36:41 +0100
+Message-Id: <1401496601-31983-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com>
+References: <20140530233034.GH1677@bart.dudau.co.uk>
+ <1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If x2apic is enabled, the MSI high address field should also be aslo
-updated when setting affinity for MSI IRQ, otherwise the MSI IRQ may
-target wrong APIC IDs.
+If we have a PCI config space specified in something like a ranges
+property we should treat it as memory type resource. Use the
+IORESOURCE_ECFG bit to distinguish the config space from standard
+IORESOURCE_MEM resources.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Kumar Gama <galak@codeaurora.org>
+[Updated commit log and added IORESOURCE_ECFG bit]
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 ---
- arch/x86/kernel/apic/io_apic.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/of/address.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 9d0a9795a0f8..2de992501a1b 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3007,6 +3007,10 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 2fcfbae..877e9e5 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -123,6 +123,9 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
+ 	u32 w = be32_to_cpup(addr);
  
- 	__get_cached_msi_msg(data->msi_desc, &msg);
- 
-+	msg.address_hi = MSI_ADDR_BASE_HI;
-+	if (x2apic_enabled())
-+		msg.address_hi |= MSI_ADDR_EXT_DEST_ID(dest);
-+
- 	msg.data &= ~MSI_DATA_VECTOR_MASK;
- 	msg.data |= MSI_DATA_VECTOR(cfg->vector);
- 	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+ 	switch((w >> 24) & 0x03) {
++	case 0x00: /* cfg space */
++		flags |= IORESOURCE_MEM | IORESOURCE_PCI_ECFG;
++		break;
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
 -- 
-1.7.10.4
+1.9.2
 
