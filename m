@@ -1,124 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:50101 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752991AbaEWQwg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 23 May 2014 12:52:36 -0400
-From: Will Deacon <will.deacon@arm.com>
-To: linux-arm-kernel@lists.infradead.org
-Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	jgunthorpe@obsidianresearch.com, sthokal@xilinx.com,
-	Will Deacon <will.deacon@arm.com>
-Subject: [PATCH v7 1/4] ARM: kconfig: allow PCI support to be selected with ARCH_MULTIPLATFORM
-Date: Fri, 23 May 2014 17:51:52 +0100
-Message-Id: <1400863915-24135-2-git-send-email-will.deacon@arm.com>
-In-Reply-To: <1400863915-24135-1-git-send-email-will.deacon@arm.com>
-References: <1400863915-24135-1-git-send-email-will.deacon@arm.com>
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:50788 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932311AbaEaO3F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 31 May 2014 10:29:05 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v4 12/15] PCI: Add pci_fixup_suspend_late quirk pass
+Date: Sat, 31 May 2014 16:27:57 +0200
+Message-Id: <1401546480-2071-13-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When targetting ARCH_MULTIPLATFORM, we may include support for SoCs with
-PCI-capable devices (e.g. mach-virt with virtio-pci).
+Add pci_fixup_suspend_late as a new pci_fixup_pass. The pass is called
+from suspend_noirq and poweroff_noirq. Using the same pass for suspend
+and hibernate is consistent with resume_early which is called by
+resume_noirq and restore_noirq.
 
-This patch allows PCI support to be selected for these SoCs by selecting
-CONFIG_MIGHT_HAVE_PCI when CONFIG_ARCH_MULTIPLATFORM=y and removes the
-individual selections from multi-platform enabled SoCs.
+The new quirk pass is required for Thunderbolt support on Apple
+hardware.
 
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Will Deacon <will.deacon@arm.com>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/arm/Kconfig               | 1 +
- arch/arm/mach-bcm/Kconfig      | 1 -
- arch/arm/mach-cns3xxx/Kconfig  | 1 -
- arch/arm/mach-imx/Kconfig      | 1 -
- arch/arm/mach-mvebu/Kconfig    | 1 -
- arch/arm/mach-shmobile/Kconfig | 1 -
- arch/arm/mach-tegra/Kconfig    | 1 -
- 7 files changed, 1 insertion(+), 6 deletions(-)
+ drivers/pci/pci-driver.c          | 18 ++++++++++++++----
+ drivers/pci/quirks.c              |  7 +++++++
+ include/asm-generic/vmlinux.lds.h |  3 +++
+ include/linux/pci.h               | 12 +++++++++++-
+ 4 files changed, 35 insertions(+), 5 deletions(-)
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index db3c5414223e..860bea828ac4 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -314,6 +314,7 @@ config ARCH_MULTIPLATFORM
- 	select CLKSRC_OF
- 	select COMMON_CLK
- 	select GENERIC_CLOCKEVENTS
-+	select MIGHT_HAVE_PCI
- 	select MULTI_IRQ_HANDLER
- 	select SPARSE_IRQ
- 	select USE_OF
-diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
-index 49c914cd9c7a..764c129b5eee 100644
---- a/arch/arm/mach-bcm/Kconfig
-+++ b/arch/arm/mach-bcm/Kconfig
-@@ -55,7 +55,6 @@ config ARCH_BCM_5301X
- 	select GENERIC_CLOCKEVENTS
- 	select ARM_GLOBAL_TIMER
- 	select CLKSRC_ARM_GLOBAL_TIMER_SCHED_CLOCK
--	select MIGHT_HAVE_PCI
- 	help
- 	  Support for Broadcom BCM470X and BCM5301X SoCs with ARM CPU cores.
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index d911e0c..55dc1b8 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -542,7 +542,7 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
+ 			WARN_ONCE(pci_dev->current_state != prev,
+ 				"PCI PM: Device state not saved by %pF\n",
+ 				drv->suspend_late);
+-			return 0;
++			goto Fixup;
+ 		}
+ 	}
  
-diff --git a/arch/arm/mach-cns3xxx/Kconfig b/arch/arm/mach-cns3xxx/Kconfig
-index dce8decd5d46..66838f42037f 100644
---- a/arch/arm/mach-cns3xxx/Kconfig
-+++ b/arch/arm/mach-cns3xxx/Kconfig
-@@ -1,7 +1,6 @@
- config ARCH_CNS3XXX
- 	bool "Cavium Networks CNS3XXX family" if ARCH_MULTI_V6
- 	select ARM_GIC
--	select MIGHT_HAVE_PCI
- 	select PCI_DOMAINS if PCI
- 	help
- 	  Support for Cavium Networks CNS3XXX platform.
-diff --git a/arch/arm/mach-imx/Kconfig b/arch/arm/mach-imx/Kconfig
-index 5740296dc429..50bb546b893a 100644
---- a/arch/arm/mach-imx/Kconfig
-+++ b/arch/arm/mach-imx/Kconfig
-@@ -796,7 +796,6 @@ config SOC_IMX6Q
- 	select ARM_ERRATA_764369 if SMP
- 	select HAVE_ARM_SCU if SMP
- 	select HAVE_ARM_TWD if SMP
--	select MIGHT_HAVE_PCI
- 	select PCI_DOMAINS if PCI
- 	select PINCTRL_IMX6Q
- 	select SOC_IMX6
-diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
-index 3f73eecbcfb0..120301ebd324 100644
---- a/arch/arm/mach-mvebu/Kconfig
-+++ b/arch/arm/mach-mvebu/Kconfig
-@@ -9,7 +9,6 @@ config ARCH_MVEBU
- 	select MVEBU_MBUS
- 	select ZONE_DMA if ARM_LPAE
- 	select ARCH_REQUIRE_GPIOLIB
--	select MIGHT_HAVE_PCI
- 	select PCI_QUIRKS if PCI
- 	select OF_ADDRESS_PCI
+@@ -551,6 +551,9 @@ static int pci_legacy_suspend_late(struct device *dev, pm_message_t state)
  
-diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
-index 0f92ba8e7884..905003898913 100644
---- a/arch/arm/mach-shmobile/Kconfig
-+++ b/arch/arm/mach-shmobile/Kconfig
-@@ -8,7 +8,6 @@ config ARCH_SHMOBILE_MULTI
- 	select HAVE_ARM_SCU if SMP
- 	select HAVE_ARM_TWD if SMP
- 	select ARM_GIC
--	select MIGHT_HAVE_PCI
- 	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
- 	select NO_IOPORT_MAP
- 	select PINCTRL
-diff --git a/arch/arm/mach-tegra/Kconfig b/arch/arm/mach-tegra/Kconfig
-index 55b305d51669..e16999e5b735 100644
---- a/arch/arm/mach-tegra/Kconfig
-+++ b/arch/arm/mach-tegra/Kconfig
-@@ -7,7 +7,6 @@ config ARCH_TEGRA
- 	select CLKSRC_MMIO
- 	select HAVE_ARM_SCU if SMP
- 	select HAVE_ARM_TWD if SMP
--	select MIGHT_HAVE_PCI
- 	select PINCTRL
- 	select ARCH_HAS_RESET_CONTROLLER
- 	select RESET_CONTROLLER
+ 	pci_pm_set_unknown_state(pci_dev);
+ 
++Fixup:
++	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
++
+ 	return 0;
+ }
+ 
+@@ -694,7 +697,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 
+ 	if (!pm) {
+ 		pci_save_state(pci_dev);
+-		return 0;
++		goto Fixup;
+ 	}
+ 
+ 	if (pm->suspend_noirq) {
+@@ -711,7 +714,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 			WARN_ONCE(pci_dev->current_state != prev,
+ 				"PCI PM: State of device not saved by %pF\n",
+ 				pm->suspend_noirq);
+-			return 0;
++			goto Fixup;
+ 		}
+ 	}
+ 
+@@ -735,6 +738,9 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+ 		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
+ 
++Fixup:
++	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
++
+ 	return 0;
+ }
+ 
+@@ -959,8 +965,10 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+ 	if (pci_has_legacy_pm_support(to_pci_dev(dev)))
+ 		return pci_legacy_suspend_late(dev, PMSG_HIBERNATE);
+ 
+-	if (!drv || !drv->pm)
++	if (!drv || !drv->pm) {
++		pci_fixup_device(pci_fixup_suspend_late, pci_dev);
+ 		return 0;
++	}
+ 
+ 	if (drv->pm->poweroff_noirq) {
+ 		int error;
+@@ -981,6 +989,8 @@ static int pci_pm_poweroff_noirq(struct device *dev)
+ 	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+ 		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
+ 
++	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
++
+ 	if (pcibios_pm_ops.poweroff_noirq)
+ 		return pcibios_pm_ops.poweroff_noirq(dev);
+ 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e729206..af2eba1 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3024,6 +3024,8 @@ extern struct pci_fixup __start_pci_fixups_resume_early[];
+ extern struct pci_fixup __end_pci_fixups_resume_early[];
+ extern struct pci_fixup __start_pci_fixups_suspend[];
+ extern struct pci_fixup __end_pci_fixups_suspend[];
++extern struct pci_fixup __start_pci_fixups_suspend_late[];
++extern struct pci_fixup __end_pci_fixups_suspend_late[];
+ 
+ static bool pci_apply_fixup_final_quirks;
+ 
+@@ -3069,6 +3071,11 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
+ 		end = __end_pci_fixups_suspend;
+ 		break;
+ 
++	case pci_fixup_suspend_late:
++		start = __start_pci_fixups_suspend_late;
++		end = __end_pci_fixups_suspend_late;
++		break;
++
+ 	default:
+ 		/* stupid compiler warning, you would think with an enum... */
+ 		return;
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 146e4ff..2dea636 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -288,6 +288,9 @@
+ 		VMLINUX_SYMBOL(__start_pci_fixups_suspend) = .;		\
+ 		*(.pci_fixup_suspend)					\
+ 		VMLINUX_SYMBOL(__end_pci_fixups_suspend) = .;		\
++		VMLINUX_SYMBOL(__start_pci_fixups_suspend_late) = .;	\
++		*(.pci_fixup_suspend_late)				\
++		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
+ 	}								\
+ 									\
+ 	/* Built-in firmware blobs */					\
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aab57b4..4724806 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1458,8 +1458,9 @@ enum pci_fixup_pass {
+ 	pci_fixup_final,	/* Final phase of device fixups */
+ 	pci_fixup_enable,	/* pci_enable_device() time */
+ 	pci_fixup_resume,	/* pci_device_resume() */
+-	pci_fixup_suspend,	/* pci_device_suspend */
++	pci_fixup_suspend,	/* pci_device_suspend() */
+ 	pci_fixup_resume_early, /* pci_device_resume_early() */
++	pci_fixup_suspend_late,	/* pci_device_suspend_late() */
+ };
+ 
+ /* Anonymous variables would be nice... */
+@@ -1500,6 +1501,11 @@ enum pci_fixup_pass {
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
+ 		suspend##hook, vendor, device, class,	\
+ 		class_shift, hook)
++#define DECLARE_PCI_FIXUP_CLASS_SUSPEND_LATE(vendor, device, class,	\
++					 class_shift, hook)		\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
++		suspend_late##hook, vendor, device,	\
++		class, class_shift, hook)
+ 
+ #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
+@@ -1525,6 +1531,10 @@ enum pci_fixup_pass {
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
+ 		suspend##hook, vendor, device,		\
+ 		PCI_ANY_ID, 0, hook)
++#define DECLARE_PCI_FIXUP_SUSPEND_LATE(vendor, device, hook)		\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
++		suspend_late##hook, vendor, device,	\
++		PCI_ANY_ID, 0, hook)
+ 
+ #ifdef CONFIG_PCI_QUIRKS
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
 -- 
-1.9.2
+1.9.3
 
