@@ -1,53 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:56669 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932730AbaE2Gjn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 May 2014 02:39:43 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
-	<kishon@ti.com>, Keerthy <j-keerthy@ti.com>,
-	Rajendra Nayak <rnayak@ti.com>, Tero Kristo <t-kristo@ti.com>,
-	Paul Walmsley <paul@pwsan.com>
-Subject: [PATCH v2 06/18] ARM: dts: DRA7: Add divider table to optfclk_pciephy_div clock
-Date: Thu, 29 May 2014 12:08:08 +0530
-Message-ID: <1401345500-20188-7-git-send-email-kishon@ti.com>
-In-Reply-To: <1401345500-20188-1-git-send-email-kishon@ti.com>
-References: <1401345500-20188-1-git-send-email-kishon@ti.com>
+Received: from dns-bn1lp0143.outbound.protection.outlook.com ([207.46.163.143]:2724
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756654AbaEaXvZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 31 May 2014 19:51:25 -0400
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: "andreas.noever@gmail.com" <andreas.noever@gmail.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"greg@kroah.com" <greg@kroah.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v4 00/15] Thunderbolt driver for Apple MacBooks
+Date: Sat, 31 May 2014 23:51:22 +0000
+Message-ID: <1401580281.7663.14.camel@x230>
+References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Keerthy <j-keerthy@ti.com>
-
-Add divider table to optfclk_pciephy_div clock. The Documentation
-for divider clock can be found at ../clock/ti/divider.txt
-
-Cc: Rajendra Nayak <rnayak@ti.com>
-Cc: Tero Kristo <t-kristo@ti.com>
-Cc: Paul Walmsley <paul@pwsan.com>
-Signed-off-by: Keerthy <j-keerthy@ti.com>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- arch/arm/boot/dts/dra7xx-clocks.dtsi |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi b/arch/arm/boot/dts/dra7xx-clocks.dtsi
-index c767687..55e95c5 100644
---- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
-+++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
-@@ -1170,6 +1170,7 @@
- 		clocks = <&apll_pcie_ck>;
- 		#clock-cells = <0>;
- 		reg = <0x021c>;
-+		ti,dividers = <2>, <1>;
- 		ti,bit-shift = <8>;
- 		ti,max-div = <2>;
- 	};
--- 
-1.7.9.5
-
+T24gU2F0LCAyMDE0LTA1LTMxIGF0IDE2OjI3ICswMjAwLCBBbmRyZWFzIE5vZXZlciB3cm90ZToN
+Cj4gSGkNCj4gDQo+IFRoaXMgaXMgdmVyc2lvbiA0IG9mIG15IFRodW5kZXJib2x0IGRyaXZlciBm
+b3IgQXBwbGUgaGFyZHdhcmUgKHNlZSBbMV0gZm9yIHYzKS4NCj4gDQo+IENoYW5nZXMgc2luY2Ug
+djM6DQo+ICAtIEZpeCB0eXBvcyBhbmQgc3R5bGUgcHJvYmxlbXMgY2F1Z2h0IGJ5IEJqb3JuLg0K
+PiAgLSBDaGFuZ2VkIHRoZSAjaWZkZWYgQ09ORklHX0FDUEkgYmxvY2sgdG8gY292ZXIgdGhlIHdo
+b2xlIHBjaSBxdWlyay4NCg0KSGkgQW5kcmVhcywNCg0KVGhpcyBzZWVtcyB0byBiZSB3b3JraW5n
+IHdlbGwgb24gbXkgTUJQLiBJdCBhcHBlYXJzIHRvIGJyb2FkbHkgd29yayBvbg0KbXkgTWFjIFBy
+bywgd2hpY2ggaGFzIFRodW5kZXJib2x0IDIgaGFyZHdhcmUgLSBJIGFkZGVkIHRoZSBQQ0kgSUQs
+IGFuZA0KbG9hZGluZyB0aGUgdGh1bmRlcmJvbHQgZHJpdmVyIGFmdGVyIHRoZSBkZXZpY2UgaXMg
+cGx1Z2dlZCBpbiB3b3JrcywgYnV0DQppdCB3b24ndCByZWNvZ25pc2UgaG90cGx1ZyBldmVudHMu
+IEkgZG9uJ3QgYXBwZWFyIHRvIGdldCBhbnkgaW50ZXJydXB0cw0KZnJvbSB0aGUgVGh1bmRlcmJv
+bHQgY29udHJvbGxlci4gQW55IGlkZWEgd2hhdCBtaWdodCBiZSBoYXBwZW5pbmcgdGhlcmU/DQoN
+CkFzIGZhciBhcyB0aGUgcXVpcmtzIGdvIC0gcGVyaGFwcyBzb21ldGhpbmcgbGlrZSB0aGlzIHdv
+dWxkIGJlDQpyZWFzb25hYmxlLCByYXRoZXIgdGhhbiBtYWludGFpbmluZyBhIGxpc3Qgb2YgbWFj
+aGluZXM/DQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9xdWlya3MuYyBiL2RyaXZlcnMvcGNp
+L3F1aXJrcy5jDQppbmRleCBjOWQ2YjkwLi5jMzE3MGQ0IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9w
+Y2kvcXVpcmtzLmMNCisrKyBiL2RyaXZlcnMvcGNpL3F1aXJrcy5jDQpAQCAtMjk5MywzNSArMjk5
+Myw2IEBAIERFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUigweDE4MTQsIDB4MDYwMSwgLyoNClJhbGlu
+ayBSVDI4MDAgODAyLjExbiBQQ0kgKi8NCiAJCQkgcXVpcmtfYnJva2VuX2ludHhfbWFza2luZyk7
+DQogDQogI2lmZGVmIENPTkZJR19BQ1BJDQotLyogQXBwbGUgc3lzdGVtcyB3aXRoIGEgQ2FjdHVz
+IFJpZGdlIFRodW5kZXJib2x0IGNvbnRyb2xsZXIuICovDQotc3RhdGljIHN0cnVjdCBkbWlfc3lz
+dGVtX2lkIGFwcGxlX3RodW5kZXJib2x0X3doaXRlbGlzdFtdID0gew0KLQl7DQotCQkubWF0Y2hl
+cyA9IHsNCi0JCQlETUlfTUFUQ0goRE1JX0JPQVJEX1ZFTkRPUiwgIkFwcGxlIEluYy4iKSwNCi0J
+CQlETUlfTUFUQ0goRE1JX1BST0RVQ1RfTkFNRSwgIk1hY0Jvb2tQcm85IiksDQotCQl9LA0KLQl9
+LA0KLQl7DQotCQkubWF0Y2hlcyA9IHsNCi0JCQlETUlfTUFUQ0goRE1JX0JPQVJEX1ZFTkRPUiwg
+IkFwcGxlIEluYy4iKSwNCi0JCQlETUlfTUFUQ0goRE1JX1BST0RVQ1RfTkFNRSwgIk1hY0Jvb2tQ
+cm8xMCIpLA0KLQkJfSwNCi0JfSwNCi0Jew0KLQkJLm1hdGNoZXMgPSB7DQotCQkJRE1JX01BVENI
+KERNSV9CT0FSRF9WRU5ET1IsICJBcHBsZSBJbmMuIiksDQotCQkJRE1JX01BVENIKERNSV9QUk9E
+VUNUX05BTUUsICJNYWNCb29rQWlyNSIpLA0KLQkJfSwNCi0JfSwNCi0Jew0KLQkJLm1hdGNoZXMg
+PSB7DQotCQkJRE1JX01BVENIKERNSV9CT0FSRF9WRU5ET1IsICJBcHBsZSBJbmMuIiksDQotCQkJ
+RE1JX01BVENIKERNSV9QUk9EVUNUX05BTUUsICJNYWNCb29rQWlyNiIpLA0KLQkJfSwNCi0JfSwN
+Ci0JeyB9DQotfTsNCi0NCiAvKg0KICAqIEFwcGxlOiBTaHV0ZG93biBDYWN0dXMgUmlkZ2UgVGh1
+bmRlcmJvbHQgY29udHJvbGxlci4NCiAgKg0KQEAgLTMwNDEsNyArMzAxMiw3IEBAIHN0YXRpYyB2
+b2lkDQpxdWlya19hcHBsZV9wb3dlcm9mZl90aHVuZGVyYm9sdChzdHJ1Y3QgcGNpX2RldiAqZGV2
+KQ0KIHsNCiAJYWNwaV9oYW5kbGUgYnJpZGdlLCBTWElPLCBTWEZQLCBTWExWOw0KIA0KLQlpZiAo
+IWRtaV9jaGVja19zeXN0ZW0oYXBwbGVfdGh1bmRlcmJvbHRfd2hpdGVsaXN0KSkNCisJaWYgKCFk
+bWlfbWF0Y2goRE1JX0JPQVJEX1ZFTkRPUiwgIkFwcGxlIEluYy4iKSkNCiAJCXJldHVybjsNCiAJ
+aWYgKHBjaV9wY2llX3R5cGUoZGV2KSAhPSBQQ0lfRVhQX1RZUEVfVVBTVFJFQU0pDQogCQlyZXR1
+cm47DQpAQCAtMzA4NCw3ICszMDU1LDcgQEAgc3RhdGljIHZvaWQNCnF1aXJrX2FwcGxlX3dhaXRf
+Zm9yX3RodW5kZXJib2x0KHN0cnVjdCBwY2lfZGV2ICpkZXYpDQogCXN0cnVjdCBwY2lfZGV2ICpz
+aWJsaW5nID0gTlVMTDsNCiAJc3RydWN0IHBjaV9kZXYgKm5oaSA9IE5VTEw7DQogDQotCWlmICgh
+ZG1pX2NoZWNrX3N5c3RlbShhcHBsZV90aHVuZGVyYm9sdF93aGl0ZWxpc3QpKQ0KKwlpZiAoIWRt
+aV9tYXRjaChETUlfQk9BUkRfVkVORE9SLCAiQXBwbGUgSW5jLiIpKQ0KIAkJcmV0dXJuOw0KIAlp
+ZiAocGNpX3BjaWVfdHlwZShkZXYpICE9IFBDSV9FWFBfVFlQRV9ET1dOU1RSRUFNKQ0KIAkJcmV0
+dXJuOw0KDQoNCi0tIA0KTWF0dGhldyBHYXJyZXR0IDxtYXR0aGV3LmdhcnJldHRAbmVidWxhLmNv
+bT4NCg==
