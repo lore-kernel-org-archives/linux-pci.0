@@ -1,83 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53113 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751058AbaFELFF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jun 2014 07:05:05 -0400
-Date: Thu, 5 Jun 2014 07:04:47 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Alexei Starovoitov <ast@plumgrid.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"David S. Miller" <davem@davemloft.net>, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci/msi: fix memory leak in free_msi_irqs()
-Message-ID: <20140605110447.GC20841@hmsreliant.think-freely.org>
-References: <1401922190-25357-1-git-send-email-ast@plumgrid.com>
+Received: from mail-we0-f173.google.com ([74.125.82.173]:43711 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbaFAUmq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jun 2014 16:42:46 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401922190-25357-1-git-send-email-ast@plumgrid.com>
+In-Reply-To: <1401639223-3441-1-git-send-email-matthew.garrett@nebula.com>
+References: <1401639223-3441-1-git-send-email-matthew.garrett@nebula.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Sun, 1 Jun 2014 22:42:25 +0200
+Message-ID: <CAMxnaaUh0s5A6x=N9VEeHGFkATDsYAtfz3JoLOLYA5jKSVyFwA@mail.gmail.com>
+Subject: Re: [PATCH] Thunderbolt: Add support for Thunderbolt 2 host controllers
+To: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <greg@kroah.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 04, 2014 at 03:49:50PM -0700, Alexei Starovoitov wrote:
-> free_msi_irqs() is leaking memory, since
-> list_for_each_entry(entry, &dev->msi_list, list) {...}
-> is never executed, because dev->msi_list is made empty by
-> the loop just above this one.
-> 
-> Fix it by relying on zero termination of attribute array like
-> populate_msi_sysfs() does.
-> 
-> Fixes: 1c51b50c2995 ("PCI/MSI: Export MSI mode using attributes, not kobjects")
-> Signed-off-by: Alexei Starovoitov <ast@plumgrid.com>
+On Sun, Jun 1, 2014 at 6:13 PM, Matthew Garrett
+<matthew.garrett@nebula.com> wrote:
+> Adding extra device IDs is enough to get this working on the second-gen
+> Thunderbolt controller in the Mac Pro.
+>
+> Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
 > ---
-> 
-> This was found by kmemleak report:
-> unreferenced object 0xffff880808eda600 (size 64):
->   comm "modprobe", pid 1526, jiffies 4294902299 (age 58422.716s)
->   hex dump (first 32 bytes):
->     20 c4 66 09 08 88 ff ff 24 01 00 00 00 00 00 00   .f.....$.......
->     50 97 77 82 ff ff ff ff 00 00 00 00 00 00 00 00  P.w.............
->   backtrace:
->     [<ffffffff816e5fc8>] kmemleak_alloc+0x28/0x50
->     [<ffffffff811b885e>] kmem_cache_alloc_trace+0xde/0x230
->     [<ffffffff813aa286>] populate_msi_sysfs+0xc6/0x250
->     [<ffffffff813aafdb>] pci_enable_msix+0x34b/0x430
->     [<ffffffff813ab0ec>] pci_enable_msix_range+0x2c/0x70
->     [<ffffffffa0034ade>] igb_init_interrupt_scheme+0x9e/0x420 [igb]
->     [<ffffffffa003d668>] igb_probe+0x4a8/0x1250 [igb]
->     [<ffffffff813930de>] local_pci_probe+0x4e/0xa0
->     [<ffffffff813933e9>] pci_device_probe+0xd9/0x120
->     [<ffffffff814697cd>] driver_probe_device+0x8d/0x250
->     [<ffffffff81469a3b>] __driver_attach+0xab/0xb0
->     [<ffffffff8146799d>] bus_for_each_dev+0x5d/0xa0
->     [<ffffffff814691de>] driver_attach+0x1e/0x20
->     [<ffffffff81468e57>] bus_add_driver+0x117/0x220
->     [<ffffffff8146a104>] driver_register+0x64/0xf0
->     [<ffffffff813923f4>] __pci_register_driver+0x64/0x70
-> 
-> IGB driver is calling pci_enable_msix_range() and immediately pci_disable_msix()
-> which leaks the memory.
-> Obviously the leak happens with any driver.
-> 
->  drivers/pci/msi.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 955ab7990c5b..fb02fc2fb034 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -414,7 +414,7 @@ static void free_msi_irqs(struct pci_dev *dev)
->  	if (dev->msi_irq_groups) {
->  		sysfs_remove_groups(&dev->dev.kobj, dev->msi_irq_groups);
->  		msi_attrs = dev->msi_irq_groups[0]->attrs;
-> -		list_for_each_entry(entry, &dev->msi_list, list) {
-> +		while (msi_attrs[count]) {
->  			dev_attr = container_of(msi_attrs[count],
->  						struct device_attribute, attr);
->  			kfree(dev_attr->attr.name);
-> -- 
-> 1.7.9.5
-> 
-> 
-Acked-by: Neil Horman <nhorman@tuxdriver.com>
+>  drivers/pci/quirks.c         | 2 ++
+>  drivers/thunderbolt/nhi.c    | 5 +++++
+>  drivers/thunderbolt/switch.c | 5 ++++-
+>  3 files changed, 11 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index c3170d4..20e76d0 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3083,6 +3083,8 @@ out:
+>  }
+>  DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x1547,
+>                                quirk_apple_wait_for_thunderbolt);
+> +DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL, 0x156d,
+> +                              quirk_apple_wait_for_thunderbolt);
+>  #endif
+Just to check: Did they split up the device ids? Is 0x156d for the
+bridges and 0x156c for the NHI?
+
+>
+>  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+> diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+> index 6f666fa..85b11d6 100644
+> --- a/drivers/thunderbolt/nhi.c
+> +++ b/drivers/thunderbolt/nhi.c
+> @@ -642,6 +642,11 @@ struct pci_device_id nhi_ids[] = {
+>                 .vendor = PCI_VENDOR_ID_INTEL, .device = 0x1547,
+>                 .subvendor = 0x2222, .subdevice = 0x1111,
+>         },
+> +       {
+> +               .class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
+> +               .vendor = PCI_VENDOR_ID_INTEL, .device = 0x156c,
+> +               .subvendor = 0x2222, .subdevice = 0x1111,
+> +       },
+>         { 0,}
+>  };
+>
+> diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+> index 2e19045..1fccdbf 100644
+> --- a/drivers/thunderbolt/switch.c
+> +++ b/drivers/thunderbolt/switch.c
+> @@ -294,8 +294,11 @@ static int tb_plug_events_active(struct tb_switch *sw, bool active)
+>
+>         if (active) {
+>                 data = data & 0xFFFFFF83;
+> -               if (sw->config.device_id == 0x1547)
+> +               switch (sw->config.device_id) {
+> +               case 0x1547:
+> +               case 0x156d:
+>                         data |= 4;
+> +               }
+>         } else {
+>                 data = data | 0x7c;
+>         }
+> --
+> 2.0.0
+>
+
+I have had a look at what os x does. They split between:
+1513, 151a, 1549 and 1547, 1548, 1567, 1569, 156b, 156d (the latter
+group gets bit 3 set)
+
+It looks like the first 3 are legacy devices, so maybe reverse the check?
+
+So far I could decode:
+1547: cactus ridge (2 and 4 port?)
+1549: ethernet adapter
+156b: 2 port falcon ridge
+156d: 4 port falcon ridge
