@@ -1,59 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:44064 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751654AbaFEOqU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jun 2014 10:46:20 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: linux-pci@vger.kernel.org
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit Kumar <mohit.kumar@st.com>, kernel@pengutronix.de
-Subject: [PATCH 1/4] PCI: allow MSI chip providers to implement their own multiple MSI setup
-Date: Thu,  5 Jun 2014 16:46:09 +0200
-Message-Id: <1401979572-32101-2-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1401979572-32101-1-git-send-email-l.stach@pengutronix.de>
-References: <1401979572-32101-1-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: rjw@rjwysocki.net
+Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Matthew Garrett <matthew.garrett@nebula.com>
+Date: Sun,  1 Jun 2014 12:33:54 -0400
+Message-Id: <1401640436-1947-3-git-send-email-matthew.garrett@nebula.com>
+In-Reply-To: <1401640436-1947-1-git-send-email-matthew.garrett@nebula.com>
+References: <1401640436-1947-1-git-send-email-matthew.garrett@nebula.com>
+Subject: [PATCH 2/4] ACPI: Don't call PCI OSC on Apple hardware when claiming to be Darwin
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/msi.c   | 3 +++
- include/linux/msi.h | 2 ++
- 2 files changed, 5 insertions(+)
+The Apple PCI _OSC method has the following code:
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 27a7e67ddfe4..c45399d3061a 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -68,9 +68,12 @@ int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+if (LEqual (0x01, OSDW ()))
+  if (LAnd (LEqual (Arg0, GUID), NEXP)
+    (do stuff)
+  else
+    (fail)
+
+NEXP is a value in high memory and is presumably under the control of the
+firmware. No methods set it. The methods that are called in the "do stuff"
+path are dummies. Unless there's some additional firmware call in early boot,
+there's no way for this call to succeed - and even if it does, it doesn't do
+anything.
+
+The easiest way to handle this is simply to ignore it. We know which flags
+would be set, so just set them by hand if the platform is running in Darwin
+mode.
+
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+---
+ drivers/acpi/pci_root.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index d388f13..f04b6b9 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -430,6 +430,17 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 	acpi_handle handle = device->handle;
  
- int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
-+	struct msi_chip *chip = dev->bus->msi;
- 	struct msi_desc *entry;
- 	int ret;
- 
-+	if (chip && chip->setup_irqs)
-+		return chip->setup_irqs(chip, dev, nvec, type);
  	/*
- 	 * If an architecture wants to support multiple MSI, it needs to
- 	 * override arch_setup_msi_irqs()
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 92a2f991262a..d813f898194c 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -75,6 +75,8 @@ struct msi_chip {
- 
- 	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
- 			 struct msi_desc *desc);
-+	int (*setup_irqs)(struct msi_chip *chip, struct pci_dev *dev,
-+			  int nvec, int type);
- 	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
- 	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
- 			    int nvec, int type);
++	 * Apple always return failure on _OSC calls when _OSI("Darwin") has
++	 * been called successfully. We know the feature set supported by the
++	 * platform, so avoid calling _OSC at all
++	 */
++
++	if (acpi_gbl_osi_data == ACPI_OSI_DARWIN) {
++		root->osc_control_set = ~OSC_PCI_EXPRESS_PME_CONTROL;
++		return;
++	}
++
++	/*
+ 	 * All supported architectures that use ACPI have support for
+ 	 * PCI domains, so we indicate this in _OSC support capabilities.
+ 	 */
 -- 
-2.0.0.rc2
+1.8.5.3
 
