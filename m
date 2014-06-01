@@ -1,71 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:48243 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828AbaFWFHw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 01:07:52 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 23 Jun 2014 15:07:50 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 2C2323578048
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 15:07:48 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N4jWoS9568734
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 14:45:32 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N57kb4015140
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 15:07:47 +1000
-Date: Mon, 23 Jun 2014 15:07:47 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: benh@au1.ibm.com, linuxppc-dev@lists.ozlabs.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	gwshan@linux.vnet.ibm.com, yan@linux.vnet.ibm.com,
-	qiudayu@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH V3 02/17] pci/of: Match PCI VFs to dev-tree nodes
- dynamically
-Message-ID: <20140623050747.GB5069@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-3-git-send-email-weiyang@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1402365399-5121-3-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from cavan.codon.org.uk ([93.93.128.6]:59804 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752335AbaFAQN4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jun 2014 12:13:56 -0400
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: andreas.noever@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	greg@kroah.com, bhelgaas@google.com,
+	Matthew Garrett <matthew.garrett@nebula.com>
+Date: Sun,  1 Jun 2014 12:13:43 -0400
+Message-Id: <1401639223-3441-1-git-send-email-matthew.garrett@nebula.com>
+Subject: [PATCH] Thunderbolt: Add support for Thunderbolt 2 host controllers
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 09:56:24AM +0800, Wei Yang wrote:
->As introduced by commit 98d9f30c82 ("pci/of: Match PCI devices to dev-tree nodes
->dynamically"), we need to match PCI devices to their corresponding dev-tree
->nodes. While for VFs, this step was missed.
->
->This patch matches VFs' PCI devices to dev-tree nodes dynamically.
->
->Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->---
-> drivers/pci/iov.c |    1 +
-> 1 file changed, 1 insertion(+)
->
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index 589ef7d..1d21f43 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -67,6 +67,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->
-> 	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
-> 	virtfn->vendor = dev->vendor;
->+	pci_set_of_node(virtfn);
+Adding extra device IDs is enough to get this working on the second-gen
+Thunderbolt controller in the Mac Pro.
 
-If the VF and PF seats on different PCI buses, I guess pci_set_of_node() always
-binds nothing with the VF. It might be one of the problem your code missed and
-I didn't catch this in the code review done previously. However, it shouldn't
-be a real problem if we're not going to rely on dynamic device_node.
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+---
+ drivers/pci/quirks.c         | 2 ++
+ drivers/thunderbolt/nhi.c    | 5 +++++
+ drivers/thunderbolt/switch.c | 5 ++++-
+ 3 files changed, 11 insertions(+), 1 deletion(-)
 
-> 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
-> 	pci_setup_device(virtfn);
-> 	virtfn->dev.parent = dev->dev.parent;
-
-Thanks,
-Gavin
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index c3170d4..20e76d0 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3083,6 +3083,8 @@ out:
+ }
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x1547,
+ 			       quirk_apple_wait_for_thunderbolt);
++DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL, 0x156d,
++			       quirk_apple_wait_for_thunderbolt);
+ #endif
+ 
+ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index 6f666fa..85b11d6 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -642,6 +642,11 @@ struct pci_device_id nhi_ids[] = {
+ 		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x1547,
+ 		.subvendor = 0x2222, .subdevice = 0x1111,
+ 	},
++	{
++		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
++		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x156c,
++		.subvendor = 0x2222, .subdevice = 0x1111,
++	},
+ 	{ 0,}
+ };
+ 
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index 2e19045..1fccdbf 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -294,8 +294,11 @@ static int tb_plug_events_active(struct tb_switch *sw, bool active)
+ 
+ 	if (active) {
+ 		data = data & 0xFFFFFF83;
+-		if (sw->config.device_id == 0x1547)
++		switch (sw->config.device_id) {
++		case 0x1547:
++		case 0x156d:
+ 			data |= 4;
++		}
+ 	} else {
+ 		data = data | 0x7c;
+ 	}
+-- 
+2.0.0
 
