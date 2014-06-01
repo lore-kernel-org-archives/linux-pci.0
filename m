@@ -1,70 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:25784 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751304AbaF0Qbz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Jun 2014 12:31:55 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	"horms@verge.net.au" <horms@verge.net.au>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>
-Subject: RE: [PATCH] pcie-rcar: kill duplicate checks
-Date: Fri, 27 Jun 2014 16:31:49 +0000
-Message-ID: <b6f599bde2b347b6aae6dc638df16a21@HKXPR06MB168.apcprd06.prod.outlook.com>
-References: <201406271859.13626.sergei.shtylyov@cogentembedded.com>
-In-Reply-To: <201406271859.13626.sergei.shtylyov@cogentembedded.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from cavan.codon.org.uk ([93.93.128.6]:59916 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505AbaFAQeT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jun 2014 12:34:19 -0400
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: rjw@rjwysocki.net
+Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Matthew Garrett <matthew.garrett@nebula.com>
+Date: Sun,  1 Jun 2014 12:33:53 -0400
+Message-Id: <1401640436-1947-2-git-send-email-matthew.garrett@nebula.com>
+In-Reply-To: <1401640436-1947-1-git-send-email-matthew.garrett@nebula.com>
+References: <1401640436-1947-1-git-send-email-matthew.garrett@nebula.com>
+Subject: [PATCH 1/4] ACPI: Support _OSI("Darwin") correctly
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
+Apple hardware queries _OSI("Darwin") in order to determine whether the
+system is running OS X, and changes firmware behaviour based on the answer.
+The most obvious difference in behaviour is that Thunderbolt hardware is
+forcibly powered down unless the system is running OS X. The obvious solution
+would be to simply add Darwin to the list of supported _OSI strings, but this
+causes problems.
 
-Thanks
-Phil
+Recent Apple hardware includes two separate methods for checking _OSI
+strings. The first will check whether Darwin is supported, and if so will
+exit. The second will check whether Darwin is supported, but will then
+continue to check for further operating systems. If a further operating
+system is found then later firmware code will assume that the OS is not OS X.
+This results in the unfortunate situation where the Thunderbolt controller is
+available at boot time but remains powered down after suspend.
 
-On 27 June 2014 15:59, Sergei wrote:
-> The PCI core will have already checked the configuration register address
-> before
-> calling the {read|write}() methods, no need to check it again in these
-> methods.
-> 
-> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> 
-> ---
-> The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo.
-> 
->  drivers/pci/host/pcie-rcar.c |   10 ----------
->  1 file changed, 10 deletions(-)
-> 
-> Index: pci/drivers/pci/host/pcie-rcar.c
-> ==========================================================
-> =========
-> --- pci.orig/drivers/pci/host/pcie-rcar.c
-> +++ pci/drivers/pci/host/pcie-rcar.c
-> @@ -260,11 +260,6 @@ static int rcar_pcie_read_conf(struct pc
->  	struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
->  	int ret;
-> 
-> -	if ((size == 2) && (where & 1))
-> -		return PCIBIOS_BAD_REGISTER_NUMBER;
-> -	else if ((size == 4) && (where & 3))
-> -		return PCIBIOS_BAD_REGISTER_NUMBER;
-> -
->  	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
->  				      bus, devfn, where, val);
->  	if (ret != PCIBIOS_SUCCESSFUL) {
-> @@ -291,11 +286,6 @@ static int rcar_pcie_write_conf(struct p
->  	int shift, ret;
->  	u32 data;
-> 
-> -	if ((size == 2) && (where & 1))
-> -		return PCIBIOS_BAD_REGISTER_NUMBER;
-> -	else if ((size == 4) && (where & 3))
-> -		return PCIBIOS_BAD_REGISTER_NUMBER;
-> -
->  	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
->  				      bus, devfn, where, &data);
->  	if (ret != PCIBIOS_SUCCESSFUL)
+The easiest way to handle this is to special-case it in the Linux-specific
+OSI handling code. If we see Darwin, we should answer true and then disable
+all other _OSI vendor strings.
+
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+---
+ drivers/acpi/acpica/utosi.c |  1 +
+ drivers/acpi/osl.c          | 10 ++++++++++
+ include/acpi/actypes.h      | 25 +++++++++++++------------
+ 3 files changed, 24 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/acpi/acpica/utosi.c b/drivers/acpi/acpica/utosi.c
+index 685766f..63b0a3b 100644
+--- a/drivers/acpi/acpica/utosi.c
++++ b/drivers/acpi/acpica/utosi.c
+@@ -87,6 +87,7 @@ ACPI_MODULE_NAME("utosi")
+ static struct acpi_interface_info acpi_default_supported_interfaces[] = {
+ 	/* Operating System Vendor Strings */
+ 
++	{"Darwin", NULL, 0, ACPI_OSI_DARWIN},	/* OS X */
+ 	{"Windows 2000", NULL, 0, ACPI_OSI_WIN_2000},	/* Windows 2000 */
+ 	{"Windows 2001", NULL, 0, ACPI_OSI_WIN_XP},	/* Windows XP */
+ 	{"Windows 2001 SP1", NULL, 0, ACPI_OSI_WIN_XP_SP1},	/* Windows XP SP1 */
+diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+index 6776c59..312ab5c 100644
+--- a/drivers/acpi/osl.c
++++ b/drivers/acpi/osl.c
+@@ -152,6 +152,16 @@ static u32 acpi_osi_handler(acpi_string interface, u32 supported)
+ 			osi_linux.dmi ? " via DMI" : "");
+ 	}
+ 
++	if (!strcmp("Darwin", interface)) {
++		/*
++		 * Apple firmware will behave poorly if it receives positive
++		 * answers to "Darwin" and any other OS. Respond positively
++		 * to Darwin and then disable all other vendor strings.
++		 */
++		acpi_update_interfaces(ACPI_DISABLE_ALL_VENDOR_STRINGS);
++		supported = ACPI_UINT32_MAX;
++	}
++
+ 	return supported;
+ }
+ 
+diff --git a/include/acpi/actypes.h b/include/acpi/actypes.h
+index e763565..1c2ef56 100644
+--- a/include/acpi/actypes.h
++++ b/include/acpi/actypes.h
+@@ -1210,17 +1210,18 @@ struct acpi_memory_list {
+ #define ACPI_ENABLE_ALL_FEATURE_STRINGS     (ACPI_ENABLE_INTERFACES | ACPI_FEATURE_STRINGS)
+ #define ACPI_ENABLE_ALL_STRINGS             (ACPI_ENABLE_INTERFACES | ACPI_VENDOR_STRINGS | ACPI_FEATURE_STRINGS)
+ 
+-#define ACPI_OSI_WIN_2000               0x01
+-#define ACPI_OSI_WIN_XP                 0x02
+-#define ACPI_OSI_WIN_XP_SP1             0x03
+-#define ACPI_OSI_WINSRV_2003            0x04
+-#define ACPI_OSI_WIN_XP_SP2             0x05
+-#define ACPI_OSI_WINSRV_2003_SP1        0x06
+-#define ACPI_OSI_WIN_VISTA              0x07
+-#define ACPI_OSI_WINSRV_2008            0x08
+-#define ACPI_OSI_WIN_VISTA_SP1          0x09
+-#define ACPI_OSI_WIN_VISTA_SP2          0x0A
+-#define ACPI_OSI_WIN_7                  0x0B
+-#define ACPI_OSI_WIN_8                  0x0C
++#define ACPI_OSI_DARWIN                 0x01
++#define ACPI_OSI_WIN_2000               0x02
++#define ACPI_OSI_WIN_XP                 0x03
++#define ACPI_OSI_WIN_XP_SP1             0x04
++#define ACPI_OSI_WINSRV_2003            0x05
++#define ACPI_OSI_WIN_XP_SP2             0x06
++#define ACPI_OSI_WINSRV_2003_SP1        0x07
++#define ACPI_OSI_WIN_VISTA              0x08
++#define ACPI_OSI_WINSRV_2008            0x09
++#define ACPI_OSI_WIN_VISTA_SP1          0x0A
++#define ACPI_OSI_WIN_VISTA_SP2          0x0B
++#define ACPI_OSI_WIN_7                  0x0C
++#define ACPI_OSI_WIN_8                  0x0D
+ 
+ #endif				/* __ACTYPES_H__ */
+-- 
+1.8.5.3
+
