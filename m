@@ -1,72 +1,197 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:36713 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752669AbaFYKap (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 06:30:45 -0400
-Received: by mail-pd0-f175.google.com with SMTP id v10so1487475pde.20
-        for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 03:30:45 -0700 (PDT)
-Message-ID: <53AAA4CF.70606@ozlabs.ru>
-Date: Wed, 25 Jun 2014 20:30:39 +1000
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-MIME-Version: 1.0
-To: David Laight <David.Laight@ACULAB.COM>,
-	'Wei Yang' <weiyang@linux.vnet.ibm.com>
-CC: "benh@au1.ibm.com" <benh@au1.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"yan@linux.vnet.ibm.com" <yan@linux.vnet.ibm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"qiudayu@linux.vnet.ibm.com" <qiudayu@linux.vnet.ibm.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table dynamically
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com> <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com> <53A94DA8.6020206@ozlabs.ru> <20140625011211.GA5785@richard> <53AA4C32.7060004@ozlabs.ru> <20140625052758.GA8873@richard> <063D6719AE5E284EB5DD2968C1650D6D17264AD8@AcuExch.aculab.com>
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D17264AD8@AcuExch.aculab.com>
-Content-Type: text/plain; charset=KOI8-R
+Received: from hygieia.santi-shop.eu ([78.46.175.2]:41994 "EHLO
+	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752912AbaFBSUR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 14:20:17 -0400
+Date: Mon, 2 Jun 2014 20:19:26 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@linux.ie>
+Subject: [PATCH 1/2] x86, ia64: Move EFI_FB vga_default_device()
+ initialization to pci_vga_fixup()
+Message-ID: <20140602201926.4d476818@neptune.home>
+In-Reply-To: <20140602201650.35f0e936@neptune.home>
+References: <20140514224339.7f8be3a9@neptune.home>
+ <20140527234255.GJ11907@google.com>
+ <20140602201650.35f0e936@neptune.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/25/2014 07:20 PM, David Laight wrote:
-> From: Wei Yang
->> On Wed, Jun 25, 2014 at 02:12:34PM +1000, Alexey Kardashevskiy wrote:
->>> On 06/25/2014 11:12 AM, Wei Yang wrote:
->>>> On Tue, Jun 24, 2014 at 08:06:32PM +1000, Alexey Kardashevskiy wrote:
->>>>> On 06/10/2014 11:56 AM, Wei Yang wrote:
->>>>>> Current iommu_table of a PE is a static field. This will have a problem when
->>>>>> iommu_free_table is called.
->>>>>
->>>>> What kind of problem? This table is per PE and PE is not going anywhere.
->>>>>
->>>>
->>>> Yes, for Bus PE, they will always sit in the system. When VF PE introduced,
->>>> they could be released on the fly. When they are released, so do the iommu
->>>> table for the PE.
->>>
->>> iommu_table is a part of PE struct. When PE is released, iommu_table will
->>> go with it as well. Why to make is a pointer? I would understand it if you
->>> added reference counting there but no - iommu_table's lifetime is equal to
->>> PE lifetime.
->>>
->>
->> Yes, iommu_talbe's life time equals to PE lifetime, so when releasing a PE we
->> need to release the iommu table. Currently, there is one function to release
->> the iommu table, iommu_free_table() which takes a pointer of the iommu_table
->> and release it.
->>
->> If the iommu table in PE is just a part of PE, it will have some problem to
->> release it with iommu_free_table(). That's why I make it a pointer in PE
->> structure.
-> 
-> What are the sizes of the iommu table and the PE structure?
+With commit b4aa0163056b ("efifb: Implement vga_default_device() (v2)")
+Matthew Garrett introduced a efifb vga_default_device() so that EFI
+systems that do not load shadow VBIOS or setup VGA get proper value for
+boot_vga PCI sysfs attribute on the corresponding PCI device.
 
-This is all about iommu_table struct (which is just a descriptor), not
-IOMMU table per se (which may be megabytes) :)
+Xorg is refusing to detect devices when boot_vga=0 which is the case on
+some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
+the dri device but then bails out with "no devices detected".
 
+Note: When vga_default_device() is set boot_vga PCI sysfs attribute
+reflects its state. When unset this attribute is 1 whenever
+IORESOURCE_ROM_SHADOW flag is set.
 
-> If the table is a round number of pages then you probably don't want to
-> embed it inside the PE structure.
+With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
+while having native drivers for the GPU also makes selecting
+sysfb/efifb optional.
 
+Remove the efifb implementation of vga_default_device() and initialize
+vgaarb's vga_default_device() with the PCI GPU that matches boot
+screen_info in pci_fixup_video().
 
+Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
+---
+ arch/ia64/pci/fixup.c       | 21 +++++++++++++++++++++
+ arch/x86/include/asm/vga.h  |  6 ------
+ arch/x86/pci/fixup.c        | 21 +++++++++++++++++++++
+ drivers/video/fbdev/efifb.c | 38 --------------------------------------
+ 4 files changed, 42 insertions(+), 44 deletions(-)
 
-
+diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
+index eee069a..9ed5bef 100644
+--- a/arch/ia64/pci/fixup.c
++++ b/arch/ia64/pci/fixup.c
+@@ -37,6 +37,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
+ 		return;
+ 	/* Maybe, this machine supports legacy memory map. */
+ 
++	if (!vga_default_device()) {
++		resource_size_t start, end;
++		int i;
++
++		/* Does firmware framebuffer belong to us? */
++		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
++			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
++				continue;
++
++			start = pci_resource_start(pdev, i);
++			end  = pci_resource_end(pdev, i);
++
++			if (!start || !end)
++				continue;
++
++			if (screen_info.lfb_base >= start &&
++				(screen_info.lfb_base + screen_info.lfb_size) < end)
++				vga_set_default_device(pdev);
++		}
++	}
++
+ 	/* Is VGA routed to us? */
+ 	bus = pdev->bus;
+ 	while (bus) {
+diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
+index 44282fb..c4b9dc2 100644
+--- a/arch/x86/include/asm/vga.h
++++ b/arch/x86/include/asm/vga.h
+@@ -17,10 +17,4 @@
+ #define vga_readb(x) (*(x))
+ #define vga_writeb(x, y) (*(y) = (x))
+ 
+-#ifdef CONFIG_FB_EFI
+-#define __ARCH_HAS_VGA_DEFAULT_DEVICE
+-extern struct pci_dev *vga_default_device(void);
+-extern void vga_set_default_device(struct pci_dev *pdev);
+-#endif
+-
+ #endif /* _ASM_X86_VGA_H */
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 94ae9ae..7246cf2 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -325,6 +325,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
+ 	struct pci_bus *bus;
+ 	u16 config;
+ 
++	if (!vga_default_device()) {
++		resource_size_t start, end;
++		int i;
++
++		/* Does firmware framebuffer belong to us? */
++		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
++			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
++				continue;
++
++			start = pci_resource_start(pdev, i);
++			end  = pci_resource_end(pdev, i);
++
++			if (!start || !end)
++				continue;
++
++			if (screen_info.lfb_base >= start &&
++				(screen_info.lfb_base + screen_info.lfb_size) < end)
++				vga_set_default_device(pdev);
++		}
++	}
++
+ 	/* Is VGA routed to us? */
+ 	bus = pdev->bus;
+ 	while (bus) {
+diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+index ae9618f..a033180 100644
+--- a/drivers/video/fbdev/efifb.c
++++ b/drivers/video/fbdev/efifb.c
+@@ -19,8 +19,6 @@
+ 
+ static bool request_mem_succeeded = false;
+ 
+-static struct pci_dev *default_vga;
+-
+ static struct fb_var_screeninfo efifb_defined = {
+ 	.activate		= FB_ACTIVATE_NOW,
+ 	.height			= -1,
+@@ -84,18 +82,6 @@ static struct fb_ops efifb_ops = {
+ 	.fb_imageblit	= cfb_imageblit,
+ };
+ 
+-struct pci_dev *vga_default_device(void)
+-{
+-	return default_vga;
+-}
+-
+-EXPORT_SYMBOL_GPL(vga_default_device);
+-
+-void vga_set_default_device(struct pci_dev *pdev)
+-{
+-	default_vga = pdev;
+-}
+-
+ static int efifb_setup(char *options)
+ {
+ 	char *this_opt;
+@@ -126,30 +112,6 @@ static int efifb_setup(char *options)
+ 		}
+ 	}
+ 
+-	for_each_pci_dev(dev) {
+-		int i;
+-
+-		if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
+-			continue;
+-
+-		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+-			resource_size_t start, end;
+-
+-			if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
+-				continue;
+-
+-			start = pci_resource_start(dev, i);
+-			end  = pci_resource_end(dev, i);
+-
+-			if (!start || !end)
+-				continue;
+-
+-			if (screen_info.lfb_base >= start &&
+-			    (screen_info.lfb_base + screen_info.lfb_size) < end)
+-				default_vga = dev;
+-		}
+-	}
+-
+ 	return 0;
+ }
+ 
 -- 
-Alexey
+1.8.5.5
+
