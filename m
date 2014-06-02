@@ -1,55 +1,354 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24678 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754597AbaFYI7u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 04:59:50 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V3 01/21] iommu/vt-d: match segment number when searching for dev_iotlb capable devices
-Date: Wed, 25 Jun 2014 17:02:27 +0800
-Message-Id: <1403686967-10887-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from hygieia.santi-shop.eu ([78.46.175.2]:50587 "EHLO
+	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752911AbaFBSUR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 14:20:17 -0400
+Date: Mon, 2 Jun 2014 20:19:13 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@linux.ie>
+Subject: [PATCH 2/2] x86, ia64: Merge common vga fixup code
+Message-ID: <20140602201913.5ed28c1e@neptune.home>
+In-Reply-To: <20140602201650.35f0e936@neptune.home>
+References: <20140514224339.7f8be3a9@neptune.home>
+	<20140527234255.GJ11907@google.com>
+	<20140602201650.35f0e936@neptune.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For virtual machine and static identity domains, there may be devices
-from different PCI segments associated with the same domain.
-So function iommu_support_dev_iotlb() should also match PCI segment
-number (iommu unit) when searching for dev_iotlb capable devices.
+The fixup code for PCI VGA devices in ia64 and x86 is mostly identical.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Merge it into a single function called from both sides.
+
+The common code is moved to vgaarb.c which makes in dependant on
+CONFIG_VGA_ARB.
+
+Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
 ---
- drivers/iommu/intel-iommu.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ arch/ia64/pci/fixup.c    | 77 ++----------------------------------------------
+ arch/x86/pci/fixup.c     | 76 +----------------------------------------------
+ drivers/gpu/vga/vgaarb.c | 75 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/vgaarb.h   | 37 +++++++++++++++++++++++
+ 4 files changed, 116 insertions(+), 149 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 51b6b77dc3e5..e29d963f3967 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1275,7 +1275,8 @@ iommu_support_dev_iotlb (struct dmar_domain *domain, struct intel_iommu *iommu,
+diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
+index 9ed5bef..5df22f9 100644
+--- a/arch/ia64/pci/fixup.c
++++ b/arch/ia64/pci/fixup.c
+@@ -9,85 +9,14 @@
  
- 	spin_lock_irqsave(&device_domain_lock, flags);
- 	list_for_each_entry(info, &domain->devices, link)
--		if (info->bus == bus && info->devfn == devfn) {
-+		if (info->iommu == iommu && info->bus == bus &&
-+		    info->devfn == devfn) {
- 			found = 1;
- 			break;
- 		}
+ #include <asm/machvec.h>
+ 
+-/*
+- * Fixup to mark boot BIOS video selected by BIOS before it changes
+- *
+- * From information provided by "Jon Smirl" <jonsmirl@gmail.com>
+- *
+- * The standard boot ROM sequence for an x86 machine uses the BIOS
+- * to select an initial video card for boot display. This boot video
+- * card will have it's BIOS copied to C0000 in system RAM.
+- * IORESOURCE_ROM_SHADOW is used to associate the boot video
+- * card with this copy. On laptops this copy has to be used since
+- * the main ROM may be compressed or combined with another image.
+- * See pci_map_rom() for use of this flag. Before marking the device
+- * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
+- * by either arch cde or vga-arbitration, if so only apply the fixup to this
+- * already determined primary video card.
+- */
+-
+-static void pci_fixup_video(struct pci_dev *pdev)
++static void pci_ia64_fixup_video(struct pci_dev *pdev)
+ {
+-	struct pci_dev *bridge;
+-	struct pci_bus *bus;
+-	u16 config;
+-
+ 	if ((strcmp(ia64_platform_name, "dig") != 0)
+ 	    && (strcmp(ia64_platform_name, "hpzx1")  != 0))
+ 		return;
+ 	/* Maybe, this machine supports legacy memory map. */
+ 
+-	if (!vga_default_device()) {
+-		resource_size_t start, end;
+-		int i;
+-
+-		/* Does firmware framebuffer belong to us? */
+-		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+-			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
+-				continue;
+-
+-			start = pci_resource_start(pdev, i);
+-			end  = pci_resource_end(pdev, i);
+-
+-			if (!start || !end)
+-				continue;
+-
+-			if (screen_info.lfb_base >= start &&
+-				(screen_info.lfb_base + screen_info.lfb_size) < end)
+-				vga_set_default_device(pdev);
+-		}
+-	}
+-
+-	/* Is VGA routed to us? */
+-	bus = pdev->bus;
+-	while (bus) {
+-		bridge = bus->self;
+-
+-		/*
+-		 * From information provided by
+-		 * "David Miller" <davem@davemloft.net>
+-		 * The bridge control register is valid for PCI header
+-		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
+-		 * PCI header type NORMAL.
+-		 */
+-		if (bridge
+-		    &&((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+-		       ||(bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
+-			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
+-						&config);
+-			if (!(config & PCI_BRIDGE_CTL_VGA))
+-				return;
+-		}
+-		bus = bus->parent;
+-	}
+-	if (!vga_default_device() || pdev == vga_default_device()) {
+-		pci_read_config_word(pdev, PCI_COMMAND, &config);
+-		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+-			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
+-			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
+-			vga_set_default_device(pdev);
+-		}
+-	}
++	pci_fixup_video(pdev);
+ }
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+-				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_video);
++				PCI_CLASS_DISPLAY_VGA, 8, pci_ia64_fixup_video);
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 7246cf2..b599847 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -302,81 +302,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PB1,	pcie_r
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC,	pcie_rootport_aspm_quirk);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC1,	pcie_rootport_aspm_quirk);
+ 
+-/*
+- * Fixup to mark boot BIOS video selected by BIOS before it changes
+- *
+- * From information provided by "Jon Smirl" <jonsmirl@gmail.com>
+- *
+- * The standard boot ROM sequence for an x86 machine uses the BIOS
+- * to select an initial video card for boot display. This boot video
+- * card will have it's BIOS copied to C0000 in system RAM.
+- * IORESOURCE_ROM_SHADOW is used to associate the boot video
+- * card with this copy. On laptops this copy has to be used since
+- * the main ROM may be compressed or combined with another image.
+- * See pci_map_rom() for use of this flag. Before marking the device
+- * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
+- * by either arch cde or vga-arbitration, if so only apply the fixup to this
+- * already determined primary video card.
+- */
+-
+-static void pci_fixup_video(struct pci_dev *pdev)
+-{
+-	struct pci_dev *bridge;
+-	struct pci_bus *bus;
+-	u16 config;
+-
+-	if (!vga_default_device()) {
+-		resource_size_t start, end;
+-		int i;
+-
+-		/* Does firmware framebuffer belong to us? */
+-		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+-			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
+-				continue;
+-
+-			start = pci_resource_start(pdev, i);
+-			end  = pci_resource_end(pdev, i);
+-
+-			if (!start || !end)
+-				continue;
+-
+-			if (screen_info.lfb_base >= start &&
+-				(screen_info.lfb_base + screen_info.lfb_size) < end)
+-				vga_set_default_device(pdev);
+-		}
+-	}
+-
+-	/* Is VGA routed to us? */
+-	bus = pdev->bus;
+-	while (bus) {
+-		bridge = bus->self;
+-
+-		/*
+-		 * From information provided by
+-		 * "David Miller" <davem@davemloft.net>
+-		 * The bridge control register is valid for PCI header
+-		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
+-		 * PCI header type NORMAL.
+-		 */
+-		if (bridge
+-		    && ((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+-		       || (bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
+-			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
+-						&config);
+-			if (!(config & PCI_BRIDGE_CTL_VGA))
+-				return;
+-		}
+-		bus = bus->parent;
+-	}
+-	if (!vga_default_device() || pdev == vga_default_device()) {
+-		pci_read_config_word(pdev, PCI_COMMAND, &config);
+-		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+-			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
+-			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
+-			vga_set_default_device(pdev);
+-		}
+-	}
+-}
++/* pci_fixup_video shared in vgaarb.c */
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+ 				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_video);
+ 
+diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+index af02597..f0fbdf6 100644
+--- a/drivers/gpu/vga/vgaarb.c
++++ b/drivers/gpu/vga/vgaarb.c
+@@ -149,6 +149,81 @@ void vga_set_default_device(struct pci_dev *pdev)
+ }
+ #endif
+ 
++/*
++ * Fixup to mark boot BIOS video selected by BIOS before it changes
++ *
++ * From information provided by "Jon Smirl" <jonsmirl@gmail.com>
++ *
++ * The standard boot ROM sequence for an x86 machine uses the BIOS
++ * to select an initial video card for boot display. This boot video
++ * card will have it's BIOS copied to C0000 in system RAM.
++ * IORESOURCE_ROM_SHADOW is used to associate the boot video
++ * card with this copy. On laptops this copy has to be used since
++ * the main ROM may be compressed or combined with another image.
++ * See pci_map_rom() for use of this flag. Before marking the device
++ * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
++ * by either arch cde or vga-arbitration, if so only apply the fixup to this
++ * already determined primary video card.
++ */
++
++void pci_fixup_video(struct pci_dev *pdev)
++{
++	struct pci_dev *bridge;
++	struct pci_bus *bus;
++	u16 config;
++
++	if (!vga_default_device()) {
++		resource_size_t start, end;
++		int i;
++
++		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
++			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
++				continue;
++
++			start = pci_resource_start(pdev, i);
++			end  = pci_resource_end(pdev, i);
++
++			if (!start || !end)
++				continue;
++
++			if (screen_info.lfb_base >= start &&
++				(screen_info.lfb_base + screen_info.lfb_size) < end)
++				vga_set_default_device(pdev);
++		}
++	}
++
++	/* Is VGA routed to us? */
++	bus = pdev->bus;
++	while (bus) {
++		bridge = bus->self;
++
++		/*
++		 * From information provided by
++		 * "David Miller" <davem@davemloft.net>
++		 * The bridge control register is valid for PCI header
++		 * type BRIDGE, or CARDBUS. Host to PCI controllers use
++		 * PCI header type NORMAL.
++		 */
++		if (bridge
++		    && ((bridge->hdr_type == PCI_HEADER_TYPE_BRIDGE)
++		       || (bridge->hdr_type == PCI_HEADER_TYPE_CARDBUS))) {
++			pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
++						&config);
++			if (!(config & PCI_BRIDGE_CTL_VGA))
++				return;
++		}
++		bus = bus->parent;
++	}
++	if (!vga_default_device() || pdev == vga_default_device()) {
++		pci_read_config_word(pdev, PCI_COMMAND, &config);
++		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
++			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
++			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
++			vga_set_default_device(pdev);
++		}
++	}
++}
++
+ static inline void vga_irq_set_state(struct vga_device *vgadev, bool state)
+ {
+ 	if (vgadev->irq_set_state)
+diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
+index 2c02f3a..6518460 100644
+--- a/include/linux/vgaarb.h
++++ b/include/linux/vgaarb.h
+@@ -162,6 +162,43 @@ extern void vga_put(struct pci_dev *pdev, unsigned int rsrc);
+ #define vga_put(pdev, rsrc)
+ #endif
+ 
++/**
++ *     pci_fixup_video
++ *
++ *     This can be called by arch PCI to fixup boot VGA tagging
++ *     of VGA PCI devices (e.g. for X86, IA64)
++ *
++ *     This code was initially spread/duplicated across:
++ *     - X86 PCI-fixup
++ *     - IA64 PCI-fixup
++ *     - EFI_FB
++ *
++ *     * PCI-fixup part:
++ *     Fixup to mark boot BIOS video selected by BIOS before it changes
++ *
++ *     From information provided by "Jon Smirl" <jonsmirl@gmail.com>
++ *
++ *     The standard boot ROM sequence for an x86 machine uses the BIOS
++ *     to select an initial video card for boot display. This boot video
++ *     card will have it's BIOS copied to C0000 in system RAM.
++ *     IORESOURCE_ROM_SHADOW is used to associate the boot video
++ *     card with this copy. On laptops this copy has to be used since
++ *     the main ROM may be compressed or combined with another image.
++ *     See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
++ *     is marked here since the boot video device will be the only enabled
++ *     video device at this point.
++ *
++ *     * EFI_FB part:
++ *     Some EFI-based system (e.g. Intel-Macs from Apple) do not setup
++ *     shadow Video-BIOS and thus can only be detected by framebuffer
++ *     IO memory range. Flag the corresponding GPU as boot_vga.
++ */
++
++#if defined(CONFIG_VGA_ARB)
++void pci_fixup_video(struct pci_dev *pdev);
++#else
++static inline void pci_fixup_video(struct pci_dev *pdev) { }
++#endif
+ 
+ /**
+  *     vga_default_device
 -- 
-1.7.10.4
+1.8.5.5
 
