@@ -1,45 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:33529 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757617AbaFSIa4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 04:30:56 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 2/5] PCI/MSI: Remove the unused function msi_enabled_mask()
-Date: Thu, 19 Jun 2014 16:30:09 +0800
-Message-ID: <1403166609-5800-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:34007 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752354AbaFBPJu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 11:09:50 -0400
+Received: by mail-wg0-f52.google.com with SMTP id l18so5218173wgh.11
+        for <linux-pci@vger.kernel.org>; Mon, 02 Jun 2014 08:09:49 -0700 (PDT)
+From: Grant Likely <grant.likely@linaro.org>
+Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM
+ resources.
+To: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Rob Herring <robherring2@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+In-Reply-To: <4756033.LkcFQN0chs@wuerfel>
+References: <20140530233034.GH1677@bart.dudau.co.uk>
+	<1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com>
+	<1401496601-31983-2-git-send-email-Liviu.Dudau@arm.com>
+	<4756033.LkcFQN0chs@wuerfel>
+Date: Mon, 02 Jun 2014 16:09:45 +0100
+Message-Id: <20140602150945.964D4C40381@trevor.secretlab.ca>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No one uses msi_enabled_mask(), remove the dead code.
+On Sat, 31 May 2014 20:41:04 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Saturday 31 May 2014 01:36:40 Liviu Dudau wrote:
+> > We would like to be able to describe PCIe ECAM resources as
+> > IORESOURCE_MEM blocks while distinguish them from standard
+> > memory resources. Add an IORESOURCE_BIT entry for this case.
+> > 
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> 
+> I still don't see any value in this at all. What is the advantage
+> of doing this opposed to just having a standardized 'reg' property
+> for a particular compatible string?
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/msi.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+I'm inclined to agree. It doesn't seem appropriate to put config space
+in ranges, and the host controller binding is responsible for
+identifying how config space is memory mapped.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 7c9fb3a..dd34dbe 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -173,11 +173,6 @@ static inline __attribute_const__ u32 msi_capable_mask(u16 control)
- 	return msi_mask((control >> 1) & 7);
- }
- 
--static inline __attribute_const__ u32 msi_enabled_mask(u16 control)
--{
--	return msi_mask((control >> 4) & 7);
--}
--
- /*
-  * PCI 2.3 does not specify mask bits for each MSI interrupt.  Attempting to
-  * mask all MSI interrupts by clearing the MSI enable bit does not work
--- 
-1.7.1
-
-
+g.
