@@ -1,73 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:55404 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753449AbaFZOP2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 10:15:28 -0400
-Date: Thu, 26 Jun 2014 15:14:45 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:34637 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753629AbaFBQXL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 12:23:11 -0400
+Received: by mail-wg0-f47.google.com with SMTP id x12so5285478wgg.18
+        for <linux-pci@vger.kernel.org>; Mon, 02 Jun 2014 09:23:10 -0700 (PDT)
+From: Grant Likely <grant.likely@linaro.org>
+Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM
+ resources.
+To: Kumar Gala <galak@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
+	Rob Herring <robherring2@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Jon Masters <jonathan@jonmasters.org>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
- function.
-Message-ID: <20140626141444.GB5134@arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <20140405001953.GE15806@google.com>
- <20140407083120.GE17163@e106497-lin.cambridge.arm.com>
- <5183143.FxBNM0xTAV@wuerfel>
- <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
- <20140626085926.GB11244@arm.com>
- <20140626093029.GB12812@e106497-lin.cambridge.arm.com>
- <20140626141138.GC15296@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140626141138.GC15296@arm.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+In-Reply-To: <390B3F94-C058-47D6-82CE-0393E60014FF@codeaurora.org>
+References: <20140530233034.GH1677@bart.dudau.co.uk>
+	<1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com>
+	<1401496601-31983-2-git-send-email-Liviu.Dudau@arm.com>
+	<4756033.LkcFQN0chs@wuerfel>
+	<20140602150945.964D4C40381@trevor.secretlab.ca>
+	<390B3F94-C058-47D6-82CE-0393E60014FF@codeaurora.org>
+Date: Mon, 02 Jun 2014 17:23:06 +0100
+Message-Id: <20140602162306.4AB0FC40476@trevor.secretlab.ca>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 26, 2014 at 03:11:38PM +0100, Catalin Marinas wrote:
-> On Thu, Jun 26, 2014 at 10:30:29AM +0100, Liviu Dudau wrote:
-> > On Thu, Jun 26, 2014 at 09:59:26AM +0100, Catalin Marinas wrote:
-> > > Although a bit late, I'm raising this now and hopefully we'll come to a
-> > > conclusion soon. Delaying arm64 PCIe support even further is not a real
-> > > option, which leaves us with:
-> > > 
-> > > 1. Someone else (with enough PCIe knowledge) volunteering to take over
-> > >    soon or
-> > > 2. Dropping Liviu's work and going for an arm64-specific implementation
-> > >    (most likely based on the arm32 implementation, see below)
-> [...]
-> > > In conclusion, unless someone volunteers for the first option fairly
-> > > soon, we'll post the alternative patches for review and take it from
-> > > there.
-> > 
-> > That would be a huge step backwards IMO and a huge dissapointment. If
-> > you go with the alternative patches from Will you will basically reset
-> > every partner's implementation that has been built on top of my
-> > patches (when they did so with the understanding that my series will be
-> > the one ARM will support and publish) *and* make anyone's attempt to
-> > create a generic implementation harder, as they will have to undo this
-> > code to remove the arch-specific parts.
+On Mon, 2 Jun 2014 10:40:30 -0500, Kumar Gala <galak@codeaurora.org> wrote:
 > 
-> I fully agree and the alternative patchset is definitely _not_ my
-> preferred solution. You can read this email as a request for help to
-> complete the work (whether it comes from ARM, Linaro or other interested
-> parties). I don't mean taking over the whole patchset but potentially
-> helping with other arch conversion (microblaze, arm multi-platform).
+> On Jun 2, 2014, at 10:09 AM, Grant Likely <grant.likely@linaro.org> wrote:
+> 
+> > On Sat, 31 May 2014 20:41:04 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
+> >> On Saturday 31 May 2014 01:36:40 Liviu Dudau wrote:
+> >>> We would like to be able to describe PCIe ECAM resources as
+> >>> IORESOURCE_MEM blocks while distinguish them from standard
+> >>> memory resources. Add an IORESOURCE_BIT entry for this case.
+> >>> 
+> >>> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> >> 
+> >> I still don't see any value in this at all. What is the advantage
+> >> of doing this opposed to just having a standardized 'reg' property
+> >> for a particular compatible string?
+> > 
+> > I'm inclined to agree. It doesn't seem appropriate to put config space
+> > in ranges, and the host controller binding is responsible for
+> > identifying how config space is memory mapped.
+> > 
+> > g.
+> 
+> I don’t agree when it comes to ECAM, but we can drop this for now
+> until someone really does that.
 
-I feel it's also worth pointing out that I didn't write that code with the
-intention of getting it merged, nor as a competing solution to what Liviu
-was proposing at the time. It was merely a development tool to enable some
-of the SMMU and GICv3 work that Marc and I have been working on recently.
+Okay, humor me then. What would a ranges property look like for ECAM? Do
+you have an example? I believe there would need to be a separate entry
+for each and every PCI device on the bus to get the config spaces to be
+contiguous.
 
-Will
+> However, what do we do with the 2 cases that exist in upstream that
+> are using ranges for cfg space?
+
+Ignore them in the core code? Make the specific host controller handle
+them I would think.
+
+g.
+
