@@ -1,87 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:49100 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755956AbaFKRZE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jun 2014 13:25:04 -0400
-Received: by mail-ie0-f182.google.com with SMTP id rp18so53304iec.27
-        for <linux-pci@vger.kernel.org>; Wed, 11 Jun 2014 10:25:03 -0700 (PDT)
-Date: Wed, 11 Jun 2014 11:25:08 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexei Starovoitov <ast@plumgrid.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci/msi: fix memory leak in free_msi_irqs()
-Message-ID: <20140611172508.GA14357@google.com>
-References: <1401922190-25357-1-git-send-email-ast@plumgrid.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401922190-25357-1-git-send-email-ast@plumgrid.com>
+Received: from smtp.codeaurora.org ([198.145.11.231]:38943 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996AbaFBPkh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 11:40:37 -0400
+Content-Type: text/plain; charset=windows-1252
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM resources.
+From: Kumar Gala <galak@codeaurora.org>
+In-Reply-To: <20140602150945.964D4C40381@trevor.secretlab.ca>
+Date: Mon, 2 Jun 2014 10:40:30 -0500
+Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robherring2@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Message-Id: <390B3F94-C058-47D6-82CE-0393E60014FF@codeaurora.org>
+References: <20140530233034.GH1677@bart.dudau.co.uk> <1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com> <1401496601-31983-2-git-send-email-Liviu.Dudau@arm.com> <4756033.LkcFQN0chs@wuerfel> <20140602150945.964D4C40381@trevor.secretlab.ca>
+To: Grant Likely <grant.likely@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 04, 2014 at 03:49:50PM -0700, Alexei Starovoitov wrote:
-> free_msi_irqs() is leaking memory, since
-> list_for_each_entry(entry, &dev->msi_list, list) {...}
-> is never executed, because dev->msi_list is made empty by
-> the loop just above this one.
-> 
-> Fix it by relying on zero termination of attribute array like
-> populate_msi_sysfs() does.
-> 
-> Fixes: 1c51b50c2995 ("PCI/MSI: Export MSI mode using attributes, not kobjects")
-> Signed-off-by: Alexei Starovoitov <ast@plumgrid.com>
 
-I added Neil and Greg's acks and a stable tag and will merge this for
-v3.16.  Thanks!
+On Jun 2, 2014, at 10:09 AM, Grant Likely <grant.likely@linaro.org> wrote:
 
-> ---
+> On Sat, 31 May 2014 20:41:04 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
+>> On Saturday 31 May 2014 01:36:40 Liviu Dudau wrote:
+>>> We would like to be able to describe PCIe ECAM resources as
+>>> IORESOURCE_MEM blocks while distinguish them from standard
+>>> memory resources. Add an IORESOURCE_BIT entry for this case.
+>>> 
+>>> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>> 
+>> I still don't see any value in this at all. What is the advantage
+>> of doing this opposed to just having a standardized 'reg' property
+>> for a particular compatible string?
 > 
-> This was found by kmemleak report:
-> unreferenced object 0xffff880808eda600 (size 64):
->   comm "modprobe", pid 1526, jiffies 4294902299 (age 58422.716s)
->   hex dump (first 32 bytes):
->     20 c4 66 09 08 88 ff ff 24 01 00 00 00 00 00 00   .f.....$.......
->     50 97 77 82 ff ff ff ff 00 00 00 00 00 00 00 00  P.w.............
->   backtrace:
->     [<ffffffff816e5fc8>] kmemleak_alloc+0x28/0x50
->     [<ffffffff811b885e>] kmem_cache_alloc_trace+0xde/0x230
->     [<ffffffff813aa286>] populate_msi_sysfs+0xc6/0x250
->     [<ffffffff813aafdb>] pci_enable_msix+0x34b/0x430
->     [<ffffffff813ab0ec>] pci_enable_msix_range+0x2c/0x70
->     [<ffffffffa0034ade>] igb_init_interrupt_scheme+0x9e/0x420 [igb]
->     [<ffffffffa003d668>] igb_probe+0x4a8/0x1250 [igb]
->     [<ffffffff813930de>] local_pci_probe+0x4e/0xa0
->     [<ffffffff813933e9>] pci_device_probe+0xd9/0x120
->     [<ffffffff814697cd>] driver_probe_device+0x8d/0x250
->     [<ffffffff81469a3b>] __driver_attach+0xab/0xb0
->     [<ffffffff8146799d>] bus_for_each_dev+0x5d/0xa0
->     [<ffffffff814691de>] driver_attach+0x1e/0x20
->     [<ffffffff81468e57>] bus_add_driver+0x117/0x220
->     [<ffffffff8146a104>] driver_register+0x64/0xf0
->     [<ffffffff813923f4>] __pci_register_driver+0x64/0x70
+> I'm inclined to agree. It doesn't seem appropriate to put config space
+> in ranges, and the host controller binding is responsible for
+> identifying how config space is memory mapped.
 > 
-> IGB driver is calling pci_enable_msix_range() and immediately pci_disable_msix()
-> which leaks the memory.
-> Obviously the leak happens with any driver.
-> 
->  drivers/pci/msi.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 955ab7990c5b..fb02fc2fb034 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -414,7 +414,7 @@ static void free_msi_irqs(struct pci_dev *dev)
->  	if (dev->msi_irq_groups) {
->  		sysfs_remove_groups(&dev->dev.kobj, dev->msi_irq_groups);
->  		msi_attrs = dev->msi_irq_groups[0]->attrs;
-> -		list_for_each_entry(entry, &dev->msi_list, list) {
-> +		while (msi_attrs[count]) {
->  			dev_attr = container_of(msi_attrs[count],
->  						struct device_attribute, attr);
->  			kfree(dev_attr->attr.name);
-> -- 
-> 1.7.9.5
-> 
+> g.
+
+I don’t agree when it comes to ECAM, but we can drop this for now until someone really does that.
+
+However, what do we do with the 2 cases that exist in upstream that are using ranges for cfg space?
+
+- k
+
+-- 
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
