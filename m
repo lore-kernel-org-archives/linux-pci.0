@@ -1,116 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:34054 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933581AbaFQQFx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 12:05:53 -0400
-Received: by mail-ie0-f170.google.com with SMTP id tr6so6573288ieb.15
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jun 2014 09:05:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1402982995-13747-4-git-send-email-jiang.liu@linux.intel.com>
-References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com> <1402982995-13747-4-git-send-email-jiang.liu@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 17 Jun 2014 10:05:33 -0600
-Message-ID: <CAErSpo4y9HQB-OcX8XwpXHW=xCvDQOJZgokG5iMqg705XZnevg@mail.gmail.com>
-Subject: Re: [RFC Patch V2 03/16] ACPI, x86/PCI: Move resource_to_addr() to
- acpi generic
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:47259 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754721AbaFBOxM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 10:53:12 -0400
+Date: Mon, 2 Jun 2014 09:52:06 -0500
+From: scameron@beardog.cce.hp.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: james.bottomley@parallels.com, webb.scales@hp.com,
+	martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+	justin.lindley@hp.com, stephenmcameron@gmail.com,
+	joseph.t.handzik@hp.com, thenzl@redhat.com,
+	michael.miller@canonical.com, scott.teel@hp.com, hch@lst.de,
+	dan.carpenter@oracle.com, linux-pci@vger.kernel.org,
+	scameron@beardog.cce.hp.com
+Subject: Re: [PATCH 2 08/24] hpsa: choose number of reply queues more intelligently.
+Message-ID: <20140602145206.GH6970@beardog.cce.hp.com>
+References: <20140529154739.8180.50710.stgit@beardog.cce.hp.com> <20140529155302.8180.17597.stgit@beardog.cce.hp.com> <20140602092751.GA30545@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140602092751.GA30545@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 16, 2014 at 11:29 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> From: Yinghai Lu <yinghai@kernel.org>
->
-> Rui Wang reported ioapic hot-add does not work on his machine
-> that _CRS have MEMORY_FIXED.
-> He also proposed to expose resource_to_addr() and use it for ioapic.
->
-> We should move it to acpi generic, as ioapi.c current is in
+On Mon, Jun 02, 2014 at 02:27:51AM -0700, Christoph Hellwig wrote:
+> On Thu, May 29, 2014 at 10:53:02AM -0500, Stephen M. Cameron wrote:
+> > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > 
+> > No sense having 8 or 16 reply queues if you only have 4 cpus,
+> > and likewise no sense limiting to 8 reply queues if you have
+> > many more cpus.
+> 
+> I've applied this as it looks good as-is, but shouldn't we also
+> cap the number of MSI-X vectors in common code so that we avoid
+> adding this as boilerplate code to lots of drivers?
 
-s/ioapi.c/ioapic.c/
+Maybe so.  Thinking about CPU hotplug, is num_online_cpus()
+the right cap?  Maybe num_possible_cpus() is better in case
+additional cpus coming online are anticipated?
 
-> drivers/pci/.
->
-> Or should move it to acpica?
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+-- steve
 
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index 0bdacc5e26a3..e91deebf0930 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -424,6 +424,52 @@ void acpi_dev_free_resource_list(struct list_head *list)
->  }
->  EXPORT_SYMBOL_GPL(acpi_dev_free_resource_list);
->
-> +acpi_status acpi_mem_addr_resource_to_address64(struct acpi_resource *resource,
-> +                       struct acpi_resource_address64 *addr)
-> +{
-> +       acpi_status status;
-> +       struct acpi_resource_memory24 *memory24;
-> +       struct acpi_resource_memory32 *memory32;
-> +       struct acpi_resource_fixed_memory32 *fixed_memory32;
-> +
-> +       memset(addr, 0, sizeof(*addr));
-> +       switch (resource->type) {
-> +       case ACPI_RESOURCE_TYPE_MEMORY24:
-> +               memory24 = &resource->data.memory24;
-> +               addr->resource_type = ACPI_MEMORY_RANGE;
-> +               addr->minimum = memory24->minimum;
-> +               addr->address_length = memory24->address_length;
-> +               addr->maximum = addr->minimum + addr->address_length - 1;
-> +               return AE_OK;
-> +       case ACPI_RESOURCE_TYPE_MEMORY32:
-> +               memory32 = &resource->data.memory32;
-> +               addr->resource_type = ACPI_MEMORY_RANGE;
-> +               addr->minimum = memory32->minimum;
-> +               addr->address_length = memory32->address_length;
-> +               addr->maximum = addr->minimum + addr->address_length - 1;
-> +               return AE_OK;
-> +       case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
-> +               fixed_memory32 = &resource->data.fixed_memory32;
-> +               addr->resource_type = ACPI_MEMORY_RANGE;
-> +               addr->minimum = fixed_memory32->address;
-> +               addr->address_length = fixed_memory32->address_length;
-> +               addr->maximum = addr->minimum + addr->address_length - 1;
-> +               return AE_OK;
-> +       case ACPI_RESOURCE_TYPE_ADDRESS16:
-> +       case ACPI_RESOURCE_TYPE_ADDRESS32:
-> +       case ACPI_RESOURCE_TYPE_ADDRESS64:
-> +               status = acpi_resource_to_address64(resource, addr);
-> +               if (ACPI_SUCCESS(status) &&
-> +                   (addr->resource_type == ACPI_MEMORY_RANGE ||
-> +                   addr->resource_type == ACPI_IO_RANGE) &&
-> +                   addr->address_length > 0) {
-> +                       return AE_OK;
-> +               }
-> +               break;
-> +       }
-> +       return AE_ERROR;
-> +}
-
-There's already very similar-looking code in acpi/resource.c, e.g.,
-acpi_dev_resource_address_space() and acpi_dev_resource_memory().  Can
-you use that existing code instead of adding new code that's mostly a
-duplication?
-
-Bjorn
+> 
+> > 
+> > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > Reviewed-by: Mike Miller <michael.miller@canonical.com>
+> > Reviewed-by: Scott Teel <scott.teel@hp.com>
+> > ---
+> >  drivers/scsi/hpsa.c     |    2 ++
+> >  drivers/scsi/hpsa_cmd.h |    2 +-
+> >  2 files changed, 3 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> > index b1ecfd8..b903e86 100644
+> > --- a/drivers/scsi/hpsa.c
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -6157,6 +6157,8 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+> >  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
+> >  		dev_info(&h->pdev->dev, "MSIX\n");
+> >  		h->msix_vector = MAX_REPLY_QUEUES;
+> > +		if (h->msix_vector > num_online_cpus())
+> > +			h->msix_vector = num_online_cpus();
+> >  		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
+> >  				      h->msix_vector);
+> >  		if (err > 0) {
+> > diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+> > index db89245..104b67b 100644
+> > --- a/drivers/scsi/hpsa_cmd.h
+> > +++ b/drivers/scsi/hpsa_cmd.h
+> > @@ -615,7 +615,7 @@ struct TransTable_struct {
+> >  	u32            RepQCount;
+> >  	u32            RepQCtrAddrLow32;
+> >  	u32            RepQCtrAddrHigh32;
+> > -#define MAX_REPLY_QUEUES 8
+> > +#define MAX_REPLY_QUEUES 64
+> >  	struct vals32  RepQAddr[MAX_REPLY_QUEUES];
+> >  };
+> >  
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---end quoted text---
