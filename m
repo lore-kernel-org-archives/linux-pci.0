@@ -1,167 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH] ACPI / hotplug / PCI: Add hotplug contexts to PCI host bridges
-Date: Tue, 10 Jun 2014 22:51:51 +0200
-Message-ID: <1986515.ZPZrccsmiq@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:59715 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752617AbaFBUnH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 16:43:07 -0400
+Content-Type: text/plain; charset=windows-1252
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM resources.
+From: Kumar Gala <galak@codeaurora.org>
+In-Reply-To: <4495090.ktpdXEyibD@wuerfel>
+Date: Mon, 2 Jun 2014 15:43:02 -0500
+Cc: Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robherring2@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Message-Id: <95C66A63-9671-4AD5-9804-6647A305DB99@codeaurora.org>
+References: <20140530233034.GH1677@bart.dudau.co.uk> <20140602162306.4AB0FC40476@trevor.secretlab.ca> <2F6515B1-48FE-4ED6-908E-CC1CAD7AF403@codeaurora.org> <4495090.ktpdXEyibD@wuerfel>
+To: Arnd Bergmann <arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-After relatively recent changes in the ACPI-based PCI hotplug
-(ACPIPHP) code, the acpiphp_check_host_bridge() executed for PCI
-host bridges via acpi_pci_root_scan_dependent() doesn't do anything
-useful, because those bridges do not have hotplug contexts.  That
-happens by mistake, so fix it by making acpiphp_enumerate_slots()
-add hotplug contexts to PCI host bridges too and modify
-acpiphp_remove_slots() to drop those contexts for host bridges
-as appropriate.
+On Jun 2, 2014, at 2:15 PM, Arnd Bergmann <arnd@arndb.de> wrote:
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=76901
-Fixes: 2d8b1d566a5f (ACPI / hotplug / PCI: Get rid of check_sub_bridges())
-Reported-and-tested-by: Gavin Guo <gavin.guo@canonical.com>
-Cc: 3.15+ <stable@vger.kernel.org> # 3.15+
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |   10 ++++++
- drivers/pci/hotplug/acpiphp_glue.c |   60 +++++++++++++++++++++++++------------
- 2 files changed, 52 insertions(+), 18 deletions(-)
+> On Monday 02 June 2014 13:09:08 Kumar Gala wrote:
+>>> However, what do we do with the 2 cases that exist in upstream that
+>>>> are using ranges for cfg space?
+>>> 
+>>> Ignore them in the core code? Make the specific host controller handle
+>>> them I would think.
+>> 
+>> I just meant, should we ‘break’ their DTs and move them from using ranges to reg?
+> 
+> dw-pcie is used on a lot of systems, I think we should make the common
+> part of that driver always handle config space in a common way, and
+> move out the part that parses the ranges property into the individual
+> soc-specific glue drivers that want to keep optional backwards compatibility
+> with existing dtbs.
+> 
+> Which one is the other driver?
+> 
+> 	Arnd
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -373,17 +373,13 @@ static acpi_status acpiphp_add_context(a
- 
- static struct acpiphp_bridge *acpiphp_dev_to_bridge(struct acpi_device *adev)
- {
--	struct acpiphp_context *context;
- 	struct acpiphp_bridge *bridge = NULL;
- 
- 	acpi_lock_hp_context();
--	context = acpiphp_get_context(adev);
--	if (context) {
--		bridge = context->bridge;
-+	if (adev->hp) {
-+		bridge = to_acpiphp_root_context(adev->hp)->root_bridge;
- 		if (bridge)
- 			get_bridge(bridge);
--
--		acpiphp_put_context(context);
- 	}
- 	acpi_unlock_hp_context();
- 	return bridge;
-@@ -881,7 +877,17 @@ void acpiphp_enumerate_slots(struct pci_
- 	 */
- 	get_device(&bus->dev);
- 
--	if (!pci_is_root_bus(bridge->pci_bus)) {
-+	acpi_lock_hp_context();
-+	if (pci_is_root_bus(bridge->pci_bus)) {
-+		struct acpiphp_root_context *root_context;
-+
-+		root_context = kzalloc(sizeof(*root_context), GFP_KERNEL);
-+		if (!root_context)
-+			goto err;
-+
-+		root_context->root_bridge = bridge;
-+		acpi_set_hp_context(adev, &root_context->hp, NULL, NULL, NULL);
-+	} else {
- 		struct acpiphp_context *context;
- 
- 		/*
-@@ -890,21 +896,16 @@ void acpiphp_enumerate_slots(struct pci_
- 		 * parent is going to be handled by pciehp, in which case this
- 		 * bridge is not interesting to us either.
- 		 */
--		acpi_lock_hp_context();
- 		context = acpiphp_get_context(adev);
--		if (!context) {
--			acpi_unlock_hp_context();
--			put_device(&bus->dev);
--			pci_dev_put(bridge->pci_dev);
--			kfree(bridge);
--			return;
--		}
-+		if (!context)
-+			goto err;
-+
- 		bridge->context = context;
- 		context->bridge = bridge;
- 		/* Get a reference to the parent bridge. */
- 		get_bridge(context->func.parent);
--		acpi_unlock_hp_context();
- 	}
-+	acpi_unlock_hp_context();
- 
- 	/* Must be added to the list prior to calling acpiphp_add_context(). */
- 	mutex_lock(&bridge_mutex);
-@@ -919,6 +920,30 @@ void acpiphp_enumerate_slots(struct pci_
- 		cleanup_bridge(bridge);
- 		put_bridge(bridge);
- 	}
-+	return;
-+
-+ err:
-+	acpi_unlock_hp_context();
-+	put_device(&bus->dev);
-+	pci_dev_put(bridge->pci_dev);
-+	kfree(bridge);
-+}
-+
-+void acpiphp_drop_bridge(struct acpiphp_bridge *bridge)
-+{
-+	if (pci_is_root_bus(bridge->pci_bus)) {
-+		struct acpiphp_root_context *root_context;
-+		struct acpi_device *adev;
-+
-+		acpi_lock_hp_context();
-+		adev = ACPI_COMPANION(bridge->pci_bus->bridge);
-+		root_context = to_acpiphp_root_context(adev->hp);
-+		adev->hp = NULL;
-+		acpi_unlock_hp_context();
-+		kfree(root_context);
-+	}
-+	cleanup_bridge(bridge);
-+	put_bridge(bridge);
- }
- 
- /**
-@@ -936,8 +961,7 @@ void acpiphp_remove_slots(struct pci_bus
- 	list_for_each_entry(bridge, &bridge_list, list)
- 		if (bridge->pci_bus == bus) {
- 			mutex_unlock(&bridge_mutex);
--			cleanup_bridge(bridge);
--			put_bridge(bridge);
-+			acpiphp_drop_bridge(bridge);
- 			return;
- 		}
- 
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -142,6 +142,16 @@ static inline acpi_handle func_to_handle
- 	return func_to_acpi_device(func)->handle;
- }
- 
-+struct acpiphp_root_context {
-+	struct acpi_hotplug_context hp;
-+	struct acpiphp_bridge *root_bridge;
-+};
-+
-+static inline struct acpiphp_root_context *to_acpiphp_root_context(struct acpi_hotplug_context *hp)
-+{
-+	return container_of(hp, struct acpiphp_root_context, hp);
-+}
-+
- /*
-  * struct acpiphp_attention_info - device specific attention registration
-  *
+Its imx6 and exynos, havent looked to see if dw-pcie is handling the parsing or not for them.
+
+- k
+
+-- 
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
