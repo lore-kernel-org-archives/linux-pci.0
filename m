@@ -1,32 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:51362 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751984AbaFXM0r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 08:26:47 -0400
-Date: Tue, 24 Jun 2014 08:26:39 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: suravee.suthikulpanit@amd.com
-Cc: marc.zyngier@arm.com, Catalin.Marinas@arm.com, Will.Deacon@arm.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 0/2] Introduce ARM GICv2m MSI(-X) support
-Message-ID: <20140624122639.GL10202@titan.lakedaemon.net>
-References: <1403569980-12913-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:50101 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752641AbaFBUoa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 16:44:30 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kumar Gala <galak@codeaurora.org>
+Cc: Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robherring2@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM resources.
+Date: Mon, 02 Jun 2014 22:44:19 +0200
+Message-ID: <5976198.MmsV3dNjlq@wuerfel>
+In-Reply-To: <95C66A63-9671-4AD5-9804-6647A305DB99@codeaurora.org>
+References: <20140530233034.GH1677@bart.dudau.co.uk> <4495090.ktpdXEyibD@wuerfel> <95C66A63-9671-4AD5-9804-6647A305DB99@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403569980-12913-1-git-send-email-suravee.suthikulpanit@amd.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 07:32:58PM -0500, suravee.suthikulpanit@amd.com wrote:
-> This patch set introduces support for MSI(-X) in GICv2m specification,
-> which is implemented in some variation of GIC400.
-> 
-> This depends on and has been tested with the V7 of "Add support for PCI in AArch64"
-> (https://lkml.org/lkml/2014/3/14/320).
+On Monday 02 June 2014 15:43:02 Kumar Gala wrote:
+> Its imx6 and exynos, havent looked to see if dw-pcie is handling
+> the parsing or not for them.
 
-Is this a build, boot, or runtime dependency?
+Ok, so they are both dw-pcie variants.
 
-thx,
+	Arnd 
 
-Jason.
