@@ -1,52 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:50181 "EHLO mail.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751508AbaFDOMQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Jun 2014 10:12:16 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id 247D512B2B2
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jun 2014 16:12:14 +0200 (CEST)
-Date: Wed, 4 Jun 2014 16:12:11 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Tejun Heo <tj@kernel.org>
-Cc: Shuah Khan <shuah.kh@samsung.com>,
-	Eli Billauer <eli.billauer@gmail.com>,
-	devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	discuss@x86-64.org
-Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
- dma_map_single()
-Message-ID: <20140604141211.GC23880@8bytes.org>
-References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
- <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
- <538E3D04.9060808@samsung.com>
- <20140603233907.GB23880@8bytes.org>
- <20140604140408.GC5004@htj.dyndns.org>
+Received: from mout.kundenserver.de ([212.227.17.10]:63466 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751739AbaFCJVx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 05:21:53 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Grant Likely <grant.likely@linaro.org>
+Cc: Kumar Gala <galak@codeaurora.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robherring2@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM resources.
+Date: Tue, 03 Jun 2014 11:21:10 +0200
+Message-ID: <5535126.fgWbMeOQVO@wuerfel>
+In-Reply-To: <20140603084459.EC01BC4096E@trevor.secretlab.ca>
+References: <20140530233034.GH1677@bart.dudau.co.uk> <2F6515B1-48FE-4ED6-908E-CC1CAD7AF403@codeaurora.org> <20140603084459.EC01BC4096E@trevor.secretlab.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140604140408.GC5004@htj.dyndns.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 04, 2014 at 10:04:08AM -0400, Tejun Heo wrote:
-> Hmmm?  Don't we have drivers which map dma buffers on device init and
-> release them on exit?  For dynamic usages, its usefulness is limited
-> especially given that dynamic tracking of buffers usually would
-> involve tracking of other information too in addition to dma buffer
-> pointer themselves.  If alloc on init and free on exit is a very rare
-> usage pattern, I have no objection against not adding devm interface
-> for dma mappings.
+On Tuesday 03 June 2014 09:44:59 Grant Likely wrote:
+> > The reason I think allow an ECAM makes sense in ranges is because it allows for a direct IO read/write to CFG space (w/o any mapping) similar to what one would do for MEM space or IO.
+> 
+> I don't think that's right. PCI addresses are defined as follows:
+> phys.hi cell: npt000ss bbbbbbbb dddddfff rrrrrrrr
+> phys.mid cell: hhhhhhhh hhhhhhhh hhhhhhhh hhhhhhhh
+> phys.low cell: llllllll llllllll llllllll llllllll
+> 
+> where 'ddddd' is the device number (0-31) and 'fff' is the function number (0-7)
+> 
+> Going up by one device number or even function number does not result in
+> contiguious address values:
+> 
+> device 0: 0x00000000 00000000 00000000
+> device 1: 0x00000800 00000000 00000000
+> device 2: 0x00001000 00000000 00000000
+> device 3: 0x00001800 00000000 00000000
+> ...
+> device 30:0x0000f000 00000000 00000000
+> device 31:0x0000f800 00000000 00000000
+> 
+> a simple ranges doesn't work transparently because each of those config
+> ranges needs to be mapped to a 4k block. I think ranges would need to
+> look like this:
+> 
+> ranges = <0x00000000 0 0  0x0ff00000  0x1000>,
+>          <0x00000800 0 0  0x0ff01000  0x1000>,
+>          <0x00001800 0 0  0x0ff02000  0x1000>,
+>          ...
+>          <0x0000f000 0 0  0x0ff1e000  0x1000>,
+>          <0x0000f800 0 0  0x0ff1f000  0x1000>;
+> 
+> (I just hacked the above up; I make no claims to it's accuracy for
+> actual address values)
+> 
+> But I don't even thing the semantics work there because the address is
+> encoded in the phys.hi cell, not the phys.low cell. Incrementing by one
+> does not behaves as most bus addresses work. To actually work properly
+> we would have needed a way to define a stride of 64bits when
+> incrementing config space addresses in a ranges mapping.
 
-Yes, but those drivers usually get DMA buffers at init time with the
-dma_alloc_* interfaces. The dma_map_* interfaces discussed here belong
-to the streaming DMA-API, so they are usually used for only one DMA
-transaction before dma_unmap_* is called on them.
+Thanks for clearing that up. I always suspected it was roughly this
+way, but never managed to think it through completely before getting
+distracted by something else.
 
-A devm interface for the dma_alloc_* family of functions would
-actually make sense, but not for the dma_map_* functions.
+I wonder if the OF definition matches CAM though, if not ECAM, as
+CAM is also limited to 256 byte config space per function.
 
-
-	Joerg
-
-
+	Arnd
