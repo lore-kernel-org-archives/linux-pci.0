@@ -1,98 +1,251 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:36977 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753981AbaFIIYQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Jun 2014 04:24:16 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch V4 39/42] x86, irq, mpparse: release IOAPIC pin when PCI device is disabled
-Date: Mon,  9 Jun 2014 16:20:08 +0800
-Message-Id: <1402302011-23642-40-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v5 08/15] thunderbolt: Scan for downstream switches
+Date: Tue,  3 Jun 2014 22:04:05 +0200
+Message-Id: <1401825852-4745-9-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Release IOAPIC pin associated with PCI device when the PCI device
-is disabled.
+Add utility methods tb_port_state and tb_wait_for_port. Add
+tb_scan_switch which recursively checks for downstream switches.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- arch/x86/kernel/mpparse.c |    1 +
- arch/x86/pci/irq.c        |   13 +++++++++++--
- 2 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/thunderbolt/switch.c | 97 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.c     | 44 ++++++++++++++++++++
+ drivers/thunderbolt/tb.h     | 16 ++++++++
+ 3 files changed, 157 insertions(+)
 
-diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
-index faf503aa3b70..fde86d2b79f8 100644
---- a/arch/x86/kernel/mpparse.c
-+++ b/arch/x86/kernel/mpparse.c
-@@ -115,6 +115,7 @@ static void __init MP_bus_info(struct mpc_bus *m)
- 
- static struct irq_domain_ops mp_ioapic_irqdomain_ops = {
- 	.map = mp_irqdomain_map,
-+	.unmap = mp_irqdomain_unmap,
- };
- 
- static void __init MP_ioapic_info(struct mpc_ioapic *m)
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index e4200e5e775e..748cfe8ab322 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -26,6 +26,7 @@ static int acer_tm360_irqrouting;
- static struct irq_routing_table *pirq_table;
- 
- static int pirq_enable_irq(struct pci_dev *dev);
-+static void pirq_disable_irq(struct pci_dev *dev);
- 
- /*
-  * Never use: 0, 1, 2 (timer, keyboard, and cascade)
-@@ -53,7 +54,7 @@ struct irq_router_handler {
- };
- 
- int (*pcibios_enable_irq)(struct pci_dev *dev) = pirq_enable_irq;
--void (*pcibios_disable_irq)(struct pci_dev *dev) = NULL;
-+void (*pcibios_disable_irq)(struct pci_dev *dev) = pirq_disable_irq;
- 
- /*
-  *  Check passed address for the PCI IRQ Routing Table signature
-@@ -1186,7 +1187,7 @@ void pcibios_penalize_isa_irq(int irq, int active)
- 
- static int pirq_enable_irq(struct pci_dev *dev)
- {
--	u8 pin;
-+	u8 pin = 0;
- 
- 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
- 	if (pin && !pcibios_lookup_irq(dev, 1)) {
-@@ -1252,3 +1253,11 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 	}
- 	return 0;
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index 6d193a2..b31b8ce 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -53,6 +53,92 @@ static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
  }
-+
-+static void pirq_disable_irq(struct pci_dev *dev)
+ 
+ /**
++ * tb_port_state() - get connectedness state of a port
++ *
++ * The port must have a TB_CAP_PHY (i.e. it should be a real port).
++ *
++ * Return: Returns an enum tb_port_state on success or an error code on failure.
++ */
++static int tb_port_state(struct tb_port *port)
 +{
-+	if (io_apic_assign_pci_irqs && dev->irq) {
-+		mp_unmap_irq(dev->irq);
-+		dev->irq = 0;
++	struct tb_cap_phy phy;
++	int res;
++	if (port->cap_phy == 0) {
++		tb_port_WARN(port, "does not have a PHY\n");
++		return -EINVAL;
 +	}
++	res = tb_port_read(port, &phy, TB_CFG_PORT, port->cap_phy, 2);
++	if (res)
++		return res;
++	return phy.state;
 +}
++
++/**
++ * tb_wait_for_port() - wait for a port to become ready
++ *
++ * Wait up to 1 second for a port to reach state TB_PORT_UP. If
++ * wait_if_unplugged is set then we also wait if the port is in state
++ * TB_PORT_UNPLUGGED (it takes a while for the device to be registered after
++ * switch resume). Otherwise we only wait if a device is registered but the link
++ * has not yet been established.
++ *
++ * Return: Returns an error code on failure. Returns 0 if the port is not
++ * connected or failed to reach state TB_PORT_UP within one second. Returns 1
++ * if the port is connected and in state TB_PORT_UP.
++ */
++int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged)
++{
++	int retries = 10;
++	int state;
++	if (!port->cap_phy) {
++		tb_port_WARN(port, "does not have PHY\n");
++		return -EINVAL;
++	}
++	if (tb_is_upstream_port(port)) {
++		tb_port_WARN(port, "is the upstream port\n");
++		return -EINVAL;
++	}
++
++	while (retries--) {
++		state = tb_port_state(port);
++		if (state < 0)
++			return state;
++		if (state == TB_PORT_DISABLED) {
++			tb_port_info(port, "is disabled (state: 0)\n");
++			return 0;
++		}
++		if (state == TB_PORT_UNPLUGGED) {
++			if (wait_if_unplugged) {
++				/* used during resume */
++				tb_port_info(port,
++					     "is unplugged (state: 7), retrying...\n");
++				msleep(100);
++				continue;
++			}
++			tb_port_info(port, "is unplugged (state: 7)\n");
++			return 0;
++		}
++		if (state == TB_PORT_UP) {
++			tb_port_info(port,
++				     "is connected, link is up (state: 2)\n");
++			return 1;
++		}
++
++		/*
++		 * After plug-in the state is TB_PORT_CONNECTING. Give it some
++		 * time.
++		 */
++		tb_port_info(port,
++			     "is connected, link is not up (state: %d), retrying...\n",
++			     state);
++		msleep(100);
++	}
++	tb_port_warn(port,
++		     "failed to reach state TB_PORT_UP. Ignoring port...\n");
++	return 0;
++}
++
++/**
+  * tb_init_port() - initialize a port
+  *
+  * This is a helper method for tb_switch_alloc. Does not check or initialize
+@@ -63,6 +149,7 @@ static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
+ static int tb_init_port(struct tb_switch *sw, u8 port_nr)
+ {
+ 	int res;
++	int cap;
+ 	struct tb_port *port = &sw->ports[port_nr];
+ 	port->sw = sw;
+ 	port->port = port_nr;
+@@ -71,6 +158,16 @@ static int tb_init_port(struct tb_switch *sw, u8 port_nr)
+ 	if (res)
+ 		return res;
+ 
++	/* Port 0 is the switch itself and has no PHY. */
++	if (port->config.type == TB_TYPE_PORT && port_nr != 0) {
++		cap = tb_find_cap(port, TB_CFG_PORT, TB_CAP_PHY);
++
++		if (cap > 0)
++			port->cap_phy = cap;
++		else
++			tb_port_WARN(port, "non switch port without a PHY\n");
++	}
++
+ 	tb_dump_port(sw->tb, &port->config);
+ 
+ 	/* TODO: Read dual link port, DP port and more from EEPROM. */
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index f1b6100..3b716fd 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -11,6 +11,47 @@
+ #include "tb.h"
+ #include "tb_regs.h"
+ 
++
++/* enumeration & hot plug handling */
++
++
++static void tb_scan_port(struct tb_port *port);
++
++/**
++ * tb_scan_switch() - scan for and initialize downstream switches
++ */
++static void tb_scan_switch(struct tb_switch *sw)
++{
++	int i;
++	for (i = 1; i <= sw->config.max_port_number; i++)
++		tb_scan_port(&sw->ports[i]);
++}
++
++/**
++ * tb_scan_port() - check for and initialize switches below port
++ */
++static void tb_scan_port(struct tb_port *port)
++{
++	struct tb_switch *sw;
++	if (tb_is_upstream_port(port))
++		return;
++	if (port->config.type != TB_TYPE_PORT)
++		return;
++	if (tb_wait_for_port(port, false) <= 0)
++		return;
++	if (port->remote) {
++		tb_port_WARN(port, "port already has a remote!\n");
++		return;
++	}
++	sw = tb_switch_alloc(port->sw->tb, tb_downstream_route(port));
++	if (!sw)
++		return;
++	port->remote = tb_upstream_port(sw);
++	tb_upstream_port(sw)->remote = port;
++	tb_scan_switch(sw);
++}
++
++
+ /* hotplug handling */
+ 
+ struct tb_hotplug_event {
+@@ -134,6 +175,9 @@ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
+ 	if (!tb->root_switch)
+ 		goto err_locked;
+ 
++	/* Full scan to discover devices added before the driver was loaded. */
++	tb_scan_switch(tb->root_switch);
++
+ 	/* Allow tb_handle_hotplug to progress events */
+ 	tb->hotplug_active = true;
+ 	mutex_unlock(&tb->lock);
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index af123c4..70a66fe 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -29,6 +29,7 @@ struct tb_port {
+ 	struct tb_regs_port_header config;
+ 	struct tb_switch *sw;
+ 	struct tb_port *remote; /* remote port, NULL if not connected */
++	int cap_phy; /* offset, zero if not found */
+ 	u8 port; /* port number on switch */
+ };
+ 
+@@ -160,6 +161,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
+ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
+ void tb_switch_free(struct tb_switch *sw);
+ 
++int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
++
+ int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
+ 
+ 
+@@ -173,4 +176,17 @@ static inline bool tb_is_upstream_port(struct tb_port *port)
+ 	return port == tb_upstream_port(port->sw);
+ }
+ 
++/**
++ * tb_downstream_route() - get route to downstream switch
++ *
++ * Port must not be the upstream port (otherwise a loop is created).
++ *
++ * Return: Returns a route to the switch behind @port.
++ */
++static inline u64 tb_downstream_route(struct tb_port *port)
++{
++	return tb_route(port->sw)
++	       | ((u64) port->port << (port->sw->config.depth * 8));
++}
++
+ #endif
 -- 
-1.7.10.4
+2.0.0
 
