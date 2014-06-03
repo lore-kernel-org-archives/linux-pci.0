@@ -1,200 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from si-002-i153.relay.mailchannels.net ([108.178.49.165]:25703 "EHLO
-	relay.mailchannels.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751340AbaFAHKs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jun 2014 03:10:48 -0400
-From: Eli Billauer <eli.billauer@gmail.com>
-To: tj@kernel.org
-Cc: devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, shuah.kh@samsung.com,
-	iommu@lists.linux-foundation.org, discuss@x86-64.org,
-	Eli Billauer <eli.billauer@gmail.com>
-Subject: [PATCH v2 2/4] dma-mapping: Add devm_ interface for dma_map_single_attrs()
-Date: Sun,  1 Jun 2014 10:01:15 +0300
-Message-Id: <1401606077-1739-3-git-send-email-eli.billauer@gmail.com>
-In-Reply-To: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
-References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v5 06/15] thunderbolt: Add thunderbolt capability handling
+Date: Tue,  3 Jun 2014 22:04:03 +0200
+Message-Id: <1401825852-4745-7-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-dmam_map_single_attrs() and dmam_unmap_single_attrs() replace the non-*_attrs
-functions, which are implemented as defines instead.
+Thunderbolt config areas contain capability lists similar to those found
+on pci devices. This patch introduces a tb_find_cap utility method to
+search for capabilities.
 
-The case of a non-NULL @attrs parameter has not been tested.
-
-Suggested-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Eli Billauer <eli.billauer@gmail.com>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- Documentation/driver-model/devres.txt    |    2 +
- drivers/base/dma-mapping.c               |   46 +++++++++++++++++++++--------
- include/asm-generic/dma-mapping-common.h |    3 ++
- include/linux/dma-mapping.h              |   12 ++++---
- 4 files changed, 45 insertions(+), 18 deletions(-)
+ drivers/thunderbolt/Makefile |   2 +-
+ drivers/thunderbolt/cap.c    | 116 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.h     |   2 +
+ 3 files changed, 119 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/thunderbolt/cap.c
 
-diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
-index 13b8be0..2112a00 100644
---- a/Documentation/driver-model/devres.txt
-+++ b/Documentation/driver-model/devres.txt
-@@ -268,6 +268,8 @@ DMA
-   dmam_pool_destroy()
-   dmam_map_single()
-   dmam_unmap_single()
-+  dmam_map_single_attrs()
-+  dmam_unmap_single_attrs()
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 4ac18d9..617b314 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+ obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
+-thunderbolt-objs := nhi.o ctl.o tb.o switch.o
++thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o
  
- PCI
-   pcim_enable_device()	: after success, all PCI ops become managed
-diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-index f76ea0f..b24ae17 100644
---- a/drivers/base/dma-mapping.c
-+++ b/drivers/base/dma-mapping.c
-@@ -11,6 +11,7 @@
- #include <linux/export.h>
- #include <linux/gfp.h>
- #include <asm-generic/dma-coherent.h>
+diff --git a/drivers/thunderbolt/cap.c b/drivers/thunderbolt/cap.c
+new file mode 100644
+index 0000000..a7b47e7
+--- /dev/null
++++ b/drivers/thunderbolt/cap.c
+@@ -0,0 +1,116 @@
++/*
++ * Thunderbolt Cactus Ridge driver - capabilities lookup
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
 +#include <linux/slab.h>
- 
- /*
-  * Managed DMA API
-@@ -20,6 +21,7 @@ struct dma_devres {
- 	void		*vaddr;
- 	dma_addr_t	dma_handle;
- 	enum dma_data_direction direction;
-+	struct dma_attrs *attrs;
- };
- 
- static void dmam_coherent_release(struct device *dev, void *res)
-@@ -285,18 +287,22 @@ static void dmam_map_single_release(struct device *dev, void *res)
- {
- 	struct dma_devres *this = res;
- 
--	dma_unmap_single(dev, this->dma_handle, this->size, this->direction);
-+	dma_unmap_single_attrs(dev, this->dma_handle, this->size,
-+			       this->direction, this->attrs);
++#include <linux/errno.h>
 +
-+	kfree(this->attrs);
- }
- 
- /**
-- * dmam_map_single - Managed dma_map_single()
-+ * dmam_map_single_attrs - Managed dma_map_single_attrs()
-  * @dev: Device to map DMA region for
-  * @ptr: Pointer to region
-  * @size: Size to map
-  * @direction: The mapping's direction
-+ * @attrs: Attributes associated with the DMA mapping
-  * @ret_dma_handle: Pointer to return the value of the DMA handle
-  *
-- * Managed dma_map_single().  The region mapped using this
-+ * Managed dma_map_single_attrs().  The region mapped using this
-  * function will be automatically unmapped on driver detach.
-  *
-  * RETURNED VALUE:
-@@ -304,9 +310,11 @@ static void dmam_map_single_release(struct device *dev, void *res)
-  * -EIO if the DMA mapping failed
-  * -ENOMEM on failure to allocate memory for internal data structure
-  */
--int dmam_map_single(struct device *dev, void *ptr, size_t size,
--		    enum dma_data_direction direction,
--		    dma_addr_t *ret_dma_handle)
++#include "tb.h"
 +
-+int dmam_map_single_attrs(struct device *dev, void *ptr, size_t size,
-+			  enum dma_data_direction direction,
-+			  struct dma_attrs *attrs,
-+			  dma_addr_t *ret_dma_handle)
- 
- {
- 	struct dma_devres *dr;
-@@ -316,8 +324,18 @@ int dmam_map_single(struct device *dev, void *ptr, size_t size,
- 	if (!dr)
- 		return -ENOMEM;
- 
--	dma_handle = dma_map_single(dev, ptr, size, direction);
-+	if (attrs) {
-+		dr->attrs = kmemdup(attrs, sizeof(*attrs), GFP_KERNEL);
-+		if (!dr->attrs) {
-+			devres_free(dr);
-+			return -ENOMEM;
++
++struct tb_cap_any {
++	union {
++		struct tb_cap_basic basic;
++		struct tb_cap_extended_short extended_short;
++		struct tb_cap_extended_long extended_long;
++	};
++} __packed;
++
++static bool tb_cap_is_basic(struct tb_cap_any *cap)
++{
++	/* basic.cap is u8. This checks only the lower 8 bit of cap. */
++	return cap->basic.cap != 5;
++}
++
++static bool tb_cap_is_long(struct tb_cap_any *cap)
++{
++	return !tb_cap_is_basic(cap)
++	       && cap->extended_short.next == 0
++	       && cap->extended_short.length == 0;
++}
++
++static enum tb_cap tb_cap(struct tb_cap_any *cap)
++{
++	if (tb_cap_is_basic(cap))
++		return cap->basic.cap;
++	else
++		/* extended_short/long have cap at the same offset. */
++		return cap->extended_short.cap;
++}
++
++static u32 tb_cap_next(struct tb_cap_any *cap, u32 offset)
++{
++	int next;
++	if (offset == 1) {
++		/*
++		 * The first pointer is part of the switch header and always
++		 * a simple pointer.
++		 */
++		next = cap->basic.next;
++	} else {
++		/*
++		 * Somehow Intel decided to use 3 different types of capability
++		 * headers. It is not like anyone could have predicted that
++		 * single byte offsets are not enough...
++		 */
++		if (tb_cap_is_basic(cap))
++			next = cap->basic.next;
++		else if (!tb_cap_is_long(cap))
++			next = cap->extended_short.next;
++		else
++			next = cap->extended_long.next;
++	}
++	/*
++	 * "Hey, we could terminate some capability lists with a null offset
++	 *  and others with a pointer to the last element." - "Great idea!"
++	 */
++	if (next == offset)
++		return 0;
++	return next;
++}
++
++/**
++ * tb_find_cap() - find a capability
++ *
++ * Return: Returns a positive offset if the capability was found and 0 if not.
++ * Returns an error code on failure.
++ */
++int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, enum tb_cap cap)
++{
++	u32 offset = 1;
++	struct tb_cap_any header;
++	int res;
++	int retries = 10;
++	while (retries--) {
++		res = tb_port_read(port, &header, space, offset, 1);
++		if (res) {
++			/* Intel needs some help with linked lists. */
++			if (space == TB_CFG_PORT && offset == 0xa
++			    && port->config.type == TB_TYPE_DP_HDMI_OUT) {
++				offset = 0x39;
++				continue;
++			}
++			return res;
 +		}
-+	} else
-+		dr->attrs = NULL;
++		if (offset != 1) {
++			if (tb_cap(&header) == cap)
++				return offset;
++			if (tb_cap_is_long(&header)) {
++				/* tb_cap_extended_long is 2 dwords */
++				res = tb_port_read(port, &header, space,
++						   offset, 2);
++				if (res)
++					return res;
++			}
++		}
++		offset = tb_cap_next(&header, offset);
++		if (!offset)
++			return 0;
++	}
++	tb_port_WARN(port,
++		     "run out of retries while looking for cap %#x in config space %d, last offset: %#x\n",
++		     cap, space, offset);
++	return -EIO;
++}
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 389dbb4..38e4c23 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -159,6 +159,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
+ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
+ void tb_switch_free(struct tb_switch *sw);
+ 
++int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
 +
-+	dma_handle = dma_map_single_attrs(dev, ptr, size, direction, attrs);
- 	if (dma_mapping_error(dev, dma_handle)) {
-+		kfree(dr->attrs);
- 		devres_free(dr);
- 		return -EIO;
- 	}
-@@ -333,23 +351,25 @@ int dmam_map_single(struct device *dev, void *ptr, size_t size,
  
- 	return 0; /* Success */
- }
--EXPORT_SYMBOL(dmam_map_single);
-+EXPORT_SYMBOL(dmam_map_single_attrs);
- 
- /**
-- * dmam_unmap_single - Managed dma_unmap_single()
-+ * dmam_unmap_single_attrs - Managed dma_unmap_single_attrs()
-  * @dev: Device to map DMA region for
-  * @dma_handle: DMA handle of the region to unmap
-  * @size: Size to unmap
-  * @direction: The mapping's direction
-+ * @attrs: Attributes associated with the DMA mapping.
-  *
-- * Managed dma_unmap_single().
-+ * Managed dma_unmap_single_attrs().
-  */
--void dmam_unmap_single(struct device *dev, dma_addr_t dma_handle,
--		       size_t size, enum dma_data_direction direction)
-+void dmam_unmap_single_attrs(struct device *dev, dma_addr_t dma_handle,
-+			     size_t size, enum dma_data_direction direction,
-+			     struct dma_attrs *attrs)
+ static inline int tb_route_length(u64 route)
  {
- 	struct dma_devres match_data = { size, NULL, dma_handle, direction };
- 
- 	WARN_ON(devres_release(dev, dmam_map_single_release, dmam_map_match,
- 			       &match_data));
- }
--EXPORT_SYMBOL(dmam_unmap_single);
-+EXPORT_SYMBOL(dmam_unmap_single_attrs);
-diff --git a/include/asm-generic/dma-mapping-common.h b/include/asm-generic/dma-mapping-common.h
-index de8bf89..1af27b3 100644
---- a/include/asm-generic/dma-mapping-common.h
-+++ b/include/asm-generic/dma-mapping-common.h
-@@ -175,6 +175,9 @@ dma_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
- #define dma_unmap_single(d, a, s, r) dma_unmap_single_attrs(d, a, s, r, NULL)
- #define dma_map_sg(d, s, n, r) dma_map_sg_attrs(d, s, n, r, NULL)
- #define dma_unmap_sg(d, s, n, r) dma_unmap_sg_attrs(d, s, n, r, NULL)
-+#define dmam_map_single(d, a, s, r, p) \
-+	dmam_map_single_attrs(d, a, s, r, NULL, p)
-+#define dmam_unmap_single(d, a, s, r) dmam_unmap_single_attrs(d, a, s, r, NULL)
- 
- extern int dma_common_mmap(struct device *dev, struct vm_area_struct *vma,
- 			   void *cpu_addr, dma_addr_t dma_addr, size_t size);
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index cad63de..4ca9134 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -233,11 +233,13 @@ static inline void dmam_release_declared_memory(struct device *dev)
- {
- }
- #endif /* ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY */
--int dmam_map_single(struct device *dev, void *ptr, size_t size,
--		    enum dma_data_direction direction,
--		    dma_addr_t *ret_dma_handle);
--void dmam_unmap_single(struct device *dev, dma_addr_t dma_handle,
--		       size_t size, enum dma_data_direction direction);
-+int dmam_map_single_attrs(struct device *dev, void *ptr, size_t size,
-+			  enum dma_data_direction direction,
-+			  struct dma_attrs *attrs,
-+			  dma_addr_t *ret_dma_handle);
-+void dmam_unmap_single_attrs(struct device *dev, dma_addr_t dma_handle,
-+			     size_t size, enum dma_data_direction direction,
-+			     struct dma_attrs *attrs);
- #ifndef CONFIG_HAVE_DMA_ATTRS
- struct dma_attrs;
- 
 -- 
-1.7.2.3
+2.0.0
 
