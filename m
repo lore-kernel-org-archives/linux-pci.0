@@ -1,170 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:2792 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754201AbaFTBXX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 21:23:23 -0400
-Message-ID: <53A38CFE.1000807@huawei.com>
-Date: Fri, 20 Jun 2014 09:23:10 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: <jon.baker@viasat.com>, <linux-pci@vger.kernel.org>
-CC: "Gogineni, Naveen" <Naveen.Gogineni@viasat.com>
-Subject: Re: PCI rescan issue
-References: <53A23DF7.60104@viasat.com> <53A2664B.3040300@huawei.com> <53A2E71D.9060208@viasat.com>
-In-Reply-To: <53A2E71D.9060208@viasat.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:53197 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933671AbaFCUEh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 16:04:37 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v5 00/15] Thunderbolt driver for Apple MacBooks
+Date: Tue,  3 Jun 2014 22:03:57 +0200
+Message-Id: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/6/19 21:35, Jon Baker wrote:
-> 
-> On 06/19/2014 12:25 AM, Yijing Wang wrote:
->> On 2014/6/19 9:33, Jon Baker wrote:
->>> I am trying to find a solution to a Linux PCI rescan problem.
->>>
->>> I have CentOS 6.5
->>>
->>>     [jbaker@server0 ~]$ uname -a
->>>     Linux server0 2.6.32-431.5.1.el6.x86_64 #1 SMP Wed Feb 12 00:41:43 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
->> Can you test it in the latest kernel?
-> 
-> Not easily, this is a system shared amongst several developers and containing some specific tools and applications. And unfortunately we know this works with a 3.X kernel on an embedded target used by another group at our company. - Jon
->>
->>> I have an Altera FPGA PCIe protoboard I am trying to test in a TYAN FT77A-B7059.
->>>
->>> We are trying to solve some hotplug/FPGA reload issues; when we reload the FPGA the PCI interface reloads confusing linux pci code.
->>>
->>> After bootup the board is seen by the kernel; lscpi shows Altera FPGA PCIe protoboard settings and config space.  We can load our driver and all is well.
->>>
->>> When we reload the FPGA lscpi display shows all "ff" for config space.  As root I tried
->> What happened during you reload the FPGA? reset PCI device or other anything?
-> I do not know, we have not monitored this.  The PCI interface is contained within the FPGA so I don't really know for sure how that behaves on reload. - Jon
+Hi,
 
-If you find lspci PCI device return all ff after FPGA reload, and you do nothing during reload. I think the PCI device can not found after
-your FPAG reload, as I mentioned, maybe the PCI device power or link has problems. I think this is not a Linux problem.
+Updated version of the driver. Includes changes by Matthew to make it work on
+Falcon Ridge hardware (present in the newest Mac(Book)Pro). 
 
-You can try this:
-1. echo 1 > /sys/bus/pci/devices/0000:8a:00.0/remove
-2. Reload FPGA board.
-3. echo 1 > /sys/bus/pci/rescan
-4. lspci to show your PCI device
+Changes since v4 (suggested by Matthew):
+ - Changed the PCI quirks to check just for Apple hardware instead of checking
+   against a list of machines. (The PCI id check already restricts this quirk
+to the relevant Apple machines).
+ - Added Falcon Ridge PCI id to the driver and to the "wait_for_thunderbolt"
+   quirk (the "poweroff_thunderbolt" quirk is no longer necessary for Falcon
+Ridge devices).
+ - Fixed plug events for Falcon Ridge hardware.
 
-Here make your device removed before FPGA board reload, avoid some stall device info in OS.
+@Matthew: I think that your patch was missing the Falcon Ridge PCI id within
+the wait_for_thunderbolt quirk (I have added it). If you have time could you
+verify that suspend/resume works on your MacPro?  Thanks!
 
-or
+As before Matthew's ACPI changes (latest version: [1]) are required for this to
+work properly. Without them you need to boot with a coldplugged TB device to
+prevent the firmware from disabling the controller.
 
-You can go to /sys/bus/pci/slots/ to find whether your PCI device support hotplug.
-If yes, you can
-echo 0 > /sys/bus/pci/slots/$device/power
-echo 1 > /sys/bus/pci/slots/$device/power
-reset the PCI device, then lspci show device whether is found.
+Thanks,
+Andreas
 
->>
->>>     echo 1 > /sys/bus/pci/rescan
->>>
->>> But no change to lspci output.
->>>
->>> I tried some variants
->>>
->>>     echo 1 > /sys/bus/pci/devices/0000:8a:00.0/rescan
->>>
->>> no change to lspci output.
->>>
->>>     echo 1 > /sys/bus/pci/devices/0000:8a:00.0/remove
->>>     echo 1 > /sys/bus/pci/rescan
->> I guess the device link to your board was disconnect. Maybe the power to device is off or link error. So OS
->> can not access pci device config space and return nothing found.
->>
->> If you provide more detailed info is better. like lspci -vvvxxx, dmesg etc. before and after your operations.
-> 
-> I have logged this...
-> 
-> After system power up (case where everything works expected):
-> 
->     $ lspci -vvv -xx -s 13:00.0
->     13:00.0 Non-VGA unclassified device: Device 1b83:f002 (rev 01)
->             Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->             Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->             Latency: 0, Cache Line Size: 64 bytes
->             Interrupt: pin A routed to IRQ 11
->             Region 0: Memory at dcc00000 (32-bit, non-prefetchable) [size=256K]
->             Region 1: Memory at dcb00000 (32-bit, non-prefetchable) [size=1M]
->             Capabilities: <access denied>
->     00: 83 1b 02 f0 06 00 10 00 01 00 00 00 10 00 00 00
->     10: 00 00 c0 dc 00 00 b0 dc 00 00 00 00 00 00 00 00
->     20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->     30: 00 00 00 00 50 00 00 00 00 00 00 00 0b 01 00 00
-
-Can you show the upstream port device lspci info ? If 13:00.0 device support hotplug, upstream device got a register
-to control the slot power.
+[1]: https://lkml.org/lkml/2014/6/1/165 
 
 
-> 
-> 
-> After FPGA reload:
-> 
->     $ lspci -vvv -xx -s 13:00.0
->     13:00.0 Non-VGA unclassified device: Device 1b83:f002 (rev ff) (prog-if ff)
->             !!! Unknown header type 7f
->     00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->     10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->     20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->     30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-> 
-> 
-> - Jon
-> 
->>
->>> This removed the device and it did not show up again in lscpi.
->>>
->>> Kernel has PCI HOTPLUG enabled:
->>>
->>>     [jbaker@server0 ~]$ cat /boot/config-2.6.32-431.el6.x86_64 | grep HOTPLUG
->>>     CONFIG_HOTPLUG=y
->>>     CONFIG_MEMORY_HOTPLUG=y
->>>     CONFIG_MEMORY_HOTPLUG_SPARSE=y
->>>     CONFIG_HOTPLUG_CPU=y
->>>     CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
->>>     CONFIG_ACPI_HOTPLUG_CPU=y
->>>     CONFIG_ACPI_HOTPLUG_MEMORY=y
->>>     CONFIG_ACPI_HOTPLUG_MEMORY_AUTO_ONLINE=y
->>>     CONFIG_HOTPLUG_PCI_PCIE=y
->>>     CONFIG_HOTPLUG_PCI=y
->>>     CONFIG_HOTPLUG_PCI_FAKE=m
->>>     CONFIG_HOTPLUG_PCI_ACPI=y
->>>     CONFIG_HOTPLUG_PCI_ACPI_IBM=m
->>>     # CONFIG_HOTPLUG_PCI_CPCI is not set
->>>     CONFIG_HOTPLUG_PCI_SHPC=m
->>>     [jbaker@server0 ~]$
->>>
->>> The kernel has pciehp module loaded, I see pciehp messages in /var/log/messages.
->>>
->>> In other distros, on other platforms, echo 1 > /sys/bus/pci/rescan has worked but does not appear to work here for CentOS 6.5 on this hardware.
->>>
->>> This problem is much discussed on the web but I have yet to see a solution discussed. I am thinking the 2.6.32-431.5.1.el6.x86_64 kernel may require a patch(es).  The rescan may not be resetting the PCIe card?
->>>
->>> Any ideas how to get rescan to work?
->>>
->>> Thank you,
->>>
->>> Jon Baker
->>>
->>
-> 
-> -- 
-> ===================================
-> Jon Baker
-> Software Engineer
-> ViaSat Inc.
-> Cleveland OH
-> 216-706-7800
-> jon.baker@viasat.com
-> www.viasat.com
-> ===================================
-> 
+Andreas Noever (15):
+  thunderbolt: Add initial cactus ridge NHI support
+  thunderbolt: Add control channel interface
+  thunderbolt: Setup control channel
+  thunderbolt: Add tb_regs.h
+  thunderbolt: Initialize root switch and ports
+  thunderbolt: Add thunderbolt capability handling
+  thunderbolt: Enable plug events
+  thunderbolt: Scan for downstream switches
+  thunderbolt: Handle hotplug events
+  thunderbolt: Add path setup code.
+  thunderbolt: Add support for simple pci tunnels
+  PCI: Add pci_fixup_suspend_late quirk pass
+  PCI: Suspend/resume quirks for Apple thunderbolt
+  thunderbolt: Read switch uid from EEPROM
+  thunderbolt: Add suspend/hibernate support
 
+ drivers/Kconfig                   |   2 +
+ drivers/Makefile                  |   1 +
+ drivers/pci/pci-driver.c          |  18 +-
+ drivers/pci/quirks.c              | 104 ++++++
+ drivers/thunderbolt/Kconfig       |  12 +
+ drivers/thunderbolt/Makefile      |   3 +
+ drivers/thunderbolt/cap.c         | 116 ++++++
+ drivers/thunderbolt/ctl.c         | 731 ++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/ctl.h         |  75 ++++
+ drivers/thunderbolt/eeprom.c      | 189 ++++++++++
+ drivers/thunderbolt/nhi.c         | 677 +++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/nhi.h         | 114 ++++++
+ drivers/thunderbolt/nhi_regs.h    | 101 ++++++
+ drivers/thunderbolt/path.c        | 215 +++++++++++
+ drivers/thunderbolt/switch.c      | 498 ++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.c          | 431 ++++++++++++++++++++++
+ drivers/thunderbolt/tb.h          | 266 ++++++++++++++
+ drivers/thunderbolt/tb_regs.h     | 213 +++++++++++
+ drivers/thunderbolt/tunnel_pci.c  | 232 ++++++++++++
+ drivers/thunderbolt/tunnel_pci.h  |  30 ++
+ include/asm-generic/vmlinux.lds.h |   3 +
+ include/linux/pci.h               |  12 +-
+ 22 files changed, 4038 insertions(+), 5 deletions(-)
+ create mode 100644 drivers/thunderbolt/Kconfig
+ create mode 100644 drivers/thunderbolt/Makefile
+ create mode 100644 drivers/thunderbolt/cap.c
+ create mode 100644 drivers/thunderbolt/ctl.c
+ create mode 100644 drivers/thunderbolt/ctl.h
+ create mode 100644 drivers/thunderbolt/eeprom.c
+ create mode 100644 drivers/thunderbolt/nhi.c
+ create mode 100644 drivers/thunderbolt/nhi.h
+ create mode 100644 drivers/thunderbolt/nhi_regs.h
+ create mode 100644 drivers/thunderbolt/path.c
+ create mode 100644 drivers/thunderbolt/switch.c
+ create mode 100644 drivers/thunderbolt/tb.c
+ create mode 100644 drivers/thunderbolt/tb.h
+ create mode 100644 drivers/thunderbolt/tb_regs.h
+ create mode 100644 drivers/thunderbolt/tunnel_pci.c
+ create mode 100644 drivers/thunderbolt/tunnel_pci.h
 
 -- 
-Thanks!
-Yijing
+2.0.0
 
