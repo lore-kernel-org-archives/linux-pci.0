@@ -1,52 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:34007 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752354AbaFBPJu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 11:09:50 -0400
-Received: by mail-wg0-f52.google.com with SMTP id l18so5218173wgh.11
-        for <linux-pci@vger.kernel.org>; Mon, 02 Jun 2014 08:09:49 -0700 (PDT)
-From: Grant Likely <grant.likely@linaro.org>
-Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM
- resources.
-To: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Rob Herring <robherring2@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-In-Reply-To: <4756033.LkcFQN0chs@wuerfel>
-References: <20140530233034.GH1677@bart.dudau.co.uk>
-	<1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com>
-	<1401496601-31983-2-git-send-email-Liviu.Dudau@arm.com>
-	<4756033.LkcFQN0chs@wuerfel>
-Date: Mon, 02 Jun 2014 16:09:45 +0100
-Message-Id: <20140602150945.964D4C40381@trevor.secretlab.ca>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 3 Jun 2014 15:41:56 -0400
+From: =?UTF-8?B?SsOpcsO0bWU=?= Carretero <cJ-ko@zougloub.eu>
+To: linux-pci@vger.kernel.org
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: quirk dma_alias_devfn for HighPoint RocketRaid 642L
+ (Marvell 9235)
+Message-ID: <20140603154156.4f1b46c4@Vantage>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 31 May 2014 20:41:04 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Saturday 31 May 2014 01:36:40 Liviu Dudau wrote:
-> > We would like to be able to describe PCIe ECAM resources as
-> > IORESOURCE_MEM blocks while distinguish them from standard
-> > memory resources. Add an IORESOURCE_BIT entry for this case.
-> > 
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> 
-> I still don't see any value in this at all. What is the advantage
-> of doing this opposed to just having a standardized 'reg' property
-> for a particular compatible string?
+This vendor has similar boards based on the same Marvell 88SE9235 chipset,
+but this patch was only tested with the 642L.
 
-I'm inclined to agree. It doesn't seem appropriate to put config space
-in ranges, and the host controller binding is responsible for
-identifying how config space is memory mapped.
+Tested on ASUS Sabertooth 990FX (AMD).
 
-g.
+If you listen to the vendor support stating:
+
+  Dear Customer,
+  Sorry about that.
+  Currently all our products' software package don't support IOMMU
+  and we don't have plan to support that.
+
+... you'll think you also wasted your money, but it turns out that you
+just lost a few hours of your valuable time talking to their support,
+because the good people from the Internet made their board work,
+with the regular AHCI driver, and even with IOMMU. Nice!
+
+
+Signed-off-by: Jérôme Carretero <cJ-ko@zougloub.eu>
+
+---
+ drivers/pci/quirks.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index f6a42bc..43c0ea0 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3380,6 +3380,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
+ /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c49 */
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9230,
+ 			 quirk_dma_func1_alias);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI, 0x0642,
++			 quirk_dma_func1_alias);
+ /* https://bugs.gentoo.org/show_bug.cgi?id=497630 */
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
+ 			 PCI_DEVICE_ID_JMICRON_JMB388_ESD,
+-- 
+2.0.0
+
