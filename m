@@ -1,111 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:39613 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933857AbaFTDrP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 23:47:15 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 20 Jun 2014 09:17:12 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 2FB61E0045
-	for <linux-pci@vger.kernel.org>; Fri, 20 Jun 2014 09:18:18 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5K3lOVT59310266
-	for <linux-pci@vger.kernel.org>; Fri, 20 Jun 2014 09:17:24 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5K3l8hl000961
-	for <linux-pci@vger.kernel.org>; Fri, 20 Jun 2014 09:17:09 +0530
-Date: Fri, 20 Jun 2014 11:46:58 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Grant Likely <grant.likely@secretlab.ca>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	gwshan@linux.vnet.ibm.com, Mike Qiu <qiudayu@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, yan@linux.vnet.ibm.com,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [RFC PATCH V3 14/17] ppc/pci: create/release dev-tree node for
- VFs
-Message-ID: <20140620034446.GA23893@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-15-git-send-email-weiyang@linux.vnet.ibm.com>
- <CACxGe6v6Rdd=GQ8qR5LQ64NThidn7kn3WkKFkOXOsNuWq75D-A@mail.gmail.com>
- <20140619024651.GC6478@richard>
- <CACxGe6sgOh3MP-03Ge9NK7DWf+dgC98huA9Sv4DcThXNfByf2w@mail.gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.130]:61359 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753661AbaFCOsI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 10:48:08 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: devicetree@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <damm@opensource.se>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: [PATCH v3] of/irq: provide more wrappers for !CONFIG_OF
+Date: Tue, 03 Jun 2014 16:47:41 +0200
+Message-ID: <16771871.sfJG2itVJN@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACxGe6sgOh3MP-03Ge9NK7DWf+dgC98huA9Sv4DcThXNfByf2w@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 19, 2014 at 09:30:47AM +0100, Grant Likely wrote:
->On Thu, Jun 19, 2014 at 3:46 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->> On Wed, Jun 18, 2014 at 07:26:27PM +0100, Grant Likely wrote:
->>>On Tue, Jun 10, 2014 at 2:56 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->>>> Currently, powernv platform is not aware of VFs. This means no dev-node
->>>> represents a VF. Also, VF PCI device is created when PF driver want to enable
->>>> it. This leads to the pdn->pdev and pdn->pe_number an invalid value.
->>>>
->>>> This patch create/release dev-node for VF and fixs this when a VF's pci_dev
->>>> is created.
->>>>
->>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>
->>>I don't think this is the right way to handle this. Unless it is a
->>>fixup to a buggy devicetree provided by firmware, I don't want to see
->>>any code modifying the devicetree to describe stuff that is able to be
->>>directly enumerated. Really the pci code should handle the lack of a
->>>device_node gracefully. If it cannot then it should be fixed.
->>
->> Grant,
->>
->> Glad to see your comment.
->>
->> I will fix this in the firmware.
->
->That's not really what I meant. The kernel should be able to deal with
->virtual functions even if firmware doesn't know how, and the kernel
->should not require modifying the device tree to support them.
->
->I'm saying fix the kernel so that a device node is not necessary for
->virtual functions.
->
->g.
+The pci-rcar driver is enabled for compile tests, and this has
+now shown that the driver cannot build without CONFIG_OF,
+following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
+interrupt mapping when possible":
 
-Grant,
+drivers/built-in.o: In function `rcar_pci_map_irq':
+:(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
+pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
+pci/host/pcie-rcar.c:875:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
 
-After doing some investigation, I found there are two places might highly rely
-on these information. And not only VFs, but also PFs.
+As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
+supposed to build fine, which we can achieve if we make the
+declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
+and provide an empty inline function otherwise, as we do for
+a lot of other of interfaces.
 
-1. pnv_pci_read_config()/pnv_pci_cfg_read()
-   When doing config space read, this needs the information of the phb.
-   In commit 61305a96, the phb is retrived from the bus, and in commit
-   9bf41be6 it turns to use the device node for EEH hotplug case. Also VF may
-   face similar case for EEH hotplug.(This is under dev)
+This lets us build the rcar_pci driver again without CONFIG_OF
+for build testing. All platforms using this driver select OF,
+so this doesn't change anything for the users.
 
-   To get rid of the device node/pci_dn, we need a special handling for VFs.
-   Hmm... it looks not nice.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: devicetree@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <damm@opensource.se>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
+----
 
-2. pnv_pci_ioda_dma_dev_setup()/pnv_pci_ioda_dma_set_mask()
-   In pci_dn, there is a field: pe_number. This is used to retrive the correct
-   PE this pci device associated with.
+This replaces "[PATCH v2] of/irq: provide int of_irq_parse_and_map_pci
+wrapper", since now the same driver requires additional interfaces.
+We still want to be able to build the driver with CONFIG_OF disabled,
+but now we need three functions instead of just one.
 
-   If we don't have a pci_dn for a VF, we need to store this information to
-   another place. Like in the PF's pci_dn? Hmm... looks not nice neither.
+Rob, Grant, can you apply this as a bug fix, or provide comments?
 
-Generally, we could find a workaround make the VFs work without device
-node/pci_dn, but it would do some harm to the infrastructure, make it not
-consistant and not easy to read/maintain.
-
-Currently I don't find a neat way to just get rid of device node/pci_dn for
-VFs only. May require a careful restructure to do so.
-
-BTW, my understanding may not be correct. If you have better idea, please let
-me know :-) Thanks a lot.
-
--- 
-Richard Yang
-Help you, Help me
+diff --git a/include/linux/of.h b/include/linux/of.h
+index 196b34c..7c29e6c 100644
+--- a/include/linux/of.h
++++ b/include/linux/of.h
+@@ -511,6 +511,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
+ 	return NULL;
+ }
+ 
++static inline int of_n_addr_cells(struct device_node *np) { return 0; }
++static inline int of_n_size_cells(struct device_node *np) { return 0; }
++
+ static inline int of_property_read_u64(const struct device_node *np,
+ 				       const char *propname, u64 *out_value)
+ {
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 1a1f5ff..dde3a4a 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -6,14 +6,44 @@
+ 
+ struct pci_dev;
+ struct of_phandle_args;
+-int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq);
+-int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+-
+ struct device_node;
++
++#ifdef CONFIG_OF
++int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq);
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
+ int of_pci_get_devfn(struct device_node *np);
++int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
++#else
++static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
++{
++	return 0;
++}
++
++static inline struct device_node *of_pci_find_child_device(struct device_node *parent,
++					     unsigned int devfn)
++{
++	return NULL;
++}
++
++static inline int of_pci_get_devfn(struct device_node *np)
++{
++	return -EINVAL;
++}
++
++static inline int
++of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
++{
++	return 0;
++}
++
++static inline int
++of_pci_parse_bus_range(struct device_node *node, struct resource *res)
++{
++	return -EINVAL;
++}
++#endif
+ 
+ #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+ int of_pci_msi_chip_add(struct msi_chip *chip);
 
