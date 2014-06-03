@@ -1,69 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:57532 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754236AbaFTQan (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jun 2014 12:30:43 -0400
-Date: Fri, 20 Jun 2014 09:34:39 -0700
-From: Greg KH <greg@kroah.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	linux-kernel@vger.kernel.org,
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:55746 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934075AbaFCUE6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 16:04:58 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
 	Matthew Garrett <matthew.garrett@nebula.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 01/15] thunderbolt: Add initial cactus ridge NHI
- support
-Message-ID: <20140620163439.GB8526@kroah.com>
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v5 07/15] thunderbolt: Enable plug events
+Date: Tue,  3 Jun 2014 22:04:04 +0200
+Message-Id: <1401825852-4745-8-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
 References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
- <1401825852-4745-2-git-send-email-andreas.noever@gmail.com>
- <1403250112.22857.7.camel@x220>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403250112.22857.7.camel@x220>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 20, 2014 at 09:41:52AM +0200, Paul Bolle wrote:
-> On Tue, 2014-06-03 at 22:03 +0200, Andreas Noever wrote:
-> > Thunderbolt hotplug is supposed to be handled by the firmware. But Apple
-> > decided to implement thunderbolt at the operating system level. The
-> > firmare only initializes thunderbolt devices that are present at boot
-> > time. This driver enables hotplug of thunderbolt of non-chained
-> > thunderbolt devices on Apple systems with a cactus ridge controller.
-> > 
-> > This first patch adds the Kconfig file as well the parts of the driver
-> > which talk directly to the hardware (that is pci device setup, interrupt
-> > handling and RX/TX ring management).
-> > 
-> > Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
-> > ---
-> 
-> This patch landed in today's linux-next (next-20140620).
-> 
-> > [...]
-> > --- /dev/null
-> > +++ b/drivers/thunderbolt/Kconfig
-> > @@ -0,0 +1,12 @@
-> > +menuconfig THUNDERBOLT
-> > +	tristate "Thunderbolt support for Apple devices"
-> > +	default no
-> 
-> That should have been "default n". But "n" is the default anyway, so I'd
-> say this line might as well be dropped. Should I draft the trivial patch
-> to do that?
-> 
-> > +	help
-> > +	  Cactus Ridge Thunderbolt Controller driver
-> > +	  This driver is required if you want to hotplug Thunderbolt devices on
-> > +	  Apple hardware.
-> > +
-> > +	  Device chaining is currently not supported.
-> > +
-> > +	  To compile this driver a module, choose M here. The module will be
-> > +	  called thunderbolt.
-> 
-> (Naive question: is Thunderbolt relevant outside x86_64?)
+Thunderbolt switches have a plug events capability. This patch adds the
+tb_plug_events_active method and uses it to activate plug events during
+switch allocation.
 
-It could be, if someone makes a board for it, I don't see anything on it
-that is x86-specific.
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+---
+ drivers/thunderbolt/switch.c | 52 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/tb.h     |  1 +
+ 2 files changed, 53 insertions(+)
 
-greg k-h
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index e89121f..6d193a2 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -99,6 +99,45 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
+ }
+ 
+ /**
++ * tb_plug_events_active() - enable/disable plug events on a switch
++ *
++ * Also configures a sane plug_events_delay of 255ms.
++ *
++ * Return: Returns 0 on success or an error code on failure.
++ */
++static int tb_plug_events_active(struct tb_switch *sw, bool active)
++{
++	u32 data;
++	int res;
++
++	sw->config.plug_events_delay = 0xff;
++	res = tb_sw_write(sw, ((u32 *) &sw->config) + 4, TB_CFG_SWITCH, 4, 1);
++	if (res)
++		return res;
++
++	res = tb_sw_read(sw, &data, TB_CFG_SWITCH, sw->cap_plug_events + 1, 1);
++	if (res)
++		return res;
++
++	if (active) {
++		data = data & 0xFFFFFF83;
++		switch (sw->config.device_id) {
++		case 0x1513:
++		case 0x151a:
++		case 0x1549:
++			break;
++		default:
++			data |= 4;
++		}
++	} else {
++		data = data | 0x7c;
++	}
++	return tb_sw_write(sw, &data, TB_CFG_SWITCH,
++			   sw->cap_plug_events + 1, 1);
++}
++
++
++/**
+  * tb_switch_free() - free a tb_switch and all downstream switches
+  */
+ void tb_switch_free(struct tb_switch *sw)
+@@ -113,6 +152,8 @@ void tb_switch_free(struct tb_switch *sw)
+ 		sw->ports[i].remote = NULL;
+ 	}
+ 
++	tb_plug_events_active(sw, false);
++
+ 	kfree(sw->ports);
+ 	kfree(sw);
+ }
+@@ -125,6 +166,7 @@ void tb_switch_free(struct tb_switch *sw)
+ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ {
+ 	int i;
++	int cap;
+ 	struct tb_switch *sw;
+ 	int upstream_port = tb_cfg_get_upstream_port(tb->ctl, route);
+ 	if (upstream_port < 0)
+@@ -177,6 +219,16 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 
+ 	/* TODO: I2C, IECS, EEPROM, link controller */
+ 
++	cap = tb_find_cap(&sw->ports[0], TB_CFG_SWITCH, TB_CAP_PLUG_EVENTS);
++	if (cap < 0) {
++		tb_sw_warn(sw, "cannot find TB_CAP_PLUG_EVENTS aborting\n");
++		goto err;
++	}
++	sw->cap_plug_events = cap;
++
++	if (tb_plug_events_active(sw, true))
++		goto err;
++
+ 	return sw;
+ err:
+ 	kfree(sw->ports);
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 38e4c23..af123c4 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -19,6 +19,7 @@ struct tb_switch {
+ 	struct tb_regs_switch_header config;
+ 	struct tb_port *ports;
+ 	struct tb *tb;
++	int cap_plug_events; /* offset, zero if not found */
+ };
+ 
+ /**
+-- 
+2.0.0
+
