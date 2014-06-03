@@ -1,364 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:35040 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750990AbaF0QP4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 12:15:56 -0400
-Message-ID: <53AD98B9.2020109@gmail.com>
-Date: Fri, 27 Jun 2014 11:15:53 -0500
-From: Rob Herring <robherring2@gmail.com>
-MIME-Version: 1.0
-To: Will Deacon <will.deacon@arm.com>, Arnd Bergmann <arnd@arndb.de>
-CC: Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Jon Masters <jonathan@jonmasters.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Michal Simek <monstr@monstr.eu>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
- function.
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <20140626085926.GB11244@arm.com> <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com> <6381366.2IfqZj1r0B@wuerfel> <20140627124949.GR26276@arm.com>
-In-Reply-To: <20140627124949.GR26276@arm.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-we0-f169.google.com ([74.125.82.169]:47889 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934205AbaFCUFF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 16:05:05 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v5 13/15] PCI: Suspend/resume quirks for Apple thunderbolt
+Date: Tue,  3 Jun 2014 22:04:10 +0200
+Message-Id: <1401825852-4745-14-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/27/2014 07:49 AM, Will Deacon wrote:
-> On Fri, Jun 27, 2014 at 12:03:34PM +0100, Arnd Bergmann wrote:
->> On Thursday 26 June 2014 19:44:21 Rob Herring wrote:
->>> I don't agree arm32 is harder than microblaze. Yes, converting ALL of
->>> arm would be, but that is not necessary. With Liviu's latest branch
->>> the hacks I previously needed are gone (thanks!), and this is all I
->>> need to get Versatile PCI working (under QEMU):
->>
->> I meant converting all of arm32 would be harder, but I agree we don't
->> have to do it. It would be nice to convert all of the drivers/pci/host
->> drivers though, iow all multiplatform-enabled ones, and leaving the
->> current arm32 pci implementation for the platforms we don't want to
->> convert to multiplatform anyway (footbridge, iop, ixp4xx, ks8695 (?),
->> pxa, sa1100).
-> 
-> I'm more than happy to convert the generic host controller we merged
-> recently, but I'd probably want the core changes merged first so that I
-> know I'm not wasting my time!
+Add two quirks to support thunderbolt suspend/resume on Apple systems.
+We need to perform two different actions during suspend and resume:
 
-Something like this untested patch...
+The whole controller has to be powered down before suspend. If this is
+not done then the native host interface device will be gone after resume
+if a thunderbolt device was plugged in before suspending. The controller
+represents itself as multiple PCI devices/bridges. To power it down we
+hook into the upstream bridge of the controller and call the magic ACPI
+methods.  Power will be restored automatically during resume (by the
+firmware presumably).
 
-Another issue I found still present is pci_ioremap_io needs some work 
-to unify with the arm implementation. That's a matter of changing the 
-function from an offset to i/o resource. That should be a pretty 
-mechanical change.
+During resume we have to wait for the native host interface to
+reestablish all pci tunnels. Since there is no parent-child relationship
+between the NHI and the bridges we have to explicitly wait for them
+using device_pm_wait_for_dev. We do this in the resume_noirq phase of
+the downstream bridges of the controller (which lead into the
+thunderbolt tunnels).
 
-Also, there is a potential for memory leak because there is no undo 
-for of_create_pci_host_bridge.
-
-Rob
-
-8<------------------------------------------------------------------
->From 301b402631b2867ced38d5533586da0bd888045c Mon Sep 17 00:00:00 2001
-From: Rob Herring <robh@kernel.org>
-Date: Fri, 27 Jun 2014 09:46:09 -0500
-Subject: [PATCH] pci: generic-host: refactor to use common range parsing
-
-Signed-off-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- drivers/pci/host/pci-host-generic.c | 191 ++++++------------------------------
- 1 file changed, 29 insertions(+), 162 deletions(-)
+ drivers/pci/quirks.c | 97 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 97 insertions(+)
 
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 44fe6aa..57fd1e1 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -32,16 +32,14 @@ struct gen_pci_cfg_bus_ops {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index af2eba1..7950fd1 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2992,6 +2992,103 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, 0x0030,
+ DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
+ 			 quirk_broken_intx_masking);
  
- struct gen_pci_cfg_windows {
- 	struct resource				res;
--	struct resource				bus_range;
- 	void __iomem				**win;
- 
- 	const struct gen_pci_cfg_bus_ops	*ops;
- };
- 
- struct gen_pci {
--	struct pci_host_bridge			host;
-+	struct pci_host_bridge			*host;
- 	struct gen_pci_cfg_windows		cfg;
--	struct list_head			resources;
- };
- 
- static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
-@@ -50,7 +48,7 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
++#ifdef CONFIG_ACPI
++/*
++ * Apple: Shutdown Cactus Ridge Thunderbolt controller.
++ *
++ * On Apple hardware the Cactus Ridge Thunderbolt controller needs to be
++ * shutdown before suspend. Otherwise the native host interface (NHI) will not
++ * be present after resume if a device was plugged in before suspend.
++ *
++ * The thunderbolt controller consists of a pcie switch with downstream
++ * bridges leading to the NHI and to the tunnel pci bridges.
++ *
++ * This quirk cuts power to the whole chip. Therefore we have to apply it
++ * during suspend_noirq of the upstream bridge.
++ *
++ * Power is automagically restored before resume. No action is needed.
++ */
++static void quirk_apple_poweroff_thunderbolt(struct pci_dev *dev)
++{
++	acpi_handle bridge, SXIO, SXFP, SXLV;
++
++	if (!dmi_match(DMI_BOARD_VENDOR, "Apple Inc."))
++		return;
++	if (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM)
++		return;
++	bridge = ACPI_HANDLE(&dev->dev);
++	if (!bridge)
++		return;
++	/*
++	 * SXIO and SXLV are present only on machines requiring this quirk.
++	 * TB bridges in external devices might have the same device id as those
++	 * on the host, but they will not have the associated ACPI methods. This
++	 * implicitly checks that we are at the right bridge.
++	 */
++	if (ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXIO", &SXIO))
++	    || ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXFP", &SXFP))
++	    || ACPI_FAILURE(acpi_get_handle(bridge, "DSB0.NHI0.SXLV", &SXLV)))
++		return;
++	dev_info(&dev->dev, "quirk: cutting power to thunderbolt controller...\n");
++
++	/* magic sequence */
++	acpi_execute_simple_method(SXIO, NULL, 1);
++	acpi_execute_simple_method(SXFP, NULL, 0);
++	msleep(300);
++	acpi_execute_simple_method(SXLV, NULL, 0);
++	acpi_execute_simple_method(SXIO, NULL, 0);
++	acpi_execute_simple_method(SXLV, NULL, 0);
++}
++DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL, 0x1547,
++			       quirk_apple_poweroff_thunderbolt);
++
++/*
++ * Apple: Wait for the thunderbolt controller to reestablish pci tunnels.
++ *
++ * During suspend the thunderbolt controller is reset and all pci
++ * tunnels are lost. The NHI driver will try to reestablish all tunnels
++ * during resume. We have to manually wait for the NHI since there is
++ * no parent child relationship between the NHI and the tunneled
++ * bridges.
++ */
++static void quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
++{
++	struct pci_dev *sibling = NULL;
++	struct pci_dev *nhi = NULL;
++
++	if (!dmi_match(DMI_BOARD_VENDOR, "Apple Inc."))
++		return;
++	if (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)
++		return;
++	/*
++	 * Find the NHI and confirm that we are a bridge on the tb host
++	 * controller and not on a tb endpoint.
++	 */
++	sibling = pci_get_slot(dev->bus, 0x0);
++	if (sibling == dev)
++		goto out; /* we are the downstream bridge to the NHI */
++	if (!sibling || !sibling->subordinate)
++		goto out;
++	nhi = pci_get_slot(sibling->subordinate, 0x0);
++	if (!nhi)
++		goto out;
++	if (nhi->vendor != PCI_VENDOR_ID_INTEL
++			|| (nhi->device != 0x1547 && nhi->device != 0x156c)
++			|| nhi->subsystem_vendor != 0x2222
++			|| nhi->subsystem_device != 0x1111)
++		goto out;
++	dev_info(&dev->dev, "quirk: wating for thunderbolt to reestablish pci tunnels...\n");
++	device_pm_wait_for_dev(&dev->dev, &nhi->dev);
++out:
++	pci_dev_put(nhi);
++	pci_dev_put(sibling);
++}
++DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x1547,
++			       quirk_apple_wait_for_thunderbolt);
++DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x156d,
++			       quirk_apple_wait_for_thunderbolt);
++#endif
++
+ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+ 			  struct pci_fixup *end)
  {
- 	struct pci_sys_data *sys = bus->sysdata;
- 	struct gen_pci *pci = sys->private_data;
--	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
-+	resource_size_t idx = bus->number - bus->busn_res.start;
- 
- 	return pci->cfg.win[idx] + ((devfn << 8) | where);
- }
-@@ -66,7 +64,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
- {
- 	struct pci_sys_data *sys = bus->sysdata;
- 	struct gen_pci *pci = sys->private_data;
--	resource_size_t idx = bus->number - pci->cfg.bus_range.start;
-+	resource_size_t idx = bus->number - bus->busn_res.start;
- 
- 	return pci->cfg.win[idx] + ((devfn << 12) | where);
- }
-@@ -138,154 +136,32 @@ static const struct of_device_id gen_pci_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, gen_pci_of_match);
- 
--static int gen_pci_calc_io_offset(struct device *dev,
--				  struct of_pci_range *range,
--				  struct resource *res,
--				  resource_size_t *offset)
--{
--	static atomic_t wins = ATOMIC_INIT(0);
--	int err, idx, max_win;
--	unsigned int window;
--
--	if (!PAGE_ALIGNED(range->cpu_addr))
--		return -EINVAL;
--
--	max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
--	idx = atomic_inc_return(&wins);
--	if (idx > max_win)
--		return -ENOSPC;
--
--	window = (idx - 1) * SZ_64K;
--	err = pci_ioremap_io(window, range->cpu_addr);
--	if (err)
--		return err;
--
--	of_pci_range_to_resource(range, dev->of_node, res);
--	res->start = window;
--	res->end = res->start + range->size - 1;
--	*offset = window - range->pci_addr;
--	return 0;
--}
--
--static int gen_pci_calc_mem_offset(struct device *dev,
--				   struct of_pci_range *range,
--				   struct resource *res,
--				   resource_size_t *offset)
--{
--	of_pci_range_to_resource(range, dev->of_node, res);
--	*offset = range->cpu_addr - range->pci_addr;
--	return 0;
--}
--
--static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
--{
--	struct pci_host_bridge_window *win;
--
--	list_for_each_entry(win, &pci->resources, list)
--		release_resource(win->res);
--
--	pci_free_resource_list(&pci->resources);
--}
--
--static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
--{
--	struct of_pci_range range;
--	struct of_pci_range_parser parser;
--	int err, res_valid = 0;
--	struct device *dev = pci->host.dev.parent;
--	struct device_node *np = dev->of_node;
--
--	if (of_pci_range_parser_init(&parser, np)) {
--		dev_err(dev, "missing \"ranges\" property\n");
--		return -EINVAL;
--	}
--
--	for_each_of_pci_range(&parser, &range) {
--		struct resource *parent, *res;
--		resource_size_t offset;
--		u32 restype = range.flags & IORESOURCE_TYPE_BITS;
--
--		res = devm_kmalloc(dev, sizeof(*res), GFP_KERNEL);
--		if (!res) {
--			err = -ENOMEM;
--			goto out_release_res;
--		}
--
--		switch (restype) {
--		case IORESOURCE_IO:
--			parent = &ioport_resource;
--			err = gen_pci_calc_io_offset(dev, &range, res, &offset);
--			break;
--		case IORESOURCE_MEM:
--			parent = &iomem_resource;
--			err = gen_pci_calc_mem_offset(dev, &range, res, &offset);
--			res_valid |= !(res->flags & IORESOURCE_PREFETCH || err);
--			break;
--		default:
--			err = -EINVAL;
--			continue;
--		}
--
--		if (err) {
--			dev_warn(dev,
--				 "error %d: failed to add resource [type 0x%x, %lld bytes]\n",
--				 err, restype, range.size);
--			continue;
--		}
--
--		err = request_resource(parent, res);
--		if (err)
--			goto out_release_res;
--
--		pci_add_resource_offset(&pci->resources, res, offset);
--	}
--
--	if (!res_valid) {
--		dev_err(dev, "non-prefetchable memory resource required\n");
--		err = -EINVAL;
--		goto out_release_res;
--	}
--
--	return 0;
--
--out_release_res:
--	gen_pci_release_of_pci_ranges(pci);
--	return err;
--}
--
- static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- {
- 	int err;
- 	u8 bus_max;
- 	resource_size_t busn;
--	struct resource *bus_range;
--	struct device *dev = pci->host.dev.parent;
-+	struct pci_bus *bus = pci->host->bus;
-+	struct resource *bus_range = &bus->busn_res;
-+	struct device *dev = pci->host->dev.parent;
- 	struct device_node *np = dev->of_node;
- 
--	if (of_pci_parse_bus_range(np, &pci->cfg.bus_range))
--		pci->cfg.bus_range = (struct resource) {
--			.name	= np->name,
--			.start	= 0,
--			.end	= 0xff,
--			.flags	= IORESOURCE_BUS,
--		};
--
- 	err = of_address_to_resource(np, 0, &pci->cfg.res);
- 	if (err) {
- 		dev_err(dev, "missing \"reg\" property\n");
- 		return err;
- 	}
- 
--	pci->cfg.win = devm_kcalloc(dev, resource_size(&pci->cfg.bus_range),
-+	pci->cfg.win = devm_kcalloc(dev, resource_size(bus_range),
- 				    sizeof(*pci->cfg.win), GFP_KERNEL);
- 	if (!pci->cfg.win)
- 		return -ENOMEM;
- 
- 	/* Limit the bus-range to fit within reg */
--	bus_max = pci->cfg.bus_range.start +
-+	bus_max = bus_range->start +
- 		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
--	pci->cfg.bus_range.end = min_t(resource_size_t, pci->cfg.bus_range.end,
--				       bus_max);
-+	pci_bus_update_busn_res_end(bus, min_t(resource_size_t,
-+				    bus_range->end, bus_max));
- 
- 	/* Map our Configuration Space windows */
- 	if (!devm_request_mem_region(dev, pci->cfg.res.start,
-@@ -293,7 +169,6 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- 				     "Configuration Space"))
- 		return -ENOMEM;
- 
--	bus_range = &pci->cfg.bus_range;
- 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
- 		u32 idx = busn - bus_range->start;
- 		u32 sz = 1 << pci->cfg.ops->bus_shift;
-@@ -305,34 +180,21 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- 			return -ENOMEM;
- 	}
- 
--	/* Register bus resource */
--	pci_add_resource(&pci->resources, bus_range);
- 	return 0;
- }
- 
--static int gen_pci_setup(int nr, struct pci_sys_data *sys)
--{
--	struct gen_pci *pci = sys->private_data;
--	list_splice_init(&pci->resources, &sys->resources);
--	return 1;
--}
-+/* Unused, temporary to satisfy ARM arch code */
-+static struct pci_sys_data sys;
- 
- static int gen_pci_probe(struct platform_device *pdev)
- {
--	int err;
-+	int err, lastbus;
- 	const char *type;
- 	const struct of_device_id *of_id;
- 	const int *prop;
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = dev->of_node;
- 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
--	struct hw_pci hw = {
--		.nr_controllers	= 1,
--		.private_data	= (void **)&pci,
--		.setup		= gen_pci_setup,
--		.map_irq	= of_irq_parse_and_map_pci,
--		.ops		= &gen_pci_ops,
--	};
- 
- 	if (!pci)
- 		return -ENOMEM;
-@@ -353,23 +215,28 @@ static int gen_pci_probe(struct platform_device *pdev)
- 
- 	of_id = of_match_node(gen_pci_of_match, np);
- 	pci->cfg.ops = of_id->data;
--	pci->host.dev.parent = dev;
--	INIT_LIST_HEAD(&pci->host.windows);
--	INIT_LIST_HEAD(&pci->resources);
- 
--	/* Parse our PCI ranges and request their resources */
--	err = gen_pci_parse_request_of_pci_ranges(pci);
--	if (err)
--		return err;
-+	pci->host = of_create_pci_host_bridge(&pdev->dev, &gen_pci_ops, &sys);
-+	if (PTR_ERR(pci->host))
-+		return PTR_ERR(pci->host);
- 
- 	/* Parse and map our Configuration Space windows */
- 	err = gen_pci_parse_map_cfg_windows(pci);
--	if (err) {
--		gen_pci_release_of_pci_ranges(pci);
-+	if (err)
- 		return err;
--	}
- 
--	pci_common_init_dev(dev, &hw);
-+	pci_ioremap_io(0, pci->host->io_base);
-+
-+	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
-+	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
-+
-+	lastbus = pci_scan_child_bus(pci->host->bus);
-+	pci_bus_update_busn_res_end(pci->host->bus, lastbus);
-+
-+	pci_assign_unassigned_bus_resources(pci->host->bus);
-+
-+	pci_bus_add_devices(pci->host->bus);
-+
- 	return 0;
- }
- 
 -- 
-1.9.1
+2.0.0
 
