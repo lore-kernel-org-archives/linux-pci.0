@@ -1,172 +1,275 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiri Kosina <trivial@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V4 10/42] x86, irq, trivial: minor improvements of IRQ related code
-Date: Mon,  9 Jun 2014 16:19:39 +0800
-Message-Id: <1402302011-23642-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:63667 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934074AbaFCUFG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 16:05:06 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH v5 14/15] thunderbolt: Read switch uid from EEPROM
+Date: Tue,  3 Jun 2014 22:04:11 +0200
+Message-Id: <1401825852-4745-15-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1) Kill unused MAX_HARDIRQS_PER_CPU.
-2) Improve function prototype declararions.
-3) Simple typo fix, change "gsit" to "gsi".
-4) Use macro VECTOR_UNDEFINED instead of hard-coded -1.
-5) Kill redundant comments.
+Add eeprom access code and read the uid during switch initialization.
+The UID will be used to check device identity after suspend.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- arch/x86/include/asm/hardirq.h |    3 ---
- arch/x86/include/asm/io_apic.h |   16 +++++++---------
- arch/x86/kernel/apic/io_apic.c |   21 +++++----------------
- 3 files changed, 12 insertions(+), 28 deletions(-)
+ drivers/thunderbolt/Makefile |   2 +-
+ drivers/thunderbolt/eeprom.c | 189 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/switch.c |   5 ++
+ drivers/thunderbolt/tb.h     |   3 +
+ 4 files changed, 198 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/thunderbolt/eeprom.c
 
-diff --git a/arch/x86/include/asm/hardirq.h b/arch/x86/include/asm/hardirq.h
-index 230853da4ec0..0f5fb6b6567e 100644
---- a/arch/x86/include/asm/hardirq.h
-+++ b/arch/x86/include/asm/hardirq.h
-@@ -40,9 +40,6 @@ typedef struct {
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 0122ca6..5d1053c 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+ obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
+-thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o
++thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
  
- DECLARE_PER_CPU_SHARED_ALIGNED(irq_cpustat_t, irq_stat);
- 
--/* We can have at most NR_VECTORS irqs routed to a cpu at a time */
--#define MAX_HARDIRQS_PER_CPU NR_VECTORS
--
- #define __ARCH_IRQ_STAT
- 
- #define inc_irq_stat(member)	this_cpu_inc(irq_stat.member)
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 9121abbc8c8f..8dd1e13f2989 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -144,22 +144,20 @@ struct io_apic_irq_attr;
- struct irq_cfg;
- extern int io_apic_set_pci_routing(struct device *dev, int irq,
- 		 struct io_apic_irq_attr *irq_attr);
--void setup_IO_APIC_irq_extra(u32 gsi);
-+extern void setup_IO_APIC_irq_extra(u32 gsi);
- extern void ioapic_insert_resources(void);
- 
- extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
- 				     unsigned int, int,
- 				     struct io_apic_irq_attr *);
--extern int native_setup_ioapic_entry(int, struct IO_APIC_route_entry *,
--				     unsigned int, int,
--				     struct io_apic_irq_attr *);
- extern void eoi_ioapic_irq(unsigned int irq, struct irq_cfg *cfg);
- 
- extern void native_compose_msi_msg(struct pci_dev *pdev,
- 				   unsigned int irq, unsigned int dest,
- 				   struct msi_msg *msg, u8 hpet_id);
- extern void native_eoi_ioapic_pin(int apic, int pin, int vector);
--int io_apic_setup_irq_pin_once(unsigned int irq, int node, struct io_apic_irq_attr *attr);
-+extern int io_apic_setup_irq_pin_once(unsigned int irq, int node,
-+				      struct io_apic_irq_attr *attr);
- 
- extern int save_ioapic_entries(void);
- extern void mask_ioapic_entries(void);
-@@ -172,11 +170,11 @@ struct mp_ioapic_gsi{
- 	u32 gsi_base;
- 	u32 gsi_end;
- };
--extern struct mp_ioapic_gsi  mp_gsi_routing[];
- extern u32 gsi_top;
--int mp_find_ioapic(u32 gsi);
--int mp_find_ioapic_pin(int ioapic, u32 gsi);
--void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
+diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
+new file mode 100644
+index 0000000..f28e402
+--- /dev/null
++++ b/drivers/thunderbolt/eeprom.c
+@@ -0,0 +1,189 @@
++/*
++ * Thunderbolt Cactus Ridge driver - eeprom access
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
 +
-+extern int mp_find_ioapic(u32 gsi);
-+extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
-+extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void __init pre_init_apic_IRQ0(void);
- 
- extern void mp_save_irq(struct mpc_intsrc *m);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 2de992501a1b..d4aba16e6bbf 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1010,7 +1010,7 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 				break;
- 
- 		if (!test_bit(lbus, mp_bus_not_pci) &&
--		    !mp_irqs[i].irqtype &&
-+		    mp_irqs[i].irqtype == mp_INT &&
- 		    (bus == lbus) &&
- 		    (slot == ((mp_irqs[i].srcbusirq >> 2) & 0x1f))) {
- 			int irq = pin_2_irq(i, ioapic_idx, mp_irqs[i].dstirq);
-@@ -1359,7 +1359,7 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
- 
- 		irq = pin_2_irq(idx, ioapic_idx, pin);
- 
--		if ((ioapic_idx > 0) && (irq > 16))
-+		if ((ioapic_idx > 0) && (irq > NR_IRQS_LEGACY))
- 			continue;
- 
- 		/*
-@@ -1388,7 +1388,7 @@ static void __init setup_IO_APIC_irqs(void)
- }
- 
- /*
-- * for the gsit that is not in first ioapic
-+ * for the gsi that is not in first ioapic
-  * but could not use acpi_register_gsi()
-  * like some special sci in IBM x3330
-  */
-@@ -2225,7 +2225,7 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
- 			apic->send_IPI_self(IRQ_MOVE_CLEANUP_VECTOR);
- 			goto unlock;
- 		}
--		__this_cpu_write(vector_irq[vector], -1);
-+		__this_cpu_write(vector_irq[vector], VECTOR_UNDEFINED);
- unlock:
- 		raw_spin_unlock(&desc->lock);
++#include "tb.h"
++
++/**
++ * tb_eeprom_ctl_write() - write control word
++ */
++static int tb_eeprom_ctl_write(struct tb_switch *sw, struct tb_eeprom_ctl *ctl)
++{
++	return tb_sw_write(sw, ctl, TB_CFG_SWITCH, sw->cap_plug_events + 4, 1);
++}
++
++/**
++ * tb_eeprom_ctl_write() - read control word
++ */
++static int tb_eeprom_ctl_read(struct tb_switch *sw, struct tb_eeprom_ctl *ctl)
++{
++	return tb_sw_read(sw, ctl, TB_CFG_SWITCH, sw->cap_plug_events + 4, 1);
++}
++
++enum tb_eeprom_transfer {
++	TB_EEPROM_IN,
++	TB_EEPROM_OUT,
++};
++
++/**
++ * tb_eeprom_active - enable rom access
++ *
++ * WARNING: Always disable access after usage. Otherwise the controller will
++ * fail to reprobe.
++ */
++static int tb_eeprom_active(struct tb_switch *sw, bool enable)
++{
++	struct tb_eeprom_ctl ctl;
++	int res = tb_eeprom_ctl_read(sw, &ctl);
++	if (res)
++		return res;
++	if (enable) {
++		ctl.access_high = 1;
++		res = tb_eeprom_ctl_write(sw, &ctl);
++		if (res)
++			return res;
++		ctl.access_low = 0;
++		return tb_eeprom_ctl_write(sw, &ctl);
++	} else {
++		ctl.access_low = 1;
++		res = tb_eeprom_ctl_write(sw, &ctl);
++		if (res)
++			return res;
++		ctl.access_high = 0;
++		return tb_eeprom_ctl_write(sw, &ctl);
++	}
++}
++
++/**
++ * tb_eeprom_transfer - transfer one bit
++ *
++ * If TB_EEPROM_IN is passed, then the bit can be retrieved from ctl->data_in.
++ * If TB_EEPROM_OUT is passed, then ctl->data_out will be written.
++ */
++static int tb_eeprom_transfer(struct tb_switch *sw, struct tb_eeprom_ctl *ctl,
++			      enum tb_eeprom_transfer direction)
++{
++	int res;
++	if (direction == TB_EEPROM_OUT) {
++		res = tb_eeprom_ctl_write(sw, ctl);
++		if (res)
++			return res;
++	}
++	ctl->clock = 1;
++	res = tb_eeprom_ctl_write(sw, ctl);
++	if (res)
++		return res;
++	if (direction == TB_EEPROM_IN) {
++		res = tb_eeprom_ctl_read(sw, ctl);
++		if (res)
++			return res;
++	}
++	ctl->clock = 0;
++	return tb_eeprom_ctl_write(sw, ctl);
++}
++
++/**
++ * tb_eeprom_out - write one byte to the bus
++ */
++static int tb_eeprom_out(struct tb_switch *sw, u8 val)
++{
++	struct tb_eeprom_ctl ctl;
++	int i;
++	int res = tb_eeprom_ctl_read(sw, &ctl);
++	if (res)
++		return res;
++	for (i = 0; i < 8; i++) {
++		ctl.data_out = val & 0x80;
++		res = tb_eeprom_transfer(sw, &ctl, TB_EEPROM_OUT);
++		if (res)
++			return res;
++		val <<= 1;
++	}
++	return 0;
++}
++
++/**
++ * tb_eeprom_in - read one byte from the bus
++ */
++static int tb_eeprom_in(struct tb_switch *sw, u8 *val)
++{
++	struct tb_eeprom_ctl ctl;
++	int i;
++	int res = tb_eeprom_ctl_read(sw, &ctl);
++	if (res)
++		return res;
++	*val = 0;
++	for (i = 0; i < 8; i++) {
++		*val <<= 1;
++		res = tb_eeprom_transfer(sw, &ctl, TB_EEPROM_IN);
++		if (res)
++			return res;
++		*val |= ctl.data_in;
++	}
++	return 0;
++}
++
++/**
++ * tb_eeprom_read_n - read count bytes from offset into val
++ */
++static int tb_eeprom_read_n(struct tb_switch *sw, u16 offset, u8 *val,
++		size_t count)
++{
++	int i, res;
++	res = tb_eeprom_active(sw, true);
++	if (res)
++		return res;
++	res = tb_eeprom_out(sw, 3);
++	if (res)
++		return res;
++	res = tb_eeprom_out(sw, offset >> 8);
++	if (res)
++		return res;
++	res = tb_eeprom_out(sw, offset);
++	if (res)
++		return res;
++	for (i = 0; i < count; i++) {
++		res = tb_eeprom_in(sw, val + i);
++		if (res)
++			return res;
++	}
++	return tb_eeprom_active(sw, false);
++}
++
++int tb_eeprom_read_uid(struct tb_switch *sw, u64 *uid)
++{
++	u8 data[9];
++	struct tb_cap_plug_events cap;
++	int res;
++	if (!sw->cap_plug_events) {
++		tb_sw_warn(sw, "no TB_CAP_PLUG_EVENTS, cannot read eeprom\n");
++		return -ENOSYS;
++	}
++	res = tb_sw_read(sw, &cap, TB_CFG_SWITCH, sw->cap_plug_events,
++			     sizeof(cap) / 4);
++	if (res)
++		return res;
++	if (!cap.eeprom_ctl.present || cap.eeprom_ctl.not_present) {
++		tb_sw_warn(sw, "no NVM\n");
++		return -ENOSYS;
++	}
++
++	if (cap.drom_offset > 0xffff) {
++		tb_sw_warn(sw, "drom offset is larger than 0xffff: %#x\n",
++				cap.drom_offset);
++		return -ENXIO;
++	}
++
++	/* read uid */
++	res = tb_eeprom_read_n(sw, cap.drom_offset, data, 9);
++	if (res)
++		return res;
++	/* TODO: check checksum in data[0] */
++	*uid = *(u64 *)(data+1);
++	return 0;
++}
++
++
++
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index 667413f..aeb5c30 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -376,6 +376,11 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
  	}
-@@ -2514,17 +2514,6 @@ static inline void init_IO_APIC_traps(void)
- 	struct irq_cfg *cfg;
- 	unsigned int irq;
+ 	sw->cap_plug_events = cap;
  
--	/*
--	 * NOTE! The local APIC isn't very good at handling
--	 * multiple interrupts at the same interrupt level.
--	 * As the interrupt level is determined by taking the
--	 * vector number and shifting that right by 4, we
--	 * want to spread these out a bit so that they don't
--	 * all fall in the same interrupt level.
--	 *
--	 * Also, we've got to be careful not to trash gate
--	 * 0x80, because int 0x80 is hm, kind of importantish. ;)
--	 */
- 	for_each_active_irq(irq) {
- 		cfg = irq_get_chip_data(irq);
- 		if (IO_APIC_IRQ(irq) && cfg && !cfg->vector) {
-@@ -3546,7 +3535,7 @@ void __init setup_ioapic_dest(void)
- 			continue;
- 		irq = pin_2_irq(irq_entry, ioapic, pin);
++	if (tb_eeprom_read_uid(sw, &sw->uid))
++		tb_sw_warn(sw, "could not read uid from eeprom\n");
++	else
++		tb_sw_info(sw, "uid: %#llx\n", sw->uid);
++
+ 	if (tb_plug_events_active(sw, true))
+ 		goto err;
  
--		if ((ioapic > 0) && (irq > 16))
-+		if ((ioapic > 0) && (irq > NR_IRQS_LEGACY))
- 			continue;
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 508abc4..a89087f 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -19,6 +19,7 @@ struct tb_switch {
+ 	struct tb_regs_switch_header config;
+ 	struct tb_port *ports;
+ 	struct tb *tb;
++	u64 uid;
+ 	int cap_plug_events; /* offset, zero if not found */
+ 	bool is_unplugged; /* unplugged, will go away */
+ };
+@@ -231,6 +232,8 @@ int tb_path_activate(struct tb_path *path);
+ void tb_path_deactivate(struct tb_path *path);
+ bool tb_path_is_invalid(struct tb_path *path);
  
- 		idata = irq_get_irq_data(irq);
++int tb_eeprom_read_uid(struct tb_switch *sw, u64 *uid);
++
+ 
+ static inline int tb_route_length(u64 route)
+ {
 -- 
-1.7.10.4
+2.0.0
 
