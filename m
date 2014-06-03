@@ -1,125 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:61655 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753034AbaFNVVe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Jun 2014 17:21:34 -0400
-Received: by mail-ig0-f182.google.com with SMTP id a13so1661970igq.15
-        for <linux-pci@vger.kernel.org>; Sat, 14 Jun 2014 14:21:33 -0700 (PDT)
-Subject: [PATCH RFC 3/4] PCI: pciehp: Compute timeout from hotplug command
- start time
-To: Yinghai Lu <yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Jan C. Nordholz" <jckn@gmx.net>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Rajat Jain <rajatxjain@gmail.com>, linux-pci@vger.kernel.org
-Date: Sat, 14 Jun 2014 15:21:32 -0600
-Message-ID: <20140614212132.15202.29174.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from 8bytes.org ([85.214.48.195]:49099 "EHLO mail.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933989AbaFCXjM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Jun 2014 19:39:12 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.8bytes.org (Postfix) with SMTP id 40CAC12B223
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jun 2014 01:39:10 +0200 (CEST)
+Date: Wed, 4 Jun 2014 01:39:07 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Shuah Khan <shuah.kh@samsung.com>
+Cc: Eli Billauer <eli.billauer@gmail.com>, tj@kernel.org,
+	devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+	discuss@x86-64.org
+Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
+ dma_map_single()
+Message-ID: <20140603233907.GB23880@8bytes.org>
+References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
+ <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
+ <538E3D04.9060808@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <538E3D04.9060808@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If we issue a hotplug command, go do something else, then come back and
-wait for the command to complete, we don't have to wait the whole timeout
-period, because some of it elapsed while we were doing something else.
+On Tue, Jun 03, 2014 at 03:24:20PM -0600, Shuah Khan wrote:
+> On 06/01/2014 01:01 AM, Eli Billauer wrote:
+> I see the value of this interface in unmap case, this type of wrapper
+> can release dma buffers, drivers neglected to release leaving dangling
+> buffers.
+> 
+> However, driver writers should give it some thought before switching
+> from conventional dma_map_*() interfaces to these proposed managed
+> dma mapping interfaces. These new interfaces shouldn't be treated as
+> drop in replacements to dma_map_*() interfaces.
+> 
+> The reasons are:
+> 
+> 1. This interface adds an overhead in allocation memory for devres to
+>    compared to other dma_map_* wrappers. Users need to be aware of that.
+>    This would be okay in the cases where a driver allocates several
+>    buffers at init time and uses them. However, several drivers allocate
+>    during run-time and release as soon as it is no longer needed. This
+>    overhead is going to be in the performance path.
+> 
+> 2. It adds a failure case even when dma buffers are available. i.e if
+>    if devres alloc fails, it will return failure even if dma map could
+>    have succeeded. This is a new failure case for DMA-API.
+> 
+>    The reason dma_map_*() routines fail now is because there are no
+>    buffers available. Drivers handle this error as a retry case.
+> 
+>    Drivers using dmam_map_single() will have to handle the failure
+>    cases differently.
+> 
+>    Since the return values are different for dmam_map_*(), that is
+>    plus that these interfaces can't be drop in replacements to the
+>    dma_map_*() interfaces.
+> 
+> 3. Similarly, it adds an overhead in releasing memory for devres to
+>    compared to other dma_unmap_* wrappers. Users need to be aware of
+>    that. This overhead is going to be in the performance path when
+>    drivers unmap buffers during run-time.
 
-Keep track of the time we issued the command, and wait only until the
-timeout period from that point has elapsed.
+I fully agree with the points Shuah brought up here. I don't think it is
+a good idea to add this kind of resource management to runtime-allocated
+(and de-allocated) resources of device drivers.
 
-For controllers with errata like Intel CF118, we previously timed out
-before issuing the second hotplug command:
+Also DMA handles are not something that could be garbage collected at
+driver unload time. They are a limited resource that may be used up at
+some point. And the whole point of a devm-API is that code can be
+simpler because we don't need to de-allocate everything on the
+error-path or at unload time, no?
 
-  At time T1 (during boot):
-    - Write DLLSCE, ABPE, PDCE, etc. to Slot Control
-  At time T2 (hotplug event):
-    - Wait for command completion (CC) in Slot Status
-    - Timeout because CC is never set in Slot Status
-    - Write PCC, PIC, etc. to Slot Control
+Besides that, we already have DMA-API debug to find drivers that do not
+release all their DMA buffers.
 
-With this change, we wait until T1 + 1 second instead of T2 + 1 second.
-If the hotplug event is more than 1 second after the boot-time
-initialization, we won't wait for the timeout at all.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/pciehp.h     |    1 +
- drivers/pci/hotplug/pciehp_hpc.c |   23 +++++++++++++++++++----
- 2 files changed, 20 insertions(+), 4 deletions(-)
+	Joerg
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index f7bc886c20be..c496258cd9a7 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -94,6 +94,7 @@ struct controller {
- 	u32 slot_cap;
- 	u32 slot_ctrl;
- 	struct timer_list poll_timer;
-+	unsigned long cmd_started;	/* jiffies */
- 	unsigned int cmd_busy:1;
- 	unsigned int no_cmd_complete:1;
- 	unsigned int link_active_reporting:1;
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index f44fdb5b0b08..18ac24d84f9b 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -104,11 +104,10 @@ static inline void pciehp_free_irq(struct controller *ctrl)
- 		free_irq(ctrl->pcie->irq, ctrl);
- }
- 
--static int pcie_poll_cmd(struct controller *ctrl)
-+static int pcie_poll_cmd(struct controller *ctrl, int timeout)
- {
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
- 	u16 slot_status;
--	int timeout = 1000;
- 
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
- 	if (slot_status & PCI_EXP_SLTSTA_CC) {
-@@ -132,7 +131,9 @@ static int pcie_poll_cmd(struct controller *ctrl)
- static void pcie_wait_cmd(struct controller *ctrl)
- {
- 	unsigned int msecs = pciehp_poll_mode ? 2500 : 1000;
--	unsigned long timeout = msecs_to_jiffies(msecs);
-+	unsigned long duration = msecs_to_jiffies(msecs);
-+	unsigned long cmd_timeout = ctrl->cmd_started + duration;
-+	unsigned long now, timeout;
- 	int rc;
- 
- 	/*
-@@ -142,11 +143,24 @@ static void pcie_wait_cmd(struct controller *ctrl)
- 	if (ctrl->no_cmd_complete)
- 		return;
- 
-+	if (!ctrl->cmd_busy)
-+		return;
-+
-+	/*
-+	 * Even if the command has already timed out, we want to call
-+	 * pcie_poll_cmd() so it can clear PCI_EXP_SLTSTA_CC.
-+	 */
-+	now = jiffies;
-+	if (time_before_eq(cmd_timeout, now))
-+		timeout = 1;
-+	else
-+		timeout = cmd_timeout - now;
-+
- 	if (ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE &&
- 	    ctrl->slot_ctrl & PCI_EXP_SLTCTL_CCIE)
- 		rc = wait_event_timeout(ctrl->queue, !ctrl->cmd_busy, timeout);
- 	else
--		rc = pcie_poll_cmd(ctrl);
-+		rc = pcie_poll_cmd(ctrl, timeout);
- 	if (!rc)
- 		ctrl_dbg(ctrl, "Command not completed in 1000 msec\n");
- }
-@@ -198,6 +212,7 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
- 	ctrl->cmd_busy = 1;
- 	smp_mb();
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
-+	ctrl->cmd_started = jiffies;
- 	ctrl->slot_ctrl = slot_ctrl;
- 
- 	mutex_unlock(&ctrl->ctrl_lock);
 
