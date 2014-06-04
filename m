@@ -1,149 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:36783 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121AbaFWHJQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 03:09:16 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 23 Jun 2014 17:08:59 +1000
-Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 94B752BB0055
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 17:08:57 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N6qbgB28442716
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 16:52:38 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N78uuf006631
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 17:08:56 +1000
-Date: Mon, 23 Jun 2014 17:08:57 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, yan@linux.vnet.ibm.com,
-	qiudayu@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH V3 11/17] ppc/pnv: Expand VF resources according to
- the number of total_pe
-Message-ID: <20140623070857.GA22440@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-12-git-send-email-weiyang@linux.vnet.ibm.com>
- <20140623060707.GA12055@shangw>
- <20140623065651.GD5172@richard>
+Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:41555 "EHLO
+	ducie-dc1.codethink.co.uk" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750992AbaFDJ6W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jun 2014 05:58:22 -0400
+Message-ID: <538EEDB7.8050600@codethink.co.uk>
+Date: Wed, 04 Jun 2014 10:58:15 +0100
+From: Ben Dooks <ben.dooks@codethink.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140623065651.GD5172@richard>
+To: Rob Herring <robherring2@gmail.com>, Arnd Bergmann <arnd@arndb.de>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <damm@opensource.se>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	SH-Linux <linux-sh@vger.kernel.org>
+Subject: Re: [PATCH v3] of/irq: provide more wrappers for !CONFIG_OF
+References: <16771871.sfJG2itVJN@wuerfel> <CAL_JsqJpP2sEkPC4DUFWTNutjFhUBiKZfNVSpiKHFPfsJzTf6w@mail.gmail.com>
+In-Reply-To: <CAL_JsqJpP2sEkPC4DUFWTNutjFhUBiKZfNVSpiKHFPfsJzTf6w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 02:56:52PM +0800, Wei Yang wrote:
->On Mon, Jun 23, 2014 at 04:07:07PM +1000, Gavin Shan wrote:
->>On Tue, Jun 10, 2014 at 09:56:33AM +0800, Wei Yang wrote:
->>>On PHB3, VF resources will be covered by M64 BAR to have better PE isolation.
->>>Mostly the total_pe number is different from the total_VFs, which will lead to
->>>a conflict between MMIO space and the PE number.
->>>
->>>This patch expands the VF resource size to reserve total_pe number of VFs'
->>>resource, which prevents the conflict.
->>>
->>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>---
->>> arch/powerpc/include/asm/machdep.h        |    6 +++
->>> arch/powerpc/include/asm/pci-bridge.h     |    3 ++
->>> arch/powerpc/kernel/pci-common.c          |   15 ++++++
->>> arch/powerpc/platforms/powernv/pci-ioda.c |   83 +++++++++++++++++++++++++++++
->>> 4 files changed, 107 insertions(+)
->>>
->>>diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
->>>index ad3025d..2f2e770 100644
->>>--- a/arch/powerpc/include/asm/machdep.h
->>>+++ b/arch/powerpc/include/asm/machdep.h
->>>@@ -234,9 +234,15 @@ struct machdep_calls {
->>>
->>> 	/* Called after scan and before resource survey */
->>> 	void (*pcibios_fixup_phb)(struct pci_controller *hose);
->>>+#ifdef CONFIG_PCI_IOV
->>>+	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
->>>+#endif /* CONFIG_PCI_IOV */
->>>
->>> 	/* Called during PCI resource reassignment */
->>> 	resource_size_t (*pcibios_window_alignment)(struct pci_bus *, unsigned long type);
->>>+#ifdef CONFIG_PCI_IOV
->>>+	resource_size_t (*__pci_sriov_resource_size)(struct pci_dev *, int resno);
+On 03/06/14 16:40, Rob Herring wrote:
+> On Tue, Jun 3, 2014 at 9:47 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> The pci-rcar driver is enabled for compile tests, and this has
+>> now shown that the driver cannot build without CONFIG_OF,
+>> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
+>> interrupt mapping when possible":
 >>
->>	resource_size_t (*pcibios_sriov_resource_size)(struct pci_dev *, int resno);
+>> drivers/built-in.o: In function `rcar_pci_map_irq':
+>> :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
+>> pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
+>> pci/host/pcie-rcar.c:875:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
 >>
->>You probably can put all SRIOV related functions together:
+>> As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
+>> supposed to build fine, which we can achieve if we make the
+>> declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
+>> and provide an empty inline function otherwise, as we do for
+>> a lot of other of interfaces.
 >>
->>#ifdef CONFIG_PCI_IOV
->>	func_a;
->>	func_b;
->>	 :
->>#endif
+>> This lets us build the rcar_pci driver again without CONFIG_OF
+>> for build testing. All platforms using this driver select OF,
+>> so this doesn't change anything for the users.
 >>
->>>+#endif /* CONFIG_PCI_IOV */
->>>
->>> 	/* Called to shutdown machine specific hardware not already controlled
->>> 	 * by other drivers.
->>>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
->>>index 4ca90a3..8c849d8 100644
->>>--- a/arch/powerpc/include/asm/pci-bridge.h
->>>+++ b/arch/powerpc/include/asm/pci-bridge.h
->>>@@ -168,6 +168,9 @@ struct pci_dn {
->>> #define IODA_INVALID_PE		(-1)
->>> #ifdef CONFIG_PPC_POWERNV
->>> 	int	pe_number;
->>>+#ifdef CONFIG_PCI_IOV
->>>+	u16     vfs;
->>>+#endif /* CONFIG_PCI_IOV */
->>> #endif
->>> };
->>>
->>>diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->>>index c449a26..c4e2e92 100644
->>>--- a/arch/powerpc/kernel/pci-common.c
->>>+++ b/arch/powerpc/kernel/pci-common.c
->>>@@ -120,6 +120,16 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
->>> 	return 1;
->>> }
->>>
->>>+#ifdef CONFIG_PCI_IOV
->>>+resource_size_t pcibios_sriov_resource_size(struct pci_dev *pdev, int resno)
->>>+{
->>>+	if (ppc_md.__pci_sriov_resource_size)
->>>+		return ppc_md.__pci_sriov_resource_size(pdev, resno);
->>>+
->>>+	return 0;
->>>+}
->>>+#endif /* CONFIG_PCI_IOV */
->>>+
->>> static resource_size_t pcibios_io_size(const struct pci_controller *hose)
->>> {
->>> #ifdef CONFIG_PPC64
->>>@@ -1675,6 +1685,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
->>> 	if (ppc_md.pcibios_fixup_phb)
->>> 		ppc_md.pcibios_fixup_phb(hose);
->>>
->>>+#ifdef CONFIG_PCI_IOV
->>>+	if (ppc_md.pcibios_fixup_sriov)
->>>+		ppc_md.pcibios_fixup_sriov(bus);
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> Cc: devicetree@vger.kernel.org
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Cc: Grant Likely <grant.likely@linaro.org>
+>> Cc: Lucas Stach <l.stach@pengutronix.de>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Magnus Damm <damm@opensource.se>
+>> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+>> Cc: Ben Dooks <ben.dooks@codethink.co.uk>
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: linux-sh@vger.kernel.org
+>> ----
 >>
->>One question I probably asked before: why we can't put the logic
->>of ppc_md.pcibios_fixup_sriov() to ppc_md.pcibios_fixup_phb()?
+>> This replaces "[PATCH v2] of/irq: provide int of_irq_parse_and_map_pci
+>> wrapper", since now the same driver requires additional interfaces.
+>> We still want to be able to build the driver with CONFIG_OF disabled,
+>> but now we need three functions instead of just one.
 >>
->
->Yep, you have asked before and I replied before too :-)
->
->During EEH hotplug, if the PF are removed, the IOV BAR will be retrieved from
->the device itself again. If I merge this fixup into
->ppc_md.pcibios_fixup_phb(), this is not proper to be invoked at hotplug event.
->
->Or fixup the phb during EEH hotplug is reasonable?
->
+>> Rob, Grant, can you apply this as a bug fix, or provide comments?
+>>
+>> diff --git a/include/linux/of.h b/include/linux/of.h
+>> index 196b34c..7c29e6c 100644
+>> --- a/include/linux/of.h
+>> +++ b/include/linux/of.h
+>> @@ -511,6 +511,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
+>>         return NULL;
+>>  }
+>>
+>> +static inline int of_n_addr_cells(struct device_node *np) { return 0; }
+>> +static inline int of_n_size_cells(struct device_node *np) { return 0; }
+> 
+> I'm fine with the rest, but I think these should always be used within
+> some higher level function.
+> 
+> I can't seem to find where this is used by rcar. BTW, why does rcar
+> pci DT support fail to have any ranges property?
 
-Yeah. It's not reasonable to apply fixup to PHB when doing hotplug on PF.
+I think the driver provides all the necessary PCI information
+internally as it started off as a platform-driver.
 
-Thanks,
-Gavin
 
+-- 
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
