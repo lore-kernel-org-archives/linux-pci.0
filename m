@@ -1,86 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:43531 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754144AbaFDCoY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 22:44:24 -0400
+Message-ID: <538E87E1.8030604@huawei.com>
+Date: Wed, 4 Jun 2014 10:43:45 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1402982995-13747-9-git-send-email-jiang.liu@linux.intel.com>
-References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com> <1402982995-13747-9-git-send-email-jiang.liu@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 17 Jun 2014 10:11:44 -0600
-Message-ID: <CAErSpo7pAv=v7JQp2UoNxYN8Pdj788NPP8OsLkM3p8NuwL_6Wg@mail.gmail.com>
-Subject: Re: [RFC Patch V2 08/16] PCI: kill wrong warning message in pcieport driver
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Keith Busch <keith.busch@intel.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jon Mason <jon.mason@intel.com>
+Subject: Re: Debugging incorrect mps settings detected
+References: <alpine.LRH.2.03.1406031308200.11244@AMR> <CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com>
+In-Reply-To: <CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Please pay attention to the existing convention of changelog summaries
-(email subject lines), including spacing and capitalization.  "git log
---oneline drivers/pci/pcie" is a good way to see the pattern.  In this
-case, you could use something like this:
+accurate>> 0xd5200000-0xd52fffff 64bit pref]
+>> [ 2107.015060] pci 0000:09:00.0: Max Payload Size 128, but upstream
+>> 0000:05:07.0 set to 256; if necessary, use "pci=pcie_bus_safe" and report a
+>> bug
+>> [ 2107.015079] pci 0000:09:00.0: no hotplug settings from platform
+>>
+>> The commit message that added the warning indicates it may be a BIOS
+>> issue that incorrectly configures this, but BIOS isn't involved with
+>> setting the MPS on a device hot add, am I right? Or is that wrong?
+> 
+> The BIOS is not involved in setting MPS on a device hot-add.
+> 
+>> This is a Dell R620 server, if that matters, though we see this on other
+>> platforms as well.
+>>
+>> Using pci=pcie_bus_perf works around the issue, but that seems a bit
+>> odd to suggest to users. Is setting MPS on hot-add something the PCI
+>> driver layer ought to be doing, or should I be looking into the platform
+>> BIOS instead?
+> 
+> The PCI core should be doing something intelligent here.  If we can't
+> configure MPS safely, we should prevent the device from being enabled.
+>  But this is stuff the PCI core doesn't implement yet.
 
-  PCI/portdrv: Remove warning about invalid IRQ
+Hi Bjorn,
+   We had a long discussion about fix this issue.
+Link: http://marc.info/?l=linux-pci&m=137714192204947&w=2
 
-On Mon, Jun 16, 2014 at 11:29 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> For hot-added PCIe ports, it always generates a warning message on x86
-> platforms when binding to pcieport driver as:
->         "device [8086:0e0b] has invalid IRQ; check vendor BIOS".
->
-> It's due to that we check pci_dev->irq before actually allocating IRQ
-> number for the PCI device:
->         if (!dev->irq && dev->pin) {
->                 dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; "
->                          "check vendor BIOS\n", dev->vendor, dev->device);
->         }
->         status = pcie_port_device_register(dev);
->                 -->pci_enable_device(dev);
->                         -->pci_enable_device_flags()
->                                 -->do_pci_enable_device()
->                                         -->pcibios_enable_device()
->                                                 -->pcibios_enable_irq()
->
-> This warning message isn't generated for PCIe ports present at boot time
-> because x86 arch code has called acpi_pci_irq_enable() in pci_acpi_init()
-> for each PCI device for safety.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/pci/pcie/portdrv_pci.c |    4 ----
->  1 file changed, 4 deletions(-)
->
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index 0d8fdc48e642..0e35f9670066 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -203,10 +203,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->              (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)))
->                 return -ENODEV;
->
-> -       if (!dev->irq && dev->pin) {
-> -               dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; "
-> -                        "check vendor BIOS\n", dev->vendor, dev->device);
-> -       }
+Now more BIOS configure device mps larger than 128B, So I think
+we should consider to fix it before we have a perfect solution about mps setting.
 
-This needs to be rebased to v3.16-rc1.
+> 
+> It's hard to reconfigure MPS after boot because it affects other
+> devices in the system, and I don't think we can always change the
+> settings of other devices while they're active.
 
->         status = pcie_port_device_register(dev);
->         if (status)
->                 return status;
-> --
-> 1.7.10.4
->
+Yes, what we can only change is the device not active after hotplug.
+
+
+> 
+> I'm not sure that warning is correct.  It seems like it should suggest
+> pcie_bus_peer2peer, which is documented as guaranteeing that hot-added
+> devices will work.  But this is always confusing to me, and I could be
+> wrong about this.
+
+I think warning is proper, pcie_bus_safe is designed to fix the hotlplug issue.
+pcie_bus_peer2perr guarantee that hotplug device work fine, because all mps setting
+128B. Maybe we should change document a little, make it more clear.
+
+
+> 
+> Bjorn
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
+
