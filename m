@@ -1,48 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 16 Jun 2014 09:35:56 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"DL-MPTFusionLinux@lsi.com" <DL-MPTFusionLinux@lsi.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"intel-linux-scu@intel.com" <intel-linux-scu@intel.com>,
-	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"pv-drivers@vmware.com" <pv-drivers@vmware.com>,
-	"qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"support@lsi.com" <support@lsi.com>,
-	"iscsi-driver@qlogic.com" <iscsi-driver@qlogic.com>
-Subject: Re: [PATCH v2 RESEND 00/23] scsi: Use pci_enable_msix_range()
- instead of pci_enable_msix()
-Message-ID: <20140616073556.GA359@dhcp-26-207.brq.redhat.com>
-References: <cover.1397461652.git.agordeev@redhat.com>
- <20140424170903.GA29593@google.com>
- <1398361868.6766.0.camel@dabdike>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f41.google.com ([209.85.216.41]:53374 "EHLO
+	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752360AbaFDOOU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jun 2014 10:14:20 -0400
+Date: Wed, 4 Jun 2014 10:14:16 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Shuah Khan <shuah.kh@samsung.com>,
+	Eli Billauer <eli.billauer@gmail.com>,
+	devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+	discuss@x86-64.org
+Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
+ dma_map_single()
+Message-ID: <20140604141416.GD5004@htj.dyndns.org>
+References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
+ <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
+ <538E3D04.9060808@samsung.com>
+ <20140603233907.GB23880@8bytes.org>
+ <20140604140408.GC5004@htj.dyndns.org>
+ <20140604141211.GC23880@8bytes.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1398361868.6766.0.camel@dabdike>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140604141211.GC23880@8bytes.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 24, 2014 at 05:51:09PM +0000, James Bottomley wrote:
-> > These depend on f7fc32c, which appeared in v3.15-rc1.  I had intended
-> > to merge these scsi updates at the same time, but I failed.  Would you
-> > like to take them now that f7fc32c is upstream?
+Hello,
+
+On Wed, Jun 04, 2014 at 04:12:11PM +0200, Joerg Roedel wrote:
+> Yes, but those drivers usually get DMA buffers at init time with the
+> dma_alloc_* interfaces. The dma_map_* interfaces discussed here belong
+> to the streaming DMA-API, so they are usually used for only one DMA
+> transaction before dma_unmap_* is called on them.
 > 
-> OK, will add them.  I'm planning to base the scsi-misc tree on -rc3 once
-> we have our current crop of fixes upstream.
+> A devm interface for the dma_alloc_* family of functions would
+> actually make sense, but not for the dma_map_* functions.
 
-Hi James,
+Ah, okay.  Fair enough.
 
-If I need to repost the series to get it into you tree?
-
-Thanks!
-
-> James
-> 
+Thanks.
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+tejun
