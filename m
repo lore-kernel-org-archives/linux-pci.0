@@ -1,435 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:52663 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751241AbaF0Q4k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 12:56:40 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1403888155-9709-1-git-send-email-phil.edworthy@renesas.com>
-References: <1403888155-9709-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1403888155-9709-3-git-send-email-phil.edworthy@renesas.com>
-Date: Fri, 27 Jun 2014 17:55:55 +0100
-Subject: [PATCH 2/2] PCI: host: pcie-rcar: Style and formatting changes.
+Received: from mga01.intel.com ([192.55.52.88]:49167 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751339AbaFDRp4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Jun 2014 13:45:56 -0400
+Date: Wed, 4 Jun 2014 10:44:40 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: Re: Debugging incorrect mps settings detected
+Message-ID: <20140604174440.GA17837@jonmason-lab>
+References: <alpine.LRH.2.03.1406031308200.11244@AMR>
+ <CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch just makes symbol and function name changes to avoid
-potential conflicts, along with minor formatting changes.
-The only other change is to replace an arg passed into a func
-with a local variable.
+On Tue, Jun 03, 2014 at 03:01:31PM -0600, Bjorn Helgaas wrote:
+> [+cc Yijing, Jon]
+> 
+> On Tue, Jun 3, 2014 at 2:04 PM, Keith Busch <keith.busch@intel.com> wrote:
+> > Hello,
+> >
+> > Hot adding a pci device results in improper MPS settings detected,
+> > reading 128 even though the upstream port is 256. This causes a warning
+> > print to be logged suggesting I should report a bug. :)
+> >
+> > Here's the dmesg of the hot plug event:
+> >
+> > [ 2105.051941] pciehp 0000:05:07.0:pcie24: Card present on Slot(27)
+> > [ 2107.012811] pci 0000:09:00.0: [8086:0953] type 00 class 0x010802
+> > [ 2107.012838] pci 0000:09:00.0: reg 0x10: [mem 0x00000000-0x00003fff 64bit]
+> > [ 2107.012873] pci 0000:09:00.0: reg 0x30: [mem 0x00000000-0x0000ffff pref]
+> > [ 2107.014986] pcieport 0000:05:07.0: bridge window [io  0x1000-0x0fff] to
+> > [bus 09] add_size 1000
+> > [ 2107.014996] pcieport 0000:05:07.0: res[13]=[io  0x1000-0x0fff]
+> > get_res_add_size add_size 1000
+> > [ 2107.015001] pcieport 0000:05:07.0: BAR 13: can't assign io (size 0x1000)
+> > [ 2107.015006] pcieport 0000:05:07.0: BAR 13: can't assign io (size 0x1000)
+> > [ 2107.015013] pci 0000:09:00.0: BAR 6: assigned [mem 0xd5200000-0xd520ffff
+> > pref]
+> > [ 2107.015018] pci 0000:09:00.0: BAR 0: assigned [mem 0xdb600000-0xdb603fff
+> > 64bit]
+> > [ 2107.015030] pcieport 0000:05:07.0: PCI bridge to [bus 09]
+> > [ 2107.015037] pcieport 0000:05:07.0:   bridge window [mem
+> > 0xdb600000-0xdb7fffff]
+> > [ 2107.015042] pcieport 0000:05:07.0:   bridge window [mem
+> > 0xd5200000-0xd52fffff 64bit pref]
+> > [ 2107.015060] pci 0000:09:00.0: Max Payload Size 128, but upstream
+> > 0000:05:07.0 set to 256; if necessary, use "pci=pcie_bus_safe" and report a
+> > bug
+> > [ 2107.015079] pci 0000:09:00.0: no hotplug settings from platform
+> >
+> > The commit message that added the warning indicates it may be a BIOS
+> > issue that incorrectly configures this, but BIOS isn't involved with
+> > setting the MPS on a device hot add, am I right? Or is that wrong?
+> 
+> The BIOS is not involved in setting MPS on a device hot-add.
+> 
+> > This is a Dell R620 server, if that matters, though we see this on other
+> > platforms as well.
+> >
+> > Using pci=pcie_bus_perf works around the issue, but that seems a bit
+> > odd to suggest to users. Is setting MPS on hot-add something the PCI
+> > driver layer ought to be doing, or should I be looking into the platform
+> > BIOS instead?
+> 
+> The PCI core should be doing something intelligent here.  If we can't
+> configure MPS safely, we should prevent the device from being enabled.
+>  But this is stuff the PCI core doesn't implement yet.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- drivers/pci/host/pcie-rcar.c | 131 ++++++++++++++++++++++---------------------
- 1 file changed, 67 insertions(+), 64 deletions(-)
+The tuning of the MPS is disabled by default, which is why the warning
+is there.  Now, we can attempt to tune it regardless of whether tuning
+is enabled (assuming this device is the only one under the root port),
+we can fail to all the hotplug, or we can enable "safe" tuning by
+default.  The first option seems a bit hacky.  The second will fail
+too often, since the MPSS of the hotplugged device would have to match
+the MPS setting of slot/fabric.  The third seems like the best option.
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 680a8cc..efdea07 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -105,7 +105,7 @@
- #define  PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
- #define  PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
- 
--#define PCI_MAX_RESOURCES 4
-+#define RCAR_PCI_MAX_RESOURCES 4
- #define MAX_NR_INBOUND_MAPS 6
- 
- struct rcar_msi {
-@@ -127,7 +127,7 @@ static inline struct rcar_msi *to_rcar_msi(struct msi_chip *chip)
- struct rcar_pcie {
- 	struct device		*dev;
- 	void __iomem		*base;
--	struct resource		res[PCI_MAX_RESOURCES];
-+	struct resource		res[RCAR_PCI_MAX_RESOURCES];
- 	struct resource		busn;
- 	int			root_bus_nr;
- 	struct clk		*clk;
-@@ -140,36 +140,37 @@ static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
- 	return sys->private_data;
- }
- 
--static void pci_write_reg(struct rcar_pcie *pcie, unsigned long val,
--			  unsigned long reg)
-+static void rcar_pci_write_reg(struct rcar_pcie *pcie, unsigned long val,
-+			       unsigned long reg)
- {
- 	writel(val, pcie->base + reg);
- }
- 
--static unsigned long pci_read_reg(struct rcar_pcie *pcie, unsigned long reg)
-+static unsigned long rcar_pci_read_reg(struct rcar_pcie *pcie,
-+				       unsigned long reg)
- {
- 	return readl(pcie->base + reg);
- }
- 
- enum {
--	PCI_ACCESS_READ,
--	PCI_ACCESS_WRITE,
-+	RCAR_PCI_ACCESS_READ,
-+	RCAR_PCI_ACCESS_WRITE,
- };
- 
- static void rcar_rmw32(struct rcar_pcie *pcie, int where, u32 mask, u32 data)
- {
- 	int shift = 8 * (where & 3);
--	u32 val = pci_read_reg(pcie, where & ~3);
-+	u32 val = rcar_pci_read_reg(pcie, where & ~3);
- 
- 	val &= ~(mask << shift);
- 	val |= data << shift;
--	pci_write_reg(pcie, val, where & ~3);
-+	rcar_pci_write_reg(pcie, val, where & ~3);
- }
- 
- static u32 rcar_read_conf(struct rcar_pcie *pcie, int where)
- {
- 	int shift = 8 * (where & 3);
--	u32 val = pci_read_reg(pcie, where & ~3);
-+	u32 val = rcar_pci_read_reg(pcie, where & ~3);
- 
- 	return val >> shift;
- }
-@@ -205,14 +206,14 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
- 		if (dev != 0)
- 			return PCIBIOS_DEVICE_NOT_FOUND;
- 
--		if (access_type == PCI_ACCESS_READ) {
--			*data = pci_read_reg(pcie, PCICONF(index));
-+		if (access_type == RCAR_PCI_ACCESS_READ) {
-+			*data = rcar_pci_read_reg(pcie, PCICONF(index));
- 		} else {
- 			/* Keep an eye out for changes to the root bus number */
- 			if (pci_is_root_bus(bus) && (reg == PCI_PRIMARY_BUS))
- 				pcie->root_bus_nr = *data & 0xff;
- 
--			pci_write_reg(pcie, *data, PCICONF(index));
-+			rcar_pci_write_reg(pcie, *data, PCICONF(index));
- 		}
- 
- 		return PCIBIOS_SUCCESSFUL;
-@@ -222,20 +223,20 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
- 	/* Clear errors */
--	pci_write_reg(pcie, pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
-+	rcar_pci_write_reg(pcie, rcar_pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
- 
- 	/* Set the PIO address */
--	pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) | PCIE_CONF_DEV(dev) |
--				PCIE_CONF_FUNC(func) | reg, PCIECAR);
-+	rcar_pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) |
-+		PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) | reg, PCIECAR);
- 
- 	/* Enable the configuration access */
- 	if (bus->parent->number == pcie->root_bus_nr)
--		pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE0, PCIECCTLR);
-+		rcar_pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE0, PCIECCTLR);
- 	else
--		pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE1, PCIECCTLR);
-+		rcar_pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE1, PCIECCTLR);
- 
- 	/* Check for errors */
--	if (pci_read_reg(pcie, PCIEERRFR) & UNSUPPORTED_REQUEST)
-+	if (rcar_pci_read_reg(pcie, PCIEERRFR) & UNSUPPORTED_REQUEST)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
- 	/* Check for master and target aborts */
-@@ -243,13 +244,13 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
- 		(PCI_STATUS_REC_MASTER_ABORT | PCI_STATUS_REC_TARGET_ABORT))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	if (access_type == PCI_ACCESS_READ)
--		*data = pci_read_reg(pcie, PCIECDR);
-+	if (access_type == RCAR_PCI_ACCESS_READ)
-+		*data = rcar_pci_read_reg(pcie, PCIECDR);
- 	else
--		pci_write_reg(pcie, *data, PCIECDR);
-+		rcar_pci_write_reg(pcie, *data, PCIECDR);
- 
- 	/* Disable the configuration access */
--	pci_write_reg(pcie, 0, PCIECCTLR);
-+	rcar_pci_write_reg(pcie, 0, PCIECCTLR);
- 
- 	return PCIBIOS_SUCCESSFUL;
- }
-@@ -260,7 +261,7 @@ static int rcar_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
- 	struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
- 	int ret;
- 
--	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
-+	ret = rcar_pcie_config_access(pcie, RCAR_PCI_ACCESS_READ,
- 				      bus, devfn, where, val);
- 	if (ret != PCIBIOS_SUCCESSFUL) {
- 		*val = 0xffffffff;
-@@ -287,7 +288,7 @@ static int rcar_pcie_write_conf(struct pci_bus *bus, unsigned int devfn,
- 	int shift, ret;
- 	u32 data;
- 
--	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
-+	ret = rcar_pcie_config_access(pcie, RCAR_PCI_ACCESS_READ,
- 				      bus, devfn, where, &data);
- 	if (ret != PCIBIOS_SUCCESSFUL)
- 		return ret;
-@@ -307,7 +308,7 @@ static int rcar_pcie_write_conf(struct pci_bus *bus, unsigned int devfn,
- 	} else
- 		data = val;
- 
--	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_WRITE,
-+	ret = rcar_pcie_config_access(pcie, RCAR_PCI_ACCESS_WRITE,
- 				      bus, devfn, where, &data);
- 
- 	return ret;
-@@ -318,14 +319,15 @@ static struct pci_ops rcar_pcie_ops = {
- 	.write	= rcar_pcie_write_conf,
- };
- 
--static void rcar_pcie_setup_window(int win, struct resource *res,
--				   struct rcar_pcie *pcie)
-+static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
- {
-+	struct resource *res = &pcie->res[win];
-+
- 	/* Setup PCIe address space mappings for each resource */
- 	resource_size_t size;
- 	u32 mask;
- 
--	pci_write_reg(pcie, 0x00000000, PCIEPTCTLR(win));
-+	rcar_pci_write_reg(pcie, 0x00000000, PCIEPTCTLR(win));
- 
- 	/*
- 	 * The PAMR mask is calculated in units of 128Bytes, which
-@@ -333,17 +335,17 @@ static void rcar_pcie_setup_window(int win, struct resource *res,
- 	 */
- 	size = resource_size(res);
- 	mask = (roundup_pow_of_two(size) / SZ_128) - 1;
--	pci_write_reg(pcie, mask << 7, PCIEPAMR(win));
-+	rcar_pci_write_reg(pcie, mask << 7, PCIEPAMR(win));
- 
--	pci_write_reg(pcie, upper_32_bits(res->start), PCIEPARH(win));
--	pci_write_reg(pcie, lower_32_bits(res->start), PCIEPARL(win));
-+	rcar_pci_write_reg(pcie, upper_32_bits(res->start), PCIEPARH(win));
-+	rcar_pci_write_reg(pcie, lower_32_bits(res->start), PCIEPARL(win));
- 
- 	/* First resource is for IO */
- 	mask = PAR_ENABLE;
- 	if (res->flags & IORESOURCE_IO)
- 		mask |= IO_SPACE;
- 
--	pci_write_reg(pcie, mask, PCIEPTCTLR(win));
-+	rcar_pci_write_reg(pcie, mask, PCIEPTCTLR(win));
- }
- 
- static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
-@@ -355,13 +357,13 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
- 	pcie->root_bus_nr = -1;
- 
- 	/* Setup PCI resources */
--	for (i = 0; i < PCI_MAX_RESOURCES; i++) {
-+	for (i = 0; i < RCAR_PCI_MAX_RESOURCES; i++) {
- 
- 		res = &pcie->res[i];
- 		if (!res->flags)
- 			continue;
- 
--		rcar_pcie_setup_window(i, res, pcie);
-+		rcar_pcie_setup_window(i, pcie);
- 
- 		if (res->flags & IORESOURCE_IO)
- 			pci_ioremap_io(nr * SZ_64K, res->start);
-@@ -407,7 +409,7 @@ static int phy_wait_for_ack(struct rcar_pcie *pcie)
- 	unsigned int timeout = 100;
- 
- 	while (timeout--) {
--		if (pci_read_reg(pcie, H1_PCIEPHYADRR) & PHY_ACK)
-+		if (rcar_pci_read_reg(pcie, H1_PCIEPHYADRR) & PHY_ACK)
- 			return 0;
- 
- 		udelay(100);
-@@ -430,15 +432,15 @@ static void phy_write_reg(struct rcar_pcie *pcie,
- 		((addr & 0xff) << ADR_POS);
- 
- 	/* Set write data */
--	pci_write_reg(pcie, data, H1_PCIEPHYDOUTR);
--	pci_write_reg(pcie, phyaddr, H1_PCIEPHYADRR);
-+	rcar_pci_write_reg(pcie, data, H1_PCIEPHYDOUTR);
-+	rcar_pci_write_reg(pcie, phyaddr, H1_PCIEPHYADRR);
- 
- 	/* Ignore errors as they will be dealt with if the data link is down */
- 	phy_wait_for_ack(pcie);
- 
- 	/* Clear command */
--	pci_write_reg(pcie, 0, H1_PCIEPHYDOUTR);
--	pci_write_reg(pcie, 0, H1_PCIEPHYADRR);
-+	rcar_pci_write_reg(pcie, 0, H1_PCIEPHYDOUTR);
-+	rcar_pci_write_reg(pcie, 0, H1_PCIEPHYADRR);
- 
- 	/* Ignore errors as they will be dealt with if the data link is down */
- 	phy_wait_for_ack(pcie);
-@@ -449,7 +451,7 @@ static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
- 	unsigned int timeout = 10;
- 
- 	while (timeout--) {
--		if ((pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
-+		if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
- 			return 0;
- 
- 		msleep(5);
-@@ -463,17 +465,17 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
- 	int err;
- 
- 	/* Begin initialization */
--	pci_write_reg(pcie, 0, PCIETCTLR);
-+	rcar_pci_write_reg(pcie, 0, PCIETCTLR);
- 
- 	/* Set mode */
--	pci_write_reg(pcie, 1, PCIEMSR);
-+	rcar_pci_write_reg(pcie, 1, PCIEMSR);
- 
- 	/*
- 	 * Initial header for port config space is type 1, set the device
- 	 * class to match. Hardware takes care of propagating the IDSETR
- 	 * settings, so there is no need to bother with a quirk.
- 	 */
--	pci_write_reg(pcie, PCI_CLASS_BRIDGE_PCI << 16, IDSETR1);
-+	rcar_pci_write_reg(pcie, PCI_CLASS_BRIDGE_PCI << 16, IDSETR1);
- 
- 	/*
- 	 * Setup Secondary Bus Number & Subordinate Bus Number, even though
-@@ -497,17 +499,17 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
- 	rcar_rmw32(pcie, REXPCAP(PCI_EXP_SLTCAP), PCI_EXP_SLTCAP_PSN, 0);
- 
- 	/* Set the completion timer timeout to the maximum 50ms. */
--	rcar_rmw32(pcie, TLCTLR+1, 0x3f, 50);
-+	rcar_rmw32(pcie, TLCTLR + 1, 0x3f, 50);
- 
- 	/* Terminate list of capabilities (Next Capability Offset=0) */
- 	rcar_rmw32(pcie, RVCCAP(0), 0xfff00000, 0);
- 
- 	/* Enable MSI */
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
--		pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
-+		rcar_pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
- 
- 	/* Finish initialization - establish a PCI Express link */
--	pci_write_reg(pcie, CFINIT, PCIETCTLR);
-+	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
- 
- 	/* This will timeout if we don't have a link. */
- 	err = rcar_pcie_wait_for_dl(pcie);
-@@ -545,7 +547,7 @@ static int rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
- 	phy_write_reg(pcie, 0, 0x66, 0x1, 0x00008000);
- 
- 	while (timeout--) {
--		if (pci_read_reg(pcie, H1_PCIEPHYSR))
-+		if (rcar_pci_read_reg(pcie, H1_PCIEPHYSR))
- 			return rcar_pcie_hw_init(pcie);
- 
- 		msleep(5);
-@@ -584,7 +586,7 @@ static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
- 	struct rcar_msi *msi = &pcie->msi;
- 	unsigned long reg;
- 
--	reg = pci_read_reg(pcie, PCIEMSIFR);
-+	reg = rcar_pci_read_reg(pcie, PCIEMSIFR);
- 
- 	/* MSI & INTx share an interrupt - we only handle MSI here */
- 	if (!reg)
-@@ -595,7 +597,7 @@ static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
- 		unsigned int irq;
- 
- 		/* clear the interrupt */
--		pci_write_reg(pcie, 1 << index, PCIEMSIFR);
-+		rcar_pci_write_reg(pcie, 1 << index, PCIEMSIFR);
- 
- 		irq = irq_find_mapping(msi->domain, index);
- 		if (irq) {
-@@ -609,7 +611,7 @@ static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
- 		}
- 
- 		/* see if there's any more pending in this vector */
--		reg = pci_read_reg(pcie, PCIEMSIFR);
-+		reg = rcar_pci_read_reg(pcie, PCIEMSIFR);
- 	}
- 
- 	return IRQ_HANDLED;
-@@ -636,8 +638,8 @@ static int rcar_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
- 
- 	irq_set_msi_desc(irq, desc);
- 
--	msg.address_lo = pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
--	msg.address_hi = pci_read_reg(pcie, PCIEMSIAUR);
-+	msg.address_lo = rcar_pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
-+	msg.address_hi = rcar_pci_read_reg(pcie, PCIEMSIAUR);
- 	msg.data = hwirq;
- 
- 	write_msi_msg(irq, &msg);
-@@ -714,11 +716,11 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
- 	msi->pages = __get_free_pages(GFP_KERNEL, 0);
- 	base = virt_to_phys((void *)msi->pages);
- 
--	pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
--	pci_write_reg(pcie, 0, PCIEMSIAUR);
-+	rcar_pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
-+	rcar_pci_write_reg(pcie, 0, PCIEMSIAUR);
- 
- 	/* enable all MSI interrupts */
--	pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
-+	rcar_pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
- 
- 	return 0;
- 
-@@ -811,6 +813,7 @@ static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
- 	if (cpu_addr > 0) {
- 		unsigned long nr_zeros = __ffs64(cpu_addr);
- 		u64 alignment = 1ULL << nr_zeros;
-+
- 		size = min(range->size, alignment);
- 	} else {
- 		size = range->size;
-@@ -826,13 +829,13 @@ static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
- 		 * Set up 64-bit inbound regions as the range parser doesn't
- 		 * distinguish between 32 and 64-bit types.
- 		 */
--		pci_write_reg(pcie, lower_32_bits(pci_addr), PCIEPRAR(idx));
--		pci_write_reg(pcie, lower_32_bits(cpu_addr), PCIELAR(idx));
--		pci_write_reg(pcie, lower_32_bits(mask) | flags, PCIELAMR(idx));
-+		rcar_pci_write_reg(pcie, lower_32_bits(pci_addr), PCIEPRAR(idx));
-+		rcar_pci_write_reg(pcie, lower_32_bits(cpu_addr), PCIELAR(idx));
-+		rcar_pci_write_reg(pcie, lower_32_bits(mask) | flags, PCIELAMR(idx));
- 
--		pci_write_reg(pcie, upper_32_bits(pci_addr), PCIEPRAR(idx+1));
--		pci_write_reg(pcie, upper_32_bits(cpu_addr), PCIELAR(idx+1));
--		pci_write_reg(pcie, 0, PCIELAMR(idx+1));
-+		rcar_pci_write_reg(pcie, upper_32_bits(pci_addr), PCIEPRAR(idx+1));
-+		rcar_pci_write_reg(pcie, upper_32_bits(cpu_addr), PCIELAR(idx+1));
-+		rcar_pci_write_reg(pcie, 0, PCIELAMR(idx + 1));
- 
- 		pci_addr += size;
- 		cpu_addr += size;
-@@ -937,7 +940,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 		of_pci_range_to_resource(&range, pdev->dev.of_node,
- 						&pcie->res[win++]);
- 
--		if (win > PCI_MAX_RESOURCES)
-+		if (win > RCAR_PCI_MAX_RESOURCES)
- 			break;
- 	}
- 
-@@ -967,7 +970,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 		return 0;
- 	}
- 
--	data = pci_read_reg(pcie, MACSR);
-+	data = rcar_pci_read_reg(pcie, MACSR);
- 	dev_info(&pdev->dev, "PCIe x%d: link up\n", (data >> 20) & 0x3f);
- 
- 	rcar_pcie_enable(pcie);
--- 
-2.0.0
+> It's hard to reconfigure MPS after boot because it affects other
+> devices in the system, and I don't think we can always change the
+> settings of other devices while they're active.
 
+Unless the slot is under its own root port, otherwise the MPS will
+have to be floored.  This is the behavior in the "safe" tuning.
+
+I suggest that the "safe" tuning get made the default behavior and we
+let it soak for a little while to shake out any issues that there may
+be.
+
+Thanks,
+Jon
+
+> I'm not sure that warning is correct.  It seems like it should suggest
+> pcie_bus_peer2peer, which is documented as guaranteeing that hot-added
+> devices will work.  But this is always confusing to me, and I could be
+> wrong about this.
+> 
+> Bjorn
