@@ -1,100 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tor-sh10.fullhost.com ([162.219.163.6]:35543 "EHLO
-	tor-sh10.fullhost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753225AbaFMRqE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jun 2014 13:46:04 -0400
-Received: from cpe0013f7f0fb44-cm0013f7f0fb40.cpe.net.cable.rogers.com ([174.112.49.58]:52908 helo=[192.168.0.185])
-	by tor-sh10.fullhost.com with esmtpsa (TLSv1:DHE-RSA-AES128-SHA:128)
-	(Exim 4.82)
-	(envelope-from <patrick@spellingbeewinnars.org>)
-	id 1WvVYA-0014fJ-DA
-	for linux-pci@vger.kernel.org; Fri, 13 Jun 2014 13:46:02 -0400
-Message-ID: <539B3878.2070202@spellingbeewinnars.org>
-Date: Fri, 13 Jun 2014 13:44:24 -0400
-From: Patrick <patrick@spellingbeewinnars.org>
+Received: from www.linutronix.de ([62.245.132.108]:44243 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751591AbaFEIPt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jun 2014 04:15:49 -0400
+Date: Thu, 5 Jun 2014 10:15:29 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: "H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, x86@kernel.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Tony Lindgren <tony@atomide.com>, linux-kernel@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, linux-pm@vger.kernel.org,
+	xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org
+Subject: Re: [RFC Patch 3/3] x86, irq: count legacy IRQs by legacy_pic->nr_legacy_irqs
+ instead of NR_IRQS_LEGACY
+In-Reply-To: <1401951877-23032-4-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.10.1406051014490.23174@nanos>
+References: <1401951877-23032-1-git-send-email-jiang.liu@linux.intel.com> <1401951877-23032-4-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: help with setpci "no devices at"
-References: <539B2609.3090106@spellingbeewinnars.org>
-In-Reply-To: <539B2609.3090106@spellingbeewinnars.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/06/14 12:25 PM, Patrick wrote:
-> Hi Everyone
->
-> Thanks again to Bjorn for helping me in the thread "updating firmware 
-> with setpci"
->
-> I have started a new thread as it's more specific than the previous 
-> one and might be more valuable this way in the archives.
->
-> I replaced a PCI chip on one card I am trying to copy the good PCI 
-> configuration space settings from another card, as-is they are very 
-> different and the repaired card is failing.
->
-> I found a perfect little awk script here to generate setpci commands 
-> from lspci -xxx  :
->
-> https://gist.github.com/jlopez-git/4594728
->
-> I ended up with setpci complaining about missing a width. I found this 
-> thread:
-> https://access.redhat.com/site/solutions/45240
->
-> It looks like older versions of the tool did not require widths to be 
-> specified. The awk script may be a bit dated.
->
-> I changed XX= to XX.b=
-> setpci -sD 04:01.0 00.b=813010e8
->
-> based on:
-> http://www.tutorialspoint.com/unix_commands/setpci.htm
-> which gave this example:
-> setpci -s 13:8.4 40.b=50:d0,04:0c,ff
->
->
-> but now I have another error:
-> setpci: Warning: No devices selected for "04:01.0".
-> setpci: Invalid width "0".
->
->
-> lspci shows the device at:
-> 04:01.0 Unassigned class [ff00]: Device a101:81ff
->
-> The example showed the b near the register address but the "invalid 
-> width 0" error has me wondering if it's supposed to go somewhere else 
-> or I should be using a different width flag.
->
-> Could someone point me in the right direction ?
->
-> Thanks for reading-Patrick
->
->
+On Thu, 5 Jun 2014, Jiang Liu wrote:
 
-I am not sure if it is good etiquette to answer your own post but I 
-wanted to mention that I found two of my mistakes.
+> Some platforms, such as Intel MID and mshypv, do not support legacy
+> interrupt controllers. So count legacy IRQs by legacy_pic->nr_legacy_irqs
+> instead of hard-coded NR_IRQS_LEGACY.
 
-I specified B but I was writing 4 bytes. I thought I better use the -D 
-flag to test-run things but that doesn't look right in this situation.
+Nice patch set!
+ 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  arch/x86/include/asm/i8259.h   |    2 ++
+>  arch/x86/kernel/acpi/boot.c    |   13 ++++++------
+>  arch/x86/kernel/apic/io_apic.c |   43 +++++++++++++++++++++++-----------------
+>  arch/x86/kernel/devicetree.c   |   12 +++++------
+>  arch/x86/kernel/irqinit.c      |    6 +++---
+>  arch/x86/pci/xen.c             |    6 +++---
+>  6 files changed, 46 insertions(+), 36 deletions(-)
+> 
+> diff --git a/arch/x86/include/asm/i8259.h b/arch/x86/include/asm/i8259.h
+> index a20365953bf8..fdac75b8782a 100644
+> --- a/arch/x86/include/asm/i8259.h
+> +++ b/arch/x86/include/asm/i8259.h
+> @@ -67,4 +67,6 @@ struct legacy_pic {
+>  extern struct legacy_pic *legacy_pic;
+>  extern struct legacy_pic null_legacy_pic;
+>  
+> +#define	nr_legacy_irqs()	(legacy_pic->nr_legacy_irqs)
 
-setpci -s  04:01.0 0x00.L=813010e8
+That wants to be a static inline, please.
 
-Ran without errors but the changes were not reflected in the card's 
-configuration space. lspci -xxx gave the same results before and after. 
-I have run all commands as root.
+Thanks,
 
-If anyone can point out another mistake I have made that would be so great.
-
-
-
-
-
-
-
-
-
-
-
-
+	tglx
