@@ -1,86 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:36404 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934970AbaFTRbR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jun 2014 13:31:17 -0400
-Message-ID: <53A46F94.1020901@ti.com>
-Date: Fri, 20 Jun 2014 13:29:56 -0400
-From: Santosh Shilimkar <santosh.shilimkar@ti.com>
-MIME-Version: 1.0
-To: Murali Karicheri <m-karicheri2@ti.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
+Received: from mga09.intel.com ([134.134.136.24]:15049 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750910AbaFEM7W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Jun 2014 08:59:22 -0400
+Date: Thu, 5 Jun 2014 15:58:42 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Gavin Guo <gavin.guo@canonical.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v2 3/8] PCI: designware: update pcie core driver to work
- with dw hw version 3.65
-References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com> <1402426287-31157-4-git-send-email-m-karicheri2@ti.com> <2CC2A0A4A178534D93D5159BF3BCB6619C5F8168DA@EAPEX1MAIL1.st.com> <53A46EE7.6080209@ti.com>
-In-Reply-To: <53A46EE7.6080209@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, YK <yk@canonical.com>,
+	Yung Shen <yung.shen@canonical.com>,
+	Po-Hsu Lin <po-hsu.lin@canonical.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: PCI-to-USB ExpressCard Hotplugging can't work in v3.15-rc5
+Message-ID: <20140605125842.GL5214@lahna.fi.intel.com>
+References: <CA+eFSM2CBiWZNmpnSNGKZGjEpK6gc=T0a5r7m6sbORi==XTCjQ@mail.gmail.com>
+ <22265253.jvFXIxhohU@vostro.rjw.lan>
+ <CA+eFSM0Cnij7EEUZhWNsyrERquUiOE4Jt8d_Ra=bt5VZZtLDwA@mail.gmail.com>
+ <1784093.b0o8Rzal2W@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1784093.b0o8Rzal2W@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 20 June 2014 01:27 PM, Murali Karicheri wrote:
-> On 6/18/2014 3:13 AM, Mohit KUMAR DCG wrote:
->> Hello Murali,
->>
->>> -----Original Message-----
->>> From: Murali Karicheri [mailto:m-karicheri2@ti.com]
->>> Sent: Wednesday, June 11, 2014 12:21 AM
->>> To: linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
->>> linux-pci@vger.kernel.org; devicetree@vger.kernel.org; linux-
->>> doc@vger.kernel.org
->>> Cc: Murali Karicheri; Santosh Shilimkar; Russell King; Grant Likely; Rob Herring;
->>> Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Pratyush ANAND; Richard
->>> Zhu; Kishon Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll;
->>> Mark Rutland; Ian Campbell; Kumar Gala; Randy Dunlap
->>> Subject: [PATCH v2 3/8] PCI: designware: update pcie core driver to work
->>> with dw hw version 3.65
->>>
->>> v3.65 version of the dw hw has MSI controller implemented in the application
->>> space. Add a version variable in the port struct to identify v3.65 hardware for
->>> different code treatment. This variable will have DW_V3_65 bit set when
->>> running on this hw version. The host init code is expected to set this version
->>> based on compatibility string dw,snps-pcie-v3.65.
->>>
->>> Some of the MSI specific functions from current DW driver are re-used on
->>> v3.65 hw. However on v3.65, MSI controller registers are in the application
->>> register space and PCIE_MSI_INTR0_ENABLE is not applicable.
->>> Modify assign_irq() to check for version and not execute the code for
->>> PCIE_MSI_INTR0_ENABLE configuration on v3.65 hw. Additionally MSI IRQ
->>> register in application space is written by EP to raise an MSI IRQ. So add a
->>> get_msi_data() function in pcie_host_ops to retrieve the register address in
->>> dw_msi_setup_irq(). v3.65 dw core driver implements this function.
->>>
->>> Also make some of the functions available in dw core driver global and make
->>> their prototypes available in the header file for re-use on v3.65.
->>>
->> - Pls apply MSI specific changes on the top of Lucas patches:
->> [PATCH 0/4] proper multi MSI handling for designware host
->>
->> Thanks
->> Mohit
-> Ok. I have pulled in Lucas's patches and use it for my work.
+On Thu, Jun 05, 2014 at 02:08:57PM +0200, Rafael J. Wysocki wrote:
+> CC: Mika
+> 
+> On Thursday, June 05, 2014 07:46:06 PM Gavin Guo wrote:
+> > On Thu, May 22, 2014 at 7:36 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > > On Wednesday, May 21, 2014 07:53:37 AM Bjorn Helgaas wrote:
+> > >> On Wed, May 21, 2014 at 3:45 AM, Gavin Guo <gavin.guo@canonical.com> wrote:
+> > >> > Hi Bjorn,
+> > >> >
+> > >> > On Wed, May 21, 2014 at 12:54 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > >> >> On Tue, May 20, 2014 at 10:36 PM, Gavin Guo <gavin.guo@canonical.com> wrote:
+> > >> >>> Hi all,
+> > >> >>>
+> > >> >>> I have a APIOTEK PCI-to-USB ExpressCard and found that when it is
+> > >> >>> plugged at cold boot, the card can be detected. But, hotplug cannot
+> > >> >>> work at run time. The bug may be related to the commit which I
+> > >> >>> reported last year:
+> > >> >>>
+> > >> >>> commit 3f327e39b4b8f760c331bb2836735be6d83fbf53
+> > >> >>
+> > >> >> Where is your report from last year?  How did you identify this
+> > >> >> commit?  Did you verify that it works correctly with v3.10-rc1, but
+> > >> >> fails when you add this commit?
+> > >> >
+> > >> > The mail about the bug I reported last year is attached. And I'm sorry
+> > >> > about not describing clearly. This commit is the one to fix the bug
+> > >> > before. So, I think it will be a clue to find out what's wrong. I've
+> > >> > built v3.10 and tested it on the platform. It works fine. The bug
+> > >> > seems like a regression.
+> > >> >
+> > >> > I also attached the dmesg of v3.10 which works correctly with hotplug.
+> > >>
+> > >> v3.10 contains 3f327e39b4b8 (it appeared in v3.10-rc3).  So since it
+> > >> works correctly in v3.10, that commit is probably not the cause of the
+> > >> regression.
+> > >>
+> > >> So apparently it worked in v3.10 and broke sometime later.  Do you
+> > >> know when it broke?
+> > >>
+> > >> We're getting Bus Check events:
+> > >>
+> > >>   ACPI: \_SB_.PCI0: ACPI_NOTIFY_BUS_CHECK event
+> > >>
+> > >> but apparently we aren't handling them correctly.  Can you turn on the
+> > >> debug in the acpi_hotplug_schedule() path and add more if necessary to
+> > >> if we get to acpi_hotplug_work_fn(), acpi_device_hotplug(), etc.?  I'm
+> > >> not familiar with that path, so either you'll have to narrow it down,
+> > >> or we can hope that Yinghai or Rafael has some insight.
+> > >
+> > > Well, it would be good to create a bug entry for this at bugzilla.kernel.org
+> > > against ACPI/Config-hotplug and mark it as a regression.
+> > 
+> > I've completed the bisect and found
+> > 2d8b1d566a5f4874f4d92361f5cdbb50baa396f8 is the first bad commit. The
+> > "git bisect log" is also attached.
+> > 
+> > commit 2d8b1d566a5f4874f4d92361f5cdbb50baa396f8
+> > Author: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > Date: Sat Jul 13 20:09:59 2013 +0300
+> > 
+> >     ACPI / hotplug / PCI: Get rid of check_sub_bridges()
+> > 
+> >     Now that acpiphp_check_bridge() always enumerates devices behind the
+> >     bridge, there is no need to do that for each sub-bridge anymore like
+> >     it is done in the current ACPI-based PCI hotplug (ACPIPHP) code.
+> > 
+> >     Given this we don't need check_sub_bridges() anymore, so drop that
+> >     function completely.
+> > 
+> >     This also simplifies the ACPIPHP code a bit.
+> > 
+> >     Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> >     Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > :040000 040000 1f3f81404e06c92c01d6848ed7a6c5bffdb5f878
+> > 4e7ca3e4af42738f90555640cafbb6e6522ceedf M drivers
 
-Are those patches already acked and getting into the queue. Please
-don't create UN-necessary merge dependencies otherwise.
+Gavin,
 
-regards,
-Santosh
+Can you send dmesg and your ACPI DSDT table to me (or attach them
+to a bug if you are filing one)? I wasn't able to dig up the original
+dmesg from the linux-pci archives.
+
+Please also make sure that you have CONFIG_DYNAMIC_DEBUG=y and
+"acpiphp.dyndbg=+p" in the kernel command line.
