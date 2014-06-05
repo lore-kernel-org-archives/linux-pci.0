@@ -1,76 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:52377 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932186AbaFCNY2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 09:24:28 -0400
-Message-ID: <1401801767.5422.4.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH 0/8] i.MX6 PCIe binding change and MSI support
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Zhu <r65037@freescale.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+Received: from mga01.intel.com ([192.55.52.88]:28066 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751489AbaFEQl6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Jun 2014 12:41:58 -0400
+Date: Thu, 5 Jun 2014 10:41:30 -0600 (MDT)
+From: Keith Busch <keith.busch@intel.com>
+To: Jon Mason <jon.mason@intel.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Keith Busch <keith.busch@intel.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	linux-samsung-soc@vger.kernel.org,
-	Rob Herring <robh+dt@kernel.org>, kernel@pengutronix.de,
-	Mark Rutland <mark.rutland@arm.com>,
-	Shawn Guo <shawn.guo@linaro.org>, Sean Cross <xobs@kosagi.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Date: Tue, 03 Jun 2014 15:22:47 +0200
-In-Reply-To: <20140530173053.GF4607@google.com>
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
-	 <20140424175844.GD29593@google.com>
-	 <1398421265.4657.25.camel@weser.hi.pengutronix.de>
-	 <CAErSpo7Boi8d+apAUC3TmmE33LuRMYJ6J+TEPLRbeyZyU3O8RQ@mail.gmail.com>
-	 <1398774686.4677.12.camel@weser.hi.pengutronix.de>
-	 <1399885183.5016.4.camel@weser.hi.pengutronix.de>
-	 <20140530173053.GF4607@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Yijing Wang <wangyijing@huawei.com>
+Subject: Re: Debugging incorrect mps settings detected
+In-Reply-To: <20140604174440.GA17837@jonmason-lab>
+Message-ID: <alpine.LRH.2.03.1406051037580.11244@AMR>
+References: <alpine.LRH.2.03.1406031308200.11244@AMR> <CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com> <20140604174440.GA17837@jonmason-lab>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+On Wed, 4 Jun 2014, Jon Mason wrote:
+> On Tue, Jun 03, 2014 at 03:01:31PM -0600, Bjorn Helgaas wrote:
+>> [+cc Yijing, Jon]
+>> The PCI core should be doing something intelligent here.  If we can't
+>> configure MPS safely, we should prevent the device from being enabled.
+>>  But this is stuff the PCI core doesn't implement yet.
+>
+> The tuning of the MPS is disabled by default, which is why the warning
+> is there.  Now, we can attempt to tune it regardless of whether tuning
+> is enabled (assuming this device is the only one under the root port),
+> we can fail to all the hotplug, or we can enable "safe" tuning by
+> default.  The first option seems a bit hacky.  The second will fail
+> too often, since the MPSS of the hotplugged device would have to match
+> the MPS setting of slot/fabric.  The third seems like the best option.
+>
+>> It's hard to reconfigure MPS after boot because it affects other
+>> devices in the system, and I don't think we can always change the
+>> settings of other devices while they're active.
+>
+> Unless the slot is under its own root port, otherwise the MPS will
+> have to be floored.  This is the behavior in the "safe" tuning.
+>
+> I suggest that the "safe" tuning get made the default behavior and we
+> let it soak for a little while to shake out any issues that there may
+> be.
 
-Am Freitag, den 30.05.2014, 11:30 -0600 schrieb Bjorn Helgaas:
-> On Mon, May 12, 2014 at 10:59:43AM +0200, Lucas Stach wrote:
-> > Hi Bjorn,
-> > 
-> > just a friendly reminder. It would be nice if you could pull those in.
-> > 
-> > Shawn already pulled the DT change and as it is a binding change this
-> > means PCIe on i.MX6 is broken in -next, as long as the remaining patches
-> > are missing.
-> 
-> I applied these to pci/host-imx6 for v3.16.
-> 
-> Sorry I didn't do this sooner; I get a lot of email and it's easy to
-> overlook things.  I mostly work from patchwork
-> (http://patchwork.ozlabs.org/project/linux-pci/list/?order=date), and I had
-> dropped this series from there because there was enough discussion that I
-> expected a re-post, so it wasn't on my radar screen anymore.
-> 
-> Bjorn
-> 
-> > Am Dienstag, den 29.04.2014, 14:31 +0200 schrieb Lucas Stach:
-> > > Hi Bjorn,
-> > > 
-> > > Am Freitag, den 25.04.2014, 08:39 -0600 schrieb Bjorn Helgaas:
-> > > [...]
-> > > > >> >   PCI: designware: split Exynos and i.MX bindings
-
-It seems you missed this one patch. This isn't too urgent, as it is just
-the doc update, but it should still go into 3.16 along with the other
-changes. I would have expected that is ok for this to go through your
-tree.
-
-Regards,
-Lucas
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+Thanks for all the info. I've tried different tunings on several different
+platforms that were all failing before. The 'safe' tuning was the only
+one successful on all platforms, so just providing a data point that
+this appears to be a good direction to go.
