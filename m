@@ -1,114 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:56435 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316AbaFJSwk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jun 2014 14:52:40 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH v2 1/8] PCI: designware: add rd[wr]_other_conf API
-Date: Tue, 10 Jun 2014 14:51:20 -0400
-Message-ID: <1402426287-31157-2-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
-References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:14883 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751559AbaFEVjh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jun 2014 17:39:37 -0400
+Date: Thu, 5 Jun 2014 23:36:49 +0200
+From: Thierry Reding <treding@nvidia.com>
+To: Vidya Sagar <vidyas@nvidia.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Krishna Thota <kthota@nvidia.com>
+Subject: Re: Query regarding ASPM in PCIe
+Message-ID: <20140605213649.GA22251@ulmo.nvidia.com>
+References: <113ACA888B71994BB56E5CF3704953486D6CE1E20E@BGMAIL02.nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <113ACA888B71994BB56E5CF3704953486D6CE1E20E@BGMAIL02.nvidia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LZvS9be/3tNcYl/X"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v3.65 version of the designware h/w, requires application space
-registers to be configured to access the remote EP config space.
-To support this, add rd[wr]_other_conf API in the pcie_host_opts
+--LZvS9be/3tNcYl/X
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Hi Vidya,
 
-CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Mohit Kumar <mohit.kumar@st.com>
-CC: Jingoo Han <jg1.han@samsung.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Pratyush Anand <pratyush.anand@st.com>
-CC: Richard Zhu <r65037@freescale.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Marek Vasut <marex@denx.de>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Pawel Moll <pawel.moll@arm.com>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-CC: Kumar Gala <galak@codeaurora.org>
-CC: Randy Dunlap <rdunlap@infradead.org>
-CC: Grant Likely <grant.likely@linaro.org> 
+when posting to public mailing lists it's customary to wrap your lines
+at around 78 characters. Also can you convert the call graph pptx into
+something more standard like PDF to make it easier for people to view?
 
----
- drivers/pci/host/pcie-designware.c |   12 ++++++++++--
- drivers/pci/host/pcie-designware.h |    4 ++++
- 2 files changed, 14 insertions(+), 2 deletions(-)
+Thierry
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index c4e3732..e8f5d8d 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -654,7 +654,11 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 
- 	spin_lock_irqsave(&pp->conf_lock, flags);
- 	if (bus->number != pp->root_bus_nr)
--		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
-+		if (pp->ops->rd_other_conf)
-+			ret = pp->ops->rd_other_conf(pp, bus, devfn,
-+						where, size, val);
-+		else
-+			ret = dw_pcie_rd_other_conf(pp, bus, devfn,
- 						where, size, val);
- 	else
- 		ret = dw_pcie_rd_own_conf(pp, where, size, val);
-@@ -680,7 +684,11 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 
- 	spin_lock_irqsave(&pp->conf_lock, flags);
- 	if (bus->number != pp->root_bus_nr)
--		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
-+		if (pp->ops->wr_other_conf)
-+			ret = pp->ops->wr_other_conf(pp, bus, devfn,
-+						where, size, val);
-+		else
-+			ret = dw_pcie_wr_other_conf(pp, bus, devfn,
- 						where, size, val);
- 	else
- 		ret = dw_pcie_wr_own_conf(pp, where, size, val);
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 3063b35..2d6dd66 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -62,6 +62,10 @@ struct pcie_host_ops {
- 			u32 val, void __iomem *dbi_base);
- 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
- 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
-+	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
-+			unsigned int devfn, int where, int size, u32 *val);
-+	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
-+			unsigned int devfn, int where, int size, u32 val);
- 	int (*link_up)(struct pcie_port *pp);
- 	void (*host_init)(struct pcie_port *pp);
- };
--- 
-1.7.9.5
+On Thu, Jun 05, 2014 at 03:57:23PM +0200, Vidya Sagar wrote:
+> Hi,
+> My understanding about ASPM feature is that, when CONFIG_PCIEASPM_POWER=
+SAVE is enabled, PCI subsystem enables ASPM - L0s, L1 features based on l=
+atency calculations respectively.
+> But in the latest code, though CONFIG_PCIEASPM_POWERSAVE is enabled, AS=
+PM on eligible devices is not enabled.
+>=20
+> irrespective of what CONFIG_PCIEASPM_* is (DEFAULT / POWERSAVE / PERFOR=
+MANCE), if 'echo powersave > /sys/modules/pcie_aspm/parameters/policy' is=
+=20executed, ASPM states are enabled in all eligible devices and is worki=
+ng as well.
+>=20
+> after having gone through the code, here is my understanding (I tried t=
+o depict the code flow in the attached PPT)
+> pcie_config_aspm_link() is the API that actually enables link entry to =
+L0s and L1 by writing the link control register in the configuration spac=
+e of the devices.
+> at top level, pci_enable_device() is the one that calls pcie_config_asp=
+m_link() API which does the job ( ofcourse, pcie_aspm_set_policy() also c=
+alls it but only when the aforementioned sysfs entry is modified... and p=
+cie_aspm_init_link_state() also calls.. again only if it is *not* in powe=
+rsave mode ... for stability reasons...!)
+>=20
+> the issue is surfacing here because.. in pci_set_power_state() there is=
+=20this condition..
+>=20
+> /* Check if we're already there */
+> if (dev->current_state =3D=3D state)
+>     return 0;
+>=20
+> because of which control returns from there and never comes to the end =
+where the call pcie_aspm_powersave_config_link() is present.
+> My understanding is that with the above condition, ASPM never gets enab=
+led by default (unless we sysfs entry is explicitly written).
+> Can you please confirm my understanding ? if this is the case indeed, I=
+'ll work on pushing a patch to fix this.
+>=20
+> Thanks,
+> Sagar
+>=20
 
+
+
+-------------------------------------------------------------------------=
+----------
+This email message is for the sole use of the intended recipient(s) and m=
+ay contain
+confidential information.  Any unauthorized review, use, disclosure or di=
+stribution
+is prohibited.  If you are not the intended recipient, please contact the=
+=20sender by
+reply email and destroy all copies of the original message.
+-------------------------------------------------------------------------=
+----------
+
+--LZvS9be/3tNcYl/X
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTkOLxAAoJEN0jrNd/PrOhaeQP/iueCJH0FadIfIrU3KVXaT4D
+DV2MR+YJhkBdrNaEai5xOdcizVBbMgo4k+4j1JzPKNR2pLBmqTveUYJ1aQRMOtKN
+7D91m3N/CR7Xc+aXokw+CuPicsfy9V5EIqrleNXxZMUd0G2qSqnB3bgTJ8NmWb/S
+0pePLVMynzO782HLk15BgVm3EqhLAUwUuiVWsLjnLl3oDH5GKDRYhreKwAfD6Zif
+9PUC+uUHSPYICvr0fV6S/uWl/Spi1FneUAo9zTU8bdOuryX0OIZ4Np2/EBj1DAQt
+q3q58KDnE37GwRuv6c4sP6MFyG23s7wJLSll3G/dTxe/JlP5uZT1bPo3aNqkLyJz
+w2qrjrzzot+8sYpbYXvj+gxg2fBNkr9SQzIbSFCRWt0R0XCcwwkrJJ5ttv4xHsRg
+tNYCL0d23uZBEHmxEHROiBzU1QaBern9ADD7hy5pPZFBy/leeONPSX8EMm7BGg07
+fOzUcTHJg+U11DF1FSpUT+aMb8k/Cgcv/qyV2qnaiQBHd+7hJU+Su02fd//aWMCi
+7T9BywFxagHMYJNEY5ut5/WShZCb6mTtUYA6n8LxtnIs69pC7RtofLoagfbnpQCi
+IV5r413BnlHitQdAPvD34UYJlNco7A1wNu7U3GZo3RedFm+3kPFFptp4t/Tr1PIR
+GBg4Lgr4PXLR1BBxj+iK
+=s2bC
+-----END PGP SIGNATURE-----
+
+--LZvS9be/3tNcYl/X--
