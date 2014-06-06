@@ -1,103 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.active-venture.com ([67.228.131.205]:53723 "EHLO
-	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756596AbaFQWzk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 18:55:40 -0400
-Message-ID: <53A0C763.7080003@roeck-us.net>
-Date: Tue, 17 Jun 2014 15:55:31 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain.linux@gmail.com>
-Subject: Re: [PATCH] PCI: pciehp: Include the Data Link Layer State Changed
- bit when clearing the Slot Status register's event bits
-References: <20140617192734.30783.71260.stgit@amt.stowe> <CAErSpo7t2kXj2ZULLXCJSWb_awS+DCtCg51dnLbb8ztWmQdYog@mail.gmail.com>
-In-Reply-To: <CAErSpo7t2kXj2ZULLXCJSWb_awS+DCtCg51dnLbb8ztWmQdYog@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mxout1.netvision.net.il ([194.90.9.20]:47264 "EHLO
+	mxout1.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660AbaFFQWl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jun 2014 12:22:41 -0400
+MIME-version: 1.0
+Content-type: text/plain; CHARSET=US-ASCII; format=flowed
+Message-id: <5391EA92.9050306@gmail.com>
+Date: Fri, 06 Jun 2014 19:21:38 +0300
+From: Eli Billauer <eli.billauer@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Joerg Roedel <joro@8bytes.org>, devel@driverdev.osuosl.org,
+	Shuah Khan <shuah.kh@samsung.com>, discuss@x86-64.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
+ dma_map_single()
+References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
+ <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
+ <538E3D04.9060808@samsung.com> <20140603233907.GB23880@8bytes.org>
+ <20140604140408.GC5004@htj.dyndns.org> <20140604141211.GC23880@8bytes.org>
+ <20140604141416.GD5004@htj.dyndns.org> <538F3548.4050101@gmail.com>
+ <20140604212525.GE23880@8bytes.org> <5391A9C2.3040602@gmail.com>
+ <20140606160103.GG15110@kroah.com>
+In-reply-to: <20140606160103.GG15110@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/17/2014 02:07 PM, Bjorn Helgaas wrote:
-> On Tue, Jun 17, 2014 at 1:27 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
->> During PCIe hot-plug initialization - pciehp_probe - data structures
->> related to slot capabilities are set up.  As part of this set up, ISRs are
->> put in place to handle slot events and all event bits are cleared out.
+On 06/06/14 19:01, Greg KH wrote:
+>> Please try to put yourself in my position: I have a driver that I care
+>> >  about, which works fine for a few years. It's based upon dma_map_single(),
+>> >  which seems to be the common way to get non-coherent memory, even for the
+>> >  driver's entire lifespan. I realize that dma_alloc_* was the intended way to
+>> >  do it, but fact is that dma_map_* has become the common choice.
 >>
->> This patch adds the Data Link Layer State Changed (PCI_EXP_SLTSTA_DLLSC)
->> Slot Status bit to the event bits that are cleared out during
->> initialization.
+> Is your driver in the kernel tree?  If not, you really are on your own :(
 >
-> I think this is related to e48f1b67f668 ("PCI: pciehp: Use link change
-> notifications for hot-plug and removal").  Prior to that, pcie_isr()
-> didn't look at the PCI_EXP_SLTSTA_DLLSC bit.
+It's the Xillybus driver in the staging area. I don't know if this 
+counts for being in the kernel tree...
+
+The suggested patchset would allow replacing my use of dma_map_single() 
+with a managed version of that function. This will clean the driver's 
+code considerably.
+
+But I think that the discussion here is if it's valid to use 
+dma_map_single() for a device-permanent DMA mapping, or if 
+dma_alloc_noncoherent() is the only way. If the answer is no, there's 
+quite obviously no point in a devres version for that function.
+
+Regards,
+    Eli
+> greg k-h
 >
-> Apparently there's a non-public report of spurious messages like this
-> at boot-time, with no actual hotplug events:
->
->    pciehp 0000:82:04.0:pcie24: slot(4): Link Up event
->    pciehp 0000:82:04.0:pcie24: Device 0000:83:00.0 already exists at
-> 0000:83:00, cannot hot-add
->    pciehp 0000:82:04.0:pcie24: Cannot add device at 0000:83:00
 >
 
-I think I have seen that message once in a while in our systems.
-Rajat, didn't we talk about this a while ago ?
-
-Guenter
-
-> Device 0000:83:00.0 was enumerated previously, during the normal PCI
-> device enumeration.  I suspect DLLSC was set by the hardware when the
-> link came up after power-on, and it remained set until Linux booted.
-> Then when we take the first pciehp interrupt, we notice DLLSC is set
-> and think it's a new link state change.
->
-> This might be system-specific, because some BIOSes might clear DLLSC
-> before handing off to the OS.  Or my theory might be all wet.
->
-> But I think we should clear DLLSC in any case.  We clear all the other
-> RW1C bits in Slot Status, and I think we should clear DLLSC as well.
->
-> I'd like to include a bugzilla or mailing list reference for the
-> spurious message, and I'd also like confirmation that this changes
-> actually fixes it.
->
-> Bjorn
->
->> Reference:
->>    PCI-SIG.  PCI Express Base Specification Revision 4.0 Version 0.3
->>    (PCI-SIG, 2014): 7.8.11. Slot Status Register (Offset 1Ah).
->>
->> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
->> ---
->>
->>   drivers/pci/hotplug/pciehp_hpc.c |    2 +-
->>   1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
->> index 42914e0..0568416 100644
->> --- a/drivers/pci/hotplug/pciehp_hpc.c
->> +++ b/drivers/pci/hotplug/pciehp_hpc.c
->> @@ -794,7 +794,7 @@ struct controller *pcie_init(struct pcie_device *dev)
->>          pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
->>                  PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
->>                  PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
->> -               PCI_EXP_SLTSTA_CC);
->> +               PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
->>
->>          /* Disable software notification */
->>          pcie_disable_notification(ctrl);
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
->
->
->
 
