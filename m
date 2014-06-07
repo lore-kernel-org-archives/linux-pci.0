@@ -1,55 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0141.outbound.protection.outlook.com ([207.46.163.141]:49121
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752445AbaFAQWS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 1 Jun 2014 12:22:18 -0400
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: "andreas.noever@gmail.com" <andreas.noever@gmail.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"greg@kroah.com" <greg@kroah.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v4 00/15] Thunderbolt driver for Apple MacBooks
-Date: Sun, 1 Jun 2014 16:07:49 +0000
-Message-ID: <1401638869.7663.21.camel@x230>
-References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
-	 <1401580281.7663.14.camel@x230>
-	 <CAMxnaaURVhZ_SiJW7Qy1bsye1bcPE=J=vjL5MgTN5znP15WnXw@mail.gmail.com>
-In-Reply-To: <CAMxnaaURVhZ_SiJW7Qy1bsye1bcPE=J=vjL5MgTN5znP15WnXw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mxout1.netvision.net.il ([194.90.9.20]:35372 "EHLO
+	mxout1.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752425AbaFGMeJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Jun 2014 08:34:09 -0400
+MIME-version: 1.0
+Content-type: text/plain; CHARSET=US-ASCII; format=flowed
+Message-id: <5392F63B.6050708@gmail.com>
+Date: Sat, 07 Jun 2014 14:23:39 +0300
+From: Eli Billauer <eli.billauer@gmail.com>
+To: shuah.kh@samsung.com
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Joerg Roedel <joro@8bytes.org>, devel@driverdev.osuosl.org,
+	discuss@x86-64.org, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
+ dma_map_single()
+References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
+ <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
+ <538E3D04.9060808@samsung.com> <20140603233907.GB23880@8bytes.org>
+ <20140604140408.GC5004@htj.dyndns.org> <20140604141211.GC23880@8bytes.org>
+ <20140604141416.GD5004@htj.dyndns.org> <538F3548.4050101@gmail.com>
+ <20140604212525.GE23880@8bytes.org> <5391A9C2.3040602@gmail.com>
+ <20140606160103.GG15110@kroah.com> <5391EA92.9050306@gmail.com>
+ <5391F438.90703@samsung.com>
+In-reply-to: <5391F438.90703@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gU3VuLCAyMDE0LTA2LTAxIGF0IDEyOjExICswMjAwLCBBbmRyZWFzIE5vZXZlciB3cm90ZToN
-Cj4gT24gU3VuLCBKdW4gMSwgMjAxNCBhdCAxOjUxIEFNLCBNYXR0aGV3IEdhcnJldHQNCj4gPG1h
-dHRoZXcuZ2FycmV0dEBuZWJ1bGEuY29tPiB3cm90ZToNCj4gPiBUaGlzIHNlZW1zIHRvIGJlIHdv
-cmtpbmcgd2VsbCBvbiBteSBNQlAuIEl0IGFwcGVhcnMgdG8gYnJvYWRseSB3b3JrIG9uDQo+ID4g
-bXkgTWFjIFBybywgd2hpY2ggaGFzIFRodW5kZXJib2x0IDIgaGFyZHdhcmUgLSBJIGFkZGVkIHRo
-ZSBQQ0kgSUQsIGFuZA0KPiA+IGxvYWRpbmcgdGhlIHRodW5kZXJib2x0IGRyaXZlciBhZnRlciB0
-aGUgZGV2aWNlIGlzIHBsdWdnZWQgaW4gd29ya3MsIGJ1dA0KPiA+IGl0IHdvbid0IHJlY29nbmlz
-ZSBob3RwbHVnIGV2ZW50cy4gSSBkb24ndCBhcHBlYXIgdG8gZ2V0IGFueSBpbnRlcnJ1cHRzDQo+
-ID4gZnJvbSB0aGUgVGh1bmRlcmJvbHQgY29udHJvbGxlci4gQW55IGlkZWEgd2hhdCBtaWdodCBi
-ZSBoYXBwZW5pbmcgdGhlcmU/DQo+IFNvIHRoZSBjb21tdW5pY2F0aW9uIHdpdGggdGhlIGNvbnRy
-b2xsZXIgd29ya3MgKGRtZXNnIGR1bXBzIGEgbGlzdCBvZg0KPiBwb3J0cyBldGMuKT8gRG8geW91
-IGdldCBwbHVnIGV2ZW50cyAoInJlc2V0dGluZyBlcnJvciBvbiBwb3J0IC4uLiIpPw0KPiBZb3Ug
-Y291bGQgdHJ5IHRvIHBsYXkgYXJvdW5kIHdpdGggdGJfcGx1Z19ldmVudHNfYWN0aXZlLCBpZiB5
-b3Ugd2FudA0KPiB0byBleHBlcmltZW50LiBJIGNhbiBhbHNvIHRha2UgYW5vdGhlciBsb29rIGF0
-IHdoYXQgT1MgWCBkb2VzIG9uY2UgSQ0KPiBnZXQgYmFjayB0byBteSB3b3Jrc3RhdGlvbiAod2hl
-biBJIHdvcmtlZCBvbiB0aGlzIHBhcnQgZmFsY29uIHJpZGdlDQo+IHdhcyBub3QgamV0IHJlbGVh
-c2VkLCBzbyBtYXliZSB0aGV5IGRvIHRoaW5ncyBkaWZmZXJlbnRseSBub3cpLg0KDQpZZWFoLCB0
-aGF0IHdhcyBpdC4gSSdsbCBtYWlsIHRoZSBwYXRjaCBzZXBhcmF0ZWx5Lg0KDQoNCj4gPiBBcyBm
-YXIgYXMgdGhlIHF1aXJrcyBnbyAtIHBlcmhhcHMgc29tZXRoaW5nIGxpa2UgdGhpcyB3b3VsZCBi
-ZQ0KPiA+IHJlYXNvbmFibGUsIHJhdGhlciB0aGFuIG1haW50YWluaW5nIGEgbGlzdCBvZiBtYWNo
-aW5lcz8NCj4gSSBoYXZlIG9idGFpbmVkIEFDUEkgZHVtcHMgZnJvbSBhIGxhdGUgMjAxMyBNQlAg
-YW5kIGZyb20gYSBNYWNQcm8NCj4gKGJvdGggYXJlIGZhbGNvbiByaWRnZSBkZXZpY2VzKSBhbmQg
-dGhlc2UgY29udGFpbiBhIGZldyBmaXJtd2FyZQ0KPiBjaGFuZ2VzLiBGb3IgZXhhbXBsZSBTWElP
-LCBTWElMIGFuZCBTWExWIGFyZSBnb25lIHNvIHRoZSBzaHV0ZG93bg0KPiBxdWlyayB3aWxsIGZh
-aWwuIFdpdGggc29tZSBsdWNrIHRoYXQgbWVhbnMgdGhhdCB0aGUgc2h1dGRvd24gcXVpcmsgaXMN
-Cj4gbm8gbG9uZ2VyIHJlcXVpcmVkIGZvciBmYWxjb24gcmlkZ2UgaGFyZHdhcmUuDQoNClllYWgs
-IGl0IHNlZW1zIEkgZG9uJ3QgbmVlZCB0aGUgc3VzcGVuZCBxdWlyayAtIHRoZSBOSEkgaXMgc3Rp
-bGwgdGhlcmUNCndpdGhvdXQgaXQuIEkgc3RpbGwgdGhpbmsgd2Ugc2hvdWxkIG1ha2UgdGhlIHF1
-aXJrIGdlbmVyYWwgcmF0aGVyIHRoYW4NCnR5aW5nIGl0IHRvIHRoZSBtYWNoaW5lcywgdGhlIHdv
-cnN0IGNhc2UgaXMgdGhhdCBpdCdsbCBqdXN0IGRvIG5vdGhpbmcuDQoNCi0tIA0KTWF0dGhldyBH
-YXJyZXR0IDxtYXR0aGV3LmdhcnJldHRAbmVidWxhLmNvbT4NCg==
+Hello Shuah,
+
+
+We agree that the streaming API was originally *intended* for short 
+map-unmap DMA sessions, and that dma_alloc_noncoherent() was the 
+*intended* API for those who want to hold the DMA during a device's 
+lifetime.
+
+We also agree that on some platforms, DMA mappings are precious, and 
+therefore any driver should unmap a region as soon as it's not needed 
+anymore.
+
+But if we stick to the citation you gave, it says "...unmapped right 
+after it (unless you use dma_sync_* below)". So even in the streaming 
+API's definition, there's an understanding, that the "streaming" DMA 
+buffer can be held for more than a single session. And a good sync tool 
+for that is made available.
+
+Using cross-reference on Linux' code, I get a strong impression, that 
+dma_alloc_NONcoherent() is pretty much unused (I counted 8 drivers). The 
+streaming API's sync functions are heavily used, on the other hand. So 
+one gets a hunch, that there's a lot of use of the streaming API in the 
+kernel tree for long-term DMA mappings.
+
+This wasn't the original intention -- we agree on that. But why is it 
+wrong? Assuming that a driver needs to hold a DMA mapping for a long 
+while, why does it matter if it was done with dma_alloc_noncoherent() or 
+with dma_map_*()? They are equally wasteful, aren't they?
+
+Why maintaining two API sets doing the same thing? Or is there a subtle 
+functional difference I'm not aware of?
+
+Thanks,
+   Eli
+
+
+
+On 06/06/14 20:02, Shuah Khan wrote:
+>
+> dma_map_single() and dma_unmap_single() are streaming DMA APIs. These
+> are intended for one DMA transfer and unmapped right after it is done.
+>
+> dma buffers are limited shared resources for streaming that are
+> shared by several drivers. Hence the need for use and release
+> model.
+>
+> Please refer to the Using Streaming DMA mappings in DMA-API-HOWTO.txt
+>
+> "- Streaming DMA mappings which are usually mapped for one DMA
+>   transfer, unmapped right after it (unless you use dma_sync_* below)
+>   and for which hardware can optimize for sequential accesses.
+>
+>   This of "streaming" as "asynchronous" or "outside the coherency
+>   domain".
+>
+>   Good examples of what to use streaming mappings for are:
+>
+>         - Networking buffers transmitted/received by a device.
+>         - Filesystem buffers written/read by a SCSI device."
+>
+>
+> If I understand your intended usage correctly, you are looking to
+> allocate and hold the buffers for the lifetime of the driver. For
+> such cases, dma_alloc_*() interfaces are the ones to use.
+>
+> Please also refer to DMA-API.txt as well. Hope this helps.
+>
+> -- Shuah
+>
+>
+
