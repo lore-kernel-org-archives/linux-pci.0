@@ -1,176 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52124 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751242AbaFWXRQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Jun 2014 19:17:16 -0400
-Message-ID: <1403565425.3707.427.camel@ul30vt.home>
-Subject: Re: PCI/AER: AER in SRIOV environment
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Yishai Hadas <yishaih@dev.mellanox.co.il>
-Cc: Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"linux-rdma (linux-rdma@vger.kernel.org)"
-	<linux-rdma@vger.kernel.org>,
-	"yishaih@mellanox.com" <yishaih@mellanox.com>, liranl@mellanox.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Mon, 23 Jun 2014 17:17:05 -0600
-In-Reply-To: <53A8ADD5.7030207@dev.mellanox.co.il>
-References: <53A839C6.5050102@dev.mellanox.co.il>
-	 <CAErSpo7xVvqYea8v624T8EyVf6skQccraAe_WYpzcf2tkWFLhg@mail.gmail.com>
-	 <53A88A32.4010406@redhat.com> <53A8ADD5.7030207@dev.mellanox.co.il>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:46693 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbaFHEUI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Jun 2014 00:20:08 -0400
+Received: by mail-ig0-f179.google.com with SMTP id r2so286527igi.0
+        for <linux-pci@vger.kernel.org>; Sat, 07 Jun 2014 21:20:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+waHKUfu0Mxy_J9qWwayxZVDBA_RDYrpsL100Mr1sUBQRchVw@mail.gmail.com>
+References: <CA+waHKUfu0Mxy_J9qWwayxZVDBA_RDYrpsL100Mr1sUBQRchVw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 7 Jun 2014 22:19:46 -0600
+Message-ID: <CAErSpo6WoWrcVaZd9OoqaK9qBTY+vXQZqs40Hb2vZJ4Y8zjMXQ@mail.gmail.com>
+Subject: Re: What can change in ways Linux handles memory when all memory >4G
+ is disabled? (x86)
+To: Nikolay Amiantov <nikoamia@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-06-24 at 01:44 +0300, Yishai Hadas wrote:
-> On 6/23/2014 11:12 PM, Don Dutile wrote:
-> > On 06/23/2014 03:09 PM, Bjorn Helgaas wrote:
-> >> [+cc linux-pci, Don]
-> >>
-> > Adding Alex Williamson in case he can add more to this conversation...
-> >
-> >> On Mon, Jun 23, 2014 at 8:29 AM, Yishai Hadas
-> >> <yishaih@dev.mellanox.co.il> wrote:
-> >>> Hi Vijay,
-> >>> Trying to add AER support for Mellanox NIC in SRIOV environment, while
-> >>> evaluating/testing encountered a problem which led me to your
-> >>> patch accepted as part of kernel 3.8, commit ID
-> >>> "918b4053184c0ca22236e70e299c5343eea35304".
-> >>>
-> >>> Have some concerns/questions on:
-> >>> When working in SRIOV environment VFs may be un-attached, having no 
-> >>> driver
-> >>> assigned to, or may be attached to Virtual machine to work in some
-> >>> pass-through mode.
-> >>> Once working in KVM setup there is pci-stub driver which is loaded 
-> >>> in the
-> >>> HYP/PF for a given attached VF.
-> > huh? 'loaded in the hyp/pf? .... um, loaded in the host, and a VF is
-> > detached from its host driver -- a VF can be used in the host w/o any 
-> > virtualization,
-> > i.e., that's how guest VM is driving the VF: as if it was used by a 
-> > guest (host) OS directly --
-> > and attached to pci-stub driver, when assigned to a KVM guest in 
-> > pre-VFIO days/ways.
-> > If VFIO used, then VF is attached to vfio-pci driver.
-> >
-> >>>
-> >>> I'm using the aer-inject kernel module and its corresponding 
-> >>> aer-inject tool
-> >>> to simulate an error in the HYP.
-> >>> In both cases your commit will cause the AER recovery to fail as 
-> >>> there is no
-> >>> driver assigned to PF's VFs that supports AER, comparing the code 
-> >>> before
-> >>> your change.
-> >>>
-> > Without VFIO, I believe that's correct. There was no AER-to-VF support 
-> > pre-VFIO days.
-> > I believe with the recent VFIO support,
-> > and modifications to KVM, an AER that is associated with an assigned 
-> > VF will
-> > force the crash/halt of the KVM guest -- can't depend on a guest VF 
-> > driver clearing
-> > the AER in the hyp/host -- guest isn't privileged enough to clear the 
-> > error.
-> > So, crashing the guest is the simple option at the moment, to contain 
-> > the error.
-> > Alex: do I have that (vfio aer default) correct, or is that still 
-> > site-under-construction?
->      How about the case that the VF is not attached to a KVM guest and 
-> has no driver loaded on host ? in such a case from code review and some 
-> testing the recovery will
->      fail as there is no AER aware driver here. What is the expected 
-> solution here ?
->      Any special qemu /stuff is needed to activate the VFIO support ? 
-> would like to give it a try for a case that VF is attached.
+[+cc linux-pci, linux-pm]
 
-Just use recent QEMU (>=1.6, the newer the better) and it should be
-automatic.  Note that the VM won't exit on error, it's stopped with
-state RUN_STATE_IO_ERROR to allow the possibility of collecting data.
-Thanks,
+On Fri, Jun 6, 2014 at 6:06 PM, Nikolay Amiantov <nikoamia@gmail.com> wrote:
+> Hello all,
+>
+> I'm trying to resolve a cryptic problem with Lenovo T440p (and with
+> Dell XPS 15z, as it appears) and nvidia in my spare time. You can read
+> more at [1]. Basically: when the user disables and then re-enables
+> nvidia card (via ACPI, bbswitch or nouveau's dynpm) on new BIOS
+> versions, something becomes really wrong. User sees fs, usb devices
+> and network controllers faults of all kinds, system renders unusable
+> and user can observe filesystem corruption after reboot. Nvidia
+> drivers (or nouveau, or i915) can not even be loaded -- all that is
+> needed to trigger a bug is to call several ACPI methods to disable and
+> re-enable the card (e.g., via acpi-call module).
 
-Alex
+I don't know what ACPI methods you're calling, but (as I'm sure you
+know) it's not guaranteed to be safe to call random methods because
+they can make arbitrary changes to the system.
 
-> >
-> >>> How such cases should work ?  my expectation was that the PF will 
-> >>> get the
-> >>> error detected message then will recognize whether
-> >>> issue is its own or one of its VFs
-> > The AER packet will have the tag of the VF in if it was the source of 
-> > the error;
-> > so the PF will never see it; although one could argue it should be 
-> > 'promoted'
-> > to the PF if PF/VF needs to clear some state it has wrt the VF (the 
-> > SRIOV spec is
-> > lacking of info in this space); _but_, VFIO resets the VF (sets FLR 
-> > bit) when the
-> > device is deassigned and before re-attachment to the host, so that 
-> > should clear out
-> > any state btwn PF & VF ('should' ... famous last words...).
->      In my test I have used the aer-inject tool simulating an error to 
-> the BUS that both PF/VF are residing on, putting the function number to 
-> be the PF one, looks like both should be called by the aer driver as part
->      of the pci_walk_bus(). As mentioned I got a call only on the PF and 
-> recovery failed as of the VF doesn't include an AER aware driver, once 
-> removed the VF recovery succeeded.
->      I believe that packet should include some info about the source of 
-> the error isn't it ?
->      In addition, looking at IXGBE upstream source code at 
-> ixgbe_error_detected()  looks like there is some code running on the PF 
-> that checks whether the source was a VF.
-> 
->      By the way: when tried to simulate a VF error using its FN got 
-> below error:
->      "Error: Failed to write, Inappropriate ioctl for device", any idea 
-> about that error ?
-> >
-> >>
-> >> I'm really not an AER expert, so help me understand this question of
-> >> recognizing whether an error is associated with a PF or a VF.
-> >>
-> >> In terms of hardware, it looks like the device that detects an error
-> >> logs some information and sends an Error Message upstream.  The Root
-> >> Complex receives the message, captures the source ID from the Error
-> >> Message, and may generate an interrupt.  I expect this source ID can
-> >> be either a PF or a VF; there's no requirement that a VF error must be
-> >> reported as though it's from the PF, is there?
-> >>
-> >>> and work accordingly, in current code
-> >>> looks like recovery failed as part of "voting" once there is no AER 
-> >>> handler
-> >>> assigned to the VFs.
-> >>
-> >> The commit you mentioned has to do with PCI_ERS_RESULT_NO_AER_DRIVER.
-> >> We use pci_walk_bus() to figure out whether all the devices in a
-> >> subtree have a driver.  What subtree is involved here?  I would expect
-> >> the VFs to be siblings of the PF, not children of it, so I'm not sure
-> >> where things went wrong.
-> > Well, VFs could be on virtual busses (ARI turned on), so not 
-> > necessarily a
-> > sibling to PF ... and then we have the problem in PCI code of not 
-> > being able
-> > to traverse these virtual busses (in some cases; not sure if 
-> > pci_walk_bus(),
-> > which is going down the tree vs up the tree, has any problems here 
-> > w/VFs on
-> > virtual busses).
-> >
-> >>
-> >> Can you collect "lspci -vvv" output and maybe add some debug so we can
-> >> see exactly where the error is detected and what devices we're looking
-> >> at to conclude that one of them doesn't have a driver?
->      lspci -vvv for both PF & VF is attached, we can see that VF 
-> (21:00.1) has no driver loaded comparing the PF (Kernel driver in use: 
-> mlx4_core).
-> >>
-> >> Bjorn
-> >>
-> >
-> 
+> I've attached a debugger to Windows kernel to catch ACPI calls for
+> disabling and re-enabling NVIDIA card -- they don't really differ with
+> what bbswitch and others use. Furthermore, the difference between ACPI
+> DSDT tables in 1.14 (last good) and 1.16 (first broken) BIOSes are
+> minimal, and loading table from 1.14 into system running 1.16 does not
+> help. But -- all those devices are using memory I/O, so my current
+> theory is that memory is somehow corrupted. There are also some
+> changes in lspci output for nvidia [2].
 
+I skimmed through [1], but I'm not sure I understood everything.
+Here's what I gleaned; please correct any mistaken impressions:
 
+  1) Suspend/resume is mentioned in [1], but the problem occurs even
+without any suspend/resume.
+  2) The problem happens on a completely stock untainted upstream
+kernel even with no nvidia, nouveau, or i915 drivers loaded.
+  3) Disabling the nvidia device (02:00.0) by executing an ACPI method
+works fine, and the system works fine after the nvidia device is
+disabled.
+  4) This ACPI method puts the nvidia device in D3cold state.
+  5) Problems start when enabling the nvidia device by executing
+another ACPI method.
 
+In the D3cold state, the PCI device is entirely powered off.  After it
+is re-enabled, e.g., by the ACPI method in 5) above, the device needs
+to be completely re-initialized.  Since you're executing the ACPI
+method "by hand," outside the context of the Linux power management
+system, there's nothing to re-initialize the device.
+
+This by itself shouldn't be a problem; the device should power up with
+its BARs zeroed out and disabled, bus mastering disabled, etc.
+
+BUT the kernel doesn't know about these power changes you're making,
+so some things will be broken.  For example, while the nvidia device
+is in D3cold, lspci will return garbage for that device.  After it
+returns to D0, lspci should work again, but now the state of the
+device (BAR assignments, interrupts, etc.) is different from what
+Linux thinks it is.
+
+If a driver does anything with the device after it returns to D0, I
+think things will break, because the PCI core already knows what
+resources are assigned to the device, but the device forgot them when
+it was powered off.  So the PCI core would happily enable the device
+but it will respond at the wrong addresses.
+
+But I think you said problems happen even without any driver for the
+nvidia device, so there's probably more going on.  This is a video
+device, and I wouldn't be surprised if there's some legacy VGA
+behavior that doesn't follow the usual PCI rules.
+
+Can you:
+
+1) Collect complete "lspci -vvxxx" output from the whole system, with
+the nvidia card enabled.
+2) Disable nvidia card.
+3) Collect complete dmesg log.
+4) Try "lspci -s02:00.0".  I expect this to show garbage if the nvidia
+card is powered off.
+5) Enable nvidia card.
+6) Try "lspci -vvxxx" again.  You mentioned changes to devices other
+than nvidia, which sounds suspicious.
+7) Collect dmesg log again.  I don't expect changes here, because the
+kernel probably doesn't notice the power transition.
+
+Bjorn
+
+> I've played a bit with this theory in mind and found a very
+> interesting thing -- when I reserve all memory upper than 4G with
+> "memmap" kernel option ("memmap=99G$0x100000000"), everything works!
+> Also, I've written a small utility that fills memory with zeros using
+> /dev/mem and then checks it. I've checked reserved memory with it, and
+> it appears that no memory in that region is corrupted at all, which is
+> even more strange. I suspect that somehow when nvidia is enabled
+> I/O-mapped memory regions are corrupted, and only when upper memory is
+> not enabled. Also, memory map does not differ apart from missing last
+> big chunk of memory with and without "memmap", and with Windows, too.
+> If I enable even small chunk of "upper" memory (e.g.,
+> 0x270000000-0x280000000), there are usual crashes.
+>
+> Long story short: I'm interested how memory management can differ when
+> this "upper" memory regions are enabled?
+>
+> P.S.: This is my first time posting to LKML, if I've done something
+> wrong, please tell!
+>
+> [1]: https://github.com/Bumblebee-Project/bbswitch/issues/78
+> [2]: http://bpaste.net/show/350758/
+>
+> --
+> Nikolay Amiantov.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
