@@ -1,233 +1,111 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:39372 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753207AbaFHDCg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Jun 2014 23:02:36 -0400
+Message-ID: <1402196538.23860.24.camel@deadeye.wl.decadent.org.uk>
+Subject: Re: [PATCH 3.14 186/228] PCI: Wrong register used to check pending
+ traffic
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Alex Williamson <alex.williamson@gmail.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: [Patch V4 35/42] x86, irq: simplify the way to handle ISA IRQ
-Date: Mon,  9 Jun 2014 16:20:04 +0800
-Message-Id: <1402302011-23642-36-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Sun, 08 Jun 2014 04:02:18 +0100
+In-Reply-To: <20140604232354.004988520@linuxfoundation.org>
+References: <20140604232347.966798903@linuxfoundation.org>
+	 <20140604232354.004988520@linuxfoundation.org>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-Ku9j6oJri/88Jd58p1gw"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On startup, setup_IO_APIC_irqs() will program all IOAPIC pins for ISA
-IRQs. Later when mp_map_pin_to_irq() is called, it just returns ISA IRQ
-number without programming corresponding IOAPIC pin.
 
-This patch consolidates the way to program IOAPIC pins for both ISA and
-non-ISA IRQs into mp_map_pin_to_irq() as below:
-1) For ISA IRQs, mp_irqs array is used to map IOAPIC pin to IRQ and
-   mp_irqdomain_map() is used to actually program the pin.
-2) For non-ISA IRQs, irqdomain is used to map IOAPIC pin to IRQ, and
-   mp_irqdomain_map() is also used to actually program the pin.
+--=-Ku9j6oJri/88Jd58p1gw
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c    |   15 +-----
- arch/x86/kernel/apic/io_apic.c |   98 ++++++++++++++++------------------------
- 2 files changed, 40 insertions(+), 73 deletions(-)
+On Wed, 2014-06-04 at 16:23 -0700, Greg Kroah-Hartman wrote:
+> 3.14-stable review patch.  If anyone has any objections, please let me kn=
+ow.
+>=20
+> ------------------
+>=20
+> From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>=20
+> commit d0b4cc4e32705ff00d90d32da7783c266c702c04 upstream.
+>=20
+> The incorrect register offset is passed to pci_wait_for_pending(), which =
+is
+> caused by commit 157e876ffe ("PCI: Add pci_wait_for_pending() (refactor
+> pci_wait_for_pending_transaction())").
+>=20
+> Fixes: 157e876ffe ("PCI: Add pci_wait_for_pending() (refactor pci_wait_fo=
+r_pending_transaction())
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Acked-by: Alex Williamson <alex.williamson@gmail.com>
+> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>=20
+> ---
+>  drivers/pci/pci.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>=20
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3043,7 +3043,8 @@ int pci_wait_for_pending_transaction(str
+>  	if (!pci_is_pcie(dev))
+>  		return 1;
+> =20
+> -	return pci_wait_for_pending(dev, PCI_EXP_DEVSTA, PCI_EXP_DEVSTA_TRPND);
+> +	return pci_wait_for_pending(dev, pci_pcie_cap(dev) + PCI_EXP_DEVSTA,
+> +				    PCI_EXP_DEVSTA_TRPND);
+>  }
+>  EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+> =20
+> @@ -3085,7 +3086,7 @@ static int pci_af_flr(struct pci_dev *de
+>  		return 0;
+> =20
+>  	/* Wait for Transaction Pending bit clean */
+> -	if (pci_wait_for_pending(dev, PCI_AF_STATUS, PCI_AF_STATUS_TP))
+> +	if (pci_wait_for_pending(dev, pos + PCI_AF_STATUS, PCI_AF_STATUS_TP))
+>  		goto clear;
+> =20
+>  	dev_err(&dev->dev, "transaction is not cleared; "
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index edb48a8e0a0d..ef3336ab6432 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -101,17 +101,6 @@ static u32 isa_irq_to_gsi[NR_IRQS_LEGACY] __read_mostly = {
- 
- #define	ACPI_INVALID_GSI		INT_MIN
- 
--static int map_gsi_to_irq(unsigned int gsi, unsigned int flags)
--{
--	int i;
--
--	for (i = 0; i < nr_legacy_irqs(); i++)
--		if (isa_irq_to_gsi[i] == gsi)
--			return i;
--
--	return mp_map_gsi_to_irq(gsi, flags);
--}
--
- /*
-  * This is just a simple wrapper around early_ioremap(),
-  * with sanity checks for phys == 0 and size == 0.
-@@ -422,7 +411,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 		return -1;
- 	}
- 
--	irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
-+	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
- 	if (irq < 0)
- 		return irq;
- 
-@@ -603,7 +592,7 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
- 
- int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- {
--	int irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
-+	int irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
- 
- 	if (irq >= 0) {
- 		*irqp = irq;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 1623f5dba6c2..5fc76cf51e44 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -204,8 +204,6 @@ static int __init parse_noapic(char *str)
- }
- early_param("noapic", parse_noapic);
- 
--static int io_apic_setup_irq_pin(unsigned int irq, int node,
--				 struct io_apic_irq_attr *attr);
- static struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node);
- 
- /* Will be called in mpparse/acpi/sfi codes for saving IRQ info */
-@@ -1021,6 +1019,16 @@ static int mp_map_pin_to_irq(u32 gsi, int idx, int ioapic, int pin,
- 	struct irq_domain *domain = mp_ioapic_irqdomain(ioapic);
- 	struct mp_pin_info *info = mp_pin_info(ioapic, pin);
- 
-+	if (!domain) {
-+		/*
-+		 * Provide an identity mapping of gsi == irq except on truly
-+		 * weird platforms that have non isa irqs in the first 16 gsis.
-+		 */
-+		return gsi >= nr_legacy_irqs() ? gsi : gsi_top + gsi;
-+	}
-+
-+	mutex_lock(&ioapic_mutex);
-+
- 	/*
- 	 * Don't use irqdomain to manage ISA IRQs because there may be
- 	 * multiple IOAPIC pins sharing the same ISA IRQ number and
-@@ -1033,28 +1041,30 @@ static int mp_map_pin_to_irq(u32 gsi, int idx, int ioapic, int pin,
- 	 * the interrupt routing logic. Thus there may be multiple pins
- 	 * sharing the same legacy IRQ number when ACPI is disabled.
- 	 */
--	if (idx >= 0 && test_bit(mp_irqs[idx].srcbus, mp_bus_not_pci))
--		return mp_irqs[idx].srcbusirq;
--
--	if (!domain) {
--		/*
--		 * Provide an identity mapping of gsi == irq except on truly
--		 * weird platforms that have non isa irqs in the first 16 gsis.
--		 */
--		return gsi >= nr_legacy_irqs() ? gsi : gsi_top + gsi;
-+	if (idx >= 0 && test_bit(mp_irqs[idx].srcbus, mp_bus_not_pci)) {
-+		irq = mp_irqs[idx].srcbusirq;
-+		if (flags & IOAPIC_MAP_ALLOC) {
-+			if (info->count == 0 &&
-+			    mp_irqdomain_map(domain, irq, pin) != 0)
-+				irq = -1;
-+
-+			/* special handling for timer IRQ0 */
-+			if (irq == 0)
-+				info->count++;
-+		}
-+	} else {
-+		irq = irq_find_mapping(domain, pin);
-+		if (irq <= 0 && (flags & IOAPIC_MAP_ALLOC))
-+			irq = alloc_irq_from_domain(domain, gsi, pin);
- 	}
- 
--	mutex_lock(&ioapic_mutex);
--	irq = irq_find_mapping(domain, pin);
--	if (irq <= 0 && (flags & IOAPIC_MAP_ALLOC))
--		irq = alloc_irq_from_domain(domain, gsi, pin);
--
- 	if (flags & IOAPIC_MAP_ALLOC) {
- 		if (irq > 0)
- 			info->count++;
- 		else if (info->count == 0)
- 			info->set = 0;
- 	}
-+
- 	mutex_unlock(&ioapic_mutex);
- 
- 	return irq > 0 ? irq : -1;
-@@ -1471,55 +1481,23 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
- 	ioapic_write_entry(attr->ioapic, attr->ioapic_pin, entry);
- }
- 
--static bool __init io_apic_pin_not_connected(int idx, int ioapic_idx, int pin)
--{
--	if (idx != -1)
--		return false;
--
--	apic_printk(APIC_VERBOSE, KERN_DEBUG " apic %d pin %d not connected\n",
--		    mpc_ioapic_id(ioapic_idx), pin);
--	return true;
--}
--
--static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
--{
--	int idx, node = cpu_to_node(0);
--	struct io_apic_irq_attr attr;
--	unsigned int pin, irq;
--
--	for_each_pin(ioapic_idx, pin) {
--		idx = find_irq_entry(ioapic_idx, pin, mp_INT);
--		if (io_apic_pin_not_connected(idx, ioapic_idx, pin))
--			continue;
--
--		irq = pin_2_irq(idx, ioapic_idx, pin,
--				ioapic_idx ? 0 : IOAPIC_MAP_ALLOC);
--		if (irq < 0 || !mp_init_irq_at_boot(ioapic_idx, irq))
--			continue;
--
--		/*
--		 * Skip the timer IRQ if there's a quirk handler
--		 * installed and if it returns 1:
--		 */
--		if (apic->multi_timer_check &&
--		    apic->multi_timer_check(ioapic_idx, irq))
--			continue;
--
--		set_io_apic_irq_attr(&attr, ioapic_idx, pin, irq_trigger(idx),
--				     irq_polarity(idx));
--
--		io_apic_setup_irq_pin(irq, node, &attr);
--	}
--}
--
- static void __init setup_IO_APIC_irqs(void)
- {
--	unsigned int ioapic_idx;
-+	unsigned int ioapic, pin;
-+	int idx;
- 
- 	apic_printk(APIC_VERBOSE, KERN_DEBUG "init IO_APIC IRQs\n");
- 
--	for_each_ioapic(ioapic_idx)
--		__io_apic_setup_irqs(ioapic_idx);
-+	for_each_ioapic_pin(ioapic, pin) {
-+		idx = find_irq_entry(ioapic, pin, mp_INT);
-+		if (idx < 0)
-+			apic_printk(APIC_VERBOSE,
-+				    KERN_DEBUG " apic %d pin %d not connected\n",
-+				    mpc_ioapic_id(ioapic), pin);
-+		else
-+			pin_2_irq(idx, ioapic, pin,
-+				  ioapic ? 0 : IOAPIC_MAP_ALLOC);
-+	}
- }
- 
- /*
--- 
-1.7.10.4
+This still seems to be broken because pci_wait_for_pending() does
+pci_read_config_word() but PCI_AF_STATUS is not word-aligned.
 
+Ben.
+
+--=20
+Ben Hutchings
+Never attribute to conspiracy what can adequately be explained by stupidity=
+.
+
+--=-Ku9j6oJri/88Jd58p1gw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUAU5PSP+e/yOyVhhEJAQqKsxAAxo1EbIMMcZewIY9JdFNSPXUC3kZVbDhc
+UJU/vbx5dFxplejijs7YeMhUwiPVCd40CJaV+hW3CaKWgaEhrDXSAlzMpqbZt0uv
+IwTV9JBzqPijNkco5sCZI+/w84R2lusaFqS6YRPyL8EV2/w7yXVuaSv31+9JZKQs
+P6zfWnDzso3lEoPesvpDiyGKFd6/YlgeBIQttFukyVbLnue2kagexjJj5/b51EWT
+HTFOhMqjxFJ3x3u/9Ltwj1Prk+cltux+/Qujc930b4fjwvbOqGwgs3I9J+gd8Crw
+DST4/W+NMoFnrrOwn8lsgveDlpzSTslLT3UU0Lo3dY1dHehvMh+mA5E2WDZjpH3U
+/XG5iRst0TKue/Pt5NVSQAt/lTxt8aZ3EgvUv/pPXNSYi1DGN+K70uyCOHyK5GWT
+hZpXnNA9qznel9NeW7hcda2kds3IcXB2Oe96+eXXuSlnG8dfDUExblHKxLXCDfrH
+61a3OuJZg/G45vWl7JeIUBNu2bRumH0yqHQ9A2NQ+oj08IzOZM1X2BzsAsWwmDXr
+9Aj5MFrdvwligGW+Vjp3xtRX/4F9nyUGz72r0FaBnbNXx6WjLf1ExL/lVhUEYyQu
+C5E4wquO+6+LUt/jfsqxhcMlTBryje3zQ5lY1tCJE8cXWhkSHqRWr+sMAjVmqmwS
+VlYpqYEHYCs=
+=DDsP
+-----END PGP SIGNATURE-----
+
+--=-Ku9j6oJri/88Jd58p1gw--
