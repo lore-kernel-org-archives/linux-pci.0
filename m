@@ -1,86 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:51461 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752141AbaFSNY3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 09:24:29 -0400
-Message-ID: <53A2E452.5020109@ti.com>
-Date: Thu, 19 Jun 2014 18:53:30 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
-MIME-Version: 1.0
-To: Tero Kristo <t-kristo@ti.com>, <devicetree@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
-	Rajendra Nayak <rnayak@ti.com>, Paul Walmsley <paul@pwsan.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>
-Subject: Re: [PATCH v2 10/18] ARM: dts: dra7xx-clocks: Add missing 32khz clocks
- used for PHY
-References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-11-git-send-email-kishon@ti.com> <53A2C690.1060106@ti.com>
-In-Reply-To: <53A2C690.1060106@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:33831 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932226AbaFIVGu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 17:06:50 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH] PCI: Prevent NULL dereference during pciehp probe
+Date: Mon,  9 Jun 2014 23:03:32 +0200
+Message-Id: <1402347812-8059-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tero,
+pciehp assumes that dev->subordinate exists. But we do not assign a bus
+if we run out of bus numbers during enumeration. This leads to a NULL
+dereference in init_slot (and other places).
 
-On Thursday 19 June 2014 04:46 PM, Tero Kristo wrote:
-> On 05/29/2014 09:38 AM, Kishon Vijay Abraham I wrote:
->> Added missing 32khz clock used by PCIe PHY.
->> The documention for this node can be found @ ../bindings/clock/ti/gate.txt.
-> 
-> You can drop the node documentation ref, and rather add a TRM reference about
-> hardware details. Other than that, looks good to me.
+Change pciehp_probe to return -ENODEV when no subordinate bus is
+present.
 
-You mean something like why 32KHz clock is used (**PRCM.PCIE_32K_GFCLK (based
-on PRM.SYS_32K) for debounce and wakeup logic inside the PCIe1_PHY_RX**)? Or
-something like **Figure 26-19. PCIe PHY Subsystem Integration of DRA TRM vE
-shows how 32KHz clock is being used** ?
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+---
+ drivers/pci/hotplug/pciehp_core.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Thanks
-Kishon
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 0e0a2ff..e5abcaf 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -255,6 +255,13 @@ static int pciehp_probe(struct pcie_device *dev)
+ 	else if (pciehp_acpi_slot_detection_check(dev->port))
+ 		goto err_out_none;
+ 
++	if (!dev->port->subordinate) {
++		/* Can happen if we run out of bus numbers during probe */
++		dev_err(&dev->device,
++			"Hotplug bridge without secondary bus, ignoring\n");
++		goto err_out_none;
++	}
++
+ 	ctrl = pcie_init(dev);
+ 	if (!ctrl) {
+ 		dev_err(&dev->device, "Controller initialization failed\n");
+-- 
+2.0.0
 
-> 
-> -Tero
-> 
->>
->> Cc: Tony Lindgren <tony@atomide.com>
->> Cc: Rajendra Nayak <rnayak@ti.com>
->> Cc: Tero Kristo <t-kristo@ti.com>
->> Cc: Paul Walmsley <paul@pwsan.com>
->> Cc: Tony Lindgren <tony@atomide.com>
->> Cc: Rob Herring <robh+dt@kernel.org>
->> Cc: Pawel Moll <pawel.moll@arm.com>
->> Cc: Mark Rutland <mark.rutland@arm.com>
->> Cc: Kumar Gala <galak@codeaurora.org>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>   arch/arm/boot/dts/dra7xx-clocks.dtsi |    8 ++++++++
->>   1 file changed, 8 insertions(+)
->>
->> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> b/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> index 44993ec..e1bd052 100644
->> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> @@ -1165,6 +1165,14 @@
->>           reg = <0x021c>, <0x0220>;
->>       };
->>
->> +    optfclk_pciephy_32khz: optfclk_pciephy_32khz@4a0093b0 {
->> +        compatible = "ti,gate-clock";
->> +        clocks = <&sys_32k_ck>;
->> +        #clock-cells = <0>;
->> +        reg = <0x13b0>;
->> +        ti,bit-shift = <8>;
->> +    };
->> +
->>       optfclk_pciephy_div: optfclk_pciephy_div@4a00821c {
->>           compatible = "ti,divider-clock";
->>           clocks = <&apll_pcie_ck>;
->>
-> 
