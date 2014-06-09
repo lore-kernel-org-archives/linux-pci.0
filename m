@@ -1,158 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:36965 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754768AbaFIIYO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Jun 2014 04:24:14 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V4 37/42] x86, irq: introduce helper functions to release IOAPIC pin
-Date: Mon,  9 Jun 2014 16:20:06 +0800
-Message-Id: <1402302011-23642-38-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:51236 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751879AbaFIUpj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 16:45:39 -0400
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH] PCI: Do not touch siblings in pci_assign_unassigned_bridge_resources
+Date: Mon,  9 Jun 2014 22:45:30 +0200
+Message-Id: <1402346730-2508-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce function mp_unmap_irq() to release IOAPIC IRQ when IRQ is not
-used any more, which will typically called by pcibios_disabled_irq.
+pci_assign_unassigned_bridge_resources is used to assign resources below
+a hotplug bridge. If the first attempt fails it will release some
+resources and try again. If a resource allocation on the hotplug bridge
+itself fails then pci_assign_unassigned_bridge_resources will invoke
+pci_bus_release_bridge_resources on the parent bus of the hotplug
+bridge. This in turn will release resources assigned to siblings of the
+hotplug bridge which may already be in use.
 
-And function mp_irqdomain_unmap() is a common implementation of
-irq_domain_ops.unmap for IOAPIC.
+This patch checks for this case and prevents
+pci_bus_release_bridge_resources to be invoked on the parent bus.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+The problem can be reproduced by having two sibling hotplug bridges A
+and B. The problem will occour if the parent of A and B does not have
+enough resources to satisfy window allocations for B during a hotplug
+event.
+
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- arch/x86/include/asm/io_apic.h |    3 ++
- arch/x86/kernel/apic/io_apic.c |   61 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 64 insertions(+)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index af6f9d4309bf..0aeed5ca356e 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -187,10 +187,12 @@ extern int mp_find_ioapic(u32 gsi);
- extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern u32 mp_pin_to_gsi(int ioapic, int pin);
- extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
-+extern void mp_unmap_irq(int irq);
- extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 				      struct ioapic_domain_cfg *cfg);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
-+extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
- extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
- extern void __init pre_init_apic_IRQ0(void);
- 
-@@ -234,6 +236,7 @@ static inline void ioapic_insert_resources(void) { }
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
- static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
- static inline int mp_map_gsi_to_irq(u32 gsi, unsigned int flags) { return gsi; }
-+static inline void mp_unmap_irq(int irq) { }
- 
- static inline int save_ioapic_entries(void)
- {
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 5fc76cf51e44..60555354b331 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -467,6 +467,21 @@ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pi
- 	return 0;
+I must admit that I do not fully understand how
+pci_assign_unassigned_bridge_resources works. Under which scenario would the
+second allocation attempt be successful?
+
+Thanks,
+Andreas
+
+ drivers/pci/setup-bus.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 138bdd6..2e418d6 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1560,6 +1560,12 @@ void __init pci_assign_unassigned_resources(void)
+ 		pci_assign_unassigned_root_bus_resources(root_bus);
  }
  
-+static void __remove_pin_from_irq(struct irq_cfg *cfg, int apic, int pin)
-+{
-+	struct irq_pin_list **last, *entry;
-+
-+	last = &cfg->irq_2_pin;
-+	for_each_irq_pin(entry, cfg->irq_2_pin)
-+		if (entry->apic == apic && entry->pin == pin) {
-+			*last = entry->next;
-+			kfree(entry);
-+			return;
-+		} else {
-+			last = &entry->next;
++/**
++ * pci_assign_unassigned_bridge_resources - greenfield resource allocation
++ *
++ * Try to assign io and memory resources on and below @bridge. The caller must
++ * ensure that no device below @bridge is active.
++ */
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ {
+ 	struct pci_bus *parent = bridge->subordinate;
+@@ -1567,7 +1573,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 					want additional resources */
+ 	int tried_times = 0;
+ 	LIST_HEAD(fail_head);
+-	struct pci_dev_resource *fail_res;
++	struct pci_dev_resource *fail_res, *tmp;
+ 	int retval;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+@@ -1594,10 +1600,21 @@ again:
+ 	 * Try to release leaf bridge's resources that doesn't fit resource of
+ 	 * child device under that bridge
+ 	 */
+-	list_for_each_entry(fail_res, &fail_head, list)
++	list_for_each_entry_safe(fail_res, tmp, &fail_head, list) {
++		 /*
++		  * The allocation of the mem/io window of the top level bridge
++		  * can fail.  Without the following check we would release our
++		  * siblings' resources.
++		  */
++		if (fail_res->dev == bridge) {
++			list_del(&fail_res->list);
++			kfree(fail_res);
++			continue;
 +		}
-+}
-+
- static void add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
- {
- 	if (__add_pin_to_irq_node(cfg, node, apic, pin))
-@@ -1119,6 +1134,31 @@ int mp_map_gsi_to_irq(u32 gsi, unsigned int flags)
- 	return mp_map_pin_to_irq(gsi, idx, ioapic, pin, flags);
- }
- 
-+void mp_unmap_irq(int irq)
-+{
-+	struct irq_data *data = irq_get_irq_data(irq);
-+	struct mp_pin_info *info;
-+	int ioapic, pin;
-+
-+	if (!data || !data->domain)
-+		return;
-+
-+	ioapic = (int)(long)data->domain->host_data;
-+	pin = (int)data->hwirq;
-+	info = mp_pin_info(ioapic, pin);
-+
-+	mutex_lock(&ioapic_mutex);
-+	if (--info->count == 0) {
-+		info->set = 0;
-+		if (irq < nr_legacy_irqs() &&
-+		    ioapics[ioapic].irqdomain_cfg.type == IOAPIC_DOMAIN_LEGACY)
-+			mp_irqdomain_unmap(data->domain, irq);
-+		else
-+			irq_dispose_mapping(irq);
+ 		pci_bus_release_bridge_resources(fail_res->dev->bus,
+ 						 fail_res->flags & type_mask,
+ 						 whole_subtree);
 +	}
-+	mutex_unlock(&ioapic_mutex);
-+}
-+
- /*
-  * Find a specific PCI IRQ entry.
-  * Not an __init, possibly needed by modules
-@@ -3874,6 +3914,27 @@ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 	return io_apic_setup_irq_pin(virq, info->node, &attr);
- }
  
-+void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
-+{
-+	struct irq_data *data = irq_get_irq_data(virq);
-+	struct irq_cfg *cfg = irq_cfg(virq);
-+	int ioapic = (int)(long)domain->host_data;
-+	int pin = (int)data->hwirq;
-+
-+	/*
-+	 * Skip the timer IRQ if there's a quirk handler installed and if it
-+	 * returns 1:
-+	 */
-+	if (apic->multi_timer_check &&
-+	    apic->multi_timer_check(ioapic, virq))
-+		return;
-+
-+	ioapic_mask_entry(ioapic, pin);
-+	__remove_pin_from_irq(cfg, ioapic, pin);
-+	WARN_ON(cfg->irq_2_pin != NULL);
-+	arch_teardown_hwirq(virq);
-+}
-+
- int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
- {
- 	int ret = 0;
+ 	/* restore size and flags */
+ 	list_for_each_entry(fail_res, &fail_head, list) {
 -- 
-1.7.10.4
+2.0.0
 
