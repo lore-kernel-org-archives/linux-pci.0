@@ -1,49 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0244.outbound.protection.outlook.com ([207.46.163.244]:2716
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751765AbaFZFsx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 Jun 2014 01:48:53 -0400
-Date: Thu, 26 Jun 2014 13:48:43 +0800
-From: Shawn Guo <shawn.guo@freescale.com>
-To: Fabio Estevam <festevam@gmail.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: Re: [PATCH] MAINTAINERS: Update mx6 pci driver maintainer's email
-Message-ID: <20140626054841.GA7859@dragon>
-References: <1403729566-12690-1-git-send-email-festevam@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1403729566-12690-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch V4 20/42] x86, irq: simplify arch_early_irq_init()
+Date: Mon,  9 Jun 2014 16:19:49 +0800
+Message-Id: <1402302011-23642-21-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 25, 2014 at 05:52:46PM -0300, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> Use Shawn's email address from Freescale.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+Simplify function arch_early_irq_init() and kill static array irq_cfgx[].
 
-Acked-by: Shawn Guo <shawn.guo@freescale.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c |   33 +++++++++++----------------------
+ 1 file changed, 11 insertions(+), 22 deletions(-)
 
-> ---
->  MAINTAINERS | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 134483f..f35d07d 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6774,7 +6774,7 @@ F:	arch/x86/kernel/quirks.c
->  
->  PCI DRIVER FOR IMX6
->  M:	Richard Zhu <r65037@freescale.com>
-> -M:	Shawn Guo <shawn.guo@linaro.org>
-> +M:	Shawn Guo <shawn.guo@freescale.com>
->  L:	linux-pci@vger.kernel.org
->  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
->  S:	Maintained
-> -- 
-> 1.8.3.2
-> 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 72cbb92ca401..12d12f897107 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -183,6 +183,7 @@ early_param("noapic", parse_noapic);
+ 
+ static int io_apic_setup_irq_pin(unsigned int irq, int node,
+ 				 struct io_apic_irq_attr *attr);
++static struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node);
+ 
+ /* Will be called in mpparse/acpi/sfi codes for saving IRQ info */
+ void mp_save_irq(struct mpc_intsrc *m)
+@@ -214,14 +215,10 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
+ 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
+ }
+ 
+-
+-/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
+-static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
+-
+ int __init arch_early_irq_init(void)
+ {
+ 	struct irq_cfg *cfg;
+-	int count, node, i;
++	int i, node = cpu_to_node(0);
+ 
+ 	if (!nr_legacy_irqs())
+ 		io_apic_irqs = ~0UL;
+@@ -234,22 +231,14 @@ int __init arch_early_irq_init(void)
+ 			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
+ 	}
+ 
+-	cfg = irq_cfgx;
+-	count = ARRAY_SIZE(irq_cfgx);
+-	node = cpu_to_node(0);
+-
+-	for (i = 0; i < count; i++) {
+-		irq_set_chip_data(i, &cfg[i]);
+-		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
+-		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
+-		/*
+-		 * For legacy IRQ's, start with assigning irq0 to irq15 to
+-		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+-		 */
+-		if (i < nr_legacy_irqs()) {
+-			cfg[i].vector = IRQ0_VECTOR + i;
+-			cpumask_setall(cfg[i].domain);
+-		}
++	/*
++	 * For legacy IRQ's, start with assigning irq0 to irq15 to
++	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
++	 */
++	for (i = 0; i < nr_legacy_irqs(); i++) {
++		cfg = alloc_irq_and_cfg_at(i, node);
++		cfg->vector = IRQ0_VECTOR + i;
++		cpumask_setall(cfg->domain);
+ 	}
+ 
+ 	return 0;
+@@ -3373,7 +3362,7 @@ int __init arch_probe_nr_irqs(void)
+ 	if (nr < nr_irqs)
+ 		nr_irqs = nr;
+ 
+-	return nr_legacy_irqs();
++	return 0;
+ }
+ 
+ int io_apic_set_pci_routing(struct device *dev, int irq,
+-- 
+1.7.10.4
+
