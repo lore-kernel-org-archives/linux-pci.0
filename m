@@ -1,62 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:41487 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751745AbaF1AWD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 20:22:03 -0400
-Received: by mail-lb0-f175.google.com with SMTP id n15so4526901lbi.34
-        for <linux-pci@vger.kernel.org>; Fri, 27 Jun 2014 17:22:01 -0700 (PDT)
-Message-ID: <53AE0ABB.4010501@cogentembedded.com>
-Date: Sat, 28 Jun 2014 04:22:19 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Phil Edworthy <phil.edworthy@renesas.com>
-CC: Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] PCI: host: pcie-rcar: Style and formatting changes.
-References: <1403888155-9709-1-git-send-email-phil.edworthy@renesas.com> <1403888155-9709-3-git-send-email-phil.edworthy@renesas.com> <20140628001448.GE27128@verge.net.au> <20140628001542.GA32431@verge.net.au>
-In-Reply-To: <20140628001542.GA32431@verge.net.au>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch V4 17/42] ce4100, irq: make CE4100 depend on CONFIG_X86_IO_APIC
+Date: Mon,  9 Jun 2014 16:19:46 +0800
+Message-Id: <1402302011-23642-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+Intel CE4100 platforms need IOAPIC support becasue some devices are
+always connected to the second IOAPIC, so make CONFIG_CE depends on
+CONFIG_X86_IO_APIC.
 
-On 06/28/2014 04:15 AM, Simon Horman wrote:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/Kconfig                  |    1 +
+ arch/x86/platform/ce4100/ce4100.c |    9 ++-------
+ 2 files changed, 3 insertions(+), 7 deletions(-)
 
->>> This patch just makes symbol and function name changes to avoid
->>> potential conflicts, along with minor formatting changes.
->>> The only other change is to replace an arg passed into a func
->>> with a local variable.
-
->>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
->>> ---
->>>   drivers/pci/host/pcie-rcar.c | 131 ++++++++++++++++++++++---------------------
->>>   1 file changed, 67 insertions(+), 64 deletions(-)
-
->>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
->>> index 680a8cc..efdea07 100644
->>> --- a/drivers/pci/host/pcie-rcar.c
->>> +++ b/drivers/pci/host/pcie-rcar.c
-[...]
->>> @@ -318,14 +319,15 @@ static struct pci_ops rcar_pcie_ops = {
->>>   	.write	= rcar_pcie_write_conf,
->>>   };
->>>
->>> -static void rcar_pcie_setup_window(int win, struct resource *res,
->>> -				   struct rcar_pcie *pcie)
->>> +static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
->>>   {
->>> +	struct resource *res = &pcie->res[win];
->>> +
->>
->> The removal of the res parameter is not in keeping with the changelog.
->> Could you break it out into a separate patch?
->
-> Sorry, I see that it is mentioned in the changelog.
-> But could you split the patch all the same?
-
-    I agree. Generally, you should not mix several changes of a different 
-nature in one patch.
-
-WBR, Sergei
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 47247708c9eb..55ec58b0b373 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -426,6 +426,7 @@ config X86_INTEL_CE
+ 	bool "CE4100 TV platform"
+ 	depends on PCI
+ 	depends on PCI_GODIRECT
++	depends on X86_IO_APIC
+ 	depends on X86_32
+ 	depends on X86_EXTENDED_PLATFORM
+ 	select X86_REBOOTFIXUPS
+diff --git a/arch/x86/platform/ce4100/ce4100.c b/arch/x86/platform/ce4100/ce4100.c
+index 8244f5ec2f4c..0a54a586559b 100644
+--- a/arch/x86/platform/ce4100/ce4100.c
++++ b/arch/x86/platform/ce4100/ce4100.c
+@@ -135,14 +135,12 @@ static void __init sdv_arch_setup(void)
+ 	sdv_serial_fixup();
+ }
+ 
+-#ifdef CONFIG_X86_IO_APIC
+ static void sdv_pci_init(void)
+ {
+ 	x86_of_pci_init();
+ 	/* We can't set this earlier, because we need to calibrate the timer */
+ 	legacy_pic = &null_legacy_pic;
+ }
+-#endif
+ 
+ /*
+  * CE4100 specific x86_init function overrides and early setup
+@@ -155,7 +153,9 @@ void __init x86_ce4100_early_setup(void)
+ 	x86_init.resources.probe_roms = x86_init_noop;
+ 	x86_init.mpparse.get_smp_config = x86_init_uint_noop;
+ 	x86_init.mpparse.find_smp_config = x86_init_noop;
++	x86_init.mpparse.setup_ioapic_ids = setup_ioapic_ids_from_mpc_nocheck;
+ 	x86_init.pci.init = ce4100_pci_init;
++	x86_init.pci.init_irq = sdv_pci_init;
+ 
+ 	/*
+ 	 * By default, the reboot method is ACPI which is supported by the
+@@ -166,10 +166,5 @@ void __init x86_ce4100_early_setup(void)
+ 	 */
+ 	reboot_type = BOOT_KBD;
+ 
+-#ifdef CONFIG_X86_IO_APIC
+-	x86_init.pci.init_irq = sdv_pci_init;
+-	x86_init.mpparse.setup_ioapic_ids = setup_ioapic_ids_from_mpc_nocheck;
+-#endif
+-
+ 	pm_power_off = ce4100_power_off;
+ }
+-- 
+1.7.10.4
 
