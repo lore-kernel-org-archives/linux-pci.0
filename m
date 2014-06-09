@@ -1,94 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:46297 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751504AbaFJRcn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jun 2014 13:32:43 -0400
-Received: by mail-ie0-f175.google.com with SMTP id tp5so5881133ieb.34
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 10:32:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <539716F7.1020901@ti.com>
-References: <1401297293-3950-1-git-send-email-m-karicheri2@ti.com>
- <20140530154455.GC4607@google.com> <539716F7.1020901@ti.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 10 Jun 2014 11:32:22 -0600
-Message-ID: <CAErSpo58cvbmyD90rNB9RHRHjGoehbGcHa8F3i82yMiQXPBNVw@mail.gmail.com>
-Subject: Re: [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch V4 40/42] x86, irq, SFI: release IOAPIC pin when PCI device is disabled
+Date: Mon,  9 Jun 2014 16:20:09 +0800
+Message-Id: <1402302011-23642-41-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 8:32 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
-> On 5/30/2014 11:44 AM, Bjorn Helgaas wrote:
->>
->> On Wed, May 28, 2014 at 01:14:53PM -0400, Murali Karicheri wrote:
->>>
->>> Call pcie_bus_configure_settings on ARM, like for other platforms.
->>> pcie_bus_configure_settings makes sure the MPS across the bus is
->>> uniform and provides the ability to tune the MRSS and MPS to higher
->>> performance values. This is particularly important for embedded where
->>> there is no firmware to program these PCI-E settings for the OS.
->>>
->>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->>
->> I applied this to pci/misc for v3.16.  Russell, let me know if you object
->> or prefer another route, and I can drop it.  I tweaked the changelog but
->> didn't touch the actual patch, so I think git will do the right thing if
->> it
->> arrives via two trees.
->
-> Bjorn,
->
-> I checked git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-> pci/misc branch
-> I don't see it. Is it a different repo?
+Release IOAPIC pin associated with PCI device when the PCI device
+is disabled.
 
-It's already in Linus' tree and I cleaned out pci/misc for the next cycle.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/intel_mid_pci.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=8b5742ad156d30ee38486652cdbd152e2d6ebbcc
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 337d165c64f1..09fece368592 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -227,6 +227,12 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
++static void intel_mid_pci_irq_disable(struct pci_dev *dev)
++{
++	if (dev->irq > 0)
++		mp_unmap_irq(dev->irq);
++}
++
+ struct pci_ops intel_mid_pci_ops = {
+ 	.read = pci_read,
+ 	.write = pci_write,
+@@ -243,6 +249,7 @@ int __init intel_mid_pci_init(void)
+ 	pr_info("Intel MID platform detected, using MID PCI ops\n");
+ 	pci_mmcfg_late_init();
+ 	pcibios_enable_irq = intel_mid_pci_irq_enable;
++	pcibios_disable_irq = intel_mid_pci_irq_disable;
+ 	pci_root_ops = intel_mid_pci_ops;
+ 	pci_soc_mode = 1;
+ 	/* Continue with standard init */
+-- 
+1.7.10.4
 
->>> CC: Russell King <linux@arm.linux.org.uk>
->>> CC: Bjorn Helgaas <bhelgaas@google.com>
->>> CC: Arnd Bergmann <arnd@arndb.de>
->>> CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
->>> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
->>> ---
->>>   - Fixed comments against initial version
->>>   arch/arm/kernel/bios32.c |   12 ++++++++++++
->>>   1 file changed, 12 insertions(+)
->>>
->>> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
->>> index 16d43cd..17a26c1 100644
->>> --- a/arch/arm/kernel/bios32.c
->>> +++ b/arch/arm/kernel/bios32.c
->>> @@ -545,6 +545,18 @@ void pci_common_init_dev(struct device *parent,
->>> struct hw_pci *hw)
->>>                  */
->>>                 pci_bus_add_devices(bus);
->>>         }
->>> +
->>> +       list_for_each_entry(sys, &head, node) {
->>> +               struct pci_bus *bus = sys->bus;
->>> +
->>> +               /* Configure PCI Express settings */
->>> +               if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
->>> +                       struct pci_bus *child;
->>> +
->>> +                       list_for_each_entry(child, &bus->children, node)
->>> +                               pcie_bus_configure_settings(child);
->>> +               }
->>> +       }
->>>   }
->>>     #ifndef CONFIG_PCI_HOST_ITE8152
->>> --
->>> 1.7.9.5
->>>
->
