@@ -1,156 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:51128 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750931AbaFWX30 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 19:29:26 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 24 Jun 2014 09:29:24 +1000
-Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 9B92C3578047
-	for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2014 09:29:21 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5NND1Kk51576854
-	for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2014 09:13:01 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5NNTKkP008585
-	for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2014 09:29:21 +1000
-Date: Tue, 24 Jun 2014 09:29:22 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, yan@linux.vnet.ibm.com,
-	qiudayu@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH V3 12/17] powerpc/powernv: implement
- pcibios_sriov_resource_alignment on powernv
-Message-ID: <20140623232922.GA4018@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-13-git-send-email-weiyang@linux.vnet.ibm.com>
- <20140623060947.GB12055@shangw>
- <20140623082142.GB4509@richard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140623082142.GB4509@richard>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Kuppuswamy Sathyanarayanan
+	<sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>,
+	sfi-devel@simplefirmware.org
+Subject: [Patch V4 32/42] x86, irq, SFI: use common irqdomain map interface to program IOAPIC pins
+Date: Mon,  9 Jun 2014 16:20:01 +0800
+Message-Id: <1402302011-23642-33-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 04:21:42PM +0800, Wei Yang wrote:
->On Mon, Jun 23, 2014 at 04:09:47PM +1000, Gavin Shan wrote:
->>On Tue, Jun 10, 2014 at 09:56:34AM +0800, Wei Yang wrote:
->>>This patch implements the pcibios_sriov_resource_alignment() on powernv
->>>platform.
->>>
->>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>---
->>> arch/powerpc/include/asm/machdep.h        |    1 +
->>> arch/powerpc/kernel/pci-common.c          |    8 ++++++++
->>> arch/powerpc/platforms/powernv/pci-ioda.c |   17 +++++++++++++++++
->>> 3 files changed, 26 insertions(+)
->>>
->>>diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
->>>index 2f2e770..3bbc55f 100644
->>>--- a/arch/powerpc/include/asm/machdep.h
->>>+++ b/arch/powerpc/include/asm/machdep.h
->>>@@ -242,6 +242,7 @@ struct machdep_calls {
->>> 	resource_size_t (*pcibios_window_alignment)(struct pci_bus *, unsigned long type);
->>> #ifdef CONFIG_PCI_IOV
->>> 	resource_size_t (*__pci_sriov_resource_size)(struct pci_dev *, int resno);
->>>+	resource_size_t (*__pci_sriov_resource_alignment)(struct pci_dev *, int resno, resource_size_t align);
+Refine SFI to use common irqdomain map interface to program IOAPIC pins,
+so we can unify the callsite to progam IOAPIC pins.
 
-Both lines exceed 80 lines here :)
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/intel_mid_pci.c      |   19 +++++-------
+ arch/x86/platform/intel-mid/sfi.c |   58 ++++++++++++++++---------------------
+ arch/x86/platform/sfi/sfi.c       |    4 ++-
+ 3 files changed, 35 insertions(+), 46 deletions(-)
 
->>> #endif /* CONFIG_PCI_IOV */
->>>
->>> 	/* Called to shutdown machine specific hardware not already controlled
->>>diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->>>index c4e2e92..35345ac 100644
->>>--- a/arch/powerpc/kernel/pci-common.c
->>>+++ b/arch/powerpc/kernel/pci-common.c
->>>@@ -128,6 +128,14 @@ resource_size_t pcibios_sriov_resource_size(struct pci_dev *pdev, int resno)
->>>
->>> 	return 0;
->>> }
->>>+
->>>+resource_size_t pcibios_sriov_resource_alignment(struct pci_dev *pdev, int resno, resource_size_t align)
->>>+{
->>>+	if (ppc_md.__pci_sriov_resource_alignment)
->>>+		return ppc_md.__pci_sriov_resource_alignment(pdev, resno, align);
->>>+
->>>+	return 0;
->>>+}
->>> #endif /* CONFIG_PCI_IOV */
->>>
->>> static resource_size_t pcibios_io_size(const struct pci_controller *hose)
->>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>index 7dfad6a..b0ac851 100644
->>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>@@ -1573,6 +1573,22 @@ static resource_size_t __pnv_pci_sriov_resource_size(struct pci_dev *pdev, int r
->>>
->>> 	return size;
->>> }
->>>+
->>>+static resource_size_t __pnv_pci_sriov_resource_alignment(struct pci_dev *pdev, int resno,
->>>+		resource_size_t align)
->>
->>The function could be "pcibios_sriov_resource_alignment()", but it's not a big deal.
->>If you prefer the original one, then keep it :)
->
->I guess you want to name it to pnv_pcibios_sriov_resource_alignment()?
->pcibios_sriov_resource_alignment() is the general name for this function.
->
->If yes, this is changed.
->
-
-Nope, What I mean is to have something like this:
-
-	struct machdep_calls {
-		:
-	#ifdef CONFIG_PCI_IOV
-	resource_size_t (*pci_sriov_resource_size)(struct pci_dev *dev,
-						   int resno);
-	resource_size_t (*pci_sriov_resource_alignment)(struct pci_dev *dev,
-							int resno,
-							resource_size_t align);
-	#endif
-		:
-	}
-
-	ppc_md.pci_sriov_resource_size = pnv_pci_iov_res_size;
-	ppc_md.pci_sriov_resource_alignment = pnv_pci_iov_res_alignment;
-
-The point is not to have prefix "__" for callbacks in "struct machdep_calls".
-ppc_md.__pci_sriov_resource_size is the first one that has prefix "__"
-
->>
->>>+{
->>>+	struct pci_dn *pdn = pci_get_pdn(pdev);
->>>+	resource_size_t iov_align;
->>>+
->>>+	iov_align = resource_size(&pdev->resource[resno]);
->>>+	if (iov_align)
->>>+		return iov_align;
->>>+
->>>+	if (pdn->vfs)
->>>+		return pdn->vfs * align;
->>>+
->>>+	return align;
->>>+}
->>> #endif /* CONFIG_PCI_IOV */
->>>
->>> /* Prevent enabling devices for which we couldn't properly
->>>@@ -1777,6 +1793,7 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>> 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
->>> #ifdef CONFIG_PCI_IOV
->>> 	ppc_md.__pci_sriov_resource_size = __pnv_pci_sriov_resource_size;
->>>+	ppc_md.__pci_sriov_resource_alignment = __pnv_pci_sriov_resource_alignment;
->>> #endif /* CONFIG_PCI_IOV */
->>> 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
->>>
-
-Thanks,
-Gavin
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index fcbdc5fac2c6..337d165c64f1 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -208,27 +208,22 @@ static int pci_write(struct pci_bus *bus, unsigned int devfn, int where,
+ 
+ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ {
+-	u8 pin;
+-	struct io_apic_irq_attr irq_attr;
++	int polarity;
+ 
+-	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
++	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
++		polarity = 0; /* active high */
++	else
++		polarity = 1; /* active low */
+ 
+ 	/*
+ 	 * MRST only have IOAPIC, the PCI irq lines are 1:1 mapped to
+ 	 * IOAPIC RTE entries, so we just enable RTE for the device.
+ 	 */
++	if (mp_set_gsi_attr(dev->irq, 1, polarity, dev_to_node(&dev->dev)))
++		return -EBUSY;
+ 	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC) < 0)
+ 		return -EBUSY;
+ 
+-	irq_attr.ioapic = mp_find_ioapic(dev->irq);
+-	irq_attr.ioapic_pin = dev->irq;
+-	irq_attr.trigger = 1; /* level */
+-	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
+-		irq_attr.polarity = 0; /* active high */
+-	else
+-		irq_attr.polarity = 1; /* active low */
+-	io_apic_set_pci_routing(&dev->dev, dev->irq, &irq_attr);
+-
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
+index 7161395e7de7..3c53a90fdb18 100644
+--- a/arch/x86/platform/intel-mid/sfi.c
++++ b/arch/x86/platform/intel-mid/sfi.c
+@@ -432,9 +432,8 @@ static int __init sfi_parse_devs(struct sfi_table_header *table)
+ 	struct sfi_table_simple *sb;
+ 	struct sfi_device_table_entry *pentry;
+ 	struct devs_id *dev = NULL;
+-	int num, i;
+-	int ioapic;
+-	struct io_apic_irq_attr irq_attr;
++	int num, i, ret;
++	int polarity;
+ 
+ 	sb = (struct sfi_table_simple *)table;
+ 	num = SFI_GET_NUM_ENTRIES(sb, struct sfi_device_table_entry);
+@@ -448,37 +447,30 @@ static int __init sfi_parse_devs(struct sfi_table_header *table)
+ 			 * devices, but they have separate RTE entry in IOAPIC
+ 			 * so we have to enable them one by one here
+ 			 */
+-			ioapic = mp_find_ioapic(irq);
+-			if (ioapic >= 0) {
+-				irq_attr.ioapic = ioapic;
+-				irq_attr.ioapic_pin = irq;
+-				irq_attr.trigger = 1;
+-				if (intel_mid_identify_cpu() ==
+-						INTEL_MID_CPU_CHIP_TANGIER) {
+-					if (!strncmp(pentry->name,
+-							"r69001-ts-i2c", 13))
+-						/* active low */
+-						irq_attr.polarity = 1;
+-					else if (!strncmp(pentry->name,
+-							"synaptics_3202", 14))
+-						/* active low */
+-						irq_attr.polarity = 1;
+-					else if (irq == 41)
+-						/* fast_int_1 */
+-						irq_attr.polarity = 1;
+-					else
+-						/* active high */
+-						irq_attr.polarity = 0;
+-				} else {
+-					/* PNW and CLV go with active low */
+-					irq_attr.polarity = 1;
+-				}
+-				WARN_ON(mp_map_gsi_to_irq(irq,
+-						IOAPIC_MAP_ALLOC) < 0);
+-				io_apic_set_pci_routing(NULL, irq, &irq_attr);
++			if (intel_mid_identify_cpu() ==
++					INTEL_MID_CPU_CHIP_TANGIER) {
++				if (!strncmp(pentry->name, "r69001-ts-i2c", 13))
++					/* active low */
++					polarity = 1;
++				else if (!strncmp(pentry->name,
++						"synaptics_3202", 14))
++					/* active low */
++					polarity = 1;
++				else if (irq == 41)
++					/* fast_int_1 */
++					polarity = 1;
++				else
++					/* active high */
++					polarity = 0;
++			} else {
++				/* PNW and CLV go with active low */
++				polarity = 1;
+ 			}
+-		} else {
+-			irq = 0; /* No irq */
++
++			ret = mp_set_gsi_attr(irq, 1, polarity, NUMA_NO_NODE);
++			if (ret == 0)
++				ret = mp_map_gsi_to_irq(irq, IOAPIC_MAP_ALLOC);
++			WARN_ON(ret < 0);
+ 		}
+ 
+ 		dev = get_device_id(pentry->type, pentry->name);
+diff --git a/arch/x86/platform/sfi/sfi.c b/arch/x86/platform/sfi/sfi.c
+index 1fdaa57f41a5..2a8a74f3bd76 100644
+--- a/arch/x86/platform/sfi/sfi.c
++++ b/arch/x86/platform/sfi/sfi.c
+@@ -71,7 +71,9 @@ static int __init sfi_parse_cpus(struct sfi_table_header *table)
+ #endif /* CONFIG_X86_LOCAL_APIC */
+ 
+ #ifdef CONFIG_X86_IO_APIC
+-static struct irq_domain_ops sfi_ioapic_irqdomain_ops;
++static struct irq_domain_ops sfi_ioapic_irqdomain_ops = {
++	.map = mp_irqdomain_map,
++};
+ 
+ static int __init sfi_parse_ioapic(struct sfi_table_header *table)
+ {
+-- 
+1.7.10.4
 
