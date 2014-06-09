@@ -1,62 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:59715 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752617AbaFBUnH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 16:43:07 -0400
-Content-Type: text/plain; charset=windows-1252
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM resources.
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <4495090.ktpdXEyibD@wuerfel>
-Date: Mon, 2 Jun 2014 15:43:02 -0500
-Cc: Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:46587 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932990AbaFIXqN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 19:46:13 -0400
+MIME-Version: 1.0
+In-Reply-To: <1402302011-23642-2-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+	<1402302011-23642-2-git-send-email-jiang.liu@linux.intel.com>
+Date: Mon, 9 Jun 2014 16:46:11 -0700
+Message-ID: <CAE9FiQXiZZG=FdafLVEBM_ENO50xxOZ19M3k5KwzsR7M0b2P=w@mail.gmail.com>
+Subject: Re: [Patch V4 01/42] x86, irq: update high address field when
+ updating affinity for MSI IRQ
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	"the arch/x86 maintainers" <x86@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-Message-Id: <95C66A63-9671-4AD5-9804-6647A305DB99@codeaurora.org>
-References: <20140530233034.GH1677@bart.dudau.co.uk> <20140602162306.4AB0FC40476@trevor.secretlab.ca> <2F6515B1-48FE-4ED6-908E-CC1CAD7AF403@codeaurora.org> <4495090.ktpdXEyibD@wuerfel>
-To: Arnd Bergmann <arnd@arndb.de>
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	Ingo Molnar <mingo@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Jun 9, 2014 at 1:19 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> If x2apic is enabled, the MSI high address field should also be aslo
+> updated when setting affinity for MSI IRQ, otherwise the MSI IRQ may
+> target wrong APIC IDs.
 
-On Jun 2, 2014, at 2:15 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+Do you have any test case to reveal the problem?
 
-> On Monday 02 June 2014 13:09:08 Kumar Gala wrote:
->>> However, what do we do with the 2 cases that exist in upstream that
->>>> are using ranges for cfg space?
->>> 
->>> Ignore them in the core code? Make the specific host controller handle
->>> them I would think.
->> 
->> I just meant, should we ‘break’ their DTs and move them from using ranges to reg?
-> 
-> dw-pcie is used on a lot of systems, I think we should make the common
-> part of that driver always handle config space in a common way, and
-> move out the part that parses the ranges property into the individual
-> soc-specific glue drivers that want to keep optional backwards compatibility
-> with existing dtbs.
-> 
-> Which one is the other driver?
-> 
-> 	Arnd
+>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Cc: stable@vger.kernel.org
+> ---
+>  arch/x86/kernel/apic/io_apic.c |    4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index 9d0a9795a0f8..2de992501a1b 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -3007,6 +3007,10 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+>
+>         __get_cached_msi_msg(data->msi_desc, &msg);
+>
+> +       msg.address_hi = MSI_ADDR_BASE_HI;
+> +       if (x2apic_enabled())
+> +               msg.address_hi |= MSI_ADDR_EXT_DEST_ID(dest);
+> +
+>         msg.data &= ~MSI_DATA_VECTOR_MASK;
+>         msg.data |= MSI_DATA_VECTOR(cfg->vector);
+>         msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
 
-Its imx6 and exynos, havent looked to see if dw-pcie is handling the parsing or not for them.
+No. This change is not needed.
 
-- k
+When x2apic is used, and apicid > 255, irq remapping is used.
 
--- 
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+msi_chip.irq_set_affinity will be changed from msi_set_affinity to
+x86_io_apic_ops.set_affinity (aka intel_setup_ioapic_entry),  via
+irq_remap_modify_chip_defaults().
 
+Thanks
+
+Yinghai
