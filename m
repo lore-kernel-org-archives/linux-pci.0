@@ -1,112 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:58321 "EHLO comal.ext.ti.com"
+Received: from mga01.intel.com ([192.55.52.88]:51340 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757670AbaFYR5c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 13:57:32 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <jg1.han@samsung.com>,
-	<bhelgaas@google.com>, <mohit.kumar@st.com>,
-	<linux-kernel@vger.kernel.org>
-CC: <kishon@ti.com>, <grant.likely@linaro.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 1/3] PCI: designware: Configuration space should be specified in 'reg'
-Date: Wed, 25 Jun 2014 23:26:45 +0530
-Message-ID: <1403719007-9352-2-git-send-email-kishon@ti.com>
-In-Reply-To: <1403719007-9352-1-git-send-email-kishon@ti.com>
-References: <1403719007-9352-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1755611AbaFIIUA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Jun 2014 04:20:00 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch V4 18/42] ce4100, irq: do not set legacy_pic to null_legacy_pic
+Date: Mon,  9 Jun 2014 16:19:47 +0800
+Message-Id: <1402302011-23642-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The configuration address space has so far been specified in *ranges*,
-however it should be specified in *reg* making it a platform MEM resource.
-Hence used 'platform_get_resource_*' API to get configuration address
-space in the designware driver.
+Intel CE4100 platforms has i8259 legacy interrupt controllers, so don't
+set legacy_pic to null_legacy_pic in late booting stage because we need
+legacy_pic to mask i8259 pins when enabling IOAPIC pins for safety.
 
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Marek Vasut <marex@denx.de>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- .../devicetree/bindings/pci/designware-pcie.txt    |    4 ++++
- drivers/pci/host/pcie-designware.c                 |   17 +++++++++++++++--
- 2 files changed, 19 insertions(+), 2 deletions(-)
+ arch/x86/platform/ce4100/ce4100.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index d0d15ee..ed0d9b9 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -2,6 +2,10 @@
- 
- Required properties:
- - compatible: should contain "snps,dw-pcie" to identify the core.
-+- reg: Should contain the configuration address space.
-+- reg-names: Must be "config" for the PCIe configuration space.
-+    (The old way of getting the configuration address space from "ranges"
-+    is deprecated and should be avoided.)
- - #address-cells: set to <3>
- - #size-cells: set to <2>
- - device_type: set to "pci"
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 1eaf4df..0b7b455 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -20,6 +20,7 @@
- #include <linux/of_pci.h>
- #include <linux/pci.h>
- #include <linux/pci_regs.h>
-+#include <linux/platform_device.h>
- #include <linux/types.h>
- 
- #include "pcie-designware.h"
-@@ -396,11 +397,23 @@ static const struct irq_domain_ops msi_domain_ops = {
- int __init dw_pcie_host_init(struct pcie_port *pp)
+diff --git a/arch/x86/platform/ce4100/ce4100.c b/arch/x86/platform/ce4100/ce4100.c
+index 0a54a586559b..701fd5843c87 100644
+--- a/arch/x86/platform/ce4100/ce4100.c
++++ b/arch/x86/platform/ce4100/ce4100.c
+@@ -138,8 +138,6 @@ static void __init sdv_arch_setup(void)
+ static void sdv_pci_init(void)
  {
- 	struct device_node *np = pp->dev->of_node;
-+	struct platform_device *pdev = to_platform_device(pp->dev);
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
-+	struct resource *cfg_res;
- 	u32 val;
- 	int i;
+ 	x86_of_pci_init();
+-	/* We can't set this earlier, because we need to calibrate the timer */
+-	legacy_pic = &null_legacy_pic;
+ }
  
-+	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
-+	if (cfg_res) {
-+		pp->config.cfg0_size = resource_size(cfg_res)/2;
-+		pp->config.cfg1_size = resource_size(cfg_res)/2;
-+		pp->cfg0_base = cfg_res->start;
-+		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
-+	} else {
-+		dev_err(pp->dev, "missing *config* reg space\n");
-+	}
-+
- 	if (of_pci_range_parser_init(&parser, np)) {
- 		dev_err(pp->dev, "missing ranges property\n");
- 		return -EINVAL;
-@@ -433,6 +446,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 			of_pci_range_to_resource(&range, np, &pp->cfg);
- 			pp->config.cfg0_size = resource_size(&pp->cfg)/2;
- 			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
-+			pp->cfg0_base = pp->cfg.start;
-+			pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
- 		}
- 	}
- 
-@@ -445,8 +460,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
- 
--	pp->cfg0_base = pp->cfg.start;
--	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
- 	pp->mem_base = pp->mem.start;
- 
- 	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+ /*
 -- 
-1.7.9.5
+1.7.10.4
 
