@@ -1,251 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v5 08/15] thunderbolt: Scan for downstream switches
-Date: Tue,  3 Jun 2014 22:04:05 +0200
-Message-Id: <1401825852-4745-9-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
-References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch V4 25/42] x86, ACPI, irq: provide basic irqdomain support
+Date: Mon,  9 Jun 2014 16:19:54 +0800
+Message-Id: <1402302011-23642-26-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add utility methods tb_port_state and tb_wait_for_port. Add
-tb_scan_switch which recursively checks for downstream switches.
+Enhance ACPI driver to provide basic irqdomain support for IOAPIC.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+We will build identity mapping for IOAPICs hosting legacy IRQs,
+otherwise dynamically allocate IRQ numbers for IOAPIC pins on demand.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/thunderbolt/switch.c | 97 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.c     | 44 ++++++++++++++++++++
- drivers/thunderbolt/tb.h     | 16 ++++++++
- 3 files changed, 157 insertions(+)
+ arch/x86/kernel/acpi/boot.c |   15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index 6d193a2..b31b8ce 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -53,6 +53,92 @@ static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 15d988cfa335..82ec56a4c6f4 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -31,6 +31,7 @@
+ #include <linux/module.h>
+ #include <linux/dmi.h>
+ #include <linux/irq.h>
++#include <linux/irqdomain.h>
+ #include <linux/slab.h>
+ #include <linux/bootmem.h>
+ #include <linux/ioport.h>
+@@ -449,10 +450,16 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 	return irq;
  }
  
- /**
-+ * tb_port_state() - get connectedness state of a port
-+ *
-+ * The port must have a TB_CAP_PHY (i.e. it should be a real port).
-+ *
-+ * Return: Returns an enum tb_port_state on success or an error code on failure.
-+ */
-+static int tb_port_state(struct tb_port *port)
-+{
-+	struct tb_cap_phy phy;
-+	int res;
-+	if (port->cap_phy == 0) {
-+		tb_port_WARN(port, "does not have a PHY\n");
-+		return -EINVAL;
-+	}
-+	res = tb_port_read(port, &phy, TB_CFG_PORT, port->cap_phy, 2);
-+	if (res)
-+		return res;
-+	return phy.state;
-+}
++static struct irq_domain_ops acpi_irqdomain_ops;
 +
-+/**
-+ * tb_wait_for_port() - wait for a port to become ready
-+ *
-+ * Wait up to 1 second for a port to reach state TB_PORT_UP. If
-+ * wait_if_unplugged is set then we also wait if the port is in state
-+ * TB_PORT_UNPLUGGED (it takes a while for the device to be registered after
-+ * switch resume). Otherwise we only wait if a device is registered but the link
-+ * has not yet been established.
-+ *
-+ * Return: Returns an error code on failure. Returns 0 if the port is not
-+ * connected or failed to reach state TB_PORT_UP within one second. Returns 1
-+ * if the port is connected and in state TB_PORT_UP.
-+ */
-+int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged)
-+{
-+	int retries = 10;
-+	int state;
-+	if (!port->cap_phy) {
-+		tb_port_WARN(port, "does not have PHY\n");
-+		return -EINVAL;
-+	}
-+	if (tb_is_upstream_port(port)) {
-+		tb_port_WARN(port, "is the upstream port\n");
-+		return -EINVAL;
-+	}
-+
-+	while (retries--) {
-+		state = tb_port_state(port);
-+		if (state < 0)
-+			return state;
-+		if (state == TB_PORT_DISABLED) {
-+			tb_port_info(port, "is disabled (state: 0)\n");
-+			return 0;
-+		}
-+		if (state == TB_PORT_UNPLUGGED) {
-+			if (wait_if_unplugged) {
-+				/* used during resume */
-+				tb_port_info(port,
-+					     "is unplugged (state: 7), retrying...\n");
-+				msleep(100);
-+				continue;
-+			}
-+			tb_port_info(port, "is unplugged (state: 7)\n");
-+			return 0;
-+		}
-+		if (state == TB_PORT_UP) {
-+			tb_port_info(port,
-+				     "is connected, link is up (state: 2)\n");
-+			return 1;
-+		}
-+
-+		/*
-+		 * After plug-in the state is TB_PORT_CONNECTING. Give it some
-+		 * time.
-+		 */
-+		tb_port_info(port,
-+			     "is connected, link is not up (state: %d), retrying...\n",
-+			     state);
-+		msleep(100);
-+	}
-+	tb_port_warn(port,
-+		     "failed to reach state TB_PORT_UP. Ignoring port...\n");
-+	return 0;
-+}
-+
-+/**
-  * tb_init_port() - initialize a port
-  *
-  * This is a helper method for tb_switch_alloc. Does not check or initialize
-@@ -63,6 +149,7 @@ static void tb_dump_port(struct tb *tb, struct tb_regs_port_header *port)
- static int tb_init_port(struct tb_switch *sw, u8 port_nr)
+ static int __init
+ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
  {
- 	int res;
-+	int cap;
- 	struct tb_port *port = &sw->ports[port_nr];
- 	port->sw = sw;
- 	port->port = port_nr;
-@@ -71,6 +158,16 @@ static int tb_init_port(struct tb_switch *sw, u8 port_nr)
- 	if (res)
- 		return res;
+ 	struct acpi_madt_io_apic *ioapic = NULL;
++	struct ioapic_domain_cfg cfg = {
++		.type = IOAPIC_DOMAIN_DYNAMIC,
++		.ops = &acpi_irqdomain_ops,
++	};
  
-+	/* Port 0 is the switch itself and has no PHY. */
-+	if (port->config.type == TB_TYPE_PORT && port_nr != 0) {
-+		cap = tb_find_cap(port, TB_CFG_PORT, TB_CAP_PHY);
-+
-+		if (cap > 0)
-+			port->cap_phy = cap;
-+		else
-+			tb_port_WARN(port, "non switch port without a PHY\n");
-+	}
-+
- 	tb_dump_port(sw->tb, &port->config);
+ 	ioapic = (struct acpi_madt_io_apic *)header;
  
- 	/* TODO: Read dual link port, DP port and more from EEPROM. */
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index f1b6100..3b716fd 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -11,6 +11,47 @@
- #include "tb.h"
- #include "tb_regs.h"
+@@ -461,8 +468,12 @@ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
  
-+
-+/* enumeration & hot plug handling */
-+
-+
-+static void tb_scan_port(struct tb_port *port);
-+
-+/**
-+ * tb_scan_switch() - scan for and initialize downstream switches
-+ */
-+static void tb_scan_switch(struct tb_switch *sw)
-+{
-+	int i;
-+	for (i = 1; i <= sw->config.max_port_number; i++)
-+		tb_scan_port(&sw->ports[i]);
-+}
-+
-+/**
-+ * tb_scan_port() - check for and initialize switches below port
-+ */
-+static void tb_scan_port(struct tb_port *port)
-+{
-+	struct tb_switch *sw;
-+	if (tb_is_upstream_port(port))
-+		return;
-+	if (port->config.type != TB_TYPE_PORT)
-+		return;
-+	if (tb_wait_for_port(port, false) <= 0)
-+		return;
-+	if (port->remote) {
-+		tb_port_WARN(port, "port already has a remote!\n");
-+		return;
-+	}
-+	sw = tb_switch_alloc(port->sw->tb, tb_downstream_route(port));
-+	if (!sw)
-+		return;
-+	port->remote = tb_upstream_port(sw);
-+	tb_upstream_port(sw)->remote = port;
-+	tb_scan_switch(sw);
-+}
-+
-+
- /* hotplug handling */
+ 	acpi_table_print_madt_entry(header);
  
- struct tb_hotplug_event {
-@@ -134,6 +175,9 @@ struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi)
- 	if (!tb->root_switch)
- 		goto err_locked;
- 
-+	/* Full scan to discover devices added before the driver was loaded. */
-+	tb_scan_switch(tb->root_switch);
+-	mp_register_ioapic(ioapic->id,
+-			   ioapic->address, ioapic->global_irq_base, NULL);
++	/* Statically assign IRQ numbers for IOAPICs hosting legacy IRQs */
++	if (ioapic->global_irq_base < nr_legacy_irqs())
++		cfg.type = IOAPIC_DOMAIN_LEGACY;
 +
- 	/* Allow tb_handle_hotplug to progress events */
- 	tb->hotplug_active = true;
- 	mutex_unlock(&tb->lock);
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index af123c4..70a66fe 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -29,6 +29,7 @@ struct tb_port {
- 	struct tb_regs_port_header config;
- 	struct tb_switch *sw;
- 	struct tb_port *remote; /* remote port, NULL if not connected */
-+	int cap_phy; /* offset, zero if not found */
- 	u8 port; /* port number on switch */
- };
++	mp_register_ioapic(ioapic->id, ioapic->address, ioapic->global_irq_base,
++			   &cfg);
  
-@@ -160,6 +161,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
- void tb_switch_free(struct tb_switch *sw);
- 
-+int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
-+
- int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
- 
- 
-@@ -173,4 +176,17 @@ static inline bool tb_is_upstream_port(struct tb_port *port)
- 	return port == tb_upstream_port(port->sw);
+ 	return 0;
  }
- 
-+/**
-+ * tb_downstream_route() - get route to downstream switch
-+ *
-+ * Port must not be the upstream port (otherwise a loop is created).
-+ *
-+ * Return: Returns a route to the switch behind @port.
-+ */
-+static inline u64 tb_downstream_route(struct tb_port *port)
-+{
-+	return tb_route(port->sw)
-+	       | ((u64) port->port << (port->sw->config.depth * 8));
-+}
-+
- #endif
 -- 
-2.0.0
+1.7.10.4
 
