@@ -1,62 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:38943 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996AbaFBPkh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 11:40:37 -0400
-Content-Type: text/plain; charset=windows-1252
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM resources.
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <20140602150945.964D4C40381@trevor.secretlab.ca>
-Date: Mon, 2 Jun 2014 10:40:30 -0500
-Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+Received: from mga01.intel.com ([192.55.52.88]:14004 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752808AbaFIIT0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Jun 2014 04:19:26 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-Message-Id: <390B3F94-C058-47D6-82CE-0393E60014FF@codeaurora.org>
-References: <20140530233034.GH1677@bart.dudau.co.uk> <1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com> <1401496601-31983-2-git-send-email-Liviu.Dudau@arm.com> <4756033.LkcFQN0chs@wuerfel> <20140602150945.964D4C40381@trevor.secretlab.ca>
-To: Grant Likely <grant.likely@linaro.org>
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch V4 12/42] x86, ioapic: kill static variable nr_irqs_gsi
+Date: Mon,  9 Jun 2014 16:19:41 +0800
+Message-Id: <1402302011-23642-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Static variable nr_irqs_gsi is used to maintain the lowest dynamic
+allocatable IRQ number. It may cause trouble when enabling dynamic
+IRQ allocation for IOAPIC, so use arch_dynirq_lower_bound() to
+avoid directly accessing nr_irqs_gsi and kill nr_irqs_gsi.
 
-On Jun 2, 2014, at 10:09 AM, Grant Likely <grant.likely@linaro.org> wrote:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c |   24 +++++-------------------
+ 1 file changed, 5 insertions(+), 19 deletions(-)
 
-> On Sat, 31 May 2014 20:41:04 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
->> On Saturday 31 May 2014 01:36:40 Liviu Dudau wrote:
->>> We would like to be able to describe PCIe ECAM resources as
->>> IORESOURCE_MEM blocks while distinguish them from standard
->>> memory resources. Add an IORESOURCE_BIT entry for this case.
->>> 
->>> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->> 
->> I still don't see any value in this at all. What is the advantage
->> of doing this opposed to just having a standardized 'reg' property
->> for a particular compatible string?
-> 
-> I'm inclined to agree. It doesn't seem appropriate to put config space
-> in ranges, and the host controller binding is responsible for
-> identifying how config space is memory mapped.
-> 
-> g.
-
-I don’t agree when it comes to ECAM, but we can drop this for now until someone really does that.
-
-However, what do we do with the 2 cases that exist in upstream that are using ranges for cfg space?
-
-- k
-
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 94a56c233e87..e8cd0bf0ee82 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -118,9 +118,6 @@ struct mpc_intsrc mp_irqs[MAX_IRQ_SOURCES];
+ /* # of MP IRQ source entries */
+ int mp_irq_entries;
+ 
+-/* GSI interrupts */
+-static int nr_irqs_gsi = NR_IRQS_LEGACY;
+-
+ #ifdef CONFIG_EISA
+ int mp_bus_id_to_type[MAX_MP_BUSSES];
+ #endif
+@@ -3322,20 +3319,11 @@ static int __init io_apic_get_redir_entries(int ioapic)
+ 	return reg_01.bits.entries + 1;
+ }
+ 
+-static void __init probe_nr_irqs_gsi(void)
+-{
+-	int nr;
+-
+-	nr = gsi_top + NR_IRQS_LEGACY;
+-	if (nr > nr_irqs_gsi)
+-		nr_irqs_gsi = nr;
+-
+-	printk(KERN_DEBUG "nr_irqs_gsi: %d\n", nr_irqs_gsi);
+-}
+-
+ unsigned int arch_dynirq_lower_bound(unsigned int from)
+ {
+-	return from < nr_irqs_gsi ? nr_irqs_gsi : from;
++	unsigned int min = gsi_top + NR_IRQS_LEGACY;
++
++	return from < min ? min : from;
+ }
+ 
+ int __init arch_probe_nr_irqs(void)
+@@ -3345,12 +3333,12 @@ int __init arch_probe_nr_irqs(void)
+ 	if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
+ 		nr_irqs = NR_VECTORS * nr_cpu_ids;
+ 
+-	nr = nr_irqs_gsi + 8 * nr_cpu_ids;
++	nr = (gsi_top + NR_IRQS_LEGACY) + 8 * nr_cpu_ids;
+ #if defined(CONFIG_PCI_MSI) || defined(CONFIG_HT_IRQ)
+ 	/*
+ 	 * for MSI and HT dyn irq
+ 	 */
+-	nr += nr_irqs_gsi * 16;
++	nr += (gsi_top + NR_IRQS_LEGACY) * 16;
+ #endif
+ 	if (nr < nr_irqs)
+ 		nr_irqs = nr;
+@@ -3623,8 +3611,6 @@ fake_ioapic_page:
+ 		ioapic_res->end = ioapic_phys + IO_APIC_SLOT_SIZE - 1;
+ 		ioapic_res++;
+ 	}
+-
+-	probe_nr_irqs_gsi();
+ }
+ 
+ void __init ioapic_insert_resources(void)
 -- 
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+1.7.10.4
 
