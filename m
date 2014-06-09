@@ -1,99 +1,207 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:44892 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708AbaFSEZ7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 00:25:59 -0400
-Message-ID: <53A2664B.3040300@huawei.com>
-Date: Thu, 19 Jun 2014 12:25:47 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: <jon.baker@viasat.com>, <linux-pci@vger.kernel.org>
-CC: "Gogineni, Naveen" <Naveen.Gogineni@viasat.com>
-Subject: Re: PCI rescan issue
-References: <53A23DF7.60104@viasat.com>
-In-Reply-To: <53A23DF7.60104@viasat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Tony Lindgren <tony@atomide.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org, sfi-devel@simplefirmware.org
+Subject: [Patch V4 24/42] x86, irq: enhance mp_register_ioapic() to support irqdomain
+Date: Mon,  9 Jun 2014 16:19:53 +0800
+Message-Id: <1402302011-23642-25-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/6/19 9:33, Jon Baker wrote:
-> I am trying to find a solution to a Linux PCI rescan problem.
-> 
-> I have CentOS 6.5
-> 
->     [jbaker@server0 ~]$ uname -a
->     Linux server0 2.6.32-431.5.1.el6.x86_64 #1 SMP Wed Feb 12 00:41:43 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
+Enhance function mp_register_ioapic() to support irqdomain.
+When registering IOAPIC, caller may provide callbacks and parameters
+for creating irqdomain. The IOAPIC core will create irqdomain later
+if caller has passed in corresponding parameters.
 
-Can you test it in the latest kernel?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    3 ++-
+ arch/x86/kernel/acpi/boot.c    |    2 +-
+ arch/x86/kernel/apic/io_apic.c |   42 +++++++++++++++++++++++++++++++++++++++-
+ arch/x86/kernel/devicetree.c   |    2 +-
+ arch/x86/kernel/mpparse.c      |    2 +-
+ arch/x86/platform/sfi/sfi.c    |    2 +-
+ 6 files changed, 47 insertions(+), 6 deletions(-)
 
-> 
-> I have an Altera FPGA PCIe protoboard I am trying to test in a TYAN FT77A-B7059.
-> 
-> We are trying to solve some hotplug/FPGA reload issues; when we reload the FPGA the PCI interface reloads confusing linux pci code.
-> 
-> After bootup the board is seen by the kernel; lscpi shows Altera FPGA PCIe protoboard settings and config space.  We can load our driver and all is well.
-> 
-> When we reload the FPGA lscpi display shows all "ff" for config space.  As root I tried
-
-What happened during you reload the FPGA? reset PCI device or other anything?
-
-> 
->     echo 1 > /sys/bus/pci/rescan
-> 
-> But no change to lspci output.
-> 
-> I tried some variants
-> 
->     echo 1 > /sys/bus/pci/devices/0000:8a:00.0/rescan
-> 
-> no change to lspci output.
-> 
->     echo 1 > /sys/bus/pci/devices/0000:8a:00.0/remove
->     echo 1 > /sys/bus/pci/rescan
-
-I guess the device link to your board was disconnect. Maybe the power to device is off or link error. So OS
-can not access pci device config space and return nothing found.
-
-If you provide more detailed info is better. like lspci -vvvxxx, dmesg etc. before and after your operations.
-
-> 
-> This removed the device and it did not show up again in lscpi.
-> 
-> Kernel has PCI HOTPLUG enabled:
-> 
->     [jbaker@server0 ~]$ cat /boot/config-2.6.32-431.el6.x86_64 | grep HOTPLUG
->     CONFIG_HOTPLUG=y
->     CONFIG_MEMORY_HOTPLUG=y
->     CONFIG_MEMORY_HOTPLUG_SPARSE=y
->     CONFIG_HOTPLUG_CPU=y
->     CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
->     CONFIG_ACPI_HOTPLUG_CPU=y
->     CONFIG_ACPI_HOTPLUG_MEMORY=y
->     CONFIG_ACPI_HOTPLUG_MEMORY_AUTO_ONLINE=y
->     CONFIG_HOTPLUG_PCI_PCIE=y
->     CONFIG_HOTPLUG_PCI=y
->     CONFIG_HOTPLUG_PCI_FAKE=m
->     CONFIG_HOTPLUG_PCI_ACPI=y
->     CONFIG_HOTPLUG_PCI_ACPI_IBM=m
->     # CONFIG_HOTPLUG_PCI_CPCI is not set
->     CONFIG_HOTPLUG_PCI_SHPC=m
->     [jbaker@server0 ~]$
-> 
-> The kernel has pciehp module loaded, I see pciehp messages in /var/log/messages.
-> 
-> In other distros, on other platforms, echo 1 > /sys/bus/pci/rescan has worked but does not appear to work here for CentOS 6.5 on this hardware.
-> 
-> This problem is much discussed on the web but I have yet to see a solution discussed. I am thinking the 2.6.32-431.5.1.el6.x86_64 kernel may require a patch(es).  The rescan may not be resetting the PCIe card?
-> 
-> Any ideas how to get rescan to work?
-> 
-> Thank you,
-> 
-> Jon Baker
-> 
-
-
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 64c6e344399b..3e4bea3a52b1 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -190,7 +190,8 @@ extern int mp_find_ioapic(u32 gsi);
+ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ extern u32 mp_pin_to_gsi(int ioapic, int pin);
+ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
+-extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
++extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
++				      struct ioapic_domain_cfg *cfg);
+ extern void __init pre_init_apic_IRQ0(void);
+ 
+ extern void mp_save_irq(struct mpc_intsrc *m);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 96d8da83ed8b..15d988cfa335 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -462,7 +462,7 @@ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
+ 	acpi_table_print_madt_entry(header);
+ 
+ 	mp_register_ioapic(ioapic->id,
+-			   ioapic->address, ioapic->global_irq_base);
++			   ioapic->address, ioapic->global_irq_base, NULL);
+ 
+ 	return 0;
+ }
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 9e5ca8edfccf..9c5f70699a80 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -85,6 +85,7 @@ int sis_apic_bug = -1;
+ static DEFINE_RAW_SPINLOCK(ioapic_lock);
+ static DEFINE_RAW_SPINLOCK(vector_lock);
+ static DEFINE_MUTEX(ioapic_mutex);
++static unsigned int ioapic_dynirq_base;
+ 
+ static struct ioapic {
+ 	/*
+@@ -2920,8 +2921,35 @@ out:
+  */
+ #define PIC_IRQS	(1UL << PIC_CASCADE_IR)
+ 
++static int mp_irqdomain_create(int ioapic)
++{
++	int hwirqs = mp_ioapic_pin_count(ioapic);
++	struct ioapic *ip = &ioapics[ioapic];
++	struct ioapic_domain_cfg *cfg = &ip->irqdomain_cfg;
++	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(ioapic);
++
++	if (cfg->type == IOAPIC_DOMAIN_INVALID)
++		return 0;
++
++	ip->irqdomain = irq_domain_add_linear(cfg->dev, hwirqs, cfg->ops,
++					      (void *)(long)ioapic);
++	if(!ip->irqdomain)
++		return -ENOMEM;
++
++	if (cfg->type == IOAPIC_DOMAIN_LEGACY ||
++	    cfg->type == IOAPIC_DOMAIN_STRICT)
++		ioapic_dynirq_base = max(ioapic_dynirq_base,
++					 gsi_cfg->gsi_end + 1);
++
++	if (gsi_cfg->gsi_base == 0)
++		irq_set_default_host(ip->irqdomain);
++
++	return 0;
++}
++
+ void __init setup_IO_APIC(void)
+ {
++	int ioapic;
+ 
+ 	/*
+ 	 * calling enable_IO_APIC() is moved to setup_local_APIC for BP
+@@ -2929,6 +2957,9 @@ void __init setup_IO_APIC(void)
+ 	io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
+ 
+ 	apic_printk(APIC_VERBOSE, "ENABLING IO-APIC IRQs\n");
++	for_each_ioapic(ioapic)
++		BUG_ON(mp_irqdomain_create(ioapic));
++
+ 	/*
+          * Set up IO-APIC IRQ routing.
+          */
+@@ -3433,6 +3464,9 @@ unsigned int arch_dynirq_lower_bound(unsigned int from)
+ {
+ 	unsigned int min = gsi_top + nr_legacy_irqs();
+ 
++	if (ioapic_dynirq_base)
++		return ioapic_dynirq_base;
++
+ 	return from < min ? min : from;
+ }
+ 
+@@ -3808,7 +3842,8 @@ static __init int bad_ioapic_register(int idx)
+ 	return 0;
+ }
+ 
+-void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
++void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
++			       struct ioapic_domain_cfg *cfg)
+ {
+ 	int idx = 0;
+ 	int entries;
+@@ -3822,6 +3857,11 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 	ioapics[idx].mp_config.type = MP_IOAPIC;
+ 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
+ 	ioapics[idx].mp_config.apicaddr = address;
++	ioapics[idx].irqdomain = NULL;
++	if (cfg)
++		ioapics[idx].irqdomain_cfg = *cfg;
++	else
++		ioapics[idx].irqdomain_cfg.type = IOAPIC_DOMAIN_INVALID;
+ 
+ 	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
+ 
+diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
+index e08a007bdacf..dd6936818330 100644
+--- a/arch/x86/kernel/devicetree.c
++++ b/arch/x86/kernel/devicetree.c
+@@ -177,7 +177,7 @@ static void __init dtb_add_ioapic(struct device_node *dn)
+ 				dn->full_name);
+ 		return;
+ 	}
+-	mp_register_ioapic(++ioapic_id, r.start, gsi_top);
++	mp_register_ioapic(++ioapic_id, r.start, gsi_top, NULL);
+ }
+ 
+ static void __init dtb_ioapic_setup(void)
+diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
+index b10e1132f316..ea8595e4cbd5 100644
+--- a/arch/x86/kernel/mpparse.c
++++ b/arch/x86/kernel/mpparse.c
+@@ -115,7 +115,7 @@ static void __init MP_bus_info(struct mpc_bus *m)
+ static void __init MP_ioapic_info(struct mpc_ioapic *m)
+ {
+ 	if (m->flags & MPC_APIC_USABLE)
+-		mp_register_ioapic(m->apicid, m->apicaddr, gsi_top);
++		mp_register_ioapic(m->apicid, m->apicaddr, gsi_top, NULL);
+ }
+ 
+ static void __init print_mp_irq_info(struct mpc_intsrc *mp_irq)
+diff --git a/arch/x86/platform/sfi/sfi.c b/arch/x86/platform/sfi/sfi.c
+index bcd1a703e3e6..8f2f789c6f04 100644
+--- a/arch/x86/platform/sfi/sfi.c
++++ b/arch/x86/platform/sfi/sfi.c
+@@ -82,7 +82,7 @@ static int __init sfi_parse_ioapic(struct sfi_table_header *table)
+ 	pentry = (struct sfi_apic_table_entry *)sb->pentry;
+ 
+ 	for (i = 0; i < num; i++) {
+-		mp_register_ioapic(i, pentry->phys_addr, gsi_top);
++		mp_register_ioapic(i, pentry->phys_addr, gsi_top, NULL);
+ 		pentry++;
+ 	}
+ 
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
