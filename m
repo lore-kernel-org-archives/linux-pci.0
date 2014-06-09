@@ -1,95 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:43860 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757679AbaFYSBq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 14:01:46 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<jg1.han@samsung.com>, <bhelgaas@google.com>, <mohit.kumar@st.com>,
-	<linux-arm-kernel@lists.infradead.org>, <tony@atomide.com>,
-	<linux-kernel@vger.kernel.org>
-CC: <kishon@ti.com>, <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>
-Subject: [PATCH 7/8] ARM: dts: dra7: Add dt data for PCIe PHY
-Date: Wed, 25 Jun 2014 23:30:17 +0530
-Message-ID: <1403719218-9484-8-git-send-email-kishon@ti.com>
-In-Reply-To: <1403719218-9484-1-git-send-email-kishon@ti.com>
-References: <1403719218-9484-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140609184157.17500.84469.stgit@bling.home>
+References: <20140609184157.17500.84469.stgit@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Jun 2014 14:04:30 -0600
+Message-ID: <CAErSpo5XNcw4sKdYrmg26N=qkvA9ysspy2kKf+bCv0KfKEGY8Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Add bridge DMA alias quirk for ITE bridge
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	rwarsow@gmx.de
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added dt data for PCIe PHY as a child node of ocp2scp3.
-The documention for this node can be found @ ../bindings/phy/ti-phy.txt.
-26.3.3 PCIe Shared PHY Subsystem Integration in vE of DRA7xx ES1.0
-describes the PCIe PHY subsystem-related components integrated in the device.
+On Mon, Jun 9, 2014 at 12:43 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=73551
+> Reported-by: rwarsow@gmx.de
+> Tested-by: rwarsow@gmx.de
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 
-Cc: Tony Lindgren <tony@atomide.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Pawel Moll <pawel.moll@arm.com>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: Kumar Gala <galak@codeaurora.org>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- arch/arm/boot/dts/dra7.dtsi |   41 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
+Added to pci/iommu for v3.16, thanks!
 
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
-index f029a90..d196404 100644
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -815,6 +815,47 @@
- 				clock-names = "sysclk";
- 				#phy-cells = <0>;
- 			};
-+
-+			pcie1_phy: pciephy@4a094000 {
-+				compatible = "ti,phy-pipe3-pcie";
-+				reg = <0x4a094000 0x80>, /* phy_rx */
-+				      <0x4a094400 0x64>; /* phy_tx */
-+				reg-names = "phy_rx", "phy_tx";
-+				ctrl-module = <&omap_control_pcie1phy>;
-+				clocks = <&dpll_pcie_ref_ck>,
-+					 <&dpll_pcie_ref_m2ldo_ck>,
-+					 <&optfclk_pciephy1_32khz>,
-+					 <&optfclk_pciephy1_clk>,
-+					 <&optfclk_pciephy1_div_clk>,
-+					 <&optfclk_pciephy_div>;
-+				clock-names = "dpll_ref", "dpll_ref_m2",
-+					      "wkupclk", "refclk",
-+					      "div-clk", "phy-div";
-+				#phy-cells = <0>;
-+				id = <1>;
-+				ti,hwmods = "pcie1-phy";
-+			};
-+
-+			pcie2_phy: pciephy@4a095000 {
-+				compatible = "ti,phy-pipe3-pcie";
-+				reg = <0x4a095000 0x80>, /* phy_rx */
-+				      <0x4a095400 0x64>; /* phy_tx */
-+				reg-names = "phy_rx", "phy_tx";
-+				ctrl-module = <&omap_control_pcie2phy>;
-+				clocks = <&dpll_pcie_ref_ck>,
-+					 <&dpll_pcie_ref_m2ldo_ck>,
-+					 <&optfclk_pciephy2_32khz>,
-+					 <&optfclk_pciephy2_clk>,
-+					 <&optfclk_pciephy2_div_clk>,
-+					 <&optfclk_pciephy_div>;
-+				clock-names = "dpll_ref", "dpll_ref_m2",
-+					      "wkupclk", "refclk",
-+					      "div-clk", "phy-div";
-+				#phy-cells = <0>;
-+				ti,hwmods = "pcie2-phy";
-+				id = <2>;
-+				status = "disabled";
-+			};
- 		};
- 
- 		sata: sata@4a141100 {
--- 
-1.7.9.5
-
+> ---
+>
+> One more for the pci/iommu branch
+>
+>  drivers/pci/quirks.c |    2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index ab620ac..533cd0d 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3407,6 +3407,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
+>                          quirk_use_pcie_bridge_dma_alias);
+>  /* Tundra 8113, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c43 */
+>  DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
+> +/* ITE 8892, https://bugzilla.kernel.org/show_bug.cgi?id=73551 */
+> +DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+>
+>  static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+>  {
+>
