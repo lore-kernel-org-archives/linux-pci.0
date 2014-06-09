@@ -1,60 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:42781 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757412AbaFSLNJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Jun 2014 07:13:09 -0400
-Message-ID: <53A2C5B4.9080300@ti.com>
-Date: Thu, 19 Jun 2014 14:12:52 +0300
-From: Tero Kristo <t-kristo@ti.com>
+Received: from www.linutronix.de ([62.245.132.108]:47290 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932414AbaFIXWp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 19:22:45 -0400
+Date: Tue, 10 Jun 2014 01:22:12 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: Re: [Patch V4 12/42] x86, ioapic: kill static variable nr_irqs_gsi
+In-Reply-To: <1402302011-23642-13-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.10.1406100121090.3830@nanos>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com> <1402302011-23642-13-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
-	Keerthy <j-keerthy@ti.com>, Rajendra Nayak <rnayak@ti.com>,
-	Paul Walmsley <paul@pwsan.com>
-Subject: Re: [PATCH v2 07/18] ARM: dts: DRA7: Change the parent of apll_pcie_in_clk_mux
- to dpll_pcie_ref_m2ldo_ck
-References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-8-git-send-email-kishon@ti.com>
-In-Reply-To: <1401345500-20188-8-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/29/2014 09:38 AM, Kishon Vijay Abraham I wrote:
-> From: Keerthy <j-keerthy@ti.com>
->
-> Change the parent of apll_pcie_in_clk_mux to dpll_pcie_ref_m2ldo_ck
-> from dpll_pcie_ref_ck.
+On Mon, 9 Jun 2014, Jiang Liu wrote:
+>  unsigned int arch_dynirq_lower_bound(unsigned int from)
+>  {
+> -	return from < nr_irqs_gsi ? nr_irqs_gsi : from;
+> +	unsigned int min = gsi_top + NR_IRQS_LEGACY;
 
-Why? Needs a better changelog also.
+Why is this gsi_top + NR_IRQ_LEGACY? The legacy interrupts are part of
+the gsi space, aren't they?
 
--Tero
+Thanks,
 
->
-> Cc: Rajendra Nayak <rnayak@ti.com>
-> Cc: Tero Kristo <t-kristo@ti.com>
-> Cc: Paul Walmsley <paul@pwsan.com>
-> Signed-off-by: Keerthy <j-keerthy@ti.com>
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->   arch/arm/boot/dts/dra7xx-clocks.dtsi |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi b/arch/arm/boot/dts/dra7xx-clocks.dtsi
-> index 55e95c5..44993ec 100644
-> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
-> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
-> @@ -1152,7 +1152,7 @@
->
->   	apll_pcie_in_clk_mux: apll_pcie_in_clk_mux@4ae06118 {
->   		compatible = "ti,mux-clock";
-> -		clocks = <&dpll_pcie_ref_ck>, <&pciesref_acs_clk_ck>;
-> +		clocks = <&dpll_pcie_ref_m2ldo_ck>, <&pciesref_acs_clk_ck>;
->   		#clock-cells = <0>;
->   		reg = <0x021c 0x4>;
->   		ti,bit-shift = <7>;
->
-
+	tglx
