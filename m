@@ -1,106 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:49535 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934161AbaFTHhp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jun 2014 03:37:45 -0400
-Received: by mail-qc0-f171.google.com with SMTP id w7so3197770qcr.16
-        for <linux-pci@vger.kernel.org>; Fri, 20 Jun 2014 00:37:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1399892270-25021-2-git-send-email-phil.edworthy@renesas.com>
-References: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com>
-	<1399892270-25021-2-git-send-email-phil.edworthy@renesas.com>
-Date: Fri, 20 Jun 2014 09:37:44 +0200
-Message-ID: <CAG374jDD+yUiBgJFpkmpgAa+Z7+v+ANo6V90YQnhTuftm2np+Q@mail.gmail.com>
-Subject: Re: [PATCH v8 1/3] PCI: host: rcar: Add Renesas R-Car PCIe driver
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
+Received: from mga14.intel.com ([192.55.52.115]:36977 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753981AbaFIIYQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Jun 2014 04:24:16 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset=UTF-8
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch V4 39/42] x86, irq, mpparse: release IOAPIC pin when PCI device is disabled
+Date: Mon,  9 Jun 2014 16:20:08 +0800
+Message-Id: <1402302011-23642-40-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Phil,
+Release IOAPIC pin associated with PCI device when the PCI device
+is disabled.
 
-Just a question...
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/mpparse.c |    1 +
+ arch/x86/pci/irq.c        |   13 +++++++++++--
+ 2 files changed, 12 insertions(+), 2 deletions(-)
 
-On 12 May 2014 12:57, Phil Edworthy <phil.edworthy@renesas.com> wrote:
-> This PCIe Host driver currently does not support MSI, so cards
-> fall back to INTx interrupts.
->
+diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
+index faf503aa3b70..fde86d2b79f8 100644
+--- a/arch/x86/kernel/mpparse.c
++++ b/arch/x86/kernel/mpparse.c
+@@ -115,6 +115,7 @@ static void __init MP_bus_info(struct mpc_bus *m)
+ 
+ static struct irq_domain_ops mp_ioapic_irqdomain_ops = {
+ 	.map = mp_irqdomain_map,
++	.unmap = mp_irqdomain_unmap,
+ };
+ 
+ static void __init MP_ioapic_info(struct mpc_ioapic *m)
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index e4200e5e775e..748cfe8ab322 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -26,6 +26,7 @@ static int acer_tm360_irqrouting;
+ static struct irq_routing_table *pirq_table;
+ 
+ static int pirq_enable_irq(struct pci_dev *dev);
++static void pirq_disable_irq(struct pci_dev *dev);
+ 
+ /*
+  * Never use: 0, 1, 2 (timer, keyboard, and cascade)
+@@ -53,7 +54,7 @@ struct irq_router_handler {
+ };
+ 
+ int (*pcibios_enable_irq)(struct pci_dev *dev) = pirq_enable_irq;
+-void (*pcibios_disable_irq)(struct pci_dev *dev) = NULL;
++void (*pcibios_disable_irq)(struct pci_dev *dev) = pirq_disable_irq;
+ 
+ /*
+  *  Check passed address for the PCI IRQ Routing Table signature
+@@ -1186,7 +1187,7 @@ void pcibios_penalize_isa_irq(int irq, int active)
+ 
+ static int pirq_enable_irq(struct pci_dev *dev)
+ {
+-	u8 pin;
++	u8 pin = 0;
+ 
+ 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+ 	if (pin && !pcibios_lookup_irq(dev, 1)) {
+@@ -1252,3 +1253,11 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 	}
+ 	return 0;
+ }
++
++static void pirq_disable_irq(struct pci_dev *dev)
++{
++	if (io_apic_assign_pci_irqs && dev->irq) {
++		mp_unmap_irq(dev->irq);
++		dev->irq = 0;
++	}
++}
+-- 
+1.7.10.4
 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> ---
->  drivers/pci/host/Kconfig     |   6 +
->  drivers/pci/host/Makefile    |   1 +
->  drivers/pci/host/pcie-rcar.c | 768 +++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 775 insertions(+)
->  create mode 100644 drivers/pci/host/pcie-rcar.c
->
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> new file mode 100644
-> index 0000000..3c524b9
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-rcar.c
-
-> +static void rcar_pcie_enable(struct rcar_pcie *pcie)
-> +{
-> +       struct platform_device *pdev = to_platform_device(pcie->dev);
-> +
-> +       rcar_pci.nr_controllers = 1;
-> +       rcar_pci.private_data = (void **)&pcie;
-> +
-> +       pci_common_init_dev(&pdev->dev, &rcar_pci);
-> +#ifdef CONFIG_PCI_DOMAINS
-> +       rcar_pci.domain++;
-> +#endif
-> +}
-> +
-
-How does it work when you have 2 PCIe DT node ?
-(because for my point of view pci_common_init_dev() can't be called twice)
-
-void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
-{
-    struct pci_sys_data *sys;
-    LIST_HEAD(head);
-
-    pci_add_flags(PCI_REASSIGN_ALL_RSRC);
-    if (hw->preinit)
-        hw->preinit();
-    pcibios_init_hw(parent, hw, &head);
-...
-
-static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
-                struct list_head *head)
-{
-    struct pci_sys_data *sys = NULL;
-    int ret;
-    int nr, busnr;
-
-    for (nr = busnr = 0; nr < hw->nr_controllers; nr++) {
-        sys = kzalloc(sizeof(struct pci_sys_data), GFP_KERNEL);
-        if (!sys)
-            panic("PCI: unable to allocate sys data!");
-
-#ifdef CONFIG_PCI_DOMAINS
-        sys->domain  = hw->domain;
-#endif
-        sys->busnr   = busnr;
-...
-
-the issue is that sys->busnr always starts to zero ...
-
-how did you fix this problem?
-
-Thanks.
-Best Regards
-
-Gabriel.
