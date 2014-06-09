@@ -1,224 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.restena.lu ([158.64.1.62]:53812 "EHLO
-	smtprelay.restena.lu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964909AbaFRGTS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jun 2014 02:19:18 -0400
-Date: Wed, 18 Jun 2014 08:09:16 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>
-Subject: Re: [PATCH 1/2] x86, ia64: Move EFI_FB vga_default_device()
- initialization to pci_vga_fixup()
-Message-ID: <20140618080916.47a46ddf@pluto>
-In-Reply-To: <20140617223542.GD30559@google.com>
-References: <20140514224339.7f8be3a9@neptune.home>
-	<20140527234255.GJ11907@google.com>
-	<20140602201650.35f0e936@neptune.home>
-	<20140602201926.4d476818@neptune.home>
-	<20140617223542.GD30559@google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch V4 14/42] x86, ioapic: use irq_cfg() instead of irq_get_chip_data() for better readability
+Date: Mon,  9 Jun 2014 16:19:43 +0800
+Message-Id: <1402302011-23642-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 17 Jun 2014 16:35:42 -0600 Bjorn Helgaas wrote:
-> On Mon, Jun 02, 2014 at 08:19:26PM +0200, Bruno Prémont wrote:
-> > With commit b4aa0163056b ("efifb: Implement vga_default_device() (v2)")
-> > Matthew Garrett introduced a efifb vga_default_device() so that EFI
-> > systems that do not load shadow VBIOS or setup VGA get proper value for
-> > boot_vga PCI sysfs attribute on the corresponding PCI device.
-> > 
-> > Xorg is refusing to detect devices when boot_vga=0 which is the case on
-> > some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
-> > the dri device but then bails out with "no devices detected".
-> > 
-> > Note: When vga_default_device() is set boot_vga PCI sysfs attribute
-> > reflects its state. When unset this attribute is 1 whenever
-> > IORESOURCE_ROM_SHADOW flag is set.
-> > 
-> > With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
-> > while having native drivers for the GPU also makes selecting
-> > sysfb/efifb optional.
-> > 
-> > Remove the efifb implementation of vga_default_device() and initialize
-> > vgaarb's vga_default_device() with the PCI GPU that matches boot
-> > screen_info in pci_fixup_video().
-> > 
-> > Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
-> > ---
-> >  arch/ia64/pci/fixup.c       | 21 +++++++++++++++++++++
-> >  arch/x86/include/asm/vga.h  |  6 ------
-> >  arch/x86/pci/fixup.c        | 21 +++++++++++++++++++++
-> >  drivers/video/fbdev/efifb.c | 38 --------------------------------------
-> >  4 files changed, 42 insertions(+), 44 deletions(-)
-> 
-> Something went wrong here.  It seems like the [2/2] patch should have
-> been [1/2], and this one should be [2/2].  And this one modifies both
-> arch/ia64/pci/fixup.c and arch/x86/pci/fixup.c, but the other patch
-> mostly combines them, so I don't see how this one applies.
+Use defined helper function irq_cfg() instead of irq_get_chip_data() for
+better readability.
 
-I ordered both patches the other way around from your explicit ordering
-proposal following the stable kernel suggestion following it.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-My patch 1/2 fixes the encountered issue and is the one that may go
-stable while my patch 2/2 performs unification of common code.
-The unification will need to be placed somewhere else than in vgaarb.c
-if one wants to keep current fixup working with CONFIG_VGA_ARB=n.
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 8de9a837790b..0b2fb2aac7a6 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -230,7 +230,7 @@ int __init arch_early_irq_init(void)
+ 	return 0;
+ }
+ 
+-static struct irq_cfg *irq_cfg(unsigned int irq)
++static inline struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+ 	return irq_get_chip_data(irq);
+ }
+@@ -272,7 +272,7 @@ static struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
+ 	if (res < 0) {
+ 		if (res != -EEXIST)
+ 			return NULL;
+-		cfg = irq_get_chip_data(at);
++		cfg = irq_cfg(at);
+ 		if (cfg)
+ 			return cfg;
+ 	}
+@@ -1204,7 +1204,7 @@ void __setup_vector_irq(int cpu)
+ 	raw_spin_lock(&vector_lock);
+ 	/* Mark the inuse vectors */
+ 	for_each_active_irq(irq) {
+-		cfg = irq_get_chip_data(irq);
++		cfg = irq_cfg(irq);
+ 		if (!cfg)
+ 			continue;
+ 
+@@ -1612,7 +1612,7 @@ __apicdebuginit(void) print_IO_APICs(void)
+ 		if (chip != &ioapic_chip)
+ 			continue;
+ 
+-		cfg = irq_get_chip_data(irq);
++		cfg = irq_cfg(irq);
+ 		if (!cfg)
+ 			continue;
+ 		entry = cfg->irq_2_pin;
+@@ -2253,7 +2253,7 @@ static void irq_complete_move(struct irq_cfg *cfg)
+ 
+ void irq_force_complete_move(int irq)
+ {
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+ 	if (!cfg)
+ 		return;
+@@ -2515,7 +2515,7 @@ static inline void init_IO_APIC_traps(void)
+ 	unsigned int irq;
+ 
+ 	for_each_active_irq(irq) {
+-		cfg = irq_get_chip_data(irq);
++		cfg = irq_cfg(irq);
+ 		if (IO_APIC_IRQ(irq) && cfg && !cfg->vector) {
+ 			/*
+ 			 * Hmm.. We don't have an entry for this,
+@@ -2648,7 +2648,7 @@ early_param("disable_timer_pin_1", disable_timer_pin_setup);
+  */
+ static inline void __init check_timer(void)
+ {
+-	struct irq_cfg *cfg = irq_get_chip_data(0);
++	struct irq_cfg *cfg = irq_cfg(0);
+ 	int node = cpu_to_node(0);
+ 	int apic1, pin1, apic2, pin2;
+ 	unsigned long flags;
+@@ -2912,7 +2912,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
+ 
+ void arch_teardown_hwirq(unsigned int irq)
+ {
+-	struct irq_cfg *cfg = irq_get_chip_data(irq);
++	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned long flags;
+ 
+ 	free_remapped_irq(irq);
+@@ -3041,7 +3041,7 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 	if (!irq_offset)
+ 		write_msi_msg(irq, &msg);
+ 
+-	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
++	setup_remapped_irq(irq, irq_cfg(irq), chip);
+ 
+ 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 
+@@ -3176,7 +3176,7 @@ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+ 
+ 	hpet_msi_write(irq_get_handler_data(irq), &msg);
+ 	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+-	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
++	setup_remapped_irq(irq, irq_cfg(irq), chip);
+ 
+ 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 	return 0;
+-- 
+1.7.10.4
 
-> And there were unrelated (trivial) changes to these files, so they
-> need to be rebased to v3.16-rc1.  I'd take care of the rebase, but
-> I don't understand the other stuff I mentioned.
-
-Ok
-
-Bruno
-
-> Bjorn
-> 
-> > diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
-> > index eee069a..9ed5bef 100644
-> > --- a/arch/ia64/pci/fixup.c
-> > +++ b/arch/ia64/pci/fixup.c
-> > @@ -37,6 +37,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
-> >  		return;
-> >  	/* Maybe, this machine supports legacy memory map. */
-> >  
-> > +	if (!vga_default_device()) {
-> > +		resource_size_t start, end;
-> > +		int i;
-> > +
-> > +		/* Does firmware framebuffer belong to us? */
-> > +		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-> > +			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> > +				continue;
-> > +
-> > +			start = pci_resource_start(pdev, i);
-> > +			end  = pci_resource_end(pdev, i);
-> > +
-> > +			if (!start || !end)
-> > +				continue;
-> > +
-> > +			if (screen_info.lfb_base >= start &&
-> > +				(screen_info.lfb_base + screen_info.lfb_size) < end)
-> > +				vga_set_default_device(pdev);
-> > +		}
-> > +	}
-> > +
-> >  	/* Is VGA routed to us? */
-> >  	bus = pdev->bus;
-> >  	while (bus) {
-> > diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
-> > index 44282fb..c4b9dc2 100644
-> > --- a/arch/x86/include/asm/vga.h
-> > +++ b/arch/x86/include/asm/vga.h
-> > @@ -17,10 +17,4 @@
-> >  #define vga_readb(x) (*(x))
-> >  #define vga_writeb(x, y) (*(y) = (x))
-> >  
-> > -#ifdef CONFIG_FB_EFI
-> > -#define __ARCH_HAS_VGA_DEFAULT_DEVICE
-> > -extern struct pci_dev *vga_default_device(void);
-> > -extern void vga_set_default_device(struct pci_dev *pdev);
-> > -#endif
-> > -
-> >  #endif /* _ASM_X86_VGA_H */
-> > diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> > index 94ae9ae..7246cf2 100644
-> > --- a/arch/x86/pci/fixup.c
-> > +++ b/arch/x86/pci/fixup.c
-> > @@ -325,6 +325,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
-> >  	struct pci_bus *bus;
-> >  	u16 config;
-> >  
-> > +	if (!vga_default_device()) {
-> > +		resource_size_t start, end;
-> > +		int i;
-> > +
-> > +		/* Does firmware framebuffer belong to us? */
-> > +		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-> > +			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> > +				continue;
-> > +
-> > +			start = pci_resource_start(pdev, i);
-> > +			end  = pci_resource_end(pdev, i);
-> > +
-> > +			if (!start || !end)
-> > +				continue;
-> > +
-> > +			if (screen_info.lfb_base >= start &&
-> > +				(screen_info.lfb_base + screen_info.lfb_size) < end)
-> > +				vga_set_default_device(pdev);
-> > +		}
-> > +	}
-> > +
-> >  	/* Is VGA routed to us? */
-> >  	bus = pdev->bus;
-> >  	while (bus) {
-> > diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-> > index ae9618f..a033180 100644
-> > --- a/drivers/video/fbdev/efifb.c
-> > +++ b/drivers/video/fbdev/efifb.c
-> > @@ -19,8 +19,6 @@
-> >  
-> >  static bool request_mem_succeeded = false;
-> >  
-> > -static struct pci_dev *default_vga;
-> > -
-> >  static struct fb_var_screeninfo efifb_defined = {
-> >  	.activate		= FB_ACTIVATE_NOW,
-> >  	.height			= -1,
-> > @@ -84,18 +82,6 @@ static struct fb_ops efifb_ops = {
-> >  	.fb_imageblit	= cfb_imageblit,
-> >  };
-> >  
-> > -struct pci_dev *vga_default_device(void)
-> > -{
-> > -	return default_vga;
-> > -}
-> > -
-> > -EXPORT_SYMBOL_GPL(vga_default_device);
-> > -
-> > -void vga_set_default_device(struct pci_dev *pdev)
-> > -{
-> > -	default_vga = pdev;
-> > -}
-> > -
-> >  static int efifb_setup(char *options)
-> >  {
-> >  	char *this_opt;
-> > @@ -126,30 +112,6 @@ static int efifb_setup(char *options)
-> >  		}
-> >  	}
-> >  
-> > -	for_each_pci_dev(dev) {
-> > -		int i;
-> > -
-> > -		if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
-> > -			continue;
-> > -
-> > -		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-> > -			resource_size_t start, end;
-> > -
-> > -			if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
-> > -				continue;
-> > -
-> > -			start = pci_resource_start(dev, i);
-> > -			end  = pci_resource_end(dev, i);
-> > -
-> > -			if (!start || !end)
-> > -				continue;
-> > -
-> > -			if (screen_info.lfb_base >= start &&
-> > -			    (screen_info.lfb_base + screen_info.lfb_size) < end)
-> > -				default_vga = dev;
-> > -		}
-> > -	}
-> > -
-> >  	return 0;
-> >  }
-> >  
-> > -- 
-> > 1.8.5.5
-> > 
