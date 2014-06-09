@@ -1,134 +1,255 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 26 Jun 2014 10:30:29 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Jon Masters <jonathan@jonmasters.org>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
- function.
-Message-ID: <20140626093029.GB12812@e106497-lin.cambridge.arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <20140405001953.GE15806@google.com>
- <20140407083120.GE17163@e106497-lin.cambridge.arm.com>
- <5183143.FxBNM0xTAV@wuerfel>
- <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
- <20140626085926.GB11244@arm.com>
-MIME-Version: 1.0
-In-Reply-To: <20140626085926.GB11244@arm.com>
-Content-Type: text/plain; charset=UTF-8
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch V4 29/42] x86, irq: introduce two helper functions to support irqdomain map operation
+Date: Mon,  9 Jun 2014 16:19:58 +0800
+Message-Id: <1402302011-23642-30-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 26, 2014 at 09:59:26AM +0100, Catalin Marinas wrote:
-> (sorry for replying to a months old thread)
-> 
-> On Mon, Apr 07, 2014 at 06:58:24PM +0100, Bjorn Helgaas wrote:
-> > On Mon, Apr 7, 2014 at 5:36 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > 
-> > > I think migrating other architectures to use the same code should be
-> > > a separate effort from adding a generic implementation that can be
-> > > used by arm64. It's probably a good idea to have patches to convert
-> > > arm32 and/or microblaze.
-> > 
-> > Let me reiterate that I am 100% in favor of replacing arch-specific
-> > code with more generic implementations.
-> > 
-> > However, I am not 100% in favor of doing it as separate efforts
-> > (although maybe I could be convinced).  The reasons I hesitate are
-> > that (1) if only one architecture uses a new "generic" implementation,
-> > we really don't know whether it is generic enough, (2) until I see the
-> > patches to convert other architectures, I have to assume that I'm the
-> > one who will write them, and (3) as soon as we add the code to
-> > drivers/pci, it becomes partly my headache to maintain it, even if
-> > only one arch benefits from it.
-> 
-> I agree and understand your point.
-> 
-> > Please don't think I'm questioning anyone's intent or good will.  It's
-> > just that I understand the business pressures, and I know how hard it
-> > can be to justify this sort of work to one's management, especially
-> > after the immediate problem has been solved.
-> 
-> But, unfortunately, that's something we failed to address in reasonable
-> time (even though I was one of the proponents of the generic PCIe
-> implementation). This work is very likely to slip further into the late
-> part of this year and I am aware that several ARM partners are blocked
-> on the (upstream) availability of PCIe support for the arm64 kernel.
-> 
-> Although a bit late, I'm raising this now and hopefully we'll come to a
-> conclusion soon. Delaying arm64 PCIe support even further is not a real
-> option, which leaves us with:
-> 
-> 1. Someone else (with enough PCIe knowledge) volunteering to take over
->    soon or
-> 2. Dropping Liviu's work and going for an arm64-specific implementation
->    (most likely based on the arm32 implementation, see below)
-> 
-> First option is ideal but there is work to do as laid out by Arnd here:
-> 
-> http://article.gmane.org/gmane.linux.kernel/1679304
-> 
-> The latest patches from Liviu are here (they only target arm64 and there
-> are additional comments to be addressed from the above thread):
-> 
-> http://linux-arm.org/git?p=linux-ld.git;a=shortlog;h=refs/heads/for-upstream/pci-next
-> 
-> The main reason for the second option is timing. We could temporarily
-> move Liviu's code under arch/arm64 with the hope that we generalise it
-> later. However, the risk is even higher that once the code is in
-> mainline, the generic implementation won't happen. In which case, I
-> don't see much point in departing from the arm32 PCI API, making bios32
-> clone the best second option.
-> 
-> For the alternative implementation above, we already have a heavily cut
-> down version of the arm32 PCI support but only tested in a virtual
-> environment so far:
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/will/linux.git/log/?h=pci/bios32
-> 
-> In conclusion, unless someone volunteers for the first option fairly
-> soon, we'll post the alternative patches for review and take it from
-> there.
+Currently there are multiple entries to program IOAPIC pins, such as
+io_apic_setup_irq_pin_once(), io_apic_set_pci_routing() and
+setup_IO_APIC_irq_extra() etc.
 
-That would be a huge step backwards IMO and a huge dissapointment. If
-you go with the alternative patches from Will you will basically reset
-every partner's implementation that has been built on top of my
-patches (when they did so with the understanding that my series will be
-the one ARM will support and publish) *and* make anyone's attempt to
-create a generic implementation harder, as they will have to undo this
-code to remove the arch-specific parts.
+This patch introduces two functions to help consolidate the code to
+program IOAPIC pins. Function mp_set_pin_attr() is used to optionally
+set trigger, polarity and NUMA node property for an IOAPIC pin.
+If mp_set_pin_attr() is not invoked for a pin, the default configuration
+from BIOS will be used.
 
-While I have part of a personal blame to carry as I have dragged some
-of the work for too long, there are things that I could not have done
-differently due to internal pressure inside the project I work on. It
-is my intent to resume work on it as soon as possible, but life is
-such at the moment that I have to dedicate my time to other things.
+Function mp_irqdomain_map() is an common implementation of irqdomain map()
+operation. It figures out attribures for pin and then actually programs
+the IOAPIC pin. We hope this will be the only entrance for programming
+IOAPIC pin.
 
-Best regards,
-Liviu
+And the flow will:
+1) caller such as xxx_pci_irq_enable figures out pin attributes.
+2) Invoke mp_set_pin_attr() to set attributes for a pin. If the pin has
+   already bin programmed,  mp_set_pin_attr() will aslo detects attribute
+   confictions.
+3) Invoke mp_map_pin_to_irq()
+3.1) If IRQ has already been assigned, return irq_find_mapping()
+3.2) Else irq_create_mapping()
+		->irq_domain_associate()
+			->mp_irqdomain_map()
+				->io_apic_setup_irq_pin()
 
-> 
-> Thanks.
-> 
-> -- 
-> Catalin
+So every pin will only programmed once by mp_irqdomain_map(), so we
+could kill io_apic_setup_irq_pin_once(), io_apic_set_pci_routing() and
+setup_IO_APIC_irq_extra() etc.
 
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    5 ++
+ arch/x86/kernel/apic/io_apic.c |   99 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 103 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 3e4bea3a52b1..c53587868590 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -173,7 +173,9 @@ enum ioapic_domain_type {
+ };
+ 
+ struct device_node;
++struct irq_domain;
+ struct irq_domain_ops;
++
+ struct ioapic_domain_cfg {
+ 	enum ioapic_domain_type		type;
+ 	const struct irq_domain_ops	*ops;
+@@ -192,6 +194,9 @@ extern u32 mp_pin_to_gsi(int ioapic, int pin);
+ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
+ extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 				      struct ioapic_domain_cfg *cfg);
++extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
++			    irq_hw_number_t hwirq);
++extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
+ extern void __init pre_init_apic_IRQ0(void);
+ 
+ extern void mp_save_irq(struct mpc_intsrc *m);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 9c5f70699a80..61aae90f7e23 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -87,6 +87,14 @@ static DEFINE_RAW_SPINLOCK(vector_lock);
+ static DEFINE_MUTEX(ioapic_mutex);
+ static unsigned int ioapic_dynirq_base;
+ 
++struct mp_pin_info {
++	int trigger;
++	int polarity;
++	int node;
++	int set;
++	u32 count;
++};
++
+ static struct ioapic {
+ 	/*
+ 	 * # of IRQ routing registers
+@@ -102,6 +110,7 @@ static struct ioapic {
+ 	struct mp_ioapic_gsi  gsi_config;
+ 	struct ioapic_domain_cfg irqdomain_cfg;
+ 	struct irq_domain *irqdomain;
++	struct mp_pin_info *pin_info;
+ 	DECLARE_BITMAP(pin_programmed, MP_MAX_IOAPIC_PIN + 1);
+ } ioapics[MAX_IO_APICS];
+ 
+@@ -147,6 +156,11 @@ static inline int mp_init_irq_at_boot(int ioapic, int irq)
+ 	return ioapic == 0 || (irq >= 0 && irq < nr_legacy_irqs());
+ }
+ 
++static inline struct mp_pin_info *mp_pin_info(int ioapic_idx, int pin)
++{
++	return ioapics[ioapic_idx].pin_info + pin;
++}
++
+ static inline struct irq_domain *mp_ioapic_irqdomain(int ioapic)
+ {
+ 	return ioapics[ioapic].irqdomain;
+@@ -1006,6 +1020,7 @@ static int mp_map_pin_to_irq(u32 gsi, int idx, int ioapic, int pin,
+ {
+ 	int irq;
+ 	struct irq_domain *domain = mp_ioapic_irqdomain(ioapic);
++	struct mp_pin_info *info = mp_pin_info(ioapic, pin);
+ 
+ 	/*
+ 	 * Don't use irqdomain to manage ISA IRQs because there may be
+@@ -1034,6 +1049,13 @@ static int mp_map_pin_to_irq(u32 gsi, int idx, int ioapic, int pin,
+ 	irq = irq_find_mapping(domain, pin);
+ 	if (irq <= 0 && (flags & IOAPIC_MAP_ALLOC))
+ 		irq = alloc_irq_from_domain(domain, gsi, pin);
++
++	if (flags & IOAPIC_MAP_ALLOC) {
++		if (irq > 0)
++			info->count++;
++		else if (info->count == 0)
++			info->set = 0;
++	}
+ 	mutex_unlock(&ioapic_mutex);
+ 
+ 	return irq > 0 ? irq : -1;
+@@ -2923,18 +2945,27 @@ out:
+ 
+ static int mp_irqdomain_create(int ioapic)
+ {
++	size_t size;
+ 	int hwirqs = mp_ioapic_pin_count(ioapic);
+ 	struct ioapic *ip = &ioapics[ioapic];
+ 	struct ioapic_domain_cfg *cfg = &ip->irqdomain_cfg;
+ 	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(ioapic);
+ 
++	size = sizeof(struct mp_pin_info) * mp_ioapic_pin_count(ioapic);
++	ip->pin_info = kzalloc(size, GFP_KERNEL);
++	if (!ip->pin_info)
++		return -ENOMEM;
++
+ 	if (cfg->type == IOAPIC_DOMAIN_INVALID)
+ 		return 0;
+ 
+ 	ip->irqdomain = irq_domain_add_linear(cfg->dev, hwirqs, cfg->ops,
+ 					      (void *)(long)ioapic);
+-	if(!ip->irqdomain)
++	if(!ip->irqdomain) {
++		kfree(ip->pin_info);
++		ip->pin_info = NULL;
+ 		return -ENOMEM;
++	}
+ 
+ 	if (cfg->type == IOAPIC_DOMAIN_LEGACY ||
+ 	    cfg->type == IOAPIC_DOMAIN_STRICT)
+@@ -3898,6 +3929,72 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	nr_ioapics++;
+ }
+ 
++int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
++		     irq_hw_number_t hwirq)
++{
++	int ioapic = (int)(long)domain->host_data;
++	struct mp_pin_info *info = mp_pin_info(ioapic, hwirq);
++	struct io_apic_irq_attr attr;
++
++	/*
++	 * Skip the timer IRQ if there's a quirk handler installed and if it
++	 * returns 1:
++	 */
++	if (apic->multi_timer_check &&
++	    apic->multi_timer_check(ioapic, virq))
++		return 0;
++
++	/* Get default attribute if not set by caller yet */
++	if (!info->set) {
++		u32 gsi = mp_pin_to_gsi(ioapic, hwirq);
++
++		if (acpi_get_override_irq(gsi, &info->trigger,
++					  &info->polarity) < 0) {
++			/*
++			 * PCI interrupts are always polarity one level
++			 * triggered.
++			 */
++			info->trigger = 1;
++			info->polarity = 1;
++		}
++		info->node = NUMA_NO_NODE;
++		info->set = 1;
++	}
++	set_io_apic_irq_attr(&attr, ioapic, hwirq, info->trigger,
++			     info->polarity);
++
++	return io_apic_setup_irq_pin(virq, info->node, &attr);
++}
++
++int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
++{
++	int ret = 0;
++	int ioapic, pin;
++	struct mp_pin_info *info;
++
++	ioapic = mp_find_ioapic(gsi);
++	if (ioapic < 0)
++		return -ENODEV;
++
++	pin = mp_find_ioapic_pin(ioapic, gsi);
++	info = mp_pin_info(ioapic, pin);
++	trigger = trigger ? 1 : 0;
++	polarity = polarity ? 1 : 0;
++
++	mutex_lock(&ioapic_mutex);
++	if (!info->set) {
++		info->trigger = trigger;
++		info->polarity = polarity;
++		info->node = node;
++		info->set = 1;
++	} else if (info->trigger != trigger || info->polarity != polarity) {
++		ret = -EBUSY;
++	}
++	mutex_unlock(&ioapic_mutex);
++
++	return ret;
++}
++
+ /* Enable IOAPIC early just for system timer */
+ void __init pre_init_apic_IRQ0(void)
+ {
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.10.4
 
