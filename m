@@ -1,111 +1,364 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:35981 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752297AbaF0A3I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 20:29:08 -0400
-Received: by mail-ob0-f171.google.com with SMTP id nu7so4820272obb.30
-        for <linux-pci@vger.kernel.org>; Thu, 26 Jun 2014 17:29:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140626054937.GB7859@dragon>
-References: <1403637507-9424-1-git-send-email-festevam@gmail.com>
-	<20140626031247.GN2224@dragon>
-	<CAOMZO5A0pQfJRwb41046UpkbG6xH7c+EVu+YuY71Zuyq5gHaDA@mail.gmail.com>
-	<20140626054937.GB7859@dragon>
-Date: Thu, 26 Jun 2014 17:29:07 -0700
-Message-ID: <CAJ+vNU0DNCT5pcvnptNBo-tPTVOH1HnrCwy7uCZt33dfyq8U-g@mail.gmail.com>
-Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
-From: Tim Harvey <tharvey@gateworks.com>
-To: Shawn Guo <shawn.guo@freescale.com>,
-	Richard Zhu <r65037@freescale.com>
-Cc: Fabio Estevam <festevam@gmail.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?B?TWFyZWsgVmHFoXV0?= <marex@denx.de>,
-	=?UTF-8?Q?David_M=C3=BCller_=28ELSOFT_AG=29?= <d.mueller@elsoft.ch>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: [Patch V4 13/42] x86, ioapic: introduce helper utilities to walk ioapics and pins
+Date: Mon,  9 Jun 2014 16:19:42 +0800
+Message-Id: <1402302011-23642-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 25, 2014 at 10:49 PM, Shawn Guo <shawn.guo@freescale.com> wrote:
-> On Thu, Jun 26, 2014 at 12:43:19AM -0300, Fabio Estevam wrote:
->> On Thu, Jun 26, 2014 at 12:12 AM, Shawn Guo <shawn.guo@freescale.com> wrote:
->> > On Tue, Jun 24, 2014 at 04:18:27PM -0300, Fabio Estevam wrote:
->> >> From: Fabio Estevam <fabio.estevam@freescale.com>
->> >>
->> >> When the mx6 PCI conctroller is initialized in the bootloader we see a kernel
->> >> hang inside imx6_add_pcie_port().
->> >>
->> >> Adding a 30ms delay allows the kernel to boot.
->> >
->> > We may not want to add a random delay into the driver before we
->> > understand the root cause of the issue.
->>
->> Yes, that's why I sent this as RFC and also explained it below the ---
->> line that I am actually trying to get some help with this issue.
->>
->> >
->> > Do you see this issue with FSL kernel?
->>
->> Yes, it also hangs.
->>
->> It is reproducible in 100% of the boots. Just need to use mainline
->> U-boot (which has PCI driver enabled by default).
->> I am using an Intel Wifi 7260 PCI card. This was also reported by
->> other folks in the U-boot list.
->
-> Richard,
->
-> Can you schedule some time to look at this issue?  I think it will come
-> to us sooner or later if any our customer enables PCIe before launching
-> kernel?
->
-> Shawn
->
+Introduce helper utilities for_each_ioapic(), for_each_ioapic_reverse(),
+for_each_pin() and for_each_ioapic_pin() to walk ioapics and pins.
+They will be rewritten e will rewrite later to support IOAPIC hotplug.
 
-Shawn / Richard,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c |  120 +++++++++++++++++++++-------------------
+ 1 file changed, 62 insertions(+), 58 deletions(-)
 
-I am also affected by this issue on IMX6 boards that I support. If I
-enable PCI in the bootloader I see similar hangs.
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index e8cd0bf0ee82..8de9a837790b 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -62,6 +62,16 @@
+ 
+ #define __apicdebuginit(type) static type __init
+ 
++#define	for_each_ioapic(idx)		\
++	for ((idx) = 0; (idx) < nr_ioapics; (idx)++)
++#define	for_each_ioapic_reverse(idx)	\
++	for ((idx) = nr_ioapics - 1; (idx) >= 0; (idx)--)
++#define	for_each_pin(idx, pin)		\
++	for ((pin) = 0; (pin) < ioapics[(idx)].nr_registers; (pin)++)
++#define	for_each_ioapic_pin(idx, pin)	\
++	for_each_ioapic((idx))		\
++		for_each_pin((idx), (pin))
++
+ #define for_each_irq_pin(entry, head) \
+ 	for (entry = head; entry; entry = entry->next)
+ 
+@@ -191,7 +201,7 @@ int __init arch_early_irq_init(void)
+ 	if (!legacy_pic->nr_legacy_irqs)
+ 		io_apic_irqs = ~0UL;
+ 
+-	for (i = 0; i < nr_ioapics; i++) {
++	for_each_ioapic(i) {
+ 		ioapics[i].saved_registers =
+ 			kzalloc(sizeof(struct IO_APIC_route_entry) *
+ 				ioapics[i].nr_registers, GFP_KERNEL);
+@@ -624,9 +634,8 @@ static void clear_IO_APIC (void)
+ {
+ 	int apic, pin;
+ 
+-	for (apic = 0; apic < nr_ioapics; apic++)
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++)
+-			clear_IO_APIC_pin(apic, pin);
++	for_each_ioapic_pin(apic, pin)
++		clear_IO_APIC_pin(apic, pin);
+ }
+ 
+ #ifdef CONFIG_X86_32
+@@ -675,13 +684,13 @@ int save_ioapic_entries(void)
+ 	int apic, pin;
+ 	int err = 0;
+ 
+-	for (apic = 0; apic < nr_ioapics; apic++) {
++	for_each_ioapic(apic) {
+ 		if (!ioapics[apic].saved_registers) {
+ 			err = -ENOMEM;
+ 			continue;
+ 		}
+ 
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++)
++		for_each_pin(apic, pin)
+ 			ioapics[apic].saved_registers[pin] =
+ 				ioapic_read_entry(apic, pin);
+ 	}
+@@ -696,11 +705,11 @@ void mask_ioapic_entries(void)
+ {
+ 	int apic, pin;
+ 
+-	for (apic = 0; apic < nr_ioapics; apic++) {
++	for_each_ioapic(apic) {
+ 		if (!ioapics[apic].saved_registers)
+ 			continue;
+ 
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++) {
++		for_each_pin(apic, pin) {
+ 			struct IO_APIC_route_entry entry;
+ 
+ 			entry = ioapics[apic].saved_registers[pin];
+@@ -719,11 +728,11 @@ int restore_ioapic_entries(void)
+ {
+ 	int apic, pin;
+ 
+-	for (apic = 0; apic < nr_ioapics; apic++) {
++	for_each_ioapic(apic) {
+ 		if (!ioapics[apic].saved_registers)
+ 			continue;
+ 
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++)
++		for_each_pin(apic, pin)
+ 			ioapic_write_entry(apic, pin,
+ 					   ioapics[apic].saved_registers[pin]);
+ 	}
+@@ -782,7 +791,7 @@ static int __init find_isa_irq_apic(int irq, int type)
+ 	if (i < mp_irq_entries) {
+ 		int ioapic_idx;
+ 
+-		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++		for_each_ioapic(ioapic_idx)
+ 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic)
+ 				return ioapic_idx;
+ 	}
+@@ -1001,7 +1010,7 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 	for (i = 0; i < mp_irq_entries; i++) {
+ 		int lbus = mp_irqs[i].srcbus;
+ 
+-		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++		for_each_ioapic(ioapic_idx)
+ 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic ||
+ 			    mp_irqs[i].dstapic == MP_APIC_ALL)
+ 				break;
+@@ -1224,12 +1233,10 @@ static inline int IO_APIC_irq_trigger(int irq)
+ {
+ 	int apic, idx, pin;
+ 
+-	for (apic = 0; apic < nr_ioapics; apic++) {
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++) {
+-			idx = find_irq_entry(apic, pin, mp_INT);
+-			if ((idx != -1) && (irq == pin_2_irq(idx, apic, pin)))
+-				return irq_trigger(idx);
+-		}
++	for_each_ioapic_pin(apic, pin) {
++		idx = find_irq_entry(apic, pin, mp_INT);
++		if ((idx != -1) && (irq == pin_2_irq(idx, apic, pin)))
++			return irq_trigger(idx);
+ 	}
+ 	/*
+          * nonexistent IRQs are edge default
+@@ -1349,7 +1356,7 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
+ 	struct io_apic_irq_attr attr;
+ 	unsigned int pin, irq;
+ 
+-	for (pin = 0; pin < ioapics[ioapic_idx].nr_registers; pin++) {
++	for_each_pin(ioapic_idx, pin) {
+ 		idx = find_irq_entry(ioapic_idx, pin, mp_INT);
+ 		if (io_apic_pin_not_connected(idx, ioapic_idx, pin))
+ 			continue;
+@@ -1380,7 +1387,7 @@ static void __init setup_IO_APIC_irqs(void)
+ 
+ 	apic_printk(APIC_VERBOSE, KERN_DEBUG "init IO_APIC IRQs\n");
+ 
+-	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++	for_each_ioapic(ioapic_idx)
+ 		__io_apic_setup_irqs(ioapic_idx);
+ }
+ 
+@@ -1583,7 +1590,7 @@ __apicdebuginit(void) print_IO_APICs(void)
+ 	struct irq_chip *chip;
+ 
+ 	printk(KERN_DEBUG "number of MP IRQ sources: %d.\n", mp_irq_entries);
+-	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++	for_each_ioapic(ioapic_idx)
+ 		printk(KERN_DEBUG "number of IO-APIC #%d registers: %d.\n",
+ 		       mpc_ioapic_id(ioapic_idx),
+ 		       ioapics[ioapic_idx].nr_registers);
+@@ -1594,7 +1601,7 @@ __apicdebuginit(void) print_IO_APICs(void)
+ 	 */
+ 	printk(KERN_INFO "testing the IO APIC.......................\n");
+ 
+-	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++	for_each_ioapic(ioapic_idx)
+ 		print_IO_APIC(ioapic_idx);
+ 
+ 	printk(KERN_DEBUG "IRQ to pin mappings:\n");
+@@ -1825,26 +1832,22 @@ static struct { int pin, apic; } ioapic_i8259 = { -1, -1 };
+ void __init enable_IO_APIC(void)
+ {
+ 	int i8259_apic, i8259_pin;
+-	int apic;
++	int apic, pin;
+ 
+ 	if (!legacy_pic->nr_legacy_irqs)
+ 		return;
+ 
+-	for(apic = 0; apic < nr_ioapics; apic++) {
+-		int pin;
++	for_each_ioapic_pin(apic, pin) {
+ 		/* See if any of the pins is in ExtINT mode */
+-		for (pin = 0; pin < ioapics[apic].nr_registers; pin++) {
+-			struct IO_APIC_route_entry entry;
+-			entry = ioapic_read_entry(apic, pin);
++		struct IO_APIC_route_entry entry = ioapic_read_entry(apic, pin);
+ 
+-			/* If the interrupt line is enabled and in ExtInt mode
+-			 * I have found the pin where the i8259 is connected.
+-			 */
+-			if ((entry.mask == 0) && (entry.delivery_mode == dest_ExtINT)) {
+-				ioapic_i8259.apic = apic;
+-				ioapic_i8259.pin  = pin;
+-				goto found_i8259;
+-			}
++		/* If the interrupt line is enabled and in ExtInt mode
++		 * I have found the pin where the i8259 is connected.
++		 */
++		if ((entry.mask == 0) && (entry.delivery_mode == dest_ExtINT)) {
++			ioapic_i8259.apic = apic;
++			ioapic_i8259.pin  = pin;
++			goto found_i8259;
+ 		}
+ 	}
+  found_i8259:
+@@ -1947,7 +1950,7 @@ void __init setup_ioapic_ids_from_mpc_nocheck(void)
+ 	/*
+ 	 * Set the IOAPIC ID to the value stored in the MPC table.
+ 	 */
+-	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++) {
++	for_each_ioapic(ioapic_idx) {
+ 		/* Read the register 0 value */
+ 		raw_spin_lock_irqsave(&ioapic_lock, flags);
+ 		reg_00.raw = io_apic_read(ioapic_idx, 0);
+@@ -2863,7 +2866,7 @@ static void ioapic_resume(void)
+ {
+ 	int ioapic_idx;
+ 
+-	for (ioapic_idx = nr_ioapics - 1; ioapic_idx >= 0; ioapic_idx--)
++	for_each_ioapic_reverse(ioapic_idx)
+ 		resume_ioapic_id(ioapic_idx);
+ 
+ 	restore_ioapic_entries();
+@@ -3453,9 +3456,8 @@ static u8 __init io_apic_unique_id(u8 id)
+ 	DECLARE_BITMAP(used, 256);
+ 
+ 	bitmap_zero(used, 256);
+-	for (i = 0; i < nr_ioapics; i++) {
++	for_each_ioapic(i)
+ 		__set_bit(mpc_ioapic_id(i), used);
+-	}
+ 	if (!test_bit(id, used))
+ 		return id;
+ 	return find_first_zero_bit(used, 256);
+@@ -3513,8 +3515,7 @@ void __init setup_ioapic_dest(void)
+ 	if (skip_ioapic_setup == 1)
+ 		return;
+ 
+-	for (ioapic = 0; ioapic < nr_ioapics; ioapic++)
+-	for (pin = 0; pin < ioapics[ioapic].nr_registers; pin++) {
++	for_each_ioapic_pin(ioapic, pin) {
+ 		irq_entry = find_irq_entry(ioapic, pin, mp_INT);
+ 		if (irq_entry == -1)
+ 			continue;
+@@ -3543,29 +3544,33 @@ void __init setup_ioapic_dest(void)
+ 
+ static struct resource *ioapic_resources;
+ 
+-static struct resource * __init ioapic_setup_resources(int nr_ioapics)
++static struct resource * __init ioapic_setup_resources(void)
+ {
+ 	unsigned long n;
+ 	struct resource *res;
+ 	char *mem;
+-	int i;
++	int i, num = 0;
+ 
+-	if (nr_ioapics <= 0)
++	for_each_ioapic(i)
++		num++;
++	if (num == 0)
+ 		return NULL;
+ 
+ 	n = IOAPIC_RESOURCE_NAME_SIZE + sizeof(struct resource);
+-	n *= nr_ioapics;
++	n *= num;
+ 
+ 	mem = alloc_bootmem(n);
+ 	res = (void *)mem;
+ 
+-	mem += sizeof(struct resource) * nr_ioapics;
++	mem += sizeof(struct resource) * num;
+ 
+-	for (i = 0; i < nr_ioapics; i++) {
+-		res[i].name = mem;
+-		res[i].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
++	num = 0;
++	for_each_ioapic(i) {
++		res[num].name = mem;
++		res[num].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+ 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
+ 		mem += IOAPIC_RESOURCE_NAME_SIZE;
++		num++;
+ 	}
+ 
+ 	ioapic_resources = res;
+@@ -3579,8 +3584,8 @@ void __init native_io_apic_init_mappings(void)
+ 	struct resource *ioapic_res;
+ 	int i;
+ 
+-	ioapic_res = ioapic_setup_resources(nr_ioapics);
+-	for (i = 0; i < nr_ioapics; i++) {
++	ioapic_res = ioapic_setup_resources();
++	for_each_ioapic(i) {
+ 		if (smp_found_config) {
+ 			ioapic_phys = mpc_ioapic_addr(i);
+ #ifdef CONFIG_X86_32
+@@ -3625,7 +3630,7 @@ void __init ioapic_insert_resources(void)
+ 		return;
+ 	}
+ 
+-	for (i = 0; i < nr_ioapics; i++) {
++	for_each_ioapic(i) {
+ 		insert_resource(&iomem_resource, r);
+ 		r++;
+ 	}
+@@ -3633,16 +3638,15 @@ void __init ioapic_insert_resources(void)
+ 
+ int mp_find_ioapic(u32 gsi)
+ {
+-	int i = 0;
++	int i;
+ 
+ 	if (nr_ioapics == 0)
+ 		return -1;
+ 
+ 	/* Find the IOAPIC that manages this GSI. */
+-	for (i = 0; i < nr_ioapics; i++) {
++	for_each_ioapic(i) {
+ 		struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(i);
+-		if ((gsi >= gsi_cfg->gsi_base)
+-		    && (gsi <= gsi_cfg->gsi_end))
++		if (gsi >= gsi_cfg->gsi_base && gsi <= gsi_cfg->gsi_end)
+ 			return i;
+ 	}
+ 
+@@ -3654,7 +3658,7 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
+ {
+ 	struct mp_ioapic_gsi *gsi_cfg;
+ 
+-	if (WARN_ON(ioapic == -1))
++	if (WARN_ON(ioapic < 0))
+ 		return -1;
+ 
+ 	gsi_cfg = mp_ioapic_gsi_routing(ioapic);
+-- 
+1.7.10.4
 
-I have the following hardware configurations on my bench:
-  1. IMX6DL + i210 (same PCI setup as Fabio's above, but DL instead of Q)
-  2. IMX6Q + ath9k device
-  3. IMX6DL + PLX PEX860x PCIe-to-PCIe bridge with various devices
-behind the bridge, using a clock buffer from IMX6 PCIe clock
-  4. IMX6Q + PLX PEX860x PCIe-to-PCIe bridge with various devices
-behind the bridge, using a clock buffer from IMX6 PCIe clock
-  5. IMX6Q + PLX PEX860x PCIe-to-PCIe bridge with various devices
-behind the bridge using a clock generator (always on, ignoring the
-PCIe clock)
-
-For all of the above I have no PCI issues using
-3.14/3.15/3.16-rc2/vendor 3.10.17_1.0.0_ga unless I enable PCI in the
-bootloader. When I do so, all of the above configurations hang
-somewhere around PCI init/enumeration. The same occurs with the most
-recent vendor kernel 3.10.17_1.0.0_ga kernel (works when PCI is
-disabled in the bootloader, hangs otherwise).
-
-When I apply Fabio's patch above to the 3.16-rc2 kernel I find that
-scenarios #4 and #5 above then work, #3 boots but the PLX bridge fails
-all config cycles (0xff's), #2 boots but with no PCIe link, and #1
-above still hangs. Previously, when I have dug into this particular
-'hang' issue on 3.15 I found that the delay needed to be between
-imx6_pcie_probe() requesting and asserting reset_gpio low, and before
-setting IOMUX_GPR1:18 to power down the PCIe PHY (note here, that the
-PHY is currently enabled in the bootloader when PCI is enabled there).
-
-When I apply Fabio's patch above to the most recent vendor kernel
-3.10.17_1.0.0_ga I still hang in all cases.
-
-So while I agree there is something horribly wrong with IMX6 PCI
-still, I don't think Fabio's patch is the right solution and I don't
-have anything better at this point in time. I'm happy to share any
-hardware with anyone that can work through this issue.
-
-Thanks,
-
-Tim
