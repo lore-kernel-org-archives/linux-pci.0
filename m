@@ -1,62 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([78.24.191.182]:45143 "EHLO
-	cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754738AbaFIOlP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 10:41:15 -0400
-Date: Mon, 9 Jun 2014 15:41:12 +0100 (BST)
-From: "Maciej W. Rozycki" <macro@linux-mips.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [Patch V4 11/42] x86, ioapic: kill unused global variable
- timer_through_8259
-In-Reply-To: <1402302011-23642-12-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.LFD.2.11.1406091538320.14982@eddie.linux-mips.org>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com> <1402302011-23642-12-git-send-email-jiang.liu@linux.intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:64362 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750822AbaFISnc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Jun 2014 14:43:32 -0400
+Subject: [PATCH] PCI: Add bridge DMA alias quirk for ITE bridge
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org, rwarsow@gmx.de
+Date: Mon, 09 Jun 2014 12:43:25 -0600
+Message-ID: <20140609184157.17500.84469.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 9 Jun 2014, Jiang Liu wrote:
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=73551
+Reported-by: rwarsow@gmx.de
+Tested-by: rwarsow@gmx.de
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-> index d4aba16e6bbf..94a56c233e87 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -2638,8 +2638,6 @@ static int __init disable_timer_pin_setup(char *arg)
->  }
->  early_param("disable_timer_pin_1", disable_timer_pin_setup);
->  
-> -int timer_through_8259 __initdata;
-> -
->  /*
->   * This code may look a bit paranoid, but it's supposed to cooperate with
->   * a wide range of boards and BIOS bugs.  Fortunately only the timer IRQ
-> @@ -2744,7 +2742,6 @@ static inline void __init check_timer(void)
->  		legacy_pic->unmask(0);
->  		if (timer_irq_works()) {
->  			apic_printk(APIC_QUIET, KERN_INFO "....... works.\n");
-> -			timer_through_8259 = 1;
->  			goto out;
->  		}
->  		/*
+One more for the pci/iommu branch
 
- So how does the new NMI watchdog handle systems that use this '8259A 
-Virtual Wire' mode, pretty common on pre-P6 computers?
+ drivers/pci/quirks.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-  Maciej
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ab620ac..533cd0d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3407,6 +3407,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
+ 			 quirk_use_pcie_bridge_dma_alias);
+ /* Tundra 8113, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c43 */
+ DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
++/* ITE 8892, https://bugzilla.kernel.org/show_bug.cgi?id=73551 */
++DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+ 
+ static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+ {
+
