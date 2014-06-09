@@ -20,99 +20,52 @@ Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch V4 30/42] x86, irq, ACPI: use common irqdomain map interface to program IOAPIC pins
-Date: Mon,  9 Jun 2014 16:19:59 +0800
-Message-Id: <1402302011-23642-31-git-send-email-jiang.liu@linux.intel.com>
+Subject: [Patch V4 09/42] x86, ACPI, irq: fix possible eror in GSI to IRQ mapping for legacy IRQ
+Date: Mon,  9 Jun 2014 16:19:38 +0800
+Message-Id: <1402302011-23642-10-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine ACPI to use common irqdomain map interface to program IOAPIC pins,
-so we can unify the callsite to progam IOAPIC pins.
+A default identity mapping between GSI and IRQ is built for legacy IRQs.
+So when overriding the default identity mapping for legacy IRQs,
+we should also invalidate isa_irq_to_gsi[gsi] when setting
+isa_irq_to_gsi[irq] = gsi.  Otherwise there may be two entries with the
+same GSI in the isa_irq_to_gsi array, and acpi_isa_irq_to_gsi() may give
+wrong result.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/kernel/acpi/boot.c |   44 ++++++++++++-------------------------------
- 1 file changed, 12 insertions(+), 32 deletions(-)
+ arch/x86/kernel/acpi/boot.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 82ec56a4c6f4..edb48a8e0a0d 100644
+index f201579cd0df..d6493863bd4b 100644
 --- a/arch/x86/kernel/acpi/boot.c
 +++ b/arch/x86/kernel/acpi/boot.c
-@@ -405,11 +405,7 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity)
- {
--	int irq;
--	int ioapic;
--	int ioapic_pin;
--	struct io_apic_irq_attr irq_attr;
--	int ret;
-+	int irq, node;
+@@ -366,6 +366,13 @@ static void __init mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
  
- 	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
- 		return gsi;
-@@ -418,39 +414,27 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	if (acpi_gbl_FADT.sci_interrupt == gsi)
- 		return gsi;
+ 	mp_save_irq(&mp_irq);
  
-+	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
-+	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
-+	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
-+	if (mp_set_gsi_attr(gsi, trigger, polarity, node)) {
-+		pr_warn("Failed to set pin attr for GSI%d\n", gsi);
-+		return -1;
-+	}
-+
- 	irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC);
- 	if (irq < 0)
- 		return irq;
- 
--	ioapic = mp_find_ioapic(gsi);
--	if (ioapic < 0) {
--		printk(KERN_WARNING "No IOAPIC for GSI %u\n", gsi);
--		return gsi;
--	}
--
--	ioapic_pin = mp_find_ioapic_pin(ioapic, gsi);
--
--	if (ioapic_pin > MP_MAX_IOAPIC_PIN) {
--		printk(KERN_ERR "Invalid reference to IOAPIC pin "
--		       "%d-%d\n", mpc_ioapic_id(ioapic),
--		       ioapic_pin);
--		return gsi;
--	}
--
- 	if (enable_update_mptable)
- 		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
- 
--	set_io_apic_irq_attr(&irq_attr, ioapic, ioapic_pin,
--			     trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
--			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
--	ret = io_apic_set_pci_routing(dev, irq, &irq_attr);
--	if (ret < 0)
--		irq = -1;
--
- 	return irq;
++	/*
++	 * Reset default identity mapping if gsi is also an legacy IRQ,
++	 * otherwise there will be more than one entry with the same GSI
++	 * and acpi_isa_irq_to_gsi() may give wrong result.
++	 */
++	if (gsi < NR_IRQS_LEGACY && isa_irq_to_gsi[gsi] == gsi)
++		isa_irq_to_gsi[gsi] = ACPI_INVALID_GSI;
+ 	isa_irq_to_gsi[bus_irq] = gsi;
  }
  
--static struct irq_domain_ops acpi_irqdomain_ops;
-+static struct irq_domain_ops acpi_irqdomain_ops = {
-+	.map = mp_irqdomain_map,
-+};
+@@ -621,7 +628,8 @@ EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
  
- static int __init
- acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
-@@ -622,10 +606,6 @@ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- 	int irq = map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
- 
- 	if (irq >= 0) {
--#ifdef CONFIG_X86_IO_APIC
--		if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
--			setup_IO_APIC_irq_extra(gsi);
--#endif
- 		*irqp = irq;
+ int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
+ {
+-	if (isa_irq < NR_IRQS_LEGACY) {
++	if (isa_irq < NR_IRQS_LEGACY &&
++	    isa_irq_to_gsi[isa_irq] != ACPI_INVALID_GSI) {
+ 		*gsi = isa_irq_to_gsi[isa_irq];
  		return 0;
  	}
 -- 
