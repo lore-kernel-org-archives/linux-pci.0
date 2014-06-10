@@ -1,143 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:33915 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757733AbaFSIbd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 04:31:33 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 4/5] PCI/MSI: MSI cleanup, msi_setup_entry()
-Date: Thu, 19 Jun 2014 16:30:48 +0800
-Message-ID: <1403166648-7932-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:46297 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751504AbaFJRcn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jun 2014 13:32:43 -0400
+Received: by mail-ie0-f175.google.com with SMTP id tp5so5881133ieb.34
+        for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 10:32:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <539716F7.1020901@ti.com>
+References: <1401297293-3950-1-git-send-email-m-karicheri2@ti.com>
+ <20140530154455.GC4607@google.com> <539716F7.1020901@ti.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 10 Jun 2014 11:32:22 -0600
+Message-ID: <CAErSpo58cvbmyD90rNB9RHRHjGoehbGcHa8F3i82yMiQXPBNVw@mail.gmail.com>
+Subject: Re: [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move MSI entry stuff to a new function
-msi_setup_entry(), simplify msi_capability_init()
-code like MSI-X do.
+On Tue, Jun 10, 2014 at 8:32 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+> On 5/30/2014 11:44 AM, Bjorn Helgaas wrote:
+>>
+>> On Wed, May 28, 2014 at 01:14:53PM -0400, Murali Karicheri wrote:
+>>>
+>>> Call pcie_bus_configure_settings on ARM, like for other platforms.
+>>> pcie_bus_configure_settings makes sure the MPS across the bus is
+>>> uniform and provides the ability to tune the MRSS and MPS to higher
+>>> performance values. This is particularly important for embedded where
+>>> there is no firmware to program these PCI-E settings for the OS.
+>>>
+>>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>>
+>> I applied this to pci/misc for v3.16.  Russell, let me know if you object
+>> or prefer another route, and I can drop it.  I tweaked the changelog but
+>> didn't touch the actual patch, so I think git will do the right thing if
+>> it
+>> arrives via two trees.
+>
+> Bjorn,
+>
+> I checked git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+> pci/misc branch
+> I don't see it. Is it a different repo?
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/msi.c |   71 +++++++++++++++++++++++++++++++---------------------
- 1 files changed, 42 insertions(+), 29 deletions(-)
+It's already in Linus' tree and I cleaned out pci/misc for the next cycle.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d8e431d..8e17446 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -582,6 +582,35 @@ error_attrs:
- 	return ret;
- }
- 
-+static int msi_setup_entry(struct pci_dev *dev)
-+{
-+	u16 control;
-+	struct msi_desc *entry;
-+
-+	entry = alloc_msi_entry(dev);
-+	if (!entry)
-+		return -ENOMEM;
-+
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-+
-+	entry->msi_attrib.is_msix	= 0;
-+	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
-+	entry->msi_attrib.entry_nr	= 0;
-+	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
-+	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
-+	entry->msi_attrib.pos		= dev->msi_cap;
-+	entry->msi_attrib.multi_cap = (control & PCI_MSI_FLAGS_QMASK) >> 1;
-+
-+	if (control & PCI_MSI_FLAGS_64BIT)
-+		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
-+	else
-+		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
-+
-+
-+	list_add_tail(&entry->list, &dev->msi_list);
-+	return 0;
-+}
-+
- /**
-  * msi_capability_init - configure device's MSI capability structure
-  * @dev: pointer to the pci_dev data structure of MSI device function
-@@ -597,51 +626,30 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- {
- 	struct msi_desc *entry;
- 	int ret;
--	u16 control;
- 	unsigned mask;
- 
- 	msi_set_enable(dev, 0);	/* Disable MSI during set up */
- 
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
- 	/* MSI Entry Initialization */
--	entry = alloc_msi_entry(dev);
--	if (!entry)
--		return -ENOMEM;
--
--	entry->msi_attrib.is_msix	= 0;
--	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
--	entry->msi_attrib.entry_nr	= 0;
--	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
--	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
--	entry->msi_attrib.pos		= dev->msi_cap;
--	entry->msi_attrib.multi_cap = (control & PCI_MSI_FLAGS_QMASK) >> 1;
-+	ret = msi_setup_entry(dev);
-+	if (ret)
-+		return ret;
- 
--	if (control & PCI_MSI_FLAGS_64BIT)
--		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
--	else
--		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
-+	entry = list_first_entry(&dev->msi_list, struct msi_desc, list);
- 	/* All MSIs are unmasked by default, Mask them all */
- 	if (entry->msi_attrib.maskbit)
- 		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
- 	mask = msi_mask(entry->msi_attrib.multi_cap);
- 	msi_mask_irq(entry, mask, mask);
- 
--	list_add_tail(&entry->list, &dev->msi_list);
--
- 	/* Configure MSI capability structure */
- 	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
--	if (ret) {
--		msi_mask_irq(entry, mask, ~mask);
--		free_msi_irqs(dev);
--		return ret;
--	}
-+	if (ret)
-+		goto err;
- 
- 	ret = populate_msi_sysfs(dev);
--	if (ret) {
--		msi_mask_irq(entry, mask, ~mask);
--		free_msi_irqs(dev);
--		return ret;
--	}
-+	if (ret)
-+		goto err;
- 
- 	/* Set MSI enabled bits	 */
- 	pci_intx_for_msi(dev, 0);
-@@ -650,6 +658,11 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 
- 	dev->irq = entry->irq;
- 	return 0;
-+
-+err:
-+	msi_mask_irq(entry, mask, ~mask);
-+	free_msi_irqs(dev);
-+	return ret;
- }
- 
- static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
--- 
-1.7.1
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=8b5742ad156d30ee38486652cdbd152e2d6ebbcc
 
-
+>>> CC: Russell King <linux@arm.linux.org.uk>
+>>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>>> CC: Arnd Bergmann <arnd@arndb.de>
+>>> CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+>>> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+>>> ---
+>>>   - Fixed comments against initial version
+>>>   arch/arm/kernel/bios32.c |   12 ++++++++++++
+>>>   1 file changed, 12 insertions(+)
+>>>
+>>> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+>>> index 16d43cd..17a26c1 100644
+>>> --- a/arch/arm/kernel/bios32.c
+>>> +++ b/arch/arm/kernel/bios32.c
+>>> @@ -545,6 +545,18 @@ void pci_common_init_dev(struct device *parent,
+>>> struct hw_pci *hw)
+>>>                  */
+>>>                 pci_bus_add_devices(bus);
+>>>         }
+>>> +
+>>> +       list_for_each_entry(sys, &head, node) {
+>>> +               struct pci_bus *bus = sys->bus;
+>>> +
+>>> +               /* Configure PCI Express settings */
+>>> +               if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>>> +                       struct pci_bus *child;
+>>> +
+>>> +                       list_for_each_entry(child, &bus->children, node)
+>>> +                               pcie_bus_configure_settings(child);
+>>> +               }
+>>> +       }
+>>>   }
+>>>     #ifndef CONFIG_PCI_HOST_ITE8152
+>>> --
+>>> 1.7.9.5
+>>>
+>
