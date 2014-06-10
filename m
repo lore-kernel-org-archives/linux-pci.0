@@ -1,91 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.w2.samsung.com ([211.189.100.12]:50205 "EHLO
-	usmailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932907AbaFCVY0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 17:24:26 -0400
-Message-id: <538E3D04.9060808@samsung.com>
-Date: Tue, 03 Jun 2014 15:24:20 -0600
-From: Shuah Khan <shuah.kh@samsung.com>
-Reply-to: shuah.kh@samsung.com
-MIME-version: 1.0
-To: Eli Billauer <eli.billauer@gmail.com>, tj@kernel.org,
-	Joerg Roedel <joro@8bytes.org>
-Cc: devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	discuss@x86-64.org, Shuah Khan <shuah.kh@samsung.com>
-Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
- dma_map_single()
-References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
- <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
-In-reply-to: <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:64455 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754584AbaFJGNU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 10 Jun 2014 02:13:20 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch V4 38/42] x86, irq, ACPI: release IOAPIC pin when PCI device is disabled
+Date: Tue, 10 Jun 2014 14:16:27 +0800
+Message-Id: <1402380987-32577-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-39-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-39-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/01/2014 01:01 AM, Eli Billauer wrote:
-> dmam_map_single() and dmam_unmap_single() are the managed counterparts
-> for the respective dma_* functions.
->
-> Note that dmam_map_single() returns a status value rather than the DMA handle.
-> The DMA handle is passed to the caller through a pointer in the arguments.
->
-> The reason for this API change is that dmam_map_single() allocates memory,
-> which may fail even if the DMA mapping is successful. On the other hand,
-> it seems like there's no platform-independent value for dma_handle that can
-> be used to indicate an error.
->
-> This leaves dmam_map_single() with no safe way to tell its caller that the
-> memory allocation has failed, except for returning a status as an int. Trying
-> to keep close to the non-devres API could also tempt programmers into using
-> dma_mapping_error() on the dmam_* functions. This would work incorrectly on
-> platforms, for which dma_mapping_error() ignores its argument, and always
-> returns success.
->
+Release IOAPIC pin associated with PCI device when the PCI device
+is disabled.
 
-I see the value of this interface in unmap case, this type of wrapper
-can release dma buffers, drivers neglected to release leaving dangling
-buffers.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+Minor change, simplify usage of function pointer.
+---
+ arch/x86/kernel/acpi/boot.c |   27 +++++++++++++++++++++++++++
+ drivers/acpi/pci_irq.c      |    3 ++-
+ 2 files changed, 29 insertions(+), 1 deletion(-)
 
-However, driver writers should give it some thought before switching
-from conventional dma_map_*() interfaces to these proposed managed
-dma mapping interfaces. These new interfaces shouldn't be treated as
-drop in replacements to dma_map_*() interfaces.
-
-The reasons are:
-
-1. This interface adds an overhead in allocation memory for devres to
-    compared to other dma_map_* wrappers. Users need to be aware of that.
-    This would be okay in the cases where a driver allocates several
-    buffers at init time and uses them. However, several drivers allocate
-    during run-time and release as soon as it is no longer needed. This
-    overhead is going to be in the performance path.
-
-2. It adds a failure case even when dma buffers are available. i.e if
-    if devres alloc fails, it will return failure even if dma map could
-    have succeeded. This is a new failure case for DMA-API.
-
-    The reason dma_map_*() routines fail now is because there are no
-    buffers available. Drivers handle this error as a retry case.
-
-    Drivers using dmam_map_single() will have to handle the failure
-    cases differently.
-
-    Since the return values are different for dmam_map_*(), that is
-    plus that these interfaces can't be drop in replacements to the
-    dma_map_*() interfaces.
-
-3. Similarly, it adds an overhead in releasing memory for devres to
-    compared to other dma_unmap_* wrappers. Users need to be aware of
-    that. This overhead is going to be in the performance path when
-    drivers unmap buffers during run-time.
-
-Adding Joerg Roedel to the thread.
-
--- Shuah
-
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index fd4b6d2e436c..8c28023924bf 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -421,8 +421,24 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 	return irq;
+ }
+ 
++static void mp_unregister_gsi(u32 gsi)
++{
++	int irq;
++
++	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
++		return;
++
++	if (acpi_gbl_FADT.sci_interrupt == gsi)
++		return;
++
++	irq = mp_map_gsi_to_irq(gsi, 0);
++	if (irq > 0)
++		mp_unmap_irq(irq);
++}
++
+ static struct irq_domain_ops acpi_irqdomain_ops = {
+ 	.map = mp_irqdomain_map,
++	.unmap = mp_irqdomain_unmap,
+ };
+ 
+ static int __init
+@@ -640,8 +656,16 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ 	return irq;
+ }
+ 
++static void acpi_unregister_gsi_ioapic(u32 gsi)
++{
++#ifdef CONFIG_X86_IO_APIC
++	mp_unregister_gsi(gsi);
++#endif
++}
++
+ int (*__acpi_register_gsi)(struct device *dev, u32 gsi,
+ 			   int trigger, int polarity) = acpi_register_gsi_pic;
++void (*__acpi_unregister_gsi)(u32 gsi) = NULL;
+ 
+ #ifdef CONFIG_ACPI_SLEEP
+ int (*acpi_suspend_lowlevel)(void) = x86_acpi_suspend_lowlevel;
+@@ -661,6 +685,8 @@ EXPORT_SYMBOL_GPL(acpi_register_gsi);
+ 
+ void acpi_unregister_gsi(u32 gsi)
+ {
++	if (__acpi_unregister_gsi)
++		__acpi_unregister_gsi(gsi);
+ }
+ EXPORT_SYMBOL_GPL(acpi_unregister_gsi);
+ 
+@@ -668,6 +694,7 @@ static void __init acpi_set_irq_model_ioapic(void)
+ {
+ 	acpi_irq_model = ACPI_IRQ_MODEL_IOAPIC;
+ 	__acpi_register_gsi = acpi_register_gsi_ioapic;
++	__acpi_unregister_gsi = acpi_unregister_gsi_ioapic;
+ 	acpi_ioapic = 1;
+ }
+ 
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 9c62340c2360..6ba463ceccc6 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -498,5 +498,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	 */
+ 
+ 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+-	acpi_unregister_gsi(gsi);
++	if (gsi >= 0 && dev->irq > 0)
++		acpi_unregister_gsi(gsi);
+ }
 -- 
-Shuah Khan
-Senior Linux Kernel Developer - Open Source Group
-Samsung Research America(Silicon Valley)
-shuah.kh@samsung.com | (970) 672-0658
+1.7.10.4
+
