@@ -1,53 +1,228 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:37875 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933671AbaFCUEe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 Jun 2014 16:04:34 -0400
-Date: Tue, 3 Jun 2014 14:04:32 -0600 (MDT)
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org
-cc: bhelgaas@google.com
-Subject: Debugging incorrect mps settings detected
-Message-ID: <alpine.LRH.2.03.1406031308200.11244@AMR>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:32973 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933856AbaFJB5O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:57:14 -0400
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 10 Jun 2014 07:27:12 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id C636BE0045
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:28:09 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1w29k53870738
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:28:02 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1vA8k021384
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:10 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: benh@au1.ibm.com
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [RFC PATCH V3 11/17] ppc/pnv: Expand VF resources according to the number of total_pe
+Date: Tue, 10 Jun 2014 09:56:33 +0800
+Message-Id: <1402365399-5121-12-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On PHB3, VF resources will be covered by M64 BAR to have better PE isolation.
+Mostly the total_pe number is different from the total_VFs, which will lead to
+a conflict between MMIO space and the PE number.
 
-Hot adding a pci device results in improper MPS settings detected,
-reading 128 even though the upstream port is 256. This causes a warning
-print to be logged suggesting I should report a bug. :)
+This patch expands the VF resource size to reserve total_pe number of VFs'
+resource, which prevents the conflict.
 
-Here's the dmesg of the hot plug event:
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/machdep.h        |    6 +++
+ arch/powerpc/include/asm/pci-bridge.h     |    3 ++
+ arch/powerpc/kernel/pci-common.c          |   15 ++++++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   83 +++++++++++++++++++++++++++++
+ 4 files changed, 107 insertions(+)
 
-[ 2105.051941] pciehp 0000:05:07.0:pcie24: Card present on Slot(27)
-[ 2107.012811] pci 0000:09:00.0: [8086:0953] type 00 class 0x010802
-[ 2107.012838] pci 0000:09:00.0: reg 0x10: [mem 0x00000000-0x00003fff 64bit]
-[ 2107.012873] pci 0000:09:00.0: reg 0x30: [mem 0x00000000-0x0000ffff pref]
-[ 2107.014986] pcieport 0000:05:07.0: bridge window [io  0x1000-0x0fff] to [bus 09] add_size 1000
-[ 2107.014996] pcieport 0000:05:07.0: res[13]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
-[ 2107.015001] pcieport 0000:05:07.0: BAR 13: can't assign io (size 0x1000)
-[ 2107.015006] pcieport 0000:05:07.0: BAR 13: can't assign io (size 0x1000)
-[ 2107.015013] pci 0000:09:00.0: BAR 6: assigned [mem 0xd5200000-0xd520ffff pref]
-[ 2107.015018] pci 0000:09:00.0: BAR 0: assigned [mem 0xdb600000-0xdb603fff 64bit]
-[ 2107.015030] pcieport 0000:05:07.0: PCI bridge to [bus 09]
-[ 2107.015037] pcieport 0000:05:07.0:   bridge window [mem 0xdb600000-0xdb7fffff]
-[ 2107.015042] pcieport 0000:05:07.0:   bridge window [mem 0xd5200000-0xd52fffff 64bit pref]
-[ 2107.015060] pci 0000:09:00.0: Max Payload Size 128, but upstream 0000:05:07.0 set to 256; if necessary, use "pci=pcie_bus_safe" and report a bug
-[ 2107.015079] pci 0000:09:00.0: no hotplug settings from platform
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index ad3025d..2f2e770 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -234,9 +234,15 @@ struct machdep_calls {
+ 
+ 	/* Called after scan and before resource survey */
+ 	void (*pcibios_fixup_phb)(struct pci_controller *hose);
++#ifdef CONFIG_PCI_IOV
++	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
++#endif /* CONFIG_PCI_IOV */
+ 
+ 	/* Called during PCI resource reassignment */
+ 	resource_size_t (*pcibios_window_alignment)(struct pci_bus *, unsigned long type);
++#ifdef CONFIG_PCI_IOV
++	resource_size_t (*__pci_sriov_resource_size)(struct pci_dev *, int resno);
++#endif /* CONFIG_PCI_IOV */
+ 
+ 	/* Called to shutdown machine specific hardware not already controlled
+ 	 * by other drivers.
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 4ca90a3..8c849d8 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -168,6 +168,9 @@ struct pci_dn {
+ #define IODA_INVALID_PE		(-1)
+ #ifdef CONFIG_PPC_POWERNV
+ 	int	pe_number;
++#ifdef CONFIG_PCI_IOV
++	u16     vfs;
++#endif /* CONFIG_PCI_IOV */
+ #endif
+ };
+ 
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index c449a26..c4e2e92 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -120,6 +120,16 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 	return 1;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++resource_size_t pcibios_sriov_resource_size(struct pci_dev *pdev, int resno)
++{
++	if (ppc_md.__pci_sriov_resource_size)
++		return ppc_md.__pci_sriov_resource_size(pdev, resno);
++
++	return 0;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ static resource_size_t pcibios_io_size(const struct pci_controller *hose)
+ {
+ #ifdef CONFIG_PPC64
+@@ -1675,6 +1685,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 	if (ppc_md.pcibios_fixup_phb)
+ 		ppc_md.pcibios_fixup_phb(hose);
+ 
++#ifdef CONFIG_PCI_IOV
++	if (ppc_md.pcibios_fixup_sriov)
++		ppc_md.pcibios_fixup_sriov(bus);
++#endif /* CONFIG_PCI_IOV */
++
+ 	/* Configure PCI Express settings */
+ 	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+ 		struct pci_bus *child;
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 87cb3089..7dfad6a 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1298,6 +1298,67 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
+ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
+ #endif /* CONFIG_PCI_MSI */
+ 
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
++{
++	struct pci_controller *hose;
++	struct pnv_phb *phb;
++	struct resource *res;
++	int i;
++	resource_size_t size;
++	struct pci_dn *pdn;
++
++	if (!pdev->is_physfn || pdev->is_added)
++		return;
++
++	hose = pci_bus_to_host(pdev->bus);
++	if (!hose) {
++		dev_err(&pdev->dev, "%s: NULL pci_controller\n", __func__);
++		return;
++	}
++
++	phb = hose->private_data;
++	if (!phb) {
++		dev_err(&pdev->dev, "%s: NULL PHB\n", __func__);
++		return;
++	}
++
++	pdn = pci_get_pdn(pdev);
++	pdn->vfs = 0;
++
++	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
++		res = &pdev->resource[i];
++		if (!res->flags || res->parent)
++			continue;
++
++		if (!is_mem_pref_64_type(res->flags))
++			continue;
++
++		dev_info(&pdev->dev, "PowerNV: Fixing VF BAR[%d] %pR to\n",
++				i, res);
++		size = pci_sriov_resource_size(pdev, i);
++		res->end = res->start + size * phb->ioda.total_pe - 1;
++		dev_info(&pdev->dev, "                       %pR\n", res);
++	}
++	pdn->vfs = phb->ioda.total_pe;
++}
++
++static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
++{
++	struct pci_dev *pdev;
++	struct pci_bus *b;
++
++	list_for_each_entry(pdev, &bus->devices, bus_list) {
++		b = pdev->subordinate;
++
++		if (b)
++			pnv_pci_ioda_fixup_sriov(b);
++
++		pnv_pci_ioda_fixup_iov_resources(pdev);
++	}
++}
++#endif /* CONFIG_PCI_IOV */
++
+ /*
+  * This function is supposed to be called on basis of PE from top
+  * to bottom style. So the the I/O or MMIO segment assigned to
+@@ -1498,6 +1559,22 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
+ 	return phb->ioda.io_segsize;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++static resource_size_t __pnv_pci_sriov_resource_size(struct pci_dev *pdev, int resno)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	u64 size = 0;
++
++	if (!pdn->vfs)
++		return size;
++
++	size = resource_size(pdev->resource + resno);
++	do_div(size, pdn->vfs);
++
++	return size;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ /* Prevent enabling devices for which we couldn't properly
+  * assign a PE
+  */
+@@ -1692,9 +1769,15 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	 * for the P2P bridge bars so that each PCI bus (excluding
+ 	 * the child P2P bridges) can form individual PE.
+ 	 */
++#ifdef CONFIG_PCI_IOV
++	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
++#endif /* CONFIG_PCI_IOV */
+ 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
+ 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
+ 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
++#ifdef CONFIG_PCI_IOV
++	ppc_md.__pci_sriov_resource_size = __pnv_pci_sriov_resource_size;
++#endif /* CONFIG_PCI_IOV */
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+ 
+ 	/* Reset IODA tables to a clean state */
+-- 
+1.7.9.5
 
-The commit message that added the warning indicates it may be a BIOS
-issue that incorrectly configures this, but BIOS isn't involved with
-setting the MPS on a device hot add, am I right? Or is that wrong?
-This is a Dell R620 server, if that matters, though we see this on other
-platforms as well.
-
-Using pci=pcie_bus_perf works around the issue, but that seems a bit
-odd to suggest to users. Is setting MPS on hot-add something the PCI
-driver layer ought to be doing, or should I be looking into the platform
-BIOS instead?
-
-Thanks!
-Keith
