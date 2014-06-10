@@ -1,76 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:38664 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752689AbaFLANT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jun 2014 20:13:19 -0400
-Received: by mail-ig0-f180.google.com with SMTP id h18so1426967igc.13
-        for <linux-pci@vger.kernel.org>; Wed, 11 Jun 2014 17:13:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANwwZzVqQ9Dur79ZP_1Fs9UWF0+h44tGW6QA4UZYdXaqV51z3A@mail.gmail.com>
-References: <CANwwZzVqQ9Dur79ZP_1Fs9UWF0+h44tGW6QA4UZYdXaqV51z3A@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 11 Jun 2014 18:12:58 -0600
-Message-ID: <CAErSpo6s1=aQ2=GxMHXTZgE+hFUp+Kzz9r32RXkDcY_TW_5+UQ@mail.gmail.com>
-Subject: Re: DMA window vs actual allocatable DMA memory
-To: Bob Biloxi <iambobbiloxi@gmail.com>
-Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:49403 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750937AbaFJNJb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 10 Jun 2014 09:09:31 -0400
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, x86@kernel.org,
+	xen-devel@lists.xenproject.org, iommu@lists.linux-foundation.org,
+	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 3/3] AHCI: Use pci_enable_msi_partial() to conserve on 10/16 MSIs
+Date: Tue, 10 Jun 2014 15:10:32 +0200
+Message-Id: <dba9f0f8e9cccd7625d0f3fab94457482e1a2bd7.1402405331.git.agordeev@redhat.com>
+In-Reply-To: <cover.1402405331.git.agordeev@redhat.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 11, 2014 at 12:23 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
-> Hi All,
->
-> I am having trouble understanding DMA window and actual amount of
-> addressable DMA memory.
->
-> I hope someone explains me. Let me put my understanding and doubts here:
->
-> Let's say I am writing code for an ethernet device driver in the
-> virtualisation(hypervisor) environment.
->
-> Now, if the ethernet adapter requires certain amount of DMA memory, I
-> need to allocate heap memory and dma map it and provide to the
-> adapter.
->
-> From the hardware perspective, we have a 64GB DMA window.
->
-> I am having trouble understanding this value. Does it mean i can
-> allocate 64GB of RAM(Heap memory) and dma map it?
->
-> As i understand there might be a table that translates bus address to
-> physical(RAM) addresses. Each entry of such table points to a 4KB
-> page. If the size of each entry is 8 bytes and there are 16M such
-> entries( 16M * 4K = 64GB DMA window), the size of the table comes to
-> around 128M
->
-> Now do I have 64GB DMA memory or 128M DMA memory?
+Make use of the new pci_enable_msi_partial() interface and
+conserve on othewise wasted interrupt resources for 10 out
+of 16 unused MSI vectors on Intel chipsets.
 
-Documentation/DMA-API-HOWTO.txt might help answer your questions.
+Cc: x86@kernel.org
+Cc: xen-devel@lists.xenproject.org
+Cc: iommu@lists.linux-foundation.org
+Cc: linux-ide@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/ata/ahci.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-The bus address to RAM address translation is done by a IOMMU
-hardware.  The tables you mention are I/O page tables used by the
-IOMMU.  The 128M occupied by the tables is kernel bookkeeping overhead
-and has nothing to do with the adapter itself.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 6070781..0c7a0f3 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1194,7 +1194,7 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 	if (nvec < n_ports)
+ 		goto single_msi;
+ 
+-	rc = pci_enable_msi_exact(pdev, nvec);
++	rc = pci_enable_msi_partial(pdev, n_ports, nvec);
+ 	if (rc == -ENOSPC)
+ 		goto single_msi;
+ 	else if (rc < 0)
+@@ -1207,7 +1207,7 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 		goto single_msi;
+ 	}
+ 
+-	return nvec;
++	return n_ports;
+ 
+ single_msi:
+ 	if (pci_enable_msi(pdev))
+-- 
+1.7.7.6
 
-The 64GB DMA window might be a hardware feature of the device, i.e.,
-maybe it can only generate 36-bit DMA addresses.  That doesn't mean
-you have to allocate memory for the whole window; I would guess
-drivers would only allocate and map what they need.  I don't know how
-they figure out how much to map.
-
-> I want to know what is the max amount of memory that I can
-> allocate(heap), dma map and provide it to the adapter.
->
-> I will be really thankful in all the help that I can get!!
->
-> Thanks so much
->
->
-> Best Regards,
-> Marc
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
