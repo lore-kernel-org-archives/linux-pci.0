@@ -1,231 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:35696 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932145AbaFJB47 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:56:59 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Jun 2014 11:56:55 +1000
-Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E691E3578048
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:53 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1ucQP24445110
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:38 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1uqAD032569
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:53 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: benh@au1.ibm.com
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [RFC PATCH V3 01/17] pci/iov: Export interface for retrieve VF's BDF
-Date: Tue, 10 Jun 2014 09:56:23 +0800
-Message-Id: <1402365399-5121-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mga02.intel.com ([134.134.136.20]:14113 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932895AbaFJGMB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 10 Jun 2014 02:12:01 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch V4 22/42] x86, irq, ACPI: change __acpi_register_gsi to return IRQ number instead of GSI
+Date: Tue, 10 Jun 2014 14:14:47 +0800
+Message-Id: <1402380887-32512-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402302011-23642-23-git-send-email-jiang.liu@linux.intel.com>
+References: <1402302011-23642-23-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When implementing the SR-IOV on PowerNV platform, some resource reservation is
-needed for VFs which don't exist at the bootup stage. To do the match between
-resources and VFs, the code need to get the VF's BDF in advance.
+Currently __acpi_register_gsi is defined to return GSI number and
+may be set to acpi_register_gsi_pic(), acpi_register_gsi_ioapic(),
+acpi_register_gsi_xen_hvm() and acpi_register_gsi_xen().
 
-In this patch, it exports the interface to retrieve VF's BDF:
-   * Make the virtfn_bus as an interface
-   * Make the virtfn_devfn as an interface
-   * rename them with more specific name
-   * code cleanup in pci_sriov_resource_alignment()
+Among which, acpi_register_gsi_ioapic() returns GSI number, but
+acpi_register_gsi_xen_hvm() and acpi_register_gsi_xen() actually
+returns IRQ number instead of GSI. And for acpi_register_gsi_pic(),
+GSI number equals to IRQ number.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+So change acpi_register_gsi_ioapic() to return IRQ number, it also
+simplifies the code.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/iov.c   |   26 +++++++-------------------
- drivers/pci/pci.h   |   21 ---------------------
- include/linux/pci.h |   43 +++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 50 insertions(+), 40 deletions(-)
+Rebase due to change in patch 8.
+---
+ arch/x86/kernel/acpi/boot.c |   21 ++++++++-------------
+ 1 file changed, 8 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 9dce7c5..589ef7d 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -19,18 +19,6 @@
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 9965afbd71ca..0cf311c72bce 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -419,7 +419,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
  
- #define VIRTFN_ID_LEN	16
+ 	irq = map_gsi_to_irq(gsi);
+ 	if (irq < 0)
+-		return ACPI_INVALID_GSI;
++		return irq;
  
--static inline u8 virtfn_bus(struct pci_dev *dev, int id)
--{
--	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
--				    dev->sriov->stride * id) >> 8);
--}
--
--static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
--{
--	return (dev->devfn + dev->sriov->offset +
--		dev->sriov->stride * id) & 0xff;
--}
--
- static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
- {
- 	struct pci_bus *child;
-@@ -69,7 +57,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	struct pci_bus *bus;
+ 	ioapic = mp_find_ioapic(gsi);
+ 	if (ioapic < 0) {
+@@ -444,12 +444,11 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
+ 			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
+ 	ret = io_apic_set_pci_routing(dev, irq, &irq_attr);
+ 	if (ret < 0)
+-		gsi = ACPI_INVALID_GSI;
++		irq = -1;
  
- 	mutex_lock(&iov->dev->sriov->lock);
--	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
-+	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
- 	if (!bus)
- 		goto failed;
- 
-@@ -77,7 +65,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	if (!virtfn)
- 		goto failed0;
- 
--	virtfn->devfn = virtfn_devfn(dev, id);
-+	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
- 	pci_setup_device(virtfn);
-@@ -140,8 +128,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	struct pci_sriov *iov = dev->sriov;
- 
- 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
--					     virtfn_bus(dev, id),
--					     virtfn_devfn(dev, id));
-+					     pci_iov_virtfn_bus(dev, id),
-+					     pci_iov_virtfn_devfn(dev, id));
- 	if (!virtfn)
- 		return;
- 
-@@ -307,7 +295,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	iov->offset = offset;
- 	iov->stride = stride;
- 
--	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
-+	if (pci_iov_virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
- 		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
- 		return -ENOMEM;
- 	}
-@@ -616,7 +604,7 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- 	if (!reg)
- 		return 0;
- 
--	 __pci_read_base(dev, type, &tmp, reg);
-+	__pci_read_base(dev, type, &tmp, reg);
- 	return resource_alignment(&tmp);
+-	return gsi;
++	return irq;
  }
  
-@@ -646,7 +634,7 @@ int pci_iov_bus_range(struct pci_bus *bus)
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		if (!dev->is_physfn)
- 			continue;
--		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
-+		busnr = pci_iov_virtfn_bus(dev, dev->sriov->total_VFs - 1);
- 		if (busnr > max)
- 			max = busnr;
- 	}
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4df38df..51f1f7c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -223,27 +223,6 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- void pci_disable_bridge_window(struct pci_dev *dev);
- 
--/* Single Root I/O Virtualization */
--struct pci_sriov {
--	int pos;		/* capability position */
--	int nres;		/* number of resources */
--	u32 cap;		/* SR-IOV Capabilities */
--	u16 ctrl;		/* SR-IOV Control */
--	u16 total_VFs;		/* total VFs associated with the PF */
--	u16 initial_VFs;	/* initial VFs associated with the PF */
--	u16 num_VFs;		/* number of VFs available */
--	u16 offset;		/* first VF Routing ID offset */
--	u16 stride;		/* following VF stride */
--	u32 pgsz;		/* page size for BAR alignment */
--	u8 link;		/* Function Dependency Link */
--	u16 driver_max_VFs;	/* max num VFs driver supports */
--	struct pci_dev *dev;	/* lowest numbered PF */
--	struct pci_dev *self;	/* this PF */
--	struct mutex lock;	/* lock for VF bus */
--	struct work_struct mtask; /* VF Migration task */
--	u8 __iomem *mstate;	/* VF Migration State Array */
--};
 -
- #ifdef CONFIG_PCI_ATS
- void pci_restore_ats_state(struct pci_dev *dev);
- #else
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33aa2ca..ddb1ca0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -240,6 +240,27 @@ struct pci_vpd;
- struct pci_sriov;
- struct pci_ats;
- 
-+/* Single Root I/O Virtualization */
-+struct pci_sriov {
-+	int pos;		/* capability position */
-+	int nres;		/* number of resources */
-+	u32 cap;		/* SR-IOV Capabilities */
-+	u16 ctrl;		/* SR-IOV Control */
-+	u16 total_VFs;		/* total VFs associated with the PF */
-+	u16 initial_VFs;	/* initial VFs associated with the PF */
-+	u16 num_VFs;		/* number of VFs available */
-+	u16 offset;		/* first VF Routing ID offset */
-+	u16 stride;		/* following VF stride */
-+	u32 pgsz;		/* page size for BAR alignment */
-+	u8 link;		/* Function Dependency Link */
-+	u16 driver_max_VFs;	/* max num VFs driver supports */
-+	struct pci_dev *dev;	/* lowest numbered PF */
-+	struct pci_dev *self;	/* this PF */
-+	struct mutex lock;	/* lock for VF bus */
-+	struct work_struct mtask; /* VF Migration task */
-+	u8 __iomem *mstate;	/* VF Migration State Array */
-+};
+ static int __init
+ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
+ {
+@@ -652,11 +651,13 @@ static int acpi_register_gsi_pic(struct device *dev, u32 gsi,
+ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ 				    int trigger, int polarity)
+ {
++	int irq = gsi;
 +
- /*
-  * The pci_dev structure is used to describe PCI devices.
-  */
-@@ -1595,6 +1616,20 @@ int pci_ext_cfg_avail(void);
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
+ #ifdef CONFIG_X86_IO_APIC
+-	gsi = mp_register_gsi(dev, gsi, trigger, polarity);
++	irq = mp_register_gsi(dev, gsi, trigger, polarity);
+ #endif
  
- #ifdef CONFIG_PCI_IOV
-+static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-+{
-+	if (!dev->is_physfn)
-+		return -1;
-+	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
-+				    dev->sriov->stride * id) >> 8);
-+}
-+static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
-+{
-+	if (!dev->is_physfn)
-+		return -1;
-+	return (dev->devfn + dev->sriov->offset +
-+		dev->sriov->stride * id) & 0xff;
-+}
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
- irqreturn_t pci_sriov_migration(struct pci_dev *dev);
-@@ -1603,6 +1638,14 @@ int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- #else
-+static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-+{
-+	return -1;
-+}
-+static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
-+{
-+	return -1;
-+}
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
+-	return gsi;
++	return irq;
+ }
+ 
+ int (*__acpi_register_gsi)(struct device *dev, u32 gsi,
+@@ -674,13 +675,7 @@ int (*acpi_suspend_lowlevel)(void);
+  */
+ int acpi_register_gsi(struct device *dev, u32 gsi, int trigger, int polarity)
+ {
+-	unsigned int plat_gsi;
+-
+-	plat_gsi = __acpi_register_gsi(dev, gsi, trigger, polarity);
+-	if (plat_gsi != ACPI_INVALID_GSI)
+-		return map_gsi_to_irq(plat_gsi);
+-
+-	return -1;
++	return __acpi_register_gsi(dev, gsi, trigger, polarity);
+ }
+ EXPORT_SYMBOL_GPL(acpi_register_gsi);
+ 
 -- 
-1.7.9.5
+1.7.10.4
 
