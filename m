@@ -1,140 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54011 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755895AbaFYIk0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 04:40:26 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: [Patch V3 12/16] x86, irq, ACPI: Implement interface to support ACPI based IOAPIC hot-addition
-Date: Wed, 25 Jun 2014 16:40:43 +0800
-Message-Id: <1403685648-10103-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from e28smtp09.in.ibm.com ([122.248.162.9]:50040 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932895AbaFJB47 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:56:59 -0400
+Received: from /spool/local
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 10 Jun 2014 07:26:57 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id A0D48125804D
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:26:16 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1vkmE57344208
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:46 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1usVq012948
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:26:54 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: benh@au1.ibm.com
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [RFC PATCH V3 02/17] pci/of: Match PCI VFs to dev-tree nodes dynamically
+Date: Tue, 10 Jun 2014 09:56:24 +0800
+Message-Id: <1402365399-5121-3-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement acpi_register_ioapic() and enhance mp_register_ioapic()
-to support ACPI based IOAPIC hot-addition.
+As introduced by commit 98d9f30c82 ("pci/of: Match PCI devices to dev-tree nodes
+dynamically"), we need to match PCI devices to their corresponding dev-tree
+nodes. While for VFs, this step was missed.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+This patch matches VFs' PCI devices to dev-tree nodes dynamically.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- arch/x86/kernel/acpi/boot.c    |   31 +++++++++++++++++++++++++++++--
- arch/x86/kernel/apic/io_apic.c |   27 ++++++++++++++++++++++++---
- 2 files changed, 53 insertions(+), 5 deletions(-)
+ drivers/pci/iov.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 120b573f1e96..c5a0abd0be82 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -768,8 +768,35 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 589ef7d..1d21f43 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -67,6 +67,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
  
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
- {
--	/* TBD */
--	return -EINVAL;
-+	int ret = -ENOSYS;
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+	int ioapic_id;
-+	u64 addr;
-+	struct ioapic_domain_cfg cfg = {
-+		.type = IOAPIC_DOMAIN_DYNAMIC,
-+		.ops = &acpi_irqdomain_ops,
-+	};
-+
-+	ioapic_id = acpi_get_ioapic_id(handle, gsi_base, &addr);
-+	if (ioapic_id < 0) {
-+		unsigned long long uid;
-+		acpi_status status;
-+
-+		status = acpi_evaluate_integer(handle, METHOD_NAME__UID,
-+					       NULL, &uid);
-+		if (ACPI_FAILURE(status)) {
-+			acpi_handle_warn(handle, "failed to get IOAPIC ID.\n");
-+			return -EINVAL;
-+		}
-+		ioapic_id = (int)uid;
-+	}
-+
-+	down_write(&acpi_ioapic_rwsem);
-+	ret  = mp_register_ioapic(ioapic_id, phys_addr, gsi_base, &cfg);
-+	up_write(&acpi_ioapic_rwsem);
-+#endif
-+
-+	return ret;
- }
- 
- EXPORT_SYMBOL(acpi_register_ioapic);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 18b5ce0c2bc9..1b6a64ed2472 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3846,7 +3846,13 @@ static int bad_ioapic_register(int idx)
- 
- static int find_free_ioapic_entry(void)
- {
--	return nr_ioapics;
-+	int idx;
-+
-+	for (idx = 0; idx < MAX_IO_APICS; idx++)
-+		if (ioapics[idx].nr_registers == 0)
-+			return idx;
-+
-+	return MAX_IO_APICS;
- }
- 
- int mp_register_ioapic(int id, u32 address, u32 gsi_base,
-@@ -3862,8 +3868,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	}
- 	for_each_ioapic(ioapic)
- 		if (ioapics[ioapic].mp_config.apicaddr == address) {
--			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
--				address, ioapic);
-+			/*
-+			 * IOAPIC unit may also be visible in PCI scope.
-+			 * When ioapic PCI driver's probe() is called,
-+			 * the IOAPIC unit may have already been initialized
-+			 * at boot time.
-+			 */
-+			if (!ioapic_initialized)
-+				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
-+					address, ioapic);
- 			return -EEXIST;
- 		}
- 
-@@ -3913,6 +3926,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	ioapics[idx].irqdomain = NULL;
- 	ioapics[idx].irqdomain_cfg = *cfg;
- 
-+	if (ioapic_initialized) {
-+		if (mp_irqdomain_create(idx)) {
-+			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+			return -ENOMEM;
-+		}
-+		alloc_ioapic_saved_registers(idx);
-+	}
-+
- 	if (gsi_cfg->gsi_end >= gsi_top)
- 		gsi_top = gsi_cfg->gsi_end + 1;
- 	if (nr_ioapics <= idx)
+ 	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
+ 	virtfn->vendor = dev->vendor;
++	pci_set_of_node(virtfn);
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+ 	pci_setup_device(virtfn);
+ 	virtfn->dev.parent = dev->dev.parent;
 -- 
-1.7.10.4
+1.7.9.5
 
