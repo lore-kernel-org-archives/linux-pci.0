@@ -1,128 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:55746 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934075AbaFCUE6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 16:04:58 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v5 07/15] thunderbolt: Enable plug events
-Date: Tue,  3 Jun 2014 22:04:04 +0200
-Message-Id: <1401825852-4745-8-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
-References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:55997 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932145AbaFJB5L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:57:11 -0400
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 10 Jun 2014 07:27:09 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id DAC3A3940048
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:06 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1vv3b5374320
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:57 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1v6CM013243
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:06 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: benh@au1.ibm.com
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [RFC PATCH V3 08/17] PCI: Add weak pcibios_sriov_resource_size() interface
+Date: Tue, 10 Jun 2014 09:56:30 +0800
+Message-Id: <1402365399-5121-9-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thunderbolt switches have a plug events capability. This patch adds the
-tb_plug_events_active method and uses it to activate plug events during
-switch allocation.
+When retrieving sriov resource size in pci_sriov_resource_size(), it will
+divide the total IOV resource size with the totalVF number. This is true for
+most cases, while may not be correct on some specific platform.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+For example on powernv platform, in order to fix the IOV BAR into a hardware
+alignment, the IOV resource size would be expended. This means the original
+method couldn't work.
+
+This patch introduces a weak pcibios_sriov_resource_size() interface, which
+gives platform a chance to implement specific method to calculate the sriov
+resource size.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- drivers/thunderbolt/switch.c | 52 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.h     |  1 +
- 2 files changed, 53 insertions(+)
+ drivers/pci/iov.c   |   27 +++++++++++++++++++++++++--
+ include/linux/pci.h |    3 +++
+ 2 files changed, 28 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index e89121f..6d193a2 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -99,6 +99,45 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index cc87773..9fd4648 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -45,6 +45,30 @@ static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+ 		pci_remove_bus(virtbus);
  }
  
- /**
-+ * tb_plug_events_active() - enable/disable plug events on a switch
-+ *
-+ * Also configures a sane plug_events_delay of 255ms.
-+ *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+static int tb_plug_events_active(struct tb_switch *sw, bool active)
++resource_size_t __weak pcibios_sriov_resource_size(struct pci_dev *dev, int resno)
 +{
-+	u32 data;
-+	int res;
-+
-+	sw->config.plug_events_delay = 0xff;
-+	res = tb_sw_write(sw, ((u32 *) &sw->config) + 4, TB_CFG_SWITCH, 4, 1);
-+	if (res)
-+		return res;
-+
-+	res = tb_sw_read(sw, &data, TB_CFG_SWITCH, sw->cap_plug_events + 1, 1);
-+	if (res)
-+		return res;
-+
-+	if (active) {
-+		data = data & 0xFFFFFF83;
-+		switch (sw->config.device_id) {
-+		case 0x1513:
-+		case 0x151a:
-+		case 0x1549:
-+			break;
-+		default:
-+			data |= 4;
-+		}
-+	} else {
-+		data = data | 0x7c;
-+	}
-+	return tb_sw_write(sw, &data, TB_CFG_SWITCH,
-+			   sw->cap_plug_events + 1, 1);
++	return 0;
 +}
 +
++resource_size_t pci_sriov_resource_size(struct pci_dev *dev, int resno)
++{
++	u64 size;
++	struct pci_sriov *iov;
 +
-+/**
-  * tb_switch_free() - free a tb_switch and all downstream switches
-  */
- void tb_switch_free(struct tb_switch *sw)
-@@ -113,6 +152,8 @@ void tb_switch_free(struct tb_switch *sw)
- 		sw->ports[i].remote = NULL;
- 	}
- 
-+	tb_plug_events_active(sw, false);
++	if (!dev->is_physfn)
++		return 0;
 +
- 	kfree(sw->ports);
- 	kfree(sw);
- }
-@@ -125,6 +166,7 @@ void tb_switch_free(struct tb_switch *sw)
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
++	size = pcibios_sriov_resource_size(dev, resno);
++	if (size != 0)
++		return size;
++
++	iov = dev->sriov;
++	size = resource_size(dev->resource + resno);
++	do_div(size, iov->total_VFs);
++
++	return size;
++}
++
+ static int virtfn_add(struct pci_dev *dev, int id, int reset)
  {
  	int i;
-+	int cap;
- 	struct tb_switch *sw;
- 	int upstream_port = tb_cfg_get_upstream_port(tb->ctl, route);
- 	if (upstream_port < 0)
-@@ -177,6 +219,16 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+@@ -81,8 +105,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 			continue;
+ 		virtfn->resource[i].name = pci_name(virtfn);
+ 		virtfn->resource[i].flags = res->flags;
+-		size = resource_size(res);
+-		do_div(size, iov->total_VFs);
++		size = pci_sriov_resource_size(dev, i + PCI_IOV_RESOURCES);
+ 		virtfn->resource[i].start = res->start + size * id;
+ 		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
+ 		rc = request_resource(res, &virtfn->resource[i]);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ddb1ca0..315c150 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1637,6 +1637,7 @@ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
++resource_size_t pci_sriov_resource_size(struct pci_dev *dev, int resno);
+ #else
+ static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+ {
+@@ -1658,6 +1659,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+ { return 0; }
+ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
++static inline resource_size_t pci_sriov_resource_size(struct pci_dev *dev, int resno)
++{ return -1; }
+ #endif
  
- 	/* TODO: I2C, IECS, EEPROM, link controller */
- 
-+	cap = tb_find_cap(&sw->ports[0], TB_CFG_SWITCH, TB_CAP_PLUG_EVENTS);
-+	if (cap < 0) {
-+		tb_sw_warn(sw, "cannot find TB_CAP_PLUG_EVENTS aborting\n");
-+		goto err;
-+	}
-+	sw->cap_plug_events = cap;
-+
-+	if (tb_plug_events_active(sw, true))
-+		goto err;
-+
- 	return sw;
- err:
- 	kfree(sw->ports);
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 38e4c23..af123c4 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -19,6 +19,7 @@ struct tb_switch {
- 	struct tb_regs_switch_header config;
- 	struct tb_port *ports;
- 	struct tb *tb;
-+	int cap_plug_events; /* offset, zero if not found */
- };
- 
- /**
+ #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
 -- 
-2.0.0
+1.7.9.5
 
