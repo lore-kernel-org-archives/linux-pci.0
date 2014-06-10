@@ -1,57 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:19824 "EHLO mga14.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:38216 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934353AbaFTHGk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 Jun 2014 03:06:40 -0400
+	id S1751181AbaFJFbj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 10 Jun 2014 01:31:39 -0400
+Message-ID: <53969834.3040404@linux.intel.com>
+Date: Tue, 10 Jun 2014 13:31:32 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [Patch] iommu/vt-d: fix bug in handling multiple RMRRs for the same PCI device
-Date: Fri, 20 Jun 2014 15:08:06 +0800
-Message-Id: <1403248086-13853-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: Re: [Patch V4 12/42] x86, ioapic: kill static variable nr_irqs_gsi
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com> <1402302011-23642-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1406100121090.3830@nanos>
+In-Reply-To: <alpine.DEB.2.10.1406100121090.3830@nanos>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function dmar_iommu_notify_scope_dev() makes a wrong assumption that
-there's one RMRR for each PCI device at most, which causes DMA failure
-on some HP platforms. So enhance dmar_iommu_notify_scope_dev() to
-handle multiple RMRRs for the same PCI device.
+Hi Thomas,
+	This piece of code is inherited from current IOAPIC driver
+and I think it's a workaround for some weird platforms.
+	For normal platforms with both 8259A and IOAPIC controllers,
+legacy ISA IRQs should be connected to both 8259A and IOAPIC pins
+(ignore timer and cascade IRQs for simplicity). According to comments
+ in current kernel, there are some platforms on which:
+1) some ISA IRQs are only connected to 8259A controllers.
+2) the corresponding IOAPIC pins are connected to some non-ISA IRQs.
+	For such platforms, IRQ0-15 are used for ISA IRQs and another
+16 IRQs just above gsi_top are reserved for IOAPIC pins 0-15 which
+are connected to non-ISA IRQs.
+	I have no real experience with such a platform, but just
+guessing possible cases according to kernel comments and "Multiple
+Processor Specification". Please look at these two pictures for quick
+reference.
+http://www.manualslib.com/manual/77733/Intel-Multiprocessor.html?page=31#manual
+http://www.manualslib.com/manual/77733/Intel-Multiprocessor.html?page=63#manual
 
-Fixbug: https://bugzilla.novell.com/show_bug.cgi?id=879482
+Thanks!
+Gerry
 
-Cc: <stable@vger.kernel.org> # 3.15
-Reported-by: Tom Mingarelli <thomas.mingarelli@hp.com>
-Tested-by: Linda Knippers <linda.knippers@hp.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |    9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 6bb32773c3ac..51b6b77dc3e5 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3816,14 +3816,11 @@ int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
- 				((void *)rmrr) + rmrr->header.length,
- 				rmrr->segment, rmrru->devices,
- 				rmrru->devices_cnt);
--			if (ret > 0)
--				break;
--			else if(ret < 0)
-+			if(ret < 0)
- 				return ret;
- 		} else if (info->event == BUS_NOTIFY_DEL_DEVICE) {
--			if (dmar_remove_dev_scope(info, rmrr->segment,
--				rmrru->devices, rmrru->devices_cnt))
--				break;
-+			dmar_remove_dev_scope(info, rmrr->segment,
-+				rmrru->devices, rmrru->devices_cnt);
- 		}
- 	}
- 
--- 
-1.7.10.4
-
+On 2014/6/10 7:22, Thomas Gleixner wrote:
+> On Mon, 9 Jun 2014, Jiang Liu wrote:
+>>  unsigned int arch_dynirq_lower_bound(unsigned int from)
+>>  {
+>> -	return from < nr_irqs_gsi ? nr_irqs_gsi : from;
+>> +	unsigned int min = gsi_top + NR_IRQS_LEGACY;
+> 
+> Why is this gsi_top + NR_IRQ_LEGACY? The legacy interrupts are part of
+> the gsi space, aren't they?
+> 
+> Thanks,
+> 
+> 	tglx
+> 
