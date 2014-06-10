@@ -1,52 +1,231 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:46995 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753437AbaF3KBN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 06:01:13 -0400
-Date: Mon, 30 Jun 2014 11:00:49 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Jean-Francois Moine <moinejf@free.fr>
-Cc: Andrew Lunn <andrew@lunn.ch>, linux-ide@vger.kernel.org,
-	Alessandro Zummo <a.zummo@towertech.it>,
-	alsa-devel@alsa-project.org, Bryan Wu <cooloney@gmail.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	rtc-linux@googlegroups.com, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Tejun Heo <tj@kernel.org>, Wim Van Sebroeck <wim@iguana.be>,
-	Mark Brown <broonie@kernel.org>,
-	Richard Purdie <rpurdie@rpsys.net>, linux-pci@vger.kernel.org,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-leds@vger.kernel.org, linux-watchdog@vger.kernel.org
-Subject: Re: [alsa-devel] [PATCH 00/13] Remove mach-kirkwood and mach-dove
-Message-ID: <20140630100048.GU32514@n2100.arm.linux.org.uk>
-References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <20140630091643.2df3b0fb@armhf> <20140630084918.GS32514@n2100.arm.linux.org.uk> <20140630114701.1368d49e@armhf>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140630114701.1368d49e@armhf>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:35696 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932145AbaFJB47 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:56:59 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 10 Jun 2014 11:56:55 +1000
+Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E691E3578048
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:53 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1ucQP24445110
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:38 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1uqAD032569
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:53 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: benh@au1.ibm.com
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [RFC PATCH V3 01/17] pci/iov: Export interface for retrieve VF's BDF
+Date: Tue, 10 Jun 2014 09:56:23 +0800
+Message-Id: <1402365399-5121-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 30, 2014 at 11:47:01AM +0200, Jean-Francois Moine wrote:
-> Have you declared the LCD clock in dove.dtsi?
-> 
->  	lcdclk: fixed-clock {
-> 		compatible = "fixed-clock";
->  		#clock-cells = <0>;
->  		clock-frequency = <400000000>;
->  	};
+When implementing the SR-IOV on PowerNV platform, some resource reservation is
+needed for VFs which don't exist at the bootup stage. To do the match between
+resources and VFs, the code need to get the VF's BDF in advance.
 
-And what difference would that make - this would not be used.
+In this patch, it exports the interface to retrieve VF's BDF:
+   * Make the virtfn_bus as an interface
+   * Make the virtfn_devfn as an interface
+   * rename them with more specific name
+   * code cleanup in pci_sriov_resource_alignment()
 
-The clock used for the LCD controller somes from the Si5351.  The internal
-clocks are not used as they are unsuitable for generating the resolutions
-we require.  The other clocks used by the LCD controller (AXI clock and
-PLL clock) are both fundamental clocks in the SoC, neither are 400MHz.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c   |   26 +++++++-------------------
+ drivers/pci/pci.h   |   21 ---------------------
+ include/linux/pci.h |   43 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 50 insertions(+), 40 deletions(-)
 
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 9dce7c5..589ef7d 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -19,18 +19,6 @@
+ 
+ #define VIRTFN_ID_LEN	16
+ 
+-static inline u8 virtfn_bus(struct pci_dev *dev, int id)
+-{
+-	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
+-				    dev->sriov->stride * id) >> 8);
+-}
+-
+-static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+-{
+-	return (dev->devfn + dev->sriov->offset +
+-		dev->sriov->stride * id) & 0xff;
+-}
+-
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ {
+ 	struct pci_bus *child;
+@@ -69,7 +57,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	struct pci_bus *bus;
+ 
+ 	mutex_lock(&iov->dev->sriov->lock);
+-	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
++	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+ 	if (!bus)
+ 		goto failed;
+ 
+@@ -77,7 +65,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	if (!virtfn)
+ 		goto failed0;
+ 
+-	virtfn->devfn = virtfn_devfn(dev, id);
++	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
+ 	virtfn->vendor = dev->vendor;
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+ 	pci_setup_device(virtfn);
+@@ -140,8 +128,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+ 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+-					     virtfn_bus(dev, id),
+-					     virtfn_devfn(dev, id));
++					     pci_iov_virtfn_bus(dev, id),
++					     pci_iov_virtfn_devfn(dev, id));
+ 	if (!virtfn)
+ 		return;
+ 
+@@ -307,7 +295,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	iov->offset = offset;
+ 	iov->stride = stride;
+ 
+-	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
++	if (pci_iov_virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
+ 		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
+ 		return -ENOMEM;
+ 	}
+@@ -616,7 +604,7 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+ 	if (!reg)
+ 		return 0;
+ 
+-	 __pci_read_base(dev, type, &tmp, reg);
++	__pci_read_base(dev, type, &tmp, reg);
+ 	return resource_alignment(&tmp);
+ }
+ 
+@@ -646,7 +634,7 @@ int pci_iov_bus_range(struct pci_bus *bus)
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (!dev->is_physfn)
+ 			continue;
+-		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
++		busnr = pci_iov_virtfn_bus(dev, dev->sriov->total_VFs - 1);
+ 		if (busnr > max)
+ 			max = busnr;
+ 	}
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4df38df..51f1f7c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -223,27 +223,6 @@ static inline int pci_ari_enabled(struct pci_bus *bus)
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+ void pci_disable_bridge_window(struct pci_dev *dev);
+ 
+-/* Single Root I/O Virtualization */
+-struct pci_sriov {
+-	int pos;		/* capability position */
+-	int nres;		/* number of resources */
+-	u32 cap;		/* SR-IOV Capabilities */
+-	u16 ctrl;		/* SR-IOV Control */
+-	u16 total_VFs;		/* total VFs associated with the PF */
+-	u16 initial_VFs;	/* initial VFs associated with the PF */
+-	u16 num_VFs;		/* number of VFs available */
+-	u16 offset;		/* first VF Routing ID offset */
+-	u16 stride;		/* following VF stride */
+-	u32 pgsz;		/* page size for BAR alignment */
+-	u8 link;		/* Function Dependency Link */
+-	u16 driver_max_VFs;	/* max num VFs driver supports */
+-	struct pci_dev *dev;	/* lowest numbered PF */
+-	struct pci_dev *self;	/* this PF */
+-	struct mutex lock;	/* lock for VF bus */
+-	struct work_struct mtask; /* VF Migration task */
+-	u8 __iomem *mstate;	/* VF Migration State Array */
+-};
+-
+ #ifdef CONFIG_PCI_ATS
+ void pci_restore_ats_state(struct pci_dev *dev);
+ #else
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 33aa2ca..ddb1ca0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -240,6 +240,27 @@ struct pci_vpd;
+ struct pci_sriov;
+ struct pci_ats;
+ 
++/* Single Root I/O Virtualization */
++struct pci_sriov {
++	int pos;		/* capability position */
++	int nres;		/* number of resources */
++	u32 cap;		/* SR-IOV Capabilities */
++	u16 ctrl;		/* SR-IOV Control */
++	u16 total_VFs;		/* total VFs associated with the PF */
++	u16 initial_VFs;	/* initial VFs associated with the PF */
++	u16 num_VFs;		/* number of VFs available */
++	u16 offset;		/* first VF Routing ID offset */
++	u16 stride;		/* following VF stride */
++	u32 pgsz;		/* page size for BAR alignment */
++	u8 link;		/* Function Dependency Link */
++	u16 driver_max_VFs;	/* max num VFs driver supports */
++	struct pci_dev *dev;	/* lowest numbered PF */
++	struct pci_dev *self;	/* this PF */
++	struct mutex lock;	/* lock for VF bus */
++	struct work_struct mtask; /* VF Migration task */
++	u8 __iomem *mstate;	/* VF Migration State Array */
++};
++
+ /*
+  * The pci_dev structure is used to describe PCI devices.
+  */
+@@ -1595,6 +1616,20 @@ int pci_ext_cfg_avail(void);
+ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
+ 
+ #ifdef CONFIG_PCI_IOV
++static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
++{
++	if (!dev->is_physfn)
++		return -1;
++	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
++				    dev->sriov->stride * id) >> 8);
++}
++static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
++{
++	if (!dev->is_physfn)
++		return -1;
++	return (dev->devfn + dev->sriov->offset +
++		dev->sriov->stride * id) & 0xff;
++}
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
+ irqreturn_t pci_sriov_migration(struct pci_dev *dev);
+@@ -1603,6 +1638,14 @@ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ #else
++static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
++{
++	return -1;
++}
++static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
++{
++	return -1;
++}
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+ static inline void pci_disable_sriov(struct pci_dev *dev) { }
 -- 
-FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
-improving, and getting towards what was expected from it.
+1.7.9.5
+
