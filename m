@@ -1,95 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V3 17/21] iommu/vt-d: search _DSM method for DMAR hotplug
-Date: Wed, 25 Jun 2014 17:02:43 +0800
-Message-Id: <1403686967-10887-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:35472 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933389AbaFJB5A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:57:00 -0400
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 10 Jun 2014 07:26:58 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 0B0A4E004B
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:55 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1vlLP60555296
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:47 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1utXb008952
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:26:56 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: benh@au1.ibm.com
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [RFC PATCH V3 03/17] ppc/pci: don't unset pci resources for VFs
+Date: Tue, 10 Jun 2014 09:56:25 +0800
+Message-Id: <1402365399-5121-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to Intel VT-d specification, _DSM method to support DMAR
-hotplug should exist directly under corresponding ACPI object
-representing PCI host bridge. But some BIOSes doesn't conform to
-this, so search for _DSM method in the subtree starting from the
-ACPI object representing the PCI host bridge.
+When the PCI_REASSIGN_ALL_RSRC is set, each resource for a pci_dev will be
+unset. which means the pci core will reassign those resources.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+While this behavior will clean up the resources information for VFs, whose
+value is calculated in virtfn_add.
+
+This patch adds a condition. If the pci_dev is a VF, skip the resource
+unset process.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- drivers/iommu/dmar.c |   35 +++++++++++++++++++++++++++++++----
- 1 file changed, 31 insertions(+), 4 deletions(-)
+ arch/powerpc/kernel/pci-common.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index ea4771e68e59..8854b070b4bb 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1921,21 +1921,48 @@ static int dmar_hotplug_remove(acpi_handle handle)
- 	return ret;
- }
- 
--static int dmar_device_hotplug(acpi_handle handle, bool insert)
-+static acpi_status dmar_get_dsm_handle(acpi_handle handle, u32 lvl,
-+				       void *context, void **retval)
-+{
-+	acpi_handle *phdl = retval;
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index d9476c1..c449a26 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -824,6 +824,12 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
+ 		       pci_name(dev));
+ 		return;
+ 	}
 +
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		*phdl = handle;
-+		return AE_CTRL_TERMINATE;
-+	}
++#ifdef CONFIG_PCI_IOV
++	if (dev->is_virtfn)
++		return;
++#endif
 +
-+	return AE_OK;
-+}
-+
-+int dmar_device_hotplug(acpi_handle handle, bool insert)
- {
- 	int ret;
-+	acpi_handle tmp = NULL;
-+	acpi_status status;
- 
- 	if (!dmar_in_use())
- 		return 0;
- 
--	if (!dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD))
-+	if (dmar_detect_dsm(handle, DMAR_DSM_FUNC_DRHD)) {
-+		tmp = handle;
-+	} else {
-+		status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-+					     ACPI_UINT32_MAX,
-+					     dmar_get_dsm_handle,
-+					     NULL, NULL, &tmp);
-+		if (ACPI_FAILURE(status)) {
-+			pr_warn("Failed to locate _DSM method.\n");
-+			return -ENXIO;
-+		}
-+	}
-+	if (tmp == NULL)
- 		return 0;
- 
- 	down_write(&dmar_global_lock);
- 	if (insert)
--		ret = dmar_hotplug_insert(handle);
-+		ret = dmar_hotplug_insert(tmp);
- 	else
--		ret = dmar_hotplug_remove(handle);
-+		ret = dmar_hotplug_remove(tmp);
- 	up_write(&dmar_global_lock);
- 
- 	return ret;
+ 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+ 		struct resource *res = dev->resource + i;
+ 		struct pci_bus_region reg;
 -- 
-1.7.10.4
+1.7.9.5
 
