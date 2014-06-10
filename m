@@ -1,133 +1,147 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V4 14/42] x86, ioapic: use irq_cfg() instead of irq_get_chip_data() for better readability
-Date: Mon,  9 Jun 2014 16:19:43 +0800
-Message-Id: <1402302011-23642-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:57494 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932145AbaFJB44 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:56:56 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 10 Jun 2014 11:56:53 +1000
+Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 953022CE8047
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:50 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1uYqL9044254
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:35 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1unvk024218
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:50 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: benh@au1.ibm.com
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [RFC PATCH V3 00/17] Enable SRIOV on POWER8
+Date: Tue, 10 Jun 2014 09:56:22 +0800
+Message-Id: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use defined helper function irq_cfg() instead of irq_get_chip_data() for
-better readability.
+This patch set enable the SRIOV on POWER8. This is not the final version, some
+patches rely on un-merged patches.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+The gerneral idea is put each VF in their own PE and allocated necessary
+resources, like DMA/IOMMU_TABLE.
+
+One thing special for VF PE is we use M64BT to cover the IOV BAR. This means
+we need to do some hack on pci devices's resources.
+1. Expand the IOV BAR properly.
+2. Shift the IOV BAR properly.
+3. IOV BAR alignment is the total size instead of an individual size.
+4. Take the IOV BAR alignment into consideration in the sizing and assigning.
+
+Test Environment:
+       The SRIOV device tested is Emulex Lancer and Mellanox ConnectX-3.
+
+Examples on pass through a VF to guest through vfio:
+	1. install necessary modules
+	   modprobe vfio
+	   modprobe vfio-pci
+	2. retrieve the iommu_group the device belongs to
+	   readlink /sys/bus/pci/devices/0000:06:0d.0/iommu_group
+	   ../../../../kernel/iommu_groups/26
+	   This means it belongs to group 26
+	3. see how many devices under this iommu_group
+	   ls ls /sys/kernel/iommu_groups/26/devices/
+	4. unbind the original driver and bind to vfio-pci driver
+	   echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
+	   echo  1102 0002 > /sys/bus/pci/drivers/vfio-pci/new_id
+	   Note: this should be done for each device in the same iommu_group
+	5. Start qemu and pass device through vfio
+	   /home/ywywyang/git/qemu-impreza/ppc64-softmmu/qemu-system-ppc64 \
+		   -M pseries -m 2048 -enable-kvm -nographic \
+		   -drive file=/home/ywywyang/kvm/fc19.img \
+		   -monitor telnet:localhost:5435,server,nowait -boot cd \
+		   -device "spapr-pci-vfio-host-bridge,id=CXGB3,iommu=26,index=6"
+
+Verify this is the exact VF response:
+	1. ping from a machine in the same subnet(the broadcast domain)
+	2. run arp -n on this machine
+	   9.115.251.20             ether   00:00:c9:df:ed:bf   C eth0
+	3. ifconfig in the guest
+	   # ifconfig eth1
+	   eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+	        inet 9.115.251.20  netmask 255.255.255.0  broadcast 9.115.251.255
+		inet6 fe80::200:c9ff:fedf:edbf  prefixlen 64  scopeid 0x20<link>
+	        ether 00:00:c9:df:ed:bf  txqueuelen 1000 (Ethernet)
+	        RX packets 175  bytes 13278 (12.9 KiB)
+	        RX errors 0  dropped 0  overruns 0  frame 0
+		TX packets 58  bytes 9276 (9.0 KiB)
+	        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+	4. They have the same MAC address
+
+	Note: make sure you shutdown other network interfaces in guest.
+
 ---
- arch/x86/kernel/apic/io_apic.c |   20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+v2 -> v3:
+   1. change the return type of virtfn_bus/virtfn_devfn to int
+      change the name of these two functions to pci_iov_virtfn_bus/pci_iov_virtfn_devfn
+   2. reduce the second parameter or pcibios_sriov_disable()
+   3. use data instead of pe in "ppc/pnv: allocate pe->iommu_table dynamically"
+   4. rename __pci_sriov_resource_size to pcibios_sriov_resource_size
+   5. rename __pci_sriov_resource_alignment to pcibios_sriov_resource_alignment
+v1 -> v2:
+   1. change the return value of virtfn_bus/virtfn_devfn to 0
+   2. move some TCE related marco definition to
+      arch/powerpc/platforms/powernv/pci.h
+   3. fix the __pci_sriov_resource_alignment on powernv platform
+      During the sizing stage, the IOV BAR is truncated to 0, which will
+      effect the order of allocation. Fix this, so that make sure BAR will be
+      allocated ordered by their alignment.
+v0 -> v1:
+   1. Improve the change log for
+      "PCI: Add weak __pci_sriov_resource_size() interface"
+      "PCI: Add weak __pci_sriov_resource_alignment() interface"
+      "PCI: take additional IOV BAR alignment in sizing and assigning"
+   2. Wrap VF PE code in CONFIG_PCI_IOV
+   3. Did regression test on P7.
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 8de9a837790b..0b2fb2aac7a6 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -230,7 +230,7 @@ int __init arch_early_irq_init(void)
- 	return 0;
- }
- 
--static struct irq_cfg *irq_cfg(unsigned int irq)
-+static inline struct irq_cfg *irq_cfg(unsigned int irq)
- {
- 	return irq_get_chip_data(irq);
- }
-@@ -272,7 +272,7 @@ static struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
- 	if (res < 0) {
- 		if (res != -EEXIST)
- 			return NULL;
--		cfg = irq_get_chip_data(at);
-+		cfg = irq_cfg(at);
- 		if (cfg)
- 			return cfg;
- 	}
-@@ -1204,7 +1204,7 @@ void __setup_vector_irq(int cpu)
- 	raw_spin_lock(&vector_lock);
- 	/* Mark the inuse vectors */
- 	for_each_active_irq(irq) {
--		cfg = irq_get_chip_data(irq);
-+		cfg = irq_cfg(irq);
- 		if (!cfg)
- 			continue;
- 
-@@ -1612,7 +1612,7 @@ __apicdebuginit(void) print_IO_APICs(void)
- 		if (chip != &ioapic_chip)
- 			continue;
- 
--		cfg = irq_get_chip_data(irq);
-+		cfg = irq_cfg(irq);
- 		if (!cfg)
- 			continue;
- 		entry = cfg->irq_2_pin;
-@@ -2253,7 +2253,7 @@ static void irq_complete_move(struct irq_cfg *cfg)
- 
- void irq_force_complete_move(int irq)
- {
--	struct irq_cfg *cfg = irq_get_chip_data(irq);
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 
- 	if (!cfg)
- 		return;
-@@ -2515,7 +2515,7 @@ static inline void init_IO_APIC_traps(void)
- 	unsigned int irq;
- 
- 	for_each_active_irq(irq) {
--		cfg = irq_get_chip_data(irq);
-+		cfg = irq_cfg(irq);
- 		if (IO_APIC_IRQ(irq) && cfg && !cfg->vector) {
- 			/*
- 			 * Hmm.. We don't have an entry for this,
-@@ -2648,7 +2648,7 @@ early_param("disable_timer_pin_1", disable_timer_pin_setup);
-  */
- static inline void __init check_timer(void)
- {
--	struct irq_cfg *cfg = irq_get_chip_data(0);
-+	struct irq_cfg *cfg = irq_cfg(0);
- 	int node = cpu_to_node(0);
- 	int apic1, pin1, apic2, pin2;
- 	unsigned long flags;
-@@ -2912,7 +2912,7 @@ int arch_setup_hwirq(unsigned int irq, int node)
- 
- void arch_teardown_hwirq(unsigned int irq)
- {
--	struct irq_cfg *cfg = irq_get_chip_data(irq);
-+	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned long flags;
- 
- 	free_remapped_irq(irq);
-@@ -3041,7 +3041,7 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 	if (!irq_offset)
- 		write_msi_msg(irq, &msg);
- 
--	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
-+	setup_remapped_irq(irq, irq_cfg(irq), chip);
- 
- 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
- 
-@@ -3176,7 +3176,7 @@ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
- 
- 	hpet_msi_write(irq_get_handler_data(irq), &msg);
- 	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
--	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
-+	setup_remapped_irq(irq, irq_cfg(irq), chip);
- 
- 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
- 	return 0;
+Wei Yang (17):
+  pci/iov: Export interface for retrieve VF's BDF
+  pci/of: Match PCI VFs to dev-tree nodes dynamically
+  ppc/pci: don't unset pci resources for VFs
+  PCI: SRIOV: add VF enable/disable hook
+  ppc/pnv: user macro to define the TCE size
+  ppc/pnv: allocate pe->iommu_table dynamically
+  ppc/pnv: Add function to deconfig a PE
+  PCI: Add weak pcibios_sriov_resource_size() interface
+  PCI: Add weak pcibios_sriov_resource_alignment() interface
+  PCI: take additional IOV BAR alignment in sizing and assigning
+  ppc/pnv: Expand VF resources according to the number of total_pe
+  powerpc/powernv: implement pcibios_sriov_resource_alignment on
+    powernv
+  powerpc/powernv: shift VF resource with an offset
+  ppc/pci: create/release dev-tree node for VFs
+  powerpc/powernv: allocate VF PE
+  ppc/pci: Expanding IOV BAR, with m64_per_iov supported
+  ppc/pnv: Group VF PE when IOV BAR is big on PHB3
+
+ arch/powerpc/include/asm/iommu.h          |    3 +
+ arch/powerpc/include/asm/machdep.h        |    7 +
+ arch/powerpc/include/asm/pci-bridge.h     |    7 +
+ arch/powerpc/include/asm/tce.h            |    3 +-
+ arch/powerpc/kernel/pci-common.c          |   29 +
+ arch/powerpc/platforms/powernv/Kconfig    |    1 +
+ arch/powerpc/platforms/powernv/pci-ioda.c |  824 +++++++++++++++++++++++++++--
+ arch/powerpc/platforms/powernv/pci.c      |   22 +-
+ arch/powerpc/platforms/powernv/pci.h      |   17 +-
+ drivers/pci/iov.c                         |   84 ++-
+ drivers/pci/pci.h                         |   21 -
+ drivers/pci/setup-bus.c                   |   66 ++-
+ include/linux/pci.h                       |   46 ++
+ 13 files changed, 1041 insertions(+), 89 deletions(-)
+
 -- 
-1.7.10.4
+1.7.9.5
 
