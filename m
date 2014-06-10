@@ -1,250 +1,350 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:34052 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261AbaFWGHM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 02:07:12 -0400
+Received: from e28smtp09.in.ibm.com ([122.248.162.9]:50105 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933943AbaFJB50 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:57:26 -0400
 Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 23 Jun 2014 16:07:10 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 6E30C2BB0054
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 16:07:08 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N5iqE150069728
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 15:44:52 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N676qb011225
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 16:07:07 +1000
-Date: Mon, 23 Jun 2014 16:07:07 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: benh@au1.ibm.com, linuxppc-dev@lists.ozlabs.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	gwshan@linux.vnet.ibm.com, yan@linux.vnet.ibm.com,
-	qiudayu@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH V3 11/17] ppc/pnv: Expand VF resources according to
- the number of total_pe
-Message-ID: <20140623060707.GA12055@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 10 Jun 2014 07:27:23 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 890983940049
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:21 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1wCPL57016320
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:28:13 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1vKgR009642
+	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:20 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: benh@au1.ibm.com
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [RFC PATCH V3 17/17] ppc/pnv: Group VF PE when IOV BAR is big on PHB3
+Date: Tue, 10 Jun 2014 09:56:39 +0800
+Message-Id: <1402365399-5121-18-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
 References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-12-git-send-email-weiyang@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1402365399-5121-12-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 09:56:33AM +0800, Wei Yang wrote:
->On PHB3, VF resources will be covered by M64 BAR to have better PE isolation.
->Mostly the total_pe number is different from the total_VFs, which will lead to
->a conflict between MMIO space and the PE number.
->
->This patch expands the VF resource size to reserve total_pe number of VFs'
->resource, which prevents the conflict.
->
->Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->---
-> arch/powerpc/include/asm/machdep.h        |    6 +++
-> arch/powerpc/include/asm/pci-bridge.h     |    3 ++
-> arch/powerpc/kernel/pci-common.c          |   15 ++++++
-> arch/powerpc/platforms/powernv/pci-ioda.c |   83 +++++++++++++++++++++++++++++
-> 4 files changed, 107 insertions(+)
->
->diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
->index ad3025d..2f2e770 100644
->--- a/arch/powerpc/include/asm/machdep.h
->+++ b/arch/powerpc/include/asm/machdep.h
->@@ -234,9 +234,15 @@ struct machdep_calls {
->
-> 	/* Called after scan and before resource survey */
-> 	void (*pcibios_fixup_phb)(struct pci_controller *hose);
->+#ifdef CONFIG_PCI_IOV
->+	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
->+#endif /* CONFIG_PCI_IOV */
->
-> 	/* Called during PCI resource reassignment */
-> 	resource_size_t (*pcibios_window_alignment)(struct pci_bus *, unsigned long type);
->+#ifdef CONFIG_PCI_IOV
->+	resource_size_t (*__pci_sriov_resource_size)(struct pci_dev *, int resno);
+When IOV BAR is big, each of it is covered by 4 M64 window. This leads to
+several VF PE sits in one PE in terms of M64.
 
-	resource_size_t (*pcibios_sriov_resource_size)(struct pci_dev *, int resno);
+This patch group VF PEs according to the M64 allocation.
 
-You probably can put all SRIOV related functions together:
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h     |    2 +-
+ arch/powerpc/platforms/powernv/pci-ioda.c |  183 +++++++++++++++++++++++------
+ 2 files changed, 145 insertions(+), 40 deletions(-)
 
-#ifdef CONFIG_PCI_IOV
-	func_a;
-	func_b;
-	 :
-#endif
-
->+#endif /* CONFIG_PCI_IOV */
->
-> 	/* Called to shutdown machine specific hardware not already controlled
-> 	 * by other drivers.
->diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
->index 4ca90a3..8c849d8 100644
->--- a/arch/powerpc/include/asm/pci-bridge.h
->+++ b/arch/powerpc/include/asm/pci-bridge.h
->@@ -168,6 +168,9 @@ struct pci_dn {
-> #define IODA_INVALID_PE		(-1)
-> #ifdef CONFIG_PPC_POWERNV
-> 	int	pe_number;
->+#ifdef CONFIG_PCI_IOV
->+	u16     vfs;
->+#endif /* CONFIG_PCI_IOV */
-> #endif
-> };
->
->diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->index c449a26..c4e2e92 100644
->--- a/arch/powerpc/kernel/pci-common.c
->+++ b/arch/powerpc/kernel/pci-common.c
->@@ -120,6 +120,16 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
-> 	return 1;
-> }
->
->+#ifdef CONFIG_PCI_IOV
->+resource_size_t pcibios_sriov_resource_size(struct pci_dev *pdev, int resno)
->+{
->+	if (ppc_md.__pci_sriov_resource_size)
->+		return ppc_md.__pci_sriov_resource_size(pdev, resno);
->+
->+	return 0;
->+}
->+#endif /* CONFIG_PCI_IOV */
->+
-> static resource_size_t pcibios_io_size(const struct pci_controller *hose)
-> {
-> #ifdef CONFIG_PPC64
->@@ -1675,6 +1685,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
-> 	if (ppc_md.pcibios_fixup_phb)
-> 		ppc_md.pcibios_fixup_phb(hose);
->
->+#ifdef CONFIG_PCI_IOV
->+	if (ppc_md.pcibios_fixup_sriov)
->+		ppc_md.pcibios_fixup_sriov(bus);
-
-One question I probably asked before: why we can't put the logic
-of ppc_md.pcibios_fixup_sriov() to ppc_md.pcibios_fixup_phb()?
-
->+#endif /* CONFIG_PCI_IOV */
->+
-> 	/* Configure PCI Express settings */
-> 	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-> 		struct pci_bus *child;
->diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->index 87cb3089..7dfad6a 100644
->--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->@@ -1298,6 +1298,67 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
-> static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
-> #endif /* CONFIG_PCI_MSI */
->
->+#ifdef CONFIG_PCI_IOV
->+static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
->+{
->+	struct pci_controller *hose;
->+	struct pnv_phb *phb;
->+	struct resource *res;
->+	int i;
->+	resource_size_t size;
->+	struct pci_dn *pdn;
->+
->+	if (!pdev->is_physfn || pdev->is_added)
->+		return;
->+
->+	hose = pci_bus_to_host(pdev->bus);
->+	if (!hose) {
->+		dev_err(&pdev->dev, "%s: NULL pci_controller\n", __func__);
->+		return;
->+	}
->+
->+	phb = hose->private_data;
->+	if (!phb) {
->+		dev_err(&pdev->dev, "%s: NULL PHB\n", __func__);
->+		return;
->+	}
->+
->+	pdn = pci_get_pdn(pdev);
->+	pdn->vfs = 0;
->+
->+	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
->+		res = &pdev->resource[i];
->+		if (!res->flags || res->parent)
->+			continue;
->+
->+		if (!is_mem_pref_64_type(res->flags))
->+			continue;
->+
->+		dev_info(&pdev->dev, "PowerNV: Fixing VF BAR[%d] %pR to\n",
->+				i, res);
->+		size = pci_sriov_resource_size(pdev, i);
->+		res->end = res->start + size * phb->ioda.total_pe - 1;
->+		dev_info(&pdev->dev, "                       %pR\n", res);
->+	}
->+	pdn->vfs = phb->ioda.total_pe;
->+}
->+
->+static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
->+{
->+	struct pci_dev *pdev;
->+	struct pci_bus *b;
->+
->+	list_for_each_entry(pdev, &bus->devices, bus_list) {
->+		b = pdev->subordinate;
->+
->+		if (b)
->+			pnv_pci_ioda_fixup_sriov(b);
->+
->+		pnv_pci_ioda_fixup_iov_resources(pdev);
->+	}
->+}
->+#endif /* CONFIG_PCI_IOV */
->+
-> /*
->  * This function is supposed to be called on basis of PE from top
->  * to bottom style. So the the I/O or MMIO segment assigned to
->@@ -1498,6 +1559,22 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
-> 	return phb->ioda.io_segsize;
-> }
->
->+#ifdef CONFIG_PCI_IOV
->+static resource_size_t __pnv_pci_sriov_resource_size(struct pci_dev *pdev, int resno)
->+{
->+	struct pci_dn *pdn = pci_get_pdn(pdev);
->+	u64 size = 0;
->+
->+	if (!pdn->vfs)
->+		return size;
->+
->+	size = resource_size(pdev->resource + resno);
->+	do_div(size, pdn->vfs);
->+
->+	return size;
->+}
->+#endif /* CONFIG_PCI_IOV */
->+
-> /* Prevent enabling devices for which we couldn't properly
->  * assign a PE
->  */
->@@ -1692,9 +1769,15 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
-> 	 * for the P2P bridge bars so that each PCI bus (excluding
-> 	 * the child P2P bridges) can form individual PE.
-> 	 */
->+#ifdef CONFIG_PCI_IOV
->+	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
->+#endif /* CONFIG_PCI_IOV */
-> 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
-> 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
-> 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
->+#ifdef CONFIG_PCI_IOV
->+	ppc_md.__pci_sriov_resource_size = __pnv_pci_sriov_resource_size;
->+#endif /* CONFIG_PCI_IOV */
-> 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
->
-> 	/* Reset IODA tables to a clean state */
-
-Thanks,
-Gavin
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 36b88e4..f0a21f5 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -173,7 +173,7 @@ struct pci_dn {
+ 	int     offset;
+ #define M64_PER_IOV 4
+ 	int     m64_per_iov;
+-	int     m64_wins[PCI_SRIOV_NUM_BARS];
++	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
+ #endif /* CONFIG_PCI_IOV */
+ #endif
+ };
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 98fc163..86688cd 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -804,26 +804,27 @@ static int pnv_pci_vf_release_m64(struct pci_dev *pdev)
+ 	struct pci_controller *hose;
+ 	struct pnv_phb        *phb;
+ 	struct pci_dn         *pdn;
+-	int                    i;
++	int                    i, j;
+ 
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+ 	phb = hose->private_data;
+ 	pdn = pci_get_pdn(pdev);
+ 
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		if (pdn->m64_wins[i] == -1)
+-			continue;
+-		opal_pci_phb_mmio_enable(phb->opal_id,
+-				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i], 0);
+-		clear_bit(pdn->m64_wins[i], &phb->ioda.m64win_alloc);
+-		pdn->m64_wins[i] = -1;
+-	}
++	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
++		for (j = 0; j < M64_PER_IOV; j++) {
++			if (pdn->m64_wins[i][j] == -1)
++				continue;
++			opal_pci_phb_mmio_enable(phb->opal_id,
++				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 0);
++			clear_bit(pdn->m64_wins[i][j], &phb->ioda.m64win_alloc);
++			pdn->m64_wins[i][j] = -1;
++		}
+ 
+ 	return 0;
+ }
+ 
+-static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
++static int pnv_pci_vf_assign_m64(struct pci_dev *pdev, u16 vf_num)
+ {
+ 	struct pci_bus        *bus;
+ 	struct pci_controller *hose;
+@@ -831,17 +832,33 @@ static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
+ 	struct pci_dn         *pdn;
+ 	unsigned int           win;
+ 	struct resource       *res;
+-	int                    i;
++	int                    i, j;
+ 	int64_t                rc;
++	int                    total_vfs;
++	resource_size_t        size, start;
++	int                    pe_num;
++	int                    vf_groups;
++	int                    vf_per_group;
+ 
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+ 	phb = hose->private_data;
+ 	pdn = pci_get_pdn(pdev);
++	total_vfs = pci_sriov_get_totalvfs(pdev);
+ 
+ 	/* Initialize the m64_wins to -1 */
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
+-		pdn->m64_wins[i] = -1;
++		for (j = 0; j < 4; j++)
++			pdn->m64_wins[i][j] = -1;
++
++	if (pdn->m64_per_iov == M64_PER_IOV) {
++		vf_groups = (vf_num <= M64_PER_IOV) ? vf_num: M64_PER_IOV;
++		vf_per_group = (vf_num <= M64_PER_IOV)? 1:
++			__roundup_pow_of_two(vf_num) / pdn->m64_per_iov;
++	} else {
++		vf_groups = 1;
++		vf_per_group = 1;
++	}
+ 
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = pdev->resource + PCI_IOV_RESOURCES + i;
+@@ -851,33 +868,61 @@ static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
+ 		if (!is_mem_pref_64_type(res->flags))
+ 			continue;
+ 
+-		do {
+-			win = find_next_zero_bit(&phb->ioda.m64win_alloc,
+-					phb->ioda.m64_bars, 0);
+-
+-			if (win >= phb->ioda.m64_bars)
+-				goto m64_failed;
+-		} while (test_and_set_bit(win, &phb->ioda.m64win_alloc));
++		for (j = 0; j < vf_groups; j++) {
++			do {
++				win = find_next_zero_bit(&phb->ioda.m64win_alloc,
++						phb->ioda.m64_bars, 0);
++
++				if (win >= phb->ioda.m64_bars)
++					goto m64_failed;
++			} while (test_and_set_bit(win, &phb->ioda.m64win_alloc));
++
++			pdn->m64_wins[i][j] = win;
++
++			if (pdn->m64_per_iov == M64_PER_IOV) {
++				size = pci_sriov_resource_size(pdev,
++						PCI_IOV_RESOURCES + i);
++				size = size * vf_per_group;
++				start = res->start + size * j;
++			} else {
++				size = resource_size(res);
++				start = res->start;
++			}
+ 
+-		pdn->m64_wins[i] = win;
++			/* Map the M64 here */
++			if (pdn->m64_per_iov == M64_PER_IOV) {
++				pe_num = pdn->offset + j;
++				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
++						pe_num, OPAL_M64_WINDOW_TYPE,
++						pdn->m64_wins[i][j], 0);
++			}
+ 
+-		/* Map the M64 here */
+-		rc = opal_pci_set_phb_mem_window(phb->opal_id,
++			rc = opal_pci_set_phb_mem_window(phb->opal_id,
+ 						 OPAL_M64_WINDOW_TYPE,
+-						 pdn->m64_wins[i],
+-						 res->start,
++						 pdn->m64_wins[i][j],
++						 start,
+ 						 0, /* unused */
+-						 resource_size(res));
+-		if (rc != OPAL_SUCCESS) {
+-			pr_err("Failed to map M64 BAR #%d: %lld\n", win, rc);
+-			goto m64_failed;
+-		}
++						 size);
+ 
+-		rc = opal_pci_phb_mmio_enable(phb->opal_id,
+-				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i], 1);
+-		if (rc != OPAL_SUCCESS) {
+-			pr_err("Failed to enable M64 BAR #%d: %llx\n", win, rc);
+-			goto m64_failed;
++
++			if (rc != OPAL_SUCCESS) {
++				pr_err("Failed to set M64 BAR #%d: %lld\n",
++						win, rc);
++				goto m64_failed;
++			}
++
++			if (pdn->m64_per_iov == M64_PER_IOV)
++				rc = opal_pci_phb_mmio_enable(phb->opal_id,
++				     OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 2);
++			else
++				rc = opal_pci_phb_mmio_enable(phb->opal_id,
++				     OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 1);
++
++			if (rc != OPAL_SUCCESS) {
++				pr_err("Failed to enable M64 BAR #%d: %llx\n",
++						win, rc);
++				goto m64_failed;
++			}
+ 		}
+ 	}
+ 	return 0;
+@@ -987,21 +1032,51 @@ static void pnv_pci_release_vf_node(struct pci_dev *dev, u16 vf_num)
+ 	}
+ }
+ 
+-static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
++static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 vf_num)
+ {
+ 	struct pci_bus        *bus;
+ 	struct pci_controller *hose;
+ 	struct pnv_phb        *phb;
+ 	struct pnv_ioda_pe    *pe, *pe_n;
+ 	struct pci_dn         *pdn;
++	u16                    vf_index;
++	int64_t                rc;
+ 
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+ 	phb = hose->private_data;
++	pdn = pci_get_pdn(pdev);
+ 
+ 	if (!pdev->is_physfn)
+ 		return;
+ 
++	if (pdn->m64_per_iov == M64_PER_IOV && vf_num > M64_PER_IOV) {
++		int   vf_group;
++		int   vf_per_group;
++		int   vf_index1;
++
++		vf_per_group = __roundup_pow_of_two(vf_num) / pdn->m64_per_iov;
++
++		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++)
++			for (vf_index = vf_group * vf_per_group;
++				vf_index < (vf_group + 1) * vf_per_group;
++				vf_index++)
++				for (vf_index1 = vf_group * vf_per_group;
++					vf_index1 < (vf_group + 1) * vf_per_group;
++					vf_index1++){
++
++					rc = opal_pci_set_peltv(phb->opal_id,
++						pdn->offset + vf_index,
++						pdn->offset + vf_index1,
++						OPAL_REMOVE_PE_FROM_DOMAIN);
++
++					if (rc)
++					    pr_warn("%s: Failed to unlink same"
++						" group PE#%d(%lld)\n", __func__,
++						pdn->offset + vf_index1, rc);
++				}
++	}
++
+ 	pdn = pci_get_pdn(pdev);
+ 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
+ 		if (pe->parent_dev != pdev)
+@@ -1037,11 +1112,12 @@ int pcibios_sriov_disable(struct pci_dev *pdev)
+ 	vf_num = iov->num_VFs;
+ 
+ 	/* Release VF PEs */
+-	pnv_ioda_release_vf_PE(pdev);
++	pnv_ioda_release_vf_PE(pdev, vf_num);
+ 	pnv_pci_release_vf_node(pdev, vf_num);
+ 
+ 	if (phb->type == PNV_PHB_IODA2) {
+-		pnv_pci_vf_resource_shift(pdev, -pdn->offset);
++		if (pdn->m64_per_iov == 1)
++			pnv_pci_vf_resource_shift(pdev, -pdn->offset);
+ 
+ 		/* Release M64 BARs */
+ 		pnv_pci_vf_release_m64(pdev);
+@@ -1065,6 +1141,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 vf_num)
+ 	int                    pe_num;
+ 	u16                    vf_index;
+ 	struct pci_dn         *pdn;
++	int64_t                rc;
+ 
+ 	bus = pdev->bus;
+ 	hose = pci_bus_to_host(bus);
+@@ -1112,7 +1189,34 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 vf_num)
+ 		mutex_unlock(&phb->ioda.pe_list_mutex);
+ 
+ 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
++	}
+ 
++	if (pdn->m64_per_iov == M64_PER_IOV && vf_num > M64_PER_IOV) {
++		int   vf_group;
++		int   vf_per_group;
++		int   vf_index1;
++
++		vf_per_group = __roundup_pow_of_two(vf_num) / pdn->m64_per_iov;
++
++		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++)
++			for (vf_index = vf_group * vf_per_group;
++				vf_index < (vf_group + 1) * vf_per_group;
++				vf_index++)
++				for (vf_index1 = vf_group * vf_per_group;
++					vf_index1 < (vf_group + 1) * vf_per_group;
++					vf_index1++) {
++
++					rc = opal_pci_set_peltv(phb->opal_id,
++						pdn->offset + vf_index,
++						pdn->offset + vf_index1,
++						OPAL_ADD_PE_TO_DOMAIN);
++
++					if (rc)
++					    pr_warn("%s: Failed to link same "
++						"group PE#%d(%lld)\n",
++						__func__,
++						pdn->offset + vf_index1, rc);
++			}
+ 	}
+ }
+ 
+@@ -1146,14 +1250,15 @@ int pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
+ 		mutex_unlock(&phb->ioda.pe_alloc_mutex);
+ 
+ 		/* Assign M64 BAR accordingly */
+-		ret = pnv_pci_vf_assign_m64(pdev);
++		ret = pnv_pci_vf_assign_m64(pdev, vf_num);
+ 		if (ret) {
+ 			pr_info("No enough M64 resource\n");
+ 			goto m64_failed;
+ 		}
+ 
+ 		/* Do some magic shift */
+-		pnv_pci_vf_resource_shift(pdev, pdn->offset);
++		if (pdn->m64_per_iov == 1)
++			pnv_pci_vf_resource_shift(pdev, pdn->offset);
+ 	}
+ 
+ 	/* Setup VF PEs */
+-- 
+1.7.9.5
 
