@@ -1,66 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from si-002-i42.relay.mailchannels.net ([184.154.112.207]:51301 "EHLO
-	relay.mailchannels.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751009AbaFAHCG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jun 2014 03:02:06 -0400
-From: Eli Billauer <eli.billauer@gmail.com>
-To: tj@kernel.org
-Cc: devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, shuah.kh@samsung.com,
-	iommu@lists.linux-foundation.org, discuss@x86-64.org,
-	Eli Billauer <eli.billauer@gmail.com>
-Subject: [PATCH v2 0/4] devres: dma-mapping: Introducing new functions
-Date: Sun,  1 Jun 2014 10:01:13 +0300
-Message-Id: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH] ACPI / hotplug / PCI: Add hotplug contexts to PCI host bridges
+Date: Tue, 10 Jun 2014 22:51:51 +0200
+Message-ID: <1986515.ZPZrccsmiq@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset consists of new functions to the managed device resource
-API, followed by a patch for the Xillybus driver, which is my motivation
-and what I tested with.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This is a resubmission after changing the API slightly.
+After relatively recent changes in the ACPI-based PCI hotplug
+(ACPIPHP) code, the acpiphp_check_host_bridge() executed for PCI
+host bridges via acpi_pci_root_scan_dependent() doesn't do anything
+useful, because those bridges do not have hotplug contexts.  That
+happens by mistake, so fix it by making acpiphp_enumerate_slots()
+add hotplug contexts to PCI host bridges too and modify
+acpiphp_remove_slots() to drop those contexts for host bridges
+as appropriate.
 
-Rationale: While migrating the staging/xillybus driver to rely completely on
-managed resources, some functionalities were missing, and hence added:
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=76901
+Fixes: 2d8b1d566a5f (ACPI / hotplug / PCI: Get rid of check_sub_bridges())
+Reported-and-tested-by: Gavin Guo <gavin.guo@canonical.com>
+Cc: 3.15+ <stable@vger.kernel.org> # 3.15+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |   10 ++++++
+ drivers/pci/hotplug/acpiphp_glue.c |   60 +++++++++++++++++++++++++------------
+ 2 files changed, 52 insertions(+), 18 deletions(-)
 
-* dmam_map_single()
-* dmam_unmap_single()
-* pcim_map_single()
-* pcim_unmap_single()
-
-Tejun suggested that dma_map_single_attrs() should have a managed version as
-well. The second patch in this set turns dmam_map_single() into
-dma_map_single_attrs(), and implements the former as a macro. Functions added:
-
-* dmam_map_single_attrs()
-* dmam_unmap_single_attrs()
-
-Xillybus' driver works with and without this patch (depends on patches #1 and #3
-only).
-
-Thanks,
-   Eli
-
-Eli Billauer (4):
-  dma-mapping: Add devm_ interface for dma_map_single()
-  dma-mapping: Add devm_ interface for dma_map_single_attrs()
-  dma-mapping: pci: Add devm_ interface for pci_map_single
-  staging: xillybus: Use devm_ API for memory allocation and DMA
-    mapping
-
- Documentation/driver-model/devres.txt    |    6 +
- drivers/base/dma-mapping.c               |  106 +++++++++++++++++
- drivers/staging/xillybus/xillybus.h      |   38 +------
- drivers/staging/xillybus/xillybus_core.c |  186 +++++++++---------------------
- drivers/staging/xillybus/xillybus_of.c   |   61 +---------
- drivers/staging/xillybus/xillybus_pcie.c |   54 ++--------
- include/asm-generic/dma-mapping-common.h |    3 +
- include/asm-generic/pci-dma-compat.h     |   18 +++
- include/linux/dma-mapping.h              |    8 +-
- 9 files changed, 214 insertions(+), 266 deletions(-)
-
--- 
-1.7.2.3
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -373,17 +373,13 @@ static acpi_status acpiphp_add_context(a
+ 
+ static struct acpiphp_bridge *acpiphp_dev_to_bridge(struct acpi_device *adev)
+ {
+-	struct acpiphp_context *context;
+ 	struct acpiphp_bridge *bridge = NULL;
+ 
+ 	acpi_lock_hp_context();
+-	context = acpiphp_get_context(adev);
+-	if (context) {
+-		bridge = context->bridge;
++	if (adev->hp) {
++		bridge = to_acpiphp_root_context(adev->hp)->root_bridge;
+ 		if (bridge)
+ 			get_bridge(bridge);
+-
+-		acpiphp_put_context(context);
+ 	}
+ 	acpi_unlock_hp_context();
+ 	return bridge;
+@@ -881,7 +877,17 @@ void acpiphp_enumerate_slots(struct pci_
+ 	 */
+ 	get_device(&bus->dev);
+ 
+-	if (!pci_is_root_bus(bridge->pci_bus)) {
++	acpi_lock_hp_context();
++	if (pci_is_root_bus(bridge->pci_bus)) {
++		struct acpiphp_root_context *root_context;
++
++		root_context = kzalloc(sizeof(*root_context), GFP_KERNEL);
++		if (!root_context)
++			goto err;
++
++		root_context->root_bridge = bridge;
++		acpi_set_hp_context(adev, &root_context->hp, NULL, NULL, NULL);
++	} else {
+ 		struct acpiphp_context *context;
+ 
+ 		/*
+@@ -890,21 +896,16 @@ void acpiphp_enumerate_slots(struct pci_
+ 		 * parent is going to be handled by pciehp, in which case this
+ 		 * bridge is not interesting to us either.
+ 		 */
+-		acpi_lock_hp_context();
+ 		context = acpiphp_get_context(adev);
+-		if (!context) {
+-			acpi_unlock_hp_context();
+-			put_device(&bus->dev);
+-			pci_dev_put(bridge->pci_dev);
+-			kfree(bridge);
+-			return;
+-		}
++		if (!context)
++			goto err;
++
+ 		bridge->context = context;
+ 		context->bridge = bridge;
+ 		/* Get a reference to the parent bridge. */
+ 		get_bridge(context->func.parent);
+-		acpi_unlock_hp_context();
+ 	}
++	acpi_unlock_hp_context();
+ 
+ 	/* Must be added to the list prior to calling acpiphp_add_context(). */
+ 	mutex_lock(&bridge_mutex);
+@@ -919,6 +920,30 @@ void acpiphp_enumerate_slots(struct pci_
+ 		cleanup_bridge(bridge);
+ 		put_bridge(bridge);
+ 	}
++	return;
++
++ err:
++	acpi_unlock_hp_context();
++	put_device(&bus->dev);
++	pci_dev_put(bridge->pci_dev);
++	kfree(bridge);
++}
++
++void acpiphp_drop_bridge(struct acpiphp_bridge *bridge)
++{
++	if (pci_is_root_bus(bridge->pci_bus)) {
++		struct acpiphp_root_context *root_context;
++		struct acpi_device *adev;
++
++		acpi_lock_hp_context();
++		adev = ACPI_COMPANION(bridge->pci_bus->bridge);
++		root_context = to_acpiphp_root_context(adev->hp);
++		adev->hp = NULL;
++		acpi_unlock_hp_context();
++		kfree(root_context);
++	}
++	cleanup_bridge(bridge);
++	put_bridge(bridge);
+ }
+ 
+ /**
+@@ -936,8 +961,7 @@ void acpiphp_remove_slots(struct pci_bus
+ 	list_for_each_entry(bridge, &bridge_list, list)
+ 		if (bridge->pci_bus == bus) {
+ 			mutex_unlock(&bridge_mutex);
+-			cleanup_bridge(bridge);
+-			put_bridge(bridge);
++			acpiphp_drop_bridge(bridge);
+ 			return;
+ 		}
+ 
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -142,6 +142,16 @@ static inline acpi_handle func_to_handle
+ 	return func_to_acpi_device(func)->handle;
+ }
+ 
++struct acpiphp_root_context {
++	struct acpi_hotplug_context hp;
++	struct acpiphp_bridge *root_bridge;
++};
++
++static inline struct acpiphp_root_context *to_acpiphp_root_context(struct acpi_hotplug_context *hp)
++{
++	return container_of(hp, struct acpiphp_root_context, hp);
++}
++
+ /*
+  * struct acpiphp_attention_info - device specific attention registration
+  *
 
