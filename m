@@ -1,59 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:46654 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753376AbaF2Vfk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jun 2014 17:35:40 -0400
-Date: Sun, 29 Jun 2014 22:35:11 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
-	Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>,
-	Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
 	Kishon Vijay Abraham I <kishon@ti.com>,
-	Alessandro Zummo <a.zummo@towertech.it>,
-	rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>,
-	linux-watchdog@vger.kernel.org
-Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
-Message-ID: <20140629213510.GR32514@n2100.arm.linux.org.uk>
-References: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH v2 0/8] Add Keystone PCIe controller driver
+Date: Tue, 10 Jun 2014 14:51:19 -0400
+Message-ID: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 29, 2014 at 10:59:47PM +0200, Andrew Lunn wrote:
-> This patchset removes arch/arm/mach-kirkwood and arch/arm/mach-dove.
-> These SoCs are now supported in arch/arm/mach-mvebu using device tree.
-> 
-> Change the dependencies for a number of drivers, either to use
-> ARCH_MVEBU where the drivers are generic, or MACH_KIRKWOOD and
-> MACH_DOVE where the drivers are specific to a SoC.
-> 
-> 
-> Andrew Lunn (13):
->   ARM: Kirkwood: Remove mach-kirkwood
->   ARM: Dove: Remove mach-dove
+This patch adds a PCIe controller driver for Keystone SoCs. This
+is based on v1 of the series posted to the mailing list.
 
-There is actually a cubox regression which has yet to be tracked down.
-Running with my kernel (which is not-DT based) runs perfectly.  With
-DT, HDMI output can be unstable.
+CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Mohit Kumar <mohit.kumar@st.com>
+CC: Jingoo Han <jg1.han@samsung.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Pratyush Anand <pratyush.anand@st.com>
+CC: Richard Zhu <r65037@freescale.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>
+CC: Marek Vasut <marex@denx.de>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Pawel Moll <pawel.moll@arm.com>
+CC: Mark Rutland <mark.rutland@arm.com>
+CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+CC: Kumar Gala <galak@codeaurora.org>
+CC: Randy Dunlap <rdunlap@infradead.org>
+CC: Grant Likely <grant.likely@linaro.org> 
 
-One of the problems is that it's /very/ difficult to reproduce, but it
-is reproducable.  I've seen it on two days over many reboots, and I've
-proved it by switching back and forth.  DT sometimes suffers from the
-problem, whereas non-DT /never/ does.
 
-Sebastian is aware of this, and as yet we haven't found a solution,
-nor have we found a way to reliably reproduce it.
+Changelog:
+
+V2
+ - Split the designware pcie enhancement patch to multiple
+   patches based on functionality added
+ - Remove the quirk code and add a patch to fix mps/mrss
+   tuning for ARM. Use kernel command line parameter
+   pci=pcie_bus_perf to work with Keystone PCI Controller.
+   Following patch addressed this.
+     [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
+ - Add documentation for device tree bindings
+ - Add separate interrupt controller nodes for MSI and Legacy
+   IRQs and use irq map for legacy IRQ
+ - Use compatibility to identify v3.65 version of the DW hardware
+   and use it to customize the designware common code.
+ - Use reg property for configuration space instead of range
+ - Other minor updates based on code inspection. 
+
+V1
+ - Add an interrupt controller node for Legacy irq chip and use
+   interrupt map/map-mask property to map legacy IRQs A/B/C/D
+ - Add a Phy driver to replace the original serdes driver
+ - Move common application register handling code to a separate
+   file to allow re-use across other platforms that use older
+   DW PCIe h/w
+ - PCI quirk for maximum read request size. Check and override only
+   if the maximum is higher than what controller can handle.
+ - Converted to a module platform driver.
+
+
+Murali Karicheri (8):
+  PCI: designware: add rd[wr]_other_conf API
+  PCI: designware: refactor host init code to re-use on v3.65 DW pci hw
+  PCI: designware: update pcie core driver to work with dw hw version
+    3.65
+  PCI: designware: add msi controller functions for v3.65 hw
+  PCI: designware: add PCI controller functions for v3.65 DW hw
+  phy: Add serdes phy driver for keystone
+  PCI: keystone: add pcie driver based on designware core driver
+  ARM: keystone: add pcie related options
+
+ .../devicetree/bindings/pci/designware-pcie.txt    |   42 ++
+ .../devicetree/bindings/pci/pci-keystone.txt       |   56 +++
+ .../bindings/phy/phy-keystone-serdes.txt           |   25 ++
+ arch/arm/mach-keystone/Kconfig                     |    1 +
+ drivers/pci/host/Kconfig                           |   12 +
+ drivers/pci/host/Makefile                          |    2 +
+ drivers/pci/host/pci-dw-v3_65-msi.c                |  149 +++++++
+ drivers/pci/host/pci-dw-v3_65.c                    |  390 ++++++++++++++++++
+ drivers/pci/host/pci-dw-v3_65.h                    |   34 ++
+ drivers/pci/host/pci-keystone.c                    |  418 ++++++++++++++++++++
+ drivers/pci/host/pcie-designware.c                 |  175 +++++---
+ drivers/pci/host/pcie-designware.h                 |   42 +-
+ drivers/phy/Kconfig                                |    6 +
+ drivers/phy/Makefile                               |    1 +
+ drivers/phy/phy-keystone-serdes.c                  |  230 +++++++++++
+ 15 files changed, 1531 insertions(+), 52 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
+ create mode 100644 Documentation/devicetree/bindings/phy/phy-keystone-serdes.txt
+ create mode 100644 drivers/pci/host/pci-dw-v3_65-msi.c
+ create mode 100644 drivers/pci/host/pci-dw-v3_65.c
+ create mode 100644 drivers/pci/host/pci-dw-v3_65.h
+ create mode 100644 drivers/pci/host/pci-keystone.c
+ create mode 100644 drivers/phy/phy-keystone-serdes.c
 
 -- 
-FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
-improving, and getting towards what was expected from it.
+1.7.9.5
+
