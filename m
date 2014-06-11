@@ -1,69 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15734 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:6155 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756579AbaFRFx7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Jun 2014 01:53:59 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Ryan Desfosses <ryan@desfo.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [Patch] PCI/portdrv: Remove warning about invalid IRQ
-Date: Wed, 18 Jun 2014 13:56:21 +0800
-Message-Id: <1403070985-31373-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <CAErSpo7pAv=v7JQp2UoNxYN8Pdj788NPP8OsLkM3p8NuwL_6Wg@mail.gmail.com>
-References: <CAErSpo7pAv=v7JQp2UoNxYN8Pdj788NPP8OsLkM3p8NuwL_6Wg@mail.gmail.com>
+	id S1753042AbaFKWHy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 Jun 2014 18:07:54 -0400
+Message-ID: <1402524464.14174.186.camel@ul30vt.home>
+Subject: Re: [PATCH 3.14 186/228] PCI: Wrong register used to check pending
+ traffic
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ben Hutchings <ben@decadent.org.uk>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	Alex Williamson <alex.williamson@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Wed, 11 Jun 2014 16:07:44 -0600
+In-Reply-To: <CAErSpo6UcObn6HVKpw82Ncfgr64w2Ws120P2WfSLqAqaROsDTw@mail.gmail.com>
+References: <20140604232347.966798903@linuxfoundation.org>
+	 <20140604232354.004988520@linuxfoundation.org>
+	 <1402196538.23860.24.camel@deadeye.wl.decadent.org.uk>
+	 <CAErSpo6UcObn6HVKpw82Ncfgr64w2Ws120P2WfSLqAqaROsDTw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For hot-added PCIe ports, it always generates a warning message on x86
-platforms when binding to portdrv as:
-	"device [8086:0e0b] has invalid IRQ; check vendor BIOS".
+On Wed, 2014-06-11 at 15:15 -0600, Bjorn Helgaas wrote:
+> On Sat, Jun 7, 2014 at 9:02 PM, Ben Hutchings <ben@decadent.org.uk> wrote:
+> > On Wed, 2014-06-04 at 16:23 -0700, Greg Kroah-Hartman wrote:
+> >> 3.14-stable review patch.  If anyone has any objections, please let me know.
+> >>
+> >> ------------------
+> >>
+> >> From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> >>
+> >> commit d0b4cc4e32705ff00d90d32da7783c266c702c04 upstream.
+> >>
+> >> The incorrect register offset is passed to pci_wait_for_pending(), which is
+> >> caused by commit 157e876ffe ("PCI: Add pci_wait_for_pending() (refactor
+> >> pci_wait_for_pending_transaction())").
+> >>
+> >> Fixes: 157e876ffe ("PCI: Add pci_wait_for_pending() (refactor pci_wait_for_pending_transaction())
+> >> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >> Acked-by: Alex Williamson <alex.williamson@gmail.com>
+> >> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >>
+> >> ---
+> >>  drivers/pci/pci.c |    5 +++--
+> >>  1 file changed, 3 insertions(+), 2 deletions(-)
+> >>
+> >> --- a/drivers/pci/pci.c
+> >> +++ b/drivers/pci/pci.c
+> >> @@ -3043,7 +3043,8 @@ int pci_wait_for_pending_transaction(str
+> >>       if (!pci_is_pcie(dev))
+> >>               return 1;
+> >>
+> >> -     return pci_wait_for_pending(dev, PCI_EXP_DEVSTA, PCI_EXP_DEVSTA_TRPND);
+> >> +     return pci_wait_for_pending(dev, pci_pcie_cap(dev) + PCI_EXP_DEVSTA,
+> >> +                                 PCI_EXP_DEVSTA_TRPND);
+> >>  }
+> >>  EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+> >>
+> >> @@ -3085,7 +3086,7 @@ static int pci_af_flr(struct pci_dev *de
+> >>               return 0;
+> >>
+> >>       /* Wait for Transaction Pending bit clean */
+> >> -     if (pci_wait_for_pending(dev, PCI_AF_STATUS, PCI_AF_STATUS_TP))
+> >> +     if (pci_wait_for_pending(dev, pos + PCI_AF_STATUS, PCI_AF_STATUS_TP))
+> >>               goto clear;
+> >>
+> >>       dev_err(&dev->dev, "transaction is not cleared; "
+> >
+> > This still seems to be broken because pci_wait_for_pending() does
+> > pci_read_config_word() but PCI_AF_STATUS is not word-aligned.
+> 
+> I agree; this does seem broken.  I think pci_read_config_word() will
+> return PCIBIOS_BAD_REGISTER_NUMBER without updating the value
+> returned, so I think we'll test garbage from the stack.
+> 
+> What do you think, Alex?
 
-It's due to that we check pci_dev->irq before actually allocating IRQ
-for the PCI device:
-	if (!dev->irq && dev->pin) {
-		dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; "
-			 "check vendor BIOS\n", dev->vendor, dev->device);
-	}
- 	status = pcie_port_device_register(dev);
-		-->pci_enable_device(dev);
-			-->pci_enable_device_flags()
-				-->do_pci_enable_device()
-					-->pcibios_enable_device()
-						-->pcibios_enable_irq()
+Yep, looks broken.  The simple fix would be to pass the AF control
+offset instead of status, shift the mask, and maybe add a BUG_ON(pos &
+1) to pci_read_config_word() to better enforce it.  Alternatively we
+could make the function take a width and use an appropriate accessor for
+the size.  I'm inclined to double-check the current users and take the
+first option unless anyone objects.  Thanks,
 
-This warning message isn't generated for PCIe ports present at boot time
-because x86 arch code has called acpi_pci_irq_enable() in pci_acpi_init()
-for each PCI device for safety.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
-Hi Bjorn,
-	I have rebased it onto v3.16-rc1 and changed the patch title
-according to your suggestion.
-Thanks!
-Gerry
-___
- drivers/pci/pcie/portdrv_pci.c |    4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 80887eaa0668..2ccc9b926ea7 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -203,10 +203,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 	     (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)))
- 		return -ENODEV;
- 
--	if (!dev->irq && dev->pin) {
--		dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; check vendor BIOS\n",
--			 dev->vendor, dev->device);
--	}
- 	status = pcie_port_device_register(dev);
- 	if (status)
- 		return status;
--- 
-1.7.10.4
+Alex
 
