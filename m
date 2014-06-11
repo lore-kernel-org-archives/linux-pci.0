@@ -1,66 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch V4 36/42] genirq: export irq_domain_disassociate() to architecture interrupt drivers
-Date: Mon,  9 Jun 2014 16:20:05 +0800
-Message-Id: <1402302011-23642-37-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:49100 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755956AbaFKRZE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jun 2014 13:25:04 -0400
+Received: by mail-ie0-f182.google.com with SMTP id rp18so53304iec.27
+        for <linux-pci@vger.kernel.org>; Wed, 11 Jun 2014 10:25:03 -0700 (PDT)
+Date: Wed, 11 Jun 2014 11:25:08 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexei Starovoitov <ast@plumgrid.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci/msi: fix memory leak in free_msi_irqs()
+Message-ID: <20140611172508.GA14357@google.com>
+References: <1401922190-25357-1-git-send-email-ast@plumgrid.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1401922190-25357-1-git-send-email-ast@plumgrid.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Export irq_domain_disassociate() to architecture interrupt drivers,
-so it could be used to handle legacy IRQ descriptors on x86.
+On Wed, Jun 04, 2014 at 03:49:50PM -0700, Alexei Starovoitov wrote:
+> free_msi_irqs() is leaking memory, since
+> list_for_each_entry(entry, &dev->msi_list, list) {...}
+> is never executed, because dev->msi_list is made empty by
+> the loop just above this one.
+> 
+> Fix it by relying on zero termination of attribute array like
+> populate_msi_sysfs() does.
+> 
+> Fixes: 1c51b50c2995 ("PCI/MSI: Export MSI mode using attributes, not kobjects")
+> Signed-off-by: Alexei Starovoitov <ast@plumgrid.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/irqdomain.h |    2 ++
- kernel/irq/irqdomain.c    |    2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+I added Neil and Greg's acks and a stable tag and will merge this for
+v3.16.  Thanks!
 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index c983ed18c332..b0f9d16e48f6 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -172,6 +172,8 @@ extern int irq_domain_associate(struct irq_domain *domain, unsigned int irq,
- extern void irq_domain_associate_many(struct irq_domain *domain,
- 				      unsigned int irq_base,
- 				      irq_hw_number_t hwirq_base, int count);
-+extern void irq_domain_disassociate(struct irq_domain *domain,
-+				    unsigned int irq);
- 
- extern unsigned int irq_create_mapping(struct irq_domain *host,
- 				       irq_hw_number_t hwirq);
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index eb5e10e32e05..6534ff6ce02e 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -231,7 +231,7 @@ void irq_set_default_host(struct irq_domain *domain)
- }
- EXPORT_SYMBOL_GPL(irq_set_default_host);
- 
--static void irq_domain_disassociate(struct irq_domain *domain, unsigned int irq)
-+void irq_domain_disassociate(struct irq_domain *domain, unsigned int irq)
- {
- 	struct irq_data *irq_data = irq_get_irq_data(irq);
- 	irq_hw_number_t hwirq;
--- 
-1.7.10.4
-
+> ---
+> 
+> This was found by kmemleak report:
+> unreferenced object 0xffff880808eda600 (size 64):
+>   comm "modprobe", pid 1526, jiffies 4294902299 (age 58422.716s)
+>   hex dump (first 32 bytes):
+>     20 c4 66 09 08 88 ff ff 24 01 00 00 00 00 00 00   .f.....$.......
+>     50 97 77 82 ff ff ff ff 00 00 00 00 00 00 00 00  P.w.............
+>   backtrace:
+>     [<ffffffff816e5fc8>] kmemleak_alloc+0x28/0x50
+>     [<ffffffff811b885e>] kmem_cache_alloc_trace+0xde/0x230
+>     [<ffffffff813aa286>] populate_msi_sysfs+0xc6/0x250
+>     [<ffffffff813aafdb>] pci_enable_msix+0x34b/0x430
+>     [<ffffffff813ab0ec>] pci_enable_msix_range+0x2c/0x70
+>     [<ffffffffa0034ade>] igb_init_interrupt_scheme+0x9e/0x420 [igb]
+>     [<ffffffffa003d668>] igb_probe+0x4a8/0x1250 [igb]
+>     [<ffffffff813930de>] local_pci_probe+0x4e/0xa0
+>     [<ffffffff813933e9>] pci_device_probe+0xd9/0x120
+>     [<ffffffff814697cd>] driver_probe_device+0x8d/0x250
+>     [<ffffffff81469a3b>] __driver_attach+0xab/0xb0
+>     [<ffffffff8146799d>] bus_for_each_dev+0x5d/0xa0
+>     [<ffffffff814691de>] driver_attach+0x1e/0x20
+>     [<ffffffff81468e57>] bus_add_driver+0x117/0x220
+>     [<ffffffff8146a104>] driver_register+0x64/0xf0
+>     [<ffffffff813923f4>] __pci_register_driver+0x64/0x70
+> 
+> IGB driver is calling pci_enable_msix_range() and immediately pci_disable_msix()
+> which leaks the memory.
+> Obviously the leak happens with any driver.
+> 
+>  drivers/pci/msi.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 955ab7990c5b..fb02fc2fb034 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -414,7 +414,7 @@ static void free_msi_irqs(struct pci_dev *dev)
+>  	if (dev->msi_irq_groups) {
+>  		sysfs_remove_groups(&dev->dev.kobj, dev->msi_irq_groups);
+>  		msi_attrs = dev->msi_irq_groups[0]->attrs;
+> -		list_for_each_entry(entry, &dev->msi_list, list) {
+> +		while (msi_attrs[count]) {
+>  			dev_attr = container_of(msi_attrs[count],
+>  						struct device_attribute, attr);
+>  			kfree(dev_attr->attr.name);
+> -- 
+> 1.7.9.5
+> 
