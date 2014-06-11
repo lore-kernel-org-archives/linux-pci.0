@@ -1,58 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 12 Jun 2014 12:58:37 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [Patch V4 12/42] x86, ioapic: kill static variable nr_irqs_gsi
-In-Reply-To: <53969834.3040404@linux.intel.com>
-Message-ID: <alpine.DEB.2.10.1406121256090.5170@nanos>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com> <1402302011-23642-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1406100121090.3830@nanos> <53969834.3040404@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:65053 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002AbaFKSIJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jun 2014 14:08:09 -0400
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAErSpo5rpdb985tS91BOEGJePwU3OSzKp_KgrrZfRqaxKBgPMw@mail.gmail.com>
+References: <1986515.ZPZrccsmiq@vostro.rjw.lan>
+	<CAErSpo5rpdb985tS91BOEGJePwU3OSzKp_KgrrZfRqaxKBgPMw@mail.gmail.com>
+Date: Wed, 11 Jun 2014 20:08:08 +0200
+Message-ID: <CAJZ5v0gFVjUwDiCYM_qeU7jL5Ym50mgMZG186G92uMdzMQo8TQ@mail.gmail.com>
+Subject: Re: [PATCH] ACPI / hotplug / PCI: Add hotplug contexts to PCI host bridges
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 10 Jun 2014, Jiang Liu wrote:
+On Wed, Jun 11, 2014 at 4:29 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Jun 10, 2014 at 2:51 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>
+>> After relatively recent changes in the ACPI-based PCI hotplug
+>> (ACPIPHP) code, the acpiphp_check_host_bridge() executed for PCI
+>> host bridges via acpi_pci_root_scan_dependent() doesn't do anything
+>> useful, because those bridges do not have hotplug contexts.  That
+>> happens by mistake, so fix it by making acpiphp_enumerate_slots()
+>> add hotplug contexts to PCI host bridges too and modify
+>> acpiphp_remove_slots() to drop those contexts for host bridges
+>> as appropriate.
+>>
+>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=76901
+>> Fixes: 2d8b1d566a5f (ACPI / hotplug / PCI: Get rid of check_sub_bridges())
+>> Reported-and-tested-by: Gavin Guo <gavin.guo@canonical.com>
+>> Cc: 3.15+ <stable@vger.kernel.org> # 3.15+
+>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> Hi Thomas,
-> 	This piece of code is inherited from current IOAPIC driver
-> and I think it's a workaround for some weird platforms.
-> 	For normal platforms with both 8259A and IOAPIC controllers,
-> legacy ISA IRQs should be connected to both 8259A and IOAPIC pins
-> (ignore timer and cascade IRQs for simplicity). According to comments
->  in current kernel, there are some platforms on which:
-> 1) some ISA IRQs are only connected to 8259A controllers.
-> 2) the corresponding IOAPIC pins are connected to some non-ISA IRQs.
-> 	For such platforms, IRQ0-15 are used for ISA IRQs and another
-> 16 IRQs just above gsi_top are reserved for IOAPIC pins 0-15 which
-> are connected to non-ISA IRQs.
-> 	I have no real experience with such a platform, but just
-> guessing possible cases according to kernel comments and "Multiple
-> Processor Specification". Please look at these two pictures for quick
-> reference.
-> http://www.manualslib.com/manual/77733/Intel-Multiprocessor.html?page=31#manual
-> http://www.manualslib.com/manual/77733/Intel-Multiprocessor.html?page=63#manual
+Thanks!
 
-Duh. I completely forgot about the 82489 mess.
+> Rafael, do you want to merge this via your tree, since you merged the
+> original acpiphp rework?
 
-We probably want a comment somewhere why we have this gsi + legacy
-thing.
+Yes, I'll take care of this.
 
-Thanks,
+> I do have a small cleanup of acpiphp_glue.c in my queue, but it won't
+> conflict with this.
+>
+> Thanks a lot for fixing this!
 
-	tglx
+You're very welcome. :-)
+
+Rafael
