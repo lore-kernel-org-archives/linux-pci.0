@@ -1,54 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:65359 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965730AbaFTTqH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jun 2014 15:46:07 -0400
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:65022 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753181AbaFYVfT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 17:35:19 -0400
+Message-ID: <5397E8FD.1070905@gmail.com>
+Date: Tue, 10 Jun 2014 22:28:29 -0700
+From: Rajat Jain <rajatxjain@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1403250112.22857.7.camel@x220>
-References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
- <1401825852-4745-2-git-send-email-andreas.noever@gmail.com> <1403250112.22857.7.camel@x220>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Fri, 20 Jun 2014 21:45:45 +0200
-Message-ID: <CAMxnaaXF4Rzg7=FA7FEJWbSvzk5HCjSbmPs57SYPye_hadiouw@mail.gmail.com>
-Subject: Re: [PATCH v5 01/15] thunderbolt: Add initial cactus ridge NHI support
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+CC: Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>
+Subject: [PATCH] pciehp: Remove the field controller->no_cmd_completed
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 20, 2014 at 9:41 AM, Paul Bolle <pebolle@tiscali.nl> wrote:
-> On Tue, 2014-06-03 at 22:03 +0200, Andreas Noever wrote:
->> Thunderbolt hotplug is supposed to be handled by the firmware. But Apple
->> decided to implement thunderbolt at the operating system level. The
->> firmare only initializes thunderbolt devices that are present at boot
->> time. This driver enables hotplug of thunderbolt of non-chained
->> thunderbolt devices on Apple systems with a cactus ridge controller.
->>
->> This first patch adds the Kconfig file as well the parts of the driver
->> which talk directly to the hardware (that is pci device setup, interrupt
->> handling and RX/TX ring management).
->>
->> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
->> ---
->
-> This patch landed in today's linux-next (next-20140620).
->
->> [...]
->> --- /dev/null
->> +++ b/drivers/thunderbolt/Kconfig
->> @@ -0,0 +1,12 @@
->> +menuconfig THUNDERBOLT
->> +     tristate "Thunderbolt support for Apple devices"
->> +     default no
->
-> That should have been "default n". But "n" is the default anyway, so I'd
-> say this line might as well be dropped. Should I draft the trivial patch
-> to do that?
+After following recent cleanups by Bjorn:
 
-Not necessary. A patch has already been send.
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/hotplug
 
-Andreas
+2cc56f3 PCI: pciehp: Remove assumptions about which commands cause
+40b9608 PCI: pciehp: Compute timeout from hotplug command start time
+3461a06 PCI: pciehp: Wait for hotplug command completion lazily
+4283c70 PCI: pciehp: Make pcie_wait_cmd() self-contained
+
+the bitfield no_cmd_complete is not really needed anymore, as there is
+only a single occurance of its use. Hence remove the unnecessary bit
+field, and use existing macro NO_CMD_CMPL() instead.
+
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
+---
+(This is rebased on top of Bjorn's pci/hotplug branch mentioned above)
+
+ drivers/pci/hotplug/pciehp.h     |    1 -
+ drivers/pci/hotplug/pciehp_hpc.c |   11 +----------
+ 2 files changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index c496258..9e5a9fb 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -96,7 +96,6 @@ struct controller {
+ 	struct timer_list poll_timer;
+ 	unsigned long cmd_started;	/* jiffies */
+ 	unsigned int cmd_busy:1;
+-	unsigned int no_cmd_complete:1;
+ 	unsigned int link_active_reporting:1;
+ 	unsigned int notification_enabled:1;
+ 	unsigned int power_fault_detected;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index a3a5c65..f7c3709 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -140,7 +140,7 @@ static void pcie_wait_cmd(struct controller *ctrl)
+ 	 * If the controller does not generate notifications for command
+ 	 * completions, we never need to wait between writes.
+ 	 */
+-	if (ctrl->no_cmd_complete)
++	if (NO_CMD_CMPL(ctrl))
+ 		return;
+ 
+ 	if (!ctrl->cmd_busy)
+@@ -772,15 +772,6 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	init_waitqueue_head(&ctrl->queue);
+ 	dbg_ctrl(ctrl);
+ 
+-	/*
+-	 * Controller doesn't notify of command completion if the "No
+-	 * Command Completed Support" bit is set in Slot Capabilities.
+-	 * If set, it means the controller can accept hotplug commands
+-	 * with no delay between them.
+-	 */
+-	if (NO_CMD_CMPL(ctrl))
+-		ctrl->no_cmd_complete = 1;
+-
+ 	/* Check if Data Link Layer Link Active Reporting is implemented */
+ 	pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
+ 	if (link_cap & PCI_EXP_LNKCAP_DLLLARC) {
+-- 
+1.7.9.5
+
