@@ -1,78 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:37639 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751674AbaFSDty convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Jun 2014 23:49:54 -0400
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Jingoo Han <jg1.han@samsung.com>,
-	"'Fabio Estevam'" <festevam@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"'Fabio Estevam'" <fabio.estevam@freescale.com>
-Date: Thu, 19 Jun 2014 11:49:38 +0800
-Subject: RE: [PATCH] PCI: designware: Use IS_ENABLED()
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB6619C5F816AED@EAPEX1MAIL1.st.com>
-References: <1403104613-9867-1-git-send-email-festevam@gmail.com>
- <005201cf8b52$f1006db0$d3014910$%han@samsung.com>
-In-Reply-To: <005201cf8b52$f1006db0$d3014910$%han@samsung.com>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:62579 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220AbaFKTyF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jun 2014 15:54:05 -0400
+Received: by mail-ig0-f182.google.com with SMTP id a13so1194212igq.15
+        for <linux-pci@vger.kernel.org>; Wed, 11 Jun 2014 12:54:04 -0700 (PDT)
+Date: Wed, 11 Jun 2014 13:54:09 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: =?iso-8859-1?B?Suly9G1l?= Carretero <cJ-ko@zougloub.eu>
+Cc: linux-pci@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: quirk dma_alias_devfn for HighPoint RocketRaid 642L
+ (Marvell 9235)
+Message-ID: <20140611195409.GC14357@google.com>
+References: <20140603154156.4f1b46c4@Vantage>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20140603154156.4f1b46c4@Vantage>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Fabio,
-
-> -----Original Message-----
-> From: Jingoo Han [mailto:jg1.han@samsung.com]
-> Sent: Thursday, June 19, 2014 5:41 AM
-> To: 'Fabio Estevam'; bhelgaas@google.com
-> Cc: linux-pci@vger.kernel.org; 'Fabio Estevam'; 'Jingoo Han'; Mohit KUMAR
-> DCG
-> Subject: Re: [PATCH] PCI: designware: Use IS_ENABLED()
+On Tue, Jun 03, 2014 at 03:41:56PM -0400, Jérôme Carretero wrote:
+> This vendor has similar boards based on the same Marvell 88SE9235 chipset,
+> but this patch was only tested with the 642L.
 > 
-> On Thursday, June 19, 2014 12:17 AM, Fabio Estevam wrote:
-> >
-> > We can get rid of the 'ifdef' by using the IS_ENABLED() macro.
-> >
-> > Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+> Tested on ASUS Sabertooth 990FX (AMD).
 > 
-> (+cc Mohit Kumar)
+> If you listen to the vendor support stating:
 > 
-
-- yes, looks good...
-
-Acked-by: Mohit Kumar <mohit.kumar@st.com>
-
-Thanks
-Mohit
-
-> Acked-by: Jingoo Han <jg1.han@samsung.com>
+>   Dear Customer,
+>   Sorry about that.
+>   Currently all our products' software package don't support IOMMU
+>   and we don't have plan to support that.
 > 
-> Best regards,
-> Jingoo Han
+> ... you'll think you also wasted your money, but it turns out that you
+> just lost a few hours of your valuable time talking to their support,
+> because the good people from the Internet made their board work,
+> with the regular AHCI driver, and even with IOMMU. Nice!
 > 
-> > ---
-> >  drivers/pci/host/pcie-designware.c | 5 ++---
-> >  1 file changed, 2 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
-> designware.c
-> > index 1eaf4df3..dc842fd 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -497,9 +497,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >
-> >  	pci_common_init_dev(pp->dev, &dw_pci);
-> >  	pci_assign_unassigned_resources();
-> > -#ifdef CONFIG_PCI_DOMAINS
-> > -	dw_pci.domain++;
-> > -#endif
-> > +	if (IS_ENABLED(CONFIG_PCI_DOMAINS))
-> > +		dw_pci.domain++;
-> >
-> >  	return 0;
-> >  }
-> > --
-> > 1.8.3.2
+> 
+> Signed-off-by: Jérôme Carretero <cJ-ko@zougloub.eu>
 
+Applied with Alex's ack to pci/iommu for v3.16, thanks!
+
+Note that I only have the PCI parts here.  There are several IOMMU patches
+required in addition, and I haven't heard the fate of those.
+
+> ---
+>  drivers/pci/quirks.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index f6a42bc..43c0ea0 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3380,6 +3380,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
+>  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c49 */
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9230,
+>  			 quirk_dma_func1_alias);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI, 0x0642,
+> +			 quirk_dma_func1_alias);
+>  /* https://bugs.gentoo.org/show_bug.cgi?id=497630 */
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
+>  			 PCI_DEVICE_ID_JMICRON_JMB388_ESD,
+> -- 
+> 2.0.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
