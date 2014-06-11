@@ -1,49 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37831 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbaFFQBK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jun 2014 12:01:10 -0400
-Date: Fri, 6 Jun 2014 09:01:03 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Eli Billauer <eli.billauer@gmail.com>
-Cc: Joerg Roedel <joro@8bytes.org>, devel@driverdev.osuosl.org,
-	Shuah Khan <shuah.kh@samsung.com>, discuss@x86-64.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
- dma_map_single()
-Message-ID: <20140606160103.GG15110@kroah.com>
-References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
- <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
- <538E3D04.9060808@samsung.com>
- <20140603233907.GB23880@8bytes.org>
- <20140604140408.GC5004@htj.dyndns.org>
- <20140604141211.GC23880@8bytes.org>
- <20140604141416.GD5004@htj.dyndns.org>
- <538F3548.4050101@gmail.com>
- <20140604212525.GE23880@8bytes.org>
- <5391A9C2.3040602@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5391A9C2.3040602@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:17462 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751002AbaFKTZD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 Jun 2014 15:25:03 -0400
+Message-ID: <1402514702.14174.163.camel@ul30vt.home>
+Subject: Re: [PATCH] PCI: quirk dma_alias_devfn for HighPoint RocketRaid
+ 642L (Marvell 9235)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: =?ISO-8859-1?Q?J=E9r=F4me?= Carretero <cJ-ko@zougloub.eu>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 11 Jun 2014 13:25:02 -0600
+In-Reply-To: <20140603154156.4f1b46c4@Vantage>
+References: <20140603154156.4f1b46c4@Vantage>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 06, 2014 at 02:45:06PM +0300, Eli Billauer wrote:
-> Hello Joerg.
+On Tue, 2014-06-03 at 15:41 -0400, Jérôme Carretero wrote:
+> This vendor has similar boards based on the same Marvell 88SE9235 chipset,
+> but this patch was only tested with the 642L.
+> 
+> Tested on ASUS Sabertooth 990FX (AMD).
+> 
+> If you listen to the vendor support stating:
+> 
+>   Dear Customer,
+>   Sorry about that.
+>   Currently all our products' software package don't support IOMMU
+>   and we don't have plan to support that.
+> 
+> ... you'll think you also wasted your money, but it turns out that you
+> just lost a few hours of your valuable time talking to their support,
+> because the good people from the Internet made their board work,
+> with the regular AHCI driver, and even with IOMMU. Nice!
 > 
 > 
-> On 05/06/14 00:25, Joerg Roedel wrote:
-> >
-> >What you are trying to do should work with dma_alloc_noncoherent(). The
-> >API allows partial syncs on this memory, so you should be fine.
-> Please try to put yourself in my position: I have a driver that I care
-> about, which works fine for a few years. It's based upon dma_map_single(),
-> which seems to be the common way to get non-coherent memory, even for the
-> driver's entire lifespan. I realize that dma_alloc_* was the intended way to
-> do it, but fact is that dma_map_* has become the common choice.
+> Signed-off-by: Jérôme Carretero <cJ-ko@zougloub.eu>
 
-Is your driver in the kernel tree?  If not, you really are on your own :(
+Acked-by: Alex Williamson <alex.williamson@redhat.com>
 
-greg k-h
+> ---
+>  drivers/pci/quirks.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index f6a42bc..43c0ea0 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3380,6 +3380,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
+>  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c49 */
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9230,
+>  			 quirk_dma_func1_alias);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI, 0x0642,
+> +			 quirk_dma_func1_alias);
+>  /* https://bugs.gentoo.org/show_bug.cgi?id=497630 */
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
+>  			 PCI_DEVICE_ID_JMICRON_JMB388_ESD,
+
+
+
