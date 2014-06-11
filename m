@@ -1,108 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29396 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754116AbaFWUMt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Jun 2014 16:12:49 -0400
-Message-ID: <53A88A32.4010406@redhat.com>
-Date: Mon, 23 Jun 2014 16:12:34 -0400
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Luck, Tony" <tony.luck@intel.com>,
+	=?ISO-8859-1?Q?=C9meric?= Maschino <emeric.maschino@gmail.com>
+Subject: [PATCH] ACPI / ia64 / sba_iommu: Restore the working initialization ordering
+Date: Thu, 12 Jun 2014 01:34:06 +0200
+Message-ID: <1484331.OIWg7ItM60@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yishai Hadas <yishaih@dev.mellanox.co.il>
-CC: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"linux-rdma (linux-rdma@vger.kernel.org)"
-	<linux-rdma@vger.kernel.org>,
-	"yishaih@mellanox.com" <yishaih@mellanox.com>, liranl@mellanox.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: PCI/AER: AER in SRIOV environment
-References: <53A839C6.5050102@dev.mellanox.co.il> <CAErSpo7xVvqYea8v624T8EyVf6skQccraAe_WYpzcf2tkWFLhg@mail.gmail.com>
-In-Reply-To: <CAErSpo7xVvqYea8v624T8EyVf6skQccraAe_WYpzcf2tkWFLhg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/23/2014 03:09 PM, Bjorn Helgaas wrote:
-> [+cc linux-pci, Don]
->
-Adding Alex Williamson in case he can add more to this conversation...
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> On Mon, Jun 23, 2014 at 8:29 AM, Yishai Hadas
-> <yishaih@dev.mellanox.co.il> wrote:
->> Hi Vijay,
->> Trying to add AER support for Mellanox NIC in SRIOV environment, while
->> evaluating/testing encountered a problem which led me to your
->> patch accepted as part of kernel 3.8, commit ID
->> "918b4053184c0ca22236e70e299c5343eea35304".
->>
->> Have some concerns/questions on:
->> When working in SRIOV environment VFs may be un-attached, having no driver
->> assigned to, or may be attached to Virtual machine to work in some
->> pass-through mode.
->> Once working in KVM setup there is pci-stub driver which is loaded in the
->> HYP/PF for a given attached VF.
-huh? 'loaded in the hyp/pf? .... um, loaded in the host, and a VF is
-detached from its host driver -- a VF can be used in the host w/o any virtualization,
-i.e., that's how guest VM is driving the VF: as if it was used by a guest (host) OS directly --
-and attached to pci-stub driver, when assigned to a KVM guest in pre-VFIO days/ways.
-If VFIO used, then VF is attached to vfio-pci driver.
+Commit 66345d5f79fc (ACPI / ia64 / sba_iommu: Use ACPI scan handler
+for device discovery) changed the ordering of SBA (System Bus Adapter)
+IOMMU initialization with respect to the PCI host bridge initialization
+which broke things inadvertently, because the SBA IOMMU initialization
+code has to run after the PCI host bridge has been initialized.
 
->>
->> I'm using the aer-inject kernel module and its corresponding aer-inject tool
->> to simulate an error in the HYP.
->> In both cases your commit will cause the AER recovery to fail as there is no
->> driver assigned to PF's VFs that supports AER, comparing the code before
->> your change.
->>
-Without VFIO, I believe that's correct. There was no AER-to-VF support pre-VFIO days.
-I believe with the recent VFIO support,
-and modifications to KVM, an AER that is associated with an assigned VF will
-force the crash/halt of the KVM guest -- can't depend on a guest VF driver clearing
-the AER in the hyp/host -- guest isn't privileged enough to clear the error.
-So, crashing the guest is the simple option at the moment, to contain the error.
-Alex: do I have that (vfio aer default) correct, or is that still site-under-construction?
+Fix that by reworking the SBA IOMMU ACPI scan handler so that it
+claims the discovered matching ACPI device objects without attempting
+to initialize anything and move the entire SBA IOMMU initialization
+to sba_init() that runs after the PCI bus has been enumerated.
 
->> How such cases should work ?  my expectation was that the PF will get the
->> error detected message then will recognize whether
->> issue is its own or one of its VFs
-The AER packet will have the tag of the VF in if it was the source of the error;
-so the PF will never see it; although one could argue it should be 'promoted'
-to the PF if PF/VF needs to clear some state it has wrt the VF (the SRIOV spec is
-lacking of info in this space); _but_, VFIO resets the VF (sets FLR bit) when the
-device is deassigned and before re-attachment to the host, so that should clear out
-any state btwn PF & VF ('should' ... famous last words...).
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=76691
+Fixes: 66345d5f79fc (ACPI / ia64 / sba_iommu: Use ACPI scan handler for device discovery)
+Reported-and-tested-by: Émeric Maschino <emeric.maschino@gmail.com>
+Cc: 3.11+ <stable@vger.kernel.org> # 3.11+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ arch/ia64/hp/common/sba_iommu.c |   64 +++++++++++++++++++++++-----------------
+ 1 file changed, 37 insertions(+), 27 deletions(-)
 
->
-> I'm really not an AER expert, so help me understand this question of
-> recognizing whether an error is associated with a PF or a VF.
->
-> In terms of hardware, it looks like the device that detects an error
-> logs some information and sends an Error Message upstream.  The Root
-> Complex receives the message, captures the source ID from the Error
-> Message, and may generate an interrupt.  I expect this source ID can
-> be either a PF or a VF; there's no requirement that a VF error must be
-> reported as though it's from the PF, is there?
->
->> and work accordingly, in current code
->> looks like recovery failed as part of "voting" once there is no AER handler
->> assigned to the VFs.
->
-> The commit you mentioned has to do with PCI_ERS_RESULT_NO_AER_DRIVER.
-> We use pci_walk_bus() to figure out whether all the devices in a
-> subtree have a driver.  What subtree is involved here?  I would expect
-> the VFs to be siblings of the PF, not children of it, so I'm not sure
-> where things went wrong.
-Well, VFs could be on virtual busses (ARI turned on), so not necessarily a
-sibling to PF ... and then we have the problem in PCI code of not being able
-to traverse these virtual busses (in some cases; not sure if pci_walk_bus(),
-which is going down the tree vs up the tree, has any problems here w/VFs on
-virtual busses).
-
->
-> Can you collect "lspci -vvv" output and maybe add some debug so we can
-> see exactly where the error is detected and what devices we're looking
-> at to conclude that one of them doesn't have a driver?
->
-> Bjorn
->
+Index: linux-pm/arch/ia64/hp/common/sba_iommu.c
+===================================================================
+--- linux-pm.orig/arch/ia64/hp/common/sba_iommu.c
++++ linux-pm/arch/ia64/hp/common/sba_iommu.c
+@@ -242,7 +242,7 @@ struct ioc {
+ 	struct pci_dev	*sac_only_dev;
+ };
+ 
+-static struct ioc *ioc_list;
++static struct ioc *ioc_list, *ioc_found;
+ static int reserve_sba_gart = 1;
+ 
+ static SBA_INLINE void sba_mark_invalid(struct ioc *, dma_addr_t, size_t);
+@@ -1809,20 +1809,13 @@ static struct ioc_iommu ioc_iommu_info[]
+ 	{ SX2000_IOC_ID, "sx2000", NULL },
+ };
+ 
+-static struct ioc *
+-ioc_init(unsigned long hpa, void *handle)
++static void ioc_init(unsigned long hpa, struct ioc *ioc)
+ {
+-	struct ioc *ioc;
+ 	struct ioc_iommu *info;
+ 
+-	ioc = kzalloc(sizeof(*ioc), GFP_KERNEL);
+-	if (!ioc)
+-		return NULL;
+-
+ 	ioc->next = ioc_list;
+ 	ioc_list = ioc;
+ 
+-	ioc->handle = handle;
+ 	ioc->ioc_hpa = ioremap(hpa, 0x1000);
+ 
+ 	ioc->func_id = READ_REG(ioc->ioc_hpa + IOC_FUNC_ID);
+@@ -1863,8 +1856,6 @@ ioc_init(unsigned long hpa, void *handle
+ 		"%s %d.%d HPA 0x%lx IOVA space %dMb at 0x%lx\n",
+ 		ioc->name, (ioc->rev >> 4) & 0xF, ioc->rev & 0xF,
+ 		hpa, ioc->iov_size >> 20, ioc->ibase);
+-
+-	return ioc;
+ }
+ 
+ 
+@@ -2031,22 +2022,21 @@ sba_map_ioc_to_node(struct ioc *ioc, acp
+ #endif
+ }
+ 
+-static int
+-acpi_sba_ioc_add(struct acpi_device *device,
+-		 const struct acpi_device_id *not_used)
++static void acpi_sba_ioc_add(struct ioc *ioc)
+ {
+-	struct ioc *ioc;
++	acpi_handle handle = ioc->handle;
+ 	acpi_status status;
+ 	u64 hpa, length;
+ 	struct acpi_device_info *adi;
+ 
+-	status = hp_acpi_csr_space(device->handle, &hpa, &length);
++	ioc_found = ioc->next;
++	status = hp_acpi_csr_space(handle, &hpa, &length);
+ 	if (ACPI_FAILURE(status))
+-		return 1;
++		goto err;
+ 
+-	status = acpi_get_object_info(device->handle, &adi);
++	status = acpi_get_object_info(handle, &adi);
+ 	if (ACPI_FAILURE(status))
+-		return 1;
++		goto err;
+ 
+ 	/*
+ 	 * For HWP0001, only SBA appears in ACPI namespace.  It encloses the PCI
+@@ -2067,13 +2057,13 @@ acpi_sba_ioc_add(struct acpi_device *dev
+ 	if (!iovp_shift)
+ 		iovp_shift = 12;
+ 
+-	ioc = ioc_init(hpa, device->handle);
+-	if (!ioc)
+-		return 1;
+-
++	ioc_init(hpa, ioc);
+ 	/* setup NUMA node association */
+-	sba_map_ioc_to_node(ioc, device->handle);
+-	return 0;
++	sba_map_ioc_to_node(ioc, handle);
++	return;
++
++ err:
++	kfree(ioc);
+ }
+ 
+ static const struct acpi_device_id hp_ioc_iommu_device_ids[] = {
+@@ -2081,9 +2071,26 @@ static const struct acpi_device_id hp_io
+ 	{"HWP0004", 0},
+ 	{"", 0},
+ };
++
++static int acpi_sba_ioc_attach(struct acpi_device *device,
++			       const struct acpi_device_id *not_used)
++{
++	struct ioc *ioc;
++
++	ioc = kzalloc(sizeof(*ioc), GFP_KERNEL);
++	if (!ioc)
++		return -ENOMEM;
++
++	ioc->next = ioc_found;
++	ioc_found = ioc;
++	ioc->handle = device->handle;
++	return 1;
++}
++
++
+ static struct acpi_scan_handler acpi_sba_ioc_handler = {
+ 	.ids	= hp_ioc_iommu_device_ids,
+-	.attach	= acpi_sba_ioc_add,
++	.attach	= acpi_sba_ioc_attach,
+ };
+ 
+ static int __init acpi_sba_ioc_init_acpi(void)
+@@ -2118,9 +2125,12 @@ sba_init(void)
+ #endif
+ 
+ 	/*
+-	 * ioc_list should be populated by the acpi_sba_ioc_handler's .attach()
++	 * ioc_found should be populated by the acpi_sba_ioc_handler's .attach()
+ 	 * routine, but that only happens if acpi_scan_init() has already run.
+ 	 */
++	while (ioc_found)
++		acpi_sba_ioc_add(ioc_found);
++
+ 	if (!ioc_list) {
+ #ifdef CONFIG_IA64_GENERIC
+ 		/*
 
