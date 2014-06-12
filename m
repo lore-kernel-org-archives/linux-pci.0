@@ -1,60 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:42188 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756505AbaFSLKy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Jun 2014 07:10:54 -0400
-Message-ID: <53A2C52C.6020606@ti.com>
-Date: Thu, 19 Jun 2014 14:10:36 +0300
-From: Tero Kristo <t-kristo@ti.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:38664 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752689AbaFLANT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jun 2014 20:13:19 -0400
+Received: by mail-ig0-f180.google.com with SMTP id h18so1426967igc.13
+        for <linux-pci@vger.kernel.org>; Wed, 11 Jun 2014 17:13:18 -0700 (PDT)
 MIME-Version: 1.0
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
-	Keerthy <j-keerthy@ti.com>, Rajendra Nayak <rnayak@ti.com>,
-	Paul Walmsley <paul@pwsan.com>
-Subject: Re: [PATCH v2 06/18] ARM: dts: DRA7: Add divider table to optfclk_pciephy_div
- clock
-References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-7-git-send-email-kishon@ti.com>
-In-Reply-To: <1401345500-20188-7-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <CANwwZzVqQ9Dur79ZP_1Fs9UWF0+h44tGW6QA4UZYdXaqV51z3A@mail.gmail.com>
+References: <CANwwZzVqQ9Dur79ZP_1Fs9UWF0+h44tGW6QA4UZYdXaqV51z3A@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 11 Jun 2014 18:12:58 -0600
+Message-ID: <CAErSpo6s1=aQ2=GxMHXTZgE+hFUp+Kzz9r32RXkDcY_TW_5+UQ@mail.gmail.com>
+Subject: Re: DMA window vs actual allocatable DMA memory
+To: Bob Biloxi <iambobbiloxi@gmail.com>
+Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/29/2014 09:38 AM, Kishon Vijay Abraham I wrote:
-> From: Keerthy <j-keerthy@ti.com>
+On Wed, Jun 11, 2014 at 12:23 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
+> Hi All,
 >
-> Add divider table to optfclk_pciephy_div clock. The Documentation
-> for divider clock can be found at ../clock/ti/divider.txt
-
-This patch requires a better changelog. Why is the change done, any TRM 
-refs etc.?
-
--Tero
-
+> I am having trouble understanding DMA window and actual amount of
+> addressable DMA memory.
 >
-> Cc: Rajendra Nayak <rnayak@ti.com>
-> Cc: Tero Kristo <t-kristo@ti.com>
-> Cc: Paul Walmsley <paul@pwsan.com>
-> Signed-off-by: Keerthy <j-keerthy@ti.com>
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->   arch/arm/boot/dts/dra7xx-clocks.dtsi |    1 +
->   1 file changed, 1 insertion(+)
+> I hope someone explains me. Let me put my understanding and doubts here:
 >
-> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi b/arch/arm/boot/dts/dra7xx-clocks.dtsi
-> index c767687..55e95c5 100644
-> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
-> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
-> @@ -1170,6 +1170,7 @@
->   		clocks = <&apll_pcie_ck>;
->   		#clock-cells = <0>;
->   		reg = <0x021c>;
-> +		ti,dividers = <2>, <1>;
->   		ti,bit-shift = <8>;
->   		ti,max-div = <2>;
->   	};
+> Let's say I am writing code for an ethernet device driver in the
+> virtualisation(hypervisor) environment.
 >
+> Now, if the ethernet adapter requires certain amount of DMA memory, I
+> need to allocate heap memory and dma map it and provide to the
+> adapter.
+>
+> From the hardware perspective, we have a 64GB DMA window.
+>
+> I am having trouble understanding this value. Does it mean i can
+> allocate 64GB of RAM(Heap memory) and dma map it?
+>
+> As i understand there might be a table that translates bus address to
+> physical(RAM) addresses. Each entry of such table points to a 4KB
+> page. If the size of each entry is 8 bytes and there are 16M such
+> entries( 16M * 4K = 64GB DMA window), the size of the table comes to
+> around 128M
+>
+> Now do I have 64GB DMA memory or 128M DMA memory?
 
+Documentation/DMA-API-HOWTO.txt might help answer your questions.
+
+The bus address to RAM address translation is done by a IOMMU
+hardware.  The tables you mention are I/O page tables used by the
+IOMMU.  The 128M occupied by the tables is kernel bookkeeping overhead
+and has nothing to do with the adapter itself.
+
+The 64GB DMA window might be a hardware feature of the device, i.e.,
+maybe it can only generate 36-bit DMA addresses.  That doesn't mean
+you have to allocate memory for the whole window; I would guess
+drivers would only allocate and map what they need.  I don't know how
+they figure out how much to map.
+
+> I want to know what is the max amount of memory that I can
+> allocate(heap), dma map and provide it to the adapter.
+>
+> I will be really thankful in all the help that I can get!!
+>
+> Thanks so much
+>
+>
+> Best Regards,
+> Marc
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
