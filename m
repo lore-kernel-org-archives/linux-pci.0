@@ -1,97 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:34084 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752199AbaFYJNt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 05:13:49 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Jun 2014 14:43:45 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 8C8651258055
-	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 14:43:12 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5P9EpBa58196208
-	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 14:44:51 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5P9Dclh002164
-	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 14:43:39 +0530
-Date: Wed, 25 Jun 2014 17:13:36 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table
- dynamically
-Message-ID: <20140625091336.GA5573@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
- <53A94DA8.6020206@ozlabs.ru>
- <20140625011211.GA5785@richard>
- <53AA4C32.7060004@ozlabs.ru>
- <20140625052758.GA8873@richard>
- <53AA7F30.40504@ozlabs.ru>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <53999FA2.4000600@linux.intel.com>
+Date: Thu, 12 Jun 2014 20:40:02 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53AA7F30.40504@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: Re: [Patch V4 12/42] x86, ioapic: kill static variable nr_irqs_gsi
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com> <1402302011-23642-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1406100121090.3830@nanos> <53969834.3040404@linux.intel.com> <alpine.DEB.2.10.1406121256090.5170@nanos>
+In-Reply-To: <alpine.DEB.2.10.1406121256090.5170@nanos>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 25, 2014 at 05:50:08PM +1000, Alexey Kardashevskiy wrote:
->On 06/25/2014 03:27 PM, Wei Yang wrote:
->> On Wed, Jun 25, 2014 at 02:12:34PM +1000, Alexey Kardashevskiy wrote:
->>> On 06/25/2014 11:12 AM, Wei Yang wrote:
->>>> On Tue, Jun 24, 2014 at 08:06:32PM +1000, Alexey Kardashevskiy wrote:
->>>>> On 06/10/2014 11:56 AM, Wei Yang wrote:
->>>>>> Current iommu_table of a PE is a static field. This will have a problem when
->>>>>> iommu_free_table is called.
->>>>>
->>>>> What kind of problem? This table is per PE and PE is not going anywhere.
->>>>>
->>>>
->>>> Yes, for Bus PE, they will always sit in the system. When VF PE introduced,
->>>> they could be released on the fly. When they are released, so do the iommu
->>>> table for the PE.
->>>
->>> iommu_table is a part of PE struct. When PE is released, iommu_table will
->>> go with it as well. Why to make is a pointer? I would understand it if you
->>> added reference counting there but no - iommu_table's lifetime is equal to
->>> PE lifetime.
->>>
->> 
->> Yes, iommu_talbe's life time equals to PE lifetime, so when releasing a PE we
->> need to release the iommu table. Currently, there is one function to release
->> the iommu table, iommu_free_table() which takes a pointer of the iommu_table
->> and release it.
->> 
->> If the iommu table in PE is just a part of PE, it will have some problem to
->> release it with iommu_free_table(). That's why I make it a pointer in PE
->> structure.
->
->So you are saying that you want to release PE by one kfree() and release
->iommu_table by another kfree (embedded into iommu_free_table()). For me
->that means that PE and iommu_table have different lifetime.
->
+Hi Thomas,
+	With all patches applied, we have following code and comments
+for this case:
+        switch (type) {
+        case IOAPIC_DOMAIN_LEGACY:
+                /*
+                 * Dynamically allocate IRQ number for non-ISA IRQs in
+the first 16
+                 * GSIs on some weird platforms.
+                 */
+                if (gsi < nr_legacy_irqs())
+                        irq = irq_create_mapping(domain, pin);
+                else if (irq_create_strict_mappings(domain, gsi, pin, 1)
+== 0)
+                        irq = gsi;
+                break;
 
-Hmm... it is right, the lifetime of these two may have some difference.
 
->And I cannot find the exact place in this patchset where you call
->iommu_free_table(), what do I miss?
->
-
-This is called in pnv_pci_release_dev_dma(), which is introduced in the commit
-cd740988: powerpc/powernv: allocate VF PE
-
->
->
->
->-- 
->Alexey
-
--- 
-Richard Yang
-Help you, Help me
-
+On 2014/6/12 18:58, Thomas Gleixner wrote:
+> On Tue, 10 Jun 2014, Jiang Liu wrote:
+> 
+>> Hi Thomas,
+>> 	This piece of code is inherited from current IOAPIC driver
+>> and I think it's a workaround for some weird platforms.
+>> 	For normal platforms with both 8259A and IOAPIC controllers,
+>> legacy ISA IRQs should be connected to both 8259A and IOAPIC pins
+>> (ignore timer and cascade IRQs for simplicity). According to comments
+>>  in current kernel, there are some platforms on which:
+>> 1) some ISA IRQs are only connected to 8259A controllers.
+>> 2) the corresponding IOAPIC pins are connected to some non-ISA IRQs.
+>> 	For such platforms, IRQ0-15 are used for ISA IRQs and another
+>> 16 IRQs just above gsi_top are reserved for IOAPIC pins 0-15 which
+>> are connected to non-ISA IRQs.
+>> 	I have no real experience with such a platform, but just
+>> guessing possible cases according to kernel comments and "Multiple
+>> Processor Specification". Please look at these two pictures for quick
+>> reference.
+>> http://www.manualslib.com/manual/77733/Intel-Multiprocessor.html?page=31#manual
+>> http://www.manualslib.com/manual/77733/Intel-Multiprocessor.html?page=63#manual
+> 
+> Duh. I completely forgot about the 82489 mess.
+> 
+> We probably want a comment somewhere why we have this gsi + legacy
+> thing.
+> 
+> Thanks,
+> 
+> 	tglx
+> 
