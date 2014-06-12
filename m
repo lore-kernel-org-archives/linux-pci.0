@@ -1,77 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0239.outbound.protection.outlook.com ([207.46.163.239]:54683
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756097AbaFXUeN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Jun 2014 16:34:13 -0400
-From: Rajat Jain <rajatjain@juniper.net>
-To: Guenter Roeck <linux@roeck-us.net>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 12 Jun 2014 12:58:37 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain.linux@gmail.com>
-Subject: RE: [PATCH] PCI: pciehp: Include the Data Link Layer State Changed
- bit when clearing the Slot Status register's event bits
-Date: Tue, 24 Jun 2014 20:34:03 +0000
-Message-ID: <aa91dac8e0f4416bb5f8b901b4da8f22@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <20140617192734.30783.71260.stgit@amt.stowe>
- <CAErSpo7t2kXj2ZULLXCJSWb_awS+DCtCg51dnLbb8ztWmQdYog@mail.gmail.com>
- <53A0C763.7080003@roeck-us.net>
-In-Reply-To: <53A0C763.7080003@roeck-us.net>
-Content-Type: text/plain; charset="utf-8"
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
+Subject: Re: [Patch V4 12/42] x86, ioapic: kill static variable nr_irqs_gsi
+In-Reply-To: <53969834.3040404@linux.intel.com>
+Message-ID: <alpine.DEB.2.10.1406121256090.5170@nanos>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com> <1402302011-23642-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1406100121090.3830@nanos> <53969834.3040404@linux.intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8sDQoNClNvcnJ5LCBJIG1pc3NlZCB0aGlzIGVtYWlsLg0KDQpQbGVhc2Ugc2VlIGJlbG93
-LiANCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1wY2ktb3du
-ZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
-bC5vcmddIE9uIEJlaGFsZiBPZiBHdWVudGVyIFJvZWNrDQo+IFNlbnQ6IFR1ZXNkYXksIEp1bmUg
-MTcsIDIwMTQgMzo1NiBQTQ0KPiBUbzogQmpvcm4gSGVsZ2FhczsgTXlyb24gU3Rvd2UNCj4gQ2M6
-IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IEtlbmppIEthbmVzaGlnZTsgbGludXgtDQo+IGtl
-cm5lbEB2Z2VyLmtlcm5lbC5vcmc7IFJhamF0IEphaW4NCj4gU3ViamVjdDogUmU6IFtQQVRDSF0g
-UENJOiBwY2llaHA6IEluY2x1ZGUgdGhlIERhdGEgTGluayBMYXllciBTdGF0ZSBDaGFuZ2VkDQo+
-IGJpdCB3aGVuIGNsZWFyaW5nIHRoZSBTbG90IFN0YXR1cyByZWdpc3RlcidzIGV2ZW50IGJpdHMN
-Cj4gDQo+IE9uIDA2LzE3LzIwMTQgMDI6MDcgUE0sIEJqb3JuIEhlbGdhYXMgd3JvdGU6DQo+ID4g
-T24gVHVlLCBKdW4gMTcsIDIwMTQgYXQgMToyNyBQTSwgTXlyb24gU3Rvd2UNCj4gPG15cm9uLnN0
-b3dlQHJlZGhhdC5jb20+IHdyb3RlOg0KPiA+PiBEdXJpbmcgUENJZSBob3QtcGx1ZyBpbml0aWFs
-aXphdGlvbiAtIHBjaWVocF9wcm9iZSAtIGRhdGEgc3RydWN0dXJlcw0KPiA+PiByZWxhdGVkIHRv
-IHNsb3QgY2FwYWJpbGl0aWVzIGFyZSBzZXQgdXAuICBBcyBwYXJ0IG9mIHRoaXMgc2V0IHVwLA0K
-PiA+PiBJU1JzIGFyZSBwdXQgaW4gcGxhY2UgdG8gaGFuZGxlIHNsb3QgZXZlbnRzIGFuZCBhbGwg
-ZXZlbnQgYml0cyBhcmUgY2xlYXJlZA0KPiBvdXQuDQo+ID4+DQo+ID4+IFRoaXMgcGF0Y2ggYWRk
-cyB0aGUgRGF0YSBMaW5rIExheWVyIFN0YXRlIENoYW5nZWQNCj4gPj4gKFBDSV9FWFBfU0xUU1RB
-X0RMTFNDKSBTbG90IFN0YXR1cyBiaXQgdG8gdGhlIGV2ZW50IGJpdHMgdGhhdCBhcmUNCj4gPj4g
-Y2xlYXJlZCBvdXQgZHVyaW5nIGluaXRpYWxpemF0aW9uLg0KPiA+DQo+ID4gSSB0aGluayB0aGlz
-IGlzIHJlbGF0ZWQgdG8gZTQ4ZjFiNjdmNjY4ICgiUENJOiBwY2llaHA6IFVzZSBsaW5rIGNoYW5n
-ZQ0KPiA+IG5vdGlmaWNhdGlvbnMgZm9yIGhvdC1wbHVnIGFuZCByZW1vdmFsIikuICBQcmlvciB0
-byB0aGF0LCBwY2llX2lzcigpDQo+ID4gZGlkbid0IGxvb2sgYXQgdGhlIFBDSV9FWFBfU0xUU1RB
-X0RMTFNDIGJpdC4NCj4gPg0KPiA+IEFwcGFyZW50bHkgdGhlcmUncyBhIG5vbi1wdWJsaWMgcmVw
-b3J0IG9mIHNwdXJpb3VzIG1lc3NhZ2VzIGxpa2UgdGhpcw0KPiA+IGF0IGJvb3QtdGltZSwgd2l0
-aCBubyBhY3R1YWwgaG90cGx1ZyBldmVudHM6DQo+ID4NCj4gPiAgICBwY2llaHAgMDAwMDo4Mjow
-NC4wOnBjaWUyNDogc2xvdCg0KTogTGluayBVcCBldmVudA0KPiA+ICAgIHBjaWVocCAwMDAwOjgy
-OjA0LjA6cGNpZTI0OiBEZXZpY2UgMDAwMDo4MzowMC4wIGFscmVhZHkgZXhpc3RzIGF0DQo+ID4g
-MDAwMDo4MzowMCwgY2Fubm90IGhvdC1hZGQNCj4gPiAgICBwY2llaHAgMDAwMDo4MjowNC4wOnBj
-aWUyNDogQ2Fubm90IGFkZCBkZXZpY2UgYXQgMDAwMDo4MzowMA0KPiA+DQo+IA0KPiBJIHRoaW5r
-IEkgaGF2ZSBzZWVuIHRoYXQgbWVzc2FnZSBvbmNlIGluIGEgd2hpbGUgaW4gb3VyIHN5c3RlbXMu
-DQo+IFJhamF0LCBkaWRuJ3Qgd2UgdGFsayBhYm91dCB0aGlzIGEgd2hpbGUgYWdvID8NCg0KRXNz
-ZW50aWFsbHkgbXkgaGljY3VwIHdhcyB0aGF0IEkgd2FzIG5vdCBzdXJlIHdoZXRoZXIgdGhlIGRy
-aXZlciBzaG91bGQgb3Igc2hvdWxkIG5vdCB0YWtlIGNhcmUgb2YgdGhlIGxpbmsgY2hhbmdlIGV2
-ZW50cyB0aGF0IGhhdmUgaGFwcGVuZWQgQkVGT1JFIHRoZSBkcml2ZXIgZ2V0cyBsb2FkZWQuIFRo
-aXMgaGFzIG1vcmUgaW1wYWN0IGlmIHRoZSBwY2llaHAgaXMgYnVpbHQgYXMgYSBrZXJuZWwgbW9k
-dWxlLg0KDQpBcyBhbiBleGFtcGxlOg0KDQpJdCBpcyBjb21tb24gZm9yIHRoZSBwbGF0Zm9ybSBp
-bml0IGNvZGUgYnVpbHQgaW50byB0aGUga2VybmVsLCB0byB0YWtlIHRoZSBQQ0kgZGV2aWNlcyBv
-biB0aGUgYm9hcmQgb3V0IG9mIHJlc2V0LiBBbmQgdGhhdCBjYW4gaGFwcGVuIGFmdGVyIHRoZSBQ
-Q0kgZW51bWVyYXRpb24gYnV0IGJlZm9yZSB0aGUgcGNpZWhwIGRyaXZlciBnZXRzIGxvYWRlZC4g
-VGh1cyBpbiB0aGlzIGNvbmRpdGlvbiwgd2l0aCB0aGlzIHBhdGNoLCB0aGUgcGNpZWhwIHdpbGwg
-aWdub3JlIHRoZSBsaW5rdXAgZXZlbnQsIHRodXMgZGV2aWNlIHdpbGwgbm90IGJlIHZpc2libGUu
-IFRoZSBvbmx5IHdheSAob3RoZXIgdGhhbiBhIHJlc2NhbikgdG8gZG8gaG90LWFkZCB0aGUgZGV2
-aWNlIHdvdWxkIGJlIHRvIGFwcGx5LWFuZC1yZW1vdmUtcmVzZXQtc2lnbmFsIHRvIHRoZSBkZXZp
-Y2UgYWdhaW4uIEF0IHdoaWNoIHBvaW50IHBjaWVocCBtYXkgZ2l2ZSBhIHdhcm5pbmcgYWJvdXQg
-YWJvdXQgYW4gYXR0ZW1wdCB0byByZW1vdmUgYSBub24tZXhpc3RlbnQgY2FyZCwgYW5kIHRoZW4g
-d2lsbCBwcm9jZWVkIGZpbmUgd2l0aCBob3QtYWRkLg0KDQpUaGUgcGF0Y2ggbG9va3MgZ29vZCwg
-b25seSB3YW50ZWQgdG8gbWFrZSBzdXJlIHRoYXQgd2UgdW5kZXJzdGFuZCBhbmQgYWdyZWUgdGhh
-dCB0aGUgcGNpZWhwIHNob3VsZCBOT1QgcHJvY2VzcyBhbmQgbGluayBldmVudHMgdGhhdCBoYXZl
-IGhhcHBlbmVkIGJlZm9yZSB0aGUgcGNpZWhwIHdhcyBsb2FkZWQuDQoNCkFja2VkLWJ5OiBSYWph
-dCBKYWluIDxyYWphdGphaW5AanVuaXBlci5uZXQ+DQoNClRoYW5rcywNCg0KUmFqYXQNCg0KDQo=
+On Tue, 10 Jun 2014, Jiang Liu wrote:
+
+> Hi Thomas,
+> 	This piece of code is inherited from current IOAPIC driver
+> and I think it's a workaround for some weird platforms.
+> 	For normal platforms with both 8259A and IOAPIC controllers,
+> legacy ISA IRQs should be connected to both 8259A and IOAPIC pins
+> (ignore timer and cascade IRQs for simplicity). According to comments
+>  in current kernel, there are some platforms on which:
+> 1) some ISA IRQs are only connected to 8259A controllers.
+> 2) the corresponding IOAPIC pins are connected to some non-ISA IRQs.
+> 	For such platforms, IRQ0-15 are used for ISA IRQs and another
+> 16 IRQs just above gsi_top are reserved for IOAPIC pins 0-15 which
+> are connected to non-ISA IRQs.
+> 	I have no real experience with such a platform, but just
+> guessing possible cases according to kernel comments and "Multiple
+> Processor Specification". Please look at these two pictures for quick
+> reference.
+> http://www.manualslib.com/manual/77733/Intel-Multiprocessor.html?page=31#manual
+> http://www.manualslib.com/manual/77733/Intel-Multiprocessor.html?page=63#manual
+
+Duh. I completely forgot about the 82489 mess.
+
+We probably want a comment somewhere why we have this gsi + legacy
+thing.
+
+Thanks,
+
+	tglx
