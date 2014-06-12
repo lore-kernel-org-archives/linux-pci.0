@@ -1,116 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64039 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:14920 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932856AbaFQF3G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Jun 2014 01:29:06 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: [RFC Patch V2 14/16] x86, irq: introduce helper to check whether an IOAPIC has been registered
-Date: Tue, 17 Jun 2014 13:29:53 +0800
-Message-Id: <1402982995-13747-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1752928AbaFLP2Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Jun 2014 11:28:16 -0400
+Subject: [PATCH] pci: Fix unaligned access testing AF transaction pending
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, ben@decadent.org.uk,
+	gwshan@linux.vnet.ibm.com, linux-kernel@vger.kernel.org
+Date: Thu, 12 Jun 2014 09:28:07 -0600
+Message-ID: <20140612152732.4162.23298.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
-been registered, it will be used when enabling IOAPIC hotplug.
+pci_wait_for_pending() uses word access, so we shouldn't be passing
+an offset that is only byte aligned.  Use the control register offset
+instead, shifting the mask to match.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Reported-by: Ben Hutchings <ben@decadent.org.uk>
+Cc: stable@vger.kernel.org
 ---
- arch/x86/include/asm/io_apic.h |    1 +
- arch/x86/kernel/acpi/boot.c    |   11 +++++++++++
- arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
- include/linux/acpi.h           |    1 +
- 4 files changed, 24 insertions(+)
+ drivers/pci/pci.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index ce63cf34c93c..0db2b7037e4b 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
- extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 			      struct ioapic_domain_cfg *cfg);
- extern int mp_unregister_ioapic(u32 gsi_base);
-+extern int mp_ioapic_registered(u32 gsi_base);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 8a1b25d2aa4c..bab37bd6296a 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -820,6 +820,17 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
- }
- EXPORT_SYMBOL(acpi_unregister_ioapic);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 759475e..81012ec 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3109,8 +3109,13 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+ 	if (probe)
+ 		return 0;
  
-+int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
-+{
-+	int ret;
-+
-+	down_write(&acpi_ioapic_rwsem);
-+	ret  = mp_ioapic_registered(gsi_base);
-+	up_write(&acpi_ioapic_rwsem);
-+
-+	return ret;
-+}
-+
- static int __init acpi_parse_sbf(struct acpi_table_header *table)
- {
- 	struct acpi_table_boot *sb;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 22bbecb05345..176433c03cf5 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -4001,6 +4001,17 @@ int mp_unregister_ioapic(u32 gsi_base)
- 	return 0;
- }
+-	/* Wait for Transaction Pending bit clean */
+-	if (pci_wait_for_pending(dev, pos + PCI_AF_STATUS, PCI_AF_STATUS_TP))
++	/*
++	 * Wait for Transaction Pending bit to clear.  A word-aligned test
++	 * is used, so we use the conrol offset rather than status and shift
++	 * the test bit to match.
++	 */
++	if (pci_wait_for_pending(dev, pos + PCI_AF_CTRL,
++				 PCI_AF_STATUS_TP << 8))
+ 		goto clear;
  
-+int mp_ioapic_registered(u32 gsi_base)
-+{
-+	int ioapic;
-+
-+	for_each_ioapic(ioapic)
-+		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base)
-+			return 1;
-+
-+	return 0;
-+}
-+
- int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 		     irq_hw_number_t hwirq)
- {
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index f478af87f575..7cf20a2e29cc 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -154,6 +154,7 @@ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
- 
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
-+int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base);
- void acpi_irq_stats_init(void);
- extern u32 acpi_irq_handled;
- extern u32 acpi_irq_not_handled;
--- 
-1.7.10.4
+ 	dev_err(&dev->dev, "transaction is not cleared; "
 
