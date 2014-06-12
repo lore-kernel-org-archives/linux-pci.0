@@ -1,255 +1,86 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <53A3F79E.8050100@linux.intel.com>
-Date: Fri, 20 Jun 2014 16:58:06 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [RFC Patch V2 15/16] pci, ioapic: kill ioapic PCI driver
-References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com> <1402982995-13747-16-git-send-email-jiang.liu@linux.intel.com> <CAErSpo4hmav+JTepA2cGC2Nwi1PHxBWpy+GG2t_dRfw1nbKqLA@mail.gmail.com>
-In-Reply-To: <CAErSpo4hmav+JTepA2cGC2Nwi1PHxBWpy+GG2t_dRfw1nbKqLA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:51128 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932878AbaFLKZl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jun 2014 06:25:41 -0400
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N710034DWYOEF30@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 12 Jun 2014 19:25:36 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Lucas Stach' <l.stach@pengutronix.de>, linux-pci@vger.kernel.org
+Cc: 'Jason Cooper' <jason@lakedaemon.net>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Mohit Kumar' <mohit.kumar@st.com>, kernel@pengutronix.de,
+	'Jingoo Han' <jg1.han@samsung.com>,
+	'Marek Vasut' <marex@denx.de>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>
+References: <1401979572-32101-1-git-send-email-l.stach@pengutronix.de>
+ <1401979572-32101-2-git-send-email-l.stach@pengutronix.de>
+In-reply-to: <1401979572-32101-2-git-send-email-l.stach@pengutronix.de>
+Subject: Re: [PATCH 1/4] PCI: allow MSI chip providers to implement their own
+ multiple MSI setup
+Date: Thu, 12 Jun 2014 19:25:35 +0900
+Message-id: <000201cf8628$a5f4ee60$f1decb20$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thursday, June 05, 2014 11:46 PM, Lucas Stach wrote:
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 
+(+cc Marek Vasut, Richard Zhu, Kishon Vijay Abraham I, Pratyush Anand)
 
-On 2014/6/18 0:49, Bjorn Helgaas wrote:
-> Your subject lines aren't even consistent in the same patch series.  I suggest:
-> 
->   PCI: Remove PCI ioapic driver
-> 
-> On Mon, Jun 16, 2014 at 11:29 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->> Originally the ioapic PCI driver is designed to support IOAPIC hotplug,
->> but it never works because no architecture has implemented required
->> interface to support it.
-> 
-> Please be specific about what these "required interfaces" are that no
-> architecture has implemented.  Otherwise it's hard for me to be
-> convinced that it's safe to remove this.
-> 
->> We plan to reimplement it as an ACPI driver
->> instead of PCI driver due to:
->> 1) To support IOAPIC hotplug, an IOAPIC unit must have an companion
->>    ACPI device, but it may or may not be presented in PCI domain.
-> 
-> Please include the reason why there must be a companion ACPI device.
-> 
-> What about hotplugging IOAPICs on non-ACPI systems?  How would that
-> work?  Will that require totally separate IOAPIC drivers?  I guess
-> pci/ioapic.c isn't very big and contains mostly ACPI stuff, so maybe
-> there's nothing worth sharing.
-> 
-> If there must be a companion ACPI device, I guess that implies that we
-> can't support an IOAPIC on a plug-in card, because there won't be
-> anything in the ACPI namespace about the card.  Is it possible to have
-> an IOAPIC on a plug-in card?  I guess I don't know what we could do
-> with it, since I don't know how we would learn about what is connected
-> to the IOAPIC input pins.  There's no standard for describing that for
-> plug-in IOAPICs, is there?
-Hi Bjorn,
-	As I know, ACPI is the only specification defining interfaces
-to support IOAPIC hotplug on x86 and IA64, and seems IOAPIC is only used
-on x86 and IA64 too.
-	I suspect that there's a real product with IOAPIC on plug-in
-card. Correct me if I'm wrong. If there are products with IOAPIC on
-plug-in card, it could only be  supported by ACPIPHP because SHPC and
-PCIe native hotplug have no  chance to update ACPI data structures.
+Reviewed-by: Jingoo Han <jg1.han@samsung.com>
 
-Thanks!
-Gerry
+However, I want more detailed commit message as possible.
+Thank you.
 
+Best regards,
+Jingoo Han
+
+> ---
+>  drivers/pci/msi.c   | 3 +++
+>  include/linux/msi.h | 2 ++
+>  2 files changed, 5 insertions(+)
 > 
->> 2) All other PCI devices have dependency on IOAPIC, so we must hot-add
->>    it before all other PCI devices and hot-remove it after all other
->>    PCI devices. So we need to explicitly control the order to add/remove
->>    IOAPIC devices.
->>
->> So kill the ioapic PCI driver and will reimplement it as an ACPI driver.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  drivers/pci/Kconfig  |    7 ---
->>  drivers/pci/Makefile |    2 -
->>  drivers/pci/ioapic.c |  121 --------------------------------------------------
->>  3 files changed, 130 deletions(-)
->>  delete mode 100644 drivers/pci/ioapic.c
->>
->> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
->> index 893503fa1782..39866d18004e 100644
->> --- a/drivers/pci/Kconfig
->> +++ b/drivers/pci/Kconfig
->> @@ -104,13 +104,6 @@ config PCI_PASID
->>
->>           If unsure, say N.
->>
->> -config PCI_IOAPIC
->> -       bool "PCI IO-APIC hotplug support" if X86
->> -       depends on PCI
->> -       depends on ACPI
->> -       depends on X86_IO_APIC
->> -       default !X86
->> -
->>  config PCI_LABEL
->>         def_bool y if (DMI || ACPI)
->>         select NLS
->> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
->> index e04fe2d9df3b..73e4af400a5a 100644
->> --- a/drivers/pci/Makefile
->> +++ b/drivers/pci/Makefile
->> @@ -13,8 +13,6 @@ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
->>  # Build PCI Express stuff if needed
->>  obj-$(CONFIG_PCIEPORTBUS) += pcie/
->>
->> -obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
->> -
->>  # Build the PCI Hotplug drivers if we were asked to
->>  obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
->>  ifdef CONFIG_HOTPLUG_PCI
->> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
->> deleted file mode 100644
->> index 6b2b7dddbbdb..000000000000
->> --- a/drivers/pci/ioapic.c
->> +++ /dev/null
->> @@ -1,121 +0,0 @@
->> -/*
->> - * IOAPIC/IOxAPIC/IOSAPIC driver
->> - *
->> - * Copyright (C) 2009 Fujitsu Limited.
->> - * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
->> - *
->> - * This program is free software; you can redistribute it and/or modify
->> - * it under the terms of the GNU General Public License version 2 as
->> - * published by the Free Software Foundation.
->> - */
->> -
->> -/*
->> - * This driver manages PCI I/O APICs added by hotplug after boot.  We try to
->> - * claim all I/O APIC PCI devices, but those present at boot were registered
->> - * when we parsed the ACPI MADT, so we'll fail when we try to re-register
->> - * them.
->> - */
->> -
->> -#include <linux/pci.h>
->> -#include <linux/module.h>
->> -#include <linux/acpi.h>
->> -#include <linux/slab.h>
->> -
->> -struct ioapic {
->> -       acpi_handle     handle;
->> -       u32             gsi_base;
->> -};
->> -
->> -static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
->> -{
->> -       acpi_handle handle;
->> -       acpi_status status;
->> -       unsigned long long gsb;
->> -       struct ioapic *ioapic;
->> -       int ret;
->> -       char *type;
->> -       struct resource *res;
->> -
->> -       handle = ACPI_HANDLE(&dev->dev);
->> -       if (!handle)
->> -               return -EINVAL;
->> -
->> -       status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
->> -       if (ACPI_FAILURE(status))
->> -               return -EINVAL;
->> -
->> -       /*
->> -        * The previous code in acpiphp evaluated _MAT if _GSB failed, but
->> -        * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
->> -        */
->> -
->> -       ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
->> -       if (!ioapic)
->> -               return -ENOMEM;
->> -
->> -       ioapic->handle = handle;
->> -       ioapic->gsi_base = (u32) gsb;
->> -
->> -       if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
->> -               type = "IOAPIC";
->> -       else
->> -               type = "IOxAPIC";
->> -
->> -       ret = pci_enable_device(dev);
->> -       if (ret < 0)
->> -               goto exit_free;
->> -
->> -       pci_set_master(dev);
->> -
->> -       if (pci_request_region(dev, 0, type))
->> -               goto exit_disable;
->> -
->> -       res = &dev->resource[0];
->> -       if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
->> -               goto exit_release;
->> -
->> -       pci_set_drvdata(dev, ioapic);
->> -       dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
->> -       return 0;
->> -
->> -exit_release:
->> -       pci_release_region(dev, 0);
->> -exit_disable:
->> -       pci_disable_device(dev);
->> -exit_free:
->> -       kfree(ioapic);
->> -       return -ENODEV;
->> -}
->> -
->> -static void ioapic_remove(struct pci_dev *dev)
->> -{
->> -       struct ioapic *ioapic = pci_get_drvdata(dev);
->> -
->> -       acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
->> -       pci_release_region(dev, 0);
->> -       pci_disable_device(dev);
->> -       kfree(ioapic);
->> -}
->> -
->> -
->> -static DEFINE_PCI_DEVICE_TABLE(ioapic_devices) = {
->> -       { PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
->> -       { PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
->> -       { }
->> -};
->> -MODULE_DEVICE_TABLE(pci, ioapic_devices);
->> -
->> -static struct pci_driver ioapic_driver = {
->> -       .name           = "ioapic",
->> -       .id_table       = ioapic_devices,
->> -       .probe          = ioapic_probe,
->> -       .remove         = ioapic_remove,
->> -};
->> -
->> -static int __init ioapic_init(void)
->> -{
->> -       return pci_register_driver(&ioapic_driver);
->> -}
->> -module_init(ioapic_init);
->> -
->> -MODULE_LICENSE("GPL");
->> --
->> 1.7.10.4
->>
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 27a7e67ddfe4..c45399d3061a 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -68,9 +68,12 @@ int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> 
+>  int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>  {
+> +	struct msi_chip *chip = dev->bus->msi;
+>  	struct msi_desc *entry;
+>  	int ret;
+> 
+> +	if (chip && chip->setup_irqs)
+> +		return chip->setup_irqs(chip, dev, nvec, type);
+>  	/*
+>  	 * If an architecture wants to support multiple MSI, it needs to
+>  	 * override arch_setup_msi_irqs()
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index 92a2f991262a..d813f898194c 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -75,6 +75,8 @@ struct msi_chip {
+> 
+>  	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+>  			 struct msi_desc *desc);
+> +	int (*setup_irqs)(struct msi_chip *chip, struct pci_dev *dev,
+> +			  int nvec, int type);
+>  	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
+>  	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
+>  			    int nvec, int type);
+> --
+> 2.0.0.rc2
+
