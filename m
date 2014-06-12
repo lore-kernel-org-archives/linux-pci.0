@@ -1,56 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:60733 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756043AbaFYOZZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 10:25:25 -0400
-Message-ID: <53AADBD7.4070302@ti.com>
-Date: Wed, 25 Jun 2014 10:25:27 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-we0-f180.google.com ([74.125.82.180]:50419 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787AbaFLFO4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jun 2014 01:14:56 -0400
 MIME-Version: 1.0
-To: Pratyush Anand <pratyush.anand@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: SATA AHCI controller detection during PCI enumeration
-References: <53A98A95.2030401@ti.com> <CAHM4w1kSH0C3N3rfy9yCBNwUXZTJmzZt5rnsLBbgjG9DLY9L2A@mail.gmail.com>
-In-Reply-To: <CAHM4w1kSH0C3N3rfy9yCBNwUXZTJmzZt5rnsLBbgjG9DLY9L2A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <CAErSpo6s1=aQ2=GxMHXTZgE+hFUp+Kzz9r32RXkDcY_TW_5+UQ@mail.gmail.com>
+References: <CANwwZzVqQ9Dur79ZP_1Fs9UWF0+h44tGW6QA4UZYdXaqV51z3A@mail.gmail.com>
+	<CAErSpo6s1=aQ2=GxMHXTZgE+hFUp+Kzz9r32RXkDcY_TW_5+UQ@mail.gmail.com>
+Date: Thu, 12 Jun 2014 10:44:55 +0530
+Message-ID: <CANwwZzV2MDfHWcW43XCnRS2qoqS1sgYQA=C9n-Lr9PZikXLqFg@mail.gmail.com>
+Subject: Re: DMA window vs actual allocatable DMA memory
+From: Bob Biloxi <iambobbiloxi@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/25/2014 12:01 AM, Pratyush Anand wrote:
-> On Tue, Jun 24, 2014 at 7:56 PM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
->> All,
->>
->> I have a board with PCI controller connected to a Marvell AHCI controller,
->> 88SE9182 connected to a PCIe bus and the PCI scan doesn't show up the SATA
->> end point. My question is in order to detect the EP,
->> is it expected to have a hard drive connected to the SATA port?
->
-> No
->
->> Currently with and without the SATA connected, the PCI scan doesn't
->> show up the device. Also is there any other requirements at the
->> hardware level to detect this SATA controller.
->
-> Does this PCIe2SATA card work with standard PC?
->
-> I do not know about this Marvell controller, but I remember one
-> silicon image controller which worked with only Gen1 host port.
-> You may ask card vendor if there is any such limitation.
->
-Pratyush,
+Thanks so much Bjorn for the reply. This is very helpful. Now my
+understanding is more clear.
+I was curious whether there is any limit from the operating
+system(hypervisor) as to how much DMA memory can drivers map.
+I'll try to investigate.
 
-Thanks for the reply. I will touch base with the Vendor on this.
-
-Murali
-
-> ~Pratyush
+On Thu, Jun 12, 2014 at 5:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Jun 11, 2014 at 12:23 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
+>> Hi All,
+>>
+>> I am having trouble understanding DMA window and actual amount of
+>> addressable DMA memory.
+>>
+>> I hope someone explains me. Let me put my understanding and doubts here:
+>>
+>> Let's say I am writing code for an ethernet device driver in the
+>> virtualisation(hypervisor) environment.
+>>
+>> Now, if the ethernet adapter requires certain amount of DMA memory, I
+>> need to allocate heap memory and dma map it and provide to the
+>> adapter.
+>>
+>> From the hardware perspective, we have a 64GB DMA window.
+>>
+>> I am having trouble understanding this value. Does it mean i can
+>> allocate 64GB of RAM(Heap memory) and dma map it?
+>>
+>> As i understand there might be a table that translates bus address to
+>> physical(RAM) addresses. Each entry of such table points to a 4KB
+>> page. If the size of each entry is 8 bytes and there are 16M such
+>> entries( 16M * 4K = 64GB DMA window), the size of the table comes to
+>> around 128M
+>>
+>> Now do I have 64GB DMA memory or 128M DMA memory?
 >
+> Documentation/DMA-API-HOWTO.txt might help answer your questions.
+>
+> The bus address to RAM address translation is done by a IOMMU
+> hardware.  The tables you mention are I/O page tables used by the
+> IOMMU.  The 128M occupied by the tables is kernel bookkeeping overhead
+> and has nothing to do with the adapter itself.
+>
+> The 64GB DMA window might be a hardware feature of the device, i.e.,
+> maybe it can only generate 36-bit DMA addresses.  That doesn't mean
+> you have to allocate memory for the whole window; I would guess
+> drivers would only allocate and map what they need.  I don't know how
+> they figure out how much to map.
+>
+>> I want to know what is the max amount of memory that I can
+>> allocate(heap), dma map and provide it to the adapter.
 >>
->> Thanks in advance for your reply.
+>> I will be really thankful in all the help that I can get!!
 >>
->> Murali
+>> Thanks so much
+>>
+>>
+>> Best Regards,
+>> Marc
 >> --
 >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 >> the body of a message to majordomo@vger.kernel.org
 >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
