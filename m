@@ -1,51 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:28066 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751489AbaFEQl6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Jun 2014 12:41:58 -0400
-Date: Thu, 5 Jun 2014 10:41:30 -0600 (MDT)
-From: Keith Busch <keith.busch@intel.com>
-To: Jon Mason <jon.mason@intel.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: Re: Debugging incorrect mps settings detected
-In-Reply-To: <20140604174440.GA17837@jonmason-lab>
-Message-ID: <alpine.LRH.2.03.1406051037580.11244@AMR>
-References: <alpine.LRH.2.03.1406031308200.11244@AMR> <CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com> <20140604174440.GA17837@jonmason-lab>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:60435 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017AbaFMOVx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jun 2014 10:21:53 -0400
+Message-ID: <1402669218.4802.3.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH 1/4] PCI: allow MSI chip providers to implement their
+ own multiple MSI setup
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit Kumar <mohit.kumar@st.com>, kernel@pengutronix.de,
+	Marek =?UTF-8?Q?Va=C5=A1ut?= <marex@denx.de>,
+	Richard Zhu <richard.zhu@linaro.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Pratyush ANAND <pratyush.anand@st.com>
+Date: Fri, 13 Jun 2014 16:20:18 +0200
+In-Reply-To: <CAHM4w1kfsVbcNquK4t1NJqYRc9Qrjg6JYNJuAV=cpZ81Zm-pnw@mail.gmail.com>
+References: <1401979572-32101-1-git-send-email-l.stach@pengutronix.de>
+	 <1401979572-32101-2-git-send-email-l.stach@pengutronix.de>
+	 <CAHM4w1kfsVbcNquK4t1NJqYRc9Qrjg6JYNJuAV=cpZ81Zm-pnw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 4 Jun 2014, Jon Mason wrote:
-> On Tue, Jun 03, 2014 at 03:01:31PM -0600, Bjorn Helgaas wrote:
->> [+cc Yijing, Jon]
->> The PCI core should be doing something intelligent here.  If we can't
->> configure MPS safely, we should prevent the device from being enabled.
->>  But this is stuff the PCI core doesn't implement yet.
->
-> The tuning of the MPS is disabled by default, which is why the warning
-> is there.  Now, we can attempt to tune it regardless of whether tuning
-> is enabled (assuming this device is the only one under the root port),
-> we can fail to all the hotplug, or we can enable "safe" tuning by
-> default.  The first option seems a bit hacky.  The second will fail
-> too often, since the MPSS of the hotplugged device would have to match
-> the MPS setting of slot/fabric.  The third seems like the best option.
->
->> It's hard to reconfigure MPS after boot because it affects other
->> devices in the system, and I don't think we can always change the
->> settings of other devices while they're active.
->
-> Unless the slot is under its own root port, otherwise the MPS will
-> have to be floored.  This is the behavior in the "safe" tuning.
->
-> I suggest that the "safe" tuning get made the default behavior and we
-> let it soak for a little while to shake out any issues that there may
-> be.
+Hi Pratyush,
 
-Thanks for all the info. I've tried different tunings on several different
-platforms that were all failing before. The 'safe' tuning was the only
-one successful on all platforms, so just providing a data point that
-this appears to be a good direction to go.
+Am Freitag, den 13.06.2014, 11:12 +0530 schrieb Pratyush Anand:
+>  Hi Lucas,
+> 
+> 
+> On Thu, Jun 5, 2014 at 8:16 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > ---
+> >  drivers/pci/msi.c   | 3 +++
+> >  include/linux/msi.h | 2 ++
+> >  2 files changed, 5 insertions(+)
+> >
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > index 27a7e67ddfe4..c45399d3061a 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -68,9 +68,12 @@ int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> >
+> >  int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> >  {
+> > +       struct msi_chip *chip = dev->bus->msi;
+> >         struct msi_desc *entry;
+> >         int ret;
+> >
+> > +       if (chip && chip->setup_irqs)
+> 
+> I think, you should also check here for nvec > 1
+
+No, nvec == 1 is just a special case and is perfectly valid.
+> 
+> > +               return chip->setup_irqs(chip, dev, nvec, type);
+> 
+> Before return, shouldn't we set chip_data for all desc->irq?
+
+Setting chip_data is done in the MSI irq domains map callback and is the
+same for single or multiple MSI setup. No need to do anything special
+here.
+
+> >         /*
+> >          * If an architecture wants to support multiple MSI, it needs to
+> >          * override arch_setup_msi_irqs()
+> 
+> This comment can be modified like "If an architecture wants
+> to support multiple MSI, it needs to either override arch_setup_msi_irqs()
+> or provide support of setup_irqs."
+> 
+Right, I'll extend that comment for v2.
+
+Regards,
+Lucas
+
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
