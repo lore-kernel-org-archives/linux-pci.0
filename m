@@ -1,68 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch V4 31/42] x86, irq, mpparse: use common irqdomain map interface to program IOAPIC pins
-Date: Mon,  9 Jun 2014 16:20:00 +0800
-Message-Id: <1402302011-23642-32-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from tor-sh10.fullhost.com ([162.219.163.6]:57282 "EHLO
+	tor-sh10.fullhost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901AbaFMQ1Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jun 2014 12:27:25 -0400
+Received: from cpe0013f7f0fb44-cm0013f7f0fb40.cpe.net.cable.rogers.com ([174.112.49.58]:44860 helo=[192.168.0.185])
+	by tor-sh10.fullhost.com with esmtpsa (TLSv1:DHE-RSA-AES128-SHA:128)
+	(Exim 4.82)
+	(envelope-from <patrick@spellingbeewinnars.org>)
+	id 1WvUK4-000XsZ-Hs
+	for linux-pci@vger.kernel.org; Fri, 13 Jun 2014 12:27:24 -0400
+Message-ID: <539B2609.3090106@spellingbeewinnars.org>
+Date: Fri, 13 Jun 2014 12:25:45 -0400
+From: Patrick <patrick@spellingbeewinnars.org>
+MIME-Version: 1.0
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: help with setpci "no devices at"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refine mpparse to use common irqdomain map interface to program IOAPIC pins,
-so we can unify the callsite to progam IOAPIC pins.
+Hi Everyone
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/mpparse.c |    4 +++-
- arch/x86/pci/irq.c        |    2 --
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Thanks again to Bjorn for helping me in the thread "updating firmware 
+with setpci"
 
-diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
-index 13c8e1f864fc..faf503aa3b70 100644
---- a/arch/x86/kernel/mpparse.c
-+++ b/arch/x86/kernel/mpparse.c
-@@ -113,7 +113,9 @@ static void __init MP_bus_info(struct mpc_bus *m)
- 		pr_warn("Unknown bustype %s - ignoring\n", str);
- }
- 
--static struct irq_domain_ops mp_ioapic_irqdomain_ops;
-+static struct irq_domain_ops mp_ioapic_irqdomain_ops = {
-+	.map = mp_irqdomain_map,
-+};
- 
- static void __init MP_ioapic_info(struct mpc_ioapic *m)
- {
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 84112f55dd7a..e4200e5e775e 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1227,8 +1227,6 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			}
- 			dev = temp_dev;
- 			if (irq >= 0) {
--				io_apic_set_pci_routing(&dev->dev, irq,
--							 &irq_attr);
- 				dev->irq = irq;
- 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
- 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
--- 
-1.7.10.4
+I have started a new thread as it's more specific than the previous one 
+and might be more valuable this way in the archives.
+
+I replaced a PCI chip on one card I am trying to copy the good PCI 
+configuration space settings from another card, as-is they are very 
+different and the repaired card is failing.
+
+I found a perfect little awk script here to generate setpci commands 
+from lspci -xxx  :
+
+https://gist.github.com/jlopez-git/4594728
+
+I ended up with setpci complaining about missing a width. I found this 
+thread:
+https://access.redhat.com/site/solutions/45240
+
+It looks like older versions of the tool did not require widths to be 
+specified. The awk script may be a bit dated.
+
+I changed XX= to XX.b=
+setpci -sD 04:01.0 00.b=813010e8
+
+based on:
+http://www.tutorialspoint.com/unix_commands/setpci.htm
+which gave this example:
+setpci -s 13:8.4 40.b=50:d0,04:0c,ff
+
+
+but now I have another error:
+setpci: Warning: No devices selected for "04:01.0".
+setpci: Invalid width "0".
+
+
+lspci shows the device at:
+04:01.0 Unassigned class [ff00]: Device a101:81ff
+
+The example showed the b near the register address but the "invalid 
+width 0" error has me wondering if it's supposed to go somewhere else or 
+I should be using a different width flag.
+
+Could someone point me in the right direction ?
+
+Thanks for reading-Patrick
+
+
+
+
+
+
+
+
+
+
+
+
+
 
