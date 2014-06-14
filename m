@@ -1,66 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:37763 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbaFZInI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 04:43:08 -0400
-Message-ID: <1403772085.4254.1.camel@weser.hi.pengutronix.de>
-Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, r65037@freescale.com, marex@denx.de,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	linux-pci@vger.kernel.org, tharvey@gateworks.com,
-	shawn.guo@freescale.com, kernel@pengutronix.de,
-	d.mueller@elsoft.ch, linux-arm-kernel@lists.infradead.org
-Date: Thu, 26 Jun 2014 10:41:25 +0200
-In-Reply-To: <1403637507-9424-1-git-send-email-festevam@gmail.com>
-References: <1403637507-9424-1-git-send-email-festevam@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:45528 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753034AbaFNVV1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Jun 2014 17:21:27 -0400
+Received: by mail-ig0-f172.google.com with SMTP id l13so1645317iga.5
+        for <linux-pci@vger.kernel.org>; Sat, 14 Jun 2014 14:21:27 -0700 (PDT)
+Subject: [PATCH RFC 2/4] PCI: pciehp: Wait for hotplug command completion
+ lazily
+To: Yinghai Lu <yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Jan C. Nordholz" <jckn@gmx.net>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Rajat Jain <rajatxjain@gmail.com>, linux-pci@vger.kernel.org
+Date: Sat, 14 Jun 2014 15:21:26 -0600
+Message-ID: <20140614212126.15202.66060.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Fabio,
+Previously we issued a hotplug command and waited for it to complete.  But
+there's no need to wait until we're ready to issue the *next* command.  The
+next command will probably be much later, so the first one may have already
+completed and we may not have to actually wait at all.
 
-Am Dienstag, den 24.06.2014, 16:18 -0300 schrieb Fabio Estevam:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> When the mx6 PCI conctroller is initialized in the bootloader we see a kernel 
-> hang inside imx6_add_pcie_port().
-> 
-> Adding a 30ms delay allows the kernel to boot.
-> 
-> Suggested-by: David Müller <d.mueller@elsoft.ch>
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> ---
-> I am happy to get feedback on how to properly fix this.
-> 
-> Thanks
-> 
->  drivers/pci/host/pci-imx6.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index a568efa..669f771 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -507,6 +507,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
->  	pp->root_bus_nr = -1;
->  	pp->ops = &imx6_pcie_host_ops;
->  
-> +	usleep_range(25000, 30000);
-> +
->  	ret = dw_pcie_host_init(pp);
->  	if (ret) {
->  		dev_err(&pdev->dev, "failed to initialize host\n");
+Because of hardware errata, some controllers generate command completion
+events for some commands but not others.  In the case of Intel CF118 (see
+spec update reference), the controller indicates command completion only
+for Slot Control writes that change the value of the following bits:
 
-I would suspect the issue to be somewhere in imx6_pcie_host_init(). Can
-you move the delay there (and to different positions in this function)
-to narrow down where the hang happens?
+  Power Controller Control
+  Power Indicator Control
+  Attention Indicator Control
+  Electromechanical Interlock Control
 
-Regards,
-Lucas
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+Changes to other bits, e.g., the interrupt enable bits, do not cause the
+Command Completed bit to be set.  Controllers from AMD and Nvidia are
+reported to have similar errata.
+
+These errata cause timeouts when pcie_enable_notification() enables
+interrupts.  Previously that timeout occurred at boot-time.  With this
+change, the timeout occurs later, when we change the state of the slot
+power, indicators, or interlock.  This speeds up boot but causes a timeout
+at the first hotplug event on the slot.  Subsequent events don't timeout
+because only the first (boot-time) hotplug command updates Slot Control
+without touching the power/indicator/interlock controls.
+
+Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 0e76e9d9d134..f44fdb5b0b08 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -165,6 +165,9 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+ 
+ 	mutex_lock(&ctrl->ctrl_lock);
+ 
++	/* Wait for any previous command that might still be in progress */
++	pcie_wait_cmd(ctrl);
++
+ 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+ 	if (slot_status & PCI_EXP_SLTSTA_CC) {
+ 		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+@@ -197,10 +200,6 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
+ 	ctrl->slot_ctrl = slot_ctrl;
+ 
+-	/*
+-	 * Wait for command completion.
+-	 */
+-	pcie_wait_cmd(ctrl);
+ 	mutex_unlock(&ctrl->ctrl_lock);
+ }
+ 
 
