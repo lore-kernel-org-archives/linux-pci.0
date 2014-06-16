@@ -1,222 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hygieia.santi-shop.eu ([78.46.175.2]:59118 "EHLO
-	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756165AbaFXUlU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 16:41:20 -0400
-Date: Tue, 24 Jun 2014 22:41:14 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Dave Airlie <airlied@linux.ie>
-Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Anibal Francisco Martinez Cortina <linuxkid.zeuz@gmail.com>,
-	nouveau@lists.freedesktop.org
-Subject: Re: [PATCH 1/2] x86, ia64: Move EFI_FB vga_default_device()
- initialization to pci_vga_fixup()
-Message-ID: <20140624224114.442d26f6@neptune.home>
-In-Reply-To: <20140602201926.4d476818@neptune.home>
-References: <20140514224339.7f8be3a9@neptune.home>
-	<20140527234255.GJ11907@google.com>
-	<20140602201650.35f0e936@neptune.home>
-	<20140602201926.4d476818@neptune.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from avon.wwwdotorg.org ([70.85.31.133]:46581 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932496AbaFPSaa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jun 2014 14:30:30 -0400
+Message-ID: <539F37C3.7070600@wwwdotorg.org>
+Date: Mon, 16 Jun 2014 12:30:27 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/5] PCI: tegra: Overhaul regulator usage
+References: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 02 June 2014 Bruno Prémont <bonbons@linux-vserver.org> wrote:
-> With commit b4aa0163056b ("efifb: Implement vga_default_device() (v2)")
-> Matthew Garrett introduced a efifb vga_default_device() so that EFI
-> systems that do not load shadow VBIOS or setup VGA get proper value for
-> boot_vga PCI sysfs attribute on the corresponding PCI device.
+On 05/28/2014 08:49 AM, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
 > 
-> Xorg is refusing to detect devices when boot_vga=0 which is the case on
-> some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
-> the dri device but then bails out with "no devices detected".
+> The current device tree binding for the regulator setup on Tegra PCIe is
+> not accurate. While it does work for current use-cases, that's likely by
+> accident rather than design. This series replaces the existing set of
+> power-supply properties with a new set that accurately describes the
+> inputs of the IP block (depending on SoC generation).
 > 
-> Note: When vga_default_device() is set boot_vga PCI sysfs attribute
-> reflects its state. When unset this attribute is 1 whenever
-> IORESOURCE_ROM_SHADOW flag is set.
+> As a heads-up, this breaks backwards compatibility with prior versions
+> of the device tree bindings, but I don't see a reason why that should
+> keep us from fixing this properly. Not many people are currently using
+> these bindings and those who are are most likely tracking upstream
+> development closely enough not to be impacted by this.
 > 
-> With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
-> while having native drivers for the GPU also makes selecting
-> sysfb/efifb optional.
+> I've aimed to keep the series bisectible, which has the downside of
+> interleaving patches to unrelated trees (ARM and PCI). I'm hoping that
+> perhaps we can find a way to merge this as a whole to keep it possible
+> to bisect across the series. Although again, I guess it wouldn't be all
+> that bad if that wasn't the case, given how little PCIe is actually
+> being used.
 > 
-> Remove the efifb implementation of vga_default_device() and initialize
-> vgaarb's vga_default_device() with the PCI GPU that matches boot
-> screen_info in pci_fixup_video().
+> This second version of the series has Bjorn's Acked-by for patch 3 from
+> the RFC. Stephen, it would be great if you can take this through the
+> Tegra tree so that the bisectability can be preserved. I have a bunch of
+> other smaller changes for the PCIe driver (mostly cleanups). I don't
+> think any of them will conflict, but for extra safety Bjorn may want to
+> pull this as a stable branch into his tree.
 
-Quite a few people trip over this issue, apparently concentrated on
-Apple Macs (EFI) with Nvidia graphics.
-
-It has shown up in at least two bugzilla reports (as side-issue):
-  https://bugs.freedesktop.org/show_bug.cgi?id=58556#c16
-  https://bugs.freedesktop.org/show_bug.cgi?id=76732#c34
-
-My initial report and discussion on freenode, #nouveau:
-  http://people.freedesktop.org/~cbrill/dri-log/?channel=nouveau&date=2013-11-23
-followed by initial patch proposal:
-  http://permalink.gmane.org/gmane.comp.video.dri.devel/95943
-
->From today on #nouveau:
-  Tested-by: Anibal Francisco Martinez Cortina <linuxkid.zeuz@gmail.com>
-
-As reported on #nouveau, every now and then someone trips over this issue
-and falls back to enabling efifb so X server accepts to start without
-explicit configuration.
-
-It would also be worth to add for first patch:
-  Cc: stable@vger.kernel.org
-
-Bruno
-
-
-> Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
-> ---
->  arch/ia64/pci/fixup.c       | 21 +++++++++++++++++++++
->  arch/x86/include/asm/vga.h  |  6 ------
->  arch/x86/pci/fixup.c        | 21 +++++++++++++++++++++
->  drivers/video/fbdev/efifb.c | 38 --------------------------------------
->  4 files changed, 42 insertions(+), 44 deletions(-)
-> 
-> diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
-> index eee069a..9ed5bef 100644
-> --- a/arch/ia64/pci/fixup.c
-> +++ b/arch/ia64/pci/fixup.c
-> @@ -37,6 +37,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
->  		return;
->  	/* Maybe, this machine supports legacy memory map. */
->  
-> +	if (!vga_default_device()) {
-> +		resource_size_t start, end;
-> +		int i;
-> +
-> +		/* Does firmware framebuffer belong to us? */
-> +		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-> +			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> +				continue;
-> +
-> +			start = pci_resource_start(pdev, i);
-> +			end  = pci_resource_end(pdev, i);
-> +
-> +			if (!start || !end)
-> +				continue;
-> +
-> +			if (screen_info.lfb_base >= start &&
-> +				(screen_info.lfb_base + screen_info.lfb_size) < end)
-> +				vga_set_default_device(pdev);
-> +		}
-> +	}
-> +
->  	/* Is VGA routed to us? */
->  	bus = pdev->bus;
->  	while (bus) {
-> diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
-> index 44282fb..c4b9dc2 100644
-> --- a/arch/x86/include/asm/vga.h
-> +++ b/arch/x86/include/asm/vga.h
-> @@ -17,10 +17,4 @@
->  #define vga_readb(x) (*(x))
->  #define vga_writeb(x, y) (*(y) = (x))
->  
-> -#ifdef CONFIG_FB_EFI
-> -#define __ARCH_HAS_VGA_DEFAULT_DEVICE
-> -extern struct pci_dev *vga_default_device(void);
-> -extern void vga_set_default_device(struct pci_dev *pdev);
-> -#endif
-> -
->  #endif /* _ASM_X86_VGA_H */
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index 94ae9ae..7246cf2 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -325,6 +325,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
->  	struct pci_bus *bus;
->  	u16 config;
->  
-> +	if (!vga_default_device()) {
-> +		resource_size_t start, end;
-> +		int i;
-> +
-> +		/* Does firmware framebuffer belong to us? */
-> +		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-> +			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> +				continue;
-> +
-> +			start = pci_resource_start(pdev, i);
-> +			end  = pci_resource_end(pdev, i);
-> +
-> +			if (!start || !end)
-> +				continue;
-> +
-> +			if (screen_info.lfb_base >= start &&
-> +				(screen_info.lfb_base + screen_info.lfb_size) < end)
-> +				vga_set_default_device(pdev);
-> +		}
-> +	}
-> +
->  	/* Is VGA routed to us? */
->  	bus = pdev->bus;
->  	while (bus) {
-> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-> index ae9618f..a033180 100644
-> --- a/drivers/video/fbdev/efifb.c
-> +++ b/drivers/video/fbdev/efifb.c
-> @@ -19,8 +19,6 @@
->  
->  static bool request_mem_succeeded = false;
->  
-> -static struct pci_dev *default_vga;
-> -
->  static struct fb_var_screeninfo efifb_defined = {
->  	.activate		= FB_ACTIVATE_NOW,
->  	.height			= -1,
-> @@ -84,18 +82,6 @@ static struct fb_ops efifb_ops = {
->  	.fb_imageblit	= cfb_imageblit,
->  };
->  
-> -struct pci_dev *vga_default_device(void)
-> -{
-> -	return default_vga;
-> -}
-> -
-> -EXPORT_SYMBOL_GPL(vga_default_device);
-> -
-> -void vga_set_default_device(struct pci_dev *pdev)
-> -{
-> -	default_vga = pdev;
-> -}
-> -
->  static int efifb_setup(char *options)
->  {
->  	char *this_opt;
-> @@ -126,30 +112,6 @@ static int efifb_setup(char *options)
->  		}
->  	}
->  
-> -	for_each_pci_dev(dev) {
-> -		int i;
-> -
-> -		if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
-> -			continue;
-> -
-> -		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-> -			resource_size_t start, end;
-> -
-> -			if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
-> -				continue;
-> -
-> -			start = pci_resource_start(dev, i);
-> -			end  = pci_resource_end(dev, i);
-> -
-> -			if (!start || !end)
-> -				continue;
-> -
-> -			if (screen_info.lfb_base >= start &&
-> -			    (screen_info.lfb_base + screen_info.lfb_size) < end)
-> -				default_vga = dev;
-> -		}
-> -	}
-> -
->  	return 0;
->  }
->  
+I've applied this series to Tegra's for-3.17/pcie-regulators branch.
