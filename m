@@ -1,72 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch V4 05/42] x86, PCI, ACPI: use kmalloc_node() to optimize for performance
-Date: Mon,  9 Jun 2014 16:19:34 +0800
-Message-Id: <1402302011-23642-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:37294 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932135AbaFQSKt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 14:10:49 -0400
+Received: by mail-ig0-f175.google.com with SMTP id h3so39958igd.14
+        for <linux-pci@vger.kernel.org>; Tue, 17 Jun 2014 11:10:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140617054457.GA30758@yanx>
+References: <1402918182-13082-1-git-send-email-yan@linux.vnet.ibm.com>
+ <CAErSpo5KepA52w0G2aa2y0-5W32FAkxoVQ+Kdo+hHsR2270Oxw@mail.gmail.com> <20140617054457.GA30758@yanx>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 17 Jun 2014 12:10:28 -0600
+Message-ID: <CAErSpo5jn1LVCK5x8a2tHCodb9aLqVOdOfSDzQxUwOONn+A-Dw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: don't UNSET resource even reassign fails
+To: Guo Chao <yan@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use kmalloc_node() instead of kmalloc() when possible to optimize
-for performance on NUMA platforms.
+On Mon, Jun 16, 2014 at 11:44 PM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
+> On Mon, Jun 16, 2014 at 02:44:34PM -0600, Bjorn Helgaas wrote:
+>> On Mon, Jun 16, 2014 at 5:29 AM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
+>> > Commit bd064f0a sets IORESOURCE_UNSET flag if resource can not be
+>> > assgined. Part of these changes breaks resource assignment.
+>> >
+>> > If resource is too big, PCI core assgins basic part first and
+>> > extends (reassigns) it to include optional part (notably SR-IOV resources).
+>> > In this case, failure is permitted and IORESOURCE_UNSET should be not set.
+>> > Otherwise, these resources are never updated to hardware even they are
+>> > already propery assigned and we will see errors like this:
+>> >
+>> >         pci 0003:00:00.0: can't enable device: BAR 15 [mem size 0x0c000000 64bit pref] not assigned
+>> >         pci 0003:00:00.0: Error enabling bridge (-22), continuing
+>>
+>> Please attach a complete dmesg log so I can look at this in more
+>> detail.  Thanks!
+>>
+>
+> It again appeared in the new machine and cards so it may not proper to
+> send complete dmesg in public list. Attachment is an excerpt related to
+> resource assignment.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: David Rientjes <rientjes@google.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/acpi.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Just remove the identifying information like vendor/device IDs and
+dmidecode info.  You can use something like this to make it easy:
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 01edac6c5e18..91bef49df228 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -448,7 +448,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 		return;
- 
- 	size = sizeof(*info->res) * info->res_num;
--	info->res = kzalloc(size, GFP_KERNEL);
-+	info->res = kzalloc_node(size, GFP_KERNEL, info->sd.node);
- 	if (!info->res) {
- 		info->res_num = 0;
- 		return;
-@@ -456,7 +456,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 
- 	size = sizeof(*info->res_offset) * info->res_num;
- 	info->res_num = 0;
--	info->res_offset = kzalloc(size, GFP_KERNEL);
-+	info->res_offset = kzalloc_node(size, GFP_KERNEL, info->sd.node);
- 	if (!info->res_offset) {
- 		kfree(info->res);
- 		info->res = NULL;
-@@ -495,7 +495,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	if (node != NUMA_NO_NODE && !node_online(node))
- 		node = NUMA_NO_NODE;
- 
--	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
- 	if (!info) {
- 		printk(KERN_WARNING "pci_bus %04x:%02x: "
- 		       "ignored (out of memory)\n", domain, busnum);
--- 
-1.7.10.4
+dmesg | sed -r 's/(pci ....:..:..\..:
+\[)....:....(\].*)/\1VVVV:DDDD\2/' | sed -r 's/(DMI:).*/\1 (removed)/'
 
+I still want to see the details about the kernel version, host bridge,
+device enumeration, initial BAR values, BAR sizing, bridge topology,
+etc.  It makes more work for me when people extract out the things
+they think I should be interested in because I'm interested in lots of
+things, and sometimes I don't even know all those things until I see
+them.
+
+Bjorn
