@@ -1,59 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:65053 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002AbaFKSIJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jun 2014 14:08:09 -0400
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:52918 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965910AbaFQVrN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 17:47:13 -0400
+Received: by mail-ie0-f174.google.com with SMTP id lx4so6679081iec.5
+        for <linux-pci@vger.kernel.org>; Tue, 17 Jun 2014 14:47:12 -0700 (PDT)
+Date: Tue, 17 Jun 2014 15:47:09 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, ben@decadent.org.uk,
+	gwshan@linux.vnet.ibm.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: Fix unaligned access testing AF transaction pending
+Message-ID: <20140617214709.GA30559@google.com>
+References: <20140612152732.4162.23298.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5rpdb985tS91BOEGJePwU3OSzKp_KgrrZfRqaxKBgPMw@mail.gmail.com>
-References: <1986515.ZPZrccsmiq@vostro.rjw.lan>
-	<CAErSpo5rpdb985tS91BOEGJePwU3OSzKp_KgrrZfRqaxKBgPMw@mail.gmail.com>
-Date: Wed, 11 Jun 2014 20:08:08 +0200
-Message-ID: <CAJZ5v0gFVjUwDiCYM_qeU7jL5Ym50mgMZG186G92uMdzMQo8TQ@mail.gmail.com>
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Add hotplug contexts to PCI host bridges
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140612152732.4162.23298.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 11, 2014 at 4:29 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Jun 10, 2014 at 2:51 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> After relatively recent changes in the ACPI-based PCI hotplug
->> (ACPIPHP) code, the acpiphp_check_host_bridge() executed for PCI
->> host bridges via acpi_pci_root_scan_dependent() doesn't do anything
->> useful, because those bridges do not have hotplug contexts.  That
->> happens by mistake, so fix it by making acpiphp_enumerate_slots()
->> add hotplug contexts to PCI host bridges too and modify
->> acpiphp_remove_slots() to drop those contexts for host bridges
->> as appropriate.
->>
->> Link: https://bugzilla.kernel.org/show_bug.cgi?id=76901
->> Fixes: 2d8b1d566a5f (ACPI / hotplug / PCI: Get rid of check_sub_bridges())
->> Reported-and-tested-by: Gavin Guo <gavin.guo@canonical.com>
->> Cc: 3.15+ <stable@vger.kernel.org> # 3.15+
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, Jun 12, 2014 at 09:28:07AM -0600, Alex Williamson wrote:
+> pci_wait_for_pending() uses word access, so we shouldn't be passing
+> an offset that is only byte aligned.  Use the control register offset
+> instead, shifting the mask to match.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Reported-by: Ben Hutchings <ben@decadent.org.uk>
+> Cc: stable@vger.kernel.org
 
-Thanks!
+Applied with Gavin's ack to for-linus for v3.16, thanks!
 
-> Rafael, do you want to merge this via your tree, since you merged the
-> original acpiphp rework?
-
-Yes, I'll take care of this.
-
-> I do have a small cleanup of acpiphp_glue.c in my queue, but it won't
-> conflict with this.
->
-> Thanks a lot for fixing this!
-
-You're very welcome. :-)
-
-Rafael
+> ---
+>  drivers/pci/pci.c |    9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 759475e..81012ec 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3109,8 +3109,13 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+>  	if (probe)
+>  		return 0;
+>  
+> -	/* Wait for Transaction Pending bit clean */
+> -	if (pci_wait_for_pending(dev, pos + PCI_AF_STATUS, PCI_AF_STATUS_TP))
+> +	/*
+> +	 * Wait for Transaction Pending bit to clear.  A word-aligned test
+> +	 * is used, so we use the conrol offset rather than status and shift
+> +	 * the test bit to match.
+> +	 */
+> +	if (pci_wait_for_pending(dev, pos + PCI_AF_CTRL,
+> +				 PCI_AF_STATUS_TP << 8))
+>  		goto clear;
+>  
+>  	dev_err(&dev->dev, "transaction is not cleared; "
+> 
