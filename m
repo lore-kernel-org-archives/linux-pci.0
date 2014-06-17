@@ -1,53 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0239.outbound.protection.outlook.com ([207.46.163.239]:7697
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753335AbaFYGMs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 02:12:48 -0400
-Date: Wed, 25 Jun 2014 14:12:40 +0800
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Richard Zhu <r65037@freescale.com>, <kernel@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: Re: The imx6q suspend/resume is broken on 3.16-rc due to PCIe
-Message-ID: <20140625061238.GA3242@dragon>
-References: <20140624153559.GA5741@dragon>
- <1403626435.4230.17.camel@weser.hi.pengutronix.de>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:33783 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775AbaFQANq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jun 2014 20:13:46 -0400
+Received: by mail-ig0-f170.google.com with SMTP id h15so382604igd.1
+        for <linux-pci@vger.kernel.org>; Mon, 16 Jun 2014 17:13:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1403626435.4230.17.camel@weser.hi.pengutronix.de>
+In-Reply-To: <CAE9FiQWQn6SNMTAQ1_RR=NdMszwOBYG_W9ifFdRN1ZLE0k_vbw@mail.gmail.com>
+References: <20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140614212132.15202.29174.stgit@bhelgaas-glaptop.roam.corp.google.com> <CAE9FiQWQn6SNMTAQ1_RR=NdMszwOBYG_W9ifFdRN1ZLE0k_vbw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 16 Jun 2014 18:13:25 -0600
+Message-ID: <CAErSpo4WMPUjg-1vS6v7zVnEUcQL9i0SxmmyjViA7njB-ErPoQ@mail.gmail.com>
+Subject: Re: [PATCH RFC 3/4] PCI: pciehp: Compute timeout from hotplug command
+ start time
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Jan C. Nordholz" <jckn@gmx.net>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 24, 2014 at 06:13:55PM +0200, Lucas Stach wrote:
-> Hi Shawn,
-> 
-> Am Dienstag, den 24.06.2014, 23:36 +0800 schrieb Shawn Guo:
-> > Hi Lucas,
-> > 
-> > I found that imx6q suspend/resume is broken on 3.16-rc, and it works
-> > just fine if PCIe support is built out.  However the issue was not
-> > exposed on 3.15, so I suspect the PCIe driver change merged in 3.16
-> > is part of the cause.
-> > 
-> I don't yet see why any of the changes to the designware/imx6 host
-> driver would cause such failures.
-> 
-> Which board are you doing your testing on? What devices are connected to
-> the PCIe bus? In what way does it break system resume, complete hang?
+On Sat, Jun 14, 2014 at 8:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sat, Jun 14, 2014 at 2:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+>> index f44fdb5b0b08..18ac24d84f9b 100644
+>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>> @@ -142,11 +143,24 @@ static void pcie_wait_cmd(struct controller *ctrl)
+>>         if (ctrl->no_cmd_complete)
+>>                 return;
+>>
+>> +       if (!ctrl->cmd_busy)
+>> +               return;
+>
+> Can you move those two lines to second patch ?
 
-It's on imx6q-sabresd without any PCIe device connected.  Right, it's a
-complete hang after enabling non-boot CPUs.
+Yeah, those lines don't really fit in this patch.  I don't think they
+really fit in the second patch ("Wait for hotplug command completion
+lazily") either, since that is simply moving the wait from after
+issuing a command to before issuing the next command.
 
-...
-Enabling non-boot CPUs ...
-CPU1: Booted secondary processor
-CPU1 is up
-CPU2: Booted secondary processor
-CPU2 is up
-CPU3: Booted secondary processor
-CPU3 is up
-<*** hang here ***>
+I moved them to the first patch ("Make pcie_wait_cmd()
+self-contained") since that is more concerned with cleaning up
+pcie_wait_cmd().  It could even be a separate patch; it would have
+made sense to check cmd_busy before calling pcie_wait_cmd().  But it
+seemed like overkill to make another patch just for that.
 
-Shawn
+Anyway, I put them all at
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/?h=pci/hotplug
+.  I'll add the results of Rajat's testing (assuming that goes well).
+It would be good if you could make sure they do what you expect on
+your hardware, too.  If you do test it, let me know what sort of
+controller you tested on (vendor/device ID).
+
+I think you will see a "Timeout on hotplug command %#010x (issued %u
+msec ago)" message.  I don't think there will be any actual slowdown,
+but I hope the message doesn't cause users too much heartburn.
+
+> Other than that, for all 4 patches
+>
+> Acked-by: Yinghai Lu <yinghai@kernel.org>
