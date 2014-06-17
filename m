@@ -1,72 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:43421 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752152AbaFPHMQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jun 2014 03:12:16 -0400
-From: Thomas Schwinge <thomas@codesourcery.com>
-To: Jerome Glisse <j.glisse@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	"Johannes Weiner" <hannes@cmpxchg.org>,
-	Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@surriel.com>,
-	Andrea Arcangeli <aarcange@redhat.com>,
-	Zlatko Calusic <zcalusic@bitsync.net>,
-	Minchan Kim <minchan@kernel.org>, <linux-mm@kvack.org>,
-	<linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Christian =?utf-8?Q?K=C3=B6nig?= <christian.koenig@amd.com>,
-	<dri-devel@lists.freedesktop.org>
-Subject: Re: radeon: screen garbled after page allocator change, was: Re: [patch v2 3/3] mm: page_alloc: fair zone allocator policy
-In-Reply-To: <87ppk1q3iq.fsf@schwinge.name>
-References: <1375457846-21521-1-git-send-email-hannes@cmpxchg.org> <1375457846-21521-4-git-send-email-hannes@cmpxchg.org> <87r45fajun.fsf@schwinge.name> <20140424133722.GD4107@cmpxchg.org> <20140427033110.GA15091@gmail.com> <20140427195527.GC9315@gmail.com> <87ppk1q3iq.fsf@schwinge.name>
-Date: Mon, 16 Jun 2014 09:11:52 +0200
-Message-ID: <87vbs1z5tz.fsf@schwinge.name>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:39971 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756032AbaFQXjN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 19:39:13 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
-	protocol="application/pgp-signature"
+In-Reply-To: <20140617221620.GC30559@google.com>
+References: <1402346730-2508-1-git-send-email-andreas.noever@gmail.com>
+	<20140617221620.GC30559@google.com>
+Date: Tue, 17 Jun 2014 16:39:12 -0700
+Message-ID: <CAE9FiQXD7hvt0cUYMzvq0r6CbZn=iJZc7BHRaF2nACbG7qwuBQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Do not touch siblings in pci_assign_unassigned_bridge_resources
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=047d7b10ca01aae09504fc10a6a3
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+--047d7b10ca01aae09504fc10a6a3
+Content-Type: text/plain; charset=UTF-8
 
-Hi!
+On Tue, Jun 17, 2014 at 3:16 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Yinghai]
+>
+> On Mon, Jun 09, 2014 at 10:45:30PM +0200, Andreas Noever wrote:
+>> The problem can be reproduced by having two sibling hotplug bridges A
+>> and B. The problem will occour if the parent of A and B does not have
+>> enough resources to satisfy window allocations for B during a hotplug
+>> event.
 
-On Mon, 28 Apr 2014 10:09:17 +0200, I wrote:
-> On Sun, 27 Apr 2014 15:55:29 -0400, Jerome Glisse <j.glisse@gmail.com> wr=
-ote:
-> > If my ugly patch works does this quirk also work ?
->=20
-> Unfortunately they both don't; see my other email,
-> <http://news.gmane.org/find-root.php?message_id=3D%3C87sioxq3rx.fsf%40sch=
-winge.name%3E>.
+> I don't understand how all this works either.  Yinghai?
+>
+> We definitely don't want to release resources that are already in use.  Can
+> you review and ack or nack this?
 
-> [...] hacked around as follows: [...]
+Hi Andreas,
 
-> If needed, I can try to capture more data, but someone who has knowledge
-> of PCI bus architecture and Linux kernel code (so, not me), might
-> probably already see what's wrong.
+Can you check if attached patch fix the problem on your test case?
 
-The problem "solved itself": the machine recently died of hardware
-failure.  ;-|
+In some case, if we can not assign pref mmio properly for the bridge,
+we may need to even clear non-pref mmio for the bridge.
 
+Thanks
 
-Gr=C3=BC=C3=9Fe,
- Thomas
+Yinghai
 
---=-=-=
-Content-Type: application/pgp-signature
+--047d7b10ca01aae09504fc10a6a3
+Content-Type: text/x-patch; charset=US-ASCII; name="fix_release_sibling_bridge_res.patch"
+Content-Disposition: attachment;
+	filename="fix_release_sibling_bridge_res.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hwjuot350
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQEcBAEBAgAGBQJTnpi4AAoJENuKOtuXzphJSy4H/iVeV8s9nQDKTRe0H+6VuyOa
-joqGgQkfanZ35xocDxEStKDD/HP5szeCE87m0dseuHqZusIH5Npeb5dNH8Ss5cZA
-4htw5IFTqDSOw5Dv2zfuAagPf0uCLAtqJv55FHlpI4kwWmeKISAkb9OAyUK/f1oA
-Wu1KbriIm9D2nFL1R1yTfvC9NYLuGDOvL4sis+4IqTRRIpeTZMAMDwwE/cBygPDE
-4+No5wYStNsqgu8uxQTU5arNtPFK8uDK/9+lKYkXU4TyFhpOEJEKQNStLRSNtq6s
-//0748KW1HdE2/9yfXbfDfrGtXNpWMFarvOXkOT4/iCvzfQ2nf1+9N1pF0VxnQg=
-=wH4w
------END PGP SIGNATURE-----
---=-=-=--
+U3ViamVjdDogW1BBVENIXSBwY2k6IERvbid0IHJlbGVhc2Ugc2liaWxpbmcgYnJpZGdlIHJlc291
+cmNlcwoKT24gaG90cGx1ZyBjYXNlLCB3ZSBzaG91bGQgbm90IHRvdWNoIHNpYmxpbmcgYnJpZGdl
+cyB0aGF0IGlzIG91dApzaWRlIG9mIHRoZSBzbG90cy4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkg
+THUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgfCAg
+IDEwICsrKysrKysrLS0KIDEgZmlsZSBjaGFuZ2VkLCA4IGluc2VydGlvbnMoKyksIDIgZGVsZXRp
+b25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCj09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCisrKyBsaW51eC0y
+LjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKQEAgLTE2NzYsMTAgKzE2NzYsMTYgQEAgYWdhaW46
+CiAJICogVHJ5IHRvIHJlbGVhc2UgbGVhZiBicmlkZ2UncyByZXNvdXJjZXMgdGhhdCBkb2Vzbid0
+IGZpdCByZXNvdXJjZSBvZgogCSAqIGNoaWxkIGRldmljZSB1bmRlciB0aGF0IGJyaWRnZQogCSAq
+LwotCWxpc3RfZm9yX2VhY2hfZW50cnkoZmFpbF9yZXMsICZmYWlsX2hlYWQsIGxpc3QpCi0JCXBj
+aV9idXNfcmVsZWFzZV9icmlkZ2VfcmVzb3VyY2VzKGZhaWxfcmVzLT5kZXYtPmJ1cywKKwlsaXN0
+X2Zvcl9lYWNoX2VudHJ5KGZhaWxfcmVzLCAmZmFpbF9oZWFkLCBsaXN0KSB7CisJCXN0cnVjdCBw
+Y2lfYnVzICpidXMgPSBmYWlsX3Jlcy0+ZGV2LT5idXM7CisKKwkJaWYgKGZhaWxfcmVzLT5kZXYg
+PT0gYnJpZGdlKQorCQkJYnVzID0gYnJpZGdlLT5zdWJvcmRpbmF0ZTsKKworCQlwY2lfYnVzX3Jl
+bGVhc2VfYnJpZGdlX3Jlc291cmNlcyhidXMsCiAJCQkJCQkgZmFpbF9yZXMtPmZsYWdzICYgdHlw
+ZV9tYXNrLAogCQkJCQkJIHdob2xlX3N1YnRyZWUpOworCX0KIAogCS8qIHJlc3RvcmUgc2l6ZSBh
+bmQgZmxhZ3MgKi8KIAlsaXN0X2Zvcl9lYWNoX2VudHJ5KGZhaWxfcmVzLCAmZmFpbF9oZWFkLCBs
+aXN0KSB7Cg==
+--047d7b10ca01aae09504fc10a6a3--
