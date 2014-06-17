@@ -1,80 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53A2E491.5040406@ti.com>
-Date: Thu, 19 Jun 2014 16:24:33 +0300
-From: Tero Kristo <t-kristo@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:34054 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933581AbaFQQFx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 12:05:53 -0400
+Received: by mail-ie0-f170.google.com with SMTP id tr6so6573288ieb.15
+        for <linux-pci@vger.kernel.org>; Tue, 17 Jun 2014 09:05:53 -0700 (PDT)
 MIME-Version: 1.0
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
-	Keerthy <j-keerthy@ti.com>, Rajendra Nayak <rnayak@ti.com>,
-	Paul Walmsley <paul@pwsan.com>
-Subject: Re: [PATCH v2 07/18] ARM: dts: DRA7: Change the parent of apll_pcie_in_clk_mux
- to dpll_pcie_ref_m2ldo_ck
-References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-8-git-send-email-kishon@ti.com> <53A2C5B4.9080300@ti.com> <53A2DEDA.5050104@ti.com>
-In-Reply-To: <53A2DEDA.5050104@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1402982995-13747-4-git-send-email-jiang.liu@linux.intel.com>
+References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com> <1402982995-13747-4-git-send-email-jiang.liu@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 17 Jun 2014 10:05:33 -0600
+Message-ID: <CAErSpo4y9HQB-OcX8XwpXHW=xCvDQOJZgokG5iMqg705XZnevg@mail.gmail.com>
+Subject: Re: [RFC Patch V2 03/16] ACPI, x86/PCI: Move resource_to_addr() to
+ acpi generic
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/19/2014 04:00 PM, Kishon Vijay Abraham I wrote:
-> Hi Tero,
+On Mon, Jun 16, 2014 at 11:29 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> From: Yinghai Lu <yinghai@kernel.org>
 >
-> On Thursday 19 June 2014 04:42 PM, Tero Kristo wrote:
->> On 05/29/2014 09:38 AM, Kishon Vijay Abraham I wrote:
->>> From: Keerthy <j-keerthy@ti.com>
->>>
->>> Change the parent of apll_pcie_in_clk_mux to dpll_pcie_ref_m2ldo_ck
->>> from dpll_pcie_ref_ck.
->>
->> Why? Needs a better changelog also.
+> Rui Wang reported ioapic hot-add does not work on his machine
+> that _CRS have MEMORY_FIXED.
+> He also proposed to expose resource_to_addr() and use it for ioapic.
 >
-> Figure 26-22. DPLL_PCIE_REF Functional Block Diagram in vE of DRA7xx ES1.0 TRM
-> shows the signal name for the output of post divider (M2) is CLKOUTLDO.
->
-> Figure 26-21. PCIe PHY Clock Generator Overview shows CLKOUTLDO is used as
-> input to apll mux.
->
-> So the actual output of dpll should be dpll_pcie_ref_m2ldo_ck instead of
-> dpll_pcie_ref_ck (which is the input of apll mux).
+> We should move it to acpi generic, as ioapi.c current is in
 
-Yep, this is what I want to see in the changelog, so please repost. The 
-original changelog had no info on it whatsoever.
+s/ioapi.c/ioapic.c/
 
--Tero
-
+> drivers/pci/.
 >
-> Thanks
-> Kishon
->>
->> -Tero
->>
->>>
->>> Cc: Rajendra Nayak <rnayak@ti.com>
->>> Cc: Tero Kristo <t-kristo@ti.com>
->>> Cc: Paul Walmsley <paul@pwsan.com>
->>> Signed-off-by: Keerthy <j-keerthy@ti.com>
->>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->>> ---
->>>    arch/arm/boot/dts/dra7xx-clocks.dtsi |    2 +-
->>>    1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi
->>> b/arch/arm/boot/dts/dra7xx-clocks.dtsi
->>> index 55e95c5..44993ec 100644
->>> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
->>> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
->>> @@ -1152,7 +1152,7 @@
->>>
->>>        apll_pcie_in_clk_mux: apll_pcie_in_clk_mux@4ae06118 {
->>>            compatible = "ti,mux-clock";
->>> -        clocks = <&dpll_pcie_ref_ck>, <&pciesref_acs_clk_ck>;
->>> +        clocks = <&dpll_pcie_ref_m2ldo_ck>, <&pciesref_acs_clk_ck>;
->>>            #clock-cells = <0>;
->>>            reg = <0x021c 0x4>;
->>>            ti,bit-shift = <7>;
->>>
->>
+> Or should move it to acpica?
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index 0bdacc5e26a3..e91deebf0930 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -424,6 +424,52 @@ void acpi_dev_free_resource_list(struct list_head *list)
+>  }
+>  EXPORT_SYMBOL_GPL(acpi_dev_free_resource_list);
+>
+> +acpi_status acpi_mem_addr_resource_to_address64(struct acpi_resource *resource,
+> +                       struct acpi_resource_address64 *addr)
+> +{
+> +       acpi_status status;
+> +       struct acpi_resource_memory24 *memory24;
+> +       struct acpi_resource_memory32 *memory32;
+> +       struct acpi_resource_fixed_memory32 *fixed_memory32;
+> +
+> +       memset(addr, 0, sizeof(*addr));
+> +       switch (resource->type) {
+> +       case ACPI_RESOURCE_TYPE_MEMORY24:
+> +               memory24 = &resource->data.memory24;
+> +               addr->resource_type = ACPI_MEMORY_RANGE;
+> +               addr->minimum = memory24->minimum;
+> +               addr->address_length = memory24->address_length;
+> +               addr->maximum = addr->minimum + addr->address_length - 1;
+> +               return AE_OK;
+> +       case ACPI_RESOURCE_TYPE_MEMORY32:
+> +               memory32 = &resource->data.memory32;
+> +               addr->resource_type = ACPI_MEMORY_RANGE;
+> +               addr->minimum = memory32->minimum;
+> +               addr->address_length = memory32->address_length;
+> +               addr->maximum = addr->minimum + addr->address_length - 1;
+> +               return AE_OK;
+> +       case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+> +               fixed_memory32 = &resource->data.fixed_memory32;
+> +               addr->resource_type = ACPI_MEMORY_RANGE;
+> +               addr->minimum = fixed_memory32->address;
+> +               addr->address_length = fixed_memory32->address_length;
+> +               addr->maximum = addr->minimum + addr->address_length - 1;
+> +               return AE_OK;
+> +       case ACPI_RESOURCE_TYPE_ADDRESS16:
+> +       case ACPI_RESOURCE_TYPE_ADDRESS32:
+> +       case ACPI_RESOURCE_TYPE_ADDRESS64:
+> +               status = acpi_resource_to_address64(resource, addr);
+> +               if (ACPI_SUCCESS(status) &&
+> +                   (addr->resource_type == ACPI_MEMORY_RANGE ||
+> +                   addr->resource_type == ACPI_IO_RANGE) &&
+> +                   addr->address_length > 0) {
+> +                       return AE_OK;
+> +               }
+> +               break;
+> +       }
+> +       return AE_ERROR;
+> +}
+
+There's already very similar-looking code in acpi/resource.c, e.g.,
+acpi_dev_resource_address_space() and acpi_dev_resource_memory().  Can
+you use that existing code instead of adding new code that's mostly a
+duplication?
+
+Bjorn
