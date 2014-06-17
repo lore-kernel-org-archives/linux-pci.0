@@ -1,80 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:43531 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754144AbaFDCoY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 22:44:24 -0400
-Message-ID: <538E87E1.8030604@huawei.com>
-Date: Wed, 4 Jun 2014 10:43:45 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail.active-venture.com ([67.228.131.205]:53723 "EHLO
+	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756596AbaFQWzk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 18:55:40 -0400
+Message-ID: <53A0C763.7080003@roeck-us.net>
+Date: Tue, 17 Jun 2014 15:55:31 -0700
+From: Guenter Roeck <linux@roeck-us.net>
 MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>
+	Myron Stowe <myron.stowe@redhat.com>
 CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jon Mason <jon.mason@intel.com>
-Subject: Re: Debugging incorrect mps settings detected
-References: <alpine.LRH.2.03.1406031308200.11244@AMR> <CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com>
-In-Reply-To: <CAErSpo6B76KL=PVGuuLjvC77kvxSjjYNnngXxPEjj_3dMbA0yg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Include the Data Link Layer State Changed
+ bit when clearing the Slot Status register's event bits
+References: <20140617192734.30783.71260.stgit@amt.stowe> <CAErSpo7t2kXj2ZULLXCJSWb_awS+DCtCg51dnLbb8ztWmQdYog@mail.gmail.com>
+In-Reply-To: <CAErSpo7t2kXj2ZULLXCJSWb_awS+DCtCg51dnLbb8ztWmQdYog@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-accurate>> 0xd5200000-0xd52fffff 64bit pref]
->> [ 2107.015060] pci 0000:09:00.0: Max Payload Size 128, but upstream
->> 0000:05:07.0 set to 256; if necessary, use "pci=pcie_bus_safe" and report a
->> bug
->> [ 2107.015079] pci 0000:09:00.0: no hotplug settings from platform
+On 06/17/2014 02:07 PM, Bjorn Helgaas wrote:
+> On Tue, Jun 17, 2014 at 1:27 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+>> During PCIe hot-plug initialization - pciehp_probe - data structures
+>> related to slot capabilities are set up.  As part of this set up, ISRs are
+>> put in place to handle slot events and all event bits are cleared out.
 >>
->> The commit message that added the warning indicates it may be a BIOS
->> issue that incorrectly configures this, but BIOS isn't involved with
->> setting the MPS on a device hot add, am I right? Or is that wrong?
-> 
-> The BIOS is not involved in setting MPS on a device hot-add.
-> 
->> This is a Dell R620 server, if that matters, though we see this on other
->> platforms as well.
->>
->> Using pci=pcie_bus_perf works around the issue, but that seems a bit
->> odd to suggest to users. Is setting MPS on hot-add something the PCI
->> driver layer ought to be doing, or should I be looking into the platform
->> BIOS instead?
-> 
-> The PCI core should be doing something intelligent here.  If we can't
-> configure MPS safely, we should prevent the device from being enabled.
->  But this is stuff the PCI core doesn't implement yet.
+>> This patch adds the Data Link Layer State Changed (PCI_EXP_SLTSTA_DLLSC)
+>> Slot Status bit to the event bits that are cleared out during
+>> initialization.
+>
+> I think this is related to e48f1b67f668 ("PCI: pciehp: Use link change
+> notifications for hot-plug and removal").  Prior to that, pcie_isr()
+> didn't look at the PCI_EXP_SLTSTA_DLLSC bit.
+>
+> Apparently there's a non-public report of spurious messages like this
+> at boot-time, with no actual hotplug events:
+>
+>    pciehp 0000:82:04.0:pcie24: slot(4): Link Up event
+>    pciehp 0000:82:04.0:pcie24: Device 0000:83:00.0 already exists at
+> 0000:83:00, cannot hot-add
+>    pciehp 0000:82:04.0:pcie24: Cannot add device at 0000:83:00
+>
 
-Hi Bjorn,
-   We had a long discussion about fix this issue.
-Link: http://marc.info/?l=linux-pci&m=137714192204947&w=2
+I think I have seen that message once in a while in our systems.
+Rajat, didn't we talk about this a while ago ?
 
-Now more BIOS configure device mps larger than 128B, So I think
-we should consider to fix it before we have a perfect solution about mps setting.
+Guenter
 
-> 
-> It's hard to reconfigure MPS after boot because it affects other
-> devices in the system, and I don't think we can always change the
-> settings of other devices while they're active.
-
-Yes, what we can only change is the device not active after hotplug.
-
-
-> 
-> I'm not sure that warning is correct.  It seems like it should suggest
-> pcie_bus_peer2peer, which is documented as guaranteeing that hot-added
-> devices will work.  But this is always confusing to me, and I could be
-> wrong about this.
-
-I think warning is proper, pcie_bus_safe is designed to fix the hotlplug issue.
-pcie_bus_peer2perr guarantee that hotplug device work fine, because all mps setting
-128B. Maybe we should change document a little, make it more clear.
-
-
-> 
+> Device 0000:83:00.0 was enumerated previously, during the normal PCI
+> device enumeration.  I suspect DLLSC was set by the hardware when the
+> link came up after power-on, and it remained set until Linux booted.
+> Then when we take the first pciehp interrupt, we notice DLLSC is set
+> and think it's a new link state change.
+>
+> This might be system-specific, because some BIOSes might clear DLLSC
+> before handing off to the OS.  Or my theory might be all wet.
+>
+> But I think we should clear DLLSC in any case.  We clear all the other
+> RW1C bits in Slot Status, and I think we should clear DLLSC as well.
+>
+> I'd like to include a bugzilla or mailing list reference for the
+> spurious message, and I'd also like confirmation that this changes
+> actually fixes it.
+>
 > Bjorn
-> 
-> 
-
-
--- 
-Thanks!
-Yijing
+>
+>> Reference:
+>>    PCI-SIG.  PCI Express Base Specification Revision 4.0 Version 0.3
+>>    (PCI-SIG, 2014): 7.8.11. Slot Status Register (Offset 1Ah).
+>>
+>> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+>> ---
+>>
+>>   drivers/pci/hotplug/pciehp_hpc.c |    2 +-
+>>   1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+>> index 42914e0..0568416 100644
+>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>> @@ -794,7 +794,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+>>          pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+>>                  PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+>>                  PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
+>> -               PCI_EXP_SLTSTA_CC);
+>> +               PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
+>>
+>>          /* Disable software notification */
+>>          pcie_disable_notification(ctrl);
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+>
+>
+>
 
