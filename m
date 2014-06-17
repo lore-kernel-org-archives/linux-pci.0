@@ -1,121 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0235.outbound.protection.outlook.com ([207.46.163.235]:20123
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753327AbaF0KGw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Jun 2014 06:06:52 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Tim Harvey <tharvey@gateworks.com>,
-	Shawn Guo <Shawn.Guo@freescale.com>
-CC: Fabio Estevam <festevam@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marek Va?ut <marex@denx.de>,
-	=?utf-8?B?RGF2aWQgTcO8bGxlciAoRUxTT0ZUIEFHKQ==?=
-	<d.mueller@elsoft.ch>, Sascha Hauer <kernel@pengutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Fabio.Estevam@freescale.com" <Fabio.Estevam@freescale.com>
-Subject: RE: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
-Date: Fri, 27 Jun 2014 10:06:47 +0000
-Message-ID: <6c999c0fee0b406db597e74837980081@BLUPR03MB136.namprd03.prod.outlook.com>
-References: <1403637507-9424-1-git-send-email-festevam@gmail.com>
-	<20140626031247.GN2224@dragon>
-	<CAOMZO5A0pQfJRwb41046UpkbG6xH7c+EVu+YuY71Zuyq5gHaDA@mail.gmail.com>
-	<20140626054937.GB7859@dragon>
- <CAJ+vNU0DNCT5pcvnptNBo-tPTVOH1HnrCwy7uCZt33dfyq8U-g@mail.gmail.com>
-In-Reply-To: <CAJ+vNU0DNCT5pcvnptNBo-tPTVOH1HnrCwy7uCZt33dfyq8U-g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1402982995-13747-9-git-send-email-jiang.liu@linux.intel.com>
+References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com> <1402982995-13747-9-git-send-email-jiang.liu@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 17 Jun 2014 10:11:44 -0600
+Message-ID: <CAErSpo7pAv=v7JQp2UoNxYN8Pdj788NPP8OsLkM3p8NuwL_6Wg@mail.gmail.com>
+Subject: Re: [RFC Patch V2 08/16] PCI: kill wrong warning message in pcieport driver
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkNCg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFRpbSBIYXJ2ZXkg
-W21haWx0bzp0aGFydmV5QGdhdGV3b3Jrcy5jb21dDQo+IFNlbnQ6IEZyaWRheSwgSnVuZSAyNywg
-MjAxNCA4OjI5IEFNDQo+IFRvOiBHdW8gU2hhd24tUjY1MDczOyBaaHUgUmljaGFyZC1SNjUwMzcN
-Cj4gQ2M6IEZhYmlvIEVzdGV2YW07IEJqb3JuIEhlbGdhYXM7IE1hcmVrIFZhxaF1dDsgRGF2aWQg
-TcO8bGxlciAoRUxTT0ZUIEFHKTsNCj4gU2FzY2hhIEhhdWVyOyBsaW51eC1hcm0ta2VybmVsQGxp
-c3RzLmluZnJhZGVhZC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IEVzdGV2YW0g
-RmFiaW8tUjQ5NDk2DQo+IFN1YmplY3Q6IFJlOiBbUkZDXSBQQ0k6IHBjaS1pbXg2OiBBZGQgZGVs
-YXkgdG8gd29ya2Fyb3VuZCBrZXJuZWwgaGFuZw0KPiANCj4gT24gV2VkLCBKdW4gMjUsIDIwMTQg
-YXQgMTA6NDkgUE0sIFNoYXduIEd1byA8c2hhd24uZ3VvQGZyZWVzY2FsZS5jb20+IHdyb3RlOg0K
-PiA+IE9uIFRodSwgSnVuIDI2LCAyMDE0IGF0IDEyOjQzOjE5QU0gLTAzMDAsIEZhYmlvIEVzdGV2
-YW0gd3JvdGU6DQo+ID4+IE9uIFRodSwgSnVuIDI2LCAyMDE0IGF0IDEyOjEyIEFNLCBTaGF3biBH
-dW8gPHNoYXduLmd1b0BmcmVlc2NhbGUuY29tPiB3cm90ZToNCj4gPj4gPiBPbiBUdWUsIEp1biAy
-NCwgMjAxNCBhdCAwNDoxODoyN1BNIC0wMzAwLCBGYWJpbyBFc3RldmFtIHdyb3RlOg0KPiA+PiA+
-PiBGcm9tOiBGYWJpbyBFc3RldmFtIDxmYWJpby5lc3RldmFtQGZyZWVzY2FsZS5jb20+DQo+ID4+
-ID4+DQo+ID4+ID4+IFdoZW4gdGhlIG14NiBQQ0kgY29uY3Ryb2xsZXIgaXMgaW5pdGlhbGl6ZWQg
-aW4gdGhlIGJvb3Rsb2FkZXIgd2UNCj4gPj4gPj4gc2VlIGEga2VybmVsIGhhbmcgaW5zaWRlIGlt
-eDZfYWRkX3BjaWVfcG9ydCgpLg0KPiA+PiA+Pg0KPiA+PiA+PiBBZGRpbmcgYSAzMG1zIGRlbGF5
-IGFsbG93cyB0aGUga2VybmVsIHRvIGJvb3QuDQo+ID4+ID4NCj4gPj4gPiBXZSBtYXkgbm90IHdh
-bnQgdG8gYWRkIGEgcmFuZG9tIGRlbGF5IGludG8gdGhlIGRyaXZlciBiZWZvcmUgd2UNCj4gPj4g
-PiB1bmRlcnN0YW5kIHRoZSByb290IGNhdXNlIG9mIHRoZSBpc3N1ZS4NCj4gPj4NCj4gPj4gWWVz
-LCB0aGF0J3Mgd2h5IEkgc2VudCB0aGlzIGFzIFJGQyBhbmQgYWxzbyBleHBsYWluZWQgaXQgYmVs
-b3cgdGhlDQo+ID4+IC0tLSBsaW5lIHRoYXQgSSBhbSBhY3R1YWxseSB0cnlpbmcgdG8gZ2V0IHNv
-bWUgaGVscCB3aXRoIHRoaXMgaXNzdWUuDQo+ID4+DQo+ID4+ID4NCj4gPj4gPiBEbyB5b3Ugc2Vl
-IHRoaXMgaXNzdWUgd2l0aCBGU0wga2VybmVsPw0KPiA+Pg0KPiA+PiBZZXMsIGl0IGFsc28gaGFu
-Z3MuDQo+ID4+DQo+ID4+IEl0IGlzIHJlcHJvZHVjaWJsZSBpbiAxMDAlIG9mIHRoZSBib290cy4g
-SnVzdCBuZWVkIHRvIHVzZSBtYWlubGluZQ0KPiA+PiBVLWJvb3QgKHdoaWNoIGhhcyBQQ0kgZHJp
-dmVyIGVuYWJsZWQgYnkgZGVmYXVsdCkuDQo+ID4+IEkgYW0gdXNpbmcgYW4gSW50ZWwgV2lmaSA3
-MjYwIFBDSSBjYXJkLiBUaGlzIHdhcyBhbHNvIHJlcG9ydGVkIGJ5DQo+ID4+IG90aGVyIGZvbGtz
-IGluIHRoZSBVLWJvb3QgbGlzdC4NCj4gPg0KPiA+IFJpY2hhcmQsDQo+ID4NCj4gPiBDYW4geW91
-IHNjaGVkdWxlIHNvbWUgdGltZSB0byBsb29rIGF0IHRoaXMgaXNzdWU/ICBJIHRoaW5rIGl0IHdp
-bGwNCj4gPiBjb21lIHRvIHVzIHNvb25lciBvciBsYXRlciBpZiBhbnkgb3VyIGN1c3RvbWVyIGVu
-YWJsZXMgUENJZSBiZWZvcmUNCj4gPiBsYXVuY2hpbmcga2VybmVsPw0KPiA+DQo+ID4gU2hhd24N
-Cj4gPg0KPiANCltSaWNoYXJkXSBJIGRpZCB0aGUgdGVzdHMgcmVmZXIgdG8gdGhpcyB1c2UtY2Fz
-ZSwgZW5hYmxlIGlteDYgcGNpZSBvbiBib3RoIHUtYm9vdCBhbmQga2VybmVsLA0KYW5kIEkgZW5j
-b3VudGVyIHRoZSBzeXN0ZW0gaGFuZyB0b28uDQoNCkhlcmUgYXJlIHRoZSBsYXRlc3QgdXBkYXRl
-cyBhbmQgc29tZSBjbHVlcyBmcm9tIG15IHNpZGU6DQotIEFib3V0IDIwMHVzIGRlbGF5IGlzIHJl
-cXVpcmVkIGFmdGVyIHRoZSBsdHNzbV9lbiBpcyBzZXQgdG8gYmUgJzEnIGF0IG15IHNpZGUuDQpP
-dGhlcndpc2UsIHN5c3RlbSB3b3VsZCBiZSBoYW5nIHdoZW4gZHJpdmVyIGFjY2VzcyB0aGUgcGNp
-ZV9waHlfZGVidWdfcjEgdG8gY2hlY2sNCnRoZSBsaW5rIGlzIHVwIG9yIG5vdC4NCg0KLSBBZnRl
-ciB0aGF0LCBzeXN0ZW0gaGFuZyB3aGVuIHJjIHRyeWluZyB0byBhY2Nlc3MgdGhlIGNmZyBzcGFj
-ZSBvZiBlcCBkZXZpY2UsDQpBbHRob3VnaCB0aGUgcGNpZSBsaW5rIGhhZCBiZWVuIHNldHVwIGFu
-ZCBJIGRvbid0IGhhdmUga25vdyB0aGUgcm9vdCBjYXVzZSB5ZXQuDQoNCi0gVGhlIGtlcm5lbCBj
-YW4gYm9vdCB1cCBzdWNjZXNzZnVsbHksIHdoZW4gSSBtYXNrIHRoZSBjZmcgcmVhZC93cml0ZSBj
-YWxsLWJhY2sgaW4gcGNpZS1kZXNpZ253YXJlLmMNCkRyaXZlciBmb3IgZGVidWcgcHVycG9zZS4N
-Cg0KTm90ZToNClRoZSBzZXF1ZW5jZSBvZiB0aGUgcGNpZSBpbml0aWFsaXphdGlvbiBzaG91bGQg
-YmUgYWRqdXN0ZWQgcmVmZXIgdG8gdGhlIG5ld2x5DQogZGlzY292ZXJlZCBidWcocGNpZSBsaW5r
-IG1heWJlIHJhcmVseSByYW5kb20gZG93biBhZnRlciB0aGUgc3lzdGVtIHdhcm0tcmVzZXQpLg0K
-KiBSZWZfc3NwX2VuKGJpdDE2IG9mIGdwcjEgcmVnaXN0ZXIpIHNob3VsZCBiZSBzZXQgYWZ0ZXIg
-dGhlIHBjaWUgb3RoZXJzIGNsa3MgYXJlIGVuYWJsZS4NCkVuYWJsZSBwY2llIHJlbGF0ZWQgY2xr
-cyAtLT4gZGVsYXkgZm9yIGFib3V0IH4xMHVzIHdhaXRpbmcgZm9yIHRoZSBjbGtzIHN0YWJsZS0t
-PnNldCByZWZfc3NwX2VuKGJpdDE2IG9mIGdwcjEgcmVnaXN0ZXIpLg0KDQpEZWJ1ZyBpcyBzdGls
-bCBvbi1nb2luZy4NCg0KPiBTaGF3biAvIFJpY2hhcmQsDQo+IA0KPiBJIGFtIGFsc28gYWZmZWN0
-ZWQgYnkgdGhpcyBpc3N1ZSBvbiBJTVg2IGJvYXJkcyB0aGF0IEkgc3VwcG9ydC4gSWYgSSBlbmFi
-bGUNCj4gUENJIGluIHRoZSBib290bG9hZGVyIEkgc2VlIHNpbWlsYXIgaGFuZ3MuDQo+IA0KPiBJ
-IGhhdmUgdGhlIGZvbGxvd2luZyBoYXJkd2FyZSBjb25maWd1cmF0aW9ucyBvbiBteSBiZW5jaDoN
-Cj4gICAxLiBJTVg2REwgKyBpMjEwIChzYW1lIFBDSSBzZXR1cCBhcyBGYWJpbydzIGFib3ZlLCBi
-dXQgREwgaW5zdGVhZCBvZiBRKQ0KPiAgIDIuIElNWDZRICsgYXRoOWsgZGV2aWNlDQo+ICAgMy4g
-SU1YNkRMICsgUExYIFBFWDg2MHggUENJZS10by1QQ0llIGJyaWRnZSB3aXRoIHZhcmlvdXMgZGV2
-aWNlcyBiZWhpbmQgdGhlDQo+IGJyaWRnZSwgdXNpbmcgYSBjbG9jayBidWZmZXIgZnJvbSBJTVg2
-IFBDSWUgY2xvY2sNCj4gICA0LiBJTVg2USArIFBMWCBQRVg4NjB4IFBDSWUtdG8tUENJZSBicmlk
-Z2Ugd2l0aCB2YXJpb3VzIGRldmljZXMgYmVoaW5kIHRoZQ0KPiBicmlkZ2UsIHVzaW5nIGEgY2xv
-Y2sgYnVmZmVyIGZyb20gSU1YNiBQQ0llIGNsb2NrDQo+ICAgNS4gSU1YNlEgKyBQTFggUEVYODYw
-eCBQQ0llLXRvLVBDSWUgYnJpZGdlIHdpdGggdmFyaW91cyBkZXZpY2VzIGJlaGluZCB0aGUNCj4g
-YnJpZGdlIHVzaW5nIGEgY2xvY2sgZ2VuZXJhdG9yIChhbHdheXMgb24sIGlnbm9yaW5nIHRoZSBQ
-Q0llIGNsb2NrKQ0KPiANCj4gRm9yIGFsbCBvZiB0aGUgYWJvdmUgSSBoYXZlIG5vIFBDSSBpc3N1
-ZXMgdXNpbmcgMy4xNC8zLjE1LzMuMTYtcmMyL3ZlbmRvcg0KPiAzLjEwLjE3XzEuMC4wX2dhIHVu
-bGVzcyBJIGVuYWJsZSBQQ0kgaW4gdGhlIGJvb3Rsb2FkZXIuIFdoZW4gSSBkbyBzbywgYWxsIG9m
-DQo+IHRoZSBhYm92ZSBjb25maWd1cmF0aW9ucyBoYW5nIHNvbWV3aGVyZSBhcm91bmQgUENJIGlu
-aXQvZW51bWVyYXRpb24uIFRoZSBzYW1lDQo+IG9jY3VycyB3aXRoIHRoZSBtb3N0IHJlY2VudCB2
-ZW5kb3Iga2VybmVsIDMuMTAuMTdfMS4wLjBfZ2Ega2VybmVsICh3b3JrcyB3aGVuDQo+IFBDSSBp
-cyBkaXNhYmxlZCBpbiB0aGUgYm9vdGxvYWRlciwgaGFuZ3Mgb3RoZXJ3aXNlKS4NCj4gDQo+IFdo
-ZW4gSSBhcHBseSBGYWJpbydzIHBhdGNoIGFib3ZlIHRvIHRoZSAzLjE2LXJjMiBrZXJuZWwgSSBm
-aW5kIHRoYXQgc2NlbmFyaW9zDQo+ICM0IGFuZCAjNSBhYm92ZSB0aGVuIHdvcmssICMzIGJvb3Rz
-IGJ1dCB0aGUgUExYIGJyaWRnZSBmYWlscyBhbGwgY29uZmlnIGN5Y2xlcw0KPiAoMHhmZidzKSwg
-IzIgYm9vdHMgYnV0IHdpdGggbm8gUENJZSBsaW5rLCBhbmQgIzEgYWJvdmUgc3RpbGwgaGFuZ3Mu
-IFByZXZpb3VzbHksDQo+IHdoZW4gSSBoYXZlIGR1ZyBpbnRvIHRoaXMgcGFydGljdWxhciAnaGFu
-ZycgaXNzdWUgb24gMy4xNSBJIGZvdW5kIHRoYXQgdGhlDQo+IGRlbGF5IG5lZWRlZCB0byBiZSBi
-ZXR3ZWVuDQo+IGlteDZfcGNpZV9wcm9iZSgpIHJlcXVlc3RpbmcgYW5kIGFzc2VydGluZyByZXNl
-dF9ncGlvIGxvdywgYW5kIGJlZm9yZSBzZXR0aW5nDQo+IElPTVVYX0dQUjE6MTggdG8gcG93ZXIg
-ZG93biB0aGUgUENJZSBQSFkgKG5vdGUgaGVyZSwgdGhhdCB0aGUgUEhZIGlzIGN1cnJlbnRseQ0K
-PiBlbmFibGVkIGluIHRoZSBib290bG9hZGVyIHdoZW4gUENJIGlzIGVuYWJsZWQgdGhlcmUpLg0K
-PiANCj4gV2hlbiBJIGFwcGx5IEZhYmlvJ3MgcGF0Y2ggYWJvdmUgdG8gdGhlIG1vc3QgcmVjZW50
-IHZlbmRvciBrZXJuZWwNCj4gMy4xMC4xN18xLjAuMF9nYSBJIHN0aWxsIGhhbmcgaW4gYWxsIGNh
-c2VzLg0KPiANCj4gU28gd2hpbGUgSSBhZ3JlZSB0aGVyZSBpcyBzb21ldGhpbmcgaG9ycmlibHkg
-d3Jvbmcgd2l0aCBJTVg2IFBDSSBzdGlsbCwgSQ0KPiBkb24ndCB0aGluayBGYWJpbydzIHBhdGNo
-IGlzIHRoZSByaWdodCBzb2x1dGlvbiBhbmQgSSBkb24ndCBoYXZlIGFueXRoaW5nDQo+IGJldHRl
-ciBhdCB0aGlzIHBvaW50IGluIHRpbWUuIEknbSBoYXBweSB0byBzaGFyZSBhbnkgaGFyZHdhcmUg
-d2l0aCBhbnlvbmUgdGhhdA0KPiBjYW4gd29yayB0aHJvdWdoIHRoaXMgaXNzdWUuDQo+IA0KPiBU
-aGFua3MsDQo+IA0KPiBUaW0NCg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJkIFpodQ0KDQo=
+Please pay attention to the existing convention of changelog summaries
+(email subject lines), including spacing and capitalization.  "git log
+--oneline drivers/pci/pcie" is a good way to see the pattern.  In this
+case, you could use something like this:
+
+  PCI/portdrv: Remove warning about invalid IRQ
+
+On Mon, Jun 16, 2014 at 11:29 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> For hot-added PCIe ports, it always generates a warning message on x86
+> platforms when binding to pcieport driver as:
+>         "device [8086:0e0b] has invalid IRQ; check vendor BIOS".
+>
+> It's due to that we check pci_dev->irq before actually allocating IRQ
+> number for the PCI device:
+>         if (!dev->irq && dev->pin) {
+>                 dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; "
+>                          "check vendor BIOS\n", dev->vendor, dev->device);
+>         }
+>         status = pcie_port_device_register(dev);
+>                 -->pci_enable_device(dev);
+>                         -->pci_enable_device_flags()
+>                                 -->do_pci_enable_device()
+>                                         -->pcibios_enable_device()
+>                                                 -->pcibios_enable_irq()
+>
+> This warning message isn't generated for PCIe ports present at boot time
+> because x86 arch code has called acpi_pci_irq_enable() in pci_acpi_init()
+> for each PCI device for safety.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/pci/pcie/portdrv_pci.c |    4 ----
+>  1 file changed, 4 deletions(-)
+>
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index 0d8fdc48e642..0e35f9670066 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -203,10 +203,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+>              (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)))
+>                 return -ENODEV;
+>
+> -       if (!dev->irq && dev->pin) {
+> -               dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; "
+> -                        "check vendor BIOS\n", dev->vendor, dev->device);
+> -       }
+
+This needs to be rebased to v3.16-rc1.
+
+>         status = pcie_port_device_register(dev);
+>         if (status)
+>                 return status;
+> --
+> 1.7.10.4
+>
