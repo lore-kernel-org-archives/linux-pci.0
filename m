@@ -1,41 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:43568 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757814AbaFYSDf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 14:03:35 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <paul@pwsan.com>, <tony@atomide.com>,
-	<linux@arm.linux.org.uk>, <rnayak@ti.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <kishon@ti.com>
-Subject: [PATCH 0/2] arm: hwmod: dra7: Add PCIe data and PCIe PHY data
-Date: Wed, 25 Jun 2014 23:32:44 +0530
-Message-ID: <1403719366-9656-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 17 Jun 2014 15:46:15 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH 1/4] ACPI: Support _OSI("Darwin") correctly
+Message-ID: <20140617144614.GA16934@srcf.ucam.org>
+References: <1401640436-1947-1-git-send-email-matthew.garrett@nebula.com>
+ <1401640436-1947-2-git-send-email-matthew.garrett@nebula.com>
+ <7712179.sDPAd6Ubry@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7712179.sDPAd6Ubry@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[1] is split into separate series in order for individual subsystem
-Maintainers to pick up the patches. This series handles the PCIe
-hwmod data for DRA7.
+On Tue, Jun 17, 2014 at 02:11:36PM +0200, Rafael J. Wysocki wrote:
+> On Sunday, June 01, 2014 12:33:53 PM Matthew Garrett wrote:
+> > Apple hardware queries _OSI("Darwin") in order to determine whether the
+> > system is running OS X, and changes firmware behaviour based on the answer.
+> > The most obvious difference in behaviour is that Thunderbolt hardware is
+> > forcibly powered down unless the system is running OS X. The obvious solution
+> > would be to simply add Darwin to the list of supported _OSI strings, but this
+> > causes problems.
+> > 
+> > Recent Apple hardware includes two separate methods for checking _OSI
+> > strings. The first will check whether Darwin is supported, and if so will
+> > exit. The second will check whether Darwin is supported, but will then
+> > continue to check for further operating systems. If a further operating
+> > system is found then later firmware code will assume that the OS is not OS X.
+> > This results in the unfortunate situation where the Thunderbolt controller is
+> > available at boot time but remains powered down after suspend.
+> > 
+> > The easiest way to handle this is to special-case it in the Linux-specific
+> > OSI handling code. If we see Darwin, we should answer true and then disable
+> > all other _OSI vendor strings.
+> > 
+> > Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+> 
+> Does applying this patch without the rest of the series makes things worse
+> or better on the machines in question (or perhaps it doesn't matter at all
+> alone)?
 
-Please find the bootlog with these hwmod patches @ [2]
-
-[1] -> https://lkml.org/lkml/2014/5/29/258
-[2] -> http://paste.ubuntu.com/7701601/
-
-Kishon Vijay Abraham I (2):
-  arm: dra7xx: Add hwmod data for pcie1 phy and pcie2 phy
-  arm: dra7xx: Add hwmod data for pcie1 and pcie2 subsystems
-
- arch/arm/mach-omap2/cm2_7xx.h             |    4 ++
- arch/arm/mach-omap2/omap_hwmod_7xx_data.c |  112 +++++++++++++++++++++++++++++
- arch/arm/mach-omap2/prm7xx.h              |    4 ++
- 3 files changed, 120 insertions(+)
+On its own, I think this will do nothing.
 
 -- 
-1.7.9.5
-
+Matthew Garrett | mjg59@srcf.ucam.org
