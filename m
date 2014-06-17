@@ -1,55 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:40052 "EHLO mail.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751313AbaFPOsD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Jun 2014 10:48:03 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id 11EEF12B251
-	for <linux-pci@vger.kernel.org>; Mon, 16 Jun 2014 16:48:01 +0200 (CEST)
-Date: Mon, 16 Jun 2014 16:47:59 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux@horizon.com, eddy0596@gmail.com
-Subject: Re: [PATCH v4 00/16] PCI/iommu: Fix DMA alias problems
-Message-ID: <20140616144759.GC18986@8bytes.org>
-References: <20140522230230.2856.40017.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [RFC Patch V2 02/16] x86, ioapic: Find usable ioapic id for 64bit.
+Date: Tue, 17 Jun 2014 13:29:41 +0800
+Message-Id: <1402982995-13747-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
+From: Yinghai Lu <yinghai@kernel.org>
 
-On Thu, May 22, 2014 at 05:07:23PM -0600, Alex Williamson wrote:
-> Alex Williamson (16):
->       PCI: Add DMA alias iterator
->       PCI: define pci_dev_flags as bit shifts
->       PCI: quirk pci_for_each_dma_alias()
->       PCI: quirk dma_alias_devfn for Ricoh devices
->       PCI: quirk dma_alias_devfn for Marvell devices
->       PCI: Quirk pci_for_each_dma_alias() for bridges
->       PCI: Add quirks for ASMedia and Tundra bridges
->       iommu: Create central IOMMU group lookup/creation interface
->       iommu/amd: Update to use PCI DMA aliases
->       iommu/amd: Use iommu_group_get_for_dev()
->       iommu/intel: Use iommu_group_get_for_dev()
->       iommu/intel: Update to use PCI DMA aliases
->       iommu/fsl: Use iommu_group_get_for_dev() for IOMMU groups
->       iommu: Remove pci.h
->       PCI: Remove pci_find_upstream_pcie_bridge()
->       PCI: Remove pci_get_dma_source()
+Checking the id in register, if that is duplicated, will pick one and
+update id register.
 
-Sorry for the delay, I had a look at the generic IOMMU and the AMD part
-now. It looks good to me so far, but I still have to review the VT-d
-changes and give it all some testing on my machines. I really like the
-code simplification in the IOMMU drivers and also feel more comfortable
-when the IVRS table is still taken into consideration for getting
-aliases.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c |   38 +++++++++++++++++++++++++++++++++-----
+ 1 file changed, 33 insertions(+), 5 deletions(-)
 
-
-	Joerg
-
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index e97ec28f5269..e56bb94cd32a 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3566,26 +3566,54 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
+ 	return apic_id;
+ }
+ 
+-static u8 __init io_apic_unique_id(u8 id)
++static u8 io_apic_unique_id(int idx, u8 id)
+ {
+ 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
+ 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
+-		return io_apic_get_unique_id(nr_ioapics, id);
++		return io_apic_get_unique_id(idx, id);
+ 	else
+ 		return id;
+ }
+ #else
+-static u8 __init io_apic_unique_id(u8 id)
++static u8 io_apic_unique_id(int idx, u8 id)
+ {
+ 	int i;
++	u8 new_id;
++	unsigned long flags;
+ 	DECLARE_BITMAP(used, 256);
++	union IO_APIC_reg_00 reg_00;
+ 
+ 	bitmap_zero(used, 256);
+ 	for_each_ioapic(i)
+ 		__set_bit(mpc_ioapic_id(i), used);
+ 	if (!test_bit(id, used))
+ 		return id;
+-	return find_first_zero_bit(used, 256);
++
++	/* check register at first */
++	raw_spin_lock_irqsave(&ioapic_lock, flags);
++	reg_00.raw = io_apic_read(idx, 0);
++	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
++	new_id = reg_00.bits.ID;
++	if (!test_bit(new_id, used)) {
++		apic_printk(APIC_VERBOSE, KERN_INFO
++			"IOAPIC[%d]: Using reg apic_id %d instead of %d\n",
++			 idx, new_id, id);
++		return new_id;
++	}
++
++	new_id = find_first_zero_bit(used, 256);
++	reg_00.bits.ID = new_id;
++	raw_spin_lock_irqsave(&ioapic_lock, flags);
++	io_apic_write(idx, 0, reg_00.raw);
++	reg_00.raw = io_apic_read(idx, 0);
++	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
++
++	/* Sanity check */
++	if (reg_00.bits.ID != new_id)
++		pr_warn("IOAPIC[%d]: Unable to change apic_id to %d!\n",
++			idx, new_id);
++
++	return new_id;
+ }
+ #endif
+ 
+@@ -3851,7 +3879,7 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 		return;
+ 	}
+ 
+-	ioapics[idx].mp_config.apicid = io_apic_unique_id(id);
++	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
+ 	ioapics[idx].mp_config.apicver = io_apic_get_version(idx);
+ 
+ 	/*
+-- 
+1.7.10.4
 
