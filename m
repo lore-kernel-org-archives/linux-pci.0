@@ -1,78 +1,210 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:46514 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932800AbaFCOu4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 10:50:56 -0400
-Received: by mail-ie0-f173.google.com with SMTP id lx4so6006914iec.4
-        for <linux-pci@vger.kernel.org>; Tue, 03 Jun 2014 07:50:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1401801767.5422.4.camel@weser.hi.pengutronix.de>
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
- <20140424175844.GD29593@google.com> <1398421265.4657.25.camel@weser.hi.pengutronix.de>
- <CAErSpo7Boi8d+apAUC3TmmE33LuRMYJ6J+TEPLRbeyZyU3O8RQ@mail.gmail.com>
- <1398774686.4677.12.camel@weser.hi.pengutronix.de> <1399885183.5016.4.camel@weser.hi.pengutronix.de>
- <20140530173053.GF4607@google.com> <1401801767.5422.4.camel@weser.hi.pengutronix.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 3 Jun 2014 08:50:35 -0600
-Message-ID: <CAErSpo5hP6UYbCVMu_43ezbrNvd0-BBW_KOVbcd_Uj4MHRao2Q@mail.gmail.com>
-Subject: Re: [PATCH 0/8] i.MX6 PCIe binding change and MSI support
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Richard Zhu <r65037@freescale.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	linux-samsung-soc@vger.kernel.org,
-	Rob Herring <robh+dt@kernel.org>, kernel@pengutronix.de,
-	Mark Rutland <mark.rutland@arm.com>,
-	Shawn Guo <shawn.guo@linaro.org>, Sean Cross <xobs@kosagi.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [RFC Patch V2 15/16] pci, ioapic: kill ioapic PCI driver
+Date: Tue, 17 Jun 2014 13:29:54 +0800
+Message-Id: <1402982995-13747-16-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 3, 2014 at 7:22 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Hello Bjorn,
->
-> Am Freitag, den 30.05.2014, 11:30 -0600 schrieb Bjorn Helgaas:
->> On Mon, May 12, 2014 at 10:59:43AM +0200, Lucas Stach wrote:
->> > Hi Bjorn,
->> >
->> > just a friendly reminder. It would be nice if you could pull those in.
->> >
->> > Shawn already pulled the DT change and as it is a binding change this
->> > means PCIe on i.MX6 is broken in -next, as long as the remaining patches
->> > are missing.
->>
->> I applied these to pci/host-imx6 for v3.16.
->>
->> Sorry I didn't do this sooner; I get a lot of email and it's easy to
->> overlook things.  I mostly work from patchwork
->> (http://patchwork.ozlabs.org/project/linux-pci/list/?order=date), and I had
->> dropped this series from there because there was enough discussion that I
->> expected a re-post, so it wasn't on my radar screen anymore.
->>
->> Bjorn
->>
->> > Am Dienstag, den 29.04.2014, 14:31 +0200 schrieb Lucas Stach:
->> > > Hi Bjorn,
->> > >
->> > > Am Freitag, den 25.04.2014, 08:39 -0600 schrieb Bjorn Helgaas:
->> > > [...]
->> > > > >> >   PCI: designware: split Exynos and i.MX bindings
->
-> It seems you missed this one patch. This isn't too urgent, as it is just
-> the doc update, but it should still go into 3.16 along with the other
-> changes. I would have expected that is ok for this to go through your
-> tree.
+Originally the ioapic PCI driver is designed to support IOAPIC hotplug,
+but it never works because no architecture has implemented required
+interface to support it. We plan to reimplement it as an ACPI driver
+instead of PCI driver due to:
+1) To support IOAPIC hotplug, an IOAPIC unit must have an companion
+   ACPI device, but it may or may not be presented in PCI domain.
+2) All other PCI devices have dependency on IOAPIC, so we must hot-add
+   it before all other PCI devices and hot-remove it after all other
+   PCI devices. So we need to explicitly control the order to add/remove
+   IOAPIC devices.
 
-Oops, sorry.  I had mentioned patches 4-8 earlier in the conversation,
-so that's what I merged.
+So kill the ioapic PCI driver and will reimplement it as an ACPI driver.
 
-I added patch 2 to pci/host-imx6, and I'll ask Linus to pull it later
-along with some other things I forgot.  Thanks for the reminder!
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/Kconfig  |    7 ---
+ drivers/pci/Makefile |    2 -
+ drivers/pci/ioapic.c |  121 --------------------------------------------------
+ 3 files changed, 130 deletions(-)
+ delete mode 100644 drivers/pci/ioapic.c
 
-Bjorn
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 893503fa1782..39866d18004e 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -104,13 +104,6 @@ config PCI_PASID
+ 
+ 	  If unsure, say N.
+ 
+-config PCI_IOAPIC
+-	bool "PCI IO-APIC hotplug support" if X86
+-	depends on PCI
+-	depends on ACPI
+-	depends on X86_IO_APIC
+-	default !X86
+-
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	select NLS
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index e04fe2d9df3b..73e4af400a5a 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -13,8 +13,6 @@ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
+ # Build PCI Express stuff if needed
+ obj-$(CONFIG_PCIEPORTBUS) += pcie/
+ 
+-obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
+-
+ # Build the PCI Hotplug drivers if we were asked to
+ obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
+ ifdef CONFIG_HOTPLUG_PCI
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+deleted file mode 100644
+index 6b2b7dddbbdb..000000000000
+--- a/drivers/pci/ioapic.c
++++ /dev/null
+@@ -1,121 +0,0 @@
+-/*
+- * IOAPIC/IOxAPIC/IOSAPIC driver
+- *
+- * Copyright (C) 2009 Fujitsu Limited.
+- * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- */
+-
+-/*
+- * This driver manages PCI I/O APICs added by hotplug after boot.  We try to
+- * claim all I/O APIC PCI devices, but those present at boot were registered
+- * when we parsed the ACPI MADT, so we'll fail when we try to re-register
+- * them.
+- */
+-
+-#include <linux/pci.h>
+-#include <linux/module.h>
+-#include <linux/acpi.h>
+-#include <linux/slab.h>
+-
+-struct ioapic {
+-	acpi_handle	handle;
+-	u32		gsi_base;
+-};
+-
+-static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
+-{
+-	acpi_handle handle;
+-	acpi_status status;
+-	unsigned long long gsb;
+-	struct ioapic *ioapic;
+-	int ret;
+-	char *type;
+-	struct resource *res;
+-
+-	handle = ACPI_HANDLE(&dev->dev);
+-	if (!handle)
+-		return -EINVAL;
+-
+-	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
+-	if (ACPI_FAILURE(status))
+-		return -EINVAL;
+-
+-	/*
+-	 * The previous code in acpiphp evaluated _MAT if _GSB failed, but
+-	 * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
+-	 */
+-
+-	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
+-	if (!ioapic)
+-		return -ENOMEM;
+-
+-	ioapic->handle = handle;
+-	ioapic->gsi_base = (u32) gsb;
+-
+-	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+-		type = "IOAPIC";
+-	else
+-		type = "IOxAPIC";
+-
+-	ret = pci_enable_device(dev);
+-	if (ret < 0)
+-		goto exit_free;
+-
+-	pci_set_master(dev);
+-
+-	if (pci_request_region(dev, 0, type))
+-		goto exit_disable;
+-
+-	res = &dev->resource[0];
+-	if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
+-		goto exit_release;
+-
+-	pci_set_drvdata(dev, ioapic);
+-	dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
+-	return 0;
+-
+-exit_release:
+-	pci_release_region(dev, 0);
+-exit_disable:
+-	pci_disable_device(dev);
+-exit_free:
+-	kfree(ioapic);
+-	return -ENODEV;
+-}
+-
+-static void ioapic_remove(struct pci_dev *dev)
+-{
+-	struct ioapic *ioapic = pci_get_drvdata(dev);
+-
+-	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
+-	pci_release_region(dev, 0);
+-	pci_disable_device(dev);
+-	kfree(ioapic);
+-}
+-
+-
+-static DEFINE_PCI_DEVICE_TABLE(ioapic_devices) = {
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
+-	{ }
+-};
+-MODULE_DEVICE_TABLE(pci, ioapic_devices);
+-
+-static struct pci_driver ioapic_driver = {
+-	.name		= "ioapic",
+-	.id_table	= ioapic_devices,
+-	.probe		= ioapic_probe,
+-	.remove		= ioapic_remove,
+-};
+-
+-static int __init ioapic_init(void)
+-{
+-	return pci_register_driver(&ioapic_driver);
+-}
+-module_init(ioapic_init);
+-
+-MODULE_LICENSE("GPL");
+-- 
+1.7.10.4
+
