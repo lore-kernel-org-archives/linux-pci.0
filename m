@@ -1,75 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:34637 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753629AbaFBQXL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 12:23:11 -0400
-Received: by mail-wg0-f47.google.com with SMTP id x12so5285478wgg.18
-        for <linux-pci@vger.kernel.org>; Mon, 02 Jun 2014 09:23:10 -0700 (PDT)
-From: Grant Likely <grant.likely@linaro.org>
-Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM
- resources.
-To: Kumar Gala <galak@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-In-Reply-To: <390B3F94-C058-47D6-82CE-0393E60014FF@codeaurora.org>
-References: <20140530233034.GH1677@bart.dudau.co.uk>
-	<1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com>
-	<1401496601-31983-2-git-send-email-Liviu.Dudau@arm.com>
-	<4756033.LkcFQN0chs@wuerfel>
-	<20140602150945.964D4C40381@trevor.secretlab.ca>
-	<390B3F94-C058-47D6-82CE-0393E60014FF@codeaurora.org>
-Date: Mon, 02 Jun 2014 17:23:06 +0100
-Message-Id: <20140602162306.4AB0FC40476@trevor.secretlab.ca>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:43206 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966902AbaFQWQY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 18:16:24 -0400
+Received: by mail-ig0-f174.google.com with SMTP id l13so1516505iga.13
+        for <linux-pci@vger.kernel.org>; Tue, 17 Jun 2014 15:16:23 -0700 (PDT)
+Date: Tue, 17 Jun 2014 16:16:20 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	yinghai@kernel.org
+Subject: Re: [PATCH] PCI: Do not touch siblings in
+ pci_assign_unassigned_bridge_resources
+Message-ID: <20140617221620.GC30559@google.com>
+References: <1402346730-2508-1-git-send-email-andreas.noever@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1402346730-2508-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2 Jun 2014 10:40:30 -0500, Kumar Gala <galak@codeaurora.org> wrote:
+[+cc Yinghai]
+
+On Mon, Jun 09, 2014 at 10:45:30PM +0200, Andreas Noever wrote:
+> pci_assign_unassigned_bridge_resources is used to assign resources below
+> a hotplug bridge. If the first attempt fails it will release some
+> resources and try again. If a resource allocation on the hotplug bridge
+> itself fails then pci_assign_unassigned_bridge_resources will invoke
+> pci_bus_release_bridge_resources on the parent bus of the hotplug
+> bridge. This in turn will release resources assigned to siblings of the
+> hotplug bridge which may already be in use.
 > 
-> On Jun 2, 2014, at 10:09 AM, Grant Likely <grant.likely@linaro.org> wrote:
+> This patch checks for this case and prevents
+> pci_bus_release_bridge_resources to be invoked on the parent bus.
 > 
-> > On Sat, 31 May 2014 20:41:04 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
-> >> On Saturday 31 May 2014 01:36:40 Liviu Dudau wrote:
-> >>> We would like to be able to describe PCIe ECAM resources as
-> >>> IORESOURCE_MEM blocks while distinguish them from standard
-> >>> memory resources. Add an IORESOURCE_BIT entry for this case.
-> >>> 
-> >>> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> >> 
-> >> I still don't see any value in this at all. What is the advantage
-> >> of doing this opposed to just having a standardized 'reg' property
-> >> for a particular compatible string?
-> > 
-> > I'm inclined to agree. It doesn't seem appropriate to put config space
-> > in ranges, and the host controller binding is responsible for
-> > identifying how config space is memory mapped.
-> > 
-> > g.
+> The problem can be reproduced by having two sibling hotplug bridges A
+> and B. The problem will occour if the parent of A and B does not have
+> enough resources to satisfy window allocations for B during a hotplug
+> event.
 > 
-> I don’t agree when it comes to ECAM, but we can drop this for now
-> until someone really does that.
+> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+> ---
+> 
+> I must admit that I do not fully understand how
+> pci_assign_unassigned_bridge_resources works. Under which scenario would the
+> second allocation attempt be successful?
 
-Okay, humor me then. What would a ranges property look like for ECAM? Do
-you have an example? I believe there would need to be a separate entry
-for each and every PCI device on the bus to get the config spaces to be
-contiguous.
+I don't understand how all this works either.  Yinghai?
 
-> However, what do we do with the 2 cases that exist in upstream that
-> are using ranges for cfg space?
+We definitely don't want to release resources that are already in use.  Can
+you review and ack or nack this?
 
-Ignore them in the core code? Make the specific host controller handle
-them I would think.
-
-g.
-
+>  drivers/pci/setup-bus.c | 21 +++++++++++++++++++--
+>  1 file changed, 19 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 138bdd6..2e418d6 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1560,6 +1560,12 @@ void __init pci_assign_unassigned_resources(void)
+>  		pci_assign_unassigned_root_bus_resources(root_bus);
+>  }
+>  
+> +/**
+> + * pci_assign_unassigned_bridge_resources - greenfield resource allocation
+> + *
+> + * Try to assign io and memory resources on and below @bridge. The caller must
+> + * ensure that no device below @bridge is active.
+> + */
+>  void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>  {
+>  	struct pci_bus *parent = bridge->subordinate;
+> @@ -1567,7 +1573,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>  					want additional resources */
+>  	int tried_times = 0;
+>  	LIST_HEAD(fail_head);
+> -	struct pci_dev_resource *fail_res;
+> +	struct pci_dev_resource *fail_res, *tmp;
+>  	int retval;
+>  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+>  				  IORESOURCE_PREFETCH;
+> @@ -1594,10 +1600,21 @@ again:
+>  	 * Try to release leaf bridge's resources that doesn't fit resource of
+>  	 * child device under that bridge
+>  	 */
+> -	list_for_each_entry(fail_res, &fail_head, list)
+> +	list_for_each_entry_safe(fail_res, tmp, &fail_head, list) {
+> +		 /*
+> +		  * The allocation of the mem/io window of the top level bridge
+> +		  * can fail.  Without the following check we would release our
+> +		  * siblings' resources.
+> +		  */
+> +		if (fail_res->dev == bridge) {
+> +			list_del(&fail_res->list);
+> +			kfree(fail_res);
+> +			continue;
+> +		}
+>  		pci_bus_release_bridge_resources(fail_res->dev->bus,
+>  						 fail_res->flags & type_mask,
+>  						 whole_subtree);
+> +	}
+>  
+>  	/* restore size and flags */
+>  	list_for_each_entry(fail_res, &fail_head, list) {
+> -- 
+> 2.0.0
+> 
