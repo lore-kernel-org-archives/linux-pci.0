@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:26777 "EHLO mga11.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:64039 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755437AbaFQF1C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Jun 2014 01:27:02 -0400
+	id S932856AbaFQF3G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Jun 2014 01:29:06 -0400
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -13,6 +13,7 @@ To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
 	Jiang Liu <jiang.liu@linux.intel.com>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
@@ -21,73 +22,95 @@ Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Paul Gortmaker <paul.gortmaker@windriver.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [RFC Patch V2 01/16] x86, irq: Split out alloc_ioapic_save_registers()
-Date: Tue, 17 Jun 2014 13:29:40 +0800
-Message-Id: <1402982995-13747-2-git-send-email-jiang.liu@linux.intel.com>
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: [RFC Patch V2 14/16] x86, irq: introduce helper to check whether an IOAPIC has been registered
+Date: Tue, 17 Jun 2014 13:29:53 +0800
+Message-Id: <1402982995-13747-15-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
+been registered, it will be used when enabling IOAPIC hotplug.
 
-Split alloc_ioapic_save_registers() from early_irq_init(),
-so it will be used per ioapic.
-
-Will call that later for hot-added ioapic controller.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
- arch/x86/kernel/apic/io_apic.c |   22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+ arch/x86/include/asm/io_apic.h |    1 +
+ arch/x86/kernel/acpi/boot.c    |   11 +++++++++++
+ arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
+ include/linux/acpi.h           |    1 +
+ 4 files changed, 24 insertions(+)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 26490336ef6f..e97ec28f5269 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -237,6 +237,19 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
- 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index ce63cf34c93c..0db2b7037e4b 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
+ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
+ extern int mp_unregister_ioapic(u32 gsi_base);
++extern int mp_ioapic_registered(u32 gsi_base);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 8a1b25d2aa4c..bab37bd6296a 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -820,6 +820,17 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
  }
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
  
-+static void alloc_ioapic_saved_registers(int idx)
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
 +{
-+	size_t size;
++	int ret;
 +
-+	if (ioapics[idx].saved_registers)
-+		return;
++	down_write(&acpi_ioapic_rwsem);
++	ret  = mp_ioapic_registered(gsi_base);
++	up_write(&acpi_ioapic_rwsem);
 +
-+	size = sizeof(struct IO_APIC_route_entry) * ioapics[idx].nr_registers;
-+	ioapics[idx].saved_registers = kzalloc(size, GFP_KERNEL);
-+	if (!ioapics[idx].saved_registers)
-+		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
++	return ret;
 +}
 +
- int __init arch_early_irq_init(void)
+ static int __init acpi_parse_sbf(struct acpi_table_header *table)
  {
- 	struct irq_cfg *cfg;
-@@ -245,13 +258,8 @@ int __init arch_early_irq_init(void)
- 	if (!nr_legacy_irqs())
- 		io_apic_irqs = ~0UL;
+ 	struct acpi_table_boot *sb;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 22bbecb05345..176433c03cf5 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -4001,6 +4001,17 @@ int mp_unregister_ioapic(u32 gsi_base)
+ 	return 0;
+ }
  
--	for_each_ioapic(i) {
--		ioapics[i].saved_registers =
--			kzalloc(sizeof(struct IO_APIC_route_entry) *
--				ioapics[i].nr_registers, GFP_KERNEL);
--		if (!ioapics[i].saved_registers)
--			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
--	}
-+	for_each_ioapic(i)
-+		alloc_ioapic_saved_registers(i);
++int mp_ioapic_registered(u32 gsi_base)
++{
++	int ioapic;
++
++	for_each_ioapic(ioapic)
++		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base)
++			return 1;
++
++	return 0;
++}
++
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 		     irq_hw_number_t hwirq)
+ {
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index f478af87f575..7cf20a2e29cc 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -154,6 +154,7 @@ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
  
- 	/*
- 	 * For legacy IRQ's, start with assigning irq0 to irq15 to
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base);
+ void acpi_irq_stats_init(void);
+ extern u32 acpi_irq_handled;
+ extern u32 acpi_irq_not_handled;
 -- 
 1.7.10.4
 
