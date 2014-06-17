@@ -1,139 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55383 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753109AbaFDIAB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Jun 2014 04:00:01 -0400
-Date: Wed, 4 Jun 2014 09:59:59 +0200 (CEST)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Bjorn Helgaas <bhelgaas@google.com>
-cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ales Novak <alnovak@suse.cz>, Adam Radford <aradford@gmail.com>
-Subject: Re: [PATCH] PCI: add quirk for 3ware 9650SE controller
-In-Reply-To: <CAErSpo7rsCGKLauH+Te1P1yJbnZAjWo18oYUYhcetecHgk+kUg@mail.gmail.com>
-Message-ID: <alpine.LNX.2.00.1406040958270.11302@pobox.suse.cz>
-References: <alpine.LNX.2.00.1308271141080.2077@pobox.suse.cz> <alpine.LNX.2.00.1308271144420.2077@pobox.suse.cz> <alpine.LNX.2.00.1308281745460.4557@pobox.suse.cz> <CAErSpo6saRNMw6Js0PLXZzYDdH0M3ypSFLDxVxp0G02aetp0Dw@mail.gmail.com>
- <alpine.LNX.2.00.1309061150140.26934@pobox.suse.cz> <CAErSpo5ExXsbSd+jYP5JYwq-RBf-dx1T_AZx6CV4=6-AfTTynQ@mail.gmail.com> <alpine.LNX.2.00.1309271106090.18703@pobox.suse.cz> <alpine.LNX.2.00.1310301125400.19090@pobox.suse.cz>
- <CAErSpo7qORQjs62zdi-5et2WnWwy3weMs56G84rWhNrW59F5WQ@mail.gmail.com> <alpine.LNX.2.00.1311051402500.2779@pobox.suse.cz> <CAErSpo4J2+XVb=aTGM9u3Kaeo-TOrvfe1=9PuyKx6jq=NnLgaw@mail.gmail.com>
- <CAErSpo7rsCGKLauH+Te1P1yJbnZAjWo18oYUYhcetecHgk+kUg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: [RFC Patch V2 12/16] x86, irq, ACPI: implement interface to support ACPI based IOAPIC hot-addition
+Date: Tue, 17 Jun 2014 13:29:51 +0800
+Message-Id: <1402982995-13747-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 3 Jun 2014, Bjorn Helgaas wrote:
+Implement acpi_register_ioapic() and enhance mp_register_ioapic()
+to support ACPI based IOAPIC hot-addition.
 
-> >>> > Attached is dmesg output leading to timeouts (that are cured by my
-> >>> > original patch in this thread) and lspci.
-> >>>
-> >>> I opened https://bugzilla.kernel.org/show_bug.cgi?id=64141 for this
-> >>> issue and attached your dmesg log and lspci output.
-> >>>
-> >>> > Please let me know if there is anything else I could do, or if you are
-> >>> > going to proceed with my patch adding the quirk.
-> >>>
-> >>> Your quirk keeps us from disabling MSIs on the device during
-> >>> enumeration.  But even if the BIOS left MSIs enabled, there's nothing
-> >>> to field the MSI until after the driver claims the device.  So I don't
-> >>> believe this has to be done as a quirk.  It should work just as well
-> >>> to do something in the driver when it claims the device.
-> >>>
-> >>> I guess another way to say this is that I don't think we understand
-> >>> what the real problem is, and if we just add a quirk to work around
-> >>> it, we might miss the chance to fix the real problem, and we may never
-> >>> be able to remove the special-case code we're adding in the generic
-> >>> path.
-> >>>
-> >>> I know you said you tried doing something in the driver, and it didn't
-> >>> work.  I don't know exactly what you tried, but twa_probe() looks
-> >>> strange to me.  The other drivers I looked at do all their PCI
-> >>> initialization before the scsi_host_alloc() / scsi_add_host() /
-> >>> scsi_scan_host() stuff.  But twa_probe() has PCI stuff scattered
-> >>> around between those three SCSI calls.  In particular, it does the MSI
-> >>> setup way down near the end, after scsi_add_host(), which seems like
-> >>> just the sort of thing that could explain this problem.
-> >>
-> >> What I tried was patch below, but it didn't have any observable effect --
-> >> the commands sent to the controller would still time out the same way.
-> >>
-> >> Debugging this is not really straightforward for me unfortunately, as I
-> >> don't own the system myself.
-> >>
-> >> I agree that we don't fully understand what is happening, but the quirk
-> >> was the only way I have been able to come up with to make the device
-> >> functioning again (apart from reverting d5dea7d95).
-> >>
-> >> Any other ideas are welcome.
-> >
-> > This patch looks like a good start, but there's a whole lot of other
-> > PCI-related initialization that I would suggest moving as well --
-> > pci_request_regions(), ioremap(), pci_set_drvdata(), pci_enable_msi,
-> > request_irq(), etc.  I would do this myself, but there are some pieces
-> > that don't look completely trivial, e.g., things like
-> > TW_DISABLE_INTERRUPTS() and twa_reset_sequence() don't look like
-> > they're SCSI-specific, but they are currently implemented using
-> > tw_dev, which looks like it's allocated by scsi_host_alloc().
-> > Untangling all this looks like more work than I want to sign up to.
-> >
-> > But I really don't want to put the quirk in because it's just a quick
-> > hack that apparently just covers up bugs in the driver, and it will be
-> > an annoyance in the PCI core forever.
-> 
-> Just FYI, I reassigned
-> https://bugzilla.kernel.org/show_bug.cgi?id=64141 from PCI to SCSI,
-> since I don't think there's a PCI core problem here.  I don't know if
-> SCSI pay attention to bugzilla at all; I'm just mentioning it here in
-> case anybody still cares about this problem and was hoping that I was
-> going to do something.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/acpi/boot.c    |   37 +++++++++++++++++++++++++++++++++++--
+ arch/x86/kernel/apic/io_apic.c |   27 ++++++++++++++++++++++++---
+ 2 files changed, 59 insertions(+), 5 deletions(-)
 
-I am adding to CC Ales Novak, who has been handling this bug on our side 
-lately.
-
-> 
-> Bjorn
-> 
-> >> ---
-> >>  drivers/scsi/3w-9xxx.c |   10 +++++-----
-> >>  1 files changed, 5 insertions(+), 5 deletions(-)
-> >>
-> >> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-> >> index ba754c3..bad7faf 100644
-> >> --- a/drivers/scsi/3w-9xxx.c
-> >> +++ b/drivers/scsi/3w-9xxx.c
-> >> @@ -2055,6 +2055,11 @@ static int __devinit twa_probe(struct pci_dev *pdev, const struct pci_device_id
-> >>                         goto out_disable_device;
-> >>                 }
-> >>
-> >> +       /* Try to enable MSI */
-> >> +       if (use_msi && (pdev->device != PCI_DEVICE_ID_3WARE_9000) &&
-> >> +           !pci_enable_msi(pdev))
-> >> +               set_bit(TW_USING_MSI, &tw_dev->flags);
-> >> +
-> >>         host = scsi_host_alloc(&driver_template, sizeof(TW_Device_Extension));
-> >>         if (!host) {
-> >>                 TW_PRINTK(host, TW_DRIVER, 0x24, "Failed to allocate memory for device extension");
-> >> @@ -2134,11 +2139,6 @@ static int __devinit twa_probe(struct pci_dev *pdev, const struct pci_device_id
-> >>                le32_to_cpu(*(int *)twa_get_param(tw_dev, 2, TW_INFORMATION_TABLE,
-> >>                                      TW_PARAM_PORTCOUNT, TW_PARAM_PORTCOUNT_LENGTH)));
-> >>
-> >> -       /* Try to enable MSI */
-> >> -       if (use_msi && (pdev->device != PCI_DEVICE_ID_3WARE_9000) &&
-> >> -           !pci_enable_msi(pdev))
-> >> -               set_bit(TW_USING_MSI, &tw_dev->flags);
-> >> -
-> >>         /* Now setup the interrupt handler */
-> >>         retval = request_irq(pdev->irq, twa_interrupt, IRQF_SHARED, "3w-9xxx", tw_dev);
-> >>         if (retval) {
-> >>
-> >>
-> >> --
-> >> Jiri Kosina
-> >> SUSE Labs
-> 
-
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 120b573f1e96..85caf3221cde 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -768,8 +768,41 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
+ 
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
++	int ret = -ENOSYS;
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++	int ioapic_id;
++	u64 addr;
++	struct ioapic_domain_cfg cfg = {
++		.type = IOAPIC_DOMAIN_DYNAMIC,
++		.ops = &acpi_irqdomain_ops,
++	};
++
++	ioapic_id = acpi_get_ioapic_id(handle, gsi_base, &addr);
++	if (ioapic_id >= 0) {
++		if (addr != phys_addr) {
++			acpi_handle_warn(handle,
++				"IOAPIC physical address doesn't match.\n");
++			return -EINVAL;
++		}
++	} else  {
++		unsigned long long uid;
++		acpi_status status;
++
++		status = acpi_evaluate_integer(handle, METHOD_NAME__UID,
++					       NULL, &uid);
++		if (ACPI_FAILURE(status)) {
++			acpi_handle_warn(handle, "failed to get IOAPIC ID.\n");
++			return -EINVAL;
++		}
++		ioapic_id = (int)uid;
++	}
++
++	down_write(&acpi_ioapic_rwsem);
++	ret  = mp_register_ioapic(ioapic_id, phys_addr, gsi_base, &cfg);
++	up_write(&acpi_ioapic_rwsem);
++#endif
++
++	return ret;
+ }
+ 
+ EXPORT_SYMBOL(acpi_register_ioapic);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index e1cce02e9f55..d26fd3ac1b4b 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3842,7 +3842,13 @@ static int bad_ioapic_register(int idx)
+ 
+ static int find_free_ioapic_entry(void)
+ {
+-	return nr_ioapics;
++	int idx;
++
++	for (idx = 0; idx < MAX_IO_APICS; idx++)
++		if (ioapics[idx].nr_registers == 0)
++			return idx;
++
++	return MAX_IO_APICS;
+ }
+ 
+ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+@@ -3858,8 +3864,15 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	}
+ 	for_each_ioapic(ioapic)
+ 		if (ioapics[ioapic].mp_config.apicaddr == address) {
+-			pr_warn("address 0x%x conflicts with IOAPIC%d\n",
+-				address, ioapic);
++			/*
++			 * IOAPIC unit may also be visible in PCI scope.
++			 * When ioapic PCI driver's probe() is called,
++			 * the IOAPIC unit may have already been initialized
++			 * at boot time.
++			 */
++			if (!ioapic_initialized)
++				pr_warn("address 0x%x conflicts with IOAPIC%d\n",
++					address, ioapic);
+ 			return -EEXIST;
+ 		}
+ 
+@@ -3909,6 +3922,14 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	ioapics[idx].irqdomain = NULL;
+ 	ioapics[idx].irqdomain_cfg = *cfg;
+ 
++	if (ioapic_initialized) {
++		if (mp_irqdomain_create(idx)) {
++			clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++			return -ENOMEM;
++		}
++		alloc_ioapic_saved_registers(idx);
++	}
++
+ 	if (gsi_cfg->gsi_end >= gsi_top)
+ 		gsi_top = gsi_cfg->gsi_end + 1;
+ 	if (nr_ioapics <= idx)
 -- 
-Jiri Kosina
-SUSE Labs
+1.7.10.4
+
