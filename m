@@ -1,52 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:61396 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752074AbaFDOEN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jun 2014 10:04:13 -0400
-Date: Wed, 4 Jun 2014 10:04:08 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Shuah Khan <shuah.kh@samsung.com>,
-	Eli Billauer <eli.billauer@gmail.com>,
-	devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	discuss@x86-64.org
-Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
- dma_map_single()
-Message-ID: <20140604140408.GC5004@htj.dyndns.org>
-References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
- <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
- <538E3D04.9060808@samsung.com>
- <20140603233907.GB23880@8bytes.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140603233907.GB23880@8bytes.org>
+Received: from mga11.intel.com ([192.55.52.93]:26777 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755437AbaFQF1C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Jun 2014 01:27:02 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [RFC Patch V2 01/16] x86, irq: Split out alloc_ioapic_save_registers()
+Date: Tue, 17 Jun 2014 13:29:40 +0800
+Message-Id: <1402982995-13747-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+From: Yinghai Lu <yinghai@kernel.org>
 
-On Wed, Jun 04, 2014 at 01:39:07AM +0200, Joerg Roedel wrote:
-> I fully agree with the points Shuah brought up here. I don't think it is
-> a good idea to add this kind of resource management to runtime-allocated
-> (and de-allocated) resources of device drivers.
->
-> Also DMA handles are not something that could be garbage collected at
-> driver unload time. They are a limited resource that may be used up at
-> some point. And the whole point of a devm-API is that code can be
-> simpler because we don't need to de-allocate everything on the
-> error-path or at unload time, no?
+Split alloc_ioapic_save_registers() from early_irq_init(),
+so it will be used per ioapic.
 
-Hmmm?  Don't we have drivers which map dma buffers on device init and
-release them on exit?  For dynamic usages, its usefulness is limited
-especially given that dynamic tracking of buffers usually would
-involve tracking of other information too in addition to dma buffer
-pointer themselves.  If alloc on init and free on exit is a very rare
-usage pattern, I have no objection against not adding devm interface
-for dma mappings.
+Will call that later for hot-added ioapic controller.
 
-Thanks.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c |   22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 26490336ef6f..e97ec28f5269 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -237,6 +237,19 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
+ 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
+ }
+ 
++static void alloc_ioapic_saved_registers(int idx)
++{
++	size_t size;
++
++	if (ioapics[idx].saved_registers)
++		return;
++
++	size = sizeof(struct IO_APIC_route_entry) * ioapics[idx].nr_registers;
++	ioapics[idx].saved_registers = kzalloc(size, GFP_KERNEL);
++	if (!ioapics[idx].saved_registers)
++		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
++}
++
+ int __init arch_early_irq_init(void)
+ {
+ 	struct irq_cfg *cfg;
+@@ -245,13 +258,8 @@ int __init arch_early_irq_init(void)
+ 	if (!nr_legacy_irqs())
+ 		io_apic_irqs = ~0UL;
+ 
+-	for_each_ioapic(i) {
+-		ioapics[i].saved_registers =
+-			kzalloc(sizeof(struct IO_APIC_route_entry) *
+-				ioapics[i].nr_registers, GFP_KERNEL);
+-		if (!ioapics[i].saved_registers)
+-			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
+-	}
++	for_each_ioapic(i)
++		alloc_ioapic_saved_registers(i);
+ 
+ 	/*
+ 	 * For legacy IRQ's, start with assigning irq0 to irq15 to
 -- 
-tejun
+1.7.10.4
+
