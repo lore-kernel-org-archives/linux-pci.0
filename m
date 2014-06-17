@@ -1,235 +1,242 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch V3 15/16] PCI: Remove PCI ioapic driver
-Date: Wed, 25 Jun 2014 16:40:46 +0800
-Message-Id: <1403685648-10103-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:46869 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754702AbaFQDZv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jun 2014 23:25:51 -0400
+Received: by mail-pa0-f42.google.com with SMTP id lj1so5252672pab.29
+        for <linux-pci@vger.kernel.org>; Mon, 16 Jun 2014 20:25:50 -0700 (PDT)
 MIME-Version: 1.0
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <20140614212139.15202.93232.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	<20140614212139.15202.93232.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Date: Mon, 16 Jun 2014 20:25:50 -0700
+Message-ID: <CAA93t1pi8ppv6Pbp7yzsU0EE7arXQVgUj2o1x-7-+Wy9yXD4DQ@mail.gmail.com>
+Subject: Re: [PATCH RFC 4/4] PCI: pciehp: Remove assumptions about which
+ commands cause completion events
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, "Jan C. Nordholz" <jckn@gmx.net>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To support IOAPIC hotplug on x86 and IA64 platforms, OS needs to figure
-out global interrupt source number(GSI) and IOAPIC enumeration ID
-through ACPI interfaces. So BIOS must implement an ACPI IOAPIC device
-with _GSB/_UID or _MAT method to support IOAPIC hotplug. OS also needs
-to figure out base physical address to access IOAPIC registers. OS may
-get the base physical address through PCI BARs if IOAPIC device is
-visible in PCI domain, otherwise OS may get the address by ACPI _CRS
-method if IOAPIC device is hidden from PCI domain by BIOS.
+Hello,
 
-When adding a PCI subtree, we need to add IOAPIC devices before enabling
-all other PCI devices because other PCI devices may use the IOAPIC to
-allocate PCI interrupts.
+I tested all the 4 patches and they works great on my system (one that
+sets the completion on all writes to "slot control" register).
 
-So we plan to reimplement IOAPIC driver as an ACPI instead of PCI driver
-due to:
-1) hot-pluggable IOAPIC devices are always visible in ACPI domain,
-   but may or may not be visible in PCI domain.
-2) we could explicitly control the order between IOAPIC and other PCI
-   devices.
+Tested-by: Rajat Jain <rajatxjain@gmail.com>
 
-We also have another choice to use a PCI driver to manage IOAPIC device
-if it's visible in PCI domain and use an ACPI driver if it's only
-visible in ACPI domain. But this solution is a little complex.
+02:01.0 PCI bridge: Integrated Device Technology, Inc. Device 807a
+(rev 02) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Bus: primary=02, secondary=90, subordinate=9f, sec-latency=0
+        I/O behind bridge: 00002000-00002fff
+        Memory behind bridge: 88000000-8bffffff
+        Prefetchable memory behind bridge: 00000000b0200000-00000000b03fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Express (v2) Downstream Port (Slot+), MSI 00
+                DevCap: MaxPayload 2048 bytes, PhantFunc 0, Latency
+L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
+Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+
+AuxPwr- TransPend-
+                LnkCap: Port #1, Speed 5GT/s, Width x4, ASPM L0s L1,
+Latency L0 <4us, L1 <4us
+                        ClockPM- Surprise+ LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train-
+SlotClk- DLActive- BWMgmt- ABWMgmt-
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd-
+HotPlug+ Surprise-
+                        Slot #1, PowerLimit 0.000W; Interlock- NoCompl-
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet+
+CmdCplt+ HPIrq+ LinkChg+
+                        Control: AttnInd Unknown, PwrInd Unknown,
+Power- Interlock-
+                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt-
+PresDet- Interlock-
+                        Changed: MRL- PresDet- LinkState-
+                DevCap2: Completion Timeout: Not Supported,
+TimeoutDis-, LTR-, OBFF Not Supported ARIFwd+
+                DevCtl2: Completion Timeout: 50us to 50ms,
+TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance-
+SpeedDis-, Selectable De-emphasis: -6dB
+                         Transmit Margin: Normal Operating Range,
+EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -6dB,
+EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-,
+LinkEqualizationRequest-
+        Capabilities: [c0] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+                Address: 00000000fff41740  Data: 0001
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [200 v1] Virtual Channel
+                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=4
+                Arb:    Fixed- WRR32- WRR64- WRR128-
+                Ctrl:   ArbSelect=Fixed
+                Status: InProgress-
+                VC0:    Caps:   PATOffset=04 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                        Status: NegoPending- InProgress-
+                        Port Arbitration Table <?>
+        Capabilities: [320 v1] Access Control Services
+                ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+
+UpstreamFwd+ EgressCtrl+ DirectTrans+
+                ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir-
+UpstreamFwd- EgressCtrl- DirectTrans-
+        Capabilities: [330 v1] #12
+        Kernel driver in use: pcieport
 
-It shouldn't cause serious backward compatibility issues because:
-1) IOAPIC hotplug is never supported on x86 yet because it hasn't
-   implemented the required acpi_register_ioapic() and
-   acpi_unregister_ioapic().
-2) Currently only ACPI based IOAPIC hotplug is possible on x86 and
-   IA64, we don't know other specifications and interfaces to support
-   IOAPIC hotplug yet.
-3) We will reimplement an ACPI IOAPICｔdriver support IOAPIC hotplug.
 
-This change also helps to get rid of the false alarm on all current
-Linux distributions:
-[    6.952497] ioapic: probe of 0000:00:05.4 failed with error -22
-[    6.959542] ioapic: probe of 0000:80:05.4 failed with error -22
+Before these 4 patches, there was no timeout on my system but there
+was a spurious error message saying
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/pci/Kconfig  |    7 ---
- drivers/pci/Makefile |    2 -
- drivers/pci/ioapic.c |  121 --------------------------------------------------
- 3 files changed, 130 deletions(-)
- delete mode 100644 drivers/pci/ioapic.c
+[   26.324838] pciehp 0000:02:00.0:pcie24: Unexpected CMD_COMPLETED.
+Need to wait for command completed event
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 893503fa1782..39866d18004e 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -104,13 +104,6 @@ config PCI_PASID
- 
- 	  If unsure, say N.
- 
--config PCI_IOAPIC
--	bool "PCI IO-APIC hotplug support" if X86
--	depends on PCI
--	depends on ACPI
--	depends on X86_IO_APIC
--	default !X86
--
- config PCI_LABEL
- 	def_bool y if (DMI || ACPI)
- 	select NLS
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index e04fe2d9df3b..73e4af400a5a 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -13,8 +13,6 @@ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
- # Build PCI Express stuff if needed
- obj-$(CONFIG_PCIEPORTBUS) += pcie/
- 
--obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
--
- # Build the PCI Hotplug drivers if we were asked to
- obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
- ifdef CONFIG_HOTPLUG_PCI
-diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-deleted file mode 100644
-index 6b2b7dddbbdb..000000000000
---- a/drivers/pci/ioapic.c
-+++ /dev/null
-@@ -1,121 +0,0 @@
--/*
-- * IOAPIC/IOxAPIC/IOSAPIC driver
-- *
-- * Copyright (C) 2009 Fujitsu Limited.
-- * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- */
--
--/*
-- * This driver manages PCI I/O APICs added by hotplug after boot.  We try to
-- * claim all I/O APIC PCI devices, but those present at boot were registered
-- * when we parsed the ACPI MADT, so we'll fail when we try to re-register
-- * them.
-- */
--
--#include <linux/pci.h>
--#include <linux/module.h>
--#include <linux/acpi.h>
--#include <linux/slab.h>
--
--struct ioapic {
--	acpi_handle	handle;
--	u32		gsi_base;
--};
--
--static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
--{
--	acpi_handle handle;
--	acpi_status status;
--	unsigned long long gsb;
--	struct ioapic *ioapic;
--	int ret;
--	char *type;
--	struct resource *res;
--
--	handle = ACPI_HANDLE(&dev->dev);
--	if (!handle)
--		return -EINVAL;
--
--	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
--	if (ACPI_FAILURE(status))
--		return -EINVAL;
--
--	/*
--	 * The previous code in acpiphp evaluated _MAT if _GSB failed, but
--	 * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
--	 */
--
--	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
--	if (!ioapic)
--		return -ENOMEM;
--
--	ioapic->handle = handle;
--	ioapic->gsi_base = (u32) gsb;
--
--	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
--		type = "IOAPIC";
--	else
--		type = "IOxAPIC";
--
--	ret = pci_enable_device(dev);
--	if (ret < 0)
--		goto exit_free;
--
--	pci_set_master(dev);
--
--	if (pci_request_region(dev, 0, type))
--		goto exit_disable;
--
--	res = &dev->resource[0];
--	if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
--		goto exit_release;
--
--	pci_set_drvdata(dev, ioapic);
--	dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
--	return 0;
--
--exit_release:
--	pci_release_region(dev, 0);
--exit_disable:
--	pci_disable_device(dev);
--exit_free:
--	kfree(ioapic);
--	return -ENODEV;
--}
--
--static void ioapic_remove(struct pci_dev *dev)
--{
--	struct ioapic *ioapic = pci_get_drvdata(dev);
--
--	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
--	pci_release_region(dev, 0);
--	pci_disable_device(dev);
--	kfree(ioapic);
--}
--
--
--static DEFINE_PCI_DEVICE_TABLE(ioapic_devices) = {
--	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
--	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
--	{ }
--};
--MODULE_DEVICE_TABLE(pci, ioapic_devices);
--
--static struct pci_driver ioapic_driver = {
--	.name		= "ioapic",
--	.id_table	= ioapic_devices,
--	.probe		= ioapic_probe,
--	.remove		= ioapic_remove,
--};
--
--static int __init ioapic_init(void)
--{
--	return pci_register_driver(&ioapic_driver);
--}
--module_init(ioapic_init);
--
--MODULE_LICENSE("GPL");
--- 
-1.7.10.4
+which was gone with these patches.
 
+
+Thanks!
+
+Rajat
+
+On Sat, Jun 14, 2014 at 2:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> We use incorrect logic to decide whether a PCIe hotplug controller
+> generates command completion events.
+>
+> 5808639bfa98 ("pciehp: fix slow probing") assumed that the Slot Status
+> "Command Completed" bit was set only for commands affecting slot power,
+> indicators, or electromechanical interlock.  That assumption is false: per
+> sec. 6.7.3.2 of PCIe spec r3.0, a write targeting any portion of the Slot
+> Control register is a command, and (if command completed events are
+> supported) software must wait for a command to complete before issuing the
+> next command.
+>
+> 5808639bfa98 was to fix boot-time timeouts (see bugzilla below) on a Lenovo
+> Thinkpad R61 with an Intel hotplug controller.  The controller probably has
+> the Intel CF118 erratum, which means it doesn't report Command Completed
+> unless the Slot Control power, indicator, or interlock bits are changed.
+> This causes a timeout because pciehp always waits for Command Complete (if
+> supported), regardless of which bits are changed.
+>
+> Remove the incorrect logic because the timeouts have been addressed
+> differently by these changes:
+>
+>   PCI: pciehp: Wait for hotplug command completion lazily
+>   PCI: pciehp: Compute timeout from hotplug command start time
+>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=10751
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c |   39 ++++++++------------------------------
+>  1 file changed, 8 insertions(+), 31 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 18ac24d84f9b..1f70de5359fb 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -161,8 +161,10 @@ static void pcie_wait_cmd(struct controller *ctrl)
+>                 rc = wait_event_timeout(ctrl->queue, !ctrl->cmd_busy, timeout);
+>         else
+>                 rc = pcie_poll_cmd(ctrl, timeout);
+> +
+>         if (!rc)
+> -               ctrl_dbg(ctrl, "Command not completed in 1000 msec\n");
+> +               ctrl_info(ctrl, "Timeout on hotplug command %#010x\n",
+> +                         ctrl->slot_ctrl);
+>  }
+>
+>  /**
+> @@ -174,7 +176,6 @@ static void pcie_wait_cmd(struct controller *ctrl)
+>  static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+>  {
+>         struct pci_dev *pdev = ctrl_dev(ctrl);
+> -       u16 slot_status;
+>         u16 slot_ctrl;
+>
+>         mutex_lock(&ctrl->ctrl_lock);
+> @@ -182,30 +183,6 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+>         /* Wait for any previous command that might still be in progress */
+>         pcie_wait_cmd(ctrl);
+>
+> -       pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+> -       if (slot_status & PCI_EXP_SLTSTA_CC) {
+> -               pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+> -                                          PCI_EXP_SLTSTA_CC);
+> -               if (!ctrl->no_cmd_complete) {
+> -                       /*
+> -                        * After 1 sec and CMD_COMPLETED still not set, just
+> -                        * proceed forward to issue the next command according
+> -                        * to spec. Just print out the error message.
+> -                        */
+> -                       ctrl_dbg(ctrl, "CMD_COMPLETED not clear after 1 sec\n");
+> -               } else if (!NO_CMD_CMPL(ctrl)) {
+> -                       /*
+> -                        * This controller seems to notify of command completed
+> -                        * event even though it supports none of power
+> -                        * controller, attention led, power led and EMI.
+> -                        */
+> -                       ctrl_dbg(ctrl, "Unexpected CMD_COMPLETED. Need to wait for command completed event\n");
+> -                       ctrl->no_cmd_complete = 0;
+> -               } else {
+> -                       ctrl_dbg(ctrl, "Unexpected CMD_COMPLETED. Maybe the controller is broken\n");
+> -               }
+> -       }
+> -
+>         pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+>         slot_ctrl &= ~mask;
+>         slot_ctrl |= (cmd & mask);
+> @@ -785,14 +762,14 @@ struct controller *pcie_init(struct pcie_device *dev)
+>         mutex_init(&ctrl->ctrl_lock);
+>         init_waitqueue_head(&ctrl->queue);
+>         dbg_ctrl(ctrl);
+> +
+>         /*
+>          * Controller doesn't notify of command completion if the "No
+> -        * Command Completed Support" bit is set in Slot Capability
+> -        * register or the controller supports none of power
+> -        * controller, attention led, power led and EMI.
+> +        * Command Completed Support" bit is set in Slot Capabilities.
+> +        * If set, it means the controller can accept hotplug commands
+> +        * with no delay between them.
+>          */
+> -       if (NO_CMD_CMPL(ctrl) ||
+> -           !(POWER_CTRL(ctrl) | ATTN_LED(ctrl) | PWR_LED(ctrl) | EMI(ctrl)))
+> +       if (NO_CMD_CMPL(ctrl))
+>                 ctrl->no_cmd_complete = 1;
+>
+>         /* Check if Data Link Layer Link Active Reporting is implemented */
+>
