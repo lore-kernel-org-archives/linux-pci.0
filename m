@@ -1,69 +1,35 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch V3 01/16] x86, irq, ACPI: Protect acpi_pci_irq_enable() from reentrance
-Date: Wed, 25 Jun 2014 16:40:32 +0800
-Message-Id: <1403685648-10103-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55414 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932657AbaFQTUB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 15:20:01 -0400
+Date: Tue, 17 Jun 2014 12:23:57 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 13/24] drivers/pci: return actual error on pci_slot_init
+Message-ID: <20140617192357.GB4628@kroah.com>
+References: <53A0513C.2070103@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53A0513C.2070103@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function acpi_pci_irq_enable() may be called twice for each PCI device
-present at boot time as below:
-1) pci_acpi_init()
-	--> acpi_pci_irq_enable()
-2) pci_enable_device()
-	--> pcibios_enable_device()
-		--> acpi_pci_irq_enable()
+On Tue, Jun 17, 2014 at 10:31:24PM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
+> 
+> Return the actual error code if call kset_create_and_add() failed
+> at pci_slot_init().
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> ---
+>  drivers/pci/slot.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
-So protect acpi_pci_irq_enable() from reentrance to correctly manage
-IOAPIC pin reference count.
+Bjorn, please do not take this patch.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/pci_irq.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+thanks,
 
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 6ba463ceccc6..9d2ebd5fd9aa 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -413,6 +413,9 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		return 0;
- 	}
- 
-+	if (dev->irq > 0)
-+		return 0;
-+
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry) {
- 		/*
-@@ -498,6 +501,8 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	 */
- 
- 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
--	if (gsi >= 0 && dev->irq > 0)
-+	if (gsi >= 0 && dev->irq > 0) {
- 		acpi_unregister_gsi(gsi);
-+		dev->irq = 0;
-+	}
- }
--- 
-1.7.10.4
-
+greg k-h
