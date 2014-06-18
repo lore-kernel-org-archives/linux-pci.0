@@ -1,206 +1,355 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([122.248.162.5]:39309 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751310AbaFWGbx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 02:31:53 -0400
-Received: from /spool/local
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 23 Jun 2014 12:01:50 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 66367E0045
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 12:02:59 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N6W4kr58654814
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 12:02:04 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N6Vl2x014160
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 12:01:48 +0530
-Date: Mon, 23 Jun 2014 14:31:45 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, yan@linux.vnet.ibm.com,
-	qiudayu@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH V3 05/17] ppc/pnv: user macro to define the TCE size
-Message-ID: <20140623063145.GC5172@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-6-git-send-email-weiyang@linux.vnet.ibm.com>
- <20140623051233.GA7223@shangw>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:45991 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751798AbaFRHSD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 18 Jun 2014 03:18:03 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Murali Karicheri <m-karicheri2@ti.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Cc: Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Date: Wed, 18 Jun 2014 15:16:35 +0800
+Subject: RE: [PATCH v2 4/8] PCI: designware: add msi controller functions
+ for v3.65 hw
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB6619C5F8168DB@EAPEX1MAIL1.st.com>
+References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
+ <1402426287-31157-5-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1402426287-31157-5-git-send-email-m-karicheri2@ti.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140623051233.GA7223@shangw>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 03:12:33PM +1000, Gavin Shan wrote:
->On Tue, Jun 10, 2014 at 09:56:27AM +0800, Wei Yang wrote:
->>During the initialization of the TVT/TCE, it uses digits to specify the TCE IO
->>Page Size, TCE Table Size, TCE Entry Size, etc.
->>
->>This patch replaces those digits with macros, which will be more meaningful and
->>easy to read.
->>
->>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->
->It looks conflicting with "dynamic page size support" posted by Alexey:
->
->http://patchwork.ozlabs.org/patch/356718/
+Hello Murali,
 
-Ok, will did some change in next version.
+> -----Original Message-----
+> From: Murali Karicheri [mailto:m-karicheri2@ti.com]
+> Sent: Wednesday, June 11, 2014 12:21 AM
+> To: linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
+> linux-pci@vger.kernel.org; devicetree@vger.kernel.org; linux-
+> doc@vger.kernel.org
+> Cc: Murali Karicheri; Santosh Shilimkar; Russell King; Grant Likely; Rob Herring;
+> Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Pratyush ANAND; Richard
+> Zhu; Kishon Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll;
+> Mark Rutland; Ian Campbell; Kumar Gala; Randy Dunlap
+> Subject: [PATCH v2 4/8] PCI: designware: add msi controller functions for
+> v3.65 hw
+> 
+> Add dw msi controller functions for v3.65 hw. This adds dw_v3_65_msi_chip
+> and dw_v3_65_msi_domain_ops so that can be used on this version of the
+> hw.
+> This required since MSI irq registers reside in the application space for v3.65
+> hw. The functions are used by v3.65 dw pci core functions to support
+> implementation of PCI controllers based on this hw version.
+> 
+> While at it, move the ATU hw specific variable and msi irq to a separate struct
+> inside a union and add another struct inside the union to hold dw v3.65
+> specific variables.
+> 
+- Here also, pls look into Lucas work for MSI cleanup and then apply your changes:
+[PATCH 0/4] proper multi MSI handling for designware host
 
->
->>---
->> arch/powerpc/include/asm/tce.h            |    3 ++-
->> arch/powerpc/platforms/powernv/pci-ioda.c |   25 +++++++++++--------------
->> arch/powerpc/platforms/powernv/pci.c      |    2 +-
->> arch/powerpc/platforms/powernv/pci.h      |    5 +++++
->> 4 files changed, 19 insertions(+), 16 deletions(-)
->>
->>diff --git a/arch/powerpc/include/asm/tce.h b/arch/powerpc/include/asm/tce.h
->>index 743f36b..28a1d06 100644
->>--- a/arch/powerpc/include/asm/tce.h
->>+++ b/arch/powerpc/include/asm/tce.h
->>@@ -40,7 +40,8 @@
->> #define TCE_SHIFT	12
->> #define TCE_PAGE_SIZE	(1 << TCE_SHIFT)
->>
->>-#define TCE_ENTRY_SIZE		8		/* each TCE is 64 bits */
->>+#define TCE_ENTRY_SHIFT		3
->>+#define TCE_ENTRY_SIZE		(1 << TCE_ENTRY_SHIFT)	/* each TCE is 64 bits */
->>
->> #define TCE_RPN_MASK		0xfffffffffful  /* 40-bit RPN (4K pages) */
->> #define TCE_RPN_SHIFT		12
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index 8ae09cf..9715351 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -820,9 +820,6 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
->> 	int64_t rc;
->> 	void *addr;
->>
->>-	/* 256M DMA window, 4K TCE pages, 8 bytes TCE */
->>-#define TCE32_TABLE_SIZE	((0x10000000 / 0x1000) * 8)
->>-
->> 	/* XXX FIXME: Handle 64-bit only DMA devices */
->> 	/* XXX FIXME: Provide 64-bit DMA facilities & non-4K TCE tables etc.. */
->> 	/* XXX FIXME: Allocate multi-level tables on PHB3 */
->>@@ -834,7 +831,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
->> 	/* Grab a 32-bit TCE table */
->> 	pe->tce32_seg = base;
->> 	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
->>-		(base << 28), ((base + segs) << 28) - 1);
->>+		(base << PNV_TCE32_SEG_SHIFT), ((base + segs) << PNV_TCE32_SEG_SHIFT) - 1);
->>
->> 	/* XXX Currently, we allocate one big contiguous table for the
->> 	 * TCEs. We only really need one chunk per 256M of TCE space
->>@@ -842,21 +839,21 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
->> 	 * requires some added smarts with our get/put_tce implementation
->> 	 */
->> 	tce_mem = alloc_pages_node(phb->hose->node, GFP_KERNEL,
->>-				   get_order(TCE32_TABLE_SIZE * segs));
->>+				   get_order(PNV_TCE32_TAB_SIZE * segs));
->> 	if (!tce_mem) {
->> 		pe_err(pe, " Failed to allocate a 32-bit TCE memory\n");
->> 		goto fail;
->> 	}
->> 	addr = page_address(tce_mem);
->>-	memset(addr, 0, TCE32_TABLE_SIZE * segs);
->>+	memset(addr, 0, PNV_TCE32_TAB_SIZE * segs);
->>
->> 	/* Configure HW */
->> 	for (i = 0; i < segs; i++) {
->> 		rc = opal_pci_map_pe_dma_window(phb->opal_id,
->> 					      pe->pe_number,
->> 					      base + i, 1,
->>-					      __pa(addr) + TCE32_TABLE_SIZE * i,
->>-					      TCE32_TABLE_SIZE, 0x1000);
->>+					      __pa(addr) + PNV_TCE32_TAB_SIZE * i,
->>+					      PNV_TCE32_TAB_SIZE, TCE_PAGE_SIZE);
->> 		if (rc) {
->> 			pe_err(pe, " Failed to configure 32-bit TCE table,"
->> 			       " err %ld\n", rc);
->>@@ -866,8 +863,8 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
->>
->> 	/* Setup linux iommu table */
->> 	tbl = &pe->tce32_table;
->>-	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
->>-				  base << 28);
->>+	pnv_pci_setup_iommu_table(tbl, addr, PNV_TCE32_TAB_SIZE * segs,
->>+				  base << PNV_TCE32_SEG_SHIFT);
->>
->> 	/* OPAL variant of P7IOC SW invalidated TCEs */
->> 	swinvp = of_get_property(phb->hose->dn, "ibm,opal-tce-kill", NULL);
->>@@ -898,7 +895,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
->> 	if (pe->tce32_seg >= 0)
->> 		pe->tce32_seg = -1;
->> 	if (tce_mem)
->>-		__free_pages(tce_mem, get_order(TCE32_TABLE_SIZE * segs));
->>+		__free_pages(tce_mem, get_order(PNV_TCE32_TAB_SIZE * segs));
->> }
->>
->> static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
->>@@ -968,7 +965,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->> 	/* The PE will reserve all possible 32-bits space */
->> 	pe->tce32_seg = 0;
->> 	end = (1 << ilog2(phb->ioda.m32_pci_base));
->>-	tce_table_size = (end / 0x1000) * 8;
->>+	tce_table_size = (end / TCE_PAGE_SIZE) * TCE_ENTRY_SIZE;
->> 	pe_info(pe, "Setting up 32-bit TCE table at 0..%08x\n",
->> 		end);
->>
->>@@ -988,7 +985,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->> 	 */
->> 	rc = opal_pci_map_pe_dma_window(phb->opal_id, pe->pe_number,
->> 					pe->pe_number << 1, 1, __pa(addr),
->>-					tce_table_size, 0x1000);
->>+					tce_table_size, TCE_PAGE_SIZE);
->> 	if (rc) {
->> 		pe_err(pe, "Failed to configure 32-bit TCE table,"
->> 		       " err %ld\n", rc);
->>@@ -1573,7 +1570,7 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
->> 	INIT_LIST_HEAD(&phb->ioda.pe_list);
->>
->> 	/* Calculate how many 32-bit TCE segments we have */
->>-	phb->ioda.tce32_count = phb->ioda.m32_pci_base >> 28;
->>+	phb->ioda.tce32_count = phb->ioda.m32_pci_base >> PNV_TCE32_SEG_SHIFT;
->>
->> #if 0 /* We should really do that ... */
->> 	rc = opal_pci_set_phb_mem_window(opal->phb_id,
->>diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
->>index 8518817..687a068 100644
->>--- a/arch/powerpc/platforms/powernv/pci.c
->>+++ b/arch/powerpc/platforms/powernv/pci.c
->>@@ -597,7 +597,7 @@ void pnv_pci_setup_iommu_table(struct iommu_table *tbl,
->> 	tbl->it_page_shift = IOMMU_PAGE_SHIFT_4K;
->> 	tbl->it_offset = dma_offset >> tbl->it_page_shift;
->> 	tbl->it_index = 0;
->>-	tbl->it_size = tce_size >> 3;
->>+	tbl->it_size = tce_size >> TCE_ENTRY_SHIFT;
->> 	tbl->it_busno = 0;
->> 	tbl->it_type = TCE_PCI;
->> }
->>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->>index 3e5f5a1..90f6da4 100644
->>--- a/arch/powerpc/platforms/powernv/pci.h
->>+++ b/arch/powerpc/platforms/powernv/pci.h
->>@@ -227,4 +227,9 @@ extern void pnv_pci_init_ioda2_phb(struct device_node *np);
->> extern void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
->> 					__be64 *startp, __be64 *endp, bool rm);
->>
->>+#define PNV_TCE32_SEG_SHIFT     28
->>+#define PNV_TCE32_SEG_SIZE      (1UL << PNV_TCE32_SEG_SHIFT)
->>+/* 256M DMA window, 4K TCE pages, 8 bytes TCE */
->>+#define PNV_TCE32_TAB_SIZE	((PNV_TCE32_SEG_SIZE / TCE_PAGE_SIZE) * TCE_ENTRY_SIZE)
->>+
->> #endif /* __POWERNV_PCI_H */
->
->Thanks,
->Gavin
+Thanks
+Mohit
 
--- 
-Richard Yang
-Help you, Help me
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> 
+> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+> CC: Russell King <linux@arm.linux.org.uk>
+> CC: Grant Likely <grant.likely@linaro.org>
+> CC: Rob Herring <robh+dt@kernel.org>
+> CC: Mohit Kumar <mohit.kumar@st.com>
+> CC: Jingoo Han <jg1.han@samsung.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Pratyush Anand <pratyush.anand@st.com>
+> CC: Richard Zhu <r65037@freescale.com>
+> CC: Kishon Vijay Abraham I <kishon@ti.com>
+> CC: Marek Vasut <marex@denx.de>
+> CC: Arnd Bergmann <arnd@arndb.de>
+> CC: Pawel Moll <pawel.moll@arm.com>
+> CC: Mark Rutland <mark.rutland@arm.com>
+> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+> CC: Kumar Gala <galak@codeaurora.org>
+> CC: Randy Dunlap <rdunlap@infradead.org>
+> CC: Grant Likely <grant.likely@linaro.org>
+> 
+> ---
+>  drivers/pci/host/Kconfig            |    5 ++
+>  drivers/pci/host/Makefile           |    1 +
+>  drivers/pci/host/pci-dw-v3_65-msi.c |  149
+> +++++++++++++++++++++++++++++++++++
+>  drivers/pci/host/pci-dw-v3_65.h     |   20 +++++
+>  drivers/pci/host/pcie-designware.h  |   21 +++--
+>  5 files changed, 191 insertions(+), 5 deletions(-)  create mode 100644
+> drivers/pci/host/pci-dw-v3_65-msi.c
+>  create mode 100644 drivers/pci/host/pci-dw-v3_65.h
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig index
+> a6f67ec..2fcd9f9 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -9,6 +9,11 @@ config PCI_MVEBU
+>  config PCIE_DW
+>  	bool
+> 
+> +config PCI_DW_V3_65
+> +	bool "Designware PCIe h/w v3.65"
+> +	help
+> +	   Say Y here if the DW h/w version is 3.65
+> +
+>  config PCI_EXYNOS
+>  	bool "Samsung Exynos PCIe controller"
+>  	depends on SOC_EXYNOS5440
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile index
+> 13fb333..28af710 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+>  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+>  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+>  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+> +obj-$(CONFIG_PCI_DW_V3_65) += pci-dw-v3_65-msi.o
+> diff --git a/drivers/pci/host/pci-dw-v3_65-msi.c b/drivers/pci/host/pci-dw-
+> v3_65-msi.c
+> new file mode 100644
+> index 0000000..a26ffdd
+> --- /dev/null
+> +++ b/drivers/pci/host/pci-dw-v3_65-msi.c
+> @@ -0,0 +1,149 @@
+> +/*
+> + * Designware(dw) MSI controller version 3.65
+> + *
+> + * Copyright (C) 2013-2014 Texas Instruments., Ltd.
+> + *		http://www.ti.com
+> + *
+> + * Author: Murali Karicheri <m-karicheri2@ti.com>
+> + *
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + */
+> +
+> +#include <linux/of_irq.h>
+> +#include <linux/kernel.h>
+> +#include <linux/msi.h>
+> +#include <linux/pci.h>
+> +
+> +#include "pcie-designware.h"
+> +
+> +#define MSI_IRQ				0x054
+> +#define MSI0_IRQ_STATUS			0x104
+> +#define MSI0_IRQ_ENABLE_SET		0x108
+> +#define MSI0_IRQ_ENABLE_CLR		0x10c
+> +#define IRQ_STATUS			0x184
+> +#define IRQ_EOI                         0x050
+> +#define MSI_IRQ_OFFSET			4
+> +
+> +static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys) {
+> +	return sys->private_data;
+> +}
+> +
+> +static inline void update_reg_offset_bit_pos(u32 offset, u32 *reg_offset,
+> +					u32 *bit_pos)
+> +{
+> +	*reg_offset = offset % 8;
+> +	*bit_pos = offset >> 3;
+> +}
+> +
+> +inline u32 dw_v3_65_get_msi_data(struct pcie_port *pp) {
+> +	return pp->app.start + MSI_IRQ;
+> +}
+> +
+> +void dw_v3_65_handle_msi_irq(struct pcie_port *pp, int offset) {
+> +	u32 pending, vector;
+> +	int src, virq;
+> +
+> +	pending = readl(pp->va_app_base + MSI0_IRQ_STATUS + (offset <<
+> 4));
+> +	/*
+> +	 * MSI0, Status bit 0-3 shows vectors 0, 8, 16, 24, MSI1 status bit
+> +	 * shows 1, 9, 17, 25 and so forth
+> +	 */
+> +	for (src = 0; src < 4; src++) {
+> +		if (BIT(src) & pending) {
+> +			vector = offset + (src << 3);
+> +			virq = irq_linear_revmap(pp->irq_domain, vector);
+> +			dev_dbg(pp->dev,
+> +				"irq: bit %d, vector %d, virq %d\n",
+> +				 src, vector, virq);
+> +			generic_handle_irq(virq);
+> +		}
+> +	}
+> +}
+> +
+> +static void dw_v3_65_msi_irq_ack(struct irq_data *d) {
+> +	u32 offset, reg_offset, bit_pos;
+> +	unsigned int irq = d->irq;
+> +	struct msi_desc *msi;
+> +	struct pcie_port *pp;
+> +
+> +	msi = irq_get_msi_desc(irq);
+> +	pp = sys_to_pcie(msi->dev->bus->sysdata);
+> +	offset = irq - irq_linear_revmap(pp->irq_domain, 0);
+> +	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
+> +
+> +	writel(BIT(bit_pos),
+> +		pp->va_app_base + MSI0_IRQ_STATUS + (reg_offset << 4));
+> +	writel(reg_offset + MSI_IRQ_OFFSET, pp->va_app_base + IRQ_EOI);
+> }
+> +
+> +static void dw_v3_65_msi_irq_mask(struct irq_data *d) {
+> +	u32 offset, reg_offset, bit_pos;
+> +	unsigned int irq = d->irq;
+> +	struct msi_desc *msi;
+> +	struct pcie_port *pp;
+> +
+> +	msi = irq_get_msi_desc(irq);
+> +	pp = sys_to_pcie(msi->dev->bus->sysdata);
+> +	offset = irq - irq_linear_revmap(pp->irq_domain, 0);
+> +	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
+> +
+> +	/* mask the end point if PVM implemented */
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		if (msi->msi_attrib.maskbit)
+> +			mask_msi_irq(d);
+> +	}
+> +
+> +	writel(BIT(bit_pos),
+> +		pp->va_app_base + MSI0_IRQ_ENABLE_CLR + (reg_offset <<
+> 4)); }
+> +
+> +static void dw_v3_65_msi_irq_unmask(struct irq_data *d) {
+> +	u32 offset, reg_offset, bit_pos;
+> +	unsigned int irq = d->irq;
+> +	struct msi_desc *msi;
+> +	struct pcie_port *pp;
+> +
+> +	msi = irq_get_msi_desc(irq);
+> +	pp = sys_to_pcie(msi->dev->bus->sysdata);
+> +	offset = irq - irq_linear_revmap(pp->irq_domain, 0);
+> +	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
+> +
+> +	/* mask the end point if PVM implemented */
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		if (msi->msi_attrib.maskbit)
+> +			unmask_msi_irq(d);
+> +	}
+> +
+> +	writel(BIT(bit_pos),
+> +		pp->va_app_base + MSI0_IRQ_ENABLE_SET + (reg_offset <<
+> 4)); }
+> +
+> +static struct irq_chip dw_v3_65_msi_chip = {
+> +	.name = "PCI-DW-MSI-OLD",
+> +	.irq_ack = dw_v3_65_msi_irq_ack,
+> +	.irq_mask = dw_v3_65_msi_irq_mask,
+> +	.irq_unmask = dw_v3_65_msi_irq_unmask, };
+> +
+> +static int dw_v3_65_msi_map(struct irq_domain *domain, unsigned int irq,
+> +			irq_hw_number_t hwirq)
+> +{
+> +	irq_set_chip_and_handler(irq, &dw_v3_65_msi_chip,
+> handle_level_irq);
+> +	irq_set_chip_data(irq, domain->host_data);
+> +	set_irq_flags(irq, IRQF_VALID);
+> +
+> +	return 0;
+> +}
+> +
+> +const struct irq_domain_ops dw_v3_65_msi_domain_ops = {
+> +	.map = dw_v3_65_msi_map,
+> +};
+> diff --git a/drivers/pci/host/pci-dw-v3_65.h b/drivers/pci/host/pci-dw-
+> v3_65.h new file mode 100644 index 0000000..689256a
+> --- /dev/null
+> +++ b/drivers/pci/host/pci-dw-v3_65.h
+> @@ -0,0 +1,20 @@
+> +/*
+> + * Designware(dw) v3.65 controller common includes
+> + *
+> + * Copyright (C) 2013-2014 Texas Instruments., Ltd.
+> + *		http://www.ti.com
+> + *
+> + * Author: Murali Karicheri <m-karicheri2@ti.com>
+> + *
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + */
+> +
+> +#define MAX_LEGACY_IRQS		4
+> +
+> +/* v3.65 specific MSI controller APIs/definitions */ extern const
+> +struct irq_domain_ops dw_v3_65_msi_domain_ops; void
+> +dw_v3_65_handle_msi_irq(struct pcie_port *pp, int offset);
+> +u32 dw_v3_65_get_msi_data(struct pcie_port *pp);
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-
+> designware.h
+> index 3a6a6eb..05bb590 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -35,16 +35,27 @@ struct pcie_port {
+>  	struct device		*dev;
+>  	u8			root_bus_nr;
+>  	void __iomem		*dbi_base;
+> -	u64			cfg0_base;
+> -	void __iomem		*va_cfg0_base;
+> -	u64			cfg1_base;
+> -	void __iomem		*va_cfg1_base;
+>  	/*
+>  	 * v3.65 DW hw implements application register space for
+>  	 * MSI and has no ATU view port
+>  	 */
+>  #define DW_V3_65		BIT(0)
+>  	u32			version;
+> +	union {
+> +		/* New DW hw specific */
+> +		struct {
+> +			u64			cfg0_base;
+> +			void __iomem		*va_cfg0_base;
+> +			u64			cfg1_base;
+> +			void __iomem		*va_cfg1_base;
+> +			int			msi_irq;
+> +		};
+> +		/* v3.65 DW hw specific */
+> +		struct  {
+> +			void __iomem		*va_app_base;
+> +			struct resource		app;
+> +		};
+> +	};
+>  	u64			io_base;
+>  	u64			mem_base;
+>  	spinlock_t		conf_lock;
+> @@ -55,7 +66,7 @@ struct pcie_port {
+>  	int			irq;
+>  	u32			lanes;
+>  	struct pcie_host_ops	*ops;
+> -	int			msi_irq;
+> +	/* msi irq domain */
+>  	struct irq_domain	*irq_domain;
+>  	unsigned long		msi_data;
+>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+> --
+> 1.7.9.5
 
