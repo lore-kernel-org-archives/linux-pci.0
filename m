@@ -1,89 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:56502 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753240AbaF0LEY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 07:04:24 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Jon Masters <jonathan@jonmasters.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Michal Simek <monstr@monstr.eu>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
-Date: Fri, 27 Jun 2014 13:03:34 +0200
-Message-ID: <6381366.2IfqZj1r0B@wuerfel>
-In-Reply-To: <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <20140626085926.GB11244@arm.com> <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:40071 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964994AbaFRJPh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 18 Jun 2014 05:15:37 -0400
+Message-ID: <53A15879.7030302@ti.com>
+Date: Wed, 18 Jun 2014 14:44:33 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
+	"jg1.han@samsung.com" <jg1.han@samsung.com>,
+	Arnd Bergmann <arnd@arndb.de>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tony@atomide.com" <tony@atomide.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>, Marek Vasut <marex@denx.de>
+Subject: Re: [PATCH v2 03/18] PCI: designware: Configuration space should
+ be specified in 'reg'
+References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-4-git-send-email-kishon@ti.com> <53876116.90504@ti.com> <3E54258959B69E4282D79E01AB1F32B70477D2A4@DFLE11.ent.ti.com>
+In-Reply-To: <3E54258959B69E4282D79E01AB1F32B70477D2A4@DFLE11.ent.ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 26 June 2014 19:44:21 Rob Herring wrote:
-> > Although a bit late, I'm raising this now and hopefully we'll come to a
-> > conclusion soon. Delaying arm64 PCIe support even further is not a real
-> > option, which leaves us with:
-> >
-> > 1. Someone else (with enough PCIe knowledge) volunteering to take over
-> >    soon or
-> 
-> Well, I might have 2 months ago, but now I'm pretty booked up.
-> 
-> > 2. Dropping Liviu's work and going for an arm64-specific implementation
-> >    (most likely based on the arm32 implementation, see below)
-> 
-> 3. Keeping Liviu's patches leaving some of the architecture specific
-> bits. I know Arnd and I both commented on it still needing more common
-> pieces, but compared to option 2 that would be way better.
+Hi,
 
-Agreed.
- 
-> 920a685 pci: Add support for creating a generic host_bridge from device tree
-> 
-> This function could be moved to drivers/of/of_pci.c if having it in
-> drivers/pci is too much maintenance burden. However, nearly the same
-> code is already being duplicated in every DT enabled ARM PCI host
-> driver and will continue as more PCI hosts are added. So this isn't
-> really a question of converting other architectures to common PCI host
-> infrastructure, but converting DT based PCI hosts to common
-> infrastructure. ARM is the only arch moving host drivers to
-> drivers/pci ATM. Until other architectures start doing that,
-> converting them is pointless.
+On Friday 30 May 2014 07:45 PM, Karicheri, Muralidharan wrote:
+>> -----Original Message-----
+>> From: Murali Karicheri [mailto:m-karicheri2@ti.com]
+>> Sent: Thursday, May 29, 2014 12:32 PM
+>> To: ABRAHAM, KISHON VIJAY
+>> Cc: devicetree@vger.kernel.org; linux-doc@vger.kernel.org; linux-arm-
+>> kernel@lists.infradead.org; linux-omap@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+>> kernel@vger.kernel.org; arnd@arndb.de; tony@atomide.com; jg1.han@samsung.com;
+>> Jason Gunthorpe; Bjorn Helgaas; Mohit Kumar; Marek Vasut
+>> Subject: Re: [PATCH v2 03/18] PCI: designware: Configuration space should be specified
+>> in 'reg'
+>>
+>> On 5/29/2014 2:38 AM, ABRAHAM, KISHON VIJAY wrote:
+>>> The configuration address space has so far been specified in *ranges*,
+>>> however it should be specified in *reg* making it a platform MEM resource.
+>>> Hence used 'platform_get_resource_*' API to get configuration address
+>>> space in the designware driver.
+>>>
+>>> Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>> Cc: Mohit Kumar <mohit.kumar@st.com>
+>>> Cc: Jingoo Han <jg1.han@samsung.com>
+>>> Cc: Marek Vasut <marex@denx.de>
+>>> Cc: Arnd Bergmann <arnd@arndb.de>
+>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>> ---
+>>>   .../devicetree/bindings/pci/designware-pcie.txt    |    1 +
+>>>   drivers/pci/host/pcie-designware.c                 |   17 +++++++++++++++--
+>>>   2 files changed, 16 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>> b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>> index d6fae13..8314360 100644
+>>> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>> @@ -6,6 +6,7 @@ Required properties:
+>>>   	as "samsung,exynos5440-pcie" or "fsl,imx6q-pcie".
+>>>   - reg: base addresses and lengths of the pcie controller,
+>>>   	the phy controller, additional register for the phy controller.
+>>> +	The configuration address space should also be specified here.
+>> Kishon,
+>>
+>> I am working on the Keystone PCI driver for which v1 is already posted.
+>> Want to clarify
+>> following.
+>> 1. Original text for reg states "base addresses and lengths of the pcie controller,
+>>         the phy controller, additional register for the phy controller"
+>> and you added
+>>         "The configuration address space should also be specified here"
+>>
+>>    and the code below added resource name "config"
+>>
+>> Does PCI designware follow some convention? Does it mean after applying this patch
+>> config name is mandatory or optional? Below code you are not returning error. Can you or
+>> author of PCI designware clarify what is expected to be present as mandatory and what is
+>> optional.
+>>
+>> Does config refers to RC's config space or EP's config space or both?
+>> The code below divide
+>> the size by 2. So it appears to be RC's + EP's config space. Please clarify.
+>>
+>>>   - interrupts: interrupt values for level interrupt,
+>>>   	pulse interrupt, special interrupt.
+>>>   - clocks: from common clock binding: handle to pci clock.
+>>> diff --git a/drivers/pci/host/pcie-designware.c
+>>> b/drivers/pci/host/pcie-designware.c
+>>> index c4e3732..603b386 100644
+>>> --- a/drivers/pci/host/pcie-designware.c
+>>> +++ b/drivers/pci/host/pcie-designware.c
+>>> @@ -20,6 +20,7 @@
+>>>   #include <linux/of_pci.h>
+>>>   #include <linux/pci.h>
+>>>   #include <linux/pci_regs.h>
+>>> +#include <linux/platform_device.h>
+>>>   #include <linux/types.h>
+>>>
+>>>   #include "pcie-designware.h"
+>>> @@ -392,11 +393,23 @@ static const struct irq_domain_ops msi_domain_ops = {
+>>>   int __init dw_pcie_host_init(struct pcie_port *pp)
+>>>   {
+>>>   	struct device_node *np = pp->dev->of_node;
+>>> +	struct platform_device *pdev = to_platform_device(pp->dev);
+>>>   	struct of_pci_range range;
+>>>   	struct of_pci_range_parser parser;
+>>> +	struct resource *cfg_res;
+>>>   	u32 val;
+>>>   	int i;
+>>>
+>>> +	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+>>> +	if (cfg_res) {
+>>> +		pp->config.cfg0_size = resource_size(cfg_res)/2;
+>>> +		pp->config.cfg1_size = resource_size(cfg_res)/2;
+>>> +		pp->cfg0_base = cfg_res->start;
+>>> +		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
+>>> +	} else {
+>>> +		dev_err(pp->dev, "missing *config* reg space\n");
+>> This should return error -EINVAL.
 
-This is the most important part in my mind. Every implementation gets
-this code wrong at least initially, and we have to provide some generic
-helper to get the broken code out of host drivers. I don't care whether
-that helper is part of the PCI core or part of the OF core.
+Just read the other thread and Grant Likely suggested the host controller
+driver should be backward compatible [1]. So we can't return -EINVAL here.
+So I'd assume this patch is fine as is? Arnd? Jingoo?
 
-> 7cfde80 arm64: Add architecture support for PCI
-> 
-> What is here is really just a function of which option we pick.
-> 
-> 
-> > First option is ideal but there is work to do as laid out by Arnd here:
-> >
-> > http://article.gmane.org/gmane.linux.kernel/1679304
-> 
-> I don't agree arm32 is harder than microblaze. Yes, converting ALL of
-> arm would be, but that is not necessary. With Liviu's latest branch
-> the hacks I previously needed are gone (thanks!), and this is all I
-> need to get Versatile PCI working (under QEMU):
+[1] -> https://lkml.org/lkml/2014/6/3/124
 
-I meant converting all of arm32 would be harder, but I agree we don't
-have to do it. It would be nice to convert all of the drivers/pci/host
-drivers though, iow all multiplatform-enabled ones, and leaving the
-current arm32 pci implementation for the platforms we don't want to
-convert to multiplatform anyway (footbridge, iop, ixp4xx, ks8695 (?),
-pxa, sa1100).
-
-	Arnd
+Thanks
+Kishon
