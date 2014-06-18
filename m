@@ -1,174 +1,163 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v5 06/15] thunderbolt: Add thunderbolt capability handling
-Date: Tue,  3 Jun 2014 22:04:03 +0200
-Message-Id: <1401825852-4745-7-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
-References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:51577 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752144AbaFRAbf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 20:31:35 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Murali Karicheri' <m-karicheri2@ti.com>
+Cc: 'linux-arm' <linux-arm-kernel@lists.infradead.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	'Santosh Shilimkar' <santosh.shilimkar@ti.com>,
+	'Russell King' <linux@arm.linux.org.uk>,
+	'Grant Likely' <grant.likely@linaro.org>,
+	'Rob Herring' <robh+dt@kernel.org>,
+	'Mohit Kumar' <mohit.kumar@st.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Marek Vasut' <marex@denx.de>, 'Arnd Bergmann' <arnd@arndb.de>,
+	'Pawel Moll' <pawel.moll@arm.com>,
+	'Mark Rutland' <mark.rutland@arm.com>,
+	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
+	'Kumar Gala' <galak@codeaurora.org>,
+	'Randy Dunlap' <rdunlap@infradead.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
+ <CAErSpo6=vi0SR0A3u5BCLgiGxoH48N5R=e8VAnFDG=K61qLxnw@mail.gmail.com>
+In-reply-to: <CAErSpo6=vi0SR0A3u5BCLgiGxoH48N5R=e8VAnFDG=K61qLxnw@mail.gmail.com>
+Subject: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
+Date: Wed, 18 Jun 2014 09:31:31 +0900
+Message-id: <003f01cf8a8c$a6f3be00$f4db3a00$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thunderbolt config areas contain capability lists similar to those found
-on pci devices. This patch introduces a tb_find_cap utility method to
-search for capabilities.
+On Wednesday, June 18, 2014 9:09 AM, Bjorn Helgaas wrote:
+> 
+> On Tue, Jun 10, 2014 at 02:51:19PM -0400, Murali Karicheri wrote:
+> > This patch adds a PCIe controller driver for Keystone SoCs. This
+> > is based on v1 of the series posted to the mailing list.
+> >
+> > CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+> > CC: Russell King <linux@arm.linux.org.uk>
+> > CC: Grant Likely <grant.likely@linaro.org>
+> > CC: Rob Herring <robh+dt@kernel.org>
+> > CC: Mohit Kumar <mohit.kumar@st.com>
+> > CC: Jingoo Han <jg1.han@samsung.com>
+> > CC: Bjorn Helgaas <bhelgaas@google.com>
+> > CC: Pratyush Anand <pratyush.anand@st.com>
+> > CC: Richard Zhu <r65037@freescale.com>
+> > CC: Kishon Vijay Abraham I <kishon@ti.com>
+> > CC: Marek Vasut <marex@denx.de>
+> > CC: Arnd Bergmann <arnd@arndb.de>
+> > CC: Pawel Moll <pawel.moll@arm.com>
+> > CC: Mark Rutland <mark.rutland@arm.com>
+> > CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+> > CC: Kumar Gala <galak@codeaurora.org>
+> > CC: Randy Dunlap <rdunlap@infradead.org>
+> > CC: Grant Likely <grant.likely@linaro.org>
+> >
+> >
+> > Changelog:
+> >
+> > V2
+> >  - Split the designware pcie enhancement patch to multiple
+> >    patches based on functionality added
+> >  - Remove the quirk code and add a patch to fix mps/mrss
+> >    tuning for ARM. Use kernel command line parameter
+> >    pci=pcie_bus_perf to work with Keystone PCI Controller.
+> >    Following patch addressed this.
+> >      [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
+> >  - Add documentation for device tree bindings
+> >  - Add separate interrupt controller nodes for MSI and Legacy
+> >    IRQs and use irq map for legacy IRQ
+> >  - Use compatibility to identify v3.65 version of the DW hardware
+> >    and use it to customize the designware common code.
+> >  - Use reg property for configuration space instead of range
+> >  - Other minor updates based on code inspection.
+> >
+> > V1
+> >  - Add an interrupt controller node for Legacy irq chip and use
+> >    interrupt map/map-mask property to map legacy IRQs A/B/C/D
+> >  - Add a Phy driver to replace the original serdes driver
+> >  - Move common application register handling code to a separate
+> >    file to allow re-use across other platforms that use older
+> >    DW PCIe h/w
+> >  - PCI quirk for maximum read request size. Check and override only
+> >    if the maximum is higher than what controller can handle.
+> >  - Converted to a module platform driver.
+> >
+> >
+> > Murali Karicheri (8):
+> >   PCI: designware: add rd[wr]_other_conf API
+> >   PCI: designware: refactor host init code to re-use on v3.65 DW pci hw
+> >   PCI: designware: update pcie core driver to work with dw hw version
+> >     3.65
+> >   PCI: designware: add msi controller functions for v3.65 hw
+> >   PCI: designware: add PCI controller functions for v3.65 DW hw
+> >   phy: Add serdes phy driver for keystone
+> >   PCI: keystone: add pcie driver based on designware core driver
+> >   ARM: keystone: add pcie related options
+> >
+> >  .../devicetree/bindings/pci/designware-pcie.txt    |   42 ++
+> >  .../devicetree/bindings/pci/pci-keystone.txt       |   56 +++
+> >  .../bindings/phy/phy-keystone-serdes.txt           |   25 ++
+> >  arch/arm/mach-keystone/Kconfig                     |    1 +
+> >  drivers/pci/host/Kconfig                           |   12 +
+> >  drivers/pci/host/Makefile                          |    2 +
+> >  drivers/pci/host/pci-dw-v3_65-msi.c                |  149 +++++++
+> >  drivers/pci/host/pci-dw-v3_65.c                    |  390 ++++++++++++++++++
+> >  drivers/pci/host/pci-dw-v3_65.h                    |   34 ++
+> >  drivers/pci/host/pci-keystone.c                    |  418 ++++++++++++++++++++
+> >  drivers/pci/host/pcie-designware.c                 |  175 +++++---
+> >  drivers/pci/host/pcie-designware.h                 |   42 +-
+> >  drivers/phy/Kconfig                                |    6 +
+> >  drivers/phy/Makefile                               |    1 +
+> >  drivers/phy/phy-keystone-serdes.c                  |  230 +++++++++++
+> >  15 files changed, 1531 insertions(+), 52 deletions(-)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
+> >  create mode 100644 Documentation/devicetree/bindings/phy/phy-keystone-serdes.txt
+> >  create mode 100644 drivers/pci/host/pci-dw-v3_65-msi.c
+> >  create mode 100644 drivers/pci/host/pci-dw-v3_65.c
+> >  create mode 100644 drivers/pci/host/pci-dw-v3_65.h
+> >  create mode 100644 drivers/pci/host/pci-keystone.c
+> >  create mode 100644 drivers/phy/phy-keystone-serdes.c
+> 
+> I'm not willing to merge phy-keystone-serdes.c because I don't
+> maintain drivers/phy and because of the binary blob of register values
+> it contains, but maybe somebody else will.  I assume it could be
+> merged by itself before the rest of this.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/Makefile |   2 +-
- drivers/thunderbolt/cap.c    | 116 +++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.h     |   2 +
- 3 files changed, 119 insertions(+), 1 deletion(-)
- create mode 100644 drivers/thunderbolt/cap.c
+I think so, too.
 
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 4ac18d9..617b314 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
- obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
--thunderbolt-objs := nhi.o ctl.o tb.o switch.o
-+thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o
- 
-diff --git a/drivers/thunderbolt/cap.c b/drivers/thunderbolt/cap.c
-new file mode 100644
-index 0000000..a7b47e7
---- /dev/null
-+++ b/drivers/thunderbolt/cap.c
-@@ -0,0 +1,116 @@
-+/*
-+ * Thunderbolt Cactus Ridge driver - capabilities lookup
-+ *
-+ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-+ */
-+
-+#include <linux/slab.h>
-+#include <linux/errno.h>
-+
-+#include "tb.h"
-+
-+
-+struct tb_cap_any {
-+	union {
-+		struct tb_cap_basic basic;
-+		struct tb_cap_extended_short extended_short;
-+		struct tb_cap_extended_long extended_long;
-+	};
-+} __packed;
-+
-+static bool tb_cap_is_basic(struct tb_cap_any *cap)
-+{
-+	/* basic.cap is u8. This checks only the lower 8 bit of cap. */
-+	return cap->basic.cap != 5;
-+}
-+
-+static bool tb_cap_is_long(struct tb_cap_any *cap)
-+{
-+	return !tb_cap_is_basic(cap)
-+	       && cap->extended_short.next == 0
-+	       && cap->extended_short.length == 0;
-+}
-+
-+static enum tb_cap tb_cap(struct tb_cap_any *cap)
-+{
-+	if (tb_cap_is_basic(cap))
-+		return cap->basic.cap;
-+	else
-+		/* extended_short/long have cap at the same offset. */
-+		return cap->extended_short.cap;
-+}
-+
-+static u32 tb_cap_next(struct tb_cap_any *cap, u32 offset)
-+{
-+	int next;
-+	if (offset == 1) {
-+		/*
-+		 * The first pointer is part of the switch header and always
-+		 * a simple pointer.
-+		 */
-+		next = cap->basic.next;
-+	} else {
-+		/*
-+		 * Somehow Intel decided to use 3 different types of capability
-+		 * headers. It is not like anyone could have predicted that
-+		 * single byte offsets are not enough...
-+		 */
-+		if (tb_cap_is_basic(cap))
-+			next = cap->basic.next;
-+		else if (!tb_cap_is_long(cap))
-+			next = cap->extended_short.next;
-+		else
-+			next = cap->extended_long.next;
-+	}
-+	/*
-+	 * "Hey, we could terminate some capability lists with a null offset
-+	 *  and others with a pointer to the last element." - "Great idea!"
-+	 */
-+	if (next == offset)
-+		return 0;
-+	return next;
-+}
-+
-+/**
-+ * tb_find_cap() - find a capability
-+ *
-+ * Return: Returns a positive offset if the capability was found and 0 if not.
-+ * Returns an error code on failure.
-+ */
-+int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, enum tb_cap cap)
-+{
-+	u32 offset = 1;
-+	struct tb_cap_any header;
-+	int res;
-+	int retries = 10;
-+	while (retries--) {
-+		res = tb_port_read(port, &header, space, offset, 1);
-+		if (res) {
-+			/* Intel needs some help with linked lists. */
-+			if (space == TB_CFG_PORT && offset == 0xa
-+			    && port->config.type == TB_TYPE_DP_HDMI_OUT) {
-+				offset = 0x39;
-+				continue;
-+			}
-+			return res;
-+		}
-+		if (offset != 1) {
-+			if (tb_cap(&header) == cap)
-+				return offset;
-+			if (tb_cap_is_long(&header)) {
-+				/* tb_cap_extended_long is 2 dwords */
-+				res = tb_port_read(port, &header, space,
-+						   offset, 2);
-+				if (res)
-+					return res;
-+			}
-+		}
-+		offset = tb_cap_next(&header, offset);
-+		if (!offset)
-+			return 0;
-+	}
-+	tb_port_WARN(port,
-+		     "run out of retries while looking for cap %#x in config space %d, last offset: %#x\n",
-+		     cap, space, offset);
-+	return -EIO;
-+}
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 389dbb4..38e4c23 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -159,6 +159,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
- void tb_switch_free(struct tb_switch *sw);
- 
-+int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
-+
- 
- static inline int tb_route_length(u64 route)
- {
--- 
-2.0.0
+DT maintainers and arch maintainers should review the following
+dt bindings.
+  .../devicetree/bindings/pci/designware-pcie.txt    |   42 ++
+  .../devicetree/bindings/pci/pci-keystone.txt       |   56 +++
+
+Generic PHY maintainer (Kishon Vijay Abraham I) should review the
+following phy driver.
+  drivers/phy/phy-keystone-serdes.c
+
+> 
+> I'm looking for acks from Mohit and/or Jingoo for the pci/host
+> changes, and from Arnd for the devicetree/bindings changes.
+> 
+> Adding these "-dw-3_64" files is sort of ugly.  If that code is only
+> used by keystone, maybe it could just be moved to pci-keystone.c?  But
+> I'll defer to Mohit and Jingoo on that and the way you modify
+> pcie-designware.c.
+
+I agree with Bjorn Helgaas's opinion. These three "-dw-3_64" files
+look terrible! I don't have a good way to handle this; however,
+moving this code to pci-keystone.c looks better.
+
+Best regards,
+Jingoo Han
+
+> 
+> Bjorn
 
