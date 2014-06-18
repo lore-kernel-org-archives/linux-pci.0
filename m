@@ -1,100 +1,234 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:51333 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753794AbaFSHPM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Jun 2014 03:15:12 -0400
-Message-ID: <53A28DE8.6030105@intel.com>
-Date: Thu, 19 Jun 2014 15:14:48 +0800
-From: "Chen, Tiejun" <tiejun.chen@intel.com>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:34192 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751576AbaFRHP2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 18 Jun 2014 03:15:28 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Murali Karicheri <m-karicheri2@ti.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Cc: Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Date: Wed, 18 Jun 2014 15:13:51 +0800
+Subject: RE: [PATCH v2 3/8] PCI: designware: update pcie core driver to work
+ with dw hw version 3.65
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB6619C5F8168DA@EAPEX1MAIL1.st.com>
+References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
+ <1402426287-31157-4-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1402426287-31157-4-git-send-email-m-karicheri2@ti.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-To: jon.baker@viasat.com, linux-pci@vger.kernel.org
-CC: "Gogineni, Naveen" <Naveen.Gogineni@viasat.com>
-Subject: Re: PCI rescan issue
-References: <53A23DF7.60104@viasat.com>
-In-Reply-To: <53A23DF7.60104@viasat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/6/19 9:33, Jon Baker wrote:
-> I am trying to find a solution to a Linux PCI rescan problem.
->
-> I have CentOS 6.5
->
->     [jbaker@server0 ~]$ uname -a
->     Linux server0 2.6.32-431.5.1.el6.x86_64 #1 SMP Wed Feb 12 00:41:43 
-> UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
->
-> I have an Altera FPGA PCIe protoboard I am trying to test in a TYAN 
-> FT77A-B7059.
->
-> We are trying to solve some hotplug/FPGA reload issues; when we reload 
-> the FPGA the PCI interface reloads confusing linux pci code.
->
-> After bootup the board is seen by the kernel; lscpi shows Altera FPGA 
-> PCIe protoboard settings and config space.  We can load our driver and 
-> all is well.
->
-> When we reload the FPGA lscpi display shows all "ff" for config space.  As
+Hello Murali,
 
-Are you saying all values in the config space are 0xff? If yes, this 
-mean the vendor/device ids are invalid, so I'm just curious how OS 
-identify this device, and you really can see that with lspci?
+> -----Original Message-----
+> From: Murali Karicheri [mailto:m-karicheri2@ti.com]
+> Sent: Wednesday, June 11, 2014 12:21 AM
+> To: linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
+> linux-pci@vger.kernel.org; devicetree@vger.kernel.org; linux-
+> doc@vger.kernel.org
+> Cc: Murali Karicheri; Santosh Shilimkar; Russell King; Grant Likely; Rob Herring;
+> Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Pratyush ANAND; Richard
+> Zhu; Kishon Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll;
+> Mark Rutland; Ian Campbell; Kumar Gala; Randy Dunlap
+> Subject: [PATCH v2 3/8] PCI: designware: update pcie core driver to work
+> with dw hw version 3.65
+> 
+> v3.65 version of the dw hw has MSI controller implemented in the application
+> space. Add a version variable in the port struct to identify v3.65 hardware for
+> different code treatment. This variable will have DW_V3_65 bit set when
+> running on this hw version. The host init code is expected to set this version
+> based on compatibility string dw,snps-pcie-v3.65.
+> 
+> Some of the MSI specific functions from current DW driver are re-used on
+> v3.65 hw. However on v3.65, MSI controller registers are in the application
+> register space and PCIE_MSI_INTR0_ENABLE is not applicable.
+> Modify assign_irq() to check for version and not execute the code for
+> PCIE_MSI_INTR0_ENABLE configuration on v3.65 hw. Additionally MSI IRQ
+> register in application space is written by EP to raise an MSI IRQ. So add a
+> get_msi_data() function in pcie_host_ops to retrieve the register address in
+> dw_msi_setup_irq(). v3.65 dw core driver implements this function.
+> 
+> Also make some of the functions available in dw core driver global and make
+> their prototypes available in the header file for re-use on v3.65.
+> 
 
-Tiejun
+- Pls apply MSI specific changes on the top of Lucas patches:
+[PATCH 0/4] proper multi MSI handling for designware host
 
-> root I tried
->
->     echo 1 > /sys/bus/pci/rescan
->
-> But no change to lspci output.
->
-> I tried some variants
->
->     echo 1 > /sys/bus/pci/devices/0000:8a:00.0/rescan
->
-> no change to lspci output.
->
->     echo 1 > /sys/bus/pci/devices/0000:8a:00.0/remove
->     echo 1 > /sys/bus/pci/rescan
->
-> This removed the device and it did not show up again in lscpi.
->
-> Kernel has PCI HOTPLUG enabled:
->
->     [jbaker@server0 ~]$ cat /boot/config-2.6.32-431.el6.x86_64 | grep 
-> HOTPLUG
->     CONFIG_HOTPLUG=y
->     CONFIG_MEMORY_HOTPLUG=y
->     CONFIG_MEMORY_HOTPLUG_SPARSE=y
->     CONFIG_HOTPLUG_CPU=y
->     CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
->     CONFIG_ACPI_HOTPLUG_CPU=y
->     CONFIG_ACPI_HOTPLUG_MEMORY=y
->     CONFIG_ACPI_HOTPLUG_MEMORY_AUTO_ONLINE=y
->     CONFIG_HOTPLUG_PCI_PCIE=y
->     CONFIG_HOTPLUG_PCI=y
->     CONFIG_HOTPLUG_PCI_FAKE=m
->     CONFIG_HOTPLUG_PCI_ACPI=y
->     CONFIG_HOTPLUG_PCI_ACPI_IBM=m
->     # CONFIG_HOTPLUG_PCI_CPCI is not set
->     CONFIG_HOTPLUG_PCI_SHPC=m
->     [jbaker@server0 ~]$
->
-> The kernel has pciehp module loaded, I see pciehp messages in 
-> /var/log/messages.
->
-> In other distros, on other platforms, echo 1 > /sys/bus/pci/rescan has 
-> worked but does not appear to work here for CentOS 6.5 on this hardware.
->
-> This problem is much discussed on the web but I have yet to see a 
-> solution discussed. I am thinking the 2.6.32-431.5.1.el6.x86_64 kernel 
-> may require a patch(es).  The rescan may not be resetting the PCIe card?
->
-> Any ideas how to get rescan to work?
->
-> Thank you,
->
-> Jon Baker
->
+Thanks
+Mohit
+
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> 
+> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+> CC: Russell King <linux@arm.linux.org.uk>
+> CC: Grant Likely <grant.likely@linaro.org>
+> CC: Rob Herring <robh+dt@kernel.org>
+> CC: Mohit Kumar <mohit.kumar@st.com>
+> CC: Jingoo Han <jg1.han@samsung.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Pratyush Anand <pratyush.anand@st.com>
+> CC: Richard Zhu <r65037@freescale.com>
+> CC: Kishon Vijay Abraham I <kishon@ti.com>
+> CC: Marek Vasut <marex@denx.de>
+> CC: Arnd Bergmann <arnd@arndb.de>
+> CC: Pawel Moll <pawel.moll@arm.com>
+> CC: Mark Rutland <mark.rutland@arm.com>
+> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+> CC: Kumar Gala <galak@codeaurora.org>
+> CC: Randy Dunlap <rdunlap@infradead.org>
+> CC: Grant Likely <grant.likely@linaro.org>
+> 
+> ---
+>  drivers/pci/host/pcie-designware.c |   27 +++++++++++++++++----------
+>  drivers/pci/host/pcie-designware.h |   16 ++++++++++++++++
+>  2 files changed, 33 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
+> designware.c
+> index e4bd19a..f985811 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -277,11 +277,15 @@ static int assign_irq(int no_irqs, struct msi_desc
+> *desc, int *pos)
+>  		}
+>  		set_bit(pos0 + i, pp->msi_irq_in_use);
+>  		/*Enable corresponding interrupt in MSI interrupt controller
+> */
+> -		res = ((pos0 + i) / 32) * 12;
+> -		bit = (pos0 + i) % 32;
+> -		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
+> 4, &val);
+> -		val |= 1 << bit;
+> -		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
+> 4, val);
+> +		if (!(pp->version & DW_V3_65)) {
+> +			res = ((pos0 + i) / 32) * 12;
+> +			bit = (pos0 + i) % 32;
+> +			dw_pcie_rd_own_conf(pp,
+> PCIE_MSI_INTR0_ENABLE + res,
+> +					    4, &val);
+> +			val |= 1 << bit;
+> +			dw_pcie_wr_own_conf(pp,
+> PCIE_MSI_INTR0_ENABLE + res,
+> +					    4, val);
+> +		}
+>  	}
+> 
+>  	*pos = pos0;
+> @@ -349,7 +353,10 @@ static int dw_msi_setup_irq(struct msi_chip *chip,
+> struct pci_dev *pdev,
+>  	 */
+>  	desc->msi_attrib.multiple = msgvec;
+> 
+> -	msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> +	if (pp->ops->get_msi_data)
+> +		msg.address_lo = pp->ops->get_msi_data(pp);
+> +	else
+> +		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+>  	msg.address_hi = 0x0;
+>  	msg.data = pos;
+>  	write_msi_msg(irq, &msg);
+> @@ -768,7 +775,7 @@ static struct pci_ops dw_pcie_ops = {
+>  	.write = dw_pcie_wr_conf,
+>  };
+> 
+> -static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> +int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+>  {
+>  	struct pcie_port *pp;
+> 
+> @@ -791,7 +798,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data
+> *sys)
+>  	return 1;
+>  }
+> 
+> -static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> +struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>  {
+>  	struct pci_bus *bus;
+>  	struct pcie_port *pp = sys_to_pcie(sys); @@ -808,7 +815,7 @@ static
+> struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>  	return bus;
+>  }
+> 
+> -static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+> +int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+>  {
+>  	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
+>  	int irq;
+> @@ -820,7 +827,7 @@ static int dw_pcie_map_irq(const struct pci_dev
+> *dev, u8 slot, u8 pin)
+>  	return irq;
+>  }
+> 
+> -static void dw_pcie_add_bus(struct pci_bus *bus)
+> +void dw_pcie_add_bus(struct pci_bus *bus)
+>  {
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>  		struct pcie_port *pp = sys_to_pcie(bus->sysdata); diff --git
+> a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index 2d6dd66..3a6a6eb 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -39,6 +39,12 @@ struct pcie_port {
+>  	void __iomem		*va_cfg0_base;
+>  	u64			cfg1_base;
+>  	void __iomem		*va_cfg1_base;
+> +	/*
+> +	 * v3.65 DW hw implements application register space for
+> +	 * MSI and has no ATU view port
+> +	 */
+> +#define DW_V3_65		BIT(0)
+> +	u32			version;
+>  	u64			io_base;
+>  	u64			mem_base;
+>  	spinlock_t		conf_lock;
+> @@ -68,6 +74,7 @@ struct pcie_host_ops {
+>  			unsigned int devfn, int where, int size, u32 val);
+>  	int (*link_up)(struct pcie_port *pp);
+>  	void (*host_init)(struct pcie_port *pp);
+> +	u32 (*get_msi_data)(struct pcie_port *pp);
+>  };
+> 
+>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+> @@ -77,5 +84,14 @@ void dw_pcie_msi_init(struct pcie_port *pp);  int
+> dw_pcie_link_up(struct pcie_port *pp);  void dw_pcie_setup_rc(struct
+> pcie_port *pp);  int dw_pcie_host_init(struct pcie_port *pp);
+> +int dw_pcie_setup(int nr, struct pci_sys_data *sys); struct pci_bus
+> +*dw_pcie_scan_bus(int nr, struct pci_sys_data *sys); void
+> +dw_pcie_add_bus(struct pci_bus *bus); int
+> dw_pcie_parse_resource(struct
+> +pcie_port *pp);
+> 
+> +/* internal to DW common core driver */ int
+> +dw_pcie_common_host_init(struct pcie_port *pp, struct hw_pci *hw); int
+> +dw_pcie_msi_host_init(struct pcie_port *pp, struct device_node *np,
+> +			const struct irq_domain_ops *irq_ops); int
+> dw_pcie_map_irq(const
+> +struct pci_dev *dev, u8 slot, u8 pin);
+>  #endif /* _PCIE_DESIGNWARE_H */
+> --
+> 1.7.9.5
 
