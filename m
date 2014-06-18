@@ -1,206 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hygieia.santi-shop.eu ([78.46.175.2]:45874 "EHLO
-	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751211AbaFXWzF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 18:55:05 -0400
-Date: Wed, 25 Jun 2014 00:55:01 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>,
-	Matthew Garrett <matthew.garrett@nebula.com>
-Subject: [PATCH 1/2 v2] x86, ia64: Move EFI_FB vga_default_device()
- initialization to pci_vga_fixup()
-Message-ID: <20140625005501.7ff7e982@neptune.home>
-In-Reply-To: <20140602201926.4d476818@neptune.home>
-References: <20140514224339.7f8be3a9@neptune.home>
-	<20140527234255.GJ11907@google.com>
-	<20140602201650.35f0e936@neptune.home>
-	<20140602201926.4d476818@neptune.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Simone Gotti <simone.gotti@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Narendra_K@Dell.com
+Subject: [PATCH 0/1] ACPI / PCI:  Fix "Operation not permitted" error reading sysfs acpi_index and label files.
+Date: Wed, 18 Jun 2014 16:51:16 +0200
+Message-Id: <1403103077-17589-1-git-send-email-simone.gotti@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With commit b4aa0163056b ("efifb: Implement vga_default_device() (v2)")
-Matthew Garrett introduced a efifb vga_default_device() so that EFI
-systems that do not load shadow VBIOS or setup VGA get proper value for
-boot_vga PCI sysfs attribute on the corresponding PCI device.
+Hi everyone,
 
-Xorg is refusing to detect devices when boot_vga=0 which is the case on
-some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
-the dri device but then bails out with "no devices detected".
+starting from kernel 3.14 I noticed that the on board interfaces names on a Dell
+PowerEdge E420 where renamed (by udev net_id internal) from eno1/eno2 to
+enp2s0f0/enp2s0f1.
 
-Note: When vga_default_device() is set boot_vga PCI sysfs attribute
-reflects its state. When unset this attribute is 1 whenever
-IORESOURCE_ROM_SHADOW flag is set.
+The root cause is that reading from the exported sysfs informations (acpi_index
+and label) from drivers/pci/pci-label.c returns an "Operation not permitted"
+error.
 
-With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
-while having native drivers for the GPU also makes selecting
-sysfb/efifb optional.
+This machine supports PCI firmware specification 3.1 so the acpi methods are
+preferred over the smbios one.
 
-Remove the efifb implementation of vga_default_device() and initialize
-vgaarb's vga_default_device() with the PCI GPU that matches boot
-screen_info in pci_fixup_video().
+Debugging the problem I noticed that the call to the _DSM method returned the
+second element with ACPI_TYPE_BUFFER type instead of ACPI_TYPE_STRING as
+expected. The commit that forced this check is:
 
-Tested-by: Anibal Francisco Martinez Cortina <linuxkid.zeuz@gmail.com>
-Cc: Matthew Garrett <matthew.garrett@nebula.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
----
+commit 1d0fcef732832432aee47cb75bf4a2cb3107be64 Author: Jiang Liu
+<jiang.liu@linux.intel.com> Date:   Thu Dec 19 20:38:13 2013 +0800
 
-Changes since v1:
-  Added Tested-by, Cc
+    ACPI / PCI: replace open-coded _DSM code with helper functions
 
- arch/ia64/pci/fixup.c       | 21 +++++++++++++++++++++
- arch/x86/include/asm/vga.h  |  6 ------
- arch/x86/pci/fixup.c        | 21 +++++++++++++++++++++
- drivers/video/fbdev/efifb.c | 38 --------------------------------------
- 4 files changed, 42 insertions(+), 44 deletions(-)
+Previously the elements' types weren't checked and an ACPI_TYPE_BUFFER for the
+second element was accepted.
 
-diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
-index eee069a..9ed5bef 100644
---- a/arch/ia64/pci/fixup.c
-+++ b/arch/ia64/pci/fixup.c
-@@ -37,6 +37,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 		return;
- 	/* Maybe, this machine supports legacy memory map. */
- 
-+	if (!vga_default_device()) {
-+		resource_size_t start, end;
-+		int i;
-+
-+		/* Does firmware framebuffer belong to us? */
-+		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-+			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-+				continue;
-+
-+			start = pci_resource_start(pdev, i);
-+			end  = pci_resource_end(pdev, i);
-+
-+			if (!start || !end)
-+				continue;
-+
-+			if (screen_info.lfb_base >= start &&
-+				(screen_info.lfb_base + screen_info.lfb_size) < end)
-+				vga_set_default_device(pdev);
-+		}
-+	}
-+
- 	/* Is VGA routed to us? */
- 	bus = pdev->bus;
- 	while (bus) {
-diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
-index 44282fb..c4b9dc2 100644
---- a/arch/x86/include/asm/vga.h
-+++ b/arch/x86/include/asm/vga.h
-@@ -17,10 +17,4 @@
- #define vga_readb(x) (*(x))
- #define vga_writeb(x, y) (*(y) = (x))
- 
--#ifdef CONFIG_FB_EFI
--#define __ARCH_HAS_VGA_DEFAULT_DEVICE
--extern struct pci_dev *vga_default_device(void);
--extern void vga_set_default_device(struct pci_dev *pdev);
--#endif
--
- #endif /* _ASM_X86_VGA_H */
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 94ae9ae..7246cf2 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -325,6 +325,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 	struct pci_bus *bus;
- 	u16 config;
- 
-+	if (!vga_default_device()) {
-+		resource_size_t start, end;
-+		int i;
-+
-+		/* Does firmware framebuffer belong to us? */
-+		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-+			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-+				continue;
-+
-+			start = pci_resource_start(pdev, i);
-+			end  = pci_resource_end(pdev, i);
-+
-+			if (!start || !end)
-+				continue;
-+
-+			if (screen_info.lfb_base >= start &&
-+				(screen_info.lfb_base + screen_info.lfb_size) < end)
-+				vga_set_default_device(pdev);
-+		}
-+	}
-+
- 	/* Is VGA routed to us? */
- 	bus = pdev->bus;
- 	while (bus) {
-diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-index ae9618f..a033180 100644
---- a/drivers/video/fbdev/efifb.c
-+++ b/drivers/video/fbdev/efifb.c
-@@ -19,8 +19,6 @@
- 
- static bool request_mem_succeeded = false;
- 
--static struct pci_dev *default_vga;
--
- static struct fb_var_screeninfo efifb_defined = {
- 	.activate		= FB_ACTIVATE_NOW,
- 	.height			= -1,
-@@ -84,18 +82,6 @@ static struct fb_ops efifb_ops = {
- 	.fb_imageblit	= cfb_imageblit,
- };
- 
--struct pci_dev *vga_default_device(void)
--{
--	return default_vga;
--}
--
--EXPORT_SYMBOL_GPL(vga_default_device);
--
--void vga_set_default_device(struct pci_dev *pdev)
--{
--	default_vga = pdev;
--}
--
- static int efifb_setup(char *options)
- {
- 	char *this_opt;
-@@ -126,30 +112,6 @@ static int efifb_setup(char *options)
- 		}
- 	}
- 
--	for_each_pci_dev(dev) {
--		int i;
--
--		if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
--			continue;
--
--		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
--			resource_size_t start, end;
--
--			if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
--				continue;
--
--			start = pci_resource_start(dev, i);
--			end  = pci_resource_end(dev, i);
--
--			if (!start || !end)
--				continue;
--
--			if (screen_info.lfb_base >= start &&
--			    (screen_info.lfb_base + screen_info.lfb_size) < end)
--				default_vga = dev;
--		}
--	}
--
- 	return 0;
- }
- 
+The disassembled _DSM acpi method uses the ASL Unicode() macro that returns an
+unicode string contained in a buffer.
+
+Additionaly I noticed that an ascii string (as it should be the one of type
+ACPI_TYPE_STRING) will be wrongly converted to utf8 from
+dsm_label_utf16s_to_utf8s as it expects an utf16 string (I reproduced this
+problem with a modified DSDT that returned an acpi string as label).
+
+I don't have the PCI firmware specification so I don't know if an Unicode string
+is correct or the bios is not compliant but I'm assuming this is possible. If
+so, the following patch tries to fix this.
+
+
+Thanks a lot.
+
+
+Simone Gotti (1):
+  Fix "Operation not permitted" error reading sysfs acpi_index and label
+    files.
+
+ drivers/pci/pci-label.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
+
 -- 
-1.8.5.5
+2.0.0
 
