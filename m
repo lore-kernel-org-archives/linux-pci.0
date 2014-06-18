@@ -1,81 +1,224 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24236 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756041AbaFXQxP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Jun 2014 12:53:15 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>,
-	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [RFC PATCH] Let device drivers disable msi on shutdown
-Date: Tue, 24 Jun 2014 10:48:57 -0600
-Message-Id: <1403628537-16367-1-git-send-email-keith.busch@intel.com>
+Received: from smtprelay.restena.lu ([158.64.1.62]:53812 "EHLO
+	smtprelay.restena.lu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964909AbaFRGTS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jun 2014 02:19:18 -0400
+Date: Wed, 18 Jun 2014 08:09:16 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@linux.ie>
+Subject: Re: [PATCH 1/2] x86, ia64: Move EFI_FB vga_default_device()
+ initialization to pci_vga_fixup()
+Message-ID: <20140618080916.47a46ddf@pluto>
+In-Reply-To: <20140617223542.GD30559@google.com>
+References: <20140514224339.7f8be3a9@neptune.home>
+	<20140527234255.GJ11907@google.com>
+	<20140602201650.35f0e936@neptune.home>
+	<20140602201926.4d476818@neptune.home>
+	<20140617223542.GD30559@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'd like to do shutdowns asynchronously so I can shutdown multiple
-devices in parallel, but the pci-driver disables interrupts after my
-driver returns from its '.shutdown', though it needs to rely on these
-interrupts in its asynchronously scheduled shutdown.
+On Tue, 17 Jun 2014 16:35:42 -0600 Bjorn Helgaas wrote:
+> On Mon, Jun 02, 2014 at 08:19:26PM +0200, Bruno Prémont wrote:
+> > With commit b4aa0163056b ("efifb: Implement vga_default_device() (v2)")
+> > Matthew Garrett introduced a efifb vga_default_device() so that EFI
+> > systems that do not load shadow VBIOS or setup VGA get proper value for
+> > boot_vga PCI sysfs attribute on the corresponding PCI device.
+> > 
+> > Xorg is refusing to detect devices when boot_vga=0 which is the case on
+> > some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
+> > the dri device but then bails out with "no devices detected".
+> > 
+> > Note: When vga_default_device() is set boot_vga PCI sysfs attribute
+> > reflects its state. When unset this attribute is 1 whenever
+> > IORESOURCE_ROM_SHADOW flag is set.
+> > 
+> > With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
+> > while having native drivers for the GPU also makes selecting
+> > sysfb/efifb optional.
+> > 
+> > Remove the efifb implementation of vga_default_device() and initialize
+> > vgaarb's vga_default_device() with the PCI GPU that matches boot
+> > screen_info in pci_fixup_video().
+> > 
+> > Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
+> > ---
+> >  arch/ia64/pci/fixup.c       | 21 +++++++++++++++++++++
+> >  arch/x86/include/asm/vga.h  |  6 ------
+> >  arch/x86/pci/fixup.c        | 21 +++++++++++++++++++++
+> >  drivers/video/fbdev/efifb.c | 38 --------------------------------------
+> >  4 files changed, 42 insertions(+), 44 deletions(-)
+> 
+> Something went wrong here.  It seems like the [2/2] patch should have
+> been [1/2], and this one should be [2/2].  And this one modifies both
+> arch/ia64/pci/fixup.c and arch/x86/pci/fixup.c, but the other patch
+> mostly combines them, so I don't see how this one applies.
 
-I tracked the reason for pci disabling msi to ...
+I ordered both patches the other way around from your explicit ordering
+proposal following the stable kernel suggestion following it.
 
-| commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
-| Author: Yinghai Lu <yhlu.kernel.send@gmail.com>
-| Date:   Wed Apr 23 14:58:09 2008 -0700
-|
-|     pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
+My patch 1/2 fixes the encountered issue and is the one that may go
+stable while my patch 2/2 performs unification of common code.
+The unification will need to be placed somewhere else than in vgaarb.c
+if one wants to keep current fixup working with CONFIG_VGA_ARB=n.
 
-... because mptfusion doesn't disable msi in its shutdown path.
+> And there were unrelated (trivial) changes to these files, so they
+> need to be rebased to v3.16-rc1.  I'd take care of the rebase, but
+> I don't understand the other stuff I mentioned.
 
-Any reason we can't let the drivers do this instead?
+Ok
 
-To provide context why I want to do this asynchronously, NVM-Express has
-one PCI device per controller, of which there could be dozens in a system,
-and each one may take many seconds (I've heard over ten in some cases)
-to safely shutdown.
+Bruno
 
-In this patch, mptfusion was compile tested only; I didn't observe any
-adverse affects from running the pci portion.
-
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/message/fusion/mptscsih.c |    3 +++
- drivers/pci/pci-driver.c          |    2 --
- 2 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 2a1c6f2..3186e17 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -1215,6 +1215,9 @@ mptscsih_remove(struct pci_dev *pdev)
- void
- mptscsih_shutdown(struct pci_dev *pdev)
- {
-+	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
-+	if (ioc->msi_enable)
-+		pci_disable_msi(pdev);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 3f8e3db..8079d98 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -453,8 +453,6 @@ static void pci_device_shutdown(struct device *dev)
- 
- 	if (drv && drv->shutdown)
- 		drv->shutdown(pci_dev);
--	pci_msi_shutdown(pci_dev);
--	pci_msix_shutdown(pci_dev);
- 
- #ifdef CONFIG_KEXEC
- 	/*
--- 
-1.7.10.4
-
+> Bjorn
+> 
+> > diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
+> > index eee069a..9ed5bef 100644
+> > --- a/arch/ia64/pci/fixup.c
+> > +++ b/arch/ia64/pci/fixup.c
+> > @@ -37,6 +37,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
+> >  		return;
+> >  	/* Maybe, this machine supports legacy memory map. */
+> >  
+> > +	if (!vga_default_device()) {
+> > +		resource_size_t start, end;
+> > +		int i;
+> > +
+> > +		/* Does firmware framebuffer belong to us? */
+> > +		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+> > +			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
+> > +				continue;
+> > +
+> > +			start = pci_resource_start(pdev, i);
+> > +			end  = pci_resource_end(pdev, i);
+> > +
+> > +			if (!start || !end)
+> > +				continue;
+> > +
+> > +			if (screen_info.lfb_base >= start &&
+> > +				(screen_info.lfb_base + screen_info.lfb_size) < end)
+> > +				vga_set_default_device(pdev);
+> > +		}
+> > +	}
+> > +
+> >  	/* Is VGA routed to us? */
+> >  	bus = pdev->bus;
+> >  	while (bus) {
+> > diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
+> > index 44282fb..c4b9dc2 100644
+> > --- a/arch/x86/include/asm/vga.h
+> > +++ b/arch/x86/include/asm/vga.h
+> > @@ -17,10 +17,4 @@
+> >  #define vga_readb(x) (*(x))
+> >  #define vga_writeb(x, y) (*(y) = (x))
+> >  
+> > -#ifdef CONFIG_FB_EFI
+> > -#define __ARCH_HAS_VGA_DEFAULT_DEVICE
+> > -extern struct pci_dev *vga_default_device(void);
+> > -extern void vga_set_default_device(struct pci_dev *pdev);
+> > -#endif
+> > -
+> >  #endif /* _ASM_X86_VGA_H */
+> > diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> > index 94ae9ae..7246cf2 100644
+> > --- a/arch/x86/pci/fixup.c
+> > +++ b/arch/x86/pci/fixup.c
+> > @@ -325,6 +325,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
+> >  	struct pci_bus *bus;
+> >  	u16 config;
+> >  
+> > +	if (!vga_default_device()) {
+> > +		resource_size_t start, end;
+> > +		int i;
+> > +
+> > +		/* Does firmware framebuffer belong to us? */
+> > +		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+> > +			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
+> > +				continue;
+> > +
+> > +			start = pci_resource_start(pdev, i);
+> > +			end  = pci_resource_end(pdev, i);
+> > +
+> > +			if (!start || !end)
+> > +				continue;
+> > +
+> > +			if (screen_info.lfb_base >= start &&
+> > +				(screen_info.lfb_base + screen_info.lfb_size) < end)
+> > +				vga_set_default_device(pdev);
+> > +		}
+> > +	}
+> > +
+> >  	/* Is VGA routed to us? */
+> >  	bus = pdev->bus;
+> >  	while (bus) {
+> > diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+> > index ae9618f..a033180 100644
+> > --- a/drivers/video/fbdev/efifb.c
+> > +++ b/drivers/video/fbdev/efifb.c
+> > @@ -19,8 +19,6 @@
+> >  
+> >  static bool request_mem_succeeded = false;
+> >  
+> > -static struct pci_dev *default_vga;
+> > -
+> >  static struct fb_var_screeninfo efifb_defined = {
+> >  	.activate		= FB_ACTIVATE_NOW,
+> >  	.height			= -1,
+> > @@ -84,18 +82,6 @@ static struct fb_ops efifb_ops = {
+> >  	.fb_imageblit	= cfb_imageblit,
+> >  };
+> >  
+> > -struct pci_dev *vga_default_device(void)
+> > -{
+> > -	return default_vga;
+> > -}
+> > -
+> > -EXPORT_SYMBOL_GPL(vga_default_device);
+> > -
+> > -void vga_set_default_device(struct pci_dev *pdev)
+> > -{
+> > -	default_vga = pdev;
+> > -}
+> > -
+> >  static int efifb_setup(char *options)
+> >  {
+> >  	char *this_opt;
+> > @@ -126,30 +112,6 @@ static int efifb_setup(char *options)
+> >  		}
+> >  	}
+> >  
+> > -	for_each_pci_dev(dev) {
+> > -		int i;
+> > -
+> > -		if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
+> > -			continue;
+> > -
+> > -		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+> > -			resource_size_t start, end;
+> > -
+> > -			if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
+> > -				continue;
+> > -
+> > -			start = pci_resource_start(dev, i);
+> > -			end  = pci_resource_end(dev, i);
+> > -
+> > -			if (!start || !end)
+> > -				continue;
+> > -
+> > -			if (screen_info.lfb_base >= start &&
+> > -			    (screen_info.lfb_base + screen_info.lfb_size) < end)
+> > -				default_vga = dev;
+> > -		}
+> > -	}
+> > -
+> >  	return 0;
+> >  }
+> >  
+> > -- 
+> > 1.8.5.5
+> > 
