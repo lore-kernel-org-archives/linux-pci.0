@@ -1,207 +1,99 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch V3 04/16] x86, PCI, ACPI: Kill private function resource_to_addr()
-Date: Wed, 25 Jun 2014 16:40:35 +0800
-Message-Id: <1403685648-10103-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:44892 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750708AbaFSEZ7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 00:25:59 -0400
+Message-ID: <53A2664B.3040300@huawei.com>
+Date: Thu, 19 Jun 2014 12:25:47 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: <jon.baker@viasat.com>, <linux-pci@vger.kernel.org>
+CC: "Gogineni, Naveen" <Naveen.Gogineni@viasat.com>
+Subject: Re: PCI rescan issue
+References: <53A23DF7.60104@viasat.com>
+In-Reply-To: <53A23DF7.60104@viasat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace private function resource_to_addr() to parse ACPI resources for
-PCI host bridge with public ACPI resource interfaces.
+On 2014/6/19 9:33, Jon Baker wrote:
+> I am trying to find a solution to a Linux PCI rescan problem.
+> 
+> I have CentOS 6.5
+> 
+>     [jbaker@server0 ~]$ uname -a
+>     Linux server0 2.6.32-431.5.1.el6.x86_64 #1 SMP Wed Feb 12 00:41:43 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/acpi.c |  142 ++++++++++++++++++---------------------------------
- 1 file changed, 51 insertions(+), 91 deletions(-)
+Can you test it in the latest kernel?
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index cfd1b132b8e3..0e716fa56ae5 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -218,114 +218,74 @@ static void teardown_mcfg_map(struct pci_root_info *info)
- }
- #endif
- 
--static acpi_status resource_to_addr(struct acpi_resource *resource,
--				    struct acpi_resource_address64 *addr)
--{
--	acpi_status status;
--	struct acpi_resource_memory24 *memory24;
--	struct acpi_resource_memory32 *memory32;
--	struct acpi_resource_fixed_memory32 *fixed_memory32;
--
--	memset(addr, 0, sizeof(*addr));
--	switch (resource->type) {
--	case ACPI_RESOURCE_TYPE_MEMORY24:
--		memory24 = &resource->data.memory24;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory24->minimum;
--		addr->address_length = memory24->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_MEMORY32:
--		memory32 = &resource->data.memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory32->minimum;
--		addr->address_length = memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
--		fixed_memory32 = &resource->data.fixed_memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = fixed_memory32->address;
--		addr->address_length = fixed_memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_ADDRESS16:
--	case ACPI_RESOURCE_TYPE_ADDRESS32:
--	case ACPI_RESOURCE_TYPE_ADDRESS64:
--		status = acpi_resource_to_address64(resource, addr);
--		if (ACPI_SUCCESS(status) &&
--		    (addr->resource_type == ACPI_MEMORY_RANGE ||
--		    addr->resource_type == ACPI_IO_RANGE) &&
--		    addr->address_length > 0) {
--			return AE_OK;
--		}
--		break;
--	}
--	return AE_ERROR;
--}
--
- static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
-+	struct resource r = {
-+		.flags = 0
-+	};
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (ACPI_SUCCESS(status))
-+	if (!acpi_dev_resource_memory(acpi_res, &r) &&
-+	    !acpi_dev_resource_address_space(acpi_res, &r))
-+		return AE_OK;
-+
-+	if ((r.flags & (IORESOURCE_IO | IORESOURCE_MEM)) && resource_size(&r))
- 		info->res_num++;
-+
- 	return AE_OK;
- }
- 
- static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct resource *res;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
--	unsigned long flags;
--	u64 start, orig_end, end;
-+	struct resource *res = &info->res[info->res_num];
-+	u64 translation_offset = 0;
-+
-+	memset(res, 0, sizeof(*res));
-+	if (acpi_dev_resource_memory(acpi_res, res)) {
-+		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+	} else if (acpi_dev_resource_address_space(acpi_res, res)) {
-+		u64 orig_end;
-+		struct acpi_resource_address64 addr;
-+
-+		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+		if (res->flags == 0)
-+			return AE_OK;
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (!ACPI_SUCCESS(status))
--		return AE_OK;
-+		if (ACPI_FAILURE(acpi_resource_to_address64(acpi_res, &addr)))
-+			return AE_OK;
- 
--	if (addr.resource_type == ACPI_MEMORY_RANGE) {
--		flags = IORESOURCE_MEM;
--		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
--			flags |= IORESOURCE_PREFETCH;
--	} else if (addr.resource_type == ACPI_IO_RANGE) {
--		flags = IORESOURCE_IO;
--	} else
--		return AE_OK;
-+		if (addr.resource_type == ACPI_MEMORY_RANGE &&
-+		    addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
-+			res->flags |= IORESOURCE_PREFETCH;
- 
--	start = addr.minimum + addr.translation_offset;
--	orig_end = end = addr.maximum + addr.translation_offset;
-+		translation_offset = addr.translation_offset;
-+		orig_end = res->end;
-+		res->start += translation_offset;
-+		res->end += translation_offset;
- 
--	/* Exclude non-addressable range or non-addressable portion of range */
--	end = min(end, (u64)iomem_resource.end);
--	if (end <= start) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"(ignored, not CPU addressable)\n", start, orig_end);
--		return AE_OK;
--	} else if (orig_end != end) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
--			start, orig_end, end + 1, orig_end);
-+		/* Exclude non-addressable range or non-addressable portion of range */
-+		res->end = min(res->end, (u64)iomem_resource.end);
-+		if (res->end <= res->start) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] (ignored, not CPU addressable)\n",
-+				 res->start, orig_end);
-+			return AE_OK;
-+		} else if (orig_end != res->end) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] ([%#llx-%#llx] ignored, not CPU addressable)\n",
-+				res->start, orig_end, res->end + 1, orig_end);
-+		}
- 	}
- 
--	res = &info->res[info->res_num];
--	res->name = info->name;
--	res->flags = flags;
--	res->start = start;
--	res->end = end;
--	info->res_offset[info->res_num] = addr.translation_offset;
--	info->res_num++;
--
--	if (!pci_use_crs)
--		dev_printk(KERN_DEBUG, &info->bridge->dev,
--			   "host bridge window %pR (ignored)\n", res);
-+	if (res->flags && resource_size(res)) {
-+		res->name = info->name;
-+		info->res_offset[info->res_num] = translation_offset;
-+		info->res_num++;
-+		if (!pci_use_crs)
-+			dev_printk(KERN_DEBUG, &info->bridge->dev,
-+				   "host bridge window %pR (ignored)\n", res);
-+	}
- 
- 	return AE_OK;
- }
+> 
+> I have an Altera FPGA PCIe protoboard I am trying to test in a TYAN FT77A-B7059.
+> 
+> We are trying to solve some hotplug/FPGA reload issues; when we reload the FPGA the PCI interface reloads confusing linux pci code.
+> 
+> After bootup the board is seen by the kernel; lscpi shows Altera FPGA PCIe protoboard settings and config space.  We can load our driver and all is well.
+> 
+> When we reload the FPGA lscpi display shows all "ff" for config space.  As root I tried
+
+What happened during you reload the FPGA? reset PCI device or other anything?
+
+> 
+>     echo 1 > /sys/bus/pci/rescan
+> 
+> But no change to lspci output.
+> 
+> I tried some variants
+> 
+>     echo 1 > /sys/bus/pci/devices/0000:8a:00.0/rescan
+> 
+> no change to lspci output.
+> 
+>     echo 1 > /sys/bus/pci/devices/0000:8a:00.0/remove
+>     echo 1 > /sys/bus/pci/rescan
+
+I guess the device link to your board was disconnect. Maybe the power to device is off or link error. So OS
+can not access pci device config space and return nothing found.
+
+If you provide more detailed info is better. like lspci -vvvxxx, dmesg etc. before and after your operations.
+
+> 
+> This removed the device and it did not show up again in lscpi.
+> 
+> Kernel has PCI HOTPLUG enabled:
+> 
+>     [jbaker@server0 ~]$ cat /boot/config-2.6.32-431.el6.x86_64 | grep HOTPLUG
+>     CONFIG_HOTPLUG=y
+>     CONFIG_MEMORY_HOTPLUG=y
+>     CONFIG_MEMORY_HOTPLUG_SPARSE=y
+>     CONFIG_HOTPLUG_CPU=y
+>     CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
+>     CONFIG_ACPI_HOTPLUG_CPU=y
+>     CONFIG_ACPI_HOTPLUG_MEMORY=y
+>     CONFIG_ACPI_HOTPLUG_MEMORY_AUTO_ONLINE=y
+>     CONFIG_HOTPLUG_PCI_PCIE=y
+>     CONFIG_HOTPLUG_PCI=y
+>     CONFIG_HOTPLUG_PCI_FAKE=m
+>     CONFIG_HOTPLUG_PCI_ACPI=y
+>     CONFIG_HOTPLUG_PCI_ACPI_IBM=m
+>     # CONFIG_HOTPLUG_PCI_CPCI is not set
+>     CONFIG_HOTPLUG_PCI_SHPC=m
+>     [jbaker@server0 ~]$
+> 
+> The kernel has pciehp module loaded, I see pciehp messages in /var/log/messages.
+> 
+> In other distros, on other platforms, echo 1 > /sys/bus/pci/rescan has worked but does not appear to work here for CentOS 6.5 on this hardware.
+> 
+> This problem is much discussed on the web but I have yet to see a solution discussed. I am thinking the 2.6.32-431.5.1.el6.x86_64 kernel may require a patch(es).  The rescan may not be resetting the PCIe card?
+> 
+> Any ideas how to get rescan to work?
+> 
+> Thank you,
+> 
+> Jon Baker
+> 
+
+
 -- 
-1.7.10.4
+Thanks!
+Yijing
 
