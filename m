@@ -1,188 +1,134 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1986515.ZPZrccsmiq@vostro.rjw.lan>
-References: <1986515.ZPZrccsmiq@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 10 Jun 2014 20:29:15 -0600
-Message-ID: <CAErSpo5rpdb985tS91BOEGJePwU3OSzKp_KgrrZfRqaxKBgPMw@mail.gmail.com>
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Add hotplug contexts to PCI host bridges
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Date: Thu, 19 Jun 2014 15:46:56 +0200
+Message-ID: <CAJZ5v0hH13nA1Qq5BYA+N5D0OBGozvNgiEGi4u8_-5i=vdjkPg@mail.gmail.com>
+Subject: [GIT PULL] ACPI and power management updates for v3.16-rc2
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
 	Linux PCI <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 2:51 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> After relatively recent changes in the ACPI-based PCI hotplug
-> (ACPIPHP) code, the acpiphp_check_host_bridge() executed for PCI
-> host bridges via acpi_pci_root_scan_dependent() doesn't do anything
-> useful, because those bridges do not have hotplug contexts.  That
-> happens by mistake, so fix it by making acpiphp_enumerate_slots()
-> add hotplug contexts to PCI host bridges too and modify
-> acpiphp_remove_slots() to drop those contexts for host bridges
-> as appropriate.
->
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=76901
-> Fixes: 2d8b1d566a5f (ACPI / hotplug / PCI: Get rid of check_sub_bridges())
-> Reported-and-tested-by: Gavin Guo <gavin.guo@canonical.com>
-> Cc: 3.15+ <stable@vger.kernel.org> # 3.15+
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Linus,
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Please pull from
 
-Rafael, do you want to merge this via your tree, since you merged the
-original acpiphp rework?
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ pm+acpi-3.16-rc2
 
-I do have a small cleanup of acpiphp_glue.c in my queue, but it won't
-conflict with this.
+to receive ACPI and power management updates for v3.16-rc2
+with top-most commit 2ba87ea132a7364dbeb71126f3d7b8ec8e59d0e9
 
-Thanks a lot for fixing this!
+ Merge branches 'pm-cpufreq' and 'pm-cpuidle'
 
-Bjorn
+on top of commit 7171511eaec5bf23fb06078f59784a3a0626b38f
 
-> ---
->  drivers/pci/hotplug/acpiphp.h      |   10 ++++++
->  drivers/pci/hotplug/acpiphp_glue.c |   60 +++++++++++++++++++++++++------------
->  2 files changed, 52 insertions(+), 18 deletions(-)
->
-> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -373,17 +373,13 @@ static acpi_status acpiphp_add_context(a
->
->  static struct acpiphp_bridge *acpiphp_dev_to_bridge(struct acpi_device *adev)
->  {
-> -       struct acpiphp_context *context;
->         struct acpiphp_bridge *bridge = NULL;
->
->         acpi_lock_hp_context();
-> -       context = acpiphp_get_context(adev);
-> -       if (context) {
-> -               bridge = context->bridge;
-> +       if (adev->hp) {
-> +               bridge = to_acpiphp_root_context(adev->hp)->root_bridge;
->                 if (bridge)
->                         get_bridge(bridge);
-> -
-> -               acpiphp_put_context(context);
->         }
->         acpi_unlock_hp_context();
->         return bridge;
-> @@ -881,7 +877,17 @@ void acpiphp_enumerate_slots(struct pci_
->          */
->         get_device(&bus->dev);
->
-> -       if (!pci_is_root_bus(bridge->pci_bus)) {
-> +       acpi_lock_hp_context();
-> +       if (pci_is_root_bus(bridge->pci_bus)) {
-> +               struct acpiphp_root_context *root_context;
-> +
-> +               root_context = kzalloc(sizeof(*root_context), GFP_KERNEL);
-> +               if (!root_context)
-> +                       goto err;
-> +
-> +               root_context->root_bridge = bridge;
-> +               acpi_set_hp_context(adev, &root_context->hp, NULL, NULL, NULL);
-> +       } else {
->                 struct acpiphp_context *context;
->
->                 /*
-> @@ -890,21 +896,16 @@ void acpiphp_enumerate_slots(struct pci_
->                  * parent is going to be handled by pciehp, in which case this
->                  * bridge is not interesting to us either.
->                  */
-> -               acpi_lock_hp_context();
->                 context = acpiphp_get_context(adev);
-> -               if (!context) {
-> -                       acpi_unlock_hp_context();
-> -                       put_device(&bus->dev);
-> -                       pci_dev_put(bridge->pci_dev);
-> -                       kfree(bridge);
-> -                       return;
-> -               }
-> +               if (!context)
-> +                       goto err;
-> +
->                 bridge->context = context;
->                 context->bridge = bridge;
->                 /* Get a reference to the parent bridge. */
->                 get_bridge(context->func.parent);
-> -               acpi_unlock_hp_context();
->         }
-> +       acpi_unlock_hp_context();
->
->         /* Must be added to the list prior to calling acpiphp_add_context(). */
->         mutex_lock(&bridge_mutex);
-> @@ -919,6 +920,30 @@ void acpiphp_enumerate_slots(struct pci_
->                 cleanup_bridge(bridge);
->                 put_bridge(bridge);
->         }
-> +       return;
-> +
-> + err:
-> +       acpi_unlock_hp_context();
-> +       put_device(&bus->dev);
-> +       pci_dev_put(bridge->pci_dev);
-> +       kfree(bridge);
-> +}
-> +
-> +void acpiphp_drop_bridge(struct acpiphp_bridge *bridge)
-> +{
-> +       if (pci_is_root_bus(bridge->pci_bus)) {
-> +               struct acpiphp_root_context *root_context;
-> +               struct acpi_device *adev;
-> +
-> +               acpi_lock_hp_context();
-> +               adev = ACPI_COMPANION(bridge->pci_bus->bridge);
-> +               root_context = to_acpiphp_root_context(adev->hp);
-> +               adev->hp = NULL;
-> +               acpi_unlock_hp_context();
-> +               kfree(root_context);
-> +       }
-> +       cleanup_bridge(bridge);
-> +       put_bridge(bridge);
->  }
->
->  /**
-> @@ -936,8 +961,7 @@ void acpiphp_remove_slots(struct pci_bus
->         list_for_each_entry(bridge, &bridge_list, list)
->                 if (bridge->pci_bus == bus) {
->                         mutex_unlock(&bridge_mutex);
-> -                       cleanup_bridge(bridge);
-> -                       put_bridge(bridge);
-> +                       acpiphp_drop_bridge(bridge);
->                         return;
->                 }
->
-> Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-> +++ linux-pm/drivers/pci/hotplug/acpiphp.h
-> @@ -142,6 +142,16 @@ static inline acpi_handle func_to_handle
->         return func_to_acpi_device(func)->handle;
->  }
->
-> +struct acpiphp_root_context {
-> +       struct acpi_hotplug_context hp;
-> +       struct acpiphp_bridge *root_bridge;
-> +};
-> +
-> +static inline struct acpiphp_root_context *to_acpiphp_root_context(struct acpi_hotplug_context *hp)
-> +{
-> +       return container_of(hp, struct acpiphp_root_context, hp);
-> +}
-> +
->  /*
->   * struct acpiphp_attention_info - device specific attention registration
->   *
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Linux 3.16-rc1
+
+These are fixes mostly (ia64 regression related to the ACPI
+enumeration of devices, cpufreq regressions, fix for I2C
+controllers included in Intel SoCs, mvebu cpuidle driver fix
+related to sysfs) plus additional kernel command line arguments
+from Kees to make it possible to build kernel images with hibernation
+and the kernel address space randomization included simultaneously,
+a new ACPI battery driver quirk for a system with a broken BIOS and
+a couple of ACPI core cleanups.
+
+Specifics:
+
+ - Fix for an ia64 regression introduced during the 3.11 cycle by a
+   commit that modified the hardware initialization ordering and made
+   device discovery fail on some systems.
+
+ - Fix for a build problem on systems where the cpufreq-cpu0 driver
+   is built-in and the cpu-thermal driver is modular from Arnd Bergmann.
+
+ - Fix for a recently introduced computational mistake in the
+   intel_pstate driver that leads to excessive rounding errors from
+   Doug Smythies.
+
+ - Fix for a failure code path in cpufreq_update_policy() that fails
+   to unlock the locks acquired previously from Aaron Plattner.
+
+ - Fix for the cpuidle mvebu driver to use shorter state names which
+   will prevent the sysfs interface from returning mangled strings.
+   From Gregory Clement.
+
+ - ACPI LPSS driver fix to make sure that the I2C controllers
+   included in BayTrail SoCs are not held in the reset state while
+   they are being probed from Mika Westerberg.
+
+ - New kernel command line arguments making it possible to build
+   kernel images with hibernation and kASLR included at the same
+   time and to select which of them will be used via the command
+   line (they are still functionally mutually exclusive, though).
+   From Kees Cook.
+
+ - ACPI battery driver quirk for Acer Aspire V5-573G that fails
+   to send battery status change notifications timely from
+   Alexander Mezin.
+
+ - Two ACPI core cleanups from Christoph Jaeger and Fabian Frederick.
+
+Thanks!
+
+
+
+---------------
+
+Aaron Plattner (1):
+      cpufreq: unlock when failing cpufreq_update_policy()
+
+Alexander Mezin (2):
+      ACPI / battery: use callback for setting up quirks
+      ACPI / battery: add quirk for Acer Aspire V5-573G
+
+Arnd Bergmann (1):
+      cpufreq: cpufreq-cpu0: fix CPU_THERMAL dependency
+
+Christoph Jaeger (1):
+      ACPI: use kstrto*() instead of simple_strto*()
+
+Doug Smythies (1):
+      intel_pstate: Correct rounding in busy calculation
+
+Fabian Frederick (1):
+      ACPI / processor replace __attribute__((packed)) by __packed
+
+Gregory CLEMENT (1):
+      cpuidle: mvebu: Fix the name of the states
+
+Kees Cook (2):
+      PM / hibernate: introduce "nohibernate" boot parameter
+      x86, kaslr: boot-time selectable with hibernation
+
+Mika Westerberg (1):
+      ACPI / LPSS: Take I2C host controllers out of reset
+
+Rafael J. Wysocki (1):
+      ACPI / ia64 / sba_iommu: Restore the working initialization ordering
+
+---------------
+
+ Documentation/kernel-parameters.txt     | 14 +++++---
+ arch/ia64/hp/common/sba_iommu.c         | 64 +++++++++++++++++++--------------
+ arch/x86/Kconfig                        |  1 -
+ arch/x86/boot/compressed/aslr.c         |  9 ++++-
+ drivers/acpi/acpi_lpss.c                | 15 ++++++++
+ drivers/acpi/battery.c                  | 39 ++++++++++++++++++--
+ drivers/acpi/osl.c                      |  3 +-
+ drivers/acpi/tables.c                   |  3 +-
+ drivers/cpufreq/Kconfig                 |  2 ++
+ drivers/cpufreq/cpufreq.c               | 10 +++---
+ drivers/cpufreq/intel_pstate.c          |  5 +--
+ drivers/cpuidle/cpuidle-armada-370-xp.c |  4 +--
+ include/acpi/processor.h                | 10 +++---
+ include/linux/suspend.h                 |  2 ++
+ kernel/power/hibernate.c                | 37 ++++++++++++++++++-
+ kernel/power/main.c                     |  6 ++--
+ kernel/power/user.c                     |  3 ++
+ 17 files changed, 167 insertions(+), 60 deletions(-)
