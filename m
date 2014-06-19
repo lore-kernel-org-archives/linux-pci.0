@@ -1,73 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f178.google.com ([209.85.220.178]:56686 "EHLO
-	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753695AbaFTRqI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jun 2014 13:46:08 -0400
+Received: from devils.ext.ti.com ([198.47.26.153]:50538 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751570AbaFSNA7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 09:00:59 -0400
+Message-ID: <53A2DEDA.5050104@ti.com>
+Date: Thu, 19 Jun 2014 18:30:10 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1401345500-20188-5-git-send-email-kishon@ti.com>
-References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-5-git-send-email-kishon@ti.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Fri, 20 Jun 2014 12:45:46 -0500
-Message-ID: <CAL_JsqJxppWOOWoX1MYF26OWXW7BdMZP1BQpq8cSgJ3n1QF5PA@mail.gmail.com>
-Subject: Re: [PATCH v2 04/18] PCI: designware: use untranslated address while
- programming ATU
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
+To: Tero Kristo <t-kristo@ti.com>, <devicetree@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	linux-omap <linux-omap@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Tony Lindgren <tony@atomide.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
+	Keerthy <j-keerthy@ti.com>, Rajendra Nayak <rnayak@ti.com>,
+	Paul Walmsley <paul@pwsan.com>
+Subject: Re: [PATCH v2 07/18] ARM: dts: DRA7: Change the parent of apll_pcie_in_clk_mux
+ to dpll_pcie_ref_m2ldo_ck
+References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-8-git-send-email-kishon@ti.com> <53A2C5B4.9080300@ti.com>
+In-Reply-To: <53A2C5B4.9080300@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 29, 2014 at 1:38 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
-> address. So whenever the cpu issues a read/write request, the 4 most
-> significant bits are used by L3 to determine the target controller.
-> For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
-> the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
-> the outbound translation window the *base* should be programmed as 0x000_0000.
-> Whenever we try to write to say 0x2000_0000, it will be translated to whatever
-> we have programmed in the translation window with base as 0x000_0000.
->
-> This is needed when the dt node is modelled something like below
-> axi {
->         compatible = "simple-bus";
->         #size-cells = <1>;
->         #address-cells = <1>;
->         ranges = <0x0        0x20000000 0x10000000 // 28-bit bus
->                   0x51000000 0x51000000 0x3000>;
->         pcie@51000000 {
->                 reg = <0x1000 0x2000>, <0x51002000 0x14c>, <0x51000000 0x2000>;
->                 reg-names = "config", "ti_conf", "rc_dbics";
->                 #address-cells = <3>;
->                 #size-cells = <2>;
->                 ranges = <0x81000000 0 0          0x03000 0 0x00010000
->                           0x82000000 0 0x20013000 0x13000 0 0xffed000>;
->         };
-> };
->
-> Here the CPU address for configuration space is 0x20013000 and the controller
-> address for configuration space is 0x13000. The controller address should be
-> used while programming the ATU (in order for translation to happen properly in
-> DRA7xx).
+Hi Tero,
 
-This talks about config space, but the ranges field is PCI memory
-space. Also, does this actually work because I though Linux expects
-memory BARs to be 1MB aligned.
+On Thursday 19 June 2014 04:42 PM, Tero Kristo wrote:
+> On 05/29/2014 09:38 AM, Kishon Vijay Abraham I wrote:
+>> From: Keerthy <j-keerthy@ti.com>
+>>
+>> Change the parent of apll_pcie_in_clk_mux to dpll_pcie_ref_m2ldo_ck
+>> from dpll_pcie_ref_ck.
+> 
+> Why? Needs a better changelog also.
 
-Getting the controller offset should work whether you specify the
-address as 0x13000 with translation or the absolute address
-0x20013000. In other words, the driver should know how many bits to
-mask off to get the offset.
+Figure 26-22. DPLL_PCIE_REF Functional Block Diagram in vE of DRA7xx ES1.0 TRM
+shows the signal name for the output of post divider (M2) is CLKOUTLDO.
 
-Rob
+Figure 26-21. PCIe PHY Clock Generator Overview shows CLKOUTLDO is used as
+input to apll mux.
+
+So the actual output of dpll should be dpll_pcie_ref_m2ldo_ck instead of
+dpll_pcie_ref_ck (which is the input of apll mux).
+
+Thanks
+Kishon
+> 
+> -Tero
+> 
+>>
+>> Cc: Rajendra Nayak <rnayak@ti.com>
+>> Cc: Tero Kristo <t-kristo@ti.com>
+>> Cc: Paul Walmsley <paul@pwsan.com>
+>> Signed-off-by: Keerthy <j-keerthy@ti.com>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>   arch/arm/boot/dts/dra7xx-clocks.dtsi |    2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>> b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>> index 55e95c5..44993ec 100644
+>> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>> @@ -1152,7 +1152,7 @@
+>>
+>>       apll_pcie_in_clk_mux: apll_pcie_in_clk_mux@4ae06118 {
+>>           compatible = "ti,mux-clock";
+>> -        clocks = <&dpll_pcie_ref_ck>, <&pciesref_acs_clk_ck>;
+>> +        clocks = <&dpll_pcie_ref_m2ldo_ck>, <&pciesref_acs_clk_ck>;
+>>           #clock-cells = <0>;
+>>           reg = <0x021c 0x4>;
+>>           ti,bit-shift = <7>;
+>>
+> 
