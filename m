@@ -1,93 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch V4 17/42] ce4100, irq: make CE4100 depend on CONFIG_X86_IO_APIC
-Date: Mon,  9 Jun 2014 16:19:46 +0800
-Message-Id: <1402302011-23642-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:35868 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755782AbaFSHWx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 03:22:53 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 19 Jun 2014 17:22:50 +1000
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 587042CE8054
+	for <linux-pci@vger.kernel.org>; Thu, 19 Jun 2014 17:22:48 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5J70aZC9830904
+	for <linux-pci@vger.kernel.org>; Thu, 19 Jun 2014 17:00:37 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5J7MkRU022864
+	for <linux-pci@vger.kernel.org>; Thu, 19 Jun 2014 17:22:46 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 1/2] PCI: Make resetting secondary bus logic common
+Date: Thu, 19 Jun 2014 17:22:44 +1000
+Message-Id: <1403162565-26835-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Intel CE4100 platforms need IOAPIC support becasue some devices are
-always connected to the second IOAPIC, so make CONFIG_CE depends on
-CONFIG_X86_IO_APIC.
+Commit d92a208d086 ("powerpc/pci: Mask linkDown on resetting PCI bus")
+implemented same logic (resetting PCI secondary bus by bridge's config
+register PCI_BRIDGE_CTL_BUS_RESET) in PCI core and arch-dependent
+code. In order to avoid the duplicate implementation introduced by the
+commit, the patch puts the logic into pci_reset_secondary_bus().
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+That commit also missed declaring newly introduced weak function
+pcibios_reset_secondary_bus() in linux/include/pci.h. The patch fixes
+it.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/x86/Kconfig                  |    1 +
- arch/x86/platform/ce4100/ce4100.c |    9 ++-------
- 2 files changed, 3 insertions(+), 7 deletions(-)
+ drivers/pci/pci.c   | 7 ++++++-
+ include/linux/pci.h | 2 ++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 47247708c9eb..55ec58b0b373 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -426,6 +426,7 @@ config X86_INTEL_CE
- 	bool "CE4100 TV platform"
- 	depends on PCI
- 	depends on PCI_GODIRECT
-+	depends on X86_IO_APIC
- 	depends on X86_32
- 	depends on X86_EXTENDED_PLATFORM
- 	select X86_REBOOTFIXUPS
-diff --git a/arch/x86/platform/ce4100/ce4100.c b/arch/x86/platform/ce4100/ce4100.c
-index 8244f5ec2f4c..0a54a586559b 100644
---- a/arch/x86/platform/ce4100/ce4100.c
-+++ b/arch/x86/platform/ce4100/ce4100.c
-@@ -135,14 +135,12 @@ static void __init sdv_arch_setup(void)
- 	sdv_serial_fixup();
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 63a54a3..758f1d8 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3193,7 +3193,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	return 0;
  }
  
--#ifdef CONFIG_X86_IO_APIC
- static void sdv_pci_init(void)
+-void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
++void pci_reset_secondary_bus(struct pci_dev *dev)
  {
- 	x86_of_pci_init();
- 	/* We can't set this earlier, because we need to calibrate the timer */
- 	legacy_pic = &null_legacy_pic;
+ 	u16 ctrl;
+ 
+@@ -3219,6 +3219,11 @@ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
+ 	ssleep(1);
  }
--#endif
  
- /*
-  * CE4100 specific x86_init function overrides and early setup
-@@ -155,7 +153,9 @@ void __init x86_ce4100_early_setup(void)
- 	x86_init.resources.probe_roms = x86_init_noop;
- 	x86_init.mpparse.get_smp_config = x86_init_uint_noop;
- 	x86_init.mpparse.find_smp_config = x86_init_noop;
-+	x86_init.mpparse.setup_ioapic_ids = setup_ioapic_ids_from_mpc_nocheck;
- 	x86_init.pci.init = ce4100_pci_init;
-+	x86_init.pci.init_irq = sdv_pci_init;
- 
- 	/*
- 	 * By default, the reboot method is ACPI which is supported by the
-@@ -166,10 +166,5 @@ void __init x86_ce4100_early_setup(void)
- 	 */
- 	reboot_type = BOOT_KBD;
- 
--#ifdef CONFIG_X86_IO_APIC
--	x86_init.pci.init_irq = sdv_pci_init;
--	x86_init.mpparse.setup_ioapic_ids = setup_ioapic_ids_from_mpc_nocheck;
--#endif
--
- 	pm_power_off = ce4100_power_off;
- }
++void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
++{
++	pci_reset_secondary_bus(dev);
++}
++
+ /**
+  * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
+  * @dev: Bridge device
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 466bcd1..340529d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -978,6 +978,8 @@ int pci_try_reset_slot(struct pci_slot *slot);
+ int pci_probe_reset_bus(struct pci_bus *bus);
+ int pci_reset_bus(struct pci_bus *bus);
+ int pci_try_reset_bus(struct pci_bus *bus);
++void pci_reset_secondary_bus(struct pci_dev *dev);
++void pcibios_reset_secondary_bus(struct pci_dev *dev);
+ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
 -- 
-1.7.10.4
+1.8.3.2
 
