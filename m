@@ -1,212 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:64654 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965502AbaFQWfq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 18:35:46 -0400
-Received: by mail-ig0-f171.google.com with SMTP id h18so4701612igc.10
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jun 2014 15:35:45 -0700 (PDT)
-Date: Tue, 17 Jun 2014 16:35:42 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>
-Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>
-Subject: Re: [PATCH 1/2] x86, ia64: Move EFI_FB vga_default_device()
- initialization to pci_vga_fixup()
-Message-ID: <20140617223542.GD30559@google.com>
-References: <20140514224339.7f8be3a9@neptune.home>
- <20140527234255.GJ11907@google.com>
- <20140602201650.35f0e936@neptune.home>
- <20140602201926.4d476818@neptune.home>
+Received: from bear.ext.ti.com ([192.94.94.41]:46776 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754675AbaFSN0w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Jun 2014 09:26:52 -0400
+Message-ID: <53A2E507.7090405@ti.com>
+Date: Thu, 19 Jun 2014 16:26:31 +0300
+From: Tero Kristo <t-kristo@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20140602201926.4d476818@neptune.home>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
+	Rajendra Nayak <rnayak@ti.com>, Paul Walmsley <paul@pwsan.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>
+Subject: Re: [PATCH v2 10/18] ARM: dts: dra7xx-clocks: Add missing 32khz clocks
+ used for PHY
+References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-11-git-send-email-kishon@ti.com> <53A2C690.1060106@ti.com> <53A2E452.5020109@ti.com>
+In-Reply-To: <53A2E452.5020109@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 02, 2014 at 08:19:26PM +0200, Bruno Prémont wrote:
-> With commit b4aa0163056b ("efifb: Implement vga_default_device() (v2)")
-> Matthew Garrett introduced a efifb vga_default_device() so that EFI
-> systems that do not load shadow VBIOS or setup VGA get proper value for
-> boot_vga PCI sysfs attribute on the corresponding PCI device.
-> 
-> Xorg is refusing to detect devices when boot_vga=0 which is the case on
-> some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
-> the dri device but then bails out with "no devices detected".
-> 
-> Note: When vga_default_device() is set boot_vga PCI sysfs attribute
-> reflects its state. When unset this attribute is 1 whenever
-> IORESOURCE_ROM_SHADOW flag is set.
-> 
-> With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
-> while having native drivers for the GPU also makes selecting
-> sysfb/efifb optional.
-> 
-> Remove the efifb implementation of vga_default_device() and initialize
-> vgaarb's vga_default_device() with the PCI GPU that matches boot
-> screen_info in pci_fixup_video().
-> 
-> Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
-> ---
->  arch/ia64/pci/fixup.c       | 21 +++++++++++++++++++++
->  arch/x86/include/asm/vga.h  |  6 ------
->  arch/x86/pci/fixup.c        | 21 +++++++++++++++++++++
->  drivers/video/fbdev/efifb.c | 38 --------------------------------------
->  4 files changed, 42 insertions(+), 44 deletions(-)
+On 06/19/2014 04:23 PM, Kishon Vijay Abraham I wrote:
+> Hi Tero,
+>
+> On Thursday 19 June 2014 04:46 PM, Tero Kristo wrote:
+>> On 05/29/2014 09:38 AM, Kishon Vijay Abraham I wrote:
+>>> Added missing 32khz clock used by PCIe PHY.
+>>> The documention for this node can be found @ ../bindings/clock/ti/gate.txt.
+>>
+>> You can drop the node documentation ref, and rather add a TRM reference about
+>> hardware details. Other than that, looks good to me.
+>
+> You mean something like why 32KHz clock is used (**PRCM.PCIE_32K_GFCLK (based
+> on PRM.SYS_32K) for debounce and wakeup logic inside the PCIe1_PHY_RX**)? Or
+> something like **Figure 26-19. PCIe PHY Subsystem Integration of DRA TRM vE
+> shows how 32KHz clock is being used** ?
 
-Something went wrong here.  It seems like the [2/2] patch should have
-been [1/2], and this one should be [2/2].  And this one modifies both
-arch/ia64/pci/fixup.c and arch/x86/pci/fixup.c, but the other patch
-mostly combines them, so I don't see how this one applies.
+Just having a reference to the TRM version used and if you can provide a 
+link to a figure or page where the clock integration is described should 
+be good.
 
-And there were unrelated (trivial) changes to these files, so they
-need to be rebased to v3.16-rc1.  I'd take care of the rebase, but
-I don't understand the other stuff I mentioned.
+-Tero
 
-Bjorn
+>
+> Thanks
+> Kishon
+>
+>>
+>> -Tero
+>>
+>>>
+>>> Cc: Tony Lindgren <tony@atomide.com>
+>>> Cc: Rajendra Nayak <rnayak@ti.com>
+>>> Cc: Tero Kristo <t-kristo@ti.com>
+>>> Cc: Paul Walmsley <paul@pwsan.com>
+>>> Cc: Tony Lindgren <tony@atomide.com>
+>>> Cc: Rob Herring <robh+dt@kernel.org>
+>>> Cc: Pawel Moll <pawel.moll@arm.com>
+>>> Cc: Mark Rutland <mark.rutland@arm.com>
+>>> Cc: Kumar Gala <galak@codeaurora.org>
+>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>> ---
+>>>    arch/arm/boot/dts/dra7xx-clocks.dtsi |    8 ++++++++
+>>>    1 file changed, 8 insertions(+)
+>>>
+>>> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> index 44993ec..e1bd052 100644
+>>> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> @@ -1165,6 +1165,14 @@
+>>>            reg = <0x021c>, <0x0220>;
+>>>        };
+>>>
+>>> +    optfclk_pciephy_32khz: optfclk_pciephy_32khz@4a0093b0 {
+>>> +        compatible = "ti,gate-clock";
+>>> +        clocks = <&sys_32k_ck>;
+>>> +        #clock-cells = <0>;
+>>> +        reg = <0x13b0>;
+>>> +        ti,bit-shift = <8>;
+>>> +    };
+>>> +
+>>>        optfclk_pciephy_div: optfclk_pciephy_div@4a00821c {
+>>>            compatible = "ti,divider-clock";
+>>>            clocks = <&apll_pcie_ck>;
+>>>
+>>
 
-> diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
-> index eee069a..9ed5bef 100644
-> --- a/arch/ia64/pci/fixup.c
-> +++ b/arch/ia64/pci/fixup.c
-> @@ -37,6 +37,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
->  		return;
->  	/* Maybe, this machine supports legacy memory map. */
->  
-> +	if (!vga_default_device()) {
-> +		resource_size_t start, end;
-> +		int i;
-> +
-> +		/* Does firmware framebuffer belong to us? */
-> +		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-> +			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> +				continue;
-> +
-> +			start = pci_resource_start(pdev, i);
-> +			end  = pci_resource_end(pdev, i);
-> +
-> +			if (!start || !end)
-> +				continue;
-> +
-> +			if (screen_info.lfb_base >= start &&
-> +				(screen_info.lfb_base + screen_info.lfb_size) < end)
-> +				vga_set_default_device(pdev);
-> +		}
-> +	}
-> +
->  	/* Is VGA routed to us? */
->  	bus = pdev->bus;
->  	while (bus) {
-> diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
-> index 44282fb..c4b9dc2 100644
-> --- a/arch/x86/include/asm/vga.h
-> +++ b/arch/x86/include/asm/vga.h
-> @@ -17,10 +17,4 @@
->  #define vga_readb(x) (*(x))
->  #define vga_writeb(x, y) (*(y) = (x))
->  
-> -#ifdef CONFIG_FB_EFI
-> -#define __ARCH_HAS_VGA_DEFAULT_DEVICE
-> -extern struct pci_dev *vga_default_device(void);
-> -extern void vga_set_default_device(struct pci_dev *pdev);
-> -#endif
-> -
->  #endif /* _ASM_X86_VGA_H */
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index 94ae9ae..7246cf2 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -325,6 +325,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
->  	struct pci_bus *bus;
->  	u16 config;
->  
-> +	if (!vga_default_device()) {
-> +		resource_size_t start, end;
-> +		int i;
-> +
-> +		/* Does firmware framebuffer belong to us? */
-> +		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-> +			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> +				continue;
-> +
-> +			start = pci_resource_start(pdev, i);
-> +			end  = pci_resource_end(pdev, i);
-> +
-> +			if (!start || !end)
-> +				continue;
-> +
-> +			if (screen_info.lfb_base >= start &&
-> +				(screen_info.lfb_base + screen_info.lfb_size) < end)
-> +				vga_set_default_device(pdev);
-> +		}
-> +	}
-> +
->  	/* Is VGA routed to us? */
->  	bus = pdev->bus;
->  	while (bus) {
-> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-> index ae9618f..a033180 100644
-> --- a/drivers/video/fbdev/efifb.c
-> +++ b/drivers/video/fbdev/efifb.c
-> @@ -19,8 +19,6 @@
->  
->  static bool request_mem_succeeded = false;
->  
-> -static struct pci_dev *default_vga;
-> -
->  static struct fb_var_screeninfo efifb_defined = {
->  	.activate		= FB_ACTIVATE_NOW,
->  	.height			= -1,
-> @@ -84,18 +82,6 @@ static struct fb_ops efifb_ops = {
->  	.fb_imageblit	= cfb_imageblit,
->  };
->  
-> -struct pci_dev *vga_default_device(void)
-> -{
-> -	return default_vga;
-> -}
-> -
-> -EXPORT_SYMBOL_GPL(vga_default_device);
-> -
-> -void vga_set_default_device(struct pci_dev *pdev)
-> -{
-> -	default_vga = pdev;
-> -}
-> -
->  static int efifb_setup(char *options)
->  {
->  	char *this_opt;
-> @@ -126,30 +112,6 @@ static int efifb_setup(char *options)
->  		}
->  	}
->  
-> -	for_each_pci_dev(dev) {
-> -		int i;
-> -
-> -		if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
-> -			continue;
-> -
-> -		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
-> -			resource_size_t start, end;
-> -
-> -			if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
-> -				continue;
-> -
-> -			start = pci_resource_start(dev, i);
-> -			end  = pci_resource_end(dev, i);
-> -
-> -			if (!start || !end)
-> -				continue;
-> -
-> -			if (screen_info.lfb_base >= start &&
-> -			    (screen_info.lfb_base + screen_info.lfb_size) < end)
-> -				default_vga = dev;
-> -		}
-> -	}
-> -
->  	return 0;
->  }
->  
-> -- 
-> 1.8.5.5
-> 
