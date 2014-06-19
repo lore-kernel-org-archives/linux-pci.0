@@ -1,164 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:52617 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920AbaFXKGr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 06:06:47 -0400
-Received: by mail-pb0-f53.google.com with SMTP id uo5so52595pbc.40
-        for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2014 03:06:47 -0700 (PDT)
-Message-ID: <53A94DA8.6020206@ozlabs.ru>
-Date: Tue, 24 Jun 2014 20:06:32 +1000
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Received: from devils.ext.ti.com ([198.47.26.153]:51461 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752141AbaFSNY3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 09:24:29 -0400
+Message-ID: <53A2E452.5020109@ti.com>
+Date: Thu, 19 Jun 2014 18:53:30 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com
-CC: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table dynamically
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com> <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=KOI8-R
+To: Tero Kristo <t-kristo@ti.com>, <devicetree@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
+	Rajendra Nayak <rnayak@ti.com>, Paul Walmsley <paul@pwsan.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>
+Subject: Re: [PATCH v2 10/18] ARM: dts: dra7xx-clocks: Add missing 32khz clocks
+ used for PHY
+References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-11-git-send-email-kishon@ti.com> <53A2C690.1060106@ti.com>
+In-Reply-To: <53A2C690.1060106@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/10/2014 11:56 AM, Wei Yang wrote:
-> Current iommu_table of a PE is a static field. This will have a problem when
-> iommu_free_table is called.
+Hi Tero,
 
-What kind of problem? This table is per PE and PE is not going anywhere.
+On Thursday 19 June 2014 04:46 PM, Tero Kristo wrote:
+> On 05/29/2014 09:38 AM, Kishon Vijay Abraham I wrote:
+>> Added missing 32khz clock used by PCIe PHY.
+>> The documention for this node can be found @ ../bindings/clock/ti/gate.txt.
+> 
+> You can drop the node documentation ref, and rather add a TRM reference about
+> hardware details. Other than that, looks good to me.
 
+You mean something like why 32KHz clock is used (**PRCM.PCIE_32K_GFCLK (based
+on PRM.SYS_32K) for debounce and wakeup logic inside the PCIe1_PHY_RX**)? Or
+something like **Figure 26-19. PCIe PHY Subsystem Integration of DRA TRM vE
+shows how 32KHz clock is being used** ?
+
+Thanks
+Kishon
 
 > 
-> This patch allocate iommu_table dynamically.
+> -Tero
 > 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/include/asm/iommu.h          |    3 +++
->  arch/powerpc/platforms/powernv/pci-ioda.c |   24 +++++++++++++-----------
->  arch/powerpc/platforms/powernv/pci.h      |    2 +-
->  3 files changed, 17 insertions(+), 12 deletions(-)
+>>
+>> Cc: Tony Lindgren <tony@atomide.com>
+>> Cc: Rajendra Nayak <rnayak@ti.com>
+>> Cc: Tero Kristo <t-kristo@ti.com>
+>> Cc: Paul Walmsley <paul@pwsan.com>
+>> Cc: Tony Lindgren <tony@atomide.com>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Cc: Pawel Moll <pawel.moll@arm.com>
+>> Cc: Mark Rutland <mark.rutland@arm.com>
+>> Cc: Kumar Gala <galak@codeaurora.org>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>   arch/arm/boot/dts/dra7xx-clocks.dtsi |    8 ++++++++
+>>   1 file changed, 8 insertions(+)
+>>
+>> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>> b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>> index 44993ec..e1bd052 100644
+>> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>> @@ -1165,6 +1165,14 @@
+>>           reg = <0x021c>, <0x0220>;
+>>       };
+>>
+>> +    optfclk_pciephy_32khz: optfclk_pciephy_32khz@4a0093b0 {
+>> +        compatible = "ti,gate-clock";
+>> +        clocks = <&sys_32k_ck>;
+>> +        #clock-cells = <0>;
+>> +        reg = <0x13b0>;
+>> +        ti,bit-shift = <8>;
+>> +    };
+>> +
+>>       optfclk_pciephy_div: optfclk_pciephy_div@4a00821c {
+>>           compatible = "ti,divider-clock";
+>>           clocks = <&apll_pcie_ck>;
+>>
 > 
-> diff --git a/arch/powerpc/include/asm/iommu.h b/arch/powerpc/include/asm/iommu.h
-> index 42632c7..0fedacb 100644
-> --- a/arch/powerpc/include/asm/iommu.h
-> +++ b/arch/powerpc/include/asm/iommu.h
-> @@ -78,6 +78,9 @@ struct iommu_table {
->  	struct iommu_group *it_group;
->  #endif
->  	void (*set_bypass)(struct iommu_table *tbl, bool enable);
-> +#ifdef CONFIG_PPC_POWERNV
-> +	void           *data;
-> +#endif
->  };
->  
->  /* Pure 2^n version of get_order */
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 9715351..8ca3926 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -608,6 +608,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
->  		return;
->  	}
->  
-> +	pe->tce32_table = kzalloc_node(sizeof(struct iommu_table),
-> +			GFP_KERNEL, hose->node);
-> +	pe->tce32_table->data = pe;
-> +
->  	/* Associate it with all child devices */
->  	pnv_ioda_setup_same_PE(bus, pe);
->  
-> @@ -675,7 +679,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev
->  
->  	pe = &phb->ioda.pe_array[pdn->pe_number];
->  	WARN_ON(get_dma_ops(&pdev->dev) != &dma_iommu_ops);
-> -	set_iommu_table_base_and_group(&pdev->dev, &pe->tce32_table);
-> +	set_iommu_table_base_and_group(&pdev->dev, pe->tce32_table);
->  }
->  
->  static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
-> @@ -702,7 +706,7 @@ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
->  	} else {
->  		dev_info(&pdev->dev, "Using 32-bit DMA via iommu\n");
->  		set_dma_ops(&pdev->dev, &dma_iommu_ops);
-> -		set_iommu_table_base(&pdev->dev, &pe->tce32_table);
-> +		set_iommu_table_base(&pdev->dev, pe->tce32_table);
->  	}
->  	return 0;
->  }
-> @@ -712,7 +716,7 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe, struct pci_bus *bus)
->  	struct pci_dev *dev;
->  
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> -		set_iommu_table_base_and_group(&dev->dev, &pe->tce32_table);
-> +		set_iommu_table_base_and_group(&dev->dev, pe->tce32_table);
->  		if (dev->subordinate)
->  			pnv_ioda_setup_bus_dma(pe, dev->subordinate);
->  	}
-> @@ -798,8 +802,7 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
->  void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
->  				 __be64 *startp, __be64 *endp, bool rm)
->  {
-> -	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
-> -					      tce32_table);
-> +	struct pnv_ioda_pe *pe = tbl->data;
->  	struct pnv_phb *phb = pe->phb;
->  
->  	if (phb->type == PNV_PHB_IODA1)
-> @@ -862,7 +865,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
->  	}
->  
->  	/* Setup linux iommu table */
-> -	tbl = &pe->tce32_table;
-> +	tbl = pe->tce32_table;
->  	pnv_pci_setup_iommu_table(tbl, addr, PNV_TCE32_TAB_SIZE * segs,
->  				  base << PNV_TCE32_SEG_SHIFT);
->  
-> @@ -900,8 +903,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
->  
->  static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
->  {
-> -	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
-> -					      tce32_table);
-> +	struct pnv_ioda_pe *pe = tbl->data;
->  	uint16_t window_id = (pe->pe_number << 1 ) + 1;
->  	int64_t rc;
->  
-> @@ -942,10 +944,10 @@ static void pnv_pci_ioda2_setup_bypass_pe(struct pnv_phb *phb,
->  	pe->tce_bypass_base = 1ull << 59;
->  
->  	/* Install set_bypass callback for VFIO */
-> -	pe->tce32_table.set_bypass = pnv_pci_ioda2_set_bypass;
-> +	pe->tce32_table->set_bypass = pnv_pci_ioda2_set_bypass;
->  
->  	/* Enable bypass by default */
-> -	pnv_pci_ioda2_set_bypass(&pe->tce32_table, true);
-> +	pnv_pci_ioda2_set_bypass(pe->tce32_table, true);
->  }
->  
->  static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
-> @@ -993,7 +995,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->  	}
->  
->  	/* Setup linux iommu table */
-> -	tbl = &pe->tce32_table;
-> +	tbl = pe->tce32_table;
->  	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0);
->  
->  	/* OPAL variant of PHB3 invalidated TCEs */
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 90f6da4..9fbf7c0 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -60,7 +60,7 @@ struct pnv_ioda_pe {
->  	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
->  	int			tce32_seg;
->  	int			tce32_segcount;
-> -	struct iommu_table	tce32_table;
-> +	struct iommu_table	*tce32_table;
->  	phys_addr_t		tce_inval_reg_phys;
->  
->  	/* 64-bit TCE bypass region */
-> 
-
-
--- 
-Alexey
