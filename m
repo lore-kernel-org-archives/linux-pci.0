@@ -1,83 +1,143 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <53967383.1000908@linux.intel.com>
-Date: Tue, 10 Jun 2014 10:54:59 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:33915 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757733AbaFSIbd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 04:31:33 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 4/5] PCI/MSI: MSI cleanup, msi_setup_entry()
+Date: Thu, 19 Jun 2014 16:30:48 +0800
+Message-ID: <1403166648-7932-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	the arch/x86 maintainers <x86@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: Re: [Patch V4 01/42] x86, irq: update high address field when updating
- affinity for MSI IRQ
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>	<1402302011-23642-2-git-send-email-jiang.liu@linux.intel.com> <CAE9FiQXiZZG=FdafLVEBM_ENO50xxOZ19M3k5KwzsR7M0b2P=w@mail.gmail.com>
-In-Reply-To: <CAE9FiQXiZZG=FdafLVEBM_ENO50xxOZ19M3k5KwzsR7M0b2P=w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Move MSI entry stuff to a new function
+msi_setup_entry(), simplify msi_capability_init()
+code like MSI-X do.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/msi.c |   71 +++++++++++++++++++++++++++++++---------------------
+ 1 files changed, 42 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d8e431d..8e17446 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -582,6 +582,35 @@ error_attrs:
+ 	return ret;
+ }
+ 
++static int msi_setup_entry(struct pci_dev *dev)
++{
++	u16 control;
++	struct msi_desc *entry;
++
++	entry = alloc_msi_entry(dev);
++	if (!entry)
++		return -ENOMEM;
++
++	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
++
++	entry->msi_attrib.is_msix	= 0;
++	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
++	entry->msi_attrib.entry_nr	= 0;
++	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
++	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
++	entry->msi_attrib.pos		= dev->msi_cap;
++	entry->msi_attrib.multi_cap = (control & PCI_MSI_FLAGS_QMASK) >> 1;
++
++	if (control & PCI_MSI_FLAGS_64BIT)
++		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
++	else
++		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
++
++
++	list_add_tail(&entry->list, &dev->msi_list);
++	return 0;
++}
++
+ /**
+  * msi_capability_init - configure device's MSI capability structure
+  * @dev: pointer to the pci_dev data structure of MSI device function
+@@ -597,51 +626,30 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ {
+ 	struct msi_desc *entry;
+ 	int ret;
+-	u16 control;
+ 	unsigned mask;
+ 
+ 	msi_set_enable(dev, 0);	/* Disable MSI during set up */
+ 
+-	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+ 	/* MSI Entry Initialization */
+-	entry = alloc_msi_entry(dev);
+-	if (!entry)
+-		return -ENOMEM;
+-
+-	entry->msi_attrib.is_msix	= 0;
+-	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
+-	entry->msi_attrib.entry_nr	= 0;
+-	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
+-	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
+-	entry->msi_attrib.pos		= dev->msi_cap;
+-	entry->msi_attrib.multi_cap = (control & PCI_MSI_FLAGS_QMASK) >> 1;
++	ret = msi_setup_entry(dev);
++	if (ret)
++		return ret;
+ 
+-	if (control & PCI_MSI_FLAGS_64BIT)
+-		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
+-	else
+-		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
++	entry = list_first_entry(&dev->msi_list, struct msi_desc, list);
+ 	/* All MSIs are unmasked by default, Mask them all */
+ 	if (entry->msi_attrib.maskbit)
+ 		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
+ 	mask = msi_mask(entry->msi_attrib.multi_cap);
+ 	msi_mask_irq(entry, mask, mask);
+ 
+-	list_add_tail(&entry->list, &dev->msi_list);
+-
+ 	/* Configure MSI capability structure */
+ 	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
+-	if (ret) {
+-		msi_mask_irq(entry, mask, ~mask);
+-		free_msi_irqs(dev);
+-		return ret;
+-	}
++	if (ret)
++		goto err;
+ 
+ 	ret = populate_msi_sysfs(dev);
+-	if (ret) {
+-		msi_mask_irq(entry, mask, ~mask);
+-		free_msi_irqs(dev);
+-		return ret;
+-	}
++	if (ret)
++		goto err;
+ 
+ 	/* Set MSI enabled bits	 */
+ 	pci_intx_for_msi(dev, 0);
+@@ -650,6 +658,11 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 
+ 	dev->irq = entry->irq;
+ 	return 0;
++
++err:
++	msi_mask_irq(entry, mask, ~mask);
++	free_msi_irqs(dev);
++	return ret;
+ }
+ 
+ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+-- 
+1.7.1
 
 
-On 2014/6/10 7:46, Yinghai Lu wrote:
-> On Mon, Jun 9, 2014 at 1:19 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->> If x2apic is enabled, the MSI high address field should also be aslo
->> updated when setting affinity for MSI IRQ, otherwise the MSI IRQ may
->> target wrong APIC IDs.
-> 
-> Do you have any test case to reveal the problem?
-Just by code inspection.
-
-> 
->>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> Cc: stable@vger.kernel.org
->> ---
->>  arch/x86/kernel/apic/io_apic.c |    4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
->> index 9d0a9795a0f8..2de992501a1b 100644
->> --- a/arch/x86/kernel/apic/io_apic.c
->> +++ b/arch/x86/kernel/apic/io_apic.c
->> @@ -3007,6 +3007,10 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
->>
->>         __get_cached_msi_msg(data->msi_desc, &msg);
->>
->> +       msg.address_hi = MSI_ADDR_BASE_HI;
->> +       if (x2apic_enabled())
->> +               msg.address_hi |= MSI_ADDR_EXT_DEST_ID(dest);
->> +
->>         msg.data &= ~MSI_DATA_VECTOR_MASK;
->>         msg.data |= MSI_DATA_VECTOR(cfg->vector);
->>         msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
-> 
-> No. This change is not needed.
-> 
-> When x2apic is used, and apicid > 255, irq remapping is used.
-> 
-> msi_chip.irq_set_affinity will be changed from msi_set_affinity to
-> x86_io_apic_ops.set_affinity (aka intel_setup_ioapic_entry),  via
-> irq_remap_modify_chip_defaults().
-Thanks for explanation, will drop this patch.
-Gerry
-> 
-> Thanks
-> 
-> Yinghai
-> 
