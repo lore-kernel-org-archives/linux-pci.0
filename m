@@ -1,80 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:42154 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755610AbaFYJBA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 05:01:00 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V3 12/21] iommu/vt-d: introduce helper function iova_size() to improve code readability
-Date: Wed, 25 Jun 2014 17:02:38 +0800
-Message-Id: <1403686967-10887-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:49700 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919AbaFSElD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 00:41:03 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAMxnaaWWuNeNbnUe++N=2bBfs5JyKiq7tHH+_kiQZyQ9aakEHg@mail.gmail.com>
+References: <1402346730-2508-1-git-send-email-andreas.noever@gmail.com>
+	<20140617221620.GC30559@google.com>
+	<CAE9FiQXD7hvt0cUYMzvq0r6CbZn=iJZc7BHRaF2nACbG7qwuBQ@mail.gmail.com>
+	<CAMxnaaWWuNeNbnUe++N=2bBfs5JyKiq7tHH+_kiQZyQ9aakEHg@mail.gmail.com>
+Date: Wed, 18 Jun 2014 21:41:02 -0700
+Message-ID: <CAE9FiQVQ657vDOhdhBq5VC044qt6TUF7FKP_-qy+35g71e56Yg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Do not touch siblings in pci_assign_unassigned_bridge_resources
+From: Yinghai Lu <yinghai@kernel.org>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=90e6ba6e8108ebb06e04fc28fbeb
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |    7 +++----
- include/linux/iova.h        |    5 +++++
- 2 files changed, 8 insertions(+), 4 deletions(-)
+--90e6ba6e8108ebb06e04fc28fbeb
+Content-Type: text/plain; charset=UTF-8
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 0d34f33bea34..d94468ae2947 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3117,10 +3117,10 @@ static void flush_unmaps(void)
- 			/* On real hardware multiple invalidations are expensive */
- 			if (cap_caching_mode(iommu->cap))
- 				iommu_flush_iotlb_psi(iommu, domain->id,
--					iova->pfn_lo, iova->pfn_hi - iova->pfn_lo + 1,
-+					iova->pfn_lo, iova_size(iova),
- 					!deferred_flush[i].freelist[j], 0);
- 			else {
--				mask = ilog2(mm_to_dma_pfn(iova->pfn_hi - iova->pfn_lo + 1));
-+				mask = ilog2(mm_to_dma_pfn(iova_size(iova)));
- 				iommu_flush_dev_iotlb(deferred_flush[i].domain[j],
- 						(uint64_t)iova->pfn_lo << PAGE_SHIFT, mask);
- 			}
-@@ -3921,8 +3921,7 @@ static int intel_iommu_memory_notifier(struct notifier_block *nb,
- 			rcu_read_lock();
- 			for_each_active_iommu(iommu, drhd)
- 				iommu_flush_iotlb_psi(iommu, si_domain->id,
--					iova->pfn_lo,
--					iova->pfn_hi - iova->pfn_lo + 1,
-+					iova->pfn_lo, iova_size(iova),
- 					!freelist, 0);
- 			rcu_read_unlock();
- 			dma_free_pagelist(freelist);
-diff --git a/include/linux/iova.h b/include/linux/iova.h
-index 3277f4711349..19e81d5ccb6d 100644
---- a/include/linux/iova.h
-+++ b/include/linux/iova.h
-@@ -34,6 +34,11 @@ struct iova_domain {
- 	unsigned long	dma_32bit_pfn;
- };
- 
-+static inline unsigned long iova_size(struct iova *iova)
-+{
-+	return iova->pfn_hi - iova->pfn_lo + 1;
-+}
-+
- struct iova *alloc_iova_mem(void);
- void free_iova_mem(struct iova *iova);
- void free_iova(struct iova_domain *iovad, unsigned long pfn);
--- 
-1.7.10.4
+On Wed, Jun 18, 2014 at 3:40 PM, Andreas Noever
+<andreas.noever@gmail.com> wrote:
+> On Wed, Jun 18, 2014 at 1:39 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> It seems to fix the testcase (no unwanted resources are released). But
+> why do you reassign bus and not just skip the top level bridge? If one
+> of the allocations below bridge failed then a resource of that device
+> will be in fail_res and bridge->subordinate will get released anyways?
+> Also by not removing fail_res from the list you trigger the code in
+> the next loop for the top level bridge (in particular the res->flags =
+> 0 line looks dangerous).
 
+Should not be dangerous, just second try.
+
+>
+> Could you explain why this function attempts to assign resources two
+> times? In which scenario will a second attempt be successful?
+
+For example, at first mmio is assigned (by firmware), but pref mmio fails,
+then before second try,  mmio get cleared, then we could separate
+mmio and mmio pref. So need to try again for pref mmio.
+
+Also I missed one MEM_64 for hotplug path.
+
+So we need two patches.
+
+Thanks
+
+Yinghai
+
+--90e6ba6e8108ebb06e04fc28fbeb
+Content-Type: text/x-patch; charset=US-ASCII; name="fix_release_sibling_bridge_res.patch"
+Content-Disposition: attachment;
+	filename="fix_release_sibling_bridge_res.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hwlkz2960
+
+U3ViamVjdDogW1BBVENIXSBwY2k6IERvbid0IHJlbGVhc2Ugc2liaWxpbmcgYnJpZGdlIHJlc291
+cmNlcwoKT24gaG90cGx1ZyBjYXNlLCB3ZSBzaG91bGQgbm90IHRvdWNoIHNpYmxpbmcgYnJpZGdl
+cyB0aGF0IGlzIG91dApzaWRlIG9mIHRoZSBzbG90cy4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkg
+THUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgfCAg
+IDEyICsrKysrKysrKy0tLQogMSBmaWxlIGNoYW5nZWQsIDkgaW5zZXJ0aW9ucygrKSwgMyBkZWxl
+dGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKPT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKKysrIGxpbnV4
+LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtMTY3NiwxMCArMTY3NiwxNiBAQCBhZ2Fp
+bjoKIAkgKiBUcnkgdG8gcmVsZWFzZSBsZWFmIGJyaWRnZSdzIHJlc291cmNlcyB0aGF0IGRvZXNu
+J3QgZml0IHJlc291cmNlIG9mCiAJICogY2hpbGQgZGV2aWNlIHVuZGVyIHRoYXQgYnJpZGdlCiAJ
+ICovCi0JbGlzdF9mb3JfZWFjaF9lbnRyeShmYWlsX3JlcywgJmZhaWxfaGVhZCwgbGlzdCkKLQkJ
+cGNpX2J1c19yZWxlYXNlX2JyaWRnZV9yZXNvdXJjZXMoZmFpbF9yZXMtPmRldi0+YnVzLAorCWxp
+c3RfZm9yX2VhY2hfZW50cnkoZmFpbF9yZXMsICZmYWlsX2hlYWQsIGxpc3QpIHsKKwkJc3RydWN0
+IHBjaV9idXMgKmJ1cyA9IGZhaWxfcmVzLT5kZXYtPmJ1czsKKworCQlpZiAoZmFpbF9yZXMtPmRl
+diA9PSBicmlkZ2UpCisJCQlidXMgPSBicmlkZ2UtPnN1Ym9yZGluYXRlOworCisJCXBjaV9idXNf
+cmVsZWFzZV9icmlkZ2VfcmVzb3VyY2VzKGJ1cywKIAkJCQkJCSBmYWlsX3Jlcy0+ZmxhZ3MgJiB0
+eXBlX21hc2ssCiAJCQkJCQkgd2hvbGVfc3VidHJlZSk7CisJfQogCiAJLyogcmVzdG9yZSBzaXpl
+IGFuZCBmbGFncyAqLwogCWxpc3RfZm9yX2VhY2hfZW50cnkoZmFpbF9yZXMsICZmYWlsX2hlYWQs
+IGxpc3QpIHsK
+--90e6ba6e8108ebb06e04fc28fbeb
+Content-Type: text/x-patch; charset=US-ASCII; name="assign_unassigned_bridge_MEM_64.patch"
+Content-Disposition: attachment;
+	filename="assign_unassigned_bridge_MEM_64.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hwlkz9yh1
+
+U3ViamVjdDogW1BBVENIXSBwY2k6IEFkZCBiYWNrIG1pc3NpbmcgTUVNXzY0IGNoZWNrIGZvciBo
+b3RwbHVnIHBhdGgKCldlIG1pc3MgdGhhdCBpbgp8ICBjb21taXQgNWIyODU0MTU1MmVmNWVlZmZj
+NDFkNjkzNjEwNWYzOGMyNTA4ZTU2Ngp8ICAgIFBDSTogUmVzdHJpY3QgNjQtYml0IHByZWZldGNo
+YWJsZSBicmlkZ2Ugd2luZG93cyB0byA2NC1iaXQgcmVzb3VyY2VzCmZvciBwY2kgaG90cGx1ZyBw
+YXRoLgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0t
+CiBkcml2ZXJzL3BjaS9zZXR1cC1idXMuYyB8ICAgIDIgKy0KIDEgZmlsZSBjaGFuZ2VkLCAxIGlu
+c2VydGlvbigrKSwgMSBkZWxldGlvbigtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9z
+ZXR1cC1idXMuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9zZXR1
+cC1idXMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCkBAIC0xNjUyLDcg
+KzE2NTIsNyBAQCB2b2lkIHBjaV9hc3NpZ25fdW5hc3NpZ25lZF9icmlkZ2VfcmVzb3VyCiAJc3Ry
+dWN0IHBjaV9kZXZfcmVzb3VyY2UgKmZhaWxfcmVzOwogCWludCByZXR2YWw7CiAJdW5zaWduZWQg
+bG9uZyB0eXBlX21hc2sgPSBJT1JFU09VUkNFX0lPIHwgSU9SRVNPVVJDRV9NRU0gfAotCQkJCSAg
+SU9SRVNPVVJDRV9QUkVGRVRDSDsKKwkJCQkgIElPUkVTT1VSQ0VfUFJFRkVUQ0ggfCBJT1JFU09V
+UkNFX01FTV82NDsKIAogYWdhaW46CiAJX19wY2lfYnVzX3NpemVfYnJpZGdlcyhwYXJlbnQsICZh
+ZGRfbGlzdCk7Cg==
+--90e6ba6e8108ebb06e04fc28fbeb--
