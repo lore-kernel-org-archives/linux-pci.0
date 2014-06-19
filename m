@@ -1,49 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:46581 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932496AbaFPSaa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jun 2014 14:30:30 -0400
-Message-ID: <539F37C3.7070600@wwwdotorg.org>
-Date: Mon, 16 Jun 2014 12:30:27 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:61417 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757733AbaFSIbH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 04:31:07 -0400
+Received: by mail-ie0-f179.google.com with SMTP id tr6so1665437ieb.24
+        for <linux-pci@vger.kernel.org>; Thu, 19 Jun 2014 01:31:07 -0700 (PDT)
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/5] PCI: tegra: Overhaul regulator usage
-References: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1401288555-24197-1-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <20140619024651.GC6478@richard>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1402365399-5121-15-git-send-email-weiyang@linux.vnet.ibm.com>
+ <CACxGe6v6Rdd=GQ8qR5LQ64NThidn7kn3WkKFkOXOsNuWq75D-A@mail.gmail.com> <20140619024651.GC6478@richard>
+From: Grant Likely <grant.likely@secretlab.ca>
+Date: Thu, 19 Jun 2014 09:30:47 +0100
+Message-ID: <CACxGe6sgOh3MP-03Ge9NK7DWf+dgC98huA9Sv4DcThXNfByf2w@mail.gmail.com>
+Subject: Re: [RFC PATCH V3 14/17] ppc/pci: create/release dev-tree node for VFs
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	gwshan@linux.vnet.ibm.com, Mike Qiu <qiudayu@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, yan@linux.vnet.ibm.com,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/28/2014 08:49 AM, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> The current device tree binding for the regulator setup on Tegra PCIe is
-> not accurate. While it does work for current use-cases, that's likely by
-> accident rather than design. This series replaces the existing set of
-> power-supply properties with a new set that accurately describes the
-> inputs of the IP block (depending on SoC generation).
-> 
-> As a heads-up, this breaks backwards compatibility with prior versions
-> of the device tree bindings, but I don't see a reason why that should
-> keep us from fixing this properly. Not many people are currently using
-> these bindings and those who are are most likely tracking upstream
-> development closely enough not to be impacted by this.
-> 
-> I've aimed to keep the series bisectible, which has the downside of
-> interleaving patches to unrelated trees (ARM and PCI). I'm hoping that
-> perhaps we can find a way to merge this as a whole to keep it possible
-> to bisect across the series. Although again, I guess it wouldn't be all
-> that bad if that wasn't the case, given how little PCIe is actually
-> being used.
-> 
-> This second version of the series has Bjorn's Acked-by for patch 3 from
-> the RFC. Stephen, it would be great if you can take this through the
-> Tegra tree so that the bisectability can be preserved. I have a bunch of
-> other smaller changes for the PCIe driver (mostly cleanups). I don't
-> think any of them will conflict, but for extra safety Bjorn may want to
-> pull this as a stable branch into his tree.
+On Thu, Jun 19, 2014 at 3:46 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+> On Wed, Jun 18, 2014 at 07:26:27PM +0100, Grant Likely wrote:
+>>On Tue, Jun 10, 2014 at 2:56 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>>> Currently, powernv platform is not aware of VFs. This means no dev-node
+>>> represents a VF. Also, VF PCI device is created when PF driver want to enable
+>>> it. This leads to the pdn->pdev and pdn->pe_number an invalid value.
+>>>
+>>> This patch create/release dev-node for VF and fixs this when a VF's pci_dev
+>>> is created.
+>>>
+>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>
+>>I don't think this is the right way to handle this. Unless it is a
+>>fixup to a buggy devicetree provided by firmware, I don't want to see
+>>any code modifying the devicetree to describe stuff that is able to be
+>>directly enumerated. Really the pci code should handle the lack of a
+>>device_node gracefully. If it cannot then it should be fixed.
+>
+> Grant,
+>
+> Glad to see your comment.
+>
+> I will fix this in the firmware.
 
-I've applied this series to Tegra's for-3.17/pcie-regulators branch.
+That's not really what I meant. The kernel should be able to deal with
+virtual functions even if firmware doesn't know how, and the kernel
+should not require modifying the device tree to support them.
+
+I'm saying fix the kernel so that a device node is not necessary for
+virtual functions.
+
+g.
