@@ -1,134 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:43632 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933016AbaFLLcq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jun 2014 07:32:46 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <yan@linux.vnet.ibm.com>;
-	Thu, 12 Jun 2014 17:02:44 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 7ECF13940049
-	for <linux-pci@vger.kernel.org>; Thu, 12 Jun 2014 17:02:40 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5CBXZ6i28246086
-	for <linux-pci@vger.kernel.org>; Thu, 12 Jun 2014 17:03:35 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5CBWdVX024913
-	for <linux-pci@vger.kernel.org>; Thu, 12 Jun 2014 17:02:40 +0530
-Date: Thu, 12 Jun 2014 19:32:35 +0800
-From: Guo Chao <yan@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] pci: Allow very large resource windows
-Message-ID: <20140612113235.GA3289@yanx>
-References: <20140611060118.GB3169@yanx>
- <CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:47817 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756963AbaFSN1p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Jun 2014 09:27:45 -0400
+Message-ID: <53A2E544.1020605@ti.com>
+Date: Thu, 19 Jun 2014 16:27:32 +0300
+From: Tero Kristo <t-kristo@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
+	Keerthy <j-keerthy@ti.com>, Rajendra Nayak <rnayak@ti.com>,
+	Paul Walmsley <paul@pwsan.com>
+Subject: Re: [PATCH v2 06/18] ARM: dts: DRA7: Add divider table to optfclk_pciephy_div
+ clock
+References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-7-git-send-email-kishon@ti.com> <53A2C52C.6020606@ti.com> <53A2DB81.5070105@ti.com>
+In-Reply-To: <53A2DB81.5070105@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 11, 2014 at 10:23:35AM -0700, Yinghai Lu wrote:
-> On Tue, Jun 10, 2014 at 11:01 PM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
-> > Well, that's not enough for our 16G BAR ...
-> >
-> > I thought Yinghai fixed it permanently last time:
-> >
-> >         http://permalink.gmane.org/gmane.linux.kernel.pci/29142
-> >
-> > Are you still working on this, Yinghai?
-> 
-> Hi Guo,
-> 
-> Please check updated version on your setup.
-> 
+On 06/19/2014 03:45 PM, Kishon Vijay Abraham I wrote:
+> Hi Tero,
+>
+> On Thursday 19 June 2014 04:40 PM, Tero Kristo wrote:
+>> On 05/29/2014 09:38 AM, Kishon Vijay Abraham I wrote:
+>>> From: Keerthy <j-keerthy@ti.com>
+>>>
+>>> Add divider table to optfclk_pciephy_div clock. The Documentation
+>>> for divider clock can be found at ../clock/ti/divider.txt
+>>
+>> This patch requires a better changelog. Why is the change done, any TRM refs etc.?
+>
+> The 8th bit of CM_CLKMODE_APLL_PCIE can be programmed to either 0x0 or 0x1
+> based on if the divider value is 0x2 or 0x1.
+>
+> Figure 26-21. PCIe PHY Clock Generator Overview in vE of DRA7xx ES1.0 shows the
+> block diagram of Clock Generator Subsystem of PCIe PHY module. We have to do a
+> bypass (divided by 1) in order to get the correct PCIE_PHY_DIV_GCLK
+
+Yes, something like this on the changelog would be good.
+
+-Tero
+
+> frequency.
+>
 > Thanks
-> 
-> Yinghai
-
-> Subject: [PATCH -v3] PCI: Fix bus align checking to support more than 8G
-> 
-> So add mmio64 mask checking, only allow more than 4G when bridge and all child
-> support 64bit res.  Still keep old 2G checking for other path.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-
-Tested-by: Guo Chao <yan@linux.vnet.ibm.com>
-
-Thanks
-
-> ---
->  drivers/pci/setup-bus.c |   40 ++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 38 insertions(+), 2 deletions(-)
-> 
-> Index: linux-2.6/drivers/pci/setup-bus.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/setup-bus.c
-> +++ linux-2.6/drivers/pci/setup-bus.c
-> @@ -928,15 +928,50 @@ static int pbus_size_mem(struct pci_bus
->  {
->  	struct pci_dev *dev;
->  	resource_size_t min_align, align, size, size0, size1;
-> -	resource_size_t aligns[14];	/* Alignments from 1Mb to 8Gb */
-> +	resource_size_t aligns[44];	/* Alignments from 1Mb to 2^63 */
->  	int order, max_order;
->  	struct resource *b_res = find_free_bus_resource(bus,
->  					mask | IORESOURCE_PREFETCH, type);
->  	resource_size_t children_add_size = 0;
-> +	unsigned int mem64_mask;
->  
->  	if (!b_res)
->  		return -ENOSPC;
->  
-> +	mem64_mask = b_res->flags & IORESOURCE_MEM_64;
-> +
-> +	/* kernel does not support 64bit res */
-> +	if (sizeof(resource_size_t) == 4)
-> +		mem64_mask &= ~IORESOURCE_MEM_64;
-> +
-> +	if (!mem64_mask)
-> +		goto mem64_mask_check_done;
-> +
-> +	/* check if mem64 support is supported and needed at first */
-> +	list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		int i;
-> +
-> +		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> +			struct resource *r = &dev->resource[i];
-> +
-> +			if (r->parent || ((r->flags & mask) != type &&
-> +					  (r->flags & mask) != type2 &&
-> +					  (r->flags & mask) != type3))
-> +				continue;
-> +#ifdef CONFIG_PCI_IOV
-> +			/* Skip SRIOV checking, as optional res */
-> +			if (realloc_head && i >= PCI_IOV_RESOURCES &&
-> +					i <= PCI_IOV_RESOURCE_END)
-> +				continue;
-> +#endif
-> +			mem64_mask &= r->flags & IORESOURCE_MEM_64;
-> +
-> +			if (!mem64_mask)
-> +				goto mem64_mask_check_done;
-> +		}
-> +	}
-> +mem64_mask_check_done:
-> +
->  	memset(aligns, 0, sizeof(aligns));
->  	max_order = 0;
->  	size = 0;
-> @@ -973,7 +1008,8 @@ static int pbus_size_mem(struct pci_bus
->  			order = __ffs(align) - 20;
->  			if (order < 0)
->  				order = 0;
-> -			if (order >= ARRAY_SIZE(aligns)) {
-> +			if (order >= ARRAY_SIZE(aligns) ||
-> +			    (!mem64_mask && order > 11 /* 2Gb */)) {
->  				dev_warn(&dev->dev, "disabling BAR %d: %pR "
->  					 "(bad alignment %#llx)\n", i, r,
->  					 (unsigned long long) align);
+> Kishon
+>>
+>> -Tero
+>>
+>>>
+>>> Cc: Rajendra Nayak <rnayak@ti.com>
+>>> Cc: Tero Kristo <t-kristo@ti.com>
+>>> Cc: Paul Walmsley <paul@pwsan.com>
+>>> Signed-off-by: Keerthy <j-keerthy@ti.com>
+>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>> ---
+>>>    arch/arm/boot/dts/dra7xx-clocks.dtsi |    1 +
+>>>    1 file changed, 1 insertion(+)
+>>>
+>>> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> index c767687..55e95c5 100644
+>>> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> @@ -1170,6 +1170,7 @@
+>>>            clocks = <&apll_pcie_ck>;
+>>>            #clock-cells = <0>;
+>>>            reg = <0x021c>;
+>>> +        ti,dividers = <2>, <1>;
+>>>            ti,bit-shift = <8>;
+>>>            ti,max-div = <2>;
+>>>        };
+>>>
+>>
 
