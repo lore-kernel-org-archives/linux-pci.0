@@ -1,48 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:39656 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751401AbaFXNm4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 09:42:56 -0400
+Received: from szxga01-in.huawei.com ([119.145.14.64]:50086 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757561AbaFSIau (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 04:30:50 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 0/5] Cleanup for MSI
+Date: Thu, 19 Jun 2014 16:29:34 +0800
+Message-ID: <1403166574-7032-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJZOPZ+FUneDDKMh0O2aZLYeDTcH8cHA7ati5wzi7Ycgc5wFXQ@mail.gmail.com>
-References: <CANwwZzWsjQwZB5Cc4Hyv2HQOLhAx6ycjf32UQG55zVX=Kmbi6Q@mail.gmail.com>
-	<CAJZOPZ+FUneDDKMh0O2aZLYeDTcH8cHA7ati5wzi7Ycgc5wFXQ@mail.gmail.com>
-Date: Tue, 24 Jun 2014 19:12:51 +0530
-Message-ID: <CANwwZzXc2UyYxGX2X+O38jTVki70HrP71FBWbc4dTyt9nEN0nA@mail.gmail.com>
-Subject: Re: mlx4 - query regarding PF VF functionality division
-From: Bob Biloxi <iambobbiloxi@gmail.com>
-To: Or Gerlitz <or.gerlitz@gmail.com>
-Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Not really, but let's take EIM approach, what's your goal/mission?
-Let's say I am going through code to understand only the PF related
-functionality without bothering about VF, what are the things I need
-to keep in mind.
-I mean do i need to :
 
-a. Go through all the files in mlx4
-b. If the code is not specifically under mlx4_is_master, I still need
-to understand it because it is also part of PF driver
-c. I can ignore the logic which executes if mlx4_is_master is false,
-because that would be the VF code
+Yijing Wang (5):
+  PCI/MSI: Introduce msix_clear_and_set_ctrl() function
+  PCI/MSI: Remove the unused function msi_enabled_mask()
+  PCI/MSI: Cache Multiple Message Capable info in msi_desc
+  PCI/MSI: MSI cleanup, msi_setup_entry()
+  s390/MSI: Fix msi mask issue
 
-Thanks for the help!!
-
+ arch/s390/pci/pci.c |    2 +-
+ drivers/pci/msi.c   |  129 +++++++++++++++++++++++++--------------------------
+ include/linux/msi.h |    1 +
+ 3 files changed, 65 insertions(+), 67 deletions(-)
 
 
-
-On Mon, Jun 23, 2014 at 5:30 PM, Or Gerlitz <or.gerlitz@gmail.com> wrote:
-> On Mon, Jun 23, 2014 at 12:33 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
-> [...]
->> Is there any way we can clearly separate the files that are used by PF
->> vs the files that are used by VF in the (drivers/net/ethernet/mlx4
->> sub-directory)?
-> [...]
->
-> Not really, but let's take EIM approach, what's your goal/mission?
->
-> Or.
