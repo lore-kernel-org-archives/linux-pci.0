@@ -1,46 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:53374 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752360AbaFDOOU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jun 2014 10:14:20 -0400
-Date: Wed, 4 Jun 2014 10:14:16 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Shuah Khan <shuah.kh@samsung.com>,
-	Eli Billauer <eli.billauer@gmail.com>,
-	devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	discuss@x86-64.org
-Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
- dma_map_single()
-Message-ID: <20140604141416.GD5004@htj.dyndns.org>
-References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
- <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
- <538E3D04.9060808@samsung.com>
- <20140603233907.GB23880@8bytes.org>
- <20140604140408.GC5004@htj.dyndns.org>
- <20140604141211.GC23880@8bytes.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <53A2E491.5040406@ti.com>
+Date: Thu, 19 Jun 2014 16:24:33 +0300
+From: Tero Kristo <t-kristo@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140604141211.GC23880@8bytes.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
+	Keerthy <j-keerthy@ti.com>, Rajendra Nayak <rnayak@ti.com>,
+	Paul Walmsley <paul@pwsan.com>
+Subject: Re: [PATCH v2 07/18] ARM: dts: DRA7: Change the parent of apll_pcie_in_clk_mux
+ to dpll_pcie_ref_m2ldo_ck
+References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-8-git-send-email-kishon@ti.com> <53A2C5B4.9080300@ti.com> <53A2DEDA.5050104@ti.com>
+In-Reply-To: <53A2DEDA.5050104@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On 06/19/2014 04:00 PM, Kishon Vijay Abraham I wrote:
+> Hi Tero,
+>
+> On Thursday 19 June 2014 04:42 PM, Tero Kristo wrote:
+>> On 05/29/2014 09:38 AM, Kishon Vijay Abraham I wrote:
+>>> From: Keerthy <j-keerthy@ti.com>
+>>>
+>>> Change the parent of apll_pcie_in_clk_mux to dpll_pcie_ref_m2ldo_ck
+>>> from dpll_pcie_ref_ck.
+>>
+>> Why? Needs a better changelog also.
+>
+> Figure 26-22. DPLL_PCIE_REF Functional Block Diagram in vE of DRA7xx ES1.0 TRM
+> shows the signal name for the output of post divider (M2) is CLKOUTLDO.
+>
+> Figure 26-21. PCIe PHY Clock Generator Overview shows CLKOUTLDO is used as
+> input to apll mux.
+>
+> So the actual output of dpll should be dpll_pcie_ref_m2ldo_ck instead of
+> dpll_pcie_ref_ck (which is the input of apll mux).
 
-On Wed, Jun 04, 2014 at 04:12:11PM +0200, Joerg Roedel wrote:
-> Yes, but those drivers usually get DMA buffers at init time with the
-> dma_alloc_* interfaces. The dma_map_* interfaces discussed here belong
-> to the streaming DMA-API, so they are usually used for only one DMA
-> transaction before dma_unmap_* is called on them.
-> 
-> A devm interface for the dma_alloc_* family of functions would
-> actually make sense, but not for the dma_map_* functions.
+Yep, this is what I want to see in the changelog, so please repost. The 
+original changelog had no info on it whatsoever.
 
-Ah, okay.  Fair enough.
+-Tero
 
-Thanks.
+>
+> Thanks
+> Kishon
+>>
+>> -Tero
+>>
+>>>
+>>> Cc: Rajendra Nayak <rnayak@ti.com>
+>>> Cc: Tero Kristo <t-kristo@ti.com>
+>>> Cc: Paul Walmsley <paul@pwsan.com>
+>>> Signed-off-by: Keerthy <j-keerthy@ti.com>
+>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>> ---
+>>>    arch/arm/boot/dts/dra7xx-clocks.dtsi |    2 +-
+>>>    1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> index 55e95c5..44993ec 100644
+>>> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+>>> @@ -1152,7 +1152,7 @@
+>>>
+>>>        apll_pcie_in_clk_mux: apll_pcie_in_clk_mux@4ae06118 {
+>>>            compatible = "ti,mux-clock";
+>>> -        clocks = <&dpll_pcie_ref_ck>, <&pciesref_acs_clk_ck>;
+>>> +        clocks = <&dpll_pcie_ref_m2ldo_ck>, <&pciesref_acs_clk_ck>;
+>>>            #clock-cells = <0>;
+>>>            reg = <0x021c 0x4>;
+>>>            ti,bit-shift = <7>;
+>>>
+>>
 
--- 
-tejun
