@@ -1,115 +1,31 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:48611 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388AbaFWG30 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 02:29:26 -0400
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 23 Jun 2014 11:59:22 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id B19A9125804D
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 11:58:50 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N6USrv11010420
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 12:00:28 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N6TIc5030239
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 11:59:18 +0530
-Date: Mon, 23 Jun 2014 14:29:15 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, yan@linux.vnet.ibm.com,
-	qiudayu@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH V3 02/17] pci/of: Match PCI VFs to dev-tree nodes
- dynamically
-Message-ID: <20140623062915.GA5172@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-3-git-send-email-weiyang@linux.vnet.ibm.com>
- <20140623050747.GB5069@shangw>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140623050747.GB5069@shangw>
+Received: from mga01.intel.com ([192.55.52.88]:63991 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934263AbaFTIRn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 20 Jun 2014 04:17:43 -0400
+From: "Chen, Alvin" <alvin.chen@intel.com>
+To: Chris Ball <chris@printf.net>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] mmc: sdhci-pci: Add support for Intel Quark SDIO host controller
+Date: Fri, 20 Jun 2014 09:13:55 -0700
+Message-Id: <1403280836-26943-1-git-send-email-alvin.chen@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 03:07:47PM +1000, Gavin Shan wrote:
->On Tue, Jun 10, 2014 at 09:56:24AM +0800, Wei Yang wrote:
->>As introduced by commit 98d9f30c82 ("pci/of: Match PCI devices to dev-tree nodes
->>dynamically"), we need to match PCI devices to their corresponding dev-tree
->>nodes. While for VFs, this step was missed.
->>
->>This patch matches VFs' PCI devices to dev-tree nodes dynamically.
->>
->>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>---
->> drivers/pci/iov.c |    1 +
->> 1 file changed, 1 insertion(+)
->>
->>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>index 589ef7d..1d21f43 100644
->>--- a/drivers/pci/iov.c
->>+++ b/drivers/pci/iov.c
->>@@ -67,6 +67,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->>
->> 	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
->> 	virtfn->vendor = dev->vendor;
->>+	pci_set_of_node(virtfn);
->
->If the VF and PF seats on different PCI buses, I guess pci_set_of_node() always
->binds nothing with the VF. It might be one of the problem your code missed and
->I didn't catch this in the code review done previously. However, it shouldn't
->be a real problem if we're not going to rely on dynamic device_node.
->
+From: "Alvin (Weike) Chen" <alvin.chen@intel.com>
 
-Thanks for the comment.
+Hi,
+Intel Quark consists of one SDIO host controller which can be PCI enumerated. 
+SDHCI-PCI layer doesn't support it. Thus, we add support for Intel Quark SDIO as well.
 
-This case is not took into consideration yet, so it is not supported now.
-While I think it is time to think about the solution now.
+Derek Browne (1):
+  Quark SDIO host controller
 
-Hmm... after reading the code a while, this seems some change in current code.
-
-1. The hierarchy of VF's device node
-   
-                    +---------+
-                    |P2P      |parent
-                    +----+----+
-                         |       pbus
-            +------------+------------+              vbus
-            |                         |           ---------------+
-       +---------+              +-----+---+          |
-       |DEV      |child1        |DEV      |child2    |
-       +---------+              +---------+          |
-                                                  +----+------+
-                                                  |VF         | vchild
-                                                  +-----------+
-
-   From the chart above, the left side is the device node hierarchy without
-   VFs. Each pci device is the direct child of the P2P bridge. When match pci
-   device and its device node, the code go through the parent bus node's child
-   list and find the one with same devfn.(in pci_set_of_node()). And we can
-   tell the parent bus node is the P2P bridge's device node.
-
-   This works fine, untill VFs need to be added. vbus is a child of the pbus,
-   and vbus->self is NULL. So first thing is to set the correct device node
-   for this virtual bus. From the chart above, looks both P2P bridge and the
-   DEV could be the device node. While the later one seems more reasonable.
-
-2. Reserve virtual bus number in firmware
-   This is not a big issue, just reserve enough bus number in firmware.
-   Otherwise, pci device and device node may not match.
-
->> 	pci_|ead_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
->> 	pci_setup_device(virtfn);
->> 	virtfn->dev.parent = dev->dev.parent;
->
->Thanks,
->Gavin
+ drivers/mmc/host/sdhci-pci.c |   12 ++++++++++++
+ include/linux/pci_ids.h      |    2 ++
+ 2 files changed, 14 insertions(+)
 
 -- 
-Richard Yang
-Help you, Help me
+1.7.9.5
 
