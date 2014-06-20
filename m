@@ -1,156 +1,285 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([78.24.191.182]:49850 "EHLO
-	cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740AbaFJV5k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jun 2014 17:57:40 -0400
-Date: Tue, 10 Jun 2014 22:57:36 +0100 (BST)
-From: "Maciej W. Rozycki" <macro@linux-mips.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Don Zickus <dzickus@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <53A3F504.4010804@linux.intel.com>
+Date: Fri, 20 Jun 2014 16:47:00 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Grant Likely <grant.likely@linaro.org>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Tony Luck <tony.luck@intel.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Paul Gortmaker <paul.gortmaker@windriver.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [Patch V4 11/42] x86, ioapic: kill unused global variable
- timer_through_8259
-In-Reply-To: <53967992.2020808@linux.intel.com>
-Message-ID: <alpine.LFD.2.11.1406100651500.14982@eddie.linux-mips.org>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com> <1402302011-23642-12-git-send-email-jiang.liu@linux.intel.com> <alpine.LFD.2.11.1406091538320.14982@eddie.linux-mips.org> <53967992.2020808@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [RFC Patch V2 15/16] pci, ioapic: kill ioapic PCI driver
+References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com> <1402982995-13747-16-git-send-email-jiang.liu@linux.intel.com> <CAErSpo4hmav+JTepA2cGC2Nwi1PHxBWpy+GG2t_dRfw1nbKqLA@mail.gmail.com>
+In-Reply-To: <CAErSpo4hmav+JTepA2cGC2Nwi1PHxBWpy+GG2t_dRfw1nbKqLA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 10 Jun 2014, Jiang Liu wrote:
+Hi Bjorn,
+	I should pay more attention to commit messages:)
+Then how about this description?
+----------------------------------------------------------------------
+PCI: Remove PCI ioapic driver
 
-> >> index d4aba16e6bbf..94a56c233e87 100644
-> >> --- a/arch/x86/kernel/apic/io_apic.c
-> >> +++ b/arch/x86/kernel/apic/io_apic.c
-> >> @@ -2638,8 +2638,6 @@ static int __init disable_timer_pin_setup(char *arg)
-> >>  }
-> >>  early_param("disable_timer_pin_1", disable_timer_pin_setup);
-> >>  
-> >> -int timer_through_8259 __initdata;
-> >> -
-> >>  /*
-> >>   * This code may look a bit paranoid, but it's supposed to cooperate with
-> >>   * a wide range of boards and BIOS bugs.  Fortunately only the timer IRQ
-> >> @@ -2744,7 +2742,6 @@ static inline void __init check_timer(void)
-> >>  		legacy_pic->unmask(0);
-> >>  		if (timer_irq_works()) {
-> >>  			apic_printk(APIC_QUIET, KERN_INFO "....... works.\n");
-> >> -			timer_through_8259 = 1;
-> >>  			goto out;
-> >>  		}
-> >>  		/*
-> > 
-> >  So how does the new NMI watchdog handle systems that use this '8259A 
-> > Virtual Wire' mode, pretty common on pre-P6 computers?
-> Hi Maciej,
-> 	We just kill the useless variable "timer_through_8259", 8259 virtual
-> wire mode is still supported.
+To support IOAPIC hotplug on x86 and IA64 platforms, OS needs to figure
+out global interrupt source number(GSI) and IOAPIC enumeration ID
+through ACPI interfaces. So BIOS must implement an ACPI IOAPIC device
+with _GSB/_UID or _MAT method to support IOAPIC hotplug. OS also needs
+to figure out base physical address to access IOAPIC registers. OS may
+get the base physical address through PCI BARs if IOAPIC device is
+visible in PCI domain, otherwise OS may get the address by ACPI _CRS
+method if IOAPIC device is hidden from PCI domain by BIOS.
 
- No doubt it is useless, the question is why it is unused.  If you tracked 
-it down, you'd come up with this change of mine:
+When adding a PCI subtree, we need to add IOAPIC devices before enabling
+all other PCI devices because other PCI devices may use the IOAPIC to
+allocate PCI interrupts.
 
-commit 35542c5ebced864776d90d83d1e255016fd4c084
-Author: Maciej W. Rozycki <macro@linux-mips.org>
-Date:   Wed May 21 22:10:22 2008 +0100
+So we plan to reimplement IOAPIC driver as an ACPI instead of PCI driver
+due to:
+1) hot-pluggable IOAPIC devices are always visible in ACPI domain,
+   but may or may not be visible in PCI domain.
+2) we could explicitly control the order between IOAPIC and other PCI
+   devices.
 
-    x86: I/O APIC: clean up the 8259A on a NMI watchdog failure
+We also have another choice to use a PCI driver to manage IOAPIC device
+if it's visible in PCI domain and use an ACPI driver if it's only
+visible in ACPI domain. But this solution is a little complex.
 
-    There is no point in keeping the 8259A enabled if the I/O APIC NMI
-    watchdog has failed and the 8259A is not used to pass through regular
-    timer interrupts.  This fixes problems with some systems where some logic
-    gets confused.
+It shouldn't cause serious backward compatibility issues because:
+1) IOAPIC hotplug is never supported on x86 yet because it hasn't
+   implemented the required acpi_register_ioapic() and
+   acpi_unregister_ioapic().
+2) Currently only ACPI based IOAPIC hotplug is possible on x86 and
+   IA64, we don't know other specifications and interfaces to support
+   IOAPIC hotplug yet.
+3) We will reimplement an ACPI IOAPICｔdriver support IOAPIC hotplug.
 
-    Signed-off-by: Maciej W. Rozycki <macro@linux-mips.org>
-    Signed-off-by: Ingo Molnar <mingo@elte.hu>
-
-that introduced that variable.  And to answer myself:
-
-commit 072b198a4ad48bd722ec6d203d65422a4698eae7
-Author: Don Zickus <dzickus@redhat.com>
-Date:   Fri Nov 12 11:22:24 2010 -0500
-
-    x86, nmi_watchdog: Remove all stub function calls from old nmi_watchdog
-
-    Now that the bulk of the old nmi_watchdog is gone, remove all
-    the stub variables and hooks associated with it.
-
-    This touches lots of files mainly because of how the io_apic
-    nmi_watchdog was implemented.  Now that the io_apic nmi_watchdog
-    is forever gone, remove all its fingers.
-
-    Most of this code was not being exercised by virtue of
-    nmi_watchdog != NMI_IO_APIC, so there shouldn't be anything to
-    risky here.
-
-    Signed-off-by: Don Zickus <dzickus@redhat.com>
-    Cc: fweisbec@gmail.com
-    Cc: gorcunov@openvz.org
-    LKML-Reference: <1289578944-28564-3-git-send-email-dzickus@redhat.com>
-    Signed-off-by: Ingo Molnar <mingo@elte.hu>
-
-So the I/O APIC watchdog is gone and '8259A Virtual Wire' mode systems are 
-not handled anymore.  Well, I guess it was a useful hack for its days, but 
-I understand that maintaining that rather hairy code to support a 
-minuscule set of old SMP systems (P5 or even i486 UP systems virtually 
-never had an I/O APIC, unless you just didn't populate additional 
-processor sockets; P5 SMPs were usually only DP though) still in existence 
-(mine is still all right, thanks, after 17 years; even the original boxed 
-CPU fans work great :) ) was considered not worth it.  Oh well...
-
- In that case though I think we should clean up some stale comment 
-references to that watchdog in arch/x86/kernel/apic/io_apic.c too.  It may 
-be worthwhile if code was scrutinised at that time too WRT implicit 
-hardware setup dependencies as indicated by these comments, as these 
-comments having been left behind clearly indicate that such a step has 
-never been made.
-
- And for the record, your clean-up logically belongs to this change:
-
-commit 5f2b0ba4d94b3ac23cbc4b7f675d98eb677a760a
-Author: Don Zickus <dzickus@redhat.com>
-Date:   Fri Nov 12 11:22:23 2010 -0500
-
-    x86, nmi_watchdog: Remove the old nmi_watchdog
-
-    Now that we have a new nmi_watchdog that is more generic and
-    sits on top of the perf subsystem, we really do not need the old
-    nmi_watchdog any more.
-
-    In addition, the old nmi_watchdog doesn't really work if you are
-    using the default clocksource, hpet.  The old nmi_watchdog code
-    relied on local apic interrupts to determine if the cpu is still
-    alive.  With hpet as the clocksource, these interrupts don't
-    increment any more and the old nmi_watchdog triggers false
-    postives.
-
-    This piece removes the old nmi_watchdog code and stubs out any
-    variables and functions calls.  The stubs are the same ones used
-    by the new nmi_watchdog code, so it should be well tested.
-
-    Signed-off-by: Don Zickus <dzickus@redhat.com>
-    Cc: fweisbec@gmail.com
-    Cc: gorcunov@openvz.org
-    LKML-Reference: <1289578944-28564-2-git-send-email-dzickus@redhat.com>
-    Signed-off-by: Ingo Molnar <mingo@elte.hu>
-
-that removed the lone use of `timer_through_8259'.  So it's been lingering 
-out there for some 3.5 years.  Thanks for sorting this out.
-
-  Maciej
+This change also helps to get rid of the false alarm on all current
+Linux distributions:
+[    6.952497] ioapic: probe of 0000:00:05.4 failed with error -22
+[    6.959542] ioapic: probe of 0000:80:05.4 failed with error -22
+---------------------------------------------------------------------------
+On 2014/6/18 0:49, Bjorn Helgaas wrote:
+> Your subject lines aren't even consistent in the same patch series.  I suggest:
+> 
+>   PCI: Remove PCI ioapic driver
+> 
+> On Mon, Jun 16, 2014 at 11:29 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>> Originally the ioapic PCI driver is designed to support IOAPIC hotplug,
+>> but it never works because no architecture has implemented required
+>> interface to support it.
+> 
+> Please be specific about what these "required interfaces" are that no
+> architecture has implemented.  Otherwise it's hard for me to be
+> convinced that it's safe to remove this.
+> 
+>> We plan to reimplement it as an ACPI driver
+>> instead of PCI driver due to:
+>> 1) To support IOAPIC hotplug, an IOAPIC unit must have an companion
+>>    ACPI device, but it may or may not be presented in PCI domain.
+> 
+> Please include the reason why there must be a companion ACPI device.
+> 
+> What about hotplugging IOAPICs on non-ACPI systems?  How would that
+> work?  Will that require totally separate IOAPIC drivers?  I guess
+> pci/ioapic.c isn't very big and contains mostly ACPI stuff, so maybe
+> there's nothing worth sharing.
+> 
+> If there must be a companion ACPI device, I guess that implies that we
+> can't support an IOAPIC on a plug-in card, because there won't be
+> anything in the ACPI namespace about the card.  Is it possible to have
+> an IOAPIC on a plug-in card?  I guess I don't know what we could do
+> with it, since I don't know how we would learn about what is connected
+> to the IOAPIC input pins.  There's no standard for describing that for
+> plug-in IOAPICs, is there?
+> 
+>> 2) All other PCI devices have dependency on IOAPIC, so we must hot-add
+>>    it before all other PCI devices and hot-remove it after all other
+>>    PCI devices. So we need to explicitly control the order to add/remove
+>>    IOAPIC devices.
+>>
+>> So kill the ioapic PCI driver and will reimplement it as an ACPI driver.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  drivers/pci/Kconfig  |    7 ---
+>>  drivers/pci/Makefile |    2 -
+>>  drivers/pci/ioapic.c |  121 --------------------------------------------------
+>>  3 files changed, 130 deletions(-)
+>>  delete mode 100644 drivers/pci/ioapic.c
+>>
+>> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+>> index 893503fa1782..39866d18004e 100644
+>> --- a/drivers/pci/Kconfig
+>> +++ b/drivers/pci/Kconfig
+>> @@ -104,13 +104,6 @@ config PCI_PASID
+>>
+>>           If unsure, say N.
+>>
+>> -config PCI_IOAPIC
+>> -       bool "PCI IO-APIC hotplug support" if X86
+>> -       depends on PCI
+>> -       depends on ACPI
+>> -       depends on X86_IO_APIC
+>> -       default !X86
+>> -
+>>  config PCI_LABEL
+>>         def_bool y if (DMI || ACPI)
+>>         select NLS
+>> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+>> index e04fe2d9df3b..73e4af400a5a 100644
+>> --- a/drivers/pci/Makefile
+>> +++ b/drivers/pci/Makefile
+>> @@ -13,8 +13,6 @@ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
+>>  # Build PCI Express stuff if needed
+>>  obj-$(CONFIG_PCIEPORTBUS) += pcie/
+>>
+>> -obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
+>> -
+>>  # Build the PCI Hotplug drivers if we were asked to
+>>  obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
+>>  ifdef CONFIG_HOTPLUG_PCI
+>> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+>> deleted file mode 100644
+>> index 6b2b7dddbbdb..000000000000
+>> --- a/drivers/pci/ioapic.c
+>> +++ /dev/null
+>> @@ -1,121 +0,0 @@
+>> -/*
+>> - * IOAPIC/IOxAPIC/IOSAPIC driver
+>> - *
+>> - * Copyright (C) 2009 Fujitsu Limited.
+>> - * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
+>> - *
+>> - * This program is free software; you can redistribute it and/or modify
+>> - * it under the terms of the GNU General Public License version 2 as
+>> - * published by the Free Software Foundation.
+>> - */
+>> -
+>> -/*
+>> - * This driver manages PCI I/O APICs added by hotplug after boot.  We try to
+>> - * claim all I/O APIC PCI devices, but those present at boot were registered
+>> - * when we parsed the ACPI MADT, so we'll fail when we try to re-register
+>> - * them.
+>> - */
+>> -
+>> -#include <linux/pci.h>
+>> -#include <linux/module.h>
+>> -#include <linux/acpi.h>
+>> -#include <linux/slab.h>
+>> -
+>> -struct ioapic {
+>> -       acpi_handle     handle;
+>> -       u32             gsi_base;
+>> -};
+>> -
+>> -static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
+>> -{
+>> -       acpi_handle handle;
+>> -       acpi_status status;
+>> -       unsigned long long gsb;
+>> -       struct ioapic *ioapic;
+>> -       int ret;
+>> -       char *type;
+>> -       struct resource *res;
+>> -
+>> -       handle = ACPI_HANDLE(&dev->dev);
+>> -       if (!handle)
+>> -               return -EINVAL;
+>> -
+>> -       status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
+>> -       if (ACPI_FAILURE(status))
+>> -               return -EINVAL;
+>> -
+>> -       /*
+>> -        * The previous code in acpiphp evaluated _MAT if _GSB failed, but
+>> -        * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
+>> -        */
+>> -
+>> -       ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
+>> -       if (!ioapic)
+>> -               return -ENOMEM;
+>> -
+>> -       ioapic->handle = handle;
+>> -       ioapic->gsi_base = (u32) gsb;
+>> -
+>> -       if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+>> -               type = "IOAPIC";
+>> -       else
+>> -               type = "IOxAPIC";
+>> -
+>> -       ret = pci_enable_device(dev);
+>> -       if (ret < 0)
+>> -               goto exit_free;
+>> -
+>> -       pci_set_master(dev);
+>> -
+>> -       if (pci_request_region(dev, 0, type))
+>> -               goto exit_disable;
+>> -
+>> -       res = &dev->resource[0];
+>> -       if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
+>> -               goto exit_release;
+>> -
+>> -       pci_set_drvdata(dev, ioapic);
+>> -       dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
+>> -       return 0;
+>> -
+>> -exit_release:
+>> -       pci_release_region(dev, 0);
+>> -exit_disable:
+>> -       pci_disable_device(dev);
+>> -exit_free:
+>> -       kfree(ioapic);
+>> -       return -ENODEV;
+>> -}
+>> -
+>> -static void ioapic_remove(struct pci_dev *dev)
+>> -{
+>> -       struct ioapic *ioapic = pci_get_drvdata(dev);
+>> -
+>> -       acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
+>> -       pci_release_region(dev, 0);
+>> -       pci_disable_device(dev);
+>> -       kfree(ioapic);
+>> -}
+>> -
+>> -
+>> -static DEFINE_PCI_DEVICE_TABLE(ioapic_devices) = {
+>> -       { PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
+>> -       { PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
+>> -       { }
+>> -};
+>> -MODULE_DEVICE_TABLE(pci, ioapic_devices);
+>> -
+>> -static struct pci_driver ioapic_driver = {
+>> -       .name           = "ioapic",
+>> -       .id_table       = ioapic_devices,
+>> -       .probe          = ioapic_probe,
+>> -       .remove         = ioapic_remove,
+>> -};
+>> -
+>> -static int __init ioapic_init(void)
+>> -{
+>> -       return pci_register_driver(&ioapic_driver);
+>> -}
+>> -module_init(ioapic_init);
+>> -
+>> -MODULE_LICENSE("GPL");
+>> --
+>> 1.7.10.4
+>>
