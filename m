@@ -1,41 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAD6G_RSCQ+CzifpofiXg9yFB3HpEqynF-3giEowRgR9E-qvX1Q@mail.gmail.com>
-References: <CAD6G_RSCQ+CzifpofiXg9yFB3HpEqynF-3giEowRgR9E-qvX1Q@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Jun 2014 11:03:21 -0600
-Message-ID: <CAErSpo5DXHH-jBmqxGfahbJKXdya01OqgMn3H+iiVFM1w12izg@mail.gmail.com>
-Subject: Re: PCIe current resource settings
-To: Jagan Teki <jagannadh.teki@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:63837 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934161AbaFTHlz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jun 2014 03:41:55 -0400
+Message-ID: <1403250112.22857.7.camel@x220>
+Subject: Re: [PATCH v5 01/15] thunderbolt: Add initial cactus ridge NHI
+ support
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Date: Fri, 20 Jun 2014 09:41:52 +0200
+In-Reply-To: <1401825852-4745-2-git-send-email-andreas.noever@gmail.com>
+References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+	 <1401825852-4745-2-git-send-email-andreas.noever@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-acpi]
+On Tue, 2014-06-03 at 22:03 +0200, Andreas Noever wrote:
+> Thunderbolt hotplug is supposed to be handled by the firmware. But Apple
+> decided to implement thunderbolt at the operating system level. The
+> firmare only initializes thunderbolt devices that are present at boot
+> time. This driver enables hotplug of thunderbolt of non-chained
+> thunderbolt devices on Apple systems with a cactus ridge controller.
+> 
+> This first patch adds the Kconfig file as well the parts of the driver
+> which talk directly to the hardware (that is pci device setup, interrupt
+> handling and RX/TX ring management).
+> 
+> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+> ---
 
-On Wed, Jun 25, 2014 at 4:23 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
-> Hi,
->
-> I think CRS feature is all ready available in Linux [1]
+This patch landed in today's linux-next (next-20140620).
 
-Yes, but _CRS is an ACPI feature, and the actual connection of _CRS
-information to the PCI core is currently done by arch-specific code
-for x86 and ia64.  There is no corresponding support for ARM.
+> [...]
+> --- /dev/null
+> +++ b/drivers/thunderbolt/Kconfig
+> @@ -0,0 +1,12 @@
+> +menuconfig THUNDERBOLT
+> +	tristate "Thunderbolt support for Apple devices"
+> +	default no
 
-The x86 and ia64 support is in arch-specific functions called
-probe_pci_root_info().  These are actually generic in principle, and I
-would love it if this functionality could be moved into
-acpi_pci_root_add() somehow.
+That should have been "default n". But "n" is the default anyway, so I'd
+say this line might as well be dropped. Should I draft the trivial patch
+to do that?
 
-> I'm guessing the respective root complex driver need to enable and use
-> this feature.
-> I'm using PCIe bridge which is operating in ARM, how can I enable or
-> is there RC driver which uses this feature already?
->
-> [1] http://lwn.net/Articles/373551/
->
-> thanks!
-> --
-> Jagan.
+> +	help
+> +	  Cactus Ridge Thunderbolt Controller driver
+> +	  This driver is required if you want to hotplug Thunderbolt devices on
+> +	  Apple hardware.
+> +
+> +	  Device chaining is currently not supported.
+> +
+> +	  To compile this driver a module, choose M here. The module will be
+> +	  called thunderbolt.
+
+(Naive question: is Thunderbolt relevant outside x86_64?)
+
+
+Paul Bolle
+
