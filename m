@@ -1,115 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14113 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932895AbaFJGMB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 Jun 2014 02:12:01 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Received: from devils.ext.ti.com ([198.47.26.153]:36404 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934970AbaFTRbR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jun 2014 13:31:17 -0400
+Message-ID: <53A46F94.1020901@ti.com>
+Date: Fri, 20 Jun 2014 13:29:56 -0400
+From: Santosh Shilimkar <santosh.shilimkar@ti.com>
+MIME-Version: 1.0
+To: Murali Karicheri <m-karicheri2@ti.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
 	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch V4 22/42] x86, irq, ACPI: change __acpi_register_gsi to return IRQ number instead of GSI
-Date: Tue, 10 Jun 2014 14:14:47 +0800
-Message-Id: <1402380887-32512-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-23-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-23-git-send-email-jiang.liu@linux.intel.com>
+	Pratyush ANAND <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v2 3/8] PCI: designware: update pcie core driver to work
+ with dw hw version 3.65
+References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com> <1402426287-31157-4-git-send-email-m-karicheri2@ti.com> <2CC2A0A4A178534D93D5159BF3BCB6619C5F8168DA@EAPEX1MAIL1.st.com> <53A46EE7.6080209@ti.com>
+In-Reply-To: <53A46EE7.6080209@ti.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently __acpi_register_gsi is defined to return GSI number and
-may be set to acpi_register_gsi_pic(), acpi_register_gsi_ioapic(),
-acpi_register_gsi_xen_hvm() and acpi_register_gsi_xen().
+On Friday 20 June 2014 01:27 PM, Murali Karicheri wrote:
+> On 6/18/2014 3:13 AM, Mohit KUMAR DCG wrote:
+>> Hello Murali,
+>>
+>>> -----Original Message-----
+>>> From: Murali Karicheri [mailto:m-karicheri2@ti.com]
+>>> Sent: Wednesday, June 11, 2014 12:21 AM
+>>> To: linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
+>>> linux-pci@vger.kernel.org; devicetree@vger.kernel.org; linux-
+>>> doc@vger.kernel.org
+>>> Cc: Murali Karicheri; Santosh Shilimkar; Russell King; Grant Likely; Rob Herring;
+>>> Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Pratyush ANAND; Richard
+>>> Zhu; Kishon Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll;
+>>> Mark Rutland; Ian Campbell; Kumar Gala; Randy Dunlap
+>>> Subject: [PATCH v2 3/8] PCI: designware: update pcie core driver to work
+>>> with dw hw version 3.65
+>>>
+>>> v3.65 version of the dw hw has MSI controller implemented in the application
+>>> space. Add a version variable in the port struct to identify v3.65 hardware for
+>>> different code treatment. This variable will have DW_V3_65 bit set when
+>>> running on this hw version. The host init code is expected to set this version
+>>> based on compatibility string dw,snps-pcie-v3.65.
+>>>
+>>> Some of the MSI specific functions from current DW driver are re-used on
+>>> v3.65 hw. However on v3.65, MSI controller registers are in the application
+>>> register space and PCIE_MSI_INTR0_ENABLE is not applicable.
+>>> Modify assign_irq() to check for version and not execute the code for
+>>> PCIE_MSI_INTR0_ENABLE configuration on v3.65 hw. Additionally MSI IRQ
+>>> register in application space is written by EP to raise an MSI IRQ. So add a
+>>> get_msi_data() function in pcie_host_ops to retrieve the register address in
+>>> dw_msi_setup_irq(). v3.65 dw core driver implements this function.
+>>>
+>>> Also make some of the functions available in dw core driver global and make
+>>> their prototypes available in the header file for re-use on v3.65.
+>>>
+>> - Pls apply MSI specific changes on the top of Lucas patches:
+>> [PATCH 0/4] proper multi MSI handling for designware host
+>>
+>> Thanks
+>> Mohit
+> Ok. I have pulled in Lucas's patches and use it for my work.
 
-Among which, acpi_register_gsi_ioapic() returns GSI number, but
-acpi_register_gsi_xen_hvm() and acpi_register_gsi_xen() actually
-returns IRQ number instead of GSI. And for acpi_register_gsi_pic(),
-GSI number equals to IRQ number.
+Are those patches already acked and getting into the queue. Please
+don't create UN-necessary merge dependencies otherwise.
 
-So change acpi_register_gsi_ioapic() to return IRQ number, it also
-simplifies the code.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
-Rebase due to change in patch 8.
----
- arch/x86/kernel/acpi/boot.c |   21 ++++++++-------------
- 1 file changed, 8 insertions(+), 13 deletions(-)
-
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 9965afbd71ca..0cf311c72bce 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -419,7 +419,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 
- 	irq = map_gsi_to_irq(gsi);
- 	if (irq < 0)
--		return ACPI_INVALID_GSI;
-+		return irq;
- 
- 	ioapic = mp_find_ioapic(gsi);
- 	if (ioapic < 0) {
-@@ -444,12 +444,11 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
- 	ret = io_apic_set_pci_routing(dev, irq, &irq_attr);
- 	if (ret < 0)
--		gsi = ACPI_INVALID_GSI;
-+		irq = -1;
- 
--	return gsi;
-+	return irq;
- }
- 
--
- static int __init
- acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
- {
-@@ -652,11 +651,13 @@ static int acpi_register_gsi_pic(struct device *dev, u32 gsi,
- static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
- 				    int trigger, int polarity)
- {
-+	int irq = gsi;
-+
- #ifdef CONFIG_X86_IO_APIC
--	gsi = mp_register_gsi(dev, gsi, trigger, polarity);
-+	irq = mp_register_gsi(dev, gsi, trigger, polarity);
- #endif
- 
--	return gsi;
-+	return irq;
- }
- 
- int (*__acpi_register_gsi)(struct device *dev, u32 gsi,
-@@ -674,13 +675,7 @@ int (*acpi_suspend_lowlevel)(void);
-  */
- int acpi_register_gsi(struct device *dev, u32 gsi, int trigger, int polarity)
- {
--	unsigned int plat_gsi;
--
--	plat_gsi = __acpi_register_gsi(dev, gsi, trigger, polarity);
--	if (plat_gsi != ACPI_INVALID_GSI)
--		return map_gsi_to_irq(plat_gsi);
--
--	return -1;
-+	return __acpi_register_gsi(dev, gsi, trigger, polarity);
- }
- EXPORT_SYMBOL_GPL(acpi_register_gsi);
- 
--- 
-1.7.10.4
-
+regards,
+Santosh
