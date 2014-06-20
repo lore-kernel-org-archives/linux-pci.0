@@ -1,124 +1,323 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:37435 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966308AbaFTStW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 20 Jun 2014 14:49:22 -0400
+Message-ID: <53A481BF.8010404@ti.com>
+Date: Fri, 20 Jun 2014 14:47:27 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Pratyush Anand <pratyush.anand@st.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V4 16/42] x86, irq: introduce some helper utilities to improve readability
-Date: Mon,  9 Jun 2014 16:19:45 +0800
-Message-Id: <1402302011-23642-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Richard Zhu <r65037@freescale.com>,
+	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v2 2/8] PCI: designware: refactor host init code to re-use
+ on v3.65 DW pci hw
+References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com> <1402426287-31157-3-git-send-email-m-karicheri2@ti.com> <20140618070500.GB6098@pratyush-vbox>
+In-Reply-To: <20140618070500.GB6098@pratyush-vbox>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It also fixes an off by one bug in
-	if ((ioapic_idx > 0) && (irq > NR_IRQS_LEGACY))
-It should be
-	if ((ioapic_idx > 0) && (irq >= NR_IRQS_LEGACY))
+On 6/18/2014 3:05 AM, Pratyush Anand wrote:
+> Hi Murali,
+>
+> On Wed, Jun 11, 2014 at 02:51:21AM +0800, Murali Karicheri wrote:
+>> Current DW PCI host init code has code specific to newer hw such as
+>> ATU port specific resource parsing and map. v3.65 DW PCI host has
+> OK, Older version did not had standard viewport implementation, so patch 1
+> of this series will help you to take care for that.
+>
+>> MSI controller in application space and requires different controller
+> Since MSI controller is implemented in application space, so this may
+> not be same for different older version dw controller users.
+>
+> Therefore, I would suggest to implement all application specific code
+> in your keystone driver only.
+Pratyush,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    2 ++
- arch/x86/kernel/apic/io_apic.c |   29 ++++++++++++++++++++++-------
- 2 files changed, 24 insertions(+), 7 deletions(-)
+Thanks for the comments.
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index de3d8b04cf64..b775cf3622c3 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -171,6 +171,7 @@ extern u32 gsi_top;
- 
- extern int mp_find_ioapic(u32 gsi);
- extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
-+extern u32 mp_pin_to_gsi(int ioapic, int pin);
- extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void __init pre_init_apic_IRQ0(void);
- 
-@@ -212,6 +213,7 @@ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
- static inline void ioapic_insert_resources(void) { }
- #define gsi_top (NR_IRQS_LEGACY)
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
-+static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
- 
- struct io_apic_irq_attr;
- static inline int io_apic_set_pci_routing(struct device *dev, int irq,
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 4ca3151d26f9..02faa7104aa5 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -117,6 +117,24 @@ struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic_idx)
- 	return &ioapics[ioapic_idx].gsi_config;
- }
- 
-+static inline int mp_ioapic_pin_count(int ioapic)
-+{
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(ioapic);
-+
-+	return gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
-+}
-+
-+u32 mp_pin_to_gsi(int ioapic, int pin)
-+{
-+	return mp_ioapic_gsi_routing(ioapic)->gsi_base + pin;
-+}
-+
-+/* Initialize all legacy IRQs and all pins on the first IOAPIC at boot */
-+static inline int mp_init_irq_at_boot(int ioapic, int irq)
-+{
-+	return ioapic == 0 || (irq >= 0 && irq < NR_IRQS_LEGACY);
-+}
-+
- int nr_ioapics;
- 
- /* The one past the highest gsi number used */
-@@ -1367,8 +1385,7 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
- 			continue;
- 
- 		irq = pin_2_irq(idx, ioapic_idx, pin);
--
--		if ((ioapic_idx > 0) && (irq > NR_IRQS_LEGACY))
-+		if (!mp_init_irq_at_boot(ioapic_idx, irq))
- 			continue;
- 
- 		/*
-@@ -1419,9 +1436,7 @@ void setup_IO_APIC_irq_extra(u32 gsi)
- 		return;
- 
- 	irq = pin_2_irq(idx, ioapic_idx, pin);
--
--	/* Only handle the non legacy irqs on secondary ioapics */
--	if (ioapic_idx == 0 || irq < NR_IRQS_LEGACY)
-+	if (mp_init_irq_at_boot(ioapic_idx, irq))
- 		return;
- 
- 	set_io_apic_irq_attr(&attr, ioapic_idx, pin, irq_trigger(idx),
-@@ -3524,9 +3539,9 @@ void __init setup_ioapic_dest(void)
- 		irq_entry = find_irq_entry(ioapic, pin, mp_INT);
- 		if (irq_entry == -1)
- 			continue;
--		irq = pin_2_irq(irq_entry, ioapic, pin);
- 
--		if ((ioapic > 0) && (irq > NR_IRQS_LEGACY))
-+		irq = pin_2_irq(irq_entry, ioapic, pin);
-+		if (!mp_init_irq_at_boot(ioapic, irq))
- 			continue;
- 
- 		idata = irq_get_irq_data(irq);
--- 
-1.7.10.4
+This is IP specific code and another driver that has this version of the 
+IP will be able to
+re-use the code. This is also being discussed in another thread from 
+Bjorn and Jingoo.
+Please discuss this in that thread.
+
+>> initialization code. So refactor the msi host controller code into a
+>> separate function. Other common functions across both hw versions
+>> are moved to dw_pcie_common_host_init() and called from the newer and
+>> v3.65 hw host initialization code.
+>>
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>>
+>> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+>> CC: Russell King <linux@arm.linux.org.uk>
+>> CC: Grant Likely <grant.likely@linaro.org>
+>> CC: Rob Herring <robh+dt@kernel.org>
+>> CC: Mohit Kumar <mohit.kumar@st.com>
+>> CC: Jingoo Han <jg1.han@samsung.com>
+>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Pratyush Anand <pratyush.anand@st.com>
+>> CC: Richard Zhu <r65037@freescale.com>
+>> CC: Kishon Vijay Abraham I <kishon@ti.com>
+>> CC: Marek Vasut <marex@denx.de>
+>> CC: Arnd Bergmann <arnd@arndb.de>
+>> CC: Pawel Moll <pawel.moll@arm.com>
+>> CC: Mark Rutland <mark.rutland@arm.com>
+>> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+>> CC: Kumar Gala <galak@codeaurora.org>
+>> CC: Randy Dunlap <rdunlap@infradead.org>
+>> CC: Grant Likely <grant.likely@linaro.org>
+>>
+>> ---
+>>   drivers/pci/host/pcie-designware.c |  136 ++++++++++++++++++++++++++----------
+>>   1 file changed, 101 insertions(+), 35 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>> index e8f5d8d..e4bd19a 100644
+>> --- a/drivers/pci/host/pcie-designware.c
+>> +++ b/drivers/pci/host/pcie-designware.c
+>> @@ -389,13 +389,19 @@ static const struct irq_domain_ops msi_domain_ops = {
+>>   	.map = dw_pcie_msi_map,
+>>   };
+>>   
+>> -int __init dw_pcie_host_init(struct pcie_port *pp)
+>> +/*
+>> + * dw_pcie_parse_resource() - Function to parse common resources
+>> + *
+>> + * @pp: ptr to pcie port
+>> + *
+>> + * Parse the range property for MEM, IO and cfg resources, and map
+>> + * the cfg register space.
+>> + */
+> Why do you need this function? If you have some extra resource, you
+> can ioremap that before you call dw_pcie_host_init.
+
+I assume you are referring to dw_pcie_parse_resource(). Keystone PCIe 
+driver needs
+this to parse the range property for IORESOURCE_MEM and IORESOURCE_IO 
+resources.
+So refactored this into a function and called from host_init()
+code for v3.65 and dw_pcie_host_init . But for Keystone PCI driver, no 
+need to ioremap
+cfg1 and cfg2 as it doesn't have ATU ports. So host_init() code has to 
+be little different.
+Idea is to have IP specific host_init() and refactor and re-use the 
+common code on both.
+
+>
+>> +int __init dw_pcie_parse_resource(struct pcie_port *pp)
+>>   {
+>>   	struct device_node *np = pp->dev->of_node;
+>>   	struct of_pci_range range;
+>>   	struct of_pci_range_parser parser;
+>> -	u32 val;
+>> -	int i;
+>>   
+>>   	if (of_pci_range_parser_init(&parser, np)) {
+>>   		dev_err(pp->dev, "missing ranges property\n");
+>> @@ -431,41 +437,29 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>>   			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
+>>   		}
+>>   	}
+>> -
+>> -	if (!pp->dbi_base) {
+>> -		pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
+>> -					resource_size(&pp->cfg));
+>> -		if (!pp->dbi_base) {
+>> -			dev_err(pp->dev, "error with ioremap\n");
+>> -			return -ENOMEM;
+>> -		}
+>> -	}
+>> -
+>> -	pp->cfg0_base = pp->cfg.start;
+>> -	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+>>   	pp->mem_base = pp->mem.start;
+>>   
+>> -	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+>> -					pp->config.cfg0_size);
+>> -	if (!pp->va_cfg0_base) {
+>> -		dev_err(pp->dev, "error with ioremap in function\n");
+>> -		return -ENOMEM;
+>> -	}
+>> -	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
+>> -					pp->config.cfg1_size);
+>> -	if (!pp->va_cfg1_base) {
+>> -		dev_err(pp->dev, "error with ioremap\n");
+>> -		return -ENOMEM;
+>> -	}
+>> +	return 0;
+>> +}
+>>   
+>> -	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
+>> -		dev_err(pp->dev, "Failed to parse the number of lanes\n");
+>> -		return -EINVAL;
+>> -	}
+>> +/*
+>> + * dw_pcie_msi_host_init() - Function to initialize msi host controller
+>> + *
+>> + * @pp: ptr to pcie port
+>> + * @np: device node ptr to msi irq controller
+>> + * @irq_msi_ops: ptr to MSI irq_domain_ops struct
+>> + *
+>> + * Function register irq domain for msi irq controller and create mappings
+>> + * for MSI irqs.
+>> + */
+>
+> May be you can only do following to support your MSI chip:
+>
+> Initialize pp->irq_domain into your add_pcie_port function before you
+> call dw_pcie_host_init.
+>
+> In dw_pcie_host_init,
+>
+> if (IS_ENABLED(CONFIG_PCI_MSI) && !pp->irq_domain)
+
+How do I pass the keystone specific msi irq_domain_ops? It looks clean 
+the way it is implemented
+in this patch. Also since MSI host controller and legacy host controller 
+are different, it make
+sense to add separate host_init for each. Let me know.
+
+Regards,
+
+Murali
+
+>
+>> +int dw_pcie_msi_host_init(struct pcie_port *pp, struct device_node *np,
+>> +				const struct irq_domain_ops *irq_msi_ops)
+>> +{
+>> +	int i;
+>>   
+>>   	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>>   		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+>> -					MAX_MSI_IRQS, &msi_domain_ops,
+>> +					MAX_MSI_IRQS, irq_msi_ops,
+>>   					&dw_pcie_msi_chip);
+>>   		if (!pp->irq_domain) {
+>>   			dev_err(pp->dev, "irq domain init failed\n");
+>> @@ -476,6 +470,29 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>>   			irq_create_mapping(pp->irq_domain, i);
+>>   	}
+>>   
+>> +	return 0;
+>> +}
+>> +
+>> +/*
+>> + * dw_pcie_common_host_init() - common host init function across different
+>> + *				versions of the designware PCI controller.
+>> + * @pp: ptr to pcie port
+>> + * @hw: ptr to hw_pci structure
+>> + *
+>> + * This functions parses common DT properties, call host_init() callback
+>> + * of the PCI controller driver. Also initialize the common RC configurations
+>> + * and call common pci core function to intialize the controller driver.
+>> + */
+>> +int __init dw_pcie_common_host_init(struct pcie_port *pp, struct hw_pci *hw)
+>> +{
+>> +	struct device_node *np = pp->dev->of_node;
+>> +	u32 val;
+>> +
+>> +	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
+>> +		dev_err(pp->dev, "Failed to parse the number of lanes\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>>   	if (pp->ops->host_init)
+>>   		pp->ops->host_init(pp);
+>>   
+>> @@ -488,10 +505,10 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>>   	val |= PORT_LOGIC_SPEED_CHANGE;
+>>   	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+>>   
+>> -	dw_pci.nr_controllers = 1;
+>> -	dw_pci.private_data = (void **)&pp;
+>> +	hw->nr_controllers = 1;
+>> +	hw->private_data = (void **)&pp;
+>>   
+>> -	pci_common_init_dev(pp->dev, &dw_pci);
+>> +	pci_common_init_dev(pp->dev, hw);
+>>   	pci_assign_unassigned_resources();
+>>   #ifdef CONFIG_PCI_DOMAINS
+>>   	dw_pci.domain++;
+>> @@ -500,6 +517,55 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>>   	return 0;
+>>   }
+>>   
+>> +/*
+>> + * dw_pcie_host_init() - Host init function for new designware h/w
+>> + *
+>> + * @pp: ptr to pcie port
+>> + *
+>> + * The function parse the PCI resurces for IO, Memory and map the config
+>> + * space addresses. Also initliaze the MSI irq controller and call
+>> + * dw_pcie_common_host_init() to initialize the PCI controller.
+>> + */
+>> +int __init dw_pcie_host_init(struct pcie_port *pp)
+>> +{
+>> +	int ret;
+>> +
+>> +	ret = dw_pcie_parse_resource(pp);
+>> +	if (ret)
+>> +		return ret;
+>> +
+>> +	if (!pp->dbi_base) {
+>> +		pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
+>> +					resource_size(&pp->cfg));
+>> +		if (!pp->dbi_base) {
+>> +			dev_err(pp->dev, "error with ioremap\n");
+>> +			return -ENOMEM;
+>> +		}
+>> +	}
+>> +
+>> +	pp->cfg0_base = pp->cfg.start;
+>> +	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+>> +
+>> +	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+>> +					pp->config.cfg0_size);
+>> +	if (!pp->va_cfg0_base) {
+>> +		dev_err(pp->dev, "error with ioremap in function\n");
+>> +		return -ENOMEM;
+>> +	}
+>> +	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
+>> +					pp->config.cfg1_size);
+>> +	if (!pp->va_cfg1_base) {
+>> +		dev_err(pp->dev, "error with ioremap\n");
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>> +	ret = dw_pcie_msi_host_init(pp, pp->dev->of_node, &msi_domain_ops);
+>> +	if (ret < 0)
+>> +		return ret;
+>> +
+>> +	return dw_pcie_common_host_init(pp, &dw_pci);
+>> +}
+>> +
+>>   static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
+>>   {
+>>   	/* Program viewport 0 : OUTBOUND : CFG0 */
+> Regards
+> Pratyush
+>
+>> -- 
+>> 1.7.9.5
 
