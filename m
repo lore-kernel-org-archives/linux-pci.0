@@ -1,218 +1,195 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:40393 "EHLO mga11.intel.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:40949 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752520AbaFRQ1u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Jun 2014 12:27:50 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+	id S1756865AbaFTRNU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 20 Jun 2014 13:13:20 -0400
+Message-ID: <53A46B49.3040009@ti.com>
+Date: Fri, 20 Jun 2014 13:11:37 -0400
+From: Santosh Shilimkar <santosh.shilimkar@ti.com>
+MIME-Version: 1.0
+To: Murali Karicheri <m-karicheri2@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
 	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFC Patch V2] x86/PCI/ACPI: kill private function resource_to_addr()
-Date: Thu, 19 Jun 2014 00:30:59 +0800
-Message-Id: <1403109059-9775-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <CAErSpo4y9HQB-OcX8XwpXHW=xCvDQOJZgokG5iMqg705XZnevg@mail.gmail.com>
-References: <CAErSpo4y9HQB-OcX8XwpXHW=xCvDQOJZgokG5iMqg705XZnevg@mail.gmail.com>
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
+References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com> <CAErSpo6=vi0SR0A3u5BCLgiGxoH48N5R=e8VAnFDG=K61qLxnw@mail.gmail.com> <53A453D1.4040308@ti.com>
+In-Reply-To: <53A453D1.4040308@ti.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace private function resource_to_addr() to parse ACPI resources for
-PCI host bridge with public ACPI resource interfaces.
+On Friday 20 June 2014 11:31 AM, Murali Karicheri wrote:
+> On 6/17/2014 8:08 PM, Bjorn Helgaas wrote:
+>> On Tue, Jun 10, 2014 at 02:51:19PM -0400, Murali Karicheri wrote:
+>>> This patch adds a PCIe controller driver for Keystone SoCs. This
+>>> is based on v1 of the series posted to the mailing list.
+>>>
+>>> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+>>> CC: Russell King <linux@arm.linux.org.uk>
+>>> CC: Grant Likely <grant.likely@linaro.org>
+>>> CC: Rob Herring <robh+dt@kernel.org>
+>>> CC: Mohit Kumar <mohit.kumar@st.com>
+>>> CC: Jingoo Han <jg1.han@samsung.com>
+>>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>>> CC: Pratyush Anand <pratyush.anand@st.com>
+>>> CC: Richard Zhu <r65037@freescale.com>
+>>> CC: Kishon Vijay Abraham I <kishon@ti.com>
+>>> CC: Marek Vasut <marex@denx.de>
+>>> CC: Arnd Bergmann <arnd@arndb.de>
+>>> CC: Pawel Moll <pawel.moll@arm.com>
+>>> CC: Mark Rutland <mark.rutland@arm.com>
+>>> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+>>> CC: Kumar Gala <galak@codeaurora.org>
+>>> CC: Randy Dunlap <rdunlap@infradead.org>
+>>> CC: Grant Likely <grant.likely@linaro.org>
+>>>
+>>>
+>>> Changelog:
+>>>
+>>> V2
+>>>   - Split the designware pcie enhancement patch to multiple
+>>>     patches based on functionality added
+>>>   - Remove the quirk code and add a patch to fix mps/mrss
+>>>     tuning for ARM. Use kernel command line parameter
+>>>     pci=pcie_bus_perf to work with Keystone PCI Controller.
+>>>     Following patch addressed this.
+>>>       [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
+>>>   - Add documentation for device tree bindings
+>>>   - Add separate interrupt controller nodes for MSI and Legacy
+>>>     IRQs and use irq map for legacy IRQ
+>>>   - Use compatibility to identify v3.65 version of the DW hardware
+>>>     and use it to customize the designware common code.
+>>>   - Use reg property for configuration space instead of range
+>>>   - Other minor updates based on code inspection.
+>>>
+>>> V1
+>>>   - Add an interrupt controller node for Legacy irq chip and use
+>>>     interrupt map/map-mask property to map legacy IRQs A/B/C/D
+>>>   - Add a Phy driver to replace the original serdes driver
+>>>   - Move common application register handling code to a separate
+>>>     file to allow re-use across other platforms that use older
+>>>     DW PCIe h/w
+>>>   - PCI quirk for maximum read request size. Check and override only
+>>>     if the maximum is higher than what controller can handle.
+>>>   - Converted to a module platform driver.
+>>>
+>>>
+>>> Murali Karicheri (8):
+>>>    PCI: designware: add rd[wr]_other_conf API
+>>>    PCI: designware: refactor host init code to re-use on v3.65 DW pci hw
+>>>    PCI: designware: update pcie core driver to work with dw hw version
+>>>      3.65
+>>>    PCI: designware: add msi controller functions for v3.65 hw
+>>>    PCI: designware: add PCI controller functions for v3.65 DW hw
+>>>    phy: Add serdes phy driver for keystone
+>>>    PCI: keystone: add pcie driver based on designware core driver
+>>>    ARM: keystone: add pcie related options
+>>>
+>>>   .../devicetree/bindings/pci/designware-pcie.txt    |   42 ++
+>>>   .../devicetree/bindings/pci/pci-keystone.txt       |   56 +++
+>>>   .../bindings/phy/phy-keystone-serdes.txt           |   25 ++
+>>>   arch/arm/mach-keystone/Kconfig                     |    1 +
+>>>   drivers/pci/host/Kconfig                           |   12 +
+>>>   drivers/pci/host/Makefile                          |    2 +
+>>>   drivers/pci/host/pci-dw-v3_65-msi.c                |  149 +++++++
+>>>   drivers/pci/host/pci-dw-v3_65.c                    |  390 ++++++++++++++++++
+>>>   drivers/pci/host/pci-dw-v3_65.h                    |   34 ++
+>>>   drivers/pci/host/pci-keystone.c                    |  418 ++++++++++++++++++++
+>>>   drivers/pci/host/pcie-designware.c                 |  175 +++++---
+>>>   drivers/pci/host/pcie-designware.h                 |   42 +-
+>>>   drivers/phy/Kconfig                                |    6 +
+>>>   drivers/phy/Makefile                               |    1 +
+>>>   drivers/phy/phy-keystone-serdes.c                  |  230 +++++++++++
+>>>   15 files changed, 1531 insertions(+), 52 deletions(-)
+>>>   create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
+>>>   create mode 100644 Documentation/devicetree/bindings/phy/phy-keystone-serdes.txt
+>>>   create mode 100644 drivers/pci/host/pci-dw-v3_65-msi.c
+>>>   create mode 100644 drivers/pci/host/pci-dw-v3_65.c
+>>>   create mode 100644 drivers/pci/host/pci-dw-v3_65.h
+>>>   create mode 100644 drivers/pci/host/pci-keystone.c
+>>>   create mode 100644 drivers/phy/phy-keystone-serdes.c
+>> I'm not willing to merge phy-keystone-serdes.c because I don't
+>> maintain drivers/phy and because of the binary blob of register values
+>> it contains, but maybe somebody else will.  I assume it could be
+>> merged by itself before the rest of this.
+>>
+>> I'm looking for acks from Mohit and/or Jingoo for the pci/host
+>> changes, and from Arnd for the devicetree/bindings changes.
+>>
+>> Adding these "-dw-3_64" files is sort of ugly.  If that code is only
+>> used by keystone, maybe it could just be moved to pci-keystone.c?  But
+>> I'll defer to Mohit and Jingoo on that and the way you modify
+>> pcie-designware.c.
+>>
+>> Bjorn
+> Bjorn, Jingoo,
+> 
+> Unfortunately I lost Jingoo's email from my Inbox. So I cut-n-paste the comment from
+> internet and respond.
+> 
+> Jingoo Han wrote:-
+> =============================================================================
+> I think so, too.
+> 
+> DT maintainers and arch maintainers should review the following
+> dt bindings.
+>   .../devicetree/bindings/pci/designware-pcie.txt    |   42 ++
+>   .../devicetree/bindings/pci/pci-keystone.txt       |   56 +++
+> Generic PHY maintainer (Kishon Vijay Abraham I) should review the
+> following phy driver.
+>   drivers/phy/phy-keystone-serdes.c
+> 
+>>
+>> I'm looking for acks from Mohit and/or Jingoo for the pci/host
+>> changes, and from Arnd for the devicetree/bindings changes.
+>>
+>> Adding these "-dw-3_64" files is sort of ugly.  If that code is only
+>> used by keystone, maybe it could just be moved to pci-keystone.c?  But
+>> I'll defer to Mohit and Jingoo on that and the way you modify
+>> pcie-designware.c.
+> 
+> I agree with Bjorn Helgaas's opinion. These three "-dw-3_64" files
+> look terrible! I don't have a good way to handle this; however,
+> moving this code to pci-keystone.c looks better.
+> ======================================================================
+> 
+> The original RFC I had submitted had all of the application space register
+> handling code as part of the Keystone PCI driver. As per Arnd's comment (See
+> my change log against v1), the code was moved to a separate file so that
+> the next driver that has same version of the DW hw could re-use this code.
+> I agree with Arnd and moved the code to v_3_65 specific files.  What is
+> your proposal?  Do you have objection to the file name? or it's content?
+> 
+> If objection is on the file name,  please suggest alternate names. If you
+> are okay with the file name, and doesn't like the code, it will be helpful
+> to review the code and provide specific comments against the patch itself
+> so that I can address the same.
+> 
+Arnd suggestion was to have the version 3.65 code in generic place since
+its IP specific and just in case some other vendor using the same version
+can leverage the code.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
-Hi Bjorn,
-	Thanks for your suggestion. Then how about this version?
-Regards!
-Gerry
----
- arch/x86/pci/acpi.c |  142 ++++++++++++++++++---------------------------------
- 1 file changed, 51 insertions(+), 91 deletions(-)
+Concern here seems toe really those name of the files. I can't think of
+any other appropriate name. 
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 91bef49df228..cc0975ef86d1 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -218,114 +218,74 @@ static void teardown_mcfg_map(struct pci_root_info *info)
- }
- #endif
- 
--static acpi_status resource_to_addr(struct acpi_resource *resource,
--				    struct acpi_resource_address64 *addr)
--{
--	acpi_status status;
--	struct acpi_resource_memory24 *memory24;
--	struct acpi_resource_memory32 *memory32;
--	struct acpi_resource_fixed_memory32 *fixed_memory32;
--
--	memset(addr, 0, sizeof(*addr));
--	switch (resource->type) {
--	case ACPI_RESOURCE_TYPE_MEMORY24:
--		memory24 = &resource->data.memory24;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory24->minimum;
--		addr->address_length = memory24->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_MEMORY32:
--		memory32 = &resource->data.memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory32->minimum;
--		addr->address_length = memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
--		fixed_memory32 = &resource->data.fixed_memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = fixed_memory32->address;
--		addr->address_length = fixed_memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_ADDRESS16:
--	case ACPI_RESOURCE_TYPE_ADDRESS32:
--	case ACPI_RESOURCE_TYPE_ADDRESS64:
--		status = acpi_resource_to_address64(resource, addr);
--		if (ACPI_SUCCESS(status) &&
--		    (addr->resource_type == ACPI_MEMORY_RANGE ||
--		    addr->resource_type == ACPI_IO_RANGE) &&
--		    addr->address_length > 0) {
--			return AE_OK;
--		}
--		break;
--	}
--	return AE_ERROR;
--}
--
- static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
-+	struct resource r = {
-+		.flags = 0
-+	};
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (ACPI_SUCCESS(status))
-+	if (!acpi_dev_resource_memory(acpi_res, &r) &&
-+	    !acpi_dev_resource_address_space(acpi_res, &r))
-+		return AE_OK;
-+
-+	if ((r.flags & (IORESOURCE_IO | IORESOURCE_MEM)) && resource_size(&r))
- 		info->res_num++;
-+
- 	return AE_OK;
- }
- 
- static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct resource *res;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
--	unsigned long flags;
--	u64 start, orig_end, end;
-+	struct resource *res = &info->res[info->res_num];
-+	u64 translation_offset = 0;
-+
-+	memset(res, 0, sizeof(*res));
-+	if (acpi_dev_resource_memory(acpi_res, res)) {
-+		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+	} else if (acpi_dev_resource_address_space(acpi_res, res)) {
-+		u64 orig_end;
-+		struct acpi_resource_address64 addr;
-+
-+		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
-+		if (res->flags == 0)
-+			return AE_OK;
- 
--	status = resource_to_addr(acpi_res, &addr);
--	if (!ACPI_SUCCESS(status))
--		return AE_OK;
-+		if (ACPI_FAILURE(acpi_resource_to_address64(acpi_res, &addr)))
-+			return AE_OK;
- 
--	if (addr.resource_type == ACPI_MEMORY_RANGE) {
--		flags = IORESOURCE_MEM;
--		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
--			flags |= IORESOURCE_PREFETCH;
--	} else if (addr.resource_type == ACPI_IO_RANGE) {
--		flags = IORESOURCE_IO;
--	} else
--		return AE_OK;
-+		if (addr.resource_type == ACPI_MEMORY_RANGE &&
-+		    addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
-+			res->flags |= IORESOURCE_PREFETCH;
- 
--	start = addr.minimum + addr.translation_offset;
--	orig_end = end = addr.maximum + addr.translation_offset;
-+		translation_offset = addr.translation_offset;
-+		orig_end = res->end;
-+		res->start += translation_offset;
-+		res->end += translation_offset;
- 
--	/* Exclude non-addressable range or non-addressable portion of range */
--	end = min(end, (u64)iomem_resource.end);
--	if (end <= start) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"(ignored, not CPU addressable)\n", start, orig_end);
--		return AE_OK;
--	} else if (orig_end != end) {
--		dev_info(&info->bridge->dev,
--			"host bridge window [%#llx-%#llx] "
--			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
--			start, orig_end, end + 1, orig_end);
-+		/* Exclude non-addressable range or non-addressable portion of range */
-+		res->end = min(res->end, (u64)iomem_resource.end);
-+		if (res->end <= res->start) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] (ignored, not CPU addressable)\n",
-+				 res->start, orig_end);
-+			return AE_OK;
-+		} else if (orig_end != res->end) {
-+			dev_info(&info->bridge->dev,
-+				"host bridge window [%#llx-%#llx] ([%#llx-%#llx] ignored, not CPU addressable)\n",
-+				res->start, orig_end, res->end + 1, orig_end);
-+		}
- 	}
- 
--	res = &info->res[info->res_num];
--	res->name = info->name;
--	res->flags = flags;
--	res->start = start;
--	res->end = end;
--	info->res_offset[info->res_num] = addr.translation_offset;
--	info->res_num++;
--
--	if (!pci_use_crs)
--		dev_printk(KERN_DEBUG, &info->bridge->dev,
--			   "host bridge window %pR (ignored)\n", res);
-+	if (res->flags && resource_size(res)) {
-+		res->name = info->name;
-+		info->res_offset[info->res_num] = translation_offset;
-+		info->res_num++;
-+		if (!pci_use_crs)
-+			dev_printk(KERN_DEBUG, &info->bridge->dev,
-+				   "host bridge window %pR (ignored)\n", res);
-+	}
- 
- 	return AE_OK;
- }
--- 
-1.7.10.4
+Regards,
+Santosh
+
 
