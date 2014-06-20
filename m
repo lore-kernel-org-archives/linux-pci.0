@@ -1,139 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30432 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753678AbaFXO4f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Jun 2014 10:56:35 -0400
-Message-ID: <53A9918D.9020607@redhat.com>
-Date: Tue, 24 Jun 2014 10:56:13 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:56686 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753695AbaFTRqI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jun 2014 13:46:08 -0400
 MIME-Version: 1.0
-To: Yishai Hadas <yishaih@dev.mellanox.co.il>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"linux-rdma (linux-rdma@vger.kernel.org)"
-	<linux-rdma@vger.kernel.org>,
-	"yishaih@mellanox.com" <yishaih@mellanox.com>, liranl@mellanox.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: PCI/AER: AER in SRIOV environment
-References: <53A839C6.5050102@dev.mellanox.co.il> <CAErSpo7xVvqYea8v624T8EyVf6skQccraAe_WYpzcf2tkWFLhg@mail.gmail.com> <53A88A32.4010406@redhat.com> <53A8ADD5.7030207@dev.mellanox.co.il>
-In-Reply-To: <53A8ADD5.7030207@dev.mellanox.co.il>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1401345500-20188-5-git-send-email-kishon@ti.com>
+References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-5-git-send-email-kishon@ti.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 20 Jun 2014 12:45:46 -0500
+Message-ID: <CAL_JsqJxppWOOWoX1MYF26OWXW7BdMZP1BQpq8cSgJ3n1QF5PA@mail.gmail.com>
+Subject: Re: [PATCH v2 04/18] PCI: designware: use untranslated address while
+ programming ATU
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linux-omap <linux-omap@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Tony Lindgren <tony@atomide.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/23/2014 06:44 PM, Yishai Hadas wrote:
-> On 6/23/2014 11:12 PM, Don Dutile wrote:
->> On 06/23/2014 03:09 PM, Bjorn Helgaas wrote:
->>> [+cc linux-pci, Don]
->>>
->> Adding Alex Williamson in case he can add more to this conversation...
->>
->>> On Mon, Jun 23, 2014 at 8:29 AM, Yishai Hadas
->>> <yishaih@dev.mellanox.co.il> wrote:
->>>> Hi Vijay,
->>>> Trying to add AER support for Mellanox NIC in SRIOV environment, while
->>>> evaluating/testing encountered a problem which led me to your
->>>> patch accepted as part of kernel 3.8, commit ID
->>>> "918b4053184c0ca22236e70e299c5343eea35304".
->>>>
->>>> Have some concerns/questions on:
->>>> When working in SRIOV environment VFs may be un-attached, having no driver
->>>> assigned to, or may be attached to Virtual machine to work in some
->>>> pass-through mode.
->>>> Once working in KVM setup there is pci-stub driver which is loaded in the
->>>> HYP/PF for a given attached VF.
->> huh? 'loaded in the hyp/pf? .... um, loaded in the host, and a VF is
->> detached from its host driver -- a VF can be used in the host w/o any virtualization,
->> i.e., that's how guest VM is driving the VF: as if it was used by a guest (host) OS directly --
->> and attached to pci-stub driver, when assigned to a KVM guest in pre-VFIO days/ways.
->> If VFIO used, then VF is attached to vfio-pci driver.
->>
->>>>
->>>> I'm using the aer-inject kernel module and its corresponding aer-inject tool
->>>> to simulate an error in the HYP.
->>>> In both cases your commit will cause the AER recovery to fail as there is no
->>>> driver assigned to PF's VFs that supports AER, comparing the code before
->>>> your change.
->>>>
->> Without VFIO, I believe that's correct. There was no AER-to-VF support pre-VFIO days.
->> I believe with the recent VFIO support,
->> and modifications to KVM, an AER that is associated with an assigned VF will
->> force the crash/halt of the KVM guest -- can't depend on a guest VF driver clearing
->> the AER in the hyp/host -- guest isn't privileged enough to clear the error.
->> So, crashing the guest is the simple option at the moment, to contain the error.
->> Alex: do I have that (vfio aer default) correct, or is that still site-under-construction?
->      How about the case that the VF is not attached to a KVM guest and has no driver loaded on host ? in such a case from code review and some testing the recovery will
->      fail as there is no AER aware driver here. What is the expected solution here ?
-Well, how can a VF be attributed to an AER if it's not assigned to a guest, and it doesn't have a driver loaded for it in the host? i.e., if it's not configured, it's sitting idle, so how can it generate an AER?
-if you are injecting an AER attributed to a device that isn't configured, then you are contriving a non-valid system condition/state, and I'm not surprised that the AER handler fails.  Maybe it needs an update/patch for the aer-inject case.
-
->      Any special qemu /stuff is needed to activate the VFIO support ? would like to give it a try for a case that VF is attached.
-I see Alex answered this question.  VFIO rocks! ... Alex did a great job with it.
-Definitely cleaned up and more cleanly architected a solution that will lend itself to incremental for
-complete reconstruction/duplication for other arches, busses, iommus, etc. to follow.
-
->>
->>>> How such cases should work ?  my expectation was that the PF will get the
->>>> error detected message then will recognize whether
->>>> issue is its own or one of its VFs
->> The AER packet will have the tag of the VF in if it was the source of the error;
->> so the PF will never see it; although one could argue it should be 'promoted'
->> to the PF if PF/VF needs to clear some state it has wrt the VF (the SRIOV spec is
->> lacking of info in this space); _but_, VFIO resets the VF (sets FLR bit) when the
->> device is deassigned and before re-attachment to the host, so that should clear out
->> any state btwn PF & VF ('should' ... famous last words...).
->      In my test I have used the aer-inject tool simulating an error to the BUS that both PF/VF are residing on, putting the function number to be the PF one, looks like both should be called by the aer driver as part
->      of the pci_walk_bus(). As mentioned I got a call only on the PF and recovery failed as of the VF doesn't include an AER aware driver, once removed the VF recovery succeeded.
->      I believe that packet should include some info about the source of the error isn't it ?
-yup.
->      In addition, looking at IXGBE upstream source code at ixgbe_error_detected()  looks like there is some code running on the PF that checks whether the source was a VF.
-Ping the INTEL gang listed in MAINTAINDERS for ixgbe to see what was tested, intention of this code wrt AER.
-Alex Duyck & Greg Rose are the two I've worked with the most on design issues in the driver, but others @INTEL may be more active in it now.
-
+On Thu, May 29, 2014 at 1:38 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+> In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
+> address. So whenever the cpu issues a read/write request, the 4 most
+> significant bits are used by L3 to determine the target controller.
+> For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
+> the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
+> the outbound translation window the *base* should be programmed as 0x000_0000.
+> Whenever we try to write to say 0x2000_0000, it will be translated to whatever
+> we have programmed in the translation window with base as 0x000_0000.
 >
->      By the way: when tried to simulate a VF error using its FN got below error:
->      "Error: Failed to write, Inappropriate ioctl for device", any idea about that error ?
-details? how did you simulate the error? -- send cmdline used, or code snippet to inject error, etc.
-that (quickly) looks like a sysfs error reply when an operation is not supported to a file/device under it.
-
->>
->>>
->>> I'm really not an AER expert, so help me understand this question of
->>> recognizing whether an error is associated with a PF or a VF.
->>>
->>> In terms of hardware, it looks like the device that detects an error
->>> logs some information and sends an Error Message upstream.  The Root
->>> Complex receives the message, captures the source ID from the Error
->>> Message, and may generate an interrupt.  I expect this source ID can
->>> be either a PF or a VF; there's no requirement that a VF error must be
->>> reported as though it's from the PF, is there?
->>>
->>>> and work accordingly, in current code
->>>> looks like recovery failed as part of "voting" once there is no AER handler
->>>> assigned to the VFs.
->>>
->>> The commit you mentioned has to do with PCI_ERS_RESULT_NO_AER_DRIVER.
->>> We use pci_walk_bus() to figure out whether all the devices in a
->>> subtree have a driver.  What subtree is involved here?  I would expect
->>> the VFs to be siblings of the PF, not children of it, so I'm not sure
->>> where things went wrong.
->> Well, VFs could be on virtual busses (ARI turned on), so not necessarily a
->> sibling to PF ... and then we have the problem in PCI code of not being able
->> to traverse these virtual busses (in some cases; not sure if pci_walk_bus(),
->> which is going down the tree vs up the tree, has any problems here w/VFs on
->> virtual busses).
->>
->>>
->>> Can you collect "lspci -vvv" output and maybe add some debug so we can
->>> see exactly where the error is detected and what devices we're looking
->>> at to conclude that one of them doesn't have a driver?
->      lspci -vvv for both PF & VF is attached, we can see that VF (21:00.1) has no driver loaded comparing the PF (Kernel driver in use: mlx4_core).
-um, well, the VF doesn't contain an AER cap strucuture, so expecting AER support for a pci device (VF or PF) w/o an AER cap is 'wishful'.... so, the VF can't generate an AER b/c it doesn't have the appropriate cap regs for the AER handler to use to report the error & recover from it.
-
->>>
->>> Bjorn
->>>
->>
+> This is needed when the dt node is modelled something like below
+> axi {
+>         compatible = "simple-bus";
+>         #size-cells = <1>;
+>         #address-cells = <1>;
+>         ranges = <0x0        0x20000000 0x10000000 // 28-bit bus
+>                   0x51000000 0x51000000 0x3000>;
+>         pcie@51000000 {
+>                 reg = <0x1000 0x2000>, <0x51002000 0x14c>, <0x51000000 0x2000>;
+>                 reg-names = "config", "ti_conf", "rc_dbics";
+>                 #address-cells = <3>;
+>                 #size-cells = <2>;
+>                 ranges = <0x81000000 0 0          0x03000 0 0x00010000
+>                           0x82000000 0 0x20013000 0x13000 0 0xffed000>;
+>         };
+> };
 >
+> Here the CPU address for configuration space is 0x20013000 and the controller
+> address for configuration space is 0x13000. The controller address should be
+> used while programming the ATU (in order for translation to happen properly in
+> DRA7xx).
 
+This talks about config space, but the ranges field is PCI memory
+space. Also, does this actually work because I though Linux expects
+memory BARs to be 1MB aligned.
+
+Getting the controller offset should work whether you specify the
+address as 0x13000 with translation or the absolute address
+0x20013000. In other words, the driver should know how many bits to
+mask off to get the offset.
+
+Rob
