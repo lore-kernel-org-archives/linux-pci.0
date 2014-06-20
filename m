@@ -1,195 +1,234 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:41461 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935233AbaFTR2c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 20 Jun 2014 13:28:32 -0400
+Message-ID: <53A46EE7.6080209@ti.com>
+Date: Fri, 20 Jun 2014 13:27:03 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [RFC Patch V2 03/16] ACPI, x86/PCI: Move resource_to_addr() to acpi generic
-Date: Tue, 17 Jun 2014 13:29:42 +0800
-Message-Id: <1402982995-13747-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Pratyush ANAND <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v2 3/8] PCI: designware: update pcie core driver to work
+ with dw hw version 3.65
+References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com> <1402426287-31157-4-git-send-email-m-karicheri2@ti.com> <2CC2A0A4A178534D93D5159BF3BCB6619C5F8168DA@EAPEX1MAIL1.st.com>
+In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB6619C5F8168DA@EAPEX1MAIL1.st.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+On 6/18/2014 3:13 AM, Mohit KUMAR DCG wrote:
+> Hello Murali,
+>
+>> -----Original Message-----
+>> From: Murali Karicheri [mailto:m-karicheri2@ti.com]
+>> Sent: Wednesday, June 11, 2014 12:21 AM
+>> To: linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
+>> linux-pci@vger.kernel.org; devicetree@vger.kernel.org; linux-
+>> doc@vger.kernel.org
+>> Cc: Murali Karicheri; Santosh Shilimkar; Russell King; Grant Likely; Rob Herring;
+>> Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Pratyush ANAND; Richard
+>> Zhu; Kishon Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll;
+>> Mark Rutland; Ian Campbell; Kumar Gala; Randy Dunlap
+>> Subject: [PATCH v2 3/8] PCI: designware: update pcie core driver to work
+>> with dw hw version 3.65
+>>
+>> v3.65 version of the dw hw has MSI controller implemented in the application
+>> space. Add a version variable in the port struct to identify v3.65 hardware for
+>> different code treatment. This variable will have DW_V3_65 bit set when
+>> running on this hw version. The host init code is expected to set this version
+>> based on compatibility string dw,snps-pcie-v3.65.
+>>
+>> Some of the MSI specific functions from current DW driver are re-used on
+>> v3.65 hw. However on v3.65, MSI controller registers are in the application
+>> register space and PCIE_MSI_INTR0_ENABLE is not applicable.
+>> Modify assign_irq() to check for version and not execute the code for
+>> PCIE_MSI_INTR0_ENABLE configuration on v3.65 hw. Additionally MSI IRQ
+>> register in application space is written by EP to raise an MSI IRQ. So add a
+>> get_msi_data() function in pcie_host_ops to retrieve the register address in
+>> dw_msi_setup_irq(). v3.65 dw core driver implements this function.
+>>
+>> Also make some of the functions available in dw core driver global and make
+>> their prototypes available in the header file for re-use on v3.65.
+>>
+> - Pls apply MSI specific changes on the top of Lucas patches:
+> [PATCH 0/4] proper multi MSI handling for designware host
+>
+> Thanks
+> Mohit
+Ok. I have pulled in Lucas's patches and use it for my work.
 
-Rui Wang reported ioapic hot-add does not work on his machine
-that _CRS have MEMORY_FIXED.
-He also proposed to expose resource_to_addr() and use it for ioapic.
-
-We should move it to acpi generic, as ioapi.c current is in
-drivers/pci/.
-
-Or should move it to acpica?
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/acpi.c     |   50 ++---------------------------------------------
- drivers/acpi/resource.c |   46 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/acpi.h    |    3 +++
- 3 files changed, 51 insertions(+), 48 deletions(-)
-
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 91bef49df228..e766cc7d3abe 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -218,59 +218,13 @@ static void teardown_mcfg_map(struct pci_root_info *info)
- }
- #endif
- 
--static acpi_status resource_to_addr(struct acpi_resource *resource,
--				    struct acpi_resource_address64 *addr)
--{
--	acpi_status status;
--	struct acpi_resource_memory24 *memory24;
--	struct acpi_resource_memory32 *memory32;
--	struct acpi_resource_fixed_memory32 *fixed_memory32;
--
--	memset(addr, 0, sizeof(*addr));
--	switch (resource->type) {
--	case ACPI_RESOURCE_TYPE_MEMORY24:
--		memory24 = &resource->data.memory24;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory24->minimum;
--		addr->address_length = memory24->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_MEMORY32:
--		memory32 = &resource->data.memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory32->minimum;
--		addr->address_length = memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
--		fixed_memory32 = &resource->data.fixed_memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = fixed_memory32->address;
--		addr->address_length = fixed_memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_ADDRESS16:
--	case ACPI_RESOURCE_TYPE_ADDRESS32:
--	case ACPI_RESOURCE_TYPE_ADDRESS64:
--		status = acpi_resource_to_address64(resource, addr);
--		if (ACPI_SUCCESS(status) &&
--		    (addr->resource_type == ACPI_MEMORY_RANGE ||
--		    addr->resource_type == ACPI_IO_RANGE) &&
--		    addr->address_length > 0) {
--			return AE_OK;
--		}
--		break;
--	}
--	return AE_ERROR;
--}
--
- static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
- 	struct acpi_resource_address64 addr;
- 	acpi_status status;
- 
--	status = resource_to_addr(acpi_res, &addr);
-+	status = acpi_mem_addr_resource_to_address64(acpi_res, &addr);
- 	if (ACPI_SUCCESS(status))
- 		info->res_num++;
- 	return AE_OK;
-@@ -285,7 +239,7 @@ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- 	unsigned long flags;
- 	u64 start, orig_end, end;
- 
--	status = resource_to_addr(acpi_res, &addr);
-+	status = acpi_mem_addr_resource_to_address64(acpi_res, &addr);
- 	if (!ACPI_SUCCESS(status))
- 		return AE_OK;
- 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 0bdacc5e26a3..e91deebf0930 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -424,6 +424,52 @@ void acpi_dev_free_resource_list(struct list_head *list)
- }
- EXPORT_SYMBOL_GPL(acpi_dev_free_resource_list);
- 
-+acpi_status acpi_mem_addr_resource_to_address64(struct acpi_resource *resource,
-+			struct acpi_resource_address64 *addr)
-+{
-+	acpi_status status;
-+	struct acpi_resource_memory24 *memory24;
-+	struct acpi_resource_memory32 *memory32;
-+	struct acpi_resource_fixed_memory32 *fixed_memory32;
-+
-+	memset(addr, 0, sizeof(*addr));
-+	switch (resource->type) {
-+	case ACPI_RESOURCE_TYPE_MEMORY24:
-+		memory24 = &resource->data.memory24;
-+		addr->resource_type = ACPI_MEMORY_RANGE;
-+		addr->minimum = memory24->minimum;
-+		addr->address_length = memory24->address_length;
-+		addr->maximum = addr->minimum + addr->address_length - 1;
-+		return AE_OK;
-+	case ACPI_RESOURCE_TYPE_MEMORY32:
-+		memory32 = &resource->data.memory32;
-+		addr->resource_type = ACPI_MEMORY_RANGE;
-+		addr->minimum = memory32->minimum;
-+		addr->address_length = memory32->address_length;
-+		addr->maximum = addr->minimum + addr->address_length - 1;
-+		return AE_OK;
-+	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
-+		fixed_memory32 = &resource->data.fixed_memory32;
-+		addr->resource_type = ACPI_MEMORY_RANGE;
-+		addr->minimum = fixed_memory32->address;
-+		addr->address_length = fixed_memory32->address_length;
-+		addr->maximum = addr->minimum + addr->address_length - 1;
-+		return AE_OK;
-+	case ACPI_RESOURCE_TYPE_ADDRESS16:
-+	case ACPI_RESOURCE_TYPE_ADDRESS32:
-+	case ACPI_RESOURCE_TYPE_ADDRESS64:
-+		status = acpi_resource_to_address64(resource, addr);
-+		if (ACPI_SUCCESS(status) &&
-+		    (addr->resource_type == ACPI_MEMORY_RANGE ||
-+		    addr->resource_type == ACPI_IO_RANGE) &&
-+		    addr->address_length > 0) {
-+			return AE_OK;
-+		}
-+		break;
-+	}
-+	return AE_ERROR;
-+}
-+
- struct res_proc_context {
- 	struct list_head *list;
- 	int (*preproc)(struct acpi_resource *, void *);
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 7a8f2cd66c8b..b479e10f6621 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -286,6 +286,9 @@ unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
- bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
- 				 struct resource *res);
- 
-+acpi_status acpi_mem_addr_resource_to_address64(struct acpi_resource *resource,
-+			struct acpi_resource_address64 *addr);
-+
- struct resource_list_entry {
- 	struct list_head node;
- 	struct resource res;
--- 
-1.7.10.4
+Murali
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>>
+>> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+>> CC: Russell King <linux@arm.linux.org.uk>
+>> CC: Grant Likely <grant.likely@linaro.org>
+>> CC: Rob Herring <robh+dt@kernel.org>
+>> CC: Mohit Kumar <mohit.kumar@st.com>
+>> CC: Jingoo Han <jg1.han@samsung.com>
+>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Pratyush Anand <pratyush.anand@st.com>
+>> CC: Richard Zhu <r65037@freescale.com>
+>> CC: Kishon Vijay Abraham I <kishon@ti.com>
+>> CC: Marek Vasut <marex@denx.de>
+>> CC: Arnd Bergmann <arnd@arndb.de>
+>> CC: Pawel Moll <pawel.moll@arm.com>
+>> CC: Mark Rutland <mark.rutland@arm.com>
+>> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+>> CC: Kumar Gala <galak@codeaurora.org>
+>> CC: Randy Dunlap <rdunlap@infradead.org>
+>> CC: Grant Likely <grant.likely@linaro.org>
+>>
+>> ---
+>>   drivers/pci/host/pcie-designware.c |   27 +++++++++++++++++----------
+>>   drivers/pci/host/pcie-designware.h |   16 ++++++++++++++++
+>>   2 files changed, 33 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
+>> designware.c
+>> index e4bd19a..f985811 100644
+>> --- a/drivers/pci/host/pcie-designware.c
+>> +++ b/drivers/pci/host/pcie-designware.c
+>> @@ -277,11 +277,15 @@ static int assign_irq(int no_irqs, struct msi_desc
+>> *desc, int *pos)
+>>   		}
+>>   		set_bit(pos0 + i, pp->msi_irq_in_use);
+>>   		/*Enable corresponding interrupt in MSI interrupt controller
+>> */
+>> -		res = ((pos0 + i) / 32) * 12;
+>> -		bit = (pos0 + i) % 32;
+>> -		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
+>> 4, &val);
+>> -		val |= 1 << bit;
+>> -		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
+>> 4, val);
+>> +		if (!(pp->version & DW_V3_65)) {
+>> +			res = ((pos0 + i) / 32) * 12;
+>> +			bit = (pos0 + i) % 32;
+>> +			dw_pcie_rd_own_conf(pp,
+>> PCIE_MSI_INTR0_ENABLE + res,
+>> +					    4, &val);
+>> +			val |= 1 << bit;
+>> +			dw_pcie_wr_own_conf(pp,
+>> PCIE_MSI_INTR0_ENABLE + res,
+>> +					    4, val);
+>> +		}
+>>   	}
+>>
+>>   	*pos = pos0;
+>> @@ -349,7 +353,10 @@ static int dw_msi_setup_irq(struct msi_chip *chip,
+>> struct pci_dev *pdev,
+>>   	 */
+>>   	desc->msi_attrib.multiple = msgvec;
+>>
+>> -	msg.address_lo = virt_to_phys((void *)pp->msi_data);
+>> +	if (pp->ops->get_msi_data)
+>> +		msg.address_lo = pp->ops->get_msi_data(pp);
+>> +	else
+>> +		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+>>   	msg.address_hi = 0x0;
+>>   	msg.data = pos;
+>>   	write_msi_msg(irq, &msg);
+>> @@ -768,7 +775,7 @@ static struct pci_ops dw_pcie_ops = {
+>>   	.write = dw_pcie_wr_conf,
+>>   };
+>>
+>> -static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+>> +int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+>>   {
+>>   	struct pcie_port *pp;
+>>
+>> @@ -791,7 +798,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data
+>> *sys)
+>>   	return 1;
+>>   }
+>>
+>> -static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>> +struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>>   {
+>>   	struct pci_bus *bus;
+>>   	struct pcie_port *pp = sys_to_pcie(sys); @@ -808,7 +815,7 @@ static
+>> struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>>   	return bus;
+>>   }
+>>
+>> -static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+>> +int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+>>   {
+>>   	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
+>>   	int irq;
+>> @@ -820,7 +827,7 @@ static int dw_pcie_map_irq(const struct pci_dev
+>> *dev, u8 slot, u8 pin)
+>>   	return irq;
+>>   }
+>>
+>> -static void dw_pcie_add_bus(struct pci_bus *bus)
+>> +void dw_pcie_add_bus(struct pci_bus *bus)
+>>   {
+>>   	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>>   		struct pcie_port *pp = sys_to_pcie(bus->sysdata); diff --git
+>> a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+>> index 2d6dd66..3a6a6eb 100644
+>> --- a/drivers/pci/host/pcie-designware.h
+>> +++ b/drivers/pci/host/pcie-designware.h
+>> @@ -39,6 +39,12 @@ struct pcie_port {
+>>   	void __iomem		*va_cfg0_base;
+>>   	u64			cfg1_base;
+>>   	void __iomem		*va_cfg1_base;
+>> +	/*
+>> +	 * v3.65 DW hw implements application register space for
+>> +	 * MSI and has no ATU view port
+>> +	 */
+>> +#define DW_V3_65		BIT(0)
+>> +	u32			version;
+>>   	u64			io_base;
+>>   	u64			mem_base;
+>>   	spinlock_t		conf_lock;
+>> @@ -68,6 +74,7 @@ struct pcie_host_ops {
+>>   			unsigned int devfn, int where, int size, u32 val);
+>>   	int (*link_up)(struct pcie_port *pp);
+>>   	void (*host_init)(struct pcie_port *pp);
+>> +	u32 (*get_msi_data)(struct pcie_port *pp);
+>>   };
+>>
+>>   int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+>> @@ -77,5 +84,14 @@ void dw_pcie_msi_init(struct pcie_port *pp);  int
+>> dw_pcie_link_up(struct pcie_port *pp);  void dw_pcie_setup_rc(struct
+>> pcie_port *pp);  int dw_pcie_host_init(struct pcie_port *pp);
+>> +int dw_pcie_setup(int nr, struct pci_sys_data *sys); struct pci_bus
+>> +*dw_pcie_scan_bus(int nr, struct pci_sys_data *sys); void
+>> +dw_pcie_add_bus(struct pci_bus *bus); int
+>> dw_pcie_parse_resource(struct
+>> +pcie_port *pp);
+>>
+>> +/* internal to DW common core driver */ int
+>> +dw_pcie_common_host_init(struct pcie_port *pp, struct hw_pci *hw); int
+>> +dw_pcie_msi_host_init(struct pcie_port *pp, struct device_node *np,
+>> +			const struct irq_domain_ops *irq_ops); int
+>> dw_pcie_map_irq(const
+>> +struct pci_dev *dev, u8 slot, u8 pin);
+>>   #endif /* _PCIE_DESIGNWARE_H */
+>> --
+>> 1.7.9.5
 
