@@ -1,85 +1,51 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch V4 06/42] x86, acpi, irq: kill static function irq_to_gsi()
-Date: Mon,  9 Jun 2014 16:19:35 +0800
-Message-Id: <1402302011-23642-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+In-Reply-To: <1403272331-3790755-1-git-send-email-arnd@arndb.de>
+References: <1403272331-3790755-1-git-send-email-arnd@arndb.de>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Fri, 20 Jun 2014 16:44:05 +0200
+Message-ID: <CAMxnaaUThGenvkYkcx062tjwYgBnBDsXNsUzeFtrUa7AV8Pk-A@mail.gmail.com>
+Subject: Re: [PATCH 1/3] thunderbolt: add PCI dependency
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Static function irq_to_gsi() is only called by acpi_isa_irq_to_gsi(),
-so kill function irq_to_gsi() and simplify acpi_isa_irq_to_gsi().
+Thanks for the series.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/acpi/boot.c |   26 ++++++--------------------
- 1 file changed, 6 insertions(+), 20 deletions(-)
+Patch 2 is equivalent to patches 1 and 2 from Sachin Kamat's series.
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index ceb3b36f2b2c..09682766d56a 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -120,22 +120,6 @@ static unsigned int gsi_to_irq(unsigned int gsi)
- 	return irq;
- }
- 
--static u32 irq_to_gsi(int irq)
--{
--	unsigned int gsi;
--
--	if (irq < NR_IRQS_LEGACY)
--		gsi = isa_irq_to_gsi[irq];
--	else if (irq < gsi_top)
--		gsi = irq;
--	else if (irq < (gsi_top + NR_IRQS_LEGACY))
--		gsi = irq - gsi_top;
--	else
--		gsi = 0xffffffff;
--
--	return gsi;
--}
--
- /*
-  * This is just a simple wrapper around early_ioremap(),
-  * with sanity checks for phys == 0 and size == 0.
-@@ -640,10 +624,12 @@ EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
- 
- int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
- {
--	if (isa_irq >= 16)
--		return -1;
--	*gsi = irq_to_gsi(isa_irq);
--	return 0;
-+	if (isa_irq < NR_IRQS_LEGACY) {
-+		*gsi = isa_irq_to_gsi[isa_irq];
-+		return 0;
-+	}
-+
-+	return -1;
- }
- 
- static int acpi_register_gsi_pic(struct device *dev, u32 gsi,
--- 
-1.7.10.4
+@Greg: This series together with Sachin's patches should fix all build
+errors. I'll send patches for the remaining warnings later.
 
+Andreas
+
+On Fri, Jun 20, 2014 at 3:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> The thunderbolt drivers cannot be built if CONFIG_PCI is disabled,
+> better add an explicit Kconfig dependency.
+> The "default no" line is redundant and can be removed at the same
+> time.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/thunderbolt/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
+> index 3a25529..5aab79b 100644
+> --- a/drivers/thunderbolt/Kconfig
+> +++ b/drivers/thunderbolt/Kconfig
+> @@ -1,6 +1,6 @@
+>  menuconfig THUNDERBOLT
+>         tristate "Thunderbolt support for Apple devices"
+> -       default no
+> +       depends on PCI
+>         help
+>           Cactus Ridge Thunderbolt Controller driver
+>           This driver is required if you want to hotplug Thunderbolt devices on
+> --
+> 1.8.3.2
+>
