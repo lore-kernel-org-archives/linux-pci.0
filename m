@@ -1,65 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:51545 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbaFLXdp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jun 2014 19:33:45 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 13 Jun 2014 09:33:42 +1000
-Date: Fri, 13 Jun 2014 09:33:37 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	ben@decadent.org.uk, gwshan@linux.vnet.ibm.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Fix unaligned access testing AF transaction pending
-Message-ID: <20140612233336.GA4404@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <20140612152732.4162.23298.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140612152732.4162.23298.stgit@bling.home>
+Received: from mout.kundenserver.de ([212.227.17.13]:65122 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965694AbaFTNw2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jun 2014 09:52:28 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 3/3] thunderbolt: fix format string for size_t
+Date: Fri, 20 Jun 2014 15:52:11 +0200
+Message-Id: <1403272331-3790755-3-git-send-email-arnd@arndb.de>
+In-Reply-To: <1403272331-3790755-1-git-send-email-arnd@arndb.de>
+References: <1403272331-3790755-1-git-send-email-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 12, 2014 at 09:28:07AM -0600, Alex Williamson wrote:
->pci_wait_for_pending() uses word access, so we shouldn't be passing
->an offset that is only byte aligned.  Use the control register offset
->instead, shifting the mask to match.
->
->Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
->Reported-by: Ben Hutchings <ben@decadent.org.uk>
->Cc: stable@vger.kernel.org
+The result of "sizeof(struct tb_drom_entry_port)" is a size_t, which
+is not necessarily the same as 'long', so we should use the appropriate
+%z format string instead of %l.
 
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/thunderbolt/eeprom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->---
-> drivers/pci/pci.c |    9 +++++++--
-> 1 file changed, 7 insertions(+), 2 deletions(-)
->
->diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->index 759475e..81012ec 100644
->--- a/drivers/pci/pci.c
->+++ b/drivers/pci/pci.c
->@@ -3109,8 +3109,13 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
-> 	if (probe)
-> 		return 0;
->
->-	/* Wait for Transaction Pending bit clean */
->-	if (pci_wait_for_pending(dev, pos + PCI_AF_STATUS, PCI_AF_STATUS_TP))
->+	/*
->+	 * Wait for Transaction Pending bit to clear.  A word-aligned test
->+	 * is used, so we use the conrol offset rather than status and shift
->+	 * the test bit to match.
->+	 */
->+	if (pci_wait_for_pending(dev, pos + PCI_AF_CTRL,
->+				 PCI_AF_STATUS_TP << 8))
-> 		goto clear;
->
-> 	dev_err(&dev->dev, "transaction is not cleared; "
->
-
-Thanks,
-Gavin
+diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
+index bc0449f..b133f3f 100644
+--- a/drivers/thunderbolt/eeprom.c
++++ b/drivers/thunderbolt/eeprom.c
+@@ -323,7 +323,7 @@ static int tb_drom_parse_entry(struct tb_switch *sw,
+ 		struct tb_drom_entry_port *entry = (void *) header;
+ 		if (header->len != sizeof(*entry)) {
+ 			tb_sw_warn(sw,
+-				"port entry has size %#x (expected %#lx)\n",
++				"port entry has size %#x (expected %#zx)\n",
+ 				header->len, sizeof(struct tb_drom_entry_port));
+ 			return -EIO;
+ 		}
+-- 
+1.8.3.2
 
