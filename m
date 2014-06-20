@@ -1,105 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:56973 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751184AbaF3Qgn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 12:36:43 -0400
-Message-ID: <1404146100.4305.32.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH 1/4] PCI: allow MSI chip providers to implement their
- own multiple MSI setup
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Marek Vasut <marex@denx.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Jingoo Han <jg1.han@samsung.com>,
-	Mohit Kumar <mohit.kumar@st.com>, kernel@pengutronix.de,
-	Marek =?UTF-8?Q?Va=C5=A1ut?= <marex@denx.de>,
-	Richard Zhu <richard.zhu@linaro.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Pratyush ANAND <pratyush.anand@st.com>
-Date: Mon, 30 Jun 2014 18:35:00 +0200
-In-Reply-To: <CAHM4w1=rvLeWjRZWQtnN05_dmt=bYOPM-y6oY6PnP4J-Nv7oQw@mail.gmail.com>
-References: <1401979572-32101-1-git-send-email-l.stach@pengutronix.de>
-	 <1401979572-32101-2-git-send-email-l.stach@pengutronix.de>
-	 <CAHM4w1kfsVbcNquK4t1NJqYRc9Qrjg6JYNJuAV=cpZ81Zm-pnw@mail.gmail.com>
-	 <1402669218.4802.3.camel@weser.hi.pengutronix.de>
-	 <CAHM4w1=rvLeWjRZWQtnN05_dmt=bYOPM-y6oY6PnP4J-Nv7oQw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
+Date: Fri, 20 Jun 2014 21:05:30 +0200
+Message-ID: <14956334.eDhb2zObBc@wuerfel>
+In-Reply-To: <53A46B49.3040009@ti.com>
+References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com> <53A453D1.4040308@ti.com> <53A46B49.3040009@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Samstag, den 14.06.2014, 14:15 +0530 schrieb Pratyush Anand:
-> Hi Lucas,
-> 
-> 
-> 
-> On Fri, Jun 13, 2014 at 7:50 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> > Hi Pratyush,
-> >
-> > Am Freitag, den 13.06.2014, 11:12 +0530 schrieb Pratyush Anand:
-> >>  Hi Lucas,
+On Friday 20 June 2014 13:11:37 Santosh Shilimkar wrote:
+> > 
+> > Unfortunately I lost Jingoo's email from my Inbox. So I cut-n-paste the comment from
+> > internet and respond.
+> > 
+> > Jingoo Han wrote:-
+> > =============================================================================
+> > I think so, too.
+> > 
+> > DT maintainers and arch maintainers should review the following
+> > dt bindings.
+> >   .../devicetree/bindings/pci/designware-pcie.txt    |   42 ++
+> >   .../devicetree/bindings/pci/pci-keystone.txt       |   56 +++
+> > Generic PHY maintainer (Kishon Vijay Abraham I) should review the
+> > following phy driver.
+> >   drivers/phy/phy-keystone-serdes.c
+> > 
 > >>
+> >> I'm looking for acks from Mohit and/or Jingoo for the pci/host
+> >> changes, and from Arnd for the devicetree/bindings changes.
 > >>
-> >> On Thu, Jun 5, 2014 at 8:16 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> >> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> >> > ---
-> >> >  drivers/pci/msi.c   | 3 +++
-> >> >  include/linux/msi.h | 2 ++
-> >> >  2 files changed, 5 insertions(+)
-> >> >
-> >> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> >> > index 27a7e67ddfe4..c45399d3061a 100644
-> >> > --- a/drivers/pci/msi.c
-> >> > +++ b/drivers/pci/msi.c
-> >> > @@ -68,9 +68,12 @@ int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-> >> >
-> >> >  int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-> >> >  {
-> >> > +       struct msi_chip *chip = dev->bus->msi;
-> >> >         struct msi_desc *entry;
-> >> >         int ret;
-> >> >
-> >> > +       if (chip && chip->setup_irqs)
-> >>
-> >> I think, you should also check here for nvec > 1
-> >
-> > No, nvec == 1 is just a special case and is perfectly valid.
+> >> Adding these "-dw-3_64" files is sort of ugly.  If that code is only
+> >> used by keystone, maybe it could just be moved to pci-keystone.c?  But
+> >> I'll defer to Mohit and Jingoo on that and the way you modify
+> >> pcie-designware.c.
+> > 
+> > I agree with Bjorn Helgaas's opinion. These three "-dw-3_64" files
+> > look terrible! I don't have a good way to handle this; however,
+> > moving this code to pci-keystone.c looks better.
+> > ======================================================================
+> > 
+> > The original RFC I had submitted had all of the application space register
+> > handling code as part of the Keystone PCI driver. As per Arnd's comment (See
+> > my change log against v1), the code was moved to a separate file so that
+> > the next driver that has same version of the DW hw could re-use this code.
+> > I agree with Arnd and moved the code to v_3_65 specific files.  What is
+> > your proposal?  Do you have objection to the file name? or it's content?
+> > 
+> > If objection is on the file name,  please suggest alternate names. If you
+> > are okay with the file name, and doesn't like the code, it will be helpful
+> > to review the code and provide specific comments against the patch itself
+> > so that I can address the same.
+> > 
+> Arnd suggestion was to have the version 3.65 code in generic place since
+> its IP specific and just in case some other vendor using the same version
+> can leverage the code.
 > 
-> So it means that the platform which supports setup_irqs need not
-> support setup_irq. May be it can be
-> documented atleast as a comment somewhere and then setup_irq can be
-> removed from designware driver.
-> 
-While 1 irq is a completely valid number of irqs in the multi MSI case
-the requirement is actually the other way around: setting up a single
-irq is required to be implemented by every MSI chip provider, while the
-ability to set up multiple MSIs is optional.
+> Concern here seems toe really those name of the files. I can't think of
+> any other appropriate name. 
 
-As the semantics of both entry points is slightly different you can not
-just remove the single MSI irq setup function if you support the
-extended multi MSI setup.
+We should definitely keep the version in the DT "compatible" strings
+wherever we know it. Regarding a better file name, I have no idea.
 
-> >>
-> >> > +               return chip->setup_irqs(chip, dev, nvec, type);
-> >>
-> >> Before return, shouldn't we set chip_data for all desc->irq?
-> >
-> > Setting chip_data is done in the MSI irq domains map callback and is the
-> > same for single or multiple MSI setup. No need to do anything special
-> > here.
-> 
-> But I see arch_setup_msi_irq function in this file doing it.
-> 
-Right, but I think this is wrong and should be corrected. Both Tegra and
-designware are setting this up in their MSI irq domain map callback,
-which is the right place to do this IMO. I haven't looked at the other
-MSI chip providers yet, but will do so.
-
-Regards,
-Lucas
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+	Arnd
