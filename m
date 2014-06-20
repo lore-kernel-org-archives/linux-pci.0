@@ -1,57 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mxout1.netvision.net.il ([194.90.9.20]:47264 "EHLO
-	mxout1.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660AbaFFQWl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jun 2014 12:22:41 -0400
-MIME-version: 1.0
-Content-type: text/plain; CHARSET=US-ASCII; format=flowed
-Message-id: <5391EA92.9050306@gmail.com>
-Date: Fri, 06 Jun 2014 19:21:38 +0300
-From: Eli Billauer <eli.billauer@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Joerg Roedel <joro@8bytes.org>, devel@driverdev.osuosl.org,
-	Shuah Khan <shuah.kh@samsung.com>, discuss@x86-64.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
- dma_map_single()
-References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
- <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
- <538E3D04.9060808@samsung.com> <20140603233907.GB23880@8bytes.org>
- <20140604140408.GC5004@htj.dyndns.org> <20140604141211.GC23880@8bytes.org>
- <20140604141416.GD5004@htj.dyndns.org> <538F3548.4050101@gmail.com>
- <20140604212525.GE23880@8bytes.org> <5391A9C2.3040602@gmail.com>
- <20140606160103.GG15110@kroah.com>
-In-reply-to: <20140606160103.GG15110@kroah.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 2/3] thunderbolt: include linux/slab.h for kmalloc
+Date: Fri, 20 Jun 2014 15:52:10 +0200
+Message-Id: <1403272331-3790755-2-git-send-email-arnd@arndb.de>
+In-Reply-To: <1403272331-3790755-1-git-send-email-arnd@arndb.de>
+References: <1403272331-3790755-1-git-send-email-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/06/14 19:01, Greg KH wrote:
->> Please try to put yourself in my position: I have a driver that I care
->> >  about, which works fine for a few years. It's based upon dma_map_single(),
->> >  which seems to be the common way to get non-coherent memory, even for the
->> >  driver's entire lifespan. I realize that dma_alloc_* was the intended way to
->> >  do it, but fact is that dma_map_* has become the common choice.
->>
-> Is your driver in the kernel tree?  If not, you really are on your own :(
->
-It's the Xillybus driver in the staging area. I don't know if this 
-counts for being in the kernel tree...
+The kmalloc/kzalloc/kfree functions are declared in linux/slab.h,
+so we have to explicitly include that header to avoid build failures
+on ARM and other architectures that don't include these implicitly
+through another header.
 
-The suggested patchset would allow replacing my use of dma_map_single() 
-with a managed version of that function. This will clean the driver's 
-code considerably.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/thunderbolt/eeprom.c | 1 +
+ drivers/thunderbolt/switch.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-But I think that the discussion here is if it's valid to use 
-dma_map_single() for a device-permanent DMA mapping, or if 
-dma_alloc_noncoherent() is the only way. If the answer is no, there's 
-quite obviously no point in a devres version for that function.
-
-Regards,
-    Eli
-> greg k-h
->
->
-
+diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
+index 0d5a80b..bc0449f 100644
+--- a/drivers/thunderbolt/eeprom.c
++++ b/drivers/thunderbolt/eeprom.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <linux/crc32.h>
++#include <linux/slab.h>
+ #include "tb.h"
+ 
+ /**
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index 0d50e7e..26e76e4 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/slab.h>
+ 
+ #include "tb.h"
+ 
+-- 
+1.8.3.2
 
