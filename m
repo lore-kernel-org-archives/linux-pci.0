@@ -1,101 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mxout1.netvision.net.il ([194.90.9.20]:35372 "EHLO
-	mxout1.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbaFGMeJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Jun 2014 08:34:09 -0400
-MIME-version: 1.0
-Content-type: text/plain; CHARSET=US-ASCII; format=flowed
-Message-id: <5392F63B.6050708@gmail.com>
-Date: Sat, 07 Jun 2014 14:23:39 +0300
-From: Eli Billauer <eli.billauer@gmail.com>
-To: shuah.kh@samsung.com
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Joerg Roedel <joro@8bytes.org>, devel@driverdev.osuosl.org,
-	discuss@x86-64.org, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
- dma_map_single()
-References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
- <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
- <538E3D04.9060808@samsung.com> <20140603233907.GB23880@8bytes.org>
- <20140604140408.GC5004@htj.dyndns.org> <20140604141211.GC23880@8bytes.org>
- <20140604141416.GD5004@htj.dyndns.org> <538F3548.4050101@gmail.com>
- <20140604212525.GE23880@8bytes.org> <5391A9C2.3040602@gmail.com>
- <20140606160103.GG15110@kroah.com> <5391EA92.9050306@gmail.com>
- <5391F438.90703@samsung.com>
-In-reply-to: <5391F438.90703@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 22 Jun 2014 22:39:46 +0800
+From: Feng Tang <feng.tang@intel.com>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Luck, Tony" <tony.luck@intel.com>, Joerg Roedel <joro@8bytes.org>,
+	"Gortmaker, Paul (Wind River)" <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	alek.du@intel.com, mark.gross@intel.com
+Subject: Re: [Patch V4 00/42] use irqdomain to dynamically allocate IRQ for
+ IOAPIC
+Message-ID: <20140622143946.GA20551@feng-snb>
+References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+ <20140622084227.GA13974@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140622084227.GA13974@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Shuah,
+Hi,
 
+On Sun, Jun 22, 2014 at 04:42:27PM +0800, Ingo Molnar wrote:
+> 
+> JFYI, with these patches applied x86 allyes32config fails with:
+> 
+>   arch/x86/platform/intel-mid/device_libs/platform_wdt.c:45:3: error: implicit declaration of function ‘io_apic_set_pci_routing’ 
 
-We agree that the streaming API was originally *intended* for short 
-map-unmap DMA sessions, and that dma_alloc_noncoherent() was the 
-*intended* API for those who want to hold the DMA during a device's 
-lifetime.
+In some intel-mid platforms (Medfield/Merrifield etc), the IOAPIC
+may have more than 80 pins, and some devices like a i2c based touch
+screen has its interrupt line directly connected to IOAPIC (this
+platform_wdt.c here should be the same case).
 
-We also agree that on some platforms, DMA mappings are precious, and 
-therefore any driver should unmap a region as soon as it's not needed 
-anymore.
-
-But if we stick to the citation you gave, it says "...unmapped right 
-after it (unless you use dma_sync_* below)". So even in the streaming 
-API's definition, there's an understanding, that the "streaming" DMA 
-buffer can be held for more than a single session. And a good sync tool 
-for that is made available.
-
-Using cross-reference on Linux' code, I get a strong impression, that 
-dma_alloc_NONcoherent() is pretty much unused (I counted 8 drivers). The 
-streaming API's sync functions are heavily used, on the other hand. So 
-one gets a hunch, that there's a lot of use of the streaming API in the 
-kernel tree for long-term DMA mappings.
-
-This wasn't the original intention -- we agree on that. But why is it 
-wrong? Assuming that a driver needs to hold a DMA mapping for a long 
-while, why does it matter if it was done with dma_alloc_noncoherent() or 
-with dma_map_*()? They are equally wasteful, aren't they?
-
-Why maintaining two API sets doing the same thing? Or is there a subtle 
-functional difference I'm not aware of?
+Since these devices are not PCI device or ACPI device, they can't
+use the general PCI/ACPI xxx_enable_dev APIs which implicitly set
+up the ioapic entry, but use this "io_apic_set_pci_routing"
+directly.
 
 Thanks,
-   Eli
+Feng
 
-
-
-On 06/06/14 20:02, Shuah Khan wrote:
->
-> dma_map_single() and dma_unmap_single() are streaming DMA APIs. These
-> are intended for one DMA transfer and unmapped right after it is done.
->
-> dma buffers are limited shared resources for streaming that are
-> shared by several drivers. Hence the need for use and release
-> model.
->
-> Please refer to the Using Streaming DMA mappings in DMA-API-HOWTO.txt
->
-> "- Streaming DMA mappings which are usually mapped for one DMA
->   transfer, unmapped right after it (unless you use dma_sync_* below)
->   and for which hardware can optimize for sequential accesses.
->
->   This of "streaming" as "asynchronous" or "outside the coherency
->   domain".
->
->   Good examples of what to use streaming mappings for are:
->
->         - Networking buffers transmitted/received by a device.
->         - Filesystem buffers written/read by a SCSI device."
->
->
-> If I understand your intended usage correctly, you are looking to
-> allocate and hold the buffers for the lifetime of the driver. For
-> such cases, dma_alloc_*() interfaces are the ones to use.
->
-> Please also refer to DMA-API.txt as well. Hope this helps.
->
-> -- Shuah
->
->
-
+> 
+> Thanks,
+> 
+> 	Ingo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
