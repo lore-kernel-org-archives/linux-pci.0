@@ -1,87 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM resources.
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <20140602162306.4AB0FC40476@trevor.secretlab.ca>
-Date: Mon, 2 Jun 2014 13:09:08 -0500
-Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-Message-Id: <2F6515B1-48FE-4ED6-908E-CC1CAD7AF403@codeaurora.org>
-References: <20140530233034.GH1677@bart.dudau.co.uk> <1401496601-31983-1-git-send-email-Liviu.Dudau@arm.com> <1401496601-31983-2-git-send-email-Liviu.Dudau@arm.com> <4756033.LkcFQN0chs@wuerfel> <20140602150945.964D4C40381@trevor.secretlab.ca> <390B3F94-C058-47D6-82CE-0393E60014FF@codeaurora.org> <20140602162306.4AB0FC40476@trevor.secretlab.ca>
-To: Grant Likely <grant.likely@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:34408 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751180AbaFWGJx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 02:09:53 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 23 Jun 2014 16:09:51 +1000
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 1A4232BB0040
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 16:09:48 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N5lWBv62128336
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 15:47:32 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N69kQB015987
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 16:09:47 +1000
+Date: Mon, 23 Jun 2014 16:09:47 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: benh@au1.ibm.com, linuxppc-dev@lists.ozlabs.org,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	gwshan@linux.vnet.ibm.com, yan@linux.vnet.ibm.com,
+	qiudayu@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH V3 12/17] powerpc/powernv: implement
+ pcibios_sriov_resource_alignment on powernv
+Message-ID: <20140623060947.GB12055@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1402365399-5121-13-git-send-email-weiyang@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1402365399-5121-13-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jun 10, 2014 at 09:56:34AM +0800, Wei Yang wrote:
+>This patch implements the pcibios_sriov_resource_alignment() on powernv
+>platform.
+>
+>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>---
+> arch/powerpc/include/asm/machdep.h        |    1 +
+> arch/powerpc/kernel/pci-common.c          |    8 ++++++++
+> arch/powerpc/platforms/powernv/pci-ioda.c |   17 +++++++++++++++++
+> 3 files changed, 26 insertions(+)
+>
+>diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+>index 2f2e770..3bbc55f 100644
+>--- a/arch/powerpc/include/asm/machdep.h
+>+++ b/arch/powerpc/include/asm/machdep.h
+>@@ -242,6 +242,7 @@ struct machdep_calls {
+> 	resource_size_t (*pcibios_window_alignment)(struct pci_bus *, unsigned long type);
+> #ifdef CONFIG_PCI_IOV
+> 	resource_size_t (*__pci_sriov_resource_size)(struct pci_dev *, int resno);
+>+	resource_size_t (*__pci_sriov_resource_alignment)(struct pci_dev *, int resno, resource_size_t align);
+> #endif /* CONFIG_PCI_IOV */
+>
+> 	/* Called to shutdown machine specific hardware not already controlled
+>diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+>index c4e2e92..35345ac 100644
+>--- a/arch/powerpc/kernel/pci-common.c
+>+++ b/arch/powerpc/kernel/pci-common.c
+>@@ -128,6 +128,14 @@ resource_size_t pcibios_sriov_resource_size(struct pci_dev *pdev, int resno)
+>
+> 	return 0;
+> }
+>+
+>+resource_size_t pcibios_sriov_resource_alignment(struct pci_dev *pdev, int resno, resource_size_t align)
+>+{
+>+	if (ppc_md.__pci_sriov_resource_alignment)
+>+		return ppc_md.__pci_sriov_resource_alignment(pdev, resno, align);
+>+
+>+	return 0;
+>+}
+> #endif /* CONFIG_PCI_IOV */
+>
+> static resource_size_t pcibios_io_size(const struct pci_controller *hose)
+>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>index 7dfad6a..b0ac851 100644
+>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>@@ -1573,6 +1573,22 @@ static resource_size_t __pnv_pci_sriov_resource_size(struct pci_dev *pdev, int r
+>
+> 	return size;
+> }
+>+
+>+static resource_size_t __pnv_pci_sriov_resource_alignment(struct pci_dev *pdev, int resno,
+>+		resource_size_t align)
 
-On Jun 2, 2014, at 11:23 AM, Grant Likely <grant.likely@linaro.org> wrote:
+The function could be "pcibios_sriov_resource_alignment()", but it's not a big deal.
+If you prefer the original one, then keep it :)
 
-> On Mon, 2 Jun 2014 10:40:30 -0500, Kumar Gala <galak@codeaurora.org> wrote:
->> 
->> On Jun 2, 2014, at 10:09 AM, Grant Likely <grant.likely@linaro.org> wrote:
->> 
->>> On Sat, 31 May 2014 20:41:04 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
->>>> On Saturday 31 May 2014 01:36:40 Liviu Dudau wrote:
->>>>> We would like to be able to describe PCIe ECAM resources as
->>>>> IORESOURCE_MEM blocks while distinguish them from standard
->>>>> memory resources. Add an IORESOURCE_BIT entry for this case.
->>>>> 
->>>>> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->>>> 
->>>> I still don't see any value in this at all. What is the advantage
->>>> of doing this opposed to just having a standardized 'reg' property
->>>> for a particular compatible string?
->>> 
->>> I'm inclined to agree. It doesn't seem appropriate to put config space
->>> in ranges, and the host controller binding is responsible for
->>> identifying how config space is memory mapped.
->>> 
->>> g.
->> 
->> I don’t agree when it comes to ECAM, but we can drop this for now
->> until someone really does that.
-> 
-> Okay, humor me then. What would a ranges property look like for ECAM? Do
-> you have an example? I believe there would need to be a separate entry
-> for each and every PCI device on the bus to get the config spaces to be
-> contiguous.
+>+{
+>+	struct pci_dn *pdn = pci_get_pdn(pdev);
+>+	resource_size_t iov_align;
+>+
+>+	iov_align = resource_size(&pdev->resource[resno]);
+>+	if (iov_align)
+>+		return iov_align;
+>+
+>+	if (pdn->vfs)
+>+		return pdn->vfs * align;
+>+
+>+	return align;
+>+}
+> #endif /* CONFIG_PCI_IOV */
+>
+> /* Prevent enabling devices for which we couldn't properly
+>@@ -1777,6 +1793,7 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
+> 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+> #ifdef CONFIG_PCI_IOV
+> 	ppc_md.__pci_sriov_resource_size = __pnv_pci_sriov_resource_size;
+>+	ppc_md.__pci_sriov_resource_alignment = __pnv_pci_sriov_resource_alignment;
+> #endif /* CONFIG_PCI_IOV */
+> 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+>
 
-The definition of ECAM is a 256M linear region with each 4k being a different bus/dev/func.
-
-So the ranges would look something like:
-
-   ranges = <0x00000000 0 0x00000000 0x0ff00000 0 0x10000000>   /* configuration space */
-
-The reason I think allow an ECAM makes sense in ranges is because it allows for a direct IO read/write to CFG space (w/o any mapping) similar to what one would do for MEM space or IO.
-
-> However, what do we do with the 2 cases that exist in upstream that
->> are using ranges for cfg space?
-> 
-> Ignore them in the core code? Make the specific host controller handle
-> them I would think.
-
-I just meant, should we ‘break’ their DTs and move them from using ranges to reg?
-
-- k
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+Thanks,
+Gavin
 
