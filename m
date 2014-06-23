@@ -1,87 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:52350 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964856AbaFQVee (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 17:34:34 -0400
-Received: by mail-ie0-f169.google.com with SMTP id at1so7033046iec.28
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jun 2014 14:34:34 -0700 (PDT)
+Received: from e28smtp05.in.ibm.com ([122.248.162.5]:58613 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751712AbaFWGaF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 02:30:05 -0400
+Received: from /spool/local
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 23 Jun 2014 11:59:59 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id A1594394004E
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 11:59:57 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N6V6W645744252
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 12:01:06 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N6TtE4032238
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 11:59:56 +0530
+Date: Mon, 23 Jun 2014 14:29:53 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, yan@linux.vnet.ibm.com,
+	qiudayu@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH V3 04/17] PCI: SRIOV: add VF enable/disable hook
+Message-ID: <20140623062953.GB5172@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1402365399-5121-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20140623050310.GA5069@shangw>
 MIME-Version: 1.0
-In-Reply-To: <20140617192734.30783.71260.stgit@amt.stowe>
-References: <20140617192734.30783.71260.stgit@amt.stowe>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 17 Jun 2014 15:07:56 -0600
-Message-ID: <CAErSpo7t2kXj2ZULLXCJSWb_awS+DCtCg51dnLbb8ztWmQdYog@mail.gmail.com>
-Subject: Re: [PATCH] PCI: pciehp: Include the Data Link Layer State Changed
- bit when clearing the Slot Status register's event bits
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain.linux@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140623050310.GA5069@shangw>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 17, 2014 at 1:27 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
-> During PCIe hot-plug initialization - pciehp_probe - data structures
-> related to slot capabilities are set up.  As part of this set up, ISRs are
-> put in place to handle slot events and all event bits are cleared out.
+On Mon, Jun 23, 2014 at 03:03:10PM +1000, Gavin Shan wrote:
+>On Tue, Jun 10, 2014 at 09:56:26AM +0800, Wei Yang wrote:
+>>VFs are dynamically created/released when driver enable them. On some
+>>platforms, like PowerNV, special resources are necessary to enable VFs.
+>>
+>>This patch adds two hooks for platform initialization before creating the VFs.
+>>
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>---
+>> drivers/pci/iov.c |   19 +++++++++++++++++++
+>> 1 file changed, 19 insertions(+)
+>>
+>>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>>index 1d21f43..cc87773 100644
+>>--- a/drivers/pci/iov.c
+>>+++ b/drivers/pci/iov.c
+>>@@ -250,6 +250,11 @@ static void sriov_disable_migration(struct pci_dev *dev)
+>> 	iounmap(iov->mstate);
+>> }
+>>
+>>+int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
+>>+{
+>>+       return 0;
+>>+}
+>>+
+>> static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>> {
+>> 	int rc;
+>>@@ -260,6 +265,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>> 	struct pci_dev *pdev;
+>> 	struct pci_sriov *iov = dev->sriov;
+>> 	int bars = 0;
+>>+	int retval;
+>>
+>> 	if (!nr_virtfn)
+>> 		return 0;
+>>@@ -334,6 +340,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>> 	if (nr_virtfn < initial)
+>> 		initial = nr_virtfn;
+>>
+>>+	if ((retval = pcibios_sriov_enable(dev, initial))) {
+>>+		dev_err(&dev->dev, "Failure %d from pcibios_sriov_setup()\n",
+>>+				retval);
 >
-> This patch adds the Data Link Layer State Changed (PCI_EXP_SLTSTA_DLLSC)
-> Slot Status bit to the event bits that are cleared out during
-> initialization.
+>		dev_err(&dev->dev, "Failure %d from pcibios_sriov_enable()\n",
+>			retval);
 
-I think this is related to e48f1b67f668 ("PCI: pciehp: Use link change
-notifications for hot-plug and removal").  Prior to that, pcie_isr()
-didn't look at the PCI_EXP_SLTSTA_DLLSC bit.
+Thanks
 
-Apparently there's a non-public report of spurious messages like this
-at boot-time, with no actual hotplug events:
-
-  pciehp 0000:82:04.0:pcie24: slot(4): Link Up event
-  pciehp 0000:82:04.0:pcie24: Device 0000:83:00.0 already exists at
-0000:83:00, cannot hot-add
-  pciehp 0000:82:04.0:pcie24: Cannot add device at 0000:83:00
-
-Device 0000:83:00.0 was enumerated previously, during the normal PCI
-device enumeration.  I suspect DLLSC was set by the hardware when the
-link came up after power-on, and it remained set until Linux booted.
-Then when we take the first pciehp interrupt, we notice DLLSC is set
-and think it's a new link state change.
-
-This might be system-specific, because some BIOSes might clear DLLSC
-before handing off to the OS.  Or my theory might be all wet.
-
-But I think we should clear DLLSC in any case.  We clear all the other
-RW1C bits in Slot Status, and I think we should clear DLLSC as well.
-
-I'd like to include a bugzilla or mailing list reference for the
-spurious message, and I'd also like confirmation that this changes
-actually fixes it.
-
-Bjorn
-
-> Reference:
->   PCI-SIG.  PCI Express Base Specification Revision 4.0 Version 0.3
->   (PCI-SIG, 2014): 7.8.11. Slot Status Register (Offset 1Ah).
 >
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-> ---
+>>+		return retval;
+>>+	}
+>>+
+>> 	for (i = 0; i < initial; i++) {
+>> 		rc = virtfn_add(dev, i, 0);
+>> 		if (rc)
+>>@@ -368,6 +380,11 @@ failed:
+>> 	return rc;
+>> }
+>>
+>>+int __weak pcibios_sriov_disable(struct pci_dev *pdev)
+>>+{
+>>+       return 0;
+>>+}
+>>+
+>> static void sriov_disable(struct pci_dev *dev)
+>> {
+>> 	int i;
+>>@@ -382,6 +399,8 @@ static void sriov_disable(struct pci_dev *dev)
+>> 	for (i = 0; i < iov->num_VFs; i++)
+>> 		virtfn_remove(dev, i, 0);
+>>
+>>+	pcibios_sriov_disable(dev);
+>>+
+>> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>> 	pci_cfg_access_lock(dev);
+>> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
 >
->  drivers/pci/hotplug/pciehp_hpc.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 42914e0..0568416 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -794,7 +794,7 @@ struct controller *pcie_init(struct pcie_device *dev)
->         pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
->                 PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
->                 PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
-> -               PCI_EXP_SLTSTA_CC);
-> +               PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
->
->         /* Disable software notification */
->         pcie_disable_notification(ctrl);
->
+>Thanks,
+>Gavin
+
+-- 
+Richard Yang
+Help you, Help me
+
