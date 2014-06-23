@@ -1,112 +1,159 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [RFC Patch V2 09/16] x86, irq: remove __init marker for functions will be used by IOAPIC hotplug
-Date: Tue, 17 Jun 2014 13:29:48 +0800
-Message-Id: <1402982995-13747-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:51644 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122AbaFWF10 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 01:27:26 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 23 Jun 2014 15:27:24 +1000
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 3F95E2CE8054
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 15:27:21 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N555J012714254
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 15:05:05 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N5RKYg026502
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 15:27:20 +1000
+Date: Mon, 23 Jun 2014 15:27:21 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: benh@au1.ibm.com, linuxppc-dev@lists.ozlabs.org,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	gwshan@linux.vnet.ibm.com, yan@linux.vnet.ibm.com,
+	qiudayu@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH V3 07/17] ppc/pnv: Add function to deconfig a PE
+Message-ID: <20140623052721.GB7223@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1402365399-5121-8-git-send-email-weiyang@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1402365399-5121-8-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    4 ++--
- arch/x86/kernel/apic/io_apic.c |   14 +++++++-------
- 2 files changed, 9 insertions(+), 9 deletions(-)
+On Tue, Jun 10, 2014 at 09:56:29AM +0800, Wei Yang wrote:
+>On PowerNV platform, it will support dynamic PE allocation and deallocation.
+>
+>This patch adds a function to release those resources related to a PE.
+>
+>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>---
+> arch/powerpc/platforms/powernv/pci-ioda.c |   77 +++++++++++++++++++++++++++++
+> 1 file changed, 77 insertions(+)
+>
+>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>index 8ca3926..87cb3089 100644
+>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>@@ -330,6 +330,83 @@ static struct pnv_ioda_pe *pnv_ioda_get_pe(struct pci_dev *dev)
+> }
+> #endif /* CONFIG_PCI_MSI */
+>
+>+static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>+{
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 0aeed5ca356e..0b31aebd9405 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern u32 mp_pin_to_gsi(int ioapic, int pin);
- extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
- extern void mp_unmap_irq(int irq);
--extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
--				      struct ioapic_domain_cfg *cfg);
-+extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+			       struct ioapic_domain_cfg *cfg);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index e56bb94cd32a..15a7d36d4a9c 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3445,7 +3445,7 @@ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
- 	return ret;
- }
- 
--static int __init io_apic_get_redir_entries(int ioapic)
-+static int io_apic_get_redir_entries(int ioapic)
- {
- 	union IO_APIC_reg_01	reg_01;
- 	unsigned long flags;
-@@ -3491,7 +3491,7 @@ int __init arch_probe_nr_irqs(void)
- }
- 
- #ifdef CONFIG_X86_32
--static int __init io_apic_get_unique_id(int ioapic, int apic_id)
-+static int io_apic_get_unique_id(int ioapic, int apic_id)
- {
- 	union IO_APIC_reg_00 reg_00;
- 	static physid_mask_t apic_id_map = PHYSID_MASK_NONE;
-@@ -3617,7 +3617,7 @@ static u8 io_apic_unique_id(int idx, u8 id)
- }
- #endif
- 
--static int __init io_apic_get_version(int ioapic)
-+static int io_apic_get_version(int ioapic)
- {
- 	union IO_APIC_reg_01	reg_01;
- 	unsigned long flags;
-@@ -3821,7 +3821,7 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
- 	return gsi - gsi_cfg->gsi_base;
- }
- 
--static __init int bad_ioapic(unsigned long address)
-+static int bad_ioapic(unsigned long address)
- {
- 	if (nr_ioapics >= MAX_IO_APICS) {
- 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
-@@ -3835,7 +3835,7 @@ static __init int bad_ioapic(unsigned long address)
- 	return 0;
- }
- 
--static __init int bad_ioapic_register(int idx)
-+static int bad_ioapic_register(int idx)
- {
- 	union IO_APIC_reg_00 reg_00;
- 	union IO_APIC_reg_01 reg_01;
-@@ -3854,8 +3854,8 @@ static __init int bad_ioapic_register(int idx)
- 	return 0;
- }
- 
--void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
--			       struct ioapic_domain_cfg *cfg)
-+void mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+			struct ioapic_domain_cfg *cfg)
- {
- 	int idx = 0;
- 	int entries;
--- 
-1.7.10.4
+Richard, it seems that the deconfiguration is incomplete. Something seems
+missed: DMA, IO and MMIO, MSI. If I understand correctly, pnv_ioda_deconfigure_pe()
+won't tear down DMA, IO and MMIO, MSI properly. For MSI/MSIx, it wouldn't
+be a problem as the VF driver should disable them before calling this function.
+
+>+	struct pci_dev *parent;
+>+	uint8_t bcomp, dcomp, fcomp;
+>+	int64_t rc;
+>+	long rid_end, rid;
+
+Blank line needed here to separate variable declaration and logic. And I think
+we won't run into case "if (pe->pbus)" for now. So it's worthy to have some
+comments to explain it for a bit :-)
+
+>+	if (pe->pbus) {
+>+		int count;
+>+
+>+		dcomp = OPAL_IGNORE_RID_DEVICE_NUMBER;
+>+		fcomp = OPAL_IGNORE_RID_FUNCTION_NUMBER;
+>+		parent = pe->pbus->self;
+>+		if (pe->flags & PNV_IODA_PE_BUS_ALL)
+>+			count = pe->pbus->busn_res.end - pe->pbus->busn_res.start + 1;
+>+		else
+>+			count = 1;
+>+
+>+		switch(count) {
+>+		case  1: bcomp = OpalPciBusAll;         break;
+>+		case  2: bcomp = OpalPciBus7Bits;       break;
+>+		case  4: bcomp = OpalPciBus6Bits;       break;
+>+		case  8: bcomp = OpalPciBus5Bits;       break;
+>+		case 16: bcomp = OpalPciBus4Bits;       break;
+>+		case 32: bcomp = OpalPciBus3Bits;       break;
+>+		default:
+>+			pr_err("%s: Number of subordinate busses %d"
+>+			       " unsupported\n",
+>+			       pci_name(pe->pbus->self), count);
+
+I guess it's not safe to do "pci_name(pe->pbus->self)" root root bus.
+
+>+			/* Do an exact match only */
+>+			bcomp = OpalPciBusAll;
+>+		}
+>+		rid_end = pe->rid + (count << 8);
+>+	}else {
+
+	} else {
+
+>+		parent = pe->pdev->bus->self;
+>+		bcomp = OpalPciBusAll;
+>+		dcomp = OPAL_COMPARE_RID_DEVICE_NUMBER;
+>+		fcomp = OPAL_COMPARE_RID_FUNCTION_NUMBER;
+>+		rid_end = pe->rid + 1;
+>+	}
+>+
+>+	/* Disable MVT on IODA1 */
+>+	if (phb->type == PNV_PHB_IODA1) {
+>+		rc = opal_pci_set_mve_enable(phb->opal_id,
+>+					     pe->mve_number, OPAL_DISABLE_MVE);
+>+		if (rc) {
+>+			pe_err(pe, "OPAL error %ld enabling MVE %d\n",
+>+			       rc, pe->mve_number);
+>+			pe->mve_number = -1;
+>+		}
+>+	}
+>+	/* Clear the reverse map */
+>+	for (rid = pe->rid; rid < rid_end; rid++)
+>+		phb->ioda.pe_rmap[rid] = 0;
+>+
+>+	/* Release from all parents PELT-V */
+>+	while (parent) {
+>+		struct pci_dn *pdn = pci_get_pdn(parent);
+>+		if (pdn && pdn->pe_number != IODA_INVALID_PE) {
+>+			rc = opal_pci_set_peltv(phb->opal_id, pdn->pe_number,
+>+						pe->pe_number, OPAL_REMOVE_PE_FROM_DOMAIN);
+>+			/* XXX What to do in case of error ? */
+>+		}
+>+		parent = parent->bus->self;
+>+	}
+
+It seems that you missed removing the PE from its own PELTV, which was
+introduced by commit 631ad69 ("powerpc/powernv: Add PE to its own PELTV").
+
+>+
+>+	/* Dissociate PE in PELT */
+>+	rc = opal_pci_set_pe(phb->opal_id, pe->pe_number, pe->rid,
+>+			     bcomp, dcomp, fcomp, OPAL_UNMAP_PE);
+>+	if (rc)
+>+		pe_err(pe, "OPAL error %ld trying to setup PELT table\n", rc);
+>+
+>+	pe->pbus = NULL;
+>+	pe->pdev = NULL;
+>+
+>+	return 0;
+>+}
+>+
+> static int pnv_ioda_configure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+> {
+> 	struct pci_dev *parent;
+
+Thanks,
+Gavin
 
