@@ -1,122 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:42158 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755620AbaFYJBB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 05:01:01 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V3 13/21] iommu/vt-d: fix bug in computing domain's iommu_snooping flag
-Date: Wed, 25 Jun 2014 17:02:39 +0800
-Message-Id: <1403686967-10887-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:44245 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756014AbaFWUIJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 16:08:09 -0400
+Received: by mail-ig0-f178.google.com with SMTP id hn18so3493694igb.5
+        for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 13:08:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1403280836-26943-2-git-send-email-alvin.chen@intel.com>
+References: <1403280836-26943-1-git-send-email-alvin.chen@intel.com> <1403280836-26943-2-git-send-email-alvin.chen@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 23 Jun 2014 14:07:47 -0600
+Message-ID: <CAErSpo7NW=3yLNY0XXLKVTqSqL=qbNEx_vp-583=32pY1Y=6TQ@mail.gmail.com>
+Subject: Re: [PATCH] mmc: sdhci-pci: Quark SDIO host controller supporting
+To: "Chen, Alvin" <alvin.chen@intel.com>
+Cc: Chris Ball <chris@printf.net>,
+	linux-mmc <linux-mmc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IOMMU units may dynamically attached to/detached from domains,
-so we should scan all active IOMMU units when computing iommu_snooping
-flag for a domain instead of only scanning IOMMU units associated
-with the domain.
+On Fri, Jun 20, 2014 at 10:13 AM, Chen, Alvin <alvin.chen@intel.com> wrote:
+> From: Derek Browne <Derek.Browne@intel.com>
+>
+> On Intel Quark, there is a SDIO host controller. This patch is added to
+> enable the SDIO host controller.
+>
+> Signed-off-by: Derek Browne <Derek.Browne@intel.com>
+> Signed-off-by: Alvin (Weike) Chen <alvin.chen@intel.com>
+> ---
+>  drivers/mmc/host/sdhci-pci.c |   12 ++++++++++++
+>  include/linux/pci_ids.h      |    2 ++
 
-Also check snooping and superpage capabilities when hot-adding DMAR units.
+Please read the comment at the top of pci_ids.h:
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   42 ++++++++++++++++++++++++------------------
- 1 file changed, 24 insertions(+), 18 deletions(-)
+ *      Do not add new entries to this file unless the definitions
+ *      are shared between multiple drivers.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index d94468ae2947..91dc85f63c41 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -634,50 +634,56 @@ static void domain_update_iommu_coherency(struct dmar_domain *domain)
- 	rcu_read_unlock();
- }
- 
--static void domain_update_iommu_snooping(struct dmar_domain *domain)
-+static int domain_update_iommu_snooping(struct intel_iommu *skip)
- {
--	int i;
--
--	domain->iommu_snooping = 1;
-+	struct dmar_drhd_unit *drhd;
-+	struct intel_iommu *iommu;
-+	int ret = 1;
- 
--	for_each_set_bit(i, domain->iommu_bmp, g_num_of_iommus) {
--		if (!ecap_sc_support(g_iommus[i]->ecap)) {
--			domain->iommu_snooping = 0;
--			break;
-+	rcu_read_lock();
-+	for_each_active_iommu(iommu, drhd) {
-+		if (iommu != skip) {
-+			if (!ecap_sc_support(iommu->ecap)) {
-+				ret = 0;
-+				break;
-+			}
- 		}
- 	}
-+	rcu_read_unlock();
-+
-+	return ret;
- }
- 
--static void domain_update_iommu_superpage(struct dmar_domain *domain)
-+static int domain_update_iommu_superpage(struct intel_iommu *skip)
- {
- 	struct dmar_drhd_unit *drhd;
--	struct intel_iommu *iommu = NULL;
-+	struct intel_iommu *iommu;
- 	int mask = 0xf;
- 
- 	if (!intel_iommu_superpage) {
--		domain->iommu_superpage = 0;
--		return;
-+		return 0;
- 	}
- 
- 	/* set iommu_superpage to the smallest common denominator */
- 	rcu_read_lock();
- 	for_each_active_iommu(iommu, drhd) {
--		mask &= cap_super_page_val(iommu->cap);
--		if (!mask) {
--			break;
-+		if (iommu != skip) {
-+			mask &= cap_super_page_val(iommu->cap);
-+			if (!mask)
-+				break;
- 		}
- 	}
- 	rcu_read_unlock();
- 
--	domain->iommu_superpage = fls(mask);
-+	return fls(mask);
- }
- 
- /* Some capabilities may be different across iommus */
- static void domain_update_iommu_cap(struct dmar_domain *domain)
- {
- 	domain_update_iommu_coherency(domain);
--	domain_update_iommu_snooping(domain);
--	domain_update_iommu_superpage(domain);
-+	domain->iommu_snooping = domain_update_iommu_snooping(NULL);
-+	domain->iommu_superpage = domain_update_iommu_superpage(NULL);
- }
- 
- static struct intel_iommu *device_to_iommu(struct device *dev, u8 *bus, u8 *devfn)
--- 
-1.7.10.4
+If the ID you're adding is shared, please mention the sharing in your changelog.
 
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2557,6 +2557,7 @@
+>  #define PCI_DEVICE_ID_INTEL_MFD_EMMC0  0x0823
+>  #define PCI_DEVICE_ID_INTEL_MFD_EMMC1  0x0824
+>  #define PCI_DEVICE_ID_INTEL_MRST_SD2   0x084F
+> +#define PCI_DEVICE_ID_INTEL_QUARK_ILB  0x095E
+
+This ID doesn't appear to be used at all.
+
+>  #define PCI_DEVICE_ID_INTEL_I960       0x0960
+>  #define PCI_DEVICE_ID_INTEL_I960RM     0x0962
+>  #define PCI_DEVICE_ID_INTEL_CENTERTON_ILB      0x0c60
+> @@ -2579,6 +2580,7 @@
+>  #define PCI_DEVICE_ID_INTEL_82840_HB   0x1a21
+>  #define PCI_DEVICE_ID_INTEL_82845_HB   0x1a30
+>  #define PCI_DEVICE_ID_INTEL_IOAT       0x1a38
+> +#define PCI_DEVICE_ID_INTEL_QRK_SD     0x08A7
+>  #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN        0x1c41
+>  #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MAX        0x1c5f
+>  #define PCI_DEVICE_ID_INTEL_PATSBURG_LPC_0     0x1d40
+> --
+> 1.7.9.5
+>
