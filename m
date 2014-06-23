@@ -1,83 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:34485 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750971AbaF0Q42 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 12:56:28 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1403888155-9709-1-git-send-email-phil.edworthy@renesas.com>
-References: <1403888155-9709-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1403888155-9709-2-git-send-email-phil.edworthy@renesas.com>
-Date: Fri, 27 Jun 2014 17:55:54 +0100
-Subject: [PATCH 1/2] PCI: host: pcie-rcar: Use correct initial HW settings
+Received: from mx1.redhat.com ([209.132.183.28]:29159 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751650AbaFWXKY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Jun 2014 19:10:24 -0400
+Message-ID: <1403565011.3707.422.camel@ul30vt.home>
+Subject: Re: PCI/AER: AER in SRIOV environment
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yishai Hadas <yishaih@dev.mellanox.co.il>,
+	"Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"linux-rdma (linux-rdma@vger.kernel.org)"
+	<linux-rdma@vger.kernel.org>,
+	"yishaih@mellanox.com" <yishaih@mellanox.com>, liranl@mellanox.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Mon, 23 Jun 2014 17:10:11 -0600
+In-Reply-To: <53A88A32.4010406@redhat.com>
+References: <53A839C6.5050102@dev.mellanox.co.il>
+	 <CAErSpo7xVvqYea8v624T8EyVf6skQccraAe_WYpzcf2tkWFLhg@mail.gmail.com>
+	 <53A88A32.4010406@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Although the R-Car PCIe driver works as it is, there are a number of
-incorrect settings that this patch corrects. It corrects:
- - enabling the PCI Express Extended Cap ID.
- - setting Data Link Layer Link Active Reporting Capable.
- - terminating list of capabilities.
+On Mon, 2014-06-23 at 16:12 -0400, Don Dutile wrote:
+> On 06/23/2014 03:09 PM, Bjorn Helgaas wrote:
+> > [+cc linux-pci, Don]
+> >
+> Adding Alex Williamson in case he can add more to this conversation...
+> 
+> > On Mon, Jun 23, 2014 at 8:29 AM, Yishai Hadas
+> > <yishaih@dev.mellanox.co.il> wrote:
+> >> Hi Vijay,
+> >> Trying to add AER support for Mellanox NIC in SRIOV environment, while
+> >> evaluating/testing encountered a problem which led me to your
+> >> patch accepted as part of kernel 3.8, commit ID
+> >> "918b4053184c0ca22236e70e299c5343eea35304".
+> >>
+> >> Have some concerns/questions on:
+> >> When working in SRIOV environment VFs may be un-attached, having no driver
+> >> assigned to, or may be attached to Virtual machine to work in some
+> >> pass-through mode.
+> >> Once working in KVM setup there is pci-stub driver which is loaded in the
+> >> HYP/PF for a given attached VF.
+> huh? 'loaded in the hyp/pf? .... um, loaded in the host, and a VF is
+> detached from its host driver -- a VF can be used in the host w/o any virtualization,
+> i.e., that's how guest VM is driving the VF: as if it was used by a guest (host) OS directly --
+> and attached to pci-stub driver, when assigned to a KVM guest in pre-VFIO days/ways.
+> If VFIO used, then VF is attached to vfio-pci driver.
+> 
+> >>
+> >> I'm using the aer-inject kernel module and its corresponding aer-inject tool
+> >> to simulate an error in the HYP.
+> >> In both cases your commit will cause the AER recovery to fail as there is no
+> >> driver assigned to PF's VFs that supports AER, comparing the code before
+> >> your change.
+> >>
+> Without VFIO, I believe that's correct. There was no AER-to-VF support pre-VFIO days.
+> I believe with the recent VFIO support,
+> and modifications to KVM, an AER that is associated with an assigned VF will
+> force the crash/halt of the KVM guest -- can't depend on a guest VF driver clearing
+> the AER in the hyp/host -- guest isn't privileged enough to clear the error.
+> So, crashing the guest is the simple option at the moment, to contain the error.
+> Alex: do I have that (vfio aer default) correct, or is that still site-under-construction?
 
-It also removes enabling the MAC data scrambling as this is the
-default HW setting, and removes incorrect code to enable slave bus
-mastering as this is done by the PCI core.
+Yep, any kind of recovery is TBD, we just send an eventfd signal that an
+error occurred and QEMU handles it by stopping the guest.  Not sure I
+can add much more to the conversation, but this is exactly the sort of
+thing that makes legacy kvm device assignment and pci-stub a bad design.
+Thanks,
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- drivers/pci/host/pcie-rcar.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+Alex
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index c06b888..680a8cc 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -483,14 +483,15 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
- 	rcar_rmw32(pcie, RCONF(PCI_SUBORDINATE_BUS), 0xff, 1);
- 
- 	/* Initialize default capabilities. */
--	rcar_rmw32(pcie, REXPCAP(0), 0, PCI_CAP_ID_EXP);
-+	rcar_rmw32(pcie, REXPCAP(0), 0xff, PCI_CAP_ID_EXP);
- 	rcar_rmw32(pcie, REXPCAP(PCI_EXP_FLAGS),
- 		PCI_EXP_FLAGS_TYPE, PCI_EXP_TYPE_ROOT_PORT << 4);
- 	rcar_rmw32(pcie, RCONF(PCI_HEADER_TYPE), 0x7f,
- 		PCI_HEADER_TYPE_BRIDGE);
- 
- 	/* Enable data link layer active state reporting */
--	rcar_rmw32(pcie, REXPCAP(PCI_EXP_LNKCAP), 0, PCI_EXP_LNKCAP_DLLLARC);
-+	rcar_rmw32(pcie, REXPCAP(PCI_EXP_LNKCAP), PCI_EXP_LNKCAP_DLLLARC,
-+		PCI_EXP_LNKCAP_DLLLARC);
- 
- 	/* Write out the physical slot number = 0 */
- 	rcar_rmw32(pcie, REXPCAP(PCI_EXP_SLTCAP), PCI_EXP_SLTCAP_PSN, 0);
-@@ -499,10 +500,7 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
- 	rcar_rmw32(pcie, TLCTLR+1, 0x3f, 50);
- 
- 	/* Terminate list of capabilities (Next Capability Offset=0) */
--	rcar_rmw32(pcie, RVCCAP(0), 0xfff0, 0);
--
--	/* Enable MAC data scrambling. */
--	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
-+	rcar_rmw32(pcie, RVCCAP(0), 0xfff00000, 0);
- 
- 	/* Enable MSI */
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
-@@ -519,11 +517,6 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
- 	/* Enable INTx interrupts */
- 	rcar_rmw32(pcie, PCIEINTXR, 0, 0xF << 8);
- 
--	/* Enable slave Bus Mastering */
--	rcar_rmw32(pcie, RCONF(PCI_STATUS), PCI_STATUS_DEVSEL_MASK,
--		PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER |
--		PCI_STATUS_CAP_LIST | PCI_STATUS_DEVSEL_FAST);
--
- 	wmb();
- 
- 	return 0;
--- 
-2.0.0
+> >> How such cases should work ?  my expectation was that the PF will get the
+> >> error detected message then will recognize whether
+> >> issue is its own or one of its VFs
+> The AER packet will have the tag of the VF in if it was the source of the error;
+> so the PF will never see it; although one could argue it should be 'promoted'
+> to the PF if PF/VF needs to clear some state it has wrt the VF (the SRIOV spec is
+> lacking of info in this space); _but_, VFIO resets the VF (sets FLR bit) when the
+> device is deassigned and before re-attachment to the host, so that should clear out
+> any state btwn PF & VF ('should' ... famous last words...).
+> 
+> >
+> > I'm really not an AER expert, so help me understand this question of
+> > recognizing whether an error is associated with a PF or a VF.
+> >
+> > In terms of hardware, it looks like the device that detects an error
+> > logs some information and sends an Error Message upstream.  The Root
+> > Complex receives the message, captures the source ID from the Error
+> > Message, and may generate an interrupt.  I expect this source ID can
+> > be either a PF or a VF; there's no requirement that a VF error must be
+> > reported as though it's from the PF, is there?
+> >
+> >> and work accordingly, in current code
+> >> looks like recovery failed as part of "voting" once there is no AER handler
+> >> assigned to the VFs.
+> >
+> > The commit you mentioned has to do with PCI_ERS_RESULT_NO_AER_DRIVER.
+> > We use pci_walk_bus() to figure out whether all the devices in a
+> > subtree have a driver.  What subtree is involved here?  I would expect
+> > the VFs to be siblings of the PF, not children of it, so I'm not sure
+> > where things went wrong.
+> Well, VFs could be on virtual busses (ARI turned on), so not necessarily a
+> sibling to PF ... and then we have the problem in PCI code of not being able
+> to traverse these virtual busses (in some cases; not sure if pci_walk_bus(),
+> which is going down the tree vs up the tree, has any problems here w/VFs on
+> virtual busses).
+> 
+> >
+> > Can you collect "lspci -vvv" output and maybe add some debug so we can
+> > see exactly where the error is detected and what devices we're looking
+> > at to conclude that one of them doesn't have a driver?
+> >
+> > Bjorn
+> >
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 
