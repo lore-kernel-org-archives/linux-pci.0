@@ -1,49 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:56647 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752441AbaFAW5f (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jun 2014 18:57:35 -0400
-Date: Sun, 1 Jun 2014 15:57:30 -0700
-From: "greg@kroah.com" <greg@kroah.com>
-To: Matthew Garrett <matthew.garrett@nebula.com>
-Cc: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v4 00/15] Thunderbolt driver for Apple MacBooks
-Message-ID: <20140601225730.GA16495@kroah.com>
-References: <1401546480-2071-1-git-send-email-andreas.noever@gmail.com>
- <1401580281.7663.14.camel@x230>
- <CAMxnaaURVhZ_SiJW7Qy1bsye1bcPE=J=vjL5MgTN5znP15WnXw@mail.gmail.com>
- <1401638869.7663.21.camel@x230>
- <CAMxnaaUJKmRrP6f2U+0-BVY_Pgz+qOn1BekGUyOqUPvp33so0w@mail.gmail.com>
- <1401660124.7663.22.camel@x230>
+Received: from e06smtp11.uk.ibm.com ([195.75.94.107]:55732 "EHLO
+	e06smtp11.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751605AbaFWKrs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 06:47:48 -0400
+Received: from /spool/local
+	by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
+	Mon, 23 Jun 2014 11:47:46 +0100
+Date: Mon, 23 Jun 2014 12:47:42 +0200 (CEST)
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+To: Yijing Wang <wangyijing@huawei.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux-s390@vger.kernel.org, linux-pci@vger.kernel.org,
+	Wuyun <wuyun.wu@huawei.com>, Xinwei Hu <huxinwei@huawei.com>
+Subject: Re: [PATCH 5/5] s390/MSI: Fix msi mask issue
+In-Reply-To: <1403166674-6836-1-git-send-email-wangyijing@huawei.com>
+Message-ID: <alpine.LFD.2.11.1406231246580.1648@denkbrett>
+References: <1403166674-6836-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401660124.7663.22.camel@x230>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 01, 2014 at 10:02:04PM +0000, Matthew Garrett wrote:
-> On Sun, 2014-06-01 at 22:45 +0200, Andreas Noever wrote:
-> > On Sun, Jun 1, 2014 at 6:07 PM, Matthew Garrett
-> > <matthew.garrett@nebula.com> wrote:
-> > > Yeah, it seems I don't need the suspend quirk - the NHI is still there
-> > > without it. I still think we should make the quirk general rather than
-> > > tying it to the machines, the worst case is that it'll just do nothing.
-> > Ok, agreed. The "wait" quirk has to run on all machines and the other
-> > one will fail if the ACPI methods are not there. Should I resend the
-> > series or just the patch or should I (or do you want to) make a
-> > separate patch?
+On Thu, 19 Jun 2014, Yijing Wang wrote:
+
+> Maskbit in msi_attrib indicates MSI whether
+> support mask-pending bit. It is read only,
+> should save mask state in masked.
 > 
-> Probably best to ask Greg - I'm fine with this stuff going through his
-> tree (note to Greg: the Apple ACPI patches I just sent need to be merged
-> before this stuff will work properly)
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  arch/s390/pci/pci.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index bdf0257..4651d6b 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -263,7 +263,7 @@ static int zpci_msi_set_mask_bits(struct msi_desc *msi, u32 mask, u32 flag)
+>  	} else
+>  		return 0;
+> 
+> -	msi->msi_attrib.maskbit = !!flag;
+> +	msi->masked = !!flag;
+>  	return 1;
+>  }
+> 
+> -- 
+> 1.7.1
+> 
+> 
+> 
+Applied, thanks!
+Sebastian
 
-Ok, I'll still queue these up, I don't want the to be lost at all, and
-will wait for the ACPI patches to land before starting to complain that
-things don't work on my box :)
-
-thanks,
-
-greg k-h
