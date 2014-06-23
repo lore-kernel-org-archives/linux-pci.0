@@ -1,69 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:38216 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751181AbaFJFbj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 Jun 2014 01:31:39 -0400
-Message-ID: <53969834.3040404@linux.intel.com>
-Date: Tue, 10 Jun 2014 13:31:32 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from e28smtp05.in.ibm.com ([122.248.162.5]:39309 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751310AbaFWGbx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 02:31:53 -0400
+Received: from /spool/local
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 23 Jun 2014 12:01:50 +0530
+Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 66367E0045
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 12:02:59 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N6W4kr58654814
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 12:02:04 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N6Vl2x014160
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 12:01:48 +0530
+Date: Mon, 23 Jun 2014 14:31:45 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, yan@linux.vnet.ibm.com,
+	qiudayu@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH V3 05/17] ppc/pnv: user macro to define the TCE size
+Message-ID: <20140623063145.GC5172@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1402365399-5121-6-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20140623051233.GA7223@shangw>
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [Patch V4 12/42] x86, ioapic: kill static variable nr_irqs_gsi
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com> <1402302011-23642-13-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.10.1406100121090.3830@nanos>
-In-Reply-To: <alpine.DEB.2.10.1406100121090.3830@nanos>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140623051233.GA7223@shangw>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
-	This piece of code is inherited from current IOAPIC driver
-and I think it's a workaround for some weird platforms.
-	For normal platforms with both 8259A and IOAPIC controllers,
-legacy ISA IRQs should be connected to both 8259A and IOAPIC pins
-(ignore timer and cascade IRQs for simplicity). According to comments
- in current kernel, there are some platforms on which:
-1) some ISA IRQs are only connected to 8259A controllers.
-2) the corresponding IOAPIC pins are connected to some non-ISA IRQs.
-	For such platforms, IRQ0-15 are used for ISA IRQs and another
-16 IRQs just above gsi_top are reserved for IOAPIC pins 0-15 which
-are connected to non-ISA IRQs.
-	I have no real experience with such a platform, but just
-guessing possible cases according to kernel comments and "Multiple
-Processor Specification". Please look at these two pictures for quick
-reference.
-http://www.manualslib.com/manual/77733/Intel-Multiprocessor.html?page=31#manual
-http://www.manualslib.com/manual/77733/Intel-Multiprocessor.html?page=63#manual
+On Mon, Jun 23, 2014 at 03:12:33PM +1000, Gavin Shan wrote:
+>On Tue, Jun 10, 2014 at 09:56:27AM +0800, Wei Yang wrote:
+>>During the initialization of the TVT/TCE, it uses digits to specify the TCE IO
+>>Page Size, TCE Table Size, TCE Entry Size, etc.
+>>
+>>This patch replaces those digits with macros, which will be more meaningful and
+>>easy to read.
+>>
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>
+>It looks conflicting with "dynamic page size support" posted by Alexey:
+>
+>http://patchwork.ozlabs.org/patch/356718/
 
-Thanks!
-Gerry
+Ok, will did some change in next version.
 
-On 2014/6/10 7:22, Thomas Gleixner wrote:
-> On Mon, 9 Jun 2014, Jiang Liu wrote:
->>  unsigned int arch_dynirq_lower_bound(unsigned int from)
->>  {
->> -	return from < nr_irqs_gsi ? nr_irqs_gsi : from;
->> +	unsigned int min = gsi_top + NR_IRQS_LEGACY;
-> 
-> Why is this gsi_top + NR_IRQ_LEGACY? The legacy interrupts are part of
-> the gsi space, aren't they?
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+>
+>>---
+>> arch/powerpc/include/asm/tce.h            |    3 ++-
+>> arch/powerpc/platforms/powernv/pci-ioda.c |   25 +++++++++++--------------
+>> arch/powerpc/platforms/powernv/pci.c      |    2 +-
+>> arch/powerpc/platforms/powernv/pci.h      |    5 +++++
+>> 4 files changed, 19 insertions(+), 16 deletions(-)
+>>
+>>diff --git a/arch/powerpc/include/asm/tce.h b/arch/powerpc/include/asm/tce.h
+>>index 743f36b..28a1d06 100644
+>>--- a/arch/powerpc/include/asm/tce.h
+>>+++ b/arch/powerpc/include/asm/tce.h
+>>@@ -40,7 +40,8 @@
+>> #define TCE_SHIFT	12
+>> #define TCE_PAGE_SIZE	(1 << TCE_SHIFT)
+>>
+>>-#define TCE_ENTRY_SIZE		8		/* each TCE is 64 bits */
+>>+#define TCE_ENTRY_SHIFT		3
+>>+#define TCE_ENTRY_SIZE		(1 << TCE_ENTRY_SHIFT)	/* each TCE is 64 bits */
+>>
+>> #define TCE_RPN_MASK		0xfffffffffful  /* 40-bit RPN (4K pages) */
+>> #define TCE_RPN_SHIFT		12
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index 8ae09cf..9715351 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -820,9 +820,6 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>> 	int64_t rc;
+>> 	void *addr;
+>>
+>>-	/* 256M DMA window, 4K TCE pages, 8 bytes TCE */
+>>-#define TCE32_TABLE_SIZE	((0x10000000 / 0x1000) * 8)
+>>-
+>> 	/* XXX FIXME: Handle 64-bit only DMA devices */
+>> 	/* XXX FIXME: Provide 64-bit DMA facilities & non-4K TCE tables etc.. */
+>> 	/* XXX FIXME: Allocate multi-level tables on PHB3 */
+>>@@ -834,7 +831,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>> 	/* Grab a 32-bit TCE table */
+>> 	pe->tce32_seg = base;
+>> 	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
+>>-		(base << 28), ((base + segs) << 28) - 1);
+>>+		(base << PNV_TCE32_SEG_SHIFT), ((base + segs) << PNV_TCE32_SEG_SHIFT) - 1);
+>>
+>> 	/* XXX Currently, we allocate one big contiguous table for the
+>> 	 * TCEs. We only really need one chunk per 256M of TCE space
+>>@@ -842,21 +839,21 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>> 	 * requires some added smarts with our get/put_tce implementation
+>> 	 */
+>> 	tce_mem = alloc_pages_node(phb->hose->node, GFP_KERNEL,
+>>-				   get_order(TCE32_TABLE_SIZE * segs));
+>>+				   get_order(PNV_TCE32_TAB_SIZE * segs));
+>> 	if (!tce_mem) {
+>> 		pe_err(pe, " Failed to allocate a 32-bit TCE memory\n");
+>> 		goto fail;
+>> 	}
+>> 	addr = page_address(tce_mem);
+>>-	memset(addr, 0, TCE32_TABLE_SIZE * segs);
+>>+	memset(addr, 0, PNV_TCE32_TAB_SIZE * segs);
+>>
+>> 	/* Configure HW */
+>> 	for (i = 0; i < segs; i++) {
+>> 		rc = opal_pci_map_pe_dma_window(phb->opal_id,
+>> 					      pe->pe_number,
+>> 					      base + i, 1,
+>>-					      __pa(addr) + TCE32_TABLE_SIZE * i,
+>>-					      TCE32_TABLE_SIZE, 0x1000);
+>>+					      __pa(addr) + PNV_TCE32_TAB_SIZE * i,
+>>+					      PNV_TCE32_TAB_SIZE, TCE_PAGE_SIZE);
+>> 		if (rc) {
+>> 			pe_err(pe, " Failed to configure 32-bit TCE table,"
+>> 			       " err %ld\n", rc);
+>>@@ -866,8 +863,8 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>>
+>> 	/* Setup linux iommu table */
+>> 	tbl = &pe->tce32_table;
+>>-	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
+>>-				  base << 28);
+>>+	pnv_pci_setup_iommu_table(tbl, addr, PNV_TCE32_TAB_SIZE * segs,
+>>+				  base << PNV_TCE32_SEG_SHIFT);
+>>
+>> 	/* OPAL variant of P7IOC SW invalidated TCEs */
+>> 	swinvp = of_get_property(phb->hose->dn, "ibm,opal-tce-kill", NULL);
+>>@@ -898,7 +895,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>> 	if (pe->tce32_seg >= 0)
+>> 		pe->tce32_seg = -1;
+>> 	if (tce_mem)
+>>-		__free_pages(tce_mem, get_order(TCE32_TABLE_SIZE * segs));
+>>+		__free_pages(tce_mem, get_order(PNV_TCE32_TAB_SIZE * segs));
+>> }
+>>
+>> static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
+>>@@ -968,7 +965,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>> 	/* The PE will reserve all possible 32-bits space */
+>> 	pe->tce32_seg = 0;
+>> 	end = (1 << ilog2(phb->ioda.m32_pci_base));
+>>-	tce_table_size = (end / 0x1000) * 8;
+>>+	tce_table_size = (end / TCE_PAGE_SIZE) * TCE_ENTRY_SIZE;
+>> 	pe_info(pe, "Setting up 32-bit TCE table at 0..%08x\n",
+>> 		end);
+>>
+>>@@ -988,7 +985,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>> 	 */
+>> 	rc = opal_pci_map_pe_dma_window(phb->opal_id, pe->pe_number,
+>> 					pe->pe_number << 1, 1, __pa(addr),
+>>-					tce_table_size, 0x1000);
+>>+					tce_table_size, TCE_PAGE_SIZE);
+>> 	if (rc) {
+>> 		pe_err(pe, "Failed to configure 32-bit TCE table,"
+>> 		       " err %ld\n", rc);
+>>@@ -1573,7 +1570,7 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>> 	INIT_LIST_HEAD(&phb->ioda.pe_list);
+>>
+>> 	/* Calculate how many 32-bit TCE segments we have */
+>>-	phb->ioda.tce32_count = phb->ioda.m32_pci_base >> 28;
+>>+	phb->ioda.tce32_count = phb->ioda.m32_pci_base >> PNV_TCE32_SEG_SHIFT;
+>>
+>> #if 0 /* We should really do that ... */
+>> 	rc = opal_pci_set_phb_mem_window(opal->phb_id,
+>>diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+>>index 8518817..687a068 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.c
+>>+++ b/arch/powerpc/platforms/powernv/pci.c
+>>@@ -597,7 +597,7 @@ void pnv_pci_setup_iommu_table(struct iommu_table *tbl,
+>> 	tbl->it_page_shift = IOMMU_PAGE_SHIFT_4K;
+>> 	tbl->it_offset = dma_offset >> tbl->it_page_shift;
+>> 	tbl->it_index = 0;
+>>-	tbl->it_size = tce_size >> 3;
+>>+	tbl->it_size = tce_size >> TCE_ENTRY_SHIFT;
+>> 	tbl->it_busno = 0;
+>> 	tbl->it_type = TCE_PCI;
+>> }
+>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>index 3e5f5a1..90f6da4 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>@@ -227,4 +227,9 @@ extern void pnv_pci_init_ioda2_phb(struct device_node *np);
+>> extern void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
+>> 					__be64 *startp, __be64 *endp, bool rm);
+>>
+>>+#define PNV_TCE32_SEG_SHIFT     28
+>>+#define PNV_TCE32_SEG_SIZE      (1UL << PNV_TCE32_SEG_SHIFT)
+>>+/* 256M DMA window, 4K TCE pages, 8 bytes TCE */
+>>+#define PNV_TCE32_TAB_SIZE	((PNV_TCE32_SEG_SIZE / TCE_PAGE_SIZE) * TCE_ENTRY_SIZE)
+>>+
+>> #endif /* __POWERNV_PCI_H */
+>
+>Thanks,
+>Gavin
+
+-- 
+Richard Yang
+Help you, Help me
+
