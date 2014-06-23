@@ -1,91 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28081 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752186AbaFXNcN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 09:32:13 -0400
-Date: Tue, 24 Jun 2014 09:21:36 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Wuyun <wuyun.wu@huawei.com>
-Subject: Re: [PATCH] x86/MSI: Clean up unnecessary override function
-Message-ID: <20140624132136.GA28885@laptop.dumpdata.com>
-References: <1403598645-11272-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-we0-f173.google.com ([74.125.82.173]:40077 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126AbaFWJdd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 05:33:33 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403598645-11272-1-git-send-email-wangyijing@huawei.com>
+Date: Mon, 23 Jun 2014 15:03:29 +0530
+Message-ID: <CANwwZzWsjQwZB5Cc4Hyv2HQOLhAx6ycjf32UQG55zVX=Kmbi6Q@mail.gmail.com>
+Subject: mlx4 - query regarding PF VF functionality division
+From: Bob Biloxi <iambobbiloxi@gmail.com>
+To: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 24, 2014 at 04:30:45PM +0800, Yijing Wang wrote:
-> MSI driver provides several weak functions allow
-> platform to override. These override functions
-> arch_msi/x_mask_irq(), arch_restore_msi_irqs(),
-> arch_teardown_msi_irqs() in x86 don't provide
-> platform specific function, still call the
-> default functions. So cleanup these override
-> functions.
+Hi All,
 
-They do. Please in the future use 'git annotate' to
-figure out which commits added them in and see if
-those are still in use.
+I was going through the Mellanox driver (mlx4) and then I had
+difficulty understanding which portion of code corresponds to the one
+executed by the PF(Physical Function Driver) and which portion of code
+by (Virtual Function Driver) in the SRIOV mode.
 
-P.S.
-Look in arch/x86/pci/xen.c
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  arch/x86/kernel/x86_init.c |   22 ----------------------
->  1 files changed, 0 insertions(+), 22 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-> index e48b674..00529fa 100644
-> --- a/arch/x86/kernel/x86_init.c
-> +++ b/arch/x86/kernel/x86_init.c
-> @@ -113,11 +113,7 @@ struct x86_msi_ops x86_msi = {
->  	.setup_msi_irqs		= native_setup_msi_irqs,
->  	.compose_msi_msg	= native_compose_msi_msg,
->  	.teardown_msi_irq	= native_teardown_msi_irq,
-> -	.teardown_msi_irqs	= default_teardown_msi_irqs,
-> -	.restore_msi_irqs	= default_restore_msi_irqs,
->  	.setup_hpet_msi		= default_setup_hpet_msi,
-> -	.msi_mask_irq		= default_msi_mask_irq,
-> -	.msix_mask_irq		= default_msix_mask_irq,
->  };
->  
->  /* MSI arch specific hooks */
-> @@ -126,28 +122,10 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  	return x86_msi.setup_msi_irqs(dev, nvec, type);
->  }
->  
-> -void arch_teardown_msi_irqs(struct pci_dev *dev)
-> -{
-> -	x86_msi.teardown_msi_irqs(dev);
-> -}
-> -
->  void arch_teardown_msi_irq(unsigned int irq)
->  {
->  	x86_msi.teardown_msi_irq(irq);
->  }
-> -
-> -void arch_restore_msi_irqs(struct pci_dev *dev)
-> -{
-> -	x86_msi.restore_msi_irqs(dev);
-> -}
-> -u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-> -{
-> -	return x86_msi.msi_mask_irq(desc, mask, flag);
-> -}
-> -u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
-> -{
-> -	return x86_msi.msix_mask_irq(desc, flag);
-> -}
->  #endif
->  
->  struct x86_io_apic_ops x86_io_apic_ops = {
-> -- 
-> 1.7.1
-> 
-> 
+My confusion is because, I was of the understanding that the QPs, CQs
+(and their creation, state mgmt commands) etc are to be performed by
+the virtual function driver(VF driver).
+
+
+And the role of the physical function driver(PF driver) is to just
+take care of the resource_tracker.c and ICM allocation.
+
+
+But of late, I think I may have understood wrong. This is because
+there is code that is specifically executed when mlx4_is_master is
+true/false( indicating PF or VF).
+
+And then, there is code which is not surrounded by this test, which
+indicates it is executed in both cases(PF driver as well as VF
+driver).
+
+Is my understanding correct? If yes, then are the QPs, CQs and
+ethernet tx, rx related functionality is executed both by master and
+slave?
+
+Is there any way we can clearly separate the files that are used by PF
+vs the files that are used by VF in the (drivers/net/ethernet/mlx4
+sub-directory)?
+
+I would be really thankful and really appreciate all the
+help/clarification I can get in understanding this.
+
+
+Thank you so much.
+
+
+Best Regards,
+Bob
