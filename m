@@ -1,72 +1,210 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:51968 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757514AbaFYRvy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 13:51:54 -0400
-Received: by mail-ie0-f171.google.com with SMTP id x19so1985378ier.16
-        for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 10:51:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <de1a45e8e5d548b88b5f797348a39e0d@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <20140617192734.30783.71260.stgit@amt.stowe> <CAErSpo7t2kXj2ZULLXCJSWb_awS+DCtCg51dnLbb8ztWmQdYog@mail.gmail.com>
- <53A0C763.7080003@roeck-us.net> <aa91dac8e0f4416bb5f8b901b4da8f22@DM2PR05MB671.namprd05.prod.outlook.com>
- <CAErSpo4xWtBtL6a-vNh_s+MRHNVa6iEe3g8ZcgFPyHHD0ZrM9g@mail.gmail.com> <de1a45e8e5d548b88b5f797348a39e0d@DM2PR05MB671.namprd05.prod.outlook.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 25 Jun 2014 11:51:34 -0600
-Message-ID: <CAErSpo6Wr4NrbwkJg6L0khU=fcH7UOOVCUoFo1QNLTxu2Z9Dsw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: pciehp: Include the Data Link Layer State Changed
- bit when clearing the Slot Status register's event bits
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: Guenter Roeck <linux@roeck-us.net>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain.linux@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mailout1.samsung.com ([203.254.224.24]:38178 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823AbaFWBpB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 22 Jun 2014 21:45:01 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Murali Karicheri' <m-karicheri2@ti.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'linux-arm' <linux-arm-kernel@lists.infradead.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	"'Shilimkar, Santosh'" <santosh.shilimkar@ti.com>,
+	'Russell King' <linux@arm.linux.org.uk>,
+	'Grant Likely' <grant.likely@linaro.org>,
+	'Rob Herring' <robh+dt@kernel.org>,
+	'Mohit Kumar' <mohit.kumar@st.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	"'ABRAHAM, KISHON VIJAY'" <kishon@ti.com>,
+	'Marek Vasut' <marex@denx.de>, 'Arnd Bergmann' <arnd@arndb.de>,
+	'Pawel Moll' <pawel.moll@arm.com>,
+	'Mark Rutland' <mark.rutland@arm.com>,
+	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
+	'Kumar Gala' <galak@codeaurora.org>,
+	'Randy Dunlap' <rdunlap@infradead.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
+ <CAErSpo6=vi0SR0A3u5BCLgiGxoH48N5R=e8VAnFDG=K61qLxnw@mail.gmail.com>
+ <53A453D1.4040308@ti.com>
+In-reply-to: <53A453D1.4040308@ti.com>
+Subject: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
+Date: Mon, 23 Jun 2014 10:44:58 +0900
+Message-id: <000401cf8e84$bd72ac30$38580490$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 24, 2014 at 11:26 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+On Saturday, June 21, 2014 12:31 AM, Murali Karicheri wrote:
+> On 6/17/2014 8:08 PM, Bjorn Helgaas wrote:
+> > On Tue, Jun 10, 2014 at 02:51:19PM -0400, Murali Karicheri wrote:
+> >> This patch adds a PCIe controller driver for Keystone SoCs. This
+> >> is based on v1 of the series posted to the mailing list.
+> >>
+> >> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+> >> CC: Russell King <linux@arm.linux.org.uk>
+> >> CC: Grant Likely <grant.likely@linaro.org>
+> >> CC: Rob Herring <robh+dt@kernel.org>
+> >> CC: Mohit Kumar <mohit.kumar@st.com>
+> >> CC: Jingoo Han <jg1.han@samsung.com>
+> >> CC: Bjorn Helgaas <bhelgaas@google.com>
+> >> CC: Pratyush Anand <pratyush.anand@st.com>
+> >> CC: Richard Zhu <r65037@freescale.com>
+> >> CC: Kishon Vijay Abraham I <kishon@ti.com>
+> >> CC: Marek Vasut <marex@denx.de>
+> >> CC: Arnd Bergmann <arnd@arndb.de>
+> >> CC: Pawel Moll <pawel.moll@arm.com>
+> >> CC: Mark Rutland <mark.rutland@arm.com>
+> >> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+> >> CC: Kumar Gala <galak@codeaurora.org>
+> >> CC: Randy Dunlap <rdunlap@infradead.org>
+> >> CC: Grant Likely <grant.likely@linaro.org>
+> >>
+> >>
+> >> Changelog:
+> >>
+> >> V2
+> >>   - Split the designware pcie enhancement patch to multiple
+> >>     patches based on functionality added
+> >>   - Remove the quirk code and add a patch to fix mps/mrss
+> >>     tuning for ARM. Use kernel command line parameter
+> >>     pci=pcie_bus_perf to work with Keystone PCI Controller.
+> >>     Following patch addressed this.
+> >>       [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
+> >>   - Add documentation for device tree bindings
+> >>   - Add separate interrupt controller nodes for MSI and Legacy
+> >>     IRQs and use irq map for legacy IRQ
+> >>   - Use compatibility to identify v3.65 version of the DW hardware
+> >>     and use it to customize the designware common code.
+> >>   - Use reg property for configuration space instead of range
+> >>   - Other minor updates based on code inspection.
+> >>
+> >> V1
+> >>   - Add an interrupt controller node for Legacy irq chip and use
+> >>     interrupt map/map-mask property to map legacy IRQs A/B/C/D
+> >>   - Add a Phy driver to replace the original serdes driver
+> >>   - Move common application register handling code to a separate
+> >>     file to allow re-use across other platforms that use older
+> >>     DW PCIe h/w
+> >>   - PCI quirk for maximum read request size. Check and override only
+> >>     if the maximum is higher than what controller can handle.
+> >>   - Converted to a module platform driver.
+> >>
+> >>
+> >> Murali Karicheri (8):
+> >>    PCI: designware: add rd[wr]_other_conf API
+> >>    PCI: designware: refactor host init code to re-use on v3.65 DW pci hw
+> >>    PCI: designware: update pcie core driver to work with dw hw version
+> >>      3.65
+> >>    PCI: designware: add msi controller functions for v3.65 hw
+> >>    PCI: designware: add PCI controller functions for v3.65 DW hw
+> >>    phy: Add serdes phy driver for keystone
+> >>    PCI: keystone: add pcie driver based on designware core driver
+> >>    ARM: keystone: add pcie related options
+> >>
+> >>   .../devicetree/bindings/pci/designware-pcie.txt    |   42 ++
+> >>   .../devicetree/bindings/pci/pci-keystone.txt       |   56 +++
+> >>   .../bindings/phy/phy-keystone-serdes.txt           |   25 ++
+> >>   arch/arm/mach-keystone/Kconfig                     |    1 +
+> >>   drivers/pci/host/Kconfig                           |   12 +
+> >>   drivers/pci/host/Makefile                          |    2 +
+> >>   drivers/pci/host/pci-dw-v3_65-msi.c                |  149 +++++++
+> >>   drivers/pci/host/pci-dw-v3_65.c                    |  390 ++++++++++++++++++
+> >>   drivers/pci/host/pci-dw-v3_65.h                    |   34 ++
+> >>   drivers/pci/host/pci-keystone.c                    |  418 ++++++++++++++++++++
+> >>   drivers/pci/host/pcie-designware.c                 |  175 +++++---
+> >>   drivers/pci/host/pcie-designware.h                 |   42 +-
+> >>   drivers/phy/Kconfig                                |    6 +
+> >>   drivers/phy/Makefile                               |    1 +
+> >>   drivers/phy/phy-keystone-serdes.c                  |  230 +++++++++++
+> >>   15 files changed, 1531 insertions(+), 52 deletions(-)
+> >>   create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
+> >>   create mode 100644 Documentation/devicetree/bindings/phy/phy-keystone-serdes.txt
+> >>   create mode 100644 drivers/pci/host/pci-dw-v3_65-msi.c
+> >>   create mode 100644 drivers/pci/host/pci-dw-v3_65.c
+> >>   create mode 100644 drivers/pci/host/pci-dw-v3_65.h
+> >>   create mode 100644 drivers/pci/host/pci-keystone.c
+> >>   create mode 100644 drivers/phy/phy-keystone-serdes.c
+> > I'm not willing to merge phy-keystone-serdes.c because I don't
+> > maintain drivers/phy and because of the binary blob of register values
+> > it contains, but maybe somebody else will.  I assume it could be
+> > merged by itself before the rest of this.
+> >
+> > I'm looking for acks from Mohit and/or Jingoo for the pci/host
+> > changes, and from Arnd for the devicetree/bindings changes.
+> >
+> > Adding these "-dw-3_64" files is sort of ugly.  If that code is only
+> > used by keystone, maybe it could just be moved to pci-keystone.c?  But
+> > I'll defer to Mohit and Jingoo on that and the way you modify
+> > pcie-designware.c.
+> >
+> > Bjorn
+> Bjorn, Jingoo,
+> 
+> Unfortunately I lost Jingoo's email from my Inbox. So I cut-n-paste the
+> comment from
+> internet and respond.
+> 
+> Jingoo Han wrote:-
+> =============================================================================
+> I think so, too.
+> 
+> DT maintainers and arch maintainers should review the following
+> dt bindings.
+>    .../devicetree/bindings/pci/designware-pcie.txt    |   42 ++
+>    .../devicetree/bindings/pci/pci-keystone.txt       |   56 +++
+> Generic PHY maintainer (Kishon Vijay Abraham I) should review the
+> following phy driver.
+>    drivers/phy/phy-keystone-serdes.c
+> 
+>  >
+>  > I'm looking for acks from Mohit and/or Jingoo for the pci/host
+>  > changes, and from Arnd for the devicetree/bindings changes.
+>  >
+>  > Adding these "-dw-3_64" files is sort of ugly.  If that code is only
+>  > used by keystone, maybe it could just be moved to pci-keystone.c?  But
+>  > I'll defer to Mohit and Jingoo on that and the way you modify
+>  > pcie-designware.c.
+> 
+> I agree with Bjorn Helgaas's opinion. These three "-dw-3_64" files
+> look terrible! I don't have a good way to handle this; however,
+> moving this code to pci-keystone.c looks better.
+> ======================================================================
+> 
+> The original RFC I had submitted had all of the application space register
+> handling code as part of the Keystone PCI driver. As per Arnd's comment
+> (See
+> my change log against v1), the code was moved to a separate file so that
+> the next driver that has same version of the DW hw could re-use this code.
+> I agree with Arnd and moved the code to v_3_65 specific files.  What is
+> your proposal?  Do you have objection to the file name? or it's content?
 
->> > Essentially my hiccup was that I was not sure whether the driver should or
->> should not take care of the link change events that have happened BEFORE
->> the driver gets loaded. This has more impact if the pciehp is built as a kernel
->> module.
->> >
->> > As an example:
->> >
->> > It is common for the platform init code built into the kernel, to take the PCI
->> devices on the board out of reset. And that can happen after the PCI
->> enumeration but before the pciehp driver gets loaded. Thus in this condition,
->> with this patch, the pciehp will ignore the linkup event, thus device will not
->> be visible. The only way (other than a rescan) to do hot-add the device would
->> be to apply-and-remove-reset-signal to the device again. At which point
->> pciehp may give a warning about about an attempt to remove a non-existent
->> card, and then will proceed fine with hot-add.
->>
->> When you saw these problems, was pciehp a module?
->
-> No, we did not actually hit *this* problem (DLLSC getting set before pciehp init). We had observed another HW specific problem where both link event and presence detect were toggling, hence 2 independent hot-plug interrupts events were coming, thus resulting in spurious messages.
+I said utterly that "I agree with Bjorn Helgaas's opinion". Also, Bjorn
+said that "Adding these "-dw-3_64" files is sort of ugly".
+Thus, the point is the file name, not the content, as Santosh Shilimkar
+said.
 
-OK, this sounds like a slightly different problem that we can work on
-later if it turns out to be necessary.
+> 
+> If objection is on the file name,  please suggest alternate names. If you
+> are okay with the file name, and doesn't like the code, it will be helpful
+> to review the code and provide specific comments against the patch itself
+> so that I can address the same.
 
->  > For example, if a card were inserted
->> after enumeration but before pciehp is initialized, we'd miss the PDC
->> indication, so I think we would fail to notice the new device.
->> That seems basically the same as missing the linkup event in your example.
->> In both cases, I think we *should* notice the new device, so the fact that we
->> don't is a problem.
-> ...
+I say again that "I have no idea about the alternate file names".
+However, if you want to add v_3_65 specific files, please don't
+split the files. Please make these three files as 1 file.
 
->>   - We currently have a problem with missing pre-pciehp events, but there is
->> a way to fix this
->
-> Somewhat agree (I do not understand what that way is currently. But I think it can wait as we don't hit that problem today and also the window where it can occur is very small).
+   drivers/pci/host/pci-dw-v3_65-msi.c
+   drivers/pci/host/pci-dw-v3_65.c
+   drivers/pci/host/pci-dw-v3_65.h
+   --> drivers/pci/host/pci-dw-v3-65.c
+        (I don't have no idea about the name)
 
-My thought was that we could fix this by integrating pciehp into PCI
-enumeration, so we're prepared to handle hotplug events on the bridge
-before we enumerate any device below the bridge.  But I haven't
-actually tried this so I don't know whether it's practical.
+Best regards,
+Jingoo Han
 
-Bjorn
+> 
+> Murali
+
+
