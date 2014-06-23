@@ -1,219 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:54706 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753800AbaFRS0r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jun 2014 14:26:47 -0400
-Received: by mail-ie0-f178.google.com with SMTP id rd18so1033455iec.23
-        for <linux-pci@vger.kernel.org>; Wed, 18 Jun 2014 11:26:47 -0700 (PDT)
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:58098 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbaFWH5F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 03:57:05 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 23 Jun 2014 13:27:00 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id A1B0A125805A
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 13:26:27 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N7v4Fb59179198
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 13:27:04 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N7umsB000694
+	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 13:26:49 +0530
+Date: Mon, 23 Jun 2014 15:56:45 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, yan@linux.vnet.ibm.com,
+	qiudayu@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH V3 08/17] PCI: Add weak pcibios_sriov_resource_size()
+ interface
+Message-ID: <20140623075645.GA4509@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1402365399-5121-9-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20140623054128.GA9831@shangw>
 MIME-Version: 1.0
-In-Reply-To: <1402365399-5121-15-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com> <1402365399-5121-15-git-send-email-weiyang@linux.vnet.ibm.com>
-From: Grant Likely <grant.likely@secretlab.ca>
-Date: Wed, 18 Jun 2014 19:26:27 +0100
-Message-ID: <CACxGe6v6Rdd=GQ8qR5LQ64NThidn7kn3WkKFkOXOsNuWq75D-A@mail.gmail.com>
-Subject: Re: [RFC PATCH V3 14/17] ppc/pci: create/release dev-tree node for VFs
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	gwshan@linux.vnet.ibm.com, Mike Qiu <qiudayu@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, yan@linux.vnet.ibm.com,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140623054128.GA9831@shangw>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 2:56 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> Currently, powernv platform is not aware of VFs. This means no dev-node
-> represents a VF. Also, VF PCI device is created when PF driver want to enable
-> it. This leads to the pdn->pdev and pdn->pe_number an invalid value.
+On Mon, Jun 23, 2014 at 03:41:28PM +1000, Gavin Shan wrote:
+>On Tue, Jun 10, 2014 at 09:56:30AM +0800, Wei Yang wrote:
+>>When retrieving sriov resource size in pci_sriov_resource_size(), it will
+>>divide the total IOV resource size with the totalVF number. This is true for
+>>most cases, while may not be correct on some specific platform.
+>>
+>>For example on powernv platform, in order to fix the IOV BAR into a hardware
+>>alignment, the IOV resource size would be expended. This means the original
+>>method couldn't work.
+>>
+>>This patch introduces a weak pcibios_sriov_resource_size() interface, which
+>>gives platform a chance to implement specific method to calculate the sriov
+>>resource size.
+>>
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>---
+>> drivers/pci/iov.c   |   27 +++++++++++++++++++++++++--
+>> include/linux/pci.h |    3 +++
+>> 2 files changed, 28 insertions(+), 2 deletions(-)
+>>
+>>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>>index cc87773..9fd4648 100644
+>>--- a/drivers/pci/iov.c
+>>+++ b/drivers/pci/iov.c
+>>@@ -45,6 +45,30 @@ static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+>> 		pci_remove_bus(virtbus);
+>> }
+>>
+>>+resource_size_t __weak pcibios_sriov_resource_size(struct pci_dev *dev, int resno)
+>>+{
+>>+	return 0;
+>>+}
+>>+
 >
-> This patch create/release dev-node for VF and fixs this when a VF's pci_dev
-> is created.
->
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>Please define the prototype of weak function in header files (e.g.
+>linux/include/pci.h) :-)
 
-I don't think this is the right way to handle this. Unless it is a
-fixup to a buggy devicetree provided by firmware, I don't want to see
-any code modifying the devicetree to describe stuff that is able to be
-directly enumerated. Really the pci code should handle the lack of a
-device_node gracefully. If it cannot then it should be fixed.
+Missed, will add it.
 
-g.
+>
+>If you missed doing same thing for the weak functions added in the
+>previous patches, you need fix it as well.
 
-> ---
->  arch/powerpc/platforms/powernv/Kconfig    |    1 +
->  arch/powerpc/platforms/powernv/pci-ioda.c |  103 +++++++++++++++++++++++++++++
->  arch/powerpc/platforms/powernv/pci.c      |   20 ++++++
->  3 files changed, 124 insertions(+)
+Yep.
+
 >
-> diff --git a/arch/powerpc/platforms/powernv/Kconfig b/arch/powerpc/platforms/powernv/Kconfig
-> index 895e8a2..0dd331b 100644
-> --- a/arch/powerpc/platforms/powernv/Kconfig
-> +++ b/arch/powerpc/platforms/powernv/Kconfig
-> @@ -11,6 +11,7 @@ config PPC_POWERNV
->         select PPC_UDBG_16550
->         select PPC_SCOM
->         select ARCH_RANDOM
-> +       select OF_DYNAMIC
->         default y
+>>+resource_size_t pci_sriov_resource_size(struct pci_dev *dev, int resno)
+>>+{
+>>+	u64 size;
 >
->  config PPC_POWERNV_RTAS
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index e46c5bf..9ace027 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -23,6 +23,7 @@
->  #include <linux/io.h>
->  #include <linux/msi.h>
->  #include <linux/memblock.h>
-> +#include <linux/of_pci.h>
+>I guess it'd better to be "resource_size_t". 
 >
->  #include <asm/sections.h>
->  #include <asm/io.h>
-> @@ -771,6 +772,108 @@ static void pnv_pci_ioda_setup_PEs(void)
->         }
->  }
+>>+	struct pci_sriov *iov;
+>>+
+>>+	if (!dev->is_physfn)
+>>+		return 0;
+>>+
+>>+	size = pcibios_sriov_resource_size(dev, resno);
+>>+	if (size != 0)
+>>+		return size;
+>>+
+>>+	iov = dev->sriov;
+>>+	size = resource_size(dev->resource + resno);
+>>+	do_div(size, iov->total_VFs);
+>>+
+>>+	return size;
+>>+}
+>>+
+>> static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>> {
+>> 	int i;
+>>@@ -81,8 +105,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>> 			continue;
+>> 		virtfn->resource[i].name = pci_name(virtfn);
+>> 		virtfn->resource[i].flags = res->flags;
+>>-		size = resource_size(res);
+>>-		do_div(size, iov->total_VFs);
+>>+		size = pci_sriov_resource_size(dev, i + PCI_IOV_RESOURCES);
+>> 		virtfn->resource[i].start = res->start + size * id;
+>> 		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
+>> 		rc = request_resource(res, &virtfn->resource[i]);
+>>diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>index ddb1ca0..315c150 100644
+>>--- a/include/linux/pci.h
+>>+++ b/include/linux/pci.h
+>>@@ -1637,6 +1637,7 @@ int pci_num_vf(struct pci_dev *dev);
+>> int pci_vfs_assigned(struct pci_dev *dev);
+>> int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>> int pci_sriov_get_totalvfs(struct pci_dev *dev);
+>>+resource_size_t pci_sriov_resource_size(struct pci_dev *dev, int resno);
+>> #else
+>> static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+>> {
+>>@@ -1658,6 +1659,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+>> { return 0; }
+>> static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>> { return 0; }
+>>+static inline resource_size_t pci_sriov_resource_size(struct pci_dev *dev, int resno)
+>>+{ return -1; }
+>> #endif
+>>
+>> #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
 >
-> +#ifdef CONFIG_PCI_IOV
-> +static void pnv_pci_create_vf_node(struct pci_dev *dev, u16 vf_num)
-> +{
-> +       struct device_node *dn, *p_dn;
-> +       struct pci_dn *pdn;
-> +       struct pci_controller *hose;
-> +       struct property *pp;
-> +       void* value;
-> +       u16 id;
-> +
-> +       hose = pci_bus_to_host(dev->bus);
-> +
-> +       /* Create dev-tree node for VFs if this is a PF */
-> +       p_dn = pci_bus_to_OF_node(dev->bus);
-> +       if (p_dn == NULL) {
-> +               dev_err(&dev->dev, "SRIOV: VF bus NULL device node\n");
-> +               return;
-> +       }
-> +
-> +       for (id = 0; id < vf_num; id++) {
-> +               dn = kzalloc(sizeof(*dn), GFP_KERNEL);
-> +               pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
-> +               pp  = kzalloc(sizeof(*pp), GFP_KERNEL);
-> +               value = kzalloc(sizeof(u32), GFP_KERNEL);
-> +
-> +               if (!dn || !pdn || !pp || !value) {
-> +                       kfree(dn);
-> +                       kfree(pdn);
-> +                       kfree(pp);
-> +                       kfree(value);
-> +                       dev_warn(&dev->dev, "%s: failed to create"
-> +                               "dev-tree node for idx(%d)\n",
-> +                               __func__, id);
-> +
-> +                       break;
-> +               }
-> +
-> +               pp->value = value;
-> +               pdn->node = dn;
-> +               pdn->devfn = pci_iov_virtfn_devfn(dev, id);
-> +               pdn->busno = dev->bus->number;
-> +               pdn->pe_number = IODA_INVALID_PE;
-> +               pdn->phb = hose;
-> +
-> +               dn->data = pdn;
-> +               kref_init(&dn->kref);
-> +               dn->full_name = dn->name =
-> +                       kasprintf(GFP_KERNEL, "%s/vf%d",
-> +                               p_dn->full_name, pdn->devfn);
-> +               dn->parent = p_dn;
-> +
-> +               pp->name = kasprintf(GFP_KERNEL, "reg");
-> +               pp->length = 5 * sizeof(__be32);
-> +               *(u32*)pp->value = cpu_to_be32(pdn->devfn) << 8;
-> +               dn->properties = pp;
-> +
-> +               of_attach_node(dn);
-> +       }
-> +}
-> +
-> +static void pnv_pci_release_vf_node(struct pci_dev *dev, u16 vf_num)
-> +{
-> +       struct device_node *dn;
-> +       struct property *pp;
-> +       u16 id;
-> +
-> +       for (id = 0; id < vf_num; id++) {
-> +               dn = of_pci_find_child_device(dev->bus->dev.of_node,
-> +                               pci_iov_virtfn_devfn(dev, id));
-> +               if (!dn)
-> +                       continue;
-> +
-> +               of_detach_node(dn);
-> +               pp = dn->properties;
-> +               kfree(pp->name);
-> +               kfree(pp->value);
-> +               kfree(pp);
-> +               kfree(dn->data);
-> +               kfree(dn);
-> +       }
-> +}
-> +
-> +int pcibios_sriov_disable(struct pci_dev *pdev)
-> +{
-> +       struct pci_sriov *iov;
-> +       u16 vf_num;
-> +
-> +       iov = pdev->sriov;
-> +       vf_num = iov->num_VFs;
-> +       pnv_pci_release_vf_node(pdev, vf_num);
-> +
-> +       return 0;
-> +}
-> +
-> +int pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
-> +{
-> +       pnv_pci_create_vf_node(pdev, vf_num);
-> +
-> +       return 0;
-> +}
-> +#endif /* CONFIG_PCI_IOV */
-> +
->  static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev)
->  {
->         struct pci_dn *pdn = pci_get_pdn(pdev);
-> diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-> index 687a068..43fcc73 100644
-> --- a/arch/powerpc/platforms/powernv/pci.c
-> +++ b/arch/powerpc/platforms/powernv/pci.c
-> @@ -654,6 +654,26 @@ static void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
->  {
->         struct pci_controller *hose = pci_bus_to_host(pdev->bus);
->         struct pnv_phb *phb = hose->private_data;
-> +#ifdef CONFIG_PCI_IOV
-> +       struct pnv_ioda_pe *pe;
-> +       struct pci_dn *pdn;
-> +
-> +       /* Fix the VF pdn PE number */
-> +       if (pdev->is_virtfn) {
-> +               pdn = pci_get_pdn(pdev);
-> +               if (pdn->pcidev == NULL || pdn->pe_number == IODA_INVALID_PE) {
-> +                       list_for_each_entry(pe, &phb->ioda.pe_list, list) {
-> +                               if (pe->rid ==
-> +                                       ((pdev->bus->number << 8) | (pdev->devfn & 0xff))) {
-> +                                       pdn->pcidev = pdev;
-> +                                       pdn->pe_number = pe->pe_number;
-> +                                       pe->pdev = pdev;
-> +                                       break;
-> +                               }
-> +                       }
-> +               }
-> +       }
-> +#endif /* CONFIG_PCI_IOV */
->
->         /* If we have no phb structure, try to setup a fallback based on
->          * the device-tree (RTAS PCI for example)
-> --
-> 1.7.9.5
->
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
+>Thanks,
+>Gavin
+
+-- 
+Richard Yang
+Help you, Help me
+
