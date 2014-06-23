@@ -1,381 +1,342 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:3246 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751261AbaFEHC7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Jun 2014 03:02:59 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, x86@kernel.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:42161 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754726AbaFWVLM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 17:11:12 -0400
+Received: by mail-lb0-f170.google.com with SMTP id 10so5368213lbg.15
+        for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 14:11:10 -0700 (PDT)
+Message-ID: <53A897EF.2020804@cogentembedded.com>
+Date: Tue, 24 Jun 2014 01:11:11 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Phil Edworthy <phil.edworthy@renesas.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Tony Lindgren <tony@atomide.com>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org, xen-devel@lists.xenproject.org,
-	linux-pci@vger.kernel.org
-Subject: [RFC Patch 3/3] x86, irq: count legacy IRQs by legacy_pic->nr_legacy_irqs instead of NR_IRQS_LEGACY
-Date: Thu,  5 Jun 2014 15:04:37 +0800
-Message-Id: <1401951877-23032-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1401951877-23032-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1401951877-23032-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <5385BCD0.1080802@linutronix.de>
-References: <5385BCD0.1080802@linutronix.de>
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH v8 1/3] PCI: host: rcar: Add Renesas R-Car PCIe driver
+References: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com> <1399892270-25021-2-git-send-email-phil.edworthy@renesas.com> <53A209DA.9000000@cogentembedded.com> <20a0a16226d54b0e8d6f68e41046bbf2@HKXPR06MB168.apcprd06.prod.outlook.com>
+In-Reply-To: <20a0a16226d54b0e8d6f68e41046bbf2@HKXPR06MB168.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some platforms, such as Intel MID and mshypv, do not support legacy
-interrupt controllers. So count legacy IRQs by legacy_pic->nr_legacy_irqs
-instead of hard-coded NR_IRQS_LEGACY.
+Hello.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/i8259.h   |    2 ++
- arch/x86/kernel/acpi/boot.c    |   13 ++++++------
- arch/x86/kernel/apic/io_apic.c |   43 +++++++++++++++++++++++-----------------
- arch/x86/kernel/devicetree.c   |   12 +++++------
- arch/x86/kernel/irqinit.c      |    6 +++---
- arch/x86/pci/xen.c             |    6 +++---
- 6 files changed, 46 insertions(+), 36 deletions(-)
+On 06/23/2014 08:44 PM, Phil Edworthy wrote:
 
-diff --git a/arch/x86/include/asm/i8259.h b/arch/x86/include/asm/i8259.h
-index a20365953bf8..fdac75b8782a 100644
---- a/arch/x86/include/asm/i8259.h
-+++ b/arch/x86/include/asm/i8259.h
-@@ -67,4 +67,6 @@ struct legacy_pic {
- extern struct legacy_pic *legacy_pic;
- extern struct legacy_pic null_legacy_pic;
- 
-+#define	nr_legacy_irqs()	(legacy_pic->nr_legacy_irqs)
-+
- #endif /* _ASM_X86_I8259_H */
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index d6493863bd4b..8b09249bb253 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -43,6 +43,7 @@
- #include <asm/io.h>
- #include <asm/mpspec.h>
- #include <asm/smp.h>
-+#include <asm/i8259.h>
- 
- #include "sleep.h" /* To include x86_acpi_suspend_lowlevel */
- static int __initdata acpi_force = 0;
-@@ -101,10 +102,10 @@ static u32 isa_irq_to_gsi[NR_IRQS_LEGACY] __read_mostly = {
- 
- static unsigned int gsi_to_irq(unsigned int gsi)
- {
--	unsigned int irq = gsi + NR_IRQS_LEGACY;
-+	unsigned int irq = gsi + nr_legacy_irqs();
- 	unsigned int i;
- 
--	for (i = 0; i < NR_IRQS_LEGACY; i++) {
-+	for (i = 0; i < nr_legacy_irqs(); i++) {
- 		if (isa_irq_to_gsi[i] == gsi) {
- 			return i;
- 		}
-@@ -114,7 +115,7 @@ static unsigned int gsi_to_irq(unsigned int gsi)
- 	 * except on truly weird platforms that have
- 	 * non isa irqs in the first 16 gsis.
- 	 */
--	if (gsi >= NR_IRQS_LEGACY)
-+	if (gsi >= nr_legacy_irqs())
- 		irq = gsi;
- 	else
- 		irq = gsi_top + gsi;
-@@ -371,7 +372,7 @@ static void __init mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- 	 * otherwise there will be more than one entry with the same GSI
- 	 * and acpi_isa_irq_to_gsi() may give wrong result.
- 	 */
--	if (gsi < NR_IRQS_LEGACY && isa_irq_to_gsi[gsi] == gsi)
-+	if (gsi < nr_legacy_irqs() && isa_irq_to_gsi[gsi] == gsi)
- 		isa_irq_to_gsi[gsi] = ACPI_INVALID_GSI;
- 	isa_irq_to_gsi[bus_irq] = gsi;
- }
-@@ -628,7 +629,7 @@ EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
- 
- int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
- {
--	if (isa_irq < NR_IRQS_LEGACY &&
-+	if (isa_irq < nr_legacy_irqs() &&
- 	    isa_irq_to_gsi[isa_irq] != ACPI_INVALID_GSI) {
- 		*gsi = isa_irq_to_gsi[isa_irq];
- 		return 0;
-@@ -1017,7 +1018,7 @@ static void __init mp_config_acpi_legacy_irqs(void)
- 	 * Use the default configuration for the IRQs 0-15.  Unless
- 	 * overridden by (MADT) interrupt source override entries.
- 	 */
--	for (i = 0; i < NR_IRQS_LEGACY; i++) {
-+	for (i = 0; i < nr_legacy_irqs(); i++) {
- 		int ioapic, pin;
- 		unsigned int dstapic;
- 		int idx;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 02faa7104aa5..72cbb92ca401 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -129,10 +129,17 @@ u32 mp_pin_to_gsi(int ioapic, int pin)
- 	return mp_ioapic_gsi_routing(ioapic)->gsi_base + pin;
- }
- 
--/* Initialize all legacy IRQs and all pins on the first IOAPIC at boot */
-+/*
-+ * Initialize all legacy IRQs and all pins on the first IOAPIC
-+ * if we have legacy interrupt controller. Kernel boot option "pirq="
-+ * may rely on non-legacy pins on the first IOAPIC.
-+ */
- static inline int mp_init_irq_at_boot(int ioapic, int irq)
- {
--	return ioapic == 0 || (irq >= 0 && irq < NR_IRQS_LEGACY);
-+	if (!nr_legacy_irqs())
-+		return 0;
-+
-+	return ioapic == 0 || (irq >= 0 && irq < nr_legacy_irqs());
- }
- 
- int nr_ioapics;
-@@ -216,7 +223,7 @@ int __init arch_early_irq_init(void)
- 	struct irq_cfg *cfg;
- 	int count, node, i;
- 
--	if (!legacy_pic->nr_legacy_irqs)
-+	if (!nr_legacy_irqs())
- 		io_apic_irqs = ~0UL;
- 
- 	for_each_ioapic(i) {
-@@ -239,7 +246,7 @@ int __init arch_early_irq_init(void)
- 		 * For legacy IRQ's, start with assigning irq0 to irq15 to
- 		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
- 		 */
--		if (i < legacy_pic->nr_legacy_irqs) {
-+		if (i < nr_legacy_irqs()) {
- 			cfg[i].vector = IRQ0_VECTOR + i;
- 			cpumask_setall(cfg[i].domain);
- 		}
-@@ -823,7 +830,7 @@ static int __init find_isa_irq_apic(int irq, int type)
-  */
- static int EISA_ELCR(unsigned int irq)
- {
--	if (irq < legacy_pic->nr_legacy_irqs) {
-+	if (irq < nr_legacy_irqs()) {
- 		unsigned int port = 0x4d0 + (irq >> 3);
- 		return (inb(port) >> (irq & 7)) & 1;
- 	}
-@@ -980,7 +987,7 @@ static int pin_2_irq(int idx, int apic, int pin)
- 	} else {
- 		u32 gsi = gsi_cfg->gsi_base + pin;
- 
--		if (gsi >= NR_IRQS_LEGACY)
-+		if (gsi >= nr_legacy_irqs())
- 			irq = gsi;
- 		else
- 			irq = gsi_top + gsi;
-@@ -1357,7 +1364,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
- 	}
- 
- 	ioapic_register_intr(irq, cfg, attr->trigger);
--	if (irq < legacy_pic->nr_legacy_irqs)
-+	if (irq < nr_legacy_irqs())
- 		legacy_pic->mask(irq);
- 
- 	ioapic_write_entry(attr->ioapic, attr->ioapic_pin, entry);
-@@ -1782,7 +1789,7 @@ __apicdebuginit(void) print_PIC(void)
- 	unsigned int v;
- 	unsigned long flags;
- 
--	if (!legacy_pic->nr_legacy_irqs)
-+	if (!nr_legacy_irqs())
- 		return;
- 
- 	printk(KERN_DEBUG "\nprinting PIC contents\n");
-@@ -1854,7 +1861,7 @@ void __init enable_IO_APIC(void)
- 	int i8259_apic, i8259_pin;
- 	int apic, pin;
- 
--	if (!legacy_pic->nr_legacy_irqs)
-+	if (!nr_legacy_irqs())
- 		return;
- 
- 	for_each_ioapic_pin(apic, pin) {
-@@ -1939,7 +1946,7 @@ void disable_IO_APIC(void)
- 	 */
- 	clear_IO_APIC();
- 
--	if (!legacy_pic->nr_legacy_irqs)
-+	if (!nr_legacy_irqs())
- 		return;
- 
- 	x86_io_apic_ops.disable();
-@@ -2143,7 +2150,7 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&ioapic_lock, flags);
--	if (irq < legacy_pic->nr_legacy_irqs) {
-+	if (irq < nr_legacy_irqs()) {
- 		legacy_pic->mask(irq);
- 		if (legacy_pic->irq_pending(irq))
- 			was_pending = 1;
-@@ -2542,7 +2549,7 @@ static inline void init_IO_APIC_traps(void)
- 			 * so default to an old-fashioned 8259
- 			 * interrupt if we can..
- 			 */
--			if (irq < legacy_pic->nr_legacy_irqs)
-+			if (irq < nr_legacy_irqs())
- 				legacy_pic->make_irq(irq);
- 			else
- 				/* Strange. Oh, well.. */
-@@ -2839,7 +2846,7 @@ void __init setup_IO_APIC(void)
- 	/*
- 	 * calling enable_IO_APIC() is moved to setup_local_APIC for BP
- 	 */
--	io_apic_irqs = legacy_pic->nr_legacy_irqs ? ~PIC_IRQS : ~0UL;
-+	io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
- 
- 	apic_printk(APIC_VERBOSE, "ENABLING IO-APIC IRQs\n");
- 	/*
-@@ -2850,7 +2857,7 @@ void __init setup_IO_APIC(void)
- 	sync_Arb_IDs();
- 	setup_IO_APIC_irqs();
- 	init_IO_APIC_traps();
--	if (legacy_pic->nr_legacy_irqs)
-+	if (nr_legacy_irqs())
- 		check_timer();
- }
- 
-@@ -3344,7 +3351,7 @@ static int __init io_apic_get_redir_entries(int ioapic)
- 
- unsigned int arch_dynirq_lower_bound(unsigned int from)
- {
--	unsigned int min = gsi_top + NR_IRQS_LEGACY;
-+	unsigned int min = gsi_top + nr_legacy_irqs();
- 
- 	return from < min ? min : from;
- }
-@@ -3356,17 +3363,17 @@ int __init arch_probe_nr_irqs(void)
- 	if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
- 		nr_irqs = NR_VECTORS * nr_cpu_ids;
- 
--	nr = (gsi_top + NR_IRQS_LEGACY) + 8 * nr_cpu_ids;
-+	nr = (gsi_top + nr_legacy_irqs()) + 8 * nr_cpu_ids;
- #if defined(CONFIG_PCI_MSI) || defined(CONFIG_HT_IRQ)
- 	/*
- 	 * for MSI and HT dyn irq
- 	 */
--	nr += (gsi_top + NR_IRQS_LEGACY) * 16;
-+	nr += gsi_top * 16;
- #endif
- 	if (nr < nr_irqs)
- 		nr_irqs = nr;
- 
--	return NR_IRQS_LEGACY;
-+	return nr_legacy_irqs();
- }
- 
- int io_apic_set_pci_routing(struct device *dev, int irq,
-diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
-index d35078ea1446..68f8805401be 100644
---- a/arch/x86/kernel/devicetree.c
-+++ b/arch/x86/kernel/devicetree.c
-@@ -316,7 +316,7 @@ static void dt_add_ioapic_domain(unsigned int ioapic_num,
- 	struct irq_domain *id;
- 	struct mp_ioapic_gsi *gsi_cfg;
- 	int ret;
--	int num;
-+	int num, legacy_irqs = nr_legacy_irqs();
- 
- 	gsi_cfg = mp_ioapic_gsi_routing(ioapic_num);
- 	num = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
-@@ -326,17 +326,17 @@ static void dt_add_ioapic_domain(unsigned int ioapic_num,
- 	BUG_ON(!id);
- 	if (gsi_cfg->gsi_base == 0) {
- 		/*
--		 * The first NR_IRQS_LEGACY irq descs are allocated in
-+		 * The first nr_legacy_irqs() irq descs are allocated in
- 		 * early_irq_init() and need just a mapping. The
- 		 * remaining irqs need both. All of them are preallocated
- 		 * and assigned so we can keep the 1:1 mapping which the ioapic
- 		 * is having.
- 		 */
--		irq_domain_associate_many(id, 0, 0, NR_IRQS_LEGACY);
-+		irq_domain_associate_many(id, 0, 0, legacy_irqs);
- 
--		if (num > NR_IRQS_LEGACY) {
--			ret = irq_create_strict_mappings(id, NR_IRQS_LEGACY,
--					NR_IRQS_LEGACY, num - NR_IRQS_LEGACY);
-+		if (num > legacy_irqs) {
-+			ret = irq_create_strict_mappings(id, legacy_irqs,
-+					legacy_irqs, num - legacy_irqs);
- 			if (ret)
- 				pr_err("Error creating mapping for the "
- 						"remaining IRQs: %d\n", ret);
-diff --git a/arch/x86/kernel/irqinit.c b/arch/x86/kernel/irqinit.c
-index 7f50156542fb..a0111e91eb4b 100644
---- a/arch/x86/kernel/irqinit.c
-+++ b/arch/x86/kernel/irqinit.c
-@@ -78,7 +78,7 @@ void __init init_ISA_irqs(void)
- #endif
- 	legacy_pic->init(0);
- 
--	for (i = 0; i < legacy_pic->nr_legacy_irqs; i++)
-+	for (i = 0; i < nr_legacy_irqs(); i++)
- 		irq_set_chip_and_handler_name(i, chip, handle_level_irq, name);
- }
- 
-@@ -100,7 +100,7 @@ void __init init_IRQ(void)
- 	 * then this vector space can be freed and re-used dynamically as the
- 	 * irq's migrate etc.
- 	 */
--	for (i = 0; i < legacy_pic->nr_legacy_irqs; i++)
-+	for (i = 0; i < nr_legacy_irqs(); i++)
- 		per_cpu(vector_irq, 0)[IRQ0_VECTOR + i] = i;
- 
- 	x86_init.irqs.intr_init();
-@@ -121,7 +121,7 @@ void setup_vector_irq(int cpu)
- 	 * legacy PIC, for the new cpu that is coming online, setup the static
- 	 * legacy vector to irq mapping:
- 	 */
--	for (irq = 0; irq < legacy_pic->nr_legacy_irqs; irq++)
-+	for (irq = 0; irq < nr_legacy_irqs(); irq++)
- 		per_cpu(vector_irq, cpu)[IRQ0_VECTOR + irq] = irq;
- #endif
- 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 905956f16465..8debddd2c6d1 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -40,7 +40,7 @@ static int xen_pcifront_enable_irq(struct pci_dev *dev)
- 	/* In PV DomU the Xen PCI backend puts the PIRQ in the interrupt line.*/
- 	pirq = gsi;
- 
--	if (gsi < NR_IRQS_LEGACY)
-+	if (gsi < nr_legacy_irqs())
- 		share = 0;
- 
- 	rc = xen_bind_pirq_gsi_to_irq(gsi, pirq, share, "pcifront");
-@@ -511,7 +511,7 @@ int __init pci_xen_initial_domain(void)
- 	xen_setup_acpi_sci();
- 	__acpi_register_gsi = acpi_register_gsi_xen;
- 	/* Pre-allocate legacy irqs */
--	for (irq = 0; irq < NR_IRQS_LEGACY; irq++) {
-+	for (irq = 0; irq < nr_legacy_irqs(); irq++) {
- 		int trigger, polarity;
- 
- 		if (acpi_get_override_irq(irq, &trigger, &polarity) == -1)
-@@ -522,7 +522,7 @@ int __init pci_xen_initial_domain(void)
- 			true /* Map GSI to PIRQ */);
- 	}
- 	if (0 == nr_ioapics) {
--		for (irq = 0; irq < NR_IRQS_LEGACY; irq++)
-+		for (irq = 0; irq < nr_legacy_irqs(); irq++)
- 			xen_bind_pirq_gsi_to_irq(irq, irq, 0, "xt-pic");
- 	}
- 	return 0;
--- 
-1.7.10.4
+>>      I'm investigating an imprecise external abort occurring once userland is
+>> started when I have NetMos
+
+    Or is it MosChip now? Can't remember all their renames. :-)
+
+>> PCIe serial card inserted and the '8250_pci'
+>> driver
+>> enabled and I have found some issues in this driver, while at it...
+
+    I should mention that the serial PCI device has both I/O port and memory 
+BARs; it's the driver's choice to use the I/O ports.
+
+> Shame they didn't come before the driver was accepted,
+
+    Sorry, I don't usually review large patches -- it's very time consuming 
+(my review took 2+ hours and yet I haven't pointed out all issues).
+
+> but still, I welcome the comments. See below.
+
+    Thanks. :-)
+
+>>> This PCIe Host driver currently does not support MSI, so cards
+>>> fall back to INTx interrupts.
+
+>>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+
+[...]
+
+>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>>> new file mode 100644
+>>> index 0000000..3c524b9
+>>> --- /dev/null
+>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>> @@ -0,0 +1,768 @@
+
+[...]
+
+>>> +static void pci_write_reg(struct rcar_pcie *pcie, unsigned long val,
+>>> +			  unsigned long reg)
+>>> +{
+>>> +	writel(val, pcie->base + reg);
+>>> +}
+>>> +
+>>> +static unsigned long pci_read_reg(struct rcar_pcie *pcie, unsigned long
+>> reg)
+>>> +{
+>>> +	return readl(pcie->base + reg);
+>>> +}
+
+>>      As a side note, these functions are hardly needed, and risk collision too...
+
+> Ben mentioned this in his review and as I said then, I found them useful during
+> development, so we agreed to leave them. Since they are static, there shouldn't
+> be a collision risk.
+
+    You're risking clashes even at the source level, not even at object file 
+level...
+
+>>> +static void rcar_pcie_setup_window(int win, struct resource *res,
+>>> +				   struct rcar_pcie *pcie)
+
+>>      As a side note, 'res' parameter is hardly needed here, as the function
+>> always gets
+>> called with the resources contained within 'struct rcar_pcie'...
+
+> Either I would have to pass an index to the resource in,
+
+    But you already do pass it, 'win' is the index!
+
+> or as I have done, a
+> pointer to the individual resource. I found it cleaner to pass the pointer.
+
+    You're actually pass excess parameters, both the index and the pointer.
+
+[...]
+
+>>> +
+>>> +	/* First resource is for IO */
+>>> +	mask = PAR_ENABLE;
+>>> +	if (res->flags & IORESOURCE_IO)
+>>> +		mask |= IO_SPACE;
+
+>>      For the memory space this works OK as you're identity-mapping the
+>> memory
+>> ranges in your device trees. However, for the I/O space this means that it
+>> won't work as the BARs in the PCIe devices get programmed with the PCI bus
+>> addresses but the PCIe window translation register is programmed with a
+>> CPU
+>> address which don't at all match (given your device trees) and hence one
+>> can't
+>> access the card's I/O mapped registers at all...
+
+> Hmm, I couldn't find any cards that supported I/O, so I wasn't able to test
+> this. Clearly this is an issue that needs looking into.
+
+    Will you look into it then, or should I?
+
+>>> +
+>>> +	pci_write_reg(pcie, mask, PCIEPTCTLR(win));
+>>> +}
+>>> +
+>>> +static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
+>>> +{
+>>> +	struct rcar_pcie *pcie = sys_to_pcie(sys);
+>>> +	struct resource *res;
+>>> +	int i;
+>>> +
+>>> +	pcie->root_bus_nr = -1;
+>>> +
+>>> +	/* Setup PCI resources */
+>>> +	for (i = 0; i < PCI_MAX_RESOURCES; i++) {
+>>> +
+>>> +		res = &pcie->res[i];
+>>> +		if (!res->flags)
+>>> +			continue;
+>>> +
+>>> +		rcar_pcie_setup_window(i, res, pcie);
+>>> +
+>>> +		if (res->flags & IORESOURCE_IO)
+>>> +			pci_ioremap_io(nr * SZ_64K, res->start);
+
+>>     I'm not sure why are you not calling pci_add_resource() for I/O space...
+
+    Sorry, did you reply to that?
+
+>> Also, this sets up only 64 KiB of I/O ports while your device tree describes
+>> I/O space 1 MiB is size.
+
+> This driver should be able to cope with multiple host controllers, so each
+> allocated 64KiB for I/O. 64KiB is all you need for I/O, but the R-Car PCIe
+> hardware has a 1MiB region (the smallest one) that can only be used for one
+> type of PCIe access.
+
+[...]
+
+>>> +static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
+>>> +{
+>>> +	int err;
+>>> +
+>>> +	/* Begin initialization */
+>>> +	pci_write_reg(pcie, 0, PCIETCTLR);
+>>> +
+>>> +	/* Set mode */
+>>> +	pci_write_reg(pcie, 1, PCIEMSR);
+>>> +
+>>> +	/*
+>>> +	 * Initial header for port config space is type 1, set the device
+>>> +	 * class to match. Hardware takes care of propagating the IDSETR
+>>> +	 * settings, so there is no need to bother with a quirk.
+>>> +	 */
+>>> +	pci_write_reg(pcie, PCI_CLASS_BRIDGE_PCI << 16, IDSETR1);
+
+>>      Hm, shouldn't this be a host bridge? I've noticed that the bridge's I/O
+>> and memory base/limit registers are left uninitialized even though the BARs
+>> of the PICe devices behind this bridge are assigned.
+
+> No, I am pretty sure this is correct.
+
+    It just looks strange. What you actually have is clearly a host-to-PCI 
+bridge. Instead you have one "virtual" PCI bus consisting of only PCI-PCI 
+bridge device, and the real PCIe bus hanging from the PCI-PCI bridge. Weird...
+
+[...]
+
+>>> +
+>>> +	/* Terminate list of capabilities (Next Capability Offset=0) */
+>>> +	rcar_rmw32(pcie, RVCCAP(0), 0xfff0, 0);
+>>> +
+>>> +	/* Enable MAC data scrambling. */
+
+    I wonder what does MAC mean in the PCIe context...
+
+>>> +	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
+
+>>      Doesn't the comment contradict the code here?
+
+> No, the rmw32 function is read, modify, write and the SCRAMBLE_DISABLE shown
+> here is the mask, not the value. If the last arg was 1, the call would set the
+> scramble disable bit to 1.
+
+    Ah, missed that, sorry.
+
+> Anyway, scrambling is enabled by default in the HW, so I'll remove this.
+
+    OK.
+
+>>> +
+>>> +	/* Finish initialization - establish a PCI Express link */
+>>> +	pci_write_reg(pcie, CFINIT, PCIETCTLR);
+>>> +
+>>> +	/* This will timeout if we don't have a link. */
+>>> +	err = rcar_pcie_wait_for_dl(pcie);
+>>> +	if (err)
+>>> +		return err;
+>>> +
+>>> +	/* Enable INTx interrupts */
+>>> +	rcar_rmw32(pcie, PCIEINTXR, 0, 0xF << 8);
+>>> +
+>>> +	/* Enable slave Bus Mastering */
+>>> +	rcar_rmw32(pcie, RCONF(PCI_STATUS), PCI_STATUS_DEVSEL_MASK,
+>>> +		PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+>> PCI_COMMAND_MASTER |
+>>> +		PCI_STATUS_CAP_LIST | PCI_STATUS_DEVSEL_FAST);
+
+>>      Hmm, you're mixing up PCI control/status registers' bits here; they're
+>> two 16-bit registers! So you're writing to 3 reserved LSBs of the PCI status
+>> register...
+
+    ... and therefore not writing these bits to the PCI command (not control, 
+sorry) register. Perhaps because of that PCI-PCI bridge remains inactive...
+
+> The mask arg should make sure that we don't write to reserved bits. However,
+
+    Look at rcar_rmw32() again -- it doesn't really do that.
+
+> the bits & mask combination is clearly wrong & I'll look at this.
+> Somewhere along the line, the use of the mask arg to the rcar_rmw32 function
+> has clearly gone astray. I checked all the rmw calls and found another couple
+> that are wrong.
+
+    OK, please fix those.
+
+[...]
+
+>>> +static int rcar_pcie_probe(struct platform_device *pdev)
+>>> +{
+>>> +	struct rcar_pcie *pcie;
+>>> +	unsigned int data;
+>>> +	struct of_pci_range range;
+>>> +	struct of_pci_range_parser parser;
+>>> +	const struct of_device_id *of_id;
+>>> +	int err, win = 0;
+>>> +	int (*hw_init_fn)(struct rcar_pcie *);
+>>> +
+>>> +	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
+>>> +	if (!pcie)
+>>> +		return -ENOMEM;
+>>> +
+>>> +	pcie->dev = &pdev->dev;
+>>> +	platform_set_drvdata(pdev, pcie);
+>>> +
+>>> +	/* Get the bus range */
+>>> +	if (of_pci_parse_bus_range(pdev->dev.of_node, &pcie->busn)) {
+>>> +		dev_err(&pdev->dev, "failed to parse bus-range
+>> property\n");
+>>> +		return -EINVAL;
+>>> +	}
+>>> +
+>>> +	if (of_pci_range_parser_init(&parser, pdev->dev.of_node)) {
+>>> +		dev_err(&pdev->dev, "missing ranges property\n");
+>>> +		return -EINVAL;
+>>> +	}
+>>> +
+>>> +	err = rcar_pcie_get_resources(pdev, pcie);
+>>> +	if (err < 0) {
+>>> +		dev_err(&pdev->dev, "failed to request resources: %d\n",
+>> err);
+>>> +		return err;
+>>> +	}
+>>> +
+>>> +	for_each_of_pci_range(&parser, &range) {
+>>> +		of_pci_range_to_resource(&range, pdev->dev.of_node,
+>>> +						&pcie->res[win++]);
+
+>>      This function call is probably no good here as it fetches into the 'start'
+>> field of a 'struct resource' a CPU address instead of a PCI address...
+
+> No, the ranges describe the CPU addresses of the PCI memory and I/O regions, so
+> this is correct.
+
+    The problem actually is that you need to remember both CPU and PCI 
+addresses, so 'struct of_pci_range' looks more fitting here...
+
+>>> +
+>>> +		if (win > PCI_MAX_RESOURCES)
+>>> +			break;
+>>> +	}
+>>> +
+>>> +	 err = rcar_pcie_parse_map_dma_ranges(pcie, pdev->dev.of_node);
+>>> +	 if (err)
+>>> +		return err;
+>>> +
+>>> +	of_id = of_match_device(rcar_pcie_of_match, pcie->dev);
+>>> +	if (!of_id || !of_id->data)
+>>> +		return -EINVAL;
+>>> +	hw_init_fn = of_id->data;
+>>> +
+>>> +	/* Failure to get a link might just be that no cards are inserted */
+>>> +	err = hw_init_fn(pcie);
+>>> +	if (err) {
+>>> +		dev_info(&pdev->dev, "PCIe link down\n");
+>>> +		return 0;
+
+>>      Not quite sure why you exit normally here without enabling the hardware.
+>> I think the internal bridge should be visible regardless of whether link is
+>> detected or not...
+
+> Why would you want to see the bridge when you can do nothing with it? Aren't
+
+    Because it's the way PCI works. You have the built-in devices always 
+present and seen on a PCI bus. :-)
+
+> you are just wasting resources?
+
+    I think it's rather you who are wasting resources. ;-) Why not just fail 
+the probe when you have no link?
+
+WBR, Sergei
 
