@@ -1,130 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:61359 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753661AbaFCOsI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 10:48:08 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: devicetree@vger.kernel.org
-Cc: Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
+Received: from mail-bn1blp0185.outbound.protection.outlook.com ([207.46.163.185]:32098
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752186AbaFXPgN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Jun 2014 11:36:13 -0400
+Date: Tue, 24 Jun 2014 23:36:01 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: Richard Zhu <r65037@freescale.com>, <kernel@pengutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <damm@opensource.se>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org
-Subject: [PATCH v3] of/irq: provide more wrappers for !CONFIG_OF
-Date: Tue, 03 Jun 2014 16:47:41 +0200
-Message-ID: <16771871.sfJG2itVJN@wuerfel>
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: The imx6q suspend/resume is broken on 3.16-rc due to PCIe
+Message-ID: <20140624153559.GA5741@dragon>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci-rcar driver is enabled for compile tests, and this has
-now shown that the driver cannot build without CONFIG_OF,
-following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
-interrupt mapping when possible":
+Hi Lucas,
 
-drivers/built-in.o: In function `rcar_pci_map_irq':
-:(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
-pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
-pci/host/pcie-rcar.c:875:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
+I found that imx6q suspend/resume is broken on 3.16-rc, and it works
+just fine if PCIe support is built out.  However the issue was not
+exposed on 3.15, so I suspect the PCIe driver change merged in 3.16
+is part of the cause.
 
-As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
-supposed to build fine, which we can achieve if we make the
-declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
-and provide an empty inline function otherwise, as we do for
-a lot of other of interfaces.
+$ echo mem > /sys/power/state
+PM: Syncing filesystems ... done.
+Freezing user space processes ... (elapsed 0.002 seconds) done.
+Freezing remaining freezable tasks ... (elapsed 0.002 seconds) done.
+sd 0:0:0:0: [sda] Synchronizing SCSI cache
+sd 0:0:0:0: [sda] Stopping disk
+PM: suspend of devices complete after 85.695 msecs
+PM: suspend devices took 0.100 seconds
+PM: late suspend of devices complete after 6.786 msecs
+PM: noirq suspend of devices complete after 6.228 msecs
+Disabling non-boot CPUs ...
+CPU1: shutdown
+CPU2: shutdown
+CPU3: shutdown
+Enabling non-boot CPUs ...
+CPU1: Booted secondary processor
+CPU1 is up
+CPU2: Booted secondary processor
+CPU2 is up
+CPU3: Booted secondary processor
+CPU3 is up
 
-This lets us build the rcar_pci driver again without CONFIG_OF
-for build testing. All platforms using this driver select OF,
-so this doesn't change anything for the users.
+The issue is actually with resume procedure.  I noticed that Richard
+added the following change in FSL kernel tree, which seems to fix the
+issue.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Cc: devicetree@vger.kernel.org
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Magnus Damm <damm@opensource.se>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
-----
+@@ -229,6 +232,22 @@ static int imx6_suspend_finish(unsigned long val)
 
-This replaces "[PATCH v2] of/irq: provide int of_irq_parse_and_map_pci
-wrapper", since now the same driver requires additional interfaces.
-We still want to be able to build the driver with CONFIG_OF disabled,
-but now we need three functions instead of just one.
+ static int imx6_pm_enter(suspend_state_t state)
+ {
++       struct regmap *gpr;
++
++       /*
++        * L2 can exit by 'reset' or Inband beacon (from remote EP)
++        * toggling phy_powerdown has same effect as 'inband beacon'
++        * So, toggle bit18 of GPR1, to fix errata
++        * "PCIe PCIe does not support L2 Power Down"
++        */
++       gpr = syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
++       if (IS_ERR(gpr)) {
++               pr_err("failed to find fsl,imx6q-iomux-gpr regmap\n");
++               return PTR_ERR(gpr);
++       }
++       regmap_update_bits(gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_TEST_PD,
++                       IMX6Q_GPR1_PCIE_TEST_PD);
++
+        switch (state) {
+        case PM_SUSPEND_STANDBY:
+                imx6_set_lpm(STOP_POWER_ON);
+@@ -258,6 +277,15 @@ static int imx6_pm_enter(suspend_state_t state)
+                return -EINVAL;
+        }
 
-Rob, Grant, can you apply this as a bug fix, or provide comments?
-
-diff --git a/include/linux/of.h b/include/linux/of.h
-index 196b34c..7c29e6c 100644
---- a/include/linux/of.h
-+++ b/include/linux/of.h
-@@ -511,6 +511,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
- 	return NULL;
++       /*
++        * L2 can exit by 'reset' or Inband beacon (from remote EP)
++        * toggling phy_powerdown has same effect as 'inband beacon'
++        * So, toggle bit18 of GPR1, to fix errata
++        * "PCIe PCIe does not support L2 Power Down"
++        */
++       regmap_update_bits(gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_TEST_PD,
++                       !IMX6Q_GPR1_PCIE_TEST_PD);
++
+        return 0;
  }
  
-+static inline int of_n_addr_cells(struct device_node *np) { return 0; }
-+static inline int of_n_size_cells(struct device_node *np) { return 0; }
-+
- static inline int of_property_read_u64(const struct device_node *np,
- 				       const char *propname, u64 *out_value)
- {
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 1a1f5ff..dde3a4a 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -6,14 +6,44 @@
- 
- struct pci_dev;
- struct of_phandle_args;
--int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq);
--int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
--
- struct device_node;
-+
-+#ifdef CONFIG_OF
-+int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq);
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_devfn(struct device_node *np);
-+int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
-+#else
-+static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
-+{
-+	return 0;
-+}
-+
-+static inline struct device_node *of_pci_find_child_device(struct device_node *parent,
-+					     unsigned int devfn)
-+{
-+	return NULL;
-+}
-+
-+static inline int of_pci_get_devfn(struct device_node *np)
-+{
-+	return -EINVAL;
-+}
-+
-+static inline int
-+of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
-+{
-+	return 0;
-+}
-+
-+static inline int
-+of_pci_parse_bus_range(struct device_node *node, struct resource *res)
-+{
-+	return -EINVAL;
-+}
-+#endif
- 
- #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
- int of_pci_msi_chip_add(struct msi_chip *chip);
+And I copied the details of the errata as below.
 
+ERR005723 PCIe: PCIe does not support L2 power down
+
+Description:
+When PCIe works as Root Complex, it can exit L2 mode only through reset.
+Since PCIe does not have a dedicated reset control bit, it cannot exit
+L2 mode.
+
+Projected Impact:
+PCIe does not support L2 power down.
+
+Workarounds:
+The PCIe can be put into PDDQ mode to save PCIe PHY power and wake up
+only by the OOB (Out of Band) wakeup signal (since wakeup by a beacon
+from link partner is not supported) driven from the link partner (End
+Point). This signal could be used as a GPIO interrupt to exit this mode.
+The limitation of this workaround is that the link partner cannot be put
+into L2 mode.
+
+As I have no knowledge of how PCIe works, I provided all the info I
+found here to kick the discussion.  Hopefully, we can find a proper fix
+to get suspend/resume back to work.
+
+Shawn
