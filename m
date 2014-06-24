@@ -1,207 +1,164 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Tony Lindgren <tony@atomide.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org, sfi-devel@simplefirmware.org
-Subject: [Patch V4 24/42] x86, irq: enhance mp_register_ioapic() to support irqdomain
-Date: Mon,  9 Jun 2014 16:19:53 +0800
-Message-Id: <1402302011-23642-25-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:52617 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752920AbaFXKGr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 06:06:47 -0400
+Received: by mail-pb0-f53.google.com with SMTP id uo5so52595pbc.40
+        for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2014 03:06:47 -0700 (PDT)
+Message-ID: <53A94DA8.6020206@ozlabs.ru>
+Date: Tue, 24 Jun 2014 20:06:32 +1000
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+MIME-Version: 1.0
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com
+CC: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table dynamically
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com> <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=KOI8-R
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance function mp_register_ioapic() to support irqdomain.
-When registering IOAPIC, caller may provide callbacks and parameters
-for creating irqdomain. The IOAPIC core will create irqdomain later
-if caller has passed in corresponding parameters.
+On 06/10/2014 11:56 AM, Wei Yang wrote:
+> Current iommu_table of a PE is a static field. This will have a problem when
+> iommu_free_table is called.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    3 ++-
- arch/x86/kernel/acpi/boot.c    |    2 +-
- arch/x86/kernel/apic/io_apic.c |   42 +++++++++++++++++++++++++++++++++++++++-
- arch/x86/kernel/devicetree.c   |    2 +-
- arch/x86/kernel/mpparse.c      |    2 +-
- arch/x86/platform/sfi/sfi.c    |    2 +-
- 6 files changed, 47 insertions(+), 6 deletions(-)
+What kind of problem? This table is per PE and PE is not going anywhere.
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 64c6e344399b..3e4bea3a52b1 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -190,7 +190,8 @@ extern int mp_find_ioapic(u32 gsi);
- extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern u32 mp_pin_to_gsi(int ioapic, int pin);
- extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
--extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
-+extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+				      struct ioapic_domain_cfg *cfg);
- extern void __init pre_init_apic_IRQ0(void);
- 
- extern void mp_save_irq(struct mpc_intsrc *m);
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 96d8da83ed8b..15d988cfa335 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -462,7 +462,7 @@ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
- 	acpi_table_print_madt_entry(header);
- 
- 	mp_register_ioapic(ioapic->id,
--			   ioapic->address, ioapic->global_irq_base);
-+			   ioapic->address, ioapic->global_irq_base, NULL);
- 
- 	return 0;
- }
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 9e5ca8edfccf..9c5f70699a80 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -85,6 +85,7 @@ int sis_apic_bug = -1;
- static DEFINE_RAW_SPINLOCK(ioapic_lock);
- static DEFINE_RAW_SPINLOCK(vector_lock);
- static DEFINE_MUTEX(ioapic_mutex);
-+static unsigned int ioapic_dynirq_base;
- 
- static struct ioapic {
- 	/*
-@@ -2920,8 +2921,35 @@ out:
-  */
- #define PIC_IRQS	(1UL << PIC_CASCADE_IR)
- 
-+static int mp_irqdomain_create(int ioapic)
-+{
-+	int hwirqs = mp_ioapic_pin_count(ioapic);
-+	struct ioapic *ip = &ioapics[ioapic];
-+	struct ioapic_domain_cfg *cfg = &ip->irqdomain_cfg;
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(ioapic);
-+
-+	if (cfg->type == IOAPIC_DOMAIN_INVALID)
-+		return 0;
-+
-+	ip->irqdomain = irq_domain_add_linear(cfg->dev, hwirqs, cfg->ops,
-+					      (void *)(long)ioapic);
-+	if(!ip->irqdomain)
-+		return -ENOMEM;
-+
-+	if (cfg->type == IOAPIC_DOMAIN_LEGACY ||
-+	    cfg->type == IOAPIC_DOMAIN_STRICT)
-+		ioapic_dynirq_base = max(ioapic_dynirq_base,
-+					 gsi_cfg->gsi_end + 1);
-+
-+	if (gsi_cfg->gsi_base == 0)
-+		irq_set_default_host(ip->irqdomain);
-+
-+	return 0;
-+}
-+
- void __init setup_IO_APIC(void)
- {
-+	int ioapic;
- 
- 	/*
- 	 * calling enable_IO_APIC() is moved to setup_local_APIC for BP
-@@ -2929,6 +2957,9 @@ void __init setup_IO_APIC(void)
- 	io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
- 
- 	apic_printk(APIC_VERBOSE, "ENABLING IO-APIC IRQs\n");
-+	for_each_ioapic(ioapic)
-+		BUG_ON(mp_irqdomain_create(ioapic));
-+
- 	/*
-          * Set up IO-APIC IRQ routing.
-          */
-@@ -3433,6 +3464,9 @@ unsigned int arch_dynirq_lower_bound(unsigned int from)
- {
- 	unsigned int min = gsi_top + nr_legacy_irqs();
- 
-+	if (ioapic_dynirq_base)
-+		return ioapic_dynirq_base;
-+
- 	return from < min ? min : from;
- }
- 
-@@ -3808,7 +3842,8 @@ static __init int bad_ioapic_register(int idx)
- 	return 0;
- }
- 
--void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
-+void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+			       struct ioapic_domain_cfg *cfg)
- {
- 	int idx = 0;
- 	int entries;
-@@ -3822,6 +3857,11 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	ioapics[idx].mp_config.type = MP_IOAPIC;
- 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
- 	ioapics[idx].mp_config.apicaddr = address;
-+	ioapics[idx].irqdomain = NULL;
-+	if (cfg)
-+		ioapics[idx].irqdomain_cfg = *cfg;
-+	else
-+		ioapics[idx].irqdomain_cfg.type = IOAPIC_DOMAIN_INVALID;
- 
- 	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
- 
-diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
-index e08a007bdacf..dd6936818330 100644
---- a/arch/x86/kernel/devicetree.c
-+++ b/arch/x86/kernel/devicetree.c
-@@ -177,7 +177,7 @@ static void __init dtb_add_ioapic(struct device_node *dn)
- 				dn->full_name);
- 		return;
- 	}
--	mp_register_ioapic(++ioapic_id, r.start, gsi_top);
-+	mp_register_ioapic(++ioapic_id, r.start, gsi_top, NULL);
- }
- 
- static void __init dtb_ioapic_setup(void)
-diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
-index b10e1132f316..ea8595e4cbd5 100644
---- a/arch/x86/kernel/mpparse.c
-+++ b/arch/x86/kernel/mpparse.c
-@@ -115,7 +115,7 @@ static void __init MP_bus_info(struct mpc_bus *m)
- static void __init MP_ioapic_info(struct mpc_ioapic *m)
- {
- 	if (m->flags & MPC_APIC_USABLE)
--		mp_register_ioapic(m->apicid, m->apicaddr, gsi_top);
-+		mp_register_ioapic(m->apicid, m->apicaddr, gsi_top, NULL);
- }
- 
- static void __init print_mp_irq_info(struct mpc_intsrc *mp_irq)
-diff --git a/arch/x86/platform/sfi/sfi.c b/arch/x86/platform/sfi/sfi.c
-index bcd1a703e3e6..8f2f789c6f04 100644
---- a/arch/x86/platform/sfi/sfi.c
-+++ b/arch/x86/platform/sfi/sfi.c
-@@ -82,7 +82,7 @@ static int __init sfi_parse_ioapic(struct sfi_table_header *table)
- 	pentry = (struct sfi_apic_table_entry *)sb->pentry;
- 
- 	for (i = 0; i < num; i++) {
--		mp_register_ioapic(i, pentry->phys_addr, gsi_top);
-+		mp_register_ioapic(i, pentry->phys_addr, gsi_top, NULL);
- 		pentry++;
- 	}
- 
+
+> 
+> This patch allocate iommu_table dynamically.
+> 
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/include/asm/iommu.h          |    3 +++
+>  arch/powerpc/platforms/powernv/pci-ioda.c |   24 +++++++++++++-----------
+>  arch/powerpc/platforms/powernv/pci.h      |    2 +-
+>  3 files changed, 17 insertions(+), 12 deletions(-)
+> 
+> diff --git a/arch/powerpc/include/asm/iommu.h b/arch/powerpc/include/asm/iommu.h
+> index 42632c7..0fedacb 100644
+> --- a/arch/powerpc/include/asm/iommu.h
+> +++ b/arch/powerpc/include/asm/iommu.h
+> @@ -78,6 +78,9 @@ struct iommu_table {
+>  	struct iommu_group *it_group;
+>  #endif
+>  	void (*set_bypass)(struct iommu_table *tbl, bool enable);
+> +#ifdef CONFIG_PPC_POWERNV
+> +	void           *data;
+> +#endif
+>  };
+>  
+>  /* Pure 2^n version of get_order */
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 9715351..8ca3926 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -608,6 +608,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
+>  		return;
+>  	}
+>  
+> +	pe->tce32_table = kzalloc_node(sizeof(struct iommu_table),
+> +			GFP_KERNEL, hose->node);
+> +	pe->tce32_table->data = pe;
+> +
+>  	/* Associate it with all child devices */
+>  	pnv_ioda_setup_same_PE(bus, pe);
+>  
+> @@ -675,7 +679,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev
+>  
+>  	pe = &phb->ioda.pe_array[pdn->pe_number];
+>  	WARN_ON(get_dma_ops(&pdev->dev) != &dma_iommu_ops);
+> -	set_iommu_table_base_and_group(&pdev->dev, &pe->tce32_table);
+> +	set_iommu_table_base_and_group(&pdev->dev, pe->tce32_table);
+>  }
+>  
+>  static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+> @@ -702,7 +706,7 @@ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+>  	} else {
+>  		dev_info(&pdev->dev, "Using 32-bit DMA via iommu\n");
+>  		set_dma_ops(&pdev->dev, &dma_iommu_ops);
+> -		set_iommu_table_base(&pdev->dev, &pe->tce32_table);
+> +		set_iommu_table_base(&pdev->dev, pe->tce32_table);
+>  	}
+>  	return 0;
+>  }
+> @@ -712,7 +716,7 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe, struct pci_bus *bus)
+>  	struct pci_dev *dev;
+>  
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+> -		set_iommu_table_base_and_group(&dev->dev, &pe->tce32_table);
+> +		set_iommu_table_base_and_group(&dev->dev, pe->tce32_table);
+>  		if (dev->subordinate)
+>  			pnv_ioda_setup_bus_dma(pe, dev->subordinate);
+>  	}
+> @@ -798,8 +802,7 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
+>  void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
+>  				 __be64 *startp, __be64 *endp, bool rm)
+>  {
+> -	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+> -					      tce32_table);
+> +	struct pnv_ioda_pe *pe = tbl->data;
+>  	struct pnv_phb *phb = pe->phb;
+>  
+>  	if (phb->type == PNV_PHB_IODA1)
+> @@ -862,7 +865,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>  	}
+>  
+>  	/* Setup linux iommu table */
+> -	tbl = &pe->tce32_table;
+> +	tbl = pe->tce32_table;
+>  	pnv_pci_setup_iommu_table(tbl, addr, PNV_TCE32_TAB_SIZE * segs,
+>  				  base << PNV_TCE32_SEG_SHIFT);
+>  
+> @@ -900,8 +903,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>  
+>  static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
+>  {
+> -	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+> -					      tce32_table);
+> +	struct pnv_ioda_pe *pe = tbl->data;
+>  	uint16_t window_id = (pe->pe_number << 1 ) + 1;
+>  	int64_t rc;
+>  
+> @@ -942,10 +944,10 @@ static void pnv_pci_ioda2_setup_bypass_pe(struct pnv_phb *phb,
+>  	pe->tce_bypass_base = 1ull << 59;
+>  
+>  	/* Install set_bypass callback for VFIO */
+> -	pe->tce32_table.set_bypass = pnv_pci_ioda2_set_bypass;
+> +	pe->tce32_table->set_bypass = pnv_pci_ioda2_set_bypass;
+>  
+>  	/* Enable bypass by default */
+> -	pnv_pci_ioda2_set_bypass(&pe->tce32_table, true);
+> +	pnv_pci_ioda2_set_bypass(pe->tce32_table, true);
+>  }
+>  
+>  static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+> @@ -993,7 +995,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>  	}
+>  
+>  	/* Setup linux iommu table */
+> -	tbl = &pe->tce32_table;
+> +	tbl = pe->tce32_table;
+>  	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0);
+>  
+>  	/* OPAL variant of PHB3 invalidated TCEs */
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index 90f6da4..9fbf7c0 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -60,7 +60,7 @@ struct pnv_ioda_pe {
+>  	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
+>  	int			tce32_seg;
+>  	int			tce32_segcount;
+> -	struct iommu_table	tce32_table;
+> +	struct iommu_table	*tce32_table;
+>  	phys_addr_t		tce_inval_reg_phys;
+>  
+>  	/* 64-bit TCE bypass region */
+> 
+
+
 -- 
-1.7.10.4
-
+Alexey
