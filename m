@@ -1,108 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 25 Jun 2014 10:44:42 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Patch V3 00/16] Enable support of IOAPIC hotplug on x86
- platforms
-Message-ID: <20140625144442.GA3775@laptop.dumpdata.com>
-References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:58473 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965173AbaFXQKP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 12:10:15 -0400
+Message-ID: <53A9A290.7020407@ti.com>
+Date: Tue, 24 Jun 2014 12:08:48 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Pratyush Anand <pratyush.anand@st.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Marek Vasut <marex@denx.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ABRAHAM KISHON VIJAY <kishon@ti.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>
+Subject: Re: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
+References: <20140623053249.GD2666@pratyush-vbox> <53A85ACE.9070506@ti.com>
+In-Reply-To: <53A85ACE.9070506@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 25, 2014 at 04:40:31PM +0800, Jiang Liu wrote:
-> This patch set enhances IOAPIC core and ACPI drivers to support IOAPIC
-> hotplug on x86 platforms. It's based on tip/x86/apic.
-> 
-> You may pull it from 
-> https://github.com/jiangliu/linux.git ioapic/hotplug_v3
+Pratyush,
 
-fatal: Couldn't find remote ref ioapic/hotplug_v3
-Unexpected end of command stream
+On 06/23/2014 12:50 PM, Santosh Shilimkar wrote:
+>
+>
+>
+> -------- Original Message --------
+> Subject: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
+> On Sat, Jun 21, 2014 at 03:05:30AM +0800, Arnd Bergmann wrote:
+>> On Friday 20 June 2014 13:11:37 Santosh Shilimkar wrote:
+>
+>>>>
+>>> Arnd suggestion was to have the version 3.65 code in generic place since
+>>> its IP specific and just in case some other vendor using the same version
+>>> can leverage the code.
+>
+> Sorry, I do not follow PCIe mailing list these days, doing something else
+> now. So coming to this topic a bit delayed.
+>
+My Apologies for the email format as I mysteriously lost this email and
+had to resort to a forwarded email to respond to this.
 
-I see ioapic/hotplug_v2?
-> 
-> We have pick up several patches from Yinghai's original IOAPIC hotplug
-> patch set and reimplemented IOAPIC driver as an ACPI driver instead of
-> a PCI driver.
-> 
-> It has been tested on a 4-socket Intel SDV with socket hot-addition
-> capability. Any suggestions are welcomed!
-> 
-> Patch 1-5 are minor bugfixes and code improvements
-> Patch 6-14 enhances ACPI and IOAPIC core to support IOAPIC hotplug
-> Patch 15 killes PCI IOAPIC driver
-> Patch 16 reimplements ACPI IOAPIC driver and enables IOAPIC hotplug
-> 
-> V2->V3:
-> 1) Refine ACPI resource walk functions for PCI root bus and IOAPIC
-> 2) Improve commit messages
-> 3) Reorder patch order for better maintenence
-> 
-> Jiang Liu (11):
->   x86, irq, ACPI: Protect acpi_pci_irq_enable() from reentrance
->   ACPI: Correct return value of acpi_dev_resource_address_space()
->   x86, PCI, ACPI: Kill private function resource_to_addr()
->   x86, irq: Remove __init marker for functions will be used by IOAPIC
->     hotplug
->   x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
->   x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from
->     hotplug
->   x86, irq, ACPI: Implement interface to support ACPI based IOAPIC
->     hot-addition
->   x86, irq, ACPI: Implement interface to support ACPI based IOAPIC
->     hot-removal
->   x86, irq: Introduce helper to check whether an IOAPIC has been
->     registered
->   PCI: Remove PCI ioapic driver
->   x86, irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
-> 
-> Yinghai Lu (5):
->   ACPI: Make map_mat_entry handle x2apic entry
->   ACPI: Move acpi_get_cpuid() to separated file
->   x86, irq: Split out alloc_ioapic_save_registers()
->   x86, ioapic: Find usable ioapic id for 64bit.
->   ACPI, ioapic: Add acpi_get_ioapic_id()
-> 
->  arch/x86/include/asm/io_apic.h |    6 +-
->  arch/x86/kernel/acpi/boot.c    |   68 ++++++++-
->  arch/x86/kernel/apic/io_apic.c |  235 +++++++++++++++++++++++++-------
->  arch/x86/pci/acpi.c            |  142 +++++++------------
->  drivers/acpi/Kconfig           |    6 +
->  drivers/acpi/Makefile          |    2 +
->  drivers/acpi/apic_id.c         |  295 ++++++++++++++++++++++++++++++++++++++++
->  drivers/acpi/internal.h        |    7 +
->  drivers/acpi/ioapic.c          |  236 ++++++++++++++++++++++++++++++++
->  drivers/acpi/pci_irq.c         |    7 +-
->  drivers/acpi/pci_root.c        |    3 +
->  drivers/acpi/processor_core.c  |  191 --------------------------
->  drivers/acpi/resource.c        |    2 +-
->  drivers/pci/Kconfig            |    7 -
->  drivers/pci/Makefile           |    2 -
->  drivers/pci/ioapic.c           |  121 ----------------
->  include/acpi/processor.h       |    3 -
->  include/linux/acpi.h           |    8 ++
->  18 files changed, 868 insertions(+), 473 deletions(-)
->  create mode 100644 drivers/acpi/apic_id.c
->  create mode 100644 drivers/acpi/ioapic.c
->  delete mode 100644 drivers/pci/ioapic.c
-> 
-> -- 
-> 1.7.10.4
-> 
+Let us have the discussion on this thread as I lost the original emails.
+>>>
+>>> Concern here seems toe really those name of the files. I can't think of
+>>> any other appropriate name.
+>>
+>> We should definitely keep the version in the DT "compatible" strings
+>> wherever we know it. Regarding a better file name, I have no idea.
+>
+> In my opinion, we do not need any of dw-v3_65 files, as code in these
+> files will not be usable by other vendors.
+>
+> Anything which is implemented in application space, will not be same
+> across all IP users. For example, MSI0_IRQ_ENABLE_SET has been defined
+> at offset 0x108 in keystone PCIe application space.Other vendor may
+> not have this register at the same offset. Moreover, other vendors are
+> not even obliged to implement MSI Enable signals in same way, so
+> internal bit definition of the register may change.
+>
+> Therefore code is not reusable if all register offset and bit
+> definitions are not same across vendors. So, in case of DW driver none
+> of the code which are accessed using va_app_base should go to common
+> area.
+>
+
+I think based on the response far on this issue, it is best to keep
+the Application specific code as part of Keystone driver and in
+future if there is any driver that has similar application register
+implemented. we can refactor the code and re-use.
+
+My V3 will revert back to implementation similar to RFC. Also since this
+is individual h/w specific, there is no no need for a compatibility as
+well. Will use keystone specific compatibility string for this.
+
+Arnd, hope this is fine. Please respond if you still think a 
+compatibility string is needed.
+
+Murali
+
+> Pratyush
+>
+>>
+>> 	Arnd
+>
+>
+
