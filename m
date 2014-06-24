@@ -1,112 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15049 "EHLO mga09.intel.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:41919 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750910AbaFEM7W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Jun 2014 08:59:22 -0400
-Date: Thu, 5 Jun 2014 15:58:42 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Gavin Guo <gavin.guo@canonical.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, YK <yk@canonical.com>,
-	Yung Shen <yung.shen@canonical.com>,
-	Po-Hsu Lin <po-hsu.lin@canonical.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: PCI-to-USB ExpressCard Hotplugging can't work in v3.15-rc5
-Message-ID: <20140605125842.GL5214@lahna.fi.intel.com>
-References: <CA+eFSM2CBiWZNmpnSNGKZGjEpK6gc=T0a5r7m6sbORi==XTCjQ@mail.gmail.com>
- <22265253.jvFXIxhohU@vostro.rjw.lan>
- <CA+eFSM0Cnij7EEUZhWNsyrERquUiOE4Jt8d_Ra=bt5VZZtLDwA@mail.gmail.com>
- <1784093.b0o8Rzal2W@vostro.rjw.lan>
+	id S1756192AbaFXQXE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Jun 2014 12:23:04 -0400
+Message-ID: <53A9A59B.9000709@ti.com>
+Date: Tue, 24 Jun 2014 12:21:47 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1784093.b0o8Rzal2W@vostro.rjw.lan>
+To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <r65037@freescale.com>,
+	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
+References: <20140623051346.GC2666@pratyush-vbox> <53A85AAC.4070401@ti.com>
+In-Reply-To: <53A85AAC.4070401@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 05, 2014 at 02:08:57PM +0200, Rafael J. Wysocki wrote:
-> CC: Mika
-> 
-> On Thursday, June 05, 2014 07:46:06 PM Gavin Guo wrote:
-> > On Thu, May 22, 2014 at 7:36 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > > On Wednesday, May 21, 2014 07:53:37 AM Bjorn Helgaas wrote:
-> > >> On Wed, May 21, 2014 at 3:45 AM, Gavin Guo <gavin.guo@canonical.com> wrote:
-> > >> > Hi Bjorn,
-> > >> >
-> > >> > On Wed, May 21, 2014 at 12:54 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > >> >> On Tue, May 20, 2014 at 10:36 PM, Gavin Guo <gavin.guo@canonical.com> wrote:
-> > >> >>> Hi all,
-> > >> >>>
-> > >> >>> I have a APIOTEK PCI-to-USB ExpressCard and found that when it is
-> > >> >>> plugged at cold boot, the card can be detected. But, hotplug cannot
-> > >> >>> work at run time. The bug may be related to the commit which I
-> > >> >>> reported last year:
-> > >> >>>
-> > >> >>> commit 3f327e39b4b8f760c331bb2836735be6d83fbf53
-> > >> >>
-> > >> >> Where is your report from last year?  How did you identify this
-> > >> >> commit?  Did you verify that it works correctly with v3.10-rc1, but
-> > >> >> fails when you add this commit?
-> > >> >
-> > >> > The mail about the bug I reported last year is attached. And I'm sorry
-> > >> > about not describing clearly. This commit is the one to fix the bug
-> > >> > before. So, I think it will be a clue to find out what's wrong. I've
-> > >> > built v3.10 and tested it on the platform. It works fine. The bug
-> > >> > seems like a regression.
-> > >> >
-> > >> > I also attached the dmesg of v3.10 which works correctly with hotplug.
-> > >>
-> > >> v3.10 contains 3f327e39b4b8 (it appeared in v3.10-rc3).  So since it
-> > >> works correctly in v3.10, that commit is probably not the cause of the
-> > >> regression.
-> > >>
-> > >> So apparently it worked in v3.10 and broke sometime later.  Do you
-> > >> know when it broke?
-> > >>
-> > >> We're getting Bus Check events:
-> > >>
-> > >>   ACPI: \_SB_.PCI0: ACPI_NOTIFY_BUS_CHECK event
-> > >>
-> > >> but apparently we aren't handling them correctly.  Can you turn on the
-> > >> debug in the acpi_hotplug_schedule() path and add more if necessary to
-> > >> if we get to acpi_hotplug_work_fn(), acpi_device_hotplug(), etc.?  I'm
-> > >> not familiar with that path, so either you'll have to narrow it down,
-> > >> or we can hope that Yinghai or Rafael has some insight.
-> > >
-> > > Well, it would be good to create a bug entry for this at bugzilla.kernel.org
-> > > against ACPI/Config-hotplug and mark it as a regression.
-> > 
-> > I've completed the bisect and found
-> > 2d8b1d566a5f4874f4d92361f5cdbb50baa396f8 is the first bad commit. The
-> > "git bisect log" is also attached.
-> > 
-> > commit 2d8b1d566a5f4874f4d92361f5cdbb50baa396f8
-> > Author: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > Date: Sat Jul 13 20:09:59 2013 +0300
-> > 
-> >     ACPI / hotplug / PCI: Get rid of check_sub_bridges()
-> > 
-> >     Now that acpiphp_check_bridge() always enumerates devices behind the
-> >     bridge, there is no need to do that for each sub-bridge anymore like
-> >     it is done in the current ACPI-based PCI hotplug (ACPIPHP) code.
-> > 
-> >     Given this we don't need check_sub_bridges() anymore, so drop that
-> >     function completely.
-> > 
-> >     This also simplifies the ACPIPHP code a bit.
-> > 
-> >     Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> >     Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > :040000 040000 1f3f81404e06c92c01d6848ed7a6c5bffdb5f878
-> > 4e7ca3e4af42738f90555640cafbb6e6522ceedf M drivers
+Mohit,
 
-Gavin,
+On 06/23/2014 12:49 PM, Santosh Shilimkar wrote:
+>
+>
+>
+> -------- Original Message --------
+> Subject: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
+> Date: Mon, 23 Jun 2014 10:43:46 +0530
+> From: Pratyush Anand<pratyush.anand@st.com>
+> To: Murali Karicheri<m-karicheri2@ti.com>
+>
+> On Sat, Jun 21, 2014 at 05:17:07AM +0800, Murali Karicheri wrote:
+>>
+>> Sorry, my previous response was in html and not sure it has made to the
+>> list. I did
+>> get an error as well. So resending my response.
+>>
+>> On 6/18/2014 6:14 AM, Mohit KUMAR DCG wrote:
+>>> Hello Murali,
+>>>
+>>
+>
+> [...]
+>
+>> *pos = pos0;
+>>
+>> @@ -349,7 +353,10 @@ static int dw_msi_setup_irq(struct msi_chip *chip,
+>> struct pci_dev *pdev,
+>>
+>> */
+>>
+>> desc->msi_attrib.multiple = msgvec;
+>>
+>> -msg.address_lo = virt_to_phys((void *)pp->msi_data);
+>>
+>> +if (pp->ops->get_msi_data)
+>>
+>> +msg.address_lo = pp->ops->get_msi_data(pp);
+>>
+>> +else
+>>
+>> +msg.address_lo = virt_to_phys((void *)pp->msi_data);
+>>
+>> msg.address_hi = 0x0;
+>>
+>> msg.data = pos;
+>>
+>>
+>> What about this code? This requires get_msi_data() as well
+>
+> pp->msi_data is set in dw_pcie_msi_init, which is a global function
+> called from vendor specific code. You can have your own
+> keystone_pcie_msi_init and then you do not need above changes.
+>
+My Apologies for the email format as I lost the original email and had
+to respond using a forwarded email.
 
-Can you send dmesg and your ACPI DSDT table to me (or attach them
-to a bug if you are filing one)? I wasn't able to dig up the original
-dmesg from the linux-pci archives.
+If you look at my original patch, keystone driver was not calling
+dw_pcie_msi_init(). However the issue is msi_chip of DW core is
+re-used as most of the code is platform independent. However
+code that sends write_msi_msg() can be re-used on keystone by
+adding this get_msi_data() API as the only difference IMO is the
+address EP writes to raise an MSI IRQ event. I don't see any
+reason why the entire code needs to be duplicated on Keystone.
+BTW, currently I have not tested the MSI IRQ and tested my driver
+only with Legacy IRQ. I plan to test this before sending my
+v3 of the patch.
 
-Please also make sure that you have CONFIG_DYNAMIC_DEBUG=y and
-"acpiphp.dyndbg=+p" in the kernel command line.
+Murali
+
+>>
+>>> -- 3rd to use pp->ops->msi_set/clear if defined.
+>> Why not API enhancement and refactor the code in a single patch?
+>
+> Yes, can be. You can send changes in 2 or 3 patches as you wish, but I
+> believe that should be able to solve problem in best way.
+>
+> Regards
+> Pratyush
+>>
+>> Murali
+>>> Pls let us know for any issue or have different opinion.
+>>>
+>>> Regards
+>>> Mohit
+>>>
+>>>
+>>>
+>>>
+>>>> --
+>>>> 1.7.9.5
+>>
+>
+>
+
