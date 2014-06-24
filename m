@@ -1,64 +1,165 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch V4 40/42] x86, irq, SFI: release IOAPIC pin when PCI device is disabled
-Date: Mon,  9 Jun 2014 16:20:09 +0800
-Message-Id: <1402302011-23642-41-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp06.in.ibm.com ([122.248.162.6]:35027 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200AbaFXBYV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 21:24:21 -0400
+Received: from /spool/local
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 24 Jun 2014 06:54:19 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 0ED79125804D
+	for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2014 06:53:48 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5O1PQZh37814522
+	for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2014 06:55:26 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5O1OFik027916
+	for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2014 06:54:15 +0530
+Date: Tue, 24 Jun 2014 09:24:14 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, yan@linux.vnet.ibm.com,
+	qiudayu@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH V3 12/17] powerpc/powernv: implement
+ pcibios_sriov_resource_alignment on powernv
+Message-ID: <20140624012414.GA5204@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1402365399-5121-13-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20140623060947.GB12055@shangw>
+ <20140623082142.GB4509@richard>
+ <20140623232922.GA4018@shangw>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140623232922.GA4018@shangw>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Release IOAPIC pin associated with PCI device when the PCI device
-is disabled.
+On Tue, Jun 24, 2014 at 09:29:22AM +1000, Gavin Shan wrote:
+>On Mon, Jun 23, 2014 at 04:21:42PM +0800, Wei Yang wrote:
+>>On Mon, Jun 23, 2014 at 04:09:47PM +1000, Gavin Shan wrote:
+>>>On Tue, Jun 10, 2014 at 09:56:34AM +0800, Wei Yang wrote:
+>>>>This patch implements the pcibios_sriov_resource_alignment() on powernv
+>>>>platform.
+>>>>
+>>>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>>>---
+>>>> arch/powerpc/include/asm/machdep.h        |    1 +
+>>>> arch/powerpc/kernel/pci-common.c          |    8 ++++++++
+>>>> arch/powerpc/platforms/powernv/pci-ioda.c |   17 +++++++++++++++++
+>>>> 3 files changed, 26 insertions(+)
+>>>>
+>>>>diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+>>>>index 2f2e770..3bbc55f 100644
+>>>>--- a/arch/powerpc/include/asm/machdep.h
+>>>>+++ b/arch/powerpc/include/asm/machdep.h
+>>>>@@ -242,6 +242,7 @@ struct machdep_calls {
+>>>> 	resource_size_t (*pcibios_window_alignment)(struct pci_bus *, unsigned long type);
+>>>> #ifdef CONFIG_PCI_IOV
+>>>> 	resource_size_t (*__pci_sriov_resource_size)(struct pci_dev *, int resno);
+>>>>+	resource_size_t (*__pci_sriov_resource_alignment)(struct pci_dev *, int resno, resource_size_t align);
+>
+>Both lines exceed 80 lines here :)
+>
+>>>> #endif /* CONFIG_PCI_IOV */
+>>>>
+>>>> 	/* Called to shutdown machine specific hardware not already controlled
+>>>>diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+>>>>index c4e2e92..35345ac 100644
+>>>>--- a/arch/powerpc/kernel/pci-common.c
+>>>>+++ b/arch/powerpc/kernel/pci-common.c
+>>>>@@ -128,6 +128,14 @@ resource_size_t pcibios_sriov_resource_size(struct pci_dev *pdev, int resno)
+>>>>
+>>>> 	return 0;
+>>>> }
+>>>>+
+>>>>+resource_size_t pcibios_sriov_resource_alignment(struct pci_dev *pdev, int resno, resource_size_t align)
+>>>>+{
+>>>>+	if (ppc_md.__pci_sriov_resource_alignment)
+>>>>+		return ppc_md.__pci_sriov_resource_alignment(pdev, resno, align);
+>>>>+
+>>>>+	return 0;
+>>>>+}
+>>>> #endif /* CONFIG_PCI_IOV */
+>>>>
+>>>> static resource_size_t pcibios_io_size(const struct pci_controller *hose)
+>>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>index 7dfad6a..b0ac851 100644
+>>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>@@ -1573,6 +1573,22 @@ static resource_size_t __pnv_pci_sriov_resource_size(struct pci_dev *pdev, int r
+>>>>
+>>>> 	return size;
+>>>> }
+>>>>+
+>>>>+static resource_size_t __pnv_pci_sriov_resource_alignment(struct pci_dev *pdev, int resno,
+>>>>+		resource_size_t align)
+>>>
+>>>The function could be "pcibios_sriov_resource_alignment()", but it's not a big deal.
+>>>If you prefer the original one, then keep it :)
+>>
+>>I guess you want to name it to pnv_pcibios_sriov_resource_alignment()?
+>>pcibios_sriov_resource_alignment() is the general name for this function.
+>>
+>>If yes, this is changed.
+>>
+>
+>Nope, What I mean is to have something like this:
+>
+>	struct machdep_calls {
+>		:
+>	#ifdef CONFIG_PCI_IOV
+>	resource_size_t (*pci_sriov_resource_size)(struct pci_dev *dev,
+>						   int resno);
+>	resource_size_t (*pci_sriov_resource_alignment)(struct pci_dev *dev,
+>							int resno,
+>							resource_size_t align);
+>	#endif
+>		:
+>	}
+>
+>	ppc_md.pci_sriov_resource_size = pnv_pci_iov_res_size;
+>	ppc_md.pci_sriov_resource_alignment = pnv_pci_iov_res_alignment;
+>
+>The point is not to have prefix "__" for callbacks in "struct machdep_calls".
+>ppc_md.__pci_sriov_resource_size is the first one that has prefix "__"
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/intel_mid_pci.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+Yep, will change the name.
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 337d165c64f1..09fece368592 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -227,6 +227,12 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	return 0;
- }
- 
-+static void intel_mid_pci_irq_disable(struct pci_dev *dev)
-+{
-+	if (dev->irq > 0)
-+		mp_unmap_irq(dev->irq);
-+}
-+
- struct pci_ops intel_mid_pci_ops = {
- 	.read = pci_read,
- 	.write = pci_write,
-@@ -243,6 +249,7 @@ int __init intel_mid_pci_init(void)
- 	pr_info("Intel MID platform detected, using MID PCI ops\n");
- 	pci_mmcfg_late_init();
- 	pcibios_enable_irq = intel_mid_pci_irq_enable;
-+	pcibios_disable_irq = intel_mid_pci_irq_disable;
- 	pci_root_ops = intel_mid_pci_ops;
- 	pci_soc_mode = 1;
- 	/* Continue with standard init */
+>
+>>>
+>>>>+{
+>>>>+	struct pci_dn *pdn = pci_get_pdn(pdev);
+>>>>+	resource_size_t iov_align;
+>>>>+
+>>>>+	iov_align = resource_size(&pdev->resource[resno]);
+>>>>+	if (iov_align)
+>>>>+		return iov_align;
+>>>>+
+>>>>+	if (pdn->vfs)
+>>>>+		return pdn->vfs * align;
+>>>>+
+>>>>+	return align;
+>>>>+}
+>>>> #endif /* CONFIG_PCI_IOV */
+>>>>
+>>>> /* Prevent enabling devices for which we couldn't properly
+>>>>@@ -1777,6 +1793,7 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>>> 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+>>>> #ifdef CONFIG_PCI_IOV
+>>>> 	ppc_md.__pci_sriov_resource_size = __pnv_pci_sriov_resource_size;
+>>>>+	ppc_md.__pci_sriov_resource_alignment = __pnv_pci_sriov_resource_alignment;
+>>>> #endif /* CONFIG_PCI_IOV */
+>>>> 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+>>>>
+>
+>Thanks,
+>Gavin
+
 -- 
-1.7.10.4
+Richard Yang
+Help you, Help me
 
