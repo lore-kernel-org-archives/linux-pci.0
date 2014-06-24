@@ -1,199 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:56443 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752801AbaFJSwp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jun 2014 14:52:45 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH v2 3/8] PCI: designware: update pcie core driver to work with dw hw version 3.65
-Date: Tue, 10 Jun 2014 14:51:22 -0400
-Message-ID: <1402426287-31157-4-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
-References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
+Received: from mx1.redhat.com ([209.132.183.28]:30432 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753678AbaFXO4f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Jun 2014 10:56:35 -0400
+Message-ID: <53A9918D.9020607@redhat.com>
+Date: Tue, 24 Jun 2014 10:56:13 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Yishai Hadas <yishaih@dev.mellanox.co.il>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"linux-rdma (linux-rdma@vger.kernel.org)"
+	<linux-rdma@vger.kernel.org>,
+	"yishaih@mellanox.com" <yishaih@mellanox.com>, liranl@mellanox.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: PCI/AER: AER in SRIOV environment
+References: <53A839C6.5050102@dev.mellanox.co.il> <CAErSpo7xVvqYea8v624T8EyVf6skQccraAe_WYpzcf2tkWFLhg@mail.gmail.com> <53A88A32.4010406@redhat.com> <53A8ADD5.7030207@dev.mellanox.co.il>
+In-Reply-To: <53A8ADD5.7030207@dev.mellanox.co.il>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v3.65 version of the dw hw has MSI controller implemented in the
-application space. Add a version variable in the port struct to
-identify v3.65 hardware for different code treatment. This variable
-will have DW_V3_65 bit set when running on this hw version. The host
-init code is expected to set this version based on compatibility
-string dw,snps-pcie-v3.65.
+On 06/23/2014 06:44 PM, Yishai Hadas wrote:
+> On 6/23/2014 11:12 PM, Don Dutile wrote:
+>> On 06/23/2014 03:09 PM, Bjorn Helgaas wrote:
+>>> [+cc linux-pci, Don]
+>>>
+>> Adding Alex Williamson in case he can add more to this conversation...
+>>
+>>> On Mon, Jun 23, 2014 at 8:29 AM, Yishai Hadas
+>>> <yishaih@dev.mellanox.co.il> wrote:
+>>>> Hi Vijay,
+>>>> Trying to add AER support for Mellanox NIC in SRIOV environment, while
+>>>> evaluating/testing encountered a problem which led me to your
+>>>> patch accepted as part of kernel 3.8, commit ID
+>>>> "918b4053184c0ca22236e70e299c5343eea35304".
+>>>>
+>>>> Have some concerns/questions on:
+>>>> When working in SRIOV environment VFs may be un-attached, having no driver
+>>>> assigned to, or may be attached to Virtual machine to work in some
+>>>> pass-through mode.
+>>>> Once working in KVM setup there is pci-stub driver which is loaded in the
+>>>> HYP/PF for a given attached VF.
+>> huh? 'loaded in the hyp/pf? .... um, loaded in the host, and a VF is
+>> detached from its host driver -- a VF can be used in the host w/o any virtualization,
+>> i.e., that's how guest VM is driving the VF: as if it was used by a guest (host) OS directly --
+>> and attached to pci-stub driver, when assigned to a KVM guest in pre-VFIO days/ways.
+>> If VFIO used, then VF is attached to vfio-pci driver.
+>>
+>>>>
+>>>> I'm using the aer-inject kernel module and its corresponding aer-inject tool
+>>>> to simulate an error in the HYP.
+>>>> In both cases your commit will cause the AER recovery to fail as there is no
+>>>> driver assigned to PF's VFs that supports AER, comparing the code before
+>>>> your change.
+>>>>
+>> Without VFIO, I believe that's correct. There was no AER-to-VF support pre-VFIO days.
+>> I believe with the recent VFIO support,
+>> and modifications to KVM, an AER that is associated with an assigned VF will
+>> force the crash/halt of the KVM guest -- can't depend on a guest VF driver clearing
+>> the AER in the hyp/host -- guest isn't privileged enough to clear the error.
+>> So, crashing the guest is the simple option at the moment, to contain the error.
+>> Alex: do I have that (vfio aer default) correct, or is that still site-under-construction?
+>      How about the case that the VF is not attached to a KVM guest and has no driver loaded on host ? in such a case from code review and some testing the recovery will
+>      fail as there is no AER aware driver here. What is the expected solution here ?
+Well, how can a VF be attributed to an AER if it's not assigned to a guest, and it doesn't have a driver loaded for it in the host? i.e., if it's not configured, it's sitting idle, so how can it generate an AER?
+if you are injecting an AER attributed to a device that isn't configured, then you are contriving a non-valid system condition/state, and I'm not surprised that the AER handler fails.  Maybe it needs an update/patch for the aer-inject case.
 
-Some of the MSI specific functions from current DW driver are re-used
-on v3.65 hw. However on v3.65, MSI controller registers are in the
-application register space and PCIE_MSI_INTR0_ENABLE is not applicable.
-Modify assign_irq() to check for version and not execute the code
-for PCIE_MSI_INTR0_ENABLE configuration on v3.65 hw. Additionally
-MSI IRQ register in application space is written by EP to raise an MSI
-IRQ. So add a get_msi_data() function in pcie_host_ops to retrieve the
-register address in dw_msi_setup_irq(). v3.65 dw core driver implements
-this function.
+>      Any special qemu /stuff is needed to activate the VFIO support ? would like to give it a try for a case that VF is attached.
+I see Alex answered this question.  VFIO rocks! ... Alex did a great job with it.
+Definitely cleaned up and more cleanly architected a solution that will lend itself to incremental for
+complete reconstruction/duplication for other arches, busses, iommus, etc. to follow.
 
-Also make some of the functions available in dw core driver global
-and make their prototypes available in the header file for re-use on
-v3.65.
+>>
+>>>> How such cases should work ?  my expectation was that the PF will get the
+>>>> error detected message then will recognize whether
+>>>> issue is its own or one of its VFs
+>> The AER packet will have the tag of the VF in if it was the source of the error;
+>> so the PF will never see it; although one could argue it should be 'promoted'
+>> to the PF if PF/VF needs to clear some state it has wrt the VF (the SRIOV spec is
+>> lacking of info in this space); _but_, VFIO resets the VF (sets FLR bit) when the
+>> device is deassigned and before re-attachment to the host, so that should clear out
+>> any state btwn PF & VF ('should' ... famous last words...).
+>      In my test I have used the aer-inject tool simulating an error to the BUS that both PF/VF are residing on, putting the function number to be the PF one, looks like both should be called by the aer driver as part
+>      of the pci_walk_bus(). As mentioned I got a call only on the PF and recovery failed as of the VF doesn't include an AER aware driver, once removed the VF recovery succeeded.
+>      I believe that packet should include some info about the source of the error isn't it ?
+yup.
+>      In addition, looking at IXGBE upstream source code at ixgbe_error_detected()  looks like there is some code running on the PF that checks whether the source was a VF.
+Ping the INTEL gang listed in MAINTAINDERS for ixgbe to see what was tested, intention of this code wrt AER.
+Alex Duyck & Greg Rose are the two I've worked with the most on design issues in the driver, but others @INTEL may be more active in it now.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>
+>      By the way: when tried to simulate a VF error using its FN got below error:
+>      "Error: Failed to write, Inappropriate ioctl for device", any idea about that error ?
+details? how did you simulate the error? -- send cmdline used, or code snippet to inject error, etc.
+that (quickly) looks like a sysfs error reply when an operation is not supported to a file/device under it.
 
-CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Mohit Kumar <mohit.kumar@st.com>
-CC: Jingoo Han <jg1.han@samsung.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Pratyush Anand <pratyush.anand@st.com>
-CC: Richard Zhu <r65037@freescale.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Marek Vasut <marex@denx.de>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Pawel Moll <pawel.moll@arm.com>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-CC: Kumar Gala <galak@codeaurora.org>
-CC: Randy Dunlap <rdunlap@infradead.org>
-CC: Grant Likely <grant.likely@linaro.org> 
+>>
+>>>
+>>> I'm really not an AER expert, so help me understand this question of
+>>> recognizing whether an error is associated with a PF or a VF.
+>>>
+>>> In terms of hardware, it looks like the device that detects an error
+>>> logs some information and sends an Error Message upstream.  The Root
+>>> Complex receives the message, captures the source ID from the Error
+>>> Message, and may generate an interrupt.  I expect this source ID can
+>>> be either a PF or a VF; there's no requirement that a VF error must be
+>>> reported as though it's from the PF, is there?
+>>>
+>>>> and work accordingly, in current code
+>>>> looks like recovery failed as part of "voting" once there is no AER handler
+>>>> assigned to the VFs.
+>>>
+>>> The commit you mentioned has to do with PCI_ERS_RESULT_NO_AER_DRIVER.
+>>> We use pci_walk_bus() to figure out whether all the devices in a
+>>> subtree have a driver.  What subtree is involved here?  I would expect
+>>> the VFs to be siblings of the PF, not children of it, so I'm not sure
+>>> where things went wrong.
+>> Well, VFs could be on virtual busses (ARI turned on), so not necessarily a
+>> sibling to PF ... and then we have the problem in PCI code of not being able
+>> to traverse these virtual busses (in some cases; not sure if pci_walk_bus(),
+>> which is going down the tree vs up the tree, has any problems here w/VFs on
+>> virtual busses).
+>>
+>>>
+>>> Can you collect "lspci -vvv" output and maybe add some debug so we can
+>>> see exactly where the error is detected and what devices we're looking
+>>> at to conclude that one of them doesn't have a driver?
+>      lspci -vvv for both PF & VF is attached, we can see that VF (21:00.1) has no driver loaded comparing the PF (Kernel driver in use: mlx4_core).
+um, well, the VF doesn't contain an AER cap strucuture, so expecting AER support for a pci device (VF or PF) w/o an AER cap is 'wishful'.... so, the VF can't generate an AER b/c it doesn't have the appropriate cap regs for the AER handler to use to report the error & recover from it.
 
----
- drivers/pci/host/pcie-designware.c |   27 +++++++++++++++++----------
- drivers/pci/host/pcie-designware.h |   16 ++++++++++++++++
- 2 files changed, 33 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index e4bd19a..f985811 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -277,11 +277,15 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
- 		}
- 		set_bit(pos0 + i, pp->msi_irq_in_use);
- 		/*Enable corresponding interrupt in MSI interrupt controller */
--		res = ((pos0 + i) / 32) * 12;
--		bit = (pos0 + i) % 32;
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
--		val |= 1 << bit;
--		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
-+		if (!(pp->version & DW_V3_65)) {
-+			res = ((pos0 + i) / 32) * 12;
-+			bit = (pos0 + i) % 32;
-+			dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
-+					    4, &val);
-+			val |= 1 << bit;
-+			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
-+					    4, val);
-+		}
- 	}
- 
- 	*pos = pos0;
-@@ -349,7 +353,10 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
- 	 */
- 	desc->msi_attrib.multiple = msgvec;
- 
--	msg.address_lo = virt_to_phys((void *)pp->msi_data);
-+	if (pp->ops->get_msi_data)
-+		msg.address_lo = pp->ops->get_msi_data(pp);
-+	else
-+		msg.address_lo = virt_to_phys((void *)pp->msi_data);
- 	msg.address_hi = 0x0;
- 	msg.data = pos;
- 	write_msi_msg(irq, &msg);
-@@ -768,7 +775,7 @@ static struct pci_ops dw_pcie_ops = {
- 	.write = dw_pcie_wr_conf,
- };
- 
--static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-+int dw_pcie_setup(int nr, struct pci_sys_data *sys)
- {
- 	struct pcie_port *pp;
- 
-@@ -791,7 +798,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
- 
--static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-+struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- {
- 	struct pci_bus *bus;
- 	struct pcie_port *pp = sys_to_pcie(sys);
-@@ -808,7 +815,7 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	return bus;
- }
- 
--static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-+int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- {
- 	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
- 	int irq;
-@@ -820,7 +827,7 @@ static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- 	return irq;
- }
- 
--static void dw_pcie_add_bus(struct pci_bus *bus)
-+void dw_pcie_add_bus(struct pci_bus *bus)
- {
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		struct pcie_port *pp = sys_to_pcie(bus->sysdata);
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 2d6dd66..3a6a6eb 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -39,6 +39,12 @@ struct pcie_port {
- 	void __iomem		*va_cfg0_base;
- 	u64			cfg1_base;
- 	void __iomem		*va_cfg1_base;
-+	/*
-+	 * v3.65 DW hw implements application register space for
-+	 * MSI and has no ATU view port
-+	 */
-+#define DW_V3_65		BIT(0)
-+	u32			version;
- 	u64			io_base;
- 	u64			mem_base;
- 	spinlock_t		conf_lock;
-@@ -68,6 +74,7 @@ struct pcie_host_ops {
- 			unsigned int devfn, int where, int size, u32 val);
- 	int (*link_up)(struct pcie_port *pp);
- 	void (*host_init)(struct pcie_port *pp);
-+	u32 (*get_msi_data)(struct pcie_port *pp);
- };
- 
- int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
-@@ -77,5 +84,14 @@ void dw_pcie_msi_init(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
-+int dw_pcie_setup(int nr, struct pci_sys_data *sys);
-+struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys);
-+void dw_pcie_add_bus(struct pci_bus *bus);
-+int dw_pcie_parse_resource(struct pcie_port *pp);
- 
-+/* internal to DW common core driver */
-+int dw_pcie_common_host_init(struct pcie_port *pp, struct hw_pci *hw);
-+int dw_pcie_msi_host_init(struct pcie_port *pp, struct device_node *np,
-+			const struct irq_domain_ops *irq_ops);
-+int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin);
- #endif /* _PCIE_DESIGNWARE_H */
--- 
-1.7.9.5
+>>>
+>>> Bjorn
+>>>
+>>
+>
 
