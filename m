@@ -1,116 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0185.outbound.protection.outlook.com ([207.46.163.185]:32098
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752186AbaFXPgN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Jun 2014 11:36:13 -0400
-Date: Tue, 24 Jun 2014 23:36:01 +0800
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Richard Zhu <r65037@freescale.com>, <kernel@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: The imx6q suspend/resume is broken on 3.16-rc due to PCIe
-Message-ID: <20140624153559.GA5741@dragon>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:43905 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932189AbaFXQ72 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Jun 2014 12:59:28 -0400
+Message-ID: <53A9AE27.2050504@ti.com>
+Date: Tue, 24 Jun 2014 12:58:15 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Pratyush Anand <pratyush.anand@st.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Marek Vasut <marex@denx.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ABRAHAM KISHON VIJAY <kishon@ti.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
+References: <20140623053249.GD2666@pratyush-vbox> <53A85ACE.9070506@ti.com> <53A9A290.7020407@ti.com>
+In-Reply-To: <53A9A290.7020407@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas,
+On 06/24/2014 12:08 PM, Murali Karicheri wrote:
+> Pratyush,
+>
+> On 06/23/2014 12:50 PM, Santosh Shilimkar wrote:
+>>
+>>
+>>
+>> -------- Original Message --------
+>> Subject: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
+>> On Sat, Jun 21, 2014 at 03:05:30AM +0800, Arnd Bergmann wrote:
+>>> On Friday 20 June 2014 13:11:37 Santosh Shilimkar wrote:
+>>
+>>>>>
+>>>> Arnd suggestion was to have the version 3.65 code in generic place
+>>>> since
+>>>> its IP specific and just in case some other vendor using the same
+>>>> version
+>>>> can leverage the code.
+>>
+>> Sorry, I do not follow PCIe mailing list these days, doing something else
+>> now. So coming to this topic a bit delayed.
+>>
+> My Apologies for the email format as I mysteriously lost this email and
+> had to resort to a forwarded email to respond to this.
+>
+> Let us have the discussion on this thread as I lost the original emails.
+>>>>
+>>>> Concern here seems toe really those name of the files. I can't think of
+>>>> any other appropriate name.
+>>>
+>>> We should definitely keep the version in the DT "compatible" strings
+>>> wherever we know it. Regarding a better file name, I have no idea.
+>>
+>> In my opinion, we do not need any of dw-v3_65 files, as code in these
+>> files will not be usable by other vendors.
+>>
+>> Anything which is implemented in application space, will not be same
+>> across all IP users. For example, MSI0_IRQ_ENABLE_SET has been defined
+>> at offset 0x108 in keystone PCIe application space.Other vendor may
+>> not have this register at the same offset. Moreover, other vendors are
+>> not even obliged to implement MSI Enable signals in same way, so
+>> internal bit definition of the register may change.
+>>
+>> Therefore code is not reusable if all register offset and bit
+>> definitions are not same across vendors. So, in case of DW driver none
+>> of the code which are accessed using va_app_base should go to common
+>> area.
+>>
+>
+> I think based on the response far on this issue, it is best to keep
+> the Application specific code as part of Keystone driver and in
+> future if there is any driver that has similar application register
+> implemented. we can refactor the code and re-use.
+>
+> My V3 will revert back to implementation similar to RFC. Also since this
+> is individual h/w specific, there is no no need for a compatibility as
+> well. Will use keystone specific compatibility string for this.
+>
+> Arnd, hope this is fine. Please respond if you still think a
+> compatibility string is needed.
 
-I found that imx6q suspend/resume is broken on 3.16-rc, and it works
-just fine if PCIe support is built out.  However the issue was not
-exposed on 3.15, so I suspect the PCIe driver change merged in 3.16
-is part of the cause.
+On a second thought, I think it is better to keep the compatibility
+string to differentiate the h/w and do any old h/w specific initialization.
 
-$ echo mem > /sys/power/state
-PM: Syncing filesystems ... done.
-Freezing user space processes ... (elapsed 0.002 seconds) done.
-Freezing remaining freezable tasks ... (elapsed 0.002 seconds) done.
-sd 0:0:0:0: [sda] Synchronizing SCSI cache
-sd 0:0:0:0: [sda] Stopping disk
-PM: suspend of devices complete after 85.695 msecs
-PM: suspend devices took 0.100 seconds
-PM: late suspend of devices complete after 6.786 msecs
-PM: noirq suspend of devices complete after 6.228 msecs
-Disabling non-boot CPUs ...
-CPU1: shutdown
-CPU2: shutdown
-CPU3: shutdown
-Enabling non-boot CPUs ...
-CPU1: Booted secondary processor
-CPU1 is up
-CPU2: Booted secondary processor
-CPU2 is up
-CPU3: Booted secondary processor
-CPU3 is up
+Thanks and regards,
 
-The issue is actually with resume procedure.  I noticed that Richard
-added the following change in FSL kernel tree, which seems to fix the
-issue.
+Murali
+>
+> Murali
+>
+>> Pratyush
+>>
+>>>
+>>> Arnd
+>>
+>>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
 
-@@ -229,6 +232,22 @@ static int imx6_suspend_finish(unsigned long val)
-
- static int imx6_pm_enter(suspend_state_t state)
- {
-+       struct regmap *gpr;
-+
-+       /*
-+        * L2 can exit by 'reset' or Inband beacon (from remote EP)
-+        * toggling phy_powerdown has same effect as 'inband beacon'
-+        * So, toggle bit18 of GPR1, to fix errata
-+        * "PCIe PCIe does not support L2 Power Down"
-+        */
-+       gpr = syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
-+       if (IS_ERR(gpr)) {
-+               pr_err("failed to find fsl,imx6q-iomux-gpr regmap\n");
-+               return PTR_ERR(gpr);
-+       }
-+       regmap_update_bits(gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_TEST_PD,
-+                       IMX6Q_GPR1_PCIE_TEST_PD);
-+
-        switch (state) {
-        case PM_SUSPEND_STANDBY:
-                imx6_set_lpm(STOP_POWER_ON);
-@@ -258,6 +277,15 @@ static int imx6_pm_enter(suspend_state_t state)
-                return -EINVAL;
-        }
-
-+       /*
-+        * L2 can exit by 'reset' or Inband beacon (from remote EP)
-+        * toggling phy_powerdown has same effect as 'inband beacon'
-+        * So, toggle bit18 of GPR1, to fix errata
-+        * "PCIe PCIe does not support L2 Power Down"
-+        */
-+       regmap_update_bits(gpr, IOMUXC_GPR1, IMX6Q_GPR1_PCIE_TEST_PD,
-+                       !IMX6Q_GPR1_PCIE_TEST_PD);
-+
-        return 0;
- }
- 
-And I copied the details of the errata as below.
-
-ERR005723 PCIe: PCIe does not support L2 power down
-
-Description:
-When PCIe works as Root Complex, it can exit L2 mode only through reset.
-Since PCIe does not have a dedicated reset control bit, it cannot exit
-L2 mode.
-
-Projected Impact:
-PCIe does not support L2 power down.
-
-Workarounds:
-The PCIe can be put into PDDQ mode to save PCIe PHY power and wake up
-only by the OOB (Out of Band) wakeup signal (since wakeup by a beacon
-from link partner is not supported) driven from the link partner (End
-Point). This signal could be used as a GPIO interrupt to exit this mode.
-The limitation of this workaround is that the link partner cannot be put
-into L2 mode.
-
-As I have no knowledge of how PCIe works, I provided all the info I
-found here to kick the discussion.  Hopefully, we can find a proper fix
-to get suspend/resume back to work.
-
-Shawn
