@@ -1,228 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:32973 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933856AbaFJB5O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:57:14 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Jun 2014 07:27:12 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id C636BE0045
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:28:09 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1w29k53870738
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:28:02 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1vA8k021384
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:10 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: benh@au1.ibm.com
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [RFC PATCH V3 11/17] ppc/pnv: Expand VF resources according to the number of total_pe
-Date: Tue, 10 Jun 2014 09:56:33 +0800
-Message-Id: <1402365399-5121-12-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from hygieia.santi-shop.eu ([78.46.175.2]:45874 "EHLO
+	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211AbaFXWzF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 18:55:05 -0400
+Date: Wed, 25 Jun 2014 00:55:01 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@linux.ie>,
+	Matthew Garrett <matthew.garrett@nebula.com>
+Subject: [PATCH 1/2 v2] x86, ia64: Move EFI_FB vga_default_device()
+ initialization to pci_vga_fixup()
+Message-ID: <20140625005501.7ff7e982@neptune.home>
+In-Reply-To: <20140602201926.4d476818@neptune.home>
+References: <20140514224339.7f8be3a9@neptune.home>
+	<20140527234255.GJ11907@google.com>
+	<20140602201650.35f0e936@neptune.home>
+	<20140602201926.4d476818@neptune.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On PHB3, VF resources will be covered by M64 BAR to have better PE isolation.
-Mostly the total_pe number is different from the total_VFs, which will lead to
-a conflict between MMIO space and the PE number.
+With commit b4aa0163056b ("efifb: Implement vga_default_device() (v2)")
+Matthew Garrett introduced a efifb vga_default_device() so that EFI
+systems that do not load shadow VBIOS or setup VGA get proper value for
+boot_vga PCI sysfs attribute on the corresponding PCI device.
 
-This patch expands the VF resource size to reserve total_pe number of VFs'
-resource, which prevents the conflict.
+Xorg is refusing to detect devices when boot_vga=0 which is the case on
+some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
+the dri device but then bails out with "no devices detected".
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Note: When vga_default_device() is set boot_vga PCI sysfs attribute
+reflects its state. When unset this attribute is 1 whenever
+IORESOURCE_ROM_SHADOW flag is set.
+
+With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
+while having native drivers for the GPU also makes selecting
+sysfb/efifb optional.
+
+Remove the efifb implementation of vga_default_device() and initialize
+vgaarb's vga_default_device() with the PCI GPU that matches boot
+screen_info in pci_fixup_video().
+
+Tested-by: Anibal Francisco Martinez Cortina <linuxkid.zeuz@gmail.com>
+Cc: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
 ---
- arch/powerpc/include/asm/machdep.h        |    6 +++
- arch/powerpc/include/asm/pci-bridge.h     |    3 ++
- arch/powerpc/kernel/pci-common.c          |   15 ++++++
- arch/powerpc/platforms/powernv/pci-ioda.c |   83 +++++++++++++++++++++++++++++
- 4 files changed, 107 insertions(+)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index ad3025d..2f2e770 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -234,9 +234,15 @@ struct machdep_calls {
+Changes since v1:
+  Added Tested-by, Cc
+
+ arch/ia64/pci/fixup.c       | 21 +++++++++++++++++++++
+ arch/x86/include/asm/vga.h  |  6 ------
+ arch/x86/pci/fixup.c        | 21 +++++++++++++++++++++
+ drivers/video/fbdev/efifb.c | 38 --------------------------------------
+ 4 files changed, 42 insertions(+), 44 deletions(-)
+
+diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
+index eee069a..9ed5bef 100644
+--- a/arch/ia64/pci/fixup.c
++++ b/arch/ia64/pci/fixup.c
+@@ -37,6 +37,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
+ 		return;
+ 	/* Maybe, this machine supports legacy memory map. */
  
- 	/* Called after scan and before resource survey */
- 	void (*pcibios_fixup_phb)(struct pci_controller *hose);
-+#ifdef CONFIG_PCI_IOV
-+	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
-+#endif /* CONFIG_PCI_IOV */
++	if (!vga_default_device()) {
++		resource_size_t start, end;
++		int i;
++
++		/* Does firmware framebuffer belong to us? */
++		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
++			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
++				continue;
++
++			start = pci_resource_start(pdev, i);
++			end  = pci_resource_end(pdev, i);
++
++			if (!start || !end)
++				continue;
++
++			if (screen_info.lfb_base >= start &&
++				(screen_info.lfb_base + screen_info.lfb_size) < end)
++				vga_set_default_device(pdev);
++		}
++	}
++
+ 	/* Is VGA routed to us? */
+ 	bus = pdev->bus;
+ 	while (bus) {
+diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
+index 44282fb..c4b9dc2 100644
+--- a/arch/x86/include/asm/vga.h
++++ b/arch/x86/include/asm/vga.h
+@@ -17,10 +17,4 @@
+ #define vga_readb(x) (*(x))
+ #define vga_writeb(x, y) (*(y) = (x))
  
- 	/* Called during PCI resource reassignment */
- 	resource_size_t (*pcibios_window_alignment)(struct pci_bus *, unsigned long type);
-+#ifdef CONFIG_PCI_IOV
-+	resource_size_t (*__pci_sriov_resource_size)(struct pci_dev *, int resno);
-+#endif /* CONFIG_PCI_IOV */
+-#ifdef CONFIG_FB_EFI
+-#define __ARCH_HAS_VGA_DEFAULT_DEVICE
+-extern struct pci_dev *vga_default_device(void);
+-extern void vga_set_default_device(struct pci_dev *pdev);
+-#endif
+-
+ #endif /* _ASM_X86_VGA_H */
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 94ae9ae..7246cf2 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -325,6 +325,27 @@ static void pci_fixup_video(struct pci_dev *pdev)
+ 	struct pci_bus *bus;
+ 	u16 config;
  
- 	/* Called to shutdown machine specific hardware not already controlled
- 	 * by other drivers.
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 4ca90a3..8c849d8 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -168,6 +168,9 @@ struct pci_dn {
- #define IODA_INVALID_PE		(-1)
- #ifdef CONFIG_PPC_POWERNV
- 	int	pe_number;
-+#ifdef CONFIG_PCI_IOV
-+	u16     vfs;
-+#endif /* CONFIG_PCI_IOV */
- #endif
++	if (!vga_default_device()) {
++		resource_size_t start, end;
++		int i;
++
++		/* Does firmware framebuffer belong to us? */
++		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
++			if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
++				continue;
++
++			start = pci_resource_start(pdev, i);
++			end  = pci_resource_end(pdev, i);
++
++			if (!start || !end)
++				continue;
++
++			if (screen_info.lfb_base >= start &&
++				(screen_info.lfb_base + screen_info.lfb_size) < end)
++				vga_set_default_device(pdev);
++		}
++	}
++
+ 	/* Is VGA routed to us? */
+ 	bus = pdev->bus;
+ 	while (bus) {
+diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+index ae9618f..a033180 100644
+--- a/drivers/video/fbdev/efifb.c
++++ b/drivers/video/fbdev/efifb.c
+@@ -19,8 +19,6 @@
+ 
+ static bool request_mem_succeeded = false;
+ 
+-static struct pci_dev *default_vga;
+-
+ static struct fb_var_screeninfo efifb_defined = {
+ 	.activate		= FB_ACTIVATE_NOW,
+ 	.height			= -1,
+@@ -84,18 +82,6 @@ static struct fb_ops efifb_ops = {
+ 	.fb_imageblit	= cfb_imageblit,
  };
  
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index c449a26..c4e2e92 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -120,6 +120,16 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 	return 1;
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+resource_size_t pcibios_sriov_resource_size(struct pci_dev *pdev, int resno)
-+{
-+	if (ppc_md.__pci_sriov_resource_size)
-+		return ppc_md.__pci_sriov_resource_size(pdev, resno);
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- static resource_size_t pcibios_io_size(const struct pci_controller *hose)
+-struct pci_dev *vga_default_device(void)
+-{
+-	return default_vga;
+-}
+-
+-EXPORT_SYMBOL_GPL(vga_default_device);
+-
+-void vga_set_default_device(struct pci_dev *pdev)
+-{
+-	default_vga = pdev;
+-}
+-
+ static int efifb_setup(char *options)
  {
- #ifdef CONFIG_PPC64
-@@ -1675,6 +1685,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 	if (ppc_md.pcibios_fixup_phb)
- 		ppc_md.pcibios_fixup_phb(hose);
+ 	char *this_opt;
+@@ -126,30 +112,6 @@ static int efifb_setup(char *options)
+ 		}
+ 	}
  
-+#ifdef CONFIG_PCI_IOV
-+	if (ppc_md.pcibios_fixup_sriov)
-+		ppc_md.pcibios_fixup_sriov(bus);
-+#endif /* CONFIG_PCI_IOV */
-+
- 	/* Configure PCI Express settings */
- 	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
- 		struct pci_bus *child;
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 87cb3089..7dfad6a 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1298,6 +1298,67 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
- static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
- #endif /* CONFIG_PCI_MSI */
- 
-+#ifdef CONFIG_PCI_IOV
-+static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
-+{
-+	struct pci_controller *hose;
-+	struct pnv_phb *phb;
-+	struct resource *res;
-+	int i;
-+	resource_size_t size;
-+	struct pci_dn *pdn;
-+
-+	if (!pdev->is_physfn || pdev->is_added)
-+		return;
-+
-+	hose = pci_bus_to_host(pdev->bus);
-+	if (!hose) {
-+		dev_err(&pdev->dev, "%s: NULL pci_controller\n", __func__);
-+		return;
-+	}
-+
-+	phb = hose->private_data;
-+	if (!phb) {
-+		dev_err(&pdev->dev, "%s: NULL PHB\n", __func__);
-+		return;
-+	}
-+
-+	pdn = pci_get_pdn(pdev);
-+	pdn->vfs = 0;
-+
-+	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
-+		res = &pdev->resource[i];
-+		if (!res->flags || res->parent)
-+			continue;
-+
-+		if (!is_mem_pref_64_type(res->flags))
-+			continue;
-+
-+		dev_info(&pdev->dev, "PowerNV: Fixing VF BAR[%d] %pR to\n",
-+				i, res);
-+		size = pci_sriov_resource_size(pdev, i);
-+		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		dev_info(&pdev->dev, "                       %pR\n", res);
-+	}
-+	pdn->vfs = phb->ioda.total_pe;
-+}
-+
-+static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
-+{
-+	struct pci_dev *pdev;
-+	struct pci_bus *b;
-+
-+	list_for_each_entry(pdev, &bus->devices, bus_list) {
-+		b = pdev->subordinate;
-+
-+		if (b)
-+			pnv_pci_ioda_fixup_sriov(b);
-+
-+		pnv_pci_ioda_fixup_iov_resources(pdev);
-+	}
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- /*
-  * This function is supposed to be called on basis of PE from top
-  * to bottom style. So the the I/O or MMIO segment assigned to
-@@ -1498,6 +1559,22 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
- 	return phb->ioda.io_segsize;
+-	for_each_pci_dev(dev) {
+-		int i;
+-
+-		if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
+-			continue;
+-
+-		for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+-			resource_size_t start, end;
+-
+-			if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
+-				continue;
+-
+-			start = pci_resource_start(dev, i);
+-			end  = pci_resource_end(dev, i);
+-
+-			if (!start || !end)
+-				continue;
+-
+-			if (screen_info.lfb_base >= start &&
+-			    (screen_info.lfb_base + screen_info.lfb_size) < end)
+-				default_vga = dev;
+-		}
+-	}
+-
+ 	return 0;
  }
  
-+#ifdef CONFIG_PCI_IOV
-+static resource_size_t __pnv_pci_sriov_resource_size(struct pci_dev *pdev, int resno)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	u64 size = 0;
-+
-+	if (!pdn->vfs)
-+		return size;
-+
-+	size = resource_size(pdev->resource + resno);
-+	do_div(size, pdn->vfs);
-+
-+	return size;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- /* Prevent enabling devices for which we couldn't properly
-  * assign a PE
-  */
-@@ -1692,9 +1769,15 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	 * for the P2P bridge bars so that each PCI bus (excluding
- 	 * the child P2P bridges) can form individual PE.
- 	 */
-+#ifdef CONFIG_PCI_IOV
-+	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
-+#endif /* CONFIG_PCI_IOV */
- 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
- 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
- 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
-+#ifdef CONFIG_PCI_IOV
-+	ppc_md.__pci_sriov_resource_size = __pnv_pci_sriov_resource_size;
-+#endif /* CONFIG_PCI_IOV */
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 
- 	/* Reset IODA tables to a clean state */
 -- 
-1.7.9.5
+1.8.5.5
 
