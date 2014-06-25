@@ -1,84 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:47186 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362AbaFSJmO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 05:42:14 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 19 Jun 2014 15:12:10 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id CC353E0045
-	for <linux-pci@vger.kernel.org>; Thu, 19 Jun 2014 15:13:13 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5J9h9wD4260136
-	for <linux-pci@vger.kernel.org>; Thu, 19 Jun 2014 15:13:09 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5J9g4BJ020439
-	for <linux-pci@vger.kernel.org>; Thu, 19 Jun 2014 15:12:05 +0530
-Date: Thu, 19 Jun 2014 17:42:02 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Grant Likely <grant.likely@secretlab.ca>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	gwshan@linux.vnet.ibm.com, Mike Qiu <qiudayu@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, yan@linux.vnet.ibm.com,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [RFC PATCH V3 14/17] ppc/pci: create/release dev-tree node for
- VFs
-Message-ID: <20140619094202.GA10609@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-15-git-send-email-weiyang@linux.vnet.ibm.com>
- <CACxGe6v6Rdd=GQ8qR5LQ64NThidn7kn3WkKFkOXOsNuWq75D-A@mail.gmail.com>
- <20140619024651.GC6478@richard>
- <CACxGe6sgOh3MP-03Ge9NK7DWf+dgC98huA9Sv4DcThXNfByf2w@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>, <paul@pwsan.com>, <tony@atomide.com>,
+	<linux@arm.linux.org.uk>, <rnayak@ti.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>
+Subject: [PATCH 1/2] arm: dra7xx: Add hwmod data for pcie1 phy and pcie2 phy
+Date: Wed, 25 Jun 2014 23:32:45 +0530
+Message-ID: <1403719366-9656-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1403719366-9656-1-git-send-email-kishon@ti.com>
+References: <1403719366-9656-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACxGe6sgOh3MP-03Ge9NK7DWf+dgC98huA9Sv4DcThXNfByf2w@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 19, 2014 at 09:30:47AM +0100, Grant Likely wrote:
->On Thu, Jun 19, 2014 at 3:46 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->> On Wed, Jun 18, 2014 at 07:26:27PM +0100, Grant Likely wrote:
->>>On Tue, Jun 10, 2014 at 2:56 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->>>> Currently, powernv platform is not aware of VFs. This means no dev-node
->>>> represents a VF. Also, VF PCI device is created when PF driver want to enable
->>>> it. This leads to the pdn->pdev and pdn->pe_number an invalid value.
->>>>
->>>> This patch create/release dev-node for VF and fixs this when a VF's pci_dev
->>>> is created.
->>>>
->>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>
->>>I don't think this is the right way to handle this. Unless it is a
->>>fixup to a buggy devicetree provided by firmware, I don't want to see
->>>any code modifying the devicetree to describe stuff that is able to be
->>>directly enumerated. Really the pci code should handle the lack of a
->>>device_node gracefully. If it cannot then it should be fixed.
->>
->> Grant,
->>
->> Glad to see your comment.
->>
->> I will fix this in the firmware.
->
->That's not really what I meant. The kernel should be able to deal with
->virtual functions even if firmware doesn't know how, and the kernel
->should not require modifying the device tree to support them.
->
->I'm saying fix the kernel so that a device node is not necessary for
->virtual functions.
+Added hwmod data for pcie1 and pcie2 phy present in DRA7xx SOC.
+Also added the missing CLKCTRL OFFSET macro and CONTEXT OFFSET macro
+for pcie1 phy and pcie2 phy.
 
-oh, sorry for my poor understanding. Let me do some investigation to see
-whether it is fine to get rid of device node for vfs.
+Cc: Tony Lindgren <tony@atomide.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Paul Walmsley <paul@pwsan.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Please find the bootlog with these hwmod patches
+http://paste.ubuntu.com/7701601/
+ arch/arm/mach-omap2/cm2_7xx.h             |    4 ++
+ arch/arm/mach-omap2/omap_hwmod_7xx_data.c |   57 +++++++++++++++++++++++++++++
+ arch/arm/mach-omap2/prm7xx.h              |    4 ++
+ 3 files changed, 65 insertions(+)
 
->
->g.
-
+diff --git a/arch/arm/mach-omap2/cm2_7xx.h b/arch/arm/mach-omap2/cm2_7xx.h
+index 9ad7594..e966e3a 100644
+--- a/arch/arm/mach-omap2/cm2_7xx.h
++++ b/arch/arm/mach-omap2/cm2_7xx.h
+@@ -357,6 +357,10 @@
+ #define DRA7XX_CM_L3INIT_SATA_CLKCTRL				DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x0088)
+ #define DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET				0x00a0
+ #define DRA7XX_CM_PCIE_STATICDEP_OFFSET				0x00a4
++#define DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL_OFFSET			0x00b0
++#define DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL			DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x00b0)
++#define DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL_OFFSET			0x00b8
++#define DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL			DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x00b8)
+ #define DRA7XX_CM_GMAC_CLKSTCTRL_OFFSET				0x00c0
+ #define DRA7XX_CM_GMAC_STATICDEP_OFFSET				0x00c4
+ #define DRA7XX_CM_GMAC_DYNAMICDEP_OFFSET			0x00c8
+diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+index 3deb76e..6ff40a6 100644
+--- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
++++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+@@ -1290,6 +1290,45 @@ static struct omap_hwmod dra7xx_ocp2scp3_hwmod = {
+ };
+ 
+ /*
++ * 'PCIE PHY' class
++ *
++ */
++
++static struct omap_hwmod_class dra7xx_pcie_phy_hwmod_class = {
++	.name	= "pcie-phy",
++};
++
++/* pcie1 phy */
++static struct omap_hwmod dra7xx_pcie1_phy_hwmod = {
++	.name		= "pcie1-phy",
++	.class		= &dra7xx_pcie_phy_hwmod_class,
++	.clkdm_name	= "l3init_clkdm",
++	.main_clk	= "l4_root_clk_div",
++	.prcm = {
++		.omap4 = {
++			.clkctrl_offs = DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL_OFFSET,
++			.context_offs = DRA7XX_RM_L3INIT_PCIESS1_CONTEXT_OFFSET,
++			.modulemode   = MODULEMODE_SWCTRL,
++		},
++	},
++};
++
++/* pcie2 phy */
++static struct omap_hwmod dra7xx_pcie2_phy_hwmod = {
++	.name		= "pcie2-phy",
++	.class		= &dra7xx_pcie_phy_hwmod_class,
++	.clkdm_name	= "l3init_clkdm",
++	.main_clk	= "l4_root_clk_div",
++	.prcm = {
++		.omap4 = {
++			.clkctrl_offs = DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL_OFFSET,
++			.context_offs = DRA7XX_RM_L3INIT_PCIESS2_CONTEXT_OFFSET,
++			.modulemode   = MODULEMODE_SWCTRL,
++		},
++	},
++};
++
++/*
+  * 'qspi' class
+  *
+  */
+@@ -2409,6 +2448,22 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__ocp2scp1 = {
+ 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
+ };
+ 
++/* l4_cfg -> pcie1 phy */
++static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1_phy = {
++	.master		= &dra7xx_l4_cfg_hwmod,
++	.slave		= &dra7xx_pcie1_phy_hwmod,
++	.clk		= "l4_root_clk_div",
++	.user		= OCP_USER_MPU | OCP_USER_SDMA,
++};
++
++/* l4_cfg -> pcie2 phy */
++static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie2_phy = {
++	.master		= &dra7xx_l4_cfg_hwmod,
++	.slave		= &dra7xx_pcie2_phy_hwmod,
++	.clk		= "l4_root_clk_div",
++	.user		= OCP_USER_MPU | OCP_USER_SDMA,
++};
++
+ static struct omap_hwmod_addr_space dra7xx_qspi_addrs[] = {
+ 	{
+ 		.pa_start	= 0x4b300000,
+@@ -2758,6 +2813,8 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
+ 	&dra7xx_l4_cfg__mpu,
+ 	&dra7xx_l4_cfg__ocp2scp1,
+ 	&dra7xx_l4_cfg__ocp2scp3,
++	&dra7xx_l4_cfg__pcie1_phy,
++	&dra7xx_l4_cfg__pcie2_phy,
+ 	&dra7xx_l3_main_1__qspi,
+ 	&dra7xx_l4_cfg__sata,
+ 	&dra7xx_l4_cfg__smartreflex_core,
+diff --git a/arch/arm/mach-omap2/prm7xx.h b/arch/arm/mach-omap2/prm7xx.h
+index d92a840..4bb50fbf 100644
+--- a/arch/arm/mach-omap2/prm7xx.h
++++ b/arch/arm/mach-omap2/prm7xx.h
+@@ -374,6 +374,10 @@
+ #define DRA7XX_RM_L3INIT_IEEE1500_2_OCP_CONTEXT_OFFSET		0x007c
+ #define DRA7XX_PM_L3INIT_SATA_WKDEP_OFFSET			0x0088
+ #define DRA7XX_RM_L3INIT_SATA_CONTEXT_OFFSET			0x008c
++#define DRA7XX_PM_L3INIT_PCIESS1_WKDEP_OFFSET			0x00b0
++#define DRA7XX_RM_L3INIT_PCIESS1_CONTEXT_OFFSET		0x00b4
++#define DRA7XX_PM_L3INIT_PCIESS2_WKDEP_OFFSET			0x00b8
++#define DRA7XX_RM_L3INIT_PCIESS2_CONTEXT_OFFSET		0x00bc
+ #define DRA7XX_RM_GMAC_GMAC_CONTEXT_OFFSET			0x00d4
+ #define DRA7XX_RM_L3INIT_OCP2SCP1_CONTEXT_OFFSET		0x00e4
+ #define DRA7XX_RM_L3INIT_OCP2SCP3_CONTEXT_OFFSET		0x00ec
 -- 
-Richard Yang
-Help you, Help me
+1.7.9.5
 
