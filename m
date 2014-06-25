@@ -1,134 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:57919 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722AbaFWIVt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 04:21:49 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 23 Jun 2014 18:21:47 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id EA6CD3578048
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 18:21:44 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N7xTuL65732858
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 17:59:29 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N8Lhni024938
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 18:21:44 +1000
-Date: Mon, 23 Jun 2014 16:21:42 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, yan@linux.vnet.ibm.com,
-	qiudayu@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH V3 12/17] powerpc/powernv: implement
- pcibios_sriov_resource_alignment on powernv
-Message-ID: <20140623082142.GB4509@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-13-git-send-email-weiyang@linux.vnet.ibm.com>
- <20140623060947.GB12055@shangw>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140623060947.GB12055@shangw>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V3 11/21] iommu/vt-d: introduce helper domain_pfn_within_range() to simplify code
+Date: Wed, 25 Jun 2014 17:02:37 +0800
+Message-Id: <1403686967-10887-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 04:09:47PM +1000, Gavin Shan wrote:
->On Tue, Jun 10, 2014 at 09:56:34AM +0800, Wei Yang wrote:
->>This patch implements the pcibios_sriov_resource_alignment() on powernv
->>platform.
->>
->>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>---
->> arch/powerpc/include/asm/machdep.h        |    1 +
->> arch/powerpc/kernel/pci-common.c          |    8 ++++++++
->> arch/powerpc/platforms/powernv/pci-ioda.c |   17 +++++++++++++++++
->> 3 files changed, 26 insertions(+)
->>
->>diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
->>index 2f2e770..3bbc55f 100644
->>--- a/arch/powerpc/include/asm/machdep.h
->>+++ b/arch/powerpc/include/asm/machdep.h
->>@@ -242,6 +242,7 @@ struct machdep_calls {
->> 	resource_size_t (*pcibios_window_alignment)(struct pci_bus *, unsigned long type);
->> #ifdef CONFIG_PCI_IOV
->> 	resource_size_t (*__pci_sriov_resource_size)(struct pci_dev *, int resno);
->>+	resource_size_t (*__pci_sriov_resource_alignment)(struct pci_dev *, int resno, resource_size_t align);
->> #endif /* CONFIG_PCI_IOV */
->>
->> 	/* Called to shutdown machine specific hardware not already controlled
->>diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->>index c4e2e92..35345ac 100644
->>--- a/arch/powerpc/kernel/pci-common.c
->>+++ b/arch/powerpc/kernel/pci-common.c
->>@@ -128,6 +128,14 @@ resource_size_t pcibios_sriov_resource_size(struct pci_dev *pdev, int resno)
->>
->> 	return 0;
->> }
->>+
->>+resource_size_t pcibios_sriov_resource_alignment(struct pci_dev *pdev, int resno, resource_size_t align)
->>+{
->>+	if (ppc_md.__pci_sriov_resource_alignment)
->>+		return ppc_md.__pci_sriov_resource_alignment(pdev, resno, align);
->>+
->>+	return 0;
->>+}
->> #endif /* CONFIG_PCI_IOV */
->>
->> static resource_size_t pcibios_io_size(const struct pci_controller *hose)
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index 7dfad6a..b0ac851 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -1573,6 +1573,22 @@ static resource_size_t __pnv_pci_sriov_resource_size(struct pci_dev *pdev, int r
->>
->> 	return size;
->> }
->>+
->>+static resource_size_t __pnv_pci_sriov_resource_alignment(struct pci_dev *pdev, int resno,
->>+		resource_size_t align)
->
->The function could be "pcibios_sriov_resource_alignment()", but it's not a big deal.
->If you prefer the original one, then keep it :)
+Introduce helper function domain_pfn_within_range() to simplify code
+and improve readability.
 
-I guess you want to name it to pnv_pcibios_sriov_resource_alignment()?
-pcibios_sriov_resource_alignment() is the general name for this function.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
 
-If yes, this is changed.
-
->
->>+{
->>+	struct pci_dn *pdn = pci_get_pdn(pdev);
->>+	resource_size_t iov_align;
->>+
->>+	iov_align = resource_size(&pdev->resource[resno]);
->>+	if (iov_align)
->>+		return iov_align;
->>+
->>+	if (pdn->vfs)
->>+		return pdn->vfs * align;
->>+
->>+	return align;
->>+}
->> #endif /* CONFIG_PCI_IOV */
->>
->> /* Prevent enabling devices for which we couldn't properly
->>@@ -1777,6 +1793,7 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
->> 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
->> #ifdef CONFIG_PCI_IOV
->> 	ppc_md.__pci_sriov_resource_size = __pnv_pci_sriov_resource_size;
->>+	ppc_md.__pci_sriov_resource_alignment = __pnv_pci_sriov_resource_alignment;
->> #endif /* CONFIG_PCI_IOV */
->> 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
->>
->
->Thanks,
->Gavin
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 20c0d92ea2d3..0d34f33bea34 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -550,6 +550,14 @@ static inline int domain_type_is_vm_or_si(struct dmar_domain *domain)
+ 				DOMAIN_FLAG_STATIC_IDENTITY);
+ }
+ 
++static inline int domain_pfn_supported(struct dmar_domain *domain,
++				       unsigned long pfn)
++{
++	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
++
++	return !(addr_width < BITS_PER_LONG && pfn >> addr_width);
++}
++
+ static int __iommu_calculate_agaw(struct intel_iommu *iommu, int max_gaw)
+ {
+ 	unsigned long sagaw;
+@@ -823,14 +831,13 @@ out:
+ static struct dma_pte *pfn_to_dma_pte(struct dmar_domain *domain,
+ 				      unsigned long pfn, int *target_level)
+ {
+-	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
+ 	struct dma_pte *parent, *pte = NULL;
+ 	int level = agaw_to_level(domain->agaw);
+ 	int offset;
+ 
+ 	BUG_ON(!domain->pgd);
+ 
+-	if (addr_width < BITS_PER_LONG && pfn >> addr_width)
++	if (!domain_pfn_supported(domain, pfn))
+ 		/* Address beyond IOMMU's addressing capabilities. */
+ 		return NULL;
+ 
+@@ -915,12 +922,11 @@ static void dma_pte_clear_range(struct dmar_domain *domain,
+ 				unsigned long start_pfn,
+ 				unsigned long last_pfn)
+ {
+-	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
+ 	unsigned int large_page = 1;
+ 	struct dma_pte *first_pte, *pte;
+ 
+-	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
+-	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
++	BUG_ON(!domain_pfn_supported(domain, start_pfn));
++	BUG_ON(!domain_pfn_supported(domain, last_pfn));
+ 	BUG_ON(start_pfn > last_pfn);
+ 
+ 	/* we don't need lock here; nobody else touches the iova range */
+@@ -981,10 +987,8 @@ static void dma_pte_free_pagetable(struct dmar_domain *domain,
+ 				   unsigned long start_pfn,
+ 				   unsigned long last_pfn)
+ {
+-	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
+-
+-	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
+-	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
++	BUG_ON(!domain_pfn_supported(domain, start_pfn));
++	BUG_ON(!domain_pfn_supported(domain, last_pfn));
+ 	BUG_ON(start_pfn > last_pfn);
+ 
+ 	dma_pte_clear_range(domain, start_pfn, last_pfn);
+@@ -1086,11 +1090,10 @@ struct page *domain_unmap(struct dmar_domain *domain,
+ 			  unsigned long start_pfn,
+ 			  unsigned long last_pfn)
+ {
+-	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
+ 	struct page *freelist = NULL;
+ 
+-	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
+-	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
++	BUG_ON(!domain_pfn_supported(domain, start_pfn));
++	BUG_ON(!domain_pfn_supported(domain, last_pfn));
+ 	BUG_ON(start_pfn > last_pfn);
+ 
+ 	/* we don't need lock here; nobody else touches the iova range */
+@@ -1994,12 +1997,11 @@ static int __domain_mapping(struct dmar_domain *domain, unsigned long iov_pfn,
+ {
+ 	struct dma_pte *first_pte = NULL, *pte = NULL;
+ 	phys_addr_t uninitialized_var(pteval);
+-	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
+ 	unsigned long sg_res;
+ 	unsigned int largepage_lvl = 0;
+ 	unsigned long lvl_pages = 0;
+ 
+-	BUG_ON(addr_width < BITS_PER_LONG && (iov_pfn + nr_pages - 1) >> addr_width);
++	BUG_ON(!domain_pfn_supported(domain, iov_pfn + nr_pages - 1));
+ 
+ 	if ((prot & (DMA_PTE_READ|DMA_PTE_WRITE)) == 0)
+ 		return -EINVAL;
 -- 
-Richard Yang
-Help you, Help me
+1.7.10.4
 
