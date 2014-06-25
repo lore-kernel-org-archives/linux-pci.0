@@ -1,95 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.w2.samsung.com ([211.189.100.11]:43619 "EHLO
-	usmailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751866AbaFFRC7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jun 2014 13:02:59 -0400
-Message-id: <5391F438.90703@samsung.com>
-Date: Fri, 06 Jun 2014 11:02:48 -0600
-From: Shuah Khan <shuah.kh@samsung.com>
-Reply-to: shuah.kh@samsung.com
-MIME-version: 1.0
-To: Eli Billauer <eli.billauer@gmail.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: Joerg Roedel <joro@8bytes.org>, devel@driverdev.osuosl.org,
-	discuss@x86-64.org, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, Tejun Heo <tj@kernel.org>,
-	Shuah Khan <shuah.kh@samsung.com>
-Subject: Re: [PATCH v2 1/4] dma-mapping: Add devm_ interface for
- dma_map_single()
-References: <1401606077-1739-1-git-send-email-eli.billauer@gmail.com>
- <1401606077-1739-2-git-send-email-eli.billauer@gmail.com>
- <538E3D04.9060808@samsung.com> <20140603233907.GB23880@8bytes.org>
- <20140604140408.GC5004@htj.dyndns.org> <20140604141211.GC23880@8bytes.org>
- <20140604141416.GD5004@htj.dyndns.org> <538F3548.4050101@gmail.com>
- <20140604212525.GE23880@8bytes.org> <5391A9C2.3040602@gmail.com>
- <20140606160103.GG15110@kroah.com> <5391EA92.9050306@gmail.com>
-In-reply-to: <5391EA92.9050306@gmail.com>
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 25 Jun 2014 10:44:42 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch V3 00/16] Enable support of IOAPIC hotplug on x86
+ platforms
+Message-ID: <20140625144442.GA3775@laptop.dumpdata.com>
+References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/06/2014 10:21 AM, Eli Billauer wrote:
-> On 06/06/14 19:01, Greg KH wrote:
->>> Please try to put yourself in my position: I have a driver that I care
->>> >  about, which works fine for a few years. It's based upon
->>> dma_map_single(),
->>> >  which seems to be the common way to get non-coherent memory, even
->>> for the
->>> >  driver's entire lifespan. I realize that dma_alloc_* was the
->>> intended way to
->>> >  do it, but fact is that dma_map_* has become the common choice.
->>>
->> Is your driver in the kernel tree?  If not, you really are on your own :(
->>
-> It's the Xillybus driver in the staging area. I don't know if this
-> counts for being in the kernel tree...
->
-> The suggested patchset would allow replacing my use of dma_map_single()
-> with a managed version of that function. This will clean the driver's
-> code considerably.
->
-> But I think that the discussion here is if it's valid to use
-> dma_map_single() for a device-permanent DMA mapping, or if
-> dma_alloc_noncoherent() is the only way. If the answer is no, there's
-> quite obviously no point in a devres version for that function.
->
+On Wed, Jun 25, 2014 at 04:40:31PM +0800, Jiang Liu wrote:
+> This patch set enhances IOAPIC core and ACPI drivers to support IOAPIC
+> hotplug on x86 platforms. It's based on tip/x86/apic.
+> 
+> You may pull it from 
+> https://github.com/jiangliu/linux.git ioapic/hotplug_v3
 
-Eli,
+fatal: Couldn't find remote ref ioapic/hotplug_v3
+Unexpected end of command stream
 
-dma_map_single() and dma_unmap_single() are streaming DMA APIs. These
-are intended for one DMA transfer and unmapped right after it is done.
-
-dma buffers are limited shared resources for streaming that are
-shared by several drivers. Hence the need for use and release
-model.
-
-Please refer to the Using Streaming DMA mappings in DMA-API-HOWTO.txt
-
-"- Streaming DMA mappings which are usually mapped for one DMA
-   transfer, unmapped right after it (unless you use dma_sync_* below)
-   and for which hardware can optimize for sequential accesses.
-
-   This of "streaming" as "asynchronous" or "outside the coherency
-   domain".
-
-   Good examples of what to use streaming mappings for are:
-
-         - Networking buffers transmitted/received by a device.
-         - Filesystem buffers written/read by a SCSI device."
-
-
-If I understand your intended usage correctly, you are looking to
-allocate and hold the buffers for the lifetime of the driver. For
-such cases, dma_alloc_*() interfaces are the ones to use.
-
-Please also refer to DMA-API.txt as well. Hope this helps.
-
--- Shuah
-
-
--- 
-Shuah Khan
-Senior Linux Kernel Developer - Open Source Group
-Samsung Research America(Silicon Valley)
-shuah.kh@samsung.com | (970) 672-0658
+I see ioapic/hotplug_v2?
+> 
+> We have pick up several patches from Yinghai's original IOAPIC hotplug
+> patch set and reimplemented IOAPIC driver as an ACPI driver instead of
+> a PCI driver.
+> 
+> It has been tested on a 4-socket Intel SDV with socket hot-addition
+> capability. Any suggestions are welcomed!
+> 
+> Patch 1-5 are minor bugfixes and code improvements
+> Patch 6-14 enhances ACPI and IOAPIC core to support IOAPIC hotplug
+> Patch 15 killes PCI IOAPIC driver
+> Patch 16 reimplements ACPI IOAPIC driver and enables IOAPIC hotplug
+> 
+> V2->V3:
+> 1) Refine ACPI resource walk functions for PCI root bus and IOAPIC
+> 2) Improve commit messages
+> 3) Reorder patch order for better maintenence
+> 
+> Jiang Liu (11):
+>   x86, irq, ACPI: Protect acpi_pci_irq_enable() from reentrance
+>   ACPI: Correct return value of acpi_dev_resource_address_space()
+>   x86, PCI, ACPI: Kill private function resource_to_addr()
+>   x86, irq: Remove __init marker for functions will be used by IOAPIC
+>     hotplug
+>   x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
+>   x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from
+>     hotplug
+>   x86, irq, ACPI: Implement interface to support ACPI based IOAPIC
+>     hot-addition
+>   x86, irq, ACPI: Implement interface to support ACPI based IOAPIC
+>     hot-removal
+>   x86, irq: Introduce helper to check whether an IOAPIC has been
+>     registered
+>   PCI: Remove PCI ioapic driver
+>   x86, irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
+> 
+> Yinghai Lu (5):
+>   ACPI: Make map_mat_entry handle x2apic entry
+>   ACPI: Move acpi_get_cpuid() to separated file
+>   x86, irq: Split out alloc_ioapic_save_registers()
+>   x86, ioapic: Find usable ioapic id for 64bit.
+>   ACPI, ioapic: Add acpi_get_ioapic_id()
+> 
+>  arch/x86/include/asm/io_apic.h |    6 +-
+>  arch/x86/kernel/acpi/boot.c    |   68 ++++++++-
+>  arch/x86/kernel/apic/io_apic.c |  235 +++++++++++++++++++++++++-------
+>  arch/x86/pci/acpi.c            |  142 +++++++------------
+>  drivers/acpi/Kconfig           |    6 +
+>  drivers/acpi/Makefile          |    2 +
+>  drivers/acpi/apic_id.c         |  295 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/acpi/internal.h        |    7 +
+>  drivers/acpi/ioapic.c          |  236 ++++++++++++++++++++++++++++++++
+>  drivers/acpi/pci_irq.c         |    7 +-
+>  drivers/acpi/pci_root.c        |    3 +
+>  drivers/acpi/processor_core.c  |  191 --------------------------
+>  drivers/acpi/resource.c        |    2 +-
+>  drivers/pci/Kconfig            |    7 -
+>  drivers/pci/Makefile           |    2 -
+>  drivers/pci/ioapic.c           |  121 ----------------
+>  include/acpi/processor.h       |    3 -
+>  include/linux/acpi.h           |    8 ++
+>  18 files changed, 868 insertions(+), 473 deletions(-)
+>  create mode 100644 drivers/acpi/apic_id.c
+>  create mode 100644 drivers/acpi/ioapic.c
+>  delete mode 100644 drivers/pci/ioapic.c
+> 
+> -- 
+> 1.7.10.4
+> 
