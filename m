@@ -1,183 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:32974 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933917AbaFJB5P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:57:15 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Jun 2014 07:27:13 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 56454E0045
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:28:08 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1vMQJ17301758
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:22 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1v8VS009361
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:09 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: benh@au1.ibm.com
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [RFC PATCH V3 10/17] PCI: take additional IOV BAR alignment in sizing and assigning
-Date: Tue, 10 Jun 2014 09:56:32 +0800
-Message-Id: <1402365399-5121-11-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch V3 00/16] Enable support of IOAPIC hotplug on x86 platforms
+Date: Wed, 25 Jun 2014 16:40:31 +0800
+Message-Id: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-At resource sizing/assigning stage, resources are divided into two lists,
-requested list and additional list, while the alignement of the additional
-IOV BAR is not taken into the sizeing and assigning procedure.
+This patch set enhances IOAPIC core and ACPI drivers to support IOAPIC
+hotplug on x86 platforms. It's based on tip/x86/apic.
 
-This is reasonable in the original implementation, since IOV BAR's alignment is
-mostly the size of a PF BAR alignemt. This means the alignment is already taken
-into consideration. While this rule may be violated on some platform.
+You may pull it from 
+https://github.com/jiangliu/linux.git ioapic/hotplug_v3
 
-This patch take the additional IOV BAR alignment in sizing and assigning stage
-explicitly.
+We have pick up several patches from Yinghai's original IOAPIC hotplug
+patch set and reimplemented IOAPIC driver as an ACPI driver instead of
+a PCI driver.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/setup-bus.c |   66 ++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 59 insertions(+), 7 deletions(-)
+It has been tested on a 4-socket Intel SDV with socket hot-addition
+capability. Any suggestions are welcomed!
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 9509ffa..0c3b3a5 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -120,6 +120,28 @@ static resource_size_t get_res_add_size(struct list_head *head,
- 	return 0;
- }
- 
-+static resource_size_t get_res_add_align(struct list_head *head,
-+		struct resource *res)
-+{
-+	struct pci_dev_resource *dev_res;
-+
-+	list_for_each_entry(dev_res, head, list) {
-+		if (dev_res->res == res) {
-+			int idx = res - &dev_res->dev->resource[0];
-+
-+			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
-+				   "res[%d]=%pR get_res_add_align min_align %llx\n",
-+				   idx, dev_res->res,
-+				   (unsigned long long)dev_res->min_align);
-+
-+			return dev_res->min_align;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+
- /* Sort resources by alignment */
- static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- {
-@@ -369,8 +391,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
--	struct pci_dev_resource *dev_res, *tmp_res;
-+	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
- 	unsigned long fail_type;
-+	resource_size_t add_align, align;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -385,10 +408,31 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 
- 	/* Update res in head list with add_size in realloc_head list */
--	list_for_each_entry(dev_res, head, list)
-+	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
- 		dev_res->res->end += get_res_add_size(realloc_head,
- 							dev_res->res);
- 
-+		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
-+			continue;
-+
-+		add_align = get_res_add_align(realloc_head, dev_res->res);
-+
-+		if (add_align > dev_res->res->start) {
-+			dev_res->res->start = add_align;
-+			dev_res->res->end = add_align +
-+				            resource_size(dev_res->res);
-+
-+			list_for_each_entry(dev_res2, head, list) {
-+				align = pci_resource_alignment(dev_res2->dev,
-+							       dev_res2->res);
-+				if (add_align > align)
-+					list_move_tail(&dev_res->list,
-+						       &dev_res2->list);
-+			}
-+               }
-+
-+	}
-+
- 	/* Try updated head list with add_size added */
- 	assign_requested_resources_sorted(head, &local_fail_head);
- 
-@@ -928,6 +972,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					 mask | IORESOURCE_PREFETCH, type);
- 	unsigned int mem64_mask = 0;
- 	resource_size_t children_add_size = 0;
-+	resource_size_t children_add_align = 0;
-+	resource_size_t add_align = 0;
- 
- 	if (!b_res)
- 		return 0;
-@@ -955,6 +1001,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			/* put SRIOV requested res to the optional list */
- 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
- 					i <= PCI_IOV_RESOURCE_END) {
-+				add_align = max(pci_resource_alignment(dev, r), add_align);
- 				r->end = r->start - 1;
- 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
- 				children_add_size += r_size;
-@@ -982,8 +1029,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				max_order = order;
- 			mem64_mask &= r->flags & IORESOURCE_MEM_64;
- 
--			if (realloc_head)
-+			if (realloc_head) {
- 				children_add_size += get_res_add_size(realloc_head, r);
-+				children_add_align = get_res_add_align(realloc_head, r);
-+				add_align = max(add_align, children_add_align);
-+			}
- 		}
- 	}
- 
-@@ -994,7 +1044,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		add_size = children_add_size;
- 	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
- 		calculate_memsize(size, min_size, add_size,
--				resource_size(b_res), min_align);
-+				resource_size(b_res), max(min_align, add_align));
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window "
-@@ -1007,10 +1057,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN | mem64_mask;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
-+		add_to_list(realloc_head, bus->self, b_res, size1-size0,
-+				max(min_align, add_align));
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
--				 "%pR to %pR add_size %llx\n", b_res,
--				 &bus->busn_res, (unsigned long long)size1-size0);
-+				 "%pR to %pR add_size %llx add_align %llx\n", b_res,
-+				 &bus->busn_res, (unsigned long long)size1-size0,
-+				 max(min_align, add_align));
- 	}
- 	return 1;
- }
+Patch 1-5 are minor bugfixes and code improvements
+Patch 6-14 enhances ACPI and IOAPIC core to support IOAPIC hotplug
+Patch 15 killes PCI IOAPIC driver
+Patch 16 reimplements ACPI IOAPIC driver and enables IOAPIC hotplug
+
+V2->V3:
+1) Refine ACPI resource walk functions for PCI root bus and IOAPIC
+2) Improve commit messages
+3) Reorder patch order for better maintenence
+
+Jiang Liu (11):
+  x86, irq, ACPI: Protect acpi_pci_irq_enable() from reentrance
+  ACPI: Correct return value of acpi_dev_resource_address_space()
+  x86, PCI, ACPI: Kill private function resource_to_addr()
+  x86, irq: Remove __init marker for functions will be used by IOAPIC
+    hotplug
+  x86, irq: Refine mp_register_ioapic() to prepare for IOAPIC hotplug
+  x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from
+    hotplug
+  x86, irq, ACPI: Implement interface to support ACPI based IOAPIC
+    hot-addition
+  x86, irq, ACPI: Implement interface to support ACPI based IOAPIC
+    hot-removal
+  x86, irq: Introduce helper to check whether an IOAPIC has been
+    registered
+  PCI: Remove PCI ioapic driver
+  x86, irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
+
+Yinghai Lu (5):
+  ACPI: Make map_mat_entry handle x2apic entry
+  ACPI: Move acpi_get_cpuid() to separated file
+  x86, irq: Split out alloc_ioapic_save_registers()
+  x86, ioapic: Find usable ioapic id for 64bit.
+  ACPI, ioapic: Add acpi_get_ioapic_id()
+
+ arch/x86/include/asm/io_apic.h |    6 +-
+ arch/x86/kernel/acpi/boot.c    |   68 ++++++++-
+ arch/x86/kernel/apic/io_apic.c |  235 +++++++++++++++++++++++++-------
+ arch/x86/pci/acpi.c            |  142 +++++++------------
+ drivers/acpi/Kconfig           |    6 +
+ drivers/acpi/Makefile          |    2 +
+ drivers/acpi/apic_id.c         |  295 ++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/internal.h        |    7 +
+ drivers/acpi/ioapic.c          |  236 ++++++++++++++++++++++++++++++++
+ drivers/acpi/pci_irq.c         |    7 +-
+ drivers/acpi/pci_root.c        |    3 +
+ drivers/acpi/processor_core.c  |  191 --------------------------
+ drivers/acpi/resource.c        |    2 +-
+ drivers/pci/Kconfig            |    7 -
+ drivers/pci/Makefile           |    2 -
+ drivers/pci/ioapic.c           |  121 ----------------
+ include/acpi/processor.h       |    3 -
+ include/linux/acpi.h           |    8 ++
+ 18 files changed, 868 insertions(+), 473 deletions(-)
+ create mode 100644 drivers/acpi/apic_id.c
+ create mode 100644 drivers/acpi/ioapic.c
+ delete mode 100644 drivers/pci/ioapic.c
+
 -- 
-1.7.9.5
+1.7.10.4
 
