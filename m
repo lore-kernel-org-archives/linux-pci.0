@@ -1,119 +1,285 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp07.in.ibm.com ([122.248.162.7]:55997 "EHLO
-	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932145AbaFJB5L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:57:11 -0400
-Received: from /spool/local
-	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Jun 2014 07:27:09 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id DAC3A3940048
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:06 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1vv3b5374320
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:57 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1v6CM013243
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:06 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: benh@au1.ibm.com
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [RFC PATCH V3 08/17] PCI: Add weak pcibios_sriov_resource_size() interface
-Date: Tue, 10 Jun 2014 09:56:30 +0800
-Message-Id: <1402365399-5121-9-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mga01.intel.com ([192.55.52.88]:24699 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755509AbaFYJAC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 05:00:02 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V3 04/21] iommu/vt-d: introduce helper functions to make code symmetric for readability
+Date: Wed, 25 Jun 2014 17:02:30 +0800
+Message-Id: <1403686967-10887-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When retrieving sriov resource size in pci_sriov_resource_size(), it will
-divide the total IOV resource size with the totalVF number. This is true for
-most cases, while may not be correct on some specific platform.
+Introduce domain_attach_iommu()/domain_detach_iommu() and refine
+iommu_attach_domain()/iommu_detach_domain() to make code symmetric
+and improve readability.
 
-For example on powernv platform, in order to fix the IOV BAR into a hardware
-alignment, the IOV resource size would be expended. This means the original
-method couldn't work.
-
-This patch introduces a weak pcibios_sriov_resource_size() interface, which
-gives platform a chance to implement specific method to calculate the sriov
-resource size.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/iov.c   |   27 +++++++++++++++++++++++++--
- include/linux/pci.h |    3 +++
- 2 files changed, 28 insertions(+), 2 deletions(-)
+ drivers/iommu/intel-iommu.c |  146 ++++++++++++++++++++++++-------------------
+ 1 file changed, 80 insertions(+), 66 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index cc87773..9fd4648 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -45,6 +45,30 @@ static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
- 		pci_remove_bus(virtbus);
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 3bac9785b054..a012d3e0b52d 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1526,32 +1526,39 @@ static struct dmar_domain *alloc_domain(int flags)
+ 	return domain;
  }
  
-+resource_size_t __weak pcibios_sriov_resource_size(struct pci_dev *dev, int resno)
-+{
-+	return 0;
-+}
-+
-+resource_size_t pci_sriov_resource_size(struct pci_dev *dev, int resno)
-+{
-+	u64 size;
-+	struct pci_sriov *iov;
-+
-+	if (!dev->is_physfn)
-+		return 0;
-+
-+	size = pcibios_sriov_resource_size(dev, resno);
-+	if (size != 0)
-+		return size;
-+
-+	iov = dev->sriov;
-+	size = resource_size(dev->resource + resno);
-+	do_div(size, iov->total_VFs);
-+
-+	return size;
-+}
-+
- static int virtfn_add(struct pci_dev *dev, int id, int reset)
+-static int iommu_attach_domain(struct dmar_domain *domain,
+-			       struct intel_iommu *iommu)
++static int __iommu_attach_domain(struct dmar_domain *domain,
++				 struct intel_iommu *iommu)
  {
- 	int i;
-@@ -81,8 +105,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 			continue;
- 		virtfn->resource[i].name = pci_name(virtfn);
- 		virtfn->resource[i].flags = res->flags;
--		size = resource_size(res);
--		do_div(size, iov->total_VFs);
-+		size = pci_sriov_resource_size(dev, i + PCI_IOV_RESOURCES);
- 		virtfn->resource[i].start = res->start + size * id;
- 		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
- 		rc = request_resource(res, &virtfn->resource[i]);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ddb1ca0..315c150 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1637,6 +1637,7 @@ int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
-+resource_size_t pci_sriov_resource_size(struct pci_dev *dev, int resno);
- #else
- static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
- {
-@@ -1658,6 +1659,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
- { return 0; }
- static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
- { return 0; }
-+static inline resource_size_t pci_sriov_resource_size(struct pci_dev *dev, int resno)
-+{ return -1; }
- #endif
+ 	int num;
+ 	unsigned long ndomains;
+-	unsigned long flags;
  
- #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+ 	ndomains = cap_ndoms(iommu->cap);
+-
+-	spin_lock_irqsave(&iommu->lock, flags);
+-
+ 	num = find_first_zero_bit(iommu->domain_ids, ndomains);
+-	if (num >= ndomains) {
+-		spin_unlock_irqrestore(&iommu->lock, flags);
+-		printk(KERN_ERR "IOMMU: no free domain ids\n");
+-		return -ENOMEM;
++	if (num < ndomains) {
++		set_bit(num, iommu->domain_ids);
++		iommu->domains[num] = domain;
++	} else {
++		num = -ENOSPC;
+ 	}
+ 
+-	domain->id = num;
+-	domain->iommu_count++;
+-	set_bit(num, iommu->domain_ids);
+-	set_bit(iommu->seq_id, domain->iommu_bmp);
+-	iommu->domains[num] = domain;
++	return num;
++}
++
++static int iommu_attach_domain(struct dmar_domain *domain,
++			       struct intel_iommu *iommu)
++{
++	int num;
++	unsigned long flags;
++
++	spin_lock_irqsave(&iommu->lock, flags);
++	num = __iommu_attach_domain(domain, iommu);
++	if (num < 0)
++		pr_err("IOMMU: no free domain ids\n");
++	else
++		domain->id = num;
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
+ 
+-	return 0;
++	return num;
+ }
+ 
+ static void iommu_detach_domain(struct dmar_domain *domain,
+@@ -1561,17 +1568,53 @@ static void iommu_detach_domain(struct dmar_domain *domain,
+ 	int num, ndomains;
+ 
+ 	spin_lock_irqsave(&iommu->lock, flags);
+-	ndomains = cap_ndoms(iommu->cap);
+-	for_each_set_bit(num, iommu->domain_ids, ndomains) {
+-		if (iommu->domains[num] == domain) {
+-			clear_bit(num, iommu->domain_ids);
+-			iommu->domains[num] = NULL;
+-			break;
++	if (domain_type_is_vm_or_si(domain)) {
++		ndomains = cap_ndoms(iommu->cap);
++		for_each_set_bit(num, iommu->domain_ids, ndomains) {
++			if (iommu->domains[num] == domain) {
++				clear_bit(num, iommu->domain_ids);
++				iommu->domains[num] = NULL;
++				break;
++			}
+ 		}
++	} else {
++		clear_bit(domain->id, iommu->domain_ids);
++		iommu->domains[domain->id] = NULL;
+ 	}
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
+ }
+ 
++static void domain_attach_iommu(struct dmar_domain *domain,
++			       struct intel_iommu *iommu)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&domain->iommu_lock, flags);
++	if (!test_and_set_bit(iommu->seq_id, domain->iommu_bmp)) {
++		domain->iommu_count++;
++		if (domain->iommu_count == 1)
++			domain->nid = iommu->node;
++		domain_update_iommu_cap(domain);
++	}
++	spin_unlock_irqrestore(&domain->iommu_lock, flags);
++}
++
++static int domain_detach_iommu(struct dmar_domain *domain,
++			       struct intel_iommu *iommu)
++{
++	unsigned long flags;
++	int count = INT_MAX;
++
++	spin_lock_irqsave(&domain->iommu_lock, flags);
++	if (test_and_clear_bit(iommu->seq_id, domain->iommu_bmp)) {
++		count = --domain->iommu_count;
++		domain_update_iommu_cap(domain);
++	}
++	spin_unlock_irqrestore(&domain->iommu_lock, flags);
++
++	return count;
++}
++
+ static struct iova_domain reserved_iova_list;
+ static struct lock_class_key reserved_rbtree_key;
+ 
+@@ -1709,9 +1752,7 @@ static void domain_exit(struct dmar_domain *domain)
+ 	/* clear attached or cached domains */
+ 	rcu_read_lock();
+ 	for_each_active_iommu(iommu, drhd)
+-		if (domain_type_is_vm(domain) ||
+-		    test_bit(iommu->seq_id, domain->iommu_bmp))
+-			iommu_detach_domain(domain, iommu);
++		iommu_detach_domain(domain, iommu);
+ 	rcu_read_unlock();
+ 
+ 	dma_free_pagelist(freelist);
+@@ -1765,16 +1806,12 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 		}
+ 
+ 		if (found == 0) {
+-			num = find_first_zero_bit(iommu->domain_ids, ndomains);
+-			if (num >= ndomains) {
++			id = __iommu_attach_domain(domain, iommu);
++			if (id < 0) {
+ 				spin_unlock_irqrestore(&iommu->lock, flags);
+-				printk(KERN_ERR "IOMMU: no free domain ids\n");
++				pr_err("IOMMU: no free domain ids\n");
+ 				return -EFAULT;
+ 			}
+-
+-			set_bit(num, iommu->domain_ids);
+-			iommu->domains[num] = domain;
+-			id = num;
+ 		}
+ 
+ 		/* Skip top levels of page tables for
+@@ -1833,14 +1870,8 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 	iommu_enable_dev_iotlb(info);
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
+ 
+-	spin_lock_irqsave(&domain->iommu_lock, flags);
+-	if (!test_and_set_bit(iommu->seq_id, domain->iommu_bmp)) {
+-		domain->iommu_count++;
+-		if (domain->iommu_count == 1)
+-			domain->nid = iommu->node;
+-		domain_update_iommu_cap(domain);
+-	}
+-	spin_unlock_irqrestore(&domain->iommu_lock, flags);
++	domain_attach_iommu(domain, iommu);
++
+ 	return 0;
+ }
+ 
+@@ -2105,7 +2136,7 @@ static inline void unlink_domain_info(struct device_domain_info *info)
+ static void domain_remove_dev_info(struct dmar_domain *domain)
+ {
+ 	struct device_domain_info *info;
+-	unsigned long flags, flags2;
++	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&device_domain_lock, flags);
+ 	while (!list_empty(&domain->devices)) {
+@@ -2119,16 +2150,7 @@ static void domain_remove_dev_info(struct dmar_domain *domain)
+ 
+ 		if (domain_type_is_vm(domain)) {
+ 			iommu_detach_dependent_devices(info->iommu, info->dev);
+-			/* clear this iommu in iommu_bmp, update iommu count
+-			 * and capabilities
+-			 */
+-			spin_lock_irqsave(&domain->iommu_lock, flags2);
+-			if (test_and_clear_bit(info->iommu->seq_id,
+-					       domain->iommu_bmp)) {
+-				domain->iommu_count--;
+-				domain_update_iommu_cap(domain);
+-			}
+-			spin_unlock_irqrestore(&domain->iommu_lock, flags2);
++			domain_detach_iommu(domain, info->iommu);
+ 		}
+ 
+ 		free_devinfo_mem(info);
+@@ -2260,11 +2282,12 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	domain = alloc_domain(0);
+ 	if (!domain)
+ 		goto error;
+-	if (iommu_attach_domain(domain, iommu)) {
++	if (iommu_attach_domain(domain, iommu) < 0) {
+ 		free_domain_mem(domain);
+ 		domain = NULL;
+ 		goto error;
+ 	}
++	domain_attach_iommu(domain, iommu);
+ 	free = domain;
+ 	if (domain_init(domain, gaw))
+ 		goto error;
+@@ -2427,10 +2450,11 @@ static int __init si_domain_init(int hw)
+ 
+ 	for_each_active_iommu(iommu, drhd) {
+ 		ret = iommu_attach_domain(si_domain, iommu);
+-		if (ret) {
++		if (ret < 0) {
+ 			domain_exit(si_domain);
+ 			return -EFAULT;
+ 		}
++		domain_attach_iommu(si_domain, iommu);
+ 	}
+ 
+ 	if (md_domain_init(si_domain, DEFAULT_DOMAIN_ADDRESS_WIDTH)) {
+@@ -4113,19 +4137,9 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
+ 	spin_unlock_irqrestore(&device_domain_lock, flags);
+ 
+ 	if (found == 0) {
+-		unsigned long tmp_flags;
+-		spin_lock_irqsave(&domain->iommu_lock, tmp_flags);
+-		clear_bit(iommu->seq_id, domain->iommu_bmp);
+-		domain->iommu_count--;
+-		domain_update_iommu_cap(domain);
+-		spin_unlock_irqrestore(&domain->iommu_lock, tmp_flags);
+-
+-		if (!domain_type_is_vm_or_si(domain)) {
+-			spin_lock_irqsave(&iommu->lock, tmp_flags);
+-			clear_bit(domain->id, iommu->domain_ids);
+-			iommu->domains[domain->id] = NULL;
+-			spin_unlock_irqrestore(&iommu->lock, tmp_flags);
+-		}
++		domain_detach_iommu(domain, iommu);
++		if (!domain_type_is_vm_or_si(domain))
++			iommu_detach_domain(domain, iommu);
+ 	}
+ }
+ 
 -- 
-1.7.9.5
+1.7.10.4
 
