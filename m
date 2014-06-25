@@ -1,78 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:55247 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbaFDWuD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jun 2014 18:50:03 -0400
-Received: by mail-pd0-f173.google.com with SMTP id v10so156960pde.18
-        for <linux-pci@vger.kernel.org>; Wed, 04 Jun 2014 15:50:03 -0700 (PDT)
-From: Alexei Starovoitov <ast@plumgrid.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] pci/msi: fix memory leak in free_msi_irqs()
-Date: Wed,  4 Jun 2014 15:49:50 -0700
-Message-Id: <1401922190-25357-1-git-send-email-ast@plumgrid.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:43568 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757814AbaFYSDf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 14:03:35 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>, <paul@pwsan.com>, <tony@atomide.com>,
+	<linux@arm.linux.org.uk>, <rnayak@ti.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>
+Subject: [PATCH 0/2] arm: hwmod: dra7: Add PCIe data and PCIe PHY data
+Date: Wed, 25 Jun 2014 23:32:44 +0530
+Message-ID: <1403719366-9656-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-free_msi_irqs() is leaking memory, since
-list_for_each_entry(entry, &dev->msi_list, list) {...}
-is never executed, because dev->msi_list is made empty by
-the loop just above this one.
+[1] is split into separate series in order for individual subsystem
+Maintainers to pick up the patches. This series handles the PCIe
+hwmod data for DRA7.
 
-Fix it by relying on zero termination of attribute array like
-populate_msi_sysfs() does.
+Please find the bootlog with these hwmod patches @ [2]
 
-Fixes: 1c51b50c2995 ("PCI/MSI: Export MSI mode using attributes, not kobjects")
-Signed-off-by: Alexei Starovoitov <ast@plumgrid.com>
----
+[1] -> https://lkml.org/lkml/2014/5/29/258
+[2] -> http://paste.ubuntu.com/7701601/
 
-This was found by kmemleak report:
-unreferenced object 0xffff880808eda600 (size 64):
-  comm "modprobe", pid 1526, jiffies 4294902299 (age 58422.716s)
-  hex dump (first 32 bytes):
-    20 c4 66 09 08 88 ff ff 24 01 00 00 00 00 00 00   .f.....$.......
-    50 97 77 82 ff ff ff ff 00 00 00 00 00 00 00 00  P.w.............
-  backtrace:
-    [<ffffffff816e5fc8>] kmemleak_alloc+0x28/0x50
-    [<ffffffff811b885e>] kmem_cache_alloc_trace+0xde/0x230
-    [<ffffffff813aa286>] populate_msi_sysfs+0xc6/0x250
-    [<ffffffff813aafdb>] pci_enable_msix+0x34b/0x430
-    [<ffffffff813ab0ec>] pci_enable_msix_range+0x2c/0x70
-    [<ffffffffa0034ade>] igb_init_interrupt_scheme+0x9e/0x420 [igb]
-    [<ffffffffa003d668>] igb_probe+0x4a8/0x1250 [igb]
-    [<ffffffff813930de>] local_pci_probe+0x4e/0xa0
-    [<ffffffff813933e9>] pci_device_probe+0xd9/0x120
-    [<ffffffff814697cd>] driver_probe_device+0x8d/0x250
-    [<ffffffff81469a3b>] __driver_attach+0xab/0xb0
-    [<ffffffff8146799d>] bus_for_each_dev+0x5d/0xa0
-    [<ffffffff814691de>] driver_attach+0x1e/0x20
-    [<ffffffff81468e57>] bus_add_driver+0x117/0x220
-    [<ffffffff8146a104>] driver_register+0x64/0xf0
-    [<ffffffff813923f4>] __pci_register_driver+0x64/0x70
+Kishon Vijay Abraham I (2):
+  arm: dra7xx: Add hwmod data for pcie1 phy and pcie2 phy
+  arm: dra7xx: Add hwmod data for pcie1 and pcie2 subsystems
 
-IGB driver is calling pci_enable_msix_range() and immediately pci_disable_msix()
-which leaks the memory.
-Obviously the leak happens with any driver.
+ arch/arm/mach-omap2/cm2_7xx.h             |    4 ++
+ arch/arm/mach-omap2/omap_hwmod_7xx_data.c |  112 +++++++++++++++++++++++++++++
+ arch/arm/mach-omap2/prm7xx.h              |    4 ++
+ 3 files changed, 120 insertions(+)
 
- drivers/pci/msi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 955ab7990c5b..fb02fc2fb034 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -414,7 +414,7 @@ static void free_msi_irqs(struct pci_dev *dev)
- 	if (dev->msi_irq_groups) {
- 		sysfs_remove_groups(&dev->dev.kobj, dev->msi_irq_groups);
- 		msi_attrs = dev->msi_irq_groups[0]->attrs;
--		list_for_each_entry(entry, &dev->msi_list, list) {
-+		while (msi_attrs[count]) {
- 			dev_attr = container_of(msi_attrs[count],
- 						struct device_attribute, attr);
- 			kfree(dev_attr->attr.name);
 -- 
 1.7.9.5
 
