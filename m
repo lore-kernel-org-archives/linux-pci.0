@@ -1,245 +1,605 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15078 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750853AbaFXRid (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Jun 2014 13:38:33 -0400
-Message-ID: <1403631493.31091.2.camel@ul30vt.home>
-Subject: Re: PCI/AER: AER in SRIOV environment
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Yishai Hadas <yishaih@dev.mellanox.co.il>
-Cc: Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"linux-rdma (linux-rdma@vger.kernel.org)"
-	<linux-rdma@vger.kernel.org>,
-	"yishaih@mellanox.com" <yishaih@mellanox.com>, liranl@mellanox.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Tue, 24 Jun 2014 11:38:13 -0600
-In-Reply-To: <53A9A5B9.20003@dev.mellanox.co.il>
-References: <53A839C6.5050102@dev.mellanox.co.il>
-	 <CAErSpo7xVvqYea8v624T8EyVf6skQccraAe_WYpzcf2tkWFLhg@mail.gmail.com>
-	 <53A88A32.4010406@redhat.com> <53A8ADD5.7030207@dev.mellanox.co.il>
-	 <53A9918D.9020607@redhat.com> <53A9A5B9.20003@dev.mellanox.co.il>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from devils.ext.ti.com ([198.47.26.153]:43056 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757993AbaFYR5i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 13:57:38 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <jg1.han@samsung.com>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>, <grant.likely@linaro.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 3/3] PCI: host: pcie-dra7xx: add support for pcie-dra7xx controller
+Date: Wed, 25 Jun 2014 23:26:47 +0530
+Message-ID: <1403719007-9352-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1403719007-9352-1-git-send-email-kishon@ti.com>
+References: <1403719007-9352-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-06-24 at 19:22 +0300, Yishai Hadas wrote:
-> On 6/24/2014 5:56 PM, Don Dutile wrote:
-> > On 06/23/2014 06:44 PM, Yishai Hadas wrote:
-> >> On 6/23/2014 11:12 PM, Don Dutile wrote:
-> >>> On 06/23/2014 03:09 PM, Bjorn Helgaas wrote:
-> >>>> [+cc linux-pci, Don]
-> >>>>
-> >>> Adding Alex Williamson in case he can add more to this conversation...
-> >>>
-> >>>> On Mon, Jun 23, 2014 at 8:29 AM, Yishai Hadas
-> >>>> <yishaih@dev.mellanox.co.il> wrote:
-> >>>>> Hi Vijay,
-> >>>>> Trying to add AER support for Mellanox NIC in SRIOV environment, 
-> >>>>> while
-> >>>>> evaluating/testing encountered a problem which led me to your
-> >>>>> patch accepted as part of kernel 3.8, commit ID
-> >>>>> "918b4053184c0ca22236e70e299c5343eea35304".
-> >>>>>
-> >>>>> Have some concerns/questions on:
-> >>>>> When working in SRIOV environment VFs may be un-attached, having 
-> >>>>> no driver
-> >>>>> assigned to, or may be attached to Virtual machine to work in some
-> >>>>> pass-through mode.
-> >>>>> Once working in KVM setup there is pci-stub driver which is loaded 
-> >>>>> in the
-> >>>>> HYP/PF for a given attached VF.
-> >>> huh? 'loaded in the hyp/pf? .... um, loaded in the host, and a VF is
-> >>> detached from its host driver -- a VF can be used in the host w/o 
-> >>> any virtualization,
-> >>> i.e., that's how guest VM is driving the VF: as if it was used by a 
-> >>> guest (host) OS directly --
-> >>> and attached to pci-stub driver, when assigned to a KVM guest in 
-> >>> pre-VFIO days/ways.
-> >>> If VFIO used, then VF is attached to vfio-pci driver.
-> >>>
-> >>>>>
-> >>>>> I'm using the aer-inject kernel module and its corresponding 
-> >>>>> aer-inject tool
-> >>>>> to simulate an error in the HYP.
-> >>>>> In both cases your commit will cause the AER recovery to fail as 
-> >>>>> there is no
-> >>>>> driver assigned to PF's VFs that supports AER, comparing the code 
-> >>>>> before
-> >>>>> your change.
-> >>>>>
-> >>> Without VFIO, I believe that's correct. There was no AER-to-VF 
-> >>> support pre-VFIO days.
-> >>> I believe with the recent VFIO support,
-> >>> and modifications to KVM, an AER that is associated with an assigned 
-> >>> VF will
-> >>> force the crash/halt of the KVM guest -- can't depend on a guest VF 
-> >>> driver clearing
-> >>> the AER in the hyp/host -- guest isn't privileged enough to clear 
-> >>> the error.
-> >>> So, crashing the guest is the simple option at the moment, to 
-> >>> contain the error.
-> >>> Alex: do I have that (vfio aer default) correct, or is that still 
-> >>> site-under-construction?
-> >>      How about the case that the VF is not attached to a KVM guest 
-> >> and has no driver loaded on host ? in such a case from code review 
-> >> and some testing the recovery will
-> >>      fail as there is no AER aware driver here. What is the expected 
-> >> solution here ?
-> > Well, how can a VF be attributed to an AER if it's not assigned to a 
-> > guest, and it doesn't have a driver loaded for it in the host? i.e., 
-> > if it's not configured, it's sitting idle, so how can it generate an AER?
->      The expectation is really that it will not participate and won't 
-> vote, however in current code looks like it gets a default vote of 
-> PCI_ERS_RESULT_NO_AER_DRIVER and recovery failed, that's exactly my concern.
->      In case pci_walk_bus() go over both PF & VF which have same BUS 
-> number this may happen, agree ?
-> > if you are injecting an AER attributed to a device that isn't 
-> > configured, then you are contriving a non-valid system 
-> > condition/state, and I'm not surprised that the AER handler fails.  
-> > Maybe it needs an update/patch for the aer-inject case.
-> >
->      The failure happens once I inject the error to its PF which is 
-> configured.
-> >>      Any special qemu /stuff is needed to activate the VFIO support ? 
-> >> would like to give it a try for a case that VF is attached.
-> > I see Alex answered this question.  VFIO rocks! ... Alex did a great 
-> > job with it.
-> > Definitely cleaned up and more cleanly architected a solution that 
-> > will lend itself to incremental for
-> > complete reconstruction/duplication for other arches, busses, iommus, 
-> > etc. to follow.
->      Alex - have on my setup QEMU which comes as part of RH 6.5, it uses 
-> the pci-stub driver, looking for a clear way to replace with a newer one 
-> which supports VFIO.
->      Should I just download from GIT and run configure, make & make 
-> install or there are other required steps to fully replace ? any pointer 
-> to the required steps may help.
+Added support for pcie controller in dra7xx. This driver re-uses
+the designware core code that is already present in kernel.
 
-Sure, you can compile from git and make install, just don't expect
-libvirt on a RHEL6 system to know about vfio.  That doesn't prevent you
-from binding devices manually and running QEMU from the commandline.
-Alternatively, RHEL7 and recent Fedora (and I assume other recent
-distros) should have native vfio support.  Thanks,
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mohit Kumar <mohit.kumar@st.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Marek Vasut <marex@denx.de>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/devicetree/bindings/pci/ti-pci.txt |   59 +++
+ drivers/pci/host/Kconfig                         |   10 +
+ drivers/pci/host/Makefile                        |    1 +
+ drivers/pci/host/pci-dra7xx.c                    |  458 ++++++++++++++++++++++
+ 4 files changed, 528 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
+ create mode 100644 drivers/pci/host/pci-dra7xx.c
 
-Alex
-
-> >>>>> How such cases should work ?  my expectation was that the PF will 
-> >>>>> get the
-> >>>>> error detected message then will recognize whether
-> >>>>> issue is its own or one of its VFs
-> >>> The AER packet will have the tag of the VF in if it was the source 
-> >>> of the error;
-> >>> so the PF will never see it; although one could argue it should be 
-> >>> 'promoted'
-> >>> to the PF if PF/VF needs to clear some state it has wrt the VF (the 
-> >>> SRIOV spec is
-> >>> lacking of info in this space); _but_, VFIO resets the VF (sets FLR 
-> >>> bit) when the
-> >>> device is deassigned and before re-attachment to the host, so that 
-> >>> should clear out
-> >>> any state btwn PF & VF ('should' ... famous last words...).
-> >>      In my test I have used the aer-inject tool simulating an error 
-> >> to the BUS that both PF/VF are residing on, putting the function 
-> >> number to be the PF one, looks like both should be called by the aer 
-> >> driver as part
-> >>      of the pci_walk_bus(). As mentioned I got a call only on the PF 
-> >> and recovery failed as of the VF doesn't include an AER aware driver, 
-> >> once removed the VF recovery succeeded.
-> >>      I believe that packet should include some info about the source 
-> >> of the error isn't it ?
-> > yup.
-> >>      In addition, looking at IXGBE upstream source code at 
-> >> ixgbe_error_detected()  looks like there is some code running on the 
-> >> PF that checks whether the source was a VF.
-> > Ping the INTEL gang listed in MAINTAINDERS for ixgbe to see what was 
-> > tested, intention of this code wrt AER.
-> > Alex Duyck & Greg Rose are the two I've worked with the most on design 
-> > issues in the driver, but others @INTEL may be more active in it now.
->      Thanks, may be helpful.
-> >
-> >>
-> >>      By the way: when tried to simulate a VF error using its FN got 
-> >> below error:
-> >>      "Error: Failed to write, Inappropriate ioctl for device", any 
-> >> idea about that error ?
-> > details? how did you simulate the error? -- send cmdline used, or code 
-> > snippet to inject error, etc.
-> > that (quickly) looks like a sysfs error reply when an operation is not 
-> > supported to a file/device under it.
->      Working with the downloaded aer-inject-0.1 tool,  command line was 
-> ./aer-inject test/aer1
->      content of aer1 file is as below:
->      AER
->      BUS 33 DEV 0 FN 0                  (33 is the decimal value of 21 
-> hex value of PF & VF bus number)
->      UNCOR_STATUS POISON_TLP
->      HEADER_LOG 0 1 2 3
-> >
-> >>>
-> >>>>
-> >>>> I'm really not an AER expert, so help me understand this question of
-> >>>> recognizing whether an error is associated with a PF or a VF.
-> >>>>
-> >>>> In terms of hardware, it looks like the device that detects an error
-> >>>> logs some information and sends an Error Message upstream. The Root
-> >>>> Complex receives the message, captures the source ID from the Error
-> >>>> Message, and may generate an interrupt.  I expect this source ID can
-> >>>> be either a PF or a VF; there's no requirement that a VF error must be
-> >>>> reported as though it's from the PF, is there?
-> >>>>
-> >>>>> and work accordingly, in current code
-> >>>>> looks like recovery failed as part of "voting" once there is no 
-> >>>>> AER handler
-> >>>>> assigned to the VFs.
-> >>>>
-> >>>> The commit you mentioned has to do with PCI_ERS_RESULT_NO_AER_DRIVER.
-> >>>> We use pci_walk_bus() to figure out whether all the devices in a
-> >>>> subtree have a driver.  What subtree is involved here?  I would expect
-> >>>> the VFs to be siblings of the PF, not children of it, so I'm not sure
-> >>>> where things went wrong.
-> >>> Well, VFs could be on virtual busses (ARI turned on), so not 
-> >>> necessarily a
-> >>> sibling to PF ... and then we have the problem in PCI code of not 
-> >>> being able
-> >>> to traverse these virtual busses (in some cases; not sure if 
-> >>> pci_walk_bus(),
-> >>> which is going down the tree vs up the tree, has any problems here 
-> >>> w/VFs on
-> >>> virtual busses).
-> >>>
-> >>>>
-> >>>> Can you collect "lspci -vvv" output and maybe add some debug so we can
-> >>>> see exactly where the error is detected and what devices we're looking
-> >>>> at to conclude that one of them doesn't have a driver?
-> >>      lspci -vvv for both PF & VF is attached, we can see that VF 
-> >> (21:00.1) has no driver loaded comparing the PF (Kernel driver in 
-> >> use: mlx4_core).
-> > um, well, the VF doesn't contain an AER cap strucuture, so expecting 
-> > AER support for a pci device (VF or PF) w/o an AER cap is 
-> > 'wishful'.... so, the VF can't generate an AER b/c it doesn't have the 
-> > appropriate cap regs for the AER handler to use to report the error & 
-> > recover from it.
->      In case VF doesn't have AER caps we may expect that once there is 
-> an error let its PF that has the AER caps to know about and let it 
-> handle it on behalf of the VF, doesn't it make sense ?
->      Do you think that without AER caps for the VF it can work properly 
-> under VFIO driver ?
-> >
-> >>>>
-> >>>> Bjorn
-> >>>>
-> >>>
-> >>
-> >
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+new file mode 100644
+index 0000000..3d21791
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -0,0 +1,59 @@
++TI PCI Controllers
++
++PCIe Designware Controller
++ - compatible: Should be "ti,dra7-pcie""
++ - reg : Two register ranges as listed in the reg-names property
++ - reg-names : The first entry must be "ti-conf" for the TI specific registers
++	       The second entry must be "rc-dbics" for the designware pcie
++	       registers
++	       The third entry must be "config" for the PCIe configuration space
++ - phys : list of PHY specifiers (used by generic PHY framework)
++ - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
++	       number of PHYs as specified in *phys* property.
++ - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
++	       where <X> is the instance number of the pcie from the HW spec.
++ - interrupts : Two interrupt entries must be specified. The first one is for
++		main interrupt line and the second for MSI interrupt line.
++ - #address-cells,
++   #size-cells,
++   #interrupt-cells,
++   device_type,
++   ranges,
++   num-lanes,
++   interrupt-map-mask,
++   interrupt-map : as specified in ../designware-pcie.txt
++
++Example:
++axi {
++	compatible = "simple-bus";
++	#size-cells = <1>;
++	#address-cells = <1>;
++	ranges = <0x51000000 0x51000000 0x3000
++		  0x0	     0x20000000 0x10000000>;
++	pcie@51000000 {
++		compatible = "ti,dra7-pcie";
++		reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
++		reg-names = "rc_dbics", "ti_conf", "config";
++		interrupts = <0 232 0x4>, <0 233 0x4>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0          0x03000 0 0x00010000
++			  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
++		#interrupt-cells = <1>;
++		num-lanes = <1>;
++		ti,hwmods = "pcie1";
++		phys = <&pcie1_phy>;
++		phy-names = "pcie-phy0";
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_intc 1>,
++				<0 0 0 2 &pcie_intc 2>,
++				<0 0 0 3 &pcie_intc 3>,
++				<0 0 0 4 &pcie_intc 4>;
++		pcie_intc: interrupt-controller {
++			interrupt-controller;
++			#address-cells = <0>;
++			#interrupt-cells = <1>;
++		};
++	};
++};
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 21df477..22117b0 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -1,6 +1,16 @@
+ menu "PCI host controller drivers"
+ 	depends on PCI
+ 
++config PCI_DRA7XX
++	bool "TI DRA7xx PCIe controller"
++	select PCIE_DW
++	depends on OF && HAS_IOMEM && TI_PIPE3
++	help
++	 Enables support for the PCIE controller present in DRA7xx SoC. There
++	 are two instances of PCIE controller in DRA7xx. This controller can
++	 act both as EP and RC. This reuses the same Designware core as used
++	 by other SoCs.
++
+ config PCI_MVEBU
+ 	bool "Marvell EBU PCIe controller"
+ 	depends on ARCH_MVEBU || ARCH_DOVE || ARCH_KIRKWOOD
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 611ba4b..c42844d 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -1,4 +1,5 @@
+ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
++obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+new file mode 100644
+index 0000000..52b34fe
+--- /dev/null
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -0,0 +1,458 @@
++/*
++ * pcie-dra7xx - PCIe controller driver for TI DRA7xx SoCs
++ *
++ * Copyright (C) 2013-2014 Texas Instruments Incorporated - http://www.ti.com
++ *
++ * Authors: Kishon Vijay Abraham I <kishon@ti.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/delay.h>
++#include <linux/err.h>
++#include <linux/interrupt.h>
++#include <linux/irq.h>
++#include <linux/irqdomain.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++#include <linux/resource.h>
++#include <linux/types.h>
++
++#include "pcie-designware.h"
++
++/* PCIe controller wrapper DRA7XX configuration registers */
++
++#define	PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN		0x0024
++#define	PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN		0x0028
++#define	ERR_SYS						BIT(0)
++#define	ERR_FATAL					BIT(1)
++#define	ERR_NONFATAL					BIT(2)
++#define	ERR_COR						BIT(3)
++#define	ERR_AXI						BIT(4)
++#define	ERR_ECRC					BIT(5)
++#define	PME_TURN_OFF					BIT(8)
++#define	PME_TO_ACK					BIT(9)
++#define	PM_PME						BIT(10)
++#define	LINK_REQ_RST					BIT(11)
++#define	LINK_UP_EVT					BIT(12)
++#define	CFG_BME_EVT					BIT(13)
++#define	CFG_MSE_EVT					BIT(14)
++#define	INTERRUPTS (ERR_SYS | ERR_FATAL | ERR_NONFATAL | ERR_COR | ERR_AXI | \
++			ERR_ECRC | PME_TURN_OFF | PME_TO_ACK | PM_PME | \
++			LINK_REQ_RST | LINK_UP_EVT | CFG_BME_EVT | CFG_MSE_EVT)
++
++#define	PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI		0x0034
++#define	PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI		0x0038
++#define	INTA						BIT(0)
++#define	INTB						BIT(1)
++#define	INTC						BIT(2)
++#define	INTD						BIT(3)
++#define	MSI						BIT(4)
++#define	LEG_EP_INTERRUPTS (INTA | INTB | INTC | INTD)
++
++#define	PCIECTRL_DRA7XX_CONF_DEVICE_CMD			0x0104
++#define	LTSSM_EN					0x1
++
++#define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
++#define	LINK_UP						BIT(16)
++
++struct dra7xx_pcie {
++	void __iomem		*base;
++	struct phy		**phy;
++	int			phy_count;
++	struct device		*dev;
++	struct pcie_port	pp;
++};
++
++#define to_dra7xx_pcie(x)	container_of((x), struct dra7xx_pcie, pp)
++
++static inline u32 dra7xx_pcie_readl(struct dra7xx_pcie *pcie, u32 offset)
++{
++	return readl(pcie->base + offset);
++}
++
++static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
++				      u32 value)
++{
++	writel(value, pcie->base + offset);
++}
++
++static int dra7xx_pcie_link_up(struct pcie_port *pp)
++{
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
++	u32 reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
++
++	return !!(reg & LINK_UP);
++}
++
++static int dra7xx_pcie_establish_link(struct pcie_port *pp)
++{
++	u32 reg;
++	unsigned int retries = 1000;
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
++
++	if (dw_pcie_link_up(pp)) {
++		dev_err(pp->dev, "link is already up\n");
++		return 0;
++	}
++
++	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
++	reg |= LTSSM_EN;
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
++
++	while (retries--) {
++		reg = dra7xx_pcie_readl(dra7xx,	PCIECTRL_DRA7XX_CONF_PHY_CS);
++		if (reg & LINK_UP)
++			break;
++		usleep_range(10, 20);
++	}
++
++	if (retries == 0) {
++		dev_err(pp->dev, "link is not up\n");
++		return -ETIMEDOUT;
++	}
++
++	return 0;
++}
++
++static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
++{
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
++
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
++			   ~INTERRUPTS);
++	dra7xx_pcie_writel(dra7xx,
++			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
++			   ~LEG_EP_INTERRUPTS & ~MSI);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		dra7xx_pcie_writel(dra7xx,
++				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI, MSI);
++	else
++		dra7xx_pcie_writel(dra7xx,
++				   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
++				   LEG_EP_INTERRUPTS);
++}
++
++static void dra7xx_pcie_host_init(struct pcie_port *pp)
++{
++	dw_pcie_setup_rc(pp);
++	dra7xx_pcie_establish_link(pp);
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		dw_pcie_msi_init(pp);
++	dra7xx_pcie_enable_interrupts(pp);
++}
++
++static struct pcie_host_ops dra7xx_pcie_host_ops = {
++	.link_up = dra7xx_pcie_link_up,
++	.host_init = dra7xx_pcie_host_init,
++};
++
++static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
++				irq_hw_number_t hwirq)
++{
++	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
++	irq_set_chip_data(irq, domain->host_data);
++	set_irq_flags(irq, IRQF_VALID);
++
++	return 0;
++}
++
++static const struct irq_domain_ops intx_domain_ops = {
++	.map = dra7xx_pcie_intx_map,
++};
++
++static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
++{
++	struct device *dev = pp->dev;
++	struct device_node *node = dev->of_node;
++	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
++
++	if (!pcie_intc_node) {
++		dev_err(dev, "No PCIe Intc node found\n");
++		return PTR_ERR(pcie_intc_node);
++	}
++
++	pp->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
++					       &intx_domain_ops, pp);
++	if (!pp->irq_domain) {
++		dev_err(dev, "Failed to get a INTx IRQ domain\n");
++		return PTR_ERR(pp->irq_domain);
++	}
++
++	return 0;
++}
++
++static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
++{
++	struct pcie_port *pp = arg;
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
++	u32 reg;
++
++	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
++
++	switch (reg) {
++	case MSI:
++		dw_handle_msi_irq(pp);
++		break;
++	case INTA:
++	case INTB:
++	case INTC:
++	case INTD:
++		generic_handle_irq(irq_find_mapping(pp->irq_domain, ffs(reg)));
++		break;
++	}
++
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
++
++	return IRQ_HANDLED;
++}
++
++
++static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
++{
++	struct dra7xx_pcie *dra7xx = arg;
++	u32 reg;
++
++	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
++
++	if (reg & ERR_SYS)
++		dev_dbg(dra7xx->dev, "System Error\n");
++
++	if (reg & ERR_FATAL)
++		dev_dbg(dra7xx->dev, "Fatal Error\n");
++
++	if (reg & ERR_NONFATAL)
++		dev_dbg(dra7xx->dev, "Non Fatal Error\n");
++
++	if (reg & ERR_COR)
++		dev_dbg(dra7xx->dev, "Correctable Error\n");
++
++	if (reg & ERR_AXI)
++		dev_dbg(dra7xx->dev, "AXI tag lookup fatal Error\n");
++
++	if (reg & ERR_ECRC)
++		dev_dbg(dra7xx->dev, "ECRC Error\n");
++
++	if (reg & PME_TURN_OFF)
++		dev_dbg(dra7xx->dev,
++			"Power Management Event Turn-Off message received\n");
++
++	if (reg & PME_TO_ACK)
++		dev_dbg(dra7xx->dev,
++			"Power Management Turn-Off Ack message received\n");
++
++	if (reg & PM_PME)
++		dev_dbg(dra7xx->dev,
++			"PM Power Management Event message received\n");
++
++	if (reg & LINK_REQ_RST)
++		dev_dbg(dra7xx->dev, "Link Request Reset\n");
++
++	if (reg & LINK_UP_EVT)
++		dev_dbg(dra7xx->dev, "Link-up state change\n");
++
++	if (reg & CFG_BME_EVT)
++		dev_dbg(dra7xx->dev, "CFG 'Bus Master Enable' change\n");
++
++	if (reg & CFG_MSE_EVT)
++		dev_dbg(dra7xx->dev, "CFG 'Memory Space Enable' change\n");
++
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN, reg);
++
++	return IRQ_HANDLED;
++}
++
++static int add_pcie_port(struct dra7xx_pcie *dra7xx,
++			  struct platform_device *pdev)
++{
++	int ret;
++	struct pcie_port *pp;
++	struct resource *res;
++	struct device *dev = &pdev->dev;
++
++	pp = &dra7xx->pp;
++	pp->dev = dev;
++	pp->ops = &dra7xx_pcie_host_ops;
++
++	pp->irq = platform_get_irq(pdev, 1);
++	if (pp->irq < 0) {
++		dev_err(dev, "missing IRQ resource\n");
++		return -EINVAL;
++	}
++
++	ret = devm_request_irq(&pdev->dev, pp->irq,
++			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
++			       "dra7-pcie-msi",	pp);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to request irq\n");
++		return ret;
++	}
++
++	if (!IS_ENABLED(CONFIG_PCI_MSI)) {
++		ret = dra7xx_pcie_init_irq_domain(pp);
++		if (ret < 0)
++			return ret;
++	}
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
++	pp->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
++	if (!pp->dbi_base)
++		return -ENOMEM;
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(dra7xx->dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int __init dra7xx_pcie_probe(struct platform_device *pdev)
++{
++	u32 reg;
++	int ret;
++	int irq;
++	int i;
++	int phy_count;
++	struct phy **phy;
++	void __iomem *base;
++	struct resource *res;
++	struct dra7xx_pcie *dra7xx;
++	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
++	char name[10];
++
++	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
++	if (!dra7xx)
++		return -ENOMEM;
++
++	irq = platform_get_irq(pdev, 0);
++	if (irq < 0) {
++		dev_err(dev, "missing IRQ resource\n");
++		return -EINVAL;
++	}
++
++	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
++			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
++	if (ret) {
++		dev_err(dev, "failed to request irq\n");
++		return ret;
++	}
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
++	base = devm_ioremap_nocache(dev, res->start, resource_size(res));
++	if (!base)
++		return -ENOMEM;
++
++	phy_count = of_property_count_strings(np, "phy-names");
++	if (phy_count < 0) {
++		dev_err(dev, "unable to find the strings\n");
++		return phy_count;
++	}
++
++	phy = devm_kzalloc(dev, sizeof(*phy) * phy_count, GFP_KERNEL);
++	if (!phy)
++		return -ENOMEM;
++
++	for (i = 0; i < phy_count; i++) {
++		snprintf(name, sizeof(name), "pcie-phy%d", i);
++		phy[i] = devm_phy_get(dev, name);
++		if (IS_ERR(phy[i]))
++			return PTR_ERR(phy[i]);
++
++		ret = phy_init(phy[i]);
++		if (ret < 0)
++			goto err_phy;
++
++		ret = phy_power_on(phy[i]);
++		if (ret < 0) {
++			phy_exit(phy[i]);
++			goto err_phy;
++		}
++	}
++
++	dra7xx->base = base;
++	dra7xx->phy = phy;
++	dra7xx->dev = dev;
++	dra7xx->phy_count = phy_count;
++
++	pm_runtime_enable(dev);
++	ret = pm_runtime_get_sync(dev);
++	if (IS_ERR_VALUE(ret)) {
++		dev_err(dev, "pm_runtime_get_sync failed\n");
++		goto err_phy;
++	}
++
++	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
++	reg &= ~LTSSM_EN;
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
++
++	platform_set_drvdata(pdev, dra7xx);
++
++	ret = add_pcie_port(dra7xx, pdev);
++	if (ret < 0)
++		goto err_add_port;
++
++	return 0;
++
++err_add_port:
++	pm_runtime_put(dev);
++	pm_runtime_disable(dev);
++
++err_phy:
++	while (--i >= 0) {
++		phy_power_off(phy[i]);
++		phy_exit(phy[i]);
++	}
++
++	return ret;
++}
++
++static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
++{
++	struct dra7xx_pcie *dra7xx = platform_get_drvdata(pdev);
++	struct pcie_port *pp = &dra7xx->pp;
++	struct device *dev = &pdev->dev;
++	int count = dra7xx->phy_count;
++
++	if (pp->irq_domain)
++		irq_domain_remove(pp->irq_domain);
++	pm_runtime_put(dev);
++	pm_runtime_disable(dev);
++	while (count--) {
++		phy_power_off(dra7xx->phy[count]);
++		phy_exit(dra7xx->phy[count]);
++	}
++
++	return 0;
++}
++
++static const struct of_device_id of_dra7xx_pcie_match[] = {
++	{ .compatible = "ti,dra7-pcie", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, of_dra7xx_pcie_match);
++
++static struct platform_driver dra7xx_pcie_driver = {
++	.remove		= __exit_p(dra7xx_pcie_remove),
++	.driver = {
++		.name	= "dra7-pcie",
++		.owner	= THIS_MODULE,
++		.of_match_table = of_dra7xx_pcie_match,
++	},
++};
++
++module_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
++
++MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
++MODULE_DESCRIPTION("TI PCIe controller driver");
++MODULE_LICENSE("GPL v2");
+-- 
+1.7.9.5
 
