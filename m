@@ -1,58 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp09.in.ibm.com ([122.248.162.9]:50040 "EHLO
-	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932895AbaFJB47 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:56:59 -0400
-Received: from /spool/local
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Jun 2014 07:26:57 +0530
-Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id A0D48125804D
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:26:16 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1vkmE57344208
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:46 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1usVq012948
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:26:54 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: benh@au1.ibm.com
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [RFC PATCH V3 02/17] pci/of: Match PCI VFs to dev-tree nodes dynamically
-Date: Tue, 10 Jun 2014 09:56:24 +0800
-Message-Id: <1402365399-5121-3-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [Patch V3 11/16] x86, irq, ACPI: Introduce a rwsem to protect IOAPIC operations from hotplug
+Date: Wed, 25 Jun 2014 16:40:42 +0800
+Message-Id: <1403685648-10103-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As introduced by commit 98d9f30c82 ("pci/of: Match PCI devices to dev-tree nodes
-dynamically"), we need to match PCI devices to their corresponding dev-tree
-nodes. While for VFs, this step was missed.
+We are going to support ACPI based IOAPIC hotplug, so introduce a rwsem
+to protect IOAPIC data structures from IOAPIC hotplug. We choose to
+serialize in ACPI instead of in the IOAPIC core because:
+1) currently we are only plan to support ACPI based IOAPIC hotplug
+2) it's much more clean and easy
+3) It does't affect IOAPIC discovered by devicetree, SFI and mppparse.
 
-This patch matches VFs' PCI devices to dev-tree nodes dynamically.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/iov.c |    1 +
- 1 file changed, 1 insertion(+)
+ arch/x86/kernel/acpi/boot.c |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 589ef7d..1d21f43 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -67,6 +67,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 8c28023924bf..120b573f1e96 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -76,6 +76,8 @@ int acpi_fix_pin2_polarity __initdata;
+ static u64 acpi_lapic_addr __initdata = APIC_DEFAULT_PHYS_BASE;
+ #endif
  
- 	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
-+	pci_set_of_node(virtfn);
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
- 	pci_setup_device(virtfn);
- 	virtfn->dev.parent = dev->dev.parent;
++static DECLARE_RWSEM(acpi_ioapic_rwsem);
++
+ #ifndef __HAVE_ARCH_CMPXCHG
+ #warning ACPI uses CMPXCHG, i486 and later hardware
+ #endif
+@@ -608,8 +610,11 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
+ 
+ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
+ {
+-	int irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
++	int irq;
+ 
++	down_read(&acpi_ioapic_rwsem);
++	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC | IOAPIC_MAP_CHECK);
++	up_read(&acpi_ioapic_rwsem);
+ 	if (irq >= 0) {
+ 		*irqp = irq;
+ 		return 0;
+@@ -650,7 +655,9 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ 	int irq = gsi;
+ 
+ #ifdef CONFIG_X86_IO_APIC
++	down_read(&acpi_ioapic_rwsem);
+ 	irq = mp_register_gsi(dev, gsi, trigger, polarity);
++	up_read(&acpi_ioapic_rwsem);
+ #endif
+ 
+ 	return irq;
+@@ -659,7 +666,9 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
+ static void acpi_unregister_gsi_ioapic(u32 gsi)
+ {
+ #ifdef CONFIG_X86_IO_APIC
++	down_read(&acpi_ioapic_rwsem);
+ 	mp_unregister_gsi(gsi);
++	up_read(&acpi_ioapic_rwsem);
+ #endif
+ }
+ 
+@@ -1185,7 +1194,9 @@ static void __init acpi_process_madt(void)
+ 			/*
+ 			 * Parse MADT IO-APIC entries
+ 			 */
++			down_write(&acpi_ioapic_rwsem);
+ 			error = acpi_parse_madt_ioapic_entries();
++			up_write(&acpi_ioapic_rwsem);
+ 			if (!error) {
+ 				acpi_set_irq_model_ioapic();
+ 
 -- 
-1.7.9.5
+1.7.10.4
 
