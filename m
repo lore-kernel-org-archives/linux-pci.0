@@ -1,40 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH 0/2] Introduce ARM GICv2m MSI(-X) support
-Date: Mon, 23 Jun 2014 19:32:58 -0500
-Message-ID: <1403569980-12913-1-git-send-email-suravee.suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:46206 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757679AbaFYSBm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 14:01:42 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<jg1.han@samsung.com>, <bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-arm-kernel@lists.infradead.org>, <tony@atomide.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>, <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>
+Subject: [PATCH 6/8] ARM: dts: dra7: Add dt data for PCIe PHY control module
+Date: Wed, 25 Jun 2014 23:30:16 +0530
+Message-ID: <1403719218-9484-7-git-send-email-kishon@ti.com>
+In-Reply-To: <1403719218-9484-1-git-send-email-kishon@ti.com>
+References: <1403719218-9484-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Added dt data for PCIe PHY control module used by PCIe PHY.
+The documention for this node can be found @ ../bindings/phy/ti-phy.txt
 
-This patch set introduces support for MSI(-X) in GICv2m specification,
-which is implemented in some variation of GIC400.
+Cc: Tony Lindgren <tony@atomide.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Pawel Moll <pawel.moll@arm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Kumar Gala <galak@codeaurora.org>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra7.dtsi |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-This depends on and has been tested with the V7 of "Add support for PCI in AArch64"
-(https://lkml.org/lkml/2014/3/14/320).
-
-Suravee Suthikulpanit (2):
-  arm/gic: Add binding probe for GIC400
-  arm/gic: Add supports for GICv2m MSI(-X)
-
- Documentation/devicetree/bindings/arm/gic.txt |  18 +-
- drivers/irqchip/Kconfig                       |   6 +
- drivers/irqchip/Makefile                      |   1 +
- drivers/irqchip/gic-msi-v2m.c                 | 249 ++++++++++++++++++++++++++
- drivers/irqchip/gic-msi-v2m.h                 |  20 +++
- drivers/irqchip/irq-gic.c                     |  23 ++-
- 6 files changed, 313 insertions(+), 4 deletions(-)
- create mode 100644 drivers/irqchip/gic-msi-v2m.c
- create mode 100644 drivers/irqchip/gic-msi-v2m.h
-
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index 34464cd..f029a90 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -827,6 +827,23 @@
+ 			ti,hwmods = "sata";
+ 		};
+ 
++		omap_control_pcie1phy: control-phy@0x4a003c40 {
++			compatible = "ti,control-phy-pcie";
++			reg = <0x4a003c40 0x4>, <0x4a003c14 0x4>, <0x4a003c34 0x4>;
++			reg-names = "power", "control_sma", "pcie_pcs";
++			clocks = <&sys_clkin1>;
++			clock-names = "sysclk";
++		};
++
++		omap_control_pcie2phy: control-pcie@0x4a003c44 {
++			compatible = "ti,control-phy-pcie";
++			reg = <0x4a003c44 0x4>, <0x4a003c14 0x4>, <0x4a003c34 0x4>;
++			reg-names = "power", "control_sma", "pcie_pcs";
++			clocks = <&sys_clkin1>;
++			clock-names = "sysclk";
++			status = "disabled";
++		};
++
+ 		omap_control_usb2phy1: control-phy@4a002300 {
+ 			compatible = "ti,control-phy-usb2";
+ 			reg = <0x4a002300 0x4>;
 -- 
-1.9.0
+1.7.9.5
 
