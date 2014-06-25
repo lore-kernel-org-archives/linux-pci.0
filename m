@@ -1,237 +1,193 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:13883 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751106AbaFJGK3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 Jun 2014 02:10:29 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: [Patch V4 21/42] x86, ACPI, irq: consolidate algorithm of mapping (ioapic, pin) to IRQ number
-Date: Tue, 10 Jun 2014 14:13:25 +0800
-Message-Id: <1402380812-32446-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-22-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-22-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <jg1.han@samsung.com>,
+	<bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>, <grant.likely@linaro.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 2/3] PCI: designware: use untranslated address while programming ATU
+Date: Wed, 25 Jun 2014 23:26:46 +0530
+Message-ID: <1403719007-9352-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1403719007-9352-1-git-send-email-kishon@ti.com>
+References: <1403719007-9352-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently ACPI and ioapic both implement algorithms to map (ioapic, pin)
-to IRQ number. So consolidate the common part into one place, which is
-also preparing for irqdomain support.
+In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
+address. So whenever the cpu issues a read/write request, the 4 most
+significant bits are used by L3 to determine the target controller.
+For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
+the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
+the outbound translation window the *base* should be programmed as 0x000_0000.
+Whenever we try to write to say 0x2000_0000, it will be translated to whatever
+we have programmed in the translation window with base as 0x000_0000.
 
-It introduces mp_map_gsi_to_irq(), which will be used to allocate IRQ
-number IOAPIC pins when irqdomain is enabled.
+This is needed when the dt node is modelled something like below
+axi {
+	compatible = "simple-bus";
+	#size-cells = <1>;
+	#address-cells = <1>;
+	ranges = <0x0        0x20000000 0x10000000 // 28-bit bus
+		  0x51000000 0x51000000 0x3000>;
+	pcie@51000000 {
+		reg = <0x1000 0x2000>, <0x51002000 0x14c>, <0x51000000 0x2000>;
+		reg-names = "config", "ti_conf", "rc_dbics";
+		#address-cells = <3>;
+		#size-cells = <2>;
+		ranges = <0x81000000 0 0          0x03000 0 0x00010000
+			  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
+	};
+};
 
-Also rename gsi_to_irq() to map_gsi_to_irq(), later we will introduce
-unmap_gsi_to_irq() when enabling IOAPIC hotplug.
+Here the CPU address for configuration space is 0x20013000 and the controller
+address for configuration space is 0x13000. The controller address should be
+used while programming the ATU (in order for translation to happen properly in
+DRA7xx).
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mohit Kumar <mohit.kumar@st.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Marek Vasut <marex@denx.de>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
-Rebase due to change in patch 8.
----
- arch/x86/include/asm/io_apic.h |    2 ++
- arch/x86/kernel/acpi/boot.c    |   45 +++++++++++++++++++---------------------
- arch/x86/kernel/apic/io_apic.c |   27 +++++++++++++-----------
- 3 files changed, 38 insertions(+), 36 deletions(-)
+ drivers/pci/host/pcie-designware.c |   49 ++++++++++++++++++++++++++++--------
+ drivers/pci/host/pcie-designware.h |    4 +++
+ 2 files changed, 42 insertions(+), 11 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index b775cf3622c3..978e51fdcb59 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -172,6 +172,7 @@ extern u32 gsi_top;
- extern int mp_find_ioapic(u32 gsi);
- extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern u32 mp_pin_to_gsi(int ioapic, int pin);
-+extern int mp_map_gsi_to_irq(u32 gsi);
- extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void __init pre_init_apic_IRQ0(void);
- 
-@@ -214,6 +215,7 @@ static inline void ioapic_insert_resources(void) { }
- #define gsi_top (NR_IRQS_LEGACY)
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
- static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
-+static inline int mp_map_gsi_to_irq(u32 gsi) { return gsi; }
- 
- struct io_apic_irq_attr;
- static inline int io_apic_set_pci_routing(struct device *dev, int irq,
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index b12976590a72..9965afbd71ca 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -100,27 +100,15 @@ static u32 isa_irq_to_gsi[NR_IRQS_LEGACY] __read_mostly = {
- 
- #define	ACPI_INVALID_GSI		INT_MIN
- 
--static unsigned int gsi_to_irq(unsigned int gsi)
-+static int map_gsi_to_irq(unsigned int gsi)
- {
--	unsigned int irq = gsi + nr_legacy_irqs();
--	unsigned int i;
-+	int i;
- 
--	for (i = 0; i < nr_legacy_irqs(); i++) {
--		if (isa_irq_to_gsi[i] == gsi) {
-+	for (i = 0; i < nr_legacy_irqs(); i++)
-+		if (isa_irq_to_gsi[i] == gsi)
- 			return i;
--		}
--	}
--
--	/* Provide an identity mapping of gsi == irq
--	 * except on truly weird platforms that have
--	 * non isa irqs in the first 16 gsis.
--	 */
--	if (gsi >= nr_legacy_irqs())
--		irq = gsi;
--	else
--		irq = gsi_top + gsi;
- 
--	return irq;
-+	return mp_map_gsi_to_irq(gsi);
- }
- 
- /*
-@@ -416,6 +404,7 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 			   int polarity)
- {
-+	int irq;
- 	int ioapic;
- 	int ioapic_pin;
- 	struct io_apic_irq_attr irq_attr;
-@@ -428,6 +417,10 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	if (acpi_gbl_FADT.sci_interrupt == gsi)
- 		return gsi;
- 
-+	irq = map_gsi_to_irq(gsi);
-+	if (irq < 0)
-+		return ACPI_INVALID_GSI;
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 0b7b455..11aba6d 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -401,8 +401,15 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
+ 	struct resource *cfg_res;
+-	u32 val;
+-	int i;
++	u32 val, na, ns;
++	const __be32 *addrp;
++	int i, index;
 +
- 	ioapic = mp_find_ioapic(gsi);
- 	if (ioapic < 0) {
- 		printk(KERN_WARNING "No IOAPIC for GSI %u\n", gsi);
-@@ -449,7 +442,7 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	set_io_apic_irq_attr(&irq_attr, ioapic, ioapic_pin,
- 			     trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
- 			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
--	ret = io_apic_set_pci_routing(dev, gsi_to_irq(gsi), &irq_attr);
-+	ret = io_apic_set_pci_routing(dev, irq, &irq_attr);
- 	if (ret < 0)
- 		gsi = ACPI_INVALID_GSI;
- 
-@@ -614,16 +607,20 @@ void __init acpi_pic_sci_set_trigger(unsigned int irq, u16 trigger)
- 	outb(new >> 8, 0x4d1);
- }
- 
--int acpi_gsi_to_irq(u32 gsi, unsigned int *irq)
-+int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
- {
--	*irq = gsi_to_irq(gsi);
-+	int irq = map_gsi_to_irq(gsi);
- 
-+	if (irq >= 0) {
- #ifdef CONFIG_X86_IO_APIC
--	if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
--		setup_IO_APIC_irq_extra(gsi);
-+		if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
-+			setup_IO_APIC_irq_extra(gsi);
- #endif
-+		*irqp = irq;
-+		return 0;
-+	}
- 
--	return 0;
-+	return -1;
- }
- EXPORT_SYMBOL_GPL(acpi_gsi_to_irq);
- 
-@@ -681,7 +678,7 @@ int acpi_register_gsi(struct device *dev, u32 gsi, int trigger, int polarity)
- 
- 	plat_gsi = __acpi_register_gsi(dev, gsi, trigger, polarity);
- 	if (plat_gsi != ACPI_INVALID_GSI)
--		return gsi_to_irq(plat_gsi);
-+		return map_gsi_to_irq(plat_gsi);
- 
- 	return -1;
- }
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 12d12f897107..ed159cd36971 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -959,11 +959,19 @@ static int irq_trigger(int idx)
- 	return trigger;
- }
- 
-+int mp_map_gsi_to_irq(u32 gsi)
-+{
-+	/*
-+	 * Provide an identity mapping of gsi == irq except on truly weird
-+	 * platforms that have non isa irqs in the first 16 gsis.
++	/* Find the address cell size and the number of cells in order to get
++	 * the untranslated address.
 +	 */
-+	return gsi >= nr_legacy_irqs() ? gsi : gsi_top + gsi;
-+}
++	of_property_read_u32(np, "#address-cells", &na);
++	ns = of_n_size_cells(np);
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+ 	if (cfg_res) {
+@@ -410,6 +417,12 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 		pp->config.cfg1_size = resource_size(cfg_res)/2;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->config.cfg0_size;
 +
- static int pin_2_irq(int idx, int apic, int pin)
- {
- 	int irq;
- 	int bus = mp_irqs[idx].srcbus;
--	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(apic);
- 
- 	/*
- 	 * Debugging check, we are in big trouble if this message pops up!
-@@ -971,17 +979,6 @@ static int pin_2_irq(int idx, int apic, int pin)
- 	if (mp_irqs[idx].dstirq != pin)
- 		pr_err("broken BIOS or MPTABLE parser, ayiee!!\n");
- 
--	if (test_bit(bus, mp_bus_not_pci)) {
--		irq = mp_irqs[idx].srcbusirq;
--	} else {
--		u32 gsi = gsi_cfg->gsi_base + pin;
--
--		if (gsi >= nr_legacy_irqs())
--			irq = gsi;
--		else
--			irq = gsi_top + gsi;
--	}
--
- #ifdef CONFIG_X86_32
- 	/*
- 	 * PCI IRQ command line redirection. Yes, limits are hardcoded.
-@@ -996,11 +993,17 @@ static int pin_2_irq(int idx, int apic, int pin)
- 				apic_printk(APIC_VERBOSE, KERN_DEBUG
- 						"using PIRQ%d -> IRQ %d\n",
- 						pin-16, irq);
-+				return irq;
- 			}
++		/* Find the untranslated configuration space address */
++		index = of_property_match_string(np, "reg-names", "config");
++		addrp = of_get_address(np, index, false, false);
++		pp->cfg0_mod_addr = of_read_number(addrp, ns);
++		pp->cfg1_mod_addr = pp->cfg0_mod_addr + pp->config.cfg0_size;
+ 	} else {
+ 		dev_err(pp->dev, "missing *config* reg space\n");
+ 	}
+@@ -435,12 +448,20 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->config.io_size = resource_size(&pp->io);
+ 			pp->config.io_bus_addr = range.pci_addr;
+ 			pp->io_base = range.cpu_addr;
++
++			/* Find the untranslated IO space address */
++			pp->io_mod_addr = of_read_number(parser.range -
++							 parser.np + na, ns);
+ 		}
+ 		if (restype == IORESOURCE_MEM) {
+ 			of_pci_range_to_resource(&range, np, &pp->mem);
+ 			pp->mem.name = "MEM";
+ 			pp->config.mem_size = resource_size(&pp->mem);
+ 			pp->config.mem_bus_addr = range.pci_addr;
++
++			/* Find the untranslated MEM space address */
++			pp->mem_mod_addr = of_read_number(parser.range -
++							  parser.np + na, ns);
+ 		}
+ 		if (restype == 0) {
+ 			of_pci_range_to_resource(&range, np, &pp->cfg);
+@@ -448,6 +469,12 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->config.cfg1_size = resource_size(&pp->cfg)/2;
+ 			pp->cfg0_base = pp->cfg.start;
+ 			pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
++
++			/* Find the untranslated configuration space address */
++			pp->cfg0_mod_addr = of_read_number(parser.range -
++							   parser.np + na, ns);
++			pp->cfg1_mod_addr = pp->cfg0_mod_addr +
++					    pp->config.cfg0_size;
  		}
  	}
- #endif
  
-+	if (test_bit(bus, mp_bus_not_pci))
-+		irq = mp_irqs[idx].srcbusirq;
-+	else
-+		irq = mp_map_gsi_to_irq(mp_pin_to_gsi(apic, pin));
-+
- 	return irq;
- }
- 
+@@ -522,9 +549,9 @@ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
+ 	/* Program viewport 0 : OUTBOUND : CFG0 */
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
+ 			  PCIE_ATU_VIEWPORT);
+-	dw_pcie_writel_rc(pp, pp->cfg0_base, PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, (pp->cfg0_base >> 32), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, pp->cfg0_base + pp->config.cfg0_size - 1,
++	dw_pcie_writel_rc(pp, pp->cfg0_mod_addr, PCIE_ATU_LOWER_BASE);
++	dw_pcie_writel_rc(pp, (pp->cfg0_mod_addr >> 32), PCIE_ATU_UPPER_BASE);
++	dw_pcie_writel_rc(pp, pp->cfg0_mod_addr + pp->config.cfg0_size - 1,
+ 			  PCIE_ATU_LIMIT);
+ 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
+@@ -538,9 +565,9 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
+ 			  PCIE_ATU_VIEWPORT);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
+-	dw_pcie_writel_rc(pp, pp->cfg1_base, PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, (pp->cfg1_base >> 32), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, pp->cfg1_base + pp->config.cfg1_size - 1,
++	dw_pcie_writel_rc(pp, pp->cfg1_mod_addr, PCIE_ATU_LOWER_BASE);
++	dw_pcie_writel_rc(pp, (pp->cfg1_mod_addr >> 32), PCIE_ATU_UPPER_BASE);
++	dw_pcie_writel_rc(pp, pp->cfg1_mod_addr + pp->config.cfg1_size - 1,
+ 			  PCIE_ATU_LIMIT);
+ 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
+@@ -553,9 +580,9 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
+ 			  PCIE_ATU_VIEWPORT);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
+-	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
++	dw_pcie_writel_rc(pp, pp->mem_mod_addr, PCIE_ATU_LOWER_BASE);
++	dw_pcie_writel_rc(pp, (pp->mem_mod_addr >> 32), PCIE_ATU_UPPER_BASE);
++	dw_pcie_writel_rc(pp, pp->mem_mod_addr + pp->config.mem_size - 1,
+ 			  PCIE_ATU_LIMIT);
+ 	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 77f592f..13828f8 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -36,11 +36,15 @@ struct pcie_port {
+ 	u8			root_bus_nr;
+ 	void __iomem		*dbi_base;
+ 	u64			cfg0_base;
++	u64			cfg0_mod_addr;
+ 	void __iomem		*va_cfg0_base;
+ 	u64			cfg1_base;
++	u64			cfg1_mod_addr;
+ 	void __iomem		*va_cfg1_base;
+ 	u64			io_base;
++	u64			io_mod_addr;
+ 	u64			mem_base;
++	u64			mem_mod_addr;
+ 	struct resource		cfg;
+ 	struct resource		io;
+ 	struct resource		mem;
 -- 
-1.7.10.4
+1.7.9.5
 
