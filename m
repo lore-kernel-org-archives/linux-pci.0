@@ -1,54 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:61325 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752607AbaFXTTD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 15:19:03 -0400
-Received: by mail-qc0-f178.google.com with SMTP id c9so762386qcz.9
-        for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2014 12:19:02 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: r65037@freescale.com, shawn.guo@freescale.com, marex@denx.de,
-	d.mueller@elsoft.ch, kernel@pengutronix.de,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	tharvey@gateworks.com, Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
-Date: Tue, 24 Jun 2014 16:18:27 -0300
-Message-Id: <1403637507-9424-1-git-send-email-festevam@gmail.com>
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:34800 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750699AbaFYEMk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 00:12:40 -0400
+Received: by mail-pd0-f174.google.com with SMTP id y10so1106306pdj.33
+        for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2014 21:12:40 -0700 (PDT)
+Message-ID: <53AA4C32.7060004@ozlabs.ru>
+Date: Wed, 25 Jun 2014 14:12:34 +1000
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+CC: benh@au1.ibm.com, linuxppc-dev@lists.ozlabs.org,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	gwshan@linux.vnet.ibm.com, yan@linux.vnet.ibm.com,
+	qiudayu@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table dynamically
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com> <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com> <53A94DA8.6020206@ozlabs.ru> <20140625011211.GA5785@richard>
+In-Reply-To: <20140625011211.GA5785@richard>
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+On 06/25/2014 11:12 AM, Wei Yang wrote:
+> On Tue, Jun 24, 2014 at 08:06:32PM +1000, Alexey Kardashevskiy wrote:
+>> On 06/10/2014 11:56 AM, Wei Yang wrote:
+>>> Current iommu_table of a PE is a static field. This will have a problem when
+>>> iommu_free_table is called.
+>>
+>> What kind of problem? This table is per PE and PE is not going anywhere.
+>>
+> 
+> Yes, for Bus PE, they will always sit in the system. When VF PE introduced,
+> they could be released on the fly. When they are released, so do the iommu
+> table for the PE.
 
-When the mx6 PCI conctroller is initialized in the bootloader we see a kernel 
-hang inside imx6_add_pcie_port().
+iommu_table is a part of PE struct. When PE is released, iommu_table will
+go with it as well. Why to make is a pointer? I would understand it if you
+added reference counting there but no - iommu_table's lifetime is equal to
+PE lifetime.
 
-Adding a 30ms delay allows the kernel to boot.
 
-Suggested-by: David Müller <d.mueller@elsoft.ch>
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
----
-I am happy to get feedback on how to properly fix this.
 
-Thanks
-
- drivers/pci/host/pci-imx6.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index a568efa..669f771 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -507,6 +507,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
- 	pp->root_bus_nr = -1;
- 	pp->ops = &imx6_pcie_host_ops;
- 
-+	usleep_range(25000, 30000);
-+
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(&pdev->dev, "failed to initialize host\n");
 -- 
-1.8.3.2
-
+Alexey
