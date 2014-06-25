@@ -1,63 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.austin.arm.com ([217.140.110.23]:57370 "EHLO
-	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751972AbaF0Nig (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 09:38:36 -0400
-Date: Fri, 27 Jun 2014 14:38:21 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Michal Simek <monstr@monstr.eu>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Jon Masters <jonathan@jonmasters.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
- function.
-Message-ID: <20140627133821.GI15296@arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <6381366.2IfqZj1r0B@wuerfel>
- <20140627124949.GR26276@arm.com>
- <7528887.J1DnSBg239@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7528887.J1DnSBg239@wuerfel>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V3 08/21] iommu/VT-d: simplify include/linux/dmar.h
+Date: Wed, 25 Jun 2014 17:02:34 +0800
+Message-Id: <1403686967-10887-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 27, 2014 at 02:16:28PM +0100, Arnd Bergmann wrote:
-> On Friday 27 June 2014 13:49:49 Will Deacon wrote:
-> > On Fri, Jun 27, 2014 at 12:03:34PM +0100, Arnd Bergmann wrote:
-> > > On Thursday 26 June 2014 19:44:21 Rob Herring wrote:
-> > > > I don't agree arm32 is harder than microblaze. Yes, converting ALL of
-> > > > arm would be, but that is not necessary. With Liviu's latest branch
-> > > > the hacks I previously needed are gone (thanks!), and this is all I
-> > > > need to get Versatile PCI working (under QEMU):
-> > > 
-> > > I meant converting all of arm32 would be harder, but I agree we don't
-> > > have to do it. It would be nice to convert all of the drivers/pci/host
-> > > drivers though, iow all multiplatform-enabled ones, and leaving the
-> > > current arm32 pci implementation for the platforms we don't want to
-> > > convert to multiplatform anyway (footbridge, iop, ixp4xx, ks8695 (?),
-> > > pxa, sa1100).
-> > 
-> > I'm more than happy to convert the generic host controller we merged
-> > recently, but I'd probably want the core changes merged first so that I
-> > know I'm not wasting my time!
-> 
-> That is definitely fine with me, but it's Bjorn's decision.
+Simplify include/linux/dmar.h a bit based on the fact that
+both CONFIG_INTEL_IOMMU and CONFIG_IRQ_REMAP select CONFIG_DMAR_TABLE.
 
-Or the changes to the generic host controller can be part of Liviu's
-patch series (maybe together with other PCI host drivers like
-designware, as time allows).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/dmar.h |   50 ++++++++++++++++++--------------------------------
+ 1 file changed, 18 insertions(+), 32 deletions(-)
 
+diff --git a/include/linux/dmar.h b/include/linux/dmar.h
+index 23c8db129560..1deece46a0ca 100644
+--- a/include/linux/dmar.h
++++ b/include/linux/dmar.h
+@@ -114,22 +114,30 @@ extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
+ /* Intel IOMMU detection */
+ extern int detect_intel_iommu(void);
+ extern int enable_drhd_fault_handling(void);
+-#else
+-struct dmar_pci_notify_info;
+-static inline int detect_intel_iommu(void)
++
++#ifdef CONFIG_INTEL_IOMMU
++extern int iommu_detected, no_iommu;
++extern int intel_iommu_init(void);
++extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
++extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
++extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
++#else /* !CONFIG_INTEL_IOMMU: */
++static inline int intel_iommu_init(void) { return -ENODEV; }
++static inline int dmar_parse_one_rmrr(struct acpi_dmar_header *header)
+ {
+-	return -ENODEV;
++	return 0;
+ }
+-
+-static inline int dmar_table_init(void)
++static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
+ {
+-	return -ENODEV;
++	return 0;
+ }
+-static inline int enable_drhd_fault_handling(void)
++static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
+ {
+-	return -1;
++	return 0;
+ }
+-#endif /* !CONFIG_DMAR_TABLE */
++#endif /* CONFIG_INTEL_IOMMU */
++
++#endif /* CONFIG_DMAR_TABLE */
+ 
+ struct irte {
+ 	union {
+@@ -177,26 +185,4 @@ extern int dmar_set_interrupt(struct intel_iommu *iommu);
+ extern irqreturn_t dmar_fault(int irq, void *dev_id);
+ extern int arch_setup_dmar_msi(unsigned int irq);
+ 
+-#ifdef CONFIG_INTEL_IOMMU
+-extern int iommu_detected, no_iommu;
+-extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
+-extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
+-extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
+-extern int intel_iommu_init(void);
+-#else /* !CONFIG_INTEL_IOMMU: */
+-static inline int intel_iommu_init(void) { return -ENODEV; }
+-static inline int dmar_parse_one_rmrr(struct acpi_dmar_header *header)
+-{
+-	return 0;
+-}
+-static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
+-{
+-	return 0;
+-}
+-static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
+-{
+-	return 0;
+-}
+-#endif /* CONFIG_INTEL_IOMMU */
+-
+ #endif /* __DMAR_H__ */
 -- 
-Catalin
+1.7.10.4
+
