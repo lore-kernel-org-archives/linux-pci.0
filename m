@@ -1,44 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tor-sh10.fullhost.com ([162.219.163.6]:45023 "EHLO
-	tor-sh10.fullhost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963AbaFKUAb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jun 2014 16:00:31 -0400
-Received: from cpe0013f7f0fb44-cm0013f7f0fb40.cpe.net.cable.rogers.com ([174.112.49.58]:41560 helo=[192.168.0.185])
-	by tor-sh10.fullhost.com with esmtpsa (TLSv1:DHE-RSA-AES128-SHA:128)
-	(Exim 4.82)
-	(envelope-from <patrick@spellingbeewinnars.org>)
-	id 1Wunsp-001aZg-Ra
-	for linux-pci@vger.kernel.org; Wed, 11 Jun 2014 15:08:27 -0400
-Message-ID: <5398A8CB.9000007@spellingbeewinnars.org>
-Date: Wed, 11 Jun 2014 15:06:51 -0400
-From: Patrick <patrick@spellingbeewinnars.org>
-MIME-Version: 1.0
-To: linux-pci@vger.kernel.org
-Subject: updating firmware with setpci ?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch Part3 V3 21/21] pci, ACPI, iommu: enhance pci_root to support DMAR device hotplug
+Date: Wed, 25 Jun 2014 17:02:47 +0800
+Message-Id: <1403686967-10887-22-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Everyone
+Finally enhance pci_root driver to support DMAR device hotplug when
+hot-plugging PCI host bridges.
 
-I hope i have understood the documentation and I am basically in the 
-right place.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/pci_root.c |   16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-I repair circuit boards used with scientific instruments. I have several 
-PCI cards that I believe are functioning properly otherwise but a driver 
-for them cannot be loaded under windows.
-
-Can I use lspci to retrieve header information from a healthy card and 
-then write this to another card using setpci ?
-
-The -m option speaks about machine readable but it still looks like 
-plain text to me. Will setpci take this and write it as binary to 
-another card ?
-
-If anyone could help I would really-really appreciate this, I don't have 
-much money right now and this job will really help if I can complete it.
-
-Thanks for reading-Patrick
-
-
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index d388f13d48b4..99c2b9761c12 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -33,6 +33,7 @@
+ #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
+ #include <linux/pci-aspm.h>
++#include <linux/dmar.h>
+ #include <linux/acpi.h>
+ #include <linux/slab.h>
+ #include <acpi/apei.h>	/* for acpi_hest_init() */
+@@ -511,6 +512,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	struct acpi_pci_root *root;
+ 	acpi_handle handle = device->handle;
+ 	int no_aspm = 0, clear_aspm = 0;
++	bool hotadd = system_state != SYSTEM_BOOTING;
+ 
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+ 	if (!root)
+@@ -557,6 +559,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+ 	device->driver_data = root;
+ 
++	if (hotadd && dmar_device_add(handle)) {
++		result = -ENXIO;
++		goto end;
++	}
++
+ 	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
+ 	       acpi_device_name(device), acpi_device_bid(device),
+ 	       root->segment, &root->secondary);
+@@ -583,7 +590,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 			root->segment, (unsigned int)root->secondary.start);
+ 		device->driver_data = NULL;
+ 		result = -ENODEV;
+-		goto end;
++		goto remove_dmar;
+ 	}
+ 
+ 	if (clear_aspm) {
+@@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(root->bus->bridge, true);
+ 
+-	if (system_state != SYSTEM_BOOTING) {
++	if (hotadd) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_root_bus_resources(root->bus);
+ 	}
+@@ -607,6 +614,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	pci_unlock_rescan_remove();
+ 	return 1;
+ 
++remove_dmar:
++	if (hotadd)
++		dmar_device_remove(handle);
+ end:
+ 	kfree(root);
+ 	return result;
+@@ -625,6 +635,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+ 
+ 	pci_remove_root_bus(root->bus);
+ 
++	dmar_device_remove(device->handle);
++
+ 	pci_unlock_rescan_remove();
+ 
+ 	kfree(root);
+-- 
+1.7.10.4
 
