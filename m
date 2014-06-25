@@ -1,78 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61608 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:24706 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753256AbaFISBx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Jun 2014 14:01:53 -0400
-Message-ID: <1402336882.14174.107.camel@ul30vt.home>
-Subject: Re: [PATCH v4 00/16] PCI/iommu: Fix DMA alias problems
-From: Alex Williamson <alex.williamson@redhat.com>
+	id S1752352AbaFYJAK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 05:00:10 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>
-Cc: iommu@lists.linux-foundation.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>
-Date: Mon, 09 Jun 2014 12:01:22 -0600
-In-Reply-To: <20140522230230.2856.40017.stgit@bling.home>
-References: <20140522230230.2856.40017.stgit@bling.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V3 05/21] iommu/vt-d: only dynamically allocate domain id for virtual domains
+Date: Wed, 25 Jun 2014 17:02:31 +0800
+Message-Id: <1403686967-10887-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-05-22 at 17:07 -0600, Alex Williamson wrote:
-> Alex Williamson (16):
->       PCI: Add DMA alias iterator
->       PCI: define pci_dev_flags as bit shifts
->       PCI: quirk pci_for_each_dma_alias()
->       PCI: quirk dma_alias_devfn for Ricoh devices
->       PCI: quirk dma_alias_devfn for Marvell devices
->       PCI: Quirk pci_for_each_dma_alias() for bridges
->       PCI: Add quirks for ASMedia and Tundra bridges
+Check the same domain id is allocated for si_domain on each IOMMU,
+otherwise the IOTLB flush for si_domain will fail.
 
+Now the rules to allocate and manage domain id are:
+1) For normal and static identity domains, domain id is allocated
+   when creating domain structure. And this id will be written into
+   context entry.
+2) For virtual machine domain, a virtual id is allocated when creating
+   domain. And when binding virtual machine domain to an iommu, a real
+   domain id is allocated on demand and this domain id will be written
+   into context entry. So domain->id for virtual machine domain may be
+   different from the domain id written into context entry(used by
+   hardware).
 
-Hi Joerg & David,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   46 ++++++++++++++++++++++++-------------------
+ 1 file changed, 26 insertions(+), 20 deletions(-)
 
-Bjorn has accepted the above patches for v3.16 and they currently live
-in his pci/iommu branch.  This series has been shown by numerous users
-to make devices with buggy DMA issues work in the presence of an IOMMU
-and it would be really great if we could get an opinion on both the
-common IOMMU changes as well as the changes for AMD-Vi and Intel VT-d.
-Varun has already ack'd the changes for fsl.  Please let us know how
-you'd like to proceed.  Can we get acks and allow Bjorn to shepherd the
-whole series in?  Would you prefer to pull the changes via your
-respective trees and let Bjorn follow-up with the code removal?  Do you
-have any outstanding issues with the patches to your areas?  Thanks,
-
-Alex
-
->       iommu: Create central IOMMU group lookup/creation interface
->       iommu/amd: Update to use PCI DMA aliases
->       iommu/amd: Use iommu_group_get_for_dev()
->       iommu/intel: Use iommu_group_get_for_dev()
->       iommu/intel: Update to use PCI DMA aliases
->       iommu/fsl: Use iommu_group_get_for_dev() for IOMMU groups
->       iommu: Remove pci.h
->       PCI: Remove pci_find_upstream_pcie_bridge()
->       PCI: Remove pci_get_dma_source()
-> 
-> 
->  drivers/iommu/amd_iommu.c           |  214 +++++++-----------------
->  drivers/iommu/amd_iommu_types.h     |    1 
->  drivers/iommu/fsl_pamu_domain.c     |   66 --------
->  drivers/iommu/intel-iommu.c         |  307 +++++++++++++----------------------
->  drivers/iommu/intel_irq_remapping.c |   55 ++++--
->  drivers/iommu/iommu.c               |  181 +++++++++++++++++++++
->  drivers/iommu/pci.h                 |   29 ---
->  drivers/pci/quirks.c                |  116 ++++++++-----
->  drivers/pci/search.c                |  104 +++++++++---
->  include/linux/iommu.h               |    1 
->  include/linux/pci.h                 |   31 +---
->  11 files changed, 557 insertions(+), 548 deletions(-)
->  delete mode 100644 drivers/iommu/pci.h
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index a012d3e0b52d..c9d7279f8f8a 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1552,15 +1552,27 @@ static int iommu_attach_domain(struct dmar_domain *domain,
+ 
+ 	spin_lock_irqsave(&iommu->lock, flags);
+ 	num = __iommu_attach_domain(domain, iommu);
++	spin_unlock_irqrestore(&iommu->lock, flags);
+ 	if (num < 0)
+ 		pr_err("IOMMU: no free domain ids\n");
+-	else
+-		domain->id = num;
+-	spin_unlock_irqrestore(&iommu->lock, flags);
+ 
+ 	return num;
+ }
+ 
++static int iommu_attach_vm_domain(struct dmar_domain *domain,
++				  struct intel_iommu *iommu)
++{
++	int num;
++	unsigned long ndomains;
++
++	ndomains = cap_ndoms(iommu->cap);
++	for_each_set_bit(num, iommu->domain_ids, ndomains)
++		if (iommu->domains[num] == domain)
++			return num;
++
++	return __iommu_attach_domain(domain, iommu);
++}
++
+ static void iommu_detach_domain(struct dmar_domain *domain,
+ 				struct intel_iommu *iommu)
+ {
+@@ -1767,8 +1779,6 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 	struct context_entry *context;
+ 	unsigned long flags;
+ 	struct dma_pte *pgd;
+-	unsigned long num;
+-	unsigned long ndomains;
+ 	int id;
+ 	int agaw;
+ 	struct device_domain_info *info = NULL;
+@@ -1793,20 +1803,8 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 	pgd = domain->pgd;
+ 
+ 	if (domain_type_is_vm_or_si(domain)) {
+-		int found = 0;
+-
+-		/* find an available domain id for this device in iommu */
+-		ndomains = cap_ndoms(iommu->cap);
+-		for_each_set_bit(num, iommu->domain_ids, ndomains) {
+-			if (iommu->domains[num] == domain) {
+-				id = num;
+-				found = 1;
+-				break;
+-			}
+-		}
+-
+-		if (found == 0) {
+-			id = __iommu_attach_domain(domain, iommu);
++		if (domain_type_is_vm(domain)) {
++			id = iommu_attach_vm_domain(domain, iommu);
+ 			if (id < 0) {
+ 				spin_unlock_irqrestore(&iommu->lock, flags);
+ 				pr_err("IOMMU: no free domain ids\n");
+@@ -2282,7 +2280,8 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	domain = alloc_domain(0);
+ 	if (!domain)
+ 		goto error;
+-	if (iommu_attach_domain(domain, iommu) < 0) {
++	domain->id = iommu_attach_domain(domain, iommu);
++	if (domain->id < 0) {
+ 		free_domain_mem(domain);
+ 		domain = NULL;
+ 		goto error;
+@@ -2443,6 +2442,7 @@ static int __init si_domain_init(int hw)
+ 	struct dmar_drhd_unit *drhd;
+ 	struct intel_iommu *iommu;
+ 	int nid, ret = 0;
++	bool first = true;
+ 
+ 	si_domain = alloc_domain(DOMAIN_FLAG_STATIC_IDENTITY);
+ 	if (!si_domain)
+@@ -2453,6 +2453,12 @@ static int __init si_domain_init(int hw)
+ 		if (ret < 0) {
+ 			domain_exit(si_domain);
+ 			return -EFAULT;
++		} else if (first) {
++			si_domain->id = ret;
++			first = false;
++		} else if (si_domain->id != ret) {
++			domain_exit(si_domain);
++			return -EFAULT;
+ 		}
+ 		domain_attach_iommu(si_domain, iommu);
+ 	}
+-- 
+1.7.10.4
 
