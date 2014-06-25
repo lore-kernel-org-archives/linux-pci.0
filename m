@@ -1,34 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH 1/4] ACPI: Support _OSI("Darwin") correctly
-Date: Thu, 19 Jun 2014 01:42:56 +0200
-Message-ID: <3186737.5xBXzTniGn@vostro.rjw.lan>
-In-Reply-To: <20140618052615.GA26873@srcf.ucam.org>
-References: <1401640436-1947-1-git-send-email-matthew.garrett@nebula.com> <20140617144614.GA16934@srcf.ucam.org> <20140618052615.GA26873@srcf.ucam.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:33746 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751755AbaFYI5i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 04:57:38 -0400
+Date: Wed, 25 Jun 2014 09:57:04 +0100
+From: Mark Rutland <mark.rutland@arm.com>
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: Marc Zyngier <Marc.Zyngier@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 2/2] arm/gic: Add supports for GICv2m MSI(-X)
+Message-ID: <20140625085703.GB29789@leverpostej>
+References: <1403569980-12913-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1403569980-12913-3-git-send-email-suravee.suthikulpanit@amd.com>
+ <20140624101111.GD5856@leverpostej>
+ <53AA3A3A.2050401@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53AA3A3A.2050401@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, June 18, 2014 06:26:15 AM Matthew Garrett wrote:
-> On Tue, Jun 17, 2014 at 03:46:15PM +0100, Matthew Garrett wrote:
-> > On Tue, Jun 17, 2014 at 02:11:36PM +0200, Rafael J. Wysocki wrote:
-> > > Does applying this patch without the rest of the series makes things worse
-> > > or better on the machines in question (or perhaps it doesn't matter at all
-> > > alone)?
-> > 
-> > On its own, I think this will do nothing.
+On Wed, Jun 25, 2014 at 03:55:54AM +0100, Suravee Suthikulanit wrote:
+> Mark,
 > 
-> Ugh, no, sorry - on its own, this will break PCIe hotplug events and 
-> battery reporting. It should only be merged with the others.
+> Thank you for all your comments. Please see my reply below. I have 
+> omitted the minor ones.
 
-Well, in that case it is not useful to split that material into
-multiple patches.  And it will need to be Linux-specific, as adding
-patch [1/4] to upstream ACPICA might break some other OSes using it.
+Likewise.
 
-Rafael
+> >> +static void free_msi_irq(struct gicv2m_msi_data *data, unsigned int irq)
+> >> +{
+> >> +       int pos;
+> >> +
+> >> +       spin_lock(&data->msi_cnt_lock);
+> >> +
+> >> +       pos = irq - data->spi_start;
+> >> +       if (pos >= 0 && pos < data->max_spi_cnt)
+> >
+> > Should either of these cases ever happen?
+> 
+> This is to check if the irq provided is within the MSI range.
 
+Sure, but surely this should only be called for the correct set of MSI
+IRQs? Allowing this to be called for arbitrary interrupts without
+reporting an error sounds wrong.
+
+[...]
+
+> >> +static int gicv2m_setup_msi_irq(struct msi_chip *chip, struct pci_dev *pdev,
+> >> +                     struct msi_desc *desc)
+> >> +{
+> >> +       int avail, irq = 0;
+> >> +       struct msi_msg msg;
+> >> +       phys_addr_t addr;
+> >> +       struct gicv2m_msi_data *data = to_gicv2m_msi_data(chip);
+> >> +
+> >> +       if (data == NULL) {
+> >
+> > If container_of returns NULL, you have bigger problems.
+> 
+> It was just sanity check. But, if you think this is obvious, I'll remove 
+> this check then.
+
+The issue is you check for NULL _after_ you've performed some pointer
+arithmetic. Because the msi_chip is the first element of
+gicv2m_msi_data, to_gicv2m_msi_data is currently an identity function
+with some type casting, but we should rely on that here. What if the
+msi_chip were moved to later in gicv2m_msi_data?
+
+If you want to check for NULL, check chip before
+to_gicv2m_msi_data(chip).
+
+[...]
+
+> >> +       /*
+> >> +       * MSI_TYPER:
+> >> +       *     [31:26] Reserved
+> >> +       *     [25:16] lowest SPI assigned to MSI
+> >> +       *     [15:10] Reserved
+> >> +       *     [9:0]   Numer of SPIs assigned to MSI
+> >> +       */
+> >> +       val = __raw_readl(msi->base + MSI_TYPER);
+> >
+> > Are you sure you want to use __raw_readl?
+> >
+> Probably not.  I am replacing this with ioread32(msi->base + MSI_TYPER).
+
+It's probably better to use readl() or a readl_relaxed() here for
+consistency with the rest of the ARM code, but otherwise that sounds
+sane.
+
+Thanks,
+Mark.
