@@ -1,49 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:45070 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407AbaFXMTX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 08:19:23 -0400
-Date: Tue, 24 Jun 2014 08:19:16 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: suravee.suthikulpanit@amd.com
-Cc: marc.zyngier@arm.com, Catalin.Marinas@arm.com, Will.Deacon@arm.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 0/2] Introduce ARM GICv2m MSI(-X) support
-Message-ID: <20140624121916.GJ10202@titan.lakedaemon.net>
-References: <1403569980-12913-1-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403569980-12913-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from mga01.intel.com ([192.55.52.88]:24678 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754485AbaFYI7q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 04:59:46 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V3 00/21] Enable support of Intel DMAR device hotplug
+Date: Wed, 25 Jun 2014 17:02:26 +0800
+Message-Id: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 23, 2014 at 07:32:58PM -0500, suravee.suthikulpanit@amd.com wrote:
-> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> 
-> This patch set introduces support for MSI(-X) in GICv2m specification,
-> which is implemented in some variation of GIC400.
-> 
-> This depends on and has been tested with the V7 of "Add support for PCI in AArch64"
-> (https://lkml.org/lkml/2014/3/14/320).
-> 
-> Suravee Suthikulpanit (2):
->   arm/gic: Add binding probe for GIC400
->   arm/gic: Add supports for GICv2m MSI(-X)
-> 
->  Documentation/devicetree/bindings/arm/gic.txt |  18 +-
->  drivers/irqchip/Kconfig                       |   6 +
->  drivers/irqchip/Makefile                      |   1 +
->  drivers/irqchip/gic-msi-v2m.c                 | 249 ++++++++++++++++++++++++++
->  drivers/irqchip/gic-msi-v2m.h                 |  20 +++
->  drivers/irqchip/irq-gic.c                     |  23 ++-
->  6 files changed, 313 insertions(+), 4 deletions(-)
->  create mode 100644 drivers/irqchip/gic-msi-v2m.c
->  create mode 100644 drivers/irqchip/gic-msi-v2m.h
+When hot plugging a descrete IOH or a physical processor with embedded
+IIO, we need to handle DMAR(or IOMMU) unit in the PCIe host bridge if
+DMAR is in use. This patch set tries to enhance current DMAR/IOMMU/IR
+drivers to support hotplug and is based on latest mainstream kernel
+v3.16-rc2.
 
-Please don't forget to run get_maintainers.pl before you send.  I almost
-missed this series. :)
+Patch 1-13 are bugfixes and code improvement for current drivers.
+Patch 14-17 enhances DMAR framework to support hotplug
+Patch 18 enhances Intel interrupt remapping driver to support hotplug
+Patch 19 enhances error handling in Intel IR driver
+Patch 20 enhance Intel IOMMU to support hotplug
+Patch 21 enhance ACPI pci_root driver to handle DMAR units
 
-thx,
+This patch set has been tested on Intel development machine.
+Appreciate any comments and tests. With this patch set and
+another IOAPIC hotplug patch set(http://www.mail-archive.com/linux-kernel
+@vger.kernel.org/msg671316.html) applied, we could support full functional
+socket hotplug on x86 platforms now.
 
-Jason.
+V2->V3:
+1) rebase to latest v3.16-rc2
+2) fix a bug in detecting super page support when hot-adding IOMMU
+
+V1->V2:
+1) enhance the way to simplify intel_unmap_sg()
+2) rename dmar_device_hotplug() to dmar_device_add/remove()
+3) coding style improvment
+
+Best Regards!
+
+Jiang Liu (21):
+  iommu/vt-d: match segment number when searching for dev_iotlb capable
+    devices
+  iommu/vt-d: use correct domain id to flush virtual machine domains
+  iommu/vt-d: introduce helper functions to improve code readability
+  iommu/vt-d: introduce helper functions to make code symmetric for
+    readability
+  iommu/vt-d: only dynamically allocate domain id for virtual domains
+  iommu/vt-d: fix possible invalid memory access caused by
+    free_dmar_iommu()
+  iommu/vt-d: avoid freeing virtual machine domain in free_dmar_iommu()
+  iommu/VT-d: simplify include/linux/dmar.h
+  iommu/vt-d: change iommu_enable/disable_translation to return void
+  iommu/vt-d: simplify intel_unmap_sg() and kill duplicated code
+  iommu/vt-d: introduce helper domain_pfn_within_range() to simplify
+    code
+  iommu/vt-d: introduce helper function iova_size() to improve code
+    readability
+  iommu/vt-d: fix bug in computing domain's iommu_snooping flag
+  IOMMU/vt-d: introduce helper function dmar_walk_resources()
+  iommu/vt-d: dynamically allocate and free seq_id for DMAR units
+  iommu/vt-d: implement DMAR unit hotplug framework
+  iommu/vt-d: search _DSM method for DMAR hotplug
+  iommu/vt-d: enhance intel_irq_remapping driver to support DMAR unit
+    hotplug
+  iommu/vt-d: enhance error recovery in function
+    intel_enable_irq_remapping()
+  iommu/vt-d: enhance intel-iommu driver to support DMAR unit hotplug
+  pci, ACPI, iommu: enhance pci_root to support DMAR device hotplug
+
+ drivers/acpi/pci_root.c             |   16 +-
+ drivers/iommu/dmar.c                |  531 ++++++++++++++++++++------
+ drivers/iommu/intel-iommu.c         |  718 +++++++++++++++++++++--------------
+ drivers/iommu/intel_irq_remapping.c |  233 +++++++++---
+ include/linux/dmar.h                |   86 +++--
+ include/linux/iova.h                |    5 +
+ 6 files changed, 1104 insertions(+), 485 deletions(-)
+
+-- 
+1.7.10.4
+
