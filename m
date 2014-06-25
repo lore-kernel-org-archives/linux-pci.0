@@ -1,113 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0242.outbound.protection.outlook.com ([207.46.163.242]:46029
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753187AbaF0Pnf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 27 Jun 2014 11:43:35 -0400
-Message-ID: <53AD911C.6040301@amd.com>
-Date: Fri, 27 Jun 2014 10:43:24 -0500
-From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>
-CC: Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] arm/gic: Add supports for GICv2m MSI(-X)
-References: <1403569980-12913-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1403569980-12913-3-git-send-email-suravee.suthikulpanit@amd.com>
- <53A94A46.1010801@arm.com>
-In-Reply-To: <53A94A46.1010801@arm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:42154 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755610AbaFYJBA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 05:01:00 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V3 12/21] iommu/vt-d: introduce helper function iova_size() to improve code readability
+Date: Wed, 25 Jun 2014 17:02:38 +0800
+Message-Id: <1403686967-10887-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marc,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |    7 +++----
+ include/linux/iova.h        |    5 +++++
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
-After looking at the GICv3 implementation and trying to understand how 
-you architect the driver, I have a couple questions below.
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 0d34f33bea34..d94468ae2947 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3117,10 +3117,10 @@ static void flush_unmaps(void)
+ 			/* On real hardware multiple invalidations are expensive */
+ 			if (cap_caching_mode(iommu->cap))
+ 				iommu_flush_iotlb_psi(iommu, domain->id,
+-					iova->pfn_lo, iova->pfn_hi - iova->pfn_lo + 1,
++					iova->pfn_lo, iova_size(iova),
+ 					!deferred_flush[i].freelist[j], 0);
+ 			else {
+-				mask = ilog2(mm_to_dma_pfn(iova->pfn_hi - iova->pfn_lo + 1));
++				mask = ilog2(mm_to_dma_pfn(iova_size(iova)));
+ 				iommu_flush_dev_iotlb(deferred_flush[i].domain[j],
+ 						(uint64_t)iova->pfn_lo << PAGE_SHIFT, mask);
+ 			}
+@@ -3921,8 +3921,7 @@ static int intel_iommu_memory_notifier(struct notifier_block *nb,
+ 			rcu_read_lock();
+ 			for_each_active_iommu(iommu, drhd)
+ 				iommu_flush_iotlb_psi(iommu, si_domain->id,
+-					iova->pfn_lo,
+-					iova->pfn_hi - iova->pfn_lo + 1,
++					iova->pfn_lo, iova_size(iova),
+ 					!freelist, 0);
+ 			rcu_read_unlock();
+ 			dma_free_pagelist(freelist);
+diff --git a/include/linux/iova.h b/include/linux/iova.h
+index 3277f4711349..19e81d5ccb6d 100644
+--- a/include/linux/iova.h
++++ b/include/linux/iova.h
+@@ -34,6 +34,11 @@ struct iova_domain {
+ 	unsigned long	dma_32bit_pfn;
+ };
+ 
++static inline unsigned long iova_size(struct iova *iova)
++{
++	return iova->pfn_hi - iova->pfn_lo + 1;
++}
++
+ struct iova *alloc_iova_mem(void);
+ void free_iova_mem(struct iova *iova);
+ void free_iova(struct iova_domain *iovad, unsigned long pfn);
+-- 
+1.7.10.4
 
- > On 06/24/2014 04:52 AM, Marc Zyngier wrote:
-> Hi Suravee,
->
-> On 24/06/14 01:33, suravee.suthikulpanit@amd.com wrote:
->> +       pr_info("GICv2m: SPI range [%d:%d]\n",
->> +               msi->spi_start, (msi->spi_start + msi->max_spi_cnt));
->> +
->> +       gic_arch_extn.irq_mask = gicv2m_mask_msi;
->> +       gic_arch_extn.irq_unmask = gicv2m_unmask_msi;
->
-> Right, I now see why you need to test on the MSI descriptor. Don't do
-> that. The gic_arch_extn crap should *never* *be* *used*.
-
-Hm, sounds like this should be removed all together then? In that case, 
-this would require changes in the irq-gic.c to call these functions 
-directly.
-
->
-> What you want to do is do assign a different irq_chip to your MSI
-> interrupts. This will require a different integration with the main GIC
-> code though. For the GICv3 ITS, I do it when the interrupt gets mapped.
-
-Ah, that's what I was trying to avoid. Why should we need a whole 
-different irq_chip just to add the MSI register frame support on top of 
-the GICv2 which is already supported by the current irq-gic.c?
-
->
->> +       return 0;
->> +}
->> +EXPORT_SYMBOL(gicv2m_msi_init);
->> +
->> +
->> +
->> +/**
->> + * Override arch_setup_msi_irq in drivers/pci/msi.c
->> + * since we don't want to change the chip_data
->> + */
->> +int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
->> +{
->> +       struct msi_chip *chip = pdev->bus->msi;
->> +
->> +       if (!chip || !chip->setup_irq)
->> +               return -EINVAL;
->> +
->> +       return chip->setup_irq(chip, pdev, desc);
->> +}
->> +
->> +/**
->> + * Override arch_teardown_msi_irq in drivers/pci/msi.c
->> + */
->> +void arch_teardown_msi_irq(unsigned int irq)
->> +{
->> +       struct msi_desc *desc;
->> +       struct msi_chip *chip;
->> +
->> +       desc = irq_get_msi_desc(irq);
->> +       if (!desc)
->> +               return;a
->> +
->> +       chip = desc->dev->bus->msi;
->> +       if (!chip)
->> +               return;
->> +
->> +       chip->teardown_irq(chip, irq);
->> +}
->
-> Please don't overtide those. There shouldn't be any reason for a
-> *driver* to do so. Only architecture code should do it. And nothing in
-> your code requires it (at least once you've stopped playing with the
-> silly gic extension...).
-
-The reason I need these because the __weak version of arch_setup_msi_irq 
-function in driver/pci/msi.c calls irq_set_chip_data and replace the 
-chip_data with msi_chip (originally was pointing to the gic_chip_data 
-structure). This ended up breaking the GIC.
-
-Looking at the GICv3 ITS implementation, this seems to also have similar 
-implementation. So, this was not an issue for you?
-
-Thanks,
-
-Suravee
