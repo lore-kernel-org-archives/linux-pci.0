@@ -1,133 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:41919 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756192AbaFXQXE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Jun 2014 12:23:04 -0400
-Message-ID: <53A9A59B.9000709@ti.com>
-Date: Tue, 24 Jun 2014 12:21:47 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-qc0-f172.google.com ([209.85.216.172]:54077 "EHLO
+	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755663AbaFYUnV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 16:43:21 -0400
 MIME-Version: 1.0
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+In-Reply-To: <CANwwZzXc2UyYxGX2X+O38jTVki70HrP71FBWbc4dTyt9nEN0nA@mail.gmail.com>
+References: <CANwwZzWsjQwZB5Cc4Hyv2HQOLhAx6ycjf32UQG55zVX=Kmbi6Q@mail.gmail.com>
+	<CAJZOPZ+FUneDDKMh0O2aZLYeDTcH8cHA7ati5wzi7Ycgc5wFXQ@mail.gmail.com>
+	<CANwwZzXc2UyYxGX2X+O38jTVki70HrP71FBWbc4dTyt9nEN0nA@mail.gmail.com>
+Date: Wed, 25 Jun 2014 23:43:20 +0300
+Message-ID: <CAJZOPZK0naRu_rv-MMPp9y9Eg_baEJXSGzdERQLWvi3Bh9qD+g@mail.gmail.com>
+Subject: Re: mlx4 - query regarding PF VF functionality division
+From: Or Gerlitz <or.gerlitz@gmail.com>
+To: Bob Biloxi <iambobbiloxi@gmail.com>
+Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"Shilimkar, Santosh" <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	"ABRAHAM, KISHON VIJAY" <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
-References: <20140623051346.GC2666@pratyush-vbox> <53A85AAC.4070401@ti.com>
-In-Reply-To: <53A85AAC.4070401@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Jack Morgenstein <jackm@dev.mellanox.co.il>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mohit,
+On Tue, Jun 24, 2014 at 4:42 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
+>
+> > Not really, but let's take EIM approach, what's your goal/mission?
+> Let's say I am going through code to understand only the PF related
+> functionality without bothering about VF, what are the things I need
+> to keep in mind.
 
-On 06/23/2014 12:49 PM, Santosh Shilimkar wrote:
->
->
->
-> -------- Original Message --------
-> Subject: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
-> Date: Mon, 23 Jun 2014 10:43:46 +0530
-> From: Pratyush Anand<pratyush.anand@st.com>
-> To: Murali Karicheri<m-karicheri2@ti.com>
->
-> On Sat, Jun 21, 2014 at 05:17:07AM +0800, Murali Karicheri wrote:
->>
->> Sorry, my previous response was in html and not sure it has made to the
->> list. I did
->> get an error as well. So resending my response.
->>
->> On 6/18/2014 6:14 AM, Mohit KUMAR DCG wrote:
->>> Hello Murali,
->>>
->>
->
-> [...]
->
->> *pos = pos0;
->>
->> @@ -349,7 +353,10 @@ static int dw_msi_setup_irq(struct msi_chip *chip,
->> struct pci_dev *pdev,
->>
->> */
->>
->> desc->msi_attrib.multiple = msgvec;
->>
->> -msg.address_lo = virt_to_phys((void *)pp->msi_data);
->>
->> +if (pp->ops->get_msi_data)
->>
->> +msg.address_lo = pp->ops->get_msi_data(pp);
->>
->> +else
->>
->> +msg.address_lo = virt_to_phys((void *)pp->msi_data);
->>
->> msg.address_hi = 0x0;
->>
->> msg.data = pos;
->>
->>
->> What about this code? This requires get_msi_data() as well
->
-> pp->msi_data is set in dw_pcie_msi_init, which is a global function
-> called from vendor specific code. You can have your own
-> keystone_pcie_msi_init and then you do not need above changes.
->
-My Apologies for the email format as I lost the original email and had
-to respond using a forwarded email.
 
-If you look at my original patch, keystone driver was not calling
-dw_pcie_msi_init(). However the issue is msi_chip of DW core is
-re-used as most of the code is platform independent. However
-code that sends write_msi_msg() can be re-used on keystone by
-adding this get_msi_data() API as the only difference IMO is the
-address EP writes to raise an MSI IRQ event. I don't see any
-reason why the entire code needs to be duplicated on Keystone.
-BTW, currently I have not tested the MSI IRQ and tested my driver
-only with Legacy IRQ. I plan to test this before sending my
-v3 of the patch.
 
-Murali
+I see, by the nature of the mlx4 SRIOV architecture under which
+there's no dedicated/separated PF vs VF driver, this is indeed a
+non-trivial task, need to think how to make it easier for you
 
->>
->>> -- 3rd to use pp->ops->msi_set/clear if defined.
->> Why not API enhancement and refactor the code in a single patch?
->
-> Yes, can be. You can send changes in 2 or 3 patches as you wish, but I
-> believe that should be able to solve problem in best way.
->
-> Regards
-> Pratyush
->>
->> Murali
->>> Pls let us know for any issue or have different opinion.
->>>
->>> Regards
->>> Mohit
->>>
->>>
->>>
->>>
->>>> --
->>>> 1.7.9.5
->>
->
->
+Or.
 
+
+>
+> I mean do i need to :
+>
+> a. Go through all the files in mlx4
+> b. If the code is not specifically under mlx4_is_master, I still need
+> to understand it because it is also part of PF driver
+> c. I can ignore the logic which executes if mlx4_is_master is false,
+> because that would be the VF code
+>
+> Thanks for the help!!
+>
+>
+>
+>
+> On Mon, Jun 23, 2014 at 5:30 PM, Or Gerlitz <or.gerlitz@gmail.com> wrote:
+> > On Mon, Jun 23, 2014 at 12:33 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
+> > [...]
+> >> Is there any way we can clearly separate the files that are used by PF
+> >> vs the files that are used by VF in the (drivers/net/ethernet/mlx4
+> >> sub-directory)?
+> > [...]
+> >
+> > Not really, but let's take EIM approach, what's your goal/mission?
+> >
+> > Or.
