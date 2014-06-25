@@ -1,54 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24678 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755297AbaFYI7y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 04:59:54 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V3 02/21] iommu/vt-d: use correct domain id to flush virtual machine domains
-Date: Wed, 25 Jun 2014 17:02:28 +0800
-Message-Id: <1403686967-10887-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<jg1.han@samsung.com>, <bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-arm-kernel@lists.infradead.org>, <tony@atomide.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>, <grant.likely@linaro.org>,
+	Rajendra Nayak <rnayak@ti.com>, Tero Kristo <t-kristo@ti.com>,
+	Paul Walmsley <paul@pwsan.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>
+Subject: [PATCH 3/8] ARM: dts: dra7xx-clocks: Add missing 32KHz clocks used for PHY
+Date: Wed, 25 Jun 2014 23:30:13 +0530
+Message-ID: <1403719218-9484-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1403719218-9484-1-git-send-email-kishon@ti.com>
+References: <1403719218-9484-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For virtual machine domains, domain->id is a virtual id, and the real
-domain id written into context entry is dynamically allocated.
-So use the real domain id instead of domain->id when flushing iotlbs
-for virtual machine domains.
+Added missing 32KHz clock used by PCIe PHY.
+Figure 26-19. PCIe PHY Subsystem Integration in vE of DRA7xx ES1.0 TRM shows
+32KHz is used by PCIe PHY.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Rajendra Nayak <rnayak@ti.com>
+Cc: Tero Kristo <t-kristo@ti.com>
+Cc: Paul Walmsley <paul@pwsan.com>
+Cc: Tony Lindgren <tony@atomide.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Pawel Moll <pawel.moll@arm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Kumar Gala <galak@codeaurora.org>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/iommu/intel-iommu.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/arm/boot/dts/dra7xx-clocks.dtsi |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index e29d963f3967..64a3c37d5cfa 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1825,7 +1825,7 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
- 					   (((u16)bus) << 8) | devfn,
- 					   DMA_CCMD_MASK_NOBIT,
- 					   DMA_CCMD_DEVICE_INVL);
--		iommu->flush.flush_iotlb(iommu, domain->id, 0, 0, DMA_TLB_DSI_FLUSH);
-+		iommu->flush.flush_iotlb(iommu, id, 0, 0, DMA_TLB_DSI_FLUSH);
- 	} else {
- 		iommu_flush_write_buffer(iommu);
- 	}
+diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+index f5dca1f..3ff6d7c 100644
+--- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
++++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+@@ -1165,6 +1165,14 @@
+ 		reg = <0x021c>, <0x0220>;
+ 	};
+ 
++	optfclk_pciephy_32khz: optfclk_pciephy_32khz@4a0093b0 {
++		compatible = "ti,gate-clock";
++		clocks = <&sys_32k_ck>;
++		#clock-cells = <0>;
++		reg = <0x13b0>;
++		ti,bit-shift = <8>;
++	};
++
+ 	optfclk_pciephy_div: optfclk_pciephy_div@4a00821c {
+ 		compatible = "ti,divider-clock";
+ 		clocks = <&apll_pcie_ck>;
 -- 
-1.7.10.4
+1.7.9.5
 
