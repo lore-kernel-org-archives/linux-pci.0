@@ -1,48 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:33831 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932226AbaFIVGu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 17:06:50 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH] PCI: Prevent NULL dereference during pciehp probe
-Date: Mon,  9 Jun 2014 23:03:32 +0200
-Message-Id: <1402347812-8059-1-git-send-email-andreas.noever@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<jg1.han@samsung.com>, <bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-arm-kernel@lists.infradead.org>, <tony@atomide.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>, <grant.likely@linaro.org>,
+	Keerthy <j-keerthy@ti.com>, Rajendra Nayak <rnayak@ti.com>,
+	Tero Kristo <t-kristo@ti.com>, Paul Walmsley <paul@pwsan.com>
+Subject: [PATCH 2/8] ARM: dts: dra7xx-clocks: Change the parent of apll_pcie_in_clk_mux to dpll_pcie_ref_m2ldo_ck
+Date: Wed, 25 Jun 2014 23:30:12 +0530
+Message-ID: <1403719218-9484-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1403719218-9484-1-git-send-email-kishon@ti.com>
+References: <1403719218-9484-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pciehp assumes that dev->subordinate exists. But we do not assign a bus
-if we run out of bus numbers during enumeration. This leads to a NULL
-dereference in init_slot (and other places).
+From: Keerthy <j-keerthy@ti.com>
 
-Change pciehp_probe to return -ENODEV when no subordinate bus is
-present.
+Change the parent of apll_pcie_in_clk_mux to dpll_pcie_ref_m2ldo_ck
+from dpll_pcie_ref_ck.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+Figure 26-22. DPLL_PCIE_REF Functional Block Diagram in vE of DRA7xx ES1.0 TRM
+shows the signal name for the output of post divider (M2) is CLKOUTLDO.
+
+Figure 26-21. PCIe PHY Clock Generator Overview shows CLKOUTLDO is used as
+input to apll mux.
+
+So the actual output of dpll is dpll_pcie_ref_m2ldo_ck which is also the input
+of apll.
+
+Cc: Rajendra Nayak <rnayak@ti.com>
+Cc: Tero Kristo <t-kristo@ti.com>
+Cc: Paul Walmsley <paul@pwsan.com>
+Signed-off-by: Keerthy <j-keerthy@ti.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/hotplug/pciehp_core.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ arch/arm/boot/dts/dra7xx-clocks.dtsi |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 0e0a2ff..e5abcaf 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -255,6 +255,13 @@ static int pciehp_probe(struct pcie_device *dev)
- 	else if (pciehp_acpi_slot_detection_check(dev->port))
- 		goto err_out_none;
+diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+index 7148e7c..f5dca1f 100644
+--- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
++++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+@@ -1152,7 +1152,7 @@
  
-+	if (!dev->port->subordinate) {
-+		/* Can happen if we run out of bus numbers during probe */
-+		dev_err(&dev->device,
-+			"Hotplug bridge without secondary bus, ignoring\n");
-+		goto err_out_none;
-+	}
-+
- 	ctrl = pcie_init(dev);
- 	if (!ctrl) {
- 		dev_err(&dev->device, "Controller initialization failed\n");
+ 	apll_pcie_in_clk_mux: apll_pcie_in_clk_mux@4ae06118 {
+ 		compatible = "ti,mux-clock";
+-		clocks = <&dpll_pcie_ref_ck>, <&pciesref_acs_clk_ck>;
++		clocks = <&dpll_pcie_ref_m2ldo_ck>, <&pciesref_acs_clk_ck>;
+ 		#clock-cells = <0>;
+ 		reg = <0x021c 0x4>;
+ 		ti,bit-shift = <7>;
 -- 
-2.0.0
+1.7.9.5
 
