@@ -1,46 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2lp0239.outbound.protection.outlook.com ([207.46.163.239]:7697
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753335AbaFYGMs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 02:12:48 -0400
+Date: Wed, 25 Jun 2014 14:12:40 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: Richard Zhu <r65037@freescale.com>, <kernel@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: Re: The imx6q suspend/resume is broken on 3.16-rc due to PCIe
+Message-ID: <20140625061238.GA3242@dragon>
+References: <20140624153559.GA5741@dragon>
+ <1403626435.4230.17.camel@weser.hi.pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <20140609184157.17500.84469.stgit@bling.home>
-References: <20140609184157.17500.84469.stgit@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Jun 2014 14:04:30 -0600
-Message-ID: <CAErSpo5XNcw4sKdYrmg26N=qkvA9ysspy2kKf+bCv0KfKEGY8Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Add bridge DMA alias quirk for ITE bridge
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	rwarsow@gmx.de
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1403626435.4230.17.camel@weser.hi.pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 9, 2014 at 12:43 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=73551
-> Reported-by: rwarsow@gmx.de
-> Tested-by: rwarsow@gmx.de
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+On Tue, Jun 24, 2014 at 06:13:55PM +0200, Lucas Stach wrote:
+> Hi Shawn,
+> 
+> Am Dienstag, den 24.06.2014, 23:36 +0800 schrieb Shawn Guo:
+> > Hi Lucas,
+> > 
+> > I found that imx6q suspend/resume is broken on 3.16-rc, and it works
+> > just fine if PCIe support is built out.  However the issue was not
+> > exposed on 3.15, so I suspect the PCIe driver change merged in 3.16
+> > is part of the cause.
+> > 
+> I don't yet see why any of the changes to the designware/imx6 host
+> driver would cause such failures.
+> 
+> Which board are you doing your testing on? What devices are connected to
+> the PCIe bus? In what way does it break system resume, complete hang?
 
-Added to pci/iommu for v3.16, thanks!
+It's on imx6q-sabresd without any PCIe device connected.  Right, it's a
+complete hang after enabling non-boot CPUs.
 
-> ---
->
-> One more for the pci/iommu branch
->
->  drivers/pci/quirks.c |    2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index ab620ac..533cd0d 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3407,6 +3407,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
->                          quirk_use_pcie_bridge_dma_alias);
->  /* Tundra 8113, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c43 */
->  DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
-> +/* ITE 8892, https://bugzilla.kernel.org/show_bug.cgi?id=73551 */
-> +DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
->
->  static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
->  {
->
+...
+Enabling non-boot CPUs ...
+CPU1: Booted secondary processor
+CPU1 is up
+CPU2: Booted secondary processor
+CPU2 is up
+CPU3: Booted secondary processor
+CPU3 is up
+<*** hang here ***>
+
+Shawn
