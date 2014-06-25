@@ -1,38 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:41204 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890AbaFPB0U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jun 2014 21:26:20 -0400
-Received: by mail-pb0-f45.google.com with SMTP id rr13so1330452pbb.32
-        for <linux-pci@vger.kernel.org>; Sun, 15 Jun 2014 18:26:20 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com>
-	<20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Date: Sun, 15 Jun 2014 18:26:20 -0700
-Message-ID: <CAA93t1pmvUJ+VwxSTF4y3o1kSTOfpeXrZxU7m02wu5MaHB38dQ@mail.gmail.com>
-Subject: Re: [PATCH RFC 0/4] PCI: pciehp: Fix Command Completion handling
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, "Jan C. Nordholz" <jckn@gmx.net>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:24678 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754597AbaFYI7u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 04:59:50 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V3 01/21] iommu/vt-d: match segment number when searching for dev_iotlb capable devices
+Date: Wed, 25 Jun 2014 17:02:27 +0800
+Message-Id: <1403686967-10887-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+For virtual machine and static identity domains, there may be devices
+from different PCI segments associated with the same domain.
+So function iommu_support_dev_iotlb() should also match PCI segment
+number (iommu unit) when searching for dev_iotlb capable devices.
 
->
-> I haven't heard anything for a while, so I wrote up these patches to
-> make my proposals concrete.  Unfortunately, I can't easily test any of
-> this, so I'm posting these for comment and possible testing if anybody
-> is ambitious.
->
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-I'll test them out on my machines tomorrow.
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 51b6b77dc3e5..e29d963f3967 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1275,7 +1275,8 @@ iommu_support_dev_iotlb (struct dmar_domain *domain, struct intel_iommu *iommu,
+ 
+ 	spin_lock_irqsave(&device_domain_lock, flags);
+ 	list_for_each_entry(info, &domain->devices, link)
+-		if (info->bus == bus && info->devfn == devfn) {
++		if (info->iommu == iommu && info->bus == bus &&
++		    info->devfn == devfn) {
+ 			found = 1;
+ 			break;
+ 		}
+-- 
+1.7.10.4
 
-Thanks,
-
-Rajat
