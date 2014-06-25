@@ -1,124 +1,122 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Matthew Garrett <matthew.garrett@nebula.com>
-Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH 1/4] ACPI: Support _OSI("Darwin") correctly
-Date: Tue, 17 Jun 2014 14:11:36 +0200
-Message-ID: <7712179.sDPAd6Ubry@vostro.rjw.lan>
-In-Reply-To: <1401640436-1947-2-git-send-email-matthew.garrett@nebula.com>
-References: <1401640436-1947-1-git-send-email-matthew.garrett@nebula.com> <1401640436-1947-2-git-send-email-matthew.garrett@nebula.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:42158 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755620AbaFYJBB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 05:01:01 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V3 13/21] iommu/vt-d: fix bug in computing domain's iommu_snooping flag
+Date: Wed, 25 Jun 2014 17:02:39 +0800
+Message-Id: <1403686967-10887-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, June 01, 2014 12:33:53 PM Matthew Garrett wrote:
-> Apple hardware queries _OSI("Darwin") in order to determine whether the
-> system is running OS X, and changes firmware behaviour based on the answer.
-> The most obvious difference in behaviour is that Thunderbolt hardware is
-> forcibly powered down unless the system is running OS X. The obvious solution
-> would be to simply add Darwin to the list of supported _OSI strings, but this
-> causes problems.
-> 
-> Recent Apple hardware includes two separate methods for checking _OSI
-> strings. The first will check whether Darwin is supported, and if so will
-> exit. The second will check whether Darwin is supported, but will then
-> continue to check for further operating systems. If a further operating
-> system is found then later firmware code will assume that the OS is not OS X.
-> This results in the unfortunate situation where the Thunderbolt controller is
-> available at boot time but remains powered down after suspend.
-> 
-> The easiest way to handle this is to special-case it in the Linux-specific
-> OSI handling code. If we see Darwin, we should answer true and then disable
-> all other _OSI vendor strings.
-> 
-> Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+IOMMU units may dynamically attached to/detached from domains,
+so we should scan all active IOMMU units when computing iommu_snooping
+flag for a domain instead of only scanning IOMMU units associated
+with the domain.
 
-Does applying this patch without the rest of the series makes things worse
-or better on the machines in question (or perhaps it doesn't matter at all
-alone)?
+Also check snooping and superpage capabilities when hot-adding DMAR units.
 
-Rafael
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   42 ++++++++++++++++++++++++------------------
+ 1 file changed, 24 insertions(+), 18 deletions(-)
 
-
-> ---
->  drivers/acpi/acpica/utosi.c |  1 +
->  drivers/acpi/osl.c          | 10 ++++++++++
->  include/acpi/actypes.h      | 25 +++++++++++++------------
->  3 files changed, 24 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/acpi/acpica/utosi.c b/drivers/acpi/acpica/utosi.c
-> index 685766f..63b0a3b 100644
-> --- a/drivers/acpi/acpica/utosi.c
-> +++ b/drivers/acpi/acpica/utosi.c
-> @@ -87,6 +87,7 @@ ACPI_MODULE_NAME("utosi")
->  static struct acpi_interface_info acpi_default_supported_interfaces[] = {
->  	/* Operating System Vendor Strings */
->  
-> +	{"Darwin", NULL, 0, ACPI_OSI_DARWIN},	/* OS X */
->  	{"Windows 2000", NULL, 0, ACPI_OSI_WIN_2000},	/* Windows 2000 */
->  	{"Windows 2001", NULL, 0, ACPI_OSI_WIN_XP},	/* Windows XP */
->  	{"Windows 2001 SP1", NULL, 0, ACPI_OSI_WIN_XP_SP1},	/* Windows XP SP1 */
-> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-> index 6776c59..312ab5c 100644
-> --- a/drivers/acpi/osl.c
-> +++ b/drivers/acpi/osl.c
-> @@ -152,6 +152,16 @@ static u32 acpi_osi_handler(acpi_string interface, u32 supported)
->  			osi_linux.dmi ? " via DMI" : "");
->  	}
->  
-> +	if (!strcmp("Darwin", interface)) {
-> +		/*
-> +		 * Apple firmware will behave poorly if it receives positive
-> +		 * answers to "Darwin" and any other OS. Respond positively
-> +		 * to Darwin and then disable all other vendor strings.
-> +		 */
-> +		acpi_update_interfaces(ACPI_DISABLE_ALL_VENDOR_STRINGS);
-> +		supported = ACPI_UINT32_MAX;
-> +	}
-> +
->  	return supported;
->  }
->  
-> diff --git a/include/acpi/actypes.h b/include/acpi/actypes.h
-> index e763565..1c2ef56 100644
-> --- a/include/acpi/actypes.h
-> +++ b/include/acpi/actypes.h
-> @@ -1210,17 +1210,18 @@ struct acpi_memory_list {
->  #define ACPI_ENABLE_ALL_FEATURE_STRINGS     (ACPI_ENABLE_INTERFACES | ACPI_FEATURE_STRINGS)
->  #define ACPI_ENABLE_ALL_STRINGS             (ACPI_ENABLE_INTERFACES | ACPI_VENDOR_STRINGS | ACPI_FEATURE_STRINGS)
->  
-> -#define ACPI_OSI_WIN_2000               0x01
-> -#define ACPI_OSI_WIN_XP                 0x02
-> -#define ACPI_OSI_WIN_XP_SP1             0x03
-> -#define ACPI_OSI_WINSRV_2003            0x04
-> -#define ACPI_OSI_WIN_XP_SP2             0x05
-> -#define ACPI_OSI_WINSRV_2003_SP1        0x06
-> -#define ACPI_OSI_WIN_VISTA              0x07
-> -#define ACPI_OSI_WINSRV_2008            0x08
-> -#define ACPI_OSI_WIN_VISTA_SP1          0x09
-> -#define ACPI_OSI_WIN_VISTA_SP2          0x0A
-> -#define ACPI_OSI_WIN_7                  0x0B
-> -#define ACPI_OSI_WIN_8                  0x0C
-> +#define ACPI_OSI_DARWIN                 0x01
-> +#define ACPI_OSI_WIN_2000               0x02
-> +#define ACPI_OSI_WIN_XP                 0x03
-> +#define ACPI_OSI_WIN_XP_SP1             0x04
-> +#define ACPI_OSI_WINSRV_2003            0x05
-> +#define ACPI_OSI_WIN_XP_SP2             0x06
-> +#define ACPI_OSI_WINSRV_2003_SP1        0x07
-> +#define ACPI_OSI_WIN_VISTA              0x08
-> +#define ACPI_OSI_WINSRV_2008            0x09
-> +#define ACPI_OSI_WIN_VISTA_SP1          0x0A
-> +#define ACPI_OSI_WIN_VISTA_SP2          0x0B
-> +#define ACPI_OSI_WIN_7                  0x0C
-> +#define ACPI_OSI_WIN_8                  0x0D
->  
->  #endif				/* __ACTYPES_H__ */
-> 
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index d94468ae2947..91dc85f63c41 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -634,50 +634,56 @@ static void domain_update_iommu_coherency(struct dmar_domain *domain)
+ 	rcu_read_unlock();
+ }
+ 
+-static void domain_update_iommu_snooping(struct dmar_domain *domain)
++static int domain_update_iommu_snooping(struct intel_iommu *skip)
+ {
+-	int i;
+-
+-	domain->iommu_snooping = 1;
++	struct dmar_drhd_unit *drhd;
++	struct intel_iommu *iommu;
++	int ret = 1;
+ 
+-	for_each_set_bit(i, domain->iommu_bmp, g_num_of_iommus) {
+-		if (!ecap_sc_support(g_iommus[i]->ecap)) {
+-			domain->iommu_snooping = 0;
+-			break;
++	rcu_read_lock();
++	for_each_active_iommu(iommu, drhd) {
++		if (iommu != skip) {
++			if (!ecap_sc_support(iommu->ecap)) {
++				ret = 0;
++				break;
++			}
+ 		}
+ 	}
++	rcu_read_unlock();
++
++	return ret;
+ }
+ 
+-static void domain_update_iommu_superpage(struct dmar_domain *domain)
++static int domain_update_iommu_superpage(struct intel_iommu *skip)
+ {
+ 	struct dmar_drhd_unit *drhd;
+-	struct intel_iommu *iommu = NULL;
++	struct intel_iommu *iommu;
+ 	int mask = 0xf;
+ 
+ 	if (!intel_iommu_superpage) {
+-		domain->iommu_superpage = 0;
+-		return;
++		return 0;
+ 	}
+ 
+ 	/* set iommu_superpage to the smallest common denominator */
+ 	rcu_read_lock();
+ 	for_each_active_iommu(iommu, drhd) {
+-		mask &= cap_super_page_val(iommu->cap);
+-		if (!mask) {
+-			break;
++		if (iommu != skip) {
++			mask &= cap_super_page_val(iommu->cap);
++			if (!mask)
++				break;
+ 		}
+ 	}
+ 	rcu_read_unlock();
+ 
+-	domain->iommu_superpage = fls(mask);
++	return fls(mask);
+ }
+ 
+ /* Some capabilities may be different across iommus */
+ static void domain_update_iommu_cap(struct dmar_domain *domain)
+ {
+ 	domain_update_iommu_coherency(domain);
+-	domain_update_iommu_snooping(domain);
+-	domain_update_iommu_superpage(domain);
++	domain->iommu_snooping = domain_update_iommu_snooping(NULL);
++	domain->iommu_superpage = domain_update_iommu_superpage(NULL);
+ }
+ 
+ static struct intel_iommu *device_to_iommu(struct device *dev, u8 *bus, u8 *devfn)
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.10.4
+
