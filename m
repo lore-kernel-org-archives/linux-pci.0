@@ -1,83 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:59031 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494AbaFEX7P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jun 2014 19:59:15 -0400
-Date: Thu, 5 Jun 2014 17:02:57 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Alexei Starovoitov <ast@plumgrid.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci/msi: fix memory leak in free_msi_irqs()
-Message-ID: <20140606000257.GB16117@kroah.com>
-References: <1401922190-25357-1-git-send-email-ast@plumgrid.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1401922190-25357-1-git-send-email-ast@plumgrid.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [Patch V3 06/16] x86, irq: Split out alloc_ioapic_save_registers()
+Date: Wed, 25 Jun 2014 16:40:37 +0800
+Message-Id: <1403685648-10103-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 04, 2014 at 03:49:50PM -0700, Alexei Starovoitov wrote:
-> free_msi_irqs() is leaking memory, since
-> list_for_each_entry(entry, &dev->msi_list, list) {...}
-> is never executed, because dev->msi_list is made empty by
-> the loop just above this one.
-> 
-> Fix it by relying on zero termination of attribute array like
-> populate_msi_sysfs() does.
-> 
-> Fixes: 1c51b50c2995 ("PCI/MSI: Export MSI mode using attributes, not kobjects")
-> Signed-off-by: Alexei Starovoitov <ast@plumgrid.com>
-> ---
-> 
-> This was found by kmemleak report:
-> unreferenced object 0xffff880808eda600 (size 64):
->   comm "modprobe", pid 1526, jiffies 4294902299 (age 58422.716s)
->   hex dump (first 32 bytes):
->     20 c4 66 09 08 88 ff ff 24 01 00 00 00 00 00 00   .f.....$.......
->     50 97 77 82 ff ff ff ff 00 00 00 00 00 00 00 00  P.w.............
->   backtrace:
->     [<ffffffff816e5fc8>] kmemleak_alloc+0x28/0x50
->     [<ffffffff811b885e>] kmem_cache_alloc_trace+0xde/0x230
->     [<ffffffff813aa286>] populate_msi_sysfs+0xc6/0x250
->     [<ffffffff813aafdb>] pci_enable_msix+0x34b/0x430
->     [<ffffffff813ab0ec>] pci_enable_msix_range+0x2c/0x70
->     [<ffffffffa0034ade>] igb_init_interrupt_scheme+0x9e/0x420 [igb]
->     [<ffffffffa003d668>] igb_probe+0x4a8/0x1250 [igb]
->     [<ffffffff813930de>] local_pci_probe+0x4e/0xa0
->     [<ffffffff813933e9>] pci_device_probe+0xd9/0x120
->     [<ffffffff814697cd>] driver_probe_device+0x8d/0x250
->     [<ffffffff81469a3b>] __driver_attach+0xab/0xb0
->     [<ffffffff8146799d>] bus_for_each_dev+0x5d/0xa0
->     [<ffffffff814691de>] driver_attach+0x1e/0x20
->     [<ffffffff81468e57>] bus_add_driver+0x117/0x220
->     [<ffffffff8146a104>] driver_register+0x64/0xf0
->     [<ffffffff813923f4>] __pci_register_driver+0x64/0x70
-> 
-> IGB driver is calling pci_enable_msix_range() and immediately pci_disable_msix()
-> which leaks the memory.
-> Obviously the leak happens with any driver.
-> 
->  drivers/pci/msi.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 955ab7990c5b..fb02fc2fb034 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -414,7 +414,7 @@ static void free_msi_irqs(struct pci_dev *dev)
->  	if (dev->msi_irq_groups) {
->  		sysfs_remove_groups(&dev->dev.kobj, dev->msi_irq_groups);
->  		msi_attrs = dev->msi_irq_groups[0]->attrs;
-> -		list_for_each_entry(entry, &dev->msi_list, list) {
-> +		while (msi_attrs[count]) {
->  			dev_attr = container_of(msi_attrs[count],
->  						struct device_attribute, attr);
->  			kfree(dev_attr->attr.name);
+From: Yinghai Lu <yinghai@kernel.org>
 
-Looks good, thanks for catching this:
+Split alloc_ioapic_save_registers() from early_irq_init(),
+so it will be used per ioapic.
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Will call that later for hot-added ioapic controller.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c |   22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index a44dce8cc559..b7296d4ca0a1 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -237,6 +237,19 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
+ 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
+ }
+ 
++static void alloc_ioapic_saved_registers(int idx)
++{
++	size_t size;
++
++	if (ioapics[idx].saved_registers)
++		return;
++
++	size = sizeof(struct IO_APIC_route_entry) * ioapics[idx].nr_registers;
++	ioapics[idx].saved_registers = kzalloc(size, GFP_KERNEL);
++	if (!ioapics[idx].saved_registers)
++		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
++}
++
+ int __init arch_early_irq_init(void)
+ {
+ 	struct irq_cfg *cfg;
+@@ -245,13 +258,8 @@ int __init arch_early_irq_init(void)
+ 	if (!nr_legacy_irqs())
+ 		io_apic_irqs = ~0UL;
+ 
+-	for_each_ioapic(i) {
+-		ioapics[i].saved_registers =
+-			kzalloc(sizeof(struct IO_APIC_route_entry) *
+-				ioapics[i].nr_registers, GFP_KERNEL);
+-		if (!ioapics[i].saved_registers)
+-			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
+-	}
++	for_each_ioapic(i)
++		alloc_ioapic_saved_registers(i);
+ 
+ 	/*
+ 	 * For legacy IRQ's, start with assigning irq0 to irq15 to
+-- 
+1.7.10.4
 
