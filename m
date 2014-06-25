@@ -1,81 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:63466 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751739AbaFCJVx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 05:21:53 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Grant Likely <grant.likely@linaro.org>
-Cc: Kumar Gala <galak@codeaurora.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robherring2@gmail.com>,
+Received: from bear.ext.ti.com ([192.94.94.41]:43860 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757679AbaFYSBq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 14:01:46 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<jg1.han@samsung.com>, <bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-arm-kernel@lists.infradead.org>, <tony@atomide.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>, <grant.likely@linaro.org>,
 	Rob Herring <robh+dt@kernel.org>,
 	Pawel Moll <pawel.moll@arm.com>,
 	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 1/2] pci: Add IORESOURCE_BIT entry for PCIe ECAM resources.
-Date: Tue, 03 Jun 2014 11:21:10 +0200
-Message-ID: <5535126.fgWbMeOQVO@wuerfel>
-In-Reply-To: <20140603084459.EC01BC4096E@trevor.secretlab.ca>
-References: <20140530233034.GH1677@bart.dudau.co.uk> <2F6515B1-48FE-4ED6-908E-CC1CAD7AF403@codeaurora.org> <20140603084459.EC01BC4096E@trevor.secretlab.ca>
+	Kumar Gala <galak@codeaurora.org>
+Subject: [PATCH 7/8] ARM: dts: dra7: Add dt data for PCIe PHY
+Date: Wed, 25 Jun 2014 23:30:17 +0530
+Message-ID: <1403719218-9484-8-git-send-email-kishon@ti.com>
+In-Reply-To: <1403719218-9484-1-git-send-email-kishon@ti.com>
+References: <1403719218-9484-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 03 June 2014 09:44:59 Grant Likely wrote:
-> > The reason I think allow an ECAM makes sense in ranges is because it allows for a direct IO read/write to CFG space (w/o any mapping) similar to what one would do for MEM space or IO.
-> 
-> I don't think that's right. PCI addresses are defined as follows:
-> phys.hi cell: npt000ss bbbbbbbb dddddfff rrrrrrrr
-> phys.mid cell: hhhhhhhh hhhhhhhh hhhhhhhh hhhhhhhh
-> phys.low cell: llllllll llllllll llllllll llllllll
-> 
-> where 'ddddd' is the device number (0-31) and 'fff' is the function number (0-7)
-> 
-> Going up by one device number or even function number does not result in
-> contiguious address values:
-> 
-> device 0: 0x00000000 00000000 00000000
-> device 1: 0x00000800 00000000 00000000
-> device 2: 0x00001000 00000000 00000000
-> device 3: 0x00001800 00000000 00000000
-> ...
-> device 30:0x0000f000 00000000 00000000
-> device 31:0x0000f800 00000000 00000000
-> 
-> a simple ranges doesn't work transparently because each of those config
-> ranges needs to be mapped to a 4k block. I think ranges would need to
-> look like this:
-> 
-> ranges = <0x00000000 0 0  0x0ff00000  0x1000>,
->          <0x00000800 0 0  0x0ff01000  0x1000>,
->          <0x00001800 0 0  0x0ff02000  0x1000>,
->          ...
->          <0x0000f000 0 0  0x0ff1e000  0x1000>,
->          <0x0000f800 0 0  0x0ff1f000  0x1000>;
-> 
-> (I just hacked the above up; I make no claims to it's accuracy for
-> actual address values)
-> 
-> But I don't even thing the semantics work there because the address is
-> encoded in the phys.hi cell, not the phys.low cell. Incrementing by one
-> does not behaves as most bus addresses work. To actually work properly
-> we would have needed a way to define a stride of 64bits when
-> incrementing config space addresses in a ranges mapping.
+Added dt data for PCIe PHY as a child node of ocp2scp3.
+The documention for this node can be found @ ../bindings/phy/ti-phy.txt.
+26.3.3 PCIe Shared PHY Subsystem Integration in vE of DRA7xx ES1.0
+describes the PCIe PHY subsystem-related components integrated in the device.
 
-Thanks for clearing that up. I always suspected it was roughly this
-way, but never managed to think it through completely before getting
-distracted by something else.
+Cc: Tony Lindgren <tony@atomide.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Pawel Moll <pawel.moll@arm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Kumar Gala <galak@codeaurora.org>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra7.dtsi |   41 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
 
-I wonder if the OF definition matches CAM though, if not ECAM, as
-CAM is also limited to 256 byte config space per function.
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index f029a90..d196404 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -815,6 +815,47 @@
+ 				clock-names = "sysclk";
+ 				#phy-cells = <0>;
+ 			};
++
++			pcie1_phy: pciephy@4a094000 {
++				compatible = "ti,phy-pipe3-pcie";
++				reg = <0x4a094000 0x80>, /* phy_rx */
++				      <0x4a094400 0x64>; /* phy_tx */
++				reg-names = "phy_rx", "phy_tx";
++				ctrl-module = <&omap_control_pcie1phy>;
++				clocks = <&dpll_pcie_ref_ck>,
++					 <&dpll_pcie_ref_m2ldo_ck>,
++					 <&optfclk_pciephy1_32khz>,
++					 <&optfclk_pciephy1_clk>,
++					 <&optfclk_pciephy1_div_clk>,
++					 <&optfclk_pciephy_div>;
++				clock-names = "dpll_ref", "dpll_ref_m2",
++					      "wkupclk", "refclk",
++					      "div-clk", "phy-div";
++				#phy-cells = <0>;
++				id = <1>;
++				ti,hwmods = "pcie1-phy";
++			};
++
++			pcie2_phy: pciephy@4a095000 {
++				compatible = "ti,phy-pipe3-pcie";
++				reg = <0x4a095000 0x80>, /* phy_rx */
++				      <0x4a095400 0x64>; /* phy_tx */
++				reg-names = "phy_rx", "phy_tx";
++				ctrl-module = <&omap_control_pcie2phy>;
++				clocks = <&dpll_pcie_ref_ck>,
++					 <&dpll_pcie_ref_m2ldo_ck>,
++					 <&optfclk_pciephy2_32khz>,
++					 <&optfclk_pciephy2_clk>,
++					 <&optfclk_pciephy2_div_clk>,
++					 <&optfclk_pciephy_div>;
++				clock-names = "dpll_ref", "dpll_ref_m2",
++					      "wkupclk", "refclk",
++					      "div-clk", "phy-div";
++				#phy-cells = <0>;
++				ti,hwmods = "pcie2-phy";
++				id = <2>;
++				status = "disabled";
++			};
+ 		};
+ 
+ 		sata: sata@4a141100 {
+-- 
+1.7.9.5
 
-	Arnd
