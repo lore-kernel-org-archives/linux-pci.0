@@ -1,197 +1,356 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:52075 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751122AbaFWFMj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 01:12:39 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 23 Jun 2014 15:12:37 +1000
-Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 6D5492CE8051
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 15:12:33 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5N4uDBV38994058
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 14:56:13 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5N5CWSU032186
-	for <linux-pci@vger.kernel.org>; Mon, 23 Jun 2014 15:12:32 +1000
-Date: Mon, 23 Jun 2014 15:12:33 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: benh@au1.ibm.com, linuxppc-dev@lists.ozlabs.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	gwshan@linux.vnet.ibm.com, yan@linux.vnet.ibm.com,
-	qiudayu@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH V3 05/17] ppc/pnv: user macro to define the TCE size
-Message-ID: <20140623051233.GA7223@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-6-git-send-email-weiyang@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1402365399-5121-6-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch V3 16/16] x86, irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
+Date: Wed, 25 Jun 2014 16:40:47 +0800
+Message-Id: <1403685648-10103-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 09:56:27AM +0800, Wei Yang wrote:
->During the initialization of the TVT/TCE, it uses digits to specify the TCE IO
->Page Size, TCE Table Size, TCE Entry Size, etc.
->
->This patch replaces those digits with macros, which will be more meaningful and
->easy to read.
->
->Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Enable support of IOAPIC hotplug by:
+1) reintroducing ACPI based IOAPIC driver
+2) enhance pci_root driver to hook hotplug events
 
-It looks conflicting with "dynamic page size support" posted by Alexey:
+The ACPI IOAPIC driver is always enabled if system supports all of
+ACPI, PCI and IOAPIC.
 
-http://patchwork.ozlabs.org/patch/356718/
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/Kconfig    |    6 ++
+ drivers/acpi/Makefile   |    1 +
+ drivers/acpi/internal.h |    7 ++
+ drivers/acpi/ioapic.c   |  236 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/pci_root.c |    3 +
+ 5 files changed, 253 insertions(+)
+ create mode 100644 drivers/acpi/ioapic.c
+
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index a34a22841002..2dab72ce2dc6 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -309,6 +309,12 @@ config ACPI_HOTPLUG_MEMORY
+ 	  To compile this driver as a module, choose M here:
+ 	  the module will be called acpi_memhotplug.
  
->---
-> arch/powerpc/include/asm/tce.h            |    3 ++-
-> arch/powerpc/platforms/powernv/pci-ioda.c |   25 +++++++++++--------------
-> arch/powerpc/platforms/powernv/pci.c      |    2 +-
-> arch/powerpc/platforms/powernv/pci.h      |    5 +++++
-> 4 files changed, 19 insertions(+), 16 deletions(-)
->
->diff --git a/arch/powerpc/include/asm/tce.h b/arch/powerpc/include/asm/tce.h
->index 743f36b..28a1d06 100644
->--- a/arch/powerpc/include/asm/tce.h
->+++ b/arch/powerpc/include/asm/tce.h
->@@ -40,7 +40,8 @@
-> #define TCE_SHIFT	12
-> #define TCE_PAGE_SIZE	(1 << TCE_SHIFT)
->
->-#define TCE_ENTRY_SIZE		8		/* each TCE is 64 bits */
->+#define TCE_ENTRY_SHIFT		3
->+#define TCE_ENTRY_SIZE		(1 << TCE_ENTRY_SHIFT)	/* each TCE is 64 bits */
->
-> #define TCE_RPN_MASK		0xfffffffffful  /* 40-bit RPN (4K pages) */
-> #define TCE_RPN_SHIFT		12
->diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->index 8ae09cf..9715351 100644
->--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->@@ -820,9 +820,6 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
-> 	int64_t rc;
-> 	void *addr;
->
->-	/* 256M DMA window, 4K TCE pages, 8 bytes TCE */
->-#define TCE32_TABLE_SIZE	((0x10000000 / 0x1000) * 8)
->-
-> 	/* XXX FIXME: Handle 64-bit only DMA devices */
-> 	/* XXX FIXME: Provide 64-bit DMA facilities & non-4K TCE tables etc.. */
-> 	/* XXX FIXME: Allocate multi-level tables on PHB3 */
->@@ -834,7 +831,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
-> 	/* Grab a 32-bit TCE table */
-> 	pe->tce32_seg = base;
-> 	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
->-		(base << 28), ((base + segs) << 28) - 1);
->+		(base << PNV_TCE32_SEG_SHIFT), ((base + segs) << PNV_TCE32_SEG_SHIFT) - 1);
->
-> 	/* XXX Currently, we allocate one big contiguous table for the
-> 	 * TCEs. We only really need one chunk per 256M of TCE space
->@@ -842,21 +839,21 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
-> 	 * requires some added smarts with our get/put_tce implementation
-> 	 */
-> 	tce_mem = alloc_pages_node(phb->hose->node, GFP_KERNEL,
->-				   get_order(TCE32_TABLE_SIZE * segs));
->+				   get_order(PNV_TCE32_TAB_SIZE * segs));
-> 	if (!tce_mem) {
-> 		pe_err(pe, " Failed to allocate a 32-bit TCE memory\n");
-> 		goto fail;
-> 	}
-> 	addr = page_address(tce_mem);
->-	memset(addr, 0, TCE32_TABLE_SIZE * segs);
->+	memset(addr, 0, PNV_TCE32_TAB_SIZE * segs);
->
-> 	/* Configure HW */
-> 	for (i = 0; i < segs; i++) {
-> 		rc = opal_pci_map_pe_dma_window(phb->opal_id,
-> 					      pe->pe_number,
-> 					      base + i, 1,
->-					      __pa(addr) + TCE32_TABLE_SIZE * i,
->-					      TCE32_TABLE_SIZE, 0x1000);
->+					      __pa(addr) + PNV_TCE32_TAB_SIZE * i,
->+					      PNV_TCE32_TAB_SIZE, TCE_PAGE_SIZE);
-> 		if (rc) {
-> 			pe_err(pe, " Failed to configure 32-bit TCE table,"
-> 			       " err %ld\n", rc);
->@@ -866,8 +863,8 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
->
-> 	/* Setup linux iommu table */
-> 	tbl = &pe->tce32_table;
->-	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
->-				  base << 28);
->+	pnv_pci_setup_iommu_table(tbl, addr, PNV_TCE32_TAB_SIZE * segs,
->+				  base << PNV_TCE32_SEG_SHIFT);
->
-> 	/* OPAL variant of P7IOC SW invalidated TCEs */
-> 	swinvp = of_get_property(phb->hose->dn, "ibm,opal-tce-kill", NULL);
->@@ -898,7 +895,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
-> 	if (pe->tce32_seg >= 0)
-> 		pe->tce32_seg = -1;
-> 	if (tce_mem)
->-		__free_pages(tce_mem, get_order(TCE32_TABLE_SIZE * segs));
->+		__free_pages(tce_mem, get_order(PNV_TCE32_TAB_SIZE * segs));
-> }
->
-> static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
->@@ -968,7 +965,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
-> 	/* The PE will reserve all possible 32-bits space */
-> 	pe->tce32_seg = 0;
-> 	end = (1 << ilog2(phb->ioda.m32_pci_base));
->-	tce_table_size = (end / 0x1000) * 8;
->+	tce_table_size = (end / TCE_PAGE_SIZE) * TCE_ENTRY_SIZE;
-> 	pe_info(pe, "Setting up 32-bit TCE table at 0..%08x\n",
-> 		end);
->
->@@ -988,7 +985,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
-> 	 */
-> 	rc = opal_pci_map_pe_dma_window(phb->opal_id, pe->pe_number,
-> 					pe->pe_number << 1, 1, __pa(addr),
->-					tce_table_size, 0x1000);
->+					tce_table_size, TCE_PAGE_SIZE);
-> 	if (rc) {
-> 		pe_err(pe, "Failed to configure 32-bit TCE table,"
-> 		       " err %ld\n", rc);
->@@ -1573,7 +1570,7 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
-> 	INIT_LIST_HEAD(&phb->ioda.pe_list);
->
-> 	/* Calculate how many 32-bit TCE segments we have */
->-	phb->ioda.tce32_count = phb->ioda.m32_pci_base >> 28;
->+	phb->ioda.tce32_count = phb->ioda.m32_pci_base >> PNV_TCE32_SEG_SHIFT;
->
-> #if 0 /* We should really do that ... */
-> 	rc = opal_pci_set_phb_mem_window(opal->phb_id,
->diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
->index 8518817..687a068 100644
->--- a/arch/powerpc/platforms/powernv/pci.c
->+++ b/arch/powerpc/platforms/powernv/pci.c
->@@ -597,7 +597,7 @@ void pnv_pci_setup_iommu_table(struct iommu_table *tbl,
-> 	tbl->it_page_shift = IOMMU_PAGE_SHIFT_4K;
-> 	tbl->it_offset = dma_offset >> tbl->it_page_shift;
-> 	tbl->it_index = 0;
->-	tbl->it_size = tce_size >> 3;
->+	tbl->it_size = tce_size >> TCE_ENTRY_SHIFT;
-> 	tbl->it_busno = 0;
-> 	tbl->it_type = TCE_PCI;
-> }
->diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->index 3e5f5a1..90f6da4 100644
->--- a/arch/powerpc/platforms/powernv/pci.h
->+++ b/arch/powerpc/platforms/powernv/pci.h
->@@ -227,4 +227,9 @@ extern void pnv_pci_init_ioda2_phb(struct device_node *np);
-> extern void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
-> 					__be64 *startp, __be64 *endp, bool rm);
->
->+#define PNV_TCE32_SEG_SHIFT     28
->+#define PNV_TCE32_SEG_SIZE      (1UL << PNV_TCE32_SEG_SHIFT)
->+/* 256M DMA window, 4K TCE pages, 8 bytes TCE */
->+#define PNV_TCE32_TAB_SIZE	((PNV_TCE32_SEG_SIZE / TCE_PAGE_SIZE) * TCE_ENTRY_SIZE)
->+
-> #endif /* __POWERNV_PCI_H */
-
-Thanks,
-Gavin
++config ACPI_HOTPLUG_IOAPIC
++	bool
++	depends on PCI
++	depends on X86_IO_APIC
++	default y
++
+ config ACPI_SBS
+ 	tristate "Smart Battery System"
+ 	depends on X86
+diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+index bf5702753c6e..e8e8dfe43be1 100644
+--- a/drivers/acpi/Makefile
++++ b/drivers/acpi/Makefile
+@@ -68,6 +68,7 @@ obj-$(CONFIG_ACPI_PROCESSOR)	+= processor.o
+ obj-y				+= container.o
+ obj-$(CONFIG_ACPI_THERMAL)	+= thermal.o
+ obj-y				+= acpi_memhotplug.o
++obj-$(CONFIG_ACPI_HOTPLUG_IOAPIC) += ioapic.o
+ obj-$(CONFIG_ACPI_BATTERY)	+= battery.o
+ obj-$(CONFIG_ACPI_SBS)		+= sbshc.o
+ obj-$(CONFIG_ACPI_SBS)		+= sbs.o
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 7de5b603f272..136275c9572c 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -34,6 +34,13 @@ void acpi_pnp_init(void);
+ int acpi_sysfs_init(void);
+ void acpi_container_init(void);
+ void acpi_memory_hotplug_init(void);
++#ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
++int acpi_ioapic_add(struct acpi_pci_root *root);
++int acpi_ioapic_remove(struct acpi_pci_root *root);
++#else
++static inline int acpi_ioapic_add(struct acpi_pci_root *root) { return 0; }
++static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
++#endif
+ #ifdef CONFIG_ACPI_DOCK
+ void register_dock_dependent_device(struct acpi_device *adev,
+ 				    acpi_handle dshandle);
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+new file mode 100644
+index 000000000000..66d87a61ee5c
+--- /dev/null
++++ b/drivers/acpi/ioapic.c
+@@ -0,0 +1,236 @@
++/*
++ * IOAPIC/IOxAPIC/IOSAPIC driver
++ *
++ * Copyright (C) 2009 Fujitsu Limited.
++ * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
++ *
++ * Copyright (C) 2014 Intel Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * Based on original drivers/pci/ioapic.c
++ *	Yinghai Lu <yinghai@kernel.org>
++ *	Jiang Liu <jiang.liu@intel.com>
++ */
++
++/*
++ * This driver manages I/O APICs added by hotplug after boot.
++ * We try to claim all I/O APIC devices, but those present at boot were
++ * registered when we parsed the ACPI MADT, so we'll fail when we try to
++ * re-register them.
++ */
++
++#define pr_fmt(fmt) "ACPI : IOAPIC: " fmt
++
++#include <linux/slab.h>
++#include <linux/acpi.h>
++#include <linux/pci.h>
++#include <acpi/acpi.h>
++
++struct acpi_pci_ioapic {
++	acpi_handle	root_handle;
++	acpi_handle	handle;
++	u32		gsi_base;
++	struct resource	res;
++	struct pci_dev	*pdev;
++	struct list_head list;
++};
++
++static LIST_HEAD(ioapic_list);
++static DEFINE_MUTEX(ioapic_list_lock);
++
++static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
++{
++	struct resource *res = data;
++
++	memset(res, 0, sizeof(*res));
++	if (acpi_dev_resource_memory(acpi_res, res)) {
++		res->flags &= IORESOURCE_MEM;
++		if (res->flags)
++			return AE_OK;
++	} else if (acpi_dev_resource_address_space(acpi_res, res)) {
++		struct acpi_resource_address64 addr;
++
++		res->flags &= IORESOURCE_MEM;
++		if (res->flags &&
++		    ACPI_SUCCESS(acpi_resource_to_address64(acpi_res, &addr)) &&
++		    addr.info.mem.caching != ACPI_PREFETCHABLE_MEMORY) {
++			res->start += addr.translation_offset;
++			res->end += addr.translation_offset;
++			return AE_OK;
++		}
++	}
++	res->flags = 0;
++
++	return AE_OK;
++}
++
++static bool acpi_is_ioapic(acpi_handle handle, char **type)
++{
++	acpi_status status;
++	struct acpi_device_info *info;
++	char *hid = NULL;
++	bool match = false;
++
++	if (!acpi_has_method(handle, "_GSB"))
++		return false;
++
++	status = acpi_get_object_info(handle, &info);
++	if (ACPI_SUCCESS(status)) {
++		if (info->valid & ACPI_VALID_HID)
++			hid = info->hardware_id.string;
++		if (hid) {
++			if (strcmp(hid, "ACPI0009") == 0) {
++				*type = "IOxAPIC";
++				match = true;
++			} else if (strcmp(hid, "ACPI000A") == 0) {
++				*type = "IOAPIC";
++				match = true;
++			}
++		}
++		kfree(info);
++	}
++
++	return match;
++}
++
++static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
++				     void *context, void **rv)
++{
++	acpi_status status;
++	unsigned long long gsi_base;
++	struct acpi_pci_ioapic *ioapic;
++	struct pci_dev *dev = NULL;
++	struct resource *res = NULL;
++	char *type = NULL;
++
++	if (!acpi_is_ioapic(handle, &type))
++		return AE_OK;
++
++	mutex_lock(&ioapic_list_lock);
++	list_for_each_entry(ioapic, &ioapic_list, list)
++		if (ioapic->handle == handle) {
++			mutex_unlock(&ioapic_list_lock);
++			return AE_OK;
++		}
++
++	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsi_base);
++	if (ACPI_FAILURE(status)) {
++		acpi_handle_warn(handle, "failed to evaluate _GSB method\n");
++		goto exit;
++	}
++
++	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
++	if (!ioapic) {
++		pr_err("cannot allocate memory for new IOAPIC\n");
++		goto exit;
++	} else {
++		ioapic->root_handle = (acpi_handle)context;
++		ioapic->handle = handle;
++		ioapic->gsi_base = (u32)gsi_base;
++		ioapic->res.flags = IORESOURCE_UNSET;
++	}
++
++	if (acpi_ioapic_registered(handle, (u32)gsi_base))
++		goto done;
++
++	dev = acpi_get_pci_dev(handle);
++	if (dev && pci_resource_len(dev, 0)) {
++		if (pci_enable_device(dev) < 0)
++			goto exit_put;
++		pci_set_master(dev);
++		if (pci_request_region(dev, 0, type))
++			goto exit_disable;
++		res = &dev->resource[0];
++		ioapic->pdev = dev;
++	} else {
++		pci_dev_put(dev);
++		dev = NULL;
++
++		res = &ioapic->res;
++		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
++		if (res->flags == IORESOURCE_UNSET) {
++			acpi_handle_warn(handle, "failed to get resource\n");
++			goto exit_free;
++		} else if (request_resource(&iomem_resource, res)) {
++			acpi_handle_warn(handle, "failed to insert resource\n");
++			goto exit_free;
++		}
++	}
++
++	if (acpi_register_ioapic(handle, res->start, (u32)gsi_base)) {
++		acpi_handle_warn(handle, "failed to register IOAPIC\n");
++		goto exit_release;
++	}
++done:
++	list_add(&ioapic->list, &ioapic_list);
++	mutex_unlock(&ioapic_list_lock);
++
++	if (dev)
++		dev_info(&dev->dev, "%s at %pR, GSI %u\n",
++			 type, res, (u32)gsi_base);
++	else
++		acpi_handle_info(handle, "%s at %pR, GSI %u\n",
++				 type, res, (u32)gsi_base);
++
++	return AE_OK;
++
++exit_release:
++	if (dev)
++		pci_release_region(dev, 0);
++	else
++		release_resource(res);
++exit_disable:
++	if (dev)
++		pci_disable_device(dev);
++exit_put:
++	if (dev)
++		pci_dev_put(dev);
++exit_free:
++	kfree(ioapic);
++exit:
++	mutex_unlock(&ioapic_list_lock);
++	*(acpi_status *)rv = AE_ERROR;
++	return AE_OK;
++}
++
++int acpi_ioapic_add(struct acpi_pci_root *root)
++{
++	acpi_status status, retval = AE_OK;
++
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
++				     UINT_MAX, handle_ioapic_add, NULL,
++				     root->device->handle, (void **)&retval);
++
++	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
++}
++
++int acpi_ioapic_remove(struct acpi_pci_root *root)
++{
++	int retval = 0;
++	struct acpi_pci_ioapic *ioapic, *tmp;
++
++	mutex_lock(&ioapic_list_lock);
++	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
++		if (root->device->handle != ioapic->root_handle)
++			continue;
++
++		if (acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base))
++			retval = -EBUSY;
++
++		if (ioapic->pdev) {
++			pci_release_region(ioapic->pdev, 0);
++			pci_disable_device(ioapic->pdev);
++			pci_dev_put(ioapic->pdev);
++		} else if (ioapic->res.flags != IORESOURCE_UNSET) {
++			release_resource(&ioapic->res);
++		}
++		list_del(&ioapic->list);
++		kfree(ioapic);
++	}
++	mutex_unlock(&ioapic_list_lock);
++
++	return retval;
++}
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index d388f13d48b4..e1223fac65ce 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -600,6 +600,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (system_state != SYSTEM_BOOTING) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_root_bus_resources(root->bus);
++		acpi_ioapic_add(root);
+ 	}
+ 
+ 	pci_lock_rescan_remove();
+@@ -620,6 +621,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+ 
+ 	pci_stop_root_bus(root->bus);
+ 
++	WARN_ON(acpi_ioapic_remove(root));
++
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
+-- 
+1.7.10.4
 
