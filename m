@@ -1,163 +1,221 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:51577 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752144AbaFRAbf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 20:31:35 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Murali Karicheri' <m-karicheri2@ti.com>
-Cc: 'linux-arm' <linux-arm-kernel@lists.infradead.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	'Santosh Shilimkar' <santosh.shilimkar@ti.com>,
-	'Russell King' <linux@arm.linux.org.uk>,
-	'Grant Likely' <grant.likely@linaro.org>,
-	'Rob Herring' <robh+dt@kernel.org>,
-	'Mohit Kumar' <mohit.kumar@st.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Marek Vasut' <marex@denx.de>, 'Arnd Bergmann' <arnd@arndb.de>,
-	'Pawel Moll' <pawel.moll@arm.com>,
-	'Mark Rutland' <mark.rutland@arm.com>,
-	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
-	'Kumar Gala' <galak@codeaurora.org>,
-	'Randy Dunlap' <rdunlap@infradead.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
- <CAErSpo6=vi0SR0A3u5BCLgiGxoH48N5R=e8VAnFDG=K61qLxnw@mail.gmail.com>
-In-reply-to: <CAErSpo6=vi0SR0A3u5BCLgiGxoH48N5R=e8VAnFDG=K61qLxnw@mail.gmail.com>
-Subject: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
-Date: Wed, 18 Jun 2014 09:31:31 +0900
-Message-id: <003f01cf8a8c$a6f3be00$f4db3a00$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:24678 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755411AbaFYI76 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 04:59:58 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V3 03/21] iommu/vt-d: introduce helper functions to improve code readability
+Date: Wed, 25 Jun 2014 17:02:29 +0800
+Message-Id: <1403686967-10887-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, June 18, 2014 9:09 AM, Bjorn Helgaas wrote:
-> 
-> On Tue, Jun 10, 2014 at 02:51:19PM -0400, Murali Karicheri wrote:
-> > This patch adds a PCIe controller driver for Keystone SoCs. This
-> > is based on v1 of the series posted to the mailing list.
-> >
-> > CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-> > CC: Russell King <linux@arm.linux.org.uk>
-> > CC: Grant Likely <grant.likely@linaro.org>
-> > CC: Rob Herring <robh+dt@kernel.org>
-> > CC: Mohit Kumar <mohit.kumar@st.com>
-> > CC: Jingoo Han <jg1.han@samsung.com>
-> > CC: Bjorn Helgaas <bhelgaas@google.com>
-> > CC: Pratyush Anand <pratyush.anand@st.com>
-> > CC: Richard Zhu <r65037@freescale.com>
-> > CC: Kishon Vijay Abraham I <kishon@ti.com>
-> > CC: Marek Vasut <marex@denx.de>
-> > CC: Arnd Bergmann <arnd@arndb.de>
-> > CC: Pawel Moll <pawel.moll@arm.com>
-> > CC: Mark Rutland <mark.rutland@arm.com>
-> > CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-> > CC: Kumar Gala <galak@codeaurora.org>
-> > CC: Randy Dunlap <rdunlap@infradead.org>
-> > CC: Grant Likely <grant.likely@linaro.org>
-> >
-> >
-> > Changelog:
-> >
-> > V2
-> >  - Split the designware pcie enhancement patch to multiple
-> >    patches based on functionality added
-> >  - Remove the quirk code and add a patch to fix mps/mrss
-> >    tuning for ARM. Use kernel command line parameter
-> >    pci=pcie_bus_perf to work with Keystone PCI Controller.
-> >    Following patch addressed this.
-> >      [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
-> >  - Add documentation for device tree bindings
-> >  - Add separate interrupt controller nodes for MSI and Legacy
-> >    IRQs and use irq map for legacy IRQ
-> >  - Use compatibility to identify v3.65 version of the DW hardware
-> >    and use it to customize the designware common code.
-> >  - Use reg property for configuration space instead of range
-> >  - Other minor updates based on code inspection.
-> >
-> > V1
-> >  - Add an interrupt controller node for Legacy irq chip and use
-> >    interrupt map/map-mask property to map legacy IRQs A/B/C/D
-> >  - Add a Phy driver to replace the original serdes driver
-> >  - Move common application register handling code to a separate
-> >    file to allow re-use across other platforms that use older
-> >    DW PCIe h/w
-> >  - PCI quirk for maximum read request size. Check and override only
-> >    if the maximum is higher than what controller can handle.
-> >  - Converted to a module platform driver.
-> >
-> >
-> > Murali Karicheri (8):
-> >   PCI: designware: add rd[wr]_other_conf API
-> >   PCI: designware: refactor host init code to re-use on v3.65 DW pci hw
-> >   PCI: designware: update pcie core driver to work with dw hw version
-> >     3.65
-> >   PCI: designware: add msi controller functions for v3.65 hw
-> >   PCI: designware: add PCI controller functions for v3.65 DW hw
-> >   phy: Add serdes phy driver for keystone
-> >   PCI: keystone: add pcie driver based on designware core driver
-> >   ARM: keystone: add pcie related options
-> >
-> >  .../devicetree/bindings/pci/designware-pcie.txt    |   42 ++
-> >  .../devicetree/bindings/pci/pci-keystone.txt       |   56 +++
-> >  .../bindings/phy/phy-keystone-serdes.txt           |   25 ++
-> >  arch/arm/mach-keystone/Kconfig                     |    1 +
-> >  drivers/pci/host/Kconfig                           |   12 +
-> >  drivers/pci/host/Makefile                          |    2 +
-> >  drivers/pci/host/pci-dw-v3_65-msi.c                |  149 +++++++
-> >  drivers/pci/host/pci-dw-v3_65.c                    |  390 ++++++++++++++++++
-> >  drivers/pci/host/pci-dw-v3_65.h                    |   34 ++
-> >  drivers/pci/host/pci-keystone.c                    |  418 ++++++++++++++++++++
-> >  drivers/pci/host/pcie-designware.c                 |  175 +++++---
-> >  drivers/pci/host/pcie-designware.h                 |   42 +-
-> >  drivers/phy/Kconfig                                |    6 +
-> >  drivers/phy/Makefile                               |    1 +
-> >  drivers/phy/phy-keystone-serdes.c                  |  230 +++++++++++
-> >  15 files changed, 1531 insertions(+), 52 deletions(-)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
-> >  create mode 100644 Documentation/devicetree/bindings/phy/phy-keystone-serdes.txt
-> >  create mode 100644 drivers/pci/host/pci-dw-v3_65-msi.c
-> >  create mode 100644 drivers/pci/host/pci-dw-v3_65.c
-> >  create mode 100644 drivers/pci/host/pci-dw-v3_65.h
-> >  create mode 100644 drivers/pci/host/pci-keystone.c
-> >  create mode 100644 drivers/phy/phy-keystone-serdes.c
-> 
-> I'm not willing to merge phy-keystone-serdes.c because I don't
-> maintain drivers/phy and because of the binary blob of register values
-> it contains, but maybe somebody else will.  I assume it could be
-> merged by itself before the rest of this.
+Introduce domain_type_is_vm() and domain_type_is_vm_or_si() to improve
+code readability.
 
-I think so, too.
+Also kill useless macro DOMAIN_FLAG_P2P_MULTIPLE_DEVICES.
 
-DT maintainers and arch maintainers should review the following
-dt bindings.
-  .../devicetree/bindings/pci/designware-pcie.txt    |   42 ++
-  .../devicetree/bindings/pci/pci-keystone.txt       |   56 +++
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   59 +++++++++++++++++++------------------------
+ 1 file changed, 26 insertions(+), 33 deletions(-)
 
-Generic PHY maintainer (Kishon Vijay Abraham I) should review the
-following phy driver.
-  drivers/phy/phy-keystone-serdes.c
-
-> 
-> I'm looking for acks from Mohit and/or Jingoo for the pci/host
-> changes, and from Arnd for the devicetree/bindings changes.
-> 
-> Adding these "-dw-3_64" files is sort of ugly.  If that code is only
-> used by keystone, maybe it could just be moved to pci-keystone.c?  But
-> I'll defer to Mohit and Jingoo on that and the way you modify
-> pcie-designware.c.
-
-I agree with Bjorn Helgaas's opinion. These three "-dw-3_64" files
-look terrible! I don't have a good way to handle this; however,
-moving this code to pci-keystone.c looks better.
-
-Best regards,
-Jingoo Han
-
-> 
-> Bjorn
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 64a3c37d5cfa..3bac9785b054 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -321,16 +321,13 @@ static inline int first_pte_in_page(struct dma_pte *pte)
+ static struct dmar_domain *si_domain;
+ static int hw_pass_through = 1;
+ 
+-/* devices under the same p2p bridge are owned in one domain */
+-#define DOMAIN_FLAG_P2P_MULTIPLE_DEVICES (1 << 0)
+-
+ /* domain represents a virtual machine, more than one devices
+  * across iommus may be owned in one domain, e.g. kvm guest.
+  */
+-#define DOMAIN_FLAG_VIRTUAL_MACHINE	(1 << 1)
++#define DOMAIN_FLAG_VIRTUAL_MACHINE	(1 << 0)
+ 
+ /* si_domain contains mulitple devices */
+-#define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 2)
++#define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 1)
+ 
+ /* define the limit of IOMMUs supported in each domain */
+ #ifdef	CONFIG_X86
+@@ -540,6 +537,16 @@ void free_iova_mem(struct iova *iova)
+ 	kmem_cache_free(iommu_iova_cache, iova);
+ }
+ 
++static inline int domain_type_is_vm(struct dmar_domain *domain)
++{
++	return domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE;
++}
++
++static inline int domain_type_is_vm_or_si(struct dmar_domain *domain)
++{
++	return domain->flags & (DOMAIN_FLAG_VIRTUAL_MACHINE |
++				DOMAIN_FLAG_STATIC_IDENTITY);
++}
+ 
+ static int __iommu_calculate_agaw(struct intel_iommu *iommu, int max_gaw)
+ {
+@@ -580,9 +587,7 @@ static struct intel_iommu *domain_get_iommu(struct dmar_domain *domain)
+ 	int iommu_id;
+ 
+ 	/* si_domain and vm domain should not get here. */
+-	BUG_ON(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE);
+-	BUG_ON(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY);
+-
++	BUG_ON(domain_type_is_vm_or_si(domain));
+ 	iommu_id = find_first_bit(domain->iommu_bmp, g_num_of_iommus);
+ 	if (iommu_id < 0 || iommu_id >= g_num_of_iommus)
+ 		return NULL;
+@@ -1500,7 +1505,7 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
+ 	free_context_table(iommu);
+ }
+ 
+-static struct dmar_domain *alloc_domain(bool vm)
++static struct dmar_domain *alloc_domain(int flags)
+ {
+ 	/* domain id for virtual machine, it won't be set in context */
+ 	static atomic_t vm_domid = ATOMIC_INIT(0);
+@@ -1510,16 +1515,13 @@ static struct dmar_domain *alloc_domain(bool vm)
+ 	if (!domain)
+ 		return NULL;
+ 
++	memset(domain, 0, sizeof(*domain));
+ 	domain->nid = -1;
+-	domain->iommu_count = 0;
+-	memset(domain->iommu_bmp, 0, sizeof(domain->iommu_bmp));
+-	domain->flags = 0;
++	domain->flags = flags;
+ 	spin_lock_init(&domain->iommu_lock);
+ 	INIT_LIST_HEAD(&domain->devices);
+-	if (vm) {
++	if (flags & DOMAIN_FLAG_VIRTUAL_MACHINE)
+ 		domain->id = atomic_inc_return(&vm_domid);
+-		domain->flags = DOMAIN_FLAG_VIRTUAL_MACHINE;
+-	}
+ 
+ 	return domain;
+ }
+@@ -1707,7 +1709,7 @@ static void domain_exit(struct dmar_domain *domain)
+ 	/* clear attached or cached domains */
+ 	rcu_read_lock();
+ 	for_each_active_iommu(iommu, drhd)
+-		if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
++		if (domain_type_is_vm(domain) ||
+ 		    test_bit(iommu->seq_id, domain->iommu_bmp))
+ 			iommu_detach_domain(domain, iommu);
+ 	rcu_read_unlock();
+@@ -1749,8 +1751,7 @@ static int domain_context_mapping_one(struct dmar_domain *domain,
+ 	id = domain->id;
+ 	pgd = domain->pgd;
+ 
+-	if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
+-	    domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) {
++	if (domain_type_is_vm_or_si(domain)) {
+ 		int found = 0;
+ 
+ 		/* find an available domain id for this device in iommu */
+@@ -2116,7 +2117,7 @@ static void domain_remove_dev_info(struct dmar_domain *domain)
+ 		iommu_disable_dev_iotlb(info);
+ 		iommu_detach_dev(info->iommu, info->bus, info->devfn);
+ 
+-		if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) {
++		if (domain_type_is_vm(domain)) {
+ 			iommu_detach_dependent_devices(info->iommu, info->dev);
+ 			/* clear this iommu in iommu_bmp, update iommu count
+ 			 * and capabilities
+@@ -2182,8 +2183,6 @@ static struct dmar_domain *dmar_insert_dev_info(struct intel_iommu *iommu,
+ 	info->dev = dev;
+ 	info->domain = domain;
+ 	info->iommu = iommu;
+-	if (!dev)
+-		domain->flags |= DOMAIN_FLAG_P2P_MULTIPLE_DEVICES;
+ 
+ 	spin_lock_irqsave(&device_domain_lock, flags);
+ 	if (dev)
+@@ -2258,7 +2257,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 		goto error;
+ 
+ 	/* Allocate and initialize new domain for the device */
+-	domain = alloc_domain(false);
++	domain = alloc_domain(0);
+ 	if (!domain)
+ 		goto error;
+ 	if (iommu_attach_domain(domain, iommu)) {
+@@ -2422,12 +2421,10 @@ static int __init si_domain_init(int hw)
+ 	struct intel_iommu *iommu;
+ 	int nid, ret = 0;
+ 
+-	si_domain = alloc_domain(false);
++	si_domain = alloc_domain(DOMAIN_FLAG_STATIC_IDENTITY);
+ 	if (!si_domain)
+ 		return -EFAULT;
+ 
+-	si_domain->flags = DOMAIN_FLAG_STATIC_IDENTITY;
+-
+ 	for_each_active_iommu(iommu, drhd) {
+ 		ret = iommu_attach_domain(si_domain, iommu);
+ 		if (ret) {
+@@ -3874,9 +3871,7 @@ static int device_notifier(struct notifier_block *nb,
+ 
+ 	down_read(&dmar_global_lock);
+ 	domain_remove_one_dev_info(domain, dev);
+-	if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
+-	    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) &&
+-	    list_empty(&domain->devices))
++	if (!domain_type_is_vm_or_si(domain) && list_empty(&domain->devices))
+ 		domain_exit(domain);
+ 	up_read(&dmar_global_lock);
+ 
+@@ -4125,8 +4120,7 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
+ 		domain_update_iommu_cap(domain);
+ 		spin_unlock_irqrestore(&domain->iommu_lock, tmp_flags);
+ 
+-		if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
+-		    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY)) {
++		if (!domain_type_is_vm_or_si(domain)) {
+ 			spin_lock_irqsave(&iommu->lock, tmp_flags);
+ 			clear_bit(domain->id, iommu->domain_ids);
+ 			iommu->domains[domain->id] = NULL;
+@@ -4165,7 +4159,7 @@ static int intel_iommu_domain_init(struct iommu_domain *domain)
+ {
+ 	struct dmar_domain *dmar_domain;
+ 
+-	dmar_domain = alloc_domain(true);
++	dmar_domain = alloc_domain(DOMAIN_FLAG_VIRTUAL_MACHINE);
+ 	if (!dmar_domain) {
+ 		printk(KERN_ERR
+ 			"intel_iommu_domain_init: dmar_domain == NULL\n");
+@@ -4209,8 +4203,7 @@ static int intel_iommu_attach_device(struct iommu_domain *domain,
+ 
+ 		old_domain = find_domain(dev);
+ 		if (old_domain) {
+-			if (dmar_domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE ||
+-			    dmar_domain->flags & DOMAIN_FLAG_STATIC_IDENTITY)
++			if (domain_type_is_vm_or_si(dmar_domain))
+ 				domain_remove_one_dev_info(old_domain, dev);
+ 			else
+ 				domain_remove_dev_info(old_domain);
+-- 
+1.7.10.4
 
