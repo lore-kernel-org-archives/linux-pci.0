@@ -1,82 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:50419 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750787AbaFLFO4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jun 2014 01:14:56 -0400
+Received: from mail-yh0-f43.google.com ([209.85.213.43]:53455 "EHLO
+	mail-yh0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851AbaFYKXU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 06:23:20 -0400
+Received: by mail-yh0-f43.google.com with SMTP id a41so1007432yho.30
+        for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 03:23:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6s1=aQ2=GxMHXTZgE+hFUp+Kzz9r32RXkDcY_TW_5+UQ@mail.gmail.com>
-References: <CANwwZzVqQ9Dur79ZP_1Fs9UWF0+h44tGW6QA4UZYdXaqV51z3A@mail.gmail.com>
-	<CAErSpo6s1=aQ2=GxMHXTZgE+hFUp+Kzz9r32RXkDcY_TW_5+UQ@mail.gmail.com>
-Date: Thu, 12 Jun 2014 10:44:55 +0530
-Message-ID: <CANwwZzV2MDfHWcW43XCnRS2qoqS1sgYQA=C9n-Lr9PZikXLqFg@mail.gmail.com>
-Subject: Re: DMA window vs actual allocatable DMA memory
-From: Bob Biloxi <iambobbiloxi@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 25 Jun 2014 15:53:19 +0530
+Message-ID: <CAD6G_RSCQ+CzifpofiXg9yFB3HpEqynF-3giEowRgR9E-qvX1Q@mail.gmail.com>
+Subject: PCIe current resource settings
+From: Jagan Teki <jagannadh.teki@gmail.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks so much Bjorn for the reply. This is very helpful. Now my
-understanding is more clear.
-I was curious whether there is any limit from the operating
-system(hypervisor) as to how much DMA memory can drivers map.
-I'll try to investigate.
+Hi,
 
-On Thu, Jun 12, 2014 at 5:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Jun 11, 2014 at 12:23 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
->> Hi All,
->>
->> I am having trouble understanding DMA window and actual amount of
->> addressable DMA memory.
->>
->> I hope someone explains me. Let me put my understanding and doubts here:
->>
->> Let's say I am writing code for an ethernet device driver in the
->> virtualisation(hypervisor) environment.
->>
->> Now, if the ethernet adapter requires certain amount of DMA memory, I
->> need to allocate heap memory and dma map it and provide to the
->> adapter.
->>
->> From the hardware perspective, we have a 64GB DMA window.
->>
->> I am having trouble understanding this value. Does it mean i can
->> allocate 64GB of RAM(Heap memory) and dma map it?
->>
->> As i understand there might be a table that translates bus address to
->> physical(RAM) addresses. Each entry of such table points to a 4KB
->> page. If the size of each entry is 8 bytes and there are 16M such
->> entries( 16M * 4K = 64GB DMA window), the size of the table comes to
->> around 128M
->>
->> Now do I have 64GB DMA memory or 128M DMA memory?
->
-> Documentation/DMA-API-HOWTO.txt might help answer your questions.
->
-> The bus address to RAM address translation is done by a IOMMU
-> hardware.  The tables you mention are I/O page tables used by the
-> IOMMU.  The 128M occupied by the tables is kernel bookkeeping overhead
-> and has nothing to do with the adapter itself.
->
-> The 64GB DMA window might be a hardware feature of the device, i.e.,
-> maybe it can only generate 36-bit DMA addresses.  That doesn't mean
-> you have to allocate memory for the whole window; I would guess
-> drivers would only allocate and map what they need.  I don't know how
-> they figure out how much to map.
->
->> I want to know what is the max amount of memory that I can
->> allocate(heap), dma map and provide it to the adapter.
->>
->> I will be really thankful in all the help that I can get!!
->>
->> Thanks so much
->>
->>
->> Best Regards,
->> Marc
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think CRS feature is all ready available in Linux [1]
+
+I'm guessing the respective root complex driver need to enable and use
+this feature.
+I'm using PCIe bridge which is operating in ARM, how can I enable or
+is there RC driver which uses this feature already?
+
+[1] http://lwn.net/Articles/373551/
+
+thanks!
+-- 
+Jagan.
