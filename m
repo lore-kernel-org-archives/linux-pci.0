@@ -1,84 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:52156 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965123AbaFRKQF convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Jun 2014 06:16:05 -0400
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Murali Karicheri <m-karicheri2@ti.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Pratyush ANAND <pratyush.anand@st.com>
-Cc: Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Date: Wed, 18 Jun 2014 18:14:28 +0800
-Subject: RE: [PATCH v2 0/8] Add Keystone PCIe controller driver
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB6619C5F8169D1@EAPEX1MAIL1.st.com>
-References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:46158 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757874AbaFYSBL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 14:01:11 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<jg1.han@samsung.com>, <bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-arm-kernel@lists.infradead.org>, <tony@atomide.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>, <grant.likely@linaro.org>
+Subject: [PATCH 0/8] arm: dts: dra7: Add PCIe data and PCIe PHY data
+Date: Wed, 25 Jun 2014 23:30:10 +0530
+Message-ID: <1403719218-9484-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Murali,
+[1] is split into separate series in order for individual subsystem
+Maintainers to pick up the patches. This series handles the PCIe
+dt data for DRA7.
 
-> -----Original Message-----
-> From: Murali Karicheri [mailto:m-karicheri2@ti.com]
-> Sent: Wednesday, June 11, 2014 12:21 AM
-> To: linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
-> linux-pci@vger.kernel.org; devicetree@vger.kernel.org; linux-
-> doc@vger.kernel.org
-> Cc: Murali Karicheri; Santosh Shilimkar; Russell King; Grant Likely; Rob Herring;
-> Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Pratyush ANAND; Richard
-> Zhu; Kishon Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll;
-> Mark Rutland; Ian Campbell; Kumar Gala; Randy Dunlap
-> Subject: [PATCH v2 0/8] Add Keystone PCIe controller driver
-> 
-> This patch adds a PCIe controller driver for Keystone SoCs. This is based on v1
-> of the series posted to the mailing list.
-> 
+This series has better commit logs than the previous one modified as
+suggested by Tero.
 
-1. I think your first patch is OK which handles platform specific ATU implementation.
+[1] -> https://lkml.org/lkml/2014/5/29/258
 
-2. For MSI part, I think you just need to add two new callbacks with pp-ops, something similar to:
-pp->ops->msi_set
-pp->ops->msi_clear
+Keerthy (2):
+  ARM: dts: dra7xx-clocks: Add divider table to optfclk_pciephy_div
+    clock
+  ARM: dts: dra7xx-clocks: Change the parent of apll_pcie_in_clk_mux to
+    dpll_pcie_ref_m2ldo_ck
 
-With these two platform specific callbacks you should be able to manage MSI handling.
-So idea is that dw_msi code uses pp->ops->msi_set/clear if platform define these,
-otherwise use dw_msi_set/clear (which you need to refactor from existing code)
+Kishon Vijay Abraham I (6):
+  ARM: dts: dra7xx-clocks: Add missing 32KHz clocks used for PHY
+  ARM: dts: dra7xx-clocks: rename pcie clocks to accommodate second PHY
+    instance
+  ARM: dts: dra7xx-clocks: Add missing clocks for second PCIe PHY
+    instance
+  ARM: dts: dra7: Add dt data for PCIe PHY control module
+  ARM: dts: dra7: Add dt data for PCIe PHY
+  ARM: dts: dra7: Add dt data for PCIe controller
 
-So other than your keystone changes we expect 3 patches:
---  1st same as you sent 1/8: for ATU handeling
--- 2nd to refactor dw_msi_set/clear: refactor from existing code
--- 3rd to use pp->ops->msi_set/clear if defined.
+ arch/arm/boot/dts/dra7.dtsi          |  127 ++++++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/dra7xx-clocks.dtsi |   39 ++++++++++-
+ 2 files changed, 163 insertions(+), 3 deletions(-)
 
-Pls let us know for any issue or have different opinion.
-
-Regards
-Mohit
-
-
-
- 
-> 
-> --
-> 1.7.9.5
+-- 
+1.7.9.5
 
