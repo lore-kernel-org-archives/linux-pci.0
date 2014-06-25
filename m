@@ -1,116 +1,376 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:59916 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505AbaFAQeT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jun 2014 12:34:19 -0400
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: rjw@rjwysocki.net
-Cc: lenb@kernel.org, robert.moore@intel.com, lv.zheng@intel.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Matthew Garrett <matthew.garrett@nebula.com>
-Date: Sun,  1 Jun 2014 12:33:53 -0400
-Message-Id: <1401640436-1947-2-git-send-email-matthew.garrett@nebula.com>
-In-Reply-To: <1401640436-1947-1-git-send-email-matthew.garrett@nebula.com>
-References: <1401640436-1947-1-git-send-email-matthew.garrett@nebula.com>
-Subject: [PATCH 1/4] ACPI: Support _OSI("Darwin") correctly
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V3 18/21] iommu/vt-d: enhance intel_irq_remapping driver to support DMAR unit hotplug
+Date: Wed, 25 Jun 2014 17:02:44 +0800
+Message-Id: <1403686967-10887-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Apple hardware queries _OSI("Darwin") in order to determine whether the
-system is running OS X, and changes firmware behaviour based on the answer.
-The most obvious difference in behaviour is that Thunderbolt hardware is
-forcibly powered down unless the system is running OS X. The obvious solution
-would be to simply add Darwin to the list of supported _OSI strings, but this
-causes problems.
+Implement required callback functions for intel_irq_remapping driver
+to support DMAR unit hotplug.
 
-Recent Apple hardware includes two separate methods for checking _OSI
-strings. The first will check whether Darwin is supported, and if so will
-exit. The second will check whether Darwin is supported, but will then
-continue to check for further operating systems. If a further operating
-system is found then later firmware code will assume that the OS is not OS X.
-This results in the unfortunate situation where the Thunderbolt controller is
-available at boot time but remains powered down after suspend.
-
-The easiest way to handle this is to special-case it in the Linux-specific
-OSI handling code. If we see Darwin, we should answer true and then disable
-all other _OSI vendor strings.
-
-Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/acpi/acpica/utosi.c |  1 +
- drivers/acpi/osl.c          | 10 ++++++++++
- include/acpi/actypes.h      | 25 +++++++++++++------------
- 3 files changed, 24 insertions(+), 12 deletions(-)
+ drivers/iommu/intel_irq_remapping.c |  222 ++++++++++++++++++++++++++---------
+ 1 file changed, 169 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/acpi/acpica/utosi.c b/drivers/acpi/acpica/utosi.c
-index 685766f..63b0a3b 100644
---- a/drivers/acpi/acpica/utosi.c
-+++ b/drivers/acpi/acpica/utosi.c
-@@ -87,6 +87,7 @@ ACPI_MODULE_NAME("utosi")
- static struct acpi_interface_info acpi_default_supported_interfaces[] = {
- 	/* Operating System Vendor Strings */
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index aa309a8e4d3a..9f1c86566452 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -36,7 +36,6 @@ struct hpet_scope {
  
-+	{"Darwin", NULL, 0, ACPI_OSI_DARWIN},	/* OS X */
- 	{"Windows 2000", NULL, 0, ACPI_OSI_WIN_2000},	/* Windows 2000 */
- 	{"Windows 2001", NULL, 0, ACPI_OSI_WIN_XP},	/* Windows XP */
- 	{"Windows 2001 SP1", NULL, 0, ACPI_OSI_WIN_XP_SP1},	/* Windows XP SP1 */
-diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-index 6776c59..312ab5c 100644
---- a/drivers/acpi/osl.c
-+++ b/drivers/acpi/osl.c
-@@ -152,6 +152,16 @@ static u32 acpi_osi_handler(acpi_string interface, u32 supported)
- 			osi_linux.dmi ? " via DMI" : "");
- 	}
+ static struct ioapic_scope ir_ioapic[MAX_IO_APICS];
+ static struct hpet_scope ir_hpet[MAX_HPET_TBS];
+-static int ir_ioapic_num, ir_hpet_num;
  
-+	if (!strcmp("Darwin", interface)) {
-+		/*
-+		 * Apple firmware will behave poorly if it receives positive
-+		 * answers to "Darwin" and any other OS. Respond positively
-+		 * to Darwin and then disable all other vendor strings.
-+		 */
-+		acpi_update_interfaces(ACPI_DISABLE_ALL_VENDOR_STRINGS);
-+		supported = ACPI_UINT32_MAX;
-+	}
-+
- 	return supported;
+ /*
+  * Lock ordering:
+@@ -320,7 +319,7 @@ static int set_ioapic_sid(struct irte *irte, int apic)
+ 
+ 	down_read(&dmar_global_lock);
+ 	for (i = 0; i < MAX_IO_APICS; i++) {
+-		if (ir_ioapic[i].id == apic) {
++		if (ir_ioapic[i].iommu && ir_ioapic[i].id == apic) {
+ 			sid = (ir_ioapic[i].bus << 8) | ir_ioapic[i].devfn;
+ 			break;
+ 		}
+@@ -347,7 +346,7 @@ static int set_hpet_sid(struct irte *irte, u8 id)
+ 
+ 	down_read(&dmar_global_lock);
+ 	for (i = 0; i < MAX_HPET_TBS; i++) {
+-		if (ir_hpet[i].id == id) {
++		if (ir_hpet[i].iommu && ir_hpet[i].id == id) {
+ 			sid = (ir_hpet[i].bus << 8) | ir_hpet[i].devfn;
+ 			break;
+ 		}
+@@ -446,17 +445,17 @@ static void iommu_set_irq_remapping(struct intel_iommu *iommu, int mode)
+ 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
  }
  
-diff --git a/include/acpi/actypes.h b/include/acpi/actypes.h
-index e763565..1c2ef56 100644
---- a/include/acpi/actypes.h
-+++ b/include/acpi/actypes.h
-@@ -1210,17 +1210,18 @@ struct acpi_memory_list {
- #define ACPI_ENABLE_ALL_FEATURE_STRINGS     (ACPI_ENABLE_INTERFACES | ACPI_FEATURE_STRINGS)
- #define ACPI_ENABLE_ALL_STRINGS             (ACPI_ENABLE_INTERFACES | ACPI_VENDOR_STRINGS | ACPI_FEATURE_STRINGS)
+-
+-static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
++static int intel_setup_irq_remapping(struct intel_iommu *iommu)
+ {
+ 	struct ir_table *ir_table;
+ 	struct page *pages;
+ 	unsigned long *bitmap;
  
--#define ACPI_OSI_WIN_2000               0x01
--#define ACPI_OSI_WIN_XP                 0x02
--#define ACPI_OSI_WIN_XP_SP1             0x03
--#define ACPI_OSI_WINSRV_2003            0x04
--#define ACPI_OSI_WIN_XP_SP2             0x05
--#define ACPI_OSI_WINSRV_2003_SP1        0x06
--#define ACPI_OSI_WIN_VISTA              0x07
--#define ACPI_OSI_WINSRV_2008            0x08
--#define ACPI_OSI_WIN_VISTA_SP1          0x09
--#define ACPI_OSI_WIN_VISTA_SP2          0x0A
--#define ACPI_OSI_WIN_7                  0x0B
--#define ACPI_OSI_WIN_8                  0x0C
-+#define ACPI_OSI_DARWIN                 0x01
-+#define ACPI_OSI_WIN_2000               0x02
-+#define ACPI_OSI_WIN_XP                 0x03
-+#define ACPI_OSI_WIN_XP_SP1             0x04
-+#define ACPI_OSI_WINSRV_2003            0x05
-+#define ACPI_OSI_WIN_XP_SP2             0x06
-+#define ACPI_OSI_WINSRV_2003_SP1        0x07
-+#define ACPI_OSI_WIN_VISTA              0x08
-+#define ACPI_OSI_WINSRV_2008            0x09
-+#define ACPI_OSI_WIN_VISTA_SP1          0x0A
-+#define ACPI_OSI_WIN_VISTA_SP2          0x0B
-+#define ACPI_OSI_WIN_7                  0x0C
-+#define ACPI_OSI_WIN_8                  0x0D
+-	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
+-					     GFP_ATOMIC);
++	if (iommu->ir_table)
++		return 0;
  
- #endif				/* __ACTYPES_H__ */
+-	if (!iommu->ir_table)
++	ir_table = kzalloc(sizeof(struct ir_table), GFP_ATOMIC);
++	if (!ir_table)
+ 		return -ENOMEM;
+ 
+ 	pages = alloc_pages_node(iommu->node, GFP_ATOMIC | __GFP_ZERO,
+@@ -465,7 +464,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+ 	if (!pages) {
+ 		pr_err("IR%d: failed to allocate pages of order %d\n",
+ 		       iommu->seq_id, INTR_REMAP_PAGE_ORDER);
+-		kfree(iommu->ir_table);
++		kfree(ir_table);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -480,11 +479,22 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+ 
+ 	ir_table->base = page_address(pages);
+ 	ir_table->bitmap = bitmap;
++	iommu->ir_table = ir_table;
+ 
+-	iommu_set_irq_remapping(iommu, mode);
+ 	return 0;
+ }
+ 
++static void intel_teardown_irq_remapping(struct intel_iommu *iommu)
++{
++	if (iommu && iommu->ir_table) {
++		free_pages((unsigned long)iommu->ir_table->base,
++			   INTR_REMAP_PAGE_ORDER);
++		kfree(iommu->ir_table->bitmap);
++		kfree(iommu->ir_table);
++		iommu->ir_table = NULL;
++	}
++}
++
+ /*
+  * Disable Interrupt Remapping.
+  */
+@@ -639,9 +649,10 @@ static int __init intel_enable_irq_remapping(void)
+ 		if (!ecap_ir_support(iommu->ecap))
+ 			continue;
+ 
+-		if (intel_setup_irq_remapping(iommu, eim))
++		if (intel_setup_irq_remapping(iommu))
+ 			goto error;
+ 
++		iommu_set_irq_remapping(iommu, eim);
+ 		setup = 1;
+ 	}
+ 
+@@ -672,12 +683,13 @@ error:
+ 	return -1;
+ }
+ 
+-static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
+-				      struct intel_iommu *iommu)
++static int ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
++				   struct intel_iommu *iommu,
++				   struct acpi_dmar_hardware_unit *drhd)
+ {
+ 	struct acpi_dmar_pci_path *path;
+ 	u8 bus;
+-	int count;
++	int count, free = -1;
+ 
+ 	bus = scope->bus;
+ 	path = (struct acpi_dmar_pci_path *)(scope + 1);
+@@ -693,19 +705,36 @@ static void ir_parse_one_hpet_scope(struct acpi_dmar_device_scope *scope,
+ 					   PCI_SECONDARY_BUS);
+ 		path++;
+ 	}
+-	ir_hpet[ir_hpet_num].bus   = bus;
+-	ir_hpet[ir_hpet_num].devfn = PCI_DEVFN(path->device, path->function);
+-	ir_hpet[ir_hpet_num].iommu = iommu;
+-	ir_hpet[ir_hpet_num].id    = scope->enumeration_id;
+-	ir_hpet_num++;
++
++	for (count = 0; count < MAX_HPET_TBS; count++) {
++		if (ir_hpet[count].iommu == iommu &&
++		    ir_hpet[count].id == scope->enumeration_id)
++			return 0;
++		else if (ir_hpet[count].iommu == NULL && free == -1)
++			free = count;
++	}
++	if (free == -1) {
++		pr_warn("Exceeded Max HPET blocks\n");
++		return -ENOSPC;
++	}
++
++	ir_hpet[free].iommu = iommu;
++	ir_hpet[free].id    = scope->enumeration_id;
++	ir_hpet[free].bus   = bus;
++	ir_hpet[free].devfn = PCI_DEVFN(path->device, path->function);
++	pr_info("HPET id %d under DRHD base 0x%Lx\n",
++		scope->enumeration_id, drhd->address);
++
++	return 0;
+ }
+ 
+-static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
+-				      struct intel_iommu *iommu)
++static int ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
++				     struct intel_iommu *iommu,
++				     struct acpi_dmar_hardware_unit *drhd)
+ {
+ 	struct acpi_dmar_pci_path *path;
+ 	u8 bus;
+-	int count;
++	int count, free = -1;
+ 
+ 	bus = scope->bus;
+ 	path = (struct acpi_dmar_pci_path *)(scope + 1);
+@@ -722,54 +751,63 @@ static void ir_parse_one_ioapic_scope(struct acpi_dmar_device_scope *scope,
+ 		path++;
+ 	}
+ 
+-	ir_ioapic[ir_ioapic_num].bus   = bus;
+-	ir_ioapic[ir_ioapic_num].devfn = PCI_DEVFN(path->device, path->function);
+-	ir_ioapic[ir_ioapic_num].iommu = iommu;
+-	ir_ioapic[ir_ioapic_num].id    = scope->enumeration_id;
+-	ir_ioapic_num++;
++	for (count = 0; count < MAX_IO_APICS; count++) {
++		if (ir_ioapic[count].iommu == iommu &&
++		    ir_ioapic[count].id == scope->enumeration_id)
++			return 0;
++		else if (ir_ioapic[count].iommu == NULL && free == -1)
++			free = count;
++	}
++	if (free == -1) {
++		pr_warn("Exceeded Max IO APICS\n");
++		return -ENOSPC;
++	}
++
++	ir_ioapic[free].bus   = bus;
++	ir_ioapic[free].devfn = PCI_DEVFN(path->device, path->function);
++	ir_ioapic[free].iommu = iommu;
++	ir_ioapic[free].id    = scope->enumeration_id;
++	pr_info("IOAPIC id %d under DRHD base  0x%Lx IOMMU %d\n",
++		scope->enumeration_id, drhd->address, iommu->seq_id);
++
++	return 0;
+ }
+ 
+ static int ir_parse_ioapic_hpet_scope(struct acpi_dmar_header *header,
+ 				      struct intel_iommu *iommu)
+ {
++	int ret = 0;
+ 	struct acpi_dmar_hardware_unit *drhd;
+ 	struct acpi_dmar_device_scope *scope;
+ 	void *start, *end;
+ 
+ 	drhd = (struct acpi_dmar_hardware_unit *)header;
+-
+ 	start = (void *)(drhd + 1);
+ 	end = ((void *)drhd) + header->length;
+ 
+-	while (start < end) {
++	while (start < end && ret == 0) {
+ 		scope = start;
+-		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC) {
+-			if (ir_ioapic_num == MAX_IO_APICS) {
+-				printk(KERN_WARNING "Exceeded Max IO APICS\n");
+-				return -1;
+-			}
+-
+-			printk(KERN_INFO "IOAPIC id %d under DRHD base "
+-			       " 0x%Lx IOMMU %d\n", scope->enumeration_id,
+-			       drhd->address, iommu->seq_id);
++		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_IOAPIC)
++			ret = ir_parse_one_ioapic_scope(scope, iommu, drhd);
++		else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET)
++			ret = ir_parse_one_hpet_scope(scope, iommu, drhd);
++		start += scope->length;
++	}
+ 
+-			ir_parse_one_ioapic_scope(scope, iommu);
+-		} else if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_HPET) {
+-			if (ir_hpet_num == MAX_HPET_TBS) {
+-				printk(KERN_WARNING "Exceeded Max HPET blocks\n");
+-				return -1;
+-			}
++	return ret;
++}
+ 
+-			printk(KERN_INFO "HPET id %d under DRHD base"
+-			       " 0x%Lx\n", scope->enumeration_id,
+-			       drhd->address);
++static void ir_remove_ioapic_hpet_scope(struct intel_iommu *iommu)
++{
++	int i;
+ 
+-			ir_parse_one_hpet_scope(scope, iommu);
+-		}
+-		start += scope->length;
+-	}
++	for (i = 0; i < MAX_HPET_TBS; i++)
++		if (ir_hpet[i].iommu == iommu)
++			ir_hpet[i].iommu = NULL;
+ 
+-	return 0;
++	for (i = 0; i < MAX_IO_APICS; i++)
++		if (ir_ioapic[i].iommu == iommu)
++			ir_ioapic[i].iommu = NULL;
+ }
+ 
+ /*
+@@ -1145,7 +1183,85 @@ struct irq_remap_ops intel_irq_remap_ops = {
+ 	.setup_hpet_msi		= intel_setup_hpet_msi,
+ };
+ 
++/*
++ * Support of Interrupt Remapping Unit Hotplug
++ */
++static int dmar_ir_add(struct dmar_drhd_unit *dmaru, struct intel_iommu *iommu)
++{
++	int ret;
++	int eim = x2apic_enabled();
++
++	if (eim && !ecap_eim_support(iommu->ecap)) {
++		pr_info("DRHD %Lx: EIM not supported by DRHD, ecap %Lx\n",
++			iommu->reg_phys, iommu->ecap);
++		return -ENODEV;
++	}
++
++	if (ir_parse_ioapic_hpet_scope(dmaru->hdr, iommu)) {
++		pr_warn("DRHD %Lx: failed to parse managed IOAPIC/HPET\n",
++			iommu->reg_phys);
++		return -ENODEV;
++	}
++
++	/* TODO: check all IOAPICs are covered by IOMMU */
++
++	/* Setup Interrupt-remapping now. */
++	ret = intel_setup_irq_remapping(iommu);
++	if (ret) {
++		pr_err("DRHD %Lx: failed to allocate resource\n",
++		       iommu->reg_phys);
++		ir_remove_ioapic_hpet_scope(iommu);
++		return ret;
++	}
++
++	if (!iommu->qi) {
++		/* Clear previous faults. */
++		dmar_fault(-1, iommu);
++		iommu_disable_irq_remapping(iommu);
++		dmar_disable_qi(iommu);
++	}
++
++	/* Enable queued invalidation */
++	ret = dmar_enable_qi(iommu);
++	if (!ret) {
++		iommu_set_irq_remapping(iommu, eim);
++	} else {
++		pr_err("DRHD %Lx: failed to enable queued invalidation, ecap %Lx, ret %d\n",
++		       iommu->reg_phys, iommu->ecap, ret);
++		intel_teardown_irq_remapping(iommu);
++		ir_remove_ioapic_hpet_scope(iommu);
++	}
++
++	return ret;
++}
++
+ int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+ {
+-	return irq_remapping_enabled ? -ENOSYS : 0;
++	int ret = 0;
++	struct intel_iommu *iommu = dmaru->iommu;
++
++	if (!irq_remapping_enabled)
++		return 0;
++	if (iommu == NULL)
++		return -EINVAL;
++	if (!ecap_ir_support(iommu->ecap))
++		return 0;
++
++	if (insert) {
++		if (!iommu->ir_table)
++			ret = dmar_ir_add(dmaru, iommu);
++	} else {
++		if (iommu->ir_table) {
++			if (!bitmap_empty(iommu->ir_table->bitmap,
++					  INTR_REMAP_TABLE_ENTRIES)) {
++				ret = -EBUSY;
++			} else {
++				iommu_disable_irq_remapping(iommu);
++				intel_teardown_irq_remapping(iommu);
++				ir_remove_ioapic_hpet_scope(iommu);
++			}
++		}
++	}
++
++	return ret;
+ }
 -- 
-1.8.5.3
+1.7.10.4
 
