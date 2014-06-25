@@ -1,186 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24827 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755606AbaFYJA6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 05:00:58 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V3 15/21] iommu/vt-d: dynamically allocate and free seq_id for DMAR units
-Date: Wed, 25 Jun 2014 17:02:41 +0800
-Message-Id: <1403686967-10887-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:34084 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199AbaFYJNt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 05:13:49 -0400
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Jun 2014 14:43:45 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 8C8651258055
+	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 14:43:12 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5P9EpBa58196208
+	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 14:44:51 +0530
+Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5P9Dclh002164
+	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 14:43:39 +0530
+Date: Wed, 25 Jun 2014 17:13:36 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table
+ dynamically
+Message-ID: <20140625091336.GA5573@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
+ <53A94DA8.6020206@ozlabs.ru>
+ <20140625011211.GA5785@richard>
+ <53AA4C32.7060004@ozlabs.ru>
+ <20140625052758.GA8873@richard>
+ <53AA7F30.40504@ozlabs.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53AA7F30.40504@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce functions to support dynamic IOMMU seq_id allocating and
-releasing, which will be used to support DMAR hotplug.
+On Wed, Jun 25, 2014 at 05:50:08PM +1000, Alexey Kardashevskiy wrote:
+>On 06/25/2014 03:27 PM, Wei Yang wrote:
+>> On Wed, Jun 25, 2014 at 02:12:34PM +1000, Alexey Kardashevskiy wrote:
+>>> On 06/25/2014 11:12 AM, Wei Yang wrote:
+>>>> On Tue, Jun 24, 2014 at 08:06:32PM +1000, Alexey Kardashevskiy wrote:
+>>>>> On 06/10/2014 11:56 AM, Wei Yang wrote:
+>>>>>> Current iommu_table of a PE is a static field. This will have a problem when
+>>>>>> iommu_free_table is called.
+>>>>>
+>>>>> What kind of problem? This table is per PE and PE is not going anywhere.
+>>>>>
+>>>>
+>>>> Yes, for Bus PE, they will always sit in the system. When VF PE introduced,
+>>>> they could be released on the fly. When they are released, so do the iommu
+>>>> table for the PE.
+>>>
+>>> iommu_table is a part of PE struct. When PE is released, iommu_table will
+>>> go with it as well. Why to make is a pointer? I would understand it if you
+>>> added reference counting there but no - iommu_table's lifetime is equal to
+>>> PE lifetime.
+>>>
+>> 
+>> Yes, iommu_talbe's life time equals to PE lifetime, so when releasing a PE we
+>> need to release the iommu table. Currently, there is one function to release
+>> the iommu table, iommu_free_table() which takes a pointer of the iommu_table
+>> and release it.
+>> 
+>> If the iommu table in PE is just a part of PE, it will have some problem to
+>> release it with iommu_free_table(). That's why I make it a pointer in PE
+>> structure.
+>
+>So you are saying that you want to release PE by one kfree() and release
+>iommu_table by another kfree (embedded into iommu_free_table()). For me
+>that means that PE and iommu_table have different lifetime.
+>
 
-Also rename IOMMU_UNITS_SUPPORTED as DMAR_UNITS_SUPPORTED.
+Hmm... it is right, the lifetime of these two may have some difference.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c        |   40 ++++++++++++++++++++++++++++++++++------
- drivers/iommu/intel-iommu.c |   13 +++----------
- include/linux/dmar.h        |    6 ++++++
- 3 files changed, 43 insertions(+), 16 deletions(-)
+>And I cannot find the exact place in this patchset where you call
+>iommu_free_table(), what do I miss?
+>
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 8e3ae29b7008..4aba78731ed8 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -69,6 +69,7 @@ LIST_HEAD(dmar_drhd_units);
- struct acpi_table_header * __initdata dmar_tbl;
- static acpi_size dmar_tbl_size;
- static int dmar_dev_scope_status = 1;
-+static unsigned long dmar_seq_ids[BITS_TO_LONGS(DMAR_UNITS_SUPPORTED)];
- 
- static int alloc_iommu(struct dmar_drhd_unit *drhd);
- static void free_iommu(struct intel_iommu *iommu);
-@@ -928,11 +929,32 @@ out:
- 	return err;
- }
- 
-+static int dmar_alloc_seq_id(struct intel_iommu *iommu)
-+{
-+	iommu->seq_id = find_first_zero_bit(dmar_seq_ids,
-+					    DMAR_UNITS_SUPPORTED);
-+	if (iommu->seq_id >= DMAR_UNITS_SUPPORTED) {
-+		iommu->seq_id = -1;
-+	} else {
-+		set_bit(iommu->seq_id, dmar_seq_ids);
-+		sprintf(iommu->name, "dmar%d", iommu->seq_id);
-+	}
-+
-+	return iommu->seq_id;
-+}
-+
-+static void dmar_free_seq_id(struct intel_iommu *iommu)
-+{
-+	if (iommu->seq_id >= 0) {
-+		clear_bit(iommu->seq_id, dmar_seq_ids);
-+		iommu->seq_id = -1;
-+	}
-+}
-+
- static int alloc_iommu(struct dmar_drhd_unit *drhd)
- {
- 	struct intel_iommu *iommu;
- 	u32 ver, sts;
--	static int iommu_allocated = 0;
- 	int agaw = 0;
- 	int msagaw = 0;
- 	int err;
-@@ -946,13 +968,16 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
- 	if (!iommu)
- 		return -ENOMEM;
- 
--	iommu->seq_id = iommu_allocated++;
--	sprintf (iommu->name, "dmar%d", iommu->seq_id);
-+	if (dmar_alloc_seq_id(iommu) < 0) {
-+		pr_err("IOMMU: failed to allocate seq_id\n");
-+		err = -ENOSPC;
-+		goto error;
-+	}
- 
- 	err = map_iommu(iommu, drhd->reg_base_addr);
- 	if (err) {
- 		pr_err("IOMMU: failed to map %s\n", iommu->name);
--		goto error;
-+		goto error_free_seq_id;
- 	}
- 
- 	err = -EINVAL;
-@@ -996,9 +1021,11 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
- 	drhd->iommu = iommu;
- 	return 0;
- 
-- err_unmap:
-+err_unmap:
- 	unmap_iommu(iommu);
-- error:
-+error_free_seq_id:
-+	dmar_free_seq_id(iommu);
-+error:
- 	kfree(iommu);
- 	return err;
- }
-@@ -1020,6 +1047,7 @@ static void free_iommu(struct intel_iommu *iommu)
- 	if (iommu->reg)
- 		unmap_iommu(iommu);
- 
-+	dmar_free_seq_id(iommu);
- 	kfree(iommu);
- }
- 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 531049f70d96..d19c51138646 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -329,17 +329,10 @@ static int hw_pass_through = 1;
- /* si_domain contains mulitple devices */
- #define DOMAIN_FLAG_STATIC_IDENTITY	(1 << 1)
- 
--/* define the limit of IOMMUs supported in each domain */
--#ifdef	CONFIG_X86
--# define	IOMMU_UNITS_SUPPORTED	MAX_IO_APICS
--#else
--# define	IOMMU_UNITS_SUPPORTED	64
--#endif
--
- struct dmar_domain {
- 	int	id;			/* domain id */
- 	int	nid;			/* node id */
--	DECLARE_BITMAP(iommu_bmp, IOMMU_UNITS_SUPPORTED);
-+	DECLARE_BITMAP(iommu_bmp, DMAR_UNITS_SUPPORTED);
- 					/* bitmap of iommus this domain uses*/
- 
- 	struct list_head devices; 	/* all devices' list */
-@@ -2720,12 +2713,12 @@ static int __init init_dmars(void)
- 		 * threaded kernel __init code path all other access are read
- 		 * only
- 		 */
--		if (g_num_of_iommus < IOMMU_UNITS_SUPPORTED) {
-+		if (g_num_of_iommus < DMAR_UNITS_SUPPORTED) {
- 			g_num_of_iommus++;
- 			continue;
- 		}
- 		printk_once(KERN_ERR "intel-iommu: exceeded %d IOMMUs\n",
--			  IOMMU_UNITS_SUPPORTED);
-+			  DMAR_UNITS_SUPPORTED);
- 	}
- 
- 	g_iommus = kcalloc(g_num_of_iommus, sizeof(struct intel_iommu *),
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index fac8ca34f9a8..c8a576bc3a98 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -30,6 +30,12 @@
- 
- struct acpi_dmar_header;
- 
-+#ifdef	CONFIG_X86
-+# define	DMAR_UNITS_SUPPORTED	MAX_IO_APICS
-+#else
-+# define	DMAR_UNITS_SUPPORTED	64
-+#endif
-+
- /* DMAR Flags */
- #define DMAR_INTR_REMAP		0x1
- #define DMAR_X2APIC_OPT_OUT	0x2
+This is called in pnv_pci_release_dev_dma(), which is introduced in the commit
+cd740988: powerpc/powernv: allocate VF PE
+
+>
+>
+>
+>-- 
+>Alexey
+
 -- 
-1.7.10.4
+Richard Yang
+Help you, Help me
 
