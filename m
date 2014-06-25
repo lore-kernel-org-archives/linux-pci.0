@@ -1,97 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:58240 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751848AbaFBPCG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 11:02:06 -0400
-Date: Mon, 2 Jun 2014 10:00:36 -0500
-From: scameron@beardog.cce.hp.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: james.bottomley@parallels.com, webb.scales@hp.com,
-	martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-	justin.lindley@hp.com, stephenmcameron@gmail.com,
-	joseph.t.handzik@hp.com, thenzl@redhat.com,
-	michael.miller@canonical.com, scott.teel@hp.com, hch@lst.de,
-	dan.carpenter@oracle.com, linux-pci@vger.kernel.org,
-	scameron@beardog.cce.hp.com
-Subject: Re: [PATCH 2 08/24] hpsa: choose number of reply queues more intelligently.
-Message-ID: <20140602150036.GI6970@beardog.cce.hp.com>
-References: <20140529154739.8180.50710.stgit@beardog.cce.hp.com> <20140529155302.8180.17597.stgit@beardog.cce.hp.com> <20140602092751.GA30545@infradead.org> <20140602145206.GH6970@beardog.cce.hp.com>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:60370 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752963AbaFYH4x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 03:56:53 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+	Wed, 25 Jun 2014 17:56:49 +1000
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id E73D32BB0040
+	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 17:56:45 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5P7YRnC11206944
+	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 17:34:27 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5P7uitK011270
+	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 17:56:45 +1000
+Message-ID: <1403682997.4587.208.camel@pasglop>
+Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table
+ dynamically
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Date: Wed, 25 Jun 2014 17:56:37 +1000
+In-Reply-To: <53AA7F30.40504@ozlabs.ru>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <53A94DA8.6020206@ozlabs.ru> <20140625011211.GA5785@richard>
+	 <53AA4C32.7060004@ozlabs.ru> <20140625052758.GA8873@richard>
+	 <53AA7F30.40504@ozlabs.ru>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140602145206.GH6970@beardog.cce.hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 02, 2014 at 09:52:06AM -0500, scameron@beardog.cce.hp.com wrote:
-> On Mon, Jun 02, 2014 at 02:27:51AM -0700, Christoph Hellwig wrote:
-> > On Thu, May 29, 2014 at 10:53:02AM -0500, Stephen M. Cameron wrote:
-> > > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > > 
-> > > No sense having 8 or 16 reply queues if you only have 4 cpus,
-> > > and likewise no sense limiting to 8 reply queues if you have
-> > > many more cpus.
+On Wed, 2014-06-25 at 17:50 +1000, Alexey Kardashevskiy wrote:
+
+> > Yes, iommu_talbe's life time equals to PE lifetime, so when releasing a PE we
+> > need to release the iommu table. Currently, there is one function to release
+> > the iommu table, iommu_free_table() which takes a pointer of the iommu_table
+> > and release it.
 > > 
-> > I've applied this as it looks good as-is, but shouldn't we also
-> > cap the number of MSI-X vectors in common code so that we avoid
-> > adding this as boilerplate code to lots of drivers?
+> > If the iommu table in PE is just a part of PE, it will have some problem to
+> > release it with iommu_free_table(). That's why I make it a pointer in PE
+> > structure.
 > 
-> Maybe so.  Thinking about CPU hotplug, is num_online_cpus()
-> the right cap?  Maybe num_possible_cpus() is better in case
-> additional cpus coming online are anticipated?
-
-On second thought, might there be PCI devices which have multiple
-MSIX vectors to signal different things?  I know for smart array
-the idea has occasionally been floated to have an additional vector
-to signal something to the host that is not a command completion,
-although we never implemented such a thing.  Had we done so,
-we would then need num_online_cpus() + 1 vectors.
-
-So maybe it's not a good idea to put such a limit in the generic
-pci code in case some device works in such a way.
-
--- steve
-
-
+> So you are saying that you want to release PE by one kfree() and release
+> iommu_table by another kfree (embedded into iommu_free_table()). For me
+> that means that PE and iommu_table have different lifetime.
 > 
-> > 
-> > > 
-> > > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > > Reviewed-by: Mike Miller <michael.miller@canonical.com>
-> > > Reviewed-by: Scott Teel <scott.teel@hp.com>
-> > > ---
-> > >  drivers/scsi/hpsa.c     |    2 ++
-> > >  drivers/scsi/hpsa_cmd.h |    2 +-
-> > >  2 files changed, 3 insertions(+), 1 deletions(-)
-> > > 
-> > > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > > index b1ecfd8..b903e86 100644
-> > > --- a/drivers/scsi/hpsa.c
-> > > +++ b/drivers/scsi/hpsa.c
-> > > @@ -6157,6 +6157,8 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
-> > >  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
-> > >  		dev_info(&h->pdev->dev, "MSIX\n");
-> > >  		h->msix_vector = MAX_REPLY_QUEUES;
-> > > +		if (h->msix_vector > num_online_cpus())
-> > > +			h->msix_vector = num_online_cpus();
-> > >  		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
-> > >  				      h->msix_vector);
-> > >  		if (err > 0) {
-> > > diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-> > > index db89245..104b67b 100644
-> > > --- a/drivers/scsi/hpsa_cmd.h
-> > > +++ b/drivers/scsi/hpsa_cmd.h
-> > > @@ -615,7 +615,7 @@ struct TransTable_struct {
-> > >  	u32            RepQCount;
-> > >  	u32            RepQCtrAddrLow32;
-> > >  	u32            RepQCtrAddrHigh32;
-> > > -#define MAX_REPLY_QUEUES 8
-> > > +#define MAX_REPLY_QUEUES 64
-> > >  	struct vals32  RepQAddr[MAX_REPLY_QUEUES];
-> > >  };
-> > >  
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > ---end quoted text---
+> And I cannot find the exact place in this patchset where you call
+> iommu_free_table(), what do I miss?
+
+He has a point though... iommu_free_table() does a whole bunch of things
+in addition to kfree at the end.
+
+This is a discrepancy in the iommu.c code, we don't allocate the table,
+it's allocated by our callers, but we do free it in iommu_free_table().
+
+My gut feeling is that we should fix that in the core by moving the
+kfree() out of iommu_free_table() and back into vio.c and
+pseries/iommu.c, the only two callers, otherwise we can't wrap the table
+structure inside another object if we are going to ever free it.
+
+Cheers,
+Ben.
+
+
+
+
