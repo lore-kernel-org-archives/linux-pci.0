@@ -1,63 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f172.google.com ([209.85.216.172]:54077 "EHLO
-	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755663AbaFYUnV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 16:43:21 -0400
+Received: from arroyo.ext.ti.com ([192.94.94.40]:46155 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757828AbaFYSBL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 14:01:11 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<jg1.han@samsung.com>, <bhelgaas@google.com>, <mohit.kumar@st.com>,
+	<linux-arm-kernel@lists.infradead.org>, <tony@atomide.com>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>, <grant.likely@linaro.org>,
+	Keerthy <j-keerthy@ti.com>, Rajendra Nayak <rnayak@ti.com>,
+	Tero Kristo <t-kristo@ti.com>, Paul Walmsley <paul@pwsan.com>
+Subject: [PATCH 1/8] ARM: dts: dra7xx-clocks: Add divider table to optfclk_pciephy_div clock
+Date: Wed, 25 Jun 2014 23:30:11 +0530
+Message-ID: <1403719218-9484-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1403719218-9484-1-git-send-email-kishon@ti.com>
+References: <1403719218-9484-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <CANwwZzXc2UyYxGX2X+O38jTVki70HrP71FBWbc4dTyt9nEN0nA@mail.gmail.com>
-References: <CANwwZzWsjQwZB5Cc4Hyv2HQOLhAx6ycjf32UQG55zVX=Kmbi6Q@mail.gmail.com>
-	<CAJZOPZ+FUneDDKMh0O2aZLYeDTcH8cHA7ati5wzi7Ycgc5wFXQ@mail.gmail.com>
-	<CANwwZzXc2UyYxGX2X+O38jTVki70HrP71FBWbc4dTyt9nEN0nA@mail.gmail.com>
-Date: Wed, 25 Jun 2014 23:43:20 +0300
-Message-ID: <CAJZOPZK0naRu_rv-MMPp9y9Eg_baEJXSGzdERQLWvi3Bh9qD+g@mail.gmail.com>
-Subject: Re: mlx4 - query regarding PF VF functionality division
-From: Or Gerlitz <or.gerlitz@gmail.com>
-To: Bob Biloxi <iambobbiloxi@gmail.com>
-Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 24, 2014 at 4:42 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
->
-> > Not really, but let's take EIM approach, what's your goal/mission?
-> Let's say I am going through code to understand only the PF related
-> functionality without bothering about VF, what are the things I need
-> to keep in mind.
+From: Keerthy <j-keerthy@ti.com>
 
+Add divider table to optfclk_pciephy_div clock. The 8th bit of
+CM_CLKMODE_APLL_PCIE can be programmed to either 0x0 or 0x1
+based on if the divider value is 0x2 or 0x1.
 
+Figure 26-21. PCIe PHY Clock Generator Overview in vE of DRA7xx ES1.0 shows the
+block diagram of Clock Generator Subsystem of PCIe PHY module. The divider
+value if '1' should be programmed in order to get the correct
+PCIE_PHY_DIV_GCLK frequency (2.5GHz).
 
-I see, by the nature of the mlx4 SRIOV architecture under which
-there's no dedicated/separated PF vs VF driver, this is indeed a
-non-trivial task, need to think how to make it easier for you
+Cc: Rajendra Nayak <rnayak@ti.com>
+Cc: Tero Kristo <t-kristo@ti.com>
+Cc: Paul Walmsley <paul@pwsan.com>
+Signed-off-by: Keerthy <j-keerthy@ti.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra7xx-clocks.dtsi |    1 +
+ 1 file changed, 1 insertion(+)
 
-Or.
+diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+index b03cfe4..7148e7c 100644
+--- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
++++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
+@@ -1170,6 +1170,7 @@
+ 		clocks = <&apll_pcie_ck>;
+ 		#clock-cells = <0>;
+ 		reg = <0x021c>;
++		ti,dividers = <2>, <1>;
+ 		ti,bit-shift = <8>;
+ 		ti,max-div = <2>;
+ 	};
+-- 
+1.7.9.5
 
-
->
-> I mean do i need to :
->
-> a. Go through all the files in mlx4
-> b. If the code is not specifically under mlx4_is_master, I still need
-> to understand it because it is also part of PF driver
-> c. I can ignore the logic which executes if mlx4_is_master is false,
-> because that would be the VF code
->
-> Thanks for the help!!
->
->
->
->
-> On Mon, Jun 23, 2014 at 5:30 PM, Or Gerlitz <or.gerlitz@gmail.com> wrote:
-> > On Mon, Jun 23, 2014 at 12:33 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
-> > [...]
-> >> Is there any way we can clearly separate the files that are used by PF
-> >> vs the files that are used by VF in the (drivers/net/ethernet/mlx4
-> >> sub-directory)?
-> > [...]
-> >
-> > Not really, but let's take EIM approach, what's your goal/mission?
-> >
-> > Or.
