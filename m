@@ -1,100 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:61936 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932308AbaFCP7q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 11:59:46 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Rob Herring <robherring2@gmail.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <damm@opensource.se>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
+Received: from mail-bn1lp0139.outbound.protection.outlook.com ([207.46.163.139]:49518
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750769AbaFYF0U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 01:26:20 -0400
+From: Rajat Jain <rajatjain@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Guenter Roeck <linux@roeck-us.net>,
+	Myron Stowe <myron.stowe@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	SH-Linux <linux-sh@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: Re: [PATCH v3] of/irq: provide more wrappers for !CONFIG_OF
-Date: Tue, 03 Jun 2014 17:59:39 +0200
-Message-ID: <5369122.ehEoyIekqa@wuerfel>
-In-Reply-To: <CAL_JsqJpP2sEkPC4DUFWTNutjFhUBiKZfNVSpiKHFPfsJzTf6w@mail.gmail.com>
-References: <16771871.sfJG2itVJN@wuerfel> <CAL_JsqJpP2sEkPC4DUFWTNutjFhUBiKZfNVSpiKHFPfsJzTf6w@mail.gmail.com>
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>
+Subject: RE: [PATCH] PCI: pciehp: Include the Data Link Layer State Changed
+ bit when clearing the Slot Status register's event bits
+Date: Wed, 25 Jun 2014 05:26:16 +0000
+Message-ID: <de1a45e8e5d548b88b5f797348a39e0d@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <20140617192734.30783.71260.stgit@amt.stowe>
+ <CAErSpo7t2kXj2ZULLXCJSWb_awS+DCtCg51dnLbb8ztWmQdYog@mail.gmail.com>
+ <53A0C763.7080003@roeck-us.net>
+ <aa91dac8e0f4416bb5f8b901b4da8f22@DM2PR05MB671.namprd05.prod.outlook.com>
+ <CAErSpo4xWtBtL6a-vNh_s+MRHNVa6iEe3g8ZcgFPyHHD0ZrM9g@mail.gmail.com>
+In-Reply-To: <CAErSpo4xWtBtL6a-vNh_s+MRHNVa6iEe3g8ZcgFPyHHD0ZrM9g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 03 June 2014 10:40:34 Rob Herring wrote:
-> > diff --git a/include/linux/of.h b/include/linux/of.h
-> > index 196b34c..7c29e6c 100644
-> > --- a/include/linux/of.h
-> > +++ b/include/linux/of.h
-> > @@ -511,6 +511,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
-> >         return NULL;
-> >  }
-> >
-> > +static inline int of_n_addr_cells(struct device_node *np) { return 0; }
-> > +static inline int of_n_size_cells(struct device_node *np) { return 0; }
-> 
-> I'm fine with the rest, but I think these should always be used within
-> some higher level function.
-
-Can you apply the rest already?
-
-> I can't seem to find where this is used by rcar. BTW, why does rcar
-> pci DT support fail to have any ranges property?
-> 
-> Looking at one use in mvebu pci only confirms my position. An
-> of_for_each_ranges helper would be useful in that case.
-
-It's currently in the pci-next, the code using this looks like 
-
-+static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
-+                                    struct device_node *node)
-+{
-+       const int na = 3, ns = 2;
-+       int rlen;
-+
-+       parser->node = node;
-+       parser->pna = of_n_addr_cells(node);
-+       parser->np = parser->pna + na + ns;
-+
-+       parser->range = of_get_property(node, "dma-ranges", &rlen);
-+       if (!parser->range)
-+               return -ENOENT;
-+
-+       parser->end = parser->range + rlen / sizeof(__be32);
-+       return 0;
-+}
-+
-+static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
-+                                         struct device_node *np)
-+{
-+       struct of_pci_range range;
-+       struct of_pci_range_parser parser;
-+       int index = 0;
-+       int err;
-+
-+       if (pci_dma_range_parser_init(&parser, np))
-+               return -EINVAL;
-+
-+       /* Get the dma-ranges from DT */
-+       for_each_of_pci_range(&parser, &range) {
-+               u64 end = range.cpu_addr + range.size - 1;
-+               dev_dbg(pcie->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
-+                       range.flags, range.cpu_addr, end, range.pci_addr);
-+
-+               err = rcar_pcie_inbound_ranges(pcie, &range, &index);
-+               if (err)
-+                       return err;
-+       }
-+
-+       return 0;
-+}
-
-Should the first function just be moved into of-pci.c?
-
-	Arnd
-
+SGVsbG8sDQoNCj4gPj4NCj4gPj4gT24gMDYvMTcvMjAxNCAwMjowNyBQTSwgQmpvcm4gSGVsZ2Fh
+cyB3cm90ZToNCj4gPj4gPiBPbiBUdWUsIEp1biAxNywgMjAxNCBhdCAxOjI3IFBNLCBNeXJvbiBT
+dG93ZQ0KPiA+PiA8bXlyb24uc3Rvd2VAcmVkaGF0LmNvbT4gd3JvdGU6DQo+ID4+ID4+IER1cmlu
+ZyBQQ0llIGhvdC1wbHVnIGluaXRpYWxpemF0aW9uIC0gcGNpZWhwX3Byb2JlIC0gZGF0YQ0KPiA+
+PiA+PiBzdHJ1Y3R1cmVzIHJlbGF0ZWQgdG8gc2xvdCBjYXBhYmlsaXRpZXMgYXJlIHNldCB1cC4g
+IEFzIHBhcnQgb2YNCj4gPj4gPj4gdGhpcyBzZXQgdXAsIElTUnMgYXJlIHB1dCBpbiBwbGFjZSB0
+byBoYW5kbGUgc2xvdCBldmVudHMgYW5kIGFsbA0KPiA+PiA+PiBldmVudCBiaXRzIGFyZSBjbGVh
+cmVkDQo+ID4+IG91dC4NCj4gPj4gPj4NCj4gPj4gPj4gVGhpcyBwYXRjaCBhZGRzIHRoZSBEYXRh
+IExpbmsgTGF5ZXIgU3RhdGUgQ2hhbmdlZA0KPiA+PiA+PiAoUENJX0VYUF9TTFRTVEFfRExMU0Mp
+IFNsb3QgU3RhdHVzIGJpdCB0byB0aGUgZXZlbnQgYml0cyB0aGF0IGFyZQ0KPiA+PiA+PiBjbGVh
+cmVkIG91dCBkdXJpbmcgaW5pdGlhbGl6YXRpb24uDQo+ID4+ID4NCj4gPj4gPiBJIHRoaW5rIHRo
+aXMgaXMgcmVsYXRlZCB0byBlNDhmMWI2N2Y2NjggKCJQQ0k6IHBjaWVocDogVXNlIGxpbmsNCj4g
+Pj4gPiBjaGFuZ2Ugbm90aWZpY2F0aW9ucyBmb3IgaG90LXBsdWcgYW5kIHJlbW92YWwiKS4gIFBy
+aW9yIHRvIHRoYXQsDQo+ID4+ID4gcGNpZV9pc3IoKSBkaWRuJ3QgbG9vayBhdCB0aGUgUENJX0VY
+UF9TTFRTVEFfRExMU0MgYml0Lg0KPiA+PiA+DQo+ID4+ID4gQXBwYXJlbnRseSB0aGVyZSdzIGEg
+bm9uLXB1YmxpYyByZXBvcnQgb2Ygc3B1cmlvdXMgbWVzc2FnZXMgbGlrZQ0KPiA+PiA+IHRoaXMg
+YXQgYm9vdC10aW1lLCB3aXRoIG5vIGFjdHVhbCBob3RwbHVnIGV2ZW50czoNCj4gPj4gPg0KPiA+
+PiA+ICAgIHBjaWVocCAwMDAwOjgyOjA0LjA6cGNpZTI0OiBzbG90KDQpOiBMaW5rIFVwIGV2ZW50
+DQo+ID4+ID4gICAgcGNpZWhwIDAwMDA6ODI6MDQuMDpwY2llMjQ6IERldmljZSAwMDAwOjgzOjAw
+LjAgYWxyZWFkeSBleGlzdHMNCj4gPj4gPiBhdCAwMDAwOjgzOjAwLCBjYW5ub3QgaG90LWFkZA0K
+PiA+PiA+ICAgIHBjaWVocCAwMDAwOjgyOjA0LjA6cGNpZTI0OiBDYW5ub3QgYWRkIGRldmljZSBh
+dCAwMDAwOjgzOjAwDQo+ID4+ID4NCj4gPj4NCj4gPj4gSSB0aGluayBJIGhhdmUgc2VlbiB0aGF0
+IG1lc3NhZ2Ugb25jZSBpbiBhIHdoaWxlIGluIG91ciBzeXN0ZW1zLg0KPiA+PiBSYWphdCwgZGlk
+bid0IHdlIHRhbGsgYWJvdXQgdGhpcyBhIHdoaWxlIGFnbyA/DQo+ID4NCj4gPiBFc3NlbnRpYWxs
+eSBteSBoaWNjdXAgd2FzIHRoYXQgSSB3YXMgbm90IHN1cmUgd2hldGhlciB0aGUgZHJpdmVyIHNo
+b3VsZCBvcg0KPiBzaG91bGQgbm90IHRha2UgY2FyZSBvZiB0aGUgbGluayBjaGFuZ2UgZXZlbnRz
+IHRoYXQgaGF2ZSBoYXBwZW5lZCBCRUZPUkUNCj4gdGhlIGRyaXZlciBnZXRzIGxvYWRlZC4gVGhp
+cyBoYXMgbW9yZSBpbXBhY3QgaWYgdGhlIHBjaWVocCBpcyBidWlsdCBhcyBhIGtlcm5lbA0KPiBt
+b2R1bGUuDQo+ID4NCj4gPiBBcyBhbiBleGFtcGxlOg0KPiA+DQo+ID4gSXQgaXMgY29tbW9uIGZv
+ciB0aGUgcGxhdGZvcm0gaW5pdCBjb2RlIGJ1aWx0IGludG8gdGhlIGtlcm5lbCwgdG8gdGFrZSB0
+aGUgUENJDQo+IGRldmljZXMgb24gdGhlIGJvYXJkIG91dCBvZiByZXNldC4gQW5kIHRoYXQgY2Fu
+IGhhcHBlbiBhZnRlciB0aGUgUENJDQo+IGVudW1lcmF0aW9uIGJ1dCBiZWZvcmUgdGhlIHBjaWVo
+cCBkcml2ZXIgZ2V0cyBsb2FkZWQuIFRodXMgaW4gdGhpcyBjb25kaXRpb24sDQo+IHdpdGggdGhp
+cyBwYXRjaCwgdGhlIHBjaWVocCB3aWxsIGlnbm9yZSB0aGUgbGlua3VwIGV2ZW50LCB0aHVzIGRl
+dmljZSB3aWxsIG5vdA0KPiBiZSB2aXNpYmxlLiBUaGUgb25seSB3YXkgKG90aGVyIHRoYW4gYSBy
+ZXNjYW4pIHRvIGRvIGhvdC1hZGQgdGhlIGRldmljZSB3b3VsZA0KPiBiZSB0byBhcHBseS1hbmQt
+cmVtb3ZlLXJlc2V0LXNpZ25hbCB0byB0aGUgZGV2aWNlIGFnYWluLiBBdCB3aGljaCBwb2ludA0K
+PiBwY2llaHAgbWF5IGdpdmUgYSB3YXJuaW5nIGFib3V0IGFib3V0IGFuIGF0dGVtcHQgdG8gcmVt
+b3ZlIGEgbm9uLWV4aXN0ZW50DQo+IGNhcmQsIGFuZCB0aGVuIHdpbGwgcHJvY2VlZCBmaW5lIHdp
+dGggaG90LWFkZC4NCj4gDQo+IFdoZW4geW91IHNhdyB0aGVzZSBwcm9ibGVtcywgd2FzIHBjaWVo
+cCBhIG1vZHVsZT8NCg0KTm8sIHdlIGRpZCBub3QgYWN0dWFsbHkgaGl0ICp0aGlzKiBwcm9ibGVt
+IChETExTQyBnZXR0aW5nIHNldCBiZWZvcmUgcGNpZWhwIGluaXQpLiBXZSBoYWQgb2JzZXJ2ZWQg
+YW5vdGhlciBIVyBzcGVjaWZpYyBwcm9ibGVtIHdoZXJlIGJvdGggbGluayBldmVudCBhbmQgcHJl
+c2VuY2UgZGV0ZWN0IHdlcmUgdG9nZ2xpbmcsIGhlbmNlIDIgaW5kZXBlbmRlbnQgaG90LXBsdWcg
+aW50ZXJydXB0cyBldmVudHMgd2VyZSBjb21pbmcsIHRodXMgcmVzdWx0aW5nIGluIHNwdXJpb3Vz
+IG1lc3NhZ2VzLg0KDQo+IFdlIGNoYW5nZWQgaXQNCj4gKGMxMGNjNDgzYmYzZiBpbiB2My4xMSkg
+c28gaXQgY2FuJ3QgYmUgYSBtb2R1bGUgYW55IG1vcmUsIGJ1dCBpZiB0aGVyZSBjYW4gc3RpbGwN
+Cj4gYmUgYSBzaWduaWZpY2FudCB3aW5kb3cgYmV0d2VlbiBlbnVtZXJhdGlvbiBhbmQgcGNpZWhw
+IGluaXQsIEknZCBsaWtlIHRvDQo+IHVuZGVyc3RhbmQgbW9yZSBhYm91dCBpdC4NCg0KT2gsIG15
+IGJhZC4gSSBkaWQgbm90IGV2ZXIgdHJ5IHRvIGFjdHVhbGx5IGJ1aWxkIGl0IGFzIGEgbW9kdWxl
+LCBJIGp1c3QgYXNzdW1lZCB0aGF0IGl0J2QgYmUgcG9zc2libGUuIEkgd2FzIGp1c3QgdGhpbmtp
+bmcgb2YgY29ybmVyIGNhc2VzIEkgZ3Vlc3MuIA0KDQo+IA0KPiA+IFRoZSBwYXRjaCBsb29rcyBn
+b29kLCBvbmx5IHdhbnRlZCB0byBtYWtlIHN1cmUgdGhhdCB3ZSB1bmRlcnN0YW5kIGFuZA0KPiBh
+Z3JlZSB0aGF0IHRoZSBwY2llaHAgc2hvdWxkIE5PVCBwcm9jZXNzIGFuZCBsaW5rIGV2ZW50cyB0
+aGF0IGhhdmUNCj4gaGFwcGVuZWQgYmVmb3JlIHRoZSBwY2llaHAgd2FzIGxvYWRlZC4NCj4gDQo+
+IEN1cnJlbnRseSAoYmVmb3JlIHRoaXMgcGF0Y2gpLCB3ZSBjbGVhciB0aGUgQXR0ZW50aW9uIEJ1
+dHRvbiBQcmVzc2VkLCBQb3dlcg0KPiBGYXVsdCBEZXRlY3RlZCwgTVJMIFNlbnNvciBDaGFuZ2Vk
+LCBQcmVzZW5jZSBEZXRlY3QgQ2hhbmdlZCwgYW5kDQo+IENvbW1hbmQgQ29tcGxldGVkIGJpdHMs
+IGJ1dCB3ZSAqZG9uJ3QqIGNsZWFyIERhdGEgTGluayBMYXllciBTdGF0ZQ0KPiBDaGFuZ2VkLg0K
+PiANCj4gVGhhdCBhc3ltbWV0cnkgc2VlbXMgaGFyZCB0byBqdXN0aWZ5Lg0KDQpBZ3JlZS4NCg0K
+ID4gRm9yIGV4YW1wbGUsIGlmIGEgY2FyZCB3ZXJlIGluc2VydGVkDQo+IGFmdGVyIGVudW1lcmF0
+aW9uIGJ1dCBiZWZvcmUgcGNpZWhwIGlzIGluaXRpYWxpemVkLCB3ZSdkIG1pc3MgdGhlIFBEQw0K
+PiBpbmRpY2F0aW9uLCBzbyBJIHRoaW5rIHdlIHdvdWxkIGZhaWwgdG8gbm90aWNlIHRoZSBuZXcg
+ZGV2aWNlLg0KPiBUaGF0IHNlZW1zIGJhc2ljYWxseSB0aGUgc2FtZSBhcyBtaXNzaW5nIHRoZSBs
+aW5rdXAgZXZlbnQgaW4geW91ciBleGFtcGxlLg0KPiBJbiBib3RoIGNhc2VzLCBJIHRoaW5rIHdl
+ICpzaG91bGQqIG5vdGljZSB0aGUgbmV3IGRldmljZSwgc28gdGhlIGZhY3QgdGhhdCB3ZQ0KPiBk
+b24ndCBpcyBhIHByb2JsZW0uDQoNCkh1bW1tLCBvayB1bmRlcnN0b29kLiBTbyB0aGF0IG1lYW5z
+IHdlIGhhdmUgZGVmaW5lZCBhIHByb2JsZW0gc3RhdGVtZW50IGF0IGxlYXN0IDotKS4gWWVzLCBJ
+IHVuZGVyc3RhbmQgdGhhdCB0aGUgd2luZG93IGlzIHZlcnkgc21hbGwgaGVyZS4gQWxzbyBJIGFn
+cmVlIHdpdGggeW91ciBvcGluaW9uIHdoYXRldmVyIHNvbHV0aW9uIHdlIHB1dCBpdCB0byB0YWtl
+IGNhcmUgb2YgZXZlbnRzIHRoYXQgaGFwcGVuZWQgYmVmb3JlIHBjaWVocCBpbml0LCBzaG91bGQg
+YmUgY29uc2lzdGVudCBmb3IgYWxsIGV2ZW50cyAobm90IGp1c3QgbGluayBjaGFuZ2VzKS4gVGhl
+IHByb2JsZW0gY2FuIHdhaXQgdG8gYmUgc29sdmVkIEkgdGhpbmsuDQoNCj4gDQo+IEJ1dCBzaW5j
+ZSBwY2llaHAgY2FuJ3QgYmUgYSBtb2R1bGUgYW55IG1vcmUsIHRoZSB3aW5kb3cgYmV0d2VlbiBQ
+Q0kNCj4gZW51bWVyYXRpb24gYW5kIHBjaWVocCBpbml0aWFsaXphdGlvbiBzaG91bGQgYmUgcmVs
+YXRpdmVseSBzbWFsbC4gIEkgdGhpbmsgdGhlDQo+IGJlc3Qgd2F5IHRvIGZpeCB0aGlzIHdvdWxk
+IGJlIHRvIGludGVncmF0ZSBwY2llaHAgbW9yZSBjbG9zZWx5IGludG8gUENJDQo+IGVudW1lcmF0
+aW9uLCBlLmcuLCBieSBkb2luZyBwY2llX2luaXQoKSBhdCB0aGUgcG9pbnQgd2hlcmUgd2UgZGlz
+Y292ZXIgdGhlDQo+IGJyaWRnZSwgYmVmb3JlIHdlIGVudW1lcmF0ZSBhbnkgZGV2aWNlcyBiZWxv
+dyB0aGUgYnJpZGdlLiAgVGhpcyBpcw0KPiBzb21ld2hhdCB0YW5nbGVkIHVwIHdpdGggYWNwaWhw
+LCBzbyBJIGRvbid0IGtub3cgaG93IGNvbXBsaWNhdGVkIGl0IHdvdWxkDQo+IGJlIHRvIGRvIHRo
+aXMuDQo+IA0KPiBTbyBJIGd1ZXNzIG15IGFyZ3VtZW50IGlzOg0KPiANCj4gICAtIElnbm9yaW5n
+IGV2ZW50cyB0aGF0IGhhcHBlbiBiZWZvcmUgcGNpZWhwIGluaXQgZGVjcmVhc2VzIG91ciBkZXBl
+bmRlbmN5DQo+IG9uIEJJT1MNCg0KQWdyZWUuDQoNCj4gICAtIEhhbmRsaW5nIGFsbCBldmVudHMg
+Y29uc2lzdGVudGx5IGlzIHZlcnkgaW1wb3J0YW50DQoNCkFncmVlLg0KDQo+ICAgLSBXZSBjdXJy
+ZW50bHkgaGF2ZSBhIHByb2JsZW0gd2l0aCBtaXNzaW5nIHByZS1wY2llaHAgZXZlbnRzLCBidXQg
+dGhlcmUgaXMNCj4gYSB3YXkgdG8gZml4IHRoaXMNCg0KU29tZXdoYXQgYWdyZWUgKEkgZG8gbm90
+IHVuZGVyc3RhbmQgd2hhdCB0aGF0IHdheSBpcyBjdXJyZW50bHkuIEJ1dCBJIHRoaW5rIGl0IGNh
+biB3YWl0IGFzIHdlIGRvbid0IGhpdCB0aGF0IHByb2JsZW0gdG9kYXkgYW5kIGFsc28gdGhlIHdp
+bmRvdyB3aGVyZSBpdCBjYW4gb2NjdXIgaXMgdmVyeSBzbWFsbCkuDQoNClRoYW5rcywNCg0KUmFq
+YXQNCg0KPiANCj4gPiBBY2tlZC1ieTogUmFqYXQgSmFpbiA8cmFqYXRqYWluQGp1bmlwZXIubmV0
+Pg0KPiANCj4gVGhhbmtzIGZvciB0YWtpbmcgYSBsb29rIGF0IHRoaXMhDQo+IA0KPiBCam9ybg0K
