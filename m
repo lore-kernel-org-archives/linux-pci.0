@@ -1,318 +1,235 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:51908 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751333AbaF3VuS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Jun 2014 17:50:18 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: [PATCH - v3] phy: Add serdes phy driver for keystone
-Date: Mon, 30 Jun 2014 17:50:10 -0400
-Message-ID: <1404165010-11202-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch V3 15/16] PCI: Remove PCI ioapic driver
+Date: Wed, 25 Jun 2014 16:40:46 +0800
+Message-Id: <1403685648-10103-16-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This phy driver added to support keystone PCI driver. This is
-a generic phy driver and currently it supports only SerDes
-for PCI Controller. The hw vendor that provides the phy
-hw published only registers and their values. So this driver
-uses these hard coded values to initialize the phy.
+To support IOAPIC hotplug on x86 and IA64 platforms, OS needs to figure
+out global interrupt source number(GSI) and IOAPIC enumeration ID
+through ACPI interfaces. So BIOS must implement an ACPI IOAPIC device
+with _GSB/_UID or _MAT method to support IOAPIC hotplug. OS also needs
+to figure out base physical address to access IOAPIC registers. OS may
+get the base physical address through PCI BARs if IOAPIC device is
+visible in PCI domain, otherwise OS may get the address by ACPI _CRS
+method if IOAPIC device is hidden from PCI domain by BIOS.
 
-Changelog:-
- -  Added comments to indicate what the register functionality
-    each register blob is doing.
- -  Previous versions were part of the PCI Keystone driver series.
-    This is now send as a separate patch so that this can be
-    reviewed indepedently and merged.
+When adding a PCI subtree, we need to add IOAPIC devices before enabling
+all other PCI devices because other PCI devices may use the IOAPIC to
+allocate PCI interrupts.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Pawel Moll <pawel.moll@arm.com>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-CC: Kumar Gala <galak@codeaurora.org>
-CC: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Grant Likely <grant.likely@linaro.org>
+So we plan to reimplement IOAPIC driver as an ACPI instead of PCI driver
+due to:
+1) hot-pluggable IOAPIC devices are always visible in ACPI domain,
+   but may or may not be visible in PCI domain.
+2) we could explicitly control the order between IOAPIC and other PCI
+   devices.
+
+We also have another choice to use a PCI driver to manage IOAPIC device
+if it's visible in PCI domain and use an ACPI driver if it's only
+visible in ACPI domain. But this solution is a little complex.
+
+It shouldn't cause serious backward compatibility issues because:
+1) IOAPIC hotplug is never supported on x86 yet because it hasn't
+   implemented the required acpi_register_ioapic() and
+   acpi_unregister_ioapic().
+2) Currently only ACPI based IOAPIC hotplug is possible on x86 and
+   IA64, we don't know other specifications and interfaces to support
+   IOAPIC hotplug yet.
+3) We will reimplement an ACPI IOAPICｔdriver support IOAPIC hotplug.
+
+This change also helps to get rid of the false alarm on all current
+Linux distributions:
+[    6.952497] ioapic: probe of 0000:00:05.4 failed with error -22
+[    6.959542] ioapic: probe of 0000:80:05.4 failed with error -22
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- .../bindings/phy/phy-serdes-keystone.txt           |   25 +++
- drivers/phy/Kconfig                                |    6 +
- drivers/phy/Makefile                               |    1 +
- drivers/phy/phy-serdes-keystone.c                  |  200 ++++++++++++++++++++
- 4 files changed, 232 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/phy/phy-serdes-keystone.txt
- create mode 100644 drivers/phy/phy-serdes-keystone.c
+ drivers/pci/Kconfig  |    7 ---
+ drivers/pci/Makefile |    2 -
+ drivers/pci/ioapic.c |  121 --------------------------------------------------
+ 3 files changed, 130 deletions(-)
+ delete mode 100644 drivers/pci/ioapic.c
 
-diff --git a/Documentation/devicetree/bindings/phy/phy-serdes-keystone.txt b/Documentation/devicetree/bindings/phy/phy-serdes-keystone.txt
-new file mode 100644
-index 0000000..612c7b5
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/phy-serdes-keystone.txt
-@@ -0,0 +1,25 @@
-+TI Keystone SerDes Phy: DT documentation
-+=======================================
-+
-+Required properties:
-+ - compatible: should be "ti,keystone-serdes-phy";
-+ - reg: base address and length of the SerDes register set
-+ - reg-names: should be "reg_serdes", name of the reg SerDes register set
-+ - #phy-cells: from the generic phy bindings, must be 0;
-+
-+Exampel for Keystone PCIE,
-+
-+		pcie0_phy: serdes_phy@2320000 {
-+			#phy-cells = <0>;
-+			compatible = "ti,keystone-serdes-phy";
-+			reg = <0x02320000 0x4000>;
-+			reg-names = "reg_serdes";
-+		};
-+
-+
-+Then the PHY can be used in PCIe controller node as
-+
-+pcie@21800000 {
-+	phys = <&pcie0_phy>;
-+	phy-names = "pcie-phy";
-+};
-diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-index 16a2f06..54a8471 100644
---- a/drivers/phy/Kconfig
-+++ b/drivers/phy/Kconfig
-@@ -178,4 +178,10 @@ config PHY_XGENE
- 	help
- 	  This option enables support for APM X-Gene SoC multi-purpose PHY.
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 893503fa1782..39866d18004e 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -104,13 +104,6 @@ config PCI_PASID
  
-+config PHY_TI_KEYSTONE_SERDES
-+	bool "TI Keystone SerDes PHY support"
-+	depends on ARCH_KEYSTONE
-+	select GENERIC_PHY
-+	help
-+	  This option enables support for TI Keystone SerDes PHY.
- endmenu
-diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-index b4f1d57..a02faaa 100644
---- a/drivers/phy/Makefile
-+++ b/drivers/phy/Makefile
-@@ -20,3 +20,4 @@ phy-exynos-usb2-$(CONFIG_PHY_EXYNOS4X12_USB2)	+= phy-exynos4x12-usb2.o
- phy-exynos-usb2-$(CONFIG_PHY_EXYNOS5250_USB2)	+= phy-exynos5250-usb2.o
- obj-$(CONFIG_PHY_EXYNOS5_USBDRD)	+= phy-exynos5-usbdrd.o
- obj-$(CONFIG_PHY_XGENE)			+= phy-xgene.o
-+obj-$(CONFIG_PHY_TI_KEYSTONE_SERDES)	+= phy-serdes-keystone.o
-diff --git a/drivers/phy/phy-serdes-keystone.c b/drivers/phy/phy-serdes-keystone.c
-new file mode 100644
-index 0000000..f1a8888
---- /dev/null
-+++ b/drivers/phy/phy-serdes-keystone.c
-@@ -0,0 +1,200 @@
-+/*
-+ * Keystone SerDes Phy driver
-+ *
-+ * Copyright (C) 2013-2014 Texas Instruments, Inc.
-+ *		http://www.ti.com
-+ *
-+ * Author: Murali Karicheri <m-karicheri2@ti.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/err.h>
-+#include <linux/io.h>
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_address.h>
-+#include <linux/of_platform.h>
-+#include <linux/phy/phy.h>
-+#include <linux/platform_device.h>
-+
-+#define reg_dump(addr, mask) \
-+		pr_debug("reg %p has value %x\n", (void *)addr, \
-+			(readl(addr) & ~mask))
-+
-+/* mask bits point to bits being modified */
-+#define reg_rmw(addr, value, mask) \
-+		writel(((readl(addr) & (~(mask))) | \
-+			(value & (mask))), (addr))
-+struct serdes_config {
-+	u32 reg;
-+	u32 val;
-+	u32 mask;
-+};
-+
-+struct phy_serdes_keystone {
-+	struct device *dev;
-+	void __iomem *base;
-+};
-+
-+static struct serdes_config ks_100mhz_5gbps_serdes[] = {
-+	/* SerDes Clock and common configuration */
-+	{0x0000, 0x00000800, 0x0000ff00},
-+	{0x0060, 0x00041c5c, 0x00ffffff},
-+	{0x0064, 0x0343c700, 0xffffff00},
-+	{0x006c, 0x00000012, 0x000000ff},
-+	{0x0068, 0x00070000, 0x00ff0000},
-+	{0x0078, 0x0000c000, 0x0000ff00},
-+
-+	/* Lane - A Phy configuration */
-+	{0x0200, 0x00000000, 0x000000ff},
-+	{0x0204, 0x5e000080, 0xff0000ff},
-+	{0x0208, 0x00000006, 0x000000ff},
-+	{0x0210, 0x00000023, 0x000000ff},
-+	{0x0214, 0x2e003060, 0xff00ffff},
-+	{0x0218, 0x76000000, 0xff000000},
-+	{0x022c, 0x00200002, 0x00ff00ff},
-+	{0x02a0, 0xffee0000, 0xffff0000},
-+	{0x02a4, 0x0000000f, 0x000000ff},
-+	{0x0204, 0x5e000000, 0xff000000},
-+	{0x0208, 0x00000006, 0x000000ff},
-+	{0x0278, 0x00002000, 0x0000ff00},
-+	{0x0280, 0x00280028, 0x00ff00ff},
-+	{0x0284, 0x2d0f0385, 0xffffffff},
-+	{0x0250, 0xd0000000, 0xff000000},
-+	{0x0284, 0x00000085, 0x000000ff},
-+	{0x0294, 0x20000000, 0xff000000},
-+
-+	/* Lane - B Phy configuration */
-+	{0x0400, 0x00000000, 0x000000ff},
-+	{0x0404, 0x5e000080, 0xff0000ff},
-+	{0x0408, 0x00000006, 0x000000ff},
-+	{0x0410, 0x00000023, 0x000000ff},
-+	{0x0414, 0x2e003060, 0xff00ffff},
-+	{0x0418, 0x76000000, 0xff000000},
-+	{0x042c, 0x00200002, 0x00ff00ff},
-+	{0x04a0, 0xffee0000, 0xffff0000},
-+	{0x04a4, 0x0000000f, 0x000000ff},
-+	{0x0404, 0x5e000000, 0xff000000},
-+	{0x0408, 0x00000006, 0x000000ff},
-+	{0x0478, 0x00002000, 0x0000ff00},
-+	{0x0480, 0x00280028, 0x00ff00ff},
-+	{0x0484, 0x2d0f0385, 0xffffffff},
-+	{0x0450, 0xd0000000, 0xff000000},
-+	{0x0494, 0x20000000, 0xff000000},
-+
-+	/* Common Lane configurations */
-+	{0x0a00, 0x00000100, 0x0000ff00},
-+	{0x0a08, 0x00e12c08, 0x00ffffff},
-+	{0x0a0c, 0x00000081, 0x000000ff},
-+	{0x0a18, 0x00e80000, 0x00ff0000},
-+	{0x0a30, 0x002f2f00, 0x00ffff00},
-+	{0x0a4c, 0xac820000, 0xffff0000},
-+	{0x0a54, 0xc0000000, 0xff000000},
-+	{0x0a58, 0x00001441, 0x0000ffff},
-+	{0x0a84, 0x00000301, 0x0000ffff},
-+	{0x0a8c, 0x81030000, 0xffff0000},
-+	{0x0a90, 0x00006001, 0x0000ffff},
-+	{0x0a94, 0x01000000, 0xff000000},
-+	{0x0aa0, 0x81000000, 0xff000000},
-+	{0x0abc, 0xff000000, 0xff000000},
-+	{0x0ac0, 0x0000008b, 0x000000ff},
-+
-+	/* common clock configuration */
-+	{0x0000, 0x00000003, 0x000000ff},
-+
-+	/* Common Lane configurations */
-+	{0x0a00, 0x0000009f, 0x000000ff},
-+	{0x0a44, 0x5f733d00, 0xffffff00},
-+	{0x0a48, 0x00fdca00, 0x00ffff00},
-+	{0x0a5c, 0x00000000, 0xffff0000},
-+	{0x0a60, 0x00008000, 0xffffffff},
-+	{0x0a64, 0x0c581220, 0xffffffff},
-+	{0x0a68, 0xe13b0602, 0xffffffff},
-+	{0x0a6c, 0xb8074cc1, 0xffffffff},
-+	{0x0a70, 0x3f02e989, 0xffffffff},
-+	{0x0a74, 0x00000001, 0x000000ff},
-+	{0x0b14, 0x00370000, 0x00ff0000},
-+	{0x0b10, 0x37000000, 0xff000000},
-+	{0x0b14, 0x0000005d, 0x000000ff},
-+};
-+
-+static int ks_serdes_phy_init(struct phy *phy)
-+{
-+	struct serdes_config *p;
-+	struct phy_serdes_keystone *ks_phy = phy_get_drvdata(phy);
-+
-+	int i;
-+
-+	for (i = 0, p = &ks_100mhz_5gbps_serdes[0];
-+		i < ARRAY_SIZE(ks_100mhz_5gbps_serdes);
-+		i++, p++) {
-+		reg_rmw((ks_phy->base + p->reg), p->val, p->mask);
-+		reg_dump((ks_phy->base + p->reg), p->mask);
-+	}
-+	msleep(20);
-+
-+	return 0;
-+}
-+
-+static struct phy_ops ks_serdes_phy_ops = {
-+	.init		= ks_serdes_phy_init,
-+	.owner		= THIS_MODULE,
-+};
-+
-+static int ks_serdes_phy_probe(struct platform_device *pdev)
-+{
-+	struct phy_provider *phy_provider;
-+	struct device *dev = &pdev->dev;
-+	struct phy_serdes_keystone *ks_phy;
-+	struct phy *phy;
-+	struct resource *res;
-+
-+	ks_phy = devm_kzalloc(dev, sizeof(*ks_phy), GFP_KERNEL);
-+	if (!ks_phy)
-+		return -ENOMEM;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "reg_serdes");
-+	ks_phy->base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(ks_phy->base))
-+		return PTR_ERR(ks_phy->base);
-+
-+	ks_phy->dev = dev;
-+	phy = devm_phy_create(dev, &ks_serdes_phy_ops, NULL);
-+	if (IS_ERR(phy))
-+		return PTR_ERR(phy);
-+
-+	phy_set_drvdata(phy, ks_phy);
-+	phy_provider = devm_of_phy_provider_register(ks_phy->dev,
-+				of_phy_simple_xlate);
-+
-+	if (IS_ERR(phy_provider))
-+		return PTR_ERR(phy_provider);
-+
-+	dev_info(dev, "keystone SerDes Phy initialized\n");
-+	return 0;
-+}
-+
-+static const struct of_device_id ks_serdes_phy_of_match[] = {
-+	{ .compatible = "ti,keystone-serdes-phy" },
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, ks_serdes_phy_of_match);
-+
-+static struct platform_driver ks_serdes_phy_driver = {
-+	.probe	= ks_serdes_phy_probe,
-+	.driver = {
-+		.of_match_table	= ks_serdes_phy_of_match,
-+		.name  = "ti,keystone-serdes-phy",
-+		.owner = THIS_MODULE,
-+	}
-+};
-+module_platform_driver(ks_serdes_phy_driver);
-+
-+MODULE_DESCRIPTION("TI Keystone SerDes PHY driver");
-+MODULE_LICENSE("GPL V2");
-+MODULE_AUTHOR("Murali Karicheri <m-karicheri2@ti.com>");
+ 	  If unsure, say N.
+ 
+-config PCI_IOAPIC
+-	bool "PCI IO-APIC hotplug support" if X86
+-	depends on PCI
+-	depends on ACPI
+-	depends on X86_IO_APIC
+-	default !X86
+-
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	select NLS
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index e04fe2d9df3b..73e4af400a5a 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -13,8 +13,6 @@ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
+ # Build PCI Express stuff if needed
+ obj-$(CONFIG_PCIEPORTBUS) += pcie/
+ 
+-obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
+-
+ # Build the PCI Hotplug drivers if we were asked to
+ obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
+ ifdef CONFIG_HOTPLUG_PCI
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+deleted file mode 100644
+index 6b2b7dddbbdb..000000000000
+--- a/drivers/pci/ioapic.c
++++ /dev/null
+@@ -1,121 +0,0 @@
+-/*
+- * IOAPIC/IOxAPIC/IOSAPIC driver
+- *
+- * Copyright (C) 2009 Fujitsu Limited.
+- * (c) Copyright 2009 Hewlett-Packard Development Company, L.P.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- */
+-
+-/*
+- * This driver manages PCI I/O APICs added by hotplug after boot.  We try to
+- * claim all I/O APIC PCI devices, but those present at boot were registered
+- * when we parsed the ACPI MADT, so we'll fail when we try to re-register
+- * them.
+- */
+-
+-#include <linux/pci.h>
+-#include <linux/module.h>
+-#include <linux/acpi.h>
+-#include <linux/slab.h>
+-
+-struct ioapic {
+-	acpi_handle	handle;
+-	u32		gsi_base;
+-};
+-
+-static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
+-{
+-	acpi_handle handle;
+-	acpi_status status;
+-	unsigned long long gsb;
+-	struct ioapic *ioapic;
+-	int ret;
+-	char *type;
+-	struct resource *res;
+-
+-	handle = ACPI_HANDLE(&dev->dev);
+-	if (!handle)
+-		return -EINVAL;
+-
+-	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
+-	if (ACPI_FAILURE(status))
+-		return -EINVAL;
+-
+-	/*
+-	 * The previous code in acpiphp evaluated _MAT if _GSB failed, but
+-	 * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
+-	 */
+-
+-	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
+-	if (!ioapic)
+-		return -ENOMEM;
+-
+-	ioapic->handle = handle;
+-	ioapic->gsi_base = (u32) gsb;
+-
+-	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+-		type = "IOAPIC";
+-	else
+-		type = "IOxAPIC";
+-
+-	ret = pci_enable_device(dev);
+-	if (ret < 0)
+-		goto exit_free;
+-
+-	pci_set_master(dev);
+-
+-	if (pci_request_region(dev, 0, type))
+-		goto exit_disable;
+-
+-	res = &dev->resource[0];
+-	if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
+-		goto exit_release;
+-
+-	pci_set_drvdata(dev, ioapic);
+-	dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
+-	return 0;
+-
+-exit_release:
+-	pci_release_region(dev, 0);
+-exit_disable:
+-	pci_disable_device(dev);
+-exit_free:
+-	kfree(ioapic);
+-	return -ENODEV;
+-}
+-
+-static void ioapic_remove(struct pci_dev *dev)
+-{
+-	struct ioapic *ioapic = pci_get_drvdata(dev);
+-
+-	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
+-	pci_release_region(dev, 0);
+-	pci_disable_device(dev);
+-	kfree(ioapic);
+-}
+-
+-
+-static DEFINE_PCI_DEVICE_TABLE(ioapic_devices) = {
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
+-	{ }
+-};
+-MODULE_DEVICE_TABLE(pci, ioapic_devices);
+-
+-static struct pci_driver ioapic_driver = {
+-	.name		= "ioapic",
+-	.id_table	= ioapic_devices,
+-	.probe		= ioapic_probe,
+-	.remove		= ioapic_remove,
+-};
+-
+-static int __init ioapic_init(void)
+-{
+-	return pci_register_driver(&ioapic_driver);
+-}
+-module_init(ioapic_init);
+-
+-MODULE_LICENSE("GPL");
 -- 
-1.7.9.5
+1.7.10.4
 
