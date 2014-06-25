@@ -1,42 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0187.outbound.protection.outlook.com ([207.46.163.187]:9260
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752771AbaFYATt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Jun 2014 20:19:49 -0400
-Message-ID: <53AA158E.1040700@amd.com>
-Date: Tue, 24 Jun 2014 19:19:26 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-To: Jason Cooper <jason@lakedaemon.net>
-CC: <marc.zyngier@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH 0/2] Introduce ARM GICv2m MSI(-X) support
-References: <1403569980-12913-1-git-send-email-suravee.suthikulpanit@amd.com>
- <20140624122639.GL10202@titan.lakedaemon.net>
-In-Reply-To: <20140624122639.GL10202@titan.lakedaemon.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:53773 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752683AbaFYKwv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 06:52:51 -0400
+Message-ID: <1403693452.4249.1.camel@weser.hi.pengutronix.de>
+Subject: Re: The imx6q suspend/resume is broken on 3.16-rc due to PCIe
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>,
+	Richard Zhu <r65037@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 25 Jun 2014 12:50:52 +0200
+In-Reply-To: <CAOMZO5BuOhWo7SCEPFmNRUQBi=5JhDrVv0yvBQM2d_jMyLkbyw@mail.gmail.com>
+References: <20140624153559.GA5741@dragon>
+	 <CAOMZO5AT54hOF2bi9bQwmBcdtG0QHyofQgoRG6Mw_RpDQXzx=w@mail.gmail.com>
+	 <20140625062243.GD3242@dragon>
+	 <CAOMZO5BuOhWo7SCEPFmNRUQBi=5JhDrVv0yvBQM2d_jMyLkbyw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/24/2014 7:26 AM, Jason Cooper wrote:
-> On Mon, Jun 23, 2014 at 07:32:58PM -0500, suravee.suthikulpanit@amd.com wrote:
->> This patch set introduces support for MSI(-X) in GICv2m specification,
->> which is implemented in some variation of GIC400.
->>
->> This depends on and has been tested with the V7 of "Add support for PCI in AArch64"
->> (https://lkml.org/lkml/2014/3/14/320).
->
-> Is this a build, boot, or runtime dependency?
->
-> thx,
->
-> Jason.
->
+Am Mittwoch, den 25.06.2014, 07:50 -0300 schrieb Fabio Estevam:
+> On Wed, Jun 25, 2014 at 3:22 AM, Shawn Guo <shawn.guo@linaro.org> wrote:
+> 
+> > Please test against v3.16-rc1 or -rc2.  The breakage on linux-next
+> > should be another issue.
+> 
+> Yes, I see it now. Tested on -rc2 and suspend/resume works with PCI
+> driver removed.
 
-For all of the above.
+Can you please send me a dmesg from a working boot?
 
-Suravee
+Regards,
+Lucas
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
