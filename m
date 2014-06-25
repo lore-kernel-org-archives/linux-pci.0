@@ -1,292 +1,187 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:41963 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934208AbaFCUFI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 16:05:08 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v5 15/15] thunderbolt: Add suspend/hibernate support
-Date: Tue,  3 Jun 2014 22:04:12 +0200
-Message-Id: <1401825852-4745-16-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
-References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:43517 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755811AbaFYIkQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 04:40:16 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch V3 08/16] ACPI, ioapic: Add acpi_get_ioapic_id()
+Date: Wed, 25 Jun 2014 16:40:39 +0800
+Message-Id: <1403685648-10103-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We use _noirq since we have to restore the pci tunnels before the pci
-core wakes the tunneled devices.
+From: Yinghai Lu <yinghai@kernel.org>
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+For ioapic hotplug, we need to parse apic id for ioapic registration.
+
+We could check _MAT and MADT to get io apic id, just like cpu hotplug
+path to get apic id.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/thunderbolt/nhi.c    | 33 +++++++++++++++++
- drivers/thunderbolt/switch.c | 84 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.c     | 61 ++++++++++++++++++++++++++++++++
- drivers/thunderbolt/tb.h     |  5 +++
- 4 files changed, 183 insertions(+)
+ drivers/acpi/apic_id.c |   97 +++++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/acpi.h   |    3 ++
+ 2 files changed, 98 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
-index d2b9ce8..346b41e 100644
---- a/drivers/thunderbolt/nhi.c
-+++ b/drivers/thunderbolt/nhi.c
-@@ -7,6 +7,7 @@
-  * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-  */
- 
-+#include <linux/pm_runtime.h>
- #include <linux/slab.h>
- #include <linux/errno.h>
- #include <linux/pci.h>
-@@ -492,6 +493,22 @@ static irqreturn_t nhi_msi(int irq, void *data)
- 	return IRQ_HANDLED;
- }
- 
-+static int nhi_suspend_noirq(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct tb *tb = pci_get_drvdata(pdev);
-+	thunderbolt_suspend(tb);
-+	return 0;
-+}
-+
-+static int nhi_resume_noirq(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct tb *tb = pci_get_drvdata(pdev);
-+	thunderbolt_resume(tb);
-+	return 0;
-+}
-+
- static void nhi_shutdown(struct tb_nhi *nhi)
- {
- 	int i;
-@@ -600,6 +617,21 @@ static void nhi_remove(struct pci_dev *pdev)
- 	nhi_shutdown(nhi);
- }
- 
-+/*
-+ * The tunneled pci bridges are siblings of us. Use resume_noirq to reenable
-+ * the tunnels asap. A corresponding pci quirk blocks the downstream bridges
-+ * resume_noirq until we are done.
-+ */
-+static const struct dev_pm_ops nhi_pm_ops = {
-+	.suspend_noirq = nhi_suspend_noirq,
-+	.resume_noirq = nhi_resume_noirq,
-+	.freeze_noirq = nhi_suspend_noirq, /*
-+					    * we just disable hotplug, the
-+					    * pci-tunnels stay alive.
-+					    */
-+	.restore_noirq = nhi_resume_noirq,
-+};
-+
- struct pci_device_id nhi_ids[] = {
- 	/*
- 	 * We have to specify class, the TB bridges use the same device and
-@@ -626,6 +658,7 @@ static struct pci_driver nhi_driver = {
- 	.id_table = nhi_ids,
- 	.probe = nhi_probe,
- 	.remove = nhi_remove,
-+	.driver.pm = &nhi_pm_ops,
- };
- 
- static int __init nhi_init(void)
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index aeb5c30..c2a24b6 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -229,6 +229,30 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
- 		sw->__unknown1, sw->__unknown4);
- }
- 
-+/**
-+ * reset_switch() - reconfigure route, enable and send TB_CFG_PKG_RESET
+diff --git a/drivers/acpi/apic_id.c b/drivers/acpi/apic_id.c
+index ac3b10a9f92d..a74a3fcd8362 100644
+--- a/drivers/acpi/apic_id.c
++++ b/drivers/acpi/apic_id.c
+@@ -2,6 +2,10 @@
+  * Copyright (C) 2005 Intel Corporation
+  * Copyright (C) 2009 Hewlett-Packard Development Company, L.P.
+  *	All routines dealing with CPU APIC ID are moved from processor_core.c
 + *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+int tb_switch_reset(struct tb *tb, u64 route)
-+{
-+	struct tb_cfg_result res;
-+	struct tb_regs_switch_header header = {
-+		header.route_hi = route >> 32,
-+		header.route_lo = route,
-+		header.enabled = true,
-+	};
-+	tb_info(tb, "resetting switch at %llx\n", route);
-+	res.err = tb_cfg_write(tb->ctl, ((u32 *) &header) + 2, route,
-+			0, 2, 2, 2);
-+	if (res.err)
-+		return res.err;
-+	res = tb_cfg_reset(tb->ctl, route, TB_CFG_DEFAULT_TIMEOUT);
-+	if (res.err > 0)
-+		return -EIO;
-+	return res.err;
-+}
-+
- struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route)
- {
- 	u8 next_port = route; /*
-@@ -412,3 +436,63 @@ void tb_sw_set_unpplugged(struct tb_switch *sw)
- 	}
- }
- 
-+int tb_switch_resume(struct tb_switch *sw)
-+{
-+	int i, err;
-+	u64 uid;
-+	tb_sw_info(sw, "resuming switch\n");
-+
-+	err = tb_eeprom_read_uid(sw, &uid);
-+	if (err) {
-+		tb_sw_warn(sw, "uid read failed\n");
-+		return err;
-+	}
-+	if (sw->uid != uid) {
-+		tb_sw_info(sw,
-+			"changed while suspended (uid %#llx -> %#llx)\n",
-+			sw->uid, uid);
-+		return -ENODEV;
-+	}
-+
-+	/* upload configuration */
-+	err = tb_sw_write(sw, 1 + (u32 *) &sw->config, TB_CFG_SWITCH, 1, 3);
-+	if (err)
-+		return err;
-+
-+	err = tb_plug_events_active(sw, true);
-+	if (err)
-+		return err;
-+
-+	/* check for surviving downstream switches */
-+	for (i = 1; i <= sw->config.max_port_number; i++) {
-+		struct tb_port *port = &sw->ports[i];
-+		if (tb_is_upstream_port(port))
-+			continue;
-+		if (!port->remote)
-+			continue;
-+		if (tb_wait_for_port(port, true) <= 0
-+			|| tb_switch_resume(port->remote->sw)) {
-+			tb_port_warn(port,
-+				     "lost during suspend, disconnecting\n");
-+			tb_sw_set_unpplugged(port->remote->sw);
-+		}
-+	}
-+	return 0;
-+}
-+
-+void tb_switch_suspend(struct tb_switch *sw)
-+{
-+	int i, err;
-+	err = tb_plug_events_active(sw, false);
-+	if (err)
-+		return;
-+
-+	for (i = 1; i <= sw->config.max_port_number; i++) {
-+		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
-+			tb_switch_suspend(sw->ports[i].remote->sw);
-+	}
-+	/*
-+	 * TODO: invoke tb_cfg_prepare_to_sleep here? does not seem to have any
-+	 * effect?
-+	 */
-+}
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index 177f61d..1aa6dd7 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -69,6 +69,28 @@ static void tb_free_invalid_tunnels(struct tb *tb)
- }
- 
- /**
-+ * tb_free_unplugged_children() - traverse hierarchy and free unplugged switches
-+ */
-+static void tb_free_unplugged_children(struct tb_switch *sw)
-+{
-+	int i;
-+	for (i = 1; i <= sw->config.max_port_number; i++) {
-+		struct tb_port *port = &sw->ports[i];
-+		if (tb_is_upstream_port(port))
-+			continue;
-+		if (!port->remote)
-+			continue;
-+		if (port->remote->sw->is_unplugged) {
-+			tb_switch_free(port->remote->sw);
-+			port->remote = NULL;
-+		} else {
-+			tb_free_unplugged_children(port->remote->sw);
-+		}
-+	}
-+}
-+
-+
-+/**
-  * find_pci_up_port() - return the first PCIe up port on @sw or NULL
++ * I/O APIC hotplug support
++ *	Yinghai Lu <yinghai@kernel.org>
++ *	Jiang Liu <jiang.liu@intel.com>
   */
- static struct tb_port *tb_find_pci_up_port(struct tb_switch *sw)
-@@ -368,3 +390,42 @@ err_locked:
- 	return NULL;
+ #include <linux/export.h>
+ #include <linux/slab.h>
+@@ -9,6 +13,9 @@
+ 
+ #include "internal.h"
+ 
++static struct acpi_table_madt *madt;
++static int read_madt;
++
+ static int map_lapic_id(struct acpi_subtable_header *entry,
+ 		 u32 acpi_id, int *apic_id)
+ {
+@@ -64,8 +71,6 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
+ static int map_madt_entry(int type, u32 acpi_id)
+ {
+ 	unsigned long madt_end, entry;
+-	static struct acpi_table_madt *madt;
+-	static int read_madt;
+ 	int apic_id = -1;
+ 
+ 	if (!read_madt) {
+@@ -200,3 +205,91 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
+ 	return acpi_map_cpuid(apic_id, acpi_id);
  }
- 
-+void thunderbolt_suspend(struct tb *tb)
+ EXPORT_SYMBOL_GPL(acpi_get_cpuid);
++
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++static int map_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
++			 u64 *phys_addr, int *ioapic_id)
 +{
-+	tb_info(tb, "suspending...\n");
-+	mutex_lock(&tb->lock);
-+	tb_switch_suspend(tb->root_switch);
-+	tb_ctl_stop(tb->ctl);
-+	tb->hotplug_active = false; /* signal tb_handle_hotplug to quit */
-+	mutex_unlock(&tb->lock);
-+	tb_info(tb, "suspend finished\n");
++	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
++
++	if (ioapic->global_irq_base != gsi_base)
++		return 0;
++
++	*phys_addr = ioapic->address;
++	*ioapic_id = ioapic->id;
++	return 1;
 +}
 +
-+void thunderbolt_resume(struct tb *tb)
++static int map_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
 +{
-+	struct tb_pci_tunnel *tunnel, *n;
-+	tb_info(tb, "resuming...\n");
-+	mutex_lock(&tb->lock);
-+	tb_ctl_start(tb->ctl);
++	struct acpi_subtable_header *hdr;
++	unsigned long madt_end, entry;
++	int apic_id = -1;
 +
-+	/* remove any pci devices the firmware might have setup */
-+	tb_switch_reset(tb, 0);
-+
-+	tb_switch_resume(tb->root_switch);
-+	tb_free_invalid_tunnels(tb);
-+	tb_free_unplugged_children(tb->root_switch);
-+	list_for_each_entry_safe(tunnel, n, &tb->tunnel_list, list)
-+		tb_pci_restart(tunnel);
-+	if (!list_empty(&tb->tunnel_list)) {
-+		/*
-+		 * the pcie links need some time to get going.
-+		 * 100ms works for me...
-+		 */
-+		tb_info(tb, "tunnels restarted, sleeping for 100ms\n");
-+		msleep(100);
++	if (!read_madt) {
++		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
++					(struct acpi_table_header **)&madt)))
++			madt = NULL;
++		read_madt++;
 +	}
-+	 /* Allow tb_handle_hotplug to progress events */
-+	tb->hotplug_active = true;
-+	mutex_unlock(&tb->lock);
-+	tb_info(tb, "resume finished\n");
++
++	if (!madt)
++		return apic_id;
++
++	entry = (unsigned long)madt;
++	madt_end = entry + madt->header.length;
++
++	/* Parse all entries looking for a match. */
++	entry += sizeof(struct acpi_table_madt);
++	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
++		hdr = (struct acpi_subtable_header *)entry;
++		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
++		    map_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
++			break;
++		else
++			entry += hdr->length;
++	}
++
++	return apic_id;
 +}
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index a89087f..63e89d0 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -214,9 +214,14 @@ static inline int tb_port_write(struct tb_port *port, void *buffer,
++
++static int map_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
++				u64 *phys_addr)
++{
++	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
++	union acpi_object *obj;
++	struct acpi_subtable_header *header;
++	int apic_id = -1;
++
++	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
++		goto exit;
++
++	if (!buffer.length || !buffer.pointer)
++		goto exit;
++
++	obj = buffer.pointer;
++	if (obj->type != ACPI_TYPE_BUFFER ||
++	    obj->buffer.length < sizeof(struct acpi_subtable_header)) {
++		goto exit;
++	}
++
++	header = (struct acpi_subtable_header *)obj->buffer.pointer;
++	if (header->type == ACPI_MADT_TYPE_IO_APIC)
++		map_ioapic_id(header, gsi_base, phys_addr, &apic_id);
++
++exit:
++	kfree(buffer.pointer);
++	return apic_id;
++}
++
++int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
++{
++	int apic_id;
++
++	apic_id = map_mat_ioapic_entry(handle, gsi_base, phys_addr);
++	if (apic_id == -1)
++		apic_id = map_madt_ioapic_entry(gsi_base, phys_addr);
++
++	return apic_id;
++}
++#endif /* CONFIG_ACPI_HOTPLUG_IOAPIC */
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 41460ed7017f..fb2bc50f330e 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -149,6 +149,9 @@ int acpi_unmap_lsapic(int cpu);
+ int acpi_get_apicid(acpi_handle, int type, u32 acpi_id);
+ int acpi_map_cpuid(int apic_id, u32 acpi_id);
+ int acpi_get_cpuid(acpi_handle, int type, u32 acpi_id);
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
++#endif
  
- struct tb *thunderbolt_alloc_and_start(struct tb_nhi *nhi);
- void thunderbolt_shutdown_and_free(struct tb *tb);
-+void thunderbolt_suspend(struct tb *tb);
-+void thunderbolt_resume(struct tb *tb);
- 
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
- void tb_switch_free(struct tb_switch *sw);
-+void tb_switch_suspend(struct tb_switch *sw);
-+int tb_switch_resume(struct tb_switch *sw);
-+int tb_switch_reset(struct tb *tb, u64 route);
- void tb_sw_set_unpplugged(struct tb_switch *sw);
- struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
- 
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
 -- 
-2.0.0
+1.7.10.4
 
