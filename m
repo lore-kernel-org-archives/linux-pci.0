@@ -1,175 +1,123 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v5 09/15] thunderbolt: Handle hotplug events
-Date: Tue,  3 Jun 2014 22:04:06 +0200
-Message-Id: <1401825852-4745-10-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
-References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:21797 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755239AbaFYIjc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 04:39:32 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [Patch V3 07/16] x86, ioapic: Find usable ioapic id for 64bit.
+Date: Wed, 25 Jun 2014 16:40:38 +0800
+Message-Id: <1403685648-10103-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We receive a plug event callback whenever a thunderbolt device is added
-or removed. This patch fills in the tb_handle_hotplug method and starts
-reacting to these events by adding/removing switches from the hierarchy.
+From: Yinghai Lu <yinghai@kernel.org>
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+Checking the id in register, if that is duplicated, will pick one and
+update id register.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/thunderbolt/switch.c | 42 +++++++++++++++++++++++++++++++++++++++-
- drivers/thunderbolt/tb.c     | 46 +++++++++++++++++++++++++++++++++++++++++++-
- drivers/thunderbolt/tb.h     |  3 +++
- 3 files changed, 89 insertions(+), 2 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   38 +++++++++++++++++++++++++++++++++-----
+ 1 file changed, 33 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index b31b8ce..d6c32e1 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -195,6 +195,24 @@ static void tb_dump_switch(struct tb *tb, struct tb_regs_switch_header *sw)
- 		sw->__unknown1, sw->__unknown4);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index b7296d4ca0a1..a068bf558657 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3570,26 +3570,54 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
+ 	return apic_id;
  }
  
-+struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route)
-+{
-+	u8 next_port = route; /*
-+			       * Routes use a stride of 8 bits,
-+			       * eventhough a port index has 6 bits at most.
-+			       * */
-+	if (route == 0)
-+		return sw;
-+	if (next_port > sw->config.max_port_number)
-+		return 0;
-+	if (tb_is_upstream_port(&sw->ports[next_port]))
-+		return 0;
-+	if (!sw->ports[next_port].remote)
-+		return 0;
-+	return get_switch_at_route(sw->ports[next_port].remote->sw,
-+				   route >> TB_ROUTE_SHIFT);
-+}
+-static u8 __init io_apic_unique_id(u8 id)
++static u8 io_apic_unique_id(int idx, u8 id)
+ {
+ 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
+ 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
+-		return io_apic_get_unique_id(nr_ioapics, id);
++		return io_apic_get_unique_id(idx, id);
+ 	else
+ 		return id;
+ }
+ #else
+-static u8 __init io_apic_unique_id(u8 id)
++static u8 io_apic_unique_id(int idx, u8 id)
+ {
+ 	int i;
++	u8 new_id;
++	unsigned long flags;
+ 	DECLARE_BITMAP(used, 256);
++	union IO_APIC_reg_00 reg_00;
+ 
+ 	bitmap_zero(used, 256);
+ 	for_each_ioapic(i)
+ 		__set_bit(mpc_ioapic_id(i), used);
+ 	if (!test_bit(id, used))
+ 		return id;
+-	return find_first_zero_bit(used, 256);
 +
- /**
-  * tb_plug_events_active() - enable/disable plug events on a switch
-  *
-@@ -249,7 +267,8 @@ void tb_switch_free(struct tb_switch *sw)
- 		sw->ports[i].remote = NULL;
++	/* check register at first */
++	raw_spin_lock_irqsave(&ioapic_lock, flags);
++	reg_00.raw = io_apic_read(idx, 0);
++	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
++	new_id = reg_00.bits.ID;
++	if (!test_bit(new_id, used)) {
++		apic_printk(APIC_VERBOSE, KERN_INFO
++			"IOAPIC[%d]: Using reg apic_id %d instead of %d\n",
++			 idx, new_id, id);
++		return new_id;
++	}
++
++	new_id = find_first_zero_bit(used, 256);
++	reg_00.bits.ID = new_id;
++	raw_spin_lock_irqsave(&ioapic_lock, flags);
++	io_apic_write(idx, 0, reg_00.raw);
++	reg_00.raw = io_apic_read(idx, 0);
++	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
++
++	/* Sanity check */
++	if (reg_00.bits.ID != new_id)
++		pr_warn("IOAPIC[%d]: Unable to change apic_id to %d!\n",
++			idx, new_id);
++
++	return new_id;
+ }
+ #endif
+ 
+@@ -3855,7 +3883,7 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 		return;
  	}
  
--	tb_plug_events_active(sw, false);
-+	if (!sw->is_unplugged)
-+		tb_plug_events_active(sw, false);
+-	ioapics[idx].mp_config.apicid = io_apic_unique_id(id);
++	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
+ 	ioapics[idx].mp_config.apicver = io_apic_get_version(idx);
  
- 	kfree(sw->ports);
- 	kfree(sw);
-@@ -333,3 +352,24 @@ err:
- 	return NULL;
- }
- 
-+/**
-+ * tb_sw_set_unpplugged() - set is_unplugged on switch and downstream switches
-+ */
-+void tb_sw_set_unpplugged(struct tb_switch *sw)
-+{
-+	int i;
-+	if (sw == sw->tb->root_switch) {
-+		tb_sw_WARN(sw, "cannot unplug root switch\n");
-+		return;
-+	}
-+	if (sw->is_unplugged) {
-+		tb_sw_WARN(sw, "is_unplugged already set\n");
-+		return;
-+	}
-+	sw->is_unplugged = true;
-+	for (i = 0; i <= sw->config.max_port_number; i++) {
-+		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
-+			tb_sw_set_unpplugged(sw->ports[i].remote->sw);
-+	}
-+}
-+
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index 3b716fd..1efcacc 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -71,11 +71,55 @@ static void tb_handle_hotplug(struct work_struct *work)
- {
- 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
- 	struct tb *tb = ev->tb;
-+	struct tb_switch *sw;
-+	struct tb_port *port;
- 	mutex_lock(&tb->lock);
- 	if (!tb->hotplug_active)
- 		goto out; /* during init, suspend or shutdown */
- 
--	/* do nothing for now */
-+	sw = get_switch_at_route(tb->root_switch, ev->route);
-+	if (!sw) {
-+		tb_warn(tb,
-+			"hotplug event from non existent switch %llx:%x (unplug: %d)\n",
-+			ev->route, ev->port, ev->unplug);
-+		goto out;
-+	}
-+	if (ev->port > sw->config.max_port_number) {
-+		tb_warn(tb,
-+			"hotplug event from non existent port %llx:%x (unplug: %d)\n",
-+			ev->route, ev->port, ev->unplug);
-+		goto out;
-+	}
-+	port = &sw->ports[ev->port];
-+	if (tb_is_upstream_port(port)) {
-+		tb_warn(tb,
-+			"hotplug event for upstream port %llx:%x (unplug: %d)\n",
-+			ev->route, ev->port, ev->unplug);
-+		goto out;
-+	}
-+	if (ev->unplug) {
-+		if (port->remote) {
-+			tb_port_info(port, "unplugged\n");
-+			tb_sw_set_unpplugged(port->remote->sw);
-+			tb_switch_free(port->remote->sw);
-+			port->remote = NULL;
-+		} else {
-+			tb_port_info(port,
-+				     "got unplug event for disconnected port, ignoring\n");
-+		}
-+	} else if (port->remote) {
-+		tb_port_info(port,
-+			     "got plug event for connected port, ignoring\n");
-+	} else {
-+		tb_port_info(port, "hotplug: scanning\n");
-+		tb_scan_port(port);
-+		if (!port->remote) {
-+			tb_port_info(port, "hotplug: no switch found\n");
-+		} else if (port->remote->sw->config.depth > 1) {
-+			tb_sw_warn(port->remote->sw,
-+				   "hotplug: chaining not supported\n");
-+		}
-+	}
- out:
- 	mutex_unlock(&tb->lock);
- 	kfree(ev);
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 70a66fe..661f182 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -20,6 +20,7 @@ struct tb_switch {
- 	struct tb_port *ports;
- 	struct tb *tb;
- 	int cap_plug_events; /* offset, zero if not found */
-+	bool is_unplugged; /* unplugged, will go away */
- };
- 
- /**
-@@ -160,6 +161,8 @@ void thunderbolt_shutdown_and_free(struct tb *tb);
- 
- struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route);
- void tb_switch_free(struct tb_switch *sw);
-+void tb_sw_set_unpplugged(struct tb_switch *sw);
-+struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
- 
- int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
- 
+ 	/*
 -- 
-2.0.0
+1.7.10.4
 
