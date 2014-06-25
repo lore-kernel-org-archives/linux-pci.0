@@ -1,32 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:20679 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750971AbaF0Q4S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 12:56:18 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Message-ID: <1403888155-9709-1-git-send-email-phil.edworthy@renesas.com>
-Date: Fri, 27 Jun 2014 17:55:53 +0100
-Subject: [PATCH 0/2] PCI: host: pcie-rcar: minor clean ups
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:59602 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751862AbaFYBMT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 21:12:19 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Jun 2014 11:12:17 +1000
+Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 00DF9357804F
+	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 11:12:14 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5P0tq2g52101326
+	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 10:55:52 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5P1CCAa021211
+	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 11:12:13 +1000
+Date: Wed, 25 Jun 2014 09:12:11 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table
+ dynamically
+Message-ID: <20140625011211.GA5785@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
+ <53A94DA8.6020206@ozlabs.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53A94DA8.6020206@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A couple of relatively minor clean up patches for the pcie-rcar driver. These
-are on top of Sergei's recent patch "pcie-rcar: kill duplicate checks".
+On Tue, Jun 24, 2014 at 08:06:32PM +1000, Alexey Kardashevskiy wrote:
+>On 06/10/2014 11:56 AM, Wei Yang wrote:
+>> Current iommu_table of a PE is a static field. This will have a problem when
+>> iommu_free_table is called.
+>
+>What kind of problem? This table is per PE and PE is not going anywhere.
+>
 
-Thanks to Sergei for point these out.
+Yes, for Bus PE, they will always sit in the system. When VF PE introduced,
+they could be released on the fly. When they are released, so do the iommu
+table for the PE.
 
-Phil Edworthy (2):
-  PCI: host: pcie-rcar: Use correct initial HW settings
-  PCI: host: pcie-rcar: Style and formatting changes.
-
- drivers/pci/host/pcie-rcar.c | 146 +++++++++++++++++++++----------------------
- 1 file changed, 71 insertions(+), 75 deletions(-)
 
 -- 
-2.0.0
+Richard Yang
+Help you, Help me
 
