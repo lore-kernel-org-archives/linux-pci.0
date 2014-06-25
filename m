@@ -1,65 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:33783 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775AbaFQANq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jun 2014 20:13:46 -0400
-Received: by mail-ig0-f170.google.com with SMTP id h15so382604igd.1
-        for <linux-pci@vger.kernel.org>; Mon, 16 Jun 2014 17:13:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWQn6SNMTAQ1_RR=NdMszwOBYG_W9ifFdRN1ZLE0k_vbw@mail.gmail.com>
-References: <20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140614212132.15202.29174.stgit@bhelgaas-glaptop.roam.corp.google.com> <CAE9FiQWQn6SNMTAQ1_RR=NdMszwOBYG_W9ifFdRN1ZLE0k_vbw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 16 Jun 2014 18:13:25 -0600
-Message-ID: <CAErSpo4WMPUjg-1vS6v7zVnEUcQL9i0SxmmyjViA7njB-ErPoQ@mail.gmail.com>
-Subject: Re: [PATCH RFC 3/4] PCI: pciehp: Compute timeout from hotplug command
- start time
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Jan C. Nordholz" <jckn@gmx.net>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+	linux-pm@vger.kernel.org
+Subject: [Patch V3 14/16] x86, irq: Introduce helper to check whether an IOAPIC has been registered
+Date: Wed, 25 Jun 2014 16:40:45 +0800
+Message-Id: <1403685648-10103-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 14, 2014 at 8:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sat, Jun 14, 2014 at 2:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
->> index f44fdb5b0b08..18ac24d84f9b 100644
->> --- a/drivers/pci/hotplug/pciehp_hpc.c
->> +++ b/drivers/pci/hotplug/pciehp_hpc.c
->> @@ -142,11 +143,24 @@ static void pcie_wait_cmd(struct controller *ctrl)
->>         if (ctrl->no_cmd_complete)
->>                 return;
->>
->> +       if (!ctrl->cmd_busy)
->> +               return;
->
-> Can you move those two lines to second patch ?
+Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
+been registered, it will be used when enabling IOAPIC hotplug.
 
-Yeah, those lines don't really fit in this patch.  I don't think they
-really fit in the second patch ("Wait for hotplug command completion
-lazily") either, since that is simply moving the wait from after
-issuing a command to before issuing the next command.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    1 +
+ arch/x86/kernel/acpi/boot.c    |   11 +++++++++++
+ arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
+ include/linux/acpi.h           |    1 +
+ 4 files changed, 24 insertions(+)
 
-I moved them to the first patch ("Make pcie_wait_cmd()
-self-contained") since that is more concerned with cleaning up
-pcie_wait_cmd().  It could even be a separate patch; it would have
-made sense to check cmd_busy before calling pcie_wait_cmd().  But it
-seemed like overkill to make another patch just for that.
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index ce63cf34c93c..0db2b7037e4b 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
+ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
+ extern int mp_unregister_ioapic(u32 gsi_base);
++extern int mp_ioapic_registered(u32 gsi_base);
+ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 28d50c70cac9..2a133f594e66 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -814,6 +814,17 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
+ }
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
+ 
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
++{
++	int ret;
++
++	down_write(&acpi_ioapic_rwsem);
++	ret  = mp_ioapic_registered(gsi_base);
++	up_write(&acpi_ioapic_rwsem);
++
++	return ret;
++}
++
+ static int __init acpi_parse_sbf(struct acpi_table_header *table)
+ {
+ 	struct acpi_table_boot *sb;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 5711689e4307..3410f1f467db 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -4005,6 +4005,17 @@ int mp_unregister_ioapic(u32 gsi_base)
+ 	return 0;
+ }
+ 
++int mp_ioapic_registered(u32 gsi_base)
++{
++	int ioapic;
++
++	for_each_ioapic(ioapic)
++		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base)
++			return 1;
++
++	return 0;
++}
++
+ int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 		     irq_hw_number_t hwirq)
+ {
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index fb2bc50f330e..1294512b07e5 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -155,6 +155,7 @@ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
+ 
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
++int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base);
+ void acpi_irq_stats_init(void);
+ extern u32 acpi_irq_handled;
+ extern u32 acpi_irq_not_handled;
+-- 
+1.7.10.4
 
-Anyway, I put them all at
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/?h=pci/hotplug
-.  I'll add the results of Rajat's testing (assuming that goes well).
-It would be good if you could make sure they do what you expect on
-your hardware, too.  If you do test it, let me know what sort of
-controller you tested on (vendor/device ID).
-
-I think you will see a "Timeout on hotplug command %#010x (issued %u
-msec ago)" message.  I don't think there will be any actual slowdown,
-but I hope the message doesn't cause users too much heartburn.
-
-> Other than that, for all 4 patches
->
-> Acked-by: Yinghai Lu <yinghai@kernel.org>
