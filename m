@@ -1,85 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:35868 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755782AbaFSHWx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 03:22:53 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 19 Jun 2014 17:22:50 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 587042CE8054
-	for <linux-pci@vger.kernel.org>; Thu, 19 Jun 2014 17:22:48 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5J70aZC9830904
-	for <linux-pci@vger.kernel.org>; Thu, 19 Jun 2014 17:00:37 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5J7MkRU022864
-	for <linux-pci@vger.kernel.org>; Thu, 19 Jun 2014 17:22:46 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Cc: bhelgaas@google.com, benh@kernel.crashing.org,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 1/2] PCI: Make resetting secondary bus logic common
-Date: Thu, 19 Jun 2014 17:22:44 +1000
-Message-Id: <1403162565-26835-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mga01.intel.com ([192.55.52.88]:24709 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932086AbaFYJAL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jun 2014 05:00:11 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part3 V3 06/21] iommu/vt-d: fix possible invalid memory access caused by free_dmar_iommu()
+Date: Wed, 25 Jun 2014 17:02:32 +0800
+Message-Id: <1403686967-10887-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit d92a208d086 ("powerpc/pci: Mask linkDown on resetting PCI bus")
-implemented same logic (resetting PCI secondary bus by bridge's config
-register PCI_BRIDGE_CTL_BUS_RESET) in PCI core and arch-dependent
-code. In order to avoid the duplicate implementation introduced by the
-commit, the patch puts the logic into pci_reset_secondary_bus().
+Static identity and virtual machine domains may be cached in
+iommu->domain_ids array after corresponding IOMMUs have been removed
+from domain->iommu_bmp. So we should check domain->iommu_bmp before
+decreasing domain->iommu_count in function free_dmar_iommu(), otherwise
+it may cause free of inuse domain data structure.
 
-That commit also missed declaring newly introduced weak function
-pcibios_reset_secondary_bus() in linux/include/pci.h. The patch fixes
-it.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/pci.c   | 7 ++++++-
- include/linux/pci.h | 2 ++
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/iommu/intel-iommu.c |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 63a54a3..758f1d8 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3193,7 +3193,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 	return 0;
- }
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index c9d7279f8f8a..b1ac737b3196 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -426,6 +426,8 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
+ 				       struct device *dev);
+ static void iommu_detach_dependent_devices(struct intel_iommu *iommu,
+ 					   struct device *dev);
++static int domain_detach_iommu(struct dmar_domain *domain,
++			       struct intel_iommu *iommu);
  
--void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
-+void pci_reset_secondary_bus(struct pci_dev *dev)
+ #ifdef CONFIG_INTEL_IOMMU_DEFAULT_ON
+ int dmar_disabled = 0;
+@@ -1468,8 +1470,7 @@ static int iommu_init_domains(struct intel_iommu *iommu)
+ static void free_dmar_iommu(struct intel_iommu *iommu)
  {
- 	u16 ctrl;
+ 	struct dmar_domain *domain;
+-	int i, count;
+-	unsigned long flags;
++	int i;
  
-@@ -3219,6 +3219,11 @@ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
- 	ssleep(1);
- }
+ 	if ((iommu->domains) && (iommu->domain_ids)) {
+ 		for_each_set_bit(i, iommu->domain_ids, cap_ndoms(iommu->cap)) {
+@@ -1482,11 +1483,7 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
  
-+void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
-+{
-+	pci_reset_secondary_bus(dev);
-+}
-+
- /**
-  * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
-  * @dev: Bridge device
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 466bcd1..340529d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -978,6 +978,8 @@ int pci_try_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
- int pci_reset_bus(struct pci_bus *bus);
- int pci_try_reset_bus(struct pci_bus *bus);
-+void pci_reset_secondary_bus(struct pci_dev *dev);
-+void pcibios_reset_secondary_bus(struct pci_dev *dev);
- void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ 			domain = iommu->domains[i];
+ 			clear_bit(i, iommu->domain_ids);
+-
+-			spin_lock_irqsave(&domain->iommu_lock, flags);
+-			count = --domain->iommu_count;
+-			spin_unlock_irqrestore(&domain->iommu_lock, flags);
+-			if (count == 0)
++			if (domain_detach_iommu(domain, iommu) == 0)
+ 				domain_exit(domain);
+ 		}
+ 	}
 -- 
-1.8.3.2
+1.7.10.4
 
