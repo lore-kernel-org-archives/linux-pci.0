@@ -1,92 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:41555 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750992AbaFDJ6W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jun 2014 05:58:22 -0400
-Message-ID: <538EEDB7.8050600@codethink.co.uk>
-Date: Wed, 04 Jun 2014 10:58:15 +0100
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:36713 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752669AbaFYKap (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 06:30:45 -0400
+Received: by mail-pd0-f175.google.com with SMTP id v10so1487475pde.20
+        for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 03:30:45 -0700 (PDT)
+Message-ID: <53AAA4CF.70606@ozlabs.ru>
+Date: Wed, 25 Jun 2014 20:30:39 +1000
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
 MIME-Version: 1.0
-To: Rob Herring <robherring2@gmail.com>, Arnd Bergmann <arnd@arndb.de>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <damm@opensource.se>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
+To: David Laight <David.Laight@ACULAB.COM>,
+	'Wei Yang' <weiyang@linux.vnet.ibm.com>
+CC: "benh@au1.ibm.com" <benh@au1.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	SH-Linux <linux-sh@vger.kernel.org>
-Subject: Re: [PATCH v3] of/irq: provide more wrappers for !CONFIG_OF
-References: <16771871.sfJG2itVJN@wuerfel> <CAL_JsqJpP2sEkPC4DUFWTNutjFhUBiKZfNVSpiKHFPfsJzTf6w@mail.gmail.com>
-In-Reply-To: <CAL_JsqJpP2sEkPC4DUFWTNutjFhUBiKZfNVSpiKHFPfsJzTf6w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
+	"yan@linux.vnet.ibm.com" <yan@linux.vnet.ibm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"qiudayu@linux.vnet.ibm.com" <qiudayu@linux.vnet.ibm.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table dynamically
+References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com> <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com> <53A94DA8.6020206@ozlabs.ru> <20140625011211.GA5785@richard> <53AA4C32.7060004@ozlabs.ru> <20140625052758.GA8873@richard> <063D6719AE5E284EB5DD2968C1650D6D17264AD8@AcuExch.aculab.com>
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D17264AD8@AcuExch.aculab.com>
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/06/14 16:40, Rob Herring wrote:
-> On Tue, Jun 3, 2014 at 9:47 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->> The pci-rcar driver is enabled for compile tests, and this has
->> now shown that the driver cannot build without CONFIG_OF,
->> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
->> interrupt mapping when possible":
+On 06/25/2014 07:20 PM, David Laight wrote:
+> From: Wei Yang
+>> On Wed, Jun 25, 2014 at 02:12:34PM +1000, Alexey Kardashevskiy wrote:
+>>> On 06/25/2014 11:12 AM, Wei Yang wrote:
+>>>> On Tue, Jun 24, 2014 at 08:06:32PM +1000, Alexey Kardashevskiy wrote:
+>>>>> On 06/10/2014 11:56 AM, Wei Yang wrote:
+>>>>>> Current iommu_table of a PE is a static field. This will have a problem when
+>>>>>> iommu_free_table is called.
+>>>>>
+>>>>> What kind of problem? This table is per PE and PE is not going anywhere.
+>>>>>
+>>>>
+>>>> Yes, for Bus PE, they will always sit in the system. When VF PE introduced,
+>>>> they could be released on the fly. When they are released, so do the iommu
+>>>> table for the PE.
+>>>
+>>> iommu_table is a part of PE struct. When PE is released, iommu_table will
+>>> go with it as well. Why to make is a pointer? I would understand it if you
+>>> added reference counting there but no - iommu_table's lifetime is equal to
+>>> PE lifetime.
+>>>
 >>
->> drivers/built-in.o: In function `rcar_pci_map_irq':
->> :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
->> pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
->> pci/host/pcie-rcar.c:875:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
+>> Yes, iommu_talbe's life time equals to PE lifetime, so when releasing a PE we
+>> need to release the iommu table. Currently, there is one function to release
+>> the iommu table, iommu_free_table() which takes a pointer of the iommu_table
+>> and release it.
 >>
->> As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
->> supposed to build fine, which we can achieve if we make the
->> declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
->> and provide an empty inline function otherwise, as we do for
->> a lot of other of interfaces.
->>
->> This lets us build the rcar_pci driver again without CONFIG_OF
->> for build testing. All platforms using this driver select OF,
->> so this doesn't change anything for the users.
->>
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> Cc: devicetree@vger.kernel.org
->> Cc: Rob Herring <robh+dt@kernel.org>
->> Cc: Grant Likely <grant.likely@linaro.org>
->> Cc: Lucas Stach <l.stach@pengutronix.de>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Magnus Damm <damm@opensource.se>
->> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
->> Cc: Ben Dooks <ben.dooks@codethink.co.uk>
->> Cc: linux-pci@vger.kernel.org
->> Cc: linux-sh@vger.kernel.org
->> ----
->>
->> This replaces "[PATCH v2] of/irq: provide int of_irq_parse_and_map_pci
->> wrapper", since now the same driver requires additional interfaces.
->> We still want to be able to build the driver with CONFIG_OF disabled,
->> but now we need three functions instead of just one.
->>
->> Rob, Grant, can you apply this as a bug fix, or provide comments?
->>
->> diff --git a/include/linux/of.h b/include/linux/of.h
->> index 196b34c..7c29e6c 100644
->> --- a/include/linux/of.h
->> +++ b/include/linux/of.h
->> @@ -511,6 +511,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
->>         return NULL;
->>  }
->>
->> +static inline int of_n_addr_cells(struct device_node *np) { return 0; }
->> +static inline int of_n_size_cells(struct device_node *np) { return 0; }
+>> If the iommu table in PE is just a part of PE, it will have some problem to
+>> release it with iommu_free_table(). That's why I make it a pointer in PE
+>> structure.
 > 
-> I'm fine with the rest, but I think these should always be used within
-> some higher level function.
-> 
-> I can't seem to find where this is used by rcar. BTW, why does rcar
-> pci DT support fail to have any ranges property?
+> What are the sizes of the iommu table and the PE structure?
 
-I think the driver provides all the necessary PCI information
-internally as it started off as a platform-driver.
+This is all about iommu_table struct (which is just a descriptor), not
+IOMMU table per se (which may be megabytes) :)
+
+
+> If the table is a round number of pages then you probably don't want to
+> embed it inside the PE structure.
+
+
 
 
 -- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+Alexey
