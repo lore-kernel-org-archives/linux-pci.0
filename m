@@ -1,72 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp1-g21.free.fr ([212.27.42.1]:21642 "EHLO smtp1-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753906AbaF3Jpf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 05:45:35 -0400
-Date: Mon, 30 Jun 2014 11:47:01 +0200
-From: Jean-Francois Moine <moinejf@free.fr>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Andrew Lunn <andrew@lunn.ch>, linux-ide@vger.kernel.org,
-	Alessandro Zummo <a.zummo@towertech.it>,
-	alsa-devel@alsa-project.org, Bryan Wu <cooloney@gmail.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	rtc-linux@googlegroups.com, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Tejun Heo <tj@kernel.org>, Wim Van Sebroeck <wim@iguana.be>,
-	Mark Brown <broonie@kernel.org>,
-	Richard Purdie <rpurdie@rpsys.net>, linux-pci@vger.kernel.org,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-leds@vger.kernel.org, linux-watchdog@vger.kernel.org
-Subject: Re: [alsa-devel] [PATCH 00/13] Remove mach-kirkwood and mach-dove
-Message-ID: <20140630114701.1368d49e@armhf>
-In-Reply-To: <20140630084918.GS32514@n2100.arm.linux.org.uk>
-References: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
-	<20140629213510.GR32514@n2100.arm.linux.org.uk>
-	<20140630091643.2df3b0fb@armhf>
-	<20140630084918.GS32514@n2100.arm.linux.org.uk>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <1403719007-9352-3-git-send-email-kishon@ti.com>
+References: <1403719007-9352-1-git-send-email-kishon@ti.com>
+	<1403719007-9352-3-git-send-email-kishon@ti.com>
+Date: Thu, 26 Jun 2014 11:07:38 +0530
+Message-ID: <CAHM4w1mMT5een4pAFb9s1JENm=j1W2yMPYdO+OdBhAy0wcRdjw@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: designware: use untranslated address while
+ programming ATU
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-doc@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit KUMAR DCG <mohit.kumar@st.com>,
+	linux-kernel@vger.kernel.org, grant.likely@linaro.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pratyush ANAND <pratyush.anand@st.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 30 Jun 2014 09:49:18 +0100
-Russell King - ARM Linux <linux@arm.linux.org.uk> wrote:
+Hi Kishon,
 
-> The problem is that the picture appears for about a second, then goes black
-> for maybe a couple of seconds, then reappears for about a second and this
-> cycle repeats.  Rebooting into the DT kernel doesn't fix it.  Rebooting
-> back into the non-DT kernel does fix it.  Then if you boot back into the DT
-> kernel it's back again.  Boot back into the non-DT kernel and it's again
-> fixed.
-> 
-> I have compared register settings for the Si5351, LCD controllers and the
-> TDA998x between the non-DT and DT versions, and can find no differences
-> there.  Yet, DT kernels are the only kernels which exhibit this behaviour.
-> Non-DT kernels (which I've run continuously including many reboots) for
-> the last two years have *never* shown this problem.
-> 
-> I have also verified that the HDMI clock is correct.  The problem occurs
-> at both 1080p and 720p resolutions (which are the two that are used during
-> boot - I have the kernel using 720p, and Xorg uses 1080p.)
-> 
-> I should also point out that in both cases, it is the _same_ kernel binary
-> (3.15) that I'm running - the DT test case just has the DT blob attached
-> whereas the non-DT case boots without (and therefore falls back to the
-> old platform stuff.)
+ Few things, if you can help me to understand:
 
-Have you declared the LCD clock in dove.dtsi?
+On Wed, Jun 25, 2014 at 11:26 PM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+> In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
+> address. So whenever the cpu issues a read/write request, the 4 most
+> significant bits are used by L3 to determine the target controller.
+> For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
+> the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
+> the outbound translation window the *base* should be programmed as 0x000_0000.
+> Whenever we try to write to say 0x2000_0000, it will be translated to whatever
+> we have programmed in the translation window with base as 0x000_0000.
+>
+> This is needed when the dt node is modelled something like below
+> axi {
+>         compatible = "simple-bus";
+>         #size-cells = <1>;
+>         #address-cells = <1>;
+>         ranges = <0x0        0x20000000 0x10000000 // 28-bit bus
+>                   0x51000000 0x51000000 0x3000>;
+>         pcie@51000000 {
+>                 reg = <0x1000 0x2000>, <0x51002000 0x14c>, <0x51000000 0x2000>;
+>                 reg-names = "config", "ti_conf", "rc_dbics";
 
- 	lcdclk: fixed-clock {
-		compatible = "fixed-clock";
- 		#clock-cells = <0>;
- 		clock-frequency = <400000000>;
- 	};
+So for DRA7, config base which will be coming from reg property should
+be 0x1000 and size 0x2000, no?
 
--- 
-Ken ar c'hentañ	|	      ** Breizh ha Linux atav! **
-Jef		|		http://moinejf.free.fr/
+>                 #address-cells = <3>;
+>                 #size-cells = <2>;
+>                 ranges = <0x81000000 0 0          0x03000 0 0x00010000
+
+range type 0x81000000 tells that it is IO
+
+>                           0x82000000 0 0x20013000 0x13000 0 0xffed000>;
+
+range type 0x81000000 tells that it is mem
+
+
+>         };
+> };
+>
+> Here the CPU address for configuration space is 0x20013000 and the controller
+> address for configuration space is 0x13000. The controller address should
+be
+
+If above understanding is correct then:
+
+Aren't these addresses(0x20013000  and 0x13000) from mem space
+instead of configuration space.
+
+If yes, then how can you get two addresses (CPU and Controller address)
+from reg property for configuration space?
+
+~Pratyush
