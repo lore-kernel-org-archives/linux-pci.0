@@ -1,213 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:50170 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933943AbaFJB5U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:57:20 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Jun 2014 07:27:18 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 929A8E004B
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:28:15 +0530 (IST)
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1w7FD7274760
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:28:07 +0530
-Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
-	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1vGZ1029693
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 07:27:16 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: benh@au1.ibm.com
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [RFC PATCH V3 14/17] ppc/pci: create/release dev-tree node for VFs
-Date: Tue, 10 Jun 2014 09:56:36 +0800
-Message-Id: <1402365399-5121-15-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:23616 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750755AbaFZOLu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 10:11:50 -0400
+Date: Thu, 26 Jun 2014 15:11:38 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Jon Masters <jonathan@jonmasters.org>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140626141138.GC15296@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140405001953.GE15806@google.com>
+ <20140407083120.GE17163@e106497-lin.cambridge.arm.com>
+ <5183143.FxBNM0xTAV@wuerfel>
+ <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
+ <20140626085926.GB11244@arm.com>
+ <20140626093029.GB12812@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140626093029.GB12812@e106497-lin.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, powernv platform is not aware of VFs. This means no dev-node
-represents a VF. Also, VF PCI device is created when PF driver want to enable
-it. This leads to the pdn->pdev and pdn->pe_number an invalid value.
+On Thu, Jun 26, 2014 at 10:30:29AM +0100, Liviu Dudau wrote:
+> On Thu, Jun 26, 2014 at 09:59:26AM +0100, Catalin Marinas wrote:
+> > Although a bit late, I'm raising this now and hopefully we'll come to a
+> > conclusion soon. Delaying arm64 PCIe support even further is not a real
+> > option, which leaves us with:
+> > 
+> > 1. Someone else (with enough PCIe knowledge) volunteering to take over
+> >    soon or
+> > 2. Dropping Liviu's work and going for an arm64-specific implementation
+> >    (most likely based on the arm32 implementation, see below)
+[...]
+> > In conclusion, unless someone volunteers for the first option fairly
+> > soon, we'll post the alternative patches for review and take it from
+> > there.
+> 
+> That would be a huge step backwards IMO and a huge dissapointment. If
+> you go with the alternative patches from Will you will basically reset
+> every partner's implementation that has been built on top of my
+> patches (when they did so with the understanding that my series will be
+> the one ARM will support and publish) *and* make anyone's attempt to
+> create a generic implementation harder, as they will have to undo this
+> code to remove the arch-specific parts.
 
-This patch create/release dev-node for VF and fixs this when a VF's pci_dev
-is created.
+I fully agree and the alternative patchset is definitely _not_ my
+preferred solution. You can read this email as a request for help to
+complete the work (whether it comes from ARM, Linaro or other interested
+parties). I don't mean taking over the whole patchset but potentially
+helping with other arch conversion (microblaze, arm multi-platform).
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/Kconfig    |    1 +
- arch/powerpc/platforms/powernv/pci-ioda.c |  103 +++++++++++++++++++++++++++++
- arch/powerpc/platforms/powernv/pci.c      |   20 ++++++
- 3 files changed, 124 insertions(+)
+(however, if the generic PCIe work won't happen in reasonable time, we
+need to set some deadline rather than keeping the patchset out of tree
+indefinitely)
 
-diff --git a/arch/powerpc/platforms/powernv/Kconfig b/arch/powerpc/platforms/powernv/Kconfig
-index 895e8a2..0dd331b 100644
---- a/arch/powerpc/platforms/powernv/Kconfig
-+++ b/arch/powerpc/platforms/powernv/Kconfig
-@@ -11,6 +11,7 @@ config PPC_POWERNV
- 	select PPC_UDBG_16550
- 	select PPC_SCOM
- 	select ARCH_RANDOM
-+	select OF_DYNAMIC
- 	default y
- 
- config PPC_POWERNV_RTAS
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index e46c5bf..9ace027 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -23,6 +23,7 @@
- #include <linux/io.h>
- #include <linux/msi.h>
- #include <linux/memblock.h>
-+#include <linux/of_pci.h>
- 
- #include <asm/sections.h>
- #include <asm/io.h>
-@@ -771,6 +772,108 @@ static void pnv_pci_ioda_setup_PEs(void)
- 	}
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+static void pnv_pci_create_vf_node(struct pci_dev *dev, u16 vf_num)
-+{
-+	struct device_node *dn, *p_dn;
-+	struct pci_dn *pdn;
-+	struct pci_controller *hose;
-+	struct property *pp;
-+	void* value;
-+	u16 id;
-+
-+	hose = pci_bus_to_host(dev->bus);
-+
-+	/* Create dev-tree node for VFs if this is a PF */
-+	p_dn = pci_bus_to_OF_node(dev->bus);
-+	if (p_dn == NULL) {
-+		dev_err(&dev->dev, "SRIOV: VF bus NULL device node\n");
-+		return;
-+	}
-+
-+	for (id = 0; id < vf_num; id++) {
-+		dn = kzalloc(sizeof(*dn), GFP_KERNEL);
-+		pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
-+		pp  = kzalloc(sizeof(*pp), GFP_KERNEL);
-+		value = kzalloc(sizeof(u32), GFP_KERNEL);
-+
-+		if (!dn || !pdn || !pp || !value) {
-+			kfree(dn);
-+			kfree(pdn);
-+			kfree(pp);
-+			kfree(value);
-+			dev_warn(&dev->dev, "%s: failed to create"
-+				"dev-tree node for idx(%d)\n",
-+				__func__, id);
-+
-+			break;
-+		}
-+
-+		pp->value = value;
-+		pdn->node = dn;
-+		pdn->devfn = pci_iov_virtfn_devfn(dev, id);
-+		pdn->busno = dev->bus->number;
-+		pdn->pe_number = IODA_INVALID_PE;
-+		pdn->phb = hose;
-+
-+		dn->data = pdn;
-+		kref_init(&dn->kref);
-+		dn->full_name = dn->name =
-+			kasprintf(GFP_KERNEL, "%s/vf%d",
-+				p_dn->full_name, pdn->devfn);
-+		dn->parent = p_dn;
-+
-+		pp->name = kasprintf(GFP_KERNEL, "reg");
-+		pp->length = 5 * sizeof(__be32);
-+		*(u32*)pp->value = cpu_to_be32(pdn->devfn) << 8;
-+		dn->properties = pp;
-+
-+		of_attach_node(dn);
-+	}
-+}
-+
-+static void pnv_pci_release_vf_node(struct pci_dev *dev, u16 vf_num)
-+{
-+	struct device_node *dn;
-+	struct property *pp;
-+	u16 id;
-+
-+	for (id = 0; id < vf_num; id++) {
-+		dn = of_pci_find_child_device(dev->bus->dev.of_node,
-+				pci_iov_virtfn_devfn(dev, id));
-+		if (!dn)
-+			continue;
-+
-+		of_detach_node(dn);
-+		pp = dn->properties;
-+		kfree(pp->name);
-+		kfree(pp->value);
-+		kfree(pp);
-+		kfree(dn->data);
-+		kfree(dn);
-+	}
-+}
-+
-+int pcibios_sriov_disable(struct pci_dev *pdev)
-+{
-+	struct pci_sriov *iov;
-+	u16 vf_num;
-+
-+	iov = pdev->sriov;
-+	vf_num = iov->num_VFs;
-+	pnv_pci_release_vf_node(pdev, vf_num);
-+
-+	return 0;
-+}
-+
-+int pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
-+{
-+	pnv_pci_create_vf_node(pdev, vf_num);
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev)
- {
- 	struct pci_dn *pdn = pci_get_pdn(pdev);
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index 687a068..43fcc73 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -654,6 +654,26 @@ static void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
- {
- 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
- 	struct pnv_phb *phb = hose->private_data;
-+#ifdef CONFIG_PCI_IOV
-+	struct pnv_ioda_pe *pe;
-+	struct pci_dn *pdn;
-+
-+	/* Fix the VF pdn PE number */
-+	if (pdev->is_virtfn) {
-+		pdn = pci_get_pdn(pdev);
-+		if (pdn->pcidev == NULL || pdn->pe_number == IODA_INVALID_PE) {
-+			list_for_each_entry(pe, &phb->ioda.pe_list, list) {
-+				if (pe->rid ==
-+					((pdev->bus->number << 8) | (pdev->devfn & 0xff))) {
-+					pdn->pcidev = pdev;
-+					pdn->pe_number = pe->pe_number;
-+					pe->pdev = pdev;
-+					break;
-+				}
-+			}
-+		}
-+	}
-+#endif /* CONFIG_PCI_IOV */
- 
- 	/* If we have no phb structure, try to setup a fallback based on
- 	 * the device-tree (RTAS PCI for example)
 -- 
-1.7.9.5
-
+Catalin
