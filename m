@@ -1,106 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V4 20/42] x86, irq: simplify arch_early_irq_init()
-Date: Mon,  9 Jun 2014 16:19:49 +0800
-Message-Id: <1402302011-23642-21-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:56646 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756054AbaFZJDF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 05:03:05 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAJZOPZK0naRu_rv-MMPp9y9Eg_baEJXSGzdERQLWvi3Bh9qD+g@mail.gmail.com>
+References: <CANwwZzWsjQwZB5Cc4Hyv2HQOLhAx6ycjf32UQG55zVX=Kmbi6Q@mail.gmail.com>
+	<CAJZOPZ+FUneDDKMh0O2aZLYeDTcH8cHA7ati5wzi7Ycgc5wFXQ@mail.gmail.com>
+	<CANwwZzXc2UyYxGX2X+O38jTVki70HrP71FBWbc4dTyt9nEN0nA@mail.gmail.com>
+	<CAJZOPZK0naRu_rv-MMPp9y9Eg_baEJXSGzdERQLWvi3Bh9qD+g@mail.gmail.com>
+Date: Thu, 26 Jun 2014 14:33:02 +0530
+Message-ID: <CANwwZzXMn5sCCGtaNBr+ri2Ujm5dmfgMiu4nS7MVqm1Uta0sig@mail.gmail.com>
+Subject: Re: mlx4 - query regarding PF VF functionality division
+From: Bob Biloxi <iambobbiloxi@gmail.com>
+To: Or Gerlitz <or.gerlitz@gmail.com>
+Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify function arch_early_irq_init() and kill static array irq_cfgx[].
+> I see, by the nature of the mlx4 SRIOV architecture under which
+> there's no dedicated/separated PF vs VF driver, this is indeed a
+> non-trivial task, need to think how to make it easier for you
+Thanks for considering. It would be really helpful. I actually
+appreciate the mlx4 architecture wherein 3 separate drivers are part
+of 1 integrated code base which I think is really difficult to
+accomplish. I mean the dedicated driver, VF driver, PF driver are all
+part of single code base which i think is good.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/io_apic.c |   33 +++++++++++----------------------
- 1 file changed, 11 insertions(+), 22 deletions(-)
+The only thing is when one wants to understand these pieces (VF or PF)
+separately, it takes some effort(as in my case)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 72cbb92ca401..12d12f897107 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -183,6 +183,7 @@ early_param("noapic", parse_noapic);
- 
- static int io_apic_setup_irq_pin(unsigned int irq, int node,
- 				 struct io_apic_irq_attr *attr);
-+static struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node);
- 
- /* Will be called in mpparse/acpi/sfi codes for saving IRQ info */
- void mp_save_irq(struct mpc_intsrc *m)
-@@ -214,14 +215,10 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
- 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
- }
- 
--
--/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
--static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
--
- int __init arch_early_irq_init(void)
- {
- 	struct irq_cfg *cfg;
--	int count, node, i;
-+	int i, node = cpu_to_node(0);
- 
- 	if (!nr_legacy_irqs())
- 		io_apic_irqs = ~0UL;
-@@ -234,22 +231,14 @@ int __init arch_early_irq_init(void)
- 			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
- 	}
- 
--	cfg = irq_cfgx;
--	count = ARRAY_SIZE(irq_cfgx);
--	node = cpu_to_node(0);
--
--	for (i = 0; i < count; i++) {
--		irq_set_chip_data(i, &cfg[i]);
--		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
--		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
--		/*
--		 * For legacy IRQ's, start with assigning irq0 to irq15 to
--		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
--		 */
--		if (i < nr_legacy_irqs()) {
--			cfg[i].vector = IRQ0_VECTOR + i;
--			cpumask_setall(cfg[i].domain);
--		}
-+	/*
-+	 * For legacy IRQ's, start with assigning irq0 to irq15 to
-+	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-+	 */
-+	for (i = 0; i < nr_legacy_irqs(); i++) {
-+		cfg = alloc_irq_and_cfg_at(i, node);
-+		cfg->vector = IRQ0_VECTOR + i;
-+		cpumask_setall(cfg->domain);
- 	}
- 
- 	return 0;
-@@ -3373,7 +3362,7 @@ int __init arch_probe_nr_irqs(void)
- 	if (nr < nr_irqs)
- 		nr_irqs = nr;
- 
--	return nr_legacy_irqs();
-+	return 0;
- }
- 
- int io_apic_set_pci_routing(struct device *dev, int irq,
--- 
-1.7.10.4
+For e.g
 
+there is this flow:
+
+mlx4_en_get-qp()->mlx4_register_mac()->mlx4_slave_cmd()
+
+after this the wrapper function gets called be it either for
+master(PF) or for slave(VF)
+
+Till now I was assuming that this makes sense only for the slave(VF)
+because register_mac is supposed to be called by VF. But from the code
+even the PF makes the call. So i was somewhat confused.
+
+It would be of immense help if I could understand this somehow..
+
+
+On Thu, Jun 26, 2014 at 2:13 AM, Or Gerlitz <or.gerlitz@gmail.com> wrote:
+> On Tue, Jun 24, 2014 at 4:42 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
+>>
+>> > Not really, but let's take EIM approach, what's your goal/mission?
+>> Let's say I am going through code to understand only the PF related
+>> functionality without bothering about VF, what are the things I need
+>> to keep in mind.
+>
+>
+>
+> I see, by the nature of the mlx4 SRIOV architecture under which
+> there's no dedicated/separated PF vs VF driver, this is indeed a
+> non-trivial task, need to think how to make it easier for you
+>
+> Or.
+>
+>
+>>
+>> I mean do i need to :
+>>
+>> a. Go through all the files in mlx4
+>> b. If the code is not specifically under mlx4_is_master, I still need
+>> to understand it because it is also part of PF driver
+>> c. I can ignore the logic which executes if mlx4_is_master is false,
+>> because that would be the VF code
+>>
+>> Thanks for the help!!
+>>
+>>
+>>
+>>
+>> On Mon, Jun 23, 2014 at 5:30 PM, Or Gerlitz <or.gerlitz@gmail.com> wrote:
+>> > On Mon, Jun 23, 2014 at 12:33 PM, Bob Biloxi <iambobbiloxi@gmail.com> wrote:
+>> > [...]
+>> >> Is there any way we can clearly separate the files that are used by PF
+>> >> vs the files that are used by VF in the (drivers/net/ethernet/mlx4
+>> >> sub-directory)?
+>> > [...]
+>> >
+>> > Not really, but let's take EIM approach, what's your goal/mission?
+>> >
+>> > Or.
