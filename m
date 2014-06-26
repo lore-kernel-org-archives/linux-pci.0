@@ -1,275 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:63667 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934074AbaFCUFG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 16:05:06 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v5 14/15] thunderbolt: Read switch uid from EEPROM
-Date: Tue,  3 Jun 2014 22:04:11 +0200
-Message-Id: <1401825852-4745-15-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
-References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:34602 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750875AbaFZJuG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 05:50:06 -0400
+From: Marek Vasut <marex@denx.de>
+To: Juergen Borleis <jbe@pengutronix.de>
+Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
+Date: Thu, 26 Jun 2014 11:50:01 +0200
+Cc: Fabio Estevam <festevam@gmail.com>,
+	Shawn Guo <shawn.guo@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <r65037@freescale.com>,
+	"David =?iso-8859-1?q?M=FCller?= (ELSOFT AG)" <d.mueller@elsoft.ch>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+References: <1403637507-9424-1-git-send-email-festevam@gmail.com> <201406261117.12542.marex@denx.de> <201406261126.09235.jbe@pengutronix.de>
+In-Reply-To: <201406261126.09235.jbe@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201406261150.01965.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add eeprom access code and read the uid during switch initialization.
-The UID will be used to check device identity after suspend.
+On Thursday, June 26, 2014 at 11:26:09 AM, Juergen Borleis wrote:
+> Hi Marek,
+> 
+> On Thursday 26 June 2014 11:17:12 Marek Vasut wrote:
+> > On Thursday, June 26, 2014 at 09:32:30 AM, Juergen Borleis wrote:
+> > > On Thursday 26 June 2014 05:43:19 Fabio Estevam wrote:
+> > > > [...]
+> > > 
+> > > > Below is the log with linux-next kernel and earlyprintk enabled:
+> > > Does it also hang when you disable "earlyprintk"? A few weeks ago we
+> > > had a similar issue with i.MX6/PCI and "earlyprintk" (at the end it
+> > > was caused by a clock change for the UART when changing from the early
+> > > to the regular console).
+> > 
+> > How can the UART clock have impact on the PCIe please ?
+> 
+> Not to the PCIe hardware, it just hanged the kernel when the PCIe driver
+> came up (due to some of its messages it tries to output at this moment).
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/Makefile |   2 +-
- drivers/thunderbolt/eeprom.c | 189 +++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/switch.c |   5 ++
- drivers/thunderbolt/tb.h     |   3 +
- 4 files changed, 198 insertions(+), 1 deletion(-)
- create mode 100644 drivers/thunderbolt/eeprom.c
+Another hint, can a blocking msleep() hang the driver ? The driver probes in 
+fs_initcall stage, I'm not sure if it cannot hit some kind of a problem when 
+using the msleep() ? It's unlikely though ...
 
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 0122ca6..5d1053c 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
- obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
--thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o
-+thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
- 
-diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
-new file mode 100644
-index 0000000..f28e402
---- /dev/null
-+++ b/drivers/thunderbolt/eeprom.c
-@@ -0,0 +1,189 @@
-+/*
-+ * Thunderbolt Cactus Ridge driver - eeprom access
-+ *
-+ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-+ */
-+
-+#include "tb.h"
-+
-+/**
-+ * tb_eeprom_ctl_write() - write control word
-+ */
-+static int tb_eeprom_ctl_write(struct tb_switch *sw, struct tb_eeprom_ctl *ctl)
-+{
-+	return tb_sw_write(sw, ctl, TB_CFG_SWITCH, sw->cap_plug_events + 4, 1);
-+}
-+
-+/**
-+ * tb_eeprom_ctl_write() - read control word
-+ */
-+static int tb_eeprom_ctl_read(struct tb_switch *sw, struct tb_eeprom_ctl *ctl)
-+{
-+	return tb_sw_read(sw, ctl, TB_CFG_SWITCH, sw->cap_plug_events + 4, 1);
-+}
-+
-+enum tb_eeprom_transfer {
-+	TB_EEPROM_IN,
-+	TB_EEPROM_OUT,
-+};
-+
-+/**
-+ * tb_eeprom_active - enable rom access
-+ *
-+ * WARNING: Always disable access after usage. Otherwise the controller will
-+ * fail to reprobe.
-+ */
-+static int tb_eeprom_active(struct tb_switch *sw, bool enable)
-+{
-+	struct tb_eeprom_ctl ctl;
-+	int res = tb_eeprom_ctl_read(sw, &ctl);
-+	if (res)
-+		return res;
-+	if (enable) {
-+		ctl.access_high = 1;
-+		res = tb_eeprom_ctl_write(sw, &ctl);
-+		if (res)
-+			return res;
-+		ctl.access_low = 0;
-+		return tb_eeprom_ctl_write(sw, &ctl);
-+	} else {
-+		ctl.access_low = 1;
-+		res = tb_eeprom_ctl_write(sw, &ctl);
-+		if (res)
-+			return res;
-+		ctl.access_high = 0;
-+		return tb_eeprom_ctl_write(sw, &ctl);
-+	}
-+}
-+
-+/**
-+ * tb_eeprom_transfer - transfer one bit
-+ *
-+ * If TB_EEPROM_IN is passed, then the bit can be retrieved from ctl->data_in.
-+ * If TB_EEPROM_OUT is passed, then ctl->data_out will be written.
-+ */
-+static int tb_eeprom_transfer(struct tb_switch *sw, struct tb_eeprom_ctl *ctl,
-+			      enum tb_eeprom_transfer direction)
-+{
-+	int res;
-+	if (direction == TB_EEPROM_OUT) {
-+		res = tb_eeprom_ctl_write(sw, ctl);
-+		if (res)
-+			return res;
-+	}
-+	ctl->clock = 1;
-+	res = tb_eeprom_ctl_write(sw, ctl);
-+	if (res)
-+		return res;
-+	if (direction == TB_EEPROM_IN) {
-+		res = tb_eeprom_ctl_read(sw, ctl);
-+		if (res)
-+			return res;
-+	}
-+	ctl->clock = 0;
-+	return tb_eeprom_ctl_write(sw, ctl);
-+}
-+
-+/**
-+ * tb_eeprom_out - write one byte to the bus
-+ */
-+static int tb_eeprom_out(struct tb_switch *sw, u8 val)
-+{
-+	struct tb_eeprom_ctl ctl;
-+	int i;
-+	int res = tb_eeprom_ctl_read(sw, &ctl);
-+	if (res)
-+		return res;
-+	for (i = 0; i < 8; i++) {
-+		ctl.data_out = val & 0x80;
-+		res = tb_eeprom_transfer(sw, &ctl, TB_EEPROM_OUT);
-+		if (res)
-+			return res;
-+		val <<= 1;
-+	}
-+	return 0;
-+}
-+
-+/**
-+ * tb_eeprom_in - read one byte from the bus
-+ */
-+static int tb_eeprom_in(struct tb_switch *sw, u8 *val)
-+{
-+	struct tb_eeprom_ctl ctl;
-+	int i;
-+	int res = tb_eeprom_ctl_read(sw, &ctl);
-+	if (res)
-+		return res;
-+	*val = 0;
-+	for (i = 0; i < 8; i++) {
-+		*val <<= 1;
-+		res = tb_eeprom_transfer(sw, &ctl, TB_EEPROM_IN);
-+		if (res)
-+			return res;
-+		*val |= ctl.data_in;
-+	}
-+	return 0;
-+}
-+
-+/**
-+ * tb_eeprom_read_n - read count bytes from offset into val
-+ */
-+static int tb_eeprom_read_n(struct tb_switch *sw, u16 offset, u8 *val,
-+		size_t count)
-+{
-+	int i, res;
-+	res = tb_eeprom_active(sw, true);
-+	if (res)
-+		return res;
-+	res = tb_eeprom_out(sw, 3);
-+	if (res)
-+		return res;
-+	res = tb_eeprom_out(sw, offset >> 8);
-+	if (res)
-+		return res;
-+	res = tb_eeprom_out(sw, offset);
-+	if (res)
-+		return res;
-+	for (i = 0; i < count; i++) {
-+		res = tb_eeprom_in(sw, val + i);
-+		if (res)
-+			return res;
-+	}
-+	return tb_eeprom_active(sw, false);
-+}
-+
-+int tb_eeprom_read_uid(struct tb_switch *sw, u64 *uid)
-+{
-+	u8 data[9];
-+	struct tb_cap_plug_events cap;
-+	int res;
-+	if (!sw->cap_plug_events) {
-+		tb_sw_warn(sw, "no TB_CAP_PLUG_EVENTS, cannot read eeprom\n");
-+		return -ENOSYS;
-+	}
-+	res = tb_sw_read(sw, &cap, TB_CFG_SWITCH, sw->cap_plug_events,
-+			     sizeof(cap) / 4);
-+	if (res)
-+		return res;
-+	if (!cap.eeprom_ctl.present || cap.eeprom_ctl.not_present) {
-+		tb_sw_warn(sw, "no NVM\n");
-+		return -ENOSYS;
-+	}
-+
-+	if (cap.drom_offset > 0xffff) {
-+		tb_sw_warn(sw, "drom offset is larger than 0xffff: %#x\n",
-+				cap.drom_offset);
-+		return -ENXIO;
-+	}
-+
-+	/* read uid */
-+	res = tb_eeprom_read_n(sw, cap.drom_offset, data, 9);
-+	if (res)
-+		return res;
-+	/* TODO: check checksum in data[0] */
-+	*uid = *(u64 *)(data+1);
-+	return 0;
-+}
-+
-+
-+
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index 667413f..aeb5c30 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -376,6 +376,11 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
- 	}
- 	sw->cap_plug_events = cap;
- 
-+	if (tb_eeprom_read_uid(sw, &sw->uid))
-+		tb_sw_warn(sw, "could not read uid from eeprom\n");
-+	else
-+		tb_sw_info(sw, "uid: %#llx\n", sw->uid);
-+
- 	if (tb_plug_events_active(sw, true))
- 		goto err;
- 
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 508abc4..a89087f 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -19,6 +19,7 @@ struct tb_switch {
- 	struct tb_regs_switch_header config;
- 	struct tb_port *ports;
- 	struct tb *tb;
-+	u64 uid;
- 	int cap_plug_events; /* offset, zero if not found */
- 	bool is_unplugged; /* unplugged, will go away */
- };
-@@ -231,6 +232,8 @@ int tb_path_activate(struct tb_path *path);
- void tb_path_deactivate(struct tb_path *path);
- bool tb_path_is_invalid(struct tb_path *path);
- 
-+int tb_eeprom_read_uid(struct tb_switch *sw, u64 *uid);
-+
- 
- static inline int tb_route_length(u64 route)
- {
--- 
-2.0.0
-
+Best regards,
+Marek Vasut
