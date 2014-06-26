@@ -1,107 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V3 08/21] iommu/VT-d: simplify include/linux/dmar.h
-Date: Wed, 25 Jun 2014 17:02:34 +0800
-Message-Id: <1403686967-10887-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:55119 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752137AbaFZI7q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 04:59:46 -0400
+Date: Thu, 26 Jun 2014 09:59:26 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Jon Masters <jonathan@jonmasters.org>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140626085926.GB11244@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140405001953.GE15806@google.com>
+ <20140407083120.GE17163@e106497-lin.cambridge.arm.com>
+ <5183143.FxBNM0xTAV@wuerfel>
+ <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify include/linux/dmar.h a bit based on the fact that
-both CONFIG_INTEL_IOMMU and CONFIG_IRQ_REMAP select CONFIG_DMAR_TABLE.
+(sorry for replying to a months old thread)
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/dmar.h |   50 ++++++++++++++++++--------------------------------
- 1 file changed, 18 insertions(+), 32 deletions(-)
+On Mon, Apr 07, 2014 at 06:58:24PM +0100, Bjorn Helgaas wrote:
+> On Mon, Apr 7, 2014 at 5:36 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> 
+> > I think migrating other architectures to use the same code should be
+> > a separate effort from adding a generic implementation that can be
+> > used by arm64. It's probably a good idea to have patches to convert
+> > arm32 and/or microblaze.
+> 
+> Let me reiterate that I am 100% in favor of replacing arch-specific
+> code with more generic implementations.
+> 
+> However, I am not 100% in favor of doing it as separate efforts
+> (although maybe I could be convinced).  The reasons I hesitate are
+> that (1) if only one architecture uses a new "generic" implementation,
+> we really don't know whether it is generic enough, (2) until I see the
+> patches to convert other architectures, I have to assume that I'm the
+> one who will write them, and (3) as soon as we add the code to
+> drivers/pci, it becomes partly my headache to maintain it, even if
+> only one arch benefits from it.
 
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 23c8db129560..1deece46a0ca 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -114,22 +114,30 @@ extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
- /* Intel IOMMU detection */
- extern int detect_intel_iommu(void);
- extern int enable_drhd_fault_handling(void);
--#else
--struct dmar_pci_notify_info;
--static inline int detect_intel_iommu(void)
-+
-+#ifdef CONFIG_INTEL_IOMMU
-+extern int iommu_detected, no_iommu;
-+extern int intel_iommu_init(void);
-+extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
-+extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
-+extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
-+#else /* !CONFIG_INTEL_IOMMU: */
-+static inline int intel_iommu_init(void) { return -ENODEV; }
-+static inline int dmar_parse_one_rmrr(struct acpi_dmar_header *header)
- {
--	return -ENODEV;
-+	return 0;
- }
--
--static inline int dmar_table_init(void)
-+static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
- {
--	return -ENODEV;
-+	return 0;
- }
--static inline int enable_drhd_fault_handling(void)
-+static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
- {
--	return -1;
-+	return 0;
- }
--#endif /* !CONFIG_DMAR_TABLE */
-+#endif /* CONFIG_INTEL_IOMMU */
-+
-+#endif /* CONFIG_DMAR_TABLE */
- 
- struct irte {
- 	union {
-@@ -177,26 +185,4 @@ extern int dmar_set_interrupt(struct intel_iommu *iommu);
- extern irqreturn_t dmar_fault(int irq, void *dev_id);
- extern int arch_setup_dmar_msi(unsigned int irq);
- 
--#ifdef CONFIG_INTEL_IOMMU
--extern int iommu_detected, no_iommu;
--extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
--extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
--extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
--extern int intel_iommu_init(void);
--#else /* !CONFIG_INTEL_IOMMU: */
--static inline int intel_iommu_init(void) { return -ENODEV; }
--static inline int dmar_parse_one_rmrr(struct acpi_dmar_header *header)
--{
--	return 0;
--}
--static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
--{
--	return 0;
--}
--static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
--{
--	return 0;
--}
--#endif /* CONFIG_INTEL_IOMMU */
--
- #endif /* __DMAR_H__ */
+I agree and understand your point.
+
+> Please don't think I'm questioning anyone's intent or good will.  It's
+> just that I understand the business pressures, and I know how hard it
+> can be to justify this sort of work to one's management, especially
+> after the immediate problem has been solved.
+
+But, unfortunately, that's something we failed to address in reasonable
+time (even though I was one of the proponents of the generic PCIe
+implementation). This work is very likely to slip further into the late
+part of this year and I am aware that several ARM partners are blocked
+on the (upstream) availability of PCIe support for the arm64 kernel.
+
+Although a bit late, I'm raising this now and hopefully we'll come to a
+conclusion soon. Delaying arm64 PCIe support even further is not a real
+option, which leaves us with:
+
+1. Someone else (with enough PCIe knowledge) volunteering to take over
+   soon or
+2. Dropping Liviu's work and going for an arm64-specific implementation
+   (most likely based on the arm32 implementation, see below)
+
+First option is ideal but there is work to do as laid out by Arnd here:
+
+http://article.gmane.org/gmane.linux.kernel/1679304
+
+The latest patches from Liviu are here (they only target arm64 and there
+are additional comments to be addressed from the above thread):
+
+http://linux-arm.org/git?p=linux-ld.git;a=shortlog;h=refs/heads/for-upstream/pci-next
+
+The main reason for the second option is timing. We could temporarily
+move Liviu's code under arch/arm64 with the hope that we generalise it
+later. However, the risk is even higher that once the code is in
+mainline, the generic implementation won't happen. In which case, I
+don't see much point in departing from the arm32 PCI API, making bios32
+clone the best second option.
+
+For the alternative implementation above, we already have a heavily cut
+down version of the arm32 PCI support but only tested in a virtual
+environment so far:
+
+https://git.kernel.org/cgit/linux/kernel/git/will/linux.git/log/?h=pci/bios32
+
+In conclusion, unless someone volunteers for the first option fairly
+soon, we'll post the alternative patches for review and take it from
+there.
+
+Thanks.
+
 -- 
-1.7.10.4
-
+Catalin
