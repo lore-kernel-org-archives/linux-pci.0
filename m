@@ -1,147 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:57494 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932145AbaFJB44 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jun 2014 21:56:56 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Jun 2014 11:56:53 +1000
-Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 953022CE8047
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:50 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5A1uYqL9044254
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:35 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5A1unvk024218
-	for <linux-pci@vger.kernel.org>; Tue, 10 Jun 2014 11:56:50 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: benh@au1.ibm.com
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [RFC PATCH V3 00/17] Enable SRIOV on POWER8
-Date: Tue, 10 Jun 2014 09:56:22 +0800
-Message-Id: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:55404 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753449AbaFZOP2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 10:15:28 -0400
+Date: Thu, 26 Jun 2014 15:14:45 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Jon Masters <jonathan@jonmasters.org>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140626141444.GB5134@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140405001953.GE15806@google.com>
+ <20140407083120.GE17163@e106497-lin.cambridge.arm.com>
+ <5183143.FxBNM0xTAV@wuerfel>
+ <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
+ <20140626085926.GB11244@arm.com>
+ <20140626093029.GB12812@e106497-lin.cambridge.arm.com>
+ <20140626141138.GC15296@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140626141138.GC15296@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set enable the SRIOV on POWER8. This is not the final version, some
-patches rely on un-merged patches.
+On Thu, Jun 26, 2014 at 03:11:38PM +0100, Catalin Marinas wrote:
+> On Thu, Jun 26, 2014 at 10:30:29AM +0100, Liviu Dudau wrote:
+> > On Thu, Jun 26, 2014 at 09:59:26AM +0100, Catalin Marinas wrote:
+> > > Although a bit late, I'm raising this now and hopefully we'll come to a
+> > > conclusion soon. Delaying arm64 PCIe support even further is not a real
+> > > option, which leaves us with:
+> > > 
+> > > 1. Someone else (with enough PCIe knowledge) volunteering to take over
+> > >    soon or
+> > > 2. Dropping Liviu's work and going for an arm64-specific implementation
+> > >    (most likely based on the arm32 implementation, see below)
+> [...]
+> > > In conclusion, unless someone volunteers for the first option fairly
+> > > soon, we'll post the alternative patches for review and take it from
+> > > there.
+> > 
+> > That would be a huge step backwards IMO and a huge dissapointment. If
+> > you go with the alternative patches from Will you will basically reset
+> > every partner's implementation that has been built on top of my
+> > patches (when they did so with the understanding that my series will be
+> > the one ARM will support and publish) *and* make anyone's attempt to
+> > create a generic implementation harder, as they will have to undo this
+> > code to remove the arch-specific parts.
+> 
+> I fully agree and the alternative patchset is definitely _not_ my
+> preferred solution. You can read this email as a request for help to
+> complete the work (whether it comes from ARM, Linaro or other interested
+> parties). I don't mean taking over the whole patchset but potentially
+> helping with other arch conversion (microblaze, arm multi-platform).
 
-The gerneral idea is put each VF in their own PE and allocated necessary
-resources, like DMA/IOMMU_TABLE.
+I feel it's also worth pointing out that I didn't write that code with the
+intention of getting it merged, nor as a competing solution to what Liviu
+was proposing at the time. It was merely a development tool to enable some
+of the SMMU and GICv3 work that Marc and I have been working on recently.
 
-One thing special for VF PE is we use M64BT to cover the IOV BAR. This means
-we need to do some hack on pci devices's resources.
-1. Expand the IOV BAR properly.
-2. Shift the IOV BAR properly.
-3. IOV BAR alignment is the total size instead of an individual size.
-4. Take the IOV BAR alignment into consideration in the sizing and assigning.
-
-Test Environment:
-       The SRIOV device tested is Emulex Lancer and Mellanox ConnectX-3.
-
-Examples on pass through a VF to guest through vfio:
-	1. install necessary modules
-	   modprobe vfio
-	   modprobe vfio-pci
-	2. retrieve the iommu_group the device belongs to
-	   readlink /sys/bus/pci/devices/0000:06:0d.0/iommu_group
-	   ../../../../kernel/iommu_groups/26
-	   This means it belongs to group 26
-	3. see how many devices under this iommu_group
-	   ls ls /sys/kernel/iommu_groups/26/devices/
-	4. unbind the original driver and bind to vfio-pci driver
-	   echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
-	   echo  1102 0002 > /sys/bus/pci/drivers/vfio-pci/new_id
-	   Note: this should be done for each device in the same iommu_group
-	5. Start qemu and pass device through vfio
-	   /home/ywywyang/git/qemu-impreza/ppc64-softmmu/qemu-system-ppc64 \
-		   -M pseries -m 2048 -enable-kvm -nographic \
-		   -drive file=/home/ywywyang/kvm/fc19.img \
-		   -monitor telnet:localhost:5435,server,nowait -boot cd \
-		   -device "spapr-pci-vfio-host-bridge,id=CXGB3,iommu=26,index=6"
-
-Verify this is the exact VF response:
-	1. ping from a machine in the same subnet(the broadcast domain)
-	2. run arp -n on this machine
-	   9.115.251.20             ether   00:00:c9:df:ed:bf   C eth0
-	3. ifconfig in the guest
-	   # ifconfig eth1
-	   eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-	        inet 9.115.251.20  netmask 255.255.255.0  broadcast 9.115.251.255
-		inet6 fe80::200:c9ff:fedf:edbf  prefixlen 64  scopeid 0x20<link>
-	        ether 00:00:c9:df:ed:bf  txqueuelen 1000 (Ethernet)
-	        RX packets 175  bytes 13278 (12.9 KiB)
-	        RX errors 0  dropped 0  overruns 0  frame 0
-		TX packets 58  bytes 9276 (9.0 KiB)
-	        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-	4. They have the same MAC address
-
-	Note: make sure you shutdown other network interfaces in guest.
-
----
-v2 -> v3:
-   1. change the return type of virtfn_bus/virtfn_devfn to int
-      change the name of these two functions to pci_iov_virtfn_bus/pci_iov_virtfn_devfn
-   2. reduce the second parameter or pcibios_sriov_disable()
-   3. use data instead of pe in "ppc/pnv: allocate pe->iommu_table dynamically"
-   4. rename __pci_sriov_resource_size to pcibios_sriov_resource_size
-   5. rename __pci_sriov_resource_alignment to pcibios_sriov_resource_alignment
-v1 -> v2:
-   1. change the return value of virtfn_bus/virtfn_devfn to 0
-   2. move some TCE related marco definition to
-      arch/powerpc/platforms/powernv/pci.h
-   3. fix the __pci_sriov_resource_alignment on powernv platform
-      During the sizing stage, the IOV BAR is truncated to 0, which will
-      effect the order of allocation. Fix this, so that make sure BAR will be
-      allocated ordered by their alignment.
-v0 -> v1:
-   1. Improve the change log for
-      "PCI: Add weak __pci_sriov_resource_size() interface"
-      "PCI: Add weak __pci_sriov_resource_alignment() interface"
-      "PCI: take additional IOV BAR alignment in sizing and assigning"
-   2. Wrap VF PE code in CONFIG_PCI_IOV
-   3. Did regression test on P7.
-
-Wei Yang (17):
-  pci/iov: Export interface for retrieve VF's BDF
-  pci/of: Match PCI VFs to dev-tree nodes dynamically
-  ppc/pci: don't unset pci resources for VFs
-  PCI: SRIOV: add VF enable/disable hook
-  ppc/pnv: user macro to define the TCE size
-  ppc/pnv: allocate pe->iommu_table dynamically
-  ppc/pnv: Add function to deconfig a PE
-  PCI: Add weak pcibios_sriov_resource_size() interface
-  PCI: Add weak pcibios_sriov_resource_alignment() interface
-  PCI: take additional IOV BAR alignment in sizing and assigning
-  ppc/pnv: Expand VF resources according to the number of total_pe
-  powerpc/powernv: implement pcibios_sriov_resource_alignment on
-    powernv
-  powerpc/powernv: shift VF resource with an offset
-  ppc/pci: create/release dev-tree node for VFs
-  powerpc/powernv: allocate VF PE
-  ppc/pci: Expanding IOV BAR, with m64_per_iov supported
-  ppc/pnv: Group VF PE when IOV BAR is big on PHB3
-
- arch/powerpc/include/asm/iommu.h          |    3 +
- arch/powerpc/include/asm/machdep.h        |    7 +
- arch/powerpc/include/asm/pci-bridge.h     |    7 +
- arch/powerpc/include/asm/tce.h            |    3 +-
- arch/powerpc/kernel/pci-common.c          |   29 +
- arch/powerpc/platforms/powernv/Kconfig    |    1 +
- arch/powerpc/platforms/powernv/pci-ioda.c |  824 +++++++++++++++++++++++++++--
- arch/powerpc/platforms/powernv/pci.c      |   22 +-
- arch/powerpc/platforms/powernv/pci.h      |   17 +-
- drivers/pci/iov.c                         |   84 ++-
- drivers/pci/pci.h                         |   21 -
- drivers/pci/setup-bus.c                   |   66 ++-
- include/linux/pci.h                       |   46 ++
- 13 files changed, 1041 insertions(+), 89 deletions(-)
-
--- 
-1.7.9.5
-
+Will
