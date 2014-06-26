@@ -1,85 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:44717 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750703AbaFZS6k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 14:58:40 -0400
-Message-ID: <53AC6D6F.5000308@gmail.com>
-Date: Thu, 26 Jun 2014 11:58:55 -0700
-From: Rajat Jain <rajatxjain@gmail.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:40372 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960AbaFZJ1F convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 05:27:05 -0400
+From: Juergen Borleis <jbe@pengutronix.de>
+To: Marek Vasut <marex@denx.de>
+Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
+Date: Thu, 26 Jun 2014 11:26:09 +0200
+Cc: Fabio Estevam <festevam@gmail.com>,
+	Shawn Guo <shawn.guo@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <r65037@freescale.com>,
+	"David =?iso-8859-1?q?M=FCller?= (ELSOFT AG)" <d.mueller@elsoft.ch>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+References: <1403637507-9424-1-git-send-email-festevam@gmail.com> <201406260932.30524.jbe@pengutronix.de> <201406261117.12542.marex@denx.de>
+In-Reply-To: <201406261117.12542.marex@denx.de>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>, rajatjain.linux@gmail.com
-Subject: [PATCH] pciehp: Remove the field controller->no_cmd_completed
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201406261126.09235.jbe@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After following recent cleanups by Bjorn:
+Hi Marek,
 
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/hotplug
+On Thursday 26 June 2014 11:17:12 Marek Vasut wrote:
+> On Thursday, June 26, 2014 at 09:32:30 AM, Juergen Borleis wrote:
+> > On Thursday 26 June 2014 05:43:19 Fabio Estevam wrote:
+> > > [...]
+> > >
+> > > Below is the log with linux-next kernel and earlyprintk enabled:
+> >
+> > Does it also hang when you disable "earlyprintk"? A few weeks ago we had
+> > a similar issue with i.MX6/PCI and "earlyprintk" (at the end it was
+> > caused by a clock change for the UART when changing from the early to the
+> > regular console).
+>
+> How can the UART clock have impact on the PCIe please ?
 
-2cc56f3 PCI: pciehp: Remove assumptions about which commands cause
-40b9608 PCI: pciehp: Compute timeout from hotplug command start time
-3461a06 PCI: pciehp: Wait for hotplug command completion lazily
-4283c70 PCI: pciehp: Make pcie_wait_cmd() self-contained
+Not to the PCIe hardware, it just hanged the kernel when the PCIe driver came 
+up (due to some of its messages it tries to output at this moment).
 
-the bitfield no_cmd_complete is not really needed anymore, as there is
-only a single occurance of its use. Hence remove the unnecessary bit
-field, and use existing macro NO_CMD_CMPL() instead.
+jbe
 
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
----
-(This is rebased on top of Bjorn's pci/hotplug branch mentioned above)
-
- drivers/pci/hotplug/pciehp.h     |    1 -
- drivers/pci/hotplug/pciehp_hpc.c |   11 +----------
- 2 files changed, 1 insertion(+), 11 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index c496258..9e5a9fb 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -96,7 +96,6 @@ struct controller {
- 	struct timer_list poll_timer;
- 	unsigned long cmd_started;	/* jiffies */
- 	unsigned int cmd_busy:1;
--	unsigned int no_cmd_complete:1;
- 	unsigned int link_active_reporting:1;
- 	unsigned int notification_enabled:1;
- 	unsigned int power_fault_detected;
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index a3a5c65..f7c3709 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -140,7 +140,7 @@ static void pcie_wait_cmd(struct controller *ctrl)
- 	 * If the controller does not generate notifications for command
- 	 * completions, we never need to wait between writes.
- 	 */
--	if (ctrl->no_cmd_complete)
-+	if (NO_CMD_CMPL(ctrl))
- 		return;
- 
- 	if (!ctrl->cmd_busy)
-@@ -772,15 +772,6 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	init_waitqueue_head(&ctrl->queue);
- 	dbg_ctrl(ctrl);
- 
--	/*
--	 * Controller doesn't notify of command completion if the "No
--	 * Command Completed Support" bit is set in Slot Capabilities.
--	 * If set, it means the controller can accept hotplug commands
--	 * with no delay between them.
--	 */
--	if (NO_CMD_CMPL(ctrl))
--		ctrl->no_cmd_complete = 1;
--
- 	/* Check if Data Link Layer Link Active Reporting is implemented */
- 	pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
- 	if (link_cap & PCI_EXP_LNKCAP_DLLLARC) {
 -- 
-1.7.9.5
-
+Pengutronix e.K.                              | Juergen Borleis             |
+Industrial Linux Solutions                    | Phone: +49-5121-206917-5128 |
+Peiner Str. 6-8, 31137 Hildesheim, Germany    | Fax:   +49-5121-206917-5555 |
+Amtsgericht Hildesheim, HRA 2686              | http://www.pengutronix.de/  |
