@@ -1,123 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21797 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755239AbaFYIjc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 04:39:32 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V3 07/16] x86, ioapic: Find usable ioapic id for 64bit.
-Date: Wed, 25 Jun 2014 16:40:38 +0800
-Message-Id: <1403685648-10103-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:37763 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770AbaFZInI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 04:43:08 -0400
+Message-ID: <1403772085.4254.1.camel@weser.hi.pengutronix.de>
+Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: bhelgaas@google.com, r65037@freescale.com, marex@denx.de,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	linux-pci@vger.kernel.org, tharvey@gateworks.com,
+	shawn.guo@freescale.com, kernel@pengutronix.de,
+	d.mueller@elsoft.ch, linux-arm-kernel@lists.infradead.org
+Date: Thu, 26 Jun 2014 10:41:25 +0200
+In-Reply-To: <1403637507-9424-1-git-send-email-festevam@gmail.com>
+References: <1403637507-9424-1-git-send-email-festevam@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+Hi Fabio,
 
-Checking the id in register, if that is duplicated, will pick one and
-update id register.
+Am Dienstag, den 24.06.2014, 16:18 -0300 schrieb Fabio Estevam:
+> From: Fabio Estevam <fabio.estevam@freescale.com>
+> 
+> When the mx6 PCI conctroller is initialized in the bootloader we see a kernel 
+> hang inside imx6_add_pcie_port().
+> 
+> Adding a 30ms delay allows the kernel to boot.
+> 
+> Suggested-by: David Müller <d.mueller@elsoft.ch>
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+> ---
+> I am happy to get feedback on how to properly fix this.
+> 
+> Thanks
+> 
+>  drivers/pci/host/pci-imx6.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index a568efa..669f771 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -507,6 +507,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+>  	pp->root_bus_nr = -1;
+>  	pp->ops = &imx6_pcie_host_ops;
+>  
+> +	usleep_range(25000, 30000);
+> +
+>  	ret = dw_pcie_host_init(pp);
+>  	if (ret) {
+>  		dev_err(&pdev->dev, "failed to initialize host\n");
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/io_apic.c |   38 +++++++++++++++++++++++++++++++++-----
- 1 file changed, 33 insertions(+), 5 deletions(-)
+I would suspect the issue to be somewhere in imx6_pcie_host_init(). Can
+you move the delay there (and to different positions in this function)
+to narrow down where the hang happens?
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index b7296d4ca0a1..a068bf558657 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3570,26 +3570,54 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
- 	return apic_id;
- }
- 
--static u8 __init io_apic_unique_id(u8 id)
-+static u8 io_apic_unique_id(int idx, u8 id)
- {
- 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
- 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
--		return io_apic_get_unique_id(nr_ioapics, id);
-+		return io_apic_get_unique_id(idx, id);
- 	else
- 		return id;
- }
- #else
--static u8 __init io_apic_unique_id(u8 id)
-+static u8 io_apic_unique_id(int idx, u8 id)
- {
- 	int i;
-+	u8 new_id;
-+	unsigned long flags;
- 	DECLARE_BITMAP(used, 256);
-+	union IO_APIC_reg_00 reg_00;
- 
- 	bitmap_zero(used, 256);
- 	for_each_ioapic(i)
- 		__set_bit(mpc_ioapic_id(i), used);
- 	if (!test_bit(id, used))
- 		return id;
--	return find_first_zero_bit(used, 256);
-+
-+	/* check register at first */
-+	raw_spin_lock_irqsave(&ioapic_lock, flags);
-+	reg_00.raw = io_apic_read(idx, 0);
-+	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
-+	new_id = reg_00.bits.ID;
-+	if (!test_bit(new_id, used)) {
-+		apic_printk(APIC_VERBOSE, KERN_INFO
-+			"IOAPIC[%d]: Using reg apic_id %d instead of %d\n",
-+			 idx, new_id, id);
-+		return new_id;
-+	}
-+
-+	new_id = find_first_zero_bit(used, 256);
-+	reg_00.bits.ID = new_id;
-+	raw_spin_lock_irqsave(&ioapic_lock, flags);
-+	io_apic_write(idx, 0, reg_00.raw);
-+	reg_00.raw = io_apic_read(idx, 0);
-+	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
-+
-+	/* Sanity check */
-+	if (reg_00.bits.ID != new_id)
-+		pr_warn("IOAPIC[%d]: Unable to change apic_id to %d!\n",
-+			idx, new_id);
-+
-+	return new_id;
- }
- #endif
- 
-@@ -3855,7 +3883,7 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 		return;
- 	}
- 
--	ioapics[idx].mp_config.apicid = io_apic_unique_id(id);
-+	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
- 	ioapics[idx].mp_config.apicver = io_apic_get_version(idx);
- 
- 	/*
+Regards,
+Lucas
 -- 
-1.7.10.4
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
