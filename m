@@ -1,51 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1403272331-3790755-1-git-send-email-arnd@arndb.de>
-References: <1403272331-3790755-1-git-send-email-arnd@arndb.de>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Fri, 20 Jun 2014 16:44:05 +0200
-Message-ID: <CAMxnaaUThGenvkYkcx062tjwYgBnBDsXNsUzeFtrUa7AV8Pk-A@mail.gmail.com>
-Subject: Re: [PATCH 1/3] thunderbolt: add PCI dependency
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.9]:49099 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753681AbaFZJRx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 05:17:53 -0400
+From: Marek Vasut <marex@denx.de>
+To: Shawn Guo <shawn.guo@freescale.com>
+Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
+Date: Thu, 26 Jun 2014 11:13:02 +0200
+Cc: Fabio Estevam <festevam@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <r65037@freescale.com>,
+	"David =?iso-8859-1?q?M=FCller?= (ELSOFT AG)" <d.mueller@elsoft.ch>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Tim Harvey <tharvey@gateworks.com>,
+	"Fabio Estevam" <fabio.estevam@freescale.com>
+References: <1403637507-9424-1-git-send-email-festevam@gmail.com> <CAOMZO5A0pQfJRwb41046UpkbG6xH7c+EVu+YuY71Zuyq5gHaDA@mail.gmail.com> <20140626054937.GB7859@dragon>
+In-Reply-To: <20140626054937.GB7859@dragon>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201406261113.02894.marex@denx.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the series.
+On Thursday, June 26, 2014 at 07:49:38 AM, Shawn Guo wrote:
+> On Thu, Jun 26, 2014 at 12:43:19AM -0300, Fabio Estevam wrote:
+> > On Thu, Jun 26, 2014 at 12:12 AM, Shawn Guo <shawn.guo@freescale.com> wrote:
+> > > On Tue, Jun 24, 2014 at 04:18:27PM -0300, Fabio Estevam wrote:
+> > >> From: Fabio Estevam <fabio.estevam@freescale.com>
+> > >> 
+> > >> When the mx6 PCI conctroller is initialized in the bootloader we see a
+> > >> kernel hang inside imx6_add_pcie_port().
+> > >> 
+> > >> Adding a 30ms delay allows the kernel to boot.
+> > > 
+> > > We may not want to add a random delay into the driver before we
+> > > understand the root cause of the issue.
+> > 
+> > Yes, that's why I sent this as RFC and also explained it below the ---
+> > line that I am actually trying to get some help with this issue.
+> > 
+> > > Do you see this issue with FSL kernel?
+> > 
+> > Yes, it also hangs.
+> > 
+> > It is reproducible in 100% of the boots. Just need to use mainline
+> > U-boot (which has PCI driver enabled by default).
+> > I am using an Intel Wifi 7260 PCI card. This was also reported by
+> > other folks in the U-boot list.
+> 
+> Richard,
+> 
+> Can you schedule some time to look at this issue?  I think it will come
+> to us sooner or later if any our customer enables PCIe before launching
+> kernel?
 
-Patch 2 is equivalent to patches 1 and 2 from Sachin Kamat's series.
+I have this problem on MX6DL SabreSDP as well. Apparently, this issue happens 
+more often on 6DL than it happens on 6Q. I'm clueless here.
 
-@Greg: This series together with Sachin's patches should fix all build
-errors. I'll send patches for the remaining warnings later.
+I presume FSL won't be willing to release how the PCIe block is exactly wired 
+into the GPR registers, right ? Also, I don't think there's some magic register 
+which allows controlling the PCIe core and PCIe PHY reset lines directly (like 
+on exynos), or is there please?
 
-Andreas
-
-On Fri, Jun 20, 2014 at 3:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> The thunderbolt drivers cannot be built if CONFIG_PCI is disabled,
-> better add an explicit Kconfig dependency.
-> The "default no" line is redundant and can be removed at the same
-> time.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/thunderbolt/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
-> index 3a25529..5aab79b 100644
-> --- a/drivers/thunderbolt/Kconfig
-> +++ b/drivers/thunderbolt/Kconfig
-> @@ -1,6 +1,6 @@
->  menuconfig THUNDERBOLT
->         tristate "Thunderbolt support for Apple devices"
-> -       default no
-> +       depends on PCI
->         help
->           Cactus Ridge Thunderbolt Controller driver
->           This driver is required if you want to hotplug Thunderbolt devices on
-> --
-> 1.8.3.2
->
+Best regards,
+Marek Vasut
