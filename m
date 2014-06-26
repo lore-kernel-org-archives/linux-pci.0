@@ -1,113 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:47768 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754708AbaFSN0E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Jun 2014 09:26:04 -0400
-Message-ID: <53A2E4B0.7030204@ti.com>
-Date: Thu, 19 Jun 2014 18:55:04 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:49464 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753071AbaFZGeI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 02:34:08 -0400
+Date: Thu, 26 Jun 2014 12:03:37 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 2/3] PCI: designware: use untranslated address while
+ programming ATU
+Message-ID: <20140626063336.GA6166@pratyush-vbox>
+References: <1403719007-9352-1-git-send-email-kishon@ti.com>
+ <1403719007-9352-3-git-send-email-kishon@ti.com>
+ <CAHM4w1mMT5een4pAFb9s1JENm=j1W2yMPYdO+OdBhAy0wcRdjw@mail.gmail.com>
+ <53ABB93A.8070301@ti.com>
 MIME-Version: 1.0
-To: Tero Kristo <t-kristo@ti.com>, <devicetree@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
-	Rajendra Nayak <rnayak@ti.com>, Paul Walmsley <paul@pwsan.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>, Keerthy <j-keerthy@ti.com>
-Subject: Re: [PATCH v2 13/18] ARM: dts: dra7xx-clocks: Add missing clocks
- for second PCIe PHY instance
-References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-14-git-send-email-kishon@ti.com> <53A2C787.5060905@ti.com>
-In-Reply-To: <53A2C787.5060905@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <53ABB93A.8070301@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hi Kishon,
 
-On Thursday 19 June 2014 04:50 PM, Tero Kristo wrote:
-> On 05/29/2014 09:38 AM, Kishon Vijay Abraham I wrote:
->> Added missing clocks used by second instance of PCIe PHY.
->> The documention for this nodes can be found @ ../bindings/clock/ti/gate.txt.
+On Thu, Jun 26, 2014 at 02:10:02PM +0800, Kishon Vijay Abraham I wrote:
+> Hi Pratyush,
 > 
-> Drop the ref to the binding doc and rather add a ref to TRM about the clock
-> layout. Also, is the register offset wrong on these? Should be 0x13b8, no, or
-> is my TRM version wrong?
+> On Thursday 26 June 2014 11:07 AM, Pratyush Anand wrote:
+> > Hi Kishon,
+> > 
+> >  Few things, if you can help me to understand:
+> > 
+> > On Wed, Jun 25, 2014 at 11:26 PM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+> >> In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
+> >> address. So whenever the cpu issues a read/write request, the 4 most
+> >> significant bits are used by L3 to determine the target controller.
+> >> For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
+> >> the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
+> >> the outbound translation window the *base* should be programmed as 0x000_0000.
+> >> Whenever we try to write to say 0x2000_0000, it will be translated to whatever
+> >> we have programmed in the translation window with base as 0x000_0000.
+> >>
+> >> This is needed when the dt node is modelled something like below
+> >> axi {
+> >>         compatible = "simple-bus";
+> >>         #size-cells = <1>;
+> >>         #address-cells = <1>;
+> >>         ranges = <0x0        0x20000000 0x10000000 // 28-bit bus
+> >>                   0x51000000 0x51000000 0x3000>;
+> >>         pcie@51000000 {
+> >>                 reg = <0x1000 0x2000>, <0x51002000 0x14c>, <0x51000000 0x2000>;
+> >>                 reg-names = "config", "ti_conf", "rc_dbics";
+> > 
+> > So for DRA7, config base which will be coming from reg property should
+> > be 0x1000 and size 0x2000, no?
+> 
+> right. The first element in 'reg' and 'reg-names' specify exactly that.
+> > 
+> >>                 #address-cells = <3>;
+> >>                 #size-cells = <2>;
+> >>                 ranges = <0x81000000 0 0          0x03000 0 0x00010000
+> > 
+> > range type 0x81000000 tells that it is IO
+> > 
+> >>                           0x82000000 0 0x20013000 0x13000 0 0xffed000>;
+> > 
+> > range type 0x81000000 tells that it is mem
+> > 
+> > 
+> >>         };
+> >> };
+> >>
+> >> Here the CPU address for configuration space is 0x20013000 and the controller
+> >> address for configuration space is 0x13000. The controller address should
+> > be
+> > 
+> > If above understanding is correct then:
+> > 
+> > Aren't these addresses(0x20013000  and 0x13000) from mem space
+> > instead of configuration space.
+> 
+> Sorry. I didn't get you. Configuration space is different from mem space and IO
+> space. We specify only the configuration space in "reg", the IO space and
+> memory space should be specified in ranges.
+> 
+> In my case
+> configuration space range: 0x20001000 - 0x20002fff
+> IO space range:            0x20003000 - 0x20012fff
+> Mem space range:           0x20013000 - 0x2fffffff
+> 
+> Here only the configuration space is obtained from 'reg' and 'IO' and 'MEM'
+> space is obtained from ranges.
+> > 
+> > If yes, then how can you get two addresses (CPU and Controller address)
+> > from reg property for configuration space?
+> 
+> I used platform_get_resource_byname() to get CPU address and of_get_address()
+> to get the untranslated controller address.
 
-Er.. you are right. It should be 0x13b8.
+This is what I am not able to understand that how does
+platform_get_resource_byname gives correct CPU address from reg =
+<0x1000 0x2000>?
 
-Thanks
-Kishon
-> 
-> -Tero
-> 
->>
->> Cc: Rajendra Nayak <rnayak@ti.com>
->> Cc: Tero Kristo <t-kristo@ti.com>
->> Cc: Paul Walmsley <paul@pwsan.com>
->> Cc: Tony Lindgren <tony@atomide.com>
->> Cc: Rob Herring <robh+dt@kernel.org>
->> Cc: Pawel Moll <pawel.moll@arm.com>
->> Cc: Mark Rutland <mark.rutland@arm.com>
->> Cc: Kumar Gala <galak@codeaurora.org>
->> Signed-off-by: Keerthy <j-keerthy@ti.com>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>   arch/arm/boot/dts/dra7xx-clocks.dtsi |   24 ++++++++++++++++++++++++
->>   1 file changed, 24 insertions(+)
->>
->> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> b/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> index 3d8c9c2..a9ff0dc 100644
->> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> @@ -1173,6 +1173,14 @@
->>           ti,bit-shift = <8>;
->>       };
->>
->> +    optfclk_pciephy2_32khz: optfclk_pciephy_32khz@4a0093b4 {
->> +        compatible = "ti,gate-clock";
->> +        clocks = <&sys_32k_ck>;
->> +        #clock-cells = <0>;
->> +        reg = <0x13b4>;
->> +        ti,bit-shift = <8>;
->> +    };
->> +
->>       optfclk_pciephy_div: optfclk_pciephy_div@4a00821c {
->>           compatible = "ti,divider-clock";
->>           clocks = <&apll_pcie_ck>;
->> @@ -1191,6 +1199,14 @@
->>           ti,bit-shift = <9>;
->>       };
->>
->> +    optfclk_pciephy2_clk: optfclk_pciephy_clk@4a0093b4 {
->> +        compatible = "ti,gate-clock";
->> +        clocks = <&apll_pcie_ck>;
->> +        #clock-cells = <0>;
->> +        reg = <0x13b4>;
->> +        ti,bit-shift = <9>;
->> +    };
->> +
->>       optfclk_pciephy1_div_clk: optfclk_pciephy_div_clk@4a0093b0 {
->>           compatible = "ti,gate-clock";
->>           clocks = <&optfclk_pciephy_div>;
->> @@ -1199,6 +1215,14 @@
->>           ti,bit-shift = <10>;
->>       };
->>
->> +    optfclk_pciephy2_div_clk: optfclk_pciephy_div_clk@4a0093b4 {
->> +        compatible = "ti,gate-clock";
->> +        clocks = <&optfclk_pciephy_div>;
->> +        #clock-cells = <0>;
->> +        reg = <0x13b4>;
->> +        ti,bit-shift = <10>;
->> +    };
->> +
->>       apll_pcie_clkvcoldo: apll_pcie_clkvcoldo {
->>           #clock-cells = <0>;
->>           compatible = "fixed-factor-clock";
->>
-> 
+cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+
+how cfg_res->start is now 0x20001000? Shouldn't cfg_res->start be
+0x1000?
+
+What am I missing?
+
+Thanks for explaining.
+
+~Pratyush
+
+
+
+> Thanks
+> Kishon
