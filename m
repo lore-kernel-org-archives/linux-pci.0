@@ -1,59 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp11.uk.ibm.com ([195.75.94.107]:55732 "EHLO
-	e06smtp11.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751605AbaFWKrs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jun 2014 06:47:48 -0400
-Received: from /spool/local
-	by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
-	Mon, 23 Jun 2014 11:47:46 +0100
-Date: Mon, 23 Jun 2014 12:47:42 +0200 (CEST)
-From: Sebastian Ott <sebott@linux.vnet.ibm.com>
-To: Yijing Wang <wangyijing@huawei.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	linux-s390@vger.kernel.org, linux-pci@vger.kernel.org,
-	Wuyun <wuyun.wu@huawei.com>, Xinwei Hu <huxinwei@huawei.com>
-Subject: Re: [PATCH 5/5] s390/MSI: Fix msi mask issue
-In-Reply-To: <1403166674-6836-1-git-send-email-wangyijing@huawei.com>
-Message-ID: <alpine.LFD.2.11.1406231246580.1648@denkbrett>
-References: <1403166674-6836-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:40234 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751137AbaFZFEM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 01:04:12 -0400
+Received: by mail-pb0-f52.google.com with SMTP id rq2so2639627pbb.11
+        for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 22:04:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <CAGAs2AnhfVoiTjNvM3Cf7eeX=sSyJscQa3w3yKtf0AeqRwQ-5Q@mail.gmail.com>
+References: <CAGAs2AnhfVoiTjNvM3Cf7eeX=sSyJscQa3w3yKtf0AeqRwQ-5Q@mail.gmail.com>
+Date: Thu, 26 Jun 2014 10:34:12 +0530
+Message-ID: <CAGAs2A=Uexvs8Fqb9N3w=zaR-yJm=GpVVCOHM2G6Kmz1s_EXJw@mail.gmail.com>
+Subject: Fwd: Suspend/Resume support for PCI
+From: AYAN KUMAR HALDER <ayankumarh@gmail.com>
+To: Scott Murray <scott@spiteful.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 19 Jun 2014, Yijing Wang wrote:
+Hi,
 
-> Maskbit in msi_attrib indicates MSI whether
-> support mask-pending bit. It is read only,
-> should save mask state in masked.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  arch/s390/pci/pci.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-> index bdf0257..4651d6b 100644
-> --- a/arch/s390/pci/pci.c
-> +++ b/arch/s390/pci/pci.c
-> @@ -263,7 +263,7 @@ static int zpci_msi_set_mask_bits(struct msi_desc *msi, u32 mask, u32 flag)
->  	} else
->  		return 0;
-> 
-> -	msi->msi_attrib.maskbit = !!flag;
-> +	msi->masked = !!flag;
->  	return 1;
->  }
-> 
-> -- 
-> 1.7.1
-> 
-> 
-> 
-Applied, thanks!
-Sebastian
+I am using a ARM based custom SOC which has a power management unit to
+turn off/on the various power domains. When I execute a suspend
+command(echo mem > /sys/power/state), then I turn off the power of the
+entire SOC except my PMU( as they are in different power domains).
+When ever the PMU receives a certain wake-up interrupt, it powers up
+the CPU and SOC and the CPU resumes the kernel as per the Linux power
+management framework.
 
+Now I have a PCI controller which has been configured in
+"linux/arch/arm/<mach-mysoc>/pcie.c". During suspend as the PCI
+power(which is part of the SOC power domain) gets turned off, so the
+controller loses its register configurations. On resume, the pci
+driver's resume functions get called and the system hangs up(when it
+tries to read/write to pci configuration space).
+
+As per my understanding, the pci driver has implementation of bus/
+device power management. It does not reconfigure the pci controller.
+So how should I make the pci controller work fine on system resume.
+Is it so that I need to reconfigure the pcie controller's registers
+(as it has been done in "linux/arch/arm/<mach-mysoc>/pcie.c") from the
+resume function of pci driver. Or would that compromise the entire
+linux pm framework.
+
+Regards,
+Ayan Kumar Halder
