@@ -1,78 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:54828 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750789AbaFYF2F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jun 2014 01:28:05 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Jun 2014 10:58:03 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 2B41FE004B
-	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 10:59:14 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s5P5TCOf3997986
-	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 10:59:12 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s5P5RxXt008387
-	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2014 10:58:00 +0530
-Date: Wed, 25 Jun 2014 13:27:58 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table
- dynamically
-Message-ID: <20140625052758.GA8873@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
- <53A94DA8.6020206@ozlabs.ru>
- <20140625011211.GA5785@richard>
- <53AA4C32.7060004@ozlabs.ru>
+Received: from mga11.intel.com ([192.55.52.93]:44574 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756178AbaFZOAF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Jun 2014 10:00:05 -0400
+Message-ID: <53AC275E.4090602@linux.intel.com>
+Date: Thu, 26 Jun 2014 21:59:58 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53AA4C32.7060004@ozlabs.ru>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	dmaengine@vger.kernel.org
+Subject: Re: [Patch Part3 V3 00/21] Enable support of Intel DMAR device hotplug
+References: <1403686967-10887-1-git-send-email-jiang.liu@linux.intel.com> <CAErSpo5z9OH_u3f9L5qKoJsJ+mgRU5rba9mnQG0Y5XXn0zcEvg@mail.gmail.com>
+In-Reply-To: <CAErSpo5z9OH_u3f9L5qKoJsJ+mgRU5rba9mnQG0Y5XXn0zcEvg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 25, 2014 at 02:12:34PM +1000, Alexey Kardashevskiy wrote:
->On 06/25/2014 11:12 AM, Wei Yang wrote:
->> On Tue, Jun 24, 2014 at 08:06:32PM +1000, Alexey Kardashevskiy wrote:
->>> On 06/10/2014 11:56 AM, Wei Yang wrote:
->>>> Current iommu_table of a PE is a static field. This will have a problem when
->>>> iommu_free_table is called.
->>>
->>> What kind of problem? This table is per PE and PE is not going anywhere.
->>>
->> 
->> Yes, for Bus PE, they will always sit in the system. When VF PE introduced,
->> they could be released on the fly. When they are released, so do the iommu
->> table for the PE.
->
->iommu_table is a part of PE struct. When PE is released, iommu_table will
->go with it as well. Why to make is a pointer? I would understand it if you
->added reference counting there but no - iommu_table's lifetime is equal to
->PE lifetime.
->
-
-Yes, iommu_talbe's life time equals to PE lifetime, so when releasing a PE we
-need to release the iommu table. Currently, there is one function to release
-the iommu table, iommu_free_table() which takes a pointer of the iommu_table
-and release it.
-
-If the iommu table in PE is just a part of PE, it will have some problem to
-release it with iommu_free_table(). That's why I make it a pointer in PE
-structure.
-
->
->
->-- 
->Alexey
-
--- 
-Richard Yang
-Help you, Help me
-
+On 2014/6/26 2:00, Bjorn Helgaas wrote:
+>>   iommu/vt-d: match segment number when searching for dev_iotlb capable
+>>     devices
+>>   iommu/vt-d: use correct domain id to flush virtual machine domains
+>>   iommu/vt-d: introduce helper functions to improve code readability
+>>   iommu/vt-d: introduce helper functions to make code symmetric for
+>>     readability
+>>   iommu/vt-d: only dynamically allocate domain id for virtual domains
+>>   iommu/vt-d: fix possible invalid memory access caused by
+>>     free_dmar_iommu()
+>>   iommu/vt-d: avoid freeing virtual machine domain in free_dmar_iommu()
+>>   iommu/VT-d: simplify include/linux/dmar.h
+>>   iommu/vt-d: change iommu_enable/disable_translation to return void
+>>   iommu/vt-d: simplify intel_unmap_sg() and kill duplicated code
+>>   iommu/vt-d: introduce helper domain_pfn_within_range() to simplify
+>>     code
+>>   iommu/vt-d: introduce helper function iova_size() to improve code
+>>     readability
+>>   iommu/vt-d: fix bug in computing domain's iommu_snooping flag
+>>   IOMMU/vt-d: introduce helper function dmar_walk_resources()
+>>   iommu/vt-d: dynamically allocate and free seq_id for DMAR units
+>>   iommu/vt-d: implement DMAR unit hotplug framework
+>>   iommu/vt-d: search _DSM method for DMAR hotplug
+>>   iommu/vt-d: enhance intel_irq_remapping driver to support DMAR unit
+>>     hotplug
+>>   iommu/vt-d: enhance error recovery in function
+>>     intel_enable_irq_remapping()
+>>   iommu/vt-d: enhance intel-iommu driver to support DMAR unit hotplug
+>>   pci, ACPI, iommu: enhance pci_root to support DMAR device hotplug
+> 
+> This looks a little sloppy; you have three different ways of
+> capitalizing the area:
+> 
+>   iommu/vt-d:
+>   iommu/VT-d:
+>   IOMMU/vt-d:
+> 
+> Also, "git log --oneline drivers/iommu" says that the convention for
+> drivers/iommu is to capitalize the first word of the rest of the
+> subject line.
+Hi Bjorn,
+	Really sorry about my careless. I just rebased the patch set
+onto v3.16-rc1, I should do more careful check about the commit
+messages. I will wait for more comments and resend a new version
+to address the commit message issues.
+	Thanks for your reminder again.
+Regards!
+Gerry
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
