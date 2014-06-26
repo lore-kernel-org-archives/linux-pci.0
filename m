@@ -1,50 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:57928 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932359AbaFCAlO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jun 2014 20:41:14 -0400
-Received: by mail-ie0-f174.google.com with SMTP id lx4so5090220iec.5
-        for <linux-pci@vger.kernel.org>; Mon, 02 Jun 2014 17:41:14 -0700 (PDT)
-Date: Mon, 2 Jun 2014 17:41:11 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Received: from mail-out.m-online.net ([212.18.0.10]:60582 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754798AbaFZJRx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 05:17:53 -0400
+From: Marek Vasut <marex@denx.de>
+To: Juergen Borleis <jbe@pengutronix.de>
+Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
+Date: Thu, 26 Jun 2014 11:17:12 +0200
+Cc: Fabio Estevam <festevam@gmail.com>,
+	Shawn Guo <shawn.guo@freescale.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Patch V3 03/37] x86, mpparse: use pr_lvl() helper utilities to
- replace printk(KERN_LVL)
-In-Reply-To: <1401178092-1228-4-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.02.1406021740100.11822@chino.kir.corp.google.com>
-References: <1401178092-1228-1-git-send-email-jiang.liu@linux.intel.com> <1401178092-1228-4-git-send-email-jiang.liu@linux.intel.com>
+	Richard Zhu <r65037@freescale.com>,
+	"David =?iso-8859-1?q?M=FCller?= (ELSOFT AG)" <d.mueller@elsoft.ch>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+References: <1403637507-9424-1-git-send-email-festevam@gmail.com> <CAOMZO5A0pQfJRwb41046UpkbG6xH7c+EVu+YuY71Zuyq5gHaDA@mail.gmail.com> <201406260932.30524.jbe@pengutronix.de>
+In-Reply-To: <201406260932.30524.jbe@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201406261117.12542.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 27 May 2014, Jiang Liu wrote:
-
-> Use pr_lvl() helper utilities to replace printk(KERN_LVL) for readability,
-> no function changes.
+On Thursday, June 26, 2014 at 09:32:30 AM, Juergen Borleis wrote:
+> Hi Fabio,
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> On Thursday 26 June 2014 05:43:19 Fabio Estevam wrote:
+> > [...]
+> 
+> > Below is the log with linux-next kernel and earlyprintk enabled:
+> Does it also hang when you disable "earlyprintk"? A few weeks ago we had a
+> similar issue with i.MX6/PCI and "earlyprintk" (at the end it was caused by
+> a clock change for the UART when changing from the early to the regular
+> console).
 
-Acked-by: David Rientjes <rientjes@google.com>
+How can the UART clock have impact on the PCIe please ?
 
-Eek, lots of newlines in single printks without pr_cont() that are 
-existing, probably to make them more visible during debugging.  I think we 
-could clean this up even further, but the printk(KERN_LVL) -> pr_lvl() 
-conversion of this patch is a step in the right direction.
+Best regards,
+Marek Vasut
