@@ -1,75 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:59804 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752335AbaFAQN4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jun 2014 12:13:56 -0400
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: andreas.noever@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	greg@kroah.com, bhelgaas@google.com,
-	Matthew Garrett <matthew.garrett@nebula.com>
-Date: Sun,  1 Jun 2014 12:13:43 -0400
-Message-Id: <1401639223-3441-1-git-send-email-matthew.garrett@nebula.com>
-Subject: [PATCH] Thunderbolt: Add support for Thunderbolt 2 host controllers
+Received: from relmlor3.renesas.com ([210.160.252.173]:34485 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750971AbaF0Q42 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 12:56:28 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1403888155-9709-1-git-send-email-phil.edworthy@renesas.com>
+References: <1403888155-9709-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1403888155-9709-2-git-send-email-phil.edworthy@renesas.com>
+Date: Fri, 27 Jun 2014 17:55:54 +0100
+Subject: [PATCH 1/2] PCI: host: pcie-rcar: Use correct initial HW settings
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding extra device IDs is enough to get this working on the second-gen
-Thunderbolt controller in the Mac Pro.
+Although the R-Car PCIe driver works as it is, there are a number of
+incorrect settings that this patch corrects. It corrects:
+ - enabling the PCI Express Extended Cap ID.
+ - setting Data Link Layer Link Active Reporting Capable.
+ - terminating list of capabilities.
 
-Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+It also removes enabling the MAC data scrambling as this is the
+default HW setting, and removes incorrect code to enable slave bus
+mastering as this is done by the PCI core.
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 ---
- drivers/pci/quirks.c         | 2 ++
- drivers/thunderbolt/nhi.c    | 5 +++++
- drivers/thunderbolt/switch.c | 5 ++++-
- 3 files changed, 11 insertions(+), 1 deletion(-)
+ drivers/pci/host/pcie-rcar.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c3170d4..20e76d0 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3083,6 +3083,8 @@ out:
- }
- DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x1547,
- 			       quirk_apple_wait_for_thunderbolt);
-+DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL, 0x156d,
-+			       quirk_apple_wait_for_thunderbolt);
- #endif
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index c06b888..680a8cc 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -483,14 +483,15 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
+ 	rcar_rmw32(pcie, RCONF(PCI_SUBORDINATE_BUS), 0xff, 1);
  
- static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
-diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
-index 6f666fa..85b11d6 100644
---- a/drivers/thunderbolt/nhi.c
-+++ b/drivers/thunderbolt/nhi.c
-@@ -642,6 +642,11 @@ struct pci_device_id nhi_ids[] = {
- 		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x1547,
- 		.subvendor = 0x2222, .subdevice = 0x1111,
- 	},
-+	{
-+		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
-+		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x156c,
-+		.subvendor = 0x2222, .subdevice = 0x1111,
-+	},
- 	{ 0,}
- };
+ 	/* Initialize default capabilities. */
+-	rcar_rmw32(pcie, REXPCAP(0), 0, PCI_CAP_ID_EXP);
++	rcar_rmw32(pcie, REXPCAP(0), 0xff, PCI_CAP_ID_EXP);
+ 	rcar_rmw32(pcie, REXPCAP(PCI_EXP_FLAGS),
+ 		PCI_EXP_FLAGS_TYPE, PCI_EXP_TYPE_ROOT_PORT << 4);
+ 	rcar_rmw32(pcie, RCONF(PCI_HEADER_TYPE), 0x7f,
+ 		PCI_HEADER_TYPE_BRIDGE);
  
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index 2e19045..1fccdbf 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -294,8 +294,11 @@ static int tb_plug_events_active(struct tb_switch *sw, bool active)
+ 	/* Enable data link layer active state reporting */
+-	rcar_rmw32(pcie, REXPCAP(PCI_EXP_LNKCAP), 0, PCI_EXP_LNKCAP_DLLLARC);
++	rcar_rmw32(pcie, REXPCAP(PCI_EXP_LNKCAP), PCI_EXP_LNKCAP_DLLLARC,
++		PCI_EXP_LNKCAP_DLLLARC);
  
- 	if (active) {
- 		data = data & 0xFFFFFF83;
--		if (sw->config.device_id == 0x1547)
-+		switch (sw->config.device_id) {
-+		case 0x1547:
-+		case 0x156d:
- 			data |= 4;
-+		}
- 	} else {
- 		data = data | 0x7c;
- 	}
+ 	/* Write out the physical slot number = 0 */
+ 	rcar_rmw32(pcie, REXPCAP(PCI_EXP_SLTCAP), PCI_EXP_SLTCAP_PSN, 0);
+@@ -499,10 +500,7 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
+ 	rcar_rmw32(pcie, TLCTLR+1, 0x3f, 50);
+ 
+ 	/* Terminate list of capabilities (Next Capability Offset=0) */
+-	rcar_rmw32(pcie, RVCCAP(0), 0xfff0, 0);
+-
+-	/* Enable MAC data scrambling. */
+-	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
++	rcar_rmw32(pcie, RVCCAP(0), 0xfff00000, 0);
+ 
+ 	/* Enable MSI */
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+@@ -519,11 +517,6 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
+ 	/* Enable INTx interrupts */
+ 	rcar_rmw32(pcie, PCIEINTXR, 0, 0xF << 8);
+ 
+-	/* Enable slave Bus Mastering */
+-	rcar_rmw32(pcie, RCONF(PCI_STATUS), PCI_STATUS_DEVSEL_MASK,
+-		PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER |
+-		PCI_STATUS_CAP_LIST | PCI_STATUS_DEVSEL_FAST);
+-
+ 	wmb();
+ 
+ 	return 0;
 -- 
 2.0.0
 
