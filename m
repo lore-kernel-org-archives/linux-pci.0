@@ -1,97 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:43711 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751401AbaFAUmq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jun 2014 16:42:46 -0400
-MIME-Version: 1.0
-In-Reply-To: <1401639223-3441-1-git-send-email-matthew.garrett@nebula.com>
-References: <1401639223-3441-1-git-send-email-matthew.garrett@nebula.com>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Sun, 1 Jun 2014 22:42:25 +0200
-Message-ID: <CAMxnaaUh0s5A6x=N9VEeHGFkATDsYAtfz3JoLOLYA5jKSVyFwA@mail.gmail.com>
-Subject: Re: [PATCH] Thunderbolt: Add support for Thunderbolt 2 host controllers
-To: Matthew Garrett <matthew.garrett@nebula.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <greg@kroah.com>,
+Received: from mout.kundenserver.de ([212.227.17.10]:63048 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752604AbaF0NQk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 09:16:40 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Will Deacon <will.deacon@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Michal Simek <monstr@monstr.eu>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Jon Masters <jonathan@jonmasters.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
+Date: Fri, 27 Jun 2014 15:16:28 +0200
+Message-ID: <7528887.J1DnSBg239@wuerfel>
+In-Reply-To: <20140627124949.GR26276@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <6381366.2IfqZj1r0B@wuerfel> <20140627124949.GR26276@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 1, 2014 at 6:13 PM, Matthew Garrett
-<matthew.garrett@nebula.com> wrote:
-> Adding extra device IDs is enough to get this working on the second-gen
-> Thunderbolt controller in the Mac Pro.
->
-> Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
-> ---
->  drivers/pci/quirks.c         | 2 ++
->  drivers/thunderbolt/nhi.c    | 5 +++++
->  drivers/thunderbolt/switch.c | 5 ++++-
->  3 files changed, 11 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index c3170d4..20e76d0 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3083,6 +3083,8 @@ out:
->  }
->  DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x1547,
->                                quirk_apple_wait_for_thunderbolt);
-> +DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL, 0x156d,
-> +                              quirk_apple_wait_for_thunderbolt);
->  #endif
-Just to check: Did they split up the device ids? Is 0x156d for the
-bridges and 0x156c for the NHI?
+On Friday 27 June 2014 13:49:49 Will Deacon wrote:
+> On Fri, Jun 27, 2014 at 12:03:34PM +0100, Arnd Bergmann wrote:
+> > On Thursday 26 June 2014 19:44:21 Rob Herring wrote:
+> > > I don't agree arm32 is harder than microblaze. Yes, converting ALL of
+> > > arm would be, but that is not necessary. With Liviu's latest branch
+> > > the hacks I previously needed are gone (thanks!), and this is all I
+> > > need to get Versatile PCI working (under QEMU):
+> > 
+> > I meant converting all of arm32 would be harder, but I agree we don't
+> > have to do it. It would be nice to convert all of the drivers/pci/host
+> > drivers though, iow all multiplatform-enabled ones, and leaving the
+> > current arm32 pci implementation for the platforms we don't want to
+> > convert to multiplatform anyway (footbridge, iop, ixp4xx, ks8695 (?),
+> > pxa, sa1100).
+> 
+> I'm more than happy to convert the generic host controller we merged
+> recently, but I'd probably want the core changes merged first so that I
+> know I'm not wasting my time!
 
->
->  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
-> diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
-> index 6f666fa..85b11d6 100644
-> --- a/drivers/thunderbolt/nhi.c
-> +++ b/drivers/thunderbolt/nhi.c
-> @@ -642,6 +642,11 @@ struct pci_device_id nhi_ids[] = {
->                 .vendor = PCI_VENDOR_ID_INTEL, .device = 0x1547,
->                 .subvendor = 0x2222, .subdevice = 0x1111,
->         },
-> +       {
-> +               .class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
-> +               .vendor = PCI_VENDOR_ID_INTEL, .device = 0x156c,
-> +               .subvendor = 0x2222, .subdevice = 0x1111,
-> +       },
->         { 0,}
->  };
->
-> diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-> index 2e19045..1fccdbf 100644
-> --- a/drivers/thunderbolt/switch.c
-> +++ b/drivers/thunderbolt/switch.c
-> @@ -294,8 +294,11 @@ static int tb_plug_events_active(struct tb_switch *sw, bool active)
->
->         if (active) {
->                 data = data & 0xFFFFFF83;
-> -               if (sw->config.device_id == 0x1547)
-> +               switch (sw->config.device_id) {
-> +               case 0x1547:
-> +               case 0x156d:
->                         data |= 4;
-> +               }
->         } else {
->                 data = data | 0x7c;
->         }
-> --
-> 2.0.0
->
+That is definitely fine with me, but it's Bjorn's decision.
 
-I have had a look at what os x does. They split between:
-1513, 151a, 1549 and 1547, 1548, 1567, 1569, 156b, 156d (the latter
-group gets bit 3 set)
-
-It looks like the first 3 are legacy devices, so maybe reverse the check?
-
-So far I could decode:
-1547: cactus ridge (2 and 4 port?)
-1549: ethernet adapter
-156b: 2 port falcon ridge
-156d: 4 port falcon ridge
+	Arnd
