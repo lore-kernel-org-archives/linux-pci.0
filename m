@@ -1,108 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:43206 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966902AbaFQWQY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 18:16:24 -0400
-Received: by mail-ig0-f174.google.com with SMTP id l13so1516505iga.13
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jun 2014 15:16:23 -0700 (PDT)
-Date: Tue, 17 Jun 2014 16:16:20 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	yinghai@kernel.org
-Subject: Re: [PATCH] PCI: Do not touch siblings in
- pci_assign_unassigned_bridge_resources
-Message-ID: <20140617221620.GC30559@google.com>
-References: <1402346730-2508-1-git-send-email-andreas.noever@gmail.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:47659 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753613AbaF0OzZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 10:55:25 -0400
+Received: by mail-ie0-f181.google.com with SMTP id y20so4302556ier.26
+        for <linux-pci@vger.kernel.org>; Fri, 27 Jun 2014 07:55:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1402346730-2508-1-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <20140627141451.GJ15296@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140405001953.GE15806@google.com> <20140407083120.GE17163@e106497-lin.cambridge.arm.com>
+ <5183143.FxBNM0xTAV@wuerfel> <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
+ <20140626085926.GB11244@arm.com> <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com>
+ <20140627141451.GJ15296@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 27 Jun 2014 08:55:04 -0600
+Message-ID: <CAErSpo7nhqJGXcnY4FO=6CZtYdSY0qNUyRSP3nnxAUO5L6c+jA@mail.gmail.com>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Jon Masters <jonathan@jonmasters.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Michal Simek <monstr@monstr.eu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+On Fri, Jun 27, 2014 at 8:14 AM, Catalin Marinas
+<catalin.marinas@arm.com> wrote:
+> ...
+> With Liviu's latest version (not posted) and with
+> of_create_pci_host_bridge() function moved to of_pci.c, I don't think
+> there is much new functionality added to drivers/pci/. What I think we
+> need is clarifying the domain_nr patch (and API change) and more users
+> of the new generic code. As you said, it doesn't need to be a separate
+> architecture but rather existing pci host drivers under drivers/pci. Of
+> course, other arch conversion should follow shortly as well but even
+> without an immediate conversion, I don't see too much additional
+> maintenance burden for the core PCIe code (and code sharing between new
+> PCIe host drivers is even more beneficial).
 
-On Mon, Jun 09, 2014 at 10:45:30PM +0200, Andreas Noever wrote:
-> pci_assign_unassigned_bridge_resources is used to assign resources below
-> a hotplug bridge. If the first attempt fails it will release some
-> resources and try again. If a resource allocation on the hotplug bridge
-> itself fails then pci_assign_unassigned_bridge_resources will invoke
-> pci_bus_release_bridge_resources on the parent bus of the hotplug
-> bridge. This in turn will release resources assigned to siblings of the
-> hotplug bridge which may already be in use.
-> 
-> This patch checks for this case and prevents
-> pci_bus_release_bridge_resources to be invoked on the parent bus.
-> 
-> The problem can be reproduced by having two sibling hotplug bridges A
-> and B. The problem will occour if the parent of A and B does not have
-> enough resources to satisfy window allocations for B during a hotplug
-> event.
-> 
-> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
-> ---
-> 
-> I must admit that I do not fully understand how
-> pci_assign_unassigned_bridge_resources works. Under which scenario would the
-> second allocation attempt be successful?
+Sorry, I haven't had time to follow this.  It sounds like there are
+several pieces we could get out of the way easily.  How about posting
+the actual patches again?  Maybe re-order them so the easy pieces are
+first so they can get applied even if there are issues with later
+ones?
 
-I don't understand how all this works either.  Yinghai?
-
-We definitely don't want to release resources that are already in use.  Can
-you review and ack or nack this?
-
->  drivers/pci/setup-bus.c | 21 +++++++++++++++++++--
->  1 file changed, 19 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 138bdd6..2e418d6 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1560,6 +1560,12 @@ void __init pci_assign_unassigned_resources(void)
->  		pci_assign_unassigned_root_bus_resources(root_bus);
->  }
->  
-> +/**
-> + * pci_assign_unassigned_bridge_resources - greenfield resource allocation
-> + *
-> + * Try to assign io and memory resources on and below @bridge. The caller must
-> + * ensure that no device below @bridge is active.
-> + */
->  void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
->  {
->  	struct pci_bus *parent = bridge->subordinate;
-> @@ -1567,7 +1573,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
->  					want additional resources */
->  	int tried_times = 0;
->  	LIST_HEAD(fail_head);
-> -	struct pci_dev_resource *fail_res;
-> +	struct pci_dev_resource *fail_res, *tmp;
->  	int retval;
->  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
->  				  IORESOURCE_PREFETCH;
-> @@ -1594,10 +1600,21 @@ again:
->  	 * Try to release leaf bridge's resources that doesn't fit resource of
->  	 * child device under that bridge
->  	 */
-> -	list_for_each_entry(fail_res, &fail_head, list)
-> +	list_for_each_entry_safe(fail_res, tmp, &fail_head, list) {
-> +		 /*
-> +		  * The allocation of the mem/io window of the top level bridge
-> +		  * can fail.  Without the following check we would release our
-> +		  * siblings' resources.
-> +		  */
-> +		if (fail_res->dev == bridge) {
-> +			list_del(&fail_res->list);
-> +			kfree(fail_res);
-> +			continue;
-> +		}
->  		pci_bus_release_bridge_resources(fail_res->dev->bus,
->  						 fail_res->flags & type_mask,
->  						 whole_subtree);
-> +	}
->  
->  	/* restore size and flags */
->  	list_for_each_entry(fail_res, &fail_head, list) {
-> -- 
-> 2.0.0
-> 
+Bjorn
