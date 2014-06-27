@@ -1,61 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:51362 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750851AbaFYJUv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 05:20:51 -0400
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 02046-08 for <linux-pci@vger.kernel.org>;
- Wed, 25 Jun 2014 10:20:43 +0100 (BST)
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Wei Yang' <weiyang@linux.vnet.ibm.com>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>
-CC: "benh@au1.ibm.com" <benh@au1.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"yan@linux.vnet.ibm.com" <yan@linux.vnet.ibm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"qiudayu@linux.vnet.ibm.com" <qiudayu@linux.vnet.ibm.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: RE: [RFC PATCH V3 06/17] ppc/pnv: allocate pe->iommu_table
- dynamically
-Date: Wed, 25 Jun 2014 09:20:11 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D17264AD8@AcuExch.aculab.com>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-7-git-send-email-weiyang@linux.vnet.ibm.com>
- <53A94DA8.6020206@ozlabs.ru> <20140625011211.GA5785@richard>
- <53AA4C32.7060004@ozlabs.ru> <20140625052758.GA8873@richard>
-In-Reply-To: <20140625052758.GA8873@richard>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-by2lp0242.outbound.protection.outlook.com ([207.46.163.242]:46029
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753187AbaF0Pnf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 27 Jun 2014 11:43:35 -0400
+Message-ID: <53AD911C.6040301@amd.com>
+Date: Fri, 27 Jun 2014 10:43:24 -0500
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] arm/gic: Add supports for GICv2m MSI(-X)
+References: <1403569980-12913-1-git-send-email-suravee.suthikulpanit@amd.com>
+ <1403569980-12913-3-git-send-email-suravee.suthikulpanit@amd.com>
+ <53A94A46.1010801@arm.com>
+In-Reply-To: <53A94A46.1010801@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogV2VpIFlhbmcNCj4gT24gV2VkLCBKdW4gMjUsIDIwMTQgYXQgMDI6MTI6MzRQTSArMTAw
-MCwgQWxleGV5IEthcmRhc2hldnNraXkgd3JvdGU6DQo+ID5PbiAwNi8yNS8yMDE0IDExOjEyIEFN
-LCBXZWkgWWFuZyB3cm90ZToNCj4gPj4gT24gVHVlLCBKdW4gMjQsIDIwMTQgYXQgMDg6MDY6MzJQ
-TSArMTAwMCwgQWxleGV5IEthcmRhc2hldnNraXkgd3JvdGU6DQo+ID4+PiBPbiAwNi8xMC8yMDE0
-IDExOjU2IEFNLCBXZWkgWWFuZyB3cm90ZToNCj4gPj4+PiBDdXJyZW50IGlvbW11X3RhYmxlIG9m
-IGEgUEUgaXMgYSBzdGF0aWMgZmllbGQuIFRoaXMgd2lsbCBoYXZlIGEgcHJvYmxlbSB3aGVuDQo+
-ID4+Pj4gaW9tbXVfZnJlZV90YWJsZSBpcyBjYWxsZWQuDQo+ID4+Pg0KPiA+Pj4gV2hhdCBraW5k
-IG9mIHByb2JsZW0/IFRoaXMgdGFibGUgaXMgcGVyIFBFIGFuZCBQRSBpcyBub3QgZ29pbmcgYW55
-d2hlcmUuDQo+ID4+Pg0KPiA+Pg0KPiA+PiBZZXMsIGZvciBCdXMgUEUsIHRoZXkgd2lsbCBhbHdh
-eXMgc2l0IGluIHRoZSBzeXN0ZW0uIFdoZW4gVkYgUEUgaW50cm9kdWNlZCwNCj4gPj4gdGhleSBj
-b3VsZCBiZSByZWxlYXNlZCBvbiB0aGUgZmx5LiBXaGVuIHRoZXkgYXJlIHJlbGVhc2VkLCBzbyBk
-byB0aGUgaW9tbXUNCj4gPj4gdGFibGUgZm9yIHRoZSBQRS4NCj4gPg0KPiA+aW9tbXVfdGFibGUg
-aXMgYSBwYXJ0IG9mIFBFIHN0cnVjdC4gV2hlbiBQRSBpcyByZWxlYXNlZCwgaW9tbXVfdGFibGUg
-d2lsbA0KPiA+Z28gd2l0aCBpdCBhcyB3ZWxsLiBXaHkgdG8gbWFrZSBpcyBhIHBvaW50ZXI/IEkg
-d291bGQgdW5kZXJzdGFuZCBpdCBpZiB5b3UNCj4gPmFkZGVkIHJlZmVyZW5jZSBjb3VudGluZyB0
-aGVyZSBidXQgbm8gLSBpb21tdV90YWJsZSdzIGxpZmV0aW1lIGlzIGVxdWFsIHRvDQo+ID5QRSBs
-aWZldGltZS4NCj4gPg0KPiANCj4gWWVzLCBpb21tdV90YWxiZSdzIGxpZmUgdGltZSBlcXVhbHMg
-dG8gUEUgbGlmZXRpbWUsIHNvIHdoZW4gcmVsZWFzaW5nIGEgUEUgd2UNCj4gbmVlZCB0byByZWxl
-YXNlIHRoZSBpb21tdSB0YWJsZS4gQ3VycmVudGx5LCB0aGVyZSBpcyBvbmUgZnVuY3Rpb24gdG8g
-cmVsZWFzZQ0KPiB0aGUgaW9tbXUgdGFibGUsIGlvbW11X2ZyZWVfdGFibGUoKSB3aGljaCB0YWtl
-cyBhIHBvaW50ZXIgb2YgdGhlIGlvbW11X3RhYmxlDQo+IGFuZCByZWxlYXNlIGl0Lg0KPiANCj4g
-SWYgdGhlIGlvbW11IHRhYmxlIGluIFBFIGlzIGp1c3QgYSBwYXJ0IG9mIFBFLCBpdCB3aWxsIGhh
-dmUgc29tZSBwcm9ibGVtIHRvDQo+IHJlbGVhc2UgaXQgd2l0aCBpb21tdV9mcmVlX3RhYmxlKCku
-IFRoYXQncyB3aHkgSSBtYWtlIGl0IGEgcG9pbnRlciBpbiBQRQ0KPiBzdHJ1Y3R1cmUuDQoNCldo
-YXQgYXJlIHRoZSBzaXplcyBvZiB0aGUgaW9tbXUgdGFibGUgYW5kIHRoZSBQRSBzdHJ1Y3R1cmU/
-DQpJZiB0aGUgdGFibGUgaXMgYSByb3VuZCBudW1iZXIgb2YgcGFnZXMgdGhlbiB5b3UgcHJvYmFi
-bHkgZG9uJ3Qgd2FudCB0bw0KZW1iZWQgaXQgaW5zaWRlIHRoZSBQRSBzdHJ1Y3R1cmUuDQoNCglE
-YXZpZA0KDQo=
+Hi Marc,
+
+After looking at the GICv3 implementation and trying to understand how 
+you architect the driver, I have a couple questions below.
+
+ > On 06/24/2014 04:52 AM, Marc Zyngier wrote:
+> Hi Suravee,
+>
+> On 24/06/14 01:33, suravee.suthikulpanit@amd.com wrote:
+>> +       pr_info("GICv2m: SPI range [%d:%d]\n",
+>> +               msi->spi_start, (msi->spi_start + msi->max_spi_cnt));
+>> +
+>> +       gic_arch_extn.irq_mask = gicv2m_mask_msi;
+>> +       gic_arch_extn.irq_unmask = gicv2m_unmask_msi;
+>
+> Right, I now see why you need to test on the MSI descriptor. Don't do
+> that. The gic_arch_extn crap should *never* *be* *used*.
+
+Hm, sounds like this should be removed all together then? In that case, 
+this would require changes in the irq-gic.c to call these functions 
+directly.
+
+>
+> What you want to do is do assign a different irq_chip to your MSI
+> interrupts. This will require a different integration with the main GIC
+> code though. For the GICv3 ITS, I do it when the interrupt gets mapped.
+
+Ah, that's what I was trying to avoid. Why should we need a whole 
+different irq_chip just to add the MSI register frame support on top of 
+the GICv2 which is already supported by the current irq-gic.c?
+
+>
+>> +       return 0;
+>> +}
+>> +EXPORT_SYMBOL(gicv2m_msi_init);
+>> +
+>> +
+>> +
+>> +/**
+>> + * Override arch_setup_msi_irq in drivers/pci/msi.c
+>> + * since we don't want to change the chip_data
+>> + */
+>> +int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
+>> +{
+>> +       struct msi_chip *chip = pdev->bus->msi;
+>> +
+>> +       if (!chip || !chip->setup_irq)
+>> +               return -EINVAL;
+>> +
+>> +       return chip->setup_irq(chip, pdev, desc);
+>> +}
+>> +
+>> +/**
+>> + * Override arch_teardown_msi_irq in drivers/pci/msi.c
+>> + */
+>> +void arch_teardown_msi_irq(unsigned int irq)
+>> +{
+>> +       struct msi_desc *desc;
+>> +       struct msi_chip *chip;
+>> +
+>> +       desc = irq_get_msi_desc(irq);
+>> +       if (!desc)
+>> +               return;a
+>> +
+>> +       chip = desc->dev->bus->msi;
+>> +       if (!chip)
+>> +               return;
+>> +
+>> +       chip->teardown_irq(chip, irq);
+>> +}
+>
+> Please don't overtide those. There shouldn't be any reason for a
+> *driver* to do so. Only architecture code should do it. And nothing in
+> your code requires it (at least once you've stopped playing with the
+> silly gic extension...).
+
+The reason I need these because the __weak version of arch_setup_msi_irq 
+function in driver/pci/msi.c calls irq_set_chip_data and replace the 
+chip_data with msi_chip (originally was pointing to the gic_chip_data 
+structure). This ended up breaking the GIC.
+
+Looking at the GICv3 ITS implementation, this seems to also have similar 
+implementation. So, this was not an issue for you?
+
+Thanks,
+
+Suravee
