@@ -1,194 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0238.outbound.protection.outlook.com ([207.46.163.238]:41022
+Received: from mail-by2lp0235.outbound.protection.outlook.com ([207.46.163.235]:20123
 	"EHLO na01-by2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753934AbaFYC4N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Jun 2014 22:56:13 -0400
-Message-ID: <53AA3A3A.2050401@amd.com>
-Date: Tue, 24 Jun 2014 21:55:54 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-To: Mark Rutland <mark.rutland@arm.com>
-CC: Marc Zyngier <Marc.Zyngier@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	id S1753327AbaF0KGw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 27 Jun 2014 06:06:52 -0400
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Tim Harvey <tharvey@gateworks.com>,
+	Shawn Guo <Shawn.Guo@freescale.com>
+CC: Fabio Estevam <festevam@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marek Va?ut <marex@denx.de>,
+	=?utf-8?B?RGF2aWQgTcO8bGxlciAoRUxTT0ZUIEFHKQ==?=
+	<d.mueller@elsoft.ch>, Sascha Hauer <kernel@pengutronix.de>,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 2/2] arm/gic: Add supports for GICv2m MSI(-X)
-References: <1403569980-12913-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1403569980-12913-3-git-send-email-suravee.suthikulpanit@amd.com>
- <20140624101111.GD5856@leverpostej>
-In-Reply-To: <20140624101111.GD5856@leverpostej>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Fabio.Estevam@freescale.com" <Fabio.Estevam@freescale.com>
+Subject: RE: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
+Date: Fri, 27 Jun 2014 10:06:47 +0000
+Message-ID: <6c999c0fee0b406db597e74837980081@BLUPR03MB136.namprd03.prod.outlook.com>
+References: <1403637507-9424-1-git-send-email-festevam@gmail.com>
+	<20140626031247.GN2224@dragon>
+	<CAOMZO5A0pQfJRwb41046UpkbG6xH7c+EVu+YuY71Zuyq5gHaDA@mail.gmail.com>
+	<20140626054937.GB7859@dragon>
+ <CAJ+vNU0DNCT5pcvnptNBo-tPTVOH1HnrCwy7uCZt33dfyq8U-g@mail.gmail.com>
+In-Reply-To: <CAJ+vNU0DNCT5pcvnptNBo-tPTVOH1HnrCwy7uCZt33dfyq8U-g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mark,
-
-Thank you for all your comments. Please see my reply below. I have 
-omitted the minor ones.
-
-On 6/24/2014 5:11 AM, Mark Rutland wrote:
-> On Tue, Jun 24, 2014 at 01:33:00AM +0100, suravee.suthikulpanit@amd.com wrote:
->> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> +static int alloc_msi_irq(struct gicv2m_msi_data *data, int nvec, int *irq)
->> +{
->> +       int size = sizeof(unsigned long) * data->bm_sz;
->> +       int next = size, ret, num;
->> +
->> +       spin_lock(&data->msi_cnt_lock);
->> +
->> +       for (num = nvec; num > 0; num--) {
->> +               next = bitmap_find_next_zero_area(data->bm,
->> +                                       size, 0, num, 0);
->> +               if (next < size)
->> +                       break;
->> +       }
->
-> If max_spi_cnt is not a multiple of BITS_PER_LONG, this can allocate a
-> number greater or equal to max_spi_cnt, but below size. We should never
-> allocate max_spi_cnt or above.
->
-Thanks for the catch. I also need to clean up this logic for V2.
-
->> +       spin_unlock(&data->msi_cnt_lock);
->> +
->> +       return ret;
->> +}
->> +
->> +static void free_msi_irq(struct gicv2m_msi_data *data, unsigned int irq)
->> +{
->> +       int pos;
->> +
->> +       spin_lock(&data->msi_cnt_lock);
->> +
->> +       pos = irq - data->spi_start;
->> +       if (pos >= 0 && pos < data->max_spi_cnt)
->
-> Should either of these cases ever happen?
-
-This is to check if the irq provided is within the MSI range.
-
->> +static int gicv2m_setup_msi_irq(struct msi_chip *chip, struct pci_dev *pdev,
->> +                     struct msi_desc *desc)
->> +{
->> +       int avail, irq = 0;
->> +       struct msi_msg msg;
->> +       phys_addr_t addr;
->> +       struct gicv2m_msi_data *data = to_gicv2m_msi_data(chip);
->> +
->> +       if (data == NULL) {
->
-> If container_of returns NULL, you have bigger problems.
-
-It was just sanity check. But, if you think this is obvious, I'll remove 
-this check then.
-
->> +int __init gicv2m_msi_init(struct device_node *node,
->> +                          struct gicv2m_msi_data *msi)
->> +{
->> +       unsigned int val;
->> +       const __be32 *msi_be;
->
-> Every time I see a __be32* in a DT probe function I weep. There is no
-> need to deal with the internal details of the DTB.
->
->> +
->> +       msi_be = of_get_address(node, GIC_OF_MSIV2M_RANGE_INDEX, NULL, NULL);
->> +       if (!msi_be) {
->> +               pr_err("GICv2m failed. Fail to locate MSI base.\n");
->> +               return -EINVAL;
->> +       }
->> +
->> +       msi->paddr64 = of_translate_address(node, msi_be);
->> +       msi->base = of_iomap(node, GIC_OF_MSIV2M_RANGE_INDEX);
->
-> You can instead use of_address_to_resource to query the address from the
-> DTB once, without having to muck about with endianness conversion
-> manually. Take a look at what of_iomap does.
-
-Thanks for this suggestion. I was not quite familiar with the "of_" 
-interface. I am cleaning up this whole section now.
-
-> I'm surprised we don't have an ioremap_resource given we have a devm_
-> variant.
->
-
->> +
->> +       /*
->> +       * MSI_TYPER:
->> +       *     [31:26] Reserved
->> +       *     [25:16] lowest SPI assigned to MSI
->> +       *     [15:10] Reserved
->> +       *     [9:0]   Numer of SPIs assigned to MSI
->> +       */
->> +       val = __raw_readl(msi->base + MSI_TYPER);
->
-> Are you sure you want to use __raw_readl?
->
-Probably not.  I am replacing this with ioread32(msi->base + MSI_TYPER).
-
->> +       if (!val) {
->> +               pr_warn("GICv2m: Failed to read MSI_TYPER register\n");
->> +               return -EINVAL;
->> +       }
->> +
->> +       msi->spi_start = (val >> 16) & 0x3ff;
->> +       msi->max_spi_cnt = val & 0x3ff;
->> +
->> +       pr_debug("GICv2m: SPI = %u, cnt = %u\n",
->> +               msi->spi_start, msi->max_spi_cnt);
->> +
->> +       if (msi->spi_start < GIC_V2M_MIN_SPI ||
->> +               msi->max_spi_cnt >= GIC_V2M_MAX_SPI) {
->> +                       pr_err("GICv2m: Init failed\n");
->> +                       return -EINVAL;
->> +       }
->> +
->> +       msi->bm_sz = BITS_TO_LONGS(msi->max_spi_cnt);
->
-> So msi->bm_sz is msi->max_spi_cnt in _longs_ (rounded up)...
->
->> +       msi->bm = kzalloc(msi->bm_sz, GFP_KERNEL);
->
-> ...yet we allocate that many _bytes_?
->
-Sorry, I got a bit confused here. I'll fix this.
-
->> +
->> +       gic_arch_extn.irq_mask = gicv2m_mask_msi;
->> +       gic_arch_extn.irq_unmask = gicv2m_unmask_msi;
->
-> I'll leave others to comment on the validity of this...
->
-Marc has commented this part in the other patch.
-
->> +       void __iomem *base;       /* GICv2m virt address */
->> +       unsigned int spi_start;   /* The SPI number that MSIs start */
->> +       unsigned int max_spi_cnt; /* The number of SPIs for MSIs */
->> +       unsigned long *bm;        /* MSI vector bitmap */
->> +       unsigned long bm_sz;      /* MSI bitmap size */
->
-> It's a bit odd in my mind that this is in longs. Why not just use
-> max_spi_cnt, which you can trivially use to determine bytes or longs?
-
-That's true. I'm cleaning this up.
-
->> @@ -246,7 +254,8 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
->>                              bool force)
->>   {
->>          void __iomem *reg = gic_dist_base(d) + GIC_DIST_TARGET + (gic_irq(d) & ~3);
->> -       unsigned int cpu, shift = (gic_irq(d) % 4) * 8;
->> +       unsigned int shift = (gic_irq(d) % 4) * 8;
->> +       unsigned int cpu = cpumask_any_and(mask_val, cpu_online_mask);
->
-> Unrelated change?
-
-Sorry, this was not supposed to be part of this patch.
-
-Thanks,
-
-Suravee
-
+SGkNCg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFRpbSBIYXJ2ZXkg
+W21haWx0bzp0aGFydmV5QGdhdGV3b3Jrcy5jb21dDQo+IFNlbnQ6IEZyaWRheSwgSnVuZSAyNywg
+MjAxNCA4OjI5IEFNDQo+IFRvOiBHdW8gU2hhd24tUjY1MDczOyBaaHUgUmljaGFyZC1SNjUwMzcN
+Cj4gQ2M6IEZhYmlvIEVzdGV2YW07IEJqb3JuIEhlbGdhYXM7IE1hcmVrIFZhxaF1dDsgRGF2aWQg
+TcO8bGxlciAoRUxTT0ZUIEFHKTsNCj4gU2FzY2hhIEhhdWVyOyBsaW51eC1hcm0ta2VybmVsQGxp
+c3RzLmluZnJhZGVhZC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IEVzdGV2YW0g
+RmFiaW8tUjQ5NDk2DQo+IFN1YmplY3Q6IFJlOiBbUkZDXSBQQ0k6IHBjaS1pbXg2OiBBZGQgZGVs
+YXkgdG8gd29ya2Fyb3VuZCBrZXJuZWwgaGFuZw0KPiANCj4gT24gV2VkLCBKdW4gMjUsIDIwMTQg
+YXQgMTA6NDkgUE0sIFNoYXduIEd1byA8c2hhd24uZ3VvQGZyZWVzY2FsZS5jb20+IHdyb3RlOg0K
+PiA+IE9uIFRodSwgSnVuIDI2LCAyMDE0IGF0IDEyOjQzOjE5QU0gLTAzMDAsIEZhYmlvIEVzdGV2
+YW0gd3JvdGU6DQo+ID4+IE9uIFRodSwgSnVuIDI2LCAyMDE0IGF0IDEyOjEyIEFNLCBTaGF3biBH
+dW8gPHNoYXduLmd1b0BmcmVlc2NhbGUuY29tPiB3cm90ZToNCj4gPj4gPiBPbiBUdWUsIEp1biAy
+NCwgMjAxNCBhdCAwNDoxODoyN1BNIC0wMzAwLCBGYWJpbyBFc3RldmFtIHdyb3RlOg0KPiA+PiA+
+PiBGcm9tOiBGYWJpbyBFc3RldmFtIDxmYWJpby5lc3RldmFtQGZyZWVzY2FsZS5jb20+DQo+ID4+
+ID4+DQo+ID4+ID4+IFdoZW4gdGhlIG14NiBQQ0kgY29uY3Ryb2xsZXIgaXMgaW5pdGlhbGl6ZWQg
+aW4gdGhlIGJvb3Rsb2FkZXIgd2UNCj4gPj4gPj4gc2VlIGEga2VybmVsIGhhbmcgaW5zaWRlIGlt
+eDZfYWRkX3BjaWVfcG9ydCgpLg0KPiA+PiA+Pg0KPiA+PiA+PiBBZGRpbmcgYSAzMG1zIGRlbGF5
+IGFsbG93cyB0aGUga2VybmVsIHRvIGJvb3QuDQo+ID4+ID4NCj4gPj4gPiBXZSBtYXkgbm90IHdh
+bnQgdG8gYWRkIGEgcmFuZG9tIGRlbGF5IGludG8gdGhlIGRyaXZlciBiZWZvcmUgd2UNCj4gPj4g
+PiB1bmRlcnN0YW5kIHRoZSByb290IGNhdXNlIG9mIHRoZSBpc3N1ZS4NCj4gPj4NCj4gPj4gWWVz
+LCB0aGF0J3Mgd2h5IEkgc2VudCB0aGlzIGFzIFJGQyBhbmQgYWxzbyBleHBsYWluZWQgaXQgYmVs
+b3cgdGhlDQo+ID4+IC0tLSBsaW5lIHRoYXQgSSBhbSBhY3R1YWxseSB0cnlpbmcgdG8gZ2V0IHNv
+bWUgaGVscCB3aXRoIHRoaXMgaXNzdWUuDQo+ID4+DQo+ID4+ID4NCj4gPj4gPiBEbyB5b3Ugc2Vl
+IHRoaXMgaXNzdWUgd2l0aCBGU0wga2VybmVsPw0KPiA+Pg0KPiA+PiBZZXMsIGl0IGFsc28gaGFu
+Z3MuDQo+ID4+DQo+ID4+IEl0IGlzIHJlcHJvZHVjaWJsZSBpbiAxMDAlIG9mIHRoZSBib290cy4g
+SnVzdCBuZWVkIHRvIHVzZSBtYWlubGluZQ0KPiA+PiBVLWJvb3QgKHdoaWNoIGhhcyBQQ0kgZHJp
+dmVyIGVuYWJsZWQgYnkgZGVmYXVsdCkuDQo+ID4+IEkgYW0gdXNpbmcgYW4gSW50ZWwgV2lmaSA3
+MjYwIFBDSSBjYXJkLiBUaGlzIHdhcyBhbHNvIHJlcG9ydGVkIGJ5DQo+ID4+IG90aGVyIGZvbGtz
+IGluIHRoZSBVLWJvb3QgbGlzdC4NCj4gPg0KPiA+IFJpY2hhcmQsDQo+ID4NCj4gPiBDYW4geW91
+IHNjaGVkdWxlIHNvbWUgdGltZSB0byBsb29rIGF0IHRoaXMgaXNzdWU/ICBJIHRoaW5rIGl0IHdp
+bGwNCj4gPiBjb21lIHRvIHVzIHNvb25lciBvciBsYXRlciBpZiBhbnkgb3VyIGN1c3RvbWVyIGVu
+YWJsZXMgUENJZSBiZWZvcmUNCj4gPiBsYXVuY2hpbmcga2VybmVsPw0KPiA+DQo+ID4gU2hhd24N
+Cj4gPg0KPiANCltSaWNoYXJkXSBJIGRpZCB0aGUgdGVzdHMgcmVmZXIgdG8gdGhpcyB1c2UtY2Fz
+ZSwgZW5hYmxlIGlteDYgcGNpZSBvbiBib3RoIHUtYm9vdCBhbmQga2VybmVsLA0KYW5kIEkgZW5j
+b3VudGVyIHRoZSBzeXN0ZW0gaGFuZyB0b28uDQoNCkhlcmUgYXJlIHRoZSBsYXRlc3QgdXBkYXRl
+cyBhbmQgc29tZSBjbHVlcyBmcm9tIG15IHNpZGU6DQotIEFib3V0IDIwMHVzIGRlbGF5IGlzIHJl
+cXVpcmVkIGFmdGVyIHRoZSBsdHNzbV9lbiBpcyBzZXQgdG8gYmUgJzEnIGF0IG15IHNpZGUuDQpP
+dGhlcndpc2UsIHN5c3RlbSB3b3VsZCBiZSBoYW5nIHdoZW4gZHJpdmVyIGFjY2VzcyB0aGUgcGNp
+ZV9waHlfZGVidWdfcjEgdG8gY2hlY2sNCnRoZSBsaW5rIGlzIHVwIG9yIG5vdC4NCg0KLSBBZnRl
+ciB0aGF0LCBzeXN0ZW0gaGFuZyB3aGVuIHJjIHRyeWluZyB0byBhY2Nlc3MgdGhlIGNmZyBzcGFj
+ZSBvZiBlcCBkZXZpY2UsDQpBbHRob3VnaCB0aGUgcGNpZSBsaW5rIGhhZCBiZWVuIHNldHVwIGFu
+ZCBJIGRvbid0IGhhdmUga25vdyB0aGUgcm9vdCBjYXVzZSB5ZXQuDQoNCi0gVGhlIGtlcm5lbCBj
+YW4gYm9vdCB1cCBzdWNjZXNzZnVsbHksIHdoZW4gSSBtYXNrIHRoZSBjZmcgcmVhZC93cml0ZSBj
+YWxsLWJhY2sgaW4gcGNpZS1kZXNpZ253YXJlLmMNCkRyaXZlciBmb3IgZGVidWcgcHVycG9zZS4N
+Cg0KTm90ZToNClRoZSBzZXF1ZW5jZSBvZiB0aGUgcGNpZSBpbml0aWFsaXphdGlvbiBzaG91bGQg
+YmUgYWRqdXN0ZWQgcmVmZXIgdG8gdGhlIG5ld2x5DQogZGlzY292ZXJlZCBidWcocGNpZSBsaW5r
+IG1heWJlIHJhcmVseSByYW5kb20gZG93biBhZnRlciB0aGUgc3lzdGVtIHdhcm0tcmVzZXQpLg0K
+KiBSZWZfc3NwX2VuKGJpdDE2IG9mIGdwcjEgcmVnaXN0ZXIpIHNob3VsZCBiZSBzZXQgYWZ0ZXIg
+dGhlIHBjaWUgb3RoZXJzIGNsa3MgYXJlIGVuYWJsZS4NCkVuYWJsZSBwY2llIHJlbGF0ZWQgY2xr
+cyAtLT4gZGVsYXkgZm9yIGFib3V0IH4xMHVzIHdhaXRpbmcgZm9yIHRoZSBjbGtzIHN0YWJsZS0t
+PnNldCByZWZfc3NwX2VuKGJpdDE2IG9mIGdwcjEgcmVnaXN0ZXIpLg0KDQpEZWJ1ZyBpcyBzdGls
+bCBvbi1nb2luZy4NCg0KPiBTaGF3biAvIFJpY2hhcmQsDQo+IA0KPiBJIGFtIGFsc28gYWZmZWN0
+ZWQgYnkgdGhpcyBpc3N1ZSBvbiBJTVg2IGJvYXJkcyB0aGF0IEkgc3VwcG9ydC4gSWYgSSBlbmFi
+bGUNCj4gUENJIGluIHRoZSBib290bG9hZGVyIEkgc2VlIHNpbWlsYXIgaGFuZ3MuDQo+IA0KPiBJ
+IGhhdmUgdGhlIGZvbGxvd2luZyBoYXJkd2FyZSBjb25maWd1cmF0aW9ucyBvbiBteSBiZW5jaDoN
+Cj4gICAxLiBJTVg2REwgKyBpMjEwIChzYW1lIFBDSSBzZXR1cCBhcyBGYWJpbydzIGFib3ZlLCBi
+dXQgREwgaW5zdGVhZCBvZiBRKQ0KPiAgIDIuIElNWDZRICsgYXRoOWsgZGV2aWNlDQo+ICAgMy4g
+SU1YNkRMICsgUExYIFBFWDg2MHggUENJZS10by1QQ0llIGJyaWRnZSB3aXRoIHZhcmlvdXMgZGV2
+aWNlcyBiZWhpbmQgdGhlDQo+IGJyaWRnZSwgdXNpbmcgYSBjbG9jayBidWZmZXIgZnJvbSBJTVg2
+IFBDSWUgY2xvY2sNCj4gICA0LiBJTVg2USArIFBMWCBQRVg4NjB4IFBDSWUtdG8tUENJZSBicmlk
+Z2Ugd2l0aCB2YXJpb3VzIGRldmljZXMgYmVoaW5kIHRoZQ0KPiBicmlkZ2UsIHVzaW5nIGEgY2xv
+Y2sgYnVmZmVyIGZyb20gSU1YNiBQQ0llIGNsb2NrDQo+ICAgNS4gSU1YNlEgKyBQTFggUEVYODYw
+eCBQQ0llLXRvLVBDSWUgYnJpZGdlIHdpdGggdmFyaW91cyBkZXZpY2VzIGJlaGluZCB0aGUNCj4g
+YnJpZGdlIHVzaW5nIGEgY2xvY2sgZ2VuZXJhdG9yIChhbHdheXMgb24sIGlnbm9yaW5nIHRoZSBQ
+Q0llIGNsb2NrKQ0KPiANCj4gRm9yIGFsbCBvZiB0aGUgYWJvdmUgSSBoYXZlIG5vIFBDSSBpc3N1
+ZXMgdXNpbmcgMy4xNC8zLjE1LzMuMTYtcmMyL3ZlbmRvcg0KPiAzLjEwLjE3XzEuMC4wX2dhIHVu
+bGVzcyBJIGVuYWJsZSBQQ0kgaW4gdGhlIGJvb3Rsb2FkZXIuIFdoZW4gSSBkbyBzbywgYWxsIG9m
+DQo+IHRoZSBhYm92ZSBjb25maWd1cmF0aW9ucyBoYW5nIHNvbWV3aGVyZSBhcm91bmQgUENJIGlu
+aXQvZW51bWVyYXRpb24uIFRoZSBzYW1lDQo+IG9jY3VycyB3aXRoIHRoZSBtb3N0IHJlY2VudCB2
+ZW5kb3Iga2VybmVsIDMuMTAuMTdfMS4wLjBfZ2Ega2VybmVsICh3b3JrcyB3aGVuDQo+IFBDSSBp
+cyBkaXNhYmxlZCBpbiB0aGUgYm9vdGxvYWRlciwgaGFuZ3Mgb3RoZXJ3aXNlKS4NCj4gDQo+IFdo
+ZW4gSSBhcHBseSBGYWJpbydzIHBhdGNoIGFib3ZlIHRvIHRoZSAzLjE2LXJjMiBrZXJuZWwgSSBm
+aW5kIHRoYXQgc2NlbmFyaW9zDQo+ICM0IGFuZCAjNSBhYm92ZSB0aGVuIHdvcmssICMzIGJvb3Rz
+IGJ1dCB0aGUgUExYIGJyaWRnZSBmYWlscyBhbGwgY29uZmlnIGN5Y2xlcw0KPiAoMHhmZidzKSwg
+IzIgYm9vdHMgYnV0IHdpdGggbm8gUENJZSBsaW5rLCBhbmQgIzEgYWJvdmUgc3RpbGwgaGFuZ3Mu
+IFByZXZpb3VzbHksDQo+IHdoZW4gSSBoYXZlIGR1ZyBpbnRvIHRoaXMgcGFydGljdWxhciAnaGFu
+ZycgaXNzdWUgb24gMy4xNSBJIGZvdW5kIHRoYXQgdGhlDQo+IGRlbGF5IG5lZWRlZCB0byBiZSBi
+ZXR3ZWVuDQo+IGlteDZfcGNpZV9wcm9iZSgpIHJlcXVlc3RpbmcgYW5kIGFzc2VydGluZyByZXNl
+dF9ncGlvIGxvdywgYW5kIGJlZm9yZSBzZXR0aW5nDQo+IElPTVVYX0dQUjE6MTggdG8gcG93ZXIg
+ZG93biB0aGUgUENJZSBQSFkgKG5vdGUgaGVyZSwgdGhhdCB0aGUgUEhZIGlzIGN1cnJlbnRseQ0K
+PiBlbmFibGVkIGluIHRoZSBib290bG9hZGVyIHdoZW4gUENJIGlzIGVuYWJsZWQgdGhlcmUpLg0K
+PiANCj4gV2hlbiBJIGFwcGx5IEZhYmlvJ3MgcGF0Y2ggYWJvdmUgdG8gdGhlIG1vc3QgcmVjZW50
+IHZlbmRvciBrZXJuZWwNCj4gMy4xMC4xN18xLjAuMF9nYSBJIHN0aWxsIGhhbmcgaW4gYWxsIGNh
+c2VzLg0KPiANCj4gU28gd2hpbGUgSSBhZ3JlZSB0aGVyZSBpcyBzb21ldGhpbmcgaG9ycmlibHkg
+d3Jvbmcgd2l0aCBJTVg2IFBDSSBzdGlsbCwgSQ0KPiBkb24ndCB0aGluayBGYWJpbydzIHBhdGNo
+IGlzIHRoZSByaWdodCBzb2x1dGlvbiBhbmQgSSBkb24ndCBoYXZlIGFueXRoaW5nDQo+IGJldHRl
+ciBhdCB0aGlzIHBvaW50IGluIHRpbWUuIEknbSBoYXBweSB0byBzaGFyZSBhbnkgaGFyZHdhcmUg
+d2l0aCBhbnlvbmUgdGhhdA0KPiBjYW4gd29yayB0aHJvdWdoIHRoaXMgaXNzdWUuDQo+IA0KPiBU
+aGFua3MsDQo+IA0KPiBUaW0NCg0KQmVzdCBSZWdhcmRzDQpSaWNoYXJkIFpodQ0KDQo=
