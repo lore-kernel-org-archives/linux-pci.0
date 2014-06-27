@@ -1,76 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:50538 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570AbaFSNA7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 09:00:59 -0400
-Message-ID: <53A2DEDA.5050104@ti.com>
-Date: Thu, 19 Jun 2014 18:30:10 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Received: from mout.kundenserver.de ([212.227.17.24]:56502 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753240AbaF0LEY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 07:04:24 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Jon Masters <jonathan@jonmasters.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Michal Simek <monstr@monstr.eu>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
+Date: Fri, 27 Jun 2014 13:03:34 +0200
+Message-ID: <6381366.2IfqZj1r0B@wuerfel>
+In-Reply-To: <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com> <20140626085926.GB11244@arm.com> <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Tero Kristo <t-kristo@ti.com>, <devicetree@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <arnd@arndb.de>, <tony@atomide.com>, <jg1.han@samsung.com>,
-	Keerthy <j-keerthy@ti.com>, Rajendra Nayak <rnayak@ti.com>,
-	Paul Walmsley <paul@pwsan.com>
-Subject: Re: [PATCH v2 07/18] ARM: dts: DRA7: Change the parent of apll_pcie_in_clk_mux
- to dpll_pcie_ref_m2ldo_ck
-References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-8-git-send-email-kishon@ti.com> <53A2C5B4.9080300@ti.com>
-In-Reply-To: <53A2C5B4.9080300@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tero,
-
-On Thursday 19 June 2014 04:42 PM, Tero Kristo wrote:
-> On 05/29/2014 09:38 AM, Kishon Vijay Abraham I wrote:
->> From: Keerthy <j-keerthy@ti.com>
->>
->> Change the parent of apll_pcie_in_clk_mux to dpll_pcie_ref_m2ldo_ck
->> from dpll_pcie_ref_ck.
+On Thursday 26 June 2014 19:44:21 Rob Herring wrote:
+> > Although a bit late, I'm raising this now and hopefully we'll come to a
+> > conclusion soon. Delaying arm64 PCIe support even further is not a real
+> > option, which leaves us with:
+> >
+> > 1. Someone else (with enough PCIe knowledge) volunteering to take over
+> >    soon or
 > 
-> Why? Needs a better changelog also.
-
-Figure 26-22. DPLL_PCIE_REF Functional Block Diagram in vE of DRA7xx ES1.0 TRM
-shows the signal name for the output of post divider (M2) is CLKOUTLDO.
-
-Figure 26-21. PCIe PHY Clock Generator Overview shows CLKOUTLDO is used as
-input to apll mux.
-
-So the actual output of dpll should be dpll_pcie_ref_m2ldo_ck instead of
-dpll_pcie_ref_ck (which is the input of apll mux).
-
-Thanks
-Kishon
+> Well, I might have 2 months ago, but now I'm pretty booked up.
 > 
-> -Tero
+> > 2. Dropping Liviu's work and going for an arm64-specific implementation
+> >    (most likely based on the arm32 implementation, see below)
 > 
->>
->> Cc: Rajendra Nayak <rnayak@ti.com>
->> Cc: Tero Kristo <t-kristo@ti.com>
->> Cc: Paul Walmsley <paul@pwsan.com>
->> Signed-off-by: Keerthy <j-keerthy@ti.com>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>   arch/arm/boot/dts/dra7xx-clocks.dtsi |    2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> b/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> index 55e95c5..44993ec 100644
->> --- a/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> +++ b/arch/arm/boot/dts/dra7xx-clocks.dtsi
->> @@ -1152,7 +1152,7 @@
->>
->>       apll_pcie_in_clk_mux: apll_pcie_in_clk_mux@4ae06118 {
->>           compatible = "ti,mux-clock";
->> -        clocks = <&dpll_pcie_ref_ck>, <&pciesref_acs_clk_ck>;
->> +        clocks = <&dpll_pcie_ref_m2ldo_ck>, <&pciesref_acs_clk_ck>;
->>           #clock-cells = <0>;
->>           reg = <0x021c 0x4>;
->>           ti,bit-shift = <7>;
->>
+> 3. Keeping Liviu's patches leaving some of the architecture specific
+> bits. I know Arnd and I both commented on it still needing more common
+> pieces, but compared to option 2 that would be way better.
+
+Agreed.
+ 
+> 920a685 pci: Add support for creating a generic host_bridge from device tree
 > 
+> This function could be moved to drivers/of/of_pci.c if having it in
+> drivers/pci is too much maintenance burden. However, nearly the same
+> code is already being duplicated in every DT enabled ARM PCI host
+> driver and will continue as more PCI hosts are added. So this isn't
+> really a question of converting other architectures to common PCI host
+> infrastructure, but converting DT based PCI hosts to common
+> infrastructure. ARM is the only arch moving host drivers to
+> drivers/pci ATM. Until other architectures start doing that,
+> converting them is pointless.
+
+This is the most important part in my mind. Every implementation gets
+this code wrong at least initially, and we have to provide some generic
+helper to get the broken code out of host drivers. I don't care whether
+that helper is part of the PCI core or part of the OF core.
+
+> 7cfde80 arm64: Add architecture support for PCI
+> 
+> What is here is really just a function of which option we pick.
+> 
+> 
+> > First option is ideal but there is work to do as laid out by Arnd here:
+> >
+> > http://article.gmane.org/gmane.linux.kernel/1679304
+> 
+> I don't agree arm32 is harder than microblaze. Yes, converting ALL of
+> arm would be, but that is not necessary. With Liviu's latest branch
+> the hacks I previously needed are gone (thanks!), and this is all I
+> need to get Versatile PCI working (under QEMU):
+
+I meant converting all of arm32 would be harder, but I agree we don't
+have to do it. It would be nice to convert all of the drivers/pci/host
+drivers though, iow all multiplatform-enabled ones, and leaving the
+current arm32 pci implementation for the platforms we don't want to
+convert to multiplatform anyway (footbridge, iop, ixp4xx, ks8695 (?),
+pxa, sa1100).
+
+	Arnd
