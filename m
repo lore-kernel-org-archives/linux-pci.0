@@ -1,72 +1,126 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC Patch V2 08/16] PCI: kill wrong warning message in pcieport driver
-Date: Tue, 17 Jun 2014 13:29:47 +0800
-Message-Id: <1402982995-13747-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:35175 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752845AbaF0OPN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 10:15:13 -0400
+Date: Fri, 27 Jun 2014 15:14:51 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Jon Masters <jonathan@jonmasters.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Michal Simek <monstr@monstr.eu>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140627141451.GJ15296@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140405001953.GE15806@google.com>
+ <20140407083120.GE17163@e106497-lin.cambridge.arm.com>
+ <5183143.FxBNM0xTAV@wuerfel>
+ <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
+ <20140626085926.GB11244@arm.com>
+ <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For hot-added PCIe ports, it always generates a warning message on x86
-platforms when binding to pcieport driver as:
-	"device [8086:0e0b] has invalid IRQ; check vendor BIOS".
+On Fri, Jun 27, 2014 at 01:44:21AM +0100, Rob Herring wrote:
+> On Thu, Jun 26, 2014 at 3:59 AM, Catalin Marinas
+> <catalin.marinas@arm.com> wrote:
+> > Although a bit late, I'm raising this now and hopefully we'll come to a
+> > conclusion soon. Delaying arm64 PCIe support even further is not a real
+> > option, which leaves us with:
+> >
+> > 1. Someone else (with enough PCIe knowledge) volunteering to take over
+> >    soon or
+> > 2. Dropping Liviu's work and going for an arm64-specific implementation
+> >    (most likely based on the arm32 implementation, see below)
+> 
+> 3. Keeping Liviu's patches leaving some of the architecture specific
+> bits. I know Arnd and I both commented on it still needing more common
+> pieces, but compared to option 2 that would be way better.
+> 
+> Let's look at the patches in question:
+> 
+> 3e71867 pci: Introduce pci_register_io_range() helper function.
+> 6681dff pci: OF: Fix the conversion of IO ranges into IO resources.
+> 
+> Both OF patches. I'll happily merge them.
 
-It's due to that we check pci_dev->irq before actually allocating IRQ
-number for the PCI device:
-	if (!dev->irq && dev->pin) {
-		dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; "
-			 "check vendor BIOS\n", dev->vendor, dev->device);
-	}
- 	status = pcie_port_device_register(dev);
-		-->pci_enable_device(dev);
-			-->pci_enable_device_flags()
-				-->do_pci_enable_device()
-					-->pcibios_enable_device()
-						-->pcibios_enable_irq()
+We just need to make sure they don't break other users of
+of_pci_range_to_resource() that the second patch introduces.
 
-This warning message isn't generated for PCIe ports present at boot time
-because x86 arch code has called acpi_pci_irq_enable() in pci_acpi_init()
-for each PCI device for safety.
+> 2d5dd85 pci: Create pci_host_bridge before its associated bus in
+> pci_create_root_bus.
+> f6f2854 pci: Introduce a domain number for pci_host_bridge.
+> 524a9f5 pci: Export find_pci_host_bridge() function.
+> 
+> These don't seem to be too controversial.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/pci/pcie/portdrv_pci.c |    4 ----
- 1 file changed, 4 deletions(-)
+I think here there were discussions around introducing domain_nr to
+pci_host_bridge, particularly to the pci_create_root_bus_in_domain() API
+change. I don't think we reached any conclusion.
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 0d8fdc48e642..0e35f9670066 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -203,10 +203,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 	     (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)))
- 		return -ENODEV;
- 
--	if (!dev->irq && dev->pin) {
--		dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; "
--			 "check vendor BIOS\n", dev->vendor, dev->device);
--	}
- 	status = pcie_port_device_register(dev);
- 	if (status)
- 		return status;
+> fb75718 pci: of: Parse and map the IRQ when adding the PCI device.
+> 
+> 6 LOC. Hardly controversial.
+
+I agree.
+
+> 920a685 pci: Add support for creating a generic host_bridge from device tree
+> 
+> This function could be moved to drivers/of/of_pci.c if having it in
+> drivers/pci is too much maintenance burden.
+
+I think it makes sense. Currently drivers/pci/host-bridge.c doesn't have
+anything OF related, so of_pci.c looks more appropriate.
+
+> However, nearly the same
+> code is already being duplicated in every DT enabled ARM PCI host
+> driver and will continue as more PCI hosts are added. So this isn't
+> really a question of converting other architectures to common PCI host
+> infrastructure, but converting DT based PCI hosts to common
+> infrastructure. ARM is the only arch moving host drivers to
+> drivers/pci ATM. Until other architectures start doing that,
+> converting them is pointless.
+
+I agree. It's probably more important to convert some of the
+drivers/pci/host implementations to using the common parsing rather than
+a new architecture (this way we avoid even more code duplication).
+
+> bcf5c10 Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+> 
+> Seems like an independent fix that should be applied regardless.
+
+Indeed. But it got stuck at the top of this series and hasn't been
+pushed upstream.
+
+> 7cfde80 arm64: Add architecture support for PCI
+> 
+> What is here is really just a function of which option we pick.
+
+With Liviu's latest version (not posted) and with
+of_create_pci_host_bridge() function moved to of_pci.c, I don't think
+there is much new functionality added to drivers/pci/. What I think we
+need is clarifying the domain_nr patch (and API change) and more users
+of the new generic code. As you said, it doesn't need to be a separate
+architecture but rather existing pci host drivers under drivers/pci. Of
+course, other arch conversion should follow shortly as well but even
+without an immediate conversion, I don't see too much additional
+maintenance burden for the core PCIe code (and code sharing between new
+PCIe host drivers is even more beneficial).
+
 -- 
-1.7.10.4
-
+Catalin
