@@ -1,84 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:51414 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932472AbaFTSza (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jun 2014 14:55:30 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-omap <linux-omap@vger.kernel.org>,
+Received: from relmlor2.renesas.com ([210.160.252.172]:25784 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751304AbaF0Qbz convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 27 Jun 2014 12:31:55 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	"horms@verge.net.au" <horms@verge.net.au>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Marek Vasut <marex@denx.de>, Tony Lindgren <tony@atomide.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 04/18] PCI: designware: use untranslated address while programming ATU
-Date: Fri, 20 Jun 2014 20:54:39 +0200
-Message-ID: <4516730.Mn8ZI8EqE1@wuerfel>
-In-Reply-To: <CAL_JsqJxppWOOWoX1MYF26OWXW7BdMZP1BQpq8cSgJ3n1QF5PA@mail.gmail.com>
-References: <1401345500-20188-1-git-send-email-kishon@ti.com> <1401345500-20188-5-git-send-email-kishon@ti.com> <CAL_JsqJxppWOOWoX1MYF26OWXW7BdMZP1BQpq8cSgJ3n1QF5PA@mail.gmail.com>
-MIME-Version: 1.0
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>
+Subject: RE: [PATCH] pcie-rcar: kill duplicate checks
+Date: Fri, 27 Jun 2014 16:31:49 +0000
+Message-ID: <b6f599bde2b347b6aae6dc638df16a21@HKXPR06MB168.apcprd06.prod.outlook.com>
+References: <201406271859.13626.sergei.shtylyov@cogentembedded.com>
+In-Reply-To: <201406271859.13626.sergei.shtylyov@cogentembedded.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 20 June 2014 12:45:46 Rob Herring wrote:
-> On Thu, May 29, 2014 at 1:38 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> > In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
-> > address. So whenever the cpu issues a read/write request, the 4 most
-> > significant bits are used by L3 to determine the target controller.
-> > For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
-> > the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
-> > the outbound translation window the *base* should be programmed as 0x000_0000.
-> > Whenever we try to write to say 0x2000_0000, it will be translated to whatever
-> > we have programmed in the translation window with base as 0x000_0000.
-> >
-> > This is needed when the dt node is modelled something like below
-> > axi {
-> >         compatible = "simple-bus";
-> >         #size-cells = <1>;
-> >         #address-cells = <1>;
-> >         ranges = <0x0        0x20000000 0x10000000 // 28-bit bus
-> >                   0x51000000 0x51000000 0x3000>;
-> >         pcie@51000000 {
-> >                 reg = <0x1000 0x2000>, <0x51002000 0x14c>, <0x51000000 0x2000>;
-> >                 reg-names = "config", "ti_conf", "rc_dbics";
-> >                 #address-cells = >;
-> >                 #size-cells = <2>;
-> >                 ranges = <0x81000000 0 0          0x03000 0 0x00010000
-> >                           0x82000000 0 0x20013000 0x13000 0 0xffed000>;
-> >         };
-> > };
-> >
-> > Here the CPU address for configuration space is 0x20013000 and the controller
-> > address for configuration space is 0x13000. The controller address should be
-> > used while programming the ATU (in order for translation to happen properly in
-> > DRA7xx).
+Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
+
+Thanks
+Phil
+
+On 27 June 2014 15:59, Sergei wrote:
+> The PCI core will have already checked the configuration register address
+> before
+> calling the {read|write}() methods, no need to check it again in these
+> methods.
 > 
-> This talks about config space, but the ranges field is PCI memory
-> space. Also, does this actually work because I though Linux expects
-> memory BARs to be 1MB aligned.
-
-Good point about the alignment.
-
-Actually both the config space and memory space are set up through the
-intermediate ranges of the parent bus.
-
-> Getting the controller offset should work whether you specify the
-> address as 0x13000 with translation or the absolute address
-> 0x20013000. In other words, the driver should know how many bits to
-> mask off to get the offset.
-
-That's what the first version of the patch did, and I didn't like that
-because the masking is not actually a property of the controller, but
-it's based on how the controller is connected to the parent bus, in this
-case by using a narrower connection. We can describe the connection just
-fine using standard DT properties and I think we should.
-
-	Arnd
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> 
+> ---
+> The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo.
+> 
+>  drivers/pci/host/pcie-rcar.c |   10 ----------
+>  1 file changed, 10 deletions(-)
+> 
+> Index: pci/drivers/pci/host/pcie-rcar.c
+> ==========================================================
+> =========
+> --- pci.orig/drivers/pci/host/pcie-rcar.c
+> +++ pci/drivers/pci/host/pcie-rcar.c
+> @@ -260,11 +260,6 @@ static int rcar_pcie_read_conf(struct pc
+>  	struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
+>  	int ret;
+> 
+> -	if ((size == 2) && (where & 1))
+> -		return PCIBIOS_BAD_REGISTER_NUMBER;
+> -	else if ((size == 4) && (where & 3))
+> -		return PCIBIOS_BAD_REGISTER_NUMBER;
+> -
+>  	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
+>  				      bus, devfn, where, val);
+>  	if (ret != PCIBIOS_SUCCESSFUL) {
+> @@ -291,11 +286,6 @@ static int rcar_pcie_write_conf(struct p
+>  	int shift, ret;
+>  	u32 data;
+> 
+> -	if ((size == 2) && (where & 1))
+> -		return PCIBIOS_BAD_REGISTER_NUMBER;
+> -	else if ((size == 4) && (where & 3))
+> -		return PCIBIOS_BAD_REGISTER_NUMBER;
+> -
+>  	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
+>  				      bus, devfn, where, &data);
+>  	if (ret != PCIBIOS_SUCCESSFUL)
