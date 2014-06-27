@@ -1,150 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>, <paul@pwsan.com>, <tony@atomide.com>,
-	<linux@arm.linux.org.uk>, <rnayak@ti.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <kishon@ti.com>
-Subject: [PATCH 1/2] arm: dra7xx: Add hwmod data for pcie1 phy and pcie2 phy
-Date: Wed, 25 Jun 2014 23:32:45 +0530
-Message-ID: <1403719366-9656-2-git-send-email-kishon@ti.com>
-In-Reply-To: <1403719366-9656-1-git-send-email-kishon@ti.com>
-References: <1403719366-9656-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f50.google.com ([209.85.215.50]:63468 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753649AbaF0O7D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 10:59:03 -0400
+Received: by mail-la0-f50.google.com with SMTP id pv20so3031445lab.37
+        for <linux-pci@vger.kernel.org>; Fri, 27 Jun 2014 07:59:01 -0700 (PDT)
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org
+Subject: [PATCH] pcie-rcar: kill duplicate checks
+Date: Fri, 27 Jun 2014 18:59:13 +0400
+Cc: phil.edworthy@renesas.com
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201406271859.13626.sergei.shtylyov@cogentembedded.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added hwmod data for pcie1 and pcie2 phy present in DRA7xx SOC.
-Also added the missing CLKCTRL OFFSET macro and CONTEXT OFFSET macro
-for pcie1 phy and pcie2 phy.
+The PCI core will have already checked the configuration register address before
+calling the {read|write}() methods, no need to check it again in these methods.
 
-Cc: Tony Lindgren <tony@atomide.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Paul Walmsley <paul@pwsan.com>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+
 ---
-Please find the bootlog with these hwmod patches
-http://paste.ubuntu.com/7701601/
- arch/arm/mach-omap2/cm2_7xx.h             |    4 ++
- arch/arm/mach-omap2/omap_hwmod_7xx_data.c |   57 +++++++++++++++++++++++++++++
- arch/arm/mach-omap2/prm7xx.h              |    4 ++
- 3 files changed, 65 insertions(+)
+The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo.
 
-diff --git a/arch/arm/mach-omap2/cm2_7xx.h b/arch/arm/mach-omap2/cm2_7xx.h
-index 9ad7594..e966e3a 100644
---- a/arch/arm/mach-omap2/cm2_7xx.h
-+++ b/arch/arm/mach-omap2/cm2_7xx.h
-@@ -357,6 +357,10 @@
- #define DRA7XX_CM_L3INIT_SATA_CLKCTRL				DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x0088)
- #define DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET				0x00a0
- #define DRA7XX_CM_PCIE_STATICDEP_OFFSET				0x00a4
-+#define DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL_OFFSET			0x00b0
-+#define DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL			DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x00b0)
-+#define DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL_OFFSET			0x00b8
-+#define DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL			DRA7XX_CM_CORE_REGADDR(DRA7XX_CM_CORE_L3INIT_INST, 0x00b8)
- #define DRA7XX_CM_GMAC_CLKSTCTRL_OFFSET				0x00c0
- #define DRA7XX_CM_GMAC_STATICDEP_OFFSET				0x00c4
- #define DRA7XX_CM_GMAC_DYNAMICDEP_OFFSET			0x00c8
-diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-index 3deb76e..6ff40a6 100644
---- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-+++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-@@ -1290,6 +1290,45 @@ static struct omap_hwmod dra7xx_ocp2scp3_hwmod = {
- };
- 
- /*
-+ * 'PCIE PHY' class
-+ *
-+ */
-+
-+static struct omap_hwmod_class dra7xx_pcie_phy_hwmod_class = {
-+	.name	= "pcie-phy",
-+};
-+
-+/* pcie1 phy */
-+static struct omap_hwmod dra7xx_pcie1_phy_hwmod = {
-+	.name		= "pcie1-phy",
-+	.class		= &dra7xx_pcie_phy_hwmod_class,
-+	.clkdm_name	= "l3init_clkdm",
-+	.main_clk	= "l4_root_clk_div",
-+	.prcm = {
-+		.omap4 = {
-+			.clkctrl_offs = DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL_OFFSET,
-+			.context_offs = DRA7XX_RM_L3INIT_PCIESS1_CONTEXT_OFFSET,
-+			.modulemode   = MODULEMODE_SWCTRL,
-+		},
-+	},
-+};
-+
-+/* pcie2 phy */
-+static struct omap_hwmod dra7xx_pcie2_phy_hwmod = {
-+	.name		= "pcie2-phy",
-+	.class		= &dra7xx_pcie_phy_hwmod_class,
-+	.clkdm_name	= "l3init_clkdm",
-+	.main_clk	= "l4_root_clk_div",
-+	.prcm = {
-+		.omap4 = {
-+			.clkctrl_offs = DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL_OFFSET,
-+			.context_offs = DRA7XX_RM_L3INIT_PCIESS2_CONTEXT_OFFSET,
-+			.modulemode   = MODULEMODE_SWCTRL,
-+		},
-+	},
-+};
-+
-+/*
-  * 'qspi' class
-  *
-  */
-@@ -2409,6 +2448,22 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__ocp2scp1 = {
- 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
- };
- 
-+/* l4_cfg -> pcie1 phy */
-+static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1_phy = {
-+	.master		= &dra7xx_l4_cfg_hwmod,
-+	.slave		= &dra7xx_pcie1_phy_hwmod,
-+	.clk		= "l4_root_clk_div",
-+	.user		= OCP_USER_MPU | OCP_USER_SDMA,
-+};
-+
-+/* l4_cfg -> pcie2 phy */
-+static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie2_phy = {
-+	.master		= &dra7xx_l4_cfg_hwmod,
-+	.slave		= &dra7xx_pcie2_phy_hwmod,
-+	.clk		= "l4_root_clk_div",
-+	.user		= OCP_USER_MPU | OCP_USER_SDMA,
-+};
-+
- static struct omap_hwmod_addr_space dra7xx_qspi_addrs[] = {
- 	{
- 		.pa_start	= 0x4b300000,
-@@ -2758,6 +2813,8 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
- 	&dra7xx_l4_cfg__mpu,
- 	&dra7xx_l4_cfg__ocp2scp1,
- 	&dra7xx_l4_cfg__ocp2scp3,
-+	&dra7xx_l4_cfg__pcie1_phy,
-+	&dra7xx_l4_cfg__pcie2_phy,
- 	&dra7xx_l3_main_1__qspi,
- 	&dra7xx_l4_cfg__sata,
- 	&dra7xx_l4_cfg__smartreflex_core,
-diff --git a/arch/arm/mach-omap2/prm7xx.h b/arch/arm/mach-omap2/prm7xx.h
-index d92a840..4bb50fbf 100644
---- a/arch/arm/mach-omap2/prm7xx.h
-+++ b/arch/arm/mach-omap2/prm7xx.h
-@@ -374,6 +374,10 @@
- #define DRA7XX_RM_L3INIT_IEEE1500_2_OCP_CONTEXT_OFFSET		0x007c
- #define DRA7XX_PM_L3INIT_SATA_WKDEP_OFFSET			0x0088
- #define DRA7XX_RM_L3INIT_SATA_CONTEXT_OFFSET			0x008c
-+#define DRA7XX_PM_L3INIT_PCIESS1_WKDEP_OFFSET			0x00b0
-+#define DRA7XX_RM_L3INIT_PCIESS1_CONTEXT_OFFSET		0x00b4
-+#define DRA7XX_PM_L3INIT_PCIESS2_WKDEP_OFFSET			0x00b8
-+#define DRA7XX_RM_L3INIT_PCIESS2_CONTEXT_OFFSET		0x00bc
- #define DRA7XX_RM_GMAC_GMAC_CONTEXT_OFFSET			0x00d4
- #define DRA7XX_RM_L3INIT_OCP2SCP1_CONTEXT_OFFSET		0x00e4
- #define DRA7XX_RM_L3INIT_OCP2SCP3_CONTEXT_OFFSET		0x00ec
--- 
-1.7.9.5
+ drivers/pci/host/pcie-rcar.c |   10 ----------
+ 1 file changed, 10 deletions(-)
 
+Index: pci/drivers/pci/host/pcie-rcar.c
+===================================================================
+--- pci.orig/drivers/pci/host/pcie-rcar.c
++++ pci/drivers/pci/host/pcie-rcar.c
+@@ -260,11 +260,6 @@ static int rcar_pcie_read_conf(struct pc
+ 	struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
+ 	int ret;
+ 
+-	if ((size == 2) && (where & 1))
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-	else if ((size == 4) && (where & 3))
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+ 	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
+ 				      bus, devfn, where, val);
+ 	if (ret != PCIBIOS_SUCCESSFUL) {
+@@ -291,11 +286,6 @@ static int rcar_pcie_write_conf(struct p
+ 	int shift, ret;
+ 	u32 data;
+ 
+-	if ((size == 2) && (where & 1))
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-	else if ((size == 4) && (where & 3))
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+ 	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
+ 				      bus, devfn, where, &data);
+ 	if (ret != PCIBIOS_SUCCESSFUL)
