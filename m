@@ -1,106 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:33756 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757712AbaFSIbc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 04:31:32 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 3/5] PCI/MSI: Cache Multiple Message Capable info in msi_desc
-Date: Thu, 19 Jun 2014 16:30:30 +0800
-Message-ID: <1403166630-5252-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-vc0-f170.google.com ([209.85.220.170]:53550 "EHLO
+	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbaF0Aon (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jun 2014 20:44:43 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20140626085926.GB11244@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140405001953.GE15806@google.com> <20140407083120.GE17163@e106497-lin.cambridge.arm.com>
+ <5183143.FxBNM0xTAV@wuerfel> <CAErSpo4iEV6khP63ZTF+YUTKi9WLFXzMv13nxw15y3qDg15Ztg@mail.gmail.com>
+ <20140626085926.GB11244@arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Thu, 26 Jun 2014 19:44:21 -0500
+Message-ID: <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper function.
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Jon Masters <jonathan@jonmasters.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Michal Simek <monstr@monstr.eu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Multiple Message Capabale is read-only indicates the max
-vector number device support. Cache it in msi_desc to avoid
-access these bits repeatly. Then we remove the unused
-function msi_capable_mask().
+Adding Michael Simek...
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/msi.c   |   15 +++++----------
- include/linux/msi.h |    1 +
- 2 files changed, 6 insertions(+), 10 deletions(-)
+On Thu, Jun 26, 2014 at 3:59 AM, Catalin Marinas
+<catalin.marinas@arm.com> wrote:
+> (sorry for replying to a months old thread)
+>
+> On Mon, Apr 07, 2014 at 06:58:24PM +0100, Bjorn Helgaas wrote:
+>> On Mon, Apr 7, 2014 at 5:36 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>>
+>> > I think migrating other architectures to use the same code should be
+>> > a separate effort from adding a generic implementation that can be
+>> > used by arm64. It's probably a good idea to have patches to convert
+>> > arm32 and/or microblaze.
+>>
+>> Let me reiterate that I am 100% in favor of replacing arch-specific
+>> code with more generic implementations.
+>>
+>> However, I am not 100% in favor of doing it as separate efforts
+>> (although maybe I could be convinced).  The reasons I hesitate are
+>> that (1) if only one architecture uses a new "generic" implementation,
+>> we really don't know whether it is generic enough, (2) until I see the
+>> patches to convert other architectures, I have to assume that I'm the
+>> one who will write them, and (3) as soon as we add the code to
+>> drivers/pci, it becomes partly my headache to maintain it, even if
+>> only one arch benefits from it.
+>
+> I agree and understand your point.
+>
+>> Please don't think I'm questioning anyone's intent or good will.  It's
+>> just that I understand the business pressures, and I know how hard it
+>> can be to justify this sort of work to one's management, especially
+>> after the immediate problem has been solved.
+>
+> But, unfortunately, that's something we failed to address in reasonable
+> time (even though I was one of the proponents of the generic PCIe
+> implementation). This work is very likely to slip further into the late
+> part of this year and I am aware that several ARM partners are blocked
+> on the (upstream) availability of PCIe support for the arm64 kernel.
+>
+> Although a bit late, I'm raising this now and hopefully we'll come to a
+> conclusion soon. Delaying arm64 PCIe support even further is not a real
+> option, which leaves us with:
+>
+> 1. Someone else (with enough PCIe knowledge) volunteering to take over
+>    soon or
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index dd34dbe..d8e431d 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -168,11 +168,6 @@ static inline __attribute_const__ u32 msi_mask(unsigned x)
- 	return (1 << (1 << x)) - 1;
- }
- 
--static inline __attribute_const__ u32 msi_capable_mask(u16 control)
--{
--	return msi_mask((control >> 1) & 7);
--}
--
- /*
-  * PCI 2.3 does not specify mask bits for each MSI interrupt.  Attempting to
-  * mask all MSI interrupts by clearing the MSI enable bit does not work
-@@ -455,7 +450,8 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
- 	arch_restore_msi_irqs(dev);
- 
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
--	msi_mask_irq(entry, msi_capable_mask(control), entry->masked);
-+	msi_mask_irq(entry, msi_mask(entry->msi_attrib.multi_cap),
-+			entry->masked);
- 	control &= ~PCI_MSI_FLAGS_QSIZE;
- 	control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
- 	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
-@@ -618,6 +614,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
- 	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
- 	entry->msi_attrib.pos		= dev->msi_cap;
-+	entry->msi_attrib.multi_cap = (control & PCI_MSI_FLAGS_QMASK) >> 1;
- 
- 	if (control & PCI_MSI_FLAGS_64BIT)
- 		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
-@@ -626,7 +623,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	/* All MSIs are unmasked by default, Mask them all */
- 	if (entry->msi_attrib.maskbit)
- 		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
--	mask = msi_capable_mask(control);
-+	mask = msi_mask(entry->msi_attrib.multi_cap);
- 	msi_mask_irq(entry, mask, mask);
- 
- 	list_add_tail(&entry->list, &dev->msi_list);
-@@ -871,7 +868,6 @@ void pci_msi_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *desc;
- 	u32 mask;
--	u16 ctrl;
- 
- 	if (!pci_msi_enable || !dev || !dev->msi_enabled)
- 		return;
-@@ -884,8 +880,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
- 	dev->msi_enabled = 0;
- 
- 	/* Return the device with MSI unmasked as initial states */
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &ctrl);
--	mask = msi_capable_mask(ctrl);
-+	mask = msi_mask(desc->msi_attrib.multi_cap);
- 	/* Keep cached state to be restored */
- 	arch_msi_mask_irq(desc, mask, ~mask);
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 92a2f99..a91156e 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -26,6 +26,7 @@ struct msi_desc {
- 	struct {
- 		__u8	is_msix	: 1;
- 		__u8	multiple: 3;	/* log2 number of messages */
-+		__u8	multi_cap : 3;	/* max log2 number of messages support */
- 		__u8	maskbit	: 1;	/* mask-pending bit supported ? */
- 		__u8	is_64	: 1;	/* Address size: 0=32bit 1=64bit */
- 		__u8	pos;		/* Location of the msi capability */
--- 
-1.7.1
+Well, I might have 2 months ago, but now I'm pretty booked up.
+
+> 2. Dropping Liviu's work and going for an arm64-specific implementation
+>    (most likely based on the arm32 implementation, see below)
+
+3. Keeping Liviu's patches leaving some of the architecture specific
+bits. I know Arnd and I both commented on it still needing more common
+pieces, but compared to option 2 that would be way better.
+
+Let's look at the patches in question:
+
+3e71867 pci: Introduce pci_register_io_range() helper function.
+6681dff pci: OF: Fix the conversion of IO ranges into IO resources.
+
+Both OF patches. I'll happily merge them.
 
 
+2d5dd85 pci: Create pci_host_bridge before its associated bus in
+pci_create_root_bus.
+f6f2854 pci: Introduce a domain number for pci_host_bridge.
+524a9f5 pci: Export find_pci_host_bridge() function.
+
+These don't seem to be too controversial.
+
+
+fb75718 pci: of: Parse and map the IRQ when adding the PCI device.
+
+6 LOC. Hardly controversial.
+
+
+920a685 pci: Add support for creating a generic host_bridge from device tree
+
+This function could be moved to drivers/of/of_pci.c if having it in
+drivers/pci is too much maintenance burden. However, nearly the same
+code is already being duplicated in every DT enabled ARM PCI host
+driver and will continue as more PCI hosts are added. So this isn't
+really a question of converting other architectures to common PCI host
+infrastructure, but converting DT based PCI hosts to common
+infrastructure. ARM is the only arch moving host drivers to
+drivers/pci ATM. Until other architectures start doing that,
+converting them is pointless.
+
+bcf5c10 Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+
+Seems like an independent fix that should be applied regardless.
+
+
+7cfde80 arm64: Add architecture support for PCI
+
+What is here is really just a function of which option we pick.
+
+
+> First option is ideal but there is work to do as laid out by Arnd here:
+>
+> http://article.gmane.org/gmane.linux.kernel/1679304
+
+I don't agree arm32 is harder than microblaze. Yes, converting ALL of
+arm would be, but that is not necessary. With Liviu's latest branch
+the hacks I previously needed are gone (thanks!), and this is all I
+need to get Versatile PCI working (under QEMU):
+
+diff --git a/arch/arm/include/asm/io.h b/arch/arm/include/asm/io.h
+index 3d23418..22b7529 100644
+--- a/arch/arm/include/asm/io.h
++++ b/arch/arm/include/asm/io.h
+@@ -178,6 +178,7 @@ static inline void __iomem *__typesafe_io(unsigned
+long addr)
+
+ /* PCI fixed i/o mapping */
+ #define PCI_IO_VIRT_BASE       0xfee00000
++#define PCI_IOBASE             PCI_IO_VIRT_BASE
+
+ #if defined(CONFIG_PCI)
+ void pci_ioremap_set_mem_type(int mem_type);
+
+Hum, so I guess now I've converted ARM...
+
+Here's a branch with my changes[1]. And BTW, it also has
+multi-platform support for Versatile as moving the PCI host to DT (and
+drivers/pci/host) is about the last remaining obstacle.
+
+Rob
+
+[1] git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git
+versatile-pci-v2
