@@ -1,123 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64455 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754584AbaFJGNU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 Jun 2014 02:13:20 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch V4 38/42] x86, irq, ACPI: release IOAPIC pin when PCI device is disabled
-Date: Tue, 10 Jun 2014 14:16:27 +0800
-Message-Id: <1402380987-32577-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-39-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-39-git-send-email-jiang.liu@linux.intel.com>
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:57370 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751972AbaF0Nig (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 09:38:36 -0400
+Date: Fri, 27 Jun 2014 14:38:21 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Michal Simek <monstr@monstr.eu>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Jon Masters <jonathan@jonmasters.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140627133821.GI15296@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <6381366.2IfqZj1r0B@wuerfel>
+ <20140627124949.GR26276@arm.com>
+ <7528887.J1DnSBg239@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7528887.J1DnSBg239@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Release IOAPIC pin associated with PCI device when the PCI device
-is disabled.
+On Fri, Jun 27, 2014 at 02:16:28PM +0100, Arnd Bergmann wrote:
+> On Friday 27 June 2014 13:49:49 Will Deacon wrote:
+> > On Fri, Jun 27, 2014 at 12:03:34PM +0100, Arnd Bergmann wrote:
+> > > On Thursday 26 June 2014 19:44:21 Rob Herring wrote:
+> > > > I don't agree arm32 is harder than microblaze. Yes, converting ALL of
+> > > > arm would be, but that is not necessary. With Liviu's latest branch
+> > > > the hacks I previously needed are gone (thanks!), and this is all I
+> > > > need to get Versatile PCI working (under QEMU):
+> > > 
+> > > I meant converting all of arm32 would be harder, but I agree we don't
+> > > have to do it. It would be nice to convert all of the drivers/pci/host
+> > > drivers though, iow all multiplatform-enabled ones, and leaving the
+> > > current arm32 pci implementation for the platforms we don't want to
+> > > convert to multiplatform anyway (footbridge, iop, ixp4xx, ks8695 (?),
+> > > pxa, sa1100).
+> > 
+> > I'm more than happy to convert the generic host controller we merged
+> > recently, but I'd probably want the core changes merged first so that I
+> > know I'm not wasting my time!
+> 
+> That is definitely fine with me, but it's Bjorn's decision.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
-Minor change, simplify usage of function pointer.
----
- arch/x86/kernel/acpi/boot.c |   27 +++++++++++++++++++++++++++
- drivers/acpi/pci_irq.c      |    3 ++-
- 2 files changed, 29 insertions(+), 1 deletion(-)
+Or the changes to the generic host controller can be part of Liviu's
+patch series (maybe together with other PCI host drivers like
+designware, as time allows).
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index fd4b6d2e436c..8c28023924bf 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -421,8 +421,24 @@ static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
- 	return irq;
- }
- 
-+static void mp_unregister_gsi(u32 gsi)
-+{
-+	int irq;
-+
-+	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
-+		return;
-+
-+	if (acpi_gbl_FADT.sci_interrupt == gsi)
-+		return;
-+
-+	irq = mp_map_gsi_to_irq(gsi, 0);
-+	if (irq > 0)
-+		mp_unmap_irq(irq);
-+}
-+
- static struct irq_domain_ops acpi_irqdomain_ops = {
- 	.map = mp_irqdomain_map,
-+	.unmap = mp_irqdomain_unmap,
- };
- 
- static int __init
-@@ -640,8 +656,16 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
- 	return irq;
- }
- 
-+static void acpi_unregister_gsi_ioapic(u32 gsi)
-+{
-+#ifdef CONFIG_X86_IO_APIC
-+	mp_unregister_gsi(gsi);
-+#endif
-+}
-+
- int (*__acpi_register_gsi)(struct device *dev, u32 gsi,
- 			   int trigger, int polarity) = acpi_register_gsi_pic;
-+void (*__acpi_unregister_gsi)(u32 gsi) = NULL;
- 
- #ifdef CONFIG_ACPI_SLEEP
- int (*acpi_suspend_lowlevel)(void) = x86_acpi_suspend_lowlevel;
-@@ -661,6 +685,8 @@ EXPORT_SYMBOL_GPL(acpi_register_gsi);
- 
- void acpi_unregister_gsi(u32 gsi)
- {
-+	if (__acpi_unregister_gsi)
-+		__acpi_unregister_gsi(gsi);
- }
- EXPORT_SYMBOL_GPL(acpi_unregister_gsi);
- 
-@@ -668,6 +694,7 @@ static void __init acpi_set_irq_model_ioapic(void)
- {
- 	acpi_irq_model = ACPI_IRQ_MODEL_IOAPIC;
- 	__acpi_register_gsi = acpi_register_gsi_ioapic;
-+	__acpi_unregister_gsi = acpi_unregister_gsi_ioapic;
- 	acpi_ioapic = 1;
- }
- 
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 9c62340c2360..6ba463ceccc6 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -498,5 +498,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	 */
- 
- 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
--	acpi_unregister_gsi(gsi);
-+	if (gsi >= 0 && dev->irq > 0)
-+		acpi_unregister_gsi(gsi);
- }
 -- 
-1.7.10.4
-
+Catalin
