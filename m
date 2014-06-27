@@ -1,121 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:41369 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752186AbaFXVT1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jun 2014 17:19:27 -0400
-Received: by mail-lb0-f178.google.com with SMTP id 10so1195589lbg.37
-        for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2014 14:19:26 -0700 (PDT)
-Message-ID: <53A9EB5F.4050708@cogentembedded.com>
-Date: Wed, 25 Jun 2014 01:19:27 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Phil Edworthy <phil.edworthy@renesas.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:35503 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752306AbaF0Mtr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 08:49:47 -0400
+Date: Fri, 27 Jun 2014 13:49:49 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v8 1/3] PCI: host: rcar: Add Renesas R-Car PCIe driver
-References: <1399892270-25021-1-git-send-email-phil.edworthy@renesas.com> <1399892270-25021-2-git-send-email-phil.edworthy@renesas.com> <53A209DA.9000000@cogentembedded.com> <20a0a16226d54b0e8d6f68e41046bbf2@HKXPR06MB168.apcprd06.prod.outlook.com> <53A897EF.2020804@cogentembedded.com> <666f39dbf0f149c6946d4c2665d3d85d@HKXPR06MB168.apcprd06.prod.outlook.com>
-In-Reply-To: <666f39dbf0f149c6946d4c2665d3d85d@HKXPR06MB168.apcprd06.prod.outlook.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Jon Masters <jonathan@jonmasters.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Michal Simek <monstr@monstr.eu>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140627124949.GR26276@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140626085926.GB11244@arm.com>
+ <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com>
+ <6381366.2IfqZj1r0B@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6381366.2IfqZj1r0B@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+On Fri, Jun 27, 2014 at 12:03:34PM +0100, Arnd Bergmann wrote:
+> On Thursday 26 June 2014 19:44:21 Rob Herring wrote:
+> > I don't agree arm32 is harder than microblaze. Yes, converting ALL of
+> > arm would be, but that is not necessary. With Liviu's latest branch
+> > the hacks I previously needed are gone (thanks!), and this is all I
+> > need to get Versatile PCI working (under QEMU):
+> 
+> I meant converting all of arm32 would be harder, but I agree we don't
+> have to do it. It would be nice to convert all of the drivers/pci/host
+> drivers though, iow all multiplatform-enabled ones, and leaving the
+> current arm32 pci implementation for the platforms we don't want to
+> convert to multiplatform anyway (footbridge, iop, ixp4xx, ks8695 (?),
+> pxa, sa1100).
 
-On 06/24/2014 02:01 PM, Phil Edworthy wrote:
+I'm more than happy to convert the generic host controller we merged
+recently, but I'd probably want the core changes merged first so that I
+know I'm not wasting my time!
 
->>>>       I'm investigating an imprecise external abort occurring once userland is
->>>> started when I have NetMos
-
->>      Or is it MosChip now? Can't remember all their renames. :-)
-
-> Do you know of somewhere I can buy a card with this chipset in the EU? I had a
-> quick search but couldn't find anything.
-
-    No. But we probably can send such card to you.
-
-[...]
-
->>>>> +
->>>>> +	/* First resource is for IO */
->>>>> +	mask = PAR_ENABLE;
->>>>> +	if (res->flags & IORESOURCE_IO)
->>>>> +		mask |= IO_SPACE;
-
->>>>       For the memory space this works OK as you're identity-mapping the
->>>> memory
->>>> ranges in your device trees. However, for the I/O space this means that it
->>>> won't work as the BARs in the PCIe devices get programmed with the PCI bus
->>>> addresses but the PCIe window translation register is programmed with a
->>>> CPU
->>>> address which don't at all match (given your device trees) and hence one
->>>> can't
->>>> access the card's I/O mapped registers at all...
-
->>> Hmm, I couldn't find any cards that supported I/O, so I wasn't able to test
->>> this. Clearly this is an issue that needs looking into.
-
->>      Will you look into it then, or should I?
-
-> I'll look at it.
-
-    Thanks.
-
-[...]
-
->>>>> +
->>>>> +		if (win > PCI_MAX_RESOURCES)
->>>>> +			break;
->>>>> +	}
->>>>> +
->>>>> +	 err = rcar_pcie_parse_map_dma_ranges(pcie, pdev->dev.of_node);
->>>>> +	 if (err)
->>>>> +		return err;
->>>>> +
->>>>> +	of_id = of_match_device(rcar_pcie_of_match, pcie->dev);
->>>>> +	if (!of_id || !of_id->data)
->>>>> +		return -EINVAL;
->>>>> +	hw_init_fn = of_id->data;
->>>>> +
->>>>> +	/* Failure to get a link might just be that no cards are inserted */
->>>>> +	err = hw_init_fn(pcie);
->>>>> +	if (err) {
->>>>> +		dev_info(&pdev->dev, "PCIe link down\n");
->>>>> +		return 0;
-
->>>>       Not quite sure why you exit normally here without enabling the
->>>> hardware.
->>>> I think the internal bridge should be visible regardless of whether link is
->>>> detected or not...
-
->>> Why would you want to see the bridge when you can do nothing with it?
->> Aren't
-
->>      Because it's the way PCI works. You have the built-in devices always
->> present and seen on a PCI bus. :-)
-
->>> you are just wasting resources?
-
->>      I think it's rather you who are wasting resources. ;-) Why not just fail
->> the probe when you have no link?
-
-> Ah, so we currently have a half-way house... not failing the probe, but not
-> enabling the HW. Either all or nothing would be preferable.
-
-    Actually, I tried ignoring the link test and the kernel died horrible 
-death without any console output. :-/ Having enabled the earlyprintk support, 
-I was able to see the reason: panic("PCI: unable to scan bus!") in 
-arch/arm/kernel/bios32.c...
-
-> Thanks
-> Phil
-
-WBR, Sergei
-
+Will
