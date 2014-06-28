@@ -1,116 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:23575 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755603AbaFYIjf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 04:39:35 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V3 09/16] x86, irq: Remove __init marker for functions will be used by IOAPIC hotplug
-Date: Wed, 25 Jun 2014 16:40:40 +0800
-Message-Id: <1403685648-10103-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:41487 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751745AbaF1AWD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jun 2014 20:22:03 -0400
+Received: by mail-lb0-f175.google.com with SMTP id n15so4526901lbi.34
+        for <linux-pci@vger.kernel.org>; Fri, 27 Jun 2014 17:22:01 -0700 (PDT)
+Message-ID: <53AE0ABB.4010501@cogentembedded.com>
+Date: Sat, 28 Jun 2014 04:22:19 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Phil Edworthy <phil.edworthy@renesas.com>
+CC: Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] PCI: host: pcie-rcar: Style and formatting changes.
+References: <1403888155-9709-1-git-send-email-phil.edworthy@renesas.com> <1403888155-9709-3-git-send-email-phil.edworthy@renesas.com> <20140628001448.GE27128@verge.net.au> <20140628001542.GA32431@verge.net.au>
+In-Reply-To: <20140628001542.GA32431@verge.net.au>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    4 ++--
- arch/x86/kernel/apic/io_apic.c |   14 +++++++-------
- 2 files changed, 9 insertions(+), 9 deletions(-)
+Hello.
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 0aeed5ca356e..0b31aebd9405 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -188,8 +188,8 @@ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern u32 mp_pin_to_gsi(int ioapic, int pin);
- extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags);
- extern void mp_unmap_irq(int irq);
--extern void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
--				      struct ioapic_domain_cfg *cfg);
-+extern void mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+			       struct ioapic_domain_cfg *cfg);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index a068bf558657..1510734d5cbb 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3449,7 +3449,7 @@ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
- 	return ret;
- }
- 
--static int __init io_apic_get_redir_entries(int ioapic)
-+static int io_apic_get_redir_entries(int ioapic)
- {
- 	union IO_APIC_reg_01	reg_01;
- 	unsigned long flags;
-@@ -3495,7 +3495,7 @@ int __init arch_probe_nr_irqs(void)
- }
- 
- #ifdef CONFIG_X86_32
--static int __init io_apic_get_unique_id(int ioapic, int apic_id)
-+static int io_apic_get_unique_id(int ioapic, int apic_id)
- {
- 	union IO_APIC_reg_00 reg_00;
- 	static physid_mask_t apic_id_map = PHYSID_MASK_NONE;
-@@ -3621,7 +3621,7 @@ static u8 io_apic_unique_id(int idx, u8 id)
- }
- #endif
- 
--static int __init io_apic_get_version(int ioapic)
-+static int io_apic_get_version(int ioapic)
- {
- 	union IO_APIC_reg_01	reg_01;
- 	unsigned long flags;
-@@ -3825,7 +3825,7 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
- 	return gsi - gsi_cfg->gsi_base;
- }
- 
--static __init int bad_ioapic(unsigned long address)
-+static int bad_ioapic(unsigned long address)
- {
- 	if (nr_ioapics >= MAX_IO_APICS) {
- 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
-@@ -3839,7 +3839,7 @@ static __init int bad_ioapic(unsigned long address)
- 	return 0;
- }
- 
--static __init int bad_ioapic_register(int idx)
-+static int bad_ioapic_register(int idx)
- {
- 	union IO_APIC_reg_00 reg_00;
- 	union IO_APIC_reg_01 reg_01;
-@@ -3858,8 +3858,8 @@ static __init int bad_ioapic_register(int idx)
- 	return 0;
- }
- 
--void __init mp_register_ioapic(int id, u32 address, u32 gsi_base,
--			       struct ioapic_domain_cfg *cfg)
-+void mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+			struct ioapic_domain_cfg *cfg)
- {
- 	int idx = 0;
- 	int entries;
--- 
-1.7.10.4
+On 06/28/2014 04:15 AM, Simon Horman wrote:
+
+>>> This patch just makes symbol and function name changes to avoid
+>>> potential conflicts, along with minor formatting changes.
+>>> The only other change is to replace an arg passed into a func
+>>> with a local variable.
+
+>>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+>>> ---
+>>>   drivers/pci/host/pcie-rcar.c | 131 ++++++++++++++++++++++---------------------
+>>>   1 file changed, 67 insertions(+), 64 deletions(-)
+
+>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>>> index 680a8cc..efdea07 100644
+>>> --- a/drivers/pci/host/pcie-rcar.c
+>>> +++ b/drivers/pci/host/pcie-rcar.c
+[...]
+>>> @@ -318,14 +319,15 @@ static struct pci_ops rcar_pcie_ops = {
+>>>   	.write	= rcar_pcie_write_conf,
+>>>   };
+>>>
+>>> -static void rcar_pcie_setup_window(int win, struct resource *res,
+>>> -				   struct rcar_pcie *pcie)
+>>> +static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
+>>>   {
+>>> +	struct resource *res = &pcie->res[win];
+>>> +
+>>
+>> The removal of the res parameter is not in keeping with the changelog.
+>> Could you break it out into a separate patch?
+>
+> Sorry, I see that it is mentioned in the changelog.
+> But could you split the patch all the same?
+
+    I agree. Generally, you should not mix several changes of a different 
+nature in one patch.
+
+WBR, Sergei
 
