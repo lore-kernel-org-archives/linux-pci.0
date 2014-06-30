@@ -1,91 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:42984 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755836AbaFKRXg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jun 2014 13:23:36 -0400
-Received: by mail-ig0-f178.google.com with SMTP id hn18so1028616igb.17
-        for <linux-pci@vger.kernel.org>; Wed, 11 Jun 2014 10:23:35 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20140611060118.GB3169@yanx>
-References: <20140611060118.GB3169@yanx>
-Date: Wed, 11 Jun 2014 10:23:35 -0700
-Message-ID: <CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: Allow very large resource windows
-From: Yinghai Lu <yinghai@kernel.org>
-To: Guo Chao <yan@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=089e012947844a115404fb92b40f
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo7t2kXj2ZULLXCJSWb_awS+DCtCg51dnLbb8ztWmQdYog@mail.gmail.com>
+References: <20140617192734.30783.71260.stgit@amt.stowe>
+	<CAErSpo7t2kXj2ZULLXCJSWb_awS+DCtCg51dnLbb8ztWmQdYog@mail.gmail.com>
+Date: Mon, 30 Jun 2014 10:49:13 -0600
+Message-ID: <CAL-B5D3M9gmefaSkGnb13UtBHt857G-ixkmhjHawO5hW2AN9xA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Include the Data Link Layer State Changed
+ bit when clearing the Slot Status register's event bits
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---089e012947844a115404fb92b40f
-Content-Type: text/plain; charset=UTF-8
-
-On Tue, Jun 10, 2014 at 11:01 PM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
-> Well, that's not enough for our 16G BAR ...
+On Tue, Jun 17, 2014 at 3:07 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Jun 17, 2014 at 1:27 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+>> During PCIe hot-plug initialization - pciehp_probe - data structures
+>> related to slot capabilities are set up.  As part of this set up, ISRs are
+>> put in place to handle slot events and all event bits are cleared out.
+>>
+>> This patch adds the Data Link Layer State Changed (PCI_EXP_SLTSTA_DLLSC)
+>> Slot Status bit to the event bits that are cleared out during
+>> initialization.
 >
-> I thought Yinghai fixed it permanently last time:
+> I think this is related to e48f1b67f668 ("PCI: pciehp: Use link change
+> notifications for hot-plug and removal").  Prior to that, pcie_isr()
+> didn't look at the PCI_EXP_SLTSTA_DLLSC bit.
 >
->         http://permalink.gmane.org/gmane.linux.kernel.pci/29142
+> Apparently there's a non-public report of spurious messages like this
+> at boot-time, with no actual hotplug events:
 >
-> Are you still working on this, Yinghai?
+>   pciehp 0000:82:04.0:pcie24: slot(4): Link Up event
+>   pciehp 0000:82:04.0:pcie24: Device 0000:83:00.0 already exists at
+> 0000:83:00, cannot hot-add
+>   pciehp 0000:82:04.0:pcie24: Cannot add device at 0000:83:00
+>
+> Device 0000:83:00.0 was enumerated previously, during the normal PCI
+> device enumeration.  I suspect DLLSC was set by the hardware when the
+> link came up after power-on, and it remained set until Linux booted.
+> Then when we take the first pciehp interrupt, we notice DLLSC is set
+> and think it's a new link state change.
+>
+> This might be system-specific, because some BIOSes might clear DLLSC
+> before handing off to the OS.  Or my theory might be all wet.
+>
+> But I think we should clear DLLSC in any case.  We clear all the other
+> RW1C bits in Slot Status, and I think we should clear DLLSC as well.
+>
+> I'd like to include a bugzilla or mailing list reference for the
+> spurious message, and I'd also like confirmation that this changes
+> actually fixes it.
 
-Hi Guo,
+I just got confirmation from the reporter that the patch fixes the
+issue they were encountering.
 
-Please check updated version on your setup.
+I've also asked them numerous time if I could make the bug public as I
+expect others may be hitting it and could benefit from a BZ and
+analysis/explanation.  I just repeated my request - if they reply
+positively I'll follow through with some documentation.
 
-Thanks
+Myron
 
-Yinghai
-
---089e012947844a115404fb92b40f
-Content-Type: text/x-patch; charset=US-ASCII; name="bus_mmio_align_v3.patch"
-Content-Disposition: attachment; filename="bus_mmio_align_v3.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hwawoqj80
-
-U3ViamVjdDogW1BBVENIIC12M10gUENJOiBGaXggYnVzIGFsaWduIGNoZWNraW5nIHRvIHN1cHBv
-cnQgbW9yZSB0aGFuIDhHCgpTbyBhZGQgbW1pbzY0IG1hc2sgY2hlY2tpbmcsIG9ubHkgYWxsb3cg
-bW9yZSB0aGFuIDRHIHdoZW4gYnJpZGdlIGFuZCBhbGwgY2hpbGQKc3VwcG9ydCA2NGJpdCByZXMu
-ICBTdGlsbCBrZWVwIG9sZCAyRyBjaGVja2luZyBmb3Igb3RoZXIgcGF0aC4KClNpZ25lZC1vZmYt
-Ynk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvc2V0
-dXAtYnVzLmMgfCAgIDQwICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0K
-IDEgZmlsZSBjaGFuZ2VkLCAzOCBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKSW5kZXg6
-IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwo9PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0y
-LjYub3JpZy9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNp
-L3NldHVwLWJ1cy5jCkBAIC05MjgsMTUgKzkyOCw1MCBAQCBzdGF0aWMgaW50IHBidXNfc2l6ZV9t
-ZW0oc3RydWN0IHBjaV9idXMKIHsKIAlzdHJ1Y3QgcGNpX2RldiAqZGV2OwogCXJlc291cmNlX3Np
-emVfdCBtaW5fYWxpZ24sIGFsaWduLCBzaXplLCBzaXplMCwgc2l6ZTE7Ci0JcmVzb3VyY2Vfc2l6
-ZV90IGFsaWduc1sxNF07CS8qIEFsaWdubWVudHMgZnJvbSAxTWIgdG8gOEdiICovCisJcmVzb3Vy
-Y2Vfc2l6ZV90IGFsaWduc1s0NF07CS8qIEFsaWdubWVudHMgZnJvbSAxTWIgdG8gMl42MyAqLwog
-CWludCBvcmRlciwgbWF4X29yZGVyOwogCXN0cnVjdCByZXNvdXJjZSAqYl9yZXMgPSBmaW5kX2Zy
-ZWVfYnVzX3Jlc291cmNlKGJ1cywKIAkJCQkJbWFzayB8IElPUkVTT1VSQ0VfUFJFRkVUQ0gsIHR5
-cGUpOwogCXJlc291cmNlX3NpemVfdCBjaGlsZHJlbl9hZGRfc2l6ZSA9IDA7CisJdW5zaWduZWQg
-aW50IG1lbTY0X21hc2s7CiAKIAlpZiAoIWJfcmVzKQogCQlyZXR1cm4gLUVOT1NQQzsKIAorCW1l
-bTY0X21hc2sgPSBiX3Jlcy0+ZmxhZ3MgJiBJT1JFU09VUkNFX01FTV82NDsKKworCS8qIGtlcm5l
-bCBkb2VzIG5vdCBzdXBwb3J0IDY0Yml0IHJlcyAqLworCWlmIChzaXplb2YocmVzb3VyY2Vfc2l6
-ZV90KSA9PSA0KQorCQltZW02NF9tYXNrICY9IH5JT1JFU09VUkNFX01FTV82NDsKKworCWlmICgh
-bWVtNjRfbWFzaykKKwkJZ290byBtZW02NF9tYXNrX2NoZWNrX2RvbmU7CisKKwkvKiBjaGVjayBp
-ZiBtZW02NCBzdXBwb3J0IGlzIHN1cHBvcnRlZCBhbmQgbmVlZGVkIGF0IGZpcnN0ICovCisJbGlz
-dF9mb3JfZWFjaF9lbnRyeShkZXYsICZidXMtPmRldmljZXMsIGJ1c19saXN0KSB7CisJCWludCBp
-OworCisJCWZvciAoaSA9IDA7IGkgPCBQQ0lfTlVNX1JFU09VUkNFUzsgaSsrKSB7CisJCQlzdHJ1
-Y3QgcmVzb3VyY2UgKnIgPSAmZGV2LT5yZXNvdXJjZVtpXTsKKworCQkJaWYgKHItPnBhcmVudCB8
-fCAoKHItPmZsYWdzICYgbWFzaykgIT0gdHlwZSAmJgorCQkJCQkgIChyLT5mbGFncyAmIG1hc2sp
-ICE9IHR5cGUyICYmCisJCQkJCSAgKHItPmZsYWdzICYgbWFzaykgIT0gdHlwZTMpKQorCQkJCWNv
-bnRpbnVlOworI2lmZGVmIENPTkZJR19QQ0lfSU9WCisJCQkvKiBTa2lwIFNSSU9WIGNoZWNraW5n
-LCBhcyBvcHRpb25hbCByZXMgKi8KKwkJCWlmIChyZWFsbG9jX2hlYWQgJiYgaSA+PSBQQ0lfSU9W
-X1JFU09VUkNFUyAmJgorCQkJCQlpIDw9IFBDSV9JT1ZfUkVTT1VSQ0VfRU5EKQorCQkJCWNvbnRp
-bnVlOworI2VuZGlmCisJCQltZW02NF9tYXNrICY9IHItPmZsYWdzICYgSU9SRVNPVVJDRV9NRU1f
-NjQ7CisKKwkJCWlmICghbWVtNjRfbWFzaykKKwkJCQlnb3RvIG1lbTY0X21hc2tfY2hlY2tfZG9u
-ZTsKKwkJfQorCX0KK21lbTY0X21hc2tfY2hlY2tfZG9uZToKKwogCW1lbXNldChhbGlnbnMsIDAs
-IHNpemVvZihhbGlnbnMpKTsKIAltYXhfb3JkZXIgPSAwOwogCXNpemUgPSAwOwpAQCAtOTczLDcg
-KzEwMDgsOCBAQCBzdGF0aWMgaW50IHBidXNfc2l6ZV9tZW0oc3RydWN0IHBjaV9idXMKIAkJCW9y
-ZGVyID0gX19mZnMoYWxpZ24pIC0gMjA7CiAJCQlpZiAob3JkZXIgPCAwKQogCQkJCW9yZGVyID0g
-MDsKLQkJCWlmIChvcmRlciA+PSBBUlJBWV9TSVpFKGFsaWducykpIHsKKwkJCWlmIChvcmRlciA+
-PSBBUlJBWV9TSVpFKGFsaWducykgfHwKKwkJCSAgICAoIW1lbTY0X21hc2sgJiYgb3JkZXIgPiAx
-MSAvKiAyR2IgKi8pKSB7CiAJCQkJZGV2X3dhcm4oJmRldi0+ZGV2LCAiZGlzYWJsaW5nIEJBUiAl
-ZDogJXBSICIKIAkJCQkJICIoYmFkIGFsaWdubWVudCAlI2xseClcbiIsIGksIHIsCiAJCQkJCSAo
-dW5zaWduZWQgbG9uZyBsb25nKSBhbGlnbik7Cg==
---089e012947844a115404fb92b40f--
+>
+> Bjorn
+>
+>> Reference:
+>>   PCI-SIG.  PCI Express Base Specification Revision 4.0 Version 0.3
+>>   (PCI-SIG, 2014): 7.8.11. Slot Status Register (Offset 1Ah).
+>>
+>> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+>> ---
+>>
+>>  drivers/pci/hotplug/pciehp_hpc.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+>> index 42914e0..0568416 100644
+>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>> @@ -794,7 +794,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+>>         pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+>>                 PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+>>                 PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
+>> -               PCI_EXP_SLTSTA_CC);
+>> +               PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
+>>
+>>         /* Disable software notification */
+>>         pcie_disable_notification(ctrl);
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
