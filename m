@@ -1,58 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:61417 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757733AbaFSIbH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jun 2014 04:31:07 -0400
-Received: by mail-ie0-f179.google.com with SMTP id tr6so1665437ieb.24
-        for <linux-pci@vger.kernel.org>; Thu, 19 Jun 2014 01:31:07 -0700 (PDT)
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:63081 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754073AbaF3KRW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 06:17:22 -0400
+Date: Mon, 30 Jun 2014 11:17:25 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Jon Masters <jonathan@jonmasters.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Michal Simek <monstr@monstr.eu>
+Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140630101724.GB25779@arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140626085926.GB11244@arm.com>
+ <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com>
+ <6381366.2IfqZj1r0B@wuerfel>
+ <20140627124949.GR26276@arm.com>
+ <53AD98B9.2020109@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20140619024651.GC6478@richard>
-References: <1402365399-5121-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1402365399-5121-15-git-send-email-weiyang@linux.vnet.ibm.com>
- <CACxGe6v6Rdd=GQ8qR5LQ64NThidn7kn3WkKFkOXOsNuWq75D-A@mail.gmail.com> <20140619024651.GC6478@richard>
-From: Grant Likely <grant.likely@secretlab.ca>
-Date: Thu, 19 Jun 2014 09:30:47 +0100
-Message-ID: <CACxGe6sgOh3MP-03Ge9NK7DWf+dgC98huA9Sv4DcThXNfByf2w@mail.gmail.com>
-Subject: Re: [RFC PATCH V3 14/17] ppc/pci: create/release dev-tree node for VFs
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	gwshan@linux.vnet.ibm.com, Mike Qiu <qiudayu@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, yan@linux.vnet.ibm.com,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53AD98B9.2020109@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 19, 2014 at 3:46 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> On Wed, Jun 18, 2014 at 07:26:27PM +0100, Grant Likely wrote:
->>On Tue, Jun 10, 2014 at 2:56 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->>> Currently, powernv platform is not aware of VFs. This means no dev-node
->>> represents a VF. Also, VF PCI device is created when PF driver want to enable
->>> it. This leads to the pdn->pdev and pdn->pe_number an invalid value.
->>>
->>> This patch create/release dev-node for VF and fixs this when a VF's pci_dev
->>> is created.
->>>
->>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>
->>I don't think this is the right way to handle this. Unless it is a
->>fixup to a buggy devicetree provided by firmware, I don't want to see
->>any code modifying the devicetree to describe stuff that is able to be
->>directly enumerated. Really the pci code should handle the lack of a
->>device_node gracefully. If it cannot then it should be fixed.
->
-> Grant,
->
-> Glad to see your comment.
->
-> I will fix this in the firmware.
+Hi Rob,
 
-That's not really what I meant. The kernel should be able to deal with
-virtual functions even if firmware doesn't know how, and the kernel
-should not require modifying the device tree to support them.
+Nice work!
 
-I'm saying fix the kernel so that a device node is not necessary for
-virtual functions.
+On Fri, Jun 27, 2014 at 05:15:53PM +0100, Rob Herring wrote:
+> On 06/27/2014 07:49 AM, Will Deacon wrote:
+> > On Fri, Jun 27, 2014 at 12:03:34PM +0100, Arnd Bergmann wrote:
+> >> On Thursday 26 June 2014 19:44:21 Rob Herring wrote:
+> >>> I don't agree arm32 is harder than microblaze. Yes, converting ALL of
+> >>> arm would be, but that is not necessary. With Liviu's latest branch
+> >>> the hacks I previously needed are gone (thanks!), and this is all I
+> >>> need to get Versatile PCI working (under QEMU):
+> >>
+> >> I meant converting all of arm32 would be harder, but I agree we don't
+> >> have to do it. It would be nice to convert all of the drivers/pci/host
+> >> drivers though, iow all multiplatform-enabled ones, and leaving the
+> >> current arm32 pci implementation for the platforms we don't want to
+> >> convert to multiplatform anyway (footbridge, iop, ixp4xx, ks8695 (?),
+> >> pxa, sa1100).
+> > 
+> > I'm more than happy to convert the generic host controller we merged
+> > recently, but I'd probably want the core changes merged first so that I
+> > know I'm not wasting my time!
+> 
+> Something like this untested patch...
+> 
+> Another issue I found still present is pci_ioremap_io needs some work 
+> to unify with the arm implementation. That's a matter of changing the 
+> function from an offset to i/o resource. That should be a pretty 
+> mechanical change.
+> 
+> Also, there is a potential for memory leak because there is no undo 
+> for of_create_pci_host_bridge.
 
-g.
+Once Liviu reposts his series, I'll take a look at
+of_create_pci_host_bridge, as I'm not sure that it provides all the
+behaviour that we get from gen_pci_parse_request_of_pci_ranges right now
+(e.g. required a non-prefetchable mem resource).
+
+Will
