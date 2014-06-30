@@ -1,77 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:63081 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754073AbaF3KRW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 06:17:22 -0400
-Date: Mon, 30 Jun 2014 11:17:25 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:46895 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754950AbaF3Itr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 04:49:47 -0400
+Date: Mon, 30 Jun 2014 09:49:18 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Jean-Francois Moine <moinejf@free.fr>
+Cc: Andrew Lunn <andrew@lunn.ch>, linux-ide@vger.kernel.org,
+	Alessandro Zummo <a.zummo@towertech.it>,
+	alsa-devel@alsa-project.org, Bryan Wu <cooloney@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	rtc-linux@googlegroups.com, linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Tejun Heo <tj@kernel.org>, Wim Van Sebroeck <wim@iguana.be>,
+	Mark Brown <broonie@kernel.org>,
+	Richard Purdie <rpurdie@rpsys.net>, linux-pci@vger.kernel.org,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Zhang Rui <rui.zhang@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Jon Masters <jonathan@jonmasters.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Michal Simek <monstr@monstr.eu>
-Subject: Re: [PATCH v7 1/6] pci: Introduce pci_register_io_range() helper
- function.
-Message-ID: <20140630101724.GB25779@arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <20140626085926.GB11244@arm.com>
- <CAL_JsqKCHf6VXR3FFcBSu1xuhP54dYsAJCZwT-X9p5iTZAOJfQ@mail.gmail.com>
- <6381366.2IfqZj1r0B@wuerfel>
- <20140627124949.GR26276@arm.com>
- <53AD98B9.2020109@gmail.com>
+	linux-leds@vger.kernel.org, linux-watchdog@vger.kernel.org
+Subject: Re: [alsa-devel] [PATCH 00/13] Remove mach-kirkwood and mach-dove
+Message-ID: <20140630084918.GS32514@n2100.arm.linux.org.uk>
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <20140630091643.2df3b0fb@armhf>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53AD98B9.2020109@gmail.com>
+In-Reply-To: <20140630091643.2df3b0fb@armhf>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rob,
-
-Nice work!
-
-On Fri, Jun 27, 2014 at 05:15:53PM +0100, Rob Herring wrote:
-> On 06/27/2014 07:49 AM, Will Deacon wrote:
-> > On Fri, Jun 27, 2014 at 12:03:34PM +0100, Arnd Bergmann wrote:
-> >> On Thursday 26 June 2014 19:44:21 Rob Herring wrote:
-> >>> I don't agree arm32 is harder than microblaze. Yes, converting ALL of
-> >>> arm would be, but that is not necessary. With Liviu's latest branch
-> >>> the hacks I previously needed are gone (thanks!), and this is all I
-> >>> need to get Versatile PCI working (under QEMU):
-> >>
-> >> I meant converting all of arm32 would be harder, but I agree we don't
-> >> have to do it. It would be nice to convert all of the drivers/pci/host
-> >> drivers though, iow all multiplatform-enabled ones, and leaving the
-> >> current arm32 pci implementation for the platforms we don't want to
-> >> convert to multiplatform anyway (footbridge, iop, ixp4xx, ks8695 (?),
-> >> pxa, sa1100).
-> > 
-> > I'm more than happy to convert the generic host controller we merged
-> > recently, but I'd probably want the core changes merged first so that I
-> > know I'm not wasting my time!
+On Mon, Jun 30, 2014 at 09:16:43AM +0200, Jean-Francois Moine wrote:
+> On Sun, 29 Jun 2014 22:35:11 +0100
+> Russell King - ARM Linux <linux@arm.linux.org.uk> wrote:
 > 
-> Something like this untested patch...
+> > There is actually a cubox regression which has yet to be tracked down.
+> > Running with my kernel (which is not-DT based) runs perfectly.  With
+> > DT, HDMI output can be unstable.
 > 
-> Another issue I found still present is pci_ioremap_io needs some work 
-> to unify with the arm implementation. That's a matter of changing the 
-> function from an offset to i/o resource. That should be a pretty 
-> mechanical change.
+> Russell,
 > 
-> Also, there is a potential for memory leak because there is no undo 
-> for of_create_pci_host_bridge.
+> What is this HDMI problem with DT?
+> 
+> I am running a DT based kernel on my Cubox for more than 1 year and the
+> only problem I have is a random black screen at startup time, and this
+> black screen problem also exists with the old non-DT kernels from
+> SolidRun.
 
-Once Liviu reposts his series, I'll take a look at
-of_create_pci_host_bridge, as I'm not sure that it provides all the
-behaviour that we get from gen_pci_parse_request_of_pci_ranges right now
-(e.g. required a non-prefetchable mem resource).
+The problem is that the picture appears for about a second, then goes black
+for maybe a couple of seconds, then reappears for about a second and this
+cycle repeats.  Rebooting into the DT kernel doesn't fix it.  Rebooting
+back into the non-DT kernel does fix it.  Then if you boot back into the DT
+kernel it's back again.  Boot back into the non-DT kernel and it's again
+fixed.
 
-Will
+I have compared register settings for the Si5351, LCD controllers and the
+TDA998x between the non-DT and DT versions, and can find no differences
+there.  Yet, DT kernels are the only kernels which exhibit this behaviour.
+Non-DT kernels (which I've run continuously including many reboots) for
+the last two years have *never* shown this problem.
+
+I have also verified that the HDMI clock is correct.  The problem occurs
+at both 1080p and 720p resolutions (which are the two that are used during
+boot - I have the kernel using 720p, and Xorg uses 1080p.)
+
+I should also point out that in both cases, it is the _same_ kernel binary
+(3.15) that I'm running - the DT test case just has the DT blob attached
+whereas the non-DT case boots without (and therefore falls back to the
+old platform stuff.)
+
+-- 
+FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+improving, and getting towards what was expected from it.
