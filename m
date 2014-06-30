@@ -1,111 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:39372 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753207AbaFHDCg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Jun 2014 23:02:36 -0400
-Message-ID: <1402196538.23860.24.camel@deadeye.wl.decadent.org.uk>
-Subject: Re: [PATCH 3.14 186/228] PCI: Wrong register used to check pending
- traffic
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	Alex Williamson <alex.williamson@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Date: Sun, 08 Jun 2014 04:02:18 +0100
-In-Reply-To: <20140604232354.004988520@linuxfoundation.org>
-References: <20140604232347.966798903@linuxfoundation.org>
-	 <20140604232354.004988520@linuxfoundation.org>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-Ku9j6oJri/88Jd58p1gw"
-Mime-Version: 1.0
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:47219 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751414AbaF3Mnx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 08:43:53 -0400
+Date: Mon, 30 Jun 2014 13:43:20 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
+	Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>,
+	Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Alessandro Zummo <a.zummo@towertech.it>,
+	rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>,
+	linux-watchdog@vger.kernel.org
+Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
+Message-ID: <20140630124320.GZ32514@n2100.arm.linux.org.uk>
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <53B154FE.80804@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53B154FE.80804@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Jun 30, 2014 at 02:15:58PM +0200, Sebastian Hesselbarth wrote:
+> Can you give a /rough/ schedule for your plans to sort out your private
+> branches? If we can all investigate the issue with the same code basis,
+> I am sure we can make DT dove behave the same way non-DT dove seems to
+> be.
 
---=-Ku9j6oJri/88Jd58p1gw
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+As you will be aware, that is an unreasonable question.  I have no
+idea what so ever how long it will take to sort out my private
+branches, because it doesn't depend all that much on me.
 
-On Wed, 2014-06-04 at 16:23 -0700, Greg Kroah-Hartman wrote:
-> 3.14-stable review patch.  If anyone has any objections, please let me kn=
-ow.
->=20
-> ------------------
->=20
-> From: Gavin Shan <gwshan@linux.vnet.ibm.com>
->=20
-> commit d0b4cc4e32705ff00d90d32da7783c266c702c04 upstream.
->=20
-> The incorrect register offset is passed to pci_wait_for_pending(), which =
-is
-> caused by commit 157e876ffe ("PCI: Add pci_wait_for_pending() (refactor
-> pci_wait_for_pending_transaction())").
->=20
-> Fixes: 157e876ffe ("PCI: Add pci_wait_for_pending() (refactor pci_wait_fo=
-r_pending_transaction())
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Acked-by: Alex Williamson <alex.williamson@gmail.com>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->=20
-> ---
->  drivers/pci/pci.c |    5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->=20
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3043,7 +3043,8 @@ int pci_wait_for_pending_transaction(str
->  	if (!pci_is_pcie(dev))
->  		return 1;
-> =20
-> -	return pci_wait_for_pending(dev, PCI_EXP_DEVSTA, PCI_EXP_DEVSTA_TRPND);
-> +	return pci_wait_for_pending(dev, pci_pcie_cap(dev) + PCI_EXP_DEVSTA,
-> +				    PCI_EXP_DEVSTA_TRPND);
->  }
->  EXPORT_SYMBOL(pci_wait_for_pending_transaction);
-> =20
-> @@ -3085,7 +3086,7 @@ static int pci_af_flr(struct pci_dev *de
->  		return 0;
-> =20
->  	/* Wait for Transaction Pending bit clean */
-> -	if (pci_wait_for_pending(dev, PCI_AF_STATUS, PCI_AF_STATUS_TP))
-> +	if (pci_wait_for_pending(dev, pos + PCI_AF_STATUS, PCI_AF_STATUS_TP))
->  		goto clear;
-> =20
->  	dev_err(&dev->dev, "transaction is not cleared; "
+For example, I've had fully working audio on the Cubox for 18+ months,
+but there's a big problem getting it into mainline.  First it was the
+lack of co-operation from the ASoC maintainers.  Then it was the ASoC
+maintainers accepting Jean-Francois patches (which really torpedoed
+my efforts.)  And the final problem which makes it totally impossible
+is that pushing the DPCM stuff will completely break the DT based
+kirkwood ASoC stuff which got pushed in.
 
-This still seems to be broken because pci_wait_for_pending() does
-pci_read_config_word() but PCI_AF_STATUS is not word-aligned.
+I suspect that the PMU work I did has also been torpedoed because of
+no one in the mvebu circles has really thought about how to deal
+properly with the overlapping registers for the PMU, hwmon and RTC.
 
-Ben.
+Right now, I have 250 patches in my Cubox tree against a base of
+3.15 plus the original set of changes.  And no, I'm *not* going
+to be stupid enough to publish the tree because of the non-GPL
+license header(s) on various files in the Vivante code base.
 
---=20
-Ben Hutchings
-Never attribute to conspiracy what can adequately be explained by stupidity=
-.
+I'm actually on the point of just giving up with mainlike on the Cubox
+because of this kind of crap, and the extreme difficulty to get any
+kind of progress on this stuff - and I'm seeing a growing number of
+patches on the Cubox-i side of things, the mainline churn on mach-dove
+is becoming a /big/ problem.
 
---=-Ku9j6oJri/88Jd58p1gw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+So... if you want to remove mach-dove, then I'll just add to my
+cubox tree an entire revert of it.  Especially as DT does not work
+properly here and non-DT does.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+And I really don't buy your "it's down to the timing" explanation -
+because (a) switching from 720p to 1080p reprograms the clock chain
+right from the Si5351, which is no different to what happens on
+initial bring up, and (b) I've measured the HDMI clock which is
+derived from this chain and it is correct and unmodulated.
 
-iQIVAwUAU5PSP+e/yOyVhhEJAQqKsxAAxo1EbIMMcZewIY9JdFNSPXUC3kZVbDhc
-UJU/vbx5dFxplejijs7YeMhUwiPVCd40CJaV+hW3CaKWgaEhrDXSAlzMpqbZt0uv
-IwTV9JBzqPijNkco5sCZI+/w84R2lusaFqS6YRPyL8EV2/w7yXVuaSv31+9JZKQs
-P6zfWnDzso3lEoPesvpDiyGKFd6/YlgeBIQttFukyVbLnue2kagexjJj5/b51EWT
-HTFOhMqjxFJ3x3u/9Ltwj1Prk+cltux+/Qujc930b4fjwvbOqGwgs3I9J+gd8Crw
-DST4/W+NMoFnrrOwn8lsgveDlpzSTslLT3UU0Lo3dY1dHehvMh+mA5E2WDZjpH3U
-/XG5iRst0TKue/Pt5NVSQAt/lTxt8aZ3EgvUv/pPXNSYi1DGN+K70uyCOHyK5GWT
-hZpXnNA9qznel9NeW7hcda2kds3IcXB2Oe96+eXXuSlnG8dfDUExblHKxLXCDfrH
-61a3OuJZg/G45vWl7JeIUBNu2bRumH0yqHQ9A2NQ+oj08IzOZM1X2BzsAsWwmDXr
-9Aj5MFrdvwligGW+Vjp3xtRX/4F9nyUGz72r0FaBnbNXx6WjLf1ExL/lVhUEYyQu
-C5E4wquO+6+LUt/jfsqxhcMlTBryje3zQ5lY1tCJE8cXWhkSHqRWr+sMAjVmqmwS
-VlYpqYEHYCs=
-=DDsP
------END PGP SIGNATURE-----
-
---=-Ku9j6oJri/88Jd58p1gw--
+-- 
+FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+improving, and getting towards what was expected from it.
