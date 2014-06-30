@@ -1,189 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34991 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932605AbaFQF1d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Jun 2014 01:27:33 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [RFC Patch V2 06/16] ACPI, ioapic: Add acpi_get_ioapic_id()
-Date: Tue, 17 Jun 2014 13:29:45 +0800
-Message-Id: <1402982995-13747-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402982995-13747-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:47766 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756249AbaF3SJS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 14:09:18 -0400
+Date: Mon, 30 Jun 2014 19:08:53 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
+	Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>,
+	Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Alessandro Zummo <a.zummo@towertech.it>,
+	rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>,
+	linux-watchdog@vger.kernel.org
+Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
+Message-ID: <20140630180853.GF32514@n2100.arm.linux.org.uk>
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <53B154FE.80804@gmail.com> <20140630124320.GZ32514@n2100.arm.linux.org.uk> <53B164B2.7090902@gmail.com> <20140630142516.GA32514@n2100.arm.linux.org.uk> <53B183D5.8020708@gmail.com> <20140630165615.GE32514@n2100.arm.linux.org.uk> <20140630174351.GI18520@lunn.ch>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140630174351.GI18520@lunn.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+On Mon, Jun 30, 2014 at 07:43:51PM +0200, Andrew Lunn wrote:
+> > > If you are talking about "Kirkwood ASoC updates", you got a Tested-by
+> > > from Andrew even before I read your patches. And besides, just because
+> > > I am interested in Dove does not mean I just swallowed the whole Linux
+> > > API knowledge. I simply avoided commenting on it, because there is
+> > > /nothing/ I can add to it.
+> > 
+> > No I am not - and those are the patches which I referred to as having
+> > been already taken by Mark into his tree.  The patch I'm referring to
+> > which can never be merged now is the one which I replied to Jean
+> > Francois just now - and if you read through it, you'll understand
+> > why - that's because it /totally/ breaks the simple DT bindings that
+> > are now established - independently - for Kirkwood stuff.
+> 
+> Hi Russell
+> 
+> Are you referring to http://www.spinics.net/lists/arm-kernel/msg328068.html
 
-For ioapic hotplug, we need to parse apic id for ioapic registration.
+I'm referring to the _entire_ addition of DT support for the sound stuff
+on mvebu.
 
-We could check _MAT and MADT to get io apic id, just like cpu hotplug
-path to get apic id.
+The timeline from my point of view started around March/April 2013, which
+is where I was told that the kirkwood stuff should be converted to DPCM
+in order to allow the SPDIF output to be used.  The documentation and
+hints how to use it fell way short of what was required - and moreover,
+the ASoC code to support this feature was missing several patches that
+Liam had (and was freezing on to, eventually sending them after last
+year's kernel summit.)
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/apic_id.c |   97 +++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/acpi.h   |    3 ++
- 2 files changed, 98 insertions(+), 2 deletions(-)
+However, eventually it got sorted through face to face discussions with
+Mark and Liam at kernel summit, but not before Jean-Francois patches
+had been merged.  My solution was developed and tested without Jean's
+patches in place.
 
-diff --git a/drivers/acpi/apic_id.c b/drivers/acpi/apic_id.c
-index ac3b10a9f92d..a74a3fcd8362 100644
---- a/drivers/acpi/apic_id.c
-+++ b/drivers/acpi/apic_id.c
-@@ -2,6 +2,10 @@
-  * Copyright (C) 2005 Intel Corporation
-  * Copyright (C) 2009 Hewlett-Packard Development Company, L.P.
-  *	All routines dealing with CPU APIC ID are moved from processor_core.c
-+ *
-+ * I/O APIC hotplug support
-+ *	Yinghai Lu <yinghai@kernel.org>
-+ *	Jiang Liu <jiang.liu@intel.com>
-  */
- #include <linux/export.h>
- #include <linux/slab.h>
-@@ -9,6 +13,9 @@
- 
- #include "internal.h"
- 
-+static struct acpi_table_madt *madt;
-+static int read_madt;
-+
- static int map_lapic_id(struct acpi_subtable_header *entry,
- 		 u32 acpi_id, int *apic_id)
- {
-@@ -64,8 +71,6 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
- static int map_madt_entry(int type, u32 acpi_id)
- {
- 	unsigned long madt_end, entry;
--	static struct acpi_table_madt *madt;
--	static int read_madt;
- 	int apic_id = -1;
- 
- 	if (!read_madt) {
-@@ -200,3 +205,91 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
- 	return acpi_map_cpuid(apic_id, acpi_id);
- }
- EXPORT_SYMBOL_GPL(acpi_get_cpuid);
-+
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+static int map_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
-+			 u64 *phys_addr, int *ioapic_id)
-+{
-+	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
-+
-+	if (ioapic->global_irq_base != gsi_base)
-+		return 0;
-+
-+	*phys_addr = ioapic->address;
-+	*ioapic_id = ioapic->id;
-+	return 1;
-+}
-+
-+static int map_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
-+{
-+	struct acpi_subtable_header *hdr;
-+	unsigned long madt_end, entry;
-+	int apic_id = -1;
-+
-+	if (!read_madt) {
-+		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
-+					(struct acpi_table_header **)&madt)))
-+			madt = NULL;
-+		read_madt++;
-+	}
-+
-+	if (!madt)
-+		return apic_id;
-+
-+	entry = (unsigned long)madt;
-+	madt_end = entry + madt->header.length;
-+
-+	/* Parse all entries looking for a match. */
-+	entry += sizeof(struct acpi_table_madt);
-+	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
-+		hdr = (struct acpi_subtable_header *)entry;
-+		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
-+		    map_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
-+			break;
-+		else
-+			entry += hdr->length;
-+	}
-+
-+	return apic_id;
-+}
-+
-+static int map_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
-+				u64 *phys_addr)
-+{
-+	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-+	union acpi_object *obj;
-+	struct acpi_subtable_header *header;
-+	int apic_id = -1;
-+
-+	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
-+		goto exit;
-+
-+	if (!buffer.length || !buffer.pointer)
-+		goto exit;
-+
-+	obj = buffer.pointer;
-+	if (obj->type != ACPI_TYPE_BUFFER ||
-+	    obj->buffer.length < sizeof(struct acpi_subtable_header)) {
-+		goto exit;
-+	}
-+
-+	header = (struct acpi_subtable_header *)obj->buffer.pointer;
-+	if (header->type == ACPI_MADT_TYPE_IO_APIC)
-+		map_ioapic_id(header, gsi_base, phys_addr, &apic_id);
-+
-+exit:
-+	kfree(buffer.pointer);
-+	return apic_id;
-+}
-+
-+int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
-+{
-+	int apic_id;
-+
-+	apic_id = map_mat_ioapic_entry(handle, gsi_base, phys_addr);
-+	if (apic_id == -1)
-+		apic_id = map_madt_ioapic_entry(gsi_base, phys_addr);
-+
-+	return apic_id;
-+}
-+#endif /* CONFIG_ACPI_HOTPLUG_IOAPIC */
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 5c432e842921..f478af87f575 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -148,6 +148,9 @@ int acpi_unmap_lsapic(int cpu);
- int acpi_get_apicid(acpi_handle, int type, u32 acpi_id);
- int acpi_map_cpuid(int apic_id, u32 acpi_id);
- int acpi_get_cpuid(acpi_handle, int type, u32 acpi_id);
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
-+#endif
- 
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
+While I was sorting out the fallout from that, the patches to convert
+kirkwood to use the simple-card stuff were merged.  At this point, I
+basically decided that was the end of nine months of effort to get SPDIF
+with DPCM properly supported, and earlier this year I emailed Mark to
+say that I regard that effort as being completely dead (even though I
+still use it, because it's the only way to get SPDIF output properly
+working with MPEG/AC3 compressed output.)
+
+Jean is only interested in feeding I2S out to the HDMI port, he's not
+interested in the SPDIF optical connector on the side, neither is he
+interested in the compressed stream support.  Neither of these are now
+possible without breaking the DT bindings for the ASoC implementation.
+
+This is the problem - in the mad headlong rush for DT support as if
+it's the most important thing on the planet, it seems that things
+haven't been properly considered - and it's not like I haven't been
+publishing these ASoC patches.  I've sent numerous rounds of patches
+during 2013.
+
+So, what do we do now with support for compressed audio streams via
+SPDIF on kirkwood hardware?  As far as I can see, it's no longer
+possible and mainline kernels will never support this.  Please tell
+me I'm wrong...
+
 -- 
-1.7.10.4
-
+FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+improving, and getting towards what was expected from it.
