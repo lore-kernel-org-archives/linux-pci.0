@@ -1,89 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f177.google.com ([209.85.128.177]:60263 "EHLO
-	mail-ve0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932297AbaFCPkf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 11:40:35 -0400
+Received: from top.free-electrons.com ([176.31.233.9]:59174 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751671AbaF3WWq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 18:22:46 -0400
+Date: Mon, 30 Jun 2014 19:21:45 -0300
+From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
+	Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>,
+	Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Alessandro Zummo <a.zummo@towertech.it>,
+	rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>,
+	linux-watchdog@vger.kernel.org
+Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
+Message-ID: <20140630222145.GA8789@arch.cereza>
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
+ <20140629213510.GR32514@n2100.arm.linux.org.uk>
+ <53B154FE.80804@gmail.com>
+ <20140630124320.GZ32514@n2100.arm.linux.org.uk>
+ <53B164B2.7090902@gmail.com>
+ <20140630142516.GA32514@n2100.arm.linux.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <16771871.sfJG2itVJN@wuerfel>
-References: <16771871.sfJG2itVJN@wuerfel>
-Date: Tue, 3 Jun 2014 10:40:34 -0500
-Message-ID: <CAL_JsqJpP2sEkPC4DUFWTNutjFhUBiKZfNVSpiKHFPfsJzTf6w@mail.gmail.com>
-Subject: Re: [PATCH v3] of/irq: provide more wrappers for !CONFIG_OF
-From: Rob Herring <robherring2@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <damm@opensource.se>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	SH-Linux <linux-sh@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20140630142516.GA32514@n2100.arm.linux.org.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 3, 2014 at 9:47 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> The pci-rcar driver is enabled for compile tests, and this has
-> now shown that the driver cannot build without CONFIG_OF,
-> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
-> interrupt mapping when possible":
->
-> drivers/built-in.o: In function `rcar_pci_map_irq':
-> :(.text+0x1cc7c): undefined reference to `of_irq_parse_and_map_pci'
-> pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
-> pci/host/pcie-rcar.c:875:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
->
-> As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
-> supposed to build fine, which we can achieve if we make the
-> declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
-> and provide an empty inline function otherwise, as we do for
-> a lot of other of interfaces.
->
-> This lets us build the rcar_pci driver again without CONFIG_OF
-> for build testing. All platforms using this driver select OF,
-> so this doesn't change anything for the users.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Cc: devicetree@vger.kernel.org
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Magnus Damm <damm@opensource.se>
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: Ben Dooks <ben.dooks@codethink.co.uk>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-sh@vger.kernel.org
-> ----
->
-> This replaces "[PATCH v2] of/irq: provide int of_irq_parse_and_map_pci
-> wrapper", since now the same driver requires additional interfaces.
-> We still want to be able to build the driver with CONFIG_OF disabled,
-> but now we need three functions instead of just one.
->
-> Rob, Grant, can you apply this as a bug fix, or provide comments?
->
-> diff --git a/include/linux/of.h b/include/linux/of.h
-> index 196b34c..7c29e6c 100644
-> --- a/include/linux/of.h
-> +++ b/include/linux/of.h
-> @@ -511,6 +511,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
->         return NULL;
->  }
->
-> +static inline int of_n_addr_cells(struct device_node *np) { return 0; }
-> +static inline int of_n_size_cells(struct device_node *np) { return 0; }
+On 30 Jun 03:25 PM, Russell King - ARM Linux wrote:
+[..]
+> 
+> Right, so what I have against mainline right now in my tree is:
+> 
+> * two SPI patches, which have been taken by Mark
+> * one long term core ARM patch adding optimised memset/memcpy IO operations
+> * the PMU stuff
+> * BMM (already published in git form)
+> * Vmeta (already published in git form)
+> * ASoC cleanup patches, which Mark took last week.
+> 
+> What isn't visible is the stuff which converts Armada DRM to component
+> support, along with the TDA998x driver (and it sounds like the TI LCDC
+> people may end up blocking that effort).  This is necessary to convert
+> it to DT support.  However, this depends on the component helper, and
+> that's where there's a blocking problem.
+> 
+> I sent out a bunch of patches last week, with a request for help from
+> the Exynos people.  So far, that has only attracted one relatively minor
+> comment from the iMX people.  I can't move forwards with the Armada
+> DRM until this is sorted.  Neither can I move forward with the TDA998x
+> driver.
+> 
 
-I'm fine with the rest, but I think these should always be used within
-some higher level function.
+I'm not sure I understand why tilcdc people are an obstacle for the
+component stuff, other than the lack of responsiveness. In any case, if
+you have some tilcdc or tda998x patches and you need help with the mainline
+process, feel free to ask.
 
-I can't seem to find where this is used by rcar. BTW, why does rcar
-pci DT support fail to have any ranges property?
+I've been doing some tilcdc work lately, and I'd be happy to help you with
+that.
 
-Looking at one use in mvebu pci only confirms my position. An
-of_for_each_ranges helper would be useful in that case.
+Do you plan to change the devicetree binding? While the current one works fine,
+it has several deficiencies, and it would be great to sort them out before
+the whole platform becomes obsolete.
 
-Rob
+Really, if you need help and if you think I can handle it, just drop me a line
+and I'll see what I can do.
+-- 
+Ezequiel García, Free Electrons
+Embedded Linux, Kernel and Android Engineering
+http://free-electrons.com
