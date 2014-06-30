@@ -1,125 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<jg1.han@samsung.com>, <bhelgaas@google.com>, <mohit.kumar@st.com>,
-	<linux-arm-kernel@lists.infradead.org>, <tony@atomide.com>,
-	<linux-kernel@vger.kernel.org>
-CC: <kishon@ti.com>, <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 8/8] ARM: dts: dra7: Add dt data for PCIe controller
-Date: Wed, 25 Jun 2014 23:30:18 +0530
-Message-ID: <1403719218-9484-9-git-send-email-kishon@ti.com>
-In-Reply-To: <1403719218-9484-1-git-send-email-kishon@ti.com>
-References: <1403719218-9484-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor2.renesas.com ([210.160.252.172]:27441 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752680AbaF3Hyo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 03:54:44 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1404114864-17330-1-git-send-email-phil.edworthy@renesas.com>
+References: <1404114864-17330-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1404114864-17330-2-git-send-email-phil.edworthy@renesas.com>
+Date: Mon, 30 Jun 2014 08:54:22 +0100
+Subject: [PATCH v2 1/3] PCI: host: pcie-rcar: Use correct initial HW settings
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added dt data for PCIe controller. This node contains dt data for
-both the DRA7 part of designware controller and for the designware core.
-The documention for this node can be found @ ../bindings/pci/ti-pci.txt.
+Although the R-Car PCIe driver works as it is, there are a number of
+incorrect settings that this patch corrects. It corrects:
+ - enabling the PCI Express Extended Cap ID.
+ - setting Data Link Layer Link Active Reporting Capable.
+ - terminating list of capabilities.
 
-Cc: Tony Lindgren <tony@atomide.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Pawel Moll <pawel.moll@arm.com>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: Kumar Gala <galak@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Marek Vasut <marex@denx.de>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+It also removes enabling the MAC data scrambling as this is the
+default HW setting, and removes incorrect code to enable slave bus
+mastering as this is done by the PCI core.
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 ---
- arch/arm/boot/dts/dra7.dtsi |   69 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 69 insertions(+)
+v2:
+ - No change
 
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
-index d196404..117288d 100644
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -98,6 +98,75 @@
- 			};
- 		};
+ drivers/pci/host/pcie-rcar.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index c06b888..680a8cc 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -483,14 +483,15 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
+ 	rcar_rmw32(pcie, RCONF(PCI_SUBORDINATE_BUS), 0xff, 1);
  
-+		axi@0 {
-+			compatible = "simple-bus";
-+			#size-cells = <1>;
-+			#address-cells = <1>;
-+			ranges = <0x51000000 0x51000000 0x3000
-+				  0x0	     0x20000000 0x10000000>;
-+			pcie@51000000 {
-+				compatible = "ti,dra7-pcie";
-+				reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
-+				reg-names = "rc_dbics", "ti_conf", "config";
-+				interrupts = <0 232 0x4>, <0 233 0x4>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				device_type = "pci";
-+				ranges = <0x81000000 0 0          0x03000 0 0x00010000
-+					  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
-+				#interrupt-cells = <1>;
-+				num-lanes = <1>;
-+				ti,hwmods = "pcie1";
-+				phys = <&pcie1_phy>;
-+				phy-names = "pcie-phy0";
-+				interrupt-map-mask = <0 0 0 7>;
-+				interrupt-map = <0 0 0 1 &pcie1_intc 1>,
-+						<0 0 0 2 &pcie1_intc 2>,
-+						<0 0 0 3 &pcie1_intc 3>,
-+						<0 0 0 4 &pcie1_intc 4>;
-+				pcie1_intc: interrupt-controller {
-+					interrupt-controller;
-+					#address-cells = <0>;
-+					#interrupt-cells = <1>;
-+				};
-+			};
-+		};
-+
-+		axi@1 {
-+			compatible = "simple-bus";
-+			#size-cells = <1>;
-+			#address-cells = <1>;
-+			ranges = <0x51800000 0x51800000 0x3000
-+				  0x0	     0x30000000 0x10000000>;
-+			status = "disabled";
-+			pcie@51000000 {
-+				compatible = "ti,dra7-pcie";
-+				reg = <0x51800000 0x2000>, <0x51802000 0x14c>, <0x1000 0x2000>;
-+				reg-names = "rc_dbics", "ti_conf", "config";
-+				interrupts = <0 355 0x4>, <0 356 0x4>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				device_type = "pci";
-+				ranges = <0x81000000 0 0          0x03000 0 0x00010000
-+					  0x82000000 0 0x30013000 0x13000 0 0xffed000>;
-+				#interrupt-cells = <1>;
-+				num-lanes = <1>;
-+				ti,hwmods = "pcie2";
-+				phys = <&pcie2_phy>;
-+				phy-names = "pcie-phy0";
-+				interrupt-map-mask = <0 0 0 7>;
-+				interrupt-map = <0 0 0 1 &pcie2_intc 1>,
-+						<0 0 0 2 &pcie2_intc 2>,
-+						<0 0 0 3 &pcie2_intc 3>,
-+						<0 0 0 4 &pcie2_intc 4>;
-+				pcie2_intc: interrupt-controller {
-+					interrupt-controller;
-+					#address-cells = <0>;
-+					#interrupt-cells = <1>;
-+				};
-+			};
-+		};
-+
- 		cm_core_aon: cm_core_aon@4a005000 {
- 			compatible = "ti,dra7-cm-core-aon";
- 			reg = <0x4a005000 0x2000>;
+ 	/* Initialize default capabilities. */
+-	rcar_rmw32(pcie, REXPCAP(0), 0, PCI_CAP_ID_EXP);
++	rcar_rmw32(pcie, REXPCAP(0), 0xff, PCI_CAP_ID_EXP);
+ 	rcar_rmw32(pcie, REXPCAP(PCI_EXP_FLAGS),
+ 		PCI_EXP_FLAGS_TYPE, PCI_EXP_TYPE_ROOT_PORT << 4);
+ 	rcar_rmw32(pcie, RCONF(PCI_HEADER_TYPE), 0x7f,
+ 		PCI_HEADER_TYPE_BRIDGE);
+ 
+ 	/* Enable data link layer active state reporting */
+-	rcar_rmw32(pcie, REXPCAP(PCI_EXP_LNKCAP), 0, PCI_EXP_LNKCAP_DLLLARC);
++	rcar_rmw32(pcie, REXPCAP(PCI_EXP_LNKCAP), PCI_EXP_LNKCAP_DLLLARC,
++		PCI_EXP_LNKCAP_DLLLARC);
+ 
+ 	/* Write out the physical slot number = 0 */
+ 	rcar_rmw32(pcie, REXPCAP(PCI_EXP_SLTCAP), PCI_EXP_SLTCAP_PSN, 0);
+@@ -499,10 +500,7 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
+ 	rcar_rmw32(pcie, TLCTLR+1, 0x3f, 50);
+ 
+ 	/* Terminate list of capabilities (Next Capability Offset=0) */
+-	rcar_rmw32(pcie, RVCCAP(0), 0xfff0, 0);
+-
+-	/* Enable MAC data scrambling. */
+-	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
++	rcar_rmw32(pcie, RVCCAP(0), 0xfff00000, 0);
+ 
+ 	/* Enable MSI */
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+@@ -519,11 +517,6 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
+ 	/* Enable INTx interrupts */
+ 	rcar_rmw32(pcie, PCIEINTXR, 0, 0xF << 8);
+ 
+-	/* Enable slave Bus Mastering */
+-	rcar_rmw32(pcie, RCONF(PCI_STATUS), PCI_STATUS_DEVSEL_MASK,
+-		PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER |
+-		PCI_STATUS_CAP_LIST | PCI_STATUS_DEVSEL_FAST);
+-
+ 	wmb();
+ 
+ 	return 0;
 -- 
-1.7.9.5
+2.0.0
 
