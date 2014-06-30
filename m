@@ -1,112 +1,125 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Prarit Bhargava <prarit@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: [Patch V3 14/16] x86, irq: Introduce helper to check whether an IOAPIC has been registered
-Date: Wed, 25 Jun 2014 16:40:45 +0800
-Message-Id: <1403685648-10103-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:62078 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751906AbaF3WrO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 18:47:14 -0400
+Received: by mail-ie0-f180.google.com with SMTP id rl12so7210520iec.25
+        for <linux-pci@vger.kernel.org>; Mon, 30 Jun 2014 15:47:13 -0700 (PDT)
+Date: Mon, 30 Jun 2014 16:47:09 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Do not touch siblings in
+ pci_assign_unassigned_bridge_resources
+Message-ID: <20140630224709.GA22024@google.com>
+References: <1402346730-2508-1-git-send-email-andreas.noever@gmail.com>
+ <20140617221620.GC30559@google.com>
+ <CAE9FiQXD7hvt0cUYMzvq0r6CbZn=iJZc7BHRaF2nACbG7qwuBQ@mail.gmail.com>
+ <CAMxnaaWWuNeNbnUe++N=2bBfs5JyKiq7tHH+_kiQZyQ9aakEHg@mail.gmail.com>
+ <CAE9FiQVQ657vDOhdhBq5VC044qt6TUF7FKP_-qy+35g71e56Yg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQVQ657vDOhdhBq5VC044qt6TUF7FKP_-qy+35g71e56Yg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce acpi_ioapic_registered() to check whether an IOAPIC has already
-been registered, it will be used when enabling IOAPIC hotplug.
+On Wed, Jun 18, 2014 at 09:41:02PM -0700, Yinghai Lu wrote:
+> On Wed, Jun 18, 2014 at 3:40 PM, Andreas Noever
+> <andreas.noever@gmail.com> wrote:
+> > On Wed, Jun 18, 2014 at 1:39 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > It seems to fix the testcase (no unwanted resources are released). But
+> > why do you reassign bus and not just skip the top level bridge? If one
+> > of the allocations below bridge failed then a resource of that device
+> > will be in fail_res and bridge->subordinate will get released anyways?
+> > Also by not removing fail_res from the list you trigger the code in
+> > the next loop for the top level bridge (in particular the res->flags =
+> > 0 line looks dangerous).
+> 
+> Should not be dangerous, just second try.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    1 +
- arch/x86/kernel/acpi/boot.c    |   11 +++++++++++
- arch/x86/kernel/apic/io_apic.c |   11 +++++++++++
- include/linux/acpi.h           |    1 +
- 4 files changed, 24 insertions(+)
+I still don't understand this.  Why do we set "res->flags = 0"?  That
+clears out the resource type.  Where do we figure out the type of "res"
+again?
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index ce63cf34c93c..0db2b7037e4b 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -191,6 +191,7 @@ extern void mp_unmap_irq(int irq);
- extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 			      struct ioapic_domain_cfg *cfg);
- extern int mp_unregister_ioapic(u32 gsi_base);
-+extern int mp_ioapic_registered(u32 gsi_base);
- extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 28d50c70cac9..2a133f594e66 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -814,6 +814,17 @@ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
- }
- EXPORT_SYMBOL(acpi_unregister_ioapic);
- 
-+int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base)
-+{
-+	int ret;
-+
-+	down_write(&acpi_ioapic_rwsem);
-+	ret  = mp_ioapic_registered(gsi_base);
-+	up_write(&acpi_ioapic_rwsem);
-+
-+	return ret;
-+}
-+
- static int __init acpi_parse_sbf(struct acpi_table_header *table)
- {
- 	struct acpi_table_boot *sb;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 5711689e4307..3410f1f467db 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -4005,6 +4005,17 @@ int mp_unregister_ioapic(u32 gsi_base)
- 	return 0;
- }
- 
-+int mp_ioapic_registered(u32 gsi_base)
-+{
-+	int ioapic;
-+
-+	for_each_ioapic(ioapic)
-+		if (ioapics[ioapic].gsi_config.gsi_base == gsi_base)
-+			return 1;
-+
-+	return 0;
-+}
-+
- int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 		     irq_hw_number_t hwirq)
- {
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index fb2bc50f330e..1294512b07e5 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -155,6 +155,7 @@ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
- 
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
-+int acpi_ioapic_registered(acpi_handle handle, u32 gsi_base);
- void acpi_irq_stats_init(void);
- extern u32 acpi_irq_handled;
- extern u32 acpi_irq_not_handled;
--- 
-1.7.10.4
+> > Could you explain why this function attempts to assign resources two
+> > times? In which scenario will a second attempt be successful?
+> 
+> For example, at first mmio is assigned (by firmware), but pref mmio fails,
+> then before second try,  mmio get cleared, then we could separate
+> mmio and mmio pref. So need to try again for pref mmio.
+> 
+> Also I missed one MEM_64 for hotplug path.
+> 
+> So we need two patches.
+> 
+> Thanks
+> 
+> Yinghai
+
+> Subject: [PATCH] pci: Don't release sibiling bridge resources
+> 
+> On hotplug case, we should not touch sibling bridges that is out
+> side of the slots.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/setup-bus.c |   12 +++++++++---
+>  1 file changed, 9 insertions(+), 3 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -1676,10 +1676,16 @@ again:
+>  	 * Try to release leaf bridge's resources that doesn't fit resource of
+>  	 * child device under that bridge
+>  	 */
+> -	list_for_each_entry(fail_res, &fail_head, list)
+> -		pci_bus_release_bridge_resources(fail_res->dev->bus,
+> +	list_for_each_entry(fail_res, &fail_head, list) {
+> +		struct pci_bus *bus = fail_res->dev->bus;
+> +
+> +		if (fail_res->dev == bridge)
+> +			bus = bridge->subordinate;
+> +
+> +		pci_bus_release_bridge_resources(bus,
+>  						 fail_res->flags & type_mask,
+>  						 whole_subtree);
+> +	}
+>  
+>  	/* restore size and flags */
+>  	list_for_each_entry(fail_res, &fail_head, list) {
+
+> Subject: [PATCH] pci: Add back missing MEM_64 check for hotplug path
+> 
+> We miss that in
+> |  commit 5b28541552ef5eeffc41d6936105f38c2508e566
+> |    PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources
+> for pci hotplug path.
+
+This changelog is useless.  I don't have time to spend a few hours
+figuring out why we want this change.
+
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/setup-bus.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -1652,7 +1652,7 @@ void pci_assign_unassigned_bridge_resour
+>  	struct pci_dev_resource *fail_res;
+>  	int retval;
+>  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+> -				  IORESOURCE_PREFETCH;
+> +				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+>  
+>  again:
+>  	__pci_bus_size_bridges(parent, &add_list);
 
