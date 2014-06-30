@@ -1,364 +1,114 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: [Patch V4 13/42] x86, ioapic: introduce helper utilities to walk ioapics and pins
-Date: Mon,  9 Jun 2014 16:19:42 +0800
-Message-Id: <1402302011-23642-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:47398 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751286AbaF3OZq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 10:25:46 -0400
+Date: Mon, 30 Jun 2014 15:25:16 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
+	Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>,
+	Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Alessandro Zummo <a.zummo@towertech.it>,
+	rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>,
+	linux-watchdog@vger.kernel.org
+Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
+Message-ID: <20140630142516.GA32514@n2100.arm.linux.org.uk>
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <53B154FE.80804@gmail.com> <20140630124320.GZ32514@n2100.arm.linux.org.uk> <53B164B2.7090902@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53B164B2.7090902@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce helper utilities for_each_ioapic(), for_each_ioapic_reverse(),
-for_each_pin() and for_each_ioapic_pin() to walk ioapics and pins.
-They will be rewritten e will rewrite later to support IOAPIC hotplug.
+On Mon, Jun 30, 2014 at 03:22:58PM +0200, Sebastian Hesselbarth wrote:
+> Of course we thought about it. But as you are dealing with different
+> SoCs at a time, we also have to care about some more SoCs than just
+> Dove. And, of course, we also run out of spare time to prepare proper
+> patches over and over again. I really /know/ that if you send patches,
+> they are well thought and well tested, so I basically postpone work
+> on that if I know you are working on it.
+>
+> My current idea of PMU register space is to have a DT provided regmap
+> but again, there are patches floating around but currently that regmap
+> helpers are still WIP. FWIW, if you look at dove pinctrl, we did a
+> last-minute patch for the PMU regs - just because you mentioned a
+> concern, so we really care about your opinion. The fact that it is not
+> solved is pure lack of time.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/io_apic.c |  120 +++++++++++++++++++++-------------------
- 1 file changed, 62 insertions(+), 58 deletions(-)
+Nothing has changed on the PMU patches since I posted them, because
+they're based on 3.15 and there's been no changes there.
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index e8cd0bf0ee82..8de9a837790b 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -62,6 +62,16 @@
- 
- #define __apicdebuginit(type) static type __init
- 
-+#define	for_each_ioapic(idx)		\
-+	for ((idx) = 0; (idx) < nr_ioapics; (idx)++)
-+#define	for_each_ioapic_reverse(idx)	\
-+	for ((idx) = nr_ioapics - 1; (idx) >= 0; (idx)--)
-+#define	for_each_pin(idx, pin)		\
-+	for ((pin) = 0; (pin) < ioapics[(idx)].nr_registers; (pin)++)
-+#define	for_each_ioapic_pin(idx, pin)	\
-+	for_each_ioapic((idx))		\
-+		for_each_pin((idx), (pin))
-+
- #define for_each_irq_pin(entry, head) \
- 	for (entry = head; entry; entry = entry->next)
- 
-@@ -191,7 +201,7 @@ int __init arch_early_irq_init(void)
- 	if (!legacy_pic->nr_legacy_irqs)
- 		io_apic_irqs = ~0UL;
- 
--	for (i = 0; i < nr_ioapics; i++) {
-+	for_each_ioapic(i) {
- 		ioapics[i].saved_registers =
- 			kzalloc(sizeof(struct IO_APIC_route_entry) *
- 				ioapics[i].nr_registers, GFP_KERNEL);
-@@ -624,9 +634,8 @@ static void clear_IO_APIC (void)
- {
- 	int apic, pin;
- 
--	for (apic = 0; apic < nr_ioapics; apic++)
--		for (pin = 0; pin < ioapics[apic].nr_registers; pin++)
--			clear_IO_APIC_pin(apic, pin);
-+	for_each_ioapic_pin(apic, pin)
-+		clear_IO_APIC_pin(apic, pin);
- }
- 
- #ifdef CONFIG_X86_32
-@@ -675,13 +684,13 @@ int save_ioapic_entries(void)
- 	int apic, pin;
- 	int err = 0;
- 
--	for (apic = 0; apic < nr_ioapics; apic++) {
-+	for_each_ioapic(apic) {
- 		if (!ioapics[apic].saved_registers) {
- 			err = -ENOMEM;
- 			continue;
- 		}
- 
--		for (pin = 0; pin < ioapics[apic].nr_registers; pin++)
-+		for_each_pin(apic, pin)
- 			ioapics[apic].saved_registers[pin] =
- 				ioapic_read_entry(apic, pin);
- 	}
-@@ -696,11 +705,11 @@ void mask_ioapic_entries(void)
- {
- 	int apic, pin;
- 
--	for (apic = 0; apic < nr_ioapics; apic++) {
-+	for_each_ioapic(apic) {
- 		if (!ioapics[apic].saved_registers)
- 			continue;
- 
--		for (pin = 0; pin < ioapics[apic].nr_registers; pin++) {
-+		for_each_pin(apic, pin) {
- 			struct IO_APIC_route_entry entry;
- 
- 			entry = ioapics[apic].saved_registers[pin];
-@@ -719,11 +728,11 @@ int restore_ioapic_entries(void)
- {
- 	int apic, pin;
- 
--	for (apic = 0; apic < nr_ioapics; apic++) {
-+	for_each_ioapic(apic) {
- 		if (!ioapics[apic].saved_registers)
- 			continue;
- 
--		for (pin = 0; pin < ioapics[apic].nr_registers; pin++)
-+		for_each_pin(apic, pin)
- 			ioapic_write_entry(apic, pin,
- 					   ioapics[apic].saved_registers[pin]);
- 	}
-@@ -782,7 +791,7 @@ static int __init find_isa_irq_apic(int irq, int type)
- 	if (i < mp_irq_entries) {
- 		int ioapic_idx;
- 
--		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
-+		for_each_ioapic(ioapic_idx)
- 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic)
- 				return ioapic_idx;
- 	}
-@@ -1001,7 +1010,7 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
- 	for (i = 0; i < mp_irq_entries; i++) {
- 		int lbus = mp_irqs[i].srcbus;
- 
--		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
-+		for_each_ioapic(ioapic_idx)
- 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic ||
- 			    mp_irqs[i].dstapic == MP_APIC_ALL)
- 				break;
-@@ -1224,12 +1233,10 @@ static inline int IO_APIC_irq_trigger(int irq)
- {
- 	int apic, idx, pin;
- 
--	for (apic = 0; apic < nr_ioapics; apic++) {
--		for (pin = 0; pin < ioapics[apic].nr_registers; pin++) {
--			idx = find_irq_entry(apic, pin, mp_INT);
--			if ((idx != -1) && (irq == pin_2_irq(idx, apic, pin)))
--				return irq_trigger(idx);
--		}
-+	for_each_ioapic_pin(apic, pin) {
-+		idx = find_irq_entry(apic, pin, mp_INT);
-+		if ((idx != -1) && (irq == pin_2_irq(idx, apic, pin)))
-+			return irq_trigger(idx);
- 	}
- 	/*
-          * nonexistent IRQs are edge default
-@@ -1349,7 +1356,7 @@ static void __init __io_apic_setup_irqs(unsigned int ioapic_idx)
- 	struct io_apic_irq_attr attr;
- 	unsigned int pin, irq;
- 
--	for (pin = 0; pin < ioapics[ioapic_idx].nr_registers; pin++) {
-+	for_each_pin(ioapic_idx, pin) {
- 		idx = find_irq_entry(ioapic_idx, pin, mp_INT);
- 		if (io_apic_pin_not_connected(idx, ioapic_idx, pin))
- 			continue;
-@@ -1380,7 +1387,7 @@ static void __init setup_IO_APIC_irqs(void)
- 
- 	apic_printk(APIC_VERBOSE, KERN_DEBUG "init IO_APIC IRQs\n");
- 
--	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
-+	for_each_ioapic(ioapic_idx)
- 		__io_apic_setup_irqs(ioapic_idx);
- }
- 
-@@ -1583,7 +1590,7 @@ __apicdebuginit(void) print_IO_APICs(void)
- 	struct irq_chip *chip;
- 
- 	printk(KERN_DEBUG "number of MP IRQ sources: %d.\n", mp_irq_entries);
--	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
-+	for_each_ioapic(ioapic_idx)
- 		printk(KERN_DEBUG "number of IO-APIC #%d registers: %d.\n",
- 		       mpc_ioapic_id(ioapic_idx),
- 		       ioapics[ioapic_idx].nr_registers);
-@@ -1594,7 +1601,7 @@ __apicdebuginit(void) print_IO_APICs(void)
- 	 */
- 	printk(KERN_INFO "testing the IO APIC.......................\n");
- 
--	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
-+	for_each_ioapic(ioapic_idx)
- 		print_IO_APIC(ioapic_idx);
- 
- 	printk(KERN_DEBUG "IRQ to pin mappings:\n");
-@@ -1825,26 +1832,22 @@ static struct { int pin, apic; } ioapic_i8259 = { -1, -1 };
- void __init enable_IO_APIC(void)
- {
- 	int i8259_apic, i8259_pin;
--	int apic;
-+	int apic, pin;
- 
- 	if (!legacy_pic->nr_legacy_irqs)
- 		return;
- 
--	for(apic = 0; apic < nr_ioapics; apic++) {
--		int pin;
-+	for_each_ioapic_pin(apic, pin) {
- 		/* See if any of the pins is in ExtINT mode */
--		for (pin = 0; pin < ioapics[apic].nr_registers; pin++) {
--			struct IO_APIC_route_entry entry;
--			entry = ioapic_read_entry(apic, pin);
-+		struct IO_APIC_route_entry entry = ioapic_read_entry(apic, pin);
- 
--			/* If the interrupt line is enabled and in ExtInt mode
--			 * I have found the pin where the i8259 is connected.
--			 */
--			if ((entry.mask == 0) && (entry.delivery_mode == dest_ExtINT)) {
--				ioapic_i8259.apic = apic;
--				ioapic_i8259.pin  = pin;
--				goto found_i8259;
--			}
-+		/* If the interrupt line is enabled and in ExtInt mode
-+		 * I have found the pin where the i8259 is connected.
-+		 */
-+		if ((entry.mask == 0) && (entry.delivery_mode == dest_ExtINT)) {
-+			ioapic_i8259.apic = apic;
-+			ioapic_i8259.pin  = pin;
-+			goto found_i8259;
- 		}
- 	}
-  found_i8259:
-@@ -1947,7 +1950,7 @@ void __init setup_ioapic_ids_from_mpc_nocheck(void)
- 	/*
- 	 * Set the IOAPIC ID to the value stored in the MPC table.
- 	 */
--	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++) {
-+	for_each_ioapic(ioapic_idx) {
- 		/* Read the register 0 value */
- 		raw_spin_lock_irqsave(&ioapic_lock, flags);
- 		reg_00.raw = io_apic_read(ioapic_idx, 0);
-@@ -2863,7 +2866,7 @@ static void ioapic_resume(void)
- {
- 	int ioapic_idx;
- 
--	for (ioapic_idx = nr_ioapics - 1; ioapic_idx >= 0; ioapic_idx--)
-+	for_each_ioapic_reverse(ioapic_idx)
- 		resume_ioapic_id(ioapic_idx);
- 
- 	restore_ioapic_entries();
-@@ -3453,9 +3456,8 @@ static u8 __init io_apic_unique_id(u8 id)
- 	DECLARE_BITMAP(used, 256);
- 
- 	bitmap_zero(used, 256);
--	for (i = 0; i < nr_ioapics; i++) {
-+	for_each_ioapic(i)
- 		__set_bit(mpc_ioapic_id(i), used);
--	}
- 	if (!test_bit(id, used))
- 		return id;
- 	return find_first_zero_bit(used, 256);
-@@ -3513,8 +3515,7 @@ void __init setup_ioapic_dest(void)
- 	if (skip_ioapic_setup == 1)
- 		return;
- 
--	for (ioapic = 0; ioapic < nr_ioapics; ioapic++)
--	for (pin = 0; pin < ioapics[ioapic].nr_registers; pin++) {
-+	for_each_ioapic_pin(ioapic, pin) {
- 		irq_entry = find_irq_entry(ioapic, pin, mp_INT);
- 		if (irq_entry == -1)
- 			continue;
-@@ -3543,29 +3544,33 @@ void __init setup_ioapic_dest(void)
- 
- static struct resource *ioapic_resources;
- 
--static struct resource * __init ioapic_setup_resources(int nr_ioapics)
-+static struct resource * __init ioapic_setup_resources(void)
- {
- 	unsigned long n;
- 	struct resource *res;
- 	char *mem;
--	int i;
-+	int i, num = 0;
- 
--	if (nr_ioapics <= 0)
-+	for_each_ioapic(i)
-+		num++;
-+	if (num == 0)
- 		return NULL;
- 
- 	n = IOAPIC_RESOURCE_NAME_SIZE + sizeof(struct resource);
--	n *= nr_ioapics;
-+	n *= num;
- 
- 	mem = alloc_bootmem(n);
- 	res = (void *)mem;
- 
--	mem += sizeof(struct resource) * nr_ioapics;
-+	mem += sizeof(struct resource) * num;
- 
--	for (i = 0; i < nr_ioapics; i++) {
--		res[i].name = mem;
--		res[i].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-+	num = 0;
-+	for_each_ioapic(i) {
-+		res[num].name = mem;
-+		res[num].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
- 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
- 		mem += IOAPIC_RESOURCE_NAME_SIZE;
-+		num++;
- 	}
- 
- 	ioapic_resources = res;
-@@ -3579,8 +3584,8 @@ void __init native_io_apic_init_mappings(void)
- 	struct resource *ioapic_res;
- 	int i;
- 
--	ioapic_res = ioapic_setup_resources(nr_ioapics);
--	for (i = 0; i < nr_ioapics; i++) {
-+	ioapic_res = ioapic_setup_resources();
-+	for_each_ioapic(i) {
- 		if (smp_found_config) {
- 			ioapic_phys = mpc_ioapic_addr(i);
- #ifdef CONFIG_X86_32
-@@ -3625,7 +3630,7 @@ void __init ioapic_insert_resources(void)
- 		return;
- 	}
- 
--	for (i = 0; i < nr_ioapics; i++) {
-+	for_each_ioapic(i) {
- 		insert_resource(&iomem_resource, r);
- 		r++;
- 	}
-@@ -3633,16 +3638,15 @@ void __init ioapic_insert_resources(void)
- 
- int mp_find_ioapic(u32 gsi)
- {
--	int i = 0;
-+	int i;
- 
- 	if (nr_ioapics == 0)
- 		return -1;
- 
- 	/* Find the IOAPIC that manages this GSI. */
--	for (i = 0; i < nr_ioapics; i++) {
-+	for_each_ioapic(i) {
- 		struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(i);
--		if ((gsi >= gsi_cfg->gsi_base)
--		    && (gsi <= gsi_cfg->gsi_end))
-+		if (gsi >= gsi_cfg->gsi_base && gsi <= gsi_cfg->gsi_end)
- 			return i;
- 	}
- 
-@@ -3654,7 +3658,7 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
- {
- 	struct mp_ioapic_gsi *gsi_cfg;
- 
--	if (WARN_ON(ioapic == -1))
-+	if (WARN_ON(ioapic < 0))
- 		return -1;
- 
- 	gsi_cfg = mp_ioapic_gsi_routing(ioapic);
+> Exactly that increasing amount of (valuable) patches makes it more
+> and more difficult for you and us to reproduce any issues. All I am
+> asking for is: if you don't push that branch for good reason, try to
+> split off at least some patches. Hunting issues like the HDMI thing
+> with 250 patches off, really isn't going to work well.
+
+Right, so what I have against mainline right now in my tree is:
+
+* two SPI patches, which have been taken by Mark
+* one long term core ARM patch adding optimised memset/memcpy IO operations
+* the PMU stuff
+* BMM (already published in git form)
+* Vmeta (already published in git form)
+* ASoC cleanup patches, which Mark took last week.
+
+What isn't visible is the stuff which converts Armada DRM to component
+support, along with the TDA998x driver (and it sounds like the TI LCDC
+people may end up blocking that effort).  This is necessary to convert
+it to DT support.  However, this depends on the component helper, and
+that's where there's a blocking problem.
+
+I sent out a bunch of patches last week, with a request for help from
+the Exynos people.  So far, that has only attracted one relatively minor
+comment from the iMX people.  I can't move forwards with the Armada
+DRM until this is sorted.  Neither can I move forward with the TDA998x
+driver.
+
+As for the ASoC stuff which you avoided commenting on, let me repeat
+that _that_ stuff is now totally dead and can /never/ be merged into
+mainline without breaking the existing ASoC kirkwood support.  In
+that case, it's not like I wasn't sending the patches out, because
+I had been... so everyone was aware of what was going on there,
+but I guess converting stuff to DT in ways that totally fuck over
+other patches is what now happens in the kernel.
+
+What I think you're missing is that for those of us who want to have
+a platform fully supported, the choice has been non-DT until relatively
+recently.  We're now at the point where the DT support on Dove has
+matured to the point where it's relatively easy to end up with a fully
+functional (but not necessarily bug free) setup with DT.  It's at the
+sweet spot where you can switch between DT and non-DT and preserve
+that functionality... but as soon as we get there we want to rip out
+the old stuff.
+
+Let me put that another way: it's at the point where those of us who
+have been using non-DT support can start moving the remaining drivers
+over to a DT environment without any functional loss.
+
+What I'm trying to get you to understand is that leaving the old stuff
+behind for a little while longer is beneficial - while those who have
+been running crippled DT based setups for the last year don't care
+about having full support, there are those who do.
+
+Of course, there's another solution to this.  I stay with my present
+3.15 kernel for ever.  That basically bars me from sending any further
+patches.  It also means that I stop maintaining TDA998x and Armada DRM,
+and you will have to take those over, which means you get the additional
+workload from those.  Is that what you really want?
+
+The Cubox is the /only/ ARM platform I have which is a capable media
+player, and I'm trying not to have it screwed by this kind of crap.
+
 -- 
-1.7.10.4
-
+FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+improving, and getting towards what was expected from it.
