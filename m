@@ -1,142 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:60120 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753268AbaFRAJF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jun 2014 20:09:05 -0400
-Received: by mail-ig0-f171.google.com with SMTP id h18so4771706igc.16
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jun 2014 17:09:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
-References: <1402426287-31157-1-git-send-email-m-karicheri2@ti.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 17 Jun 2014 18:08:43 -0600
-Message-ID: <CAErSpo6=vi0SR0A3u5BCLgiGxoH48N5R=e8VAnFDG=K61qLxnw@mail.gmail.com>
-Subject: Re: [PATCH v2 0/8] Add Keystone PCIe controller driver
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:47900 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752634AbaF3TgG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 15:36:06 -0400
+Date: Mon, 30 Jun 2014 20:35:40 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
+	Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>,
+	Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Alessandro Zummo <a.zummo@towertech.it>,
+	rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>,
+	linux-watchdog@vger.kernel.org
+Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
+Message-ID: <20140630193540.GG32514@n2100.arm.linux.org.uk>
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <53B154FE.80804@gmail.com> <20140630124320.GZ32514@n2100.arm.linux.org.uk> <53B164B2.7090902@gmail.com> <20140630142516.GA32514@n2100.arm.linux.org.uk> <53B183D5.8020708@gmail.com> <20140630165615.GE32514@n2100.arm.linux.org.uk> <53B19EF2.7020801@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <53B19EF2.7020801@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 10, 2014 at 02:51:19PM -0400, Murali Karicheri wrote:
-> This patch adds a PCIe controller driver for Keystone SoCs. This
-> is based on v1 of the series posted to the mailing list.
->
-> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-> CC: Russell King <linux@arm.linux.org.uk>
-> CC: Grant Likely <grant.likely@linaro.org>
-> CC: Rob Herring <robh+dt@kernel.org>
-> CC: Mohit Kumar <mohit.kumar@st.com>
-> CC: Jingoo Han <jg1.han@samsung.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Pratyush Anand <pratyush.anand@st.com>
-> CC: Richard Zhu <r65037@freescale.com>
-> CC: Kishon Vijay Abraham I <kishon@ti.com>
-> CC: Marek Vasut <marex@denx.de>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Pawel Moll <pawel.moll@arm.com>
-> CC: Mark Rutland <mark.rutland@arm.com>
-> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-> CC: Kumar Gala <galak@codeaurora.org>
-> CC: Randy Dunlap <rdunlap@infradead.org>
-> CC: Grant Likely <grant.likely@linaro.org>
->
->
-> Changelog:
->
-> V2
->  - Split the designware pcie enhancement patch to multiple
->    patches based on functionality added
->  - Remove the quirk code and add a patch to fix mps/mrss
->    tuning for ARM. Use kernel command line parameter
->    pci=pcie_bus_perf to work with Keystone PCI Controller.
->    Following patch addressed this.
->      [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
->  - Add documentation for device tree bindings
->  - Add separate interrupt controller nodes for MSI and Legacy
->    IRQs and use irq map for legacy IRQ
->  - Use compatibility to identify v3.65 version of the DW hardware
->    and use it to customize the designware common code.
->  - Use reg property for configuration space instead of range
->  - Other minor updates based on code inspection.
->
-> V1
->  - Add an interrupt controller node for Legacy irq chip and use
->    interrupt map/map-mask property to map legacy IRQs A/B/C/D
->  - Add a Phy driver to replace the original serdes driver
->  - Move common application register handling code to a separate
->    file to allow re-use across other platforms that use older
->    DW PCIe h/w
->  - PCI quirk for maximum read request size. Check and override only
->    if the maximum is higher than what controller can handle.
->  - Converted to a module platform driver.
->
->
-> Murali Karicheri (8):
->   PCI: designware: add rd[wr]_other_conf API
->   PCI: designware: refactor host init code to re-use on v3.65 DW pci hw
->   PCI: designware: update pcie core driver to work with dw hw version
->     3.65
->   PCI: designware: add msi controller functions for v3.65 hw
->   PCI: designware: add PCI controller functions for v3.65 DW hw
->   phy: Add serdes phy driver for keystone
->   PCI: keystone: add pcie driver based on designware core driver
->   ARM: keystone: add pcie related options
->
->  .../devicetree/bindings/pci/designware-pcie.txt    |   42 ++
->  .../devicetree/bindings/pci/pci-keystone.txt       |   56 +++
->  .../bindings/phy/phy-keystone-serdes.txt           |   25 ++
->  arch/arm/mach-keystone/Kconfig                     |    1 +
->  drivers/pci/host/Kconfig                           |   12 +
->  drivers/pci/host/Makefile                          |    2 +
->  drivers/pci/host/pci-dw-v3_65-msi.c                |  149 +++++++
->  drivers/pci/host/pci-dw-v3_65.c                    |  390 ++++++++++++++++++
->  drivers/pci/host/pci-dw-v3_65.h                    |   34 ++
->  drivers/pci/host/pci-keystone.c                    |  418 ++++++++++++++++++++
->  drivers/pci/host/pcie-designware.c                 |  175 +++++---
->  drivers/pci/host/pcie-designware.h                 |   42 +-
->  drivers/phy/Kconfig                                |    6 +
->  drivers/phy/Makefile                               |    1 +
->  drivers/phy/phy-keystone-serdes.c                  |  230 +++++++++++
->  15 files changed, 1531 insertions(+), 52 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
->  create mode 100644 Documentation/devicetree/bindings/phy/phy-keystone-serdes.txt
->  create mode 100644 drivers/pci/host/pci-dw-v3_65-msi.c
->  create mode 100644 drivers/pci/host/pci-dw-v3_65.c
->  create mode 100644 drivers/pci/host/pci-dw-v3_65.h
->  create mode 100644 drivers/pci/host/pci-keystone.c
->  create mode 100644 drivers/phy/phy-keystone-serdes.c
+On Mon, Jun 30, 2014 at 07:31:30PM +0200, Sebastian Hesselbarth wrote:
+> On 06/30/2014 06:56 PM, Russell King - ARM Linux wrote:
+> > On Mon, Jun 30, 2014 at 05:35:49PM +0200, Sebastian Hesselbarth wrote:
+> >> On 06/30/2014 04:25 PM, Russell King - ARM Linux wrote:
+> >>> Nothing has changed on the PMU patches since I posted them, because
+> >>> they're based on 3.15 and there's been no changes there.
+> >>
+> >> I offered to deal with mainlining them end of April, you never replied.
+> >> I know that if you dislike something you answer, but it is hard to tell
+> >> if silence means agreement.
+> >>
+> >> I am not going to waste any time preparing patches just to get a NAK.
+> > 
+> > That's because I am quite prepared to work on them _if_ there is a way
+> > forward.  You've already said that changing things like hwmon and rtc
+> > is a work in progress to convert them to regmap.  That's great, but
+> > in order to progress these myself, I need *visibility* of that work,
+> > and there is zero visibility of that.
+> 
+> So, we are on the same boat. For the HDMI issue, I also need visibility
+> to add any more ideas how to deal with it. Just provide me the binaries,
+> I see if I can at least reproduce the issue.
 
-I'm not willing to merge phy-keystone-serdes.c because I don't
-maintain drivers/phy and because of the binary blob of register values
-it contains, but maybe somebody else will.  I assume it could be
-merged by itself before the rest of this.
+What I can do is provide a branch of all the current stuff which is
+relatively clean for mainline:
 
-I'm looking for acks from Mohit and/or Jingoo for the pci/host
-changes, and from Arnd for the devicetree/bindings changes.
+http://ftp.arm.linux.org.uk/cgit/linux-cubox.git/log/?h=cubox-ml-3.15
 
-Adding these "-dw-3_64" files is sort of ugly.  If that code is only
-used by keystone, maybe it could just be moved to pci-keystone.c?  But
-I'll defer to Mohit and Jingoo on that and the way you modify
-pcie-designware.c.
+there's lots missing from it, and it probably doesn't even build
+properly, but that's one of the side effects of trying to keep
+everything working and juggling between mainline and something that
+works.
 
-Bjorn
+> Right. And since I am one of those volunteers, I can tell you that
+> some specific attitude in dealing with people is definitely reducing
+> the willingness to stick with it.
+> 
+> I constantly offered to spend my spare time for hunting the issue
+> but only received ranting.
+
+All that I'm /complaining/ about is the very quick removal of the
+non-DT support.
+
+> Sure, nobody said that DT is feature complete. But you'd have to do
+> the same on mainline non-DT dove as there has never been support for
+> the cubox.
+
+Indeed, but successively merging mainline into Rabeeh's tree is rather
+trivial for the most part (apart from a few nasty conflicts, such as the
+completely different si5531 driver).  Where that happens, I take
+mainline's version, and if necessary augment it to make non-DT work
+again.
+
+That has pros and cons - the pro is that I get to keep a feature complete
+kernel on the hardware.  The con is that I still need to use bits of
+mach-dove to make everything work, even with DT.
+
+> If it helps us tracking down the HDMI issue, we can have below setup
+> for DT dove and get rid of it incrementally.
+
+Right, and you'll also need stuff such as the component updates I've
+been trying to push recently, updates to Armada DRM so that it can be
+used in a DT environment (included in the above git tree), and probably
+a few other things.
+
+The timeline for DRM stuff looks something like this:
+
+- get the component updates reviewed and acceptable
+- get those merged by Greg
+- chase up what's happening with the DRM bug fix
+- get the DRM of_graph helper reviewed and merged
+- get the Armada DRM component helper conversion reviewed and merged
+  (which depends on sorting out how to deal with the component helper
+   dependency and need for those changes to be with these changes.)
+- same for the tda998x driver, which will also need the DRM of_graph
+  helpers.
+
+I /suspect/ what's going to happen there is that the component updates
+will make the 3.17 merge window, and maybe the initial DRM stuff.
+The remainder will be for the 3.18 merge window when everyone has
+the dependencies in their trees to cope with those changes.
+
+So that's probably something like 4 to 6 months just for that (assuming
+a kernel cycle is three months.)
+
+-- 
+FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+improving, and getting towards what was expected from it.
