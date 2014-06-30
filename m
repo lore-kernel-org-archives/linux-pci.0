@@ -1,187 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:43517 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755811AbaFYIkQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jun 2014 04:40:16 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:38486 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753182AbaF3NqG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 09:46:06 -0400
+Message-ID: <1404135864.4305.23.camel@weser.hi.pengutronix.de>
+Subject: Re: The imx6q suspend/resume is broken on 3.16-rc due to PCIe
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Shawn Guo <shawn.guo@linaro.org>
+Cc: Shawn Guo <shawn.guo@freescale.com>,
+	Richard Zhu <r65037@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch V3 08/16] ACPI, ioapic: Add acpi_get_ioapic_id()
-Date: Wed, 25 Jun 2014 16:40:39 +0800
-Message-Id: <1403685648-10103-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
+	Fabio Estevam <festevam@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Date: Mon, 30 Jun 2014 15:44:24 +0200
+In-Reply-To: <20140628143712.GA7869@dragon>
+References: <20140624153559.GA5741@dragon>
+	 <CAOMZO5AT54hOF2bi9bQwmBcdtG0QHyofQgoRG6Mw_RpDQXzx=w@mail.gmail.com>
+	 <20140625062243.GD3242@dragon>
+	 <CAOMZO5BuOhWo7SCEPFmNRUQBi=5JhDrVv0yvBQM2d_jMyLkbyw@mail.gmail.com>
+	 <1403693452.4249.1.camel@weser.hi.pengutronix.de>
+	 <20140625125306.GB6917@dragon>
+	 <1403772229.4254.4.camel@weser.hi.pengutronix.de>
+	 <20140628143712.GA7869@dragon>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+Am Samstag, den 28.06.2014, 22:37 +0800 schrieb Shawn Guo:
+> On Thu, Jun 26, 2014 at 10:43:49AM +0200, Lucas Stach wrote:
+> > Am Mittwoch, den 25.06.2014, 20:53 +0800 schrieb Shawn Guo:
+> > > On Wed, Jun 25, 2014 at 12:50:52PM +0200, Lucas Stach wrote:
+> > > > Am Mittwoch, den 25.06.2014, 07:50 -0300 schrieb Fabio Estevam:
+> > > > > On Wed, Jun 25, 2014 at 3:22 AM, Shawn Guo <shawn.guo@linaro.org> wrote:
+> > > > > 
+> > > > > > Please test against v3.16-rc1 or -rc2.  The breakage on linux-next
+> > > > > > should be another issue.
+> > > > > 
+> > > > > Yes, I see it now. Tested on -rc2 and suspend/resume works with PCI
+> > > > > driver removed.
+> > > > 
+> > > > Can you please send me a dmesg from a working boot?
+> > > 
+> > > What do you mean by "working boot"?  Boot is always working.  What fails
+> > > is system resuming.
+> > > 
+> > > Shawn
+> > > 
+> > Oops, what I meant is a dmesg after a working resume (from kernel 3.15).
+> > I can see how failing to resume from L2 can cause the hang and we should
+> > really implement the PHY PD toggling in the pcie driver, but I would
+> > like to understand why you don't hit this on 3.15.
+> 
+> Sorry, Lucas.  I just noticed that in my 3.15 testing PCIe is not
+> enabled in device tree at all.  So the issue should have already been
+> there before your changes to PCIe driver.
+> 
+Hi Shawn,
 
-For ioapic hotplug, we need to parse apic id for ioapic registration.
+can you please test the attached patch on top of 3.16-rc* to see if it
+helps? If it works for you I would like to try and get this into 3.16 as
+a bugfix.
 
-We could check _MAT and MADT to get io apic id, just like cpu hotplug
-path to get apic id.
+Regards,
+Lucas
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+--------------------------->8-----------------------------
+>From f3bfdc9c19249188fa153b1568c3129cd31af4f5 Mon Sep 17 00:00:00 2001
+From: Lucas Stach <l.stach@pengutronix.de>
+Date: Mon, 30 Jun 2014 15:33:04 +0200
+Subject: [PATCH] PCI: imx6: add workaround for errata ERR005723
+
+Fixes system hang after resume from suspend to mem.
+
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- drivers/acpi/apic_id.c |   97 +++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/acpi.h   |    3 ++
- 2 files changed, 98 insertions(+), 2 deletions(-)
+ drivers/pci/host/pci-imx6.c | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-diff --git a/drivers/acpi/apic_id.c b/drivers/acpi/apic_id.c
-index ac3b10a9f92d..a74a3fcd8362 100644
---- a/drivers/acpi/apic_id.c
-+++ b/drivers/acpi/apic_id.c
-@@ -2,6 +2,10 @@
-  * Copyright (C) 2005 Intel Corporation
-  * Copyright (C) 2009 Hewlett-Packard Development Company, L.P.
-  *	All routines dealing with CPU APIC ID are moved from processor_core.c
-+ *
-+ * I/O APIC hotplug support
-+ *	Yinghai Lu <yinghai@kernel.org>
-+ *	Jiang Liu <jiang.liu@intel.com>
-  */
- #include <linux/export.h>
- #include <linux/slab.h>
-@@ -9,6 +13,9 @@
- 
- #include "internal.h"
- 
-+static struct acpi_table_madt *madt;
-+static int read_madt;
-+
- static int map_lapic_id(struct acpi_subtable_header *entry,
- 		 u32 acpi_id, int *apic_id)
- {
-@@ -64,8 +71,6 @@ static int map_lsapic_id(struct acpi_subtable_header *entry,
- static int map_madt_entry(int type, u32 acpi_id)
- {
- 	unsigned long madt_end, entry;
--	static struct acpi_table_madt *madt;
--	static int read_madt;
- 	int apic_id = -1;
- 
- 	if (!read_madt) {
-@@ -200,3 +205,91 @@ int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
- 	return acpi_map_cpuid(apic_id, acpi_id);
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index a568efaa331c..5c58a3ee5dbf 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -589,6 +589,38 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(acpi_get_cpuid);
-+
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+static int map_ioapic_id(struct acpi_subtable_header *entry, u32 gsi_base,
-+			 u64 *phys_addr, int *ioapic_id)
-+{
-+	struct acpi_madt_io_apic *ioapic = (struct acpi_madt_io_apic *)entry;
-+
-+	if (ioapic->global_irq_base != gsi_base)
-+		return 0;
-+
-+	*phys_addr = ioapic->address;
-+	*ioapic_id = ioapic->id;
-+	return 1;
-+}
-+
-+static int map_madt_ioapic_entry(u32 gsi_base, u64 *phys_addr)
-+{
-+	struct acpi_subtable_header *hdr;
-+	unsigned long madt_end, entry;
-+	int apic_id = -1;
-+
-+	if (!read_madt) {
-+		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
-+					(struct acpi_table_header **)&madt)))
-+			madt = NULL;
-+		read_madt++;
-+	}
-+
-+	if (!madt)
-+		return apic_id;
-+
-+	entry = (unsigned long)madt;
-+	madt_end = entry + madt->header.length;
-+
-+	/* Parse all entries looking for a match. */
-+	entry += sizeof(struct acpi_table_madt);
-+	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
-+		hdr = (struct acpi_subtable_header *)entry;
-+		if (hdr->type == ACPI_MADT_TYPE_IO_APIC &&
-+		    map_ioapic_id(hdr, gsi_base, phys_addr, &apic_id))
-+			break;
-+		else
-+			entry += hdr->length;
-+	}
-+
-+	return apic_id;
-+}
-+
-+static int map_mat_ioapic_entry(acpi_handle handle, u32 gsi_base,
-+				u64 *phys_addr)
-+{
-+	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-+	union acpi_object *obj;
-+	struct acpi_subtable_header *header;
-+	int apic_id = -1;
-+
-+	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
-+		goto exit;
-+
-+	if (!buffer.length || !buffer.pointer)
-+		goto exit;
-+
-+	obj = buffer.pointer;
-+	if (obj->type != ACPI_TYPE_BUFFER ||
-+	    obj->buffer.length < sizeof(struct acpi_subtable_header)) {
-+		goto exit;
-+	}
-+
-+	header = (struct acpi_subtable_header *)obj->buffer.pointer;
-+	if (header->type == ACPI_MADT_TYPE_IO_APIC)
-+		map_ioapic_id(header, gsi_base, phys_addr, &apic_id);
-+
-+exit:
-+	kfree(buffer.pointer);
-+	return apic_id;
-+}
-+
-+int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr)
-+{
-+	int apic_id;
-+
-+	apic_id = map_mat_ioapic_entry(handle, gsi_base, phys_addr);
-+	if (apic_id == -1)
-+		apic_id = map_madt_ioapic_entry(gsi_base, phys_addr);
-+
-+	return apic_id;
-+}
-+#endif /* CONFIG_ACPI_HOTPLUG_IOAPIC */
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 41460ed7017f..fb2bc50f330e 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -149,6 +149,9 @@ int acpi_unmap_lsapic(int cpu);
- int acpi_get_apicid(acpi_handle, int type, u32 acpi_id);
- int acpi_map_cpuid(int apic_id, u32 acpi_id);
- int acpi_get_cpuid(acpi_handle, int type, u32 acpi_id);
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
-+#endif
  
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
++#ifdef CONFIG_PM_SLEEP
++static int imx6_pcie_suspend(struct device *dev)
++{
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++
++	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
++
++	return 0;
++}
++
++static int imx6_pcie_resume(struct device *dev)
++{
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++
++	/*
++	 * This is a workaround for
++	 * ERR005723: PCIe does not support L2 power down
++	 * Toggling the PHY PD bit around system L2 state switching seems to be
++	 * enough to wake the PCIe logic after a power down.
++	 */
++	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
++
++	return 0;
++}
++#endif
++
++static SIMPLE_DEV_PM_OPS(imx6_pcie_pm_ops,
++		imx6_pcie_suspend,
++		imx6_pcie_resume);
++
+ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-pcie", },
+ 	{},
+@@ -600,6 +632,7 @@ static struct platform_driver imx6_pcie_driver = {
+ 		.name	= "imx6q-pcie",
+ 		.owner	= THIS_MODULE,
+ 		.of_match_table = imx6_pcie_of_match,
++		.pm = &imx6_pcie_pm_ops,
+ 	},
+ };
+ 
 -- 
-1.7.10.4
+2.0.0
+
+
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
