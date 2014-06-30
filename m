@@ -1,307 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:35824 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752948AbaFIIRx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Jun 2014 04:17:53 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch V4 04/42] x86, acpi: reorganize code to avoid forward declaration in boot.c
-Date: Mon,  9 Jun 2014 16:19:33 +0800
-Message-Id: <1402302011-23642-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1402302011-23642-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from relmlor3.renesas.com ([210.160.252.173]:15931 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754388AbaF3HzG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jun 2014 03:55:06 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1404114864-17330-1-git-send-email-phil.edworthy@renesas.com>
+References: <1404114864-17330-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1404114864-17330-4-git-send-email-phil.edworthy@renesas.com>
+Date: Mon, 30 Jun 2014 08:54:24 +0100
+Subject: [PATCH v2 3/3] PCI: host: pcie-rcar: Replace arg passed into a func with
+ local var
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reorganize code to avoid forward declaration in boot.c, no function
-changes.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/kernel/acpi/boot.c |  236 +++++++++++++++++++++----------------------
- 1 file changed, 116 insertions(+), 120 deletions(-)
+ drivers/pci/host/pcie-rcar.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index b41b47021f53..ceb3b36f2b2c 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -345,10 +345,123 @@ acpi_parse_lapic_nmi(struct acpi_subtable_header * header, const unsigned long e
- #endif				/*CONFIG_X86_LOCAL_APIC */
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 758e2b4..efdea07 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -319,9 +319,10 @@ static struct pci_ops rcar_pcie_ops = {
+ 	.write	= rcar_pcie_write_conf,
+ };
  
- #ifdef CONFIG_X86_IO_APIC
--static void  mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
--				    u32 gsi);
-+#define MP_ISA_BUS		0
-+
-+static void __init mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
-+					  u32 gsi)
-+{
-+	int ioapic;
-+	int pin;
-+	struct mpc_intsrc mp_irq;
-+
-+	/*
-+	 * Convert 'gsi' to 'ioapic.pin'.
-+	 */
-+	ioapic = mp_find_ioapic(gsi);
-+	if (ioapic < 0)
-+		return;
-+	pin = mp_find_ioapic_pin(ioapic, gsi);
-+
-+	/*
-+	 * TBD: This check is for faulty timer entries, where the override
-+	 *      erroneously sets the trigger to level, resulting in a HUGE
-+	 *      increase of timer interrupts!
-+	 */
-+	if ((bus_irq == 0) && (trigger == 3))
-+		trigger = 1;
-+
-+	mp_irq.type = MP_INTSRC;
-+	mp_irq.irqtype = mp_INT;
-+	mp_irq.irqflag = (trigger << 2) | polarity;
-+	mp_irq.srcbus = MP_ISA_BUS;
-+	mp_irq.srcbusirq = bus_irq;	/* IRQ */
-+	mp_irq.dstapic = mpc_ioapic_id(ioapic); /* APIC ID */
-+	mp_irq.dstirq = pin;	/* INTIN# */
-+
-+	mp_save_irq(&mp_irq);
-+
-+	isa_irq_to_gsi[bus_irq] = gsi;
-+}
-+
-+static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
-+			int polarity)
-+{
-+#ifdef CONFIG_X86_MPPARSE
-+	struct mpc_intsrc mp_irq;
-+	struct pci_dev *pdev;
-+	unsigned char number;
-+	unsigned int devfn;
-+	int ioapic;
-+	u8 pin;
-+
-+	if (!acpi_ioapic)
-+		return 0;
-+	if (!dev || !dev_is_pci(dev))
-+		return 0;
-+
-+	pdev = to_pci_dev(dev);
-+	number = pdev->bus->number;
-+	devfn = pdev->devfn;
-+	pin = pdev->pin;
-+	/* print the entry should happen on mptable identically */
-+	mp_irq.type = MP_INTSRC;
-+	mp_irq.irqtype = mp_INT;
-+	mp_irq.irqflag = (trigger == ACPI_EDGE_SENSITIVE ? 4 : 0x0c) |
-+				(polarity == ACPI_ACTIVE_HIGH ? 1 : 3);
-+	mp_irq.srcbus = number;
-+	mp_irq.srcbusirq = (((devfn >> 3) & 0x1f) << 2) | ((pin - 1) & 3);
-+	ioapic = mp_find_ioapic(gsi);
-+	mp_irq.dstapic = mpc_ioapic_id(ioapic);
-+	mp_irq.dstirq = mp_find_ioapic_pin(ioapic, gsi);
-+
-+	mp_save_irq(&mp_irq);
-+#endif
-+	return 0;
-+}
-+
- static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
--			   int polarity);
-+			   int polarity)
-+{
-+	int ioapic;
-+	int ioapic_pin;
-+	struct io_apic_irq_attr irq_attr;
-+	int ret;
-+
-+	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
-+		return gsi;
-+
-+	/* Don't set up the ACPI SCI because it's already set up */
-+	if (acpi_gbl_FADT.sci_interrupt == gsi)
-+		return gsi;
-+
-+	ioapic = mp_find_ioapic(gsi);
-+	if (ioapic < 0) {
-+		printk(KERN_WARNING "No IOAPIC for GSI %u\n", gsi);
-+		return gsi;
-+	}
-+
-+	ioapic_pin = mp_find_ioapic_pin(ioapic, gsi);
-+
-+	if (ioapic_pin > MP_MAX_IOAPIC_PIN) {
-+		printk(KERN_ERR "Invalid reference to IOAPIC pin "
-+		       "%d-%d\n", mpc_ioapic_id(ioapic),
-+		       ioapic_pin);
-+		return gsi;
-+	}
-+
-+	if (enable_update_mptable)
-+		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
-+
-+	set_io_apic_irq_attr(&irq_attr, ioapic, ioapic_pin,
-+			     trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
-+			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
-+	ret = io_apic_set_pci_routing(dev, gsi_to_irq(gsi), &irq_attr);
-+	if (ret < 0)
-+		gsi = INT_MIN;
-+
-+	return gsi;
-+}
-+
- 
- static int __init
- acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
-@@ -905,44 +1018,6 @@ static int __init acpi_parse_madt_lapic_entries(void)
- #endif				/* CONFIG_X86_LOCAL_APIC */
- 
- #ifdef	CONFIG_X86_IO_APIC
--#define MP_ISA_BUS		0
--
--static void __init mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
--					  u32 gsi)
--{
--	int ioapic;
--	int pin;
--	struct mpc_intsrc mp_irq;
--
--	/*
--	 * Convert 'gsi' to 'ioapic.pin'.
--	 */
--	ioapic = mp_find_ioapic(gsi);
--	if (ioapic < 0)
--		return;
--	pin = mp_find_ioapic_pin(ioapic, gsi);
--
--	/*
--	 * TBD: This check is for faulty timer entries, where the override
--	 *      erroneously sets the trigger to level, resulting in a HUGE
--	 *      increase of timer interrupts!
--	 */
--	if ((bus_irq == 0) && (trigger == 3))
--		trigger = 1;
--
--	mp_irq.type = MP_INTSRC;
--	mp_irq.irqtype = mp_INT;
--	mp_irq.irqflag = (trigger << 2) | polarity;
--	mp_irq.srcbus = MP_ISA_BUS;
--	mp_irq.srcbusirq = bus_irq;	/* IRQ */
--	mp_irq.dstapic = mpc_ioapic_id(ioapic); /* APIC ID */
--	mp_irq.dstirq = pin;	/* INTIN# */
--
--	mp_save_irq(&mp_irq);
--
--	isa_irq_to_gsi[bus_irq] = gsi;
--}
--
- static void __init mp_config_acpi_legacy_irqs(void)
+-static void rcar_pcie_setup_window(int win, struct resource *res,
+-				   struct rcar_pcie *pcie)
++static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
  {
- 	int i;
-@@ -1009,85 +1084,6 @@ static void __init mp_config_acpi_legacy_irqs(void)
- 	}
- }
++	struct resource *res = &pcie->res[win];
++
+ 	/* Setup PCIe address space mappings for each resource */
+ 	resource_size_t size;
+ 	u32 mask;
+@@ -362,7 +363,7 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
+ 		if (!res->flags)
+ 			continue;
  
--static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
--			int polarity)
--{
--#ifdef CONFIG_X86_MPPARSE
--	struct mpc_intsrc mp_irq;
--	struct pci_dev *pdev;
--	unsigned char number;
--	unsigned int devfn;
--	int ioapic;
--	u8 pin;
--
--	if (!acpi_ioapic)
--		return 0;
--	if (!dev || !dev_is_pci(dev))
--		return 0;
--
--	pdev = to_pci_dev(dev);
--	number = pdev->bus->number;
--	devfn = pdev->devfn;
--	pin = pdev->pin;
--	/* print the entry should happen on mptable identically */
--	mp_irq.type = MP_INTSRC;
--	mp_irq.irqtype = mp_INT;
--	mp_irq.irqflag = (trigger == ACPI_EDGE_SENSITIVE ? 4 : 0x0c) |
--				(polarity == ACPI_ACTIVE_HIGH ? 1 : 3);
--	mp_irq.srcbus = number;
--	mp_irq.srcbusirq = (((devfn >> 3) & 0x1f) << 2) | ((pin - 1) & 3);
--	ioapic = mp_find_ioapic(gsi);
--	mp_irq.dstapic = mpc_ioapic_id(ioapic);
--	mp_irq.dstirq = mp_find_ioapic_pin(ioapic, gsi);
--
--	mp_save_irq(&mp_irq);
--#endif
--	return 0;
--}
--
--static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
--			   int polarity)
--{
--	int ioapic;
--	int ioapic_pin;
--	struct io_apic_irq_attr irq_attr;
--	int ret;
--
--	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
--		return gsi;
--
--	/* Don't set up the ACPI SCI because it's already set up */
--	if (acpi_gbl_FADT.sci_interrupt == gsi)
--		return gsi;
--
--	ioapic = mp_find_ioapic(gsi);
--	if (ioapic < 0) {
--		printk(KERN_WARNING "No IOAPIC for GSI %u\n", gsi);
--		return gsi;
--	}
--
--	ioapic_pin = mp_find_ioapic_pin(ioapic, gsi);
--
--	if (ioapic_pin > MP_MAX_IOAPIC_PIN) {
--		printk(KERN_ERR "Invalid reference to IOAPIC pin "
--		       "%d-%d\n", mpc_ioapic_id(ioapic),
--		       ioapic_pin);
--		return gsi;
--	}
--
--	if (enable_update_mptable)
--		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
--
--	set_io_apic_irq_attr(&irq_attr, ioapic, ioapic_pin,
--			     trigger == ACPI_EDGE_SENSITIVE ? 0 : 1,
--			     polarity == ACPI_ACTIVE_HIGH ? 0 : 1);
--	ret = io_apic_set_pci_routing(dev, gsi_to_irq(gsi), &irq_attr);
--	if (ret < 0)
--		gsi = INT_MIN;
--
--	return gsi;
--}
--
- /*
-  * Parse IOAPIC related entries in MADT
-  * returns 0 on success, < 0 on error
+-		rcar_pcie_setup_window(i, res, pcie);
++		rcar_pcie_setup_window(i, pcie);
+ 
+ 		if (res->flags & IORESOURCE_IO)
+ 			pci_ioremap_io(nr * SZ_64K, res->start);
 -- 
-1.7.10.4
+2.0.0
 
