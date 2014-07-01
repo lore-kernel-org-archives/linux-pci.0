@@ -1,91 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:63332 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932306AbaGIPdV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 11:33:21 -0400
-Received: by mail-ig0-f176.google.com with SMTP id r10so2000439igi.9
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 08:33:20 -0700 (PDT)
-Received: from localhost ([172.16.48.225])
-        by mx.google.com with ESMTPSA id j10sm16335046igv.17.2014.07.09.08.33.19
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
-        Wed, 09 Jul 2014 08:33:19 -0700 (PDT)
-Subject: [PATCH 1/3] PCI: Cleanup control flow
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 09 Jul 2014 09:33:18 -0600
-Message-ID: <20140709153318.1004.88406.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140709153252.1004.86246.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140709153252.1004.86246.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:57558 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932288AbaGASf4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 14:35:56 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20140630224709.GA22024@google.com>
+References: <1402346730-2508-1-git-send-email-andreas.noever@gmail.com>
+	<20140617221620.GC30559@google.com>
+	<CAE9FiQXD7hvt0cUYMzvq0r6CbZn=iJZc7BHRaF2nACbG7qwuBQ@mail.gmail.com>
+	<CAMxnaaWWuNeNbnUe++N=2bBfs5JyKiq7tHH+_kiQZyQ9aakEHg@mail.gmail.com>
+	<CAE9FiQVQ657vDOhdhBq5VC044qt6TUF7FKP_-qy+35g71e56Yg@mail.gmail.com>
+	<20140630224709.GA22024@google.com>
+Date: Tue, 1 Jul 2014 11:35:56 -0700
+Message-ID: <CAE9FiQWzFP_6AU1hLwKKxD2tu+OPjwXfQbLwW-yNT6pCW7JJZA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Do not touch siblings in pci_assign_unassigned_bridge_resources
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Return errors immediately so the straightline path is the normal,
-no-error path.  No functional change.
+On Mon, Jun 30, 2014 at 3:47 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> Should not be dangerous, just second try.
+>
+> I still don't understand this.  Why do we set "res->flags = 0"?  That
+> clears out the resource type.  Where do we figure out the type of "res"
+> again?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/setup-res.c |   35 +++++++++++++++++++----------------
- 1 file changed, 19 insertions(+), 16 deletions(-)
+pci_bridge_check_ranges()
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 481c4e18693a..532dc540dc5d 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -305,14 +305,16 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- 	if (ret < 0)
- 		ret = pci_revert_fw_address(res, dev, resno, size);
- 
--	if (!ret) {
--		res->flags &= ~IORESOURCE_UNSET;
--		res->flags &= ~IORESOURCE_STARTALIGN;
--		dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
--		if (resno < PCI_BRIDGE_RESOURCES)
--			pci_update_resource(dev, resno);
--	}
--	return ret;
-+	if (ret)
-+		return ret;
-+
-+	res->flags &= ~IORESOURCE_UNSET;
-+	res->flags &= ~IORESOURCE_STARTALIGN;
-+	dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
-+	if (resno < PCI_BRIDGE_RESOURCES)
-+		pci_update_resource(dev, resno);
-+
-+	return 0;
- }
- EXPORT_SYMBOL(pci_assign_resource);
- 
-@@ -335,19 +337,20 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
- 	/* already aligned with min_align */
- 	new_size = resource_size(res) + addsize;
- 	ret = _pci_assign_resource(dev, resno, new_size, min_align);
--	if (!ret) {
--		res->flags &= ~IORESOURCE_UNSET;
--		res->flags &= ~IORESOURCE_STARTALIGN;
--		dev_info(&dev->dev, "BAR %d: reassigned %pR\n", resno, res);
--		if (resno < PCI_BRIDGE_RESOURCES)
--			pci_update_resource(dev, resno);
--	} else {
-+	if (ret) {
- 		res->flags = flags;
- 		dev_info(&dev->dev, "BAR %d: %pR (failed to expand by %#llx)\n",
- 			 resno, res, (unsigned long long) addsize);
-+		return ret;
- 	}
- 
--	return ret;
-+	res->flags &= ~IORESOURCE_UNSET;
-+	res->flags &= ~IORESOURCE_STARTALIGN;
-+	dev_info(&dev->dev, "BAR %d: reassigned %pR\n", resno, res);
-+	if (resno < PCI_BRIDGE_RESOURCES)
-+		pci_update_resource(dev, resno);
-+
-+	return 0;
- }
- 
- int pci_enable_resources(struct pci_dev *dev, int mask)
+>> Subject: [PATCH] pci: Add back missing MEM_64 check for hotplug path
+>>
+>> We miss that in
+>> |  commit 5b28541552ef5eeffc41d6936105f38c2508e566
+>> |    PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources
+>> for pci hotplug path.
+>
+> This changelog is useless.  I don't have time to spend a few hours
+> figuring out why we want this change.
 
+We have MEM_64 in type_mask from pci_assign_unassigned_root_bus_resources().
+And I missed the same change for hotplug path.
+
+
+That is for exact type checking.
+
+Thanks
+
+Yinghai
