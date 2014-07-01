@@ -1,67 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:42447 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837AbaGUX1e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jul 2014 19:27:34 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 22 Jul 2014 09:27:31 +1000
-Date: Tue, 22 Jul 2014 09:27:32 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Tuomas Tynkkynen <ttynkkynen@nvidia.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/AER: Forward declare struct pci_dev to avoid warning
-Message-ID: <20140721232732.GA4736@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1405960243-589-1-git-send-email-ttynkkynen@nvidia.com>
+Received: from dliviu.plus.com ([80.229.23.120]:32786 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754745AbaGAUpb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Jul 2014 16:45:31 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id 1ED19FFCF3
+	for <linux-pci@vger.kernel.org>; Tue,  1 Jul 2014 21:45:30 +0100 (BST)
+From: "Liviu Dudau" <liviu@dudau.co.uk>
+Date: Tue, 1 Jul 2014 21:45:09 +0100
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140701204508.GA19569@bart.dudau.co.uk>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com>
+ <8556461.i7qCGvGY5a@wuerfel>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1405960243-589-1-git-send-email-ttynkkynen@nvidia.com>
+In-Reply-To: <8556461.i7qCGvGY5a@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 07:30:43PM +0300, Tuomas Tynkkynen wrote:
+On Tue, Jul 01, 2014 at 09:36:10PM +0200, Arnd Bergmann wrote:
+> On Tuesday 01 July 2014 19:43:28 Liviu Dudau wrote:
+> > +/*
+> > + * Record the PCI IO range (expressed as CPU physical address + size).
+> > + * Return a negative value if an error has occured, zero otherwise
+> > + */
+> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> > +{
+> > +#ifdef PCI_IOBASE
+> > +       struct io_range *res;
+> > +       resource_size_t allocated_size = 0;
+> > +
+> > +       /* check if the range hasn't been previously recorded */
+> > +       list_for_each_entry(res, &io_range_list, list) {
+> > +               if (addr >= res->start && addr + size <= res->start + size)
+> > +                       return 0;
+> > +               allocated_size += res->size;
+> > +       }
+> > +
+> > +       /* range not registed yet, check for available space */
+> > +       if (allocated_size + size - 1 > IO_SPACE_LIMIT)
+> > +               return -E2BIG;
+> > +
+> > +       /* add the range to the list */
+> > +       res = kzalloc(sizeof(*res), GFP_KERNEL);
+> > +       if (!res)
+> > +               return -ENOMEM;
+> > +
+> > +       res->start = addr;
+> > +       res->size = size;
+> > +
+> > +       list_add_tail(&res->list, &io_range_list);
+> > +
+> > +       return 0;
+> > +#else
+> > +       return -EINVAL;
+> > +#endif
+> > +}
+> > +
+> >  unsigned long __weak pci_address_to_pio(phys_addr_t address)
+> >  {
+> > +#ifdef PCI_IOBASE
+> > +       struct io_range *res;
+> > +       resource_size_t offset = 0;
+> > +
+> > +       list_for_each_entry(res, &io_range_list, list) {
+> > +               if (address >= res->start &&
+> > +                       address < res->start + res->size) {
+> > +                       return res->start - address + offset;
+> > +               }
+> > +               offset += res->size;
+> > +       }
+> > +
+> > +       return (unsigned long)-1;
+> > +#else
+> >         if (address > IO_SPACE_LIMIT)
+> >                 return (unsigned long)-1;
+> >  
+> >         return (unsigned long) address;
+> > +#endif
+> >  }
+> 
+> This still conflicts with the other allocator you have in patch 9
+> for pci_remap_iospace: nothing guarantees that the mapping is the
+> same for both.
+> 
+> Also, this is a completely pointless exercise at this moment, because
+> nobody cares about the result of pci_address_to_pio on architectures
+> that don't already provide this function. If we ever get a proper
+> Open Firmware implementation that wants to put hardcoded PCI devices
+> into DT, we can add an implementation, but for now this seems overkill.
+> 
+> The allocator in pci_register_io_range seems reasonable, why not merge
+> this function with pci_remap_iospace() as I have asked you multiple
+> times before? Just make it return the io_offset so the caller can
+> put that into the PCI host resources.
 
-I guess it's same issue and fix as:
+Hi Arnd,
 
-http://patchwork.ozlabs.org/patch/370629/
+While I agree with you that at some moment the allocators were inconsistent
+wrt each other, for this version I would respectfully disagree on this.
+The allocator in pci_register_io_range() only makes sure that the ranges
+are not overlapping, it doesn't do any mapping whatsoever, while
+pci_remap_iospace() does only an ioremap_page_range(). The idea is that
+you get the offset out of pci_address_to_pio() and apply it to
+pci_remap_iospace().
 
-Thanks,
-Gavin
+Why do you think there are conflicts?
 
->Forward declaring struct pci_dev in aer.h avoids this warning:
->
->In file included from include/ras/ras_event.h:11:0,
->                 from drivers/ras/ras.c:13:
->include/linux/aer.h:38:44: warning: 'struct pci_dev’ declared inside parameter list [enabled by default]
->include/linux/aer.h:38:44: warning: its scope is only this definition or declaration, which is probably not what you want [enabled by default]
->
->Signed-off-by: Tuomas Tynkkynen <ttynkkynen@nvidia.com>
->---
-> include/linux/aer.h | 2 ++
-> 1 file changed, 2 insertions(+)
->
->diff --git a/include/linux/aer.h b/include/linux/aer.h
->index 4dbaa70..d9ec8dd 100644
->--- a/include/linux/aer.h
->+++ b/include/linux/aer.h
->@@ -7,6 +7,8 @@
-> #ifndef _AER_H_
-> #define _AER_H_
->
->+struct pci_dev;
->+
-> #define AER_NONFATAL			0
-> #define AER_FATAL			1
-> #define AER_CORRECTABLE			2
->-- 
->1.8.1.5
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Best regards,
+Liviu
+
+
+> 
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
