@@ -1,52 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:47515 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341AbaGJFYF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 01:24:05 -0400
-Received: by mail-ob0-f180.google.com with SMTP id vb8so9205366obc.39
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 22:24:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOesGMjdAYoFLsqCNMUp7_KbiT8xKn6nkUxX=4V7wojsMp_-2Q@mail.gmail.com>
-References: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E48F2@EAPEX1MAIL1.st.com>
-	<CAOesGMiu_azMYt3L5OgZSFRgrJQvXvkvSOtr0eLam22CQ5SwuA@mail.gmail.com>
-	<CAKohpon0KkW+GqTGriioXCRLet0wBzT-7=+_VUBczJtfgTgJqQ@mail.gmail.com>
-	<CAOesGMjdAYoFLsqCNMUp7_KbiT8xKn6nkUxX=4V7wojsMp_-2Q@mail.gmail.com>
-Date: Thu, 10 Jul 2014 10:54:03 +0530
-Message-ID: <CAKohpom79td__V9r68YmOTS_Ws4PKXDAaHLhYeLZcAcHRsjYig@mail.gmail.com>
-Subject: Re: [GIT PULL] ARM: SPEAr1310 PCIe updates
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Olof Johansson <olof@lixom.net>
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Nicholson <mark@nicholnet.com>,
-	"FTPAdmin Kernel.org" <ftpadmin@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50170 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932447AbaGASof (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 14:44:35 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v8 4/9] pci: OF: Fix the conversion of IO ranges into IO resources.
+Date: Tue,  1 Jul 2014 19:43:29 +0100
+Message-Id: <1404240214-9804-5-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10 July 2014 10:47, Olof Johansson <olof@lixom.net> wrote:
->> I didn't sign-off because I haven't even looked closed at many of the
->> patches around PCI and Acked whatever I could understand.
->
-> Thanks, good to know that the series hasn't been fully reviewed. That
-> makes me even more hesitant to apply it at the moment, given all the
-> other issues around it.
+The ranges property for a host bridge controller in DT describes
+the mapping between the PCI bus address and the CPU physical address.
+The resources framework however expects that the IO resources start
+at a pseudo "port" address 0 (zero) and have a maximum size of IO_SPACE_LIMIT.
+The conversion from pci ranges to resources failed to take that into account.
 
-Its not that the series hasn't been fully reviewed, it is.
+In the process move the function into drivers/of/address.c as it now
+depends on pci_address_to_pio() code and make it return an error message.
 
-Arnd has reviewed and Acked the complete series. I have Acked SPEAr
-specific parts and Bjorn have Acked PCI specific stuff.
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ drivers/of/address.c       | 47 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_address.h | 13 ++-----------
+ 2 files changed, 49 insertions(+), 11 deletions(-)
 
->> But yeah, this committer thing is what I missed. Because of that I might
->> be required to signoff it.
->
-> Anyone touching the patch, forwarding it or applying it needs to sign
-> off. It's quite simple, and well documented.
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 1345733..cbbaed2 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -872,3 +872,50 @@ bool of_dma_is_coherent(struct device_node *np)
+ 	return false;
+ }
+ EXPORT_SYMBOL_GPL(of_dma_is_coherent);
++
++/*
++ * of_pci_range_to_resource - Create a resource from an of_pci_range
++ * @range:	the PCI range that describes the resource
++ * @np:		device node where the range belongs to
++ * @res:	pointer to a valid resource that will be updated to
++ *              reflect the values contained in the range.
++ *
++ * Returns EINVAL if the range cannot be converted to resource.
++ *
++ * Note that if the range is an IO range, the resource will be converted
++ * using pci_address_to_pio() which can fail if it is called too early or
++ * if the range cannot be matched to any host bridge IO space (our case here).
++ * To guard against that we try to register the IO range first.
++ * If that fails we know that pci_address_to_pio() will do too.
++ */
++int of_pci_range_to_resource(struct of_pci_range *range,
++	struct device_node *np, struct resource *res)
++{
++	int err;
++	res->flags = range->flags;
++	res->parent = res->child = res->sibling = NULL;
++	res->name = np->full_name;
++
++	if (res->flags & IORESOURCE_IO) {
++		unsigned long port = -1;
++		err = pci_register_io_range(range->cpu_addr, range->size);
++		if (err)
++			goto invalid_range;
++		port = pci_address_to_pio(range->cpu_addr);
++		if (port == (unsigned long)-1) {
++			err = -EINVAL;
++			goto invalid_range;
++		}
++		res->start = port;
++	} else {
++		res->start = range->cpu_addr;
++	}
++	res->end = res->start + range->size - 1;
++	return 0;
++
++invalid_range:
++	res->start = (resource_size_t)OF_BAD_ADDR;
++	res->end = (resource_size_t)OF_BAD_ADDR;
++	return err;
++}
++
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index ac4aac4..33c0420 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -23,17 +23,8 @@ struct of_pci_range {
+ #define for_each_of_pci_range(parser, range) \
+ 	for (; of_pci_range_parser_one(parser, range);)
+ 
+-static inline void of_pci_range_to_resource(struct of_pci_range *range,
+-					    struct device_node *np,
+-					    struct resource *res)
+-{
+-	res->flags = range->flags;
+-	res->start = range->cpu_addr;
+-	res->end = range->cpu_addr + range->size - 1;
+-	res->parent = res->child = res->sibling = NULL;
+-	res->name = np->full_name;
+-}
+-
++extern int of_pci_range_to_resource(struct of_pci_range *range,
++		struct device_node *np, struct resource *res);
+ /* Translate a DMA address from device space to CPU space */
+ extern u64 of_translate_dma_address(struct device_node *dev,
+ 				    const __be32 *in_addr);
+-- 
+2.0.0
 
-Yeah, my mistake. Accepted.
