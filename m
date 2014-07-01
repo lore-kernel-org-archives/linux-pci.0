@@ -1,395 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:57977 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934171AbaFCUFB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jun 2014 16:05:01 -0400
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Greg KH <greg@kroah.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH v5 10/15] thunderbolt: Add path setup code.
-Date: Tue,  3 Jun 2014 22:04:07 +0200
-Message-Id: <1401825852-4745-11-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
-References: <1401825852-4745-1-git-send-email-andreas.noever@gmail.com>
+Received: from mail-by2lp0244.outbound.protection.outlook.com ([207.46.163.244]:33513
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753028AbaGAGvS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Jul 2014 02:51:18 -0400
+Date: Tue, 1 Jul 2014 14:51:07 +0800
+From: Shawn Guo <shawn.guo@freescale.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: Shawn Guo <shawn.guo@linaro.org>,
+	Richard Zhu <r65037@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Fabio Estevam <festevam@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: The imx6q suspend/resume is broken on 3.16-rc due to PCIe
+Message-ID: <20140701065105.GE14471@dragon>
+References: <20140624153559.GA5741@dragon>
+ <CAOMZO5AT54hOF2bi9bQwmBcdtG0QHyofQgoRG6Mw_RpDQXzx=w@mail.gmail.com>
+ <20140625062243.GD3242@dragon>
+ <CAOMZO5BuOhWo7SCEPFmNRUQBi=5JhDrVv0yvBQM2d_jMyLkbyw@mail.gmail.com>
+ <1403693452.4249.1.camel@weser.hi.pengutronix.de>
+ <20140625125306.GB6917@dragon>
+ <1403772229.4254.4.camel@weser.hi.pengutronix.de>
+ <20140628143712.GA7869@dragon>
+ <1404135864.4305.23.camel@weser.hi.pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1404135864.4305.23.camel@weser.hi.pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A thunderbolt path is a unidirectional channel between two thunderbolt
-ports. Two such paths are needed to establish a pci tunnel.
+On Mon, Jun 30, 2014 at 03:44:24PM +0200, Lucas Stach wrote:
+> Hi Shawn,
+> 
+> can you please test the attached patch on top of 3.16-rc* to see if it
+> helps? If it works for you I would like to try and get this into 3.16 as
+> a bugfix.
 
-This patch introduces struct tb_path as well as a set of tb_path_*
-methods which are used to activate & deactivate paths.
+Unfortunately, it doesn't work.  With your change, now it hangs in
+suspend procedure.
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/Makefile |   2 +-
- drivers/thunderbolt/path.c   | 215 +++++++++++++++++++++++++++++++++++++++++++
- drivers/thunderbolt/switch.c |  34 +++++++
- drivers/thunderbolt/tb.h     |  62 +++++++++++++
- 4 files changed, 312 insertions(+), 1 deletion(-)
- create mode 100644 drivers/thunderbolt/path.c
+$ echo mem > /sys/power/state
+PM: Syncing filesystems ... done.
+PM: Preparing system for mem sleep
+Freezing user space processes ... (elapsed 0.005 seconds) done.
+Freezing remaining freezable tasks ... (elapsed 0.003 seconds) done.
+PM: Entering mem sleep
+sd 0:0:0:0: [sda] Synchronizing SCSI cache
+sd 0:0:0:0: [sda] Stopping disk
+PM: suspend of devices complete after 102.992 msecs
+PM: suspend devices took 0.110 seconds
+PM: late suspend of devices complete after 12.808 msecs
 
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 617b314..3532f36 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
- obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
--thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o
-+thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o
- 
-diff --git a/drivers/thunderbolt/path.c b/drivers/thunderbolt/path.c
-new file mode 100644
-index 0000000..8fcf8a7
---- /dev/null
-+++ b/drivers/thunderbolt/path.c
-@@ -0,0 +1,215 @@
-+/*
-+ * Thunderbolt Cactus Ridge driver - path/tunnel functionality
-+ *
-+ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-+ */
-+
-+#include <linux/slab.h>
-+#include <linux/errno.h>
-+
-+#include "tb.h"
-+
-+
-+static void tb_dump_hop(struct tb_port *port, struct tb_regs_hop *hop)
-+{
-+	tb_port_info(port, " Hop through port %d to hop %d (%s)\n",
-+		     hop->out_port, hop->next_hop,
-+		     hop->enable ? "enabled" : "disabled");
-+	tb_port_info(port, "  Weight: %d Priority: %d Credits: %d Drop: %d\n",
-+		     hop->weight, hop->priority,
-+		     hop->initial_credits, hop->drop_packages);
-+	tb_port_info(port, "   Counter enabled: %d Counter index: %d\n",
-+		     hop->counter_enable, hop->counter);
-+	tb_port_info(port, "  Flow Control (In/Eg): %d/%d Shared Buffer (In/Eg): %d/%d\n",
-+		     hop->ingress_fc, hop->egress_fc,
-+		     hop->ingress_shared_buffer, hop->egress_shared_buffer);
-+	tb_port_info(port, "  Unknown1: %#x Unknown2: %#x Unknown3: %#x\n",
-+		     hop->unknown1, hop->unknown2, hop->unknown3);
-+}
-+
-+/**
-+ * tb_path_alloc() - allocate a thunderbolt path
-+ *
-+ * Return: Returns a tb_path on success or NULL on failure.
-+ */
-+struct tb_path *tb_path_alloc(struct tb *tb, int num_hops)
-+{
-+	struct tb_path *path = kzalloc(sizeof(*path), GFP_KERNEL);
-+	if (!path)
-+		return NULL;
-+	path->hops = kcalloc(num_hops, sizeof(*path->hops), GFP_KERNEL);
-+	if (!path->hops) {
-+		kfree(path);
-+		return NULL;
-+	}
-+	path->tb = tb;
-+	path->path_length = num_hops;
-+	return path;
-+}
-+
-+/**
-+ * tb_path_free() - free a deactivated path
-+ */
-+void tb_path_free(struct tb_path *path)
-+{
-+	if (path->activated) {
-+		tb_WARN(path->tb, "trying to free an activated path\n")
-+		return;
-+	}
-+	kfree(path->hops);
-+	kfree(path);
-+}
-+
-+static void __tb_path_deallocate_nfc(struct tb_path *path, int first_hop)
-+{
-+	int i, res;
-+	for (i = first_hop; i < path->path_length; i++) {
-+		res = tb_port_add_nfc_credits(path->hops[i].in_port,
-+					      -path->nfc_credits);
-+		if (res)
-+			tb_port_warn(path->hops[i].in_port,
-+				     "nfc credits deallocation failed for hop %d\n",
-+				     i);
-+	}
-+}
-+
-+static void __tb_path_deactivate_hops(struct tb_path *path, int first_hop)
-+{
-+	int i, res;
-+	struct tb_regs_hop hop = { };
-+	for (i = first_hop; i < path->path_length; i++) {
-+		res = tb_port_write(path->hops[i].in_port, &hop, TB_CFG_HOPS,
-+				    2 * path->hops[i].in_hop_index, 2);
-+		if (res)
-+			tb_port_warn(path->hops[i].in_port,
-+				     "hop deactivation failed for hop %d, index %d\n",
-+				     i, path->hops[i].in_hop_index);
-+	}
-+}
-+
-+void tb_path_deactivate(struct tb_path *path)
-+{
-+	if (!path->activated) {
-+		tb_WARN(path->tb, "trying to deactivate an inactive path\n");
-+		return;
-+	}
-+	tb_info(path->tb,
-+		"deactivating path from %llx:%x to %llx:%x\n",
-+		tb_route(path->hops[0].in_port->sw),
-+		path->hops[0].in_port->port,
-+		tb_route(path->hops[path->path_length - 1].out_port->sw),
-+		path->hops[path->path_length - 1].out_port->port);
-+	__tb_path_deactivate_hops(path, 0);
-+	__tb_path_deallocate_nfc(path, 0);
-+	path->activated = false;
-+}
-+
-+/**
-+ * tb_path_activate() - activate a path
-+ *
-+ * Activate a path starting with the last hop and iterating backwards. The
-+ * caller must fill path->hops before calling tb_path_activate().
-+ *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+int tb_path_activate(struct tb_path *path)
-+{
-+	int i, res;
-+	enum tb_path_port out_mask, in_mask;
-+	if (path->activated) {
-+		tb_WARN(path->tb, "trying to activate already activated path\n");
-+		return -EINVAL;
-+	}
-+
-+	tb_info(path->tb,
-+		"activating path from %llx:%x to %llx:%x\n",
-+		tb_route(path->hops[0].in_port->sw),
-+		path->hops[0].in_port->port,
-+		tb_route(path->hops[path->path_length - 1].out_port->sw),
-+		path->hops[path->path_length - 1].out_port->port);
-+
-+	/* Clear counters. */
-+	for (i = path->path_length - 1; i >= 0; i--) {
-+		if (path->hops[i].in_counter_index == -1)
-+			continue;
-+		res = tb_port_clear_counter(path->hops[i].in_port,
-+					    path->hops[i].in_counter_index);
-+		if (res)
-+			goto err;
-+	}
-+
-+	/* Add non flow controlled credits. */
-+	for (i = path->path_length - 1; i >= 0; i--) {
-+		res = tb_port_add_nfc_credits(path->hops[i].in_port,
-+					      path->nfc_credits);
-+		if (res) {
-+			__tb_path_deallocate_nfc(path, i);
-+			goto err;
-+		}
-+	}
-+
-+	/* Activate hops. */
-+	for (i = path->path_length - 1; i >= 0; i--) {
-+		struct tb_regs_hop hop;
-+
-+		/* dword 0 */
-+		hop.next_hop = path->hops[i].next_hop_index;
-+		hop.out_port = path->hops[i].out_port->port;
-+		/* TODO: figure out why these are good values */
-+		hop.initial_credits = (i == path->path_length - 1) ? 16 : 7;
-+		hop.unknown1 = 0;
-+		hop.enable = 1;
-+
-+		/* dword 1 */
-+		out_mask = (i == path->path_length - 1) ?
-+				TB_PATH_DESTINATION : TB_PATH_INTERNAL;
-+		in_mask = (i == 0) ? TB_PATH_SOURCE : TB_PATH_INTERNAL;
-+		hop.weight = path->weight;
-+		hop.unknown2 = 0;
-+		hop.priority = path->priority;
-+		hop.drop_packages = path->drop_packages;
-+		hop.counter = path->hops[i].in_counter_index;
-+		hop.counter_enable = path->hops[i].in_counter_index != -1;
-+		hop.ingress_fc = path->ingress_fc_enable & in_mask;
-+		hop.egress_fc = path->egress_fc_enable & out_mask;
-+		hop.ingress_shared_buffer = path->ingress_shared_buffer
-+					    & in_mask;
-+		hop.egress_shared_buffer = path->egress_shared_buffer
-+					    & out_mask;
-+		hop.unknown3 = 0;
-+
-+		tb_port_info(path->hops[i].in_port, "Writing hop %d, index %d",
-+			     i, path->hops[i].in_hop_index);
-+		tb_dump_hop(path->hops[i].in_port, &hop);
-+		res = tb_port_write(path->hops[i].in_port, &hop, TB_CFG_HOPS,
-+				    2 * path->hops[i].in_hop_index, 2);
-+		if (res) {
-+			__tb_path_deactivate_hops(path, i);
-+			__tb_path_deallocate_nfc(path, 0);
-+			goto err;
-+		}
-+	}
-+	path->activated = true;
-+	tb_info(path->tb, "path activation complete\n");
-+	return 0;
-+err:
-+	tb_WARN(path->tb, "path activation failed\n");
-+	return res;
-+}
-+
-+/**
-+ * tb_path_is_invalid() - check whether any ports on the path are invalid
-+ *
-+ * Return: Returns true if the path is invalid, false otherwise.
-+ */
-+bool tb_path_is_invalid(struct tb_path *path)
-+{
-+	int i = 0;
-+	for (i = 0; i < path->path_length; i++) {
-+		if (path->hops[i].in_port->sw->is_unplugged)
-+			return true;
-+		if (path->hops[i].out_port->sw->is_unplugged)
-+			return true;
-+	}
-+	return false;
-+}
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index d6c32e1..667413f 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -139,6 +139,40 @@ int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged)
- }
- 
- /**
-+ * tb_port_add_nfc_credits() - add/remove non flow controlled credits to port
-+ *
-+ * Change the number of NFC credits allocated to @port by @credits. To remove
-+ * NFC credits pass a negative amount of credits.
-+ *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+int tb_port_add_nfc_credits(struct tb_port *port, int credits)
-+{
-+	if (credits == 0)
-+		return 0;
-+	tb_port_info(port,
-+		     "adding %#x NFC credits (%#x -> %#x)",
-+		     credits,
-+		     port->config.nfc_credits,
-+		     port->config.nfc_credits + credits);
-+	port->config.nfc_credits += credits;
-+	return tb_port_write(port, &port->config.nfc_credits,
-+			     TB_CFG_PORT, 4, 1);
-+}
-+
-+/**
-+ * tb_port_clear_counter() - clear a counter in TB_CFG_COUNTER
-+ *
-+ * Return: Returns 0 on success or an error code on failure.
-+ */
-+int tb_port_clear_counter(struct tb_port *port, int counter)
-+{
-+	u32 zero[3] = { 0, 0, 0 };
-+	tb_port_info(port, "clearing counter %d\n", counter);
-+	return tb_port_write(port, zero, TB_CFG_COUNTERS, 3 * counter, 3);
-+}
-+
-+/**
-  * tb_init_port() - initialize a port
-  *
-  * This is a helper method for tb_switch_alloc. Does not check or initialize
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 661f182..8bbdc2b 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -35,6 +35,60 @@ struct tb_port {
- };
- 
- /**
-+ * struct tb_path_hop - routing information for a tb_path
-+ *
-+ * Hop configuration is always done on the IN port of a switch.
-+ * in_port and out_port have to be on the same switch. Packets arriving on
-+ * in_port with "hop" = in_hop_index will get routed to through out_port. The
-+ * next hop to take (on out_port->remote) is determined by next_hop_index.
-+ *
-+ * in_counter_index is the index of a counter (in TB_CFG_COUNTERS) on the in
-+ * port.
-+ */
-+struct tb_path_hop {
-+	struct tb_port *in_port;
-+	struct tb_port *out_port;
-+	int in_hop_index;
-+	int in_counter_index; /* write -1 to disable counters for this hop. */
-+	int next_hop_index;
-+};
-+
-+/**
-+ * enum tb_path_port - path options mask
-+ */
-+enum tb_path_port {
-+	TB_PATH_NONE = 0,
-+	TB_PATH_SOURCE = 1, /* activate on the first hop (out of src) */
-+	TB_PATH_INTERNAL = 2, /* activate on other hops (not the first/last) */
-+	TB_PATH_DESTINATION = 4, /* activate on the last hop (into dst) */
-+	TB_PATH_ALL = 7,
-+};
-+
-+/**
-+ * struct tb_path - a unidirectional path between two ports
-+ *
-+ * A path consists of a number of hops (see tb_path_hop). To establish a PCIe
-+ * tunnel two paths have to be created between the two PCIe ports.
-+ *
-+ */
-+struct tb_path {
-+	struct tb *tb;
-+	int nfc_credits; /* non flow controlled credits */
-+	enum tb_path_port ingress_shared_buffer;
-+	enum tb_path_port egress_shared_buffer;
-+	enum tb_path_port ingress_fc_enable;
-+	enum tb_path_port egress_fc_enable;
-+
-+	int priority:3;
-+	int weight:4;
-+	bool drop_packages;
-+	bool activated;
-+	struct tb_path_hop *hops;
-+	int path_length; /* number of hops */
-+};
-+
-+
-+/**
-  * struct tb - main thunderbolt bus structure
-  */
- struct tb {
-@@ -165,9 +219,17 @@ void tb_sw_set_unpplugged(struct tb_switch *sw);
- struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
- 
- int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
-+int tb_port_add_nfc_credits(struct tb_port *port, int credits);
-+int tb_port_clear_counter(struct tb_port *port, int counter);
- 
- int tb_find_cap(struct tb_port *port, enum tb_cfg_space space, u32 value);
- 
-+struct tb_path *tb_path_alloc(struct tb *tb, int num_hops);
-+void tb_path_free(struct tb_path *path);
-+int tb_path_activate(struct tb_path *path);
-+void tb_path_deactivate(struct tb_path *path);
-+bool tb_path_is_invalid(struct tb_path *path);
-+
- 
- static inline int tb_route_length(u64 route)
- {
--- 
-2.0.0
+Shawn
 
+> 
+> Regards,
+> Lucas
+> 
+> --------------------------->8-----------------------------
+> From f3bfdc9c19249188fa153b1568c3129cd31af4f5 Mon Sep 17 00:00:00 2001
+> From: Lucas Stach <l.stach@pengutronix.de>
+> Date: Mon, 30 Jun 2014 15:33:04 +0200
+> Subject: [PATCH] PCI: imx6: add workaround for errata ERR005723
+> 
+> Fixes system hang after resume from suspend to mem.
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+>  drivers/pci/host/pci-imx6.c | 33 +++++++++++++++++++++++++++++++++
+>  1 file changed, 33 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index a568efaa331c..5c58a3ee5dbf 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -589,6 +589,38 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  	return 0;
+>  }
+>  
+> +#ifdef CONFIG_PM_SLEEP
+> +static int imx6_pcie_suspend(struct device *dev)
+> +{
+> +	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+> +
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
+> +
+> +	return 0;
+> +}
+> +
+> +static int imx6_pcie_resume(struct device *dev)
+> +{
+> +	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+> +
+> +	/*
+> +	 * This is a workaround for
+> +	 * ERR005723: PCIe does not support L2 power down
+> +	 * Toggling the PHY PD bit around system L2 state switching seems to be
+> +	 * enough to wake the PCIe logic after a power down.
+> +	 */
+> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> +			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+> +
+> +	return 0;
+> +}
+> +#endif
+> +
+> +static SIMPLE_DEV_PM_OPS(imx6_pcie_pm_ops,
+> +		imx6_pcie_suspend,
+> +		imx6_pcie_resume);
+> +
+>  static const struct of_device_id imx6_pcie_of_match[] = {
+>  	{ .compatible = "fsl,imx6q-pcie", },
+>  	{},
+> @@ -600,6 +632,7 @@ static struct platform_driver imx6_pcie_driver = {
+>  		.name	= "imx6q-pcie",
+>  		.owner	= THIS_MODULE,
+>  		.of_match_table = imx6_pcie_of_match,
+> +		.pm = &imx6_pcie_pm_ops,
+>  	},
+>  };
+>  
+> -- 
+> 2.0.0
+> 
+> 
+> -- 
+> Pengutronix e.K.             | Lucas Stach                 |
+> Industrial Linux Solutions   | http://www.pengutronix.de/  |
+> 
