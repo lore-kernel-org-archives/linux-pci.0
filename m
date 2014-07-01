@@ -1,111 +1,292 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55697 "EHLO mga11.intel.com"
+Received: from dliviu.plus.com ([80.229.23.120]:32840 "EHLO smtp.dudau.co.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190AbaGKGRU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jul 2014 02:17:20 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+	id S1752149AbaGAUvn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Jul 2014 16:51:43 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id 1B96CFFCF5
+	for <linux-pci@vger.kernel.org>; Tue,  1 Jul 2014 21:51:42 +0100 (BST)
+From: "Liviu Dudau" <liviu@dudau.co.uk>
+Date: Tue, 1 Jul 2014 21:50:50 +0100
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V4 08/21] iommu/vt-d: Simplify include/linux/dmar.h
-Date: Fri, 11 Jul 2014 14:19:32 +0800
-Message-Id: <1405059585-10620-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [RESEND] [PATCH v8 8/9] pci: Add support for creating a generic
+ host_bridge from device tree
+Message-ID: <20140701205050.GB19569@bart.dudau.co.uk>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify include/linux/dmar.h a bit based on the fact that
-both CONFIG_INTEL_IOMMU and CONFIG_IRQ_REMAP select CONFIG_DMAR_TABLE.
+Several platforms use a rather generic version of parsing
+the device tree to find the host bridge ranges. Move the common code
+into the generic PCI code and use it to create a pci_host_bridge
+structure that can be used by arch code.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Based on early attempts by Andrew Murray to unify the code.
+Used powerpc and microblaze PCI code as starting point.
+
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- include/linux/dmar.h |   50 ++++++++++++++++++--------------------------------
- 1 file changed, 18 insertions(+), 32 deletions(-)
+ drivers/of/of_pci.c       | 136 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/host-bridge.c |  15 +++++
+ include/linux/of_pci.h    |  10 ++++
+ include/linux/pci.h       |   8 +++
+ 4 files changed, 169 insertions(+)
 
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 23c8db129560..1deece46a0ca 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -114,22 +114,30 @@ extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
- /* Intel IOMMU detection */
- extern int detect_intel_iommu(void);
- extern int enable_drhd_fault_handling(void);
--#else
--struct dmar_pci_notify_info;
--static inline int detect_intel_iommu(void)
-+
-+#ifdef CONFIG_INTEL_IOMMU
-+extern int iommu_detected, no_iommu;
-+extern int intel_iommu_init(void);
-+extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
-+extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
-+extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
-+#else /* !CONFIG_INTEL_IOMMU: */
-+static inline int intel_iommu_init(void) { return -ENODEV; }
-+static inline int dmar_parse_one_rmrr(struct acpi_dmar_header *header)
- {
--	return -ENODEV;
-+	return 0;
- }
--
--static inline int dmar_table_init(void)
-+static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
- {
--	return -ENODEV;
-+	return 0;
- }
--static inline int enable_drhd_fault_handling(void)
-+static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
- {
--	return -1;
-+	return 0;
- }
--#endif /* !CONFIG_DMAR_TABLE */
-+#endif /* CONFIG_INTEL_IOMMU */
-+
-+#endif /* CONFIG_DMAR_TABLE */
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 8481996..e81402a 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -1,6 +1,7 @@
+ #include <linux/kernel.h>
+ #include <linux/export.h>
+ #include <linux/of.h>
++#include <linux/of_address.h>
+ #include <linux/of_pci.h>
  
- struct irte {
- 	union {
-@@ -177,26 +185,4 @@ extern int dmar_set_interrupt(struct intel_iommu *iommu);
- extern irqreturn_t dmar_fault(int irq, void *dev_id);
- extern int arch_setup_dmar_msi(unsigned int irq);
+ static inline int __of_pci_pci_compare(struct device_node *node,
+@@ -89,6 +90,141 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+ }
+ EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
  
--#ifdef CONFIG_INTEL_IOMMU
--extern int iommu_detected, no_iommu;
--extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
--extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
--extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
--extern int intel_iommu_init(void);
--#else /* !CONFIG_INTEL_IOMMU: */
--static inline int intel_iommu_init(void) { return -ENODEV; }
--static inline int dmar_parse_one_rmrr(struct acpi_dmar_header *header)
--{
--	return 0;
--}
--static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
--{
--	return 0;
--}
--static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
--{
--	return 0;
--}
--#endif /* CONFIG_INTEL_IOMMU */
--
- #endif /* __DMAR_H__ */
++/**
++ * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
++ * @dev: device node of the host bridge having the range property
++ * @resources: list where the range of resources will be added after DT parsing
++ * @io_base: pointer to a variable that will contain the physical address for
++ * the start of the I/O range.
++ *
++ * It is the callers job to free the @resources list if an error is returned.
++ *
++ * This function will parse the "ranges" property of a PCI host bridge device
++ * node and setup the resource mapping based on its content. It is expected
++ * that the property conforms with the Power ePAPR document.
++ *
++ * Each architecture is then offered the chance of applying their own
++ * filtering of pci_host_bridge_windows based on their own restrictions by
++ * calling pcibios_fixup_bridge_ranges(). The filtered list of windows
++ * can then be used when creating a pci_host_bridge structure.
++ */
++static int pci_host_bridge_of_get_ranges(struct device_node *dev,
++		struct list_head *resources, resource_size_t *io_base)
++{
++	struct resource *res;
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	int err;
++
++	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
++
++	/* Check for ranges property */
++	err = of_pci_range_parser_init(&parser, dev);
++	if (err)
++		return err;
++
++	pr_debug("Parsing ranges property...\n");
++	for_each_of_pci_range(&parser, &range) {
++		/* Read next ranges element */
++		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx cpu_addr:0x%016llx size:0x%016llx\n",
++			range.pci_space, range.pci_addr, range.cpu_addr, range.size);
++
++		/*
++		 * If we failed translation or got a zero-sized region
++		 * then skip this range
++		 */
++		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
++			continue;
++
++		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
++		if (!res)
++			return -ENOMEM;
++
++		err = of_pci_range_to_resource(&range, dev, res);
++		if (err)
++			return err;
++
++		if (resource_type(res) == IORESOURCE_IO)
++			*io_base = range.cpu_addr;
++
++		pci_add_resource_offset(resources, res,
++				res->start - range.pci_addr);
++	}
++
++	/* Apply architecture specific fixups for the ranges */
++	return pcibios_fixup_bridge_ranges(resources);
++}
++
++static atomic_t domain_nr = ATOMIC_INIT(-1);
++
++/**
++ * of_create_pci_host_bridge - Create a PCI host bridge structure using
++ * information passed in the DT.
++ * @parent: device owning this host bridge
++ * @ops: pci_ops associated with the host controller
++ * @host_data: opaque data structure used by the host controller.
++ *
++ * returns a pointer to the newly created pci_host_bridge structure, or
++ * NULL if the call failed.
++ *
++ * This function will try to obtain the host bridge domain number by
++ * using of_alias_get_id() call with "pci-domain" as a stem. If that
++ * fails, a local allocator will be used that will put each host bridge
++ * in a new domain.
++ */
++struct pci_host_bridge *
++of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
++{
++	int err, domain, busno;
++	struct resource *bus_range;
++	struct pci_bus *root_bus;
++	struct pci_host_bridge *bridge;
++	resource_size_t io_base = 0;
++	LIST_HEAD(res);
++
++	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
++	if (!bus_range)
++		return ERR_PTR(-ENOMEM);
++
++	domain = of_alias_get_id(parent->of_node, "pci-domain");
++	if (domain == -ENODEV)
++		domain = atomic_inc_return(&domain_nr);
++
++	err = of_pci_parse_bus_range(parent->of_node, bus_range);
++	if (err) {
++		dev_info(parent, "No bus range for %s, using default [0-255]\n",
++			parent->of_node->full_name);
++		bus_range->start = 0;
++		bus_range->end = 255;
++		bus_range->flags = IORESOURCE_BUS;
++	}
++	busno = bus_range->start;
++	pci_add_resource(&res, bus_range);
++
++	/* now parse the rest of host bridge bus ranges */
++	err = pci_host_bridge_of_get_ranges(parent->of_node, &res, &io_base);
++	if (err)
++		goto err_create;
++
++	/* then create the root bus */
++	root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
++						ops, host_data, &res);
++	if (IS_ERR(root_bus)) {
++		err = PTR_ERR(root_bus);
++		goto err_create;
++	}
++
++	bridge = to_pci_host_bridge(root_bus->bridge);
++	bridge->io_base = io_base;
++
++	return bridge;
++
++err_create:
++	pci_free_resource_list(&res);
++	return ERR_PTR(err);
++}
++EXPORT_SYMBOL_GPL(of_create_pci_host_bridge);
++
+ #ifdef CONFIG_PCI_MSI
+ 
+ static LIST_HEAD(of_pci_msi_chip_list);
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 36c669e..54ceafd 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -83,3 +83,18 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 	res->end = region->end + offset;
+ }
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
++
++/**
++ * Simple version of the platform specific code for filtering the list
++ * of resources obtained from the ranges declaration in DT.
++ *
++ * Platforms can override this function in order to impose stronger
++ * constraints onto the list of resources that a host bridge can use.
++ * The filtered list will then be used to create a root bus and associate
++ * it with the host bridge.
++ *
++ */
++int __weak pcibios_fixup_bridge_ranges(struct list_head *resources)
++{
++	return 0;
++}
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index dde3a4a..71e36d0 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -15,6 +15,9 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
++struct pci_host_bridge *of_create_pci_host_bridge(struct device *parent,
++					struct pci_ops *ops, void *host_data);
++
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+ {
+@@ -43,6 +46,13 @@ of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+ {
+ 	return -EINVAL;
+ }
++
++static inline struct pci_host_bridge *
++of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
++			void *host_data)
++{
++	return NULL;
++}
+ #endif
+ 
+ #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 7e7b939..556dc5f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -402,6 +402,7 @@ struct pci_host_bridge {
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
+ 	int domain_nr;
++	resource_size_t io_base;	/* physical address for the start of I/O area */
+ 	struct list_head windows;	/* pci_host_bridge_windows */
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+@@ -1809,8 +1810,15 @@ static inline void pci_set_of_node(struct pci_dev *dev) { }
+ static inline void pci_release_of_node(struct pci_dev *dev) { }
+ static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+ static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
++
+ #endif  /* CONFIG_OF */
+ 
++/* Used by architecture code to apply any quirks to the list of
++ * pci_host_bridge resource ranges before they are being used
++ * by of_create_pci_host_bridge()
++ */
++extern int pcibios_fixup_bridge_ranges(struct list_head *resources);
++
+ #ifdef CONFIG_EEH
+ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
+ {
 -- 
-1.7.10.4
+2.0.0
+
 
