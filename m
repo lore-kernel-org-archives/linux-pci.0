@@ -1,75 +1,222 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47437 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751517AbaGJKLQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Jul 2014 06:11:16 -0400
-Date: Thu, 10 Jul 2014 12:11:51 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-Message-ID: <20140710101151.GA21629@dhcp-26-207.brq.redhat.com>
-References: <cover.1402405331.git.agordeev@redhat.com>
- <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
- <20140702202201.GA28852@google.com>
- <20140704085741.GA12247@dhcp-26-207.brq.redhat.com>
- <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
- <20140708122606.GB6270@dhcp-26-207.brq.redhat.com>
- <CAErSpo4oiabgoOjsGdWZpCMPnmopK4xRzB2f3tM0AiUFrdhFww@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4oiabgoOjsGdWZpCMPnmopK4xRzB2f3tM0AiUFrdhFww@mail.gmail.com>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50183 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S964814AbaGASop (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 14:44:45 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH] arm64: Add architectural support for PCI
+Date: Tue,  1 Jul 2014 19:44:00 +0100
+Message-Id: <1404240240-9856-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1404240240-9856-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1404240240-9856-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 09, 2014 at 10:06:48AM -0600, Bjorn Helgaas wrote:
-> Out of curiosity, do you have a pointer to this?  It looks like it
+Use the generic host bridge functions to provide support for
+PCI Express on arm64.
 
-I.e. ICH8 chapter 12.1.30 or ICH10 chapter 14.1.27
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ arch/arm64/Kconfig            | 19 ++++++++++++++++-
+ arch/arm64/include/asm/Kbuild |  1 +
+ arch/arm64/include/asm/io.h   |  3 ++-
+ arch/arm64/include/asm/pci.h  | 49 +++++++++++++++++++++++++++++++++++++++++++
+ arch/arm64/kernel/Makefile    |  1 +
+ arch/arm64/kernel/pci.c       | 38 +++++++++++++++++++++++++++++++++
+ 6 files changed, 109 insertions(+), 2 deletions(-)
+ create mode 100644 arch/arm64/include/asm/pci.h
+ create mode 100644 arch/arm64/kernel/pci.c
 
-> uses one vector per port, and I'm wondering if the reason it requests
-> 16 is because there's some possibility of a part with more than 8
-> ports.
-
-I doubt that is the reason. The only allowed MME values (powers of two)
-are 0b000, 0b001, 0b010 and 0b100. As you can see, only one bit is used -
-I would speculate it suits nicely to some hardware logic.
-
-BTW, apart from AHCI, it seems the reason MSI is not going to disappear
-(in a decade at least) is it is way cheaper to implement than MSI-X.
-
-> > No, this is not an erratum. The value of 8 vectors is reserved and could
-> > cause undefined results if used.
-> 
-> As I read the spec (PCI 3.0, sec 6.8.1.3), if MMC contains 0b100
-> (requesting 16 vectors), the OS is allowed to allocate 1, 2, 4, 8, or
-> 16 vectors.  If allocating 8 vectors and writing 0b011 to MME causes
-> undefined results, I'd say that's a chipset defect.
-
-Well, the PCI spec does not prevent devices to have their own specs on top
-of it. Undefined results are meant on the device side here. On the MSI side
-these results are likely perfectly within the PCI spec. I feel speaking as
-a lawer here ;)
-
-> Interrupt vector space is the issue I would worry about, but I think
-> I'm going to put this on the back burner until it actually becomes a
-> problem.
-
-I plan to try get rid of arch_msi_check_device() hook. Should I repost
-this series afterwards?
-
-Thanks!
-
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index a474de34..48ed631 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -75,7 +75,7 @@ config MMU
+ 	def_bool y
+ 
+ config NO_IOPORT_MAP
+-	def_bool y
++	def_bool y if !PCI
+ 
+ config STACKTRACE_SUPPORT
+ 	def_bool y
+@@ -150,6 +150,23 @@ menu "Bus support"
+ config ARM_AMBA
+ 	bool
+ 
++config PCI
++	bool "PCI support"
++	help
++	  This feature enables support for PCIe bus system. If you say Y
++	  here, the kernel will include drivers and infrastructure code
++	  to support PCIe bus devices.
++
++config PCI_DOMAINS
++	def_bool PCI
++
++config PCI_SYSCALL
++	def_bool PCI
++
++source "drivers/pci/Kconfig"
++source "drivers/pci/pcie/Kconfig"
++source "drivers/pci/hotplug/Kconfig"
++
+ endmenu
+ 
+ menu "Kernel Features"
+diff --git a/arch/arm64/include/asm/Kbuild b/arch/arm64/include/asm/Kbuild
+index 0b3fcf8..07cb417 100644
+--- a/arch/arm64/include/asm/Kbuild
++++ b/arch/arm64/include/asm/Kbuild
+@@ -29,6 +29,7 @@ generic-y += mman.h
+ generic-y += msgbuf.h
+ generic-y += mutex.h
+ generic-y += pci.h
++generic-y += pci-bridge.h
+ generic-y += poll.h
+ generic-y += preempt.h
+ generic-y += resource.h
+diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+index e0ecdcf..dc34039 100644
+--- a/arch/arm64/include/asm/io.h
++++ b/arch/arm64/include/asm/io.h
+@@ -121,7 +121,8 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+ /*
+  *  I/O port access primitives.
+  */
+-#define IO_SPACE_LIMIT		0xffff
++#define arch_has_dev_port()	(1)
++#define IO_SPACE_LIMIT		0x1ffffff
+ #define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
+ 
+ static inline u8 inb(unsigned long addr)
+diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+new file mode 100644
+index 0000000..3f7856e
+--- /dev/null
++++ b/arch/arm64/include/asm/pci.h
+@@ -0,0 +1,49 @@
++#ifndef __ASM_PCI_H
++#define __ASM_PCI_H
++#ifdef __KERNEL__
++
++#include <linux/types.h>
++#include <linux/slab.h>
++#include <linux/dma-mapping.h>
++
++#include <asm/io.h>
++#include <asm-generic/pci-bridge.h>
++#include <asm-generic/pci-dma-compat.h>
++
++#define PCIBIOS_MIN_IO		0x1000
++#define PCIBIOS_MIN_MEM		0
++
++struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
++
++/*
++ * Set to 1 if the kernel should re-assign all PCI bus numbers
++ */
++#define pcibios_assign_all_busses() \
++	(pci_has_flag(PCI_REASSIGN_ALL_BUS))
++
++/*
++ * PCI address space differs from physical memory address space
++ */
++#define PCI_DMA_BUS_IS_PHYS	(0)
++
++extern int isa_dma_bridge_buggy;
++
++#ifdef CONFIG_PCI
++static inline int pci_domain_nr(struct pci_bus *bus)
++{
++	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
++
++	if (bridge)
++		return bridge->domain_nr;
++
++	return 0;
++}
++
++static inline int pci_proc_domain(struct pci_bus *bus)
++{
++	return 1;
++}
++#endif  /* CONFIG_PCI */
++
++#endif  /* __KERNEL__ */
++#endif  /* __ASM_PCI_H */
+diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
+index cdaedad..36b117a 100644
+--- a/arch/arm64/kernel/Makefile
++++ b/arch/arm64/kernel/Makefile
+@@ -29,6 +29,7 @@ arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)	+= sleep.o suspend.o
+ arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
+ arm64-obj-$(CONFIG_KGDB)		+= kgdb.o
+ arm64-obj-$(CONFIG_EFI)			+= efi.o efi-stub.o efi-entry.o
++arm64-obj-$(CONFIG_PCI)			+= pci.o
+ 
+ obj-y					+= $(arm64-obj-y) vdso/
+ obj-m					+= $(arm64-obj-m)
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+new file mode 100644
+index 0000000..955d6d1
+--- /dev/null
++++ b/arch/arm64/kernel/pci.c
+@@ -0,0 +1,38 @@
++/*
++ * Code borrowed from powerpc/kernel/pci-common.c
++ *
++ * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
++ * Copyright (C) 2014 ARM Ltd.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/init.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/mm.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/slab.h>
++
++#include <asm/pci-bridge.h>
++
++/*
++ * Called after each bus is probed, but before its children are examined
++ */
++void pcibios_fixup_bus(struct pci_bus *bus)
++{
++	/* nothing to do, expected to be removed in the future */
++}
++
++/*
++ * We don't have to worry about legacy ISA devices, so nothing to do here
++ */
++resource_size_t pcibios_align_resource(void *data, const struct resource *res,
++				resource_size_t size, resource_size_t align)
++{
++	return res->start;
++}
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+2.0.0
+
