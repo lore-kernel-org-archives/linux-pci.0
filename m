@@ -1,67 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:59921 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226AbaGBMjL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 08:39:11 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50171 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S964784AbaGASog (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 14:44:36 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
 	linaro-kernel <linaro-kernel@lists.linaro.org>,
 	Tanmay Inamdar <tinamdar@apm.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
 	Sinan Kaya <okaya@codeaurora.org>,
 	Jingoo Han <jg1.han@samsung.com>,
 	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
 	Device Tree ML <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper function.
-Date: Wed, 02 Jul 2014 14:38:04 +0200
-Message-ID: <4751391.BGkeOrZGt8@wuerfel>
-In-Reply-To: <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Subject: [PATCH v8 9/9] pci: Remap I/O bus resources into CPU space with pci_remap_iospace()
+Date: Tue,  1 Jul 2014 19:43:34 +0100
+Message-Id: <1404240214-9804-10-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some more detailed comments now
+Introduce a default implementation for remapping PCI bus I/O resources
+onto the CPU address space. Architectures with special needs may
+provide their own version, but most should be able to use this one.
 
-On Tuesday 01 July 2014 19:43:28 Liviu Dudau wrote:
-> +/*
-> + * Record the PCI IO range (expressed as CPU physical address + size).
-> + * Return a negative value if an error has occured, zero otherwise
-> + */
-> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> +{
-> +#ifdef PCI_IOBASE
-> +       struct io_range *res;
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ drivers/pci/pci.c   | 33 +++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  3 +++
+ 2 files changed, 36 insertions(+)
 
-I was confused by the variable naming here: A variable named 'res' is
-normally a 'struct resource'. Maybe better call this 'range'.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8e65dc3..a90df97 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2708,6 +2708,39 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+ }
+ EXPORT_SYMBOL(pci_request_regions_exclusive);
+ 
++/**
++ *	pci_remap_iospace - Remap the memory mapped I/O space
++ *	@res: Resource describing the I/O space
++ *	@phys_addr: physical address where the range will be mapped.
++ *
++ *	Remap the memory mapped I/O space described by the @res
++ *	into the CPU physical address space. Only architectures
++ *	that have memory mapped IO defined (and hence PCI_IOBASE)
++ *	should call this function.
++ */
++int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
++{
++	int err = -ENODEV;
++
++#ifdef PCI_IOBASE
++	if (!(res->flags & IORESOURCE_IO))
++		return -EINVAL;
++
++	if (res->end > IO_SPACE_LIMIT)
++		return -EINVAL;
++
++	err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
++				res->end + 1 + (unsigned long)PCI_IOBASE,
++				phys_addr, __pgprot(PROT_DEVICE_nGnRE));
++#else
++	/* this architecture does not have memory mapped I/O space,
++	   so this function should never be called */
++	WARN_ON(1);
++#endif
++
++	return err;
++}
++
+ static void __pci_set_master(struct pci_dev *dev, bool enable)
+ {
+ 	u16 old_cmd, cmd;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 556dc5f..65fb1fc 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1100,6 +1100,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 						  resource_size_t),
+ 			void *alignf_data);
+ 
++
++int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
++
+ static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+ {
+ 	struct pci_bus_region region;
+-- 
+2.0.0
 
-> +       resource_size_t allocated_size = 0;
-> +
-> +       /* check if the range hasn't been previously recorded */
-> +       list_for_each_entry(res, &io_range_list, list) {
-> +               if (addr >= res->start && addr + size <= res->start + size)
-> +                       return 0;
-> +               allocated_size += res->size;
-> +       }
-
-A spin_lock around the list lookup should be sufficient to get around
-the race that Will mentioned.
-
-> +       /* range not registed yet, check for available space */
-> +       if (allocated_size + size - 1 > IO_SPACE_LIMIT)
-> +               return -E2BIG;
-
-It might be better to limit the size to 64K if it doesn't fit at first.
-
-
-	Arnd
