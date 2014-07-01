@@ -1,111 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:53240 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933281AbaGRJ3B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 05:29:01 -0400
-Message-ID: <1405675599.6072.8.camel@weser.hi.pengutronix.de>
-Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: Shawn Guo <shawn.guo@freescale.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Fabio Estevam <festevam@gmail.com>,
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50159 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932391AbaGASob (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 14:44:31 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Marek =?UTF-8?Q?Va=C5=A1ut?= <marex@denx.de>,
-	David =?ISO-8859-1?Q?M=FCller?= "(ELSOFT AG)"
-	<d.mueller@elsoft.ch>, Sascha Hauer <kernel@pengutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Date: Fri, 18 Jul 2014 11:26:39 +0200
-In-Reply-To: <CAJ+vNU0DNCT5pcvnptNBo-tPTVOH1HnrCwy7uCZt33dfyq8U-g@mail.gmail.com>
-References: <1403637507-9424-1-git-send-email-festevam@gmail.com>
-	 <20140626031247.GN2224@dragon>
-	 <CAOMZO5A0pQfJRwb41046UpkbG6xH7c+EVu+YuY71Zuyq5gHaDA@mail.gmail.com>
-	 <20140626054937.GB7859@dragon>
-	 <CAJ+vNU0DNCT5pcvnptNBo-tPTVOH1HnrCwy7uCZt33dfyq8U-g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v8 6/9] pci: Introduce a domain number for pci_host_bridge.
+Date: Tue,  1 Jul 2014 19:43:31 +0100
+Message-Id: <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tim,
+Make it easier to discover the domain number of a bus by storing
+the number in pci_host_bridge for the root bus. Several architectures
+have their own way of storing this information, so it makes sense
+to try to unify the code. While at this, add a new function that
+creates a root bus in a given domain and make pci_create_root_bus()
+a wrapper around this function.
 
-Am Donnerstag, den 26.06.2014, 17:29 -0700 schrieb Tim Harvey:
-[...]
-> Shawn / Richard,
-> 
-> I am also affected by this issue on IMX6 boards that I support. If I
-> enable PCI in the bootloader I see similar hangs.
-> 
-> I have the following hardware configurations on my bench:
->   1. IMX6DL + i210 (same PCI setup as Fabio's above, but DL instead of Q)
->   2. IMX6Q + ath9k device
->   3. IMX6DL + PLX PEX860x PCIe-to-PCIe bridge with various devices
-> behind the bridge, using a clock buffer from IMX6 PCIe clock
->   4. IMX6Q + PLX PEX860x PCIe-to-PCIe bridge with various devices
-> behind the bridge, using a clock buffer from IMX6 PCIe clock
->   5. IMX6Q + PLX PEX860x PCIe-to-PCIe bridge with various devices
-> behind the bridge using a clock generator (always on, ignoring the
-> PCIe clock)
-> 
-> For all of the above I have no PCI issues using
-> 3.14/3.15/3.16-rc2/vendor 3.10.17_1.0.0_ga unless I enable PCI in the
-> bootloader. When I do so, all of the above configurations hang
-> somewhere around PCI init/enumeration. The same occurs with the most
-> recent vendor kernel 3.10.17_1.0.0_ga kernel (works when PCI is
-> disabled in the bootloader, hangs otherwise).
-> 
-> When I apply Fabio's patch above to the 3.16-rc2 kernel I find that
-> scenarios #4 and #5 above then work, #3 boots but the PLX bridge fails
-> all config cycles (0xff's), #2 boots but with no PCIe link, and #1
-> above still hangs. Previously, when I have dug into this particular
-> 'hang' issue on 3.15 I found that the delay needed to be between
-> imx6_pcie_probe() requesting and asserting reset_gpio low, and before
-> setting IOMUX_GPR1:18 to power down the PCIe PHY (note here, that the
-> PHY is currently enabled in the bootloader when PCI is enabled there).
-> 
-> When I apply Fabio's patch above to the most recent vendor kernel
-> 3.10.17_1.0.0_ga I still hang in all cases.
-> 
-> So while I agree there is something horribly wrong with IMX6 PCI
-> still, I don't think Fabio's patch is the right solution and I don't
-> have anything better at this point in time. I'm happy to share any
-> hardware with anyone that can work through this issue.
-> 
-Can you try if the attached patch makes any difference?
-
-Regards,
-Lucas
------------------------------->8---------------------------------
->From 0e2fc443c760290166f6371d50813e6c30a678da Mon Sep 17 00:00:00 2001
-From: Lucas Stach <l.stach@pengutronix.de>
-Date: Thu, 17 Jul 2014 18:54:44 +0200
-Subject: [PATCH] try forcing LTSSM into detect state
-
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- drivers/pci/host/pci-imx6.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/probe.c | 41 +++++++++++++++++++++++++++++++++--------
+ include/linux/pci.h |  4 ++++
+ 2 files changed, 37 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index a568efaa331c..afa450c54aba 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -215,6 +215,8 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 2c92662..abf5e82 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1748,8 +1748,9 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
  {
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ }
  
-+	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
++		int domain, int bus, struct pci_ops *ops, void *sysdata,
++		struct list_head *resources)
+ {
+ 	int error;
+ 	struct pci_host_bridge *bridge;
+@@ -1762,27 +1763,31 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 
+ 	bridge = pci_alloc_host_bridge();
+ 	if (!bridge)
+-		return NULL;
++		return ERR_PTR(-ENOMEM);
+ 
+ 	bridge->dev.parent = parent;
+ 	bridge->dev.release = pci_release_host_bridge_dev;
++	bridge->domain_nr = domain;
+ 
+ 	b = pci_alloc_bus();
+-	if (!b)
++	if (!b) {
++		error = -ENOMEM;
+ 		goto err_out;
++	}
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bus;
+-	b2 = pci_find_bus(pci_domain_nr(b), bus);
++	b2 = pci_find_bus(bridge->domain_nr, bus);
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
++		error = -EEXIST;
+ 		goto err_bus_out;
+ 	}
+ 
+ 	bridge->bus = b;
+-	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	dev_set_name(&bridge->dev, "pci%04x:%02x", bridge->domain_nr, bus);
+ 	error = pcibios_root_bridge_prepare(bridge);
+ 	if (error)
+ 		goto err_out;
+@@ -1801,7 +1806,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+-	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
++	dev_set_name(&b->dev, "%04x:%02x", bridge->domain_nr, bus);
+ 	error = device_register(&b->dev);
+ 	if (error)
+ 		goto class_dev_reg_err;
+@@ -1851,7 +1856,27 @@ err_bus_out:
+ 	kfree(b);
+ err_out:
+ 	kfree(bridge);
+-	return NULL;
++	return ERR_PTR(error);
++}
++
++struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	int domain_nr;
++	struct pci_bus *b = pci_alloc_bus();
++	if (!b)
++		return NULL;
++
++	b->sysdata = sysdata;
++	domain_nr = pci_domain_nr(b);
++	kfree(b);
++
++	b = pci_create_root_bus_in_domain(parent, domain_nr, bus,
++				ops, sysdata, resources);
++	if (IS_ERR(b))
++		return NULL;
++
++	return b;
+ }
+ 
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 466bcd1..7e7b939 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -401,6 +401,7 @@ struct pci_host_bridge_window {
+ struct pci_host_bridge {
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
++	int domain_nr;
+ 	struct list_head windows;	/* pci_host_bridge_windows */
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+@@ -769,6 +770,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
++			int domain, int bus, struct pci_ops *ops,
++			void *sysdata, struct list_head *resources);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
 -- 
-2.0.1
-
-
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+2.0.0
 
