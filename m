@@ -1,96 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:35005 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947AbaGIBeT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 21:34:19 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N8F00I368CTJX10@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 09 Jul 2014 10:34:05 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Stephen Rothwell' <sfr@canb.auug.org.au>,
-	'Fabio Estevam' <festevam@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	'Fabio Estevam' <fabio.estevam@freescale.com>,
-	'Jingoo Han' <jg1.han@samsung.com>,
-	'Mohit Kumar' <mohit.kumar@st.com>
-References: <1403104613-9867-1-git-send-email-festevam@gmail.com>
- <20140709105731.1b3e2bbe@canb.auug.org.au>
-In-reply-to: <20140709105731.1b3e2bbe@canb.auug.org.au>
-Subject: Re: PCI: designware: Use IS_ENABLED()
-Date: Wed, 09 Jul 2014 10:34:05 +0900
-Message-id: <001101cf9b15$df01cf50$9d056df0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
+Received: from kirsty.vergenet.net ([202.4.237.240]:51813 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755335AbaGARX1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 13:23:27 -0400
+Date: Tue, 1 Jul 2014 11:27:46 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH v2 0/3] PCI: host: pcie-rcar: minor clean ups
+Message-ID: <20140701022746.GA13917@verge.net.au>
+References: <1404114864-17330-1-git-send-email-phil.edworthy@renesas.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404114864-17330-1-git-send-email-phil.edworthy@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 09, 2014 9:58 AM, Stephen Rothwell wrote:
+On Mon, Jun 30, 2014 at 08:54:21AM +0100, Phil Edworthy wrote:
+> Relatively minor clean up patches for the pcie-rcar driver. These
+> are on top of Sergei's recent patch "pcie-rcar: kill duplicate checks".
 > 
-> Hi Fabio,
+> Thanks to Sergei for point these out.
 > 
-> [I noticed this in the pci tree in linux-next this morning]
+> v2:
+>  - break out replacing function arg with local var into separate patch
 > 
-> On Wed, 18 Jun 2014 12:16:53 -0300 Fabio Estevam <festevam@gmail.com> wrote:
-> >
-> > From: Fabio Estevam <fabio.estevam@freescale.com>
-> >
-> > We can get rid of the 'ifdef' by using the IS_ENABLED() macro.
-> >
-> > Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> > Acked-by: Jingoo Han <jg1.han@samsung.com>
-> > Acked-by: Mohit Kumar <mohit.kumar@st.com>
-> >
-> > ---
-> > drivers/pci/host/pcie-designware.c | 5 ++---
-> >  1 file changed, 2 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index 1eaf4df3..dc842fd 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -497,9 +497,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >
-> >  	pci_common_init_dev(pp->dev, &dw_pci);
-> >  	pci_assign_unassigned_resources();
-> > -#ifdef CONFIG_PCI_DOMAINS
-> > -	dw_pci.domain++;
-> > -#endif
-> > +	if (IS_ENABLED(CONFIG_PCI_DOMAINS))
-> > +		dw_pci.domain++;
-> >
-> >  	return 0;
-> >  }
-> 
-> Will this actually compile if CONFIG_PCI_DOMAINS is disabled, since the
-> "domains" field of dw_pci does not even exist in that case (it is
-> ifdeffed out in arch/arm/include/asm/mach/pci.h)?  Even if it works
-> with newer compilers, will it work with older ones i.e. how new does
-> the compiler have to be to elide the code before noticing that
-> "domains" does not exist?
+> Phil Edworthy (3):
+>   PCI: host: pcie-rcar: Use correct initial HW settings
+>   PCI: host: pcie-rcar: Style and formatting changes.
+>   PCI: host: pcie-rcar: Replace arg passed into a func with local var
 
-Oops, you're right! It makes build errors when CONFIG_PCI_DOMAINS
-is disabled.
+Thanks Phil,
 
-The "domain" variable is guarded by "#ifdef CONFIG_PCI_DOMAINS";
-thus, IS_ENABLED() should NOT be used.
-
-./arch/arm/include/asm/mach/pci.h
-struct hw_pci {
-#ifdef CONFIG_PCI_DOMAINS
-	int		domain;
-#endif
-
-Bjorn Helgaas,
-Please revert this patch from your pci tree. Thank you.
-
-Best regards,
-Jingoo Han
-
-> 
-> --
-> Cheers,
-> Stephen Rothwell                    sfr@canb.auug.org.au
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
 
