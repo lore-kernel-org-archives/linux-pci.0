@@ -1,224 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:36324 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932203AbaGVWx3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Jul 2014 18:53:29 -0400
-Message-ID: <53CEEB1C.9020202@ti.com>
-Date: Tue, 22 Jul 2014 18:52:12 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50160 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932392AbaGASob (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 14:44:31 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
 	Jingoo Han <jg1.han@samsung.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v7 4/5] PCI: add PCI controller for keystone PCIe h/w
-References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com> <1405961925-27248-5-git-send-email-m-karicheri2@ti.com> <20140722223527.GA27965@google.com>
-In-Reply-To: <20140722223527.GA27965@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper function.
+Date: Tue,  1 Jul 2014 19:43:28 +0100
+Message-Id: <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+Some architectures do not have a simple view of the PCI I/O space
+and instead use a range of CPU addresses that map to bus addresses. For
+some architectures these ranges will be expressed by OF bindings
+in a device tree file.
 
-On 07/22/2014 06:35 PM, Bjorn Helgaas wrote:
-> On Mon, Jul 21, 2014 at 12:58:44PM -0400, Murali Karicheri wrote:
->> keystone PCIe controller is based on v3.65 version of the
->> designware h/w. Main differences are
->> 	1. No ATU support
->> 	2. Legacy and MSI irq functions are implemented in
->> 	   application register space
->> 	3. MSI interrupts are multiplexed over 8 IRQ lines to the Host
->> 	   side.
->> All of the Application register space handing code are organized into
->> pci-keystone-dw.c and the functions are called from pci-keystone.c
->> to implement PCI controller driver. Also add necessary DT documentation
->> for the driver.
->>
->> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->> Acked-by: Santosh Shilimkar<santosh.shilimkar@ti.com>
->> ...
->
->> +++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
->> ...
->
->> +Note for PCI driver usage
->> +=========================
->> +Driver requires pci=pcie_bus_perf in the bootargs for proper functioning.
->
-> Whoa, why is this?  Special boot args should not be required.
+Introduce a pci_register_io_range() helper function with a generic
+implementation that can be used by such architectures to keep track
+of the I/O ranges described by the PCI bindings. If the PCI_IOBASE
+macro is not defined that signals lack of support for PCI and we
+return an error.
 
-This was discussed initially and I had added following commit to get 
-this working instead of a PCI quirk. To get some background please see 
-the thread for commit below that you also had signed off as well.
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ drivers/of/address.c       | 61 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_address.h |  1 +
+ 2 files changed, 62 insertions(+)
 
-commit 8b5742ad156d30ee38486652cdbd152e2d6ebbcc
-Author: Murali Karicheri <m-karicheri2@ti.com>
-Date:   Wed May 28 13:14:53 2014 -0400
-
-     ARM/PCI: Call pcie_bus_configure_settings() to set MPS
-
-     Call pcie_bus_configure_settings() on ARM, like for other platforms.
-     pcie_bus_configure_settings() makes sure the MPS across the bus is 
-uniform
-     and provides the ability to tune the MRSS and MPS to higher performance
-     values.  This is particularly important for embedded where there is no
-     firmware to program these PCIe settings for the OS.
-
-     Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-     CC: Russell King <linux@arm.linux.org.uk>
-     CC: Arnd Bergmann <arnd@arndb.de>
-     CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-     CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-
-This was added as a preparatory patch to support keystone and
-avoid a PCI quirk to do the same. Keystone has MRSS limitation
-of 256 bytes. So adding a bootargs flag was suggested a better option 
-than a PCI quirk.
-
-I will look into the rest of the comments and possibly try to address 
-them or discuss.
-
-BTW, please apply patch 1-3 that has already got ack from maintainers
-and is indepdent of this patch.
-
-Thanks
-
-Murali
-
->
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index 21df477..f8bc475 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -46,4 +46,9 @@ config PCI_HOST_GENERIC
->>   	  Say Y here if you want to support a simple generic PCI host
->>   	  controller, such as the one emulated by kvmtool.
->>
->> +config PCI_KEYSTONE
->> +	bool "TI Keystone PCIe controller"
->> +	depends on ARCH_KEYSTONE
->> +	select PCIE_DW
->> +	select PCIEPORTBUS
->
-> It'd be nice to have some help text here.  I know, not everybody else does.
->
->> +++ b/drivers/pci/host/pci-keystone-dw.c
->> ...
->> +void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie , int offset)
->> +{
->> +	struct pcie_port *pp =&ks_pcie->pp;
->> +	u32 pending, vector;
->> +	int src, virq;
->> +
->> +	pending = readl(ks_pcie->va_app_base + MSI0_IRQ_STATUS + (offset<<  4));
->
-> Blank line here (before the block comment).
->
->> +	/*
->> +	 * MSI0, Status bit 0-3 shows vectors 0, 8, 16, 24, MSI1 status bit
->> +	 * shows 1, 9, 17, 25 and so forth
->> +	 */
->> +	for (src = 0; src<  4; src++) {
->> +		if (BIT(src)&  pending) {
->> +			vector = offset + (src<<  3);
->> +			virq = irq_linear_revmap(pp->irq_domain, vector);
->> +			dev_dbg(pp->dev,
->> +				"irq: bit %d, vector %d, virq %d\n",
->> +				 src, vector, virq);
->> +			generic_handle_irq(virq);
->> +		}
->> +	}
->> +}
->> +
->> ...
->
->> +static void __iomem *ks_pcie_cfg_setup(struct keystone_pcie *ks_pcie, u8 bus,
->> +					unsigned int devfn)
->> +{
->> +	u8 device = PCI_SLOT(devfn), function = PCI_FUNC(devfn);
->> +	struct pcie_port *pp =&ks_pcie->pp;
->> +	u32 regval;
->> +
->> +	if (bus == 0)
->> +		return pp->dbi_base;
->> +
->> +	regval = (bus<<  16) | (device<<  8) | function;
->> +	/*
->> +	 * Since Bus#1 will be a virtual bus, we need to have TYPE0
->> +	 * access only.
->> +	 * TYPE 1
->> +	 */
->> +	if (bus != 1)
->> +		regval |= BIT(24);
->> +
->> +	writel(regval, ks_pcie->va_app_base + CFG_SETUP);
->> +	return pp->va_cfg0_base;
->> +}
->> +
->> +int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->> +		unsigned int devfn, int where, int size, u32 *val)
->> +{
->> +	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
->> +	u8 bus_num = bus->number;
->> +	void __iomem *addr;
->> +	int ret;
->> +
->> +	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
->> +	ret = dw_pcie_cfg_read(addr + (where&  ~0x3), where, size, val);
->
-> This *looks* like it needs a lock to protect against concurrent
-> ks_pcie_cfg_setup() users, since it writes a register.
->
->> +
->> +	return ret;
->
-> Please use the same style as in ks_dw_pcie_wr_other_conf(), i.e., get rid
-> of "ret".
->
->> +}
->> +
->> +int ks_dw_pcie_wr_other_conf(struct pcie_port *pp,
->> +		struct pci_bus *bus, unsigned int devfn, int where,
->> +		int size, u32 val)
->> +{
->> +	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
->> +	u8 bus_num = bus->number;
->> +	void __iomem *addr;
->> +
->> +	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
->> +
->> +	return dw_pcie_cfg_write(addr + (where&  ~0x3), where, size, val);
->> +}
->
->> +++ b/drivers/pci/host/pci-keystone.c
->> ...
->
->> +static struct platform_driver ks_pcie_driver __refdata = {
->
-> Why does this need to be __refdata?  There are no other occurrences in
-> drivers/pci.
->
->> +	.probe  = ks_pcie_probe,
->> +	.remove = __exit_p(ks_pcie_remove),
->> +	.driver = {
->> +		.name	= "keystone-pcie",
->> +		.owner	= THIS_MODULE,
->> +		.of_match_table = of_match_ptr(ks_pcie_of_match),
->> +	},
->> +};
->
-> Bjorn
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 5edfcb0..1345733 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -5,6 +5,7 @@
+ #include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/pci_regs.h>
++#include <linux/slab.h>
+ #include <linux/string.h>
+ 
+ /* Max address size we deal with */
+@@ -601,12 +602,72 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+ }
+ EXPORT_SYMBOL(of_get_address);
+ 
++struct io_range {
++	struct list_head list;
++	phys_addr_t start;
++	resource_size_t size;
++};
++
++static LIST_HEAD(io_range_list);
++
++/*
++ * Record the PCI IO range (expressed as CPU physical address + size).
++ * Return a negative value if an error has occured, zero otherwise
++ */
++int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
++{
++#ifdef PCI_IOBASE
++	struct io_range *res;
++	resource_size_t allocated_size = 0;
++
++	/* check if the range hasn't been previously recorded */
++	list_for_each_entry(res, &io_range_list, list) {
++		if (addr >= res->start && addr + size <= res->start + size)
++			return 0;
++		allocated_size += res->size;
++	}
++
++	/* range not registed yet, check for available space */
++	if (allocated_size + size - 1 > IO_SPACE_LIMIT)
++		return -E2BIG;
++
++	/* add the range to the list */
++	res = kzalloc(sizeof(*res), GFP_KERNEL);
++	if (!res)
++		return -ENOMEM;
++
++	res->start = addr;
++	res->size = size;
++
++	list_add_tail(&res->list, &io_range_list);
++
++	return 0;
++#else
++	return -EINVAL;
++#endif
++}
++
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
++#ifdef PCI_IOBASE
++	struct io_range *res;
++	resource_size_t offset = 0;
++
++	list_for_each_entry(res, &io_range_list, list) {
++		if (address >= res->start &&
++			address < res->start + res->size) {
++			return res->start - address + offset;
++		}
++		offset += res->size;
++	}
++
++	return (unsigned long)-1;
++#else
+ 	if (address > IO_SPACE_LIMIT)
+ 		return (unsigned long)-1;
+ 
+ 	return (unsigned long) address;
++#endif
+ }
+ 
+ static int __of_address_to_resource(struct device_node *dev,
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index c13b878..ac4aac4 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -55,6 +55,7 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+ extern const __be32 *of_get_address(struct device_node *dev, int index,
+ 			   u64 *size, unsigned int *flags);
+ 
++extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+ extern unsigned long pci_address_to_pio(phys_addr_t addr);
+ 
+ extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+-- 
+2.0.0
 
