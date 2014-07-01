@@ -1,65 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:34578 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758463AbaGXDpQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 23:45:16 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N97005BV6FETBA0@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 24 Jul 2014 12:45:14 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Lucas Stach' <l.stach@pengutronix.de>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Richard Zhu' <r65037@freescale.com>,
-	'Shawn Guo' <shawn.guo@freescale.com>, kernel@pengutronix.de,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
- <1406137217-11294-2-git-send-email-l.stach@pengutronix.de>
-In-reply-to: <1406137217-11294-2-git-send-email-l.stach@pengutronix.de>
-Subject: Re: [PATCH 1/3] MAINTAINERS: add myself as co-maintainer for i.MX6 PCI
- driver
-Date: Thu, 24 Jul 2014 12:45:13 +0900
-Message-id: <001001cfa6f1$ad1ef4d0$075cde70$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mout.kundenserver.de ([212.227.126.130]:50292 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751499AbaGATgW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 15:36:22 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper function.
+Date: Tue, 01 Jul 2014 21:36:10 +0200
+Message-ID: <8556461.i7qCGvGY5a@wuerfel>
+In-Reply-To: <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 24, 2014 2:40 AM, Lucas Stach wrote:
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
-> I've talked privately to Richard about this and he's
-> in favor, but still should give an public ACK.
+On Tuesday 01 July 2014 19:43:28 Liviu Dudau wrote:
+> +/*
+> + * Record the PCI IO range (expressed as CPU physical address + size).
+> + * Return a negative value if an error has occured, zero otherwise
+> + */
+> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> +{
+> +#ifdef PCI_IOBASE
+> +       struct io_range *res;
+> +       resource_size_t allocated_size = 0;
+> +
+> +       /* check if the range hasn't been previously recorded */
+> +       list_for_each_entry(res, &io_range_list, list) {
+> +               if (addr >= res->start && addr + size <= res->start + size)
+> +                       return 0;
+> +               allocated_size += res->size;
+> +       }
+> +
+> +       /* range not registed yet, check for available space */
+> +       if (allocated_size + size - 1 > IO_SPACE_LIMIT)
+> +               return -E2BIG;
+> +
+> +       /* add the range to the list */
+> +       res = kzalloc(sizeof(*res), GFP_KERNEL);
+> +       if (!res)
+> +               return -ENOMEM;
+> +
+> +       res->start = addr;
+> +       res->size = size;
+> +
+> +       list_add_tail(&res->list, &io_range_list);
+> +
+> +       return 0;
+> +#else
+> +       return -EINVAL;
+> +#endif
+> +}
+> +
+>  unsigned long __weak pci_address_to_pio(phys_addr_t address)
+>  {
+> +#ifdef PCI_IOBASE
+> +       struct io_range *res;
+> +       resource_size_t offset = 0;
+> +
+> +       list_for_each_entry(res, &io_range_list, list) {
+> +               if (address >= res->start &&
+> +                       address < res->start + res->size) {
+> +                       return res->start - address + offset;
+> +               }
+> +               offset += res->size;
+> +       }
+> +
+> +       return (unsigned long)-1;
+> +#else
+>         if (address > IO_SPACE_LIMIT)
+>                 return (unsigned long)-1;
+>  
+>         return (unsigned long) address;
+> +#endif
+>  }
 
-OK, I see. I also think that you are the proper person for
-maintaining the i.MX6 PCI driver.
+This still conflicts with the other allocator you have in patch 9
+for pci_remap_iospace: nothing guarantees that the mapping is the
+same for both.
 
-Acked-by: Jingoo Han <jg1.han@samsung.com>
+Also, this is a completely pointless exercise at this moment, because
+nobody cares about the result of pci_address_to_pio on architectures
+that don't already provide this function. If we ever get a proper
+Open Firmware implementation that wants to put hardcoded PCI devices
+into DT, we can add an implementation, but for now this seems overkill.
 
-However, you still need the ACK from Richard Zhu or Shawn Guo.
+The allocator in pci_register_io_range seems reasonable, why not merge
+this function with pci_remap_iospace() as I have asked you multiple
+times before? Just make it return the io_offset so the caller can
+put that into the PCI host resources.
 
-Best regards,
-Jingoo Han
-
-> ---
->  MAINTAINERS | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 134483f206e4..54c23c4fcbb0 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6775,6 +6775,7 @@ F:	arch/x86/kernel/quirks.c
->  PCI DRIVER FOR IMX6
->  M:	Richard Zhu <r65037@freescale.com>
->  M:	Shawn Guo <shawn.guo@linaro.org>
-> +M:	Lucas Stach <l.stach@pengutronix.de>
->  L:	linux-pci@vger.kernel.org
->  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
->  S:	Maintained
-> --
-> 2.0.1
-
+	Arnd
