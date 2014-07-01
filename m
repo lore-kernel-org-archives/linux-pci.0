@@ -1,147 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59365 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751462AbaGVUXc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Jul 2014 16:23:32 -0400
-Message-ID: <1406060607.4463.36.camel@ul30vt.home>
-Subject: Re: [PATCH] PCI: Add device specific (non)reset for AMD GPUs
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 22 Jul 2014 14:23:27 -0600
-In-Reply-To: <20140722195557.GD19181@google.com>
-References: <20140716190955.4722.25453.stgit@gimli.home>
-	 <20140722195557.GD19181@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50165 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932431AbaGASoe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Jul 2014 14:44:34 -0400
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v8 5/9] pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+Date: Tue,  1 Jul 2014 19:43:30 +0100
+Message-Id: <1404240214-9804-6-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-07-22 at 13:55 -0600, Bjorn Helgaas wrote:
-> On Wed, Jul 16, 2014 at 01:14:08PM -0600, Alex Williamson wrote:
-> > There are numerous ATI/AMD GPUs available that report that they
-> > support a PM reset (NoSoftRst-) but for which such a reset has no
-> > apparent effect on the device.  These devices continue to display the
-> > same framebuffer across PM reset and the fan speed remains constant,
-> > while a proper bus reset causes the display to lose sync and the fan
-> > to reset to high speed.  Create a device specific reset for ATI vendor
-> > devices that tries to catch these devices and report that
-> > pci_reset_function() is not supported.
-> > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> > 
-> > This patch makes the series "vfio-pci: Reset improvements" far more
-> > useful for users with one of these GPUs.  If pci_reset_function()
-> > indicates that it's supported and successful, then I have no reason
-> > to resort to a bus/slot reset in the vfio-pci code.  Since it doesn't
-> > seem to do anything anyway, let's just forget that PM reset exists
-> > for these devices.
-> > 
-> >  drivers/pci/quirks.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 53 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 460c354..bed9c63 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3289,6 +3289,57 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
-> >  	return 0;
-> >  }
-> >  
-> > +/*
-> > + * Numerous AMD/ATI GPUs report that they're capable of PM reset (NoSoftRst-)
-> > + * and pci_reset_function() reports the device as successfully reset, but
-> > + * there's no apparent effect from the reset.  Test for these, being sure to
-> > + * allow FLR should it ever exist, and use the device specific reset to
-> > + * disable any sort of function-local reset if only PM reset is available.
-> > + */
-> > +static int reset_ati_gpu(struct pci_dev *dev, int probe)
-> > +{
-> > +	u16 pm_csr;
-> > +	u32 devcap;
-> > +	int af_pos;
-> > +
-> > +	/*
-> > +	 * VGA class devices, not on the root bus, PCI function 0 of a
-> > +	 * multifunction device with PM capabilities
-> > +	 */
-> > +	if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA ||
-> > +	    pci_is_root_bus(dev->bus) || PCI_FUNC(dev->devfn) ||
-> > +	    !dev->multifunction || !dev->pm_cap)
-> > +		return -ENOTTY;
-> > +
-> > +	/* PM reports NoSoftRst- */
-> > +	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pm_csr);
-> > +	if (pm_csr & PCI_PM_CTRL_NO_SOFT_RESET)
-> > +		return -ENOTTY;
-> > +
-> > +	/* No PCIe FLR */
-> > +	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &devcap);
-> > +	if (devcap & PCI_EXP_DEVCAP_FLR)
-> > +		return -ENOTTY;
-> > +
-> > +	/* No AF FLR */
-> > +	af_pos = pci_find_capability(dev, PCI_CAP_ID_AF);
-> > +	if (af_pos) {
-> > +		u8 af_cap;
-> > +
-> > +		pci_read_config_byte(dev, af_pos + PCI_AF_CAP, &af_cap);
-> > +		if ((af_cap && PCI_AF_CAP_TP) && (af_cap && PCI_AF_CAP_FLR))
-> > +			return -ENOTTY;
-> > +	}
-> > +
-> > +	/*
-> > +	 * We could attempt a singleton bus/slot reset here to override
-> > +	 * PM reset priority over these, but the devices we're interested
-> > +	 * in are multifunction GPU + audio devices in their known configs.
-> > +	 */
-> > +
-> > +	return -EINVAL;
-> > +}
-> > +
-> >  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
-> >  #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-> >  #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
-> > @@ -3304,6 +3355,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
-> >  		reset_intel_generic_dev },
-> >  	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
-> >  		reset_chelsio_generic_dev },
-> > +	{ PCI_VENDOR_ID_ATI, PCI_ANY_ID,
-> > +		reset_ati_gpu },
-> 
-> I'm a little confused, but maybe we just need a comment about what the
-> return values from pci_dev_specific_reset() mean.  Based on reading
-> __pci_dev_reset(), it looks like:
-> 
->   0 means "I support this reset method" (if probe) or
->   "I performed this reset" (if !probe),
->   
->   ENOTTY means "I don't support this reset method, try another one",
-> 
->   anything else means "I don't support this reset method and don't try
->   any others" (it'd be useful to know what this is good for).
-> 
-> But reset_ati_gpu() never returns 0, so it seems like your patch makes
-> it so we can never reset any ATI device at all.  So I must be missing
-> something.
+Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+the creation order has been changed for no good reason. Revert the order of
+creation as we are going to depend on the pci_host_bridge structure to retrieve the
+domain number of the root bus.
 
-Nope, you're not missing anything.  The return value behavior is exactly
-as you describe and the ATI GPUs that advertise NoSoftRst- don't appear
-to do any sort of reset when moving them back from D3, so I'm
-effectively trying to negate that as a viable reset option.  I think
-this is what the anything-else return value is meant for.  I only return
-"I don't support this reset method and don't try any others" after I
-verify there are no other options, so if they come out with FLR support,
-that would still get precedence.  It's a little awkward, but I don't
-know how to test whether a reset function was successful.  It seems like
-it would be device specific.  Anyone from AMD reading the list that can
-comment on what sort of reset happens on these GPUs for a D3->D0 reset?
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Acked-by: Grant Likely <grant.likely@linaro.org>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ drivers/pci/probe.c | 31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
 
-Regardless, I don't really expect users other than device assignment,
-and my testing indicates that PM reset is useless on these devices for
-that.  Thanks,
-
-Alex
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e3cf8a2..2c92662 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -515,7 +515,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+ 	kfree(bridge);
+ }
+ 
+-static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
++static struct pci_host_bridge *pci_alloc_host_bridge(void)
+ {
+ 	struct pci_host_bridge *bridge;
+ 
+@@ -524,7 +524,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+ 		return NULL;
+ 
+ 	INIT_LIST_HEAD(&bridge->windows);
+-	bridge->bus = b;
+ 	return bridge;
+ }
+ 
+@@ -1761,9 +1760,16 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	char bus_addr[64];
+ 	char *fmt;
+ 
++	bridge = pci_alloc_host_bridge();
++	if (!bridge)
++		return NULL;
++
++	bridge->dev.parent = parent;
++	bridge->dev.release = pci_release_host_bridge_dev;
++
+ 	b = pci_alloc_bus();
+ 	if (!b)
+-		return NULL;
++		goto err_out;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+@@ -1772,26 +1778,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 
+-	bridge = pci_alloc_host_bridge(b);
+-	if (!bridge)
+-		goto err_out;
+-
+-	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_host_bridge_dev;
++	bridge->bus = b;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+ 	error = pcibios_root_bridge_prepare(bridge);
+-	if (error) {
+-		kfree(bridge);
++	if (error)
+ 		goto err_out;
+-	}
+ 
+ 	error = device_register(&bridge->dev);
+ 	if (error) {
+ 		put_device(&bridge->dev);
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+@@ -1848,8 +1847,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ class_dev_reg_err:
+ 	put_device(&bridge->dev);
+ 	device_unregister(&bridge->dev);
+-err_out:
++err_bus_out:
+ 	kfree(b);
++err_out:
++	kfree(bridge);
+ 	return NULL;
+ }
+ 
+-- 
+2.0.0
 
