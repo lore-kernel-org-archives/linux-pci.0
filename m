@@ -1,138 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:35995 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752575AbaGGEMi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Jul 2014 00:12:38 -0400
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Murali Karicheri <m-karicheri2@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Cc: Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Date: Mon, 7 Jul 2014 12:11:04 +0800
-Subject: RE: [PATCH v3 1/5] PCI: designware: add rd[wr]_other_conf API
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E4282@EAPEX1MAIL1.st.com>
-References: <1404164720-11066-1-git-send-email-m-karicheri2@ti.com>
- <1404164720-11066-2-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1404164720-11066-2-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v8 0/9] Support for creating generic PCI host bridges from DT
+Date: Tue,  1 Jul 2014 19:43:25 +0100
+Message-Id: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Murali,
+This is my resurected attempt at adding support for generic PCI host
+bridge controllers that make use of device tree information to
+configure themselves. I've tagged it as v8 although the patches
+have now been reshuffled in order to ease adoption so referring to
+the older versions might be a bit of a hoop jumping exercise.
 
-> -----Original Message-----
-> From: Murali Karicheri [mailto:m-karicheri2@ti.com]
-> Sent: Tuesday, July 01, 2014 3:15 AM
-> To: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
-> devicetree@vger.kernel.org
-> Cc: Murali Karicheri; Santosh Shilimkar; Russell King; Grant Likely; Rob Herring;
-> Mohit KUMAR DCG; Jingoo Han; Bjorn Helgaas; Pratyush ANAND; Richard
-> Zhu; Kishon Vijay Abraham I; Marek Vasut; Arnd Bergmann; Pawel Moll;
-> Mark Rutland; Ian Campbell; Kumar Gala; Randy Dunlap
-> Subject: [PATCH v3 1/5] PCI: designware: add rd[wr]_other_conf API
-> 
-> v3.65 version of the designware h/w, requires application space registers to
-> be configured to access the remote EP config space.
-> To support this, add rd[wr]_other_conf API in the pcie_host_opts
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> 
-> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-> CC: Russell King <linux@arm.linux.org.uk>
-> CC: Grant Likely <grant.likely@linaro.org>
-> CC: Rob Herring <robh+dt@kernel.org>
-> CC: Mohit Kumar <mohit.kumar@st.com>
-> CC: Jingoo Han <jg1.han@samsung.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Pratyush Anand <pratyush.anand@st.com>
-> CC: Richard Zhu <r65037@freescale.com>
-> CC: Kishon Vijay Abraham I <kishon@ti.com>
-> CC: Marek Vasut <marex@denx.de>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Pawel Moll <pawel.moll@arm.com>
-> CC: Mark Rutland <mark.rutland@arm.com>
-> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-> CC: Kumar Gala <galak@codeaurora.org>
-> CC: Randy Dunlap <rdunlap@infradead.org>
-> CC: Grant Likely <grant.likely@linaro.org>
-> ---
->  drivers/pci/host/pcie-designware.c |   12 ++++++++++--
->  drivers/pci/host/pcie-designware.h |    4 ++++
->  2 files changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
-> designware.c
-> index 1eaf4df..d8f3af7 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -656,7 +656,11 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32
-> devfn, int where,
->  	}
-> 
->  	if (bus->number != pp->root_bus_nr)
-> -		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
-> +		if (pp->ops->rd_other_conf)
-> +			ret = pp->ops->rd_other_conf(pp, bus, devfn,
-> +						where, size, val);
-> +		else
-> +			ret = dw_pcie_rd_other_conf(pp, bus, devfn,
->  						where, size, val);
->  	else
->  		ret = dw_pcie_rd_own_conf(pp, where, size, val); @@ -
-> 679,7 +683,11 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32
-> devfn,
->  		return PCIBIOS_DEVICE_NOT_FOUND;
-> 
->  	if (bus->number != pp->root_bus_nr)
-> -		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
-> +		if (pp->ops->wr_other_conf)
-> +			ret = pp->ops->wr_other_conf(pp, bus, devfn,
-> +						where, size, val);
-> +		else
-> +			ret = dw_pcie_wr_other_conf(pp, bus, devfn,
->  						where, size, val);
->  	else
->  		ret = dw_pcie_wr_own_conf(pp, where, size, val); diff --git
-> a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index 77f592f..8121901 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -61,6 +61,10 @@ struct pcie_host_ops {
->  			u32 val, void __iomem *dbi_base);
->  	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32
-> *val);
->  	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32
-> val);
-> +	int (*rd_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
-> +			unsigned int devfn, int where, int size, u32 *val);
-> +	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
-> +			unsigned int devfn, int where, int size, u32 val);
->  	int (*link_up)(struct pcie_port *pp);
->  	void (*host_init)(struct pcie_port *pp);  };
+Changes from v7:
+  - Reordered the patches so that fixes and non-controversial patches
+    from v7 can be accepted more easily. If agreed I can split the
+    series again into patches that can be upstreamed easily and ones
+    that still need discussion.
+  - Moved the of_create_host_bridge() function to drivers/of/of_pci.c
+    to better reflect its target use.
+  - Added the function to remap the bus I/O resources that used to be
+    provided in my arm64 patch series and (re)named it pci_remap_iospace()
+  - Removed error code checking from parsing and mapping of IRQ from DT
+    in recognition that some PCI devices will not have legacy IRQ mappings.
 
-- Now it looks good to me.
+v7 thread here with all the historic information: https://lkml.org/lkml/2014/3/14/279
 
-Acked-by: Mohit Kumar <mohit.kumar@st.com>
+Best regards,
+Liviu
 
-Regards
-Mohit
-> --
-> 1.7.9.5
+
+Liviu Dudau (9):
+  Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+  pci: Export find_pci_host_bridge() function.
+  pci: Introduce pci_register_io_range() helper function.
+  pci: OF: Fix the conversion of IO ranges into IO resources.
+  pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+  pci: Introduce a domain number for pci_host_bridge.
+  pci: of: Parse and map the IRQ when adding the PCI device.
+  pci: Add support for creating a generic host_bridge from device tree
+  pci: Remap I/O bus resources into CPU space with pci_remap_iospace()
+
+ drivers/of/address.c       | 108 ++++++++++++++++++++++++++++++++++++
+ drivers/of/of_pci.c        | 135 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/host-bridge.c  |  21 ++++++-
+ drivers/pci/pci.c          |  37 +++++++++++++
+ drivers/pci/probe.c        |  68 ++++++++++++++++-------
+ include/asm-generic/io.h   |   2 +-
+ include/linux/of_address.h |  14 +----
+ include/linux/of_pci.h     |  10 ++++
+ include/linux/pci.h        |  15 +++++
+ 9 files changed, 376 insertions(+), 34 deletions(-)
+
+-- 
+2.0.0
 
