@@ -1,178 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:43736 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932557AbaGWSzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Jul 2014 14:55:55 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH v8 1/2] PCI: designware: enhance dw_pcie_host_init() to support v3.65 DW hardware
-Date: Wed, 23 Jul 2014 14:54:51 -0400
-Message-ID: <1406141692-7249-2-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1406141692-7249-1-git-send-email-m-karicheri2@ti.com>
-References: <1406141692-7249-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:41570 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752340AbaGBVHj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 17:07:39 -0400
+Received: by mail-ie0-f170.google.com with SMTP id tr6so10047472ieb.29
+        for <linux-pci@vger.kernel.org>; Wed, 02 Jul 2014 14:07:39 -0700 (PDT)
+Date: Wed, 2 Jul 2014 15:07:36 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] pci: Allow very large resource windows
+Message-ID: <20140702210736.GB28852@google.com>
+References: <20140611060118.GB3169@yanx>
+ <CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-keystone PCI controller is based on v3.65 designware hardware. This
-version differs from newer versions of the hardware in few functional
-areas discussed below that makes it necessary to change dw_pcie_host_init()
-to support v3.65 based PCI controller.
+On Wed, Jun 11, 2014 at 10:23:35AM -0700, Yinghai Lu wrote:
+> On Tue, Jun 10, 2014 at 11:01 PM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
+> > Well, that's not enough for our 16G BAR ...
+> >
+> > I thought Yinghai fixed it permanently last time:
+> >
+> >         http://permalink.gmane.org/gmane.linux.kernel.pci/29142
+> >
+> > Are you still working on this, Yinghai?
+> 
+> Hi Guo,
+> 
+> Please check updated version on your setup.
+> 
+> Thanks
+> 
+> Yinghai
 
- 1. No support for ATU port. So any ATU specific resource handling code
-    is to be bypassed for v3.65 h/w.
- 2. MSI controller uses Application space to implement MSI and 32 MSI
-    interrupts are multiplexed over 8 IRQs to the host. Hence the code
-    to process MSI IRQ needs to be different. This patch allows platform
-    driver to provide its own irq_domain_ops ptr to irq_domain_add_linear()
-    through an API callback from the designware core driver.
- 3. MSI interrupt generation requires EP to write to the RC's application
-    register. So enhance the driver to allow setup of inbound access to
-    MSI irq register as a post scan bus API callback.
+> Subject: [PATCH -v3] PCI: Fix bus align checking to support more than 8G
+> 
+> So add mmio64 mask checking, only allow more than 4G when bridge and all child
+> support 64bit res.  Still keep old 2G checking for other path.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/setup-bus.c |   40 ++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 38 insertions(+), 2 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -928,15 +928,50 @@ static int pbus_size_mem(struct pci_bus
+>  {
+>  	struct pci_dev *dev;
+>  	resource_size_t min_align, align, size, size0, size1;
+> -	resource_size_t aligns[14];	/* Alignments from 1Mb to 8Gb */
+> +	resource_size_t aligns[44];	/* Alignments from 1Mb to 2^63 */
+>  	int order, max_order;
+>  	struct resource *b_res = find_free_bus_resource(bus,
+>  					mask | IORESOURCE_PREFETCH, type);
+>  	resource_size_t children_add_size = 0;
+> +	unsigned int mem64_mask;
+>  
+>  	if (!b_res)
+>  		return -ENOSPC;
+>  
+> +	mem64_mask = b_res->flags & IORESOURCE_MEM_64;
+> +
+> +	/* kernel does not support 64bit res */
+> +	if (sizeof(resource_size_t) == 4)
+> +		mem64_mask &= ~IORESOURCE_MEM_64;
+> +
+> +	if (!mem64_mask)
+> +		goto mem64_mask_check_done;
+> +
+> +	/* check if mem64 support is supported and needed at first */
+> +	list_for_each_entry(dev, &bus->devices, bus_list) {
+> +		int i;
+> +
+> +		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> +			struct resource *r = &dev->resource[i];
+> +
+> +			if (r->parent || ((r->flags & mask) != type &&
+> +					  (r->flags & mask) != type2 &&
+> +					  (r->flags & mask) != type3))
+> +				continue;
+> +#ifdef CONFIG_PCI_IOV
+> +			/* Skip SRIOV checking, as optional res */
+> +			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+> +					i <= PCI_IOV_RESOURCE_END)
+> +				continue;
+> +#endif
+> +			mem64_mask &= r->flags & IORESOURCE_MEM_64;
+> +
+> +			if (!mem64_mask)
+> +				goto mem64_mask_check_done;
+> +		}
+> +	}
+> +mem64_mask_check_done:
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
-Acked-by: Mohit KUMAR <mohit.kumar@st.com>
-Acked-by: Jingoo Han <jg1.han@samsung.com>
+What happens if we increase the size of aligns[], but omit this loop and
+the mem64_mask stuff?  Is mem64_mask just an optimization, so the code
+would still work without it?  If the existing code works for 8GB bars
+(without mem64_mask), when does it break and start requiring mem64_mask?
 
-CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Jingoo Han <jg1.han@samsung.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Richard Zhu <r65037@freescale.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Marek Vasut <marex@denx.de>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Pawel Moll <pawel.moll@arm.com>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-CC: Kumar Gala <galak@codeaurora.org>
-CC: Randy Dunlap <rdunlap@infradead.org>
-CC: Grant Likely <grant.likely@linaro.org>
----
- drivers/pci/host/pcie-designware.c |   52 +++++++++++++++++++++++-------------
- drivers/pci/host/pcie-designware.h |    2 ++
- 2 files changed, 36 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 52bd3a1..76d3d8e 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -425,7 +425,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	struct resource *cfg_res;
- 	u32 val, na, ns;
- 	const __be32 *addrp;
--	int i, index;
-+	int i, index, ret;
- 
- 	/* Find the address cell size and the number of cells in order to get
- 	 * the untranslated address.
-@@ -511,17 +511,24 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 
- 	pp->mem_base = pp->mem.start;
- 
--	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
--					pp->config.cfg0_size);
- 	if (!pp->va_cfg0_base) {
--		dev_err(pp->dev, "error with ioremap in function\n");
--		return -ENOMEM;
-+		pp->cfg0_base = pp->cfg.start;
-+		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-+						pp->config.cfg0_size);
-+		if (!pp->va_cfg0_base) {
-+			dev_err(pp->dev, "error with ioremap in function\n");
-+			return -ENOMEM;
-+		}
- 	}
--	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
--					pp->config.cfg1_size);
-+
- 	if (!pp->va_cfg1_base) {
--		dev_err(pp->dev, "error with ioremap\n");
--		return -ENOMEM;
-+		pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-+		pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
-+						pp->config.cfg1_size);
-+		if (!pp->va_cfg1_base) {
-+			dev_err(pp->dev, "error with ioremap\n");
-+			return -ENOMEM;
-+		}
- 	}
- 
- 	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
-@@ -530,16 +537,22 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	}
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
--					MAX_MSI_IRQS, &msi_domain_ops,
--					&dw_pcie_msi_chip);
--		if (!pp->irq_domain) {
--			dev_err(pp->dev, "irq domain init failed\n");
--			return -ENXIO;
--		}
-+		if (!pp->ops->msi_host_init) {
-+			pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
-+						MAX_MSI_IRQS, &msi_domain_ops,
-+						&dw_pcie_msi_chip);
-+			if (!pp->irq_domain) {
-+				dev_err(pp->dev, "irq domain init failed\n");
-+				return -ENXIO;
-+			}
- 
--		for (i = 0; i < MAX_MSI_IRQS; i++)
--			irq_create_mapping(pp->irq_domain, i);
-+			for (i = 0; i < MAX_MSI_IRQS; i++)
-+				irq_create_mapping(pp->irq_domain, i);
-+		} else {
-+			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
-+			if (ret < 0)
-+				return ret;
-+		}
- 	}
- 
- 	if (pp->ops->host_init)
-@@ -799,6 +812,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 		BUG();
- 	}
- 
-+	if (bus && pp->ops->scan_bus)
-+		pp->ops->scan_bus(pp);
-+
- 	return bus;
- }
- 
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index daf81f9..3e84e0a 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -74,6 +74,8 @@ struct pcie_host_ops {
- 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
- 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
- 	u32 (*get_msi_data)(struct pcie_port *pp);
-+	void (*scan_bus)(struct pcie_port *pp);
-+	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
- };
- 
- int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
--- 
-1.7.9.5
+>  	memset(aligns, 0, sizeof(aligns));
+>  	max_order = 0;
+>  	size = 0;
+> @@ -973,7 +1008,8 @@ static int pbus_size_mem(struct pci_bus
+>  			order = __ffs(align) - 20;
+>  			if (order < 0)
+>  				order = 0;
+> -			if (order >= ARRAY_SIZE(aligns)) {
+> +			if (order >= ARRAY_SIZE(aligns) ||
+> +			    (!mem64_mask && order > 11 /* 2Gb */)) {
+>  				dev_warn(&dev->dev, "disabling BAR %d: %pR "
+>  					 "(bad alignment %#llx)\n", i, r,
+>  					 (unsigned long long) align);
 
