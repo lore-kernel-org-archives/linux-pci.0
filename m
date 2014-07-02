@@ -1,250 +1,210 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>
-CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
-	<Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"Marc Zyngier" <Marc.Zyngier@arm.com>
-Subject: [PATCH 4/4 V3] irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
-Date: Wed, 9 Jul 2014 18:05:04 -0500
-Message-ID: <1404947104-21345-5-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:37516 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754283AbaGBRYA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 13:24:00 -0400
+Date: Wed, 2 Jul 2014 18:23:55 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic
+ host_bridge from device tree
+Message-ID: <20140702172355.GQ2173@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
+ <20140702112230.GL18731@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140702112230.GL18731@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On Wed, Jul 02, 2014 at 12:22:30PM +0100, Will Deacon wrote:
+> Hi Liviu,
+> 
+> On Tue, Jul 01, 2014 at 07:43:33PM +0100, Liviu Dudau wrote:
+> > Several platforms use a rather generic version of parsing
+> > the device tree to find the host bridge ranges. Move the common code
+> > into the generic PCI code and use it to create a pci_host_bridge
+> > structure that can be used by arch code.
+> > 
+> > Based on early attempts by Andrew Murray to unify the code.
+> > Used powerpc and microblaze PCI code as starting point.
+> 
+> I just had a quick look at this to see how it differs from the parsing in
+> pci-host-generic.c and there a few small differences worth discussing.
+> 
+> > +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
+> > +		struct list_head *resources, resource_size_t *io_base)
+> > +{
+> > +	struct resource *res;
+> > +	struct of_pci_range range;
+> > +	struct of_pci_range_parser parser;
+> > +	int err;
+> > +
+> > +	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
+> > +
+> > +	/* Check for ranges property */
+> > +	err = of_pci_range_parser_init(&parser, dev);
+> > +	if (err)
+> > +		return err;
+> > +
+> > +	pr_debug("Parsing ranges property...\n");
+> > +	for_each_of_pci_range(&parser, &range) {
+> > +		/* Read next ranges element */
+> > +		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx cpu_addr:0x%016llx size:0x%016llx\n",
+> > +			range.pci_space, range.pci_addr, range.cpu_addr, range.size);
+> > +
+> > +		/*
+> > +		 * If we failed translation or got a zero-sized region
+> > +		 * then skip this range
+> > +		 */
+> > +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+> > +			continue;
+> > +
+> > +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> > +		if (!res)
+> > +			return -ENOMEM;
+> > +
+> > +		err = of_pci_range_to_resource(&range, dev, res);
+> > +		if (err)
+> > +			return err;
+> > +
+> > +		if (resource_type(res) == IORESOURCE_IO)
+> > +			*io_base = range.cpu_addr;
+> > +
+> > +		pci_add_resource_offset(resources, res,
+> > +				res->start - range.pci_addr);
+> 
+> Where do you request_resource before adding it?
 
-This patch extend GICv2m MSI to support multiple MSI in ARM64.
+I don't, because I'm expecting that arch code might filter the list. When 
+the host bridge code calls pci_scan_root_bus() the resources will be
+requested then.
 
-This requires the common arch_setup_msi_irqs() to be overwriten
-with ARM64 version which does not return 1 for PCI_CAP_ID_MSI and
-nvec > 1.
+> 
+> > +	}
+> > +
+> > +	/* Apply architecture specific fixups for the ranges */
+> > +	return pcibios_fixup_bridge_ranges(resources);
+> 
+> I currently mandate at least one non-prefetchable resource in the
+> device-tree. Should I simply drop this restriction, or do I have to somehow
+> hook this into the pcibios callback?
 
-Cc: Mark Rutland <Mark.Rutland@arm.com>
-Cc: Marc Zyngier <Marc.Zyngier@arm.com>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Catalin Marinas <Catalin.Marinas@arm.com>
-Cc: Will Deacon <Will.Deacon@arm.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- arch/arm64/include/asm/msi.h  | 15 ++++++++
- arch/arm64/kernel/Makefile    |  1 +
- arch/arm64/kernel/msi.c       | 57 ++++++++++++++++++++++++++++++
- drivers/irqchip/irq-gic-v2m.c | 80 +++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 153 insertions(+)
- create mode 100644 arch/arm64/include/asm/msi.h
- create mode 100644 arch/arm64/kernel/msi.c
+Don't think I understand why you need at least one non-prefetcheable resource
+but if you want to mandate that then the pcibios_fixup_bridge_ranges() would
+be the place to put that check.
 
-diff --git a/arch/arm64/include/asm/msi.h b/arch/arm64/include/asm/msi.h
-new file mode 100644
-index 0000000..2a0944a
---- /dev/null
-+++ b/arch/arm64/include/asm/msi.h
-@@ -0,0 +1,15 @@
-+#ifndef _ASM_ARM64_MSI_H_
-+#define _ASM_ARM64_MSI_H_
-+
-+struct pci_dev;
-+struct msi_desc;
-+
-+struct arm64_msi_ops {
-+	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
-+	void (*teardown_msi_irqs)(struct pci_dev *dev);
-+};
-+
-+extern struct arm64_msi_ops arm64_msi;
-+extern int arm64_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-+
-+#endif /* _ASM_ARM64_MSI_H_ */
-diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
-index cdaedad..0636e27 100644
---- a/arch/arm64/kernel/Makefile
-+++ b/arch/arm64/kernel/Makefile
-@@ -29,6 +29,7 @@ arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)	+= sleep.o suspend.o
- arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
- arm64-obj-$(CONFIG_KGDB)		+= kgdb.o
- arm64-obj-$(CONFIG_EFI)			+= efi.o efi-stub.o efi-entry.o
-+arm64-obj-$(CONFIG_PCI_MSI)		+= msi.o
- 
- obj-y					+= $(arm64-obj-y) vdso/
- obj-m					+= $(arm64-obj-m)
-diff --git a/arch/arm64/kernel/msi.c b/arch/arm64/kernel/msi.c
-new file mode 100644
-index 0000000..ed62397
---- /dev/null
-+++ b/arch/arm64/kernel/msi.c
-@@ -0,0 +1,57 @@
-+/*
-+ * ARM64 architectural MSI implemention
-+ *
-+ * Support for Message Signalelled Interrupts for systems that
-+ * implement ARM Generic Interrupt Controller: GICv2m.
-+ *
-+ * Copyright (C) 2014 Advanced Micro Devices, Inc.
-+ * Authors: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License version 2 as published
-+ * by the Free Software Foundation.
-+ */
-+
-+#include <linux/irq.h>
-+#include <linux/msi.h>
-+#include <linux/pci.h>
-+
-+#include <asm/msi.h>
-+
-+/*
-+ * ARM64 function for seting up MSI irqs.
-+ * Copied from driver/pci/msi.c: arch_setup_msi_irqs().
-+ */
-+int arm64_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	struct msi_desc *entry;
-+	int ret;
-+
-+	if (type == PCI_CAP_ID_MSI && nvec > 1)
-+		return 1;
-+
-+	list_for_each_entry(entry, &dev->msi_list, list) {
-+		ret = arch_setup_msi_irq(dev, entry);
-+		if (ret < 0)
-+			return ret;
-+		if (ret > 0)
-+			return -ENOSPC;
-+	}
-+
-+	return 0;
-+}
-+
-+struct arm64_msi_ops arm64_msi = {
-+	.setup_msi_irqs         = arm64_setup_msi_irqs,
-+	.teardown_msi_irqs      = default_teardown_msi_irqs,
-+};
-+
-+int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	return arm64_msi.setup_msi_irqs(dev, nvec, type);
-+}
-+
-+void arch_teardown_msi_irqs(struct pci_dev *dev)
-+{
-+	arm64_msi.teardown_msi_irqs(dev);
-+}
-diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
-index e54ca1d..9d88ad9 100644
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -24,6 +24,10 @@
- #include <linux/of_pci.h>
- #include <linux/bitmap.h>
- 
-+#ifdef CONFIG_ARM64
-+#include <asm/msi.h>
-+#endif
-+
- #include "irqchip.h"
- #include "irq-gic.h"
- 
-@@ -216,6 +220,80 @@ static struct irq_chip gicv2m_chip = {
- #endif
- };
- 
-+
-+/*
-+ * _gicv2m_setup_msi_irqs - Setup MSI interrupts for the given PCI device.
-+ * This overrides the weak definition in ./drivers/pci/msi.c.
-+ * If nvec interrupts are irqable, then assign it to PCI device.
-+ * Otherwise return error.
-+ *
-+ * @pdev: PCI device which is requesting to enable MSI
-+ * @nvec: number of MSI vectors
-+ */
-+static int _gicv2m_setup_msi_irqs(struct pci_dev *pdev, int nvec)
-+{
-+	int irq = 0, nvec_pow2 = 0, avail;
-+	int i = 0;
-+	struct msi_msg msg;
-+	phys_addr_t addr;
-+	struct msi_desc *entry;
-+	struct msi_chip *chip = pdev->bus->msi;
-+	struct v2m_data *data = to_v2m_data(chip);
-+
-+	BUG_ON(list_empty(&pdev->msi_list));
-+	WARN_ON(!list_is_singular(&pdev->msi_list));
-+
-+	entry = list_first_entry(&pdev->msi_list, struct msi_desc, list);
-+	WARN_ON(entry->irq);
-+	WARN_ON(entry->msi_attrib.multiple);
-+	WARN_ON(entry->nvec_used);
-+	WARN_ON(!entry->dev);
-+
-+	avail = alloc_msi_irq(data, nvec, &irq);
-+	if (avail != 0) {
-+		dev_err(&pdev->dev,
-+			"GICv2m: Failed to allocate %d irqs.\n", nvec);
-+		return avail;
-+	}
-+
-+	/* Set lowest of the new interrupts assigned to the PCI device */
-+	nvec_pow2 = __roundup_pow_of_two(nvec);
-+	entry->nvec_used = nvec;
-+	entry->msi_attrib.multiple = ilog2(nvec_pow2);
-+
-+	for (i = 0; i < nvec; i++) {
-+		irq_set_chip_data(irq+i, chip);
-+		if (irq_set_msi_desc_off(irq, i, entry)) {
-+			dev_err(&pdev->dev,
-+				"GICv2m: Failed to set up MSI irq %d\n",
-+				(irq+i));
-+			return -EINVAL;
+> 
+> > +}
+> > +
+> > +static atomic_t domain_nr = ATOMIC_INIT(-1);
+> > +
+> > +/**
+> > + * of_create_pci_host_bridge - Create a PCI host bridge structure using
+> > + * information passed in the DT.
+> > + * @parent: device owning this host bridge
+> > + * @ops: pci_ops associated with the host controller
+> > + * @host_data: opaque data structure used by the host controller.
+> > + *
+> > + * returns a pointer to the newly created pci_host_bridge structure, or
+> > + * NULL if the call failed.
+> > + *
+> > + * This function will try to obtain the host bridge domain number by
+> > + * using of_alias_get_id() call with "pci-domain" as a stem. If that
+> > + * fails, a local allocator will be used that will put each host bridge
+> > + * in a new domain.
+> > + */
+> > +struct pci_host_bridge *
+> > +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
+> > +{
+> > +	int err, domain, busno;
+> > +	struct resource *bus_range;
+> > +	struct pci_bus *root_bus;
+> > +	struct pci_host_bridge *bridge;
+> > +	resource_size_t io_base;
+> > +	LIST_HEAD(res);
+> > +
+> > +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+> > +	if (!bus_range)
+> > +		return ERR_PTR(-ENOMEM);
+> > +
+> > +	domain = of_alias_get_id(parent->of_node, "pci-domain");
+> > +	if (domain == -ENODEV)
+> > +		domain = atomic_inc_return(&domain_nr);
+> > +
+> > +	err = of_pci_parse_bus_range(parent->of_node, bus_range);
+> > +	if (err) {
+> > +		dev_info(parent, "No bus range for %s, using default [0-255]\n",
+> > +			parent->of_node->full_name);
+> > +		bus_range->start = 0;
+> > +		bus_range->end = 255;
+> > +		bus_range->flags = IORESOURCE_BUS;
+> 
+> What about bus_range->name?
+
+Don't know! Is anyone using it?
+
+> 
+> > +	}
+> > +	busno = bus_range->start;
+> > +	pci_add_resource(&res, bus_range);
+> 
+> I currently truncate the bus range to fit inside the Configuration Space
+> window I have (in the reg property). How can I continue to do that with this
+> patch?
+
+Not easily. Unless I add an argument to this function that will allow you to
+pass in the max number for the bus range, then the code becomes:
+
++	err = of_pci_parse_bus_range(parent->of_node, bus_range);
++	if (err) {
++		dev_info(parent, "No bus range for %s, using default [0-%d]\n",
++			parent->of_node->full_name, max_range);
++		bus_range->start = 0;
++		bus_range->end = max_range;
++		bus_range->flags = IORESOURCE_BUS;
++	} else {
++		if (bus_range->end > bus_range->start + max_range) {
++			bus_range->end = bus_range->start + max_range;
 +		}
-+
-+		irq_set_irq_type((irq+i), IRQ_TYPE_EDGE_RISING);
 +	}
-+
-+	addr = data->res.start + V2M_MSI_SETSPI_NS;
-+	msg.address_hi = (u32)(addr >> 32);
-+	msg.address_lo = (u32)(addr);
-+	msg.data = irq;
-+	write_msi_msg(irq, &msg);
-+
-+	return 0;
-+}
-+
-+static int
-+gicv2m_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
-+{
-+	int ret;
-+
-+	if (type == PCI_CAP_ID_MSI)
-+		ret = _gicv2m_setup_msi_irqs(pdev, nvec);
-+	else
-+		ret = arm64_setup_msi_irqs(pdev, nvec, type);
-+	return ret;
-+}
-+
- #ifdef CONFIG_OF
- static int __init
- gicv2m_of_init(struct device_node *node, struct device_node *parent)
-@@ -229,6 +307,8 @@ gicv2m_of_init(struct device_node *node, struct device_node *parent)
- 		return ret;
- 	}
- 
-+	arm64_msi.setup_msi_irqs = &gicv2m_setup_msi_irqs;
-+
- 	gic->msi_chip.owner = THIS_MODULE;
- 	gic->msi_chip.of_node = node;
- 	gic->msi_chip.setup_irq = gicv2m_setup_msi_irq;
+
+Or something like that.
+
+Best regards,
+Liviu
+
+> 
+> Will
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.9.0
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
