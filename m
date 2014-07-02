@@ -1,85 +1,228 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:49646 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753823AbaGPVML (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 17:12:11 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Vidya Sagar <sagar.tv@gmail.com>, matthew.garrett@nebula.com,
-	nchumbalkar@lenovo.com, thierry.reding@gmail.com,
-	swarren@nvidia.com, linux-pci@vger.kernel.org, kthota@nvidia.com,
-	linux-kernel@vger.kernel.org, vidyas@nvidia.com
-Subject: Re: [PATCH v3] PCI: enable ASPM configuration in PCIE POWERSAVE mode
-Date: Wed, 16 Jul 2014 23:30:27 +0200
-Message-ID: <1480976.v66rlUIZnu@vostro.rjw.lan>
-In-Reply-To: <20140716193637.GA14366@google.com>
-References: <1405505022-7593-1-git-send-email-vidyas@nvidia.com> <20140716193637.GA14366@google.com>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:36366 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754204AbaGBWag (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 18:30:36 -0400
+Received: by mail-ig0-f179.google.com with SMTP id uq10so818405igb.12
+        for <linux-pci@vger.kernel.org>; Wed, 02 Jul 2014 15:30:35 -0700 (PDT)
+Date: Wed, 2 Jul 2014 16:30:32 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC Patch V2] x86/PCI/ACPI: kill private function
+ resource_to_addr()
+Message-ID: <20140702223032.GF28852@google.com>
+References: <CAErSpo4y9HQB-OcX8XwpXHW=xCvDQOJZgokG5iMqg705XZnevg@mail.gmail.com>
+ <1403109059-9775-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1403109059-9775-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 16, 2014 01:36:37 PM Bjorn Helgaas wrote:
-> On Wed, Jul 16, 2014 at 03:33:42PM +0530, Vidya Sagar wrote:
-> > From: Vidya Sagar <sagar.tv@gmail.com>
-> > 
-> > Commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
-> >  under POWERSAVE mode") moved pcie_aspm_powersave_config_link() out of
-> > pci_raw_set_power_state() to pci_set_power_state() which would enable
-> > ASPM. But, with Commit db288c9c5f9d ("PCI / PM: restore the original
-> >  behavior of pci_set_power_state()"), which re-introduced the following check
-> > ./drivers/pci/pci.c: pci_set_power_state()
-> > 
-> > +	/* Check if we're already there */
-> > +	if (dev->current_state == state)
-> > +	   return 0;
-> > 
-> > in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
-> > made leaving ASPM broken.
-> > Fix it by configuring links for ASPM in do_pci_enable_device() instead of
-> > pci_set_power_state()
-> > 
-> > Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> > Signed-off-by: Vidya Sagar <sagar.tv@gmail.com>
+On Thu, Jun 19, 2014 at 12:30:59AM +0800, Jiang Liu wrote:
+> Replace private function resource_to_addr() to parse ACPI resources for
+> PCI host bridge with public ACPI resource interfaces.
 > 
-> I applied this to pci/misc for v3.17 with the following changelog:
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+> Hi Bjorn,
+> 	Thanks for your suggestion. Then how about this version?
+
+Looks good to me.  I assume you're merging this along with the rest of the
+series.  Let me know if you need me to do anything.
+
+Bjorn
+
+> ---
+>  arch/x86/pci/acpi.c |  142 ++++++++++++++++++---------------------------------
+>  1 file changed, 51 insertions(+), 91 deletions(-)
 > 
-> It would still make me feel better if Matthew and/or Rafael acked this.
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 91bef49df228..cc0975ef86d1 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -218,114 +218,74 @@ static void teardown_mcfg_map(struct pci_root_info *info)
+>  }
+>  #endif
+>  
+> -static acpi_status resource_to_addr(struct acpi_resource *resource,
+> -				    struct acpi_resource_address64 *addr)
+> -{
+> -	acpi_status status;
+> -	struct acpi_resource_memory24 *memory24;
+> -	struct acpi_resource_memory32 *memory32;
+> -	struct acpi_resource_fixed_memory32 *fixed_memory32;
+> -
+> -	memset(addr, 0, sizeof(*addr));
+> -	switch (resource->type) {
+> -	case ACPI_RESOURCE_TYPE_MEMORY24:
+> -		memory24 = &resource->data.memory24;
+> -		addr->resource_type = ACPI_MEMORY_RANGE;
+> -		addr->minimum = memory24->minimum;
+> -		addr->address_length = memory24->address_length;
+> -		addr->maximum = addr->minimum + addr->address_length - 1;
+> -		return AE_OK;
+> -	case ACPI_RESOURCE_TYPE_MEMORY32:
+> -		memory32 = &resource->data.memory32;
+> -		addr->resource_type = ACPI_MEMORY_RANGE;
+> -		addr->minimum = memory32->minimum;
+> -		addr->address_length = memory32->address_length;
+> -		addr->maximum = addr->minimum + addr->address_length - 1;
+> -		return AE_OK;
+> -	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+> -		fixed_memory32 = &resource->data.fixed_memory32;
+> -		addr->resource_type = ACPI_MEMORY_RANGE;
+> -		addr->minimum = fixed_memory32->address;
+> -		addr->address_length = fixed_memory32->address_length;
+> -		addr->maximum = addr->minimum + addr->address_length - 1;
+> -		return AE_OK;
+> -	case ACPI_RESOURCE_TYPE_ADDRESS16:
+> -	case ACPI_RESOURCE_TYPE_ADDRESS32:
+> -	case ACPI_RESOURCE_TYPE_ADDRESS64:
+> -		status = acpi_resource_to_address64(resource, addr);
+> -		if (ACPI_SUCCESS(status) &&
+> -		    (addr->resource_type == ACPI_MEMORY_RANGE ||
+> -		    addr->resource_type == ACPI_IO_RANGE) &&
+> -		    addr->address_length > 0) {
+> -			return AE_OK;
+> -		}
+> -		break;
+> -	}
+> -	return AE_ERROR;
+> -}
+> -
+>  static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
+>  {
+>  	struct pci_root_info *info = data;
+> -	struct acpi_resource_address64 addr;
+> -	acpi_status status;
+> +	struct resource r = {
+> +		.flags = 0
+> +	};
+>  
+> -	status = resource_to_addr(acpi_res, &addr);
+> -	if (ACPI_SUCCESS(status))
+> +	if (!acpi_dev_resource_memory(acpi_res, &r) &&
+> +	    !acpi_dev_resource_address_space(acpi_res, &r))
+> +		return AE_OK;
+> +
+> +	if ((r.flags & (IORESOURCE_IO | IORESOURCE_MEM)) && resource_size(&r))
+>  		info->res_num++;
+> +
+>  	return AE_OK;
+>  }
+>  
+>  static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
+>  {
+>  	struct pci_root_info *info = data;
+> -	struct resource *res;
+> -	struct acpi_resource_address64 addr;
+> -	acpi_status status;
+> -	unsigned long flags;
+> -	u64 start, orig_end, end;
+> +	struct resource *res = &info->res[info->res_num];
+> +	u64 translation_offset = 0;
+> +
+> +	memset(res, 0, sizeof(*res));
+> +	if (acpi_dev_resource_memory(acpi_res, res)) {
+> +		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
+> +	} else if (acpi_dev_resource_address_space(acpi_res, res)) {
+> +		u64 orig_end;
+> +		struct acpi_resource_address64 addr;
+> +
+> +		res->flags &= IORESOURCE_MEM | IORESOURCE_IO;
+> +		if (res->flags == 0)
+> +			return AE_OK;
+>  
+> -	status = resource_to_addr(acpi_res, &addr);
+> -	if (!ACPI_SUCCESS(status))
+> -		return AE_OK;
+> +		if (ACPI_FAILURE(acpi_resource_to_address64(acpi_res, &addr)))
+> +			return AE_OK;
+>  
+> -	if (addr.resource_type == ACPI_MEMORY_RANGE) {
+> -		flags = IORESOURCE_MEM;
+> -		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
+> -			flags |= IORESOURCE_PREFETCH;
+> -	} else if (addr.resource_type == ACPI_IO_RANGE) {
+> -		flags = IORESOURCE_IO;
+> -	} else
+> -		return AE_OK;
+> +		if (addr.resource_type == ACPI_MEMORY_RANGE &&
+> +		    addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
+> +			res->flags |= IORESOURCE_PREFETCH;
+>  
+> -	start = addr.minimum + addr.translation_offset;
+> -	orig_end = end = addr.maximum + addr.translation_offset;
+> +		translation_offset = addr.translation_offset;
+> +		orig_end = res->end;
+> +		res->start += translation_offset;
+> +		res->end += translation_offset;
+>  
+> -	/* Exclude non-addressable range or non-addressable portion of range */
+> -	end = min(end, (u64)iomem_resource.end);
+> -	if (end <= start) {
+> -		dev_info(&info->bridge->dev,
+> -			"host bridge window [%#llx-%#llx] "
+> -			"(ignored, not CPU addressable)\n", start, orig_end);
+> -		return AE_OK;
+> -	} else if (orig_end != end) {
+> -		dev_info(&info->bridge->dev,
+> -			"host bridge window [%#llx-%#llx] "
+> -			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
+> -			start, orig_end, end + 1, orig_end);
+> +		/* Exclude non-addressable range or non-addressable portion of range */
+> +		res->end = min(res->end, (u64)iomem_resource.end);
+> +		if (res->end <= res->start) {
+> +			dev_info(&info->bridge->dev,
+> +				"host bridge window [%#llx-%#llx] (ignored, not CPU addressable)\n",
+> +				 res->start, orig_end);
+> +			return AE_OK;
+> +		} else if (orig_end != res->end) {
+> +			dev_info(&info->bridge->dev,
+> +				"host bridge window [%#llx-%#llx] ([%#llx-%#llx] ignored, not CPU addressable)\n",
+> +				res->start, orig_end, res->end + 1, orig_end);
+> +		}
+>  	}
+>  
+> -	res = &info->res[info->res_num];
+> -	res->name = info->name;
+> -	res->flags = flags;
+> -	res->start = start;
+> -	res->end = end;
+> -	info->res_offset[info->res_num] = addr.translation_offset;
+> -	info->res_num++;
+> -
+> -	if (!pci_use_crs)
+> -		dev_printk(KERN_DEBUG, &info->bridge->dev,
+> -			   "host bridge window %pR (ignored)\n", res);
+> +	if (res->flags && resource_size(res)) {
+> +		res->name = info->name;
+> +		info->res_offset[info->res_num] = translation_offset;
+> +		info->res_num++;
+> +		if (!pci_use_crs)
+> +			dev_printk(KERN_DEBUG, &info->bridge->dev,
+> +				   "host bridge window %pR (ignored)\n", res);
+> +	}
+>  
+>  	return AE_OK;
+>  }
+> -- 
+> 1.7.10.4
 > 
->     PCI: Configure ASPM when enabling device
->     
->     We can't do ASPM configuration at enumeration-time because enabling it
->     makes some defective hardware unresponsive, even if ASPM is disabled later
->     (see 41cd766b0659 ("PCI: Don't enable aspm before drivers have had a chance
->     to veto it").  Therefore, we have to do it after a driver claims the
->     device.
->     
->     We previously configured ASPM in pci_set_power_state(), but that's not a
->     very good place because it's not really related to setting the PCI device
->     power state, and doing it there means:
->     
->       - We incorrectly skipped ASPM config when setting a device that's
->         already in D0 to D0.
->     
->       - We unnecessarily configured ASPM when setting a device to a low-power
->         state (the ASPM feature only applies when the device is in D0).
->     
->       - We unnecessarily configured ASPM when called from a .resume() method
->         (ASPM configuration needs to be restored during resume, but I think
->         pci_restore_pcie_state() should already do this).
->     
->     Move ASPM configuration from pci_set_power_state() to
->     do_pci_enable_device() so we do it when a driver enables a device.
->     
->     [bhelgaas: changelog]
->     Link: https://bugzilla.kernel.org/show_bug.cgi?id=79621
-> 
-> It would still make me feel better if Matthew and/or Rafael chimed in to
-> make sure this is sane.
-
-I like the change, but I'm not sure whether or not it will work for everyone.
-
-The only way to verify that seems to be to apply it, however.
-
-Rafael
-
