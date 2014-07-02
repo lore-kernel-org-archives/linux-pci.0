@@ -1,44 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:36293 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752424AbaGDIRN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 04:17:13 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 4/5] PCI/MSI: Retrieve first MSI irq from msi_desc rather than pci_dev
-Date: Fri, 4 Jul 2014 16:16:54 +0800
-Message-ID: <1404461814-9936-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:63568 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778AbaGBVZn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 17:25:43 -0400
+Received: by mail-ig0-f180.google.com with SMTP id h18so764071igc.1
+        for <linux-pci@vger.kernel.org>; Wed, 02 Jul 2014 14:25:42 -0700 (PDT)
+Date: Wed, 2 Jul 2014 15:25:38 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Ryan Desfosses <ryan@desfo.org>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [Patch] PCI/portdrv: Remove warning about invalid IRQ
+Message-ID: <20140702212538.GC28852@google.com>
+References: <CAErSpo7pAv=v7JQp2UoNxYN8Pdj788NPP8OsLkM3p8NuwL_6Wg@mail.gmail.com>
+ <1403070985-31373-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1403070985-31373-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Retrieve the first MSi irq to compute the MSI index from
-struct msi_desc rather than the pci device, avoid a additional
-memory access.
+On Wed, Jun 18, 2014 at 01:56:21PM +0800, Jiang Liu wrote:
+> For hot-added PCIe ports, it always generates a warning message on x86
+> platforms when binding to portdrv as:
+> 	"device [8086:0e0b] has invalid IRQ; check vendor BIOS".
+> 
+> It's due to that we check pci_dev->irq before actually allocating IRQ
+> for the PCI device:
+> 	if (!dev->irq && dev->pin) {
+> 		dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; "
+> 			 "check vendor BIOS\n", dev->vendor, dev->device);
+> 	}
+>  	status = pcie_port_device_register(dev);
+> 		-->pci_enable_device(dev);
+> 			-->pci_enable_device_flags()
+> 				-->do_pci_enable_device()
+> 					-->pcibios_enable_device()
+> 						-->pcibios_enable_irq()
+> 
+> This warning message isn't generated for PCIe ports present at boot time
+> because x86 arch code has called acpi_pci_irq_enable() in pci_acpi_init()
+> for each PCI device for safety.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/msi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Applied to pci/misc for v3.17, thanks!
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 86578bb..7f803e9 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -235,7 +235,7 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
- 		msix_mask_irq(desc, flag);
- 		readl(desc->mask_base);		/* Flush write to device */
- 	} else {
--		unsigned offset = data->irq - desc->dev->irq;
-+		unsigned offset = data->irq - desc->irq;
- 		msi_mask_irq(desc, 1 << offset, flag << offset);
- 	}
- }
--- 
-1.7.1
-
-
+> ---
+> Hi Bjorn,
+> 	I have rebased it onto v3.16-rc1 and changed the patch title
+> according to your suggestion.
+> Thanks!
+> Gerry
+> ___
+>  drivers/pci/pcie/portdrv_pci.c |    4 ----
+>  1 file changed, 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index 80887eaa0668..2ccc9b926ea7 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -203,10 +203,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+>  	     (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)))
+>  		return -ENODEV;
+>  
+> -	if (!dev->irq && dev->pin) {
+> -		dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; check vendor BIOS\n",
+> -			 dev->vendor, dev->device);
+> -	}
+>  	status = pcie_port_device_register(dev);
+>  	if (status)
+>  		return status;
+> -- 
+> 1.7.10.4
+> 
