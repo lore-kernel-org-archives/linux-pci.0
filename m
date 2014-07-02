@@ -1,107 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 26 Jul 2014 09:33:02 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: xjtuwjp@gmail.com, lindar_liu@usish.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 18/23] pm8001: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Message-ID: <20140726083301.GI21129@agordeev.usersys.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <9bfa1f22a2a59814a4d520bbcce6eba1b6979b31.1405533479.git.agordeev@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:55315 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755660AbaGBQAi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 12:00:38 -0400
+Date: Wed, 2 Jul 2014 17:00:34 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140702160034.GP2173@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com>
+ <20140702112222.GK18731@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9bfa1f22a2a59814a4d520bbcce6eba1b6979b31.1405533479.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140702112222.GK18731@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 08:05:22PM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
-
-Hi Jack, Lindar,
-
-Could you please review this patch?
-
-Thanks!
-
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: xjtuwjp@gmail.com
-> Cc: lindar_liu@usish.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/pm8001/pm8001_init.c |   39 +++++++++++++++++++------------------
->  1 files changed, 20 insertions(+), 19 deletions(-)
+On Wed, Jul 02, 2014 at 12:22:22PM +0100, Will Deacon wrote:
+> On Tue, Jul 01, 2014 at 07:43:28PM +0100, Liviu Dudau wrote:
+> > Some architectures do not have a simple view of the PCI I/O space
+> > and instead use a range of CPU addresses that map to bus addresses. For
+> > some architectures these ranges will be expressed by OF bindings
+> > in a device tree file.
+> > 
+> > Introduce a pci_register_io_range() helper function with a generic
+> > implementation that can be used by such architectures to keep track
+> > of the I/O ranges described by the PCI bindings. If the PCI_IOBASE
+> > macro is not defined that signals lack of support for PCI and we
+> > return an error.
 > 
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index e837ece..4057c24 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -729,34 +729,35 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
->  		sizeof(pm8001_ha->msix_entries[0]);
->  	for (i = 0; i < max_entry ; i++)
->  		pm8001_ha->msix_entries[i].entry = i;
-> -	rc = pci_enable_msix(pm8001_ha->pdev, pm8001_ha->msix_entries,
-> +	rc = pci_enable_msix_exact(pm8001_ha->pdev, pm8001_ha->msix_entries,
->  		number_of_intr);
->  	pm8001_ha->number_of_intr = number_of_intr;
-> -	if (!rc) {
-> -		PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
-> -			"pci_enable_msix request ret:%d no of intr %d\n",
-> -					rc, pm8001_ha->number_of_intr));
-> +	if (rc)
-> +		return rc;
->  
-> +	PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
-> +		"pci_enable_msix_exact request ret:%d no of intr %d\n",
-> +				rc, pm8001_ha->number_of_intr));
->  
-> -		for (i = 0; i < number_of_intr; i++) {
-> -			snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
-> -					DRV_NAME"%d", i);
-> -			pm8001_ha->irq_vector[i].irq_id = i;
-> -			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
-> +	for (i = 0; i < number_of_intr; i++) {
-> +		snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
-> +				DRV_NAME"%d", i);
-> +		pm8001_ha->irq_vector[i].irq_id = i;
-> +		pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
->  
-> -			rc = request_irq(pm8001_ha->msix_entries[i].vector,
-> -				pm8001_interrupt_handler_msix, flag,
-> -				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
-> -			if (rc) {
-> -				for (j = 0; j < i; j++)
-> -					free_irq(
-> -					pm8001_ha->msix_entries[j].vector,
-> +		rc = request_irq(pm8001_ha->msix_entries[i].vector,
-> +			pm8001_interrupt_handler_msix, flag,
-> +			intr_drvname[i], &(pm8001_ha->irq_vector[i]));
-> +		if (rc) {
-> +			for (j = 0; j < i; j++) {
-> +				free_irq(pm8001_ha->msix_entries[j].vector,
->  					&(pm8001_ha->irq_vector[i]));
-> -				pci_disable_msix(pm8001_ha->pdev);
-> -				break;
->  			}
-> +			pci_disable_msix(pm8001_ha->pdev);
-> +			break;
->  		}
->  	}
-> +
->  	return rc;
->  }
->  #endif
-> -- 
-> 1.7.7.6
+> [...]
+> 
+> > +/*
+> > + * Record the PCI IO range (expressed as CPU physical address + size).
+> > + * Return a negative value if an error has occured, zero otherwise
+> > + */
+> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> > +{
+> > +#ifdef PCI_IOBASE
+> > +	struct io_range *res;
+> > +	resource_size_t allocated_size = 0;
+> > +
+> > +	/* check if the range hasn't been previously recorded */
+> > +	list_for_each_entry(res, &io_range_list, list) {
+> > +		if (addr >= res->start && addr + size <= res->start + size)
+> > +			return 0;
+> > +		allocated_size += res->size;
+> > +	}
+> > +
+> > +	/* range not registed yet, check for available space */
+> > +	if (allocated_size + size - 1 > IO_SPACE_LIMIT)
+> > +		return -E2BIG;
+> > +
+> > +	/* add the range to the list */
+> > +	res = kzalloc(sizeof(*res), GFP_KERNEL);
+> > +	if (!res)
+> > +		return -ENOMEM;
+> > +
+> > +	res->start = addr;
+> > +	res->size = size;
+> > +
+> > +	list_add_tail(&res->list, &io_range_list);
+> > +
+> > +	return 0;
+> 
+> Hopefully a stupid question, but how is this serialised? I'm just surprised
+> that adding to and searching a list are sufficient, unless there's a big
+> lock somewhere.
+
+Sorry, tripped into my own filters!
+
+You are right, there is no serialisation here, will add one.
+
+Best regards,
+Liviu
+
+> 
+> Will
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
