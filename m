@@ -1,11 +1,10 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 15 Jul 2014 01:14:45 +0100
-From: Liviu Dudau <liviu@dudau.co.uk>
+Date: Wed, 2 Jul 2014 14:20:42 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	linaro-kernel <linaro-kernel@lists.linaro.org>,
@@ -18,84 +17,71 @@ Cc: Catalin Marinas <catalin.marinas@arm.com>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Device Tree ML <devicetree@vger.kernel.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 9/9] pci: Remap I/O bus resources into CPU space with
- pci_remap_iospace()
-Message-ID: <20140715001444.GB6803@bart.dudau.co.uk>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140702132042.GG2173@e106497-lin.cambridge.arm.com>
 References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-10-git-send-email-Liviu.Dudau@arm.com>
- <20140714165443.GI1112@arm.com>
- <7345495.UDsgOtKzyQ@wuerfel>
+ <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com>
+ <4751391.BGkeOrZGt8@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <7345495.UDsgOtKzyQ@wuerfel>
+In-Reply-To: <4751391.BGkeOrZGt8@wuerfel>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 14, 2014 at 08:15:48PM +0200, Arnd Bergmann wrote:
-> On Monday 14 July 2014 17:54:43 Catalin Marinas wrote:
-> > On Tue, Jul 01, 2014 at 07:43:34PM +0100, Liviu Dudau wrote:
-> > > Introduce a default implementation for remapping PCI bus I/O resources
-> > > onto the CPU address space. Architectures with special needs may
-> > > provide their own version, but most should be able to use this one.
-> > [...]
-> > > +/**
-> > > + *   pci_remap_iospace - Remap the memory mapped I/O space
-> > > + *   @res: Resource describing the I/O space
-> > > + *   @phys_addr: physical address where the range will be mapped.
-> > > + *
-> > > + *   Remap the memory mapped I/O space described by the @res
-> > > + *   into the CPU physical address space. Only architectures
-> > > + *   that have memory mapped IO defined (and hence PCI_IOBASE)
-> > > + *   should call this function.
-> > > + */
-> > > +int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-> > > +{
-> > > +     int err = -ENODEV;
-> > > +
-> > > +#ifdef PCI_IOBASE
-> > > +     if (!(res->flags & IORESOURCE_IO))
-> > > +             return -EINVAL;
-> > > +
-> > > +     if (res->end > IO_SPACE_LIMIT)
-> > > +             return -EINVAL;
-> > > +
-> > > +     err = ioremap_page_range(res->start + (unsigned long)PCI_IOBASE,
-> > > +                             res->end + 1 + (unsigned long)PCI_IOBASE,
-> > > +                             phys_addr, __pgprot(PROT_DEVICE_nGnRE));
-> > 
-> > Except that PROT_DEVICE_nGnRE is arm64 only. I think that's a function
-> > that should remain arch specific.
-> > 
+On Wed, Jul 02, 2014 at 01:38:04PM +0100, Arnd Bergmann wrote:
+> Some more detailed comments now
 > 
-> How about #defining a macro with the correct pgprot value in asm/pci.h
-> or asm/pgtable.h?
-> We can provide a default for that in another architecture independent
-> location.
+> On Tuesday 01 July 2014 19:43:28 Liviu Dudau wrote:
+> > +/*
+> > + * Record the PCI IO range (expressed as CPU physical address + size).
+> > + * Return a negative value if an error has occured, zero otherwise
+> > + */
+> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> > +{
+> > +#ifdef PCI_IOBASE
+> > +       struct io_range *res;
+> 
+> I was confused by the variable naming here: A variable named 'res' is
+> normally a 'struct resource'. Maybe better call this 'range'.
+> 
+> > +       resource_size_t allocated_size = 0;
+> > +
+> > +       /* check if the range hasn't been previously recorded */
+> > +       list_for_each_entry(res, &io_range_list, list) {
+> > +               if (addr >= res->start && addr + size <= res->start + size)
+> > +                       return 0;
+> > +               allocated_size += res->size;
+> > +       }
+> 
+> A spin_lock around the list lookup should be sufficient to get around
+> the race that Will mentioned.
+> 
+> > +       /* range not registed yet, check for available space */
+> > +       if (allocated_size + size - 1 > IO_SPACE_LIMIT)
+> > +               return -E2BIG;
+> 
+> It might be better to limit the size to 64K if it doesn't fit at first.
 
-I was discussing the same thing with Catalin today. It is the most reasonable
-approach, as the host bridge driver that is likely to call this function should
-not be aware of the architectural flags used here.
+Thanks Arnd for review. Will update and post a new patch soon if I don't
+get any other comments.
 
 Best regards,
 Liviu
 
 > 
+> 
 > 	Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 > 
 
 -- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
-
- One small step
-   for me ...
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
