@@ -1,48 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.hostpark.net ([212.243.197.30]:33581 "EHLO
-	mail.hostpark.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755605AbaGRLvG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 07:51:06 -0400
-Message-ID: <53C90895.6070109@elsoft.ch>
-Date: Fri, 18 Jul 2014 13:44:21 +0200
-From: =?UTF-8?B?IkRhdmlkIE3DvGxsZXIgKEVMU09GVCBBRyki?=
-	<d.mueller@elsoft.ch>
-MIME-Version: 1.0
-To: Lucas Stach <l.stach@pengutronix.de>
-CC: Tim Harvey <tharvey@gateworks.com>,
-	Shawn Guo <shawn.guo@freescale.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Fabio Estevam <festevam@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?B?TWFyZWsgVmHFoXV0?= <marex@denx.de>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
+Received: from service87.mimecast.com ([91.220.42.44]:40797 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754131AbaGBOXH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 10:23:07 -0400
+Date: Wed, 2 Jul 2014 15:23:03 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
-References: <1403637507-9424-1-git-send-email-festevam@gmail.com>	 <20140626031247.GN2224@dragon>	 <CAOMZO5A0pQfJRwb41046UpkbG6xH7c+EVu+YuY71Zuyq5gHaDA@mail.gmail.com>	 <20140626054937.GB7859@dragon>	 <CAJ+vNU0DNCT5pcvnptNBo-tPTVOH1HnrCwy7uCZt33dfyq8U-g@mail.gmail.com> <1405675599.6072.8.camel@weser.hi.pengutronix.de>
-In-Reply-To: <1405675599.6072.8.camel@weser.hi.pengutronix.de>
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140702142303.GJ2173@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <8556461.i7qCGvGY5a@wuerfel>
+ <20140701204508.GA19569@bart.dudau.co.uk>
+ <7343032.WUqPgbXNQS@wuerfel>
+MIME-Version: 1.0
+In-Reply-To: <7343032.WUqPgbXNQS@wuerfel>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello
+On Wed, Jul 02, 2014 at 01:30:31PM +0100, Arnd Bergmann wrote:
+> On Tuesday 01 July 2014 21:45:09 Liviu Dudau wrote:
+> > On Tue, Jul 01, 2014 at 09:36:10PM +0200, Arnd Bergmann wrote:
+> > > On Tuesday 01 July 2014 19:43:28 Liviu Dudau wrote:
+> > > 
+> > > This still conflicts with the other allocator you have in patch 9
+> > > for pci_remap_iospace: nothing guarantees that the mapping is the
+> > > same for both.
+> > > 
+> > > Also, this is a completely pointless exercise at this moment, because
+> > > nobody cares about the result of pci_address_to_pio on architectures
+> > > that don't already provide this function. If we ever get a proper
+> > > Open Firmware implementation that wants to put hardcoded PCI devices
+> > > into DT, we can add an implementation, but for now this seems overkill.
+> > > 
+> > > The allocator in pci_register_io_range seems reasonable, why not merge
+> > > this function with pci_remap_iospace() as I have asked you multiple
+> > > times before? Just make it return the io_offset so the caller can
+> > > put that into the PCI host resources.
+> > 
+> > Hi Arnd,
+> > 
+> > While I agree with you that at some moment the allocators were inconsistent
+> > wrt each other, for this version I would respectfully disagree on this.
+> > The allocator in pci_register_io_range() only makes sure that the ranges
+> > are not overlapping, it doesn't do any mapping whatsoever, while
+> > pci_remap_iospace() does only an ioremap_page_range(). The idea is that
+> > you get the offset out of pci_address_to_pio() and apply it to
+> > pci_remap_iospace().
+> 
+> Ok, got it now, I'm sorry I didn't read this properly at first.
+> 
+> Your solution looks correct to me, just using different
+> tradeoffs to what I was expecting: You get a working pci_address_to_pio()
+> function, which is probably never needed, but in turn you need to
+> keep the state of each host bridge in a global list.
 
-Lucas Stach wrote:
-> @@ -215,6 +215,8 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
->  {
->  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
->  
-> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->  			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+Just a reminder that with my patchset I *do* start using pci_address_to_pio()
+in order to correctly parse the IO ranges from DT.
+
+Best regards,
+Liviu
+
+> 
+> 	Arnd
+> 
 > 
 
-Sorry, this doesn't seem to fix the problem (at least not with my
-hardware).
-
-Dave
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
