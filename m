@@ -1,192 +1,121 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53BBF0FA.1070006@ti.com>
-Date: Tue, 8 Jul 2014 09:24:10 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Murali Karicheri <m-karicheri2@ti.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:40450 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756451AbaGBRbJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 13:31:09 -0400
+Date: Wed, 2 Jul 2014 18:31:13 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v3 4/5] PCI: designware: enhance dw core driver to support
- Keystone PCI host controller
-References: <1404164720-11066-1-git-send-email-m-karicheri2@ti.com> <1404164720-11066-5-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1404164720-11066-5-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic
+ host_bridge from device tree
+Message-ID: <20140702173113.GJ24879@arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
+ <20140702112230.GL18731@arm.com>
+ <20140702172355.GQ2173@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140702172355.GQ2173@e106497-lin.cambridge.arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/30/2014 05:45 PM, Murali Karicheri wrote:
-> Add API dw_pcie_v3_65_host_init() to support host controller initialization
-> for Keystone PCI driver. The Keystone PCI uses v3.65 version of the DW hardware
-> identified by compatibility string "dw,snps-pcie-v3.65". This allow for
-> different treatment for this version of the h/w during host initialization.
-> Key differences in v3.65 DW h/w are
-> 	1. No ATU support
-> 	2. Legacy and MSI irq functions are implemented in application
-> 	   register space
-> 	3. MSI interrupts are multiplexed over 8 IRQ lines to the Host side.
-> So a msi irq chip is needed and the irq domain ops ptr is passed in
-> dw_pcie_v3_65_host_init() to allow re-use of common MSI code in dw core.  The
-> Keystone PCI host controller requires a modified pci scan function to allow
-> setup BAR0 for EP's access to MSI_IRQ register in application register to
-> raise MSI irq.  So a ptr to pci hw ops struct is passed to the host init code.
->
-> Keystone PCI controller re-uses the DW Core driver code wherever there is
-> common functionality. So this patch makes these functions global and added
-> their prototypes in pcie-designware.h to allow re-use on Keystone.
->
-> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->
-> CC: Santosh Shilimkar<santosh.shilimkar@ti.com>
-> CC: Russell King<linux@arm.linux.org.uk>
-> CC: Grant Likely<grant.likely@linaro.org>
-> CC: Rob Herring<robh+dt@kernel.org>
-> CC: Mohit Kumar<mohit.kumar@st.com>
-> CC: Jingoo Han<jg1.han@samsung.com>
-> CC: Bjorn Helgaas<bhelgaas@google.com>
-> CC: Pratyush Anand<pratyush.anand@st.com>
-> CC: Richard Zhu<r65037@freescale.com>
-> CC: Kishon Vijay Abraham I<kishon@ti.com>
-> CC: Marek Vasut<marex@denx.de>
-> CC: Arnd Bergmann<arnd@arndb.de>
-> CC: Pawel Moll<pawel.moll@arm.com>
-> CC: Mark Rutland<mark.rutland@arm.com>
-> CC: Ian Campbell<ijc+devicetree@hellion.org.uk>
-> CC: Kumar Gala<galak@codeaurora.org>
-> CC: Randy Dunlap<rdunlap@infradead.org>
-> CC: Grant Likely<grant.likely@linaro.org>
-> ---
->   .../devicetree/bindings/pci/designware-pcie.txt    |    2 +
->   drivers/pci/host/pcie-designware.c                 |   39 ++++++++++++++++++--
->   drivers/pci/host/pcie-designware.h                 |    7 ++++
->   3 files changed, 44 insertions(+), 4 deletions(-)
->
-> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> index d0d15ee..0cb10c0 100644
-> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> @@ -2,6 +2,8 @@
->
->   Required properties:
->   - compatible: should contain "snps,dw-pcie" to identify the core.
-> +  Additionally contains "dw,snps-pcie-v3.65" to identify v3.65 version of the DW
-> +  hardware.
->   - #address-cells: set to<3>
->   - #size-cells: set to<2>
->   - device_type: set to "pci"
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index c11e4de..4dcbebe 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -556,6 +556,37 @@ static int dw_pcie_msi_host_init(struct pcie_port *pp,
->   	return 0;
->   }
->
-> +int __init dw_pcie_v3_65_host_init(struct pcie_port *pp, struct hw_pci *hw,
-> +				   struct device_node *msi_irqc_np,
-> +				   const struct irq_domain_ops *msi_irq_ops)
-> +{
-> +	int ret = -EINVAL;
-> +
-> +	/* check if compatible with v3.65 DW h/w */
-> +	if (!of_device_is_compatible(pp->dev->of_node, "dw,snps-pcie-v3.65")) {
-> +		dev_err(pp->dev,
-> +			"PCI Controller not compatible with v3.65 DW h/w\n");
-> +		goto out;
+On Wed, Jul 02, 2014 at 06:23:55PM +0100, Liviu Dudau wrote:
+> On Wed, Jul 02, 2014 at 12:22:30PM +0100, Will Deacon wrote:
+> > On Tue, Jul 01, 2014 at 07:43:33PM +0100, Liviu Dudau wrote:
+> > > Several platforms use a rather generic version of parsing
+> > > the device tree to find the host bridge ranges. Move the common code
+> > > into the generic PCI code and use it to create a pci_host_bridge
+> > > structure that can be used by arch code.
+> > > 
+> > > Based on early attempts by Andrew Murray to unify the code.
+> > > Used powerpc and microblaze PCI code as starting point.
+> > 
+> > I just had a quick look at this to see how it differs from the parsing in
+> > pci-host-generic.c and there a few small differences worth discussing.
+
+[...]
+
+> > > +	}
+> > > +
+> > > +	/* Apply architecture specific fixups for the ranges */
+> > > +	return pcibios_fixup_bridge_ranges(resources);
+> > 
+> > I currently mandate at least one non-prefetchable resource in the
+> > device-tree. Should I simply drop this restriction, or do I have to somehow
+> > hook this into the pcibios callback?
+> 
+> Don't think I understand why you need at least one non-prefetcheable resource
+> but if you want to mandate that then the pcibios_fixup_bridge_ranges() would
+> be the place to put that check.
+
+I think it was Arnd's idea at the time:
+
+  http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/232225.html
+
+and it's probably worth keeping if possible (just to avoid changes to the
+behaviour of the existing driver).
+
+However, that means I already need a host-controller callback via
+pcibios_fixup_bridge_ranges...
+
+> > > +	err = of_pci_parse_bus_range(parent->of_node, bus_range);
+> > > +	if (err) {
+> > > +		dev_info(parent, "No bus range for %s, using default [0-255]\n",
+> > > +			parent->of_node->full_name);
+> > > +		bus_range->start = 0;
+> > > +		bus_range->end = 255;
+> > > +		bus_range->flags = IORESOURCE_BUS;
+> > 
+> > What about bus_range->name?
+> 
+> Don't know! Is anyone using it?
+
+I guess /proc/iomem prints it out? I set it in my current driver, if you
+want to take a look.
+
+> > 
+> > > +	}
+> > > +	busno = bus_range->start;
+> > > +	pci_add_resource(&res, bus_range);
+> > 
+> > I currently truncate the bus range to fit inside the Configuration Space
+> > window I have (in the reg property). How can I continue to do that with this
+> > patch?
+> 
+> Not easily. Unless I add an argument to this function that will allow you to
+> pass in the max number for the bus range, then the code becomes:
+> 
+> +	err = of_pci_parse_bus_range(parent->of_node, bus_range);
+> +	if (err) {
+> +		dev_info(parent, "No bus range for %s, using default [0-%d]\n",
+> +			parent->of_node->full_name, max_range);
+> +		bus_range->start = 0;
+> +		bus_range->end = max_range;
+> +		bus_range->flags = IORESOURCE_BUS;
+> +	} else {
+> +		if (bus_range->end > bus_range->start + max_range) {
+> +			bus_range->end = bus_range->start + max_range;
+> +		}
 > +	}
-> +	pp->version = DW_HW_V3_65;
-> +
-> +	/* v3.65 PCI controller is expected to provide its own PCI h/w ops */
-> +	if (!hw || !msi_irq_ops) {
-> +		dev_err(pp->dev,
-> +			"v3.65 PCI Controllers doesn't provide %s\n",
-> +			(hw == NULL) ? "PCI hw ops" : "PCI MSI irq domain ops");
-> +		goto out;
-> +	}
-> +
-> +	ret = dw_pcie_msi_host_init(pp, msi_irqc_np,  msi_irq_ops);
-> +	if (ret)
-> +		goto out;
-> +
-> +	ret = dw_pcie_common_host_init(pp, hw);
-> +out:
-> +	return ret;
-> +}
-> +
->   int __init dw_pcie_host_init(struct pcie_port *pp)
->   {
->   	int ret;
-> @@ -763,7 +794,7 @@ static struct pci_ops dw_pcie_ops = {
->   	.write = dw_pcie_wr_conf,
->   };
->
-> -static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> +int dw_pcie_setup(int nr, struct pci_sys_data *sys)
->   {
->   	struct pcie_port *pp;
->
-> @@ -786,7 +817,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
->   	return 1;
->   }
->
-> -static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> +struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->   {
->   	struct pci_bus *bus;
->   	struct pcie_port *pp = sys_to_pcie(sys);
-> @@ -803,7 +834,7 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->   	return bus;
->   }
->
-> -static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-> +int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
->   {
->   	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
->   	int irq;
-> @@ -815,7 +846,7 @@ static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
->   	return irq;
->   }
->
-> -static void dw_pcie_add_bus(struct pci_bus *bus)
-> +void dw_pcie_add_bus(struct pci_bus *bus)
->   {
->   	if (IS_ENABLED(CONFIG_PCI_MSI)) {
->   		struct pcie_port *pp = sys_to_pcie(bus->sysdata);
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index db0260f..2681826 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -81,4 +81,11 @@ void dw_pcie_msi_init(struct pcie_port *pp);
->   int dw_pcie_link_up(struct pcie_port *pp);
->   void dw_pcie_setup_rc(struct pcie_port *pp);
->   int dw_pcie_host_init(struct pcie_port *pp);
-> +int dw_pcie_v3_65_host_init(struct pcie_port *pp, struct hw_pci *hw,
-> +			   struct device_node *msi_irqc_np,
-> +			   const struct irq_domain_ops *msi_irq_ops);
-> +int dw_pcie_setup(int nr, struct pci_sys_data *sys);
-> +struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys);
-> +void dw_pcie_add_bus(struct pci_bus *bus);
-> +int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin);
->   #endif /* _PCIE_DESIGNWARE_H */
-DT Maintainers,
+> 
+> Or something like that.
 
-Could you provide your comments or Ack for the DT update made in this patch?
+Again, take a look at my driver (it's in mainline now) to see how I deal
+with this.
 
-Thanks
-
-Murali
+Will
