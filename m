@@ -1,57 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:34650 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956AbaGQCPB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 22:15:01 -0400
-Received: by mail-ig0-f180.google.com with SMTP id l13so1936260iga.7
-        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 19:15:00 -0700 (PDT)
+Received: from 8bytes.org ([85.214.48.195]:38482 "EHLO mail.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752406AbaGBNdE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Jul 2014 09:33:04 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.8bytes.org (Postfix) with SMTP id 5550812B340
+	for <linux-pci@vger.kernel.org>; Wed,  2 Jul 2014 15:33:02 +0200 (CEST)
+Date: Wed, 2 Jul 2014 15:32:59 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Bill Sumner <bill.sumner@hp.com>,
+	"Hoemann, Jerry" <jerry.hoemann@hp.com>,
+	indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+	doug.hatch@hp.com, ishii.hironobu@jp.fujitsu.com,
+	bhelgaas@google.com, zhenhua@hp.com
+Subject: Re: [PATCH 0/8] iommu/vt-d: Fix crash dump failure caused by legacy
+ DMA/IO
+Message-ID: <20140702133258.GN26537@8bytes.org>
+References: <1398386198-19304-1-git-send-email-bill.sumner@hp.com>
+ <1398854973.12733.23.camel@i7.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <CAKAYmMJf=TdpdyALZQOoAmdgPjpzFu-OP7rMLzyaFRno-36F6Q@mail.gmail.com>
-References: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
-	<CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
-	<CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
-	<CAE9FiQWomktcpSHeFwxWBLXmAsbdXEHv6sOrNXodobkBw=mRKA@mail.gmail.com>
-	<CAE9FiQW+GbprQZNvHC-ek1cSydP3KWcjgAU0ii5_jECC1+tXrg@mail.gmail.com>
-	<CAKAYmMJf=TdpdyALZQOoAmdgPjpzFu-OP7rMLzyaFRno-36F6Q@mail.gmail.com>
-Date: Wed, 16 Jul 2014 19:15:00 -0700
-Message-ID: <CAE9FiQUn4QByiaPqKnk=CCmCXsnaqVfNCjynoyNM3FucrKGhew@mail.gmail.com>
-Subject: Re: Error assigning BAR 0 to hotplugged device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Chuck Tuffli <ctuffli@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1398854973.12733.23.camel@i7.infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 6:00 PM, Chuck Tuffli <ctuffli@gmail.com> wrote:
-> On Wed, Jul 16, 2014 at 4:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> ...
->> in the tree:
->>    80:03.0 ==> 96:00.0 ==> 97:08.0 ==> 98:00.0 ==> 99:00.0 ==> 9a:00.0
->> ==> 9b:15.0
->>
->> only 97:08.0 and 99:00.0 is hotplug+.
->>
->> and kernel will honor BIOS set value at first, and realloc will only work on
->> unassigned/invalid assigned BARs. and hpmem_size will be only treated at
->> optional size even on hotplug slots.
->
-> Does this mean the only time the kernel will re-allocate the BARs and
-> use hpmemsize is if they have the value 0x0? If so, does realloc have
-> any limitations with respect to where in the tree the invalid BAR
-> exists? In my example, could realloc fix 80:03.0? 9b:15.0?
+Hi David,
 
-the problem is 9b:15.0 is not hotplugable, when a5:00.0 is not
-inserted into the slot,
-realloc will not pre-reserve range for 9b:15.0.
+On Wed, Apr 30, 2014 at 11:49:33AM +0100, David Woodhouse wrote:
+> There could be all kinds of existing mappings in the DMA page tables,
+> and I'm not sure it's safe to preserve them. What prevents the crashdump
+> kernel from trying to use any of the physical pages which are
+> accessible, and which could thus be corrupted by stray DMA?
+> 
+> In fact, the old kernel could even have set up 1:1 passthrough mappings
+> for some devices, which would then be able to DMA *anywhere*. Surely we
+> need to prevent that?
 
-> If the BIOS doesn't allocate enough memory mapped IO resources for
-> devices, it sounds like the kernel can't really fix this problem,
-> right?
+Ideally we would prevent that, yes. But the problem is that a failed DMA
+transaction might put the device into an unrecoverable state. Usually
+any in-flight DMA transactions should only target buffers set up by the
+previous kernel and not corrupt any data.
 
-Yes. You need to fix BIOS at first.
+> After the last round of this patchset, we discussed a potential
+> improvement where you point every virtual bus address at the *same*
+> physical scratch page.
 
-So it will be final products or just development prototype?
+That is a solution to prevent the in-flight DMA failures. But what
+happens when there is some in-flight DMA to a disk to write some inodes
+or a new superblock. Then this scratch address-space may cause
+filesystem corruption at worst.
 
-Yinghai
+So with this in mind I would prefer initially taking over the
+page-tables from the old kernel before the device drivers re-initialize
+the devices.
+
+
+	Joerg
+
+
