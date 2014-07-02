@@ -1,94 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53D71707.6000200@gmail.com>
-Date: Mon, 28 Jul 2014 20:37:43 -0700
-From: Alexander Duyck <alexander.duyck@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.10]:52689 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750880AbaGBO7W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 10:59:22 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper function.
+Date: Wed, 02 Jul 2014 16:58:58 +0200
+Message-ID: <5997020.x4BWezXjnq@wuerfel>
+In-Reply-To: <20140702142303.GJ2173@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <7343032.WUqPgbXNQS@wuerfel> <20140702142303.GJ2173@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-To: ethan zhao <ethan.zhao@oracle.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	xen-devel@lists.xenproject.org, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Subject: Re: [PATCH 1/4] PCI: introduce helper functions for device flag operation
-References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>   <1406045944-1587-2-git-send-email-ethan.zhao@oracle.com>  <1406581206.1011.133.camel@ul30vt.home> <53D6FE95.6040605@oracle.com> <1406601073.1011.157.camel@ul30vt.home> <53D70A55.20805@oracle.com>
-In-Reply-To: <53D70A55.20805@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/28/2014 07:43 PM, ethan zhao wrote:
+On Wednesday 02 July 2014 15:23:03 Liviu Dudau wrote:
+> > 
+> > Your solution looks correct to me, just using different
+> > tradeoffs to what I was expecting: You get a working pci_address_to_pio()
+> > function, which is probably never needed, but in turn you need to
+> > keep the state of each host bridge in a global list.
 > 
-> On 2014/7/29 10:31, Alex Williamson wrote:
->> On Tue, 2014-07-29 at 09:53 +0800, ethan zhao wrote:
->>> On 2014/7/29 5:00, Alex Williamson wrote:
->>>> On Wed, 2014-07-23 at 00:19 +0800, Ethan Zhao wrote:
->>>>> This patch introduced three helper functions to hide direct
->>>>> device flag operation.
->>>>>
->>>>> void pci_set_dev_assigned(struct pci_dev *pdev);
->>>>> void pci_set_dev_deassigned(struct pci_dev *pdev);
->>>>> bool pci_is_dev_assigned(struct pci_dev *pdev);
->>>>>
->>>>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
->>>>> ---
->>>>>    include/linux/pci.h |   13 +++++++++++++
->>>>>    1 files changed, 13 insertions(+), 0 deletions(-)
->>>>>
->>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>>>> index aab57b4..5f6f8fa 100644
->>>>> --- a/include/linux/pci.h
->>>>> +++ b/include/linux/pci.h
->>>>> @@ -1129,6 +1129,19 @@ resource_size_t
->>>>> pcibios_window_alignment(struct pci_bus *bus,
->>>>>       int pci_set_vga_state(struct pci_dev *pdev, bool decode,
->>>>>                  unsigned int command_bits, u32 flags);
->>>>> +/* helper functions for operation of device flag */
->>>>> +static inline void pci_set_dev_assigned(struct pci_dev *pdev)
->>>>> +{
->>>>> +    pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
->>>>> +}
->>>>> +static inline void pci_set_dev_deassigned(struct pci_dev *pdev)
->>>>> +{
->>>>> +    pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
->>>>> +}
->>>> I think pci_clear_dev_assigned() would make more sense, we're not
->>>> setting a flag named DEASSIGNED.
->>>     Though it is a flag operation now, may not later, we define it
->>> because we want to hide the internal operation.
->>>     'set' to 'deassigned'  status is enough. So I would like keep it.
->> I disagree, the opposite of a 'set' is a 'clear', or at least an
->> 'unset'.  Using bit-ops-like terminology doesn't lock us into an
->> implementation.  As written, this could just as easily be setting two
->> different variables.
->  So there are two pairs of opposite:
-> 
->  set assigned ---> unset assigned
->  set assigned ---> set deassigned
-> 
->  Here you prefer the 'verb' set /unset, and I prefer the 'adj.' assigned
-> / deassigned.
-> 
->  Do they really have different meaning or make confusion ? I don't think
-> so.
-> 
->  Thanks,
->  Ethan
-> 
+> Just a reminder that with my patchset I *do* start using pci_address_to_pio()
+> in order to correctly parse the IO ranges from DT.
 
-I agree with Alex W.  If you are going to use the "set" name you should
-probably use "clear" for the operation that undoes it.  Using the term
-set implies that it is setting a bit and we currently don't have a
-deassigned/unassigned bit.
+Yes, what I meant is that it would be easier not to do that. All existing
+drivers expect of_pci_range_to_resource() to return the CPU address for
+an I/O space register, not the Linux I/O port number that we want to 
+pass to the PCI core. This is suboptimal because it's not obvious how
+it works, but it lets us get away without an extra registration step.
+Once all probe functions in PCI host drivers have been changed to the
+of_create_pci_host_bridge, that should not matter any more, because
+there is only one place left that calls it and we only have to get it
+right once.
 
-If that doesn't work perhaps you could use something like
-get/put_assigned_device or acquire/release_assigned_device.  You just
-need to describe what it is you are doing.  You could even consider
-adding some tests to return an error if you attempt to assign a device
-that is already assigned.
+Also, when you change that of_pci_range_to_resource, you also have to 
+audit all callers of that function and ensure they can deal with the new
+behavior.
 
-Thanks,
-
-Alex D
-
+	Arnd
