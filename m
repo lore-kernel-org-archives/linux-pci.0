@@ -1,141 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:22128 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754208AbaG3HAE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jul 2014 03:00:04 -0400
-Message-ID: <53D89754.3010704@huawei.com>
-Date: Wed, 30 Jul 2014 14:57:24 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-bn1lp0144.outbound.protection.outlook.com ([207.46.163.144]:13141
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754564AbaGBPVa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Jul 2014 11:21:30 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>
+CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
+	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
+	<Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH 1/3 V2] irqchip: gic: Add binding probe for ARM GIC400
+Date: Wed, 2 Jul 2014 10:21:06 -0500
+Message-ID: <1404314468-7674-2-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1404314468-7674-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1404314468-7674-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-To: Ethan Zhao <ethan.kernel@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	"<keith.busch@intel.com>" <keith.busch@intel.com>,
-	"<jon.mason@intel.com>" <jon.mason@intel.com>,
-	Jon Mason <jdmason@kudzu.us>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-References: <1406621877-12022-1-git-send-email-wangyijing@huawei.com> <CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>
-In-Reply-To: <CABawtvP1sviOZynf2N43ORDF-mPHX9PrcsXSmxKqv4_V9QpnsQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/7/30 14:26, Ethan Zhao wrote:
-> On Tue, Jul 29, 2014 at 4:17 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Currently we don't update device's mps value when doing
->> pci device hot-add. The hot-added device's mps will be set
->> to default value (128B). But the upstream port device's mps
->> may be larger than 128B which was set by firmware during
->> system bootup. In this case the new added device may not
->> work normally. This issue was found in huawei 5885 server
->> and Dell R620 server. And if we run the platform with windows,
->> this problem is gone. This patch try to update the hot added
->> device mps equal to its parent mps, if device mpss < parent mps,
->> print warning.
->>
->> References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
-> 
-> http://marc.info/?l=e1000-devel&m=134182518500774&w=2
-> 
-> The bug was reported by Joe.jin@oracle.com. the related hardware
-> is SUN FIRE X2270 M2, it is not a hotplug sever except SAS HDD,
-> and the the issue is definitely a BIOS bug. not related to the hotplug
-> code path. was fixed by BIOS.
-> 
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Yes, that issue is BIOS bug, the mps setting is wrong after system boot up.
-But that issue is not same as this one, Keith and Jordan found the issue
-after hot-plug. And my patch only modify the hotplug slot connected device.
+Add new Irqchip declaration for GIC400. This was mentioned in
+gic binding documentation, but there is not code to support it.
 
-In my idea, make the device work is important, because these platforms with windows
-can run happy, why linux leave this issue to BIOS.
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ drivers/irqchip/irq-gic.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Anyway, this is my personal opinion.
-
-Thanks!
-Yijing.
-
-> 
->> Reported-by: Keith Busch <keith.busch@intel.com>
->> Reported-by: Jordan_Hargrave@Dell.com
->> Reported-by: Yijing Wang <wangyijing@huawei.com>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Cc: Jon Mason <jdmason@kudzu.us>
->> ---
->>  drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
->>  1 files changed, 39 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index e3cf8a2..583ca52 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
->>                 dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
->>  }
->>
->> +/**
->> + * pcie_bus_update_set - update device mps when device doing hot-add
->> + * @dev: PCI device to set
->> + *
->> + * After device hot add, mps will be set to default(128B), But the
->> + * upstream port device's mps may be larger than 128B which was set
->> + * by firmware during system bootup. Then we should update the device
->> + * mps to equal to its parent mps, Or the device can not work normally.
->> + */
->> +static void pcie_bus_update_set(struct pci_dev *dev)
->> +{
->> +       int mps, p_mps, mpss;
->> +       struct pci_dev *parent;
->> +
->> +       if (!pci_is_pcie(dev) || !dev->bus->self
->> +                       || !dev->bus->self->is_hotplug_bridge)
->> +               return;
->> +
->> +       parent = dev->bus->self;
->> +       mps = pcie_get_mps(dev);
->> +       p_mps = pcie_get_mps(parent);
->> +
->> +       if (mps >= p_mps)
->> +               return;
->> +
->> +       mpss = 128 << dev->pcie_mpss;
->> +       if (mpss < p_mps) {
->> +               dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
->> +                               "If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
->> +                               mpss, p_mps);
->> +               return;
->> +       }
->> +
->> +       pcie_write_mps(dev, p_mps);
->> +       dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
->> +                       pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
->> +}
->> +
->>  static void pcie_bus_detect_mps(struct pci_dev *dev)
->>  {
->>         struct pci_dev *bridge = dev->bus->self;
->> @@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->>                 return 0;
->>
->>         if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
->> +               pcie_bus_update_set(dev);
->>                 pcie_bus_detect_mps(dev);
->>                 return 0;
->>         }
->> --
->> 1.7.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 7e11c9d..adc86de 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -1071,6 +1071,8 @@ gic_of_init(struct device_node *node, struct device_node *parent)
+ 	gic_cnt++;
+ 	return 0;
+ }
++
++IRQCHIP_DECLARE(arm_gic_400, "arm,gic-400", gic_of_init);
+ IRQCHIP_DECLARE(cortex_a15_gic, "arm,cortex-a15-gic", gic_of_init);
+ IRQCHIP_DECLARE(cortex_a9_gic, "arm,cortex-a9-gic", gic_of_init);
+ IRQCHIP_DECLARE(msm_8660_qgic, "qcom,msm-8660-qgic", gic_of_init);
 -- 
-Thanks!
-Yijing
+1.9.0
 
