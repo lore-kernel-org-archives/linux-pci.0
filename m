@@ -1,113 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f49.google.com ([209.85.192.49]:58751 "EHLO
-	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932797AbaGOUv7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 16:51:59 -0400
-Received: by mail-qg0-f49.google.com with SMTP id 63so5313978qgz.36
-        for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2014 13:51:58 -0700 (PDT)
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:34952 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753069AbaGBLRn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 07:17:43 -0400
+Date: Wed, 2 Jul 2014 12:17:48 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 7/9] pci: of: Parse and map the IRQ when adding the
+ PCI device.
+Message-ID: <20140702111748.GJ18731@arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-8-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1405317877-15060-1-git-send-email-vidyas@nvidia.com>
-References: <1405317877-15060-1-git-send-email-vidyas@nvidia.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 15 Jul 2014 14:51:38 -0600
-Message-ID: <CAErSpo4D5m14wk6k2Hd19tH+E_VbtmSR2SncQBhg5Dq=KSyKSw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: enable ASPM configuration in PCIE POWERSAVE mode
-To: Vidya Sagar <sagar.tv@gmail.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Nagananda Chumbalkar <nchumbalkar@lenovo.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Vidya Sagar <vidyas@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404240214-9804-8-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Matthew, Rafael]
-
-On Mon, Jul 14, 2014 at 12:04 AM, Vidya Sagar <sagar.tv@gmail.com> wrote:
-> From: Vidya Sagar <sagar.tv@gmail.com>
->
-> 'commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
->  under POWERSAVE mode")' moved pcie_aspm_powersave_config_link() out of
-> pci_raw_set_power_state() to pci_set_power_state() which would enable
-> ASPM. But, with 'commit db288c9c5f9d ("PCI / PM: restore the original
->  behavior of pci_set_power_state()")', which re-introduced the following check
-> ./drivers/pci/pci.c: pci_set_power_state()
-> +   /* Check if we're already there */
-> +   if (dev->current_state == state)
-> +       return 0;
-> in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
-> made leaving ASPM broken.
-> Fix it by not returning from when the above condition is true, rather, jump to
-> ASPM configuration code and exit from there eventually.
->
-> Signed-off-by: Vidya Sagar <sagar.tv@gmail.com>
-
-I'm OK with the patch (obviously, since I wrote it), but you neglected
-to copy Matthew and Rafael.  And you forgot to rewrite the changelog.
-I'll take care of the changelog, but I would like to see something
-from Matthew and Rafael, since this is a significant change in how we
-configure ASPM.
-
-Matthew, Rafael, my observation was: "But I wonder if we can untangle
-ASPM from pci_set_power_state().  I don't think they're really
-related.  There are a zillion .suspend() and .resume() methods that
-call pci_set_power_state().  I doubt that we need to do ASPM
-configuration during suspend, and I'm dubious about resume, too."
-
-So the new patch moves the pcie_aspm_powersave_config_link() call out
-of pci_set_power_state() and into do_pci_enable_device().
-
-Bjorn
-
+On Tue, Jul 01, 2014 at 07:43:32PM +0100, Liviu Dudau wrote:
+> Enhance the default implementation of pcibios_add_device() to
+> parse and map the IRQ of the device if a DT binding is available.
+> 
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 > ---
-> v2:
-> * Calling ASPM config code is moved from pci_set_power_state() to
-> * do_pci_enable_device()
->
->  drivers/pci/pci.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
->
+>  drivers/pci/pci.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
 > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 1c8592b..81d49d3 100644
+> index 63a54a3..8e65dc3 100644
 > --- a/drivers/pci/pci.c
 > +++ b/drivers/pci/pci.c
-> @@ -839,12 +839,6 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->
->         if (!__pci_complete_power_transition(dev, state))
->                 error = 0;
-> -       /*
-> -        * When aspm_policy is "powersave" this call ensures
-> -        * that ASPM is configured.
-> -        */
-> -       if (!error && dev->bus->self)
-> -               pcie_aspm_powersave_config_link(dev->bus->self);
->
->         return error;
->  }
-> @@ -1195,12 +1189,18 @@ int __weak pcibios_enable_device(struct pci_dev *dev, int bars)
->  static int do_pci_enable_device(struct pci_dev *dev, int bars)
+> @@ -17,6 +17,7 @@
+>  #include <linux/spinlock.h>
+>  #include <linux/string.h>
+>  #include <linux/log2.h>
+> +#include <linux/of_pci.h>
+>  #include <linux/pci-aspm.h>
+>  #include <linux/pm_wakeup.h>
+>  #include <linux/interrupt.h>
+> @@ -1453,6 +1454,9 @@ EXPORT_SYMBOL(pcim_pin_device);
+>   */
+>  int __weak pcibios_add_device(struct pci_dev *dev)
 >  {
->         int err;
-> +       struct pci_dev *bridge;
->         u16 cmd;
->         u8 pin;
->
->         err = pci_set_power_state(dev, PCI_D0);
->         if (err < 0 && err != -EIO)
->                 return err;
-> +
-> +       bridge = pci_upstream_bridge(dev);
-> +       if (bridge)
-> +               pcie_aspm_powersave_config_link(bridge);
-> +
->         err = pcibios_enable_device(dev, bars);
->         if (err < 0)
->                 return err;
-> --
-> 1.8.1.5
->
+> +#ifdef CONFIG_OF
+> +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> +#endif
+
+You could avoid the #ifdef by only assigning dev->irq if
+of_irq_parse_and_map_pci returned something > 0.
+
+Will
