@@ -1,41 +1,71 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	xen-devel@lists.xenproject.org
-Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Subject: [PATCH 4/4] PCI: use device flag operation helper function in iov.c
-Date: Wed, 23 Jul 2014 00:19:04 +0800
-Message-Id: <1406045944-1587-5-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
-References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
+MIME-Version: 1.0
+In-Reply-To: <1404240214-9804-3-git-send-email-Liviu.Dudau@arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+	<1404240214-9804-3-git-send-email-Liviu.Dudau@arm.com>
+Date: Wed, 2 Jul 2014 11:06:38 -0700
+Message-ID: <CACoXjck+aU33=kSy=KCGABNXNR7tj2KndAiBqEDK7wQ_Qei80Q@mail.gmail.com>
+Subject: Re: [PATCH v8 2/9] pci: Export find_pci_host_bridge() function.
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	patches <patches@apm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use device flag operation helper functions when check device
-assignment status.
+Hi,
 
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
----
- drivers/pci/iov.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Tue, Jul 1, 2014 at 11:43 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> This is a useful function and we should make it visible outside the
+> generic PCI code. Export it as a GPL symbol.
+>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> ---
+>  drivers/pci/host-bridge.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 0e5f3c9..36c669e 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -16,12 +16,13 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+>         return bus;
+>  }
+>
+> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+>  {
+>         struct pci_bus *root_bus = find_pci_root_bus(bus);
+>
+>         return to_pci_host_bridge(root_bus->bridge);
+>  }
+> +EXPORT_SYMBOL_GPL(find_pci_host_bridge);
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index de7a747..61fad36 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -633,7 +633,7 @@ int pci_vfs_assigned(struct pci_dev *dev)
- 		 * our dev as the physical function and the assigned bit is set
- 		 */
- 		if (vfdev->is_virtfn && (vfdev->physfn == dev) &&
--		    (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
-+		    pci_is_dev_assigned(vfdev))
- 			vfs_assigned++;
- 
- 		vfdev = pci_get_device(dev->vendor, dev_id, vfdev);
--- 
-1.7.1
+Is there any specific reason behind making this symbol GPL? I think
+the other functions in this file are just EXPORT_SYMBOL. Ultimately
+companies which have non gpl Linux modules (nvidia) will face issue
+using this API.
 
+The same applies to 'of_create_pci_host_bridge'.
+>
+>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+>                                  void (*release_fn)(struct pci_host_bridge *),
+> --
+> 2.0.0
+>
