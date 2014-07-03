@@ -1,99 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:59121 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752264AbaG2H6I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 03:58:08 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <Jordan_Hargrave@Dell.com>,
-	<keith.busch@intel.com>, <jdmason@kudzu.us>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH] PCI: update device mps when doing pci hotplug
-Date: Tue, 29 Jul 2014 16:23:31 +0800
-Message-ID: <1406622211-12554-1-git-send-email-wangyijing@huawei.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:55325 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756702AbaGCIK7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Jul 2014 04:10:59 -0400
+Message-ID: <53B50F5B.7010505@ti.com>
+Date: Thu, 3 Jul 2014 13:37:55 +0530
+From: Rajendra Nayak <rnayak@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Kishon Vijay Abraham I <kishon@ti.com>
+CC: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>, <paul@pwsan.com>, <tony@atomide.com>,
+	<linux@arm.linux.org.uk>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] arm: dra7xx: Add hwmod data for pcie1 and pcie2 subsystems
+References: <1403719366-9656-1-git-send-email-kishon@ti.com> <1403719366-9656-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1403719366-9656-3-git-send-email-kishon@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we don't update device's mps value when doing
-pci device hot-add. The hot-added device's mps will be set
-to default value (128B). But the upstream port device's mps
-may be larger than 128B which was set by firmware during
-system bootup. In this case the new added device may not
-work normally. This issue was found in huawei 5885 server
-and Dell R620 server. And if we run the platform with windows,
-this problem is gone. This patch try to update the hot added
-device mps equal to its parent mps, if device mpss < parent mps,
-print warning.
+On Wednesday 25 June 2014 11:32 PM, Kishon Vijay Abraham I wrote:
+> Added hwmod data for pcie1 and pcie2 subsystem present in DRA7xx SOC.
+> 
+> Cc: Tony Lindgren <tony@atomide.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Paul Walmsley <paul@pwsan.com>
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+> Please find the bootlog with these hwmod patches
+> http://paste.ubuntu.com/7701601/
+>  arch/arm/mach-omap2/omap_hwmod_7xx_data.c |   55 +++++++++++++++++++++++++++++
+>  1 file changed, 55 insertions(+)
+> 
+> diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+> index 6ff40a6..934aa9d 100644
+> --- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+> +++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+> @@ -1290,6 +1290,43 @@ static struct omap_hwmod dra7xx_ocp2scp3_hwmod = {
+>  };
+>  
+>  /*
+> + * 'PCIE' class
+> + *
+> + */
+> +
+> +static struct omap_hwmod_class dra7xx_pcie_hwmod_class = {
+> +	.name	= "pcie",
+> +};
+> +
+> +/* pcie1 */
+> +static struct omap_hwmod dra7xx_pcie1_hwmod = {
+> +	.name		= "pcie1",
+> +	.class		= &dra7xx_pcie_hwmod_class,
+> +	.clkdm_name	= "l3init_clkdm",
 
-References: https://bugzilla.kernel.org/show_bug.cgi?id=60671
-Reported-by: Keith Busch <keith.busch@intel.com>
-Reported-by: Jordan_Hargrave@Dell.com
-Reported-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>
----
- drivers/pci/probe.c |   39 +++++++++++++++++++++++++++++++++++++++
- 1 files changed, 39 insertions(+), 0 deletions(-)
+The TRM tells me it belongs to 'pcie_clkdm' instead. Can you please recheck?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e3cf8a2..583ca52 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1613,6 +1613,44 @@ static void pcie_write_mrrs(struct pci_dev *dev)
- 		dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If problems are experienced, try running with pci=pcie_bus_safe\n");
- }
- 
-+/**
-+ * pcie_bus_update_set - update device mps when device doing hot-add
-+ * @dev: PCI device to set
-+ * 
-+ * After device hot add, mps will be set to default(128B), But the 
-+ * upstream port device's mps may be larger than 128B which was set 
-+ * by firmware during system bootup. Then we should update the device
-+ * mps to equal to its parent mps, Or the device can not work normally.
-+ */
-+static void pcie_bus_update_set(struct pci_dev *dev)
-+{
-+	int mps, p_mps, mpss;
-+	struct pci_dev *parent;
-+
-+	if (!pci_is_pcie(dev) || !dev->bus->self 
-+			|| !dev->bus->self->is_hotplug_bridge)
-+		return;
-+	
-+	parent = dev->bus->self;
-+	mps = pcie_get_mps(dev);
-+	p_mps = pcie_get_mps(parent);
-+
-+	if (mps >= p_mps)
-+		return;
-+
-+	mpss = 128 << dev->pcie_mpss;
-+	if (mpss < p_mps) {
-+		dev_warn(&dev->dev, "MPSS %d smaller than upstream MPS %d\n"
-+				"If necessary, use \"pci=pcie_bus_safe\" boot parameter to avoid this problem\n",
-+				mpss, p_mps);
-+		return;
-+	}
-+
-+	pcie_write_mps(dev, p_mps);
-+	dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n", 
-+			pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
-+}
-+
- static void pcie_bus_detect_mps(struct pci_dev *dev)
- {
- 	struct pci_dev *bridge = dev->bus->self;
-@@ -1637,6 +1675,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
- 		return 0;
- 
- 	if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
-+		pcie_bus_update_set(dev);
- 		pcie_bus_detect_mps(dev);
- 		return 0;
- 	}
--- 
-1.7.1
+> +	.main_clk	= "l4_root_clk_div",
+> +	.prcm = {
+> +		.omap4 = {
+> +			.clkctrl_offs	= DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET,
+> +			.modulemode	= MODULEMODE_SWCTRL,
+> +		},
+> +	},
+> +};
+> +
+> +/* pcie2 */
+> +static struct omap_hwmod dra7xx_pcie2_hwmod = {
+> +	.name		= "pcie2",
+> +	.class		= &dra7xx_pcie_hwmod_class,
+> +	.clkdm_name	= "l3init_clkdm",
+> +	.main_clk	= "l4_root_clk_div",
+> +	.prcm = {
+> +		.omap4 = {
+> +			.clkctrl_offs = DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET,
+> +			.modulemode   = MODULEMODE_SWCTRL,
+> +		},
+> +	},
+> +};
+> +
+> +/*
+>   * 'PCIE PHY' class
+>   *
+>   */
+> @@ -2448,6 +2485,22 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__ocp2scp1 = {
+>  	.user		= OCP_USER_MPU | OCP_USER_SDMA,
+>  };
+>  
+> +/* l4_cfg -> pcie1 */
+
+There seems to be a slave port on l3_init as well which seems to be missing?
+
+Refer to 'Figure 24-157. PCIe Controllers Integration' of TRM version P.
+
+regards,
+Rajendra
+
+> +static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1 = {
+> +	.master		= &dra7xx_l4_cfg_hwmod,
+> +	.slave		= &dra7xx_pcie1_hwmod,
+> +	.clk		= "l4_root_clk_div",
+> +	.user		= OCP_USER_MPU | OCP_USER_SDMA,
+> +};
+> +
+> +/* l4_cfg -> pcie2 */
+> +static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie2 = {
+> +	.master		= &dra7xx_l4_cfg_hwmod,
+> +	.slave		= &dra7xx_pcie2_hwmod,
+> +	.clk		= "l4_root_clk_div",
+> +	.user		= OCP_USER_MPU | OCP_USER_SDMA,
+> +};
+> +
+>  /* l4_cfg -> pcie1 phy */
+>  static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1_phy = {
+>  	.master		= &dra7xx_l4_cfg_hwmod,
+> @@ -2813,6 +2866,8 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
+>  	&dra7xx_l4_cfg__mpu,
+>  	&dra7xx_l4_cfg__ocp2scp1,
+>  	&dra7xx_l4_cfg__ocp2scp3,
+> +	&dra7xx_l4_cfg__pcie1,
+> +	&dra7xx_l4_cfg__pcie2,
+>  	&dra7xx_l4_cfg__pcie1_phy,
+>  	&dra7xx_l4_cfg__pcie2_phy,
+>  	&dra7xx_l3_main_1__qspi,
+> 
 
