@@ -1,68 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24521 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755741AbaGVQUI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 12:20:08 -0400
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gleb@kernel.org, pbonzini@redhat.com,
-	kvm@vger.kernel.org, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	xen-devel@lists.xenproject.org
-Cc: alex.williamson@redhat.com, alexander.h.duyck@intel.com,
-	ethan.kernel@gmail.com
-Subject: [PATCH 2/4] KVM: use pci device flag operation helper functions
-Date: Wed, 23 Jul 2014 00:19:02 +0800
-Message-Id: <1406045944-1587-3-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
-References: <1406045944-1587-1-git-send-email-ethan.zhao@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49354 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759016AbaGCPv7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Jul 2014 11:51:59 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 7/7] iommu: Remove pci.h
+To: iommu@lists.linux-foundation.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>
+Date: Thu, 03 Jul 2014 09:51:55 -0600
+Message-ID: <20140703155155.8112.13590.stgit@gimli.home>
+In-Reply-To: <20140703154428.8112.97562.stgit@gimli.home>
+References: <20140703154428.8112.97562.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use helper function instead of direct operation to pci device
-flag when set device to assigned or deassigned.
+The single helper here no longer has any users.
 
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- virt/kvm/assigned-dev.c |    2 +-
- virt/kvm/iommu.c        |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
-index bf06577..d122bda 100644
---- a/virt/kvm/assigned-dev.c
-+++ b/virt/kvm/assigned-dev.c
-@@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
- 	else
- 		pci_restore_state(assigned_dev->dev);
- 
--	assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+	pci_set_dev_deassigned(assigned_dev->dev);
- 
- 	pci_release_regions(assigned_dev->dev);
- 	pci_disable_device(assigned_dev->dev);
-diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
-index 0df7d4b..8cfe021 100644
---- a/virt/kvm/iommu.c
-+++ b/virt/kvm/iommu.c
-@@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
- 			goto out_unmap;
- 	}
- 
--	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-+	pci_set_dev_assigned(pdev);
- 
- 	dev_info(&pdev->dev, "kvm assign device\n");
- 
-@@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
- 
- 	iommu_detach_device(domain, &pdev->dev);
- 
--	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-+	pci_set_dev_deassigned(pdev);
- 
- 	dev_info(&pdev->dev, "kvm deassign device\n");
- 
--- 
-1.7.1
+ drivers/iommu/pci.h |   29 -----------------------------
+ 1 file changed, 29 deletions(-)
+ delete mode 100644 drivers/iommu/pci.h
+
+diff --git a/drivers/iommu/pci.h b/drivers/iommu/pci.h
+deleted file mode 100644
+index 352d80a..0000000
+--- a/drivers/iommu/pci.h
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/*
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License, version 2, as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+- *
+- * Copyright (C) 2013 Red Hat, Inc.
+- * Copyright (C) 2013 Freescale Semiconductor, Inc.
+- *
+- */
+-#ifndef __IOMMU_PCI_H
+-#define __IOMMU_PCI_H
+-
+-/* Helper function for swapping pci device reference */
+-static inline void swap_pci_ref(struct pci_dev **from, struct pci_dev *to)
+-{
+-	pci_dev_put(*from);
+-	*from = to;
+-}
+-
+-#endif  /* __IOMMU_PCI_H */
 
