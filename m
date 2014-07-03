@@ -1,129 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:59111 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865AbaGDO5z convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 10:57:55 -0400
-Date: Fri, 4 Jul 2014 15:57:52 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
- pci_host_bridge.
-Message-ID: <20140704145752.GJ6501@e106497-lin.cambridge.arm.com>
-References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
- <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
- <20140405000007.GD15806@google.com>
- <20140407084623.GG17163@e106497-lin.cambridge.arm.com>
- <1396862058.3671.40.camel@pasglop>
- <20140407100715.GI17163@e106497-lin.cambridge.arm.com>
- <CAErSpo7h+Yew2hBztzkOzcHU5r4OQebxFbcZGkNUwJwfTFsbfg@mail.gmail.com>
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:45387 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752308AbaGCDUw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 23:20:52 -0400
+Received: by mail-oa0-f43.google.com with SMTP id o6so13328381oag.2
+        for <linux-pci@vger.kernel.org>; Wed, 02 Jul 2014 20:20:52 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7h+Yew2hBztzkOzcHU5r4OQebxFbcZGkNUwJwfTFsbfg@mail.gmail.com>
+Date: Wed, 2 Jul 2014 23:20:52 -0400
+Message-ID: <CAKb7UviGCtebGwyHbXRLZhDOiDAez+eKkxPe9jz5kc-3R1kUvQ@mail.gmail.com>
+Subject: How to check for proper MSI support?
+From: Ilia Mirkin <imirkin@alum.mit.edu>
+To: linux-pci@vger.kernel.org
+Cc: "nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>,
+	brian.johnathan.b@gmail.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 07, 2014 at 11:44:51PM +0100, Bjorn Helgaas wrote:
-> On Mon, Apr 7, 2014 at 4:07 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > On Mon, Apr 07, 2014 at 10:14:18AM +0100, Benjamin Herrenschmidt wrote:
-> >> On Mon, 2014-04-07 at 09:46 +0100, Liviu Dudau wrote:
-> >> >
-> >> > *My* strategy is to get rid of pci_domain_nr(). I don't see why we need
-> >> > to have arch specific way of providing the number, specially after looking
-> >> > at the existing implementations that return a value from a variable that
-> >> > is never touched or incremented. My guess is that pci_domain_nr() was
-> >> > created to work around the fact that there was no domain_nr maintainance in
-> >> > the generic code.
-> >>
-> >> Well, there was no generic host bridge structure. There is one now, it should
-> >> go there.
-> >
-> > Exactly! Hence my patch. After it gets accepted I will go through architectures
-> > and remove their version of pci_domain_nr().
-> 
-> Currently the arch has to supply pci_domain_nr() because that's the
-> only way for the generic code to learn the domain.  After you add
-> pci_create_root_bus_in_domain(), the arch can supply the domain that
-> way, and we won't need the arch-specific pci_domain_nr().  Right?
-> That makes more sense to me; thanks for the explanation.
-> 
-> Let me try to explain my concern about the
-> pci_create_root_bus_in_domain() interface.  We currently have these
-> interfaces:
-> 
->   pci_scan_root_bus()
->   pci_scan_bus()
->   pci_scan_bus_parented()
->   pci_create_root_bus()
-> 
-> pci_scan_root_bus() is a higher-level interface than
-> pci_create_root_bus(), so I'm trying to migrate toward it because it
-> lets us remove a little code from the arch, e.g., pci_scan_child_bus()
-> and pci_bus_add_devices().
-> 
-> I think we can only remove the arch-specific pci_domain_nr() if that
-> arch uses pci_create_root_bus_in_domain().  When we convert an arch
-> from using scan_bus interfaces to using
-> pci_create_root_bus_in_domain(), we will have to move the rest of the
-> scan_bus code (pci_scan_child_bus(), pci_bus_add_devices()) back into
-> the arch code.
-> 
-> One alternative is to add an _in_domain() variant of each of these
-> interfaces, but that doesn't seem very convenient either.  My idea of
-> passing in a structure would also require adding variants, so there's
-> not really an advantage there, but I am thinking of the next
-> unification effort, e.g., for NUMA node info.  I don't really want to
-> have to change all the _in_domain() interfaces to also take yet
-> another parameter for the node number.
+Hello,
 
-Bjorn,
+A user (cc'd) reported that nouveau's enabling of MSI causes the card
+to not work on his setup [1]. I think the situation is that MSI is
+just not supported by the underlying motherboard, even though the
+card, and probably bridge, support it just fine. It's a very old
+board. The nouveau code does:
 
-I'm coming around to your way of thinking and I want to suggest a strategy
-for adding the domain number into the PCI framework.
+pmc->use_msi = pci_enable_msi(device->pdev) == 0;
 
-My understanding is that when pci_host_bridge structure was introduced
-you were trying to keep the APIs unchanged and hence the creation of a
-bridge was hidden inside the pci_create_root_bus() function.
+Does it need to do more checking than that before trying to enable MSI
+on the device? Could it be that the linux pci subsystem is missing on
+inheriting MSI capabilities somewhere?
 
-If we want to store the domain_nr information in the host bridge structure,
-together with a pointer to sysdata, then we need to break up the creation
-of the pci_host_bridge from the creation of a root bus. At that moment,
-pci_scan_root_bus() will need to be changed to accept a pci_host_bridge
-pointer, while pci_scan_bus() and pci_scan_bus_parented() will create
-the host bridge in the body of their function.
+Thanks,
 
-Did I understood correctly this time your intentions? Do you agree with
-this plan?
+  -ilia
 
-Best regards,
-Liviu
+[1]
 
+00:00.0 Host bridge [0600]: Intel Corporation 430FX - 82437FX TSC
+[Triton I] [8086:122d] (rev 01)
+        Flags: bus master, medium devsel, latency 64
 
-> 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+00:0e.0 PCI bridge [0604]: PLX Technology, Inc. PEX8112 x1 Lane PCI
+Express-to-PCI Bridge [10b5:8112] (rev aa) (prog-if 00 [Normal
+decode])
+        Flags: bus master, 66MHz, medium devsel, latency 66
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        I/O behind bridge: 0000f000-0000ffff
+        Memory behind bridge: f5e00000-fbffffff
+        Prefetchable memory behind bridge: d5d00000-f5dfffff
+        Capabilities: [40] Power Management version 2
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [60] Express PCI/PCI-X to PCI-Express Bridge, MSI 00
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+01:00.0 VGA compatible controller [0300]: NVIDIA Corporation G96
+[GeForce 9400 GT] [10de:0641] (rev a1) (prog-if 00 [VGA controller])
+        Subsystem: Jaton Corp Device [1b13:0641]
+        Flags: bus master, fast devsel, latency 0, IRQ 11
+        Memory at fb000000 (32-bit, non-prefetchable) [size=16M]
+        Memory at e0000000 (64-bit, prefetchable) [size=256M]
+        Memory at f8000000 (64-bit, non-prefetchable) [size=32M]
+        I/O ports at fc80 [size=128]
+        [virtual] Expansion ROM at d5d00000 [disabled] [size=512K]
+        Capabilities: [60] Power Management version 3
+        Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [78] Express Endpoint, MSI 00
+        Capabilities: [b4] Vendor Specific Information: Len=14 <?>
+        Kernel driver in use: nouveau
