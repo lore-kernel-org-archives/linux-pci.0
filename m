@@ -1,286 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0141.outbound.protection.outlook.com ([207.46.163.141]:18763
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756571AbaGIXF2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Jul 2014 19:05:28 -0400
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>
-CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
-	<Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"Marc Zyngier" <Marc.Zyngier@arm.com>
-Subject: [PATCH 2/4 V3] irqchip: gic: Restructuring ARM GIC code
-Date: Wed, 9 Jul 2014 18:05:02 -0500
-Message-ID: <1404947104-21345-3-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:52437 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753035AbaGCWEq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 18:04:46 -0400
+Received: by mail-qg0-f48.google.com with SMTP id q108so790107qgd.7
+        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 15:04:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <7850906.HUE8jaYLrp@harkonnen>
+References: <280883016.9onmf0miLq@pcbe13110.cern.ch> <CAErSpo7dyfpcMdCv3QB=PQn3HskcVtdt4MXb8KUMcQC9+N3oBQ@mail.gmail.com>
+ <7850906.HUE8jaYLrp@harkonnen>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 3 Jul 2014 16:04:24 -0600
+Message-ID: <CAErSpo6Dgwn5QtHwBEcJsY++ZDUu73S6Jm1EVgD0AO-NaN2Wgw@mail.gmail.com>
+Subject: Re: PCIe bus enumeration
+To: Federico Vaga <federico.vaga@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Michel Arruat <michel.arruat@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On Thu, Jul 3, 2014 at 2:40 PM, Federico Vaga <federico.vaga@gmail.com> wrote:
+> On Thursday 03 July 2014 13:43:14 Bjorn Helgaas wrote:
 
-This patch restructures the code to prepare for future MSI support.
-It moves the declaration of structures and functions into the header file,
-and omit the static prefix.
+>> The /sys/bus/pci/slots/*/address files might help.  On my system, I
+>> have:
+>>
+>>   $ grep . /sys/bus/pci/slots/*/address /dev/null
+>>   /sys/bus/pci/slots/5/address:0000:03:00
+>
+> My slots directory is empty on 3.2, 3.6, 3.14. I have to compile the
+> kernel with a
+> particular configuration? Use a kernel parameter?
 
-Since we are planing to have different irq_chip for GICv2m, the patch adds
-irq_chip pointer in the gic_chip_data which is initialized during probing phase.
+Should be built-in, no parameter needed.  I think this is from
+pci_create_slot() in drivers/pci/slot.c.  That's called from
+register_slot() (drivers/acpi/pci_slot.c, which obviously depends on
+the BIOS) and indirectly from pciehp (which doesn't depend on the BIOS
+and reads a slot number from the PCIe capability).  "lspci -vv" will
+show you this slot number in the SltCap (if the port supports a slot),
+e.g.,
 
-This should not have any functional changes.
+  00:1c.3 PCI bridge: Intel Corporation Lynx Point-LP PCI Express Root Port 4
+        Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd-
+HotPlug- Surprise-
+                        Slot #3, PowerLimit 10.000W; Interlock- NoCompl+
 
-Cc: Mark Rutland <Mark.Rutland@arm.com>
-Cc: Marc Zyngier <Marc.Zyngier@arm.com>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Catalin Marinas <Catalin.Marinas@arm.com>
-Cc: Will Deacon <Will.Deacon@arm.com>
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- drivers/irqchip/irq-gic.c | 65 +++++++++++++++++++++--------------------------
- drivers/irqchip/irq-gic.h | 52 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 81 insertions(+), 36 deletions(-)
- create mode 100644 drivers/irqchip/irq-gic.h
+Since you don't see these, my guess is that your ports don't indicate
+that they support a slot, e.g., they might look like this:
 
-diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
-index ac8f7ea..966e1d5 100644
---- a/drivers/irqchip/irq-gic.c
-+++ b/drivers/irqchip/irq-gic.c
-@@ -1,5 +1,5 @@
- /*
-- *  linux/arch/arm/common/gic.c
-+ *  driver/irqchip/irq-gic.c
-  *
-  *  Copyright (C) 2002 ARM Limited, All Rights Reserved.
-  *
-@@ -47,30 +47,9 @@
- #include <asm/smp_plat.h>
- 
- #include "irq-gic-common.h"
-+#include "irq-gic.h"
- #include "irqchip.h"
- 
--union gic_base {
--	void __iomem *common_base;
--	void __percpu * __iomem *percpu_base;
--};
--
--struct gic_chip_data {
--	union gic_base dist_base;
--	union gic_base cpu_base;
--#ifdef CONFIG_CPU_PM
--	u32 saved_spi_enable[DIV_ROUND_UP(1020, 32)];
--	u32 saved_spi_conf[DIV_ROUND_UP(1020, 16)];
--	u32 saved_spi_target[DIV_ROUND_UP(1020, 4)];
--	u32 __percpu *saved_ppi_enable;
--	u32 __percpu *saved_ppi_conf;
--#endif
--	struct irq_domain *domain;
--	unsigned int gic_irqs;
--#ifdef CONFIG_GIC_NON_BANKED
--	void __iomem *(*get_base)(union gic_base *);
--#endif
--};
--
- static DEFINE_RAW_SPINLOCK(irq_controller_lock);
- 
- /*
-@@ -152,7 +131,7 @@ static inline unsigned int gic_irq(struct irq_data *d)
- /*
-  * Routines to acknowledge, disable and enable interrupts
-  */
--static void gic_mask_irq(struct irq_data *d)
-+void gic_mask_irq(struct irq_data *d)
- {
- 	u32 mask = 1 << (gic_irq(d) % 32);
- 
-@@ -163,7 +142,7 @@ static void gic_mask_irq(struct irq_data *d)
- 	raw_spin_unlock(&irq_controller_lock);
- }
- 
--static void gic_unmask_irq(struct irq_data *d)
-+void gic_unmask_irq(struct irq_data *d)
- {
- 	u32 mask = 1 << (gic_irq(d) % 32);
- 
-@@ -174,7 +153,7 @@ static void gic_unmask_irq(struct irq_data *d)
- 	raw_spin_unlock(&irq_controller_lock);
- }
- 
--static void gic_eoi_irq(struct irq_data *d)
-+void gic_eoi_irq(struct irq_data *d)
- {
- 	if (gic_arch_extn.irq_eoi) {
- 		raw_spin_lock(&irq_controller_lock);
-@@ -185,7 +164,7 @@ static void gic_eoi_irq(struct irq_data *d)
- 	writel_relaxed(gic_irq(d), gic_cpu_base(d) + GIC_CPU_EOI);
- }
- 
--static int gic_set_type(struct irq_data *d, unsigned int type)
-+int gic_set_type(struct irq_data *d, unsigned int type)
- {
- 	void __iomem *base = gic_dist_base(d);
- 	unsigned int gicirq = gic_irq(d);
-@@ -209,7 +188,7 @@ static int gic_set_type(struct irq_data *d, unsigned int type)
- 	return 0;
- }
- 
--static int gic_retrigger(struct irq_data *d)
-+int gic_retrigger(struct irq_data *d)
- {
- 	if (gic_arch_extn.irq_retrigger)
- 		return gic_arch_extn.irq_retrigger(d);
-@@ -219,8 +198,8 @@ static int gic_retrigger(struct irq_data *d)
- }
- 
- #ifdef CONFIG_SMP
--static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
--			    bool force)
-+int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
-+		     bool force)
- {
- 	void __iomem *reg = gic_dist_base(d) + GIC_DIST_TARGET + (gic_irq(d) & ~3);
- 	unsigned int cpu, shift = (gic_irq(d) % 4) * 8;
-@@ -246,7 +225,7 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
- #endif
- 
- #ifdef CONFIG_PM
--static int gic_set_wake(struct irq_data *d, unsigned int on)
-+int gic_set_wake(struct irq_data *d, unsigned int on)
- {
- 	int ret = -ENXIO;
- 
-@@ -768,19 +747,21 @@ void __init gic_init_physaddr(struct device_node *node)
- static int gic_irq_domain_map(struct irq_domain *d, unsigned int irq,
- 				irq_hw_number_t hw)
- {
-+	struct gic_chip_data *gic = d->host_data;
-+
- 	if (hw < 32) {
- 		irq_set_percpu_devid(irq);
--		irq_set_chip_and_handler(irq, &gic_chip,
-+		irq_set_chip_and_handler(irq, gic->irq_chip,
- 					 handle_percpu_devid_irq);
- 		set_irq_flags(irq, IRQF_VALID | IRQF_NOAUTOEN);
- 	} else {
--		irq_set_chip_and_handler(irq, &gic_chip,
-+		irq_set_chip_and_handler(irq, gic->irq_chip,
- 					 handle_fasteoi_irq);
- 		set_irq_flags(irq, IRQF_VALID | IRQF_PROBE);
- 
- 		gic_routable_irq_domain_ops->map(d, irq, hw);
- 	}
--	irq_set_chip_data(irq, d->host_data);
-+	irq_set_chip_data(irq, gic);
- 	return 0;
- }
- 
-@@ -989,8 +970,9 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
- #ifdef CONFIG_OF
- static int gic_cnt __initdata;
- 
--static int __init
--gic_of_init(struct device_node *node, struct device_node *parent)
-+int __init
-+_gic_of_init(struct device_node *node, struct device_node *parent,
-+	     struct irq_chip *chip, struct gic_chip_data **gic)
- {
- 	void __iomem *cpu_base;
- 	void __iomem *dist_base;
-@@ -1009,6 +991,8 @@ gic_of_init(struct device_node *node, struct device_node *parent)
- 	if (of_property_read_u32(node, "cpu-offset", &percpu_offset))
- 		percpu_offset = 0;
- 
-+	gic_data[gic_cnt].irq_chip = chip;
-+
- 	gic_init_bases(gic_cnt, -1, dist_base, cpu_base, percpu_offset, node);
- 	if (!gic_cnt)
- 		gic_init_physaddr(node);
-@@ -1017,10 +1001,19 @@ gic_of_init(struct device_node *node, struct device_node *parent)
- 		irq = irq_of_parse_and_map(node, 0);
- 		gic_cascade_irq(gic_cnt, irq);
- 	}
-+
-+	if (gic)
-+		*gic = &gic_data[gic_cnt];
- 	gic_cnt++;
- 	return 0;
- }
- 
-+static int __init
-+gic_of_init(struct device_node *node, struct device_node *parent)
-+{
-+	return _gic_of_init(node, parent, &gic_chip, NULL);
-+}
-+
- IRQCHIP_DECLARE(arm_gic_400, "arm,gic-400", gic_of_init);
- IRQCHIP_DECLARE(cortex_a15_gic, "arm,cortex-a15-gic", gic_of_init);
- IRQCHIP_DECLARE(cortex_a9_gic, "arm,cortex-a9-gic", gic_of_init);
-diff --git a/drivers/irqchip/irq-gic.h b/drivers/irqchip/irq-gic.h
-new file mode 100644
-index 0000000..a4beb4a
---- /dev/null
-+++ b/drivers/irqchip/irq-gic.h
-@@ -0,0 +1,52 @@
-+#ifndef _IRQ_GIC_H_
-+#define _IRQ_GIC_H_
-+
-+#include <linux/msi.h>
-+
-+union gic_base {
-+	void __iomem *common_base;
-+	void __percpu * __iomem *percpu_base;
-+};
-+
-+struct gic_chip_data {
-+	union gic_base dist_base;
-+	union gic_base cpu_base;
-+#ifdef CONFIG_CPU_PM
-+	u32 saved_spi_enable[DIV_ROUND_UP(1020, 32)];
-+	u32 saved_spi_conf[DIV_ROUND_UP(1020, 16)];
-+	u32 saved_spi_target[DIV_ROUND_UP(1020, 4)];
-+	u32 __percpu *saved_ppi_enable;
-+	u32 __percpu *saved_ppi_conf;
-+#endif
-+	struct irq_domain *domain;
-+	unsigned int gic_irqs;
-+	struct irq_chip *irq_chip;
-+#ifdef CONFIG_GIC_NON_BANKED
-+	void __iomem *(*get_base)(union gic_base *);
-+#endif
-+};
-+
-+void gic_mask_irq(struct irq_data *d);
-+void gic_unmask_irq(struct irq_data *d);
-+void gic_eoi_irq(struct irq_data *d);
-+int gic_set_type(struct irq_data *d, unsigned int type);
-+int gic_retrigger(struct irq_data *d);
-+
-+#ifdef CONFIG_SMP
-+int gic_set_affinity(struct irq_data *d,
-+			    const struct cpumask *mask_val,
-+			    bool force);
-+#endif
-+
-+#ifdef CONFIG_PM
-+int gic_set_wake(struct irq_data *d, unsigned int on);
-+#endif
-+
-+#ifdef CONFIG_OF
-+int _gic_of_init(struct device_node *node,
-+		 struct device_node *parent,
-+		 struct irq_chip *chip,
-+		 struct gic_chip_data **gic) __init;
-+#endif
-+
-+#endif /* _IRQ_GIC_H_ */
--- 
-1.9.0
+  00:1c.3 PCI bridge: Intel Corporation Lynx Point-LP PCI Express Root Port 4
+        Capabilities: [40] Express (v2) Root Port (Slot-), MSI 00
 
+The "Slot-" means the port doesn't have a slot, and lspci won't show
+you the SltCap register, and I think the kernel won't put anything in
+/sys/bus/pci/slots.
+
+>> "lspci -v" also shows:
+>>
+>>   03:00.0 Unassigned class [ff00]: Realtek Semiconductor Co., Ltd.
+>> Device 5227 (rev 01)
+>>         Physical Slot: 5
+>
+> My lspci hasn't the "Physical Slot" field. However, where does it take
+> this information?
+> From the BIOS I suppose, a recent BIOS.
+
+>From looking at the lspci source
+(git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git), it looks
+like that "Physical Slot" comes from /sys/bus/pci/slots/..., so if you
+don't have anything there, you won't see "Physical Slot".
+
+>> I don't think the behavior should be different on PCIe, but maybe if
+>> you have an example, it will help me figure out why it is
+>> different.  My current machine has three Root Ports (which are
+>> treated as PCI-to-PCI bridges), and they all have secondary bus
+>> numbers assigned, even though only two have devices below them:
+>>
+>>            +-1c.0-[01]--
+>>            +-1c.3-[02]----00.0
+>>            +-1c.5-[03]----00.0
+>
+> What I observed is that when several PCIe slot belong to a single PCI
+> Bridge, and you
+> plug a board in one on these, then it enumerates all secondary buses,
+> also the
+> empty ones (like your case, all your slot belong to device 1c).
+>
+> But, if you un-plug the devices on secondary bus 02 and 03, you should
+> not see the
+> device 1c anymore. This is what is happening with my machine
+> [industrial backplane
+> with several PCI(e) slots and the motherboard plugged in a special
+> slot.].
+
+I think there's something unusual going on with your machine.  I can't
+remove the devices on my machine (a laptop), but normally the Root
+Ports or Downstream Ports leading to the slots continue to exist even
+if the slots are empty.  In your case, it sounds like there's some
+hardware that is turning off power to those ports when the slots are
+all empty.
+
+I assume these ports don't support hotplug.  If they *did* support
+hotplug, those ports would have to exist because they handle the
+hotplug events (presence detect, etc.)
+
+If you can collect the complete "lspci -vv" output from your machine
+(with a device plugged in, so we can see the port leading to it), that
+will help make this more concrete.  And maybe one with no devices
+plugged in, so we can see exactly what changes.
+
+Bjorn
