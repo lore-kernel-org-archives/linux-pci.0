@@ -1,91 +1,246 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f169.google.com ([209.85.128.169]:55256 "EHLO
-	mail-ve0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750927AbaGHIx5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 04:53:57 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:57627 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753441AbaGCPvU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Jul 2014 11:51:20 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 1/7] iommu: Create central IOMMU group lookup/creation
+	interface
+To: iommu@lists.linux-foundation.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>
+Date: Thu, 03 Jul 2014 09:51:18 -0600
+Message-ID: <20140703155117.8112.95406.stgit@gimli.home>
+In-Reply-To: <20140703154428.8112.97562.stgit@gimli.home>
+References: <20140703154428.8112.97562.stgit@gimli.home>
 MIME-Version: 1.0
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E46A4@EAPEX1MAIL1.st.com>
-References: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E46A4@EAPEX1MAIL1.st.com>
-Date: Tue, 8 Jul 2014 14:23:56 +0530
-Message-ID: <CAOh2x=nLawh_X0M2ESDvxKNhhVUjE9yKEvfin3WTkNs8Kv5eUg@mail.gmail.com>
-Subject: Re: [GIT PULL] SPEAr1310 PCIe patches rebased on 3.16-rc3
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Cc: "arm@kernel.org" <arm@kernel.org>,
-	"Arnd Bergmann (arnd@arndb.de)" <arnd@arndb.de>,
-	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
-	"'Kishon Vijay Abraham I' (kishon@ti.com)" <kishon@ti.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Mark Nicholson <mark@nicholnet.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mohit,
+Currently each IOMMU driver that supports IOMMU groups has its own
+code for discovering the base device used in grouping.  This code
+is generally not specific to the IOMMU hardware, but to the bus of
+the devices managed by the IOMMU.  We can therefore create a common
+interface for supporting devices on different buses.
 
-On Tue, Jul 8, 2014 at 12:36 PM, Mohit KUMAR DCG <Mohit.KUMAR@st.com> wrote:
-> Hello Arnd,
->
-> Pls find SPEAr1310 pcie patches to be merged through arm-soc tree.
-> These patches are rebased on the top of 3-16-rc3.
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
-> spear/pcie-support-v8
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-You actually sent this request before Arnd's reply :).
+ drivers/iommu/iommu.c |  182 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iommu.h |    1 
+ 2 files changed, 183 insertions(+)
 
-This is what he asked for:
-
-"Please also include a description of the overall series and the
-reasons why we decided
-to merge it through arm-soc in the pull request email. Thanks!"
-
-Also this is not how we send pull requests, please see this:
-http://git-scm.com/docs/git-request-pull
-
-Let me know if you need some help.
-
-Also, build-bot reported a warning with your patches and I have
-fixed it now:
-
->> WARNING: drivers/built-in.o(.data+0x334): Section mismatch in reference from the variable spear1310_miphy_driver to the function .init.text:spear1310_miphy_probe()
-
-diff --git a/drivers/phy/phy-spear1310-miphy.c
-b/drivers/phy/phy-spear1310-miphy.c
-index 6136634..dc0b97a 100644
---- a/drivers/phy/phy-spear1310-miphy.c
-+++ b/drivers/phy/phy-spear1310-miphy.c
-@@ -205,7 +205,7 @@ static struct phy *spear1310_miphy_xlate(struct device *dev,
-        return priv->phy;
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index e5555fc..d061c86 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -29,6 +29,7 @@
+ #include <linux/idr.h>
+ #include <linux/notifier.h>
+ #include <linux/err.h>
++#include <linux/pci.h>
+ #include <trace/events/iommu.h>
+ 
+ static struct kset *iommu_group_kset;
+@@ -514,6 +515,187 @@ int iommu_group_id(struct iommu_group *group)
  }
-
--static int __init spear1310_miphy_probe(struct platform_device *pdev)
-+static int spear1310_miphy_probe(struct platform_device *pdev)
+ EXPORT_SYMBOL_GPL(iommu_group_id);
+ 
++/*
++ * To consider a PCI device isolated, we require ACS to support Source
++ * Validation, Request Redirection, Completer Redirection, and Upstream
++ * Forwarding.  This effectively means that devices cannot spoof their
++ * requester ID, requests and completions cannot be redirected, and all
++ * transactions are forwarded upstream, even as it passes through a
++ * bridge where the target device is downstream.
++ */
++#define REQ_ACS_FLAGS   (PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
++
++struct group_for_pci_data {
++	struct pci_dev *pdev;
++	struct iommu_group *group;
++};
++
++/*
++ * DMA alias iterator callback, return the last seen device.  Stop and return
++ * the IOMMU group if we find one along the way.
++ */
++static int get_pci_alias_or_group(struct pci_dev *pdev, u16 alias, void *opaque)
++{
++	struct group_for_pci_data *data = opaque;
++
++	data->pdev = pdev;
++	data->group = iommu_group_get(&pdev->dev);
++
++	return data->group != NULL;
++}
++
++/*
++ * Use standard PCI bus topology, isolation features, and DMA alias quirks
++ * to find or create an IOMMU group for a device.
++ */
++static struct iommu_group *iommu_group_get_for_pci_dev(struct pci_dev *pdev)
++{
++	struct group_for_pci_data data;
++	struct pci_bus *bus;
++	struct iommu_group *group = NULL;
++	struct pci_dev *tmp;
++
++	/*
++	 * Find the upstream DMA alias for the device.  A device must not
++	 * be aliased due to topology in order to have its own IOMMU group.
++	 * If we find an alias along the way that already belongs to a
++	 * group, use it.
++	 */
++	if (pci_for_each_dma_alias(pdev, get_pci_alias_or_group, &data))
++		return data.group;
++
++	pdev = data.pdev;
++
++	/*
++	 * Continue upstream from the point of minimum IOMMU granularity
++	 * due to aliases to the point where devices are protected from
++	 * peer-to-peer DMA by PCI ACS.  Again, if we find an existing
++	 * group, use it.
++	 */
++	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
++		if (!bus->self)
++			continue;
++
++		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
++			break;
++
++		pdev = bus->self;
++
++		group = iommu_group_get(&pdev->dev);
++		if (group)
++			return group;
++	}
++
++	/*
++	 * Next we need to consider DMA alias quirks.  If one device aliases
++	 * to another, they should be grouped together.  It's theoretically
++	 * possible that aliases could create chains of devices where each
++	 * device aliases another device.  If we then factor in multifunction
++	 * ACS grouping requirements, each alias could incorporate a new slot
++	 * with multiple functions, each with aliases.  This is all extremely
++	 * unlikely as DMA alias quirks are typically only used for PCIe
++	 * devices where we usually have a single slot per bus.  Furthermore,
++	 * the alias quirk is usually to another function within the slot
++	 * (and ACS multifunction is not supported) or to a different slot
++	 * that doesn't physically exist.  The likely scenario is therefore
++	 * that everything on the bus gets grouped together.  To reduce the
++	 * problem space, share the IOMMU group for all devices on the bus
++	 * if a DMA alias quirk is present on the bus.
++	 */
++	tmp = NULL;
++	for_each_pci_dev(tmp) {
++		if (tmp->bus != pdev->bus ||
++		    !(tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN))
++			continue;
++
++		pci_dev_put(tmp);
++		tmp = NULL;
++
++		/* We have an alias quirk, search for an existing group */
++		for_each_pci_dev(tmp) {
++			struct iommu_group *group_tmp;
++
++			if (tmp->bus != pdev->bus)
++				continue;
++
++			group_tmp = iommu_group_get(&tmp->dev);
++			if (!group) {
++				group = group_tmp;
++				continue;
++			}
++
++			if (group_tmp) {
++				WARN_ON(group != group_tmp);
++				iommu_group_put(group_tmp);
++			}
++		}
++
++		return group ? group : iommu_group_alloc();
++	}
++
++	/*
++	 * Non-multifunction devices or multifunction devices supporting
++	 * ACS get their own group.
++	 */
++	if (!pdev->multifunction || pci_acs_enabled(pdev, REQ_ACS_FLAGS))
++		return iommu_group_alloc();
++
++	/*
++	 * Multifunction devices not supporting ACS share a group with other
++	 * similar devices in the same slot.
++	 */
++	tmp = NULL;
++	for_each_pci_dev(tmp) {
++		if (tmp == pdev || tmp->bus != pdev->bus ||
++		    PCI_SLOT(tmp->devfn) !=  PCI_SLOT(pdev->devfn) ||
++		    pci_acs_enabled(tmp, REQ_ACS_FLAGS))
++			continue;
++
++		group = iommu_group_get(&tmp->dev);
++		if (group) {
++			pci_dev_put(tmp);
++			return group;
++		}
++	}
++
++	/* No shared group found, allocate new */
++	return iommu_group_alloc();
++}
++
++/**
++ * iommu_group_get_for_dev - Find or create the IOMMU group for a device
++ * @dev: target device
++ *
++ * This function is intended to be called by IOMMU drivers and extended to
++ * support common, bus-defined algorithms when determining or creating the
++ * IOMMU group for a device.  On success, the caller will hold a reference
++ * to the returned IOMMU group, which will already include the provided
++ * device.  The reference should be released with iommu_group_put().
++ */
++struct iommu_group *iommu_group_get_for_dev(struct device *dev)
++{
++	struct iommu_group *group = ERR_PTR(-EIO);
++	int ret;
++
++	group = iommu_group_get(dev);
++	if (group)
++		return group;
++
++	if (dev_is_pci(dev))
++		group = iommu_group_get_for_pci_dev(to_pci_dev(dev));
++
++	if (IS_ERR(group))
++		return group;
++
++	ret = iommu_group_add_device(group, dev);
++	if (ret) {
++		iommu_group_put(group);
++		return ERR_PTR(ret);
++	}
++
++	return group;
++}
++
+ static int add_iommu_group(struct device *dev, void *data)
  {
-        struct device *dev = &pdev->dev;
-        struct spear1310_miphy_priv *priv;
-diff --git a/drivers/phy/phy-spear1340-miphy.c
-b/drivers/phy/phy-spear1340-miphy.c
-index cbaf284..e06e944 100644
---- a/drivers/phy/phy-spear1340-miphy.c
-+++ b/drivers/phy/phy-spear1340-miphy.c
-@@ -235,7 +235,7 @@ static struct phy *spear1340_miphy_xlate(struct device *dev,
-        return priv->phy;
- }
+ 	struct iommu_ops *ops = data;
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index b96a5b2..a2e5843 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -181,6 +181,7 @@ extern int iommu_group_register_notifier(struct iommu_group *group,
+ extern int iommu_group_unregister_notifier(struct iommu_group *group,
+ 					   struct notifier_block *nb);
+ extern int iommu_group_id(struct iommu_group *group);
++extern struct iommu_group *iommu_group_get_for_dev(struct device *dev);
+ 
+ extern int iommu_domain_get_attr(struct iommu_domain *domain, enum iommu_attr,
+ 				 void *data);
 
--static int __init spear1340_miphy_probe(struct platform_device *pdev)
-+static int spear1340_miphy_probe(struct platform_device *pdev)
- {
-        struct device *dev = &pdev->dev;
-        struct spear1340_miphy_priv *priv;
-
-Please let me know if I screwed up. Else send pull request from
-this branch again.
-
---
-viresh
