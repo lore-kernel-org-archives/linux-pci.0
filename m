@@ -1,123 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:58431 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965259AbaGPSsy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 14:48:54 -0400
-Received: by mail-ie0-f173.google.com with SMTP id tr6so1223366ieb.18
-        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 11:48:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1405059585-10620-22-git-send-email-jiang.liu@linux.intel.com>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com> <1405059585-10620-22-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:58260 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753961AbaGCWL4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 18:11:56 -0400
+Received: by mail-ig0-f173.google.com with SMTP id uq10so8164688igb.0
+        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 15:11:56 -0700 (PDT)
+Date: Thu, 3 Jul 2014 16:11:52 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 16 Jul 2014 12:48:33 -0600
-Message-ID: <CAErSpo5MU2tck3iQxf0K0rMzNuHdFMLDF+frqQ-5f-KPGcobqg@mail.gmail.com>
-Subject: Re: [Patch Part3 V4 21/21] pci, ACPI, iommu: Enhance pci_root to
- support DMAR device hotplug
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	dmaengine@vger.kernel.org,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] pci: Allow very large resource windows
+Message-ID: <20140703221152.GH28852@google.com>
+References: <20140611060118.GB3169@yanx>
+ <CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
+ <20140702210736.GB28852@google.com>
+ <CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
+ <20140703131526.GG28852@google.com>
+ <CAE9FiQWPGXMBYmpzyk8cicKZ1ELUZiARkZjr2vvgntmt3bt1jQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQWPGXMBYmpzyk8cicKZ1ELUZiARkZjr2vvgntmt3bt1jQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 11, 2014 at 12:19 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> Finally enhance pci_root driver to support DMAR device hotplug when
-> hot-plugging PCI host bridges.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+On Thu, Jul 03, 2014 at 12:59:21PM -0700, Yinghai Lu wrote:
+> On Thu, Jul 3, 2014 at 6:15 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >>
+> >> >> +     mem64_mask = b_res->flags & IORESOURCE_MEM_64;
+> >> >> +
+> >> >> +     /* kernel does not support 64bit res */
+> >> >> +     if (sizeof(resource_size_t) == 4)
+> >> >> +             mem64_mask &= ~IORESOURCE_MEM_64;
+> >
+> > I think you're fixing two things at once, and they should be split
+> > into two separate patches:
+> >
+> >   1) Change aligns[] size to increase support alignment from 8GB to 2^63
+> >
+> >      I'm not sure about going all the way to aligns[44].  That array
+> >      by itself puts 352 bytes in the stack frame (240 of which are
+> >      added by this patch), which seems excessive.  I suspect that
+> >      supporting BARs up to 64GB or 128GB would be enough for the
+> >      foreseeable future.
+> 
+> ok, let's use 128G this time.
+> 
+> >
+> >   2) Adding mem64_mask
+> >
+> >      I think the idea is that even if we have a 64-bit window, we
+> >      can't use anything above 4GB if we only have 32-bit resources.
+> >      That's true, but I don't think we can enforce that in
+> >      pbus_size_mem() because we're only figuring out how much space is
+> >      needed; we have no idea where that space will be allocated.
+> 
+> with current version of __pci_bus_size_bridges, we separate pref_mem64 with
+> pref_mem32 to calling pbus_size_mem.
+> 
+> so if we have pref 64bit window, we will only size pref 64 bit
+> children under it.
+> and will only assign pref 64bit mem64 to them late.
+> 
+> If the bridge does not support 64bit pref windows, and child support
+> 64bit pref mmio, then bridge will try to use pref 32 window, in that
+> case, .... could have
+> size overflow as you state follow.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+This problem has nothing to do with overflow.  We're concerned with
+IORESOURCE_MEM_64, which tells us the width of the bridge window
+registers: obviously we can't put a 64-bit bus address in a 32-bit
+window register.
 
-I assume you'll merge this along with the rest of the series via some
-non-PCI tree.
+pbus_size_mem() figures out how much space we need.  If we need 4GB or
+more and the kernel only supports 32-bit resources, we can fail
+immediately because we can't describe a 4GB window in a 32-bit
+resource.
 
-> ---
->  drivers/acpi/pci_root.c |   16 ++++++++++++++--
->  1 file changed, 14 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index d388f13d48b4..99c2b9761c12 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -33,6 +33,7 @@
->  #include <linux/pci.h>
->  #include <linux/pci-acpi.h>
->  #include <linux/pci-aspm.h>
-> +#include <linux/dmar.h>
->  #include <linux/acpi.h>
->  #include <linux/slab.h>
->  #include <acpi/apei.h> /* for acpi_hest_init() */
-> @@ -511,6 +512,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->         struct acpi_pci_root *root;
->         acpi_handle handle = device->handle;
->         int no_aspm = 0, clear_aspm = 0;
-> +       bool hotadd = system_state != SYSTEM_BOOTING;
->
->         root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
->         if (!root)
-> @@ -557,6 +559,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
->         strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->         device->driver_data = root;
->
-> +       if (hotadd && dmar_device_add(handle)) {
-> +               result = -ENXIO;
-> +               goto end;
-> +       }
-> +
->         pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
->                acpi_device_name(device), acpi_device_bid(device),
->                root->segment, &root->secondary);
-> @@ -583,7 +590,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->                         root->segment, (unsigned int)root->secondary.start);
->                 device->driver_data = NULL;
->                 result = -ENODEV;
-> -               goto end;
-> +               goto remove_dmar;
->         }
->
->         if (clear_aspm) {
-> @@ -597,7 +604,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->         if (device->wakeup.flags.run_wake)
->                 device_set_run_wake(root->bus->bridge, true);
->
-> -       if (system_state != SYSTEM_BOOTING) {
-> +       if (hotadd) {
->                 pcibios_resource_survey_bus(root->bus);
->                 pci_assign_unassigned_root_bus_resources(root->bus);
->         }
-> @@ -607,6 +614,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
->         pci_unlock_rescan_remove();
->         return 1;
->
-> +remove_dmar:
-> +       if (hotadd)
-> +               dmar_device_remove(handle);
->  end:
->         kfree(root);
->         return result;
-> @@ -625,6 +635,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
->
->         pci_remove_root_bus(root->bus);
->
-> +       dmar_device_remove(device->handle);
-> +
->         pci_unlock_rescan_remove();
->
->         kfree(root);
-> --
-> 1.7.10.4
->
+But if we need less than 4GB, pbus_size_mem() should succeed.  We
+might fail *later*, if we can't allocate bus addresses that fit in a
+32-bit bridge window register.  But in pbus_size_mem(), we have no
+idea where the space will come from.
+
+So I don't think there's any point in looking at the sizes of
+individual BARs in pbus_size_mem().  We should only look at the total
+size required.
+
+> > And I think there are more problems:
+> >
+> >   - I don't think we handle overflow of "size" correctly.  Assume that
+> >     we have BARs of 2GB, 2GB, and 8GB.  If we have 32-bit resources,
+> >     when we add those up, it will overflow and we'll mistakenly think
+> >     we only need 8MB.
+> 
+> in this case we should check the overflow.
+> 
+> >
+> >   - We shouldn't set "r->flags = 0".  The warning says we're disabling
+> >     the BAR, but this *doesn't* disable the BAR, and in fact, there is
+> >     no way to disable a single BAR.  What we can do is turn off
+> >     PCI_COMMAND_MEMORY to disable all the memory BARs for the device.
+> >     And to do that, we need to keep IORESOURCE_MEM in r->flags so
+> >     pci_enable_resources() can tell that this is a memory BAR.
+> 
+> when we try to size it,  means that bar is not assigned. with r->flags
+> = 0, means
+> we will ignore it all the way.
+
+With "r->flags = 0", we will not try to assign resources to the BAR,
+but the hardware BAR still exists and contains some address.  If the
+device has other memory BARs, pci_enable_resources() will turn on
+PCI_COMMAND_MEMORY.  Now the "r->flags == 0" BAR is enabled but the
+address it contains might conflict with other devices.  That's the
+problem.
+
+To fix this, I think we need to do "r->flags |= IORESOURCE_UNSET |
+IORESOURCE_DISABLED".
+
+Bjorn
