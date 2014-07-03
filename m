@@ -1,115 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:33823 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755351AbaGVPlf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 11:41:35 -0400
-MIME-Version: 1.0
-In-Reply-To: <53CD424B.1090806@ti.com>
-References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com>
- <1405696469-7172-5-git-send-email-m-karicheri2@ti.com> <CAL_JsqKheoWrSGtxPO=AE8g9iOAqfwRa=81Ku=Cfx8_gpDysOg@mail.gmail.com>
- <53C9839C.5090604@ti.com> <006001cfa485$4f4fcff0$edef6fd0$%han@samsung.com> <53CD424B.1090806@ti.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Tue, 22 Jul 2014 10:41:12 -0500
-Message-ID: <CAL_JsqJXb28RHhZG9=-NACwAr1ooGhfMOPjtsTGO2s3Dx7ayxQ@mail.gmail.com>
-Subject: Re: [PATCH v6 4/5] PCI: add PCI controller for keystone PCIe h/w
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+CC: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: RE: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+Date: Thu, 3 Jul 2014 09:20:52 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1726BF4E@AcuExch.aculab.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
+ <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
+ <20140702202201.GA28852@google.com>
+In-Reply-To: <20140702202201.GA28852@google.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 11:39 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
-> On 07/20/2014 09:44 PM, Jingoo Han wrote:
->>
->> On Saturday, July 19, 2014 5:29 AM, Murali Karicheri wrote:
->>>
->>> On 07/18/2014 03:31 PM, Rob Herring wrote:
->>>>
->>>> On Fri, Jul 18, 2014 at 10:14 AM, Murali Karicheri<m-karicheri2@ti.com>
->>>> wrote:
->>>
->>> --- Cut ---
->>>>>
->>>>> +
->>>>> +Optional properties:-
->>>>> +       phys: phandle to Generic Keystone SerDes phy for PCI
->>>>> +       phy-names: name of the Generic Keystine SerDes phy for PCI
->>>>> +         - If boot loader already does PCI link establishment, then
->>>>> phys and
->>>>> +           phy-names shouldn't be present.
->>>>> +       ti,enable-linktrain - Enable Link training.
->>>>> +         - If boot loader already does PCI link establishment, then
->>>>> this
->>>>> +           shouldn't be present.
->>>>
->>>>
->>>> Can't you read from the h/w if the link is trained?
->>
->>
->> I agree with Rob Herring's suggestion.
->>
->>>
->>> Yes.
->>>
->>> There are customers who use this driver with PCI Link setup done in the
->>> boot loader. This property tells the driver to bypass Link setup
->>> procedure in that case. Is this undesirable and if so. how other
->>> platforms handle it? Check first if link is trained or start the link
->>> setup procedure? Let me know. If this is fine, please provide your Ack.
->>
->>
->> Please, check the following code of Exynos PCIe diver.
->>
->> ./drivers/pci/host/pci-exynos.c
->>
->> static int exynos_pcie_establish_link(struct pcie_port *pp)
->> {
->>         struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
->>         void __iomem *elbi_base = exynos_pcie->elbi_base;
->>         void __iomem *pmu_base = exynos_pcie->pmu_base;
->>
->>         if (dw_pcie_link_up(pp)) {
->>                 dev_err(pp->dev, "Link already up\n");
->>                 return 0;
->>         }
->>         .....
->>
->> In the case of Exynos PCIe, the Exynos PCIe driver checks the
->> h/w bit such as PCIE_ELBI_LTSSM_ENABLE bit of PCIE_ELBI_RDLH_LINKUP
->> offset register.
->>
->> If the link is already set up by the boot loader or other reasons,
->> the driver will skip some initialization codes.
->>
->> The first step is that you find such h/w bit for checking link up.
->> If so, please add the code for skipping, when the link is already
->> set up.
->>
-> Rob, Jingoo,
->
-> We have similar bit to check for Link status and I have removed the DT
-> property and skip Link retrain if PCIe Link is already Up. I will be
-> resending the series with Patch 4/5 updated.
-
-For both keystone and exynos, is this status bit in the phy? If so,
-sounds like this should be a standard phy function op.
-
-Rob
+RnJvbTogQmpvcm4gSGVsZ2Fhcw0KPiBPbiBUdWUsIEp1biAxMCwgMjAxNCBhdCAwMzoxMDozMFBN
+ICswMjAwLCBBbGV4YW5kZXIgR29yZGVldiB3cm90ZToNCj4gPiBUaGVyZSBhcmUgUENJIGRldmlj
+ZXMgdGhhdCByZXF1aXJlIGEgcGFydGljdWxhciB2YWx1ZSB3cml0dGVuDQo+ID4gdG8gdGhlIE11
+bHRpcGxlIE1lc3NhZ2UgRW5hYmxlIChNTUUpIHJlZ2lzdGVyIHdoaWxlIGFsaWduZWQgb24NCj4g
+PiBwb3dlciBvZiAyIGJvdW5kYXJ5IHZhbHVlIG9mIGFjdHVhbGx5IHVzZWQgTVNJIHZlY3RvcnMg
+J252ZWMnDQo+ID4gaXMgYSBsZXNzZXIgb2YgdGhhdCBNTUUgdmFsdWU6DQo+ID4NCj4gPiAJcm91
+bmR1cF9wb3dfb2ZfdHdvKG52ZWMpIDwgJ011bHRpcGxlIE1lc3NhZ2UgRW5hYmxlJw0KPiA+DQo+
+ID4gSG93ZXZlciB0aGUgZXhpc3RpbmcgcGNpX2VuYWJsZV9tc2lfYmxvY2soKSBpbnRlcmZhY2Ug
+aXMgbm90DQo+ID4gYWJsZSB0byBjb25maWd1cmUgc3VjaCBkZXZpY2VzLCBzaW5jZSB0aGUgdmFs
+dWUgd3JpdHRlbiB0byB0aGUNCj4gPiBNTUUgcmVnaXN0ZXIgaXMgY2FsY3VsYXRlZCBmcm9tIHRo
+ZSBudW1iZXIgb2YgcmVxdWVzdGVkIE1TSXMNCj4gPiAnbnZlYyc6DQo+ID4NCj4gPiAJJ011bHRp
+cGxlIE1lc3NhZ2UgRW5hYmxlJyA9IHJvdW5kdXBfcG93X29mX3R3byhudmVjKQ0KPiANCj4gRm9y
+IE1TSSwgc29mdHdhcmUgbGVhcm5zIGhvdyBtYW55IHZlY3RvcnMgYSBkZXZpY2UgcmVxdWVzdHMg
+YnkgcmVhZGluZw0KPiB0aGUgTXVsdGlwbGUgTWVzc2FnZSBDYXBhYmxlIChNTUMpIGZpZWxkLiAg
+VGhpcyBmaWVsZCBpcyBlbmNvZGVkLCBzbyBhDQo+IGRldmljZSBjYW4gb25seSByZXF1ZXN0IDEs
+IDIsIDQsIDgsIGV0Yy4sIHZlY3RvcnMuICBJdCdzIGltcG9zc2libGUNCj4gZm9yIGEgZGV2aWNl
+IHRvIHJlcXVlc3QgMyB2ZWN0b3JzOyBpdCB3b3VsZCBoYXZlIHRvIHJvdW5kIHVwIHRoYXQgdXAN
+Cj4gdG8gYSBwb3dlciBvZiB0d28gYW5kIHJlcXVlc3QgNCB2ZWN0b3JzLg0KPiANCj4gU29mdHdh
+cmUgd3JpdGVzIHNpbWlsYXJseSBlbmNvZGVkIHZhbHVlcyB0byBNTUUgdG8gdGVsbCB0aGUgZGV2
+aWNlIGhvdw0KPiBtYW55IHZlY3RvcnMgaGF2ZSBiZWVuIGFsbG9jYXRlZCBmb3IgaXRzIHVzZS4g
+IEZvciBleGFtcGxlLCBpdCdzDQo+IGltcG9zc2libGUgdG8gdGVsbCB0aGUgZGV2aWNlIHRoYXQg
+aXQgY2FuIHVzZSAzIHZlY3RvcnM7IHRoZSBPUyBoYXMgdG8NCj4gcm91bmQgdGhhdCB1cCBhbmQg
+dGVsbCB0aGUgZGV2aWNlIGl0IGNhbiB1c2UgNCB2ZWN0b3JzLg0KPiANCj4gU28gaWYgSSB1bmRl
+cnN0YW5kIGNvcnJlY3RseSwgdGhlIHBvaW50IG9mIHRoaXMgc2VyaWVzIGlzIHRvIHRha2UNCj4g
+YWR2YW50YWdlIG9mIGRldmljZS1zcGVjaWZpYyBrbm93bGVkZ2UsIGUuZy4sIHRoZSBkZXZpY2Ug
+cmVxdWVzdHMgNA0KPiB2ZWN0b3JzIHZpYSBNTUMsIGJ1dCB3ZSAia25vdyIgdGhlIGRldmljZSBp
+cyBvbmx5IGNhcGFibGUgb2YgdXNpbmcgMy4NCj4gTW9yZW92ZXIsIHdlIHRlbGwgdGhlIGRldmlj
+ZSB2aWEgTU1FIHRoYXQgNCB2ZWN0b3JzIGFyZSBhdmFpbGFibGUsIGJ1dA0KPiB3ZSd2ZSBvbmx5
+IGFjdHVhbGx5IHNldCB1cCAzIG9mIHRoZW0uDQouLi4NCg0KRXZlbiBpZiB5b3UgZG8gdGhhdCwg
+eW91IG91Z2h0IHRvIHdyaXRlIHZhbGlkIGludGVycnVwdCBpbmZvcm1hdGlvbg0KaW50byB0aGUg
+NHRoIHNsb3QgKG1heWJlIHJlcGxpY2F0aW5nIG9uZSBvZiB0aGUgZWFybGllciBpbnRlcnJ1cHRz
+KS4NClRoZW4sIGlmIHRoZSBkZXZpY2UgZG9lcyByYWlzZSB0aGUgJ3VuZXhwZWN0ZWQnIGludGVy
+cnVwdCB5b3UgZG9uJ3QNCmdldCBhIHdyaXRlIHRvIGEgcmFuZG9tIGtlcm5lbCBsb2NhdGlvbi4N
+Cg0KUGxhdXNpYmx5IHNvbWV0aGluZyBzaW1pbGFyIHNob3VsZCBiZSBkb25lIHdoZW4gYSBzbWFs
+bGVyIG51bWJlciBvZg0KaW50ZXJydXB0cyBpcyBhc3NpZ25lZC4NCg0KCURhdmlkDQoNCg==
