@@ -1,35 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44550 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321AbaG2OYH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 10:24:07 -0400
-Date: Tue, 29 Jul 2014 07:24:03 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Tomas Henzl <thenzl@redhat.com>, linux-kernel@vger.kernel.org,
-	xjtuwjp@gmail.com, lindar_liu@usish.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: Re: [PATCH v2 RESEND 17/23] pm8001: Fix invalid return when
- request_irq() failed
-Message-ID: <20140729142403.GA13589@infradead.org>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <5ecd9b80f705545c3dc85b2a4ae63a8ac3df8105.1405533479.git.agordeev@redhat.com>
- <53D79DE2.9000702@redhat.com>
- <20140729132020.GA7714@infradead.org>
- <53D7A62D.2090709@redhat.com>
- <20140729135641.GA14378@infradead.org>
- <20140729141544.GA18029@dhcp-26-207.brq.redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:23732 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759056AbaGCPwC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Jul 2014 11:52:02 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 4/7] iommu/intel: Use iommu_group_get_for_dev()
+To: iommu@lists.linux-foundation.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>
+Date: Thu, 03 Jul 2014 09:51:37 -0600
+Message-ID: <20140703155136.8112.64951.stgit@gimli.home>
+In-Reply-To: <20140703154428.8112.97562.stgit@gimli.home>
+References: <20140703154428.8112.97562.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140729141544.GA18029@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 29, 2014 at 04:15:45PM +0200, Alexander Gordeev wrote:
-> Hmm.. 18/23 applies with a minor fuzz against
-> git://git.infradead.org/users/hch/scsi-queue.git drivers-for-3.17
+The IOMMU code now provides a common interface for finding or
+creating an IOMMU group for a device on PCI buses.  Make use of it
+and remove piles of code.
 
-Okay, it was just git-am being goofy then.  I'll take care of it.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: David Woodhouse <dwmw2@infradead.org>
+---
+
+ drivers/iommu/intel-iommu.c |   79 ++-----------------------------------------
+ 1 file changed, 4 insertions(+), 75 deletions(-)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 51b6b77..9128c84 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -45,7 +45,6 @@
+ #include <asm/iommu.h>
+ 
+ #include "irq_remapping.h"
+-#include "pci.h"
+ 
+ #define ROOT_SIZE		VTD_PAGE_SIZE
+ #define CONTEXT_SIZE		VTD_PAGE_SIZE
+@@ -4373,91 +4372,21 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
+ 	return 0;
+ }
+ 
+-#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
+-
+ static int intel_iommu_add_device(struct device *dev)
+ {
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct pci_dev *bridge, *dma_pdev = NULL;
+ 	struct iommu_group *group;
+-	int ret;
+ 	u8 bus, devfn;
+ 
+ 	if (!device_to_iommu(dev, &bus, &devfn))
+ 		return -ENODEV;
+ 
+-	bridge = pci_find_upstream_pcie_bridge(pdev);
+-	if (bridge) {
+-		if (pci_is_pcie(bridge))
+-			dma_pdev = pci_get_domain_bus_and_slot(
+-						pci_domain_nr(pdev->bus),
+-						bridge->subordinate->number, 0);
+-		if (!dma_pdev)
+-			dma_pdev = pci_dev_get(bridge);
+-	} else
+-		dma_pdev = pci_dev_get(pdev);
+-
+-	/* Account for quirked devices */
+-	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
+-
+-	/*
+-	 * If it's a multifunction device that does not support our
+-	 * required ACS flags, add to the same group as lowest numbered
+-	 * function that also does not suport the required ACS flags.
+-	 */
+-	if (dma_pdev->multifunction &&
+-	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
+-		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
+-
+-		for (i = 0; i < 8; i++) {
+-			struct pci_dev *tmp;
+-
+-			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
+-			if (!tmp)
+-				continue;
+-
+-			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
+-				swap_pci_ref(&dma_pdev, tmp);
+-				break;
+-			}
+-			pci_dev_put(tmp);
+-		}
+-	}
+-
+-	/*
+-	 * Devices on the root bus go through the iommu.  If that's not us,
+-	 * find the next upstream device and test ACS up to the root bus.
+-	 * Finding the next device may require skipping virtual buses.
+-	 */
+-	while (!pci_is_root_bus(dma_pdev->bus)) {
+-		struct pci_bus *bus = dma_pdev->bus;
+-
+-		while (!bus->self) {
+-			if (!pci_is_root_bus(bus))
+-				bus = bus->parent;
+-			else
+-				goto root_bus;
+-		}
+-
+-		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
+-			break;
+-
+-		swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
+-	}
++	group = iommu_group_get_for_dev(dev);
+ 
+-root_bus:
+-	group = iommu_group_get(&dma_pdev->dev);
+-	pci_dev_put(dma_pdev);
+-	if (!group) {
+-		group = iommu_group_alloc();
+-		if (IS_ERR(group))
+-			return PTR_ERR(group);
+-	}
+-
+-	ret = iommu_group_add_device(group, dev);
++	if (IS_ERR(group))
++		return PTR_ERR(group);
+ 
+ 	iommu_group_put(group);
+-	return ret;
++	return 0;
+ }
+ 
+ static void intel_iommu_remove_device(struct device *dev)
 
