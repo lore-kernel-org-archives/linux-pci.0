@@ -1,224 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:32823 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758700AbaGXGW7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 02:22:59 -0400
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 24 Jul 2014 11:52:56 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 934633940067
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:53 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s6O6MlNl34996436
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:47 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s6O6MqCe007917
-	for <linux-pci@vger.kernel.org>; Thu, 24 Jul 2014 11:52:52 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	yan@linux.vnet.ibm.com, qiudayu@linux.vnet.ibm.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 12/17] powerpc/powernv: Expand VF resources according to the number of total_pe
-Date: Thu, 24 Jul 2014 14:22:22 +0800
-Message-Id: <1406182947-11302-13-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1406182947-11302-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:51904 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752838AbaGCTnf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 15:43:35 -0400
+Received: by mail-qc0-f175.google.com with SMTP id i8so684852qcq.6
+        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 12:43:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <280883016.9onmf0miLq@pcbe13110.cern.ch>
+References: <280883016.9onmf0miLq@pcbe13110.cern.ch>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 3 Jul 2014 13:43:14 -0600
+Message-ID: <CAErSpo7dyfpcMdCv3QB=PQn3HskcVtdt4MXb8KUMcQC9+N3oBQ@mail.gmail.com>
+Subject: Re: PCIe bus enumeration
+To: Federico Vaga <federico.vaga@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Michel Arruat <michel.arruat@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On PHB3, VF resources will be covered by M64 BAR to have better PE isolation.
-Mostly the total_pe number is different from the total_VFs, which will lead to
-a conflict between MMIO space and the PE number.
+On Thu, Jul 3, 2014 at 10:45 AM, Federico Vaga <federico.vaga@gmail.com> wrote:
+> Hello,
+>
+> (I haven't a deep knowledge of the PCIe specification, maybe I'm just
+> missing something)
+>
+> is there a way to force the PCI subsystem to assign a bus-number to
+> every PCIe bridge, even if there is nothing connected?
+>
+>
+> My aim is to have a bus enumeration constant and independent from what
+> I plugged on the system. So, I can associate a physical slot to linux
+> device address bb:dd.f. Is it possible?
 
-This patch expands the VF resource size to reserve total_pe number of VFs'
-resource, which prevents the conflict.
+The /sys/bus/pci/slots/*/address files might help.  On my system, I have:
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/machdep.h        |    4 ++
- arch/powerpc/include/asm/pci-bridge.h     |    3 +
- arch/powerpc/kernel/pci-common.c          |    5 ++
- arch/powerpc/platforms/powernv/pci-ioda.c |   91 +++++++++++++++++++++++++++++
- arch/powerpc/platforms/powernv/pci.h      |    3 +
- 5 files changed, 106 insertions(+)
+  $ grep . /sys/bus/pci/slots/*/address /dev/null
+  /sys/bus/pci/slots/5/address:0000:03:00
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 3909d1b..fabb8016 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -252,6 +252,10 @@ struct machdep_calls {
- 	/* Reset the secondary bus of bridge */
- 	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
- 
-+#ifdef CONFIG_PCI_IOV
-+	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
-+#endif /* CONFIG_PCI_IOV */
-+
- 	/* Called to shutdown machine specific hardware not already controlled
- 	 * by other drivers.
- 	 */
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 757d7bb..3cb95af 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -173,6 +173,9 @@ struct pci_dn {
- #define IODA_INVALID_PE		(-1)
- #ifdef CONFIG_PPC_POWERNV
- 	int	pe_number;
-+#ifdef CONFIG_PCI_IOV
-+	u16     vfs;			/* number of VFs IOV BAR expended */
-+#endif /* CONFIG_PCI_IOV */
- #endif
- 	struct list_head child_list;
- 	struct list_head list;
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index d38a330..c2b7930 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1651,6 +1651,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 	if (ppc_md.pcibios_fixup_phb)
- 		ppc_md.pcibios_fixup_phb(hose);
- 
-+#ifdef CONFIG_PCI_IOV
-+	if (ppc_md.pcibios_fixup_sriov)
-+		ppc_md.pcibios_fixup_sriov(bus);
-+#endif /* CONFIG_PCI_IOV */
-+
- 	/* Configure PCI Express settings */
- 	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
- 		struct pci_bus *child;
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 8318b07..6fd2377 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1505,6 +1505,60 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
- static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
- #endif /* CONFIG_PCI_MSI */
- 
-+#ifdef CONFIG_PCI_IOV
-+static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
-+{
-+	struct pci_controller *hose;
-+	struct pnv_phb *phb;
-+	struct resource *res;
-+	int i;
-+	resource_size_t size;
-+	struct pci_dn *pdn;
-+
-+	if (!pdev->is_physfn || pdev->is_added)
-+		return;
-+
-+	hose = pci_bus_to_host(pdev->bus);
-+	phb = hose->private_data;
-+
-+	pdn = pci_get_pdn(pdev);
-+	pdn->vfs = 0;
-+
-+	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
-+		res = &pdev->resource[i];
-+		if (!res->flags || res->parent)
-+			continue;
-+		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-+			dev_warn(&pdev->dev, " non M64 IOV BAR %pR on %s\n",
-+				 res, pci_name(pdev));
-+			continue;
-+		}
-+
-+		dev_dbg(&pdev->dev, "PowerNV: Fixing VF BAR[%d] %pR to\n",
-+				i, res);
-+		size = pnv_pci_sriov_resource_size(pdev, i);
-+		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		dev_dbg(&pdev->dev, "                       %pR\n", res);
-+	}
-+	pdn->vfs = phb->ioda.total_pe;
-+}
-+
-+static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
-+{
-+	struct pci_dev *pdev;
-+	struct pci_bus *b;
-+
-+	list_for_each_entry(pdev, &bus->devices, bus_list) {
-+		b = pdev->subordinate;
-+
-+		if (b)
-+			pnv_pci_ioda_fixup_sriov(b);
-+
-+		pnv_pci_ioda_fixup_iov_resources(pdev);
-+	}
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- /*
-  * This function is supposed to be called on basis of PE from top
-  * to bottom style. So the the I/O or MMIO segment assigned to
-@@ -1681,6 +1735,40 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
- 	return phb->ioda.io_segsize;
- }
- 
-+/*
-+ * Allocate firmware data for VF, which doesn't have corresponding
-+ * device node. So we have to extend device's archdata.
-+ */
-+#ifdef CONFIG_PCI_IOV
-+static resource_size_t pnv_pcibios_sriov_resource_size(struct pci_dev *pdev, int resno)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	resource_size_t size = 0;
-+
-+	if (!pdn->vfs)
-+		return size;
-+
-+	size = resource_size(pdev->resource + resno);
-+	do_div(size, pdn->vfs);
-+
-+	return size;
-+}
-+
-+resource_size_t pnv_pci_sriov_resource_size(struct pci_dev *pdev, int resno)
-+{
-+	resource_size_t size;
-+
-+	size = pnv_pcibios_sriov_resource_size(pdev, resno);
-+	if (size != 0)
-+		return size;
-+
-+	size = resource_size(pdev->resource + resno);
-+	do_div(size, pci_sriov_get_totalvfs(pdev));
-+
-+	return size;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- /* Prevent enabling devices for which we couldn't properly
-  * assign a PE
-  */
-@@ -1886,6 +1974,9 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
- 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
- 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
-+#ifdef CONFIG_PCI_IOV
-+	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
-+#endif /* CONFIG_PCI_IOV */
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 
- 	/* Reset IODA tables to a clean state */
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 0d616f0..e55772f 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -229,5 +229,8 @@ extern void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
- 					__be64 *startp, __be64 *endp, bool rm);
- extern void pnv_pci_reset_secondary_bus(struct pci_dev *dev);
- extern int ioda_eeh_phb_reset(struct pci_controller *hose, int option);
-+#ifdef CONFIG_PCI_IOV
-+resource_size_t pnv_pci_sriov_resource_size(struct pci_dev *pdev, int resno);
-+#endif
- 
- #endif /* __POWERNV_PCI_H */
--- 
-1.7.9.5
+"lspci -v" also shows:
 
+  03:00.0 Unassigned class [ff00]: Realtek Semiconductor Co., Ltd.
+Device 5227 (rev 01)
+        Physical Slot: 5
+
+If you want to start with a physical slot number and figure out the
+bb.dd associated with it, the /sys/bus/pci/slots files are probably
+the most straightforward way.
+
+> I can do the mapping with a simple shell script by discovering the
+> "new" bus number, but I'm wondering if there is a way to have a
+> constant bus enumeration.
+>
+>
+>
+> My Humble Observation
+> ---------------------
+> It seems (to me) that for PCI the kernel assigns a bus-number to every
+> PCI bridges and sub-bridges even if there is nothing connected:
+>
+>
+> e.g. from lspci -t
+>
+>       [...]
+>       +-1e.0-[04-05]----0c.0-[05]--
+>
+> 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 92)
+> 04:0c.0 PCI bridge: Texas Instruments PCI2050 PCI-to-PCI Bridge (rev
+> 02)
+
+Yes.  I think you're talking about the bridge "secondary bus number".
+In this case the 04:0c.0 bridge has secondary bus 05, and there are no
+devices on bus 05.
+
+> The behavior on PCIe seems different. When there is nothing plugged on
+> a bus, then the kernel doesn't assign any bus-number and it doesn't
+> detect any PCI-Bridge at all. So, when I reboot the system with a new
+> PCIe card the bus enumeration may change.
+
+I don't think the behavior should be different on PCIe, but maybe if
+you have an example, it will help me figure out why it is different.
+My current machine has three Root Ports (which are treated as
+PCI-to-PCI bridges), and they all have secondary bus numbers assigned,
+even though only two have devices below them:
+
+           +-1c.0-[01]--
+           +-1c.3-[02]----00.0
+           +-1c.5-[03]----00.0
+
+We have to assign a secondary bus number in order to enumerate below
+the bridge.  We can't even tell whether the bus is empty until we
+enumerate it.  We should assign a secondary bus number, then enumerate
+the secondary bus (possibly finding nothing).  If we don't find
+anything, I think we currently leave the secondary bus number assigned
+even though the bus is empty.
+
+Bjorn
