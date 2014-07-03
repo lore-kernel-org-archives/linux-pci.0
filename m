@@ -1,62 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:39698 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756032AbaGRUqZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jul 2014 16:46:25 -0400
-From: Marek Vasut <marex@denx.de>
-To: Shawn Guo <shawn.guo@freescale.com>
-Subject: Re: [RFC] PCI: pci-imx6: Add delay to workaround kernel hang
-Date: Fri, 18 Jul 2014 22:46:20 +0200
-Cc: "Uwe =?iso-8859-1?q?Kleine-K=F6nig?="
-	<u.kleine-koenig@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>, bhelgaas@google.com,
-	r65037@freescale.com, d.mueller@elsoft.ch, kernel@pengutronix.de,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	tharvey@gateworks.com, Fabio Estevam <fabio.estevam@freescale.com>
-References: <1403637507-9424-1-git-send-email-festevam@gmail.com> <201407171023.10908.marex@denx.de> <20140717152707.GA8537@dragon>
-In-Reply-To: <20140717152707.GA8537@dragon>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201407182246.20911.marex@denx.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:32471 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753249AbaGCUrC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 16:47:02 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 3/3] PCI: Avoid size overflow for bridge 32bit resource
+Date: Thu,  3 Jul 2014 13:46:19 -0700
+Message-Id: <1404420379-20983-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1404420379-20983-1-git-send-email-yinghai@kernel.org>
+References: <1404420379-20983-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 17, 2014 at 05:27:09 PM, Shawn Guo wrote:
-> On Thu, Jul 17, 2014 at 10:23:10AM +0200, Marek Vasut wrote:
-> > On Thursday, July 17, 2014 at 08:51:48 AM, Uwe Kleine-König wrote:
-> > > Hello,
-> > > 
-> > > On Tue, Jun 24, 2014 at 04:18:27PM -0300, Fabio Estevam wrote:
-> > > > From: Fabio Estevam <fabio.estevam@freescale.com>
-> > > > 
-> > > > When the mx6 PCI conctroller is initialized in the bootloader we see
-> > > > a kernel hang inside imx6_add_pcie_port().
-> > > > 
-> > > > Adding a 30ms delay allows the kernel to boot.
-> > > 
-> > > Just my thought on how to debug that: I'd try to bisect the pci init
-> > > routine in the boot loader. I.e. first only do the first half of the
-> > > initialisation in U-Boot. Depending on Linux being able to boot or not
-> > > initialize more or less on the next run.
-> > > 
-> > > Maybe there is a single register write that makes Linux fail?!
-> > 
-> > I am still hell-bent on thinking that the missing PCIe block reset is
-> > what makes the Linux fail. Missing block reset is always a problem.
-> 
-> Indeed.  We're missing a hardware reset for PCIe on i.MX6Q and i.MX6DL.
-> Such reset is available on i.MX6SX, so there is no this problem for
-> i.MX6SX PCIe.
-> 
-> > Or do we now have a
-> > mean to reset the PCIe block and it's PHY from software?
-> 
-> Richard is trying to find a SW workaround for it, but we're not really
-> sure if it's possible.
+When mmio64_mask is not used, overall size should not bigger than 2G
+for single bridge.
+Get out early, so we could have chance to have some child resources get
+assigned instead of failing all of them, as bridge resource assigned
+is too small when overflow happens.
 
-I hate to ask this, but does that mean all but MX6SLX are irrepairably broken 
-and will never have a reliable PCIe implementation ever?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Best regards,
-Marek Vasut
+---
+ drivers/pci/setup-bus.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -957,6 +957,16 @@ static int pbus_size_mem(struct pci_bus
+ 					  (r->flags & mask) != type3))
+ 				continue;
+ 			r_size = resource_size(r);
++
++			/* reject oversize early */
++			if (!mem64_mask &&
++			    ((unsigned long long)size + r_size > (1ULL<<31))) {
++				dev_warn(&dev->dev, "disabling BAR %d: %pR size %#llx overflow bridge's)\n",
++					i, r, (unsigned long long)size);
++				r->flags = 0;
++				continue;
++			}
++
+ #ifdef CONFIG_PCI_IOV
+ 			/* put SRIOV requested res to the optional list */
+ 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
