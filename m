@@ -1,35 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:37423 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754211AbaGSOaN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Jul 2014 10:30:13 -0400
-Received: by mail-oa0-f54.google.com with SMTP id n16so5021731oag.41
-        for <linux-pci@vger.kernel.org>; Sat, 19 Jul 2014 07:30:12 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:36981 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753070AbaGCPvP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Jul 2014 11:51:15 -0400
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 0/7] iommu: Fix DMA alias problems
+To: iommu@lists.linux-foundation.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 03 Jul 2014 09:51:12 -0600
+Message-ID: <20140703154428.8112.97562.stgit@gimli.home>
 MIME-Version: 1.0
-In-Reply-To: <20140719045804.GC20064@quad.lixom.net>
-References: <CAKohpo=T3taZx8e39tenCRBNxCUr=7H2xG7Ng=e+YQXuuY9u8Q@mail.gmail.com>
-	<20140719045804.GC20064@quad.lixom.net>
-Date: Sat, 19 Jul 2014 20:00:12 +0530
-Message-ID: <CAKohponcBFB=dvO5Maz-wr9JMdiMY-N35jqYgTsRzP2N59ky=Q@mail.gmail.com>
-Subject: Re: [GIT PULL] ARM: SPEAr13xx PCIe updates for v3.17
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Olof Johansson <olof@lixom.net>
-Cc: "arm@kernel.org" <arm@kernel.org>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Nicholson <mark@nicholnet.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19 July 2014 10:28, Olof Johansson <olof@lixom.net> wrote:
-> Looks good. Thanks for following up on this and fixing up stuff.
+This is effectively a resend of the iommu parts of the previously
+combined iommu and pci v4 series.  The pci base changes are in, we
+just need the iommu changes to make them effective.  These changes
+have proven to solve numerous issues with devices that use the
+wrong requester ID and bridges that fail to expose a PCIe capability.
+After this is applied, we'll be able to remove a couple pci
+interfaces, including the very broken pci_find_upstream_pcie_bridge.
+Thanks,
 
-Thanks for picking it up.
+Alex
+
+---
+
+Alex Williamson (7):
+      iommu: Remove pci.h
+      iommu/fsl: Use iommu_group_get_for_dev() for IOMMU groups
+      iommu/intel: Update to use PCI DMA aliases
+      iommu/intel: Use iommu_group_get_for_dev()
+      iommu/amd: Use iommu_group_get_for_dev()
+      iommu/amd: Update to use PCI DMA aliases
+      iommu: Create central IOMMU group lookup/creation interface
+
+
+ drivers/iommu/amd_iommu.c           |  214 +++++++-----------------
+ drivers/iommu/amd_iommu_types.h     |    1 
+ drivers/iommu/fsl_pamu_domain.c     |   66 --------
+ drivers/iommu/intel-iommu.c         |  307 +++++++++++++----------------------
+ drivers/iommu/intel_irq_remapping.c |   55 ++++--
+ drivers/iommu/iommu.c               |  182 +++++++++++++++++++++
+ drivers/iommu/pci.h                 |   29 ---
+ include/linux/iommu.h               |    1 
+ 8 files changed, 398 insertions(+), 457 deletions(-)
+ delete mode 100644 drivers/iommu/pci.h
