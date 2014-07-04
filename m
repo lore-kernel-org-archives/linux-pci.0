@@ -1,95 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:45064 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753236AbaGCWxw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Jul 2014 18:53:52 -0400
-Message-ID: <1404428017.29546.177.camel@pasglop>
-Subject: Re: [PATCH 1/2] PCI: Make resetting secondary bus logic common
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Date: Fri, 04 Jul 2014 08:53:37 +1000
-In-Reply-To: <20140703224704.GA25980@google.com>
-References: <1403162565-26835-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <20140703224704.GA25980@google.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:33496 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787AbaGDHB0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 03:01:26 -0400
+Message-ID: <53B65141.5080002@huawei.com>
+Date: Fri, 4 Jul 2014 15:01:21 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Brian Becker <brian.johnathan.b@gmail.com>
+CC: Ilia Mirkin <imirkin@alum.mit.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>
+Subject: Re: How to check for proper MSI support?
+References: <CAKb7UviGCtebGwyHbXRLZhDOiDAez+eKkxPe9jz5kc-3R1kUvQ@mail.gmail.com>	<53B4F0F7.9020403@huawei.com>	<CALhae2jRz8hL0bwySAbP7r+vJGOG5aif4GA_Yjp0inGAwz5JEA@mail.gmail.com>	<53B612FE.4080105@huawei.com>	<CAKb7UviVFQYwYdp_dgxK7jJ5Ny9yG1y8LATydxtVtkzRh+aOKw@mail.gmail.com>	<53B61B03.3070308@huawei.com>	<CAKb7UvjFuu4Hm1pfmY-NMFORfv-+fx4oYeJicRoE8UTL_4Wp4A@mail.gmail.com>	<53B625D9.9080500@huawei.com>	<CAKb7UviYak+Jt6+RGFZc=OtNh2DVJaCvxnBpRRkw7zVn8u+9Vw@mail.gmail.com>	<53B642BA.3090007@huawei.com> <CALhae2iz0aC0qOJfg2utiwokO42b-Qn+qSUp2pWykZe0jpXp5Q@mail.gmail.com>
+In-Reply-To: <CALhae2iz0aC0qOJfg2utiwokO42b-Qn+qSUp2pWykZe0jpXp5Q@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-07-03 at 16:47 -0600, Bjorn Helgaas wrote:
-> On Thu, Jun 19, 2014 at 05:22:44PM +1000, Gavin Shan wrote:
-> > Commit d92a208d086 ("powerpc/pci: Mask linkDown on resetting PCI bus")
-> > implemented same logic (resetting PCI secondary bus by bridge's config
-> > register PCI_BRIDGE_CTL_BUS_RESET) in PCI core and arch-dependent
-> > code. In order to avoid the duplicate implementation introduced by the
-> > commit, the patch puts the logic into pci_reset_secondary_bus().
-> > 
-> > That commit also missed declaring newly introduced weak function
-> > pcibios_reset_secondary_bus() in linux/include/pci.h. The patch fixes
-> > it.
-> > 
-> > Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On 2014/7/4 14:26, Brian Becker wrote:
+> I am booting a kernel with CONFIG_ACPI=n on a platform which does not
+> support ACPI.
+
+Hmmm, so my suggestion is
+1. Add quirk to detect 430FX chipset, if detected, disable MSI in this platform.
+or
+
+2. Append boot argument pci=nomsi in OS command line when the OS running on your old platform.
+
+Maybe other guys has some advices. :)
+
+
+
+
 > 
-> I applied both of these to pci/virtualization for v3.17.  Ben, if you'd
-> rather apply the powerpc one [1], let me know and I'll drop that one.
-
-I'm happy for you to keep it. If for some reason I want it too we can
-both carry it, it shouldn't hurt significantly at merge time.
-
-Cheers,
-Ben.
-
-> Bjorn
+> On Fri, Jul 4, 2014 at 1:59 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>>>> There is a NVIDIA G96 GPU (which is PCIe only) hanging off of a PCIe
+>>>>> <-> PCI bridge (all on one card), which is plugged into a motherboard
+>>>>> with the 430FX chipset (PCI 2.0 supported).
+>>>>>
+>>>>> The GPU PCI device, of course, has full support for MSI. However my
+>>>>> understanding is that MSI won't actually work here. This is confirmed
+>>>>> by the fact that if we let nouveau enable MSI, the device doesn't work
+>>>>> (presumably due to lack of interrupt delivery, although I admit to not
+>>>>> having debugged it that far). How do I, as a nouveau driver developer,
+>>>>> know not to call pci_enable_msi? Or alternatively how can
+>>>>> pci_enable_msi be taught not to succeed in this case?
+>>>>
+>>>> You can set bus_flags or global pci_msi_enable flag by add quirk function.
+>>>> You can refer to examples in drivers/pci/quirk.c
+>>>>
+>>>> Linux support some broken chipsets or devices to disable msi during device initialization by add quirk.
+>>>
+>>> So let me get this straight -- you're suggesting I add a quirk for
+>>> every PCI chipset that doesn't support MSI? There are probably
+>>> hundreds of these... anything made before 1999 or so, and probably a
+>>> bunch since then too. There _has_ to be a way to do this generically.
+>>> Is the PCI spec version anywhere in the root hub?
+>>
+>> There is no register to identify PCI spec version in PCI config space registers.
+>> If your platform boot up with ACPI, you can setting ACPI FADT boot flag to disable MSI,
+>> you can refer to this in ACPI 5.2.9.3 chapter "Fixed ACPI Description Table Boot Architecture Flags"
+>>
+>>
+>>>
+>>> Perhaps we can check if every bridge on the way to the CPU has the MSI
+>>> capability (including the root hub)? (And naturally _that_ won't
+>>> work... on my sandybridge laptop, the host bridge doesn't have the MSI
+>>> cap but the system most definitely supports MSI.)
+>>>
+>>> Adding Bjorn... perhaps you know? Some of the info has been stripped
+>>> out by now, you can see the full lspci -vvvxxx at
+>>> http://marc.info/?l=linux-pci&m=140443441730503&w=2
+>>>
+>>>   -ilia
+>>>
+>>> .
+>>>
+>>
+>>
+>> --
+>> Thanks!
+>> Yijing
+>>
 > 
-> [1] http://patchwork.ozlabs.org/patch/361802/
+> .
 > 
-> > ---
-> >  drivers/pci/pci.c   | 7 ++++++-
-> >  include/linux/pci.h | 2 ++
-> >  2 files changed, 8 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 63a54a3..758f1d8 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -3193,7 +3193,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
-> >  	return 0;
-> >  }
-> >  
-> > -void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
-> > +void pci_reset_secondary_bus(struct pci_dev *dev)
-> >  {
-> >  	u16 ctrl;
-> >  
-> > @@ -3219,6 +3219,11 @@ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
-> >  	ssleep(1);
-> >  }
-> >  
-> > +void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
-> > +{
-> > +	pci_reset_secondary_bus(dev);
-> > +}
-> > +
-> >  /**
-> >   * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
-> >   * @dev: Bridge device
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 466bcd1..340529d 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -978,6 +978,8 @@ int pci_try_reset_slot(struct pci_slot *slot);
-> >  int pci_probe_reset_bus(struct pci_bus *bus);
-> >  int pci_reset_bus(struct pci_bus *bus);
-> >  int pci_try_reset_bus(struct pci_bus *bus);
-> > +void pci_reset_secondary_bus(struct pci_dev *dev);
-> > +void pcibios_reset_secondary_bus(struct pci_dev *dev);
-> >  void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
-> >  void pci_update_resource(struct pci_dev *dev, int resno);
-> >  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
-> > -- 
-> > 1.8.3.2
-> > 
 
+
+-- 
+Thanks!
+Yijing
 
