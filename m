@@ -1,66 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28101 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750896AbaGKAsk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 20:48:40 -0400
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com, konrad.wilk@oracle.com,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	gleb@kernel.org, pbonzini@redhat.com, jeffrey.t.kirsher@intel.com,
-	jesse.brandeburg@intel.com, bruce.w.allan@intel.com,
-	carolyn.wyborny@intel.com, donald.c.skidmore@intel.com,
-	gregory.v.rose@intel.com, alexander.h.duyck@intel.com,
-	john.ronciak@intel.com, mitch.a.williams@intel.com
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ethan.kernel@gmail.com, vaughan.cao@oracle.com,
-	Ethan Zhao <ethan.zhao@oracle.com>
-Subject: [PATCH 4/4] i40e: use PCI VFs assignment helper function simplify i40e_vfs_are_assigned()
-Date: Fri, 11 Jul 2014 08:47:22 +0800
-Message-Id: <1405039642-23519-4-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1405039642-23519-1-git-send-email-ethan.zhao@oracle.com>
-References: <1405039642-23519-1-git-send-email-ethan.zhao@oracle.com>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:59825 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753689AbaGDXf7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 19:35:59 -0400
+Received: by mail-ob0-f171.google.com with SMTP id nu7so2364535obb.16
+        for <linux-pci@vger.kernel.org>; Fri, 04 Jul 2014 16:35:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACna6ry7+oNLwGVkdJiDkLq_QCZ5+gKk8Dxr=tbs-kBYqCp9Yg@mail.gmail.com>
+References: <CACna6ry7+oNLwGVkdJiDkLq_QCZ5+gKk8Dxr=tbs-kBYqCp9Yg@mail.gmail.com>
+Date: Sat, 5 Jul 2014 01:35:59 +0200
+Message-ID: <CACna6rxfutrgdnv2=UZgg5=awQy4KMqFYzwesGtq9gyxh3Jw_g@mail.gmail.com>
+Subject: Re: Checking PCIe generation in driver code
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-New VFs reference counter mechanism and VFs assignment helper functions are introduced to
-PCI SRIOV, use them instead of manipulating device flag directly.
+On 3 July 2014 22:06, Rafał Miłecki <zajec5@gmail.com> wrote:
+> I'm dealing with Broadcom devices and it appears I need to know if the
+> current PCIe device is Gen 1 or Gen 2. This is because they have
+> slightly different registers:
+> #define PCI_BAR0_WIN2 0xac
+> #define PCIE2_BAR0_WIN2 0x70
+>
+> Is there a way to know that? I keep starring at struct pci_dev, but
+> can't see "generation" field. Tried Googling, but couldn't find
+> anything.
 
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
----
- drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |   17 ++---------------
- 1 files changed, 2 insertions(+), 15 deletions(-)
+I've noticed that my 14e4:4360 card (PCIe Gen2) has:
+LNKCAP: 0x0046DC12 (hint: PCI_EXP_LNKCAP_SLS_5_0GB)
 
-diff --git a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-index 02c11a7..781040e 100644
---- a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-+++ b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-@@ -693,22 +693,9 @@ complete_reset:
- static bool i40e_vfs_are_assigned(struct i40e_pf *pf)
- {
- 	struct pci_dev *pdev = pf->pdev;
--	struct pci_dev *vfdev;
--
--	/* loop through all the VFs to see if we own any that are assigned */
--	vfdev = pci_get_device(PCI_VENDOR_ID_INTEL, I40E_DEV_ID_VF , NULL);
--	while (vfdev) {
--		/* if we don't own it we don't care */
--		if (vfdev->is_virtfn && pci_physfn(vfdev) == pdev) {
--			/* if it is assigned we cannot release it */
--			if (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED)
--				return true;
--		}
- 
--		vfdev = pci_get_device(PCI_VENDOR_ID_INTEL,
--				       I40E_DEV_ID_VF,
--				       vfdev);
--	}
-+	if (pci_vfs_assigned(pdev))
-+		return true;
- 
- 	return false;
- }
+Some older card 14e4:4359 (PCIe 1) has:
+LNKCAP: 0x00176811 (hint: PCI_EXP_LNKCAP_SLS_2_5GB)
+
+Wikipedia says 500 MB/s was added in PCIe 2.0.
+
+Could I check for this bit to determine if I'm dealing PCIe 2.0 card?
+
 -- 
-1.7.1
-
+Rafał
