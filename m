@@ -1,86 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:1562 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbaGDBxt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 21:53:49 -0400
-Message-ID: <53B60921.7090501@huawei.com>
-Date: Fri, 4 Jul 2014 09:53:37 +0800
+Received: from szxga01-in.huawei.com ([119.145.14.64]:36097 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751163AbaGDIQv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 04:16:51 -0400
 From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	<linux-s390@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Wuyun <wuyun.wu@huawei.com>, Xinwei Hu <huxinwei@huawei.com>
-Subject: Re: [PATCH 5/5] s390/MSI: Fix msi mask issue
-References: <1403166674-6836-1-git-send-email-wangyijing@huawei.com> <20140703235706.GC25980@google.com>
-In-Reply-To: <20140703235706.GC25980@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 3/5] PCI/MSI: Remove unused function msi_remove_pci_irq_vectors()
+Date: Fri, 4 Jul 2014 16:16:35 +0800
+Message-ID: <1404461795-6840-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> @@ -263,7 +263,7 @@ static int zpci_msi_set_mask_bits(struct msi_desc *msi, u32 mask, u32 flag)
->>  	} else
->>  		return 0;
->>  
->> -	msi->msi_attrib.maskbit = !!flag;
->> +	msi->masked = !!flag;
-> 
-> This doesn't look right.  For MSI-X, you just overwrote the previous update
-> of msi->masked:
-> 
->     if (msi->msi_attrib.is_msix) {
-> 	...
-> 	msi->masked = readl(msi->mask_base + offset);
-> 
-> Maybe the update values end up being the same, but why do it twice?
+No one use msi_remove_pci_irq_vectors() function,
+clean up it.
 
-Hi Bjorn, this code is some difficult to understand. I guess it's for save
-MSI mask status, for MSI-X, do this twice, maybe this line should move up int to
-MSI if ()...
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/msi.c   |   18 ------------------
+ include/linux/pci.h |    2 --
+ 2 files changed, 0 insertions(+), 20 deletions(-)
 
-Because I don't have the platform to test, so I do not want to change the code logic,
-what I am sure is save the flag status in msi->msi_attrib.maskbit  is wrong.
-So I change this like:
-	msi->masked = !!flag;
-
-Sebastian may know why do it like this.
-
-Besides, I think we can use MSI code driver interface mask_msi_irq() and unmask_msi_irq()
-to replace zpci_enable_irq() and zpci_disable_irq().
-
-> 
-> Also, the MSI mask bits are 32-bit field that can individually mask any
-> subset of the 32 possible MSI vectors, and you collapsed this down to a
-> single bit, so msi->masked no longer contains that information.
-> 
-> Maybe none of this matters because all the zpci_msi_set_mask_bits() uses
-> seem to be for a single bit, but the name says "mask_*bits*" and the
-> msi->masked field is generic and covers multiple MSI vectors in general.
-
-Yes, it always uses single bit here, as you said, this code has some problems for
-multiple MSI, although it may does not use it.
-
-I will try to send a new patch fix the original problem.
-
-Thanks!
-Yijing.
-> 
->>  	return 1;
->>  }
->>  
->> -- 
->> 1.7.1
->>
->>
-> 
-> .
-> 
-
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index c306883..86578bb 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1014,24 +1014,6 @@ void pci_disable_msix(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_disable_msix);
+ 
+-/**
+- * msi_remove_pci_irq_vectors - reclaim MSI(X) irqs to unused state
+- * @dev: pointer to the pci_dev data structure of MSI(X) device function
+- *
+- * Being called during hotplug remove, from which the device function
+- * is hot-removed. All previous assigned MSI/MSI-X irqs, if
+- * allocated for this device function, are reclaimed to unused state,
+- * which may be used later on.
+- **/
+-void msi_remove_pci_irq_vectors(struct pci_dev *dev)
+-{
+-	if (!pci_msi_enable || !dev)
+-		return;
+-
+-	if (dev->msi_enabled || dev->msix_enabled)
+-		free_msi_irqs(dev);
+-}
+-
+ void pci_no_msi(void)
+ {
+ 	pci_msi_enable = 0;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 466bcd1..66bd22f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1186,7 +1186,6 @@ int pci_msix_vec_count(struct pci_dev *dev);
+ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
+ void pci_msix_shutdown(struct pci_dev *dev);
+ void pci_disable_msix(struct pci_dev *dev);
+-void msi_remove_pci_irq_vectors(struct pci_dev *dev);
+ void pci_restore_msi_state(struct pci_dev *dev);
+ int pci_msi_enabled(void);
+ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec);
+@@ -1217,7 +1216,6 @@ static inline int pci_enable_msix(struct pci_dev *dev,
+ { return -ENOSYS; }
+ static inline void pci_msix_shutdown(struct pci_dev *dev) { }
+ static inline void pci_disable_msix(struct pci_dev *dev) { }
+-static inline void msi_remove_pci_irq_vectors(struct pci_dev *dev) { }
+ static inline void pci_restore_msi_state(struct pci_dev *dev) { }
+ static inline int pci_msi_enabled(void) { return 0; }
+ static inline int pci_enable_msi_range(struct pci_dev *dev, int minvec,
 -- 
-Thanks!
-Yijing
+1.7.1
+
 
