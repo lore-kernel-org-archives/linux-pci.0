@@ -1,55 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38684 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756382AbaGQKWL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Jul 2014 06:22:11 -0400
-Date: Thu, 17 Jul 2014 12:22:52 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:27688 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752495AbaGDIQX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 04:16:23 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI/MSI: Remove arch_msi_check_device()
-Message-ID: <20140717102252.GA17987@dhcp-26-207.brq.redhat.com>
-References: <cover.1405160163.git.agordeev@redhat.com>
- <1005232855c3af2c0c669818ee63be445389b6ad.1405160163.git.agordeev@redhat.com>
- <20140716222024.GE14366@google.com>
+CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 0/5] Cleanup for MSI
+Date: Fri, 4 Jul 2014 16:14:27 +0800
+Message-ID: <1404461667-9636-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140716222024.GE14366@google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 04:20:24PM -0600, Bjorn Helgaas wrote:
-> > @@ -809,22 +799,23 @@ out_free:
-> >  }
-> >  
-> >  /**
-> > - * pci_msi_check_device - check whether MSI may be enabled on a device
-> > + * msi_check_device - check whether MSI may be enabled on a device
-> >   * @dev: pointer to the pci_dev data structure of MSI device function
-> >   * @nvec: how many MSIs have been requested ?
-> > - * @type: are we checking for MSI or MSI-X ?
-> >   *
-> >   * Look at global flags, the device itself, and its parent buses
-> >   * to determine if MSI/-X are supported for the device. If MSI/-X is
-> >   * supported return 0, else return an error code.
-> >   **/
-> > -static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
-> > +static int msi_check_device(struct pci_dev *dev, int nvec)
-> 
-> I think "check_device" is a terrible name because it really doesn't
-> give a clue about what it's doing or what the return value means.
-> Since you're removing the external usage (arch_msi_check_device) and
-> this one is static, this would be a good time to fix it.  Maybe
-> "pci_msi_supported()" or something?
+This patchset is based Bjorn's pci/msi branch.
 
-What about pci_can_enable_msi() or pci_msi_can_enable() or msi_can_enable()?
+v1->v2: Modify msi_setup_entry() return type suggested by Bjorn.
+        Post a new s390 MSI patch to fix and simplify MSI code.
+		Post another 3 cleanup patch for MSI.
 
-> I *love* the idea of getting rid of this much code!
-> 
-> Bjorn
+Patch 2(s390/MSI) just compiled fine, no real machine test.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Yijing Wang (5):
+  PCI/MSI: MSI cleanup, msi_setup_entry()
+  s390/MSI: Use standard mask and unmask funtions
+  PCI/MSI: Remove unused function msi_remove_pci_irq_vectors()
+  PCI/MSI: Retrieve first MSI irq from msi_desc rather than pci_dev
+  PCI/MSI: Clean up the useless code
+
+ arch/s390/pci/pci.c |   49 ++++------------------------------
+ drivers/pci/msi.c   |   72 ++++++++++++++++++++++++---------------------------
+ include/linux/pci.h |    2 -
+ 3 files changed, 40 insertions(+), 83 deletions(-)
+
+
