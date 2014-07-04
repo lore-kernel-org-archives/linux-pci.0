@@ -1,56 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:43391 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755531AbaGPSKv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 14:10:51 -0400
-Received: by mail-ig0-f172.google.com with SMTP id h15so4441706igd.11
-        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 11:10:51 -0700 (PDT)
+Received: from service87.mimecast.com ([91.220.42.44]:59111 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751865AbaGDO5z convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 10:57:55 -0400
+Date: Fri, 4 Jul 2014 15:57:52 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [PATCH v7 4/6] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140704145752.GJ6501@e106497-lin.cambridge.arm.com>
+References: <1394811272-1547-1-git-send-email-Liviu.Dudau@arm.com>
+ <1394811272-1547-5-git-send-email-Liviu.Dudau@arm.com>
+ <20140405000007.GD15806@google.com>
+ <20140407084623.GG17163@e106497-lin.cambridge.arm.com>
+ <1396862058.3671.40.camel@pasglop>
+ <20140407100715.GI17163@e106497-lin.cambridge.arm.com>
+ <CAErSpo7h+Yew2hBztzkOzcHU5r4OQebxFbcZGkNUwJwfTFsbfg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <53C5F2C2.20707@linux.intel.com>
-References: <53C5F2C2.20707@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 16 Jul 2014 12:04:05 -0600
-Message-ID: <CAErSpo6D3q0NoJhjF2kTZBVaQBb5Gz-bY-P_eR2EYzFvQ6yhPw@mail.gmail.com>
-Subject: Re: Need advices about PCI IRQ reference count tracking
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
+In-Reply-To: <CAErSpo7h+Yew2hBztzkOzcHU5r4OQebxFbcZGkNUwJwfTFsbfg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+On Mon, Apr 07, 2014 at 11:44:51PM +0100, Bjorn Helgaas wrote:
+> On Mon, Apr 7, 2014 at 4:07 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > On Mon, Apr 07, 2014 at 10:14:18AM +0100, Benjamin Herrenschmidt wrote:
+> >> On Mon, 2014-04-07 at 09:46 +0100, Liviu Dudau wrote:
+> >> >
+> >> > *My* strategy is to get rid of pci_domain_nr(). I don't see why we need
+> >> > to have arch specific way of providing the number, specially after looking
+> >> > at the existing implementations that return a value from a variable that
+> >> > is never touched or incremented. My guess is that pci_domain_nr() was
+> >> > created to work around the fact that there was no domain_nr maintainance in
+> >> > the generic code.
+> >>
+> >> Well, there was no generic host bridge structure. There is one now, it should
+> >> go there.
+> >
+> > Exactly! Hence my patch. After it gets accepted I will go through architectures
+> > and remove their version of pci_domain_nr().
+> 
+> Currently the arch has to supply pci_domain_nr() because that's the
+> only way for the generic code to learn the domain.  After you add
+> pci_create_root_bus_in_domain(), the arch can supply the domain that
+> way, and we won't need the arch-specific pci_domain_nr().  Right?
+> That makes more sense to me; thanks for the explanation.
+> 
+> Let me try to explain my concern about the
+> pci_create_root_bus_in_domain() interface.  We currently have these
+> interfaces:
+> 
+>   pci_scan_root_bus()
+>   pci_scan_bus()
+>   pci_scan_bus_parented()
+>   pci_create_root_bus()
+> 
+> pci_scan_root_bus() is a higher-level interface than
+> pci_create_root_bus(), so I'm trying to migrate toward it because it
+> lets us remove a little code from the arch, e.g., pci_scan_child_bus()
+> and pci_bus_add_devices().
+> 
+> I think we can only remove the arch-specific pci_domain_nr() if that
+> arch uses pci_create_root_bus_in_domain().  When we convert an arch
+> from using scan_bus interfaces to using
+> pci_create_root_bus_in_domain(), we will have to move the rest of the
+> scan_bus code (pci_scan_child_bus(), pci_bus_add_devices()) back into
+> the arch code.
+> 
+> One alternative is to add an _in_domain() variant of each of these
+> interfaces, but that doesn't seem very convenient either.  My idea of
+> passing in a structure would also require adding variants, so there's
+> not really an advantage there, but I am thinking of the next
+> unification effort, e.g., for NUMA node info.  I don't really want to
+> have to change all the _in_domain() interfaces to also take yet
+> another parameter for the node number.
 
-On Tue, Jul 15, 2014 at 9:34 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> Hi Bjorn,
->         When enabling ACPI based IOAPIC hotplug, we encountered an
-> issue with PCI IRQ reference count tracking and need your advices.
->         In order to hot-remove an IOAPIC, we need to track and keep
-> balance of IOAPIC pin usage count. But acpi_pci_irq_enable() may
-> be called twice for a PCI device,
-> 1) pci_acpi_init() if pci_routeirq is true
-> 2) pci_enable_device()
->
-> So in function acpi_pci_irq_enable(), we need a way to track whether
-> an IOAPIC IRQ has been assigned to the PCI device. Previously we check
-> "if (dev->irq > 0)" for that, but that's wrong because dev->irq may
-> be set to non-zero in pci_read_irq() if BIOS has already assigned
-> a legacy IRQ for the device. So is it OK to add a flag into pci_dev
-> to track this information?
->
-> Another possible workaround is to disable IOAPIC hotplug when
-> pci_routeirq is set, but that sounds not the best solution.
+Bjorn,
 
-My first choice would be to get rid of pci_routeirq.  It was added in
-2004 as a workaround for broken drivers.  I don't know any reason why
-we need the "pci=routeirq" option any more.
+I'm coming around to your way of thinking and I want to suggest a strategy
+for adding the domain number into the PCI framework.
 
-However, 629e15d245f4 ("x86, irq: update_mptable needs pci_routeirq")
-added another use of pci_routeirq.  This is only used when booting
-with the undocumented "update_mptable" option, and I can't tell
-whether it's useful or not.
+My understanding is that when pci_host_bridge structure was introduced
+you were trying to keep the APIs unchanged and hence the creation of a
+bridge was hidden inside the pci_create_root_bus() function.
 
-Bjorn
+If we want to store the domain_nr information in the host bridge structure,
+together with a pointer to sysdata, then we need to break up the creation
+of the pci_host_bridge from the creation of a root bus. At that moment,
+pci_scan_root_bus() will need to be changed to accept a pci_host_bridge
+pointer, while pci_scan_bus() and pci_scan_bus_parented() will create
+the host bridge in the body of their function.
 
-P.S.  I'm going on vacation for a few weeks, so I won't be able to
-follow this for a while.
+Did I understood correctly this time your intentions? Do you agree with
+this plan?
+
+Best regards,
+Liviu
+
+
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
