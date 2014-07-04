@@ -1,241 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57767 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756460AbaGCPvf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Jul 2014 11:51:35 -0400
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 3/7] iommu/amd: Use iommu_group_get_for_dev()
-To: iommu@lists.linux-foundation.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>
-Date: Thu, 03 Jul 2014 09:51:30 -0600
-Message-ID: <20140703155130.8112.99665.stgit@gimli.home>
-In-Reply-To: <20140703154428.8112.97562.stgit@gimli.home>
-References: <20140703154428.8112.97562.stgit@gimli.home>
+Received: from e06smtp12.uk.ibm.com ([195.75.94.108]:42018 "EHLO
+	e06smtp12.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751720AbaGDO2l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 10:28:41 -0400
+Received: from /spool/local
+	by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
+	Fri, 4 Jul 2014 15:28:39 +0100
+Date: Fri, 4 Jul 2014 16:28:32 +0200 (CEST)
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+To: Yijing Wang <wangyijing@huawei.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux-s390@vger.kernel.org, linux-pci@vger.kernel.org,
+	Wuyun <wuyun.wu@huawei.com>, Xinwei Hu <huxinwei@huawei.com>
+Subject: Re: [PATCH 2/5] s390/MSI: Use standard mask and unmask funtions
+In-Reply-To: <1404461764-6520-1-git-send-email-wangyijing@huawei.com>
+Message-ID: <alpine.LFD.2.11.1407041623560.1624@denkbrett>
+References: <1404461764-6520-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The common iommu_group_get_for_dev() allows us to greatly simplify
-our group lookup for a new device.  Also, since we insert IVRS
-aliases into the PCI DMA alias quirks, we should alway come up with
-the same results as the existing code.
+On Fri, 4 Jul 2014, Yijing Wang wrote:
+> MSI irqchip in s390 has its own mask and unmask MSI irq
+> functions, zpci_enable_irq() and zpci_disable_irq().
+> They mask and unmask MSI irq in standard ways, no arch
+> special. MSI driver provides two global standard functions
+> mask_msi_irq() and unmask_msi_irq(). Local zpci_enable_irq()
+> and zpci_disable_irq() are almost the same as the standard
+> two. the difference is local mask/unmask functions
+> read the mask status before mask and unmask everytime.
+> Then change the value and rewrite to hardware. In standard
+> functions, save the mask status after mask and unmask msi
+> irq, and use the cached status to change the mask status.
+> When we mask or unmask a MSI irq, we always cache its
+> mask status except we know need not to cache it, like in
+> pci_msi_shutdown. So use the standard functions to replace
+> the local is safe.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
+Thanks, for doing that!
+At first glance the last hunk looks funny.
 
- drivers/iommu/amd_iommu.c       |  164 +--------------------------------------
- drivers/iommu/amd_iommu_types.h |    1 
- 2 files changed, 5 insertions(+), 160 deletions(-)
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  arch/s390/pci/pci.c |   49 ++++++-------------------------------------------
+>  1 files changed, 6 insertions(+), 43 deletions(-)
+> 
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index 9ddc51e..01fa289 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -48,13 +48,10 @@
+>  static LIST_HEAD(zpci_list);
+>  static DEFINE_SPINLOCK(zpci_list_lock);
+> 
+> -static void zpci_enable_irq(struct irq_data *data);
+> -static void zpci_disable_irq(struct irq_data *data);
+> -
+>  static struct irq_chip zpci_irq_chip = {
+>  	.name = "zPCI",
+> -	.irq_unmask = zpci_enable_irq,
+> -	.irq_mask = zpci_disable_irq,
+> +	.irq_unmask = mask_msi_irq,
+> +	.irq_mask = unmask_msi_irq,
+>  };
+> 
+>  static DECLARE_BITMAP(zpci_domain, ZPCI_NR_DEVICES);
+> @@ -244,43 +241,6 @@ static int zpci_cfg_store(struct zpci_dev *zdev, int offset, u32 val, u8 len)
+>  	return rc;
+>  }
+> 
+> -static int zpci_msi_set_mask_bits(struct msi_desc *msi, u32 mask, u32 flag)
+> -{
+> -	int offset, pos;
+> -	u32 mask_bits;
+> -
+> -	if (msi->msi_attrib.is_msix) {
+> -		offset = msi->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
+> -			PCI_MSIX_ENTRY_VECTOR_CTRL;
+> -		msi->masked = readl(msi->mask_base + offset);
+> -		writel(flag, msi->mask_base + offset);
+> -	} else if (msi->msi_attrib.maskbit) {
+> -		pos = (long) msi->mask_base;
+> -		pci_read_config_dword(msi->dev, pos, &mask_bits);
+> -		mask_bits &= ~(mask);
+> -		mask_bits |= flag & mask;
+> -		pci_write_config_dword(msi->dev, pos, mask_bits);
+> -	} else
+> -		return 0;
+> -
+> -	msi->msi_attrib.maskbit = !!flag;
+> -	return 1;
+> -}
+> -
+> -static void zpci_enable_irq(struct irq_data *data)
+> -{
+> -	struct msi_desc *msi = irq_get_msi_desc(data->irq);
+> -
+> -	zpci_msi_set_mask_bits(msi, 1, 0);
+> -}
+> -
+> -static void zpci_disable_irq(struct irq_data *data)
+> -{
+> -	struct msi_desc *msi = irq_get_msi_desc(data->irq);
+> -
+> -	zpci_msi_set_mask_bits(msi, 1, 1);
+> -}
+> -
+>  void pcibios_fixup_bus(struct pci_bus *bus)
+>  {
+>  }
+> @@ -487,7 +447,10 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+> 
+>  	/* Release MSI interrupts */
+>  	list_for_each_entry(msi, &pdev->msi_list, list) {
+> -		zpci_msi_set_mask_bits(msi, 1, 1);
+> +		if (msi->msi_attrib.is_msix)
+> +			default_msi_mask_irq(msi, 1, 1);
+> +		else
+> +			default_msix_mask_irq(msi, 1);
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 25d7571..2e03c17 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -46,7 +46,6 @@
- #include "amd_iommu_proto.h"
- #include "amd_iommu_types.h"
- #include "irq_remapping.h"
--#include "pci.h"
- 
- #define CMD_SET_TYPE(cmd, t) ((cmd)->data[1] |= ((t) << 28))
- 
-@@ -133,9 +132,6 @@ static void free_dev_data(struct iommu_dev_data *dev_data)
- 	list_del(&dev_data->dev_data_list);
- 	spin_unlock_irqrestore(&dev_data_list_lock, flags);
- 
--	if (dev_data->group)
--		iommu_group_put(dev_data->group);
--
- 	kfree(dev_data);
- }
- 
-@@ -264,167 +260,17 @@ static bool check_device(struct device *dev)
- 	return true;
- }
- 
--static struct pci_bus *find_hosted_bus(struct pci_bus *bus)
--{
--	while (!bus->self) {
--		if (!pci_is_root_bus(bus))
--			bus = bus->parent;
--		else
--			return ERR_PTR(-ENODEV);
--	}
--
--	return bus;
--}
--
--#define REQ_ACS_FLAGS	(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
--
--static struct pci_dev *get_isolation_root(struct pci_dev *pdev)
--{
--	struct pci_dev *dma_pdev = pdev;
--
--	/* Account for quirked devices */
--	swap_pci_ref(&dma_pdev, pci_get_dma_source(dma_pdev));
--
--	/*
--	 * If it's a multifunction device that does not support our
--	 * required ACS flags, add to the same group as lowest numbered
--	 * function that also does not suport the required ACS flags.
--	 */
--	if (dma_pdev->multifunction &&
--	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
--		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
--
--		for (i = 0; i < 8; i++) {
--			struct pci_dev *tmp;
--
--			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
--			if (!tmp)
--				continue;
--
--			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
--				swap_pci_ref(&dma_pdev, tmp);
--				break;
--			}
--			pci_dev_put(tmp);
--		}
--	}
--
--	/*
--	 * Devices on the root bus go through the iommu.  If that's not us,
--	 * find the next upstream device and test ACS up to the root bus.
--	 * Finding the next device may require skipping virtual buses.
--	 */
--	while (!pci_is_root_bus(dma_pdev->bus)) {
--		struct pci_bus *bus = find_hosted_bus(dma_pdev->bus);
--		if (IS_ERR(bus))
--			break;
--
--		if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
--			break;
--
--		swap_pci_ref(&dma_pdev, pci_dev_get(bus->self));
--	}
--
--	return dma_pdev;
--}
--
--static int use_pdev_iommu_group(struct pci_dev *pdev, struct device *dev)
--{
--	struct iommu_group *group = iommu_group_get(&pdev->dev);
--	int ret;
--
--	if (!group) {
--		group = iommu_group_alloc();
--		if (IS_ERR(group))
--			return PTR_ERR(group);
--
--		WARN_ON(&pdev->dev != dev);
--	}
--
--	ret = iommu_group_add_device(group, dev);
--	iommu_group_put(group);
--	return ret;
--}
--
--static int use_dev_data_iommu_group(struct iommu_dev_data *dev_data,
--				    struct device *dev)
--{
--	if (!dev_data->group) {
--		struct iommu_group *group = iommu_group_alloc();
--		if (IS_ERR(group))
--			return PTR_ERR(group);
--
--		dev_data->group = group;
--	}
--
--	return iommu_group_add_device(dev_data->group, dev);
--}
--
- static int init_iommu_group(struct device *dev)
- {
--	struct iommu_dev_data *dev_data;
- 	struct iommu_group *group;
--	struct pci_dev *dma_pdev;
--	int ret;
- 
--	group = iommu_group_get(dev);
--	if (group) {
--		iommu_group_put(group);
--		return 0;
--	}
-+	group = iommu_group_get_for_dev(dev);
- 
--	dev_data = find_dev_data(get_device_id(dev));
--	if (!dev_data)
--		return -ENOMEM;
--
--	if (dev_data->alias_data) {
--		u16 alias;
--		struct pci_bus *bus;
--
--		if (dev_data->alias_data->group)
--			goto use_group;
-+	if (IS_ERR(group))
-+		return PTR_ERR(group);
- 
--		/*
--		 * If the alias device exists, it's effectively just a first
--		 * level quirk for finding the DMA source.
--		 */
--		alias = amd_iommu_alias_table[dev_data->devid];
--		dma_pdev = pci_get_bus_and_slot(alias >> 8, alias & 0xff);
--		if (dma_pdev) {
--			dma_pdev = get_isolation_root(dma_pdev);
--			goto use_pdev;
--		}
--
--		/*
--		 * If the alias is virtual, try to find a parent device
--		 * and test whether the IOMMU group is actualy rooted above
--		 * the alias.  Be careful to also test the parent device if
--		 * we think the alias is the root of the group.
--		 */
--		bus = pci_find_bus(0, alias >> 8);
--		if (!bus)
--			goto use_group;
--
--		bus = find_hosted_bus(bus);
--		if (IS_ERR(bus) || !bus->self)
--			goto use_group;
--
--		dma_pdev = get_isolation_root(pci_dev_get(bus->self));
--		if (dma_pdev != bus->self || (dma_pdev->multifunction &&
--		    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)))
--			goto use_pdev;
--
--		pci_dev_put(dma_pdev);
--		goto use_group;
--	}
--
--	dma_pdev = get_isolation_root(pci_dev_get(to_pci_dev(dev)));
--use_pdev:
--	ret = use_pdev_iommu_group(dma_pdev, dev);
--	pci_dev_put(dma_pdev);
--	return ret;
--use_group:
--	return use_dev_data_iommu_group(dev_data->alias_data, dev);
-+	iommu_group_put(group);
-+	return 0;
- }
- 
- static int __last_alias(struct pci_dev *pdev, u16 alias, void *data)
-diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
-index f1a5abf..7277a20 100644
---- a/drivers/iommu/amd_iommu_types.h
-+++ b/drivers/iommu/amd_iommu_types.h
-@@ -432,7 +432,6 @@ struct iommu_dev_data {
- 	struct iommu_dev_data *alias_data;/* The alias dev_data */
- 	struct protection_domain *domain; /* Domain the device is bound to */
- 	atomic_t bind;			  /* Domain attach reference count */
--	struct iommu_group *group;	  /* IOMMU group for virtual aliases */
- 	u16 devid;			  /* PCI Device ID */
- 	bool iommu_v2;			  /* Device can make use of IOMMUv2 */
- 	bool passthrough;		  /* Default for device is pt_domain */
+This one looks inverted.
+
+>  		irq_set_msi_desc(msi->irq, NULL);
+>  		irq_free_desc(msi->irq);
+>  		msi->msg.address_lo = 0;
+
+Regards,
+Sebastian
 
