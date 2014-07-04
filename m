@@ -1,103 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:21690 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751988AbaGZBX1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jul 2014 21:23:27 -0400
-From: <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 2/3] PCI/MSI: Remove msi_desc->msi_attrib.pos
-Date: Sat, 26 Jul 2014 09:48:35 +0800
-Message-ID: <1406339316-20163-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1406339316-20163-1-git-send-email-wangyijing@huawei.com>
-References: <1406339316-20163-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:59131 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753000AbaGDV0P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 17:26:15 -0400
+Received: by mail-ie0-f176.google.com with SMTP id at1so1887084iec.21
+        for <linux-pci@vger.kernel.org>; Fri, 04 Jul 2014 14:26:14 -0700 (PDT)
+Date: Fri, 4 Jul 2014 15:26:12 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Federico Vaga <federico.vaga@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Michel Arruat <michel.arruat@gmail.com>
+Subject: Re: PCIe bus enumeration
+Message-ID: <20140704212612.GA15618@google.com>
+References: <280883016.9onmf0miLq@pcbe13110.cern.ch>
+ <7850906.HUE8jaYLrp@harkonnen>
+ <CAErSpo6Dgwn5QtHwBEcJsY++ZDUu73S6Jm1EVgD0AO-NaN2Wgw@mail.gmail.com>
+ <1807045.P44aWKLMe6@pcbe13110.cern.ch>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1807045.P44aWKLMe6@pcbe13110.cern.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing@huawei.com>
+On Fri, Jul 04, 2014 at 09:55:20AM +0200, Federico Vaga wrote:
+> > I assume these ports don't support hotplug.  If they *did* support
+> > hotplug, those ports would have to exist because they handle the
+> > hotplug events (presence detect, etc.)
+> 
+> I asked: yes, they do not support hotplug
+> 
+> > If you can collect the complete "lspci -vv" output from your machine
+> > (with a device plugged in, so we can see the port leading to it),
+> > that will help make this more concrete.  And maybe one with no
+> > devices plugged in, so we can see exactly what changes.
+> 
+> I attached two files with the output. I putted a card in slot 10 and 
+> took the output, then moved the card on slot 11 and took the output.
+> 
+> As you can see with diff the bridge behind the slot disappear when it 
+> is empty.
 
-Use pci_dev->msi/x_cap instead of msi_desc->msi_attrib.pos,
-and remove pos member.
+Perfect, thanks!  For some reason, it really helps me to be able to stare
+at the actual data.  Here's the situation with slot 10 occupied:
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/mips/pci/msi-octeon.c         |    6 +++---
- drivers/pci/host/pcie-designware.c |    2 +-
- drivers/pci/msi.c                  |    2 --
- include/linux/msi.h                |    1 -
- 4 files changed, 4 insertions(+), 7 deletions(-)
+  00:01.0 82Q35 Root Port to [bus 05]          PCIe SltCap slot #21
+  05:00.0 CERN/ECP/EDU Device                  slot 10
+  00:1c.0 82801I Express Port 1 to [bus 04]    PCIe SltCap slot #22
+  00:1c.3 (not present at all)
+  00:1c.4 82801I Express Port 5 to [bus 03]    PCIe SltCap slot #0
+  03:00.0 Realtek NIC
 
-diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
-index ab0c5d1..c8814be 100644
---- a/arch/mips/pci/msi-octeon.c
-+++ b/arch/mips/pci/msi-octeon.c
-@@ -73,8 +73,8 @@ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- 	 * wants.  Most devices only want 1, which will give
- 	 * configured_private_bits and request_private_bits equal 0.
- 	 */
--	pci_read_config_word(dev, desc->msi_attrib.pos + PCI_MSI_FLAGS,
--			     &control);
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS,
-+			&control);
- 
- 	/*
- 	 * If the number of private bits has been configured then use
-@@ -176,7 +176,7 @@ msi_irq_allocated:
- 	/* Update the number of IRQs the device has available to it */
- 	control &= ~PCI_MSI_FLAGS_QSIZE;
- 	control |= request_private_bits << 4;
--	pci_write_config_word(dev, desc->msi_attrib.pos + PCI_MSI_FLAGS,
-+	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS,
- 			      control);
- 
- 	irq_set_msi_desc(irq, desc);
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 52bd3a1..c3706cb 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -355,7 +355,7 @@ static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
- 		return -EINVAL;
- 	}
- 
--	pci_read_config_word(pdev, desc->msi_attrib.pos+PCI_MSI_FLAGS,
-+	pci_read_config_word(pdev, pdev->msi_cap + PCI_MSI_FLAGS,
- 				&msg_ctr);
- 	msgvec = (msg_ctr&PCI_MSI_FLAGS_QSIZE) >> 4;
- 	if (msgvec == 0)
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index e2aa74e..0d0f163 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -584,7 +584,6 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
- 	entry->msi_attrib.entry_nr	= 0;
- 	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
- 	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
--	entry->msi_attrib.pos		= dev->msi_cap;
- 	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
- 
- 	if (control & PCI_MSI_FLAGS_64BIT)
-@@ -688,7 +687,6 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 		entry->msi_attrib.is_64		= 1;
- 		entry->msi_attrib.entry_nr	= entries[i].entry;
- 		entry->msi_attrib.default_irq	= dev->irq;
--		entry->msi_attrib.pos		= dev->msix_cap;
- 		entry->mask_base		= base;
- 
- 		list_add_tail(&entry->list, &dev->msi_list);
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8892d41..fff7201 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -29,7 +29,6 @@ struct msi_desc {
- 		__u8	multi_cap : 3;	/* log2 num of messages supported */
- 		__u8	maskbit	: 1;	/* mask-pending bit supported ? */
- 		__u8	is_64	: 1;	/* Address size: 0=32bit 1=64bit */
--		__u8	pos;		/* Location of the msi capability */
- 		__u16	entry_nr;	/* specific enabled entry */
- 		unsigned default_irq;	/* default pre-assigned irq */
- 	} msi_attrib;
--- 
-1.7.1
+and here it is with slot 11 occupied:
 
+  00:01.0 (not present at all)
+  00:1c.0 82801I Express Port 1 to [bus 05]    PCIe SltCap slot #22
+  00:1c.3 82801I Express Port 4 to [bus 04]    PCIe SltCap slot #25
+  04:00.0 CERN/ECP/EDU Device                  slot 11
+  00:1c.4 82801I Express Port 5 to [bus 03]    PCIe SltCap slot #0
+  03:00.0 Realtek NIC
+
+I'm pretty sure this is a function of your BIOS.  There are often
+device-specific ways to enable or disable individual devices (like the root
+ports here), and the BIOS is likely disabling these ports when there is
+nothing below them.  I don't know why it would turn off 00:1c.3 when its
+slot is empty, but it doesn't turn off 00:1c.0, which also leads to an
+empty slot.  But I don't think Linux is involved in this, and if the BIOS
+disables devices, there really isn't anything Linux can do about it.
+
+If you can get to an EFI shell on this box, you might be able to confirm
+this with the "pci" command.  Booting Linux with "pci=earlydump" is similar
+in that it dumps PCI config space before we change anything.
+
+To solve this problem, I think you need slot information even when there's
+no hotplug.  This has been raised before [1, 2], and I think it's a good
+idea, but nobody has implemented it yet.
+
+Another curious thing is that you refer to "slot 10", but there's no
+obvious connection between that and the "slot 21" in the PCIe capability of
+the Root Port leading to that slot.  But I guess you said the slots are in
+a backplane (they're not an integral part of the motherboard).  In that
+case, there's no way for the motherboard to know what the labels on the
+backplane are.
+
+Bjorn
+
+[1] http://lkml.kernel.org/r/CAErSpo45sDNPt6=Yw-qgqdojYL8+_JNOVNEnVxRLatga+bY+2A@mail.gmail.com
+[2] https://bugzilla.kernel.org/show_bug.cgi?id=72681
