@@ -1,80 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34916 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932508AbaGYQ6o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 Jul 2014 12:58:44 -0400
-Message-ID: <1406307516.1011.21.camel@ul30vt.home>
-Subject: Re: [PATCH v1 1/3] PCI: export pci_get_dma_device() helper to other
- users
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Brown <broonie@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
-Date: Fri, 25 Jul 2014 10:58:36 -0600
-In-Reply-To: <1406295104-20082-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1406295104-20082-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 4 Jul 2014 11:54:34 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+Message-ID: <20140704095434.GC12247@dhcp-26-207.brq.redhat.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
+ <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
+ <20140702202201.GA28852@google.com>
+ <063D6719AE5E284EB5DD2968C1650D6D1726BF4E@AcuExch.aculab.com>
+ <20140704085816.GB12247@dhcp-26-207.brq.redhat.com>
+ <063D6719AE5E284EB5DD2968C1650D6D1726C717@AcuExch.aculab.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1726C717@AcuExch.aculab.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-07-25 at 16:31 +0300, Andy Shevchenko wrote:
-> Some chipsets use the function 0 for DMA on other functions of a
-> multifunctional device. One of the example is Intel EG20T PCH. This is also
-> applicable to Lynxpoint PCH when LPSS devices are switched to PCI mode.
+On Fri, Jul 04, 2014 at 09:11:50AM +0000, David Laight wrote:
+> > I might be missing something, but we are talking of MSI address space
+> > here, aren't we? I am not getting how we could end up with a 'write'
+> > to a random kernel location when a unclaimed MSI vector sent. We could
+> > only expect a spurious interrupt at worst, which is handled and reported.
+> > 
+> > Anyway, as I described in my reply to Bjorn, this is not a concern IMO.
 > 
-> This patch exports a useful helper to get a device of the DMA. This device is
-> needed to request a DMA channel from a proper controller.
+> I'm thinking of the following - which might be MSI-X ?
+> 1) Hardware requests some interrupts and tells the host the BAR (and offset)
+>    where the 'vectors' should be written.
+> 2) To raise an interrupt the hardware uses the 'vector' as the address
+>    of a normal PCIe write cycle.
 > 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/pci/quirks.c | 2 +-
->  include/linux/pci.h  | 9 +++++++++
->  2 files changed, 10 insertions(+), 1 deletion(-)
+> So if the hardware requests 4 interrupts, but the driver (believing it
+> will only use 3) only write 3 vectors, and then the hardware uses the
+> 4th vector it can write to a random location.
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 80c2d01..8352e5b 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3517,7 +3517,7 @@ static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
->  	if (!PCI_FUNC(dev->devfn))
->  		return pci_dev_get(dev);
->  
-> -	return pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-> +	return pci_get_dma_device(dev);
->  }
->  
->  static const struct pci_dev_dma_source {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 61978a4..86caab7 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1575,6 +1575,15 @@ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
->  static inline void pci_dev_specific_enable_acs(struct pci_dev *dev) { }
->  #endif
->  
-> +/*
-> + * Some chipsets use the function 0 for DMA on other functions of a
-> + * multifunctional device.
-> + */
-> +static inline struct pci_dev *pci_get_dma_device(struct pci_dev *dev)
-> +{
-> +	return pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-> +}
-> +
->  void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
->  void pcim_iounmap(struct pci_dev *pdev, void __iomem *addr);
->  void __iomem * const *pcim_iomap_table(struct pci_dev *pdev);
+> Debugging that would be hard!
 
-You've created a very generic function for a very specific problem.  I
-can't just call this on any random device and expect it to work
-correctly.  What about all the other device which use function 1 for
-their DMA alias.  We've just added infrastructure in PCI to support DMA
-aliases, see pci_for_each_dma_alias().  Please use this instead.  Quirks
-can be added to set the dma_alias_devfn and
-PCI_DEV_FLAGS_DMA_ALIAS_DEVFN to indicate that it's valid.  Thanks,
+MSI base address is kind of hardcoded for a platform. A combination of
+MSI base address, PCI function number and MSI vector makes a PCI host to
+raise interrupt on a CPU. I might be inaccurate in details, but the scenario
+you described is impossible AFAICT.
 
-Alex
+> 	David
+> 
+> 
+> 
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
