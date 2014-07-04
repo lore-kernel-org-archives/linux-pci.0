@@ -1,52 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24234 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965798AbaGPSFb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 14:05:31 -0400
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Vikas Chaudhary <vikas.chaudhary@qlogic.com>,
-	iscsi-driver@qlogic.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 22/23] qla4xxx: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Wed, 16 Jul 2014 20:05:26 +0200
-Message-Id: <0496ccbc0f203afaeeb7758c146b93c2f387684c.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:31927 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199AbaGDCmh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 22:42:37 -0400
+Message-ID: <53B61494.5050904@huawei.com>
+Date: Fri, 4 Jul 2014 10:42:28 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>
+Subject: Re: [PATCH 0/5] Cleanup for MSI
+References: <1403166574-7032-1-git-send-email-wangyijing@huawei.com> <20140704000440.GD25980@google.com>
+In-Reply-To: <20140704000440.GD25980@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On 2014/7/4 8:04, Bjorn Helgaas wrote:
+> On Thu, Jun 19, 2014 at 04:29:34PM +0800, Yijing Wang wrote:
+>>
+>> Yijing Wang (5):
+>>   PCI/MSI: Introduce msix_clear_and_set_ctrl() function
+>>   PCI/MSI: Remove the unused function msi_enabled_mask()
+>>   PCI/MSI: Cache Multiple Message Capable info in msi_desc
+> 
+> The above three look good, and I applied them to pci/msi for v3.17.  If you
+> repost the others, please rebase them to that branch because I fixed some
+> whitespace issues:
+> 
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/msi
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: iscsi-driver@qlogic.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-By: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_nx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Bjorn, Thanks a lot!
 
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index 9dbdb4b..7c33658 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -4221,7 +4221,7 @@ qla4_8xxx_enable_msix(struct scsi_qla_host *ha)
- 	for (i = 0; i < QLA_MSIX_ENTRIES; i++)
- 		entries[i].entry = qla4_8xxx_msix_entries[i].entry;
- 
--	ret = pci_enable_msix(ha->pdev, entries, ARRAY_SIZE(entries));
-+	ret = pci_enable_msix_exact(ha->pdev, entries, ARRAY_SIZE(entries));
- 	if (ret) {
- 		ql4_printk(KERN_WARNING, ha,
- 		    "MSI-X: Failed to enable support -- %d/%d\n",
+> 
+>>   PCI/MSI: MSI cleanup, msi_setup_entry()
+>>   s390/MSI: Fix msi mask issue
+>>
+>>  arch/s390/pci/pci.c |    2 +-
+>>  drivers/pci/msi.c   |  129 +++++++++++++++++++++++++--------------------------
+>>  include/linux/msi.h |    1 +
+>>  3 files changed, 65 insertions(+), 67 deletions(-)
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
+
 -- 
-1.7.7.6
+Thanks!
+Yijing
 
