@@ -1,48 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:59703 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751517AbaGJPkv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 11:40:51 -0400
-Received: by mail-wg0-f43.google.com with SMTP id b13so9089831wgh.26
-        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 08:40:47 -0700 (PDT)
-From: matthew_minter@xyratex.com
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: [PATCH RFC] Ensure hot-added PCI devices are given an IRQ on rescan
-Date: Thu, 10 Jul 2014 16:40:38 +0100
-Message-Id: <1405006839-16502-1-git-send-email-matthew_minter@xyratex.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:32934 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751320AbaGDF7b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 01:59:31 -0400
+Message-ID: <53B642BA.3090007@huawei.com>
+Date: Fri, 4 Jul 2014 13:59:22 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Ilia Mirkin <imirkin@alum.mit.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Brian Becker <brian.johnathan.b@gmail.com>,
+	<linux-pci@vger.kernel.org>,
+	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>
+Subject: Re: How to check for proper MSI support?
+References: <CAKb7UviGCtebGwyHbXRLZhDOiDAez+eKkxPe9jz5kc-3R1kUvQ@mail.gmail.com>	<53B4F0F7.9020403@huawei.com>	<CALhae2jRz8hL0bwySAbP7r+vJGOG5aif4GA_Yjp0inGAwz5JEA@mail.gmail.com>	<53B612FE.4080105@huawei.com>	<CAKb7UviVFQYwYdp_dgxK7jJ5Ny9yG1y8LATydxtVtkzRh+aOKw@mail.gmail.com>	<53B61B03.3070308@huawei.com>	<CAKb7UvjFuu4Hm1pfmY-NMFORfv-+fx4oYeJicRoE8UTL_4Wp4A@mail.gmail.com>	<53B625D9.9080500@huawei.com> <CAKb7UviYak+Jt6+RGFZc=OtNh2DVJaCvxnBpRRkw7zVn8u+9Vw@mail.gmail.com>
+In-Reply-To: <CAKb7UviYak+Jt6+RGFZc=OtNh2DVJaCvxnBpRRkw7zVn8u+9Vw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some boards which contain physically hot-pluggable PCIe slots such as 8639 connectors can hot-add 
-devices simply by connecting them while up and writing to /sys/bus/pci/rescan.
+>>> There is a NVIDIA G96 GPU (which is PCIe only) hanging off of a PCIe
+>>> <-> PCI bridge (all on one card), which is plugged into a motherboard
+>>> with the 430FX chipset (PCI 2.0 supported).
+>>>
+>>> The GPU PCI device, of course, has full support for MSI. However my
+>>> understanding is that MSI won't actually work here. This is confirmed
+>>> by the fact that if we let nouveau enable MSI, the device doesn't work
+>>> (presumably due to lack of interrupt delivery, although I admit to not
+>>> having debugged it that far). How do I, as a nouveau driver developer,
+>>> know not to call pci_enable_msi? Or alternatively how can
+>>> pci_enable_msi be taught not to succeed in this case?
+>>
+>> You can set bus_flags or global pci_msi_enable flag by add quirk function.
+>> You can refer to examples in drivers/pci/quirk.c
+>>
+>> Linux support some broken chipsets or devices to disable msi during device initialization by add quirk.
+> 
+> So let me get this straight -- you're suggesting I add a quirk for
+> every PCI chipset that doesn't support MSI? There are probably
+> hundreds of these... anything made before 1999 or so, and probably a
+> bunch since then too. There _has_ to be a way to do this generically.
+> Is the PCI spec version anywhere in the root hub?
 
-This probes the device and loads a driver. However when a device is added in this way it is not given 
-an interrupt. Irqs seem to be passed by the PCI BIOS, or emulated PCI BIOS in the case of non x86 
-arches and so these hot-added cards naturally do not get one.
+There is no register to identify PCI spec version in PCI config space registers.
+If your platform boot up with ACPI, you can setting ACPI FADT boot flag to disable MSI,
+you can refer to this in ACPI 5.2.9.3 chapter "Fixed ACPI Description Table Boot Architecture Flags"
 
-This means that when a device is added in this way, unless the device and driver use only MSI/MSI-X it 
-will try to request irq vector 0 which does not end well. To prevent this I have added a check for an 
-empty irq vector and use pdev_fixup_irq to set one at run time if one has not been provided. This is 
-done inside an unlikely block in order to make negligible the performance impact on the normal PCI 
-device adding code path, this should not be a performance critical area anyway as devices are not 
-often added.
 
-I have looked into instead modifying the rescan code however this would be a less effective solution  
-as there is no convenient way there to run code between device probing and the driver loading and so 
-would need a significant redesign.
+> 
+> Perhaps we can check if every bridge on the way to the CPU has the MSI
+> capability (including the root hub)? (And naturally _that_ won't
+> work... on my sandybridge laptop, the host bridge doesn't have the MSI
+> cap but the system most definitely supports MSI.)
+> 
+> Adding Bjorn... perhaps you know? Some of the info has been stripped
+> out by now, you can see the full lspci -vvvxxx at
+> http://marc.info/?l=linux-pci&m=140443441730503&w=2
+> 
+>   -ilia
+> 
+> .
+> 
 
-If anyone has any suggestions or feedback on this patch, or a better way to solve this issue should 
-there be one, I would be very grateful.
 
-In addition I have only had the opportunity to test this code on non x86 platforms so if anyone has a 
-x86 or AMD64 PC with physical hot-add capability I would be very appreciative if you could try running 
-this.
-
-Best regards,
-Matthew
-
- drivers/pci/bus.c       | 11 +++++++++++
- drivers/pci/setup-irq.c |  2 +-
- include/linux/pci.h     |  2 ++
- 3 files changed, 14 insertions(+), 1 deletion(-)
+-- 
+Thanks!
+Yijing
 
