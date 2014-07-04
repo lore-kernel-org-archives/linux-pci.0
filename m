@@ -1,170 +1,436 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 22 Jul 2014 16:57:08 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v7 0/5] Add Keystone PCIe controller driver
-Message-ID: <20140722225708.GB27965@google.com>
-References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:44971 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756385AbaGDCfw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 22:35:52 -0400
+Message-ID: <53B612FE.4080105@huawei.com>
+Date: Fri, 4 Jul 2014 10:35:42 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Brian Becker <brian.johnathan.b@gmail.com>
+CC: Ilia Mirkin <imirkin@alum.mit.edu>, <linux-pci@vger.kernel.org>,
+	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>
+Subject: Re: How to check for proper MSI support?
+References: <CAKb7UviGCtebGwyHbXRLZhDOiDAez+eKkxPe9jz5kc-3R1kUvQ@mail.gmail.com>	<53B4F0F7.9020403@huawei.com> <CALhae2jRz8hL0bwySAbP7r+vJGOG5aif4GA_Yjp0inGAwz5JEA@mail.gmail.com>
+In-Reply-To: <CALhae2jRz8hL0bwySAbP7r+vJGOG5aif4GA_Yjp0inGAwz5JEA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 12:58:40PM -0400, Murali Karicheri wrote:
-> This patch series add PCIe controller driver for keystone SoCs. This is
-> based on v4 of the series posted to the mailing list. Keystone PCI controller
-> is based on version 3.65 of the DW hardware. This driver uses the DW core
-> functions to implement the PCI controller driver for keystone.
-> 
-> Testing:
-> =======
-> 
-> Testing of the driver is done on TI's K2HK EVM inserted to a Elma blu!eco
-> MicroTCA chassis AMC slot with JumpGen SEM-200 AMC SATA Storage and Dual
-> Ethernet Card Express inserted on another AMC slot. The e1000e driver available
-> on intel's website is patched to the kernel source tree and build. e1000e.ko
-> is dynamically loaded and executed ping and iperf tests to test the
-> functionality.
-> 
-> Thanks to all of you who have contributed by reviewing and offering valuable
-> comments. If you want me to add your "Reviewed-by", please let me know so that
-> I can add it to the commit log and re-send. Patch 1-3 has Acks from maintainers
-> and I believe this can be merged to upstream branch. Patch 4 is waiting for
-> Ack from DT maintainer. Please provide the same at the earliest.
-> 
-> Thanks
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> 
-> CC: Russell King <linux@arm.linux.org.uk>
-> CC: Grant Likely <grant.likely@linaro.org>
-> CC: Rob Herring <robh+dt@kernel.org>
-> CC: Mohit Kumar <mohit.kumar@st.com>
-> CC: Jingoo Han <jg1.han@samsung.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Pratyush Anand <pratyush.anand@st.com>
-> CC: Richard Zhu <r65037@freescale.com>
-> CC: Kishon Vijay Abraham I <kishon@ti.com>
-> CC: Marek Vasut <marex@denx.de>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Pawel Moll <pawel.moll@arm.com>
-> CC: Mark Rutland <mark.rutland@arm.com>
-> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-> CC: Kumar Gala <galak@codeaurora.org>
-> CC: Randy Dunlap <rdunlap@infradead.org>
-> CC: Grant Likely <grant.likely@linaro.org>
-> 
-> Changelog:
-> 
-> v7
->  - Removed ti,enable_linktrain DT property. The driver now check if
->    the link is up and then retrain the link if not already up. This
->    is as per comment from DT maintainer.
->  - Rebased to upstream kernel v3.16-rc6
-> 
-> v6
->  - Added Ack from Maintainer for patch 3. Patch 1-3 now have the
->    Acks from maintainer and can be merged to upstream branch.
->    Patch 4 is waiting ack from DT maintainer.
-> v5
->  - Rebased to upstream kernel v3.16-rc5
->  - Reworked Patch 3/6 and 4/6 into a single patch based on
->    maintainer comment to use a API callback model to support
->    the v3.65 h/w.
-> v4
->  - Addressed comments against 5/5.
->  - Added a patch 6/6 for Maintainer information
->  - Added couple of Acked-By:
->  - Rebased to latest Linux 3.16-rc4
-> v3
->  - DW application register handling code is now part of
->    Keystone PCI driver. RFC had this code part of Keystone
->    PCI driver, then V1 moved this to a separate file to
->    re-use on other platforms that uses this version of the
->    DW h/w. Then based on comments against v2, this is moved
->    back to Keystone driver.
->  - Keystone SerDes phy driver is removed from this series so that
->    this can be merged independent of that patch
->  - added msi_set_irq()/clear_irq() API's to support Keystone
-> 
-> V2
->  - Split the designware pcie enhancement patch to multiple
->    patches based on functionality added
->  - Remove the quirk code and add a patch to fix mps/mrss
->    tuning for ARM. Use kernel command line parameter
->    pci=pcie_bus_perf to work with Keystone PCI Controller.
->    Following patch addressed this.
->      [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
->  - Add documentation for device tree bindings
->  - Add separate interrupt controller nodes for MSI and Legacy
->    IRQs and use irq map for legacy IRQ
->  - Use compatibility to identify v3.65 version of the DW hardware
->    and use it to customize the designware common code.
->  - Use reg property for configuration space instead of range
->  - Other minor updates based on code inspection. 
-> 
-> V1
->  - Add an interrupt controller node for Legacy irq chip and use
->    interrupt map/map-mask property to map legacy IRQs A/B/C/D
->  - Add a Phy driver to replace the original serdes driver
->  - Move common application register handling code to a separate
->    file to allow re-use across other platforms that use older
->    DW PCIe h/w
->  - PCI quirk for maximum read request size. Check and override only
->    if the maximum is higher than what controller can handle.
->  - Converted to a module platform driver.
-> 
-> Murali Karicheri (5):
->   PCI: designware: add rd[wr]_other_conf API
->   PCI: designware: refactor MSI code to work with v3.65 dw hardware
+Hi Brian,
+   From your 01:00.0 VGA compatible controller PCI config register, it supports 1 MSI vector, so I think this
+card has no problem. But you didn't answer what's the pci_enable_msi() return during it enable MSI fail.
 
-I applied the above two to my pci/host-designware branch.  The rest didn't
-apply cleanly because I applied Kishon's DRA7xx changes first, and there
-are several conflicts.  Can you rebase the rest of them on top of
-pci/host-designware?
+You can check PCI bus whether support MSI like:
 
->   PCI: designware: enhance dw_pcie_host_init() to support v3.65 DW
->     hardware
->   PCI: add PCI controller for keystone PCIe h/w
->   PCI: keystone: Update maintainer information
+cat /sys/bus/pci/devices/00:0e.0/msi_bus
 
-You can squash the MAINTAINERS update into the driver addition.  They're
-logically part of the same change.
+Other, do you call pci_enable_device() before pci_enable_msi() ?
 
-Bjorn
-
->  .../devicetree/bindings/pci/pci-keystone.txt       |   68 +++
->  MAINTAINERS                                        |    7 +
->  drivers/pci/host/Kconfig                           |    5 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-keystone-dw.c                 |  521 ++++++++++++++++++++
->  drivers/pci/host/pci-keystone.c                    |  386 +++++++++++++++
->  drivers/pci/host/pci-keystone.h                    |   58 +++
->  drivers/pci/host/pcie-designware.c                 |  116 +++--
->  drivers/pci/host/pcie-designware.h                 |    9 +
->  9 files changed, 1135 insertions(+), 36 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
->  create mode 100644 drivers/pci/host/pci-keystone-dw.c
->  create mode 100644 drivers/pci/host/pci-keystone.c
->  create mode 100644 drivers/pci/host/pci-keystone.h
+On 2014/7/4 8:35, Brian Becker wrote:
+> I mistakenly only replied to Yijing Wang the first time. Here are the further details.
 > 
-> -- 
-> 1.7.9.5
+> uname -a: Linux p5-133 3.15.2-p5-133 #1 Thu Jun 26 22:56:27 EDT 2014 i586 GNU/Linux
 > 
+> Here is the output from lspci -vvvxxx:
+> 
+> root@p5-133:~# cat lspci.txt
+> 00:00.0 Host bridge: Intel Corporation 430FX - 82437FX TSC [Triton I] (rev 01)
+>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ >SERR- <PERR- INTx-
+>         Latency: 64
+> 00: 86 80 2d 12 06 00 00 22 01 00 00 06 00 40 00 00
+> 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 50: 88 00 41 00 00 00 00 03 49 10 55 55 55 05 55 05
+> 60: 08 10 18 20 20 00 00 00 0f 00 00 00 00 00 00 00
+> 70: 00 00 0a 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00
+> 
+> 00:07.0 ISA bridge: Intel Corporation 82371FB PIIX ISA [Triton I] (rev 02)
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0
+> 00: 86 80 2e 12 0f 00 80 02 02 00 01 06 00 00 80 00
+> 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 40: 00 00 00 00 00 00 00 00 00 00 00 00 4d 00 60 00
+> 50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 60: 0b 0b 0b 09 00 00 00 00 00 f2 05 00 00 00 00 00
+> 70: 0f 80 00 00 00 00 04 04 02 00 00 00 00 00 00 00
+> 80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 03 00 e0 00 02 d0 00 a0 13 00 00 00 00 00 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 08 02 00 00 00 00 00 00
+> 
+> 00:07.1 IDE interface: Intel Corporation 82371FB PIIX IDE [Triton I] (rev 02) (prog-if 80 [Master])
+>         Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 64
+>         Region 0: [virtual] Memory at 000001f0 (32-bit, non-prefetchable) [size=8]
+>         Region 1: [virtual] Memory at 000003f0 (type 3, non-prefetchable) [size=1]
+>         Region 2: [virtual] Memory at 00000170 (32-bit, non-prefetchable) [size=8]
+>         Region 3: [virtual] Memory at 00000370 (type 3, non-prefetchable) [size=1]
+>         Region 4: I/O ports at ef80 [size=16]
+>         Kernel driver in use: pata_oldpiix
+> 00: 86 80 30 12 05 00 80 02 02 80 01 01 00 40 00 00
+> 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 81 ef 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 40: 36 a3 07 a3 00 00 00 00 00 00 00 00 00 00 00 00
+> 50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 08 02 00 00 00 00 00 00
+> 
+> 00:0e.0 PCI bridge: PLX Technology, Inc. PEX8112 x1 Lane PCI Express-to-PCI Bridge (rev aa) (prog-if 00 [Normal decode])
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 66, Cache Line Size: 32 bytes
+> 
+>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>         I/O behind bridge: 0000f000-0000ffff
+>         Memory behind bridge: f5e00000-fbffffff
+>         Prefetchable memory behind bridge: d5d00000-f5dfffff
+>         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+>         BridgeCtl: Parity+ SERR+ NoISA- VGA+ MAbort- >Reset- FastB2B-
+>                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+> 
+>         Capabilities: [40] Power Management version 2
+>                 Flags: PMEClk- DSI- D1+ D2- AuxCurrent=0mA PME(D0+,D1+,D2-,D3hot+,D3cold-
+> )
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+> 
+>         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+>                 Address: 0000000000000000  Data: 0000
+>         Capabilities: [60] Express (v1) PCI/PCI-X to PCI-Express Bridge, MSI 00
+>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+>                         ExtTag- RBE- FLReset-
+>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop- BrConfRtry-
+>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <1us, L1 <16us
+>                         ClockPM- Surprise- LLActRep- BwNot-
+>                 LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
+> 00: b5 10 12 81 17 01 30 02 aa 00 04 06 08 42 01 00
+> 10: 00 00 00 00 00 00 00 00 00 01 01 00 f0 f0 00 00
+> 20: e0 f5 f0 fb d0 d5 d0 f5 00 00 00 00 00 00 00 00
+> 30: 00 00 00 00 40 00 00 00 00 00 00 00 00 01 0b 00
+> 40: 01 50 02 5a 00 00 00 00 10 28 0e 00 00 00 00 00
+> 50: 05 60 80 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 60: 10 00 81 00 00 00 00 00 00 20 00 00 11 4c 02 00
+> 70: 00 00 11 00 80 0c 00 00 00 00 40 00 00 00 00 00
+> 80: 00 00 00 00 00 00 00 00 33 00 00 00 00 00 00 00
+> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+> 00:0f.0 USB controller: ULi Electronics Inc. USB 1.1 Controller (rev 03) (prog-if 10 [OHCI])
+>         Subsystem: ULi Electronics Inc. ASRock 939Dual-SATA2 Motherboard
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 64 (20000ns max), Cache Line Size: 32 bytes
+>         Interrupt: pin B routed to IRQ 9
+>         Region 0: Memory at ffbeb000 (32-bit, non-prefetchable) [size=4K]
+>         Capabilities: [60] Power Management version 2
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1+,D2-,D3hot+,D3cold+)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>         Kernel driver in use: ohci-pci
+> 00: b9 10 37 52 17 01 b0 02 03 10 03 0c 08 40 80 00
+> 10: 00 b0 be ff 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 b9 10 37 52
+> 30: 00 00 00 00 60 00 00 00 00 00 00 00 09 02 00 50
+> 40: 00 00 1f 00 e0 02 00 00 00 00 00 00 00 00 00 00
+> 50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 60: 01 00 02 d8 00 00 00 00 00 00 00 00 00 00 00 00
+> 70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+> 00:0f.1 USB controller: ULi Electronics Inc. USB 1.1 Controller (rev 03) (prog-if 10 [OHCI])
+>         Subsystem: ULi Electronics Inc. ASRock 939Dual-SATA2 Motherboard
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 64 (20000ns max), Cache Line Size: 32 bytes
+>         Interrupt: pin C routed to IRQ 11
+>         Region 0: Memory at ffbec000 (32-bit, non-prefetchable) [size=4K]
+>         Capabilities: [60] Power Management version 2
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1+,D2-,D3hot+,D3cold+)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>         Kernel driver in use: ohci-pci
+> 00: b9 10 37 52 17 01 b0 02 03 10 03 0c 08 40 80 00
+> 10: 00 c0 be ff 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 b9 10 37 52
+> 30: 00 00 00 00 60 00 00 00 00 00 00 00 0b 03 00 50
+> 40: 00 00 1f 00 e0 02 00 00 00 00 00 00 00 00 00 00
+> 50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 60: 01 00 02 d8 00 00 00 00 00 00 00 00 00 00 00 00
+> 70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+> 00:0f.2 USB controller: ULi Electronics Inc. USB 1.1 Controller (rev 03) (prog-if 10 [OHCI])
+>         Subsystem: ULi Electronics Inc. ASRock 939Dual-SATA2 Motherboard
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 64 (20000ns max), Cache Line Size: 32 bytes
+>         Interrupt: pin D routed to IRQ 11
+>         Region 0: Memory at ffbed000 (32-bit, non-prefetchable) [size=4K]
+>         Capabilities: [60] Power Management version 2
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1+,D2-,D3hot+,D3cold+)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>         Kernel driver in use: ohci-pci
+> 00: b9 10 37 52 17 01 b0 02 03 10 03 0c 08 40 80 00
+> 10: 00 d0 be ff 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 b9 10 37 52
+> 30: 00 00 00 00 60 00 00 00 00 00 00 00 0b 04 00 50
+> 40: 00 00 1f 00 e0 02 00 00 00 00 00 00 00 00 00 00
+> 50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 60: 01 00 02 d8 00 00 00 00 00 00 00 00 00 00 00 00
+> 70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+> 00:0f.3 USB controller: ULi Electronics Inc. USB 2.0 Controller (rev 01) (prog-if 20 [EHCI])
+>         Subsystem: ULi Electronics Inc. Device 5272
+>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 64 (20000ns max), Cache Line Size: 32 bytes
+>         Interrupt: pin A routed to IRQ 11
+>         Region 0: Memory at ffbefc00 (32-bit, non-prefetchable) [size=256]
+>         Capabilities: [50] Power Management version 2
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [58] Debug port: BAR=1 offset=0090
+>         Kernel driver in use: ehci-pci
+> 00: b9 10 39 52 16 01 b0 02 01 20 03 0c 08 40 80 00
+> 10: 00 fc be ff 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 b9 10 72 52
+> 30: 00 00 00 00 50 00 00 00 00 00 00 00 0b 01 00 50
+> 40: 01 02 00 ee 00 00 10 c4 00 00 00 00 00 00 00 00
+> 50: 01 58 02 c8 00 00 00 00 0a 00 90 20 00 00 00 00
+> 60: 20 20 7f 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 70: 01 00 00 00 00 00 00 c0 00 00 00 00 00 00 00 00
+> 80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+> 00:10.0 RAID bus controller: Silicon Image, Inc. PCI0680 Ultra ATA-133 Host Controller (rev 02)
+>         Subsystem: Silicon Image, Inc. Winic W-680 (Silicon Image 680 based)
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 64, Cache Line Size: 4 bytes
+>         Interrupt: pin A routed to IRQ 9
+>         Region 0: I/O ports at eff0 [size=8]
+>         Region 1: I/O ports at efe4 [size=4]
+>         Region 2: I/O ports at efa8 [size=8]
+>         Region 3: I/O ports at efe0 [size=4]
+>         Region 4: I/O ports at ef90 [size=16]
+>         Region 5: Memory at ffbeec00 (32-bit, non-prefetchable) [size=256]
+>         [virtual] Expansion ROM at 08000000 [disabled] [size=512K]
+>         Capabilities: [60] Power Management version 2
+>                 Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=2 PME-
+>         Kernel driver in use: pata_sil680
+> 00: 95 10 80 06 07 01 90 02 02 00 04 01 01 40 00 00
+> 10: f1 ef 00 00 e5 ef 00 00 a9 ef 00 00 e1 ef 00 00
+> 20: 91 ef 00 00 00 ec be ff 00 00 00 00 95 10 80 36
+> 30: 00 00 00 00 60 00 00 00 00 00 00 00 09 01 00 00
+> 40: 00 00 00 00 90 14 19 08 00 00 00 00 00 00 00 00
+> 50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 60: 01 00 22 06 00 40 00 64 00 00 00 00 00 00 00 00
+> 70: 08 00 00 00 00 70 57 07 00 00 00 00 00 00 00 00
+> 80: 03 00 00 00 00 00 00 00 00 00 11 00 d9 7d ff 7b
+> 90: 00 fe 00 0d ff ff ff 3b 33 00 00 19 ff 00 00 00
+> a0: 00 62 c1 10 c1 10 8a 32 c1 10 92 43 07 40 09 40
+> b0: 01 60 8a 32 8a 32 8a 32 92 43 92 43 09 40 09 40
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+> 01:00.0 VGA compatible controller: NVIDIA Corporation G96 [GeForce 9400 GT] (rev a1) (prog-if 00 [VGA controller])
+>         Subsystem: Jaton Corp Device 0641
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0, Cache Line Size: 32 bytes
+>         Interrupt: pin A routed to IRQ 11
+>         Region 0: Memory at fb000000 (32-bit, non-prefetchable) [size=16M]
+>         Region 1: Memory at e0000000 (64-bit, prefetchable) [size=256M]
+>         Region 3: Memory at f8000000 (64-bit, non-prefetchable) [size=32M]
+>         Region 5: I/O ports at fc80 [size=128]
+> 
+>         [virtual] Expansion ROM at d5d00000 [disabled] [size=512K]
+>         Capabilities: [60] Power Management version 3
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+> 
+>         Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
+>                 Address: 0000000000000000  Data: 0000
+>         Capabilities: [78] Express (v1) Endpoint, MSI 00
+>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 <4us
+>                         ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+>                 LnkCap: Port #0, Speed 2.5GT/s, Width x16, ASPM L0s L1, Latency L0 <512ns, L1 <1us
+>                         ClockPM- Surprise- LLActRep- BwNot-
+>                 LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk-
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+> 
+>         Capabilities: [b4] Vendor Specific Information: Len=14 <?>
+>         Kernel driver in use: nouveau
+> 00: de 10 41 06 07 01 10 00 a1 00 00 03 08 00 00 00
+> 10: 00 00 00 fb 0c 00 00 e0 00 00 00 00 04 00 00 f8
+> 20: 00 00 00 00 81 fc 00 00 00 00 00 00 13 1b 41 06
+> 30: 00 00 00 00 60 00 00 00 00 00 00 00 0b 01 00 00
+> 40: 13 1b 41 06 00 00 00 00 00 00 00 00 00 00 00 00
+> 50: 01 00 00 00 01 00 00 00 ce d6 23 00 00 00 00 00
+> 60: 01 68 03 00 00 00 00 00 05 78 80 00 00 00 00 00
+> 70: 00 00 00 00 00 00 00 00 10 b4 01 00 e0 84 64 00
+> 80: 10 28 00 00 01 3d 00 00 08 00 11 10 00 00 00 00
+> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> b0: 00 00 00 00 09 00 14 01 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+> 
+> 
+> On Thu, Jul 3, 2014 at 1:58 AM, Yijing Wang <wangyijing@huawei.com <mailto:wangyijing@huawei.com>> wrote:
+> 
+>     On 2014/7/3 11:20, Ilia Mirkin wrote:
+>     > Hello,
+>     >
+>     > A user (cc'd) reported that nouveau's enabling of MSI causes the card
+>     > to not work on his setup [1]. I think the situation is that MSI is
+>     > just not supported by the underlying motherboard, even though the
+>     > card, and probably bridge, support it just fine. It's a very old
+>     > board. The nouveau code does:
+> 
+> 
+>     What is the kernel version running in your board ?
+> 
+>     >
+>     > pmc->use_msi = pci_enable_msi(device->pdev) == 0;
+> 
+>     Driver call pci_enable_msi() and always return 0 ?
+> 
+>     >
+>     > Does it need to do more checking than that before trying to enable MSI
+>     > on the device? Could it be that the linux pci subsystem is missing on
+>     > inheriting MSI capabilities somewhere?
+> 
+>     pci_enable_msi() will checking your device whether it supports MSI.
+>     Can you provide the detailed lspci information ? eg. lspci -vvvxxx ?
+> 
+> 
+>     >
+>     >   -ilia
+>     >
+>     > [1]
+>     >
+>     > 00:00.0 Host bridge [0600]: Intel Corporation 430FX - 82437FX TSC
+>     > [Triton I] [8086:122d] (rev 01)
+>     >         Flags: bus master, medium devsel, latency 64
+>     >
+>     > 00:0e.0 PCI bridge [0604]: PLX Technology, Inc. PEX8112 x1 Lane PCI
+>     > Express-to-PCI Bridge [10b5:8112] (rev aa) (prog-if 00 [Normal
+>     > decode])
+>     >         Flags: bus master, 66MHz, medium devsel, latency 66
+>     >         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>     >         I/O behind bridge: 0000f000-0000ffff
+>     >         Memory behind bridge: f5e00000-fbffffff
+>     >         Prefetchable memory behind bridge: d5d00000-f5dfffff
+>     >         Capabilities: [40] Power Management version 2
+>     >         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+>     >         Capabilities: [60] Express PCI/PCI-X to PCI-Express Bridge, MSI 00
+>     >
+>     > 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation G96
+>     > [GeForce 9400 GT] [10de:0641] (rev a1) (prog-if 00 [VGA controller])
+>     >         Subsystem: Jaton Corp Device [1b13:0641]
+>     >         Flags: bus master, fast devsel, latency 0, IRQ 11
+>     >         Memory at fb000000 (32-bit, non-prefetchable) [size=16M]
+>     >         Memory at e0000000 (64-bit, prefetchable) [size=256M]
+>     >         Memory at f8000000 (64-bit, non-prefetchable) [size=32M]
+>     >         I/O ports at fc80 [size=128]
+>     >         [virtual] Expansion ROM at d5d00000 [disabled] [size=512K]
+>     >         Capabilities: [60] Power Management version 3
+>     >         Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
+>     >         Capabilities: [78] Express Endpoint, MSI 00
+>     >         Capabilities: [b4] Vendor Specific Information: Len=14 <?>
+>     >         Kernel driver in use: nouveau
+>     > --
+>     > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>     > the body of a message to majordomo@vger.kernel.org <mailto:majordomo@vger.kernel.org>
+>     > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>     >
+>     >
+> 
+> 
+>     --
+>     Thanks!
+>     Yijing
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
+
