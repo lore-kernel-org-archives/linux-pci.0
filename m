@@ -1,53 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:59334 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751997AbaGaQ4w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jul 2014 12:56:52 -0400
-Date: Thu, 31 Jul 2014 18:56:48 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] x86, irq: Keep IRQ assignment for PCI devices during
- suspend/hibernation
-Message-ID: <20140731165648.GG4375@pd.tnic>
-References: <20140730175836.GC10213@pd.tnic>
- <1406766807-5745-1-git-send-email-jiang.liu@linux.intel.com>
- <20140731103941.GA4375@pd.tnic>
- <53DA70AB.9010906@linux.intel.com>
+Received: from service87.mimecast.com ([91.220.42.44]:47932 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754129AbaGDLkI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 07:40:08 -0400
+Date: Fri, 4 Jul 2014 12:40:04 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Prabhakar Kushwaha <prabhakar@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] arm64: PCI(e) arch support
+Message-ID: <20140704114004.GG6501@e106497-lin.cambridge.arm.com>
+References: <1404422876-1160-1-git-send-email-tinamdar@apm.com>
+ <4342569.JSAyWBcJn2@wuerfel>
+ <20140704110251.GF6501@e106497-lin.cambridge.arm.com>
+ <8557411.iWl9PJdYsS@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <53DA70AB.9010906@linux.intel.com>
+In-Reply-To: <8557411.iWl9PJdYsS@wuerfel>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 01, 2014 at 12:36:59AM +0800, Jiang Liu wrote:
-> 1) There's a race window between device_shutdown() and
-> syscore_shutdown(). USB device may be returned to BIOS
-> during device_shutdown() and IOMMU units are disabled
-> during syscore_shutdown().
-> 2) Printing debug messages enlarges the race window,
-> especially when using serial console.
-> Then it triggers warning message "AMD-Vi: Event logged [IO_PAGE_FAULT
-> device=00:12.0 domain=0x0009 address=0x00000000ffffffc0 flags=0x0010]".
+On Fri, Jul 04, 2014 at 12:28:09PM +0100, Arnd Bergmann wrote:
+> On Friday 04 July 2014 12:02:51 Liviu Dudau wrote:
+> > > Supporting just one boot loader is of course a bit silly, especially when
+> > > you know that people will be using all sorts of boot loaders.
+> > 
+> > You could also argue that supporting just one kernel is silly as well, but
+> > so far I haven't seen too many Linux people complaining that *BSD is not
+> > officially supported.
 > 
-> But I have no AMD platforms to verify this theory. Could you
-> please help to try adding delays between device_shutdown()
-> and syscore_shutdown() in function kernel_power_off()?
+> I have heard complaints from UEFI people though that want to support
+> more than just Linux ;-)
+> 
+> > It's also a small game of demand and offer: ARM partners that were interested
+> > in ARMv8 have been asked which bootloader solution they are interested in,
+> > and I guess not enough u-boot supporters made their voices heard. Limited
+> > resources leads to limited choices.
+> 
+> I think it's rather a question of whether they'd benefit from ARM doing it.
+> It's fairly easy to port most of the smaller boot-loaders, and there
+> is not much architecture specific code in them.
+> 
+> > > A more interesting aspect of this question is what the kernel can expect
+> > > the boot loader to have done with the PCI host bridge when the kernel
+> > > is entered.
+> > 
+> > Indeed. I'm interested in opinions here.
+> > 
+> > > 
+> > > Traditionally, embedded ARM boot loaders have left the PCI host bridge
+> > > alone unless they were booting from it, and Linux did all the setup.
+> > > With the SBSA class of ARM servers, this is not really practical, and
+> > > whatever runs before Linux (typically UEFI) should already set up the
+> > > PCI bus and do resource allocation like every other server architecture
+> > > does. I would assume that UEFI does this right, and if not we can consider
+> > > that a bug.
+> > 
+> > And at the moment we have UEFI on Juno that can be made SBSA compliant
+> > but by default it's not (yes, it *is* a bug).
+> 
+> Is this because of the PCI config space access or something else?
 
-Ok, but this whole deal started appearing only after rc6. And this
-ordering hasn't been touched recently, AFAICT. So it must be something
-new...
+No, just lack of man power to carry enough work in that area for UEFI.
 
-I'm still trying to get that other system to trigger...
+> 
+> The publically announced version of Juno doesn't have any PCI slots,
+> so I guess this is about a future variant, right?
+
+Yes, current chip has an errata on PCI which renders it unable to carry
+device initiated transfers. This will be fixed in the next revision of
+the chip due next year.
+
+> 
+> > > However, what do we do about PCI hosts that can be used with different
+> > > kinds of systems? Do we assume that they all do PCI resource allocation?
+> > > Can we decide this on a per host driver basis, or do we need to introduce
+> > > an extension to the PCI DT binding to make that decision?
+> > 
+> > The PCI code currently should skip the configured devices and only touch
+> > the not configured ones. The question is how to detect if the host bridge
+> > has been initialised by the firmware or not.
+> 
+> On PowerPC we used to have a per platform flag that defined whether PCI was
+> supposed to be initialized by firmware or by the OS, but it makes less
+> sense on ARM64 since we try to avoid introducing the concept of platforms
+> in too many places.
+> 
+> If we can't rely on the firmware to get it right, I think we don't have
+> a choice but to rely on DT information (In the ACPI case, I would definitely
+> mandate that the firmware has to get it right). We may also need to deal
+> with the case of firmware initializing the PCI host bridge incorrectly,
+> though we can try not to do that until we have to.
+> 
+> It should be easy enough to detect the case of a host bridge that has
+> not been touched, but that would fail in case of kexec() when it has
+> been set up by a previously running kernel.
+
+One option would be to have per host controller registers that if at a known
+value it would mean the setup has been done, but that is just giving ammo
+to the hardware guys to screw us up.
+
+Best regards,
+Liviu
+
+> 
+> 	Arnd
+> 
+> 
 
 -- 
-Regards/Gruss,
-    Boris.
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
-Sent from a fat crate under my desk. Formatting is fine.
---
