@@ -1,55 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from h1446028.stratoserver.net ([85.214.92.142]:43572 "EHLO
-	mail.ahsoftware.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736AbaGFJuh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Jul 2014 05:50:37 -0400
-Message-ID: <53B91BB2.3090005@ahsoftware.de>
-Date: Sun, 06 Jul 2014 11:49:38 +0200
-From: Alexander Holler <holler@ahsoftware.de>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:58208 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752757AbaGDAEn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 20:04:43 -0400
+Received: by mail-ie0-f173.google.com with SMTP id at20so1017100iec.18
+        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 17:04:43 -0700 (PDT)
+Date: Thu, 3 Jul 2014 18:04:40 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, Wuyun <wuyun.wu@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>
+Subject: Re: [PATCH 0/5] Cleanup for MSI
+Message-ID: <20140704000440.GD25980@google.com>
+References: <1403166574-7032-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: rtc-linux@googlegroups.com,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-CC: Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
-	Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>,
-	Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Alessandro Zummo <a.zummo@towertech.it>,
-	Wim Van Sebroeck <wim@iguana.be>,
-	linux-watchdog@vger.kernel.org
-Subject: Re: [rtc-linux] Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
-References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <53B154FE.80804@gmail.com> <20140630124320.GZ32514@n2100.arm.linux.org.uk> <53B164B2.7090902@gmail.com> <20140630142516.GA32514@n2100.arm.linux.org.uk> <53B183D5.8020708@gmail.com> <20140630165615.GE32514@n2100.arm.linux.org.uk> <20140630174351.GI18520@lunn.ch> <20140630180853.GF32514@n2100.arm.linux.org.uk> <20140630181640.GL18520@lunn.ch>
-In-Reply-To: <20140630181640.GL18520@lunn.ch>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1403166574-7032-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 30.06.2014 20:16, schrieb Andrew Lunn:
->> So, what do we do now with support for compressed audio streams via
->> SPDIF on kirkwood hardware?  As far as I can see, it's no longer
->> possible and mainline kernels will never support this.  Please tell
->> me I'm wrong...
+On Thu, Jun 19, 2014 at 04:29:34PM +0800, Yijing Wang wrote:
 > 
-> Well, it would of been nice if you had made a comment to either v1 or
-> v2 of my patchset saying this is going to cause problems for some
-> devices.
+> Yijing Wang (5):
+>   PCI/MSI: Introduce msix_clear_and_set_ctrl() function
+>   PCI/MSI: Remove the unused function msi_enabled_mask()
+>   PCI/MSI: Cache Multiple Message Capable info in msi_desc
+
+The above three look good, and I applied them to pci/msi for v3.17.  If you
+repost the others, please rebase them to that branch because I fixed some
+whitespace issues:
+
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/msi
+
+>   PCI/MSI: MSI cleanup, msi_setup_entry()
+>   s390/MSI: Fix msi mask issue
 > 
-> So i will go look at your patch to add frontend and backend and see
-> what it means for the current DT binding. The nice thing about
-> kirkwood (and Dove) is, there is no uboot with DT support. Hence
-> nobody is flashing there DT blob. They are always using appended DT.
-> So i'm not against changing the binding. And it has only been in the
-> kernel for one cycle, so i doubt there are too many users at the
-> moment.
-
-And most people just don't care if some DT-binding changes as they can
-change the provided DT themself. At least on every sane device.
-
+>  arch/s390/pci/pci.c |    2 +-
+>  drivers/pci/msi.c   |  129 +++++++++++++++++++++++++--------------------------
+>  include/linux/msi.h |    1 +
+>  3 files changed, 65 insertions(+), 67 deletions(-)
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
