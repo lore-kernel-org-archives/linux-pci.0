@@ -1,128 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:44226 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932289AbaGWRk2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jul 2014 13:40:28 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@freescale.com>, kernel@pengutronix.de
-Subject: [PATCH 3/3] PCI: imx6: fix boot hang when link already enabled
-Date: Wed, 23 Jul 2014 19:40:17 +0200
-Message-Id: <1406137217-11294-4-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
-References: <1406137217-11294-1-git-send-email-l.stach@pengutronix.de>
+Received: from mout.kundenserver.de ([212.227.17.24]:49863 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750714AbaGDL2O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 07:28:14 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Prabhakar Kushwaha <prabhakar@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] arm64: PCI(e) arch support
+Date: Fri, 04 Jul 2014 13:28:09 +0200
+Message-ID: <8557411.iWl9PJdYsS@wuerfel>
+In-Reply-To: <20140704110251.GF6501@e106497-lin.cambridge.arm.com>
+References: <1404422876-1160-1-git-send-email-tinamdar@apm.com> <4342569.JSAyWBcJn2@wuerfel> <20140704110251.GF6501@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This fixes a boot hang observed when the bootloader
-already enabled the PCIe link for it's own use. The
-fundamental problem is that Freescale forgot to wire
-up the core reset, so software doesn't have a sane way
-to get the core into a defined state.
+On Friday 04 July 2014 12:02:51 Liviu Dudau wrote:
+> > Supporting just one boot loader is of course a bit silly, especially when
+> > you know that people will be using all sorts of boot loaders.
+> 
+> You could also argue that supporting just one kernel is silly as well, but
+> so far I haven't seen too many Linux people complaining that *BSD is not
+> officially supported.
 
-According to the DW PCIe core reference manual configuration
-of the core may only happen when the LTSSM is disabled, so
-this is one of the first things we need to do. Apparently
-this isn't safe to do when the LTSSM is in any other state
-than "detect" as we observe an instant machine hang when
-trying to do so while the link is already up.
+I have heard complaints from UEFI people though that want to support
+more than just Linux ;-)
 
-As a workaround force LTSSM into detect state right before
-hitting the disable switch.
+> It's also a small game of demand and offer: ARM partners that were interested
+> in ARMv8 have been asked which bootloader solution they are interested in,
+> and I guess not enough u-boot supporters made their voices heard. Limited
+> resources leads to limited choices.
 
-Reported-by: Fabio Estevam <fabio.estevam@freescale.com>
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-Acked-by: Tim Harvey <tharvey@gateworks.com>
----
-v2: - messed up the first submission by omitting a chunk
-v3: - check if bootloader actually enabled link before
-      touching any core registers
-    - add a comment to explain things a bit
-    - add shutdown hook to clean state on reboot
+I think it's rather a question of whether they'd benefit from ARM doing it.
+It's fairly easy to port most of the smaller boot-loaders, and there
+is not much architecture specific code in them.
 
-Fabios delay workaround worked because of the following
-conditions:
-1. The driver gets probed and pulls the peripheral reset GPIO
-2. Peripheral is held in reset, so won't answer any link
-negotiation requests
-3. The LTSSM times out and falls back into detect state
-after 24ms (that's why a 30ms delay helps)
-4. After LTSSM entered detect state it's safe to hit the
-disable switch
----
- drivers/pci/host/pci-imx6.c | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+> > A more interesting aspect of this question is what the kernel can expect
+> > the boot loader to have done with the PCI host bridge when the kernel
+> > is entered.
+> 
+> Indeed. I'm interested in opinions here.
+> 
+> > 
+> > Traditionally, embedded ARM boot loaders have left the PCI host bridge
+> > alone unless they were booting from it, and Linux did all the setup.
+> > With the SBSA class of ARM servers, this is not really practical, and
+> > whatever runs before Linux (typically UEFI) should already set up the
+> > PCI bus and do resource allocation like every other server architecture
+> > does. I would assume that UEFI does this right, and if not we can consider
+> > that a bug.
+> 
+> And at the moment we have UEFI on Juno that can be made SBSA compliant
+> but by default it's not (yes, it *is* a bug).
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index ceb1677884b2..8199257f7f28 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -49,6 +49,9 @@ struct imx6_pcie {
- 
- /* PCIe Port Logic registers (memory-mapped) */
- #define PL_OFFSET 0x700
-+#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
-+#define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
-+#define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
- #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
- #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
- #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
-@@ -214,6 +217,31 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
- static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- {
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-+	u32 val, gpr1, gpr12;
-+
-+	/*
-+	 * If the bootloader already enabled the link we need some special
-+	 * handling to get the core back into a state where it is safe to
-+	 * touch it for configuration. As there is no dedicated reset signal
-+	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
-+	 * state before completely disabling LTSSM, which is a prerequisite
-+	 * for core configuration.
-+	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
-+	 * indication that the bootloader activated the link.
-+	 */
-+	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
-+	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
-+
-+	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
-+	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
-+		val = readl(pp->dbi_base + PCIE_PL_PFLR);
-+		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-+		val |= PCIE_PL_PFLR_FORCE_LINK;
-+		writel(val, pp->dbi_base + PCIE_PL_PFLR);
-+
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-+	}
- 
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
-@@ -589,6 +617,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	return 0;
- }
- 
-+static void imx6_pcie_shutdown(struct platform_device *pdev)
-+{
-+	struct imx6_pcie *imx6_pcie = platform_get_drvdata(pdev);
-+
-+	/* bring down link, so bootloader gets clean state in case of reboot */
-+	imx6_pcie_assert_core_reset(&imx6_pcie->pp);
-+}
-+
- static const struct of_device_id imx6_pcie_of_match[] = {
- 	{ .compatible = "fsl,imx6q-pcie", },
- 	{},
-@@ -602,6 +638,7 @@ static struct platform_driver imx6_pcie_driver = {
- 		.of_match_table = imx6_pcie_of_match,
- 		.suppress_bind_attrs = true,
- 	},
-+	.shutdown = imx6_pcie_shutdown,
- };
- 
- /* Freescale PCIe driver does not allow module unload */
--- 
-2.0.1
+Is this because of the PCI config space access or something else?
 
+The publically announced version of Juno doesn't have any PCI slots,
+so I guess this is about a future variant, right?
+
+> > However, what do we do about PCI hosts that can be used with different
+> > kinds of systems? Do we assume that they all do PCI resource allocation?
+> > Can we decide this on a per host driver basis, or do we need to introduce
+> > an extension to the PCI DT binding to make that decision?
+> 
+> The PCI code currently should skip the configured devices and only touch
+> the not configured ones. The question is how to detect if the host bridge
+> has been initialised by the firmware or not.
+
+On PowerPC we used to have a per platform flag that defined whether PCI was
+supposed to be initialized by firmware or by the OS, but it makes less
+sense on ARM64 since we try to avoid introducing the concept of platforms
+in too many places.
+
+If we can't rely on the firmware to get it right, I think we don't have
+a choice but to rely on DT information (In the ACPI case, I would definitely
+mandate that the firmware has to get it right). We may also need to deal
+with the case of firmware initializing the PCI host bridge incorrectly,
+though we can try not to do that until we have to.
+
+It should be easy enough to detect the case of a host bridge that has
+not been touched, but that would fail in case of kexec() when it has
+been set up by a previously running kernel.
+
+	Arnd
