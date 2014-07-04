@@ -1,112 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0239.outbound.protection.outlook.com ([207.46.163.239]:28822
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753206AbaGVHYH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 03:24:07 -0400
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Fabio.Estevam@freescale.com" <Fabio.Estevam@freescale.com>,
-	Shawn Guo <Shawn.Guo@freescale.com>,
-	Marek Vasut <marex@denx.de>,
-	"d.mueller@elsoft.ch" <d.mueller@elsoft.ch>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v2] PCI: imx6: fix boot hang when link already enabled
-Date: Tue, 22 Jul 2014 07:24:02 +0000
-Message-ID: <1d83254966df448ea71a08830ad00713@DM2PR0301MB0862.namprd03.prod.outlook.com>
-References: <1405966635-7455-1-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1405966635-7455-1-git-send-email-l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:22345 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756653AbaGDI5c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Jul 2014 04:57:32 -0400
+Date: Fri, 4 Jul 2014 10:58:17 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+Message-ID: <20140704085816.GB12247@dhcp-26-207.brq.redhat.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
+ <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
+ <20140702202201.GA28852@google.com>
+ <063D6719AE5E284EB5DD2968C1650D6D1726BF4E@AcuExch.aculab.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1726BF4E@AcuExch.aculab.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas:
-Thanks for your help on this case firstly.
-See my comments marked by Richard below.
-Best Regards
-Richard Zhu
+On Thu, Jul 03, 2014 at 09:20:52AM +0000, David Laight wrote:
+> From: Bjorn Helgaas
+> > On Tue, Jun 10, 2014 at 03:10:30PM +0200, Alexander Gordeev wrote:
+> > > There are PCI devices that require a particular value written
+> > > to the Multiple Message Enable (MME) register while aligned on
+> > > power of 2 boundary value of actually used MSI vectors 'nvec'
+> > > is a lesser of that MME value:
+> > >
+> > > 	roundup_pow_of_two(nvec) < 'Multiple Message Enable'
+> > >
+> > > However the existing pci_enable_msi_block() interface is not
+> > > able to configure such devices, since the value written to the
+> > > MME register is calculated from the number of requested MSIs
+> > > 'nvec':
+> > >
+> > > 	'Multiple Message Enable' = roundup_pow_of_two(nvec)
+> > 
+> > For MSI, software learns how many vectors a device requests by reading
+> > the Multiple Message Capable (MMC) field.  This field is encoded, so a
+> > device can only request 1, 2, 4, 8, etc., vectors.  It's impossible
+> > for a device to request 3 vectors; it would have to round up that up
+> > to a power of two and request 4 vectors.
+> > 
+> > Software writes similarly encoded values to MME to tell the device how
+> > many vectors have been allocated for its use.  For example, it's
+> > impossible to tell the device that it can use 3 vectors; the OS has to
+> > round that up and tell the device it can use 4 vectors.
+> > 
+> > So if I understand correctly, the point of this series is to take
+> > advantage of device-specific knowledge, e.g., the device requests 4
+> > vectors via MMC, but we "know" the device is only capable of using 3.
+> > Moreover, we tell the device via MME that 4 vectors are available, but
+> > we've only actually set up 3 of them.
+> ...
+> 
+> Even if you do that, you ought to write valid interrupt information
+> into the 4th slot (maybe replicating one of the earlier interrupts).
+> Then, if the device does raise the 'unexpected' interrupt you don't
+> get a write to a random kernel location.
 
+I might be missing something, but we are talking of MSI address space
+here, aren't we? I am not getting how we could end up with a 'write'
+to a random kernel location when a unclaimed MSI vector sent. We could
+only expect a spurious interrupt at worst, which is handled and reported.
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
-> On Behalf Of Lucas Stach
-> Sent: Tuesday, July 22, 2014 2:17 AM
-> To: bhelgaas@google.com
-> Cc: linux-pci@vger.kernel.org; Estevam Fabio-R49496; Guo Shawn-R65073; Marek
-> Vasut; d.mueller@elsoft.ch; Zhu Richard-R65037; tharvey@gateworks.com;
-> kernel@pengutronix.de; linux-arm-kernel@lists.infradead.org
-> Subject: [PATCH v2] PCI: imx6: fix boot hang when link already enabled
+Anyway, as I described in my reply to Bjorn, this is not a concern IMO.
+
+> Plausibly something similar should be done when a smaller number of
+> interrupts is assigned.
 > 
-> This fixes a boot hang observed when the bootloader already enabled the PCIe
-> link for it's own use. The fundamental problem is that Freescale forgot to
-> wire up the core reset, so software doesn't have a sane way to get the core
-> into a defined state.
+> 	David
 > 
-> According to the DW PCIe core reference manual configuration of the core may
-> only happen when the LTSSM is disabled, so this is one of the first things we
-> need to do. Apparently this isn't safe to do when the LTSSM is in any other
-> state than "detect" as we observe an instant machine hang when trying to do so
-> while the link is already up.
-> 
-> As a workaround force LTSSM into detect state right before hitting the disable
-> switch.
-> 
-> Reported-by: Fabio Estevam <fabio.estevam@freescale.com>
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
-> v2: messed up the first submission by omitting a chunk
-> 
-> Fabios delay workaround worked because of the following
-> conditions:
-> 1. The driver gets probed and pulls the peripheral reset GPIO 2. Peripheral is
-> held in reset, so won't answer any link negotiation requests 3. The LTSSM
-> times out and falls back into detect state after 24ms (that's why a 30ms delay
-> helps) 4. After LTSSM entered detect state it's safe to hit the disable switch
-> ---
->  drivers/pci/host/pci-imx6.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c index
-> a568efaa331c..1c4b4b81fe15 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -49,6 +49,9 @@ struct imx6_pcie {
-> 
->  /* PCIe Port Logic registers (memory-mapped) */  #define PL_OFFSET 0x700
-> +#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
-> +#define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
-> +#define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
->  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)  #define PCIE_PHY_DEBUG_R1
-> (PL_OFFSET + 0x2c)
->  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
-> @@ -214,7 +217,15 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
-> static int imx6_pcie_assert_core_reset(struct pcie_port *pp)  {
->  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> +	u32 val;
-> +
-> +	val = readl(pp->dbi_base + PCIE_PL_PFLR);
-> +	val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-> +	val |= PCIE_PL_PFLR_FORCE_LINK;
-> +	writel(val, pp->dbi_base + PCIE_PL_PFLR);
-[Richard] At this point, the port logic register access are relied on the
-pcie clks enable in uboot. Otherwise, kernel would be hang, if the pcie is not enabled
-in uboot ever.
-> 
-> +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> +			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->  			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> --
-> 2.0.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
