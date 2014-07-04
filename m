@@ -1,78 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55697 "EHLO mga11.intel.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:36938 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190AbaGKGRM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jul 2014 02:17:12 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V4 06/21] iommu/vt-d: Fix possible invalid memory access caused by free_dmar_iommu()
-Date: Fri, 11 Jul 2014 14:19:30 +0800
-Message-Id: <1405059585-10620-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1754701AbaGDRAm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Jul 2014 13:00:42 -0400
+Date: Fri, 4 Jul 2014 11:00:28 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Prabhakar Kushwaha <prabhakar@freescale.com>
+Subject: Re: [PATCH] arm64: PCI(e) arch support
+Message-ID: <20140704170028.GB1736@obsidianresearch.com>
+References: <1404422876-1160-1-git-send-email-tinamdar@apm.com>
+ <53B5F81B.8010801@freescale.com>
+ <20140704094440.GC6501@e106497-lin.cambridge.arm.com>
+ <4342569.JSAyWBcJn2@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4342569.JSAyWBcJn2@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Static identity and virtual machine domains may be cached in
-iommu->domain_ids array after corresponding IOMMUs have been removed
-from domain->iommu_bmp. So we should check domain->iommu_bmp before
-decreasing domain->iommu_count in function free_dmar_iommu(), otherwise
-it may cause free of inuse domain data structure.
+On Fri, Jul 04, 2014 at 12:21:00PM +0200, Arnd Bergmann wrote:
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+> However, what do we do about PCI hosts that can be used with different
+> kinds of systems? Do we assume that they all do PCI resource allocation?
+> Can we decide this on a per host driver basis, or do we need to introduce
+> an extension to the PCI DT binding to make that decision?
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 968e3d32e305..0984fa58d872 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -425,6 +425,8 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
- 				       struct device *dev);
- static void iommu_detach_dependent_devices(struct intel_iommu *iommu,
- 					   struct device *dev);
-+static int domain_detach_iommu(struct dmar_domain *domain,
-+			       struct intel_iommu *iommu);
- 
- #ifdef CONFIG_INTEL_IOMMU_DEFAULT_ON
- int dmar_disabled = 0;
-@@ -1465,8 +1467,7 @@ static int iommu_init_domains(struct intel_iommu *iommu)
- static void free_dmar_iommu(struct intel_iommu *iommu)
- {
- 	struct dmar_domain *domain;
--	int i, count;
--	unsigned long flags;
-+	int i;
- 
- 	if ((iommu->domains) && (iommu->domain_ids)) {
- 		for_each_set_bit(i, iommu->domain_ids, cap_ndoms(iommu->cap)) {
-@@ -1479,11 +1480,7 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
- 
- 			domain = iommu->domains[i];
- 			clear_bit(i, iommu->domain_ids);
--
--			spin_lock_irqsave(&domain->iommu_lock, flags);
--			count = --domain->iommu_count;
--			spin_unlock_irqrestore(&domain->iommu_lock, flags);
--			if (count == 0)
-+			if (domain_detach_iommu(domain, iommu) == 0)
- 				domain_exit(domain);
- 		}
- 	}
--- 
-1.7.10.4
+If the firmware sets everything up, and standard ECAM/CAM config space
+is provided, then Will's simple generic driver should be selected. The
+kernel shouldn't even be using code to manipulate the host
+bridge. This is the x86 model.
 
+If it is more embedded focused and firmware doesn't do much, then a
+different compatible string and different driver can be used that does
+have any special setup code..
+
+The HW needs to be designed to support this, so it actually has to
+imeplement configuration access properly, it can't split the config
+space for the bridge with config space for the downstream, for
+instance. It must implement something sensible for root port bridge
+windows, and a few other common sense things.
+
+Things are going to need to work like this anyhow on any HW that
+expects to suport ACPI...
+
+It is OK for the kernel to reconfigure the BARs and other things as it
+likes, so long as the configuration access mechanism is working
+properly according to the spec. IIRC it does a bit of a hybrid on x86
+where it tries to leave things alone that are OK, and fix up things
+that are not OK.
+
+Jason
