@@ -1,39 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48650 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753347AbaG2NUZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jul 2014 09:20:25 -0400
-Date: Tue, 29 Jul 2014 06:20:20 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org, xjtuwjp@gmail.com,
-	lindar_liu@usish.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: Re: [PATCH v2 RESEND 17/23] pm8001: Fix invalid return when
- request_irq() failed
-Message-ID: <20140729132020.GA7714@infradead.org>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <5ecd9b80f705545c3dc85b2a4ae63a8ac3df8105.1405533479.git.agordeev@redhat.com>
- <53D79DE2.9000702@redhat.com>
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:47190 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752056AbaGDDat (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jul 2014 23:30:49 -0400
+Received: by mail-ob0-f169.google.com with SMTP id wp18so1271345obc.14
+        for <linux-pci@vger.kernel.org>; Thu, 03 Jul 2014 20:30:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53D79DE2.9000702@redhat.com>
+In-Reply-To: <53B61B03.3070308@huawei.com>
+References: <CAKb7UviGCtebGwyHbXRLZhDOiDAez+eKkxPe9jz5kc-3R1kUvQ@mail.gmail.com>
+	<53B4F0F7.9020403@huawei.com>
+	<CALhae2jRz8hL0bwySAbP7r+vJGOG5aif4GA_Yjp0inGAwz5JEA@mail.gmail.com>
+	<53B612FE.4080105@huawei.com>
+	<CAKb7UviVFQYwYdp_dgxK7jJ5Ny9yG1y8LATydxtVtkzRh+aOKw@mail.gmail.com>
+	<53B61B03.3070308@huawei.com>
+Date: Thu, 3 Jul 2014 23:30:48 -0400
+Message-ID: <CAKb7UvjFuu4Hm1pfmY-NMFORfv-+fx4oYeJicRoE8UTL_4Wp4A@mail.gmail.com>
+Subject: Re: How to check for proper MSI support?
+From: Ilia Mirkin <imirkin@alum.mit.edu>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Brian Becker <brian.johnathan.b@gmail.com>,
+	linux-pci@vger.kernel.org,
+	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 29, 2014 at 03:13:06PM +0200, Tomas Henzl wrote:
-> Hi, 
-> patch looks good.
-> 
-> A correction in pm8001_request_irq might be added too to allow 
-> the INT-X path when pm8001_setup_msix fails, but that is not part 
-> of this fix.
+On Thu, Jul 3, 2014 at 11:09 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> On 2014/7/4 10:43, Ilia Mirkin wrote:
+>> On Thu, Jul 3, 2014 at 10:35 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> Hi Brian,
+>>>    From your 01:00.0 VGA compatible controller PCI config register, it supports 1 MSI vector, so I think this
+>>> card has no problem. But you didn't answer what's the pci_enable_msi() return during it enable MSI fail.
+>>>
+>>> You can check PCI bus whether support MSI like:
+>>>
+>>> cat /sys/bus/pci/devices/00:0e.0/msi_bus
+>>>
+>>> Other, do you call pci_enable_device() before pci_enable_msi() ?
+>>
+>> Yes, the device is enabled. nouveau does generally work for most
+>> people :) And it works fine here if MSI is forced off.
+>>
+>> The problem here is that pci_enable_msi() succeeds, but it probably
+>
+> It's some strange, pci_enable_msi() succeeds, but there is nothing in MSI address and data register
+>
+>         Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
+>                 Address: 0000000000000000  Data: 0000
+> Because the address and data is invalid, so MSI can not work.
+>
+> Because you said pci_enable_msi() return 0 which indicates success, so I guess the device
+> current power state is not D0, because checking code in __write_msi_msi.
+>
+> void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+> {
+>     if (entry->dev->current_state != PCI_D0) {
+>         /* Don't touch the hardware now */
+>     } else if (entry->msi_attrib.is_msix) {
+>         void __iomem *base;
+>         base = entry->mask_base +
+>             entry->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
+>
+>         writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
+>         writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
+>         writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
+>     ......
+>
+>> shouldn't. I don't know all the details about MSI, but doesn't the CPU
+>> or (L)APIC have to support it? In this case, it's a P200MMX on a 430FX
+>> chipset board. Both quite ancient...
+>
+> MSI in x86 always send to specific interrupt address(0xfeexxxx), most x86 CPU
+> should support MSI, but I am not sure, I don't know hardware much.
 
+To put things in perspective, P200MMX was released in early 1997. It
+looks like the PCI 2.2 spec, which defines MSI, was released in late
+1998. The 430FX chipset only supports PCI 2.0.
 
-There's actually an equivalent fix already in through one of the
-previous pm8001 updates, so I skipped this one even if it already had an
-ACK.  The following pm8001 applied just fine, though.  Take a look, as
-I've already pushed out the updated drivers branch.
+>
+>>
+>> So given that the PCI device itself supports MSI, how do we tell that
+>> it shouldn't actually get turned on?
+>
+> Generally, some message in dmesg like:
+> [   17.322311] ahci 0000:00:1f.2: irq 119 for MSI/MSI-X
+> [   17.322319] ahci 0000:00:1f.2: irq 120 for MSI/MSI-X
+> [   17.322326] ahci 0000:00:1f.2: irq 121 for MSI/MSI-X
+> [   17.322333] ahci 0000:00:1f.2: irq 122 for MSI/MSI-X
+> [   17.322339] ahci 0000:00:1f.2: irq 123 for MSI/MSI-X
+>
+> Also you can check /proc/interrupts I think.
 
+I must not have made my question clear. Let me try again:
+
+There is a NVIDIA G96 GPU (which is PCIe only) hanging off of a PCIe
+<-> PCI bridge (all on one card), which is plugged into a motherboard
+with the 430FX chipset (PCI 2.0 supported).
+
+The GPU PCI device, of course, has full support for MSI. However my
+understanding is that MSI won't actually work here. This is confirmed
+by the fact that if we let nouveau enable MSI, the device doesn't work
+(presumably due to lack of interrupt delivery, although I admit to not
+having debugged it that far). How do I, as a nouveau driver developer,
+know not to call pci_enable_msi? Or alternatively how can
+pci_enable_msi be taught not to succeed in this case?
+
+Thanks,
+
+  -ilia
