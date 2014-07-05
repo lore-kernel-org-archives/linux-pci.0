@@ -1,68 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32191 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758996AbaGPNjB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 09:39:01 -0400
-Date: Wed, 16 Jul 2014 09:33:05 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Patch V3 00/16] Enable support of IOAPIC hotplug on x86
- platforms
-Message-ID: <20140716133305.GG19585@laptop.dumpdata.com>
-References: <1403685648-10103-1-git-send-email-jiang.liu@linux.intel.com>
- <20140714172642.GA12920@laptop.dumpdata.com>
- <20140714194133.GA22857@laptop.dumpdata.com>
- <53C54876.5090606@linux.intel.com>
- <20140715161035.GA8097@laptop.dumpdata.com>
- <53C5EB19.7060104@linux.intel.com>
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:43509 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755789AbaGESXg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 14:23:36 -0400
+Received: by mail-ig0-f169.google.com with SMTP id c1so9245271igq.4
+        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 11:23:35 -0700 (PDT)
+Date: Sat, 5 Jul 2014 12:23:32 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v3 0/5] Add Keystone PCIe controller driver
+Message-ID: <20140705182332.GB28871@google.com>
+References: <1404164720-11066-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53C5EB19.7060104@linux.intel.com>
+In-Reply-To: <1404164720-11066-1-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 11:01:45AM +0800, Jiang Liu wrote:
-> Hi Konrad,
+On Mon, Jun 30, 2014 at 05:45:15PM -0400, Murali Karicheri wrote:
+> This patch add PCIe controller driver for Keystone SoCs. This
+> is based on v2 of the series posted to the mailing list.
+> Keystone PCI controller is based on version 3.65 of the DW
+> hardware. This driver re-uses some of the DW core driver
+> functions and required modification in some to support
+> the old DW h/w based Keystone driver.
+> 
+> Please review and let me know if you have any comments.
 
-Hey Jiang,
-> 	We have found the root cause with your great support. If BIOS
-> assigns an IRQ number for a PCI device, acpi_pci_irq_enable() fails to
+I'm waiting for acks from Mohit or Jingoo for the designware changes.
 
-I would think that is a common scenario?
+I'd also like an ack from the devicetree folks for the Keystone binding.
 
-> assign IOAPIC IRQ then due to the check:
->         if (dev->irq > 0)
->                 return 0;
+And I think we need a MAINTAINERS update for drivers/pci/host/\*keystone\*
 
-I should really look in the code to figure this out - but I think your
-patch will have a detail analysis that will make tglrx happy, so
-will just wait till then :-)
-
-> 	For a quick workaround, just comment out above check. But we
-> need some time to figure out a clean fixup for it. We will send out new
-> version once it gets resolved.
-
-Excellent. Once you do, please do give me the git tree so I can slurp
-it in my testing
-
-> 	Thanks for your great help again.
-
-Of course! Thank you for your quick turn-around.
-> Regards!
-> Gerry
-> On 2014/7/16 0:10, Konrad Rzeszutek Wilk wrote:
-> > already assigned IRQ
+> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+> CC: Russell King <linux@arm.linux.org.uk>
+> CC: Grant Likely <grant.likely@linaro.org>
+> CC: Rob Herring <robh+dt@kernel.org>
+> CC: Mohit Kumar <mohit.kumar@st.com>
+> CC: Jingoo Han <jg1.han@samsung.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Pratyush Anand <pratyush.anand@st.com>
+> CC: Richard Zhu <r65037@freescale.com>
+> CC: Kishon Vijay Abraham I <kishon@ti.com>
+> CC: Marek Vasut <marex@denx.de>
+> CC: Arnd Bergmann <arnd@arndb.de>
+> CC: Pawel Moll <pawel.moll@arm.com>
+> CC: Mark Rutland <mark.rutland@arm.com>
+> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+> CC: Kumar Gala <galak@codeaurora.org>
+> CC: Randy Dunlap <rdunlap@infradead.org>
+> CC: Grant Likely <grant.likely@linaro.org> 
+> 
+> Changelog:
+> 
+> v3
+>  - DW application register handling code is now part of
+>    Keystone PCI driver. RFC had this code part of Keystone
+>    PCI driver, then V1 moved this to a separate file to
+>    re-use on other platforms that uses this version of the
+>    DW h/w. Then based on comments against v2, this is moved
+>    back to Keystone driver.
+>  - Keystone SerDes phy driver is removed from this series so that
+>    this can be merged independent of that patch
+>  - added msi_set_irq()/clear_irq() API's to support Keystone
+> 
+> V2
+>  - Split the designware pcie enhancement patch to multiple
+>    patches based on functionality added
+>  - Remove the quirk code and add a patch to fix mps/mrss
+>    tuning for ARM. Use kernel command line parameter
+>    pci=pcie_bus_perf to work with Keystone PCI Controller.
+>    Following patch addressed this.
+>      [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
+>  - Add documentation for device tree bindings
+>  - Add separate interrupt controller nodes for MSI and Legacy
+>    IRQs and use irq map for legacy IRQ
+>  - Use compatibility to identify v3.65 version of the DW hardware
+>    and use it to customize the designware common code.
+>  - Use reg property for configuration space instead of range
+>  - Other minor updates based on code inspection. 
+> 
+> V1
+>  - Add an interrupt controller node for Legacy irq chip and use
+>    interrupt map/map-mask property to map legacy IRQs A/B/C/D
+>  - Add a Phy driver to replace the original serdes driver
+>  - Move common application register handling code to a separate
+>    file to allow re-use across other platforms that use older
+>    DW PCIe h/w
+>  - PCI quirk for maximum read request size. Check and override only
+>    if the maximum is higher than what controller can handle.
+>  - Converted to a module platform driver.
+> 
+> Murali Karicheri (5):
+>   PCI: designware: add rd[wr]_other_conf API
+>   PCI: designware: refactor MSI code to work with v3.65 dw hardware
+>   PCI: designware: refactor host init code to re-use on keystone PCI
+>   PCI: designware: enhance dw core driver to support Keystone PCI host
+>     controller
+>   PCI: add PCI controller for Keystone PCIe h/w
+> 
+>  .../devicetree/bindings/pci/designware-pcie.txt    |    2 +
+>  .../devicetree/bindings/pci/pci-keystone.txt       |   69 +++
+>  drivers/pci/host/Kconfig                           |    5 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-keystone-dw.c                 |  523 ++++++++++++++++++++
+>  drivers/pci/host/pci-keystone.c                    |  381 ++++++++++++++
+>  drivers/pci/host/pci-keystone.h                    |   56 +++
+>  drivers/pci/host/pcie-designware.c                 |  206 ++++++--
+>  drivers/pci/host/pcie-designware.h                 |   17 +-
+>  9 files changed, 1207 insertions(+), 53 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
+>  create mode 100644 drivers/pci/host/pci-keystone-dw.c
+>  create mode 100644 drivers/pci/host/pci-keystone.c
+>  create mode 100644 drivers/pci/host/pci-keystone.h
+> 
+> -- 
+> 1.7.9.5
+> 
