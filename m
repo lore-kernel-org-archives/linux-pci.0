@@ -1,65 +1,55 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<Paul.Mundt@huawei.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	"Marc Zyngier" <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<virtualization@lists.linux-foundation.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 06/11] PCI/MSI: Save MSI irq in PCI MSI layer
-Date: Sat, 26 Jul 2014 11:08:43 +0800
-Message-ID: <1406344128-27055-7-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
-References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:46160 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753189AbaGERzC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 13:55:02 -0400
+Received: by mail-ig0-f180.google.com with SMTP id h18so3137830igc.13
+        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 10:55:01 -0700 (PDT)
+Date: Sat, 5 Jul 2014 11:54:58 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	rmk+kernel@arm.linux.org.uk, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 09/13] PCI: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
+Message-ID: <20140705175458.GF26618@google.com>
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
+ <1404075603-31838-12-git-send-email-andrew@lunn.ch>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404075603-31838-12-git-send-email-andrew@lunn.ch>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save MSI irq in PCI MSI layer, this is preparation
-for generic MSI.
+On Sun, Jun 29, 2014 at 10:59:58PM +0200, Andrew Lunn wrote:
+> mach-kirkwood and mach-dove have been removed, now that these SoCs
+> lives in mach-mvebu. ARCH_MVEBU is sufficient.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/msi.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Looks like there's still discussion about the cubox regression, so
+I'll wait until that's resolved and Thomas or Jason ack this.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 21b16e0..f96dd38 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -650,8 +650,6 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	pci_intx_for_msi(dev, 0);
- 	msi_set_enable(dev, 1);
- 	dev->msi_enabled = 1;
--
--	dev->irq = entry->irq;
- 	return 0;
- }
- 
-@@ -1059,6 +1057,7 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
- {
- 	int nvec;
- 	int rc;
-+	struct msi_desc *entry;
- 
- 	if (dev->current_state != PCI_D0)
- 		return -EINVAL;
-@@ -1114,6 +1113,8 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
- 		return rc;
- 	}
- 
-+	entry = list_entry(dev->msi_list.next, struct msi_desc, list);
-+	dev->irq = entry->irq;
- 	return nvec;
- }
- EXPORT_SYMBOL(pci_enable_msi_range);
--- 
-1.7.1
-
+> 
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/pci/host/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 21df477be0c8..b9692deeb99a 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -3,7 +3,7 @@ menu "PCI host controller drivers"
+>  
+>  config PCI_MVEBU
+>  	bool "Marvell EBU PCIe controller"
+> -	depends on ARCH_MVEBU || ARCH_DOVE || ARCH_KIRKWOOD
+> +	depends on ARCH_MVEBU
+>  	depends on OF
+>  
+>  config PCIE_DW
+> -- 
+> 2.0.0
+> 
