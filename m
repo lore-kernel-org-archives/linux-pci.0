@@ -1,97 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51675 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756147AbaGNUR5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 16:17:57 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH] ACPI / hotplug: Simplify acpi_set_hp_context()
-Date: Mon, 14 Jul 2014 22:36:10 +0200
-Message-ID: <5388095.MjHqc07ajT@vostro.rjw.lan>
+Received: from mail-qa0-f44.google.com ([209.85.216.44]:48351 "EHLO
+	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751974AbaGEQL5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 12:11:57 -0400
+Received: by mail-qa0-f44.google.com with SMTP id hw13so2180740qab.3
+        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 09:11:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CACna6rxfutrgdnv2=UZgg5=awQy4KMqFYzwesGtq9gyxh3Jw_g@mail.gmail.com>
+References: <CACna6ry7+oNLwGVkdJiDkLq_QCZ5+gKk8Dxr=tbs-kBYqCp9Yg@mail.gmail.com>
+ <CACna6rxfutrgdnv2=UZgg5=awQy4KMqFYzwesGtq9gyxh3Jw_g@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 5 Jul 2014 10:11:36 -0600
+Message-ID: <CAErSpo4kFuCn98eJFbCo5W7bpPTA-visb0u-nPq-ptUCiB6XgA@mail.gmail.com>
+Subject: Re: Checking PCIe generation in driver code
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Fri, Jul 4, 2014 at 5:35 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> On 3 July 2014 22:06, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> I'm dealing with Broadcom devices and it appears I need to know if the
+>> current PCIe device is Gen 1 or Gen 2. This is because they have
+>> slightly different registers:
+>> #define PCI_BAR0_WIN2 0xac
+>> #define PCIE2_BAR0_WIN2 0x70
+>>
+>> Is there a way to know that? I keep starring at struct pci_dev, but
+>> can't see "generation" field. Tried Googling, but couldn't find
+>> anything.
+>
+> I've noticed that my 14e4:4360 card (PCIe Gen2) has:
+> LNKCAP: 0x0046DC12 (hint: PCI_EXP_LNKCAP_SLS_5_0GB)
+>
+> Some older card 14e4:4359 (PCIe 1) has:
+> LNKCAP: 0x00176811 (hint: PCI_EXP_LNKCAP_SLS_2_5GB)
+>
+> Wikipedia says 500 MB/s was added in PCIe 2.0.
+>
+> Could I check for this bit to determine if I'm dealing PCIe 2.0 card?
 
-Since all of the acpi_set_hp_context() callers pass at least one NULL
-function pointer and one caller passes NULL function pointers only
-to it, drop function pointer arguments from acpi_set_hp_context()
-and make the callers initialize the function pointers in struct
-acpi_hotplug_context by themselves before passing it to
-acpi_set_hp_context().
+No, I think you should use the device ID to differentiate between the
+register layouts.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c                |    4 +++-
- drivers/pci/hotplug/acpiphp_glue.c |    7 ++++---
- include/acpi/acpi_bus.h            |    8 +-------
- 3 files changed, 8 insertions(+), 11 deletions(-)
-
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -372,15 +372,9 @@ static inline void acpi_set_device_statu
- }
- 
- static inline void acpi_set_hp_context(struct acpi_device *adev,
--				       struct acpi_hotplug_context *hp,
--				       int (*notify)(struct acpi_device *, u32),
--				       void (*uevent)(struct acpi_device *, u32),
--				       void (*fixup)(struct acpi_device *))
-+				       struct acpi_hotplug_context *hp)
- {
- 	hp->self = adev;
--	hp->notify = notify;
--	hp->uevent = uevent;
--	hp->fixup = fixup;
- 	adev->hp = hp;
- }
- 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -77,7 +77,9 @@ void acpi_initialize_hp_context(struct a
- 				void (*uevent)(struct acpi_device *, u32))
- {
- 	acpi_lock_hp_context();
--	acpi_set_hp_context(adev, hp, notify, uevent, NULL);
-+	hp->notify = notify;
-+	hp->uevent = uevent;
-+	acpi_set_hp_context(adev, hp);
- 	acpi_unlock_hp_context();
- }
- EXPORT_SYMBOL_GPL(acpi_initialize_hp_context);
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -80,8 +80,9 @@ static struct acpiphp_context *acpiphp_i
- 		return NULL;
- 
- 	context->refcount = 1;
--	acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_notify, NULL,
--			    acpiphp_post_dock_fixup);
-+	context->hp.notify = acpiphp_hotplug_notify;
-+	context->hp.fixup = acpiphp_post_dock_fixup;
-+	acpi_set_hp_context(adev, &context->hp);
- 	return context;
- }
- 
-@@ -876,7 +877,7 @@ void acpiphp_enumerate_slots(struct pci_
- 			goto err;
- 
- 		root_context->root_bridge = bridge;
--		acpi_set_hp_context(adev, &root_context->hp, NULL, NULL, NULL);
-+		acpi_set_hp_context(adev, &root_context->hp);
- 	} else {
- 		struct acpiphp_context *context;
- 
-
+Bjorn
