@@ -1,65 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og107.obsmtp.com ([64.18.0.184]:54148 "HELO
-	exprod5og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751321AbaGGS0o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 14:26:44 -0400
-Received: by mail-ve0-f174.google.com with SMTP id jx11so4502141veb.19
-        for <linux-pci@vger.kernel.org>; Mon, 07 Jul 2014 11:26:43 -0700 (PDT)
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:52708 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753045AbaGERrp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 13:47:45 -0400
+Received: by mail-ig0-f175.google.com with SMTP id h3so9551281igd.14
+        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 10:47:45 -0700 (PDT)
+Date: Sat, 5 Jul 2014 11:47:42 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: horms@verge.net.au, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, phil.edworthy@renesas.com
+Subject: Re: [PATCH] pcie-rcar: kill duplicate checks
+Message-ID: <20140705174742.GD26618@google.com>
+References: <201406271859.13626.sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-In-Reply-To: <53B5F81B.8010801@freescale.com>
-References: <1404422876-1160-1-git-send-email-tinamdar@apm.com>
-	<53B5F81B.8010801@freescale.com>
-Date: Mon, 7 Jul 2014 11:26:43 -0700
-Message-ID: <CACoXjc=0+gkHCX7SkcVrJ6xGNyVLyW-X+ZfDzJwSDn-9QX5zkw@mail.gmail.com>
-Subject: Re: [PATCH] arm64: PCI(e) arch support
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Prabhakar Kushwaha <prabhakar@freescale.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Liviu Dudau <liviu.dudau@arm.com>,
-	Kumar Gala <galak@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201406271859.13626.sergei.shtylyov@cogentembedded.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 3, 2014 at 5:40 PM, Prabhakar Kushwaha
-<prabhakar@freescale.com> wrote:
-> Hi Tanmay, Liviu,
->
-> On 7/4/2014 2:57 AM, Tanmay Inamdar wrote:
->>
->> Reposting on request of several people since previously posted one was
->> corrupted.
->>
->> This patch adds the arch support for PCI(e) for arm64. The files
->> added or modified in this patch are based on PCI(e) support in
->> 32bit arm.
->>
->> Please note that this patch is just for the reference. Liviu Dudau from
->> ARM
->> has posted his v8 series of patch to support PCIe in arm64.
->>
->> The patch will apply against 3.13 Linux Kernel
->>
->> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
->>
->
-> do we foresee similar type of changes in u-boot  to support PCI(e) for
-> ARM64.
->
+On Fri, Jun 27, 2014 at 06:59:13PM +0400, Sergei Shtylyov wrote:
+> The PCI core will have already checked the configuration register address before
+> calling the {read|write}() methods, no need to check it again in these methods.
+> 
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-Well.. Actually PCI(e) has no dependency on ARM64 architecture. This
-patch is required only because of current Linux structure. Hence
-Liviu's effort to take PCI(e) out of 'arch' makes sense.
+Applied with Phil and Simon's acks to pci/host-rcar for v3.17, thanks!
 
-In my experience, I don't think any arch specific changes are required
-in u-boot. At least I don't recall making any specific changes in
-u-boot pci layer. However we don't really have a big use case for PCIe
-in u-boot. It just links up and lists the devices discovered during
-enumeration.
-
-
-> Regards,
-> Prabhakar
->
->
+> ---
+> The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo.
+> 
+>  drivers/pci/host/pcie-rcar.c |   10 ----------
+>  1 file changed, 10 deletions(-)
+> 
+> Index: pci/drivers/pci/host/pcie-rcar.c
+> ===================================================================
+> --- pci.orig/drivers/pci/host/pcie-rcar.c
+> +++ pci/drivers/pci/host/pcie-rcar.c
+> @@ -260,11 +260,6 @@ static int rcar_pcie_read_conf(struct pc
+>  	struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
+>  	int ret;
+>  
+> -	if ((size == 2) && (where & 1))
+> -		return PCIBIOS_BAD_REGISTER_NUMBER;
+> -	else if ((size == 4) && (where & 3))
+> -		return PCIBIOS_BAD_REGISTER_NUMBER;
+> -
+>  	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
+>  				      bus, devfn, where, val);
+>  	if (ret != PCIBIOS_SUCCESSFUL) {
+> @@ -291,11 +286,6 @@ static int rcar_pcie_write_conf(struct p
+>  	int shift, ret;
+>  	u32 data;
+>  
+> -	if ((size == 2) && (where & 1))
+> -		return PCIBIOS_BAD_REGISTER_NUMBER;
+> -	else if ((size == 4) && (where & 3))
+> -		return PCIBIOS_BAD_REGISTER_NUMBER;
+> -
+>  	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
+>  				      bus, devfn, where, &data);
+>  	if (ret != PCIBIOS_SUCCESSFUL)
