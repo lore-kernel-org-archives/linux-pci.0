@@ -1,87 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:36353 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753010AbaGKPIa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 11:08:30 -0400
-Date: Fri, 11 Jul 2014 16:08:23 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
- pci_host_bridge.
-Message-ID: <20140711150823.GU6501@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
- <20140708005954.GC22939@google.com>
- <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
- <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
- <20140708224847.GC4980@e106497-lin.cambridge.arm.com>
- <CAErSpo5rBt0iF2HGeDD-UH6_sPCoC647VCw0Q1v_0Rdpvcir-w@mail.gmail.com>
- <20140710094758.GA6501@e106497-lin.cambridge.arm.com>
- <CAErSpo5ZNCY31NztT0cLFbRVsBZqMsZ0LbTFNOTQCZUU3F7qJA@mail.gmail.com>
- <20140711141115.GB16321@arm.com>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:60826 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752817AbaGETCH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 15:02:07 -0400
+Received: by mail-ig0-f178.google.com with SMTP id hn18so3159713igb.11
+        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 12:02:06 -0700 (PDT)
+Date: Sat, 5 Jul 2014 13:02:03 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Vidya Sagar <vidyas@nvidia.com>
+Cc: nagananda.chumbalkar@hp.com, thierry.reding@gmail.com,
+	swarren@nvidia.com, kthota@nvidia.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH v1] PCI: enable ASPM configuration in PCIE POWERSAVE mode
+Message-ID: <20140705190203.GE28871@google.com>
+References: <1404198978-26593-1-git-send-email-vidyas@nvidia.com>
+ <20140705185736.GD28871@google.com>
 MIME-Version: 1.0
-In-Reply-To: <20140711141115.GB16321@arm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140705185736.GD28871@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 11, 2014 at 03:11:16PM +0100, Catalin Marinas wrote:
-> On Thu, Jul 10, 2014 at 11:36:10PM +0100, Bjorn Helgaas wrote:
-> > Most of the rest of the v7 discussion was about "Introduce a domain
-> > number for pci_host_bridge."  I think we should add arm64 using the
-> > existing pci_scan_root_bus() and keep the domain number in the arm64
-> > sysdata structure like every other arch does.  Isn't that feasible?
-> > We can worry about domain unification later.
+[+cc Rafael]
+
+On Sat, Jul 05, 2014 at 12:57:36PM -0600, Bjorn Helgaas wrote:
+> [+cc Matthew]
 > 
-> I think that's what we were trying to avoid, adding an arm64-specific
-> pci_sys_data structure (and arm64-specific API). IIUC, avoiding this
-> would allow the host controller drivers to use the sysdata pointer for
-> their own private data structures.
+> On Tue, Jul 01, 2014 at 12:46:18PM +0530, Vidya Sagar wrote:
+> > commit 1a680b7c moved pcie_aspm_powersave_config_link() out of
+> > pci_raw_set_power_state() to pci_set_power_state() which would enable
+> > ASPM. But, with commit db288c9c, which re-introduced the following check
+> > ./drivers/pci/pci.c: pci_set_power_state()
+> > +   /* Check if we're already there */
+> > +   if (dev->current_state == state)
+> > +       return 0;
+> > in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
+> > made leaving ASPM broken.
+> > Fix it by not returning from when the above condition is true, rather, jump to
+> > ASPM configuration code and exit from there eventually.
 > 
-> Also since you can specify the domain number via DT (and in Liviu's
-> v8 patches read by of_create_pci_host_bridge), I think it would make
-> sense to have it stored in some generic data structures (e.g.
-> pci_host_bridge) rather than in an arm64 private sysdata.
+> Rafael, Matthew, any comments?  We have vacillated on this before and
+> the web is already pretty tangled.
 > 
-> (Liviu is thinking of an alternative API but maybe he could briefly
-> describe it here before posting a new series)
+> Vidya, can you give more details about the bug fixed by this change?
+> What's the scenario?  Are we resuming and the device is powered up but
+> ASPM isn't enabled?  Maybe you could collect more details in a
+> http://bugzilla.kernel.org report?
 > 
-> -- 
-> Catalin
-
-
-My plan is to keep the domain number in the pci_host_bridge and split
-the creation of the pci_host_bridge out of the pci_create_root_bus().
-The new function (tentatively called pci_create_new_root_bus()) will
-no longer call pci_alloc_host_bridge() but will accept it as a
-parameter, allowing one to be able to set the domain_nr ahead of the
-root bus creation.
-
-Best regards,
-Liviu
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+> > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> > ---
+> >  drivers/pci/pci.c | 6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 1c8592b..ded24c4 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -804,7 +804,7 @@ EXPORT_SYMBOL_GPL(__pci_complete_power_transition);
+> >   */
+> >  int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >  {
+> > -	int error;
+> > +	int error = 0;
+> >  
+> >  	/* bound the state we're entering */
+> >  	if (state > PCI_D3cold)
+> > @@ -821,7 +821,7 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >  
+> >  	/* Check if we're already there */
+> >  	if (dev->current_state == state)
+> > -		return 0;
+> > +		goto config_aspm;
+> >  
+> >  	__pci_start_power_transition(dev, state);
+> >  
+> > @@ -839,6 +839,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> >  
+> >  	if (!__pci_complete_power_transition(dev, state))
+> >  		error = 0;
+> > +
+> > +config_aspm:
+> >  	/*
+> >  	 * When aspm_policy is "powersave" this call ensures
+> >  	 * that ASPM is configured.
+> > -- 
+> > 1.8.1.5
+> > 
