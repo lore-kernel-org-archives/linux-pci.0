@@ -1,39 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:27688 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752495AbaGDIQX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 04:16:23 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 0/5] Cleanup for MSI
-Date: Fri, 4 Jul 2014 16:14:27 +0800
-Message-ID: <1404461667-9636-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:59013 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751895AbaGES5k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jul 2014 14:57:40 -0400
+Received: by mail-ig0-f182.google.com with SMTP id l13so3160600iga.9
+        for <linux-pci@vger.kernel.org>; Sat, 05 Jul 2014 11:57:40 -0700 (PDT)
+Date: Sat, 5 Jul 2014 12:57:36 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Vidya Sagar <vidyas@nvidia.com>
+Cc: rjw@sisk.pl, nagananda.chumbalkar@hp.com, thierry.reding@gmail.com,
+	swarren@nvidia.com, kthota@nvidia.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>
+Subject: Re: [PATCH v1] PCI: enable ASPM configuration in PCIE POWERSAVE mode
+Message-ID: <20140705185736.GD28871@google.com>
+References: <1404198978-26593-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404198978-26593-1-git-send-email-vidyas@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset is based Bjorn's pci/msi branch.
+[+cc Matthew]
 
-v1->v2: Modify msi_setup_entry() return type suggested by Bjorn.
-        Post a new s390 MSI patch to fix and simplify MSI code.
-		Post another 3 cleanup patch for MSI.
+On Tue, Jul 01, 2014 at 12:46:18PM +0530, Vidya Sagar wrote:
+> commit 1a680b7c moved pcie_aspm_powersave_config_link() out of
+> pci_raw_set_power_state() to pci_set_power_state() which would enable
+> ASPM. But, with commit db288c9c, which re-introduced the following check
+> ./drivers/pci/pci.c: pci_set_power_state()
+> +   /* Check if we're already there */
+> +   if (dev->current_state == state)
+> +       return 0;
+> in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
+> made leaving ASPM broken.
+> Fix it by not returning from when the above condition is true, rather, jump to
+> ASPM configuration code and exit from there eventually.
 
-Patch 2(s390/MSI) just compiled fine, no real machine test.
+Rafael, Matthew, any comments?  We have vacillated on this before and
+the web is already pretty tangled.
 
-Yijing Wang (5):
-  PCI/MSI: MSI cleanup, msi_setup_entry()
-  s390/MSI: Use standard mask and unmask funtions
-  PCI/MSI: Remove unused function msi_remove_pci_irq_vectors()
-  PCI/MSI: Retrieve first MSI irq from msi_desc rather than pci_dev
-  PCI/MSI: Clean up the useless code
+Vidya, can you give more details about the bug fixed by this change?
+What's the scenario?  Are we resuming and the device is powered up but
+ASPM isn't enabled?  Maybe you could collect more details in a
+http://bugzilla.kernel.org report?
 
- arch/s390/pci/pci.c |   49 ++++------------------------------
- drivers/pci/msi.c   |   72 ++++++++++++++++++++++++---------------------------
- include/linux/pci.h |    2 -
- 3 files changed, 40 insertions(+), 83 deletions(-)
-
-
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+>  drivers/pci/pci.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 1c8592b..ded24c4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -804,7 +804,7 @@ EXPORT_SYMBOL_GPL(__pci_complete_power_transition);
+>   */
+>  int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  {
+> -	int error;
+> +	int error = 0;
+>  
+>  	/* bound the state we're entering */
+>  	if (state > PCI_D3cold)
+> @@ -821,7 +821,7 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  
+>  	/* Check if we're already there */
+>  	if (dev->current_state == state)
+> -		return 0;
+> +		goto config_aspm;
+>  
+>  	__pci_start_power_transition(dev, state);
+>  
+> @@ -839,6 +839,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  
+>  	if (!__pci_complete_power_transition(dev, state))
+>  		error = 0;
+> +
+> +config_aspm:
+>  	/*
+>  	 * When aspm_policy is "powersave" this call ensures
+>  	 * that ASPM is configured.
+> -- 
+> 1.8.1.5
+> 
