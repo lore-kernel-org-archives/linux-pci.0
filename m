@@ -1,98 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55697 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752313AbaGKGRY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jul 2014 02:17:24 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part3 V4 09/21] iommu/vt-d: Change iommu_enable/disable_translation to return void
-Date: Fri, 11 Jul 2014 14:19:33 +0800
-Message-Id: <1405059585-10620-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from h1446028.stratoserver.net ([85.214.92.142]:43572 "EHLO
+	mail.ahsoftware.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736AbaGFJuh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Jul 2014 05:50:37 -0400
+Message-ID: <53B91BB2.3090005@ahsoftware.de>
+Date: Sun, 06 Jul 2014 11:49:38 +0200
+From: Alexander Holler <holler@ahsoftware.de>
+MIME-Version: 1.0
+To: rtc-linux@googlegroups.com,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+CC: Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
+	Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>,
+	Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Alessandro Zummo <a.zummo@towertech.it>,
+	Wim Van Sebroeck <wim@iguana.be>,
+	linux-watchdog@vger.kernel.org
+Subject: Re: [rtc-linux] Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <53B154FE.80804@gmail.com> <20140630124320.GZ32514@n2100.arm.linux.org.uk> <53B164B2.7090902@gmail.com> <20140630142516.GA32514@n2100.arm.linux.org.uk> <53B183D5.8020708@gmail.com> <20140630165615.GE32514@n2100.arm.linux.org.uk> <20140630174351.GI18520@lunn.ch> <20140630180853.GF32514@n2100.arm.linux.org.uk> <20140630181640.GL18520@lunn.ch>
+In-Reply-To: <20140630181640.GL18520@lunn.ch>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify error handling path by changing iommu_{enable|disable}_translation
-to return void.
+Am 30.06.2014 20:16, schrieb Andrew Lunn:
+>> So, what do we do now with support for compressed audio streams via
+>> SPDIF on kirkwood hardware?  As far as I can see, it's no longer
+>> possible and mainline kernels will never support this.  Please tell
+>> me I'm wrong...
+> 
+> Well, it would of been nice if you had made a comment to either v1 or
+> v2 of my patchset saying this is going to cause problems for some
+> devices.
+> 
+> So i will go look at your patch to add frontend and backend and see
+> what it means for the current DT binding. The nice thing about
+> kirkwood (and Dove) is, there is no uboot with DT support. Hence
+> nobody is flashing there DT blob. They are always using appended DT.
+> So i'm not against changing the binding. And it has only been in the
+> kernel for one cycle, so i doubt there are too many users at the
+> moment.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 5d7383775bf1..0ba078bc0f32 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1389,7 +1389,7 @@ static void iommu_disable_protect_mem_regions(struct intel_iommu *iommu)
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
- }
- 
--static int iommu_enable_translation(struct intel_iommu *iommu)
-+static void iommu_enable_translation(struct intel_iommu *iommu)
- {
- 	u32 sts;
- 	unsigned long flags;
-@@ -1403,10 +1403,9 @@ static int iommu_enable_translation(struct intel_iommu *iommu)
- 		      readl, (sts & DMA_GSTS_TES), sts);
- 
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flags);
--	return 0;
- }
- 
--static int iommu_disable_translation(struct intel_iommu *iommu)
-+static void iommu_disable_translation(struct intel_iommu *iommu)
- {
- 	u32 sts;
- 	unsigned long flag;
-@@ -1420,7 +1419,6 @@ static int iommu_disable_translation(struct intel_iommu *iommu)
- 		      readl, (!(sts & DMA_GSTS_TES)), sts);
- 
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flag);
--	return 0;
- }
- 
- 
-@@ -2860,11 +2858,7 @@ static int __init init_dmars(void)
- 
- 		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
- 		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
--
--		ret = iommu_enable_translation(iommu);
--		if (ret)
--			goto free_iommu;
--
-+		iommu_enable_translation(iommu);
- 		iommu_disable_protect_mem_regions(iommu);
- 	}
- 
-@@ -3578,10 +3572,8 @@ static int init_iommu_hw(void)
- 
- 		iommu->flush.flush_context(iommu, 0, 0, 0,
- 					   DMA_CCMD_GLOBAL_INVL);
--		iommu->flush.flush_iotlb(iommu, 0, 0, 0,
--					 DMA_TLB_GLOBAL_FLUSH);
--		if (iommu_enable_translation(iommu))
--			return 1;
-+		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
-+		iommu_enable_translation(iommu);
- 		iommu_disable_protect_mem_regions(iommu);
- 	}
- 
--- 
-1.7.10.4
+And most people just don't care if some DT-binding changes as they can
+change the provided DT themself. At least on every sane device.
 
