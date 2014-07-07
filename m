@@ -1,92 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, xjtuwjp@gmail.com,
-	lindar_liu@usish.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 18/23] pm8001: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Wed, 16 Jul 2014 20:05:22 +0200
-Message-Id: <9bfa1f22a2a59814a4d520bbcce6eba1b6979b31.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:52433 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409AbaGGLM4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 07:12:56 -0400
+Date: Mon, 7 Jul 2014 12:12:52 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 0/9] Support for creating generic PCI host bridges
+ from DT
+Message-ID: <20140707111252.GQ6501@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqK_CfagmiFOpOXVYGry22nGnCZL0ZXeJhYxb9zp=P2fsQ@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAL_JsqK_CfagmiFOpOXVYGry22nGnCZL0ZXeJhYxb9zp=P2fsQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Sun, Jul 06, 2014 at 04:23:43PM +0100, Rob Herring wrote:
+> On Tue, Jul 1, 2014 at 1:43 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > This is my resurected attempt at adding support for generic PCI host
+> > bridge controllers that make use of device tree information to
+> > configure themselves. I've tagged it as v8 although the patches
+> > have now been reshuffled in order to ease adoption so referring to
+> > the older versions might be a bit of a hoop jumping exercise.
+> >
+> > Changes from v7:
+> >   - Reordered the patches so that fixes and non-controversial patches
+> >     from v7 can be accepted more easily. If agreed I can split the
+> >     series again into patches that can be upstreamed easily and ones
+> >     that still need discussion.
+> >   - Moved the of_create_host_bridge() function to drivers/of/of_pci.c
+> >     to better reflect its target use.
+> >   - Added the function to remap the bus I/O resources that used to be
+> >     provided in my arm64 patch series and (re)named it pci_remap_iospace()
+> >   - Removed error code checking from parsing and mapping of IRQ from DT
+> >     in recognition that some PCI devices will not have legacy IRQ mappings.
+> >
+> > v7 thread here with all the historic information: https://lkml.org/lkml/2014/3/14/279
+> 
+> Can you publish a branch for this series please.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: xjtuwjp@gmail.com
-Cc: lindar_liu@usish.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/pm8001/pm8001_init.c |   39 +++++++++++++++++++------------------
- 1 files changed, 20 insertions(+), 19 deletions(-)
+Do you want a branch that has the series as publised (+the one obvious miss
+on the header include) or a branch that has the comments rolled in, but is
+is not published yet as I'm waiting on answers from Bjorn regarding domain
+number handling?
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index e837ece..4057c24 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -729,34 +729,35 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
- 		sizeof(pm8001_ha->msix_entries[0]);
- 	for (i = 0; i < max_entry ; i++)
- 		pm8001_ha->msix_entries[i].entry = i;
--	rc = pci_enable_msix(pm8001_ha->pdev, pm8001_ha->msix_entries,
-+	rc = pci_enable_msix_exact(pm8001_ha->pdev, pm8001_ha->msix_entries,
- 		number_of_intr);
- 	pm8001_ha->number_of_intr = number_of_intr;
--	if (!rc) {
--		PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
--			"pci_enable_msix request ret:%d no of intr %d\n",
--					rc, pm8001_ha->number_of_intr));
-+	if (rc)
-+		return rc;
- 
-+	PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
-+		"pci_enable_msix_exact request ret:%d no of intr %d\n",
-+				rc, pm8001_ha->number_of_intr));
- 
--		for (i = 0; i < number_of_intr; i++) {
--			snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
--					DRV_NAME"%d", i);
--			pm8001_ha->irq_vector[i].irq_id = i;
--			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
-+	for (i = 0; i < number_of_intr; i++) {
-+		snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
-+				DRV_NAME"%d", i);
-+		pm8001_ha->irq_vector[i].irq_id = i;
-+		pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
- 
--			rc = request_irq(pm8001_ha->msix_entries[i].vector,
--				pm8001_interrupt_handler_msix, flag,
--				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
--			if (rc) {
--				for (j = 0; j < i; j++)
--					free_irq(
--					pm8001_ha->msix_entries[j].vector,
-+		rc = request_irq(pm8001_ha->msix_entries[i].vector,
-+			pm8001_interrupt_handler_msix, flag,
-+			intr_drvname[i], &(pm8001_ha->irq_vector[i]));
-+		if (rc) {
-+			for (j = 0; j < i; j++) {
-+				free_irq(pm8001_ha->msix_entries[j].vector,
- 					&(pm8001_ha->irq_vector[i]));
--				pci_disable_msix(pm8001_ha->pdev);
--				break;
- 			}
-+			pci_disable_msix(pm8001_ha->pdev);
-+			break;
- 		}
- 	}
-+
- 	return rc;
- }
- #endif
+Best regards,
+Liviu
+
+> 
+> Rob
+> 
+
 -- 
-1.7.7.6
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
