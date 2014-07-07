@@ -1,131 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:56115 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751969AbaGHVdM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 17:33:12 -0400
-Received: by mail-pd0-f182.google.com with SMTP id y13so7868533pdi.27
-        for <linux-pci@vger.kernel.org>; Tue, 08 Jul 2014 14:33:12 -0700 (PDT)
-Date: Tue, 8 Jul 2014 15:33:05 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic
- host_bridge from device tree
-Message-ID: <20140708213305.GB4555@google.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
- <20140708010103.GD22939@google.com>
- <20140708102940.GZ6501@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140708102940.GZ6501@e106497-lin.cambridge.arm.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:28051 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957AbaGGPa6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 11:30:58 -0400
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: Pratyush Anand <pratyush.anand@st.com>
+Cc: "Arnd Bergmann (arnd@arndb.de)" <arnd@arndb.de>,
+	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
+	Mohit KUMAR <mohit.kumar@st.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mark Nicholson <mark@nicholnet.com>
+Subject: Re: [PATCH V8 0/9] PCI: Add SPEAr13xx PCie support
+Date: Mon, 07 Jul 2014 17:30:40 +0200
+Message-id: <8677743.Bty96DiF3F@amdc1032>
+In-reply-to: <20140522113119.GA2646@pratyush-vbox>
+References: <cover.1397555158.git.mohit.kumar@st.com>
+ <2CC2A0A4A178534D93D5159BF3BCB6619B94997E2B@EAPEX1MAIL1.st.com>
+ <20140522113119.GA2646@pratyush-vbox>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 08, 2014 at 11:29:40AM +0100, Liviu Dudau wrote:
-> On Tue, Jul 08, 2014 at 02:01:04AM +0100, Bjorn Helgaas wrote:
-> > On Tue, Jul 01, 2014 at 07:43:33PM +0100, Liviu Dudau wrote:
-> > > ...
-> > > +     for_each_of_pci_range(&parser, &range) {
-> > > +             /* Read next ranges element */
-> > > +             pr_debug("pci_space: 0x%08x pci_addr:0x%016llx cpu_addr:0x%016llx size:0x%016llx\n",
-> > > +                     range.pci_space, range.pci_addr, range.cpu_addr, range.size);
+
+Hi Arnd,
+
+Any update on status of this patchset?  Is it OK for it to go through
+arm-soc tree or should it be splitted into separate parts which would
+go through pci/phy/arm-soc trees?
+
+[ The patchset applies fine to next-20140707 after fixing trivial
+  reject in drivers/pci/host/Makefile in patch #8.  To make it build
+  the following line from patch #8 needs to be dropped:
+
+  +       spin_lock_init(&pp->conf_lock);
+]
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
+On Thursday, May 22, 2014 05:01:19 PM Pratyush Anand wrote:
+> Hi Arnd/Bjorn,
+> 
+> On Mon, May 19, 2014 at 07:55:12PM +0800, Mohit KUMAR wrote:
+> > Hello Arnd,
 > > 
-> > If you're not trying to match other printk formats, you could try to match
-> > the %pR format used elsewhere, e.g., "%#010llx-%#010llx" with
-> > range.cpu_addr, range.cpu_addr + range.size - 1.
-> 
-> Yes, not a big fan of the ugly output it generates, but the output matches closely the ranges
-> definition in the device tree file so it is easy to validate that you are parsing the right
-> entry. I am happy to change it to shorten the cpu range message.
-
-If it already matches other device tree stuff, that's perfect.  I'm not
-familiar with that.
-
-> > > +int __weak pcibios_fixup_bridge_ranges(struct list_head *resources)
-> > > +{
-> > > +     return 0;
-> > > +}
+> > > -----Original Message-----
+> > > From: Mohit KUMAR DCG
+> > > Sent: Tuesday, April 15, 2014 5:20 PM
+> > > To: spear-devel; linux-kernel@vger.kernel.org; devicetree@vger.kernel.org;
+> > > linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org
+> > > Cc: Mohit KUMAR DCG
+> > > Subject: [PATCH V8 0/9] PCI: Add SPEAr13xx PCie support
+> > > 
+> > > Patch# 1 and 2: Improvement and fixes for SPEAr13xx support.
+> > > Patch# 3,4 and 6: Add DT bindings for spear1310/40-miphy, misc and pcie
+> > > node Patch# 5: Add spear1310/40-miphy driver and support for spear1310/40
+> > > miphy wrapper.
+> > > Patch# 7-9: Add SPEAr13xx PCIe driver and dt support.
+> > > 
+> > > These pathes are tested with linux-3.15 tag of arm-soc tree.
+> > > Tested with SPEAr1310 evaluation board with:
+> > > 	- INTEL PRO 100/100 EP card
+> > > 	- USB xhci gen2 card
+> > >  	- Above cards connected through LeCROY PTC switch
+> > > 
+> > > Modifications for SATA are tested with SPEAr1340-evb board
+> > > 
 > > 
-> > I'd wait to add this until there's a platform that needs to implement it.
-> > Splitting it out will make this patch that much smaller and easier to
-> > understand.
+> > I think 3.16 windows is about to close, are you planning to merge this series?
+> > Pls let me know if something pending on our part.
 > 
-> I need this as this is the default implementation (i.e. do nothing). Otherwise the
-> link phase will give errors. 
-
-I meant that you could remove the default implementation *and* the call of
-it, since it currently does nothing.
-
-> > > diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> > > index dde3a4a..71e36d0 100644
-> > > --- a/include/linux/of_pci.h
-> > > +++ b/include/linux/of_pci.h
-> > > @@ -15,6 +15,9 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
-> > >  int of_pci_get_devfn(struct device_node *np);
-> > >  int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
-> > >  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
-> > > +struct pci_host_bridge *of_create_pci_host_bridge(struct device *parent,
-> > > +                                     struct pci_ops *ops, void *host_data);
-> > > +
-> > >  #else
-> > >  static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
-> > >  {
-> > > @@ -43,6 +46,13 @@ of_pci_parse_bus_range(struct device_node *node, struct resource *res)
-> > >  {
-> > >       return -EINVAL;
-> > >  }
-> > > +
-> > > +static inline struct pci_host_bridge *
-> > > +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
-> > > +                     void *host_data)
-> > > +{
-> > > +     return NULL;
-> > > +}
-> > >  #endif
-> > >
-> > >  #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
-> > > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > > index 7e7b939..556dc5f 100644
-> > > --- a/include/linux/pci.h
-> > > +++ b/include/linux/pci.h
-> > > @@ -402,6 +402,7 @@ struct pci_host_bridge {
-> > >       struct device dev;
-> > >       struct pci_bus *bus;            /* root bus */
-> > >       int domain_nr;
-> > > +     resource_size_t io_base;        /* physical address for the start of I/O area */
+> If you could let us know the status of this patch series inclusion.
+> 
+> Regards
+> Pratyush
+> 
 > > 
-> > I don't see where this is used yet.
-> 
-> It's used in pci_host_bridge_of_get_ranges() (earlier in this patch).
+> > Regards
+> > Mohit
+> > 
+> > > Changes since v7:
+> > > - Rebase over for-linus-3.15 tag of arm-soc tree so that complete patch series
+> > > can be applied cleanly.
+> > > - Incorporated few comments on comment style and superfluous comments
+> > > Changes since v6:
+> > > - Split miphy driver for SPEAr1310 and SPEAr1340
+> > > - Some cleanup and incorporated other minor comments Changes since v5:
+> > > - Split DT bindings for misc, miphy-40lp and pcie node into sepearte patches
+> > > - Merge config options PCIE_SPEAR13XX and PCI_MSI into defconfig patch
+> > > - Incorporated other minor comments
+> > > Changes since v4:
+> > > - Uses per device function pointers passed from .data field to
+> > >   the of_device_id instead of of_device_is_compatible.
+> > > - Incorporated other minor comments from v4
+> > > 
+> > > Changes since v3:
+> > > - Phy driver renamed to phy-miphy40lp
+> > > - ahci phy hook patch used as suggested by Arnd
+> > > - Incorporated other minor comments from v3
+> > > 
+> > > Changes since v2:
+> > > - Incorporated comments to move SPEAr13xx PCIe and SATA phy specific
+> > > routines to
+> > >   the phy framework
+> > > - Modify ahci driver to include phy hooks
+> > > - phy-core driver modifications for subsys_initcall()
+> > > 
+> > > Changes since v1:
+> > > - Few patches of the series are already accepted and applied to mainline e.g.
+> > >  pcie designware driver improvements,fixes for IO translation bug, PCIe dw
+> > > driver maintainer. So dropped these from v2.
+> > > - Incorporated comment to move the common/reset PCIe code to the
+> > > seperate driver
+> > > - PCIe and SATA share common PHY configuration registers, so move SATA
+> > > platform code to the system config driver Fourth patch is improves pcie
+> > > designware driver and fixes the IO translation bug. IO translation bug fix
+> > > leads to the working of PCIe EP devices connected to RC through switch.
+> > > 
+> > > Mohit Kumar (1):
+> > >   SPEAr13xx: defconfig: Update
+> > > 
+> > > Pratyush Anand (8):
+> > >   clk: SPEAr13XX: Fix pcie clock name
+> > >   SPEAr13XX: Fix static mapping table
+> > >   phy: SPEAr1310/40-miphy: Add binding information
+> > >   SPEAr: misc: Add binding information
+> > >   phy: SPEAr1310/40-miphy: Add phy driver for PCIe and SATA
+> > >   SPEAr13XX: Add binding information for PCIe controller
+> > >   SPEAr13XX: dts: Add PCIe node information
+> > >   pcie: SPEAr13xx: Add designware wrapper support
+> > > 
+> > >  .../devicetree/bindings/arm/spear-misc.txt         |    9 +
+> > >  .../devicetree/bindings/pci/spear13xx-pcie.txt     |   14 +
+> > >  .../devicetree/bindings/phy/st-spear1310-miphy.txt |   12 +
+> > >  .../devicetree/bindings/phy/st-spear1340-miphy.txt |   11 +
+> > >  MAINTAINERS                                        |    6 +
+> > >  arch/arm/boot/dts/spear1310-evb.dts                |    4 +
+> > >  arch/arm/boot/dts/spear1310.dtsi                   |   93 +++++-
+> > >  arch/arm/boot/dts/spear1340-evb.dts                |    4 +
+> > >  arch/arm/boot/dts/spear1340.dtsi                   |   30 ++-
+> > >  arch/arm/boot/dts/spear13xx.dtsi                   |    9 +-
+> > >  arch/arm/configs/spear13xx_defconfig               |   16 +
+> > >  arch/arm/mach-spear/Kconfig                        |    4 +
+> > >  arch/arm/mach-spear/include/mach/spear.h           |    4 +-
+> > >  arch/arm/mach-spear/spear1340.c                    |  127 +------
+> > >  arch/arm/mach-spear/spear13xx.c                    |    2 +-
+> > >  drivers/clk/spear/spear1310_clock.c                |    6 +-
+> > >  drivers/clk/spear/spear1340_clock.c                |    2 +-
+> > >  drivers/pci/host/Kconfig                           |    8 +
+> > >  drivers/pci/host/Makefile                          |    1 +
+> > >  drivers/pci/host/pcie-spear13xx.c                  |  407 ++++++++++++++++++++
+> > >  drivers/phy/Kconfig                                |   12 +
+> > >  drivers/phy/Makefile                               |    2 +
+> > >  drivers/phy/phy-spear1310-miphy.c                  |  274 +++++++++++++
+> > >  drivers/phy/phy-spear1340-miphy.c                  |  300 ++++++++++++++
+> > >  24 files changed, 1218 insertions(+), 139 deletions(-)  create mode 100644
+> > > Documentation/devicetree/bindings/arm/spear-misc.txt
+> > >  create mode 100644 Documentation/devicetree/bindings/pci/spear13xx-
+> > > pcie.txt
+> > >  create mode 100644 Documentation/devicetree/bindings/phy/st-
+> > > spear1310-miphy.txt
+> > >  create mode 100644 Documentation/devicetree/bindings/phy/st-
+> > > spear1340-miphy.txt
+> > >  create mode 100644 drivers/pci/host/pcie-spear13xx.c  create mode 100644
+> > > drivers/phy/phy-spear1310-miphy.c  create mode 100644 drivers/phy/phy-
+> > > spear1340-miphy.c
 
-of_create_pci_host_bridge() fills in bridge->io_base, but I don't see
-anything that ever *reads* bridge->io_base.
-
-> > As far as I know, there's nothing that prevents a host bridge from having
-> > several I/O port apertures (or several memory-mapped I/O port spaces).
-> 
-> The pci_register_io_range() will give different offsets for each apperture.
-> I just need to make sure I don't overwrite io_base when parsing multiple IO
-> ranges.
-
-Let's continue this in the other thread where I'm trying to understand the
-I/O apertures.  Obviously I'm still missing something if you can indeed
-have multiple I/O apertures per bridge (because then only one of them can
-start at I/O address 0 on PCI).
-
-Bjorn
