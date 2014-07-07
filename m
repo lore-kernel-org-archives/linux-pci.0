@@ -1,319 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:32905 "EHLO smtp.dudau.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751676AbaGAVEt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Jul 2014 17:04:49 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id DC666FFCF3
-	for <linux-pci@vger.kernel.org>; Tue,  1 Jul 2014 22:04:47 +0100 (BST)
-From: "Liviu Dudau" <liviu@dudau.co.uk>
-Date: Tue, 1 Jul 2014 22:04:10 +0100
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RESEND] [PATCH v8 8/9] pci: Add support for creating a generic
- host_bridge from device tree
-Message-ID: <20140701210410.GC19569@bart.dudau.co.uk>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
- <20140701205050.GB19569@bart.dudau.co.uk>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140701205050.GB19569@bart.dudau.co.uk>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1719046.4xHmiSoxkE@pcbe13110.cern.ch>
+References: <280883016.9onmf0miLq@pcbe13110.cern.ch> <1807045.P44aWKLMe6@pcbe13110.cern.ch>
+ <20140704212612.GA15618@google.com> <1719046.4xHmiSoxkE@pcbe13110.cern.ch>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 7 Jul 2014 11:34:31 -0600
+Message-ID: <CAErSpo5YbaOjqr4obHwekRNwo1K5j0JbE-PYu48k7U90ZpWM0A@mail.gmail.com>
+Subject: Re: PCIe bus enumeration
+To: Federico Vaga <federico.vaga@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Michel Arruat <michel.arruat@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is clearly not my day today! This will fail compilation on ARCH=arm due to
-missing header include for <linux/slab.h>
+On Mon, Jul 7, 2014 at 1:29 AM, Federico Vaga <federico.vaga@gmail.com> wrote:
+> On Friday 04 July 2014 15:26:12 Bjorn Helgaas wrote:
+>> On Fri, Jul 04, 2014 at 09:55:20AM +0200, Federico Vaga wrote:
+>> > > I assume these ports don't support hotplug.  If they *did*
+>> > > support
+>> > > hotplug, those ports would have to exist because they handle the
+>> > > hotplug events (presence detect, etc.)
+>> >
+>> > I asked: yes, they do not support hotplug
+>> >
+>> > > If you can collect the complete "lspci -vv" output from your
+>> > > machine (with a device plugged in, so we can see the port
+>> > > leading to it), that will help make this more concrete.  And
+>> > > maybe one with no devices plugged in, so we can see exactly
+>> > > what changes.
+>> >
+>> > I attached two files with the output. I putted a card in slot 10
+>> > and took the output, then moved the card on slot 11 and took the
+>> > output.
+>> >
+>> > As you can see with diff the bridge behind the slot disappear when
+>> > it is empty.
+>>
+>> Perfect, thanks!  For some reason, it really helps me to be able to
+>> stare at the actual data.  Here's the situation with slot 10
+>> occupied:
+>>
+>>   00:01.0 82Q35 Root Port to [bus 05]          PCIe SltCap slot #21
+>>   05:00.0 CERN/ECP/EDU Device                  slot 10
+>>   00:1c.0 82801I Express Port 1 to [bus 04]    PCIe SltCap slot #22
+>>   00:1c.3 (not present at all)
+>>   00:1c.4 82801I Express Port 5 to [bus 03]    PCIe SltCap slot #0
+>>   03:00.0 Realtek NIC
+>>
+>> and here it is with slot 11 occupied:
+>>
+>>   00:01.0 (not present at all)
+>>   00:1c.0 82801I Express Port 1 to [bus 05]    PCIe SltCap slot #22
+>>   00:1c.3 82801I Express Port 4 to [bus 04]    PCIe SltCap slot #25
+>>   04:00.0 CERN/ECP/EDU Device                  slot 11
+>>   00:1c.4 82801I Express Port 5 to [bus 03]    PCIe SltCap slot #0
+>>   03:00.0 Realtek NIC
+>>
+>> I'm pretty sure this is a function of your BIOS.  There are often
+>> device-specific ways to enable or disable individual devices (like
+>> the root ports here), and the BIOS is likely disabling these ports
+>> when there is nothing below them.  I don't know why it would turn
+>> off 00:1c.3 when its slot is empty, but it doesn't turn off
+>> 00:1c.0, which also leads to an empty slot. But I don't think
+>> Linux is involved in this, and if the BIOS disables devices, there
+>> really isn't anything Linux can do about it.
+>
+> It seems to happen also on some "classic" PC. I didn't experiment it
+> by myself, some friends reported me this behavior in the recent past.
+>
+> So, It looks like that some BIOS disable the bridge when there is
+> nothing behind it. Why? Power save? :/
 
-Will send an update tomorrow after more testing. Sorry!
+Could be power savings, or possibly to conserve bus numbers, which are
+a limited resource.
 
-Liviu
+>> If you can get to an EFI shell on this box, you might be able to
+>> confirm this with the "pci" command.  Booting Linux with
+>> "pci=earlydump" is similar in that it dumps PCI config space before
+>> we change anything.
+>
+> yes I confirm, the bridge are not there if I don't plug the card.
+>
+>> To solve this problem, I think you need slot information even when
+>> there's no hotplug.  This has been raised before [1, 2], and I
+>> think it's a good idea, but nobody has implemented it yet.
+>
+> Yes, but if the BIOS disable the bridge there is nothing we can do.
 
-On Tue, Jul 01, 2014 at 09:50:50PM +0100, Liviu Dudau wrote:
-> Several platforms use a rather generic version of parsing
-> the device tree to find the host bridge ranges. Move the common code
-> into the generic PCI code and use it to create a pci_host_bridge
-> structure that can be used by arch code.
-> 
-> Based on early attempts by Andrew Murray to unify the code.
-> Used powerpc and microblaze PCI code as starting point.
-> 
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  drivers/of/of_pci.c       | 136 ++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/host-bridge.c |  15 +++++
->  include/linux/of_pci.h    |  10 ++++
->  include/linux/pci.h       |   8 +++
->  4 files changed, 169 insertions(+)
-> 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 8481996..e81402a 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -1,6 +1,7 @@
->  #include <linux/kernel.h>
->  #include <linux/export.h>
->  #include <linux/of.h>
-> +#include <linux/of_address.h>
->  #include <linux/of_pci.h>
->  
->  static inline int __of_pci_pci_compare(struct device_node *node,
-> @@ -89,6 +90,141 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
->  }
->  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
->  
-> +/**
-> + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
-> + * @dev: device node of the host bridge having the range property
-> + * @resources: list where the range of resources will be added after DT parsing
-> + * @io_base: pointer to a variable that will contain the physical address for
-> + * the start of the I/O range.
-> + *
-> + * It is the callers job to free the @resources list if an error is returned.
-> + *
-> + * This function will parse the "ranges" property of a PCI host bridge device
-> + * node and setup the resource mapping based on its content. It is expected
-> + * that the property conforms with the Power ePAPR document.
-> + *
-> + * Each architecture is then offered the chance of applying their own
-> + * filtering of pci_host_bridge_windows based on their own restrictions by
-> + * calling pcibios_fixup_bridge_ranges(). The filtered list of windows
-> + * can then be used when creating a pci_host_bridge structure.
-> + */
-> +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
-> +		struct list_head *resources, resource_size_t *io_base)
-> +{
-> +	struct resource *res;
-> +	struct of_pci_range range;
-> +	struct of_pci_range_parser parser;
-> +	int err;
-> +
-> +	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
-> +
-> +	/* Check for ranges property */
-> +	err = of_pci_range_parser_init(&parser, dev);
-> +	if (err)
-> +		return err;
-> +
-> +	pr_debug("Parsing ranges property...\n");
-> +	for_each_of_pci_range(&parser, &range) {
-> +		/* Read next ranges element */
-> +		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx cpu_addr:0x%016llx size:0x%016llx\n",
-> +			range.pci_space, range.pci_addr, range.cpu_addr, range.size);
-> +
-> +		/*
-> +		 * If we failed translation or got a zero-sized region
-> +		 * then skip this range
-> +		 */
-> +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-> +			continue;
-> +
-> +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-> +		if (!res)
-> +			return -ENOMEM;
-> +
-> +		err = of_pci_range_to_resource(&range, dev, res);
-> +		if (err)
-> +			return err;
-> +
-> +		if (resource_type(res) == IORESOURCE_IO)
-> +			*io_base = range.cpu_addr;
-> +
-> +		pci_add_resource_offset(resources, res,
-> +				res->start - range.pci_addr);
-> +	}
-> +
-> +	/* Apply architecture specific fixups for the ranges */
-> +	return pcibios_fixup_bridge_ranges(resources);
-> +}
-> +
-> +static atomic_t domain_nr = ATOMIC_INIT(-1);
-> +
-> +/**
-> + * of_create_pci_host_bridge - Create a PCI host bridge structure using
-> + * information passed in the DT.
-> + * @parent: device owning this host bridge
-> + * @ops: pci_ops associated with the host controller
-> + * @host_data: opaque data structure used by the host controller.
-> + *
-> + * returns a pointer to the newly created pci_host_bridge structure, or
-> + * NULL if the call failed.
-> + *
-> + * This function will try to obtain the host bridge domain number by
-> + * using of_alias_get_id() call with "pci-domain" as a stem. If that
-> + * fails, a local allocator will be used that will put each host bridge
-> + * in a new domain.
-> + */
-> +struct pci_host_bridge *
-> +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
-> +{
-> +	int err, domain, busno;
-> +	struct resource *bus_range;
-> +	struct pci_bus *root_bus;
-> +	struct pci_host_bridge *bridge;
-> +	resource_size_t io_base = 0;
-> +	LIST_HEAD(res);
-> +
-> +	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
-> +	if (!bus_range)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	domain = of_alias_get_id(parent->of_node, "pci-domain");
-> +	if (domain == -ENODEV)
-> +		domain = atomic_inc_return(&domain_nr);
-> +
-> +	err = of_pci_parse_bus_range(parent->of_node, bus_range);
-> +	if (err) {
-> +		dev_info(parent, "No bus range for %s, using default [0-255]\n",
-> +			parent->of_node->full_name);
-> +		bus_range->start = 0;
-> +		bus_range->end = 255;
-> +		bus_range->flags = IORESOURCE_BUS;
-> +	}
-> +	busno = bus_range->start;
-> +	pci_add_resource(&res, bus_range);
-> +
-> +	/* now parse the rest of host bridge bus ranges */
-> +	err = pci_host_bridge_of_get_ranges(parent->of_node, &res, &io_base);
-> +	if (err)
-> +		goto err_create;
-> +
-> +	/* then create the root bus */
-> +	root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
-> +						ops, host_data, &res);
-> +	if (IS_ERR(root_bus)) {
-> +		err = PTR_ERR(root_bus);
-> +		goto err_create;
-> +	}
-> +
-> +	bridge = to_pci_host_bridge(root_bus->bridge);
-> +	bridge->io_base = io_base;
-> +
-> +	return bridge;
-> +
-> +err_create:
-> +	pci_free_resource_list(&res);
-> +	return ERR_PTR(err);
-> +}
-> +EXPORT_SYMBOL_GPL(of_create_pci_host_bridge);
-> +
->  #ifdef CONFIG_PCI_MSI
->  
->  static LIST_HEAD(of_pci_msi_chip_list);
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 36c669e..54ceafd 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -83,3 +83,18 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
->  	res->end = region->end + offset;
->  }
->  EXPORT_SYMBOL(pcibios_bus_to_resource);
-> +
-> +/**
-> + * Simple version of the platform specific code for filtering the list
-> + * of resources obtained from the ranges declaration in DT.
-> + *
-> + * Platforms can override this function in order to impose stronger
-> + * constraints onto the list of resources that a host bridge can use.
-> + * The filtered list will then be used to create a root bus and associate
-> + * it with the host bridge.
-> + *
-> + */
-> +int __weak pcibios_fixup_bridge_ranges(struct list_head *resources)
-> +{
-> +	return 0;
-> +}
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index dde3a4a..71e36d0 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -15,6 +15,9 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
->  int of_pci_get_devfn(struct device_node *np);
->  int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
->  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
-> +struct pci_host_bridge *of_create_pci_host_bridge(struct device *parent,
-> +					struct pci_ops *ops, void *host_data);
-> +
->  #else
->  static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
->  {
-> @@ -43,6 +46,13 @@ of_pci_parse_bus_range(struct device_node *node, struct resource *res)
->  {
->  	return -EINVAL;
->  }
-> +
-> +static inline struct pci_host_bridge *
-> +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
-> +			void *host_data)
-> +{
-> +	return NULL;
-> +}
->  #endif
->  
->  #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 7e7b939..556dc5f 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -402,6 +402,7 @@ struct pci_host_bridge {
->  	struct device dev;
->  	struct pci_bus *bus;		/* root bus */
->  	int domain_nr;
-> +	resource_size_t io_base;	/* physical address for the start of I/O area */
->  	struct list_head windows;	/* pci_host_bridge_windows */
->  	void (*release_fn)(struct pci_host_bridge *);
->  	void *release_data;
-> @@ -1809,8 +1810,15 @@ static inline void pci_set_of_node(struct pci_dev *dev) { }
->  static inline void pci_release_of_node(struct pci_dev *dev) { }
->  static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
->  static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
-> +
->  #endif  /* CONFIG_OF */
->  
-> +/* Used by architecture code to apply any quirks to the list of
-> + * pci_host_bridge resource ranges before they are being used
-> + * by of_create_pci_host_bridge()
-> + */
-> +extern int pcibios_fixup_bridge_ranges(struct list_head *resources);
-> +
->  #ifdef CONFIG_EEH
->  static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
->  {
-> -- 
-> 2.0.0
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Well, it's true that it's hard to get constant *bus numbers*, but it's
+never really been a good idea to rely on those, because they're
+assigned at the discretion of the OS, and there are reasons why the OS
+might want to reallocate them, e.g., to accommodate a deep hot-plugged
+hierarchy.  If you shift focus to *slot numbers*, then I think there's
+a lot more we can do.
 
--- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
+>> Another curious thing is that you refer to "slot 10", but there's no
+>> obvious connection between that and the "slot 21" in the PCIe
+>> capability of the Root Port leading to that slot.  But I guess you
+>> said the slots are in a backplane (they're not an integral part of
+>> the motherboard).  In that case, there's no way for the motherboard
+>> to know what the labels on the backplane are.
+>
+> It is written on the backplane. I said slot 10 because I'm counting
+> the available slot, but on the backplane they are 22, 25, and other
+> no-consecutive numbers.
 
- One small step
-   for me ...
+The 22, 25, etc., are in the same range as the slot numbers in the
+PCIe Slot Capabilities registers, so maybe the backplane is
+constructed to make this possible.  The external PCIe chassis I'm
+familiar with have one fast link on a cable leading to the box, with a
+PCIe switch inside the box.  The upstream port is connected to the
+incoming link, and there's a downstream port connected to each slot.
+In this case, the slot numbers in the downstream ports' Slot
+Capabilities registers can be made to match the silkscreen labels on
+the board since everything is fixed by the hardware.
 
+Your backplane sounds a little different (you have Ports on the root
+bus leading directly to slots in the backplane, so I assume those
+Ports are on the motherboard, not the backplane), but maybe the
+motherboard & backplane are designed as a unit so the Port slot
+numbers could match the backplane.
+
+> If I use `biosdecode` I can get that information, but only for the
+> "first level" of bridges. On some backplane I have PCI bridges behind
+> bridges, and in this case biosdecode doesn't help: it just tell me
+> about the bridge on the motherboard.
+
+What specific biosdecode information are you using?  There's a fair
+amount of stuff in the PCI-to-PCI bridge spec about slot and chassis
+numbering, including some about expansion chassis.  I doubt that Linux
+implements all that, so there's probably room for a lot of
+improvement.  I attached your lspci output to the bugzilla
+(https://bugzilla.kernel.org/show_bug.cgi?id=72681).  Maybe you could
+attach the biosdecode info there, too, and we could see if there's a
+way we can make this easier.
+
+Bjorn
