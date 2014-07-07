@@ -1,114 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Xinwei Hu <huxinwei@huawei.com>, Wuyun <wuyun.wu@huawei.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<Paul.Mundt@huawei.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	"Marc Zyngier" <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	<linux-arch@vger.kernel.org>, <arnab.basu@freescale.com>,
-	<virtualization@lists.linux-foundation.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [RFC PATCH 08/11] PCI/MSI: Introduce new struct msi_irqs and struct msi_ops
-Date: Sat, 26 Jul 2014 11:08:45 +0800
-Message-ID: <1406344128-27055-9-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
-References: <1406344128-27055-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:41832 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751450AbaGGX1x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 19:27:53 -0400
+Received: by mail-ig0-f169.google.com with SMTP id r10so176415igi.2
+        for <linux-pci@vger.kernel.org>; Mon, 07 Jul 2014 16:27:52 -0700 (PDT)
+Date: Mon, 7 Jul 2014 17:27:49 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 2/9] pci: Export find_pci_host_bridge() function.
+Message-ID: <20140707232749.GA22939@google.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-3-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404240214-9804-3-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, MSI driver is bonding with PCI everywhere.
-Now introduce a new struct msi_irqs to manage all MSI
-related informations in a MSI support device. In addition,
-we introduce struct msi_ops to hook all device specific
-MSI operations. Then MSI driver can be decoupled with
-PCI.
+On Tue, Jul 01, 2014 at 07:43:27PM +0100, Liviu Dudau wrote:
+> This is a useful function and we should make it visible outside the
+> generic PCI code. Export it as a GPL symbol.
+> 
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> ---
+>  drivers/pci/host-bridge.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 0e5f3c9..36c669e 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -16,12 +16,13 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+>  	return bus;
+>  }
+>  
+> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+>  {
+>  	struct pci_bus *root_bus = find_pci_root_bus(bus);
+>  
+>  	return to_pci_host_bridge(root_bus->bridge);
+>  }
+> +EXPORT_SYMBOL_GPL(find_pci_host_bridge);
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- include/linux/msi.h |   30 +++++++++++++++++++++++++++++-
- include/linux/pci.h |    7 +------
- 2 files changed, 30 insertions(+), 7 deletions(-)
+There's nothing in this series that uses find_pci_host_bridge(), so 
+how about we just wait until we have something that needs it?
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 3ad8416..5a672d3 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -10,6 +10,34 @@ struct msi_msg {
- 	u32	data;		/* 16 bits of msi message data */
- };
- 
-+struct msi_ops;
-+
-+struct msi_irqs {
-+	u8 msi_enabled:1;
-+	u8 msix_enabled:1;
-+	int node;
-+	struct list_head msi_list;
-+	void *data;
-+	struct msi_ops *ops;
-+};
-+
-+struct msix_entry {
-+	u32	vector;	/* kernel uses to write allocated vector */
-+	u16	entry;	/* driver uses to specify entry, OS writes */
-+};
-+
-+struct msi_ops {
-+	void (*msi_set_enable)(struct msi_irqs *msi, int enable, int type);
-+	struct msi_desc *(*msi_setup_entry)(struct msi_irqs *msi);
-+	int (*msix_setup_entries)(struct msi_irqs *msi, void __iomem *base,
-+			struct msix_entry *entries, int nvec);
-+	u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
-+	u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
-+	void (*msi_read_message)(struct msi_desc *desc, struct msi_msg *msg);
-+	void (*msi_write_message)(struct msi_desc *desc, struct msi_msg *msg);
-+	void (*msi_set_intx)(struct msi_irqs *msi, int enable);
-+};
-+
- /* Helper functions */
- struct irq_data;
- struct msi_desc;
-@@ -42,7 +70,7 @@ struct msi_desc {
- 		void __iomem *mask_base;
- 		u8 mask_pos;
- 	};
--	struct pci_dev *dev;
-+	struct msi_irqs *msi;
- 
- 	/* Last set MSI message */
- 	struct msi_msg msg;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c6c01ae..c7bca1c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -32,8 +32,8 @@
- #include <uapi/linux/pci.h>
- 
- #include <linux/pci_ids.h>
--
- #include <linux/msi.h>
-+
- /*
-  * The PCI interface treats multi-function devices as independent
-  * devices.  The slot/function address of each device is encoded
-@@ -1182,11 +1182,6 @@ enum pci_dma_burst_strategy {
- 				   strategy_parameter byte boundaries */
- };
- 
--struct msix_entry {
--	u32	vector;	/* kernel uses to write allocated vector */
--	u16	entry;	/* driver uses to specify entry, OS writes */
--};
--
- 
- #ifdef CONFIG_PCI_MSI
- int pci_msi_vec_count(struct pci_dev *dev);
--- 
-1.7.1
+Also, if/when we export this, I'd prefer a name that starts with "pci_"
+as most of the other interfaces do.
 
+>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+>  				 void (*release_fn)(struct pci_host_bridge *),
+> -- 
+> 2.0.0
+> 
