@@ -1,73 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:44506 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751280AbaGKBMc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 21:12:32 -0400
-Received: by mail-ig0-f170.google.com with SMTP id h3so16497igd.5
-        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 18:12:32 -0700 (PDT)
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:40773 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751167AbaGGU0i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 16:26:38 -0400
 MIME-Version: 1.0
-In-Reply-To: <20140703221152.GH28852@google.com>
-References: <20140611060118.GB3169@yanx>
-	<CAE9FiQWe2bf7QbKn9kmZS34a4cMewsdD-9qAELdXs-dEtx70GQ@mail.gmail.com>
-	<20140702210736.GB28852@google.com>
-	<CAE9FiQU5Ltu89zmRG0h2aXfXH0oCcTEP=jF7b=zHi=SaOA2rKg@mail.gmail.com>
-	<20140703131526.GG28852@google.com>
-	<CAE9FiQWPGXMBYmpzyk8cicKZ1ELUZiARkZjr2vvgntmt3bt1jQ@mail.gmail.com>
-	<20140703221152.GH28852@google.com>
-Date: Thu, 10 Jul 2014 18:12:32 -0700
-Message-ID: <CAE9FiQX69x_YgHihYM-+tahTvbuk6MATBXvm9Rz5kiQ9UpKNPg@mail.gmail.com>
-Subject: Re: [PATCH] pci: Allow very large resource windows
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <CAErSpo4_YEEU1q1ehT2oizLRwPe1_7qOMnXR=y7WmXOp=raSag@mail.gmail.com>
+References: <20140617192734.30783.71260.stgit@amt.stowe>
+	<CAErSpo7t2kXj2ZULLXCJSWb_awS+DCtCg51dnLbb8ztWmQdYog@mail.gmail.com>
+	<CAL-B5D3M9gmefaSkGnb13UtBHt857G-ixkmhjHawO5hW2AN9xA@mail.gmail.com>
+	<CAErSpo4_YEEU1q1ehT2oizLRwPe1_7qOMnXR=y7WmXOp=raSag@mail.gmail.com>
+Date: Mon, 7 Jul 2014 14:26:37 -0600
+Message-ID: <CAL-B5D2_3nE4uDXM=jOwrOD_dnMngkiGRYBUTh5jaxO-e=p3ow@mail.gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Include the Data Link Layer State Changed
+ bit when clearing the Slot Status register's event bits
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 3, 2014 at 3:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Jul 03, 2014 at 12:59:21PM -0700, Yinghai Lu wrote:
-
->> when we try to size it,  means that bar is not assigned. with r->flags
->> = 0, means
->> we will ignore it all the way.
+On Tue, Jul 1, 2014 at 1:29 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jun 30, 2014 at 10:49 AM, Myron Stowe <myron.stowe@gmail.com> wrote:
+>> On Tue, Jun 17, 2014 at 3:07 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Tue, Jun 17, 2014 at 1:27 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+>>>> During PCIe hot-plug initialization - pciehp_probe - data structures
+>>>> related to slot capabilities are set up.  As part of this set up, ISRs are
+>>>> put in place to handle slot events and all event bits are cleared out.
+>>>>
+>>>> This patch adds the Data Link Layer State Changed (PCI_EXP_SLTSTA_DLLSC)
+>>>> Slot Status bit to the event bits that are cleared out during
+>>>> initialization.
+>>>
+>>> I think this is related to e48f1b67f668 ("PCI: pciehp: Use link change
+>>> notifications for hot-plug and removal").  Prior to that, pcie_isr()
+>>> didn't look at the PCI_EXP_SLTSTA_DLLSC bit.
+>>>
+>>> Apparently there's a non-public report of spurious messages like this
+>>> at boot-time, with no actual hotplug events:
+>>>
+>>>   pciehp 0000:82:04.0:pcie24: slot(4): Link Up event
+>>>   pciehp 0000:82:04.0:pcie24: Device 0000:83:00.0 already exists at
+>>> 0000:83:00, cannot hot-add
+>>>   pciehp 0000:82:04.0:pcie24: Cannot add device at 0000:83:00
+>>>
+>>> Device 0000:83:00.0 was enumerated previously, during the normal PCI
+>>> device enumeration.  I suspect DLLSC was set by the hardware when the
+>>> link came up after power-on, and it remained set until Linux booted.
+>>> Then when we take the first pciehp interrupt, we notice DLLSC is set
+>>> and think it's a new link state change.
+>>>
+>>> This might be system-specific, because some BIOSes might clear DLLSC
+>>> before handing off to the OS.  Or my theory might be all wet.
+>>>
+>>> But I think we should clear DLLSC in any case.  We clear all the other
+>>> RW1C bits in Slot Status, and I think we should clear DLLSC as well.
+>>>
+>>> I'd like to include a bugzilla or mailing list reference for the
+>>> spurious message, and I'd also like confirmation that this changes
+>>> actually fixes it.
+>>
+>> I just got confirmation from the reporter that the patch fixes the
+>> issue they were encountering.
+>>
+>> I've also asked them numerous time if I could make the bug public as I
+>> expect others may be hitting it and could benefit from a BZ and
+>> analysis/explanation.  I just repeated my request - if they reply
+>> positively I'll follow through with some documentation.
 >
-> With "r->flags = 0", we will not try to assign resources to the BAR,
-> but the hardware BAR still exists and contains some address.  If the
-> device has other memory BARs, pci_enable_resources() will turn on
-> PCI_COMMAND_MEMORY.  Now the "r->flags == 0" BAR is enabled but the
-> address it contains might conflict with other devices.  That's the
-> problem.
+> I'd be glad to merge this, as soon as we get more details about the
+> problem it fixes.  I think it's good to include some specifics, e.g.,
+> "Unexpected Link Up event," etc., because it helps other people with
+> the same problem to find the solution.  It's OK if details about
+> pre-production machines and so on are removed, but it's better if
+> changes to generic code are supported by public evidence that
+> everybody can evaluate.
 >
-> To fix this, I think we need to do "r->flags |= IORESOURCE_UNSET |
-> IORESOURCE_DISABLED".
+> If you want to pull out the public stuff into a kernel.org bugzilla,
+> that would be fine, too.  That would actually be better because then
+> we don't have to depend on Red Hat maintaining it.
 
-No, that is not right.
+Agreed (but I couldn't get the vendor to agree to open up the Red Hat
+BZ).  I've opened https://bugzilla.kernel.org/show_bug.cgi?id=79611
+and included a scrubbed 'dmesg' log there along with an analysis of
+how we are hitting the issue.
 
-Current that r->flags = 0 and reset_resource() cover the bug in
-pci_enable_resources() when assign and reassign resource fail.
-
-In pci_enable_resources() if there is one resource with IO BAR or SRIOV BAR
-is not assigned and have UNSET, it will prevent device from being enabled.
-
-Most drivers could work without io port.
-
-If you change r->flags = 0 to
-r->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED
-
-Those drivers would not work anymore.
-
-I also know one driver that could work with pref mmio, but mmio is not assigned.
---- silicon bug, that it exposes non-needed mmio bar.
-
-BTW I think we may need to clear the BAR in pci_claim_resource().
-
-Maybe Linus or Greg have more idea about this.
-Do we need to get more strict? will only enable PCI_COMMAND_MEMORY
-unless all mmio BARs get assigned value?
-
-Thanks
-
-Yinghai
+>
+> Bjorn
+>
+>>>> Reference:
+>>>>   PCI-SIG.  PCI Express Base Specification Revision 4.0 Version 0.3
+>>>>   (PCI-SIG, 2014): 7.8.11. Slot Status Register (Offset 1Ah).
+>>>>
+>>>> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+>>>> ---
+>>>>
+>>>>  drivers/pci/hotplug/pciehp_hpc.c |    2 +-
+>>>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+>>>> index 42914e0..0568416 100644
+>>>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>>>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>>>> @@ -794,7 +794,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+>>>>         pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+>>>>                 PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+>>>>                 PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
+>>>> -               PCI_EXP_SLTSTA_CC);
+>>>> +               PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
+>>>>
+>>>>         /* Disable software notification */
+>>>>         pcie_disable_notification(ctrl);
+>>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
