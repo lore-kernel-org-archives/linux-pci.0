@@ -1,127 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:56039 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753442AbaGJNdh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Jul 2014 09:33:37 -0400
-Message-ID: <53BE95FA.5080100@ti.com>
-Date: Thu, 10 Jul 2014 19:02:42 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
-MIME-Version: 1.0
-To: Viresh Kumar <viresh.kumar@linaro.org>
-CC: Arnd Bergmann <arnd@linaro.org>, "olof@lixom.net" <olof@lixom.net>,
-	"linux-arm-kernel@lists.infradead.org"
+Received: from service87.mimecast.com ([91.220.42.44]:48268 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751939AbaGGLLj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 07:11:39 -0400
+Date: Mon, 7 Jul 2014 12:11:33 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	spear-devel <spear-devel@list.st.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Nicholson <mark@nicholnet.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [PATCH V9 2/7] phy: Add drivers for PCIe and SATA phy on SPEAr13xx
-References: <cover.1404976058.git.viresh.kumar@linaro.org>	<d1ef8db8704d09ba4f276c954dc22b555998f957.1404976058.git.viresh.kumar@linaro.org>	<53BE926A.2070005@ti.com> <CAKohpokNijH37NAmuh5cYEZxYFJE-COKwVNP3RNHSEoS03YYAA@mail.gmail.com>
-In-Reply-To: <CAKohpokNijH37NAmuh5cYEZxYFJE-COKwVNP3RNHSEoS03YYAA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+	Rob Herring <robherring2@gmail.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v8 4/9] pci: OF: Fix the conversion of IO ranges into IO
+ resources.
+Message-ID: <20140707111133.GP6501@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-5-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqJNfB_jynFQK0Ov6A3wqk6LF3abUFEUjhmzipak26sU5w@mail.gmail.com>
+ <6122131.ozzYjjjRQi@wuerfel>
+MIME-Version: 1.0
+In-Reply-To: <6122131.ozzYjjjRQi@wuerfel>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Jul 05, 2014 at 09:46:09PM +0100, Arnd Bergmann wrote:
+> On Saturday 05 July 2014 14:25:52 Rob Herring wrote:
+> > On Tue, Jul 1, 2014 at 1:43 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > > The ranges property for a host bridge controller in DT describes
+> > > the mapping between the PCI bus address and the CPU physical address.
+> > > The resources framework however expects that the IO resources start
+> > > at a pseudo "port" address 0 (zero) and have a maximum size of IO_SPACE_LIMIT.
+> > > The conversion from pci ranges to resources failed to take that into account.
+> > 
+> > I don't think this change is right. There are 2 resources: the PCI bus
+> > addresses and cpu addresses. This function deals with the cpu
+> > addresses. Returning pci addresses for i/o and cpu addresses for
+> > memory is going to be error prone. We probably need both cpu and pci
+> > resources exposed to host controllers.
+> > 
+> > Making the new function only deal with i/o bus resources and naming it
+> > of_pci_range_to_io_resource would be better.
+> 
+> I think you are correct that this change by itself is will break existing
+> drivers that rely on the current behavior of of_pci_range_to_resource,
+> but there is also something wrong with the existing implementation:
 
+Either I'm very confused or I've managed to confuse everyone else. The I/O
+resources described using CPU addresses *are* using "pseudo" port based
+addresses (or at least that is my understanding and my reading of the code).
+Can you point me to a function that is expecting the IO resource to have
+the start address at the physical address of the mapped space?
 
-On Thursday 10 July 2014 07:00 PM, Viresh Kumar wrote:
-> On 10 July 2014 18:47, Kishon Vijay Abraham I <kishon@ti.com> wrote:
->> On Thursday 10 July 2014 12:56 PM, Viresh Kumar wrote:
->>> From: Pratyush Anand <pratyush.anand@st.com>
->>>
->>> ARM based ST Microelectronics's SPEAr1310/40 platforms uses ST's phy (known as
->>> 'miphy') for PCIe and SATA. This patch adds drivers for these miphys.
->>>
->>> This also adds proper bindings for miphys.
->>>
->>> Acked-by: Arnd Bergmann <arnd@arndb.de>
->>> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
->>> Tested-by: Mohit Kumar <mohit.kumar@st.com>
->>> Cc: Kishon Vijay Abraham I <kishon@ti.com>
->>> [viresh: fixed logs/cclist/checkpatch warnings, broken into smaller patches]
->>> Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
->>> ---
->>>  .../devicetree/bindings/phy/st-spear1310-miphy.txt |  12 +
->>>  .../devicetree/bindings/phy/st-spear1340-miphy.txt |  11 +
->>>  drivers/phy/Kconfig                                |  12 +
->>>  drivers/phy/Makefile                               |   2 +
->>>  drivers/phy/phy-spear1310-miphy.c                  | 274 +++++++++++++++++++
->>>  drivers/phy/phy-spear1340-miphy.c                  | 302 +++++++++++++++++++++
->>
->> Please send separate patche for each driver.
-> 
-> These were both around SPEAr and were on the same lines.
-> So sending these in a single patch shouldn't be a big issue I believe.
-> 
-> In case another version is required, I may do it.
-> 
->>> diff --git a/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt b/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
->>> new file mode 100644
->>> index 0000000..b9b281a
->>> --- /dev/null
->>> +++ b/Documentation/devicetree/bindings/phy/st-spear1310-miphy.txt
->>
->> We generally create a single document for a SoC vendor. So just use st-phy.txt.
-> 
-> Probably yes.
-> 
->> <snip>
-> 
-> Please keep line containing file names while removing stuff, makes it easy
-> to locate code.
+I was trying to fix exactly this issue, that you cannot use the resource
+structure returned by this function in any call that is expecting an IO
+resource.
 
-ah.. apologies..
+Rob, you can try this function with two host bridges. Patch [3/9] changes
+pci_address_to_pio() to calculate the offset of the range based on already
+registed ranges, so the first host bridge will have it's IO resources
+starting from zero, but the second host bridge will have .start offseted
+by the size of the IO space of the first bridge. That is not a PCI bus
+address AFAICT.
+
+Best regards,
+Liviu
+
 > 
->>> +
->>> +static int spear1340_miphy_sata_init(struct spear1340_miphy_priv *priv)
->>> +{
->>> +     regmap_update_bits(priv->misc, SPEAR1340_PCIE_SATA_CFG,
->>> +                        SPEAR1340_PCIE_SATA_CFG_MASK,
->>> +                        SPEAR1340_SATA_CFG_VAL);
->>> +     regmap_update_bits(priv->misc, SPEAR1340_PCIE_MIPHY_CFG,
->>> +                        SPEAR1340_PCIE_MIPHY_CFG_MASK,
->>> +                        SPEAR1340_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK);
->>> +     /* Switch on sata power domain */
->>> +     regmap_update_bits(priv->misc, SPEAR1340_PCM_CFG,
->>> +                        SPEAR1340_PCM_CFG_SATA_POWER_EN,
->>> +                        SPEAR1340_PCM_CFG_SATA_POWER_EN);
->>> +     msleep(20);
->>> +     /* Disable PCIE SATA Controller reset */
->>> +     regmap_update_bits(priv->misc, SPEAR1340_PERIP1_SW_RST,
->>> +                        SPEAR1340_PERIP1_SW_RSATA, 0);
->>> +     msleep(20);
->>
->> Please add a comment for all delays added.
+> of_pci_range_to_resource() at the moment returns a the address in
+> cpu address space (i.e. IORESOURCE_MEM) but sets the res->flags
+> value to IORESOURCE_IO, which means it doesn't fit into the resource
+> tree. Liviu's version gets that part right, and it would be nice
+> to fix that eventually, however we do it here.
 > 
-> @Pratyush/Mohit: please let me know what to add here.
+> 	Arnd
 > 
->>> +#ifdef CONFIG_PM_SLEEP
->>> +static int spear1340_miphy_suspend(struct device *dev)
->>> +{
->>> +     struct spear1340_miphy_priv *priv = dev_get_drvdata(dev);
->>> +     int ret = 0;
->>> +
->>> +     if (priv->mode == SATA)
->>> +             ret = spear1340_miphy_sata_exit(priv);
->>
->> Shouldn't this be spear1340_miphy_init()?
->>> +
->>> +     return ret;
->>> +}
->>> +
->>> +static int spear1340_miphy_resume(struct device *dev)
->>> +{
->>> +     struct spear1340_miphy_priv *priv = dev_get_drvdata(dev);
->>> +     int ret = 0;
->>> +
->>> +     if (priv->mode == SATA)
->>> +             ret = spear1340_miphy_sata_init(priv);
->>
->> And here spear1340_miphy_exit()? Why only for sata phys?
 > 
-> @Mohit/Pratyush ??
-> 
-> Thanks Kishon for another round of review :)
-> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
