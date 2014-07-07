@@ -1,71 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:20403 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750976AbaGGUmD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Jul 2014 16:42:03 -0400
+Date: Mon, 7 Jul 2014 22:42:43 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	linux-s390@vger.kernel.org, "x86@kernel.org" <x86@kernel.org>,
+	xen-devel@lists.xenproject.org,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+Message-ID: <20140707204242.GA27809@dhcp-26-207.brq.redhat.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
+ <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
+ <20140702202201.GA28852@google.com>
+ <20140704085741.GA12247@dhcp-26-207.brq.redhat.com>
+ <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1404240214-9804-3-git-send-email-Liviu.Dudau@arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
-	<1404240214-9804-3-git-send-email-Liviu.Dudau@arm.com>
-Date: Wed, 2 Jul 2014 11:06:38 -0700
-Message-ID: <CACoXjck+aU33=kSy=KCGABNXNR7tj2KndAiBqEDK7wQ_Qei80Q@mail.gmail.com>
-Subject: Re: [PATCH v8 2/9] pci: Export find_pci_host_bridge() function.
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	patches <patches@apm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Mon, Jul 07, 2014 at 01:40:48PM -0600, Bjorn Helgaas wrote:
+> As you can tell, I'm a little skeptical about this.  It's a fairly big
+> change, it affects the arch interface, it seems to be targeted for
+> only a single chipset (though it's widely used), and we already
+> support a standard solution (MSI-X, reducing the number of vectors
+> requested, or even operating with 1 vector).
 
-On Tue, Jul 1, 2014 at 11:43 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> This is a useful function and we should make it visible outside the
-> generic PCI code. Export it as a GPL symbol.
->
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  drivers/pci/host-bridge.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 0e5f3c9..36c669e 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -16,12 +16,13 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->         return bus;
->  }
->
-> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->  {
->         struct pci_bus *root_bus = find_pci_root_bus(bus);
->
->         return to_pci_host_bridge(root_bus->bridge);
->  }
-> +EXPORT_SYMBOL_GPL(find_pci_host_bridge);
+Bjorn,
 
-Is there any specific reason behind making this symbol GPL? I think
-the other functions in this file are just EXPORT_SYMBOL. Ultimately
-companies which have non gpl Linux modules (nvidia) will face issue
-using this API.
+I surely understand your concerns. I am answering this "summary"
+question right away.
 
-The same applies to 'of_create_pci_host_bridge'.
->
->  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
->                                  void (*release_fn)(struct pci_host_bridge *),
-> --
-> 2.0.0
->
+Even though an extra parameter is introduced, functionally this update
+is rather small. It is only the new pci_enable_msi_partial() function
+that could exploit a custom 'nvec_mme' parameter. By contrast, existing
+pci_enable_msi_range() function (and therefore all device drivers) is
+unaffected - it just rounds up 'nvec' to the nearest power of two and
+continues exactly as it has been. All archs besides x86 just ignore it.
+And x86 change is fairly small as well - all necessary functionality is
+already in.
+
+Thus, at the moment it is only AHCI of concern. And no, AHCI can not do MSI-X..
+
+Thanks!
+
+> Bjorn
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
