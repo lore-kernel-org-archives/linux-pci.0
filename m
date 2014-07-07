@@ -1,85 +1,34 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3343 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754226AbaGHMZa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Jul 2014 08:25:30 -0400
-Date: Tue, 8 Jul 2014 14:26:07 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	linux-s390@vger.kernel.org, "x86@kernel.org" <x86@kernel.org>,
-	xen-devel@lists.xenproject.org,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-Message-ID: <20140708122606.GB6270@dhcp-26-207.brq.redhat.com>
-References: <cover.1402405331.git.agordeev@redhat.com>
- <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
- <20140702202201.GA28852@google.com>
- <20140704085741.GA12247@dhcp-26-207.brq.redhat.com>
- <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"swarren@nvidia.com" <swarren@nvidia.com>,
+	"vidyas@nvidia.com" <vidyas@nvidia.com>,
+	"thierry.reding@gmail.com" <thierry.reding@gmail.com>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"kthota@nvidia.com" <kthota@nvidia.com>,
+	"nagananda.chumbalkar@hp.com" <nagananda.chumbalkar@hp.com>
+Subject: Re: [PATCH v1] PCI: enable ASPM configuration in PCIE POWERSAVE mode
+Date: Mon, 7 Jul 2014 16:02:29 +0000
+Message-ID: <1404748948.9762.29.camel@x230>
+References: <1404198978-26593-1-git-send-email-vidyas@nvidia.com>
+	 <20140705185736.GD28871@google.com> <20140705190203.GE28871@google.com>
+In-Reply-To: <20140705190203.GE28871@google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 07, 2014 at 01:40:48PM -0600, Bjorn Helgaas wrote:
-> >> Can you quantify the benefit of this?  Can't a device already use
-> >> MSI-X to request exactly the number of vectors it can use?  (I know
-> >
-> > A Intel AHCI chipset requires 16 vectors written to MME while advertises
-> > (via AHCI registers) and uses only 6. Even attempt to init 8 vectors results
-> > in device's fallback to 1 (!).
-> 
-> Is the fact that it uses only 6 vectors documented in the public spec?
-
-Yes, it is documented in ICH specs.
-
-> Is this a chipset erratum?  Are there newer versions of the chipset
-> that fix this, e.g., by requesting 8 vectors and using 6, or by also
-> supporting MSI-X?
-
-No, this is not an erratum. The value of 8 vectors is reserved and could
-cause undefined results if used.
-
-> I know this conserves vector numbers.  What does that mean in real
-> user-visible terms?  Are there systems that won't boot because of this
-> issue, and this patch fixes them?  Does it enable bigger
-> configurations, e.g., more I/O devices, than before?
-
-Visibly, it ceases logging messages ('ahci 0000:00:1f.2: irq 107 for
-MSI/MSI-X') for IRQs that are not shown in /proc/interrupts later.
-
-No, it does not enable/fix any existing hardware issue I am aware of.
-It just saves a couple of interrupt vectors, as Michael put it (10/16
-to be precise). However, interrupt vectors space is pretty much scarce
-resource on x86 and a risk of exhausting the vectors (and introducing
-quota i.e) has already been raised AFAIR.
-
-> Do you know how Windows handles this?  Does it have a similar interface?
-
-Have no clue, TBH. Can try to investigate if you see it helpful.
-
-> As you can tell, I'm a little skeptical about this.  It's a fairly big
-> change, it affects the arch interface, it seems to be targeted for
-> only a single chipset (though it's widely used), and we already
-> support a standard solution (MSI-X, reducing the number of vectors
-> requested, or even operating with 1 vector).
-
-I also do not like the fact the arch interface is getting complicated,
-so I happily leave it to your judgement ;) Well, it is low-level and
-hidden from drivers at least.
-
-Thanks!
-
-> Bjorn
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+T24gU2F0LCAyMDE0LTA3LTA1IGF0IDEzOjAyIC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
+PiA+IFJhZmFlbCwgTWF0dGhldywgYW55IGNvbW1lbnRzPyAgV2UgaGF2ZSB2YWNpbGxhdGVkIG9u
+IHRoaXMgYmVmb3JlIGFuZA0KPiA+IHRoZSB3ZWIgaXMgYWxyZWFkeSBwcmV0dHkgdGFuZ2xlZC4N
+Cj4gPiANCj4gPiBWaWR5YSwgY2FuIHlvdSBnaXZlIG1vcmUgZGV0YWlscyBhYm91dCB0aGUgYnVn
+IGZpeGVkIGJ5IHRoaXMgY2hhbmdlPw0KPiA+IFdoYXQncyB0aGUgc2NlbmFyaW8/ICBBcmUgd2Ug
+cmVzdW1pbmcgYW5kIHRoZSBkZXZpY2UgaXMgcG93ZXJlZCB1cCBidXQNCj4gPiBBU1BNIGlzbid0
+IGVuYWJsZWQ/ICBNYXliZSB5b3UgY291bGQgY29sbGVjdCBtb3JlIGRldGFpbHMgaW4gYQ0KPiA+
+IGh0dHA6Ly9idWd6aWxsYS5rZXJuZWwub3JnIHJlcG9ydD8NCg0KSSBiZWxpZXZlIHRoYXQncyB0
+aGUgY2FzZS4gVGhlIHByb3Bvc2VkIGNoYW5nZSB3b3VsZCBmaXggaXQgYnV0IGlzbid0DQpyZWFs
+bHkgdGVycmlibHkgY2xlYW4gLSBJIHRoaW5rIGl0IHdvdWxkIGJlIG1vcmUgcmVhZGFibGUgdG8g
+c3BsaXQgdGhpcw0KaW50byBtdWx0aXBsZSBmdW5jdGlvbnMuDQoNCi0tIA0KTWF0dGhldyBHYXJy
+ZXR0IDxtYXR0aGV3LmdhcnJldHRAbmVidWxhLmNvbT4NCg==
