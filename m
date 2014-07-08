@@ -1,76 +1,284 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:63568 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752778AbaGBVZn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 17:25:43 -0400
-Received: by mail-ig0-f180.google.com with SMTP id h18so764071igc.1
-        for <linux-pci@vger.kernel.org>; Wed, 02 Jul 2014 14:25:42 -0700 (PDT)
-Date: Wed, 2 Jul 2014 15:25:38 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Ryan Desfosses <ryan@desfo.org>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [Patch] PCI/portdrv: Remove warning about invalid IRQ
-Message-ID: <20140702212538.GC28852@google.com>
-References: <CAErSpo7pAv=v7JQp2UoNxYN8Pdj788NPP8OsLkM3p8NuwL_6Wg@mail.gmail.com>
- <1403070985-31373-1-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403070985-31373-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:45412 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbaGHNba (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 09:31:30 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Murali Karicheri' <m-karicheri2@ti.com>,
+	'Mohit Kumar' <mohit.kumar@st.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	'Santosh Shilimkar' <santosh.shilimkar@ti.com>,
+	'Russell King' <linux@arm.linux.org.uk>,
+	'Grant Likely' <grant.likely@linaro.org>,
+	'Rob Herring' <robh+dt@kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Marek Vasut' <marex@denx.de>, 'Arnd Bergmann' <arnd@arndb.de>,
+	'Pawel Moll' <pawel.moll@arm.com>,
+	'Mark Rutland' <mark.rutland@arm.com>,
+	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
+	'Kumar Gala' <galak@codeaurora.org>,
+	'Randy Dunlap' <rdunlap@infradead.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1404164720-11066-1-git-send-email-m-karicheri2@ti.com>
+ <1404164720-11066-4-git-send-email-m-karicheri2@ti.com>
+ <53BBF031.5080105@ti.com>
+In-reply-to: <53BBF031.5080105@ti.com>
+Subject: Re: [PATCH v3 3/5] PCI: designware: refactor host init code to re-use
+ on keystone PCI
+Date: Tue, 08 Jul 2014 22:31:27 +0900
+Message-id: <001301cf9ab0$ebb8c470$c32a4d50$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 18, 2014 at 01:56:21PM +0800, Jiang Liu wrote:
-> For hot-added PCIe ports, it always generates a warning message on x86
-> platforms when binding to portdrv as:
-> 	"device [8086:0e0b] has invalid IRQ; check vendor BIOS".
+On Tuesday, July 08, 2014 10:21 PM, Murali Karicheri wrote:
 > 
-> It's due to that we check pci_dev->irq before actually allocating IRQ
-> for the PCI device:
-> 	if (!dev->irq && dev->pin) {
-> 		dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; "
-> 			 "check vendor BIOS\n", dev->vendor, dev->device);
-> 	}
->  	status = pcie_port_device_register(dev);
-> 		-->pci_enable_device(dev);
-> 			-->pci_enable_device_flags()
-> 				-->do_pci_enable_device()
-> 					-->pcibios_enable_device()
-> 						-->pcibios_enable_irq()
+> Mohit, Jingoo,
 > 
-> This warning message isn't generated for PCIe ports present at boot time
-> because x86 arch code has called acpi_pci_irq_enable() in pci_acpi_init()
-> for each PCI device for safety.
+> Thanks for the Ack for 1/5 and 2/5 of this series.
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Could you also review 3/5 and 4/5 of this series and provide your Ack or
+> comments at the earliest.
 
-Applied to pci/misc for v3.17, thanks!
+Sorry, I cannot review 3/5 and 4/5.
 
-> ---
-> Hi Bjorn,
-> 	I have rebased it onto v3.16-rc1 and changed the patch title
-> according to your suggestion.
-> Thanks!
-> Gerry
-> ___
->  drivers/pci/pcie/portdrv_pci.c |    4 ----
->  1 file changed, 4 deletions(-)
+For a few years, I have done mainline work without any payment,
+as other hobbyists have done. It means that it is very hard to
+spend reviewing the patch from mailing list. Currently, I am up to
+my neck in work. In the case of 3/5 and 4/5 of your patchset,
+it requires me to spend a lot of time.
+
+I will go the extra miles to review all patches including your
+patches. But, I am not sure that I can do it. Thank you.
+
+Best regards,
+Jingoo Han
 > 
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index 80887eaa0668..2ccc9b926ea7 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -203,10 +203,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->  	     (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)))
->  		return -ENODEV;
->  
-> -	if (!dev->irq && dev->pin) {
-> -		dev_warn(&dev->dev, "device [%04x:%04x] has invalid IRQ; check vendor BIOS\n",
-> -			 dev->vendor, dev->device);
-> -	}
->  	status = pcie_port_device_register(dev);
->  	if (status)
->  		return status;
-> -- 
-> 1.7.10.4
+> Thanks and regards,
 > 
+> Murali
+> 
+> On 06/30/2014 05:45 PM, Murali Karicheri wrote:
+> > This patch refactor the host controller init code to support Keystone
+> > PCI controller.
+> >
+> > Current DW PCI host controller init code has code specific to newer
+> > DW hw such as ATU port resource parse and ioremap. Conditionally
+> > execute this code if DW h/w is not v3.65. Keystone PCI controller
+> > is based on v3.65 DW PCI h/w and it has MSI controller implemented
+> > in application space and requires different controller initialization
+> > code. So factor out the MSI host init code to a separate function.
+> >
+> > Rename dw_pcie_host_init() to dw_pcie_common_host_init() that takes an
+> > additional arg, ptr to hw_pci structure. This allows to re-use the code
+> > for Keystone PCI that can now provide it's own pci hw ops and msi irq
+> > ops.  dw_pcie_host_init() is now a wrapper function that calls
+> > dw_pcie_common_host_init() for pci common initialization.
+> >
+> > Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+> >
+> > CC: Santosh Shilimkar<santosh.shilimkar@ti.com>
+> > CC: Russell King<linux@arm.linux.org.uk>
+> > CC: Grant Likely<grant.likely@linaro.org>
+> > CC: Rob Herring<robh+dt@kernel.org>
+> > CC: Mohit Kumar<mohit.kumar@st.com>
+> > CC: Jingoo Han<jg1.han@samsung.com>
+> > CC: Bjorn Helgaas<bhelgaas@google.com>
+> > CC: Pratyush Anand<pratyush.anand@st.com>
+> > CC: Richard Zhu<r65037@freescale.com>
+> > CC: Kishon Vijay Abraham I<kishon@ti.com>
+> > CC: Marek Vasut<marex@denx.de>
+> > CC: Arnd Bergmann<arnd@arndb.de>
+> > CC: Pawel Moll<pawel.moll@arm.com>
+> > CC: Mark Rutland<mark.rutland@arm.com>
+> > CC: Ian Campbell<ijc+devicetree@hellion.org.uk>
+> > CC: Kumar Gala<galak@codeaurora.org>
+> > CC: Randy Dunlap<rdunlap@infradead.org>
+> > CC: Grant Likely<grant.likely@linaro.org>
+> > ---
+> >   drivers/pci/host/pcie-designware.c |  105 +++++++++++++++++++++++++-----------
+> >   drivers/pci/host/pcie-designware.h |    3 +-
+> >   2 files changed, 75 insertions(+), 33 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 905941c..c11e4de 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -415,19 +415,24 @@ static const struct irq_domain_ops msi_domain_ops = {
+> >   	.map = dw_pcie_msi_map,
+> >   };
+> >
+> > -int __init dw_pcie_host_init(struct pcie_port *pp)
+> > +static int __init dw_pcie_common_host_init(struct pcie_port *pp,
+> > +					   struct hw_pci *hw)
+> >   {
+> >   	struct device_node *np = pp->dev->of_node;
+> >   	struct of_pci_range range;
+> >   	struct of_pci_range_parser parser;
+> > +	struct hw_pci *pci_hw = hw;
+> >   	u32 val;
+> > -	int i;
+> >
+> >   	if (of_pci_range_parser_init(&parser, np)) {
+> >   		dev_err(pp->dev, "missing ranges property\n");
+> >   		return -EINVAL;
+> >   	}
+> >
+> > +	/* Default to dw_pci if no hw ops provided */
+> > +	if (!pci_hw)
+> > +		pci_hw =&dw_pci;
+> > +
+> >   	/* Get the I/O and memory ranges from DT */
+> >   	for_each_of_pci_range(&parser,&range) {
+> >   		unsigned long restype = range.flags&  IORESOURCE_TYPE_BITS;
+> > @@ -467,21 +472,24 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >   		}
+> >   	}
+> >
+> > -	pp->cfg0_base = pp->cfg.start;
+> > -	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+> >   	pp->mem_base = pp->mem.start;
+> > -
+> > -	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+> > -					pp->config.cfg0_size);
+> > -	if (!pp->va_cfg0_base) {
+> > -		dev_err(pp->dev, "error with ioremap in function\n");
+> > -		return -ENOMEM;
+> > -	}
+> > -	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
+> > -					pp->config.cfg1_size);
+> > -	if (!pp->va_cfg1_base) {
+> > -		dev_err(pp->dev, "error with ioremap\n");
+> > -		return -ENOMEM;
+> > +	if (!pp->version&  DW_HW_V3_65) {
+> > +		/* Default is with ATU port. */
+> > +		pp->cfg0_base = pp->cfg.start;
+> > +		pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+> > +
+> > +		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+> > +						pp->config.cfg0_size);
+> > +		if (!pp->va_cfg0_base) {
+> > +			dev_err(pp->dev, "error with ioremap in function\n");
+> > +			return -ENOMEM;
+> > +		}
+> > +		pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
+> > +						pp->config.cfg1_size);
+> > +		if (!pp->va_cfg1_base) {
+> > +			dev_err(pp->dev, "error with ioremap\n");
+> > +			return -ENOMEM;
+> > +		}
+> >   	}
+> >
+> >   	if (of_property_read_u32(np, "num-lanes",&pp->lanes)) {
+> > @@ -489,19 +497,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >   		return -EINVAL;
+> >   	}
+> >
+> > -	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> > -		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+> > -					MAX_MSI_IRQS,&msi_domain_ops,
+> > -					&dw_pcie_msi_chip);
+> > -		if (!pp->irq_domain) {
+> > -			dev_err(pp->dev, "irq domain init failed\n");
+> > -			return -ENXIO;
+> > -		}
+> > -
+> > -		for (i = 0; i<  MAX_MSI_IRQS; i++)
+> > -			irq_create_mapping(pp->irq_domain, i);
+> > -	}
+> > -
+> >   	if (pp->ops->host_init)
+> >   		pp->ops->host_init(pp);
+> >
+> > @@ -514,10 +509,10 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >   	val |= PORT_LOGIC_SPEED_CHANGE;
+> >   	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> >
+> > -	dw_pci.nr_controllers = 1;
+> > -	dw_pci.private_data = (void **)&pp;
+> > +	pci_hw->nr_controllers = 1;
+> > +	pci_hw->private_data = (void **)&pp;
+> >
+> > -	pci_common_init_dev(pp->dev,&dw_pci);
+> > +	pci_common_init_dev(pp->dev, pci_hw);
+> >   	pci_assign_unassigned_resources();
+> >   #ifdef CONFIG_PCI_DOMAINS
+> >   	dw_pci.domain++;
+> > @@ -526,6 +521,52 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >   	return 0;
+> >   }
+> >
+> > +/*
+> > + * dw_pcie_msi_host_init() - Function to initialize msi host controller
+> > + * @pp: ptr to pcie port
+> > + * @msi_irqc_np: device node ptr to msi irq controller
+> > + * @irq_msi_ops: ptr to MSI irq_domain_ops struct
+> > + *
+> > + * Function register irq domain for msi irq controller and create mappings
+> > + * for MSI irqs.
+> > + */
+> > +static int dw_pcie_msi_host_init(struct pcie_port *pp,
+> > +				 struct device_node *msi_irqc_np,
+> > +				 const struct irq_domain_ops *msi_irq_ops)
+> > +{
+> > +	const struct irq_domain_ops *msi_irq_domain_ops = msi_irq_ops;
+> > +	int i;
+> > +
+> > +	/* Default to  msi_domain_ops if no msi irq domain ops provided */
+> > +	if (!msi_irq_domain_ops)
+> > +		msi_irq_domain_ops =&msi_domain_ops;
+> > +
+> > +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> > +		pp->irq_domain = irq_domain_add_linear(msi_irqc_np,
+> > +					MAX_MSI_IRQS, msi_irq_domain_ops,
+> > +					&dw_pcie_msi_chip);
+> > +		if (!pp->irq_domain) {
+> > +			dev_err(pp->dev, "irq domain init failed\n");
+> > +			return -ENXIO;
+> > +		}
+> > +
+> > +		for (i = 0; i<  MAX_MSI_IRQS; i++)
+> > +			irq_create_mapping(pp->irq_domain, i);
+> > +	}
+> > +	return 0;
+> > +}
+> > +
+> > +int __init dw_pcie_host_init(struct pcie_port *pp)
+> > +{
+> > +	int ret;
+> > +
+> > +	ret = dw_pcie_msi_host_init(pp, pp->dev->of_node, NULL);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	return dw_pcie_common_host_init(pp, NULL);
+> > +}
+> > +
+> >   static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
+> >   {
+> >   	/* Program viewport 0 : OUTBOUND : CFG0 */
+> > diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> > index 387f69e..db0260f 100644
+> > --- a/drivers/pci/host/pcie-designware.h
+> > +++ b/drivers/pci/host/pcie-designware.h
+> > @@ -51,6 +51,8 @@ struct pcie_port {
+> >   	int			msi_irq;
+> >   	struct irq_domain	*irq_domain;
+> >   	unsigned long		msi_data;
+> > +#define DW_HW_V3_65		BIT(0)
+> > +	u32			version;
+> >   	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+> >   };
+> >
+> > @@ -79,5 +81,4 @@ void dw_pcie_msi_init(struct pcie_port *pp);
+> >   int dw_pcie_link_up(struct pcie_port *pp);
+> >   void dw_pcie_setup_rc(struct pcie_port *pp);
+> >   int dw_pcie_host_init(struct pcie_port *pp);
+> > -
+> >   #endif /* _PCIE_DESIGNWARE_H */
+
