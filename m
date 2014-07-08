@@ -1,60 +1,114 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 21 Jul 2014 10:17:34 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>
-Subject: Re: [Update 2x][PATCH 1/2] ACPI / PM: Always enable wakeup GPEs when
- enabling device wakeup
-Message-ID: <20140721081734.GL3935@laptop>
-References: <1907495.agrCMfRsQN@vostro.rjw.lan>
- <1617640.X0G82q0eFI@vostro.rjw.lan>
- <7670400.0LUVFHKPfm@vostro.rjw.lan>
- <5962983.s3jy9r09Hm@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:45422 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344AbaGHW57 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 18:57:59 -0400
+Date: Tue, 8 Jul 2014 23:57:55 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic
+ host_bridge from device tree
+Message-ID: <20140708225755.GE4980@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-9-git-send-email-Liviu.Dudau@arm.com>
+ <20140708010103.GD22939@google.com>
+ <20140708102940.GZ6501@e106497-lin.cambridge.arm.com>
+ <20140708213305.GB4555@google.com>
+ <20140708222738.GA4980@e106497-lin.cambridge.arm.com>
+ <20140708223737.GA19512@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5962983.s3jy9r09Hm@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20140708223737.GA19512@google.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 01:51:46AM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: ACPI / PM: Always enable wakeup GPEs when enabling device wakeup
+On Tue, Jul 08, 2014 at 11:37:37PM +0100, Bjorn Helgaas wrote:
+> On Tue, Jul 08, 2014 at 11:27:38PM +0100, Liviu Dudau wrote:
+> > On Tue, Jul 08, 2014 at 10:33:05PM +0100, Bjorn Helgaas wrote:
+> > > On Tue, Jul 08, 2014 at 11:29:40AM +0100, Liviu Dudau wrote:
+> > > > On Tue, Jul 08, 2014 at 02:01:04AM +0100, Bjorn Helgaas wrote:
+> > > > > On Tue, Jul 01, 2014 at 07:43:33PM +0100, Liviu Dudau wrote:
+> > > > > > ...
+> > > > > > +int __weak pcibios_fixup_bridge_ranges(struct list_head *resources)
+> > > > > > +{
+> > > > > > +     return 0;
+> > > > > > +}
+> > > > > 
+> > > > > I'd wait to add this until there's a platform that needs to implement it.
+> > > > > Splitting it out will make this patch that much smaller and easier to
+> > > > > understand.
+> > > > 
+> > > > I need this as this is the default implementation (i.e. do nothing). Otherwise the
+> > > > link phase will give errors. 
+> > > 
+> > > I meant that you could remove the default implementation *and* the call of
+> > > it, since it currently does nothing.
+> > 
+> > True. But it looks like converting Will's pci-host-generic.c driver will make use of this.
 > 
-> Wakeup GPEs are currently only enabled when setting up devices for
-> remote wakeup at run time.  During system-wide transitions they are
-> enabled by ACPICA at the very last stage of suspend (before asking
-> the BIOS to take over).  Of course, that only works for system
-> sleep states supported by ACPI, so in particular it doesn't work
-> for the "freeze" sleep state.
+> I think we should move this part of the patch to the conversion of
+> that driver.  That will keep related changes grouped together, which 
+> makes them easier to review and easier to backport, e.g., to distro
+> kernels.
 > 
-> For this reason, modify the ACPI core device PM code to enable wakeup
-> GPEs for devices when setting them up for wakeup regardless of whether
-> that is remote wakeup at runtime or system wakeup.  That allows the
-> same device wakeup setup routine to be used for both runtime PM and
-> system-wide PM and makes it possible to reduce code size quite a bit.
+> > > > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > > > > index 7e7b939..556dc5f 100644
+> > > > > > --- a/include/linux/pci.h
+> > > > > > +++ b/include/linux/pci.h
+> > > > > > @@ -402,6 +402,7 @@ struct pci_host_bridge {
+> > > > > >       struct device dev;
+> > > > > >       struct pci_bus *bus;            /* root bus */
+> > > > > >       int domain_nr;
+> > > > > > +     resource_size_t io_base;        /* physical address for the start of I/O area */
+> > > > > 
+> > > > > I don't see where this is used yet.
+> > > > 
+> > > > It's used in pci_host_bridge_of_get_ranges() (earlier in this patch).
+> > > 
+> > > of_create_pci_host_bridge() fills in bridge->io_base, but I don't see
+> > > anything that ever *reads* bridge->io_base.
+> > 
+> > Ah, understood. It is used by the host bridge drivers to set their ATR registers to the
+> > correct CPU address values.
 > 
-> That should make things like ACPI-based PCI Wake-on-LAN work with
-> the "freeze" sleep state among other things.
-> 
-> Tested-on: Toshiba Portege R500
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
-> 
-> The PCI ACPI device PM notify handler has to be updated to avoid running
-> runtime resume callbacks during system suspend too.
+> Same applies here.
 
-So I tested the first version, with that my WSM-EP didn't resume on WoL
-and pressing the power button after the WoL had it crash and burn in the
-igb driver.
+Except I have no idea which host bridge driver is going to be submitted first. There are
+at least a couple of public series for HB drivers based on my series plus the one I have yet
+to submit for my platform.
 
-Today I tested this latest version and WoL still didn't trigger a
-resume, but the power button did make it go again, no crashes and I
-suppose I can confirm the earlier patch that stopped making it go halt
-works.
+Maybe an associated documentation patch that explains the intended use for io_base could
+persuade you on the value of keeping the io_base patch here?
 
-When I 'halt' I can wake the machine back up using a WoL so that all
-_should_ work afaik.
+Best regards,
+Liviu
+
+> 
+> Bjorn
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
