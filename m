@@ -1,112 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:55315 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755660AbaGBQAi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 12:00:38 -0400
-Date: Wed, 2 Jul 2014 17:00:34 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper
- function.
-Message-ID: <20140702160034.GP2173@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com>
- <20140702112222.GK18731@arm.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:61460 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753425AbaGHCIW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 22:08:22 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Gerald Schaefer <gerald.schaefer@de.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	<linux-s390@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Wuyun <wuyun.wu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 2/6] s390/MSI: Use standard mask and unmask funtions
+Date: Tue, 8 Jul 2014 10:08:05 +0800
+Message-ID: <1404785285-6408-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20140702112222.GK18731@arm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 02, 2014 at 12:22:22PM +0100, Will Deacon wrote:
-> On Tue, Jul 01, 2014 at 07:43:28PM +0100, Liviu Dudau wrote:
-> > Some architectures do not have a simple view of the PCI I/O space
-> > and instead use a range of CPU addresses that map to bus addresses. For
-> > some architectures these ranges will be expressed by OF bindings
-> > in a device tree file.
-> > 
-> > Introduce a pci_register_io_range() helper function with a generic
-> > implementation that can be used by such architectures to keep track
-> > of the I/O ranges described by the PCI bindings. If the PCI_IOBASE
-> > macro is not defined that signals lack of support for PCI and we
-> > return an error.
-> 
-> [...]
-> 
-> > +/*
-> > + * Record the PCI IO range (expressed as CPU physical address + size).
-> > + * Return a negative value if an error has occured, zero otherwise
-> > + */
-> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> > +{
-> > +#ifdef PCI_IOBASE
-> > +	struct io_range *res;
-> > +	resource_size_t allocated_size = 0;
-> > +
-> > +	/* check if the range hasn't been previously recorded */
-> > +	list_for_each_entry(res, &io_range_list, list) {
-> > +		if (addr >= res->start && addr + size <= res->start + size)
-> > +			return 0;
-> > +		allocated_size += res->size;
-> > +	}
-> > +
-> > +	/* range not registed yet, check for available space */
-> > +	if (allocated_size + size - 1 > IO_SPACE_LIMIT)
-> > +		return -E2BIG;
-> > +
-> > +	/* add the range to the list */
-> > +	res = kzalloc(sizeof(*res), GFP_KERNEL);
-> > +	if (!res)
-> > +		return -ENOMEM;
-> > +
-> > +	res->start = addr;
-> > +	res->size = size;
-> > +
-> > +	list_add_tail(&res->list, &io_range_list);
-> > +
-> > +	return 0;
-> 
-> Hopefully a stupid question, but how is this serialised? I'm just surprised
-> that adding to and searching a list are sufficient, unless there's a big
-> lock somewhere.
+MSI irqchip in s390 has its own mask and unmask MSI irq
+functions, zpci_enable_irq() and zpci_disable_irq().
+They mask and unmask MSI irq in standard ways, no arch
+special. MSI driver provides two global standard functions
+mask_msi_irq() and unmask_msi_irq(). Local zpci_enable_irq()
+and zpci_disable_irq() are almost the same as the standard
+two. the difference is local mask/unmask functions
+read the mask status before mask and unmask everytime.
+Then change the value and rewrite to hardware. In standard
+functions, save the mask status after mask and unmask msi
+irq, and use the cached status to change the mask status.
+When we mask or unmask a MSI irq, we always cache its
+mask status except we know need not to cache it, like in
+pci_msi_shutdown. So use the standard functions to replace
+the local is safe.
 
-Sorry, tripped into my own filters!
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/s390/pci/pci.c |   49 ++++++-------------------------------------------
+ 1 files changed, 6 insertions(+), 43 deletions(-)
 
-You are right, there is no serialisation here, will add one.
-
-Best regards,
-Liviu
-
-> 
-> Will
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 9ddc51e..f715031 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -48,13 +48,10 @@
+ static LIST_HEAD(zpci_list);
+ static DEFINE_SPINLOCK(zpci_list_lock);
+ 
+-static void zpci_enable_irq(struct irq_data *data);
+-static void zpci_disable_irq(struct irq_data *data);
+-
+ static struct irq_chip zpci_irq_chip = {
+ 	.name = "zPCI",
+-	.irq_unmask = zpci_enable_irq,
+-	.irq_mask = zpci_disable_irq,
++	.irq_unmask = mask_msi_irq,
++	.irq_mask = unmask_msi_irq,
+ };
+ 
+ static DECLARE_BITMAP(zpci_domain, ZPCI_NR_DEVICES);
+@@ -244,43 +241,6 @@ static int zpci_cfg_store(struct zpci_dev *zdev, int offset, u32 val, u8 len)
+ 	return rc;
+ }
+ 
+-static int zpci_msi_set_mask_bits(struct msi_desc *msi, u32 mask, u32 flag)
+-{
+-	int offset, pos;
+-	u32 mask_bits;
+-
+-	if (msi->msi_attrib.is_msix) {
+-		offset = msi->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
+-			PCI_MSIX_ENTRY_VECTOR_CTRL;
+-		msi->masked = readl(msi->mask_base + offset);
+-		writel(flag, msi->mask_base + offset);
+-	} else if (msi->msi_attrib.maskbit) {
+-		pos = (long) msi->mask_base;
+-		pci_read_config_dword(msi->dev, pos, &mask_bits);
+-		mask_bits &= ~(mask);
+-		mask_bits |= flag & mask;
+-		pci_write_config_dword(msi->dev, pos, mask_bits);
+-	} else
+-		return 0;
+-
+-	msi->msi_attrib.maskbit = !!flag;
+-	return 1;
+-}
+-
+-static void zpci_enable_irq(struct irq_data *data)
+-{
+-	struct msi_desc *msi = irq_get_msi_desc(data->irq);
+-
+-	zpci_msi_set_mask_bits(msi, 1, 0);
+-}
+-
+-static void zpci_disable_irq(struct irq_data *data)
+-{
+-	struct msi_desc *msi = irq_get_msi_desc(data->irq);
+-
+-	zpci_msi_set_mask_bits(msi, 1, 1);
+-}
+-
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+ }
+@@ -487,7 +447,10 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+ 
+ 	/* Release MSI interrupts */
+ 	list_for_each_entry(msi, &pdev->msi_list, list) {
+-		zpci_msi_set_mask_bits(msi, 1, 1);
++		if (msi->msi_attrib.is_msix)
++			default_msix_mask_irq(msi, 1);
++		else
++			default_msi_mask_irq(msi, 1, 1);
+ 		irq_set_msi_desc(msi->irq, NULL);
+ 		irq_free_desc(msi->irq);
+ 		msi->msg.address_lo = 0;
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.1
+
 
