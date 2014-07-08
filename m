@@ -1,81 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:42640 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752949AbaGNGFn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jul 2014 02:05:43 -0400
-From: Vidya Sagar <sagar.tv@gmail.com>
-To: bhelgaas@google.com, rjw@rjwysocki.net, nchumbalkar@lenovo.com,
-	thierry.reding@gmail.com, swarren@nvidia.com, kthota@nvidia.com,
-	linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, vidyas@nvidia.com,
-	Vidya Sagar <sagar.tv@gmail.com>
-Subject: [PATCH v2] PCI: enable ASPM configuration in PCIE POWERSAVE mode
-Date: Mon, 14 Jul 2014 11:34:37 +0530
-Message-Id: <1405317877-15060-1-git-send-email-vidyas@nvidia.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:10202 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753486AbaGHCI5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 22:08:57 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 3/6] PCI/MSI: Remove unused function msi_remove_pci_irq_vectors()
+Date: Tue, 8 Jul 2014 10:08:36 +0800
+Message-ID: <1404785316-6392-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vidya Sagar <sagar.tv@gmail.com>
+No one use msi_remove_pci_irq_vectors() function,
+clean up it.
 
-'commit 1a680b7c3258 ("PCI: PCIe links may not get configured for ASPM
- under POWERSAVE mode")' moved pcie_aspm_powersave_config_link() out of
-pci_raw_set_power_state() to pci_set_power_state() which would enable
-ASPM. But, with 'commit db288c9c5f9d ("PCI / PM: restore the original
- behavior of pci_set_power_state()")', which re-introduced the following check
-./drivers/pci/pci.c: pci_set_power_state()
-+   /* Check if we're already there */
-+   if (dev->current_state == state)
-+       return 0;
-in pci_set_power_state(), call to pcie_aspm_powersave_config_link() is never
-made leaving ASPM broken.
-Fix it by not returning from when the above condition is true, rather, jump to
-ASPM configuration code and exit from there eventually.
-
-Signed-off-by: Vidya Sagar <sagar.tv@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
-v2:
-* Calling ASPM config code is moved from pci_set_power_state() to
-* do_pci_enable_device()
+ drivers/pci/msi.c   |   18 ------------------
+ include/linux/pci.h |    2 --
+ 2 files changed, 0 insertions(+), 20 deletions(-)
 
- drivers/pci/pci.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 1c8592b..81d49d3 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -839,12 +839,6 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
- 
- 	if (!__pci_complete_power_transition(dev, state))
- 		error = 0;
--	/*
--	 * When aspm_policy is "powersave" this call ensures
--	 * that ASPM is configured.
--	 */
--	if (!error && dev->bus->self)
--		pcie_aspm_powersave_config_link(dev->bus->self);
- 
- 	return error;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index c306883..86578bb 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1014,24 +1014,6 @@ void pci_disable_msix(struct pci_dev *dev)
  }
-@@ -1195,12 +1189,18 @@ int __weak pcibios_enable_device(struct pci_dev *dev, int bars)
- static int do_pci_enable_device(struct pci_dev *dev, int bars)
- {
- 	int err;
-+	struct pci_dev *bridge;
- 	u16 cmd;
- 	u8 pin;
+ EXPORT_SYMBOL(pci_disable_msix);
  
- 	err = pci_set_power_state(dev, PCI_D0);
- 	if (err < 0 && err != -EIO)
- 		return err;
-+
-+	bridge = pci_upstream_bridge(dev);
-+	if (bridge)
-+		pcie_aspm_powersave_config_link(bridge);
-+
- 	err = pcibios_enable_device(dev, bars);
- 	if (err < 0)
- 		return err;
+-/**
+- * msi_remove_pci_irq_vectors - reclaim MSI(X) irqs to unused state
+- * @dev: pointer to the pci_dev data structure of MSI(X) device function
+- *
+- * Being called during hotplug remove, from which the device function
+- * is hot-removed. All previous assigned MSI/MSI-X irqs, if
+- * allocated for this device function, are reclaimed to unused state,
+- * which may be used later on.
+- **/
+-void msi_remove_pci_irq_vectors(struct pci_dev *dev)
+-{
+-	if (!pci_msi_enable || !dev)
+-		return;
+-
+-	if (dev->msi_enabled || dev->msix_enabled)
+-		free_msi_irqs(dev);
+-}
+-
+ void pci_no_msi(void)
+ {
+ 	pci_msi_enable = 0;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 466bcd1..66bd22f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1186,7 +1186,6 @@ int pci_msix_vec_count(struct pci_dev *dev);
+ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
+ void pci_msix_shutdown(struct pci_dev *dev);
+ void pci_disable_msix(struct pci_dev *dev);
+-void msi_remove_pci_irq_vectors(struct pci_dev *dev);
+ void pci_restore_msi_state(struct pci_dev *dev);
+ int pci_msi_enabled(void);
+ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec);
+@@ -1217,7 +1216,6 @@ static inline int pci_enable_msix(struct pci_dev *dev,
+ { return -ENOSYS; }
+ static inline void pci_msix_shutdown(struct pci_dev *dev) { }
+ static inline void pci_disable_msix(struct pci_dev *dev) { }
+-static inline void msi_remove_pci_irq_vectors(struct pci_dev *dev) { }
+ static inline void pci_restore_msi_state(struct pci_dev *dev) { }
+ static inline int pci_msi_enabled(void) { return 0; }
+ static inline int pci_enable_msi_range(struct pci_dev *dev, int minvec,
 -- 
-1.8.1.5
+1.7.1
+
 
