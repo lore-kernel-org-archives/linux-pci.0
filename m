@@ -1,59 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:52689 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750880AbaGBO7W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jul 2014 10:59:22 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper function.
-Date: Wed, 02 Jul 2014 16:58:58 +0200
-Message-ID: <5997020.x4BWezXjnq@wuerfel>
-In-Reply-To: <20140702142303.GJ2173@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <7343032.WUqPgbXNQS@wuerfel> <20140702142303.GJ2173@e106497-lin.cambridge.arm.com>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:58047 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751704AbaGHHGd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 03:06:33 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: "arm@kernel.org" <arm@kernel.org>,
+	"Arnd Bergmann (arnd@arndb.de)" <arnd@arndb.de>,
+	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
+	"'Kishon Vijay Abraham I' (kishon@ti.com)" <kishon@ti.com>,
+	Pratyush ANAND <pratyush.anand@st.com>
+Cc: spear-devel <spear-devel@list.st.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Mark Nicholson <mark@nicholnet.com>
+Date: Tue, 8 Jul 2014 15:06:11 +0800
+Subject: [GIT PULL] SPEAr1310 PCIe patches rebased on 3.16-rc3
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E46A4@EAPEX1MAIL1.st.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 02 July 2014 15:23:03 Liviu Dudau wrote:
-> > 
-> > Your solution looks correct to me, just using different
-> > tradeoffs to what I was expecting: You get a working pci_address_to_pio()
-> > function, which is probably never needed, but in turn you need to
-> > keep the state of each host bridge in a global list.
-> 
-> Just a reminder that with my patchset I *do* start using pci_address_to_pio()
-> in order to correctly parse the IO ranges from DT.
-
-Yes, what I meant is that it would be easier not to do that. All existing
-drivers expect of_pci_range_to_resource() to return the CPU address for
-an I/O space register, not the Linux I/O port number that we want to 
-pass to the PCI core. This is suboptimal because it's not obvious how
-it works, but it lets us get away without an extra registration step.
-Once all probe functions in PCI host drivers have been changed to the
-of_create_pci_host_bridge, that should not matter any more, because
-there is only one place left that calls it and we only have to get it
-right once.
-
-Also, when you change that of_pci_range_to_resource, you also have to 
-audit all callers of that function and ensure they can deal with the new
-behavior.
-
-	Arnd
+SGVsbG8gQXJuZCwNCg0KUGxzIGZpbmQgU1BFQXIxMzEwIHBjaWUgcGF0Y2hlcyB0byBiZSBtZXJn
+ZWQgdGhyb3VnaCBhcm0tc29jIHRyZWUuIA0KVGhlc2UgcGF0Y2hlcyBhcmUgcmViYXNlZCBvbiB0
+aGUgdG9wIG9mIDMtMTYtcmMzLg0KDQpnaXQ6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4
+L2tlcm5lbC9naXQvdmlyZXNoay9saW51eC5naXQNCnNwZWFyL3BjaWUtc3VwcG9ydC12OA0KDQpU
+aGFua3MNCk1vaGl0DQoNCg0KDQoNCg==
