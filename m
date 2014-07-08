@@ -1,357 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 66-162-147-187.static.twtelecom.net ([66.162.147.187]:53778
-	"EHLO spibarracuda01.sierraphotonics.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751721AbaGaUW0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jul 2014 16:22:26 -0400
-Received: from SPIEXCHMAIL01.sierraphotonics.com (spiexchmail01.sierraphotonics.com [192.168.10.45]) by spibarracuda01.sierraphotonics.com with ESMTP id HrC9sVAUGB4a4PNx for <linux-pci@vger.kernel.org>; Thu, 31 Jul 2014 13:22:24 -0700 (PDT)
-From: Robert Johnson <rjohnson@sierraphotonics.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Does 3.0.4 kernel support PCIe AER driver on powerpc?
-Date: Thu, 31 Jul 2014 20:22:51 +0000
-Message-ID: <d9ceac65eb54483d979929d143f0e21b@SPIEXCHMAIL01.sierraphotonics.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from service87.mimecast.com ([91.220.42.44]:54541 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753346AbaGHKky convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 06:40:54 -0400
+Date: Tue, 8 Jul 2014 11:40:50 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140708104050.GA6501@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com>
+ <20140708001418.GB22939@google.com>
 MIME-Version: 1.0
+In-Reply-To: <20140708001418.GB22939@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I tried asking the linux-pci mail list but got no response, so I thought I should really ask a more powerpc centric audience.
+On Tue, Jul 08, 2014 at 01:14:18AM +0100, Bjorn Helgaas wrote:
+> On Tue, Jul 01, 2014 at 07:43:28PM +0100, Liviu Dudau wrote:
+> > Some architectures do not have a simple view of the PCI I/O space
+> > and instead use a range of CPU addresses that map to bus addresses. For
+> > some architectures these ranges will be expressed by OF bindings
+> > in a device tree file.
+> > 
+> > Introduce a pci_register_io_range() helper function with a generic
+> > implementation that can be used by such architectures to keep track
+> > of the I/O ranges described by the PCI bindings. If the PCI_IOBASE
+> > macro is not defined that signals lack of support for PCI and we
+> > return an error.
+> > 
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > ---
+> >  drivers/of/address.c       | 61 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  include/linux/of_address.h |  1 +
+> >  2 files changed, 62 insertions(+)
+> > 
+> > diff --git a/drivers/of/address.c b/drivers/of/address.c
+> > index 5edfcb0..1345733 100644
+> > --- a/drivers/of/address.c
+> > +++ b/drivers/of/address.c
+> > @@ -5,6 +5,7 @@
+> >  #include <linux/module.h>
+> >  #include <linux/of_address.h>
+> >  #include <linux/pci_regs.h>
+> > +#include <linux/slab.h>
+> >  #include <linux/string.h>
+> >  
+> >  /* Max address size we deal with */
+> > @@ -601,12 +602,72 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+> >  }
+> >  EXPORT_SYMBOL(of_get_address);
+> >  
+> > +struct io_range {
+> > +	struct list_head list;
+> > +	phys_addr_t start;
+> > +	resource_size_t size;
+> > +};
+> > +
+> > +static LIST_HEAD(io_range_list);
+> > +
+> > +/*
+> > + * Record the PCI IO range (expressed as CPU physical address + size).
+> > + * Return a negative value if an error has occured, zero otherwise
+> > + */
+> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> 
+> I don't understand the interface here.  What's the mapping from CPU
+> physical address to bus I/O port?  For example, I have the following
+> machine in mind:
+> 
+>   HWP0002:00: PCI Root Bridge (domain 0000 [bus 00-1b])
+>   HWP0002:00: memory-mapped IO port space [mem 0xf8010000000-0xf8010000fff]
+>   HWP0002:00: host bridge window [io  0x0000-0x0fff]
+> 
+>   HWP0002:09: PCI Root Bridge (domain 0001 [bus 00-1b])
+>   HWP0002:09: memory-mapped IO port space [mem 0xf8110000000-0xf8110000fff]
+>   HWP0002:09: host bridge window [io  0x1000000-0x1000fff] (PCI address [0x0-0xfff])
+> 
+> The CPU physical memory [mem 0xf8010000000-0xf8010000fff] is translated by
+> the bridge to I/O ports 0x0000-0x0fff on PCI bus 0000:00.  Drivers use,
+> e.g., "inb(0)" to access it.
+> 
+> Similarly, [mem 0xf8110000000-0xf8110000fff] is translated by the second
+> bridge to I/O ports 0x0000-0x0fff on PCI bus 0001:00.  Drivers use
+> "inb(0x1000000)" to access it.
+> 
+> pci_register_io_range() seems sort of like it's intended to track the
+> memory-mapped IO port spaces, e.g., [mem 0xf8010000000-0xf8010000fff].
+> But I would think you'd want to keep track of at least the base port
+> number on the PCI bus, too.  Or is that why it's weak?
 
-I am working with a Freescale P2020 based embedded system that includes an IDT PCIe switch with x1 PCIe lanes to custom PCIe devices on a backplane.  I was hoping to use the AER driver to get more info about any PCIe errors that may occur between the IDT switch and the PCIe devices.  The embedded system uses a board support package currently based on Gentoo Linux with kernel 3.0.4.
+It's weak in case the default implementation doesn't fit someones requirements.
+And yes, it is trying to track the memory-mapped IO port spaces. When
+calling pci_address_to_pio() - which takes the CPU address - it will
+return the port number (0x0000 - 0x0fff and 0x1000000 - 0x1000fff respectively).
+pci_address_to_pio() uses the list built by calling pci_register_io_range()
+to calculate the correct offsets (although in this case it would move your
+second host bridge io ports to [io 0x1000 - 0x1fff] as it tries not to leave
+gaps in the reservations).
 
-I guess the first question is does the 3.0.4 kernel support PCIe AER driver on powerpc?
+> 
+> Here's what these look like in /proc/iomem and /proc/ioports (note that
+> there are two resource structs for each memory-mapped IO port space: one
+> IORESOURCE_MEM for the memory-mapped area (used only by the host bridge
+> driver), and one IORESOURCE_IO for the I/O port space (this becomes the
+> parent of a region used by a regular device driver):
+> 
+>   /proc/iomem:
+>     PCI Bus 0000:00 I/O Ports 00000000-00000fff
+>     PCI Bus 0001:00 I/O Ports 01000000-01000fff
+> 
+>   /proc/ioports:
+>     00000000-00000fff : PCI Bus 0000:00
+>     01000000-01000fff : PCI Bus 0001:00
 
-I found one related old post from 2010 but the behavior I observe is different than what is described in this post:
+OK, I have a question that might be ovbious to you but I have missed the answer
+so far: how does the IORESOURCE_MEM area gets created? Is it the host bridge
+driver's job to do it? Is it something that the framework should do when it
+notices that the IORESOURCE_IO is memory mapped?
 
-http://thread.gmane.org/gmane.linux.kernel.pci/9685/focus=9709
+Many thanks,
+Liviu
 
-My assumption is that if the AER driver is working properly, I should see some kernel log entries that include "... service driver aer loaded" which come from pcie_port_probe_service() in drivers/pci/pcie/portdrv_core.c.  Is that a correct assumption?
+> 
+> > +{
+> > +#ifdef PCI_IOBASE
+> > +	struct io_range *res;
+> > +	resource_size_t allocated_size = 0;
+> > +
+> > +	/* check if the range hasn't been previously recorded */
+> > +	list_for_each_entry(res, &io_range_list, list) {
+> > +		if (addr >= res->start && addr + size <= res->start + size)
+> > +			return 0;
+> > +		allocated_size += res->size;
+> > +	}
+> > +
+> > +	/* range not registed yet, check for available space */
+> > +	if (allocated_size + size - 1 > IO_SPACE_LIMIT)
+> > +		return -E2BIG;
+> > +
+> > +	/* add the range to the list */
+> > +	res = kzalloc(sizeof(*res), GFP_KERNEL);
+> > +	if (!res)
+> > +		return -ENOMEM;
+> > +
+> > +	res->start = addr;
+> > +	res->size = size;
+> > +
+> > +	list_add_tail(&res->list, &io_range_list);
+> > +
+> > +	return 0;
+> > +#else
+> > +	return -EINVAL;
+> > +#endif
+> > +}
+> > +
+> >  unsigned long __weak pci_address_to_pio(phys_addr_t address)
+> >  {
+> > +#ifdef PCI_IOBASE
+> > +	struct io_range *res;
+> > +	resource_size_t offset = 0;
+> > +
+> > +	list_for_each_entry(res, &io_range_list, list) {
+> > +		if (address >= res->start &&
+> > +			address < res->start + res->size) {
+> > +			return res->start - address + offset;
+> > +		}
+> > +		offset += res->size;
+> > +	}
+> > +
+> > +	return (unsigned long)-1;
+> > +#else
+> >  	if (address > IO_SPACE_LIMIT)
+> >  		return (unsigned long)-1;
+> >  
+> >  	return (unsigned long) address;
+> > +#endif
+> >  }
+> >  
+> >  static int __of_address_to_resource(struct device_node *dev,
+> > diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+> > index c13b878..ac4aac4 100644
+> > --- a/include/linux/of_address.h
+> > +++ b/include/linux/of_address.h
+> > @@ -55,6 +55,7 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+> >  extern const __be32 *of_get_address(struct device_node *dev, int index,
+> >  			   u64 *size, unsigned int *flags);
+> >  
+> > +extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+> >  extern unsigned long pci_address_to_pio(phys_addr_t addr);
+> >  
+> >  extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+> > -- 
+> > 2.0.0
+> > 
+> 
 
-Here is a summary of what I see:
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
-In drivers/pci/pcie/aer/aerdrv.c:
-                - aer_service_init() gets call at boot and appears to be successful returning 0
-                - aer_probe() never gets called
- 
-In drivers/pci/pcie/portdrv_core.c:
-                - pcie_port_service_register() gets called from aer_service_init() at boot, as expected it shows service name "aer" and returns 0
-                - pcie_port_probe_service() never gets called, I assume this would likely cause aer_probe() to get called
-                - pcie_port_device_register() gets called for many of the PCIe devices in the system and completes successfully for many cases where service=0x02 (AER) is included
-
-I end up with many devices in "/sys/bus/pci_express/devices" with names that end in "2" indicating that they are successfully associated with the AER service.  There is also a directory /sys/bus/pci_express/drivers which contains an "aer" entry.
-
-# ls /sys/bus/pci_express/devices
-0000:01:00.0:pcie18  0000:02:11.0:pcie22  0000:02:14.0:pcie28  0000:05:00.0:pcie12  0000:06:05.0:pcie28  0000:06:0d.0:pcie22
-0000:02:08.0:pcie22  0000:02:11.0:pcie28  0000:02:15.0:pcie22  0000:05:00.0:pcie18  0000:06:07.0:pcie22  0000:06:0d.0:pcie28
-0000:02:08.0:pcie28  0000:02:12.0:pcie22  0000:02:15.0:pcie28  0000:06:01.0:pcie22  0000:06:07.0:pcie28  0000:06:0f.0:pcie22
-0000:02:0c.0:pcie22  0000:02:12.0:pcie28  0000:02:16.0:pcie22  0000:06:01.0:pcie28  0000:06:09.0:pcie22  0000:06:0f.0:pcie28
-0000:02:0c.0:pcie28  0000:02:13.0:pcie22  0000:02:16.0:pcie28  0000:06:03.0:pcie22  0000:06:09.0:pcie28  0000:07:00.0:pcie18
-0000:02:10.0:pcie22  0000:02:13.0:pcie28  0000:02:17.0:pcie22  0000:06:03.0:pcie28  0000:06:0b.0:pcie22  0000:08:01.0:pcie22
-0000:02:10.0:pcie28  0000:02:14.0:pcie22  0000:02:17.0:pcie28  0000:06:05.0:pcie22  0000:06:0b.0:pcie28  0000:08:02.0:pcie22
-
-# ls /sys/bus/pci_express/drivers/aer
-bind  uevent  unbind
-
-Any idea why pcie_port_probe_service() is never called?  Where should this be called from?
-
-Here is a partial output of the lspci command (full listing too many chars):
-
-xpedite5570 / # lspci -vvv
-00:00.0 PCI bridge: Freescale Semiconductor Inc P2020E (rev 21) (prog-if 00 [Normal decode])
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 32 bytes
-        Region 0: Memory at <ignored> (32-bit, non-prefetchable)
-        Bus: primary=00, secondary=01, subordinate=1a, sec-latency=0
-        I/O behind bridge: 00000000-00000fff
-        Memory behind bridge: 80000000-dfffffff
-        Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [44] Power Management version 2
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [4c] Express (v1) Root Port (Slot-), MSI 00
-                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag- RBE- FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s, Latency L0 <2us, L1 unlimited
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-                RootCap: CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-
-01:00.0 PCI bridge: Integrated Device Technology, Inc. Device 808e (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 32 bytes
-        Bus: primary=01, secondary=02, subordinate=1a, sec-latency=0
-        I/O behind bridge: 00000000-00000fff
-        Memory behind bridge: 80000000-805fffff
-        Prefetchable memory behind bridge: 0000000080600000-00000000806fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Express (v2) Upstream Port, MSI 00
-                DevCap: MaxPayload 2048 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-SlotPowerLimit 15.000W
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
-                LnkCap: Port #8, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <4us, L1 <4us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Not Supported, TimeoutDis-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [c0] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [200 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Capabilities: [330 v1] #12
-        Kernel driver in use: pcieport
-
-02:08.0 PCI bridge: Integrated Device Technology, Inc. Device 808e (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 32 bytes
-        Bus: primary=02, secondary=03, subordinate=04, sec-latency=0
-        I/O behind bridge: 0000f000-00000fff
-        Memory behind bridge: 80000000-800fffff
-        Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Express (v2) Downstream Port (Slot-), MSI 00
-                DevCap: MaxPayload 2048 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag+ RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, L1 <4us
-                        ClockPM- Surprise+ LLActRep+ BwNot+
-                LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Not Supported, TimeoutDis- ARIFwd+
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [c0] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-                Address: 00000000fff41740  Data: 0000
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [200 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Capabilities: [320 v1] Access Control Services
-                ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl+ DirectTrans+
-                ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
-        Capabilities: [330 v1] #12
-        Kernel driver in use: pcieport
-
-02:0c.0 PCI bridge: Integrated Device Technology, Inc. Device 808e (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 32 bytes
-        Bus: primary=02, secondary=05, subordinate=12, sec-latency=0
-        I/O behind bridge: 00000000-00000fff
-        Memory behind bridge: 80100000-804fffff
-        Prefetchable memory behind bridge: 0000000080600000-00000000806fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Express (v2) Downstream Port (Slot-), MSI 00
-                DevCap: MaxPayload 2048 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag+ RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
-                LnkCap: Port #12, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <4us, L1 <4us
-                        ClockPM- Surprise+ LLActRep+ BwNot+
-                LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
-                DevCap2: Completion Timeout: Not Supported, TimeoutDis- ARIFwd+
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [c0] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-                Address: 00000000fff41740  Data: 0001
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [200 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Capabilities: [320 v1] Access Control Services
-                ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl+ DirectTrans+
-                ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
-        Capabilities: [330 v1] #12
-        Kernel driver in use: pcieport
-
-02:11.0 PCI bridge: Integrated Device Technology, Inc. Device 808e (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 32 bytes
-        Bus: primary=02, secondary=14, subordinate=14, sec-latency=0
-        I/O behind bridge: 0000f000-00000fff
-        Memory behind bridge: 80500000-805fffff
-        Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Express (v2) Downstream Port (Slot-), MSI 00
-                DevCap: MaxPayload 1024 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag+ RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
-                LnkCap: Port #17, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, L1 <4us
-                        ClockPM- Surprise+ LLActRep+ BwNot+
-                LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
-                DevCap2: Completion Timeout: Not Supported, TimeoutDis- ARIFwd+
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [c0] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-                Address: 00000000fff41740  Data: 0003
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [200 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Capabilities: [320 v1] Access Control Services
-                ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl+ DirectTrans+
-                ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
-        Capabilities: [330 v1] #12
-        Kernel driver in use: pcieport
-
-14:00.0 Memory controller: Xilinx Corporation Device 6024
-        Subsystem: Xilinx Corporation Device 0007
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 32 bytes
-        Interrupt: pin A routed to IRQ 64
-        Region 0: Memory at f80500000 (64-bit, non-prefetchable) [size=1M]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [48] MSI: Enable+ Count=1/16 Maskable- 64bit+
-                Address: 00000000fff41740  Data: 0016
-        Capabilities: [60] Express (v2) Endpoint, MSI 00
-                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 unlimited
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s, Latency L0 unlimited, L1 unlimited
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Range B, TimeoutDis-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [9c] MSI-X: Enable- Count=4 Masked-
-                Vector table: BAR=0 offset=000f0000
-                PBA: BAR=0 offset=000f8000
-        Capabilities: [fc] #00 [0000]
-        Capabilities: [100 v1] Device Serial Number 00-00-00-01-01-00-0a-35
-        Kernel driver in use: spi_dev
