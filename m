@@ -1,59 +1,77 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53D7725C.5010405@citrix.com>
-Date: Tue, 29 Jul 2014 11:07:24 +0100
-From: David Vrabel <david.vrabel@citrix.com>
+Date: Tue, 8 Jul 2014 18:18:28 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 0/9] Support for creating generic PCI host bridges
+ from DT
+Message-ID: <20140708171828.GM6501@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <CAL_JsqK_CfagmiFOpOXVYGry22nGnCZL0ZXeJhYxb9zp=P2fsQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Ethan Zhao <ethan.zhao@oracle.com>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<gleb@kernel.org>, <pbonzini@redhat.com>, <kvm@vger.kernel.org>,
-	<konrad.wilk@oracle.com>, <boris.ostrovsky@oracle.com>,
-	<xen-devel@lists.xenproject.org>
-CC: <alex.williamson@redhat.com>, <alexander.h.duyck@intel.com>,
-	<ethan.kernel@gmail.com>
-Subject: Re: [PATCH 3/4 v3] xen-pciback: use pci device flag operation helper
- function
-References: <1406606791-8834-1-git-send-email-ethan.zhao@oracle.com> <1406606791-8834-4-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1406606791-8834-4-git-send-email-ethan.zhao@oracle.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <CAL_JsqK_CfagmiFOpOXVYGry22nGnCZL0ZXeJhYxb9zp=P2fsQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29/07/14 05:06, Ethan Zhao wrote:
-> Use pci device flag operation helper functions when set device
-> to assigned or deassigned state.
+On Sun, Jul 06, 2014 at 04:23:43PM +0100, Rob Herring wrote:
+> On Tue, Jul 1, 2014 at 1:43 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > This is my resurected attempt at adding support for generic PCI host
+> > bridge controllers that make use of device tree information to
+> > configure themselves. I've tagged it as v8 although the patches
+> > have now been reshuffled in order to ease adoption so referring to
+> > the older versions might be a bit of a hoop jumping exercise.
+> >
+> > Changes from v7:
+> >   - Reordered the patches so that fixes and non-controversial patches
+> >     from v7 can be accepted more easily. If agreed I can split the
+> >     series again into patches that can be upstreamed easily and ones
+> >     that still need discussion.
+> >   - Moved the of_create_host_bridge() function to drivers/of/of_pci.c
+> >     to better reflect its target use.
+> >   - Added the function to remap the bus I/O resources that used to be
+> >     provided in my arm64 patch series and (re)named it pci_remap_iospace()
+> >   - Removed error code checking from parsing and mapping of IRQ from DT
+> >     in recognition that some PCI devices will not have legacy IRQ mappings.
+> >
+> > v7 thread here with all the historic information: https://lkml.org/lkml/2014/3/14/279
 > 
-> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
-
-Konrad already reviewed this but you've not included his reviewed-by tag.
-
-I don't understand why we bother with this flag on Xen since we never
-use it but:
-
-Acked-by: David Vrabel <david.vrabel@citrix.com>
-
-I'm expecting this to go via the PCI tree.
-
-David
-
-> --- a/drivers/xen/xen-pciback/pci_stub.c
-> +++ b/drivers/xen/xen-pciback/pci_stub.c
-> @@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
->  	xen_pcibk_config_free_dyn_fields(dev);
->  	xen_pcibk_config_free_dev(dev);
->  
-> -	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-> +	pci_clear_dev_assigned(dev);
->  	pci_dev_put(dev);
->  
->  	kfree(psdev);
-> @@ -404,7 +404,7 @@ static int pcistub_init_device(struct pci_dev *dev)
->  	dev_dbg(&dev->dev, "reset device\n");
->  	xen_pcibk_reset_device(dev);
->  
-> -	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-> +	pci_set_dev_assigned(dev);
->  	return 0;
->  
->  config_release:
+> Can you publish a branch for this series please.
 > 
+> Rob
+> 
+
+Hi Rob,
+
+I have pushed a brach that matches my v8 patchset +1 obvious missing header include
+here: http://www.linux-arm.org/git?p=linux-ld.git;a=shortlog;h=refs/heads/for-upstream/pci_v8
+
+Best regards,
+Liviu
+
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
