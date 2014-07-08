@@ -1,76 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-	iss_storagedev@hp.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 09/23] hpsa: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 16 Jul 2014 20:05:13 +0200
-Message-Id: <fa8dc16252a7afa6186b78af4b90590755f45507.1405533479.git.agordeev@redhat.com>
-In-Reply-To: <cover.1405533479.git.agordeev@redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:60945 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753893AbaGHKmy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 06:42:54 -0400
+Date: Tue, 8 Jul 2014 11:42:48 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 2/9] pci: Export find_pci_host_bridge() function.
+Message-ID: <20140708104248.GB6501@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-3-git-send-email-Liviu.Dudau@arm.com>
+ <20140707232749.GA22939@google.com>
+MIME-Version: 1.0
+In-Reply-To: <20140707232749.GA22939@google.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Tue, Jul 08, 2014 at 12:27:49AM +0100, Bjorn Helgaas wrote:
+> On Tue, Jul 01, 2014 at 07:43:27PM +0100, Liviu Dudau wrote:
+> > This is a useful function and we should make it visible outside the
+> > generic PCI code. Export it as a GPL symbol.
+> > 
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> > ---
+> >  drivers/pci/host-bridge.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> > index 0e5f3c9..36c669e 100644
+> > --- a/drivers/pci/host-bridge.c
+> > +++ b/drivers/pci/host-bridge.c
+> > @@ -16,12 +16,13 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+> >  	return bus;
+> >  }
+> >  
+> > -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+> > +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+> >  {
+> >  	struct pci_bus *root_bus = find_pci_root_bus(bus);
+> >  
+> >  	return to_pci_host_bridge(root_bus->bridge);
+> >  }
+> > +EXPORT_SYMBOL_GPL(find_pci_host_bridge);
+> 
+> There's nothing in this series that uses find_pci_host_bridge(), so 
+> how about we just wait until we have something that needs it?
+> 
+> Also, if/when we export this, I'd prefer a name that starts with "pci_"
+> as most of the other interfaces do.
 
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: iss_storagedev@hp.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/scsi/hpsa.c |   27 ++++++++++++---------------
- 1 files changed, 12 insertions(+), 15 deletions(-)
+Understood.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 648dec2..5c4ab6e 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -6160,25 +6160,22 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 		h->msix_vector = MAX_REPLY_QUEUES;
- 		if (h->msix_vector > num_online_cpus())
- 			h->msix_vector = num_online_cpus();
--		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
--				      h->msix_vector);
--		if (err > 0) {
-+		err = pci_enable_msix_range(h->pdev, hpsa_msix_entries,
-+					    1, h->msix_vector);
-+		if (err < 0) {
-+			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
-+			h->msix_vector = 0;
-+			goto single_msi_mode;
-+		} else if (err < h->msix_vector) {
- 			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
- 			       "available\n", err);
--			h->msix_vector = err;
--			err = pci_enable_msix(h->pdev, hpsa_msix_entries,
--					      h->msix_vector);
--		}
--		if (!err) {
--			for (i = 0; i < h->msix_vector; i++)
--				h->intr[i] = hpsa_msix_entries[i].vector;
--			return;
--		} else {
--			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
--			       err);
--			h->msix_vector = 0;
- 		}
-+		h->msix_vector = err;
-+		for (i = 0; i < h->msix_vector; i++)
-+			h->intr[i] = hpsa_msix_entries[i].vector;
-+		return;
- 	}
-+single_msi_mode:
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
- 		dev_info(&h->pdev->dev, "MSI\n");
- 		if (!pci_enable_msi(h->pdev))
+I was using the function in the other patch series that adds PCIe support to arm64
+in order to provide a pci_domain_nr() implementation. But I might not need it
+in the end if I go ahead with separating pci_host_bridge creation from bus
+creation.
+
+Best regards,
+Liviu
+
+> 
+> >  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+> >  				 void (*release_fn)(struct pci_host_bridge *),
+> > -- 
+> > 2.0.0
+> > 
+> 
+
 -- 
-1.7.7.6
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
