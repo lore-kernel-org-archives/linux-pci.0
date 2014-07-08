@@ -1,38 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 22 Jul 2014 10:55:38 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>
-Subject: Re: [PATCH 0/3] ACPI / PM: Make ACPI-based PCI wakeup work for the
- "freeze" sleep state
-Message-ID: <20140722085538.GA3935@laptop>
-References: <1907495.agrCMfRsQN@vostro.rjw.lan>
- <9631666.En3K0jlGsY@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cernmx13.cern.ch ([188.184.36.46]:33164 "EHLO CERNMX13.cern.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932580AbaGHTRQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Jul 2014 15:17:16 -0400
+From: Federico Vaga <federico.vaga@cern.ch>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	<michel.arruat@cern.ch>
+Subject: Re: PCIe bus enumeration
+Date: Tue, 8 Jul 2014 21:20:59 +0200
+Message-ID: <3107266.EcOOcRPPM0@harkonnen>
+In-Reply-To: <CAErSpo5ixtc=n0f56=QvtxYnXumZiao6NMgBVAWpcJH4f7QA4g@mail.gmail.com>
+References: <280883016.9onmf0miLq@pcbe13110.cern.ch> <5283004.YemU4lhtKD@pcbe13110.cern.ch> <CAErSpo5ixtc=n0f56=QvtxYnXumZiao6NMgBVAWpcJH4f7QA4g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9631666.En3K0jlGsY@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 22, 2014 at 03:23:29AM +0200, Rafael J. Wysocki wrote:
+On Tuesday 08 July 2014 12:23:39 Bjorn Helgaas wrote:
+> On Tue, Jul 8, 2014 at 1:15 AM, Federico Vaga 
+<federico.vaga@cern.ch> wrote:
+> >> > So, It looks like that some BIOS disable the bridge when there
+> >> > is
+> >> > nothing behind it. Why? Power save? :/
+> >> 
+> >> Could be power savings, or possibly to conserve bus numbers,
+> >> which
+> >> are a limited resource.
+> > 
+> > what is the maximum number of buses?
+> 
+> 256.
 
-> That turned out to be more challenging than I had thought initially.
-> 
-> The last version I sent was almost OK, but it had some issues (like it could
-> walk the PCI hierarchy before resuming any PCI devices during system resume),
-> so a new version follows.  I did my best to avoid introducing any new problems
-> with it, but I obviously might overlook something.
-> 
-> It works for me and doesn't seem to break anything as far as I can say.
-> 
-> [1/3] Make PM workqueue available for CONFIG_PM_RUNTIME unset.
-> [2/3] Rework the handling of ACPI device wakeup notifications.
-> [3/3] Enable wakeup GPEs while setting up devices for wakeup during system
->       suspend too.
+Well, it is not a small number. I will ask directly to the company who 
+sell this crate and ask them what is going on in the BIOS
 
-Doesn't break, doesn't 'work' either. Is there anything I can provide
-you with to make this easier? lspci output or anything like that?
+> > At this point I'm a little bit confused about the definition "slot
+> > numbers" :) You mean the 22, 25, ...
+> 
+> Right.  Bus numbers are under software control, to some degree (as a
+> general rule, an x86 BIOS assigns them and Linux leaves them alone,
+> but they *can* be changed so they aren't a good thing to rely on).
+> The bus number of a root bus is usually determined by hardware or
+> by an arch-specific host bridge driver.  The bus number below a
+> PCI-PCI bridge is determined by the bridge's "secondary bus number"
+> register, which software can change.
+> 
+> Slot numbers are based on the Physical Slot Number in the PCIe Slot
+> Capability register.  This is set by some hardware mechanism such as
+> pin strapping or a serial EEPROM.  Software can't change it, so you
+> can rely on it to be constant.  (There's also a mechanism for
+> getting a slot number from ACPI, but that should also return a
+> constant value).  The problem is that I don't think the Linux slot
+> number support is very good, so I'm sure there's plenty of stuff
+> that we *should* be able to do that we can't do *yet*.
+
+Mh, I understand. Let's say that I have time to spend on this problem 
+(I do not know) and contributing to the PCI subsystem. How many 
+differences are there between 3.2, 3.6, 3.16/next? We are using 
+3.2/3.6 at the moment, but probably you should expect that it will 
+work on the last version :)
+
+-- 
+Federico Vaga
