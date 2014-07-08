@@ -1,66 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:11605 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751271AbaGHCLc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 22:11:32 -0400
+Message-ID: <53BB5348.10701@huawei.com>
+Date: Tue, 8 Jul 2014 10:11:20 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20140702111748.GJ18731@arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <1404240214-9804-8-git-send-email-Liviu.Dudau@arm.com> <20140702111748.GJ18731@arm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Sat, 5 Jul 2014 14:04:41 -0500
-Message-ID: <CAL_JsqKWm54MjXC60EWVcxOurza=f2V9fwe2vVROa_Mv-6QnHw@mail.gmail.com>
-Subject: Re: [PATCH v8 7/9] pci: of: Parse and map the IRQ when adding the PCI device.
-To: Will Deacon <will.deacon@arm.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>
+Subject: Re: [PATCH] PCI/MSI: Use irq_get_msi_desc() to simplify code
+References: <1404463406-3484-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1404463406-3484-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 2, 2014 at 6:17 AM, Will Deacon <will.deacon@arm.com> wrote:
-> On Tue, Jul 01, 2014 at 07:43:32PM +0100, Liviu Dudau wrote:
->> Enhance the default implementation of pcibios_add_device() to
->> parse and map the IRQ of the device if a DT binding is available.
->>
->> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->> ---
->>  drivers/pci/pci.c | 4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 63a54a3..8e65dc3 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -17,6 +17,7 @@
->>  #include <linux/spinlock.h>
->>  #include <linux/string.h>
->>  #include <linux/log2.h>
->> +#include <linux/of_pci.h>
->>  #include <linux/pci-aspm.h>
->>  #include <linux/pm_wakeup.h>
->>  #include <linux/interrupt.h>
->> @@ -1453,6 +1454,9 @@ EXPORT_SYMBOL(pcim_pin_device);
->>   */
->>  int __weak pcibios_add_device(struct pci_dev *dev)
->>  {
->> +#ifdef CONFIG_OF
->> +     dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->> +#endif
->
-> You could avoid the #ifdef by only assigning dev->irq if
-> of_irq_parse_and_map_pci returned something > 0.
+This patch has been integrate into "[PATCH v3 0/6] Cleanup for MSI" patchset.
 
-Perhaps it could just be unconditional always. Presumably, dev->irq is
-not already set to something valid and setting it to <= 0 should not
-have any consequences.
+On 2014/7/4 16:43, Yijing Wang wrote:
+> Use irq_get_msi_desc() to get MSI irq related msi_desc
+> directly.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/msi.c |   12 +++++-------
+>  1 files changed, 5 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 3bee1ba..f95af2b 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -487,7 +487,6 @@ EXPORT_SYMBOL_GPL(pci_restore_msi_state);
+>  static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
+>  			     char *buf)
+>  {
+> -	struct pci_dev *pdev = to_pci_dev(dev);
+>  	struct msi_desc *entry;
+>  	unsigned long irq;
+>  	int retval;
+> @@ -496,12 +495,11 @@ static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
+>  	if (retval)
+>  		return retval;
+>  
+> -	list_for_each_entry(entry, &pdev->msi_list, list) {
+> -		if (entry->irq == irq) {
+> -			return sprintf(buf, "%s\n",
+> -				       entry->msi_attrib.is_msix ? "msix" : "msi");
+> -		}
+> -	}
+> +	entry = irq_get_msi_desc(irq);
+> +	if (entry)
+> +		return sprintf(buf, "%s\n",
+> +				entry->msi_attrib.is_msix ? "msix" : "msi");
+> +
+>  	return -ENODEV;
+>  }
+>  
+> 
 
-Rob
+
+-- 
+Thanks!
+Yijing
+
