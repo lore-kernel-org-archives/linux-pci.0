@@ -1,121 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f181.google.com ([209.85.216.181]:47757 "EHLO
-	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868AbaGGVNP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 17:13:15 -0400
-Received: by mail-qc0-f181.google.com with SMTP id x13so4411702qcv.26
-        for <linux-pci@vger.kernel.org>; Mon, 07 Jul 2014 14:13:14 -0700 (PDT)
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:62324 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753747AbaGHSYA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 14:24:00 -0400
+Received: by mail-qg0-f54.google.com with SMTP id q107so5379919qgd.41
+        for <linux-pci@vger.kernel.org>; Tue, 08 Jul 2014 11:23:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <113ACA888B71994BB56E5CF3704953486D8E9DFE3C@BGMAIL02.nvidia.com>
-References: <1404198978-26593-1-git-send-email-vidyas@nvidia.com>
- <20140705185736.GD28871@google.com> <20140705190203.GE28871@google.com> <113ACA888B71994BB56E5CF3704953486D8E9DFE3C@BGMAIL02.nvidia.com>
+In-Reply-To: <5283004.YemU4lhtKD@pcbe13110.cern.ch>
+References: <280883016.9onmf0miLq@pcbe13110.cern.ch> <1719046.4xHmiSoxkE@pcbe13110.cern.ch>
+ <CAErSpo5YbaOjqr4obHwekRNwo1K5j0JbE-PYu48k7U90ZpWM0A@mail.gmail.com> <5283004.YemU4lhtKD@pcbe13110.cern.ch>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 7 Jul 2014 15:12:54 -0600
-Message-ID: <CAErSpo5qSy6sEUj-Hu1_ympHUhxLBw6Cf1v_Y6bQ6XqFNmJS8Q@mail.gmail.com>
-Subject: Re: [PATCH v1] PCI: enable ASPM configuration in PCIE POWERSAVE mode
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: "nagananda.chumbalkar@hp.com" <nagananda.chumbalkar@hp.com>,
-	"thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Date: Tue, 8 Jul 2014 12:23:39 -0600
+Message-ID: <CAErSpo5ixtc=n0f56=QvtxYnXumZiao6NMgBVAWpcJH4f7QA4g@mail.gmail.com>
+Subject: Re: PCIe bus enumeration
+To: Federico Vaga <federico.vaga@cern.ch>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"tianyu.lan@intel.com" <tianyu.lan@intel.com>
+	michel.arruat@cern.ch
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 7, 2014 at 12:00 PM, Vidya Sagar <vidyas@nvidia.com> wrote:
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: Sunday, July 06, 2014 12:32 AM
->> To: Vidya Sagar
->> Cc: nagananda.chumbalkar@hp.com; thierry.reding@gmail.com; Stephen
->> Warren; Krishna Thota; linux-pci@vger.kernel.org; linux-
->> kernel@vger.kernel.org; Matthew Garrett; Rafael J. Wysocki
->> Subject: Re: [PATCH v1] PCI: enable ASPM configuration in PCIE POWERSAVE
->> mode
+On Tue, Jul 8, 2014 at 1:15 AM, Federico Vaga <federico.vaga@cern.ch> wrote:
+>> > So, It looks like that some BIOS disable the bridge when there is
+>> > nothing behind it. Why? Power save? :/
 >>
->> [+cc Rafael]
->>
->> On Sat, Jul 05, 2014 at 12:57:36PM -0600, Bjorn Helgaas wrote:
->> > [+cc Matthew]
->> >
->> > On Tue, Jul 01, 2014 at 12:46:18PM +0530, Vidya Sagar wrote:
->> > > commit 1a680b7c moved pcie_aspm_powersave_config_link() out of
->> > > pci_raw_set_power_state() to pci_set_power_state() which would
->> > > enable ASPM. But, with commit db288c9c, which re-introduced the
->> > > following check
->> > > ./drivers/pci/pci.c: pci_set_power_state()
->> > > +   /* Check if we're already there */
->> > > +   if (dev->current_state == state)
->> > > +       return 0;
->> > > in pci_set_power_state(), call to pcie_aspm_powersave_config_link()
->> > > is never made leaving ASPM broken.
->> > > Fix it by not returning from when the above condition is true,
->> > > rather, jump to ASPM configuration code and exit from there eventually.
->> >
->> > Rafael, Matthew, any comments?  We have vacillated on this before and
->> > the web is already pretty tangled.
->> >
->> > Vidya, can you give more details about the bug fixed by this change?
->> > What's the scenario?  Are we resuming and the device is powered up but
->> > ASPM isn't enabled?  Maybe you could collect more details in a
->> > http://bugzilla.kernel.org report?
+>> Could be power savings, or possibly to conserve bus numbers, which
+>> are a limited resource.
 >
-> I've raised a bugzilla bug  https://bugzilla.kernel.org/show_bug.cgi?id=79621 for the same.
-> Scenario here is, when the driver of a particular PCIe device is loaded and when CONFIG_PCIEASPM_POWERSAVE=y, ASPM is expected to get configured by the sub system which is not happening as of today.
-> The reason for this behavior is the 'if' condition that checks for the device's power state and returns if it is already in D0. Ideally, it shouldn't return from there, rather proceed to configure ASPM.
+> what is the maximum number of buses?
 
-Thanks, Vidya.  I'm not really looking for analysis of the code flow,
-since I can work that out myself.  What I *would* like is a complete
-dmesg log and "lspci -vv" output, because I'd like to know what's
-special about this particular device.  We boot with devices powered on
-(in D0) all the time, and most of the time, ASPM is configured
-correctly.  So I want to know what is different about this case.
+256.
+
+>> Well, it's true that it's hard to get constant *bus numbers*, but
+>> it's never really been a good idea to rely on those, because
+>> they're assigned at the discretion of the OS, and there are reasons
+>> why the OS might want to reallocate them, e.g., to accommodate a
+>> deep hot-plugged hierarchy.  If you shift focus to *slot numbers*,
+>> then I think there's a lot more we can do.
+>
+> At this point I'm a little bit confused about the definition "slot
+> numbers" :) You mean the 22, 25, ...
+
+Right.  Bus numbers are under software control, to some degree (as a
+general rule, an x86 BIOS assigns them and Linux leaves them alone,
+but they *can* be changed so they aren't a good thing to rely on).
+The bus number of a root bus is usually determined by hardware or by
+an arch-specific host bridge driver.  The bus number below a PCI-PCI
+bridge is determined by the bridge's "secondary bus number" register,
+which software can change.
+
+Slot numbers are based on the Physical Slot Number in the PCIe Slot
+Capability register.  This is set by some hardware mechanism such as
+pin strapping or a serial EEPROM.  Software can't change it, so you
+can rely on it to be constant.  (There's also a mechanism for getting
+a slot number from ACPI, but that should also return a constant
+value).  The problem is that I don't think the Linux slot number
+support is very good, so I'm sure there's plenty of stuff that we
+*should* be able to do that we can't do *yet*.
 
 Bjorn
-
->> > > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->> > > ---
->> > >  drivers/pci/pci.c | 6 ++++--
->> > >  1 file changed, 4 insertions(+), 2 deletions(-)
->> > >
->> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c index
->> > > 1c8592b..ded24c4 100644
->> > > --- a/drivers/pci/pci.c
->> > > +++ b/drivers/pci/pci.c
->> > > @@ -804,7 +804,7 @@
->> EXPORT_SYMBOL_GPL(__pci_complete_power_transition);
->> > >   */
->> > >  int pci_set_power_state(struct pci_dev *dev, pci_power_t state)  {
->> > > - int error;
->> > > + int error = 0;
->> > >
->> > >   /* bound the state we're entering */
->> > >   if (state > PCI_D3cold)
->> > > @@ -821,7 +821,7 @@ int pci_set_power_state(struct pci_dev *dev,
->> > > pci_power_t state)
->> > >
->> > >   /* Check if we're already there */
->> > >   if (dev->current_state == state)
->> > > -         return 0;
->> > > +         goto config_aspm;
->> > >
->> > >   __pci_start_power_transition(dev, state);
->> > >
->> > > @@ -839,6 +839,8 @@ int pci_set_power_state(struct pci_dev *dev,
->> > > pci_power_t state)
->> > >
->> > >   if (!__pci_complete_power_transition(dev, state))
->> > >           error = 0;
->> > > +
->> > > +config_aspm:
->> > >   /*
->> > >    * When aspm_policy is "powersave" this call ensures
->> > >    * that ASPM is configured.
->> > > --
->> > > 1.8.1.5
->> > >
