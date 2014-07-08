@@ -1,28 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbfkord-smmo03.seg.att.com ([209.65.160.84]:63244 "EHLO
-	nbfkord-smmo03.seg.att.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751223AbaG3KWO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Jul 2014 06:22:14 -0400
-Message-ID: <53D8C750.8010604@solarflare.com>
-Date: Wed, 30 Jul 2014 11:22:08 +0100
-From: Edward Cree <ecree@solarflare.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:61153 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752721AbaGHCHo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 22:07:44 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 1/6] PCI/MSI: MSI cleanup, msi_setup_entry()
+Date: Tue, 8 Jul 2014 10:07:23 +0800
+Message-ID: <1404785243-6040-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: <linux-pci@vger.kernel.org>
-Subject: Re: pci_sriov_set_totalvfs question
-References: <53D7A9FC.3040001@solarflare.com> <1406645502.1011.166.camel@ul30vt.home>
-In-Reply-To: <1406645502.1011.166.camel@ul30vt.home>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29/07/14 15:51, Alex Williamson wrote:
-> I believe this is referring to device_lock(), which should already be
-> held on the PF during probe.  Thanks,
->
-> Alex
->
-I see, thanks for the help.
--Edward
-The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
+Move MSI entry stuff to a new function
+msi_setup_entry(), simplify msi_capability_init()
+code like MSI-X do.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/msi.c |   51 +++++++++++++++++++++++++++++++++------------------
+ 1 files changed, 33 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 50a7e4e..c306883 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -581,6 +581,38 @@ error_attrs:
+ 	return ret;
+ }
+ 
++static struct msi_desc *msi_setup_entry(struct pci_dev *dev)
++{
++	u16 control;
++	struct msi_desc *entry;
++
++	/* MSI Entry Initialization */
++	entry = alloc_msi_entry(dev);
++	if (!entry)
++		return NULL;
++
++	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
++
++	entry->msi_attrib.is_msix	= 0;
++	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
++	entry->msi_attrib.entry_nr	= 0;
++	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
++	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
++	entry->msi_attrib.pos		= dev->msi_cap;
++	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
++
++	if (control & PCI_MSI_FLAGS_64BIT)
++		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
++	else
++		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
++
++	/* Save the initial mask status */
++	if (entry->msi_attrib.maskbit)
++		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
++
++	return entry;
++}
++
+ /**
+  * msi_capability_init - configure device's MSI capability structure
+  * @dev: pointer to the pci_dev data structure of MSI device function
+@@ -596,32 +628,15 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ {
+ 	struct msi_desc *entry;
+ 	int ret;
+-	u16 control;
+ 	unsigned mask;
+ 
+ 	msi_set_enable(dev, 0);	/* Disable MSI during set up */
+ 
+-	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+-	/* MSI Entry Initialization */
+-	entry = alloc_msi_entry(dev);
++	entry = msi_setup_entry(dev);
+ 	if (!entry)
+ 		return -ENOMEM;
+ 
+-	entry->msi_attrib.is_msix	= 0;
+-	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
+-	entry->msi_attrib.entry_nr	= 0;
+-	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
+-	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
+-	entry->msi_attrib.pos		= dev->msi_cap;
+-	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
+-
+-	if (control & PCI_MSI_FLAGS_64BIT)
+-		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
+-	else
+-		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
+ 	/* All MSIs are unmasked by default, Mask them all */
+-	if (entry->msi_attrib.maskbit)
+-		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
+ 	mask = msi_mask(entry->msi_attrib.multi_cap);
+ 	msi_mask_irq(entry, mask, mask);
+ 
+-- 
+1.7.1
+
+
