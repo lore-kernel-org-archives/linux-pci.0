@@ -1,147 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:50421 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753416AbaGHKDi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 06:03:38 -0400
-Date: Tue, 8 Jul 2014 11:03:32 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Rob Herring <robherring2@gmail.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v8 4/9] pci: OF: Fix the conversion of IO ranges into IO
- resources.
-Message-ID: <20140708100332.GW6501@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <6122131.ozzYjjjRQi@wuerfel>
- <20140707111133.GP6501@e106497-lin.cambridge.arm.com>
- <201407072322.00990.arnd@arndb.de>
+Received: from mx1.redhat.com ([209.132.183.28]:3343 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754226AbaGHMZa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Jul 2014 08:25:30 -0400
+Date: Tue, 8 Jul 2014 14:26:07 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	linux-s390@vger.kernel.org, "x86@kernel.org" <x86@kernel.org>,
+	xen-devel@lists.xenproject.org,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+Message-ID: <20140708122606.GB6270@dhcp-26-207.brq.redhat.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
+ <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
+ <20140702202201.GA28852@google.com>
+ <20140704085741.GA12247@dhcp-26-207.brq.redhat.com>
+ <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <201407072322.00990.arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 07, 2014 at 10:22:00PM +0100, Arnd Bergmann wrote:
-> On Monday 07 July 2014, Liviu Dudau wrote:
-> > On Sat, Jul 05, 2014 at 09:46:09PM +0100, Arnd Bergmann wrote:
-> > > On Saturday 05 July 2014 14:25:52 Rob Herring wrote:
-> > > > On Tue, Jul 1, 2014 at 1:43 PM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > > > > The ranges property for a host bridge controller in DT describes
-> > > > > the mapping between the PCI bus address and the CPU physical address.
-> > > > > The resources framework however expects that the IO resources start
-> > > > > at a pseudo "port" address 0 (zero) and have a maximum size of IO_SPACE_LIMIT.
-> > > > > The conversion from pci ranges to resources failed to take that into account.
-> > > > 
-> > > > I don't think this change is right. There are 2 resources: the PCI bus
-> > > > addresses and cpu addresses. This function deals with the cpu
-> > > > addresses. Returning pci addresses for i/o and cpu addresses for
-> > > > memory is going to be error prone. We probably need both cpu and pci
-> > > > resources exposed to host controllers.
-> > > > 
-> > > > Making the new function only deal with i/o bus resources and naming it
-> > > > of_pci_range_to_io_resource would be better.
-> > > 
-> > > I think you are correct that this change by itself is will break existing
-> > > drivers that rely on the current behavior of of_pci_range_to_resource,
-> > > but there is also something wrong with the existing implementation:
-> > 
-> > Either I'm very confused or I've managed to confuse everyone else. The I/O
-> > resources described using CPU addresses *are* using "pseudo" port based
-> > addresses (or at least that is my understanding and my reading of the code).
-> > Can you point me to a function that is expecting the IO resource to have
-> > the start address at the physical address of the mapped space?
+On Mon, Jul 07, 2014 at 01:40:48PM -0600, Bjorn Helgaas wrote:
+> >> Can you quantify the benefit of this?  Can't a device already use
+> >> MSI-X to request exactly the number of vectors it can use?  (I know
+> >
+> > A Intel AHCI chipset requires 16 vectors written to MME while advertises
+> > (via AHCI registers) and uses only 6. Even attempt to init 8 vectors results
+> > in device's fallback to 1 (!).
 > 
-> pci_v3_preinit() in arch/arm/mach-integrator/pci_v3.c for instance takes
-> the resource returned by of_pci_range_to_resource and programs the
-> start and size into hardware registers that expect a physical address
-> as far as I can tell.
-> 
-> > I was trying to fix exactly this issue, that you cannot use the resource
-> > structure returned by this function in any call that is expecting an IO
-> > resource.
-> 
-> I looked at the other drivers briefly, and I think you indeed fix the Tegra
-> driver with this but break the integrator driver as mentioned above.
-> The other callers of of_pci_range_to_resource() are apparently not
-> impacted as they recalculate the values they get.
+> Is the fact that it uses only 6 vectors documented in the public spec?
 
-I would argue that integrator version is having broken assumptions. If it would
-try to allocate that IO range or request the resource as returned currently by
-of_pci_range_to_resource (without my patch) it would fail. I know because I did
-the same thing in my host bridge driver and it failed miserably. That's why I
-tried to patch it.
+Yes, it is documented in ICH specs.
 
-I will lay out my argument here and people can tell me if I am wrong:
+> Is this a chipset erratum?  Are there newer versions of the chipset
+> that fix this, e.g., by requesting 8 vectors and using 6, or by also
+> supporting MSI-X?
 
-PCI IO resources (even if they are memory mapped on certain architectures) need
-to emulate the x86 world "port" concept. Why do I think this? Because of this
-structure at the beginning of kernel/resource.c:
+No, this is not an erratum. The value of 8 vectors is reserved and could
+cause undefined results if used.
 
-struct resource ioport_resource = {
-	.name	= "PCI IO",
-	.start	= 0,
-	.end	= IO_SPACE_LIMIT,
-	.flags	= IORESOURCE_IO,
-};
-EXPORT_SYMBOL(ioport_resource);
+> I know this conserves vector numbers.  What does that mean in real
+> user-visible terms?  Are there systems that won't boot because of this
+> issue, and this patch fixes them?  Does it enable bigger
+> configurations, e.g., more I/O devices, than before?
 
-The other resource that people seem to confuse it with is the next one in that
-file:
+Visibly, it ceases logging messages ('ahci 0000:00:1f.2: irq 107 for
+MSI/MSI-X') for IRQs that are not shown in /proc/interrupts later.
 
-struct resource iomem_resource = {
-	.name	= "PCI mem",
-	.start	= 0,
-	.end	= -1,
-	.flags	= IORESOURCE_MEM,
-};
-EXPORT_SYMBOL(iomem_resource);
+No, it does not enable/fix any existing hardware issue I am aware of.
+It just saves a couple of interrupt vectors, as Michael put it (10/16
+to be precise). However, interrupt vectors space is pretty much scarce
+resource on x86 and a risk of exhausting the vectors (and introducing
+quota i.e) has already been raised AFAIR.
 
-Now, there are architecture that override the .start and .end values, but arm
-is not one of those, and mach-integrator doesn't change it either. So one can
-play with the ioport_resource values to move the "port" window wherever he/she
-wants, but it doesn't change the "port access" way of addressing it.
+> Do you know how Windows handles this?  Does it have a similar interface?
 
-If the IO space is memory mapped, then we use the port number, the io_offset
-and the PCI_IOBASE to get to the virtual address that, when accessed, will
-generate the correct addresses on the bus, based on what the host bridge has
-been configured.
+Have no clue, TBH. Can try to investigate if you see it helpful.
 
-This is the current level of my understanding of PCI IO.
+> As you can tell, I'm a little skeptical about this.  It's a fairly big
+> change, it affects the arch interface, it seems to be targeted for
+> only a single chipset (though it's widely used), and we already
+> support a standard solution (MSI-X, reducing the number of vectors
+> requested, or even operating with 1 vector).
 
-Now, I believe Rob has switched entirely to using my series in some test that
-he has run and he hasn't encountered any issues, as long as one remembers in
-the host bridge driver to add the io_base offset to the .start resource. If
-not then I need to patch pci_v3.c.
+I also do not like the fact the arch interface is getting complicated,
+so I happily leave it to your judgement ;) Well, it is low-level and
+hidden from drivers at least.
 
-Best regards,
-Liviu
+Thanks!
 
-> 
-> 	Arnd
-> 
+> Bjorn
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
