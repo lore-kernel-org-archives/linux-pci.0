@@ -1,66 +1,216 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gloria.sntech.de ([95.129.55.99]:39395 "EHLO gloria.sntech.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754541AbaGNOCA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Jul 2014 10:02:00 -0400
-From: Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
-To: suravee.suthikulpanit@amd.com, jason@lakedaemon.net
-Cc: linux-arm-kernel@lists.infradead.org, marc.zyngier@arm.com,
-	mark.rutland@arm.com, devicetree@vger.kernel.org,
-	pawel.moll@arm.com, linux-doc@vger.kernel.org,
-	Catalin.Marinas@arm.com, Harish.Kasiviswanathan@amd.com,
-	linux-kernel@vger.kernel.org, Will.Deacon@arm.com,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	linux-pci@vger.kernel.org, tglx@linutronix.de
-Subject: Re: [PATCH 1/4 V3] irqchip: gic: Add binding probe for ARM GIC400
-Date: Mon, 14 Jul 2014 16:03:15 +0200
-Message-ID: <2932284.F1eaAf8ArJ@diego>
-In-Reply-To: <1404947104-21345-2-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com> <1404947104-21345-2-git-send-email-suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mailout3.samsung.com ([203.254.224.33]:11080 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754242AbaGHMUe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 08:20:34 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Murali Karicheri' <m-karicheri2@ti.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	'Santosh Shilimkar' <santosh.shilimkar@ti.com>,
+	'Russell King' <linux@arm.linux.org.uk>,
+	'Grant Likely' <grant.likely@linaro.org>,
+	'Rob Herring' <robh+dt@kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Pratyush ANAND' <pratyush.anand@st.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	'Marek Vasut' <marex@denx.de>, 'Arnd Bergmann' <arnd@arndb.de>,
+	'Pawel Moll' <pawel.moll@arm.com>,
+	'Mark Rutland' <mark.rutland@arm.com>,
+	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
+	'Kumar Gala' <galak@codeaurora.org>,
+	'Randy Dunlap' <rdunlap@infradead.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1404164720-11066-1-git-send-email-m-karicheri2@ti.com>
+ <1404164720-11066-3-git-send-email-m-karicheri2@ti.com>
+ <2CC2A0A4A178534D93D5159BF3BCB661A17A3E4291@EAPEX1MAIL1.st.com>
+ <53BAD07C.2010302@ti.com>
+In-reply-to: <53BAD07C.2010302@ti.com>
+Subject: Re: [PATCH v3 2/5] PCI: designware: refactor MSI code to work with
+ v3.65 dw hardware
+Date: Tue, 08 Jul 2014 21:20:30 +0900
+Message-id: <000e01cf9aa7$02425030$06c6f090$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, 9. Juli 2014, 18:05:01 schrieb suravee.suthikulpanit@amd.com:
-> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On Tuesday, July 08, 2014 1:53 AM, Murali Karicheri wrote:
+> On 07/07/2014 12:17 AM, Mohit KUMAR DCG wrote:
+> > On Tuesday, July 01, 2014 3:15 AM, Murali Karicheri wrote:
+> >>
+> >> Keystone PCI controller is based on v3.65 version of the DW PCI h/w that
+> >> implements MSI controller registers in application space compared to the
+> >> newer version. This requires updates to the DW core API to support the PCI
+> >> controller driver based on this old DW hardware. Add msi_irq_set()/clear()
+> >> API functions to allow Set/Clear MSI IRQ enable bit in the application register.
+> >> Also the old h/w uses MSI_IRQ register in application register space to raise
+> >> MSI IRQ to the RC from EP. Current code uses the standard mechanism as
+> >> per PCI spec. So add another API get_msi_data() to get the address of this
+> >> register so that common code can be re-used on old h/w.
+> >>
+> >> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+> >>
+> >> CC: Santosh Shilimkar<santosh.shilimkar@ti.com>
+> >> CC: Russell King<linux@arm.linux.org.uk>
+> >> CC: Grant Likely<grant.likely@linaro.org>
+> >> CC: Rob Herring<robh+dt@kernel.org>
+> >> CC: Mohit Kumar<mohit.kumar@st.com>
+> >> CC: Jingoo Han<jg1.han@samsung.com>
+> >> CC: Bjorn Helgaas<bhelgaas@google.com>
+> >> CC: Pratyush Anand<pratyush.anand@st.com>
+> >> CC: Richard Zhu<r65037@freescale.com>
+> >> CC: Kishon Vijay Abraham I<kishon@ti.com>
+> >> CC: Marek Vasut<marex@denx.de>
+> >> CC: Arnd Bergmann<arnd@arndb.de>
+> >> CC: Pawel Moll<pawel.moll@arm.com>
+> >> CC: Mark Rutland<mark.rutland@arm.com>
+> >> CC: Ian Campbell<ijc+devicetree@hellion.org.uk>
+> >> CC: Kumar Gala<galak@codeaurora.org>
+> >> CC: Randy Dunlap<rdunlap@infradead.org>
+> >> CC: Grant Likely<grant.likely@linaro.org>
+> >> ---
+> >>   drivers/pci/host/pcie-designware.c |   50 ++++++++++++++++++++++++++-
+> >> ---------
+> >>   drivers/pci/host/pcie-designware.h |    3 +++
+> >>   2 files changed, 39 insertions(+), 14 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-
+> >> designware.c
+> >> index d8f3af7..905941c 100644
+> >> --- a/drivers/pci/host/pcie-designware.c
+> >> +++ b/drivers/pci/host/pcie-designware.c
+> >> @@ -217,27 +217,47 @@ static int find_valid_pos0(struct pcie_port *pp, int
+> >> msgvec, int pos, int *pos0)
+> >>   	return 0;
+> >>   }
+> >>
+> >> +static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq) {
+> >> +	unsigned int res, bit, val;
+> >> +
+> >> +	res = (irq / 32) * 12;
+> >> +	bit = irq % 32;
+> >> +	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,&val);
+> >> +	val&= ~(1<<  bit);
+> >> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val); }
+> >> +
+> >>   static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
+> >>   			    unsigned int nvec, unsigned int pos)  {
+> >> -	unsigned int i, res, bit, val;
+> >> +	unsigned int i;
+> >>
+> >>   	for (i = 0; i<  nvec; i++) {
+> >>   		irq_set_msi_desc_off(irq_base, i, NULL);
+> >>   		clear_bit(pos + i, pp->msi_irq_in_use);
+> >>   		/* Disable corresponding interrupt on MSI controller */
+> >> -		res = ((pos + i) / 32) * 12;
+> >> -		bit = (pos + i) % 32;
+> >> -		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
+> >> 4,&val);
+> >> -		val&= ~(1<<  bit);
+> >> -		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
+> >> 4, val);
+> >> +		if (pp->ops->msi_clear_irq)
+> >> +			pp->ops->msi_clear_irq(pp, pos + i);
+> >> +		else
+> >> +			dw_pcie_msi_clear_irq(pp, pos + i);
+> >>   	}
+> >>   }
+> >>
+> >> +static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq) {
+> >> +	unsigned int res, bit, val;
+> >> +
+> >> +	res = (irq / 32) * 12;
+> >> +	bit = irq % 32;
+> >> +	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,&val);
+> >> +	val |= 1<<  bit;
+> >> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val); }
+> >> +
+> >>   static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)  {
+> >> -	int res, bit, irq, pos0, pos1, i;
+> >> -	u32 val;
+> >> +	int irq, pos0, pos1, i;
+> >>   	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
+> >>
+> >>   	if (!pp) {
+> >> @@ -281,11 +301,10 @@ static int assign_irq(int no_irqs, struct msi_desc
+> >> *desc, int *pos)
+> >>   		}
+> >>   		set_bit(pos0 + i, pp->msi_irq_in_use);
+> >>   		/*Enable corresponding interrupt in MSI interrupt controller
+> >> */
+> >> -		res = ((pos0 + i) / 32) * 12;
+> >> -		bit = (pos0 + i) % 32;
+> >> -		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
+> >> 4,&val);
+> >> -		val |= 1<<  bit;
+> >> -		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res,
+> >> 4, val);
+> >> +		if (pp->ops->msi_set_irq)
+> >> +			pp->ops->msi_set_irq(pp, pos0 + i);
+> >> +		else
+> >> +			dw_pcie_msi_set_irq(pp, pos0 + i);
+> >>   	}
+> >>
+> >>   	*pos = pos0;
+> >> @@ -353,7 +372,10 @@ static int dw_msi_setup_irq(struct msi_chip *chip,
+> >> struct pci_dev *pdev,
+> >>   	 */
+> >>   	desc->msi_attrib.multiple = msgvec;
+> >>
+> >> -	msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> >> +	if (pp->ops->get_msi_data)
+> >> +		msg.address_lo = pp->ops->get_msi_data(pp);
+> >> +	else
+> >> +		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> >>   	msg.address_hi = 0x0;
+> >>   	msg.data = pos;
+> >>   	write_msi_msg(irq,&msg);
+> >> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-
+> >> designware.h
+> >> index 8121901..387f69e 100644
+> >> --- a/drivers/pci/host/pcie-designware.h
+> >> +++ b/drivers/pci/host/pcie-designware.h
+> >> @@ -67,6 +67,9 @@ struct pcie_host_ops {
+> >>   			unsigned int devfn, int where, int size, u32 val);
+> >>   	int (*link_up)(struct pcie_port *pp);
+> >>   	void (*host_init)(struct pcie_port *pp);
+> >> +	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+> >> +	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+> >> +	u32 (*get_msi_data)(struct pcie_port *pp);
+> >>   };
+> >>
+> >>   int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+> >
+> > - Now MSI specific dw code can be shared b/w old Synopsys controller (ver<  3.70)
+> > and newer controller that standardize the MSI settings inside design ware core itself.
+> >
+> > Jingoo,
+> >
+> > Pls let us know if you have any concern or comment over this.
+> >
+> > Acked-by: Mohit Kumar<mohit.kumar@st.com>
+> >
+> > Regards
+> > Mohit
+> >
+> >> --
+> >> 1.7.9.5
+> >
+> Mohit,
 > 
-> Add new Irqchip declaration for GIC400. This was mentioned in
-> gic binding documentation, but there is not code to support it.
+> Thanks.
 > 
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> Jingoo, could you provide your response or Ack?
 
-The Rockchip RK3288 also contains a GIC400, so I would be very happy if 
-someone could pick up this one patch independently of the rest.
+Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-But in light of Matthias' cortex-a7-gic patch from last week, this one might 
-need an update.
+Best regards,
+Jingoo Han
 
-
-> ---
->  drivers/irqchip/irq-gic.c | 2 ++
->  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
-> index 508b815..ac8f7ea 100644
-> --- a/drivers/irqchip/irq-gic.c
-> +++ b/drivers/irqchip/irq-gic.c
-> @@ -1020,6 +1020,8 @@ gic_of_init(struct device_node *node, struct
-> device_node *parent) gic_cnt++;
->  	return 0;
->  }
-> +
-
-also it looks like the omission of the blank line in the original file is 
-intentional, so I'd guess it shouldn't be added here.
-
-
-> +IRQCHIP_DECLARE(arm_gic_400, "arm,gic-400", gic_of_init);
->  IRQCHIP_DECLARE(cortex_a15_gic, "arm,cortex-a15-gic", gic_of_init);
->  IRQCHIP_DECLARE(cortex_a9_gic, "arm,cortex-a9-gic", gic_of_init);
->  IRQCHIP_DECLARE(msm_8660_qgic, "qcom,msm-8660-qgic", gic_of_init);
-
-
-Thanks
-Heiko
+> Thanks
+> --
 
