@@ -1,41 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:64743 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757724AbaGOW4s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jul 2014 18:56:48 -0400
-Received: by mail-ig0-f176.google.com with SMTP id hn18so3440108igb.15
-        for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2014 15:56:47 -0700 (PDT)
-Subject: [PATCH 1/2] PCI: generic: Fix GPL v2 license string typo
-To: linux-pci@vger.kernel.org, Simon Horman <horms@verge.net.au>,
-	Will Deacon <will.deacon@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thierry Reding <treding@nvidia.com>,
-	linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org
-Date: Tue, 15 Jul 2014 16:56:45 -0600
-Message-ID: <20140715225645.22578.64865.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140715225503.22578.32174.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140715225503.22578.32174.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:62085 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753387AbaGHCJ0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 22:09:26 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Wuyun <wuyun.wu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 5/6] PCI/MSI: Clean up the useless code
+Date: Tue, 8 Jul 2014 10:09:08 +0800
+Message-ID: <1404785348-2036-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The proper MODULE_LICENSE() string for the GPL v2 is "GPL v2", not "GPLv2".
+Clean up the useless code in __pci_restore_msix_state().
 
-Based-on-work-by: Thierry Reding <treding@nvidia.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/host/pci-host-generic.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/msi.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 44fe6aa6a43f..3d2076f59911 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -385,4 +385,4 @@ module_platform_driver(gen_pci_driver);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 7f803e9..3bee1ba 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -463,7 +463,6 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 	if (!dev->msix_enabled)
+ 		return;
+ 	BUG_ON(list_empty(&dev->msi_list));
+-	entry = list_first_entry(&dev->msi_list, struct msi_desc, list);
  
- MODULE_DESCRIPTION("Generic PCI host driver");
- MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
--MODULE_LICENSE("GPLv2");
-+MODULE_LICENSE("GPL v2");
+ 	/* route the table */
+ 	pci_intx_for_msi(dev, 0);
+-- 
+1.7.1
+
 
