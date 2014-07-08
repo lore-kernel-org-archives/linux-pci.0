@@ -1,183 +1,181 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f172.google.com ([209.85.160.172]:41024 "EHLO
-	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932723AbaGVWfe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jul 2014 18:35:34 -0400
-Received: by mail-yk0-f172.google.com with SMTP id 10so247929ykt.17
-        for <linux-pci@vger.kernel.org>; Tue, 22 Jul 2014 15:35:33 -0700 (PDT)
-Date: Tue, 22 Jul 2014 16:35:27 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 7 Jul 2014 18:59:54 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
 	Jingoo Han <jg1.han@samsung.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v7 4/5] PCI: add PCI controller for keystone PCIe h/w
-Message-ID: <20140722223527.GA27965@google.com>
-References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
- <1405961925-27248-5-git-send-email-m-karicheri2@ti.com>
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140708005954.GC22939@google.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1405961925-27248-5-git-send-email-m-karicheri2@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 21, 2014 at 12:58:44PM -0400, Murali Karicheri wrote:
-> keystone PCIe controller is based on v3.65 version of the
-> designware h/w. Main differences are
-> 	1. No ATU support
-> 	2. Legacy and MSI irq functions are implemented in
-> 	   application register space
-> 	3. MSI interrupts are multiplexed over 8 IRQ lines to the Host
-> 	   side.
-> All of the Application register space handing code are organized into
-> pci-keystone-dw.c and the functions are called from pci-keystone.c
-> to implement PCI controller driver. Also add necessary DT documentation
-> for the driver.
+On Tue, Jul 01, 2014 at 07:43:31PM +0100, Liviu Dudau wrote:
+> Make it easier to discover the domain number of a bus by storing
+> the number in pci_host_bridge for the root bus. Several architectures
+> have their own way of storing this information, so it makes sense
+> to try to unify the code. While at this, add a new function that
+> creates a root bus in a given domain and make pci_create_root_bus()
+> a wrapper around this function.
+
+"While at this" is always a good clue that maybe something should be
+split into a separate patch :)  This is a very good example, since it
+adds a new interface that deserves its own changelog.
+
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+> ---
+>  drivers/pci/probe.c | 41 +++++++++++++++++++++++++++++++++--------
+>  include/linux/pci.h |  4 ++++
+>  2 files changed, 37 insertions(+), 8 deletions(-)
 > 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> Acked-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
-> ...
-
-> +++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-> ...
-
-> +Note for PCI driver usage
-> +=========================
-> +Driver requires pci=pcie_bus_perf in the bootargs for proper functioning.
-
-Whoa, why is this?  Special boot args should not be required.
-
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 21df477..f8bc475 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -46,4 +46,9 @@ config PCI_HOST_GENERIC
->  	  Say Y here if you want to support a simple generic PCI host
->  	  controller, such as the one emulated by kvmtool.
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 2c92662..abf5e82 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1748,8 +1748,9 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+>  {
+>  }
 >  
-> +config PCI_KEYSTONE
-> +	bool "TI Keystone PCIe controller"
-> +	depends on ARCH_KEYSTONE
-> +	select PCIE_DW
-> +	select PCIEPORTBUS
+> -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> +struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
+> +		int domain, int bus, struct pci_ops *ops, void *sysdata,
+> +		struct list_head *resources)
 
-It'd be nice to have some help text here.  I know, not everybody else does.
+I don't think we should do it this way; this makes it possible to have a
+host bridge where "bridge->domain_nr != pci_domain_nr(bridge->bus)".
 
-> +++ b/drivers/pci/host/pci-keystone-dw.c
-> ...
-> +void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie , int offset)
-> +{
-> +	struct pcie_port *pp = &ks_pcie->pp;
-> +	u32 pending, vector;
-> +	int src, virq;
-> +
-> +	pending = readl(ks_pcie->va_app_base + MSI0_IRQ_STATUS + (offset << 4));
+I wonder if it would help to make a weak pci_domain_nr() function that
+returns "bridge->domain_nr".  Then each arch could individually drop its
+pci_domain_nr() definition as it was converted, e.g., something like this:
 
-Blank line here (before the block comment).
+  - Convert every arch pci_domain_nr() from a #define to a non-inline
+    function
+  - Add bridge.domain_nr, initialized from pci_domain_nr()
+  - Add a weak generic pci_domain_nr() that returns bridge.domain_nr
+  - Add a way to create a host bridge in a specified domain, so we can
+    initialize bridge.domain_nr without using pci_domain_nr()
+  - Convert each arch to use the new creation mechanism and drop its
+    pci_domain_nr() implementation
 
-> +	/*
-> +	 * MSI0, Status bit 0-3 shows vectors 0, 8, 16, 24, MSI1 status bit
-> +	 * shows 1, 9, 17, 25 and so forth
-> +	 */
-> +	for (src = 0; src < 4; src++) {
-> +		if (BIT(src) & pending) {
-> +			vector = offset + (src << 3);
-> +			virq = irq_linear_revmap(pp->irq_domain, vector);
-> +			dev_dbg(pp->dev,
-> +				"irq: bit %d, vector %d, virq %d\n",
-> +				 src, vector, virq);
-> +			generic_handle_irq(virq);
-> +		}
+>  {
+>  	int error;
+>  	struct pci_host_bridge *bridge;
+> @@ -1762,27 +1763,31 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  
+>  	bridge = pci_alloc_host_bridge();
+>  	if (!bridge)
+> -		return NULL;
+> +		return ERR_PTR(-ENOMEM);
+>  
+>  	bridge->dev.parent = parent;
+>  	bridge->dev.release = pci_release_host_bridge_dev;
+> +	bridge->domain_nr = domain;
+>  
+>  	b = pci_alloc_bus();
+> -	if (!b)
+> +	if (!b) {
+> +		error = -ENOMEM;
+>  		goto err_out;
 > +	}
+>  
+>  	b->sysdata = sysdata;
+>  	b->ops = ops;
+>  	b->number = b->busn_res.start = bus;
+> -	b2 = pci_find_bus(pci_domain_nr(b), bus);
+> +	b2 = pci_find_bus(bridge->domain_nr, bus);
+>  	if (b2) {
+>  		/* If we already got to this bus through a different bridge, ignore it */
+>  		dev_dbg(&b2->dev, "bus already known\n");
+> +		error = -EEXIST;
+>  		goto err_bus_out;
+>  	}
+>  
+>  	bridge->bus = b;
+> -	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> +	dev_set_name(&bridge->dev, "pci%04x:%02x", bridge->domain_nr, bus);
+>  	error = pcibios_root_bridge_prepare(bridge);
+>  	if (error)
+>  		goto err_out;
+> @@ -1801,7 +1806,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  
+>  	b->dev.class = &pcibus_class;
+>  	b->dev.parent = b->bridge;
+> -	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
+> +	dev_set_name(&b->dev, "%04x:%02x", bridge->domain_nr, bus);
+>  	error = device_register(&b->dev);
+>  	if (error)
+>  		goto class_dev_reg_err;
+> @@ -1851,7 +1856,27 @@ err_bus_out:
+>  	kfree(b);
+>  err_out:
+>  	kfree(bridge);
+> -	return NULL;
+> +	return ERR_PTR(error);
 > +}
 > +
-> ...
-
-> +static void __iomem *ks_pcie_cfg_setup(struct keystone_pcie *ks_pcie, u8 bus,
-> +					unsigned int devfn)
+> +struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> +		struct pci_ops *ops, void *sysdata, struct list_head *resources)
 > +{
-> +	u8 device = PCI_SLOT(devfn), function = PCI_FUNC(devfn);
-> +	struct pcie_port *pp = &ks_pcie->pp;
-> +	u32 regval;
+> +	int domain_nr;
+> +	struct pci_bus *b = pci_alloc_bus();
+> +	if (!b)
+> +		return NULL;
 > +
-> +	if (bus == 0)
-> +		return pp->dbi_base;
+> +	b->sysdata = sysdata;
+> +	domain_nr = pci_domain_nr(b);
+> +	kfree(b);
 > +
-> +	regval = (bus << 16) | (device << 8) | function;
-> +	/*
-> +	 * Since Bus#1 will be a virtual bus, we need to have TYPE0
-> +	 * access only.
-> +	 * TYPE 1
-> +	 */
-> +	if (bus != 1)
-> +		regval |= BIT(24);
+> +	b = pci_create_root_bus_in_domain(parent, domain_nr, bus,
+> +				ops, sysdata, resources);
+> +	if (IS_ERR(b))
+> +		return NULL;
 > +
-> +	writel(regval, ks_pcie->va_app_base + CFG_SETUP);
-> +	return pp->va_cfg0_base;
-> +}
-> +
-> +int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-> +		unsigned int devfn, int where, int size, u32 *val)
-> +{
-> +	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
-> +	u8 bus_num = bus->number;
-> +	void __iomem *addr;
-> +	int ret;
-> +
-> +	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
-> +	ret = dw_pcie_cfg_read(addr + (where & ~0x3), where, size, val);
-
-This *looks* like it needs a lock to protect against concurrent
-ks_pcie_cfg_setup() users, since it writes a register.
-
-> +
-> +	return ret;
-
-Please use the same style as in ks_dw_pcie_wr_other_conf(), i.e., get rid
-of "ret".
-
-> +}
-> +
-> +int ks_dw_pcie_wr_other_conf(struct pcie_port *pp,
-> +		struct pci_bus *bus, unsigned int devfn, int where,
-> +		int size, u32 val)
-> +{
-> +	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
-> +	u8 bus_num = bus->number;
-> +	void __iomem *addr;
-> +
-> +	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
-> +
-> +	return dw_pcie_cfg_write(addr + (where & ~0x3), where, size, val);
-> +}
-
-> +++ b/drivers/pci/host/pci-keystone.c
-> ...
-
-> +static struct platform_driver ks_pcie_driver __refdata = {
-
-Why does this need to be __refdata?  There are no other occurrences in
-drivers/pci.
-
-> +	.probe  = ks_pcie_probe,
-> +	.remove = __exit_p(ks_pcie_remove),
-> +	.driver = {
-> +		.name	= "keystone-pcie",
-> +		.owner	= THIS_MODULE,
-> +		.of_match_table = of_match_ptr(ks_pcie_of_match),
-> +	},
-> +};
-
-Bjorn
+> +	return b;
+>  }
+>  
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 466bcd1..7e7b939 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -401,6 +401,7 @@ struct pci_host_bridge_window {
+>  struct pci_host_bridge {
+>  	struct device dev;
+>  	struct pci_bus *bus;		/* root bus */
+> +	int domain_nr;
+>  	struct list_head windows;	/* pci_host_bridge_windows */
+>  	void (*release_fn)(struct pci_host_bridge *);
+>  	void *release_data;
+> @@ -769,6 +770,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  				    struct pci_ops *ops, void *sysdata,
+>  				    struct list_head *resources);
+> +struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
+> +			int domain, int bus, struct pci_ops *ops,
+> +			void *sysdata, struct list_head *resources);
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+>  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+>  void pci_bus_release_busn_res(struct pci_bus *b);
+> -- 
+> 2.0.0
+> 
