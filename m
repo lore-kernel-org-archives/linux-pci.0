@@ -1,52 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0187.outbound.protection.outlook.com ([207.46.163.187]:48284
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756571AbaGIXFP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Jul 2014 19:05:15 -0400
-From: <suravee.suthikulpanit@amd.com>
-To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
-	<jason@lakedaemon.net>
-CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
-	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
-	<Harish.Kasiviswanathan@amd.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH 1/4 V3] irqchip: gic: Add binding probe for ARM GIC400
-Date: Wed, 9 Jul 2014 18:05:01 -0500
-Message-ID: <1404947104-21345-2-git-send-email-suravee.suthikulpanit@amd.com>
-In-Reply-To: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from mail-ve0-f180.google.com ([209.85.128.180]:57101 "EHLO
+	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300AbaGHFiW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 01:38:22 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E4639@EAPEX1MAIL1.st.com>
+References: <cover.1397555158.git.mohit.kumar@st.com>
+	<2CC2A0A4A178534D93D5159BF3BCB6619B94997E2B@EAPEX1MAIL1.st.com>
+	<20140522113119.GA2646@pratyush-vbox>
+	<8677743.Bty96DiF3F@amdc1032>
+	<2CC2A0A4A178534D93D5159BF3BCB661A17A3E45ED@EAPEX1MAIL1.st.com>
+	<CAOh2x=nGuFNa2vgFv+3j3B6WoHb2EXg+K47Vh4OUFUHS9a7peg@mail.gmail.com>
+	<2CC2A0A4A178534D93D5159BF3BCB661A17A3E4639@EAPEX1MAIL1.st.com>
+Date: Tue, 8 Jul 2014 11:08:21 +0530
+Message-ID: <CAOh2x=naoa8a1v7Pk+Qv-Fha34ezp6OqBXVwsh_p=guCZgXFrA@mail.gmail.com>
+Subject: Re: [PATCH V8 0/9] PCI: Add SPEAr13xx PCie support
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"Arnd Bergmann (arnd@arndb.de)" <arnd@arndb.de>,
+	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mark Nicholson <mark@nicholnet.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On Tue, Jul 8, 2014 at 10:54 AM, Mohit KUMAR DCG <Mohit.KUMAR@st.com> wrote:
+> Pls find attached patches to push through your repo.  These are rebased over the top
+>  of 3.16-rc3.
 
-Add new Irqchip declaration for GIC400. This was mentioned in
-gic binding documentation, but there is not code to support it.
-
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- drivers/irqchip/irq-gic.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
-index 508b815..ac8f7ea 100644
---- a/drivers/irqchip/irq-gic.c
-+++ b/drivers/irqchip/irq-gic.c
-@@ -1020,6 +1020,8 @@ gic_of_init(struct device_node *node, struct device_node *parent)
- 	gic_cnt++;
- 	return 0;
- }
-+
-+IRQCHIP_DECLARE(arm_gic_400, "arm,gic-400", gic_of_init);
- IRQCHIP_DECLARE(cortex_a15_gic, "arm,cortex-a15-gic", gic_of_init);
- IRQCHIP_DECLARE(cortex_a9_gic, "arm,cortex-a9-gic", gic_of_init);
- IRQCHIP_DECLARE(msm_8660_qgic, "qcom,msm-8660-qgic", gic_of_init);
--- 
-1.9.0
-
+git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
+spear/pcie-support-v8
