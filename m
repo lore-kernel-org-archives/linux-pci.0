@@ -1,50 +1,51 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <53C7F389.7010007@ladisch.de>
-Date: Thu, 17 Jul 2014 18:02:17 +0200
-From: Clemens Ladisch <clemens@ladisch.de>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+CC: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: RE: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+Date: Tue, 8 Jul 2014 08:33:17 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1726E211@AcuExch.aculab.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
+ <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
+ <20140702202201.GA28852@google.com>
+ <063D6719AE5E284EB5DD2968C1650D6D1726BF4E@AcuExch.aculab.com>
+ <20140704085816.GB12247@dhcp-26-207.brq.redhat.com>
+ <CAErSpo7QWc35seoMhJA+H1_=MkKWYMdeYG=hT=i1v=iz8d5ezA@mail.gmail.com>
+In-Reply-To: <CAErSpo7QWc35seoMhJA+H1_=MkKWYMdeYG=hT=i1v=iz8d5ezA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>,
-	Guenter Roeck <linux@roeck-us.net>
-CC: Borislav Petkov <bp@alien8.de>, jdelvare@suse.de,
-	rdunlap@infradead.org, bhelgaas@google.com,
-	lm-sensors@lm-sensors.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] hwmon, k10temp: Add support for AMD F15h M60h processor
-References: <1405369388-12729-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <20140714195128.GA25124@pd.tnic> <53C43BDF.2070403@ladisch.de> <20140714203336.GA30926@roeck-us.net> <53C4DB2D.80406@ladisch.de> <53C4EE5C.5020407@roeck-us.net> <53C7EA41.8030907@amd.com>
-In-Reply-To: <53C7EA41.8030907@amd.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Aravind Gopalakrishnan wrote:
-> On 7/15/2014 4:03 AM, Guenter Roeck wrote:
->> On 07/15/2014 12:41 AM, Clemens Ladisch wrote:
->>> Guenter Roeck wrote:
->>>> On Mon, Jul 14, 2014 at 10:21:51PM +0200, Clemens Ladisch wrote:
->>>>> Borislav Petkov wrote:
->>>>>> On Mon, Jul 14, 2014 at 03:23:08PM -0500, Aravind Gopalakrishnan wrote:
->>>>>>> +    if (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model == 0x60) {
->>>>>>> +        pci_bus_write_config_dword(pdev->bus, PCI_DEVFN(0, 0),
->>>>>>> +                       NB_SMU_IND_ADDR, IND_ADDR_OFFSET);
->>>>>>> +        pci_bus_read_config_dword(pdev->bus, PCI_DEVFN(0, 0),
->>>>>>> +                      NB_SMU_IND_DATA, &regval);
->>>>>
->>>>> How do you prevent races with any other code that accesses some indirect
->>>>> register?
->>>
->>> If there actually is any other code; these indirect SMU registers appear
->>> to be mostly undocumented and to be intended to be used by the BIOS.
->>> (Which makes me wonder why the temperature sensor was moved there.)
->>
->> Scary. Does that mean there is a chance they may get used through ACPI ?
->
-> I have been asking internally about this, and looks like it's just a register address change.
-> So we probably don't have to worry about this being used elsewhere..
-
-The conflict is about the SMU index register; the question is whether
-_any_ of these SMU registers is used elsewhere (in a way that could
-happen concurrently).
-
-
-Regards,
-Clemens
+RnJvbTogQmpvcm4gSGVsZ2Fhcw0KLi4uDQo+ID4+IEV2ZW4gaWYgeW91IGRvIHRoYXQsIHlvdSBv
+dWdodCB0byB3cml0ZSB2YWxpZCBpbnRlcnJ1cHQgaW5mb3JtYXRpb24NCj4gPj4gaW50byB0aGUg
+NHRoIHNsb3QgKG1heWJlIHJlcGxpY2F0aW5nIG9uZSBvZiB0aGUgZWFybGllciBpbnRlcnJ1cHRz
+KS4NCj4gPj4gVGhlbiwgaWYgdGhlIGRldmljZSBkb2VzIHJhaXNlIHRoZSAndW5leHBlY3RlZCcg
+aW50ZXJydXB0IHlvdSBkb24ndA0KPiA+PiBnZXQgYSB3cml0ZSB0byBhIHJhbmRvbSBrZXJuZWwg
+bG9jYXRpb24uDQo+ID4NCj4gPiBJIG1pZ2h0IGJlIG1pc3Npbmcgc29tZXRoaW5nLCBidXQgd2Ug
+YXJlIHRhbGtpbmcgb2YgTVNJIGFkZHJlc3Mgc3BhY2UNCj4gPiBoZXJlLCBhcmVuJ3Qgd2U/IEkg
+YW0gbm90IGdldHRpbmcgaG93IHdlIGNvdWxkIGVuZCB1cCB3aXRoIGEgJ3dyaXRlJw0KPiA+IHRv
+IGEgcmFuZG9tIGtlcm5lbCBsb2NhdGlvbiB3aGVuIGEgdW5jbGFpbWVkIE1TSSB2ZWN0b3Igc2Vu
+dC4gV2UgY291bGQNCj4gPiBvbmx5IGV4cGVjdCBhIHNwdXJpb3VzIGludGVycnVwdCBhdCB3b3Jz
+dCwgd2hpY2ggaXMgaGFuZGxlZCBhbmQgcmVwb3J0ZWQuDQo+IA0KPiBZZXMsIHRoYXQncyBob3cg
+SSB1bmRlcnN0YW5kIGl0LiAgV2l0aCBNU0ksIHRoZSBPUyBzcGVjaWZpZXMgdGhlIGENCj4gc2lu
+Z2xlIE1lc3NhZ2UgQWRkcmVzcywgZS5nLiwgYSBMQVBJQyBhZGRyZXNzLCBhbmQgYSBzaW5nbGUg
+TWVzc2FnZQ0KPiBEYXRhIHZhbHVlLCBlLmcuLCBhIHZlY3RvciBudW1iZXIgdGhhdCB3aWxsIGJl
+IHdyaXR0ZW4gdG8gdGhlIExBUElDLg0KPiBUaGUgZGV2aWNlIGlzIHBlcm1pdHRlZCB0byBtb2Rp
+Znkgc29tZSBsb3ctb3JkZXIgYml0cyBvZiB0aGUgTWVzc2FnZQ0KPiBEYXRhIHRvIHNlbmQgb25l
+IG9mIHNldmVyYWwgdmVjdG9yIG51bWJlcnMgKHRoZSBNTUUgdmFsdWUgdGVsbHMgdGhlDQo+IGRl
+dmljZSBob3cgbWFueSBiaXRzIGl0IGNhbiBtb2RpZnkpLg0KPiANCj4gQm90dG9tIGxpbmUsIEkg
+dGhpbmsgYSBzcHVyaW91cyBpbnRlcnJ1cHQgaXMgdGhlIGZhaWx1cmUgd2UnZCBleHBlY3QNCj4g
+aWYgYSBkZXZpY2UgdXNlZCBtb3JlIHZlY3RvcnMgdGhhbiB0aGUgT1MgZXhwZWN0cyBpdCB0by4N
+Cg0KU28geW91IG5lZWQgdG8gdGVsbCB0aGUgZGV2aWNlIHdoZXJlIHRvIHdyaXRlIGluIG9yZGVy
+IHRvIHJhaXNlIHRoZQ0KJ3NwdXJpb3VzIGludGVycnVwdCcuDQoNCglEYXZpZA0KDQo=
