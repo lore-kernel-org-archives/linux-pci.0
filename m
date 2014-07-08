@@ -1,67 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27559 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750774AbaGZIdZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 26 Jul 2014 04:33:25 -0400
-Date: Sat, 26 Jul 2014 09:41:38 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>,
-	iscsi-driver@qlogic.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND 22/23] qla4xxx: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Message-ID: <20140726084137.GL21129@agordeev.usersys.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <0496ccbc0f203afaeeb7758c146b93c2f387684c.1405533479.git.agordeev@redhat.com>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:63780 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753322AbaGHMNV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 08:13:21 -0400
+Date: Tue, 8 Jul 2014 08:13:01 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	rmk+kernel@arm.linux.org.uk, Mark Brown <broonie@kernel.org>,
+	alsa-devel@alsa-project.org,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
+	Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>,
+	Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Alessandro Zummo <a.zummo@towertech.it>,
+	rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>,
+	linux-watchdog@vger.kernel.org
+Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
+Message-ID: <20140708121301.GU23978@titan.lakedaemon.net>
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0496ccbc0f203afaeeb7758c146b93c2f387684c.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 08:05:26PM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+Andrew,
 
-Hi Vikas,
-
-Could you please reveiw this patch?
-
-Thanks!
-
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> Cc: iscsi-driver@qlogic.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Acked-By: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> ---
->  drivers/scsi/qla4xxx/ql4_nx.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+On Sun, Jun 29, 2014 at 10:59:47PM +0200, Andrew Lunn wrote:
+> This patchset removes arch/arm/mach-kirkwood and arch/arm/mach-dove.
+> These SoCs are now supported in arch/arm/mach-mvebu using device tree.
 > 
-> diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-> index 9dbdb4b..7c33658 100644
-> --- a/drivers/scsi/qla4xxx/ql4_nx.c
-> +++ b/drivers/scsi/qla4xxx/ql4_nx.c
-> @@ -4221,7 +4221,7 @@ qla4_8xxx_enable_msix(struct scsi_qla_host *ha)
->  	for (i = 0; i < QLA_MSIX_ENTRIES; i++)
->  		entries[i].entry = qla4_8xxx_msix_entries[i].entry;
->  
-> -	ret = pci_enable_msix(ha->pdev, entries, ARRAY_SIZE(entries));
-> +	ret = pci_enable_msix_exact(ha->pdev, entries, ARRAY_SIZE(entries));
->  	if (ret) {
->  		ql4_printk(KERN_WARNING, ha,
->  		    "MSI-X: Failed to enable support -- %d/%d\n",
-> -- 
-> 1.7.7.6
+> Change the dependencies for a number of drivers, either to use
+> ARCH_MVEBU where the drivers are generic, or MACH_KIRKWOOD and
+> MACH_DOVE where the drivers are specific to a SoC.
 > 
+> 
+> Andrew Lunn (13):
+>   ARM: Kirkwood: Remove mach-kirkwood
+>   ARM: Dove: Remove mach-dove
+>   sound: ASoC: kirkwood: Remove unused drivers
+>   sound: ASoC: kirkwood: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   cpuidle: kirkwood: Replace ARCH_KIRKWOOD dependency
+>   ata: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   thermal: Replace ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   leds: Replace ARCH_KIRKWOOD dependency
+>   PCI: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   phy: Replace ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   rtc: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   watchdog: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   Remove ARCH_DOVE dependency
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Let's just do mach-kirkwood/ removal this time around and we'll
+re-address mach-dove next window.
+
+thx,
+
+Jason.
