@@ -1,91 +1,83 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Date: Tue, 8 Jul 2014 23:48:47 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH] PCI / PM: Make PCIe PME interrupts wake up from "freeze" sleep state
-Date: Mon, 28 Jul 2014 01:08:58 +0200
-Message-ID: <1744442.5aE2TFtgoQ@vostro.rjw.lan>
-In-Reply-To: <3655886.Ih7L6voqVK@vostro.rjw.lan>
-References: <12684812.i3F8JrYCl0@vostro.rjw.lan> <20140724134241.GZ6758@twins.programming.kicks-ass.net> <3655886.Ih7L6voqVK@vostro.rjw.lan>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for
+ pci_host_bridge.
+Message-ID: <20140708224847.GC4980@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com>
+ <20140708005954.GC22939@google.com>
+ <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
+ <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 24, 2014 05:36:28 PM Rafael J. Wysocki wrote:
-> On Thursday, July 24, 2014 03:42:41 PM Peter Zijlstra wrote:
+On Tue, Jul 08, 2014 at 07:41:50PM +0100, Bjorn Helgaas wrote:
+> On Tue, Jul 8, 2014 at 4:46 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > On Tue, Jul 08, 2014 at 01:59:54AM +0100, Bjorn Helgaas wrote:
 > 
-> [...]
+> >> I wonder if it would help to make a weak pci_domain_nr() function that
+> >> returns "bridge->domain_nr".  Then each arch could individually drop its
+> >> pci_domain_nr() definition as it was converted, e.g., something like this:
+> >>
+> >>   - Convert every arch pci_domain_nr() from a #define to a non-inline
+> >>     function
+> >>   - Add bridge.domain_nr, initialized from pci_domain_nr()
+> >>   - Add a weak generic pci_domain_nr() that returns bridge.domain_nr
+> >>   - Add a way to create a host bridge in a specified domain, so we can
+> >>     initialize bridge.domain_nr without using pci_domain_nr()
+> >>   - Convert each arch to use the new creation mechanism and drop its
+> >>     pci_domain_nr() implementation
+> >
+> > I will try to propose a patch implementing this.
 > 
-> > 
-> > So with this patch on:
-> > 
-> >   http://marc.info/?l=3Dlinux-kernel&m=3D140620918218199
-> > 
-> > This will not work on my machine, because aerdrv is requesting the same
-> > irq.
-> > 
-> > Now I've not a f'cking clue what aerdrv is, and whether it too wants
-> > NO_SUSPEND on or not.
-> > 
-> > But if I make it also request NO_SUSPEND it all starts working.
-> 
-> OK, so can you please test the updated patch below?
-> 
-> Rafael
-> 
-> ---
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: PCI / PM: Make PCIe PME interrupts wake up from "freeze" sleep state
-> 
-> The "freeze" sleep state, also known as suspend-to-idle, is entered
-> without taking nonboot CPUs offline, right after devices have been
-> suspended.  It works by waiting for at least one wakeup source object
-> to become "active" as a result of handling a hardware interrupt.
-> 
-> Of course, interrupts supposed to be able to wake up the system from
-> suspend-to-idle cannot be disabled by suspend_device_irqs() and their
-> interrupt handlers must be able to cope with interrupts coming after
-> all devices have been suspended.  In that case, they only need to
-> call __pm_wakeup_event() for a single wakeup source object without
-> trying to access hardware (that will be resumed later as part of
-> the subsequent system resume).
-> 
-> Make PCIe PME interrupts work this way.
-> 
-> Register an additional wakeup source object for each PCIe PME
-> service device.  That object will be used to generate wakeups from
-> suspend-to-idle.
-> 
-> Add IRQF_NO_SUSPEND to PME interrupt flags.  This will make
-> suspend_device_irqs() to ignore PME interrupts, but that's OK,
-> because the PME interrupt handler is suspend-aware anyway and
-> can cope with interrupts coming during system suspend-resume.
-> Unfortunately, that requires the AER service driver to pass
-> IRQF_NO_SUSPEND when requesting its IRQ which may be shared with
-> the PME interrupt and to make that safe, simple suspend/resume
-> routines need to be added to the AER driver.
-> 
-> During system suspend, while suspending the PME service for given
-> port, walk the bus below that port and see if any devices on that
-> bus are configured for wakeup.  If so, do not disable the PME
-> interrupt, but only set a "suspend level" for the service to
-> "wakeup" and make the interrupt handler behave in a special way,
-> which is to call __pm_wakeup_event() with the service's wakeup
-> source object as the first argument whenever the interrupt is
-> triggered.
-> 
-> The "suspend level" is cleared while resuming the PME service.
-> 
-> This change allows Wake-on-LAN to be used for wakeup from
-> suspend-to-idle on my MSI Wind tesbed netbook.
+> I think this is more of an extra credit, cleanup sort of thing.  I
+> don't think it advances your primary goal of (I think) getting arm64
+> PCI support in.  So my advice is to not worry about unifying domain
+> handling until later.
 
-Hi Bjorn,
+Getting arm64 supported *is* my main goal. But like you have stated in your
+review of v7, you wanted to see another architecture converted as a guarantee
+of "genericity" (for lack of a better word) for my patches. The one architecture
+I've set my eyes on is microblaze, and that one uses pci_scan_root_bus()
+rather than pci_create_root_bus() so I don't have any opportunity to pass the
+domain number or any additional info (like the sysdata pointer that we were
+talking about) to the pci_host_bridge structure unless I do this cleanup.
 
-There will be a new version of this, please ignore for now.
+Best regards,
+Liviu
 
-Rafael
+
+> 
+> Bjorn
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
