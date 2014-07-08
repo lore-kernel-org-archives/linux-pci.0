@@ -1,92 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:49863 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750714AbaGDL2O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jul 2014 07:28:14 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Prabhakar Kushwaha <prabhakar@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] arm64: PCI(e) arch support
-Date: Fri, 04 Jul 2014 13:28:09 +0200
-Message-ID: <8557411.iWl9PJdYsS@wuerfel>
-In-Reply-To: <20140704110251.GF6501@e106497-lin.cambridge.arm.com>
-References: <1404422876-1160-1-git-send-email-tinamdar@apm.com> <4342569.JSAyWBcJn2@wuerfel> <20140704110251.GF6501@e106497-lin.cambridge.arm.com>
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:41282 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754571AbaGHSmL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 14:42:11 -0400
+Received: by mail-qg0-f49.google.com with SMTP id f51so5340554qge.8
+        for <linux-pci@vger.kernel.org>; Tue, 08 Jul 2014 11:42:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <1404240214-9804-7-git-send-email-Liviu.Dudau@arm.com> <20140708005954.GC22939@google.com>
+ <20140708104655.GC6501@e106497-lin.cambridge.arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 8 Jul 2014 12:41:50 -0600
+Message-ID: <CAErSpo75ovmGoeSHKJN0nckGDy-0gpn8kLPfHQ79CtcXxhPydw@mail.gmail.com>
+Subject: Re: [PATCH v8 6/9] pci: Introduce a domain number for pci_host_bridge.
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 04 July 2014 12:02:51 Liviu Dudau wrote:
-> > Supporting just one boot loader is of course a bit silly, especially when
-> > you know that people will be using all sorts of boot loaders.
-> 
-> You could also argue that supporting just one kernel is silly as well, but
-> so far I haven't seen too many Linux people complaining that *BSD is not
-> officially supported.
+On Tue, Jul 8, 2014 at 4:46 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Tue, Jul 08, 2014 at 01:59:54AM +0100, Bjorn Helgaas wrote:
 
-I have heard complaints from UEFI people though that want to support
-more than just Linux ;-)
+>> I wonder if it would help to make a weak pci_domain_nr() function that
+>> returns "bridge->domain_nr".  Then each arch could individually drop its
+>> pci_domain_nr() definition as it was converted, e.g., something like this:
+>>
+>>   - Convert every arch pci_domain_nr() from a #define to a non-inline
+>>     function
+>>   - Add bridge.domain_nr, initialized from pci_domain_nr()
+>>   - Add a weak generic pci_domain_nr() that returns bridge.domain_nr
+>>   - Add a way to create a host bridge in a specified domain, so we can
+>>     initialize bridge.domain_nr without using pci_domain_nr()
+>>   - Convert each arch to use the new creation mechanism and drop its
+>>     pci_domain_nr() implementation
+>
+> I will try to propose a patch implementing this.
 
-> It's also a small game of demand and offer: ARM partners that were interested
-> in ARMv8 have been asked which bootloader solution they are interested in,
-> and I guess not enough u-boot supporters made their voices heard. Limited
-> resources leads to limited choices.
+I think this is more of an extra credit, cleanup sort of thing.  I
+don't think it advances your primary goal of (I think) getting arm64
+PCI support in.  So my advice is to not worry about unifying domain
+handling until later.
 
-I think it's rather a question of whether they'd benefit from ARM doing it.
-It's fairly easy to port most of the smaller boot-loaders, and there
-is not much architecture specific code in them.
-
-> > A more interesting aspect of this question is what the kernel can expect
-> > the boot loader to have done with the PCI host bridge when the kernel
-> > is entered.
-> 
-> Indeed. I'm interested in opinions here.
-> 
-> > 
-> > Traditionally, embedded ARM boot loaders have left the PCI host bridge
-> > alone unless they were booting from it, and Linux did all the setup.
-> > With the SBSA class of ARM servers, this is not really practical, and
-> > whatever runs before Linux (typically UEFI) should already set up the
-> > PCI bus and do resource allocation like every other server architecture
-> > does. I would assume that UEFI does this right, and if not we can consider
-> > that a bug.
-> 
-> And at the moment we have UEFI on Juno that can be made SBSA compliant
-> but by default it's not (yes, it *is* a bug).
-
-Is this because of the PCI config space access or something else?
-
-The publically announced version of Juno doesn't have any PCI slots,
-so I guess this is about a future variant, right?
-
-> > However, what do we do about PCI hosts that can be used with different
-> > kinds of systems? Do we assume that they all do PCI resource allocation?
-> > Can we decide this on a per host driver basis, or do we need to introduce
-> > an extension to the PCI DT binding to make that decision?
-> 
-> The PCI code currently should skip the configured devices and only touch
-> the not configured ones. The question is how to detect if the host bridge
-> has been initialised by the firmware or not.
-
-On PowerPC we used to have a per platform flag that defined whether PCI was
-supposed to be initialized by firmware or by the OS, but it makes less
-sense on ARM64 since we try to avoid introducing the concept of platforms
-in too many places.
-
-If we can't rely on the firmware to get it right, I think we don't have
-a choice but to rely on DT information (In the ACPI case, I would definitely
-mandate that the firmware has to get it right). We may also need to deal
-with the case of firmware initializing the PCI host bridge incorrectly,
-though we can try not to do that until we have to.
-
-It should be easy enough to detect the case of a host bridge that has
-not been touched, but that would fail in case of kexec() when it has
-been set up by a previously running kernel.
-
-	Arnd
+Bjorn
