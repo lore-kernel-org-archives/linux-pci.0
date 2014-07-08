@@ -1,101 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from server721-han.de-nserver.de ([85.158.180.102]:36455 "EHLO
-	server721-han.de-nserver.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755428AbaGPIHD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 04:07:03 -0400
-Message-ID: <53C63139.7000608@kristov.de>
-Date: Wed, 16 Jul 2014 10:00:57 +0200
-From: Christoph Schulz <develop@kristov.de>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:34238 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751465AbaGHWYr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 18:24:47 -0400
+Received: by mail-pa0-f53.google.com with SMTP id ey11so8027085pad.40
+        for <linux-pci@vger.kernel.org>; Tue, 08 Jul 2014 15:24:47 -0700 (PDT)
+Date: Tue, 8 Jul 2014 16:24:42 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 1/3] PCI: Fix bus align checking to support more than
+ 8G
+Message-ID: <20140708222442.GA13700@google.com>
+References: <1404420379-20983-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-To: linux-kernel@vger.kernel.org
-CC: linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Robert Resch <fli4l@robert.reschpara.de>
-Subject: [PATCH 1/1] x86: don't exclude low BIOS area when allocating address
- space for non-PCI cards
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1404420379-20983-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christoph Schulz <develop@kristov.de>
+On Thu, Jul 03, 2014 at 01:46:17PM -0700, Yinghai Lu wrote:
+> Use 128G instead.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Commit 30919b0bf356a8ee0ef4f7d38ca8ad99b96820b2 ("x86: avoid low BIOS area when
-allocating address space") moved the test for resource allocations that fall
-within the first 1MB of address space from the PCI-specific path to a generic
-path, such that all resource allocations will avoid this area. However, this
-breaks ISA cards which need to allocate a memory region within the first 1MB.
-An example is the i82365 PCMCIA controller and derivatives like the Ricoh
-RF5C296/396 which map part of the PCMCIA socket memory address space into the
-first 1MB of system memory address space. They do not work anymore as no usable
-memory region exists due to this change:
+I applied this one to pci/resource for v3.17, thanks!
 
-Intel ISA PCIC probe: Ricoh RF5C296/396 ISA-to-PCMCIA at port 0x3e0 ofs 0x00, 2 sockets
-host opts [0]: none
-host opts [1]: none
-ISA irqs (scanned) = 3,4,5,9,10 status change on irq 10
-pcmcia_socket pcmcia_socket1: pccard: PCMCIA card inserted into slot 1
-pcmcia_socket pcmcia_socket0: cs: IO port probe 0xc00-0xcff: excluding 0xcf8-0xcff
-pcmcia_socket pcmcia_socket0: cs: IO port probe 0xa00-0xaff: clean.
-pcmcia_socket pcmcia_socket0: cs: IO port probe 0x100-0x3ff: excluding 0x170-0x177 0x1f0-0x1f7 0x2f8-0x2ff 0x370-0x37f 0x3c0-0x3e7 0x3f0-0x3ff
-pcmcia_socket pcmcia_socket0: cs: memory probe 0x0a0000-0x0affff: excluding 0xa0000-0xaffff
-pcmcia_socket pcmcia_socket0: cs: memory probe 0x0b0000-0x0bffff: excluding 0xb0000-0xbffff
-pcmcia_socket pcmcia_socket0: cs: memory probe 0x0c0000-0x0cffff: excluding 0xc0000-0xcbfff
-pcmcia_socket pcmcia_socket0: cs: memory probe 0x0d0000-0x0dffff: clean.
-pcmcia_socket pcmcia_socket0: cs: memory probe 0x0e0000-0x0effff: clean.
-pcmcia_socket pcmcia_socket0: cs: memory probe 0x60000000-0x60ffffff: clean.
-pcmcia_socket pcmcia_socket0: cs: memory probe 0xa0000000-0xa0ffffff: clean.
-pcmcia_socket pcmcia_socket1: cs: IO port probe 0xc00-0xcff: excluding 0xcf8-0xcff
-pcmcia_socket pcmcia_socket1: cs: IO port probe 0xa00-0xaff: clean.
-pcmcia_socket pcmcia_socket1: cs: IO port probe 0x100-0x3ff: excluding 0x170-0x177 0x1f0-0x1f7 0x2f8-0x2ff 0x370-0x37f 0x3c0-0x3e7 0x3f0-0x3ff
-pcmcia_socket pcmcia_socket1: cs: memory probe 0x0a0000-0x0affff: excluding 0xa0000-0xaffff
-pcmcia_socket pcmcia_socket1: cs: memory probe 0x0b0000-0x0bffff: excluding 0xb0000-0xbffff
-pcmcia_socket pcmcia_socket1: cs: memory probe 0x0c0000-0x0cffff: excluding 0xc0000-0xcbfff
-pcmcia_socket pcmcia_socket1: cs: memory probe 0x0d0000-0x0dffff: clean.
-pcmcia_socket pcmcia_socket1: cs: memory probe 0x0e0000-0x0effff: clean.
-pcmcia_socket pcmcia_socket1: cs: memory probe 0x60000000-0x60ffffff: clean.
-pcmcia_socket pcmcia_socket1: cs: memory probe 0xa0000000-0xa0ffffff: clean.
-pcmcia_socket pcmcia_socket1: cs: memory probe 0x0cc000-0x0effff: excluding 0xe0000-0xeffff
-pcmcia_socket pcmcia_socket1: cs: unable to map card memory!
+I didn't apply [2/3] or [3/3] because the questions I raised earlier
+haven't been resolved.
 
-If filtering out the first 1MB is reverted, everything works as expected.
-
-Signed-off-by: Christoph Schulz <develop@kristov.de>
-Tested-by: Robert Resch <fli4l@robert.reschpara.de>
----
-diff --git a/arch/x86/kernel/resource.c b/arch/x86/kernel/resource.c
-index 2a26819..80eab01 100644
---- a/arch/x86/kernel/resource.c
-+++ b/arch/x86/kernel/resource.c
-@@ -37,10 +37,12 @@ static void remove_e820_regions(struct resource *avail)
- 
- void arch_remove_reservations(struct resource *avail)
- {
--	/* Trim out BIOS areas (low 1MB and high 2MB) and E820 regions */
-+	/*
-+	 * Trim out BIOS area (high 2MB) and E820 regions. We do not remove
-+	 * the low 1MB unconditionally, as this area is needed for some ISA
-+	 * cards requiring a memory range, e.g. the i82365 PCMCIA controller.
-+	 */
- 	if (avail->flags & IORESOURCE_MEM) {
--		if (avail->start < BIOS_END)
--			avail->start = BIOS_END;
- 		resource_clip(avail, BIOS_ROM_BASE, BIOS_ROM_END);
- 
- 		remove_e820_regions(avail);
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index a19ed92..2ae525e 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -162,6 +162,10 @@ pcibios_align_resource(void *data, const struct resource *res,
- 			return start;
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
-+	} else if (res->flags & IORESOURCE_MEM) {
-+		/* The low 1MB range is reserved for ISA cards */
-+		if (start < BIOS_END)
-+			start = BIOS_END;
- 	}
- 	return start;
- }
+> ---
+>  drivers/pci/setup-bus.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -925,7 +925,7 @@ static int pbus_size_mem(struct pci_bus
+>  {
+>  	struct pci_dev *dev;
+>  	resource_size_t min_align, align, size, size0, size1;
+> -	resource_size_t aligns[14];	/* Alignments from 1Mb to 8Gb */
+> +	resource_size_t aligns[18];	/* Alignments from 1Mb to 128Gb */
+>  	int order, max_order;
+>  	struct resource *b_res = find_free_bus_resource(bus,
+>  					mask | IORESOURCE_PREFETCH, type);
