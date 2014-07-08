@@ -1,150 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:35980 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030462AbaGRPTR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Jul 2014 11:19:17 -0400
-Message-ID: <53C93AEC.8040203@ti.com>
-Date: Fri, 18 Jul 2014 11:19:08 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:55636 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751151AbaGHVrK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 17:47:10 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Igor Bezukh <Igor@galilsoft.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: A question about PCI suspend-resume functionallity
+Date: Wed, 09 Jul 2014 00:05:14 +0200
+Message-ID: <4712771.pPjooVqFXc@vostro.rjw.lan>
+In-Reply-To: <CAErSpo5p6qEL3=tcWTYMCQCF08oanc3KTUAOdY9P6=5rxZYNZg@mail.gmail.com>
+References: <1404833913010.27399@galilsoft.com> <CAErSpo5p6qEL3=tcWTYMCQCF08oanc3KTUAOdY9P6=5rxZYNZg@mail.gmail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>
-CC: <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v6 0/5] Add Keystone PCIe controller driver
-References: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1405696469-7172-1-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/18/2014 11:14 AM, Murali Karicheri wrote:
-> This patch series add PCIe controller driver for keystone SoCs. This is
-> based on v4 of the series posted to the mailing list. Keystone PCI controller
-> is based on version 3.65 of the DW hardware. This driver uses the DW core
-> functions to implement the PCI controller driver for keystone.
->
-> Testing:
-> =======
->
-> Testing of the driver is done on TI's K2HK EVM inserted to a Elma blu!eco
-> MicroTCA chassis AMC slot with JumpGen SEM-200 AMC SATA Storage and Dual
-> Ethernet Card Express inserted on another AMC slot. The e1000e driver available
-> on intel's website is patched to the kernel source tree and build. e1000e.ko
-> is dynamically loaded and executed ping and iperf tests to test the
-> functionality.
->
-> Thanks to all of you who have contributed by reviewing and offering valuable
-> comments. If you want me to add your "Reviewed-by", please let me know so that
-> I can add it to the commit log and re-send. Patch 1-3 has Acks from maintainers
-> and I believe this can be merged to upstream branch. Patch 4 is waiting for
-> Ack from DT maintainer. Please provide the same at the earliest.
->
-> Thanks
->
-> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->
-> CC: Russell King<linux@arm.linux.org.uk>
-> CC: Grant Likely<grant.likely@linaro.org>
-> CC: Rob Herring<robh+dt@kernel.org>
-> CC: Mohit Kumar<mohit.kumar@st.com>
-> CC: Jingoo Han<jg1.han@samsung.com>
-> CC: Bjorn Helgaas<bhelgaas@google.com>
-> CC: Pratyush Anand<pratyush.anand@st.com>
-> CC: Richard Zhu<r65037@freescale.com>
-> CC: Kishon Vijay Abraham I<kishon@ti.com>
-> CC: Marek Vasut<marex@denx.de>
-> CC: Arnd Bergmann<arnd@arndb.de>
-> CC: Pawel Moll<pawel.moll@arm.com>
-> CC: Mark Rutland<mark.rutland@arm.com>
-> CC: Ian Campbell<ijc+devicetree@hellion.org.uk>
-> CC: Kumar Gala<galak@codeaurora.org>
-> CC: Randy Dunlap<rdunlap@infradead.org>
-> CC: Grant Likely<grant.likely@linaro.org>
->
-> Changelog:
->
-> v6
->   - Added Ack from Maintainer for patch 3. Patch 1-3 now have the
->     Acks from maintainer and can be merged to upstream branch.
->     Patch 4 is waiting ack from DT maintainer.
-> v5
->   - Rebased to upstream kernel v3.16-rc5
->   - Reworked Patch 3/6 and 4/6 into a single patch based on
->     maintainer comment to use a API callback model to support
->     the v3.65 h/w.
-> v4
->   - Addressed comments against 5/5.
->   - Added a patch 6/6 for Maintainer information
->   - Added couple of Acked-By:
->   - Rebased to latest Linux 3.16-rc4
-> v3
->   - DW application register handling code is now part of
->     Keystone PCI driver. RFC had this code part of Keystone
->     PCI driver, then V1 moved this to a separate file to
->     re-use on other platforms that uses this version of the
->     DW h/w. Then based on comments against v2, this is moved
->     back to Keystone driver.
->   - Keystone SerDes phy driver is removed from this series so that
->     this can be merged independent of that patch
->   - added msi_set_irq()/clear_irq() API's to support Keystone
->
-> V2
->   - Split the designware pcie enhancement patch to multiple
->     patches based on functionality added
->   - Remove the quirk code and add a patch to fix mps/mrss
->     tuning for ARM. Use kernel command line parameter
->     pci=pcie_bus_perf to work with Keystone PCI Controller.
->     Following patch addressed this.
->       [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
->   - Add documentation for device tree bindings
->   - Add separate interrupt controller nodes for MSI and Legacy
->     IRQs and use irq map for legacy IRQ
->   - Use compatibility to identify v3.65 version of the DW hardware
->     and use it to customize the designware common code.
->   - Use reg property for configuration space instead of range
->   - Other minor updates based on code inspection.
->
-> V1
->   - Add an interrupt controller node for Legacy irq chip and use
->     interrupt map/map-mask property to map legacy IRQs A/B/C/D
->   - Add a Phy driver to replace the original serdes driver
->   - Move common application register handling code to a separate
->     file to allow re-use across other platforms that use older
->     DW PCIe h/w
->   - PCI quirk for maximum read request size. Check and override only
->     if the maximum is higher than what controller can handle.
->   - Converted to a module platform driver.
->
-> Murali Karicheri (5):
->    PCI: designware: add rd[wr]_other_conf API
->    PCI: designware: refactor MSI code to work with v3.65 dw hardware
->    PCI: designware: enhance dw_pcie_host_init() to support v3.65 DW
->      hardware
->    PCI: add PCI controller for keystone PCIe h/w
->    PCI: keystone: Update maintainer information
->
->   .../devicetree/bindings/pci/pci-keystone.txt       |   71 +++
->   MAINTAINERS                                        |    7 +
->   drivers/pci/host/Kconfig                           |    5 +
->   drivers/pci/host/Makefile                          |    1 +
->   drivers/pci/host/pci-keystone-dw.c                 |  516 ++++++++++++++++++++
->   drivers/pci/host/pci-keystone.c                    |  385 +++++++++++++++
->   drivers/pci/host/pci-keystone.h                    |   59 +++
->   drivers/pci/host/pcie-designware.c                 |  116 +++--
->   drivers/pci/host/pcie-designware.h                 |    9 +
->   9 files changed, 1133 insertions(+), 36 deletions(-)
->   create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
->   create mode 100644 drivers/pci/host/pci-keystone-dw.c
->   create mode 100644 drivers/pci/host/pci-keystone.c
->   create mode 100644 drivers/pci/host/pci-keystone.h
->
-Bjorn,
+On Tuesday, July 08, 2014 02:47:03 PM Bjorn Helgaas wrote:
+> [+cc linux-pm]
+> 
+> On Tue, Jul 8, 2014 at 9:39 AM, Igor Bezukh <Igor@galilsoft.com> wrote:
+> > Hi,
+> >
+> >
+> > We are testing Intel Gigabit adapter driver (igb) under Fedora 20, kernel 3.14.4 for the following use-case:
+> >
+> > (*) Adapter is connected to the PCIE slot
+> > (*) We put the system under suspend by running pm-suspend from user-space
+> > (*) Remove the adapter from the PCIE slot
+> > (*) Wake up the system
+> >
+> > Currenlty, we got kernel panics and the system got stuck.
+> >
+> > My question is - does the PCI subsystem logic calls the driver remove function when driver resume function returns with error code?
+> >
+> > Or should I implement the call to igb_remove from igb_resume in the Intel driver?
+> 
+> I don't know what the best design is here.  I suspect that when we
+> resume, we should re-enumerate the PCI topology to see if anything
+> changed, but I don't think we do that.  I think there *is* something
+> like that for ACPI -- the BIOS can send a Bus Check notification on
+> resume if it knows something has changed.
 
-I still don't have Ack from DT maintainer against 4/5 and I have send 
-few reminders already and waiting. I have copied Rob to this email. Is 
-there anyone else to be Acked for the DT part? Otherwise, it is ready to 
-be merged. Let me know how it goes.
+In ACPI we wait for system resume to complete and handle the notifications
+then.  Calling .remove() callbacks from drivers during system resume doesn't
+really work, especially if they happen too early (e.g. during the "noirq resume"
+stage).
 
-Thanks
+> But my guess is that if you
+> remove an adapter below a switch that is powered down because the
+> system is suspended, the interrupt we would normally get is lost
+> forever.
+> 
+> It doesn't seem like something that should be solved in the driver,
+> because you could just as easily have *added* a device while
+> suspended, and the core has to re-enumerate to find that.
 
-Murali
+The driver's system resume callbacks need to be able to cope with
+missing devices.
+
+Rafael
+
