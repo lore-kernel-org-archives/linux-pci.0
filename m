@@ -1,44 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:64139 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbaGLMJW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Jul 2014 08:09:22 -0400
-Received: by mail-la0-f51.google.com with SMTP id mc6so1671115lab.10
-        for <linux-pci@vger.kernel.org>; Sat, 12 Jul 2014 05:09:21 -0700 (PDT)
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Add include guard to include/linux/pci_ids.h
-References: <1404993911-10544-1-git-send-email-linux@rasmusvillemoes.dk>
-	<20140710220233.GA21053@google.com>
-Date: Sat, 12 Jul 2014 14:09:18 +0200
-In-Reply-To: <20140710220233.GA21053@google.com> (Bjorn Helgaas's message of
-	"Thu, 10 Jul 2014 16:02:33 -0600")
-Message-ID: <87tx6mzslt.fsf@rasmusvillemoes.dk>
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:50712 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753677AbaGHU1V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 16:27:21 -0400
+Received: by mail-qc0-f178.google.com with SMTP id i17so1470282qcy.37
+        for <linux-pci@vger.kernel.org>; Tue, 08 Jul 2014 13:27:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <3107266.EcOOcRPPM0@harkonnen>
+References: <280883016.9onmf0miLq@pcbe13110.cern.ch> <5283004.YemU4lhtKD@pcbe13110.cern.ch>
+ <CAErSpo5ixtc=n0f56=QvtxYnXumZiao6NMgBVAWpcJH4f7QA4g@mail.gmail.com> <3107266.EcOOcRPPM0@harkonnen>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 8 Jul 2014 14:27:00 -0600
+Message-ID: <CAErSpo7YEiiM1b8Jf1d3Pt4iZXhwNTr18SsSZS15Ekm_LHS03A@mail.gmail.com>
+Subject: Re: PCIe bus enumeration
+To: Federico Vaga <federico.vaga@cern.ch>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	michel.arruat@cern.ch
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
-
-> On Thu, Jul 10, 2014 at 02:05:11PM +0200, Rasmus Villemoes wrote:
->> Adding an include guard frees the preprocessor from reparsing over
->> 2600 #defines in the cases where pci_ids.h is somehow included more
->> than once. This gives a tiny-but-measurable performance improvement
->> when compiling such files.
->> 
->> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+On Tue, Jul 8, 2014 at 1:20 PM, Federico Vaga <federico.vaga@cern.ch> wrote:
+> On Tuesday 08 July 2014 12:23:39 Bjorn Helgaas wrote:
+>> On Tue, Jul 8, 2014 at 1:15 AM, Federico Vaga
+> <federico.vaga@cern.ch> wrote:
+>> >> > So, It looks like that some BIOS disable the bridge when there
+>> >> > is
+>> >> > nothing behind it. Why? Power save? :/
+>> >>
+>> >> Could be power savings, or possibly to conserve bus numbers,
+>> >> which
+>> >> are a limited resource.
+>> >
+>> > what is the maximum number of buses?
+>>
+>> 256.
 >
-> Applied to pci/misc for v3.17, thanks!
+> Well, it is not a small number. I will ask directly to the company who
+> sell this crate and ask them what is going on in the BIOS
+
+Yeah, it's not usually a problem until you get to the really big
+machines.  The BIOS vendor could give you a much better reason; I'm
+only speculating.
+
+>> > At this point I'm a little bit confused about the definition "slot
+>> > numbers" :) You mean the 22, 25, ...
+>>
+>> Right.  Bus numbers are under software control, to some degree (as a
+>> general rule, an x86 BIOS assigns them and Linux leaves them alone,
+>> but they *can* be changed so they aren't a good thing to rely on).
+>> The bus number of a root bus is usually determined by hardware or
+>> by an arch-specific host bridge driver.  The bus number below a
+>> PCI-PCI bridge is determined by the bridge's "secondary bus number"
+>> register, which software can change.
+>>
+>> Slot numbers are based on the Physical Slot Number in the PCIe Slot
+>> Capability register.  This is set by some hardware mechanism such as
+>> pin strapping or a serial EEPROM.  Software can't change it, so you
+>> can rely on it to be constant.  (There's also a mechanism for
+>> getting a slot number from ACPI, but that should also return a
+>> constant value).  The problem is that I don't think the Linux slot
+>> number support is very good, so I'm sure there's plenty of stuff
+>> that we *should* be able to do that we can't do *yet*.
 >
+> Mh, I understand. Let's say that I have time to spend on this problem
+> (I do not know) and contributing to the PCI subsystem. How many
+> differences are there between 3.2, 3.6, 3.16/next? We are using
+> 3.2/3.6 at the moment, but probably you should expect that it will
+> work on the last version :)
 
-Great.
+There are quite a few differences, including a fair amount of work on
+the hotplug drivers.  The problem in this area is that pciehp (the
+PCIe hotplug driver) and acpiphp (the ACPI hotplug driver) both can
+register slot numbers and it's sort of ugly to figure out which one to
+use in a given situation.  Neither can be a loadable module anymore,
+which simplifies things a little bit, but it's still ugly.
 
-One thing I thought about, but which is likely undoable in practice:
-There are only about 800 files which use any of the #defines in
-pci_ids.h, but more than 3000 files include pci.h directly or
-indirectly. Making those 800 include pci_ids.h directly and removing it
-from pci.h could speed up compilation of the other 2200.
-
-Rasmus
+Bjorn
