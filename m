@@ -1,90 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:49783 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932081AbaGKNuo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jul 2014 09:50:44 -0400
-Received: by mail-pd0-f169.google.com with SMTP id ft15so1438033pdb.14
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jul 2014 06:50:44 -0700 (PDT)
-Content-Type: text/plain; charset="utf-8"
+Received: from mout.kundenserver.de ([212.227.17.10]:55738 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752745AbaGHHBj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 03:01:39 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper function.
+Date: Tue, 8 Jul 2014 09:00:44 +0200
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <1404240214-9804-4-git-send-email-Liviu.Dudau@arm.com> <20140708001418.GB22939@google.com>
+In-Reply-To: <20140708001418.GB22939@google.com>
 MIME-Version: 1.0
-To: Viresh Kumar <viresh.kumar@linaro.org>, arnd@linaro.org,
-	olof@lixom.net
-From: Mike Turquette <mturquette@linaro.org>
-In-Reply-To: <08c2b017de1d545e42d97ce911ed913aeba46ca9.1404976058.git.viresh.kumar@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org, spear-devel@list.st.com,
-	b.zolnierkie@samsung.com, bhelgaas@google.com, mark@nicholnet.com,
-	linux-pci@vger.kernel.org,
-	"Pratyush Anand" <pratyush.anand@st.com>,
-	"Viresh Kumar" <viresh.kumar@linaro.org>
-References: <cover.1404976058.git.viresh.kumar@linaro.org>
- <08c2b017de1d545e42d97ce911ed913aeba46ca9.1404976058.git.viresh.kumar@linaro.org>
-Message-ID: <20140711135038.9850.6196@quantum>
-Subject: Re: [PATCH V9 3/7] ARM: SPEAr13xx: Fix pcie clock name
-Date: Fri, 11 Jul 2014 06:50:38 -0700
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201407080900.44882.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Quoting Viresh Kumar (2014-07-10 00:26:34)
-> From: Pratyush Anand <pratyush.anand@st.com>
+On Tuesday 08 July 2014, Bjorn Helgaas wrote:
+> On Tue, Jul 01, 2014 at 07:43:28PM +0100, Liviu Dudau wrote:
+> > +static LIST_HEAD(io_range_list);
+> > +
+> > +/*
+> > + * Record the PCI IO range (expressed as CPU physical address + size).
+> > + * Return a negative value if an error has occured, zero otherwise
+> > + */
+> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
 > 
-> Follow dt clock naming convention for PCIe clocks.
+> I don't understand the interface here.  What's the mapping from CPU
+> physical address to bus I/O port?  For example, I have the following
+> machine in mind:
 > 
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-> Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
-> Cc: Mike Turquette <mturquette@linaro.org>
-> [viresh: fixed logs/cclist]
-> Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+>   HWP0002:00: PCI Root Bridge (domain 0000 [bus 00-1b])
+>   HWP0002:00: memory-mapped IO port space [mem 0xf8010000000-0xf8010000fff]
+>   HWP0002:00: host bridge window [io  0x0000-0x0fff]
+> 
+>   HWP0002:09: PCI Root Bridge (domain 0001 [bus 00-1b])
+>   HWP0002:09: memory-mapped IO port space [mem 0xf8110000000-0xf8110000fff]
+>   HWP0002:09: host bridge window [io  0x1000000-0x1000fff] (PCI address [0x0-0xfff])
+> 
+> The CPU physical memory [mem 0xf8010000000-0xf8010000fff] is translated by
+> the bridge to I/O ports 0x0000-0x0fff on PCI bus 0000:00.  Drivers use,
+> e.g., "inb(0)" to access it.
+> 
+> Similarly, [mem 0xf8110000000-0xf8110000fff] is translated by the second
+> bridge to I/O ports 0x0000-0x0fff on PCI bus 0001:00.  Drivers use
+> "inb(0x1000000)" to access it.
 
-Applied to clk-next.
+I guess you are thinking of the IA64 model here where you keep the virtual
+I/O port numbers in a per-bus lookup table that gets accessed for each
+inb() call. I've thought about this some more, and I believe there are good
+reasons for sticking with the model used on arm32 and powerpc for the
+generic OF implementation.
 
-Regards,
-Mike
+The idea is that there is a single virtual memory range for all I/O port
+mappings and we use the MMU to do the translation rather than computing
+it manually in the inb() implemnetation. The main advantage is that all
+functions used in device drivers to (potentially) access I/O ports
+become trivial this way, which helps for code size and in some cases
+(e.g. SoC-internal registers with a low latency) it may even be performance
+relevant.
 
-> ---
->  drivers/clk/spear/spear1310_clock.c | 6 +++---
->  drivers/clk/spear/spear1340_clock.c | 2 +-
->  2 files changed, 4 insertions(+), 4 deletions(-)
+What this scheme gives you is a set of functions that literally do:
+
+/* architecture specific virtual address */
+#define PCI_IOBASE (void __iomem *)0xabcd00000000000
+
+static inline u32 inl(unsigned long port)
+{
+	return readl(port + PCI_IOBASE);
+}
+
+static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+{
+	return port + PCI_IOBASE;
+}
+
+static inline unsigned int ioread32(void __iomem *p)
+{
+	return readl(p);
+}
+
+Since we want this to work on 32-bit machines, the virtual I/O space has
+to be rather tightly packed, so Liviu's algorithm just picks the next
+available address for each new I/O space.
+
+> pci_register_io_range() seems sort of like it's intended to track the
+> memory-mapped IO port spaces, e.g., [mem 0xf8010000000-0xf8010000fff].
+> But I would think you'd want to keep track of at least the base port
+> number on the PCI bus, too.  Or is that why it's weak?
+
+The PCI bus start address only gets factored in when the window is registered
+with the PCI core in patch 8/9, where we go over all ranges doing
+
++               pci_add_resource_offset(resources, res,
++                               res->start - range.pci_addr);
+
+With Liviu's patch, this can be done in exactly the same way for both
+MMIO and PIO spaces.
+
+> Here's what these look like in /proc/iomem and /proc/ioports (note that
+> there are two resource structs for each memory-mapped IO port space: one
+> IORESOURCE_MEM for the memory-mapped area (used only by the host bridge
+> driver), and one IORESOURCE_IO for the I/O port space (this becomes the
+> parent of a region used by a regular device driver):
 > 
-> diff --git a/drivers/clk/spear/spear1310_clock.c b/drivers/clk/spear/spear1310_clock.c
-> index 65894f7..4daa597 100644
-> --- a/drivers/clk/spear/spear1310_clock.c
-> +++ b/drivers/clk/spear/spear1310_clock.c
-> @@ -742,19 +742,19 @@ void __init spear1310_clk_init(void __iomem *misc_base, void __iomem *ras_base)
->         clk = clk_register_gate(NULL, "pcie_sata_0_clk", "ahb_clk", 0,
->                         SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_0_CLK_ENB,
->                         0, &_lock);
-> -       clk_register_clkdev(clk, NULL, "dw_pcie.0");
-> +       clk_register_clkdev(clk, NULL, "b1000000.pcie");
->         clk_register_clkdev(clk, NULL, "b1000000.ahci");
->  
->         clk = clk_register_gate(NULL, "pcie_sata_1_clk", "ahb_clk", 0,
->                         SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_1_CLK_ENB,
->                         0, &_lock);
-> -       clk_register_clkdev(clk, NULL, "dw_pcie.1");
-> +       clk_register_clkdev(clk, NULL, "b1800000.pcie");
->         clk_register_clkdev(clk, NULL, "b1800000.ahci");
->  
->         clk = clk_register_gate(NULL, "pcie_sata_2_clk", "ahb_clk", 0,
->                         SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_2_CLK_ENB,
->                         0, &_lock);
-> -       clk_register_clkdev(clk, NULL, "dw_pcie.2");
-> +       clk_register_clkdev(clk, NULL, "b4000000.pcie");
->         clk_register_clkdev(clk, NULL, "b4000000.ahci");
->  
->         clk = clk_register_gate(NULL, "sysram0_clk", "ahb_clk", 0,
-> diff --git a/drivers/clk/spear/spear1340_clock.c b/drivers/clk/spear/spear1340_clock.c
-> index fe835c1..5a5c664 100644
-> --- a/drivers/clk/spear/spear1340_clock.c
-> +++ b/drivers/clk/spear/spear1340_clock.c
-> @@ -839,7 +839,7 @@ void __init spear1340_clk_init(void __iomem *misc_base)
->         clk = clk_register_gate(NULL, "pcie_sata_clk", "ahb_clk", 0,
->                         SPEAR1340_PERIP1_CLK_ENB, SPEAR1340_PCIE_SATA_CLK_ENB,
->                         0, &_lock);
-> -       clk_register_clkdev(clk, NULL, "dw_pcie");
-> +       clk_register_clkdev(clk, NULL, "b1000000.pcie");
->         clk_register_clkdev(clk, NULL, "b1000000.ahci");
->  
->         clk = clk_register_gate(NULL, "sysram0_clk", "ahb_clk", 0,
-> -- 
-> 2.0.0.rc2
+>   /proc/iomem:
+>     PCI Bus 0000:00 I/O Ports 00000000-00000fff
+>     PCI Bus 0001:00 I/O Ports 01000000-01000fff
 > 
+>   /proc/ioports:
+>     00000000-00000fff : PCI Bus 0000:00
+>     01000000-01000fff : PCI Bus 0001:00
+
+The only difference I'd expect here is that the last line would make it
+packed more tightly, so it's instead
+
+  /proc/ioports:
+     00000000-00000fff : PCI Bus 0000:00
+     00001000-00001fff : PCI Bus 0001:00
+
+In practice we'd probably have 64KB per host controller, and each of them 
+would be a separate domain. I think we normally don't register the
+IORESOURCE_MEM resource, but I agree it's a good idea and we should
+always do that.
+
+	Arnd
