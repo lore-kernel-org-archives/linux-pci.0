@@ -1,277 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:53090 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751164AbaGTG7P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Jul 2014 02:59:15 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Peter Zijlstra <peterz@infradead.org>
-Subject: [Update][PATCH 1/2] ACPI / PM: Always enable wakeup GPEs when enabling device wakeup
-Date: Sun, 20 Jul 2014 09:17:33 +0200
-Message-ID: <7670400.0LUVFHKPfm@vostro.rjw.lan>
-In-Reply-To: <1617640.X0G82q0eFI@vostro.rjw.lan>
-References: <1907495.agrCMfRsQN@vostro.rjw.lan> <1617640.X0G82q0eFI@vostro.rjw.lan>
+Received: from bear.ext.ti.com ([192.94.94.41]:34837 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753660AbaGIJjF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Jul 2014 05:39:05 -0400
+Message-ID: <53BD0D8D.9000108@ti.com>
+Date: Wed, 9 Jul 2014 15:08:21 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Jingoo Han <jg1.han@samsung.com>, <mohit.kumar@st.com>
+CC: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <grant.likely@linaro.org>,
+	"'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
+	"'Marek Vasut'" <marex@denx.de>, "'Arnd Bergmann'" <arnd@arndb.de>
+Subject: Re: [PATCH 2/3] PCI: designware: use untranslated address while programming
+ ATU
+References: <1403719007-9352-1-git-send-email-kishon@ti.com> <1403719007-9352-3-git-send-email-kishon@ti.com> <53BBE492.4070904@ti.com> <001201cf9aae$f2e080a0$d8a181e0$%han@samsung.com>
+In-Reply-To: <001201cf9aae$f2e080a0$d8a181e0$%han@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Jingoo,
 
-Wakeup GPEs are currently only enabled when setting up devices for
-remote wakeup at run time.  During system-wide transitions they are
-enabled by ACPICA at the very last stage of suspend (before asking
-the BIOS to take over).  Of course, that only works for system
-sleep states supported by ACPI, so in particular it doesn't work
-for the "freeze" sleep state.
+On Tuesday 08 July 2014 06:47 PM, Jingoo Han wrote:
+> On Tuesday, July 08, 2014 9:31 PM, Kishon Vijay Abraham I wrote:
+>>
+>> Hi Mohit, Jingoo,
+>>
+>> On Wednesday 25 June 2014 11:26 PM, Kishon Vijay Abraham I wrote:
+>>> In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
+>>> address. So whenever the cpu issues a read/write request, the 4 most
+>>> significant bits are used by L3 to determine the target controller.
+>>> For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
+>>> the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
+>>> the outbound translation window the *base* should be programmed as 0x000_0000.
+>>> Whenever we try to write to say 0x2000_0000, it will be translated to whatever
+>>> we have programmed in the translation window with base as 0x000_0000.
+>>>
+>>> This is needed when the dt node is modelled something like below
+>>> axi {
+>>> 	compatible = "simple-bus";
+>>> 	#size-cells = <1>;
+>>> 	#address-cells = <1>;
+>>> 	ranges = <0x0        0x20000000 0x10000000 // 28-bit bus
+>>> 		  0x51000000 0x51000000 0x3000>;
+>>> 	pcie@51000000 {
+>>> 		reg = <0x1000 0x2000>, <0x51002000 0x14c>, <0x51000000 0x2000>;
+>>> 		reg-names = "config", "ti_conf", "rc_dbics";
+>>> 		#address-cells = <3>;
+>>> 		#size-cells = <2>;
+>>> 		ranges = <0x81000000 0 0          0x03000 0 0x00010000
+>>> 			  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
+>>> 	};
+>>> };
+>>>
+>>> Here the CPU address for configuration space is 0x20013000 and the controller
+>>> address for configuration space is 0x13000. The controller address should be
+>>> used while programming the ATU (in order for translation to happen properly in
+>>> DRA7xx).
+>>
+>> Are you okay with this patch? Can you give your Reviewed-by/Acked-by?
+> 
+> Sorry, I cannot understand fully what this patch does. :-(
+> However, I have some questions as below.
+> 
+> 1. io_mod_addr
+> The 'io_mod_addr' variable is not used. Then, how about removing
+> 'io_mod_addr' from this patch?
 
-For this reason, modify the ACPI core device PM code to enable wakeup
-GPEs for devices when setting them up for wakeup regardless of whether
-that is remote wakeup at runtime or system wakeup.  That allows the
-same device wakeup setup routine to be used for both runtime PM and
-system-wide PM and makes it possible to reduce code size quite a bit.
+Actually I missed using it in io_outbound(). Will fix it.
+> 
+> 2. ranges
+> In the case of Exynos PCIe, there is no limitation such as 28bit for
+> access. Then, when there is no 'ranges' property in DT file, is there
+> no side effect? I mean the compatibility with other SoC's PCIe drivers.
 
-That should make things like ACPI-based PCI Wake-on-LAN work with
-the "freeze" sleep state among other things.
+It shouldn't break anything. The ranges is used to resolve cpu address while
+adding resources to the device. So in other SoCs it'll use use the parent
+'ranges' which is usually ocp/simple-bus to resolve cpu address. In my case it
+has to use the axi ranges. So other SoCs shouldn't be impacted.
+> 
+> 3. _addr post fix
+> 
+> How about renaming 'cfg0_mod_addr', 'mem_mod_addr' as below?
 
-Tested-on: Toshiba Portege R500
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
+sure.
 
-The acpi_target_sleep_state() check in acpi_wakeup_device() would not cover
-the "freeze" sleep state, so instead use pm_request_resume() for resuming
-the device in there which defers the runtime resume until after system
-suspend-resume is complete.
-
----
- drivers/acpi/device_pm.c |   83 ++++++++++++++++++++---------------------------
- include/acpi/acpi_bus.h  |   11 ------
- 2 files changed, 37 insertions(+), 57 deletions(-)
-
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -600,26 +600,10 @@ int acpi_pm_device_sleep_state(struct de
- }
- EXPORT_SYMBOL(acpi_pm_device_sleep_state);
- 
--#ifdef CONFIG_PM_RUNTIME
--/**
-- * acpi_wakeup_device - Wakeup notification handler for ACPI devices.
-- * @handle: ACPI handle of the device the notification is for.
-- * @event: Type of the signaled event.
-- * @context: Device corresponding to @handle.
-- */
--static void acpi_wakeup_device(acpi_handle handle, u32 event, void *context)
--{
--	struct device *dev = context;
--
--	if (event == ACPI_NOTIFY_DEVICE_WAKE && dev) {
--		pm_wakeup_event(dev, 0);
--		pm_runtime_resume(dev);
--	}
--}
--
- /**
-- * __acpi_device_run_wake - Enable/disable runtime remote wakeup for device.
-- * @adev: ACPI device to enable/disable the remote wakeup for.
-+ * acpi_device_wakeup - Enable/disable wakeup functionality for device.
-+ * @adev: ACPI device to enable/disable wakeup functionality for.
-+ * @target_state: State the system is transitioning into.
-  * @enable: Whether to enable or disable the wakeup functionality.
-  *
-  * Enable/disable the GPE associated with @adev so that it can generate
-@@ -629,7 +613,8 @@ static void acpi_wakeup_device(acpi_hand
-  * Callers must ensure that @adev is a valid ACPI device node before executing
-  * this function.
-  */
--int __acpi_device_run_wake(struct acpi_device *adev, bool enable)
-+static int acpi_device_wakeup(struct acpi_device *adev, u32 target_state,
-+			      bool enable)
- {
- 	struct acpi_device_wakeup *wakeup = &adev->wakeup;
- 
-@@ -637,7 +622,7 @@ int __acpi_device_run_wake(struct acpi_d
- 		acpi_status res;
- 		int error;
- 
--		error = acpi_enable_wakeup_device_power(adev, ACPI_STATE_S0);
-+		error = acpi_enable_wakeup_device_power(adev, target_state);
- 		if (error)
- 			return error;
- 
-@@ -653,6 +638,27 @@ int __acpi_device_run_wake(struct acpi_d
- 	return 0;
- }
- 
-+#ifdef CONFIG_PM_RUNTIME
-+/**
-+ * acpi_wakeup_device - Wakeup notification handler for ACPI devices.
-+ * @handle: ACPI handle of the device the notification is for.
-+ * @event: Type of the signaled event.
-+ * @context: Device corresponding to @handle.
-+ */
-+static void acpi_wakeup_device(acpi_handle handle, u32 event, void *context)
-+{
-+	struct device *dev = context;
-+
-+	if (event == ACPI_NOTIFY_DEVICE_WAKE && dev) {
-+		pm_wakeup_event(dev, 0);
-+		/*
-+		 * Use the PM workqueue to avoid running the runtime resume
-+		 * callback during system suspend which may not be appropriate.
-+		 */
-+		pm_request_resume(dev);
-+	}
-+}
-+
- /**
-  * acpi_pm_device_run_wake - Enable/disable remote wakeup for given device.
-  * @dev: Device to enable/disable the platform to wake up.
-@@ -673,7 +679,7 @@ int acpi_pm_device_run_wake(struct devic
- 		return -ENODEV;
- 	}
- 
--	return __acpi_device_run_wake(adev, enable);
-+	return acpi_device_wakeup(adev, enable, ACPI_STATE_S0);
- }
- EXPORT_SYMBOL(acpi_pm_device_run_wake);
- #else
-@@ -683,20 +689,6 @@ static inline void acpi_wakeup_device(ac
- 
- #ifdef CONFIG_PM_SLEEP
- /**
-- * __acpi_device_sleep_wake - Enable or disable device to wake up the system.
-- * @dev: Device to enable/desible to wake up the system.
-- * @target_state: System state the device is supposed to wake up from.
-- * @enable: Whether to enable or disable @dev to wake up the system.
-- */
--int __acpi_device_sleep_wake(struct acpi_device *adev, u32 target_state,
--			     bool enable)
--{
--	return enable ?
--		acpi_enable_wakeup_device_power(adev, target_state) :
--		acpi_disable_wakeup_device_power(adev);
--}
--
--/**
-  * acpi_pm_device_sleep_wake - Enable or disable device to wake up the system.
-  * @dev: Device to enable/desible to wake up the system from sleep states.
-  * @enable: Whether to enable or disable @dev to wake up the system.
-@@ -716,8 +708,7 @@ int acpi_pm_device_sleep_wake(struct dev
- 		return -ENODEV;
- 	}
- 
--	error = __acpi_device_sleep_wake(adev, acpi_target_system_state(),
--					 enable);
-+	error = acpi_device_wakeup(adev, acpi_target_system_state(), enable);
- 	if (!error)
- 		dev_info(dev, "System wakeup %s by ACPI\n",
- 				enable ? "enabled" : "disabled");
-@@ -775,13 +766,13 @@ int acpi_dev_runtime_suspend(struct devi
- 
- 	remote_wakeup = dev_pm_qos_flags(dev, PM_QOS_FLAG_REMOTE_WAKEUP) >
- 				PM_QOS_FLAGS_NONE;
--	error = __acpi_device_run_wake(adev, remote_wakeup);
-+	error = acpi_device_wakeup(adev, ACPI_STATE_S0, remote_wakeup);
- 	if (remote_wakeup && error)
- 		return -EAGAIN;
- 
- 	error = acpi_dev_pm_low_power(dev, adev, ACPI_STATE_S0);
- 	if (error)
--		__acpi_device_run_wake(adev, false);
-+		acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 
- 	return error;
- }
-@@ -804,7 +795,7 @@ int acpi_dev_runtime_resume(struct devic
- 		return 0;
- 
- 	error = acpi_dev_pm_full_power(adev);
--	__acpi_device_run_wake(adev, false);
-+	acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 	return error;
- }
- EXPORT_SYMBOL_GPL(acpi_dev_runtime_resume);
-@@ -860,13 +851,13 @@ int acpi_dev_suspend_late(struct device
- 
- 	target_state = acpi_target_system_state();
- 	wakeup = device_may_wakeup(dev);
--	error = __acpi_device_sleep_wake(adev, target_state, wakeup);
-+	error = acpi_device_wakeup(adev, target_state, wakeup);
- 	if (wakeup && error)
- 		return error;
- 
- 	error = acpi_dev_pm_low_power(dev, adev, target_state);
- 	if (error)
--		__acpi_device_sleep_wake(adev, ACPI_STATE_UNKNOWN, false);
-+		acpi_device_wakeup(adev, ACPI_STATE_UNKNOWN, false);
- 
- 	return error;
- }
-@@ -889,7 +880,7 @@ int acpi_dev_resume_early(struct device
- 		return 0;
- 
- 	error = acpi_dev_pm_full_power(adev);
--	__acpi_device_sleep_wake(adev, ACPI_STATE_UNKNOWN, false);
-+	acpi_device_wakeup(adev, ACPI_STATE_UNKNOWN, false);
- 	return error;
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resume_early);
-@@ -1052,7 +1043,7 @@ int acpi_dev_pm_attach(struct device *de
- 	dev->pm_domain = &acpi_general_pm_domain;
- 	if (power_on) {
- 		acpi_dev_pm_full_power(adev);
--		__acpi_device_run_wake(adev, false);
-+		acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 	}
- 	return 0;
- }
-@@ -1086,7 +1077,7 @@ void acpi_dev_pm_detach(struct device *d
- 			 */
- 			dev_pm_qos_hide_latency_limit(dev);
- 			dev_pm_qos_hide_flags(dev);
--			__acpi_device_run_wake(adev, false);
-+			acpi_device_wakeup(adev, ACPI_STATE_S0, false);
- 			acpi_dev_pm_low_power(dev, adev, ACPI_STATE_S0);
- 		}
- 	}
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -532,13 +532,8 @@ static inline int acpi_pm_device_sleep_s
- #endif
- 
- #ifdef CONFIG_PM_RUNTIME
--int __acpi_device_run_wake(struct acpi_device *, bool);
- int acpi_pm_device_run_wake(struct device *, bool);
- #else
--static inline int __acpi_device_run_wake(struct acpi_device *adev, bool en)
--{
--	return -ENODEV;
--}
- static inline int acpi_pm_device_run_wake(struct device *dev, bool enable)
- {
- 	return -ENODEV;
-@@ -546,14 +541,8 @@ static inline int acpi_pm_device_run_wak
- #endif
- 
- #ifdef CONFIG_PM_SLEEP
--int __acpi_device_sleep_wake(struct acpi_device *, u32, bool);
- int acpi_pm_device_sleep_wake(struct device *, bool);
- #else
--static inline int __acpi_device_sleep_wake(struct acpi_device *adev,
--					   u32 target_state, bool enable)
--{
--	return -ENODEV;
--}
- static inline int acpi_pm_device_sleep_wake(struct device *dev, bool enable)
- {
- 	return -ENODEV;
-
+Thanks
+Kishon
