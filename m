@@ -1,83 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f49.google.com ([209.85.192.49]:46154 "EHLO
-	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751847AbaHADvO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jul 2014 23:51:14 -0400
-Received: by mail-qg0-f49.google.com with SMTP id j107so5190434qga.36
-        for <linux-pci@vger.kernel.org>; Thu, 31 Jul 2014 20:51:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <alpine.LFD.2.03.1407311500570.16821@solarflare.com>
-References: <53D9288B.5030302@solarflare.com>
-	<53D93407.8040308@redhat.com>
-	<53D93848.7070203@solarflare.com>
-	<53D9602A.4010406@intel.com>
-	<53DA3180.5040302@solarflare.com>
-	<alpine.LFD.2.03.1407311500570.16821@solarflare.com>
-Date: Fri, 1 Aug 2014 11:51:13 +0800
-Message-ID: <CABawtvPwxovKV==8RVCL1OcsdfnZDDjr=d1uYp-A=bAzYbmKww@mail.gmail.com>
-Subject: Re: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-From: Ethan Zhao <ethan.kernel@gmail.com>
-To: Edward Cree <ecree@solarflare.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Don Dutile <ddutile@redhat.com>,
+Received: from mout.kundenserver.de ([212.227.17.10]:56064 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754901AbaGIIcS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 04:32:18 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [PATCH v8 4/9] pci: OF: Fix the conversion of IO ranges into IO resources.
+Date: Wed, 9 Jul 2014 10:31:50 +0200
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Rob Herring <robherring2@gmail.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <201407072322.00990.arnd@arndb.de> <20140708100332.GW6501@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20140708100332.GW6501@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201407091031.50402.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Though I like this patch, it shows direct style, but it will change
-the meaning of a function not mentioned here.
+On Tuesday 08 July 2014, Liviu Dudau wrote:
+> On Mon, Jul 07, 2014 at 10:22:00PM +0100, Arnd Bergmann wrote:
+> > 
+> > I looked at the other drivers briefly, and I think you indeed fix the Tegra
+> > driver with this but break the integrator driver as mentioned above.
+> > The other callers of of_pci_range_to_resource() are apparently not
+> > impacted as they recalculate the values they get.
+> 
+> I would argue that integrator version is having broken assumptions. If it would
+> try to allocate that IO range or request the resource as returned currently by
+> of_pci_range_to_resource (without my patch) it would fail. I know because I did
+> the same thing in my host bridge driver and it failed miserably. That's why I
+> tried to patch it.
 
-  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+The integrator code was just introduced and the reason for how it does things
+is the way that of_pci_range_to_resource() works today. We tried to cope with
+it and not change the existing behavior in order to not break any other drivers.
 
-So far seems no driver call pci_sriov_set_totalvfs() with numvfs = 0
-and the patch will change the behavior of the drivers, but it will
-definitely change the test cases and documents related to IOV.
+It's certainly not fair to call the integrator version broken, it just works
+around the common code having a quirky interface. We should probably have
+done of_pci_range_to_resource better than it is today (I would have argued
+for it to return an IORESOURCE_MEM with the CPU address), but it took long
+enough to get that merged and I was sick of arguing about it.
 
-Thanks,
-Ethan
+> If the IO space is memory mapped, then we use the port number, the io_offset
+> and the PCI_IOBASE to get to the virtual address that, when accessed, will
+> generate the correct addresses on the bus, based on what the host bridge has
+> been configured.
+> 
+> This is the current level of my understanding of PCI IO.
 
-On Thu, Jul 31, 2014 at 10:24 PM, Edward Cree <ecree@solarflare.com> wrote:
-> Make a driver_max_VFs of 0 mean 0, instead of total_VFs as previously.
-> Initialise driver_max_VFs to total_VFs instead of 0.
->
-> Signed-off-by: Edward Cree <ecree@solarflare.com>
-> ---
-> Only existing callers are ixgbe and igb, and neither passes 0, so this
-> doesn't break existing users.
-> ---
->  drivers/pci/iov.c | 7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index cb6f247..fb51467 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -381,7 +381,7 @@ found:
->         iov->pos = pos;
->         iov->nres = nres;
->         iov->ctrl = ctrl;
-> -       iov->total_VFs = total;
-> +       iov->driver_max_VFs = iov->total_VFs = total;
->         iov->offset = offset;
->         iov->stride = stride;
->         iov->pgsz = pgsz;
-> @@ -686,9 +686,6 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
->         if (!dev->is_physfn)
->                 return 0;
->
-> -       if (dev->sriov->driver_max_VFs)
-> -               return dev->sriov->driver_max_VFs;
-> -
-> -       return dev->sriov->total_VFs;
-> +       return dev->sriov->driver_max_VFs;
->  }
->  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
-> --
-> 1.7.11.7
-> The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Your understanding is absolutely correct, and that's great because very few
+people get that right. What I think we're really arguing about is what the
+of_pci_range_to_resource is supposed to return. As you and Bjorn both pointed
+out earlier, there are in fact two resources associated with the I/O window
+and the flaw in the current implementation is that of_pci_range_to_resource
+returns the numeric values for the IORESOURCE_MEM resource, but sets the
+type to IORESOURCE_IO, which is offset from that by PCI_IOBASE.
+
+You try to fix that by making it return the correct IORESOURCE_IO resource,
+which is a reasonable approach but you must not break drivers that rely
+on the broken resource while doing that.
+
+The approach that I would have picked is to return the IORESOURCE_MEM
+resource associated with the I/O window and pick a (basically random)
+IORESOURCE_IO resource struct based on what hasn't been used and then
+compute the appropriate io_offset from that. This approach of course
+would also have required fixing up all drivers relying on the current
+behavior.
+
+To be clear, I'm fine with you (and Bjorn if he cares) picking the
+approach you like here, either one of these works fine as long as the
+host drivers use the interface in the way it is defined.
+
+> Now, I believe Rob has switched entirely to using my series in some test that
+> he has run and he hasn't encountered any issues, as long as one remembers in
+> the host bridge driver to add the io_base offset to the .start resource. If
+> not then I need to patch pci_v3.c.
+
+The crazy part of all these discussions is that basically nobody ever uses
+I/O port access, so it's very hard to test and we don't even notice when
+we get it wrong, but we end up spending most of the time for PCI host controller
+reviews trying to get these right.
+
+I'm very thankful that you are doing this work to get it moved into common
+code so hopefully this is the last time we ever have to worry about it because
+all future drivers will be able to use the common implemnetation.
+
+	Arnd
