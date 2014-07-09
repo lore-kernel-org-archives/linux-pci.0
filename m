@@ -1,175 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:28051 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957AbaGGPa6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jul 2014 11:30:58 -0400
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-To: Pratyush Anand <pratyush.anand@st.com>
-Cc: "Arnd Bergmann (arnd@arndb.de)" <arnd@arndb.de>,
-	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
-	Mohit KUMAR <mohit.kumar@st.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mark Nicholson <mark@nicholnet.com>
-Subject: Re: [PATCH V8 0/9] PCI: Add SPEAr13xx PCie support
-Date: Mon, 07 Jul 2014 17:30:40 +0200
-Message-id: <8677743.Bty96DiF3F@amdc1032>
-In-reply-to: <20140522113119.GA2646@pratyush-vbox>
-References: <cover.1397555158.git.mohit.kumar@st.com>
- <2CC2A0A4A178534D93D5159BF3BCB6619B94997E2B@EAPEX1MAIL1.st.com>
- <20140522113119.GA2646@pratyush-vbox>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from service87.mimecast.com ([91.220.42.44]:44963 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755062AbaGIJOo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 05:14:44 -0400
+Date: Wed, 9 Jul 2014 10:14:41 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140709091441.GR6501@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <201407080900.44882.arnd@arndb.de>
+ <20140708212951.GA4555@google.com>
+ <201407090820.49418.arnd@arndb.de>
+MIME-Version: 1.0
+In-Reply-To: <201407090820.49418.arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Jul 09, 2014 at 07:20:49AM +0100, Arnd Bergmann wrote:
+> On Tuesday 08 July 2014, Bjorn Helgaas wrote:
+> > On Tue, Jul 8, 2014 at 1:00 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > > On Tuesday 08 July 2014, Bjorn Helgaas wrote:
+> > >> On Tue, Jul 01, 2014 at 07:43:28PM +0100, Liviu Dudau wrote:
+> > >> > +static LIST_HEAD(io_range_list);
+> > >> > +
+> > >> > +/*
+> > >> > + * Record the PCI IO range (expressed as CPU physical address + size).
+> > >> > + * Return a negative value if an error has occured, zero otherwise
+> > >> > + */
+> > >> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> > >>
+> > >> I don't understand the interface here.  What's the mapping from CPU
+> > >> physical address to bus I/O port?  For example, I have the following
+> > >> machine in mind:
+> > >>
+> > >>   HWP0002:00: PCI Root Bridge (domain 0000 [bus 00-1b])
+> > >>   HWP0002:00: memory-mapped IO port space [mem 0xf8010000000-0xf8010000fff]
+> > >>   HWP0002:00: host bridge window [io  0x0000-0x0fff]
+> > >>
+> > >>   HWP0002:09: PCI Root Bridge (domain 0001 [bus 00-1b])
+> > >>   HWP0002:09: memory-mapped IO port space [mem 0xf8110000000-0xf8110000fff]
+> > >>   HWP0002:09: host bridge window [io  0x1000000-0x1000fff] (PCI address [0x0-0xfff])
+> > >>
+> > >> The CPU physical memory [mem 0xf8010000000-0xf8010000fff] is translated by
+> > >> the bridge to I/O ports 0x0000-0x0fff on PCI bus 0000:00.  Drivers use,
+> > >> e.g., "inb(0)" to access it.
+> > >>
+> > >> Similarly, [mem 0xf8110000000-0xf8110000fff] is translated by the second
+> > >> bridge to I/O ports 0x0000-0x0fff on PCI bus 0001:00.  Drivers use
+> > >> "inb(0x1000000)" to access it.
+> > >
+> > > I guess you are thinking of the IA64 model here where you keep the virtual
+> > > I/O port numbers in a per-bus lookup table that gets accessed for each
+> > > inb() call. I've thought about this some more, and I believe there are good
+> > > reasons for sticking with the model used on arm32 and powerpc for the
+> > > generic OF implementation.
+> > >
+> > > The idea is that there is a single virtual memory range for all I/O port
+> > > mappings and we use the MMU to do the translation rather than computing
+> > > it manually in the inb() implemnetation. The main advantage is that all
+> > > functions used in device drivers to (potentially) access I/O ports
+> > > become trivial this way, which helps for code size and in some cases
+> > > (e.g. SoC-internal registers with a low latency) it may even be performance
+> > > relevant.
+> > 
+> > My example is from ia64, but I'm not advocating for the lookup table.
+> > The point is that the hardware works similarly (at least for dense ia64
+> > I/O port spaces) in terms of mapping CPU physical addresses to PCI I/O
+> > space.
+> > 
+> > I think my confusion is because your pci_register_io_range() and
+> > pci_addess_to_pci() implementations assume that every io_range starts at
+> > I/O port 0 on PCI (correct me if I'm wrong).  I suspect that's why you
+> > don't save the I/O port number in struct io_range.
+> 
+> I think you are just misreading the code, but I agree it's hard to
+> understand and I made the same mistake in my initial reply to the
+> first version.
 
-Hi Arnd,
-
-Any update on status of this patchset?  Is it OK for it to go through
-arm-soc tree or should it be splitted into separate parts which would
-go through pci/phy/arm-soc trees?
-
-[ The patchset applies fine to next-20140707 after fixing trivial
-  reject in drivers/pci/host/Makefile in patch #8.  To make it build
-  the following line from patch #8 needs to be dropped:
-
-  +       spin_lock_init(&pp->conf_lock);
-]
+I am willing to make the code more easy to understand and validate. Proof that
+things are not that easy to check is that I've also got confused last night
+without having all the code in front of me. Any suggestions?
 
 Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Liviu
 
-On Thursday, May 22, 2014 05:01:19 PM Pratyush Anand wrote:
-> Hi Arnd/Bjorn,
 > 
-> On Mon, May 19, 2014 at 07:55:12PM +0800, Mohit KUMAR wrote:
-> > Hello Arnd,
-> > 
-> > > -----Original Message-----
-> > > From: Mohit KUMAR DCG
-> > > Sent: Tuesday, April 15, 2014 5:20 PM
-> > > To: spear-devel; linux-kernel@vger.kernel.org; devicetree@vger.kernel.org;
-> > > linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org
-> > > Cc: Mohit KUMAR DCG
-> > > Subject: [PATCH V8 0/9] PCI: Add SPEAr13xx PCie support
-> > > 
-> > > Patch# 1 and 2: Improvement and fixes for SPEAr13xx support.
-> > > Patch# 3,4 and 6: Add DT bindings for spear1310/40-miphy, misc and pcie
-> > > node Patch# 5: Add spear1310/40-miphy driver and support for spear1310/40
-> > > miphy wrapper.
-> > > Patch# 7-9: Add SPEAr13xx PCIe driver and dt support.
-> > > 
-> > > These pathes are tested with linux-3.15 tag of arm-soc tree.
-> > > Tested with SPEAr1310 evaluation board with:
-> > > 	- INTEL PRO 100/100 EP card
-> > > 	- USB xhci gen2 card
-> > >  	- Above cards connected through LeCROY PTC switch
-> > > 
-> > > Modifications for SATA are tested with SPEAr1340-evb board
-> > > 
-> > 
-> > I think 3.16 windows is about to close, are you planning to merge this series?
-> > Pls let me know if something pending on our part.
+> pci_register_io_range and pci_address_to_pci only worry about the mapping
+> between CPU physical and Linux I/O address, they do not care which PCI
+> port numbers are behind that. The mapping between PCI port numbers and
+> Linux port numbers is done correctly in patch 8/9 in the
+> pci_host_bridge_of_get_ranges() function.
 > 
-> If you could let us know the status of this patch series inclusion.
+> > Maybe that assumption is guaranteed by OF, but it doesn't hold for ACPI;
+> > ACPI can describe several I/O port apertures for a single bridge, each
+> > associated with a different CPU physical memory region.
 > 
-> Regards
-> Pratyush
+> DT can have the same, although the common case is that each PCI host
+> bridge has 64KB of I/O ports starting at address 0. Most driver writers
+> get it wrong for the case where it starts at a different address, so
+> I really want to have a generic implementation that gets it right.
 > 
+> > If my speculation here is correct, a comment to the effect that each
+> > io_range corresponds to a PCI I/O space range that starts at 0 might be
+> > enough.
 > > 
-> > Regards
-> > Mohit
-> > 
-> > > Changes since v7:
-> > > - Rebase over for-linus-3.15 tag of arm-soc tree so that complete patch series
-> > > can be applied cleanly.
-> > > - Incorporated few comments on comment style and superfluous comments
-> > > Changes since v6:
-> > > - Split miphy driver for SPEAr1310 and SPEAr1340
-> > > - Some cleanup and incorporated other minor comments Changes since v5:
-> > > - Split DT bindings for misc, miphy-40lp and pcie node into sepearte patches
-> > > - Merge config options PCIE_SPEAR13XX and PCI_MSI into defconfig patch
-> > > - Incorporated other minor comments
-> > > Changes since v4:
-> > > - Uses per device function pointers passed from .data field to
-> > >   the of_device_id instead of of_device_is_compatible.
-> > > - Incorporated other minor comments from v4
-> > > 
-> > > Changes since v3:
-> > > - Phy driver renamed to phy-miphy40lp
-> > > - ahci phy hook patch used as suggested by Arnd
-> > > - Incorporated other minor comments from v3
-> > > 
-> > > Changes since v2:
-> > > - Incorporated comments to move SPEAr13xx PCIe and SATA phy specific
-> > > routines to
-> > >   the phy framework
-> > > - Modify ahci driver to include phy hooks
-> > > - phy-core driver modifications for subsys_initcall()
-> > > 
-> > > Changes since v1:
-> > > - Few patches of the series are already accepted and applied to mainline e.g.
-> > >  pcie designware driver improvements,fixes for IO translation bug, PCIe dw
-> > > driver maintainer. So dropped these from v2.
-> > > - Incorporated comment to move the common/reset PCIe code to the
-> > > seperate driver
-> > > - PCIe and SATA share common PHY configuration registers, so move SATA
-> > > platform code to the system config driver Fourth patch is improves pcie
-> > > designware driver and fixes the IO translation bug. IO translation bug fix
-> > > leads to the working of PCIe EP devices connected to RC through switch.
-> > > 
-> > > Mohit Kumar (1):
-> > >   SPEAr13xx: defconfig: Update
-> > > 
-> > > Pratyush Anand (8):
-> > >   clk: SPEAr13XX: Fix pcie clock name
-> > >   SPEAr13XX: Fix static mapping table
-> > >   phy: SPEAr1310/40-miphy: Add binding information
-> > >   SPEAr: misc: Add binding information
-> > >   phy: SPEAr1310/40-miphy: Add phy driver for PCIe and SATA
-> > >   SPEAr13XX: Add binding information for PCIe controller
-> > >   SPEAr13XX: dts: Add PCIe node information
-> > >   pcie: SPEAr13xx: Add designware wrapper support
-> > > 
-> > >  .../devicetree/bindings/arm/spear-misc.txt         |    9 +
-> > >  .../devicetree/bindings/pci/spear13xx-pcie.txt     |   14 +
-> > >  .../devicetree/bindings/phy/st-spear1310-miphy.txt |   12 +
-> > >  .../devicetree/bindings/phy/st-spear1340-miphy.txt |   11 +
-> > >  MAINTAINERS                                        |    6 +
-> > >  arch/arm/boot/dts/spear1310-evb.dts                |    4 +
-> > >  arch/arm/boot/dts/spear1310.dtsi                   |   93 +++++-
-> > >  arch/arm/boot/dts/spear1340-evb.dts                |    4 +
-> > >  arch/arm/boot/dts/spear1340.dtsi                   |   30 ++-
-> > >  arch/arm/boot/dts/spear13xx.dtsi                   |    9 +-
-> > >  arch/arm/configs/spear13xx_defconfig               |   16 +
-> > >  arch/arm/mach-spear/Kconfig                        |    4 +
-> > >  arch/arm/mach-spear/include/mach/spear.h           |    4 +-
-> > >  arch/arm/mach-spear/spear1340.c                    |  127 +------
-> > >  arch/arm/mach-spear/spear13xx.c                    |    2 +-
-> > >  drivers/clk/spear/spear1310_clock.c                |    6 +-
-> > >  drivers/clk/spear/spear1340_clock.c                |    2 +-
-> > >  drivers/pci/host/Kconfig                           |    8 +
-> > >  drivers/pci/host/Makefile                          |    1 +
-> > >  drivers/pci/host/pcie-spear13xx.c                  |  407 ++++++++++++++++++++
-> > >  drivers/phy/Kconfig                                |   12 +
-> > >  drivers/phy/Makefile                               |    2 +
-> > >  drivers/phy/phy-spear1310-miphy.c                  |  274 +++++++++++++
-> > >  drivers/phy/phy-spear1340-miphy.c                  |  300 ++++++++++++++
-> > >  24 files changed, 1218 insertions(+), 139 deletions(-)  create mode 100644
-> > > Documentation/devicetree/bindings/arm/spear-misc.txt
-> > >  create mode 100644 Documentation/devicetree/bindings/pci/spear13xx-
-> > > pcie.txt
-> > >  create mode 100644 Documentation/devicetree/bindings/phy/st-
-> > > spear1310-miphy.txt
-> > >  create mode 100644 Documentation/devicetree/bindings/phy/st-
-> > > spear1340-miphy.txt
-> > >  create mode 100644 drivers/pci/host/pcie-spear13xx.c  create mode 100644
-> > > drivers/phy/phy-spear1310-miphy.c  create mode 100644 drivers/phy/phy-
-> > > spear1340-miphy.c
+> > If you did add a PCI I/O port number argument to pci_register_io_range(),
+> > we might be able to make an ACPI-based implementation of it.  But I guess
+> > that could be done if/when anybody ever wants to do that.
+> 
+> I think we shoulnd't worry about it before we actually need it. As far as
+> I understand, the only user of that code (unless someone wants to convert
+> ia64) would be ARM64 with ACPI, but that uses the SBSA hardware model that
+> recommends having no I/O space at all.
+> 
+>  	Arnd
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
