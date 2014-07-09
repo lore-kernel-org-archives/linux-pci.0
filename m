@@ -1,46 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30882 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751151AbaG2OQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Jul 2014 10:16:03 -0400
-Date: Tue, 29 Jul 2014 16:15:45 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Tomas Henzl <thenzl@redhat.com>, linux-kernel@vger.kernel.org,
-	xjtuwjp@gmail.com, lindar_liu@usish.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: Re: [PATCH v2 RESEND 17/23] pm8001: Fix invalid return when
- request_irq() failed
-Message-ID: <20140729141544.GA18029@dhcp-26-207.brq.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <5ecd9b80f705545c3dc85b2a4ae63a8ac3df8105.1405533479.git.agordeev@redhat.com>
- <53D79DE2.9000702@redhat.com>
- <20140729132020.GA7714@infradead.org>
- <53D7A62D.2090709@redhat.com>
- <20140729135641.GA14378@infradead.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:49178 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751948AbaGIQ07 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 12:26:59 -0400
+Date: Wed, 9 Jul 2014 12:26:57 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Igor Bezukh <Igor@galilsoft.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: A question about PCI suspend-resume functionallity
+In-Reply-To: <CAErSpo7_sWKCT6gdv-U=2miyT4+XGtGa-TBP8ueunS_fgvJr9Q@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1407091218170.873-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140729135641.GA14378@infradead.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 29, 2014 at 06:56:41AM -0700, Christoph Hellwig wrote:
-> On Tue, Jul 29, 2014 at 03:48:29PM +0200, Tomas Henzl wrote:
-> > I'm a bit confused - you were not commenting my text above I think?
-> > 
-> > I see in drivers-for-3.17 this patch already applied 5607de7
-> > but not yet the next one (18/23) which also has a review, is there another ack needed?
+On Wed, 9 Jul 2014, Bjorn Helgaas wrote:
+
+> > In the USB stack, the subsystem core resume code checks to see if a
+> > device has been unplugged before the driver's ->resume callback is
+> > invoked.  If a device is gone, the driver callback is skipped.  Thus
+> > drivers don't have to worry about trying to resume a device that has
+> > been unplugged.
 > 
-> Looks like I got a bit confused due to a non-applying patch, but it
-> seems like the one that failed was the second one.  I'll look at it time
-> permitting, but if someone familar with pm8001 can fix the reject for me
-> that would help me greatly!
+> I assume that you do want to call the driver's ->remove method to free
+> any per-device state.  Do USB drivers just have to be smart enough to
+> do that without touching the device?
 
-Hmm.. 18/23 applies with a minor fuzz against
-git://git.infradead.org/users/hch/scsi-queue.git drivers-for-3.17
+Not quite how I'd describe it.  They have to be smart enough for the
+remove routine to run correctly even if the device is already gone --
+_any_ driver for a hot-unpluggable device has to be like this.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Obviously no driver can touch a device that is gone.  But it can
+try.  If a USB driver tries to touch a device that has been unplugged,
+the corresponding function call just returns an error.  It doesn't
+crash.
+
+Alan Stern
+
