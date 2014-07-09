@@ -1,183 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:34803 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933145AbaGURAO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 21 Jul 2014 13:00:14 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH v7 3/5] PCI: designware: enhance dw_pcie_host_init() to support v3.65 DW hardware
-Date: Mon, 21 Jul 2014 12:58:43 -0400
-Message-ID: <1405961925-27248-4-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
-References: <1405961925-27248-1-git-send-email-m-karicheri2@ti.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:35518 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345AbaGIJDs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 05:03:48 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>, <paul@pwsan.com>, <tony@atomide.com>,
+	<linux@arm.linux.org.uk>, <rnayak@ti.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <kishon@ti.com>
+Subject: [PATCH v2] arm: dra7xx: Add hwmod data for pcie1 and pcie2 subsystems
+Date: Wed, 9 Jul 2014 14:32:47 +0530
+Message-ID: <1404896567-32204-1-git-send-email-kishon@ti.com>
+In-Reply-To: <1403719366-9656-3-git-send-email-kishon@ti.com>
+References: <1403719366-9656-3-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-keystone PCI controller is based on v3.65 designware hardware. This
-version differs from newer versions of the hardware in few functional
-areas discussed below that makes it necessary to change dw_pcie_host_init()
-to support v3.65 based PCI controller.
+Added hwmod data for pcie1 and pcie2 subsystem present in DRA7xx SOC.
 
- 1. No support for ATU port. So any ATU specific resource handling code
-    is to be bypassed for v3.65 h/w.
- 2. MSI controller uses Application space to implement MSI and 32 MSI
-    interrupts are multiplexed over 8 IRQs to the host. Hence the code
-    to process MSI IRQ needs to be different. This patch allows platform
-    driver to provide its own irq_domain_ops ptr to irq_domain_add_linear()
-    through an API callback from the designware core driver.
- 3. MSI interrupt generation requires EP to write to the RC's application
-    register. So enhance the driver to allow setup of inbound access to
-    MSI irq register as a post scan bus API callback.
-
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Reviewed-by: Pratyush Anand <pratyush.anand@st.com>
-Acked-by: Mohit KUMAR <mohit.kumar@st.com>
-
-CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Jingoo Han <jg1.han@samsung.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Richard Zhu <r65037@freescale.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Marek Vasut <marex@denx.de>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Pawel Moll <pawel.moll@arm.com>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-CC: Kumar Gala <galak@codeaurora.org>
-CC: Randy Dunlap <rdunlap@infradead.org>
-CC: Grant Likely <grant.likely@linaro.org>
+Cc: Tony Lindgren <tony@atomide.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Paul Walmsley <paul@pwsan.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/host/pcie-designware.c |   54 +++++++++++++++++++++++-------------
- drivers/pci/host/pcie-designware.h |    2 ++
- 2 files changed, 36 insertions(+), 20 deletions(-)
+Changes from v1:
+* changed the clock domain to "pcie_clkdm"
+* Added PCIe as a slave port for l3_main.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 905941c..35bb4af 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -420,8 +420,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	struct device_node *np = pp->dev->of_node;
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
-+	int i, ret;
- 	u32 val;
--	int i;
- 
- 	if (of_pci_range_parser_init(&parser, np)) {
- 		dev_err(pp->dev, "missing ranges property\n");
-@@ -467,21 +467,26 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
- 
--	pp->cfg0_base = pp->cfg.start;
--	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
- 	pp->mem_base = pp->mem.start;
- 
--	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
--					pp->config.cfg0_size);
- 	if (!pp->va_cfg0_base) {
--		dev_err(pp->dev, "error with ioremap in function\n");
--		return -ENOMEM;
-+		pp->cfg0_base = pp->cfg.start;
-+		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-+						pp->config.cfg0_size);
-+		if (!pp->va_cfg0_base) {
-+			dev_err(pp->dev, "error with ioremap in function\n");
-+			return -ENOMEM;
-+		}
- 	}
--	pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
--					pp->config.cfg1_size);
-+
- 	if (!pp->va_cfg1_base) {
--		dev_err(pp->dev, "error with ioremap\n");
--		return -ENOMEM;
-+		pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-+		pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
-+						pp->config.cfg1_size);
-+		if (!pp->va_cfg1_base) {
-+			dev_err(pp->dev, "error with ioremap\n");
-+			return -ENOMEM;
-+		}
- 	}
- 
- 	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
-@@ -490,16 +495,22 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	}
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
--					MAX_MSI_IRQS, &msi_domain_ops,
--					&dw_pcie_msi_chip);
--		if (!pp->irq_domain) {
--			dev_err(pp->dev, "irq domain init failed\n");
--			return -ENXIO;
--		}
-+		if (!pp->ops->msi_host_init) {
-+			pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
-+						MAX_MSI_IRQS, &msi_domain_ops,
-+						&dw_pcie_msi_chip);
-+			if (!pp->irq_domain) {
-+				dev_err(pp->dev, "irq domain init failed\n");
-+				return -ENXIO;
-+			}
- 
--		for (i = 0; i < MAX_MSI_IRQS; i++)
--			irq_create_mapping(pp->irq_domain, i);
-+			for (i = 0; i < MAX_MSI_IRQS; i++)
-+				irq_create_mapping(pp->irq_domain, i);
-+		} else {
-+			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
-+			if (ret < 0)
-+				return ret;
-+		}
- 	}
- 
- 	if (pp->ops->host_init)
-@@ -759,6 +770,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 		BUG();
- 	}
- 
-+	if (bus && pp->ops->scan_bus)
-+		pp->ops->scan_bus(pp);
-+
- 	return bus;
- }
- 
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 387f69e..080c649 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -70,6 +70,8 @@ struct pcie_host_ops {
- 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
- 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
- 	u32 (*get_msi_data)(struct pcie_port *pp);
-+	void (*scan_bus)(struct pcie_port *pp);
-+	int (*msi_host_init)(struct pcie_port *pp, struct msi_chip *chip);
+Boot log for dra7xx can be found at http://paste.ubuntu.com/7769402/
+
+ arch/arm/mach-omap2/omap_hwmod_7xx_data.c |   73 +++++++++++++++++++++++++++++
+ 1 file changed, 73 insertions(+)
+
+diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+index 6ff40a6..2f37ca8 100644
+--- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
++++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+@@ -1290,6 +1290,43 @@ static struct omap_hwmod dra7xx_ocp2scp3_hwmod = {
  };
  
- int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+ /*
++ * 'PCIE' class
++ *
++ */
++
++static struct omap_hwmod_class dra7xx_pcie_hwmod_class = {
++	.name	= "pcie",
++};
++
++/* pcie1 */
++static struct omap_hwmod dra7xx_pcie1_hwmod = {
++	.name		= "pcie1",
++	.class		= &dra7xx_pcie_hwmod_class,
++	.clkdm_name	= "pcie_clkdm",
++	.main_clk	= "l4_root_clk_div",
++	.prcm = {
++		.omap4 = {
++			.clkctrl_offs	= DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET,
++			.modulemode	= MODULEMODE_SWCTRL,
++		},
++	},
++};
++
++/* pcie2 */
++static struct omap_hwmod dra7xx_pcie2_hwmod = {
++	.name		= "pcie2",
++	.class		= &dra7xx_pcie_hwmod_class,
++	.clkdm_name	= "pcie_clkdm",
++	.main_clk	= "l4_root_clk_div",
++	.prcm = {
++		.omap4 = {
++			.clkctrl_offs = DRA7XX_CM_PCIE_CLKSTCTRL_OFFSET,
++			.modulemode   = MODULEMODE_SWCTRL,
++		},
++	},
++};
++
++/*
+  * 'PCIE PHY' class
+  *
+  */
+@@ -2448,6 +2485,38 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__ocp2scp1 = {
+ 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
+ };
+ 
++/* l3_main_1 -> pcie1 */
++static struct omap_hwmod_ocp_if dra7xx_l3_main_1__pcie1 = {
++	.master		= &dra7xx_l3_main_1_hwmod,
++	.slave		= &dra7xx_pcie1_hwmod,
++	.clk		= "l3_iclk_div",
++	.user		= OCP_USER_MPU | OCP_USER_SDMA,
++};
++
++/* l4_cfg -> pcie1 */
++static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1 = {
++	.master		= &dra7xx_l4_cfg_hwmod,
++	.slave		= &dra7xx_pcie1_hwmod,
++	.clk		= "l4_root_clk_div",
++	.user		= OCP_USER_MPU | OCP_USER_SDMA,
++};
++
++/* l3_main_1 -> pcie2 */
++static struct omap_hwmod_ocp_if dra7xx_l3_main_1__pcie2 = {
++	.master		= &dra7xx_l3_main_1_hwmod,
++	.slave		= &dra7xx_pcie2_hwmod,
++	.clk		= "l3_iclk_div",
++	.user		= OCP_USER_MPU | OCP_USER_SDMA,
++};
++
++/* l4_cfg -> pcie2 */
++static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie2 = {
++	.master		= &dra7xx_l4_cfg_hwmod,
++	.slave		= &dra7xx_pcie2_hwmod,
++	.clk		= "l4_root_clk_div",
++	.user		= OCP_USER_MPU | OCP_USER_SDMA,
++};
++
+ /* l4_cfg -> pcie1 phy */
+ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pcie1_phy = {
+ 	.master		= &dra7xx_l4_cfg_hwmod,
+@@ -2813,6 +2882,10 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
+ 	&dra7xx_l4_cfg__mpu,
+ 	&dra7xx_l4_cfg__ocp2scp1,
+ 	&dra7xx_l4_cfg__ocp2scp3,
++	&dra7xx_l3_main_1__pcie1,
++	&dra7xx_l4_cfg__pcie1,
++	&dra7xx_l3_main_1__pcie2,
++	&dra7xx_l4_cfg__pcie2,
+ 	&dra7xx_l4_cfg__pcie1_phy,
+ 	&dra7xx_l4_cfg__pcie2_phy,
+ 	&dra7xx_l3_main_1__qspi,
 -- 
 1.7.9.5
 
