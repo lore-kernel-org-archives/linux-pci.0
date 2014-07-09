@@ -1,71 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:52306 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751480AbaGPUzN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jul 2014 16:55:13 -0400
-Received: by mail-ie0-f170.google.com with SMTP id rl12so1507002iec.1
-        for <linux-pci@vger.kernel.org>; Wed, 16 Jul 2014 13:55:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
-References: <CAKAYmMLfxkmaVxaPDd6z=B0ESQ3mR=dUG4OFFgEoy0295qLYgg@mail.gmail.com>
-	<CAKAYmMLhPhukBbR8NhPk3EigmvwiX+DEGj-Mod7zpHMnZKRsLw@mail.gmail.com>
-	<CAErSpo7vooChRfSF6oY8GcqVYZruv-7_D0zm3a4M_KDVMbWNiA@mail.gmail.com>
-Date: Wed, 16 Jul 2014 13:55:12 -0700
-Message-ID: <CAE9FiQWomktcpSHeFwxWBLXmAsbdXEHv6sOrNXodobkBw=mRKA@mail.gmail.com>
-Subject: Re: Error assigning BAR 0 to hotplugged device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Chuck Tuffli <ctuffli@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mailout2.samsung.com ([203.254.224.25]:35005 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750947AbaGIBeT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 21:34:19 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N8F00I368CTJX10@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 09 Jul 2014 10:34:05 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Stephen Rothwell' <sfr@canb.auug.org.au>,
+	'Fabio Estevam' <festevam@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	'Fabio Estevam' <fabio.estevam@freescale.com>,
+	'Jingoo Han' <jg1.han@samsung.com>,
+	'Mohit Kumar' <mohit.kumar@st.com>
+References: <1403104613-9867-1-git-send-email-festevam@gmail.com>
+ <20140709105731.1b3e2bbe@canb.auug.org.au>
+In-reply-to: <20140709105731.1b3e2bbe@canb.auug.org.au>
+Subject: Re: PCI: designware: Use IS_ENABLED()
+Date: Wed, 09 Jul 2014 10:34:05 +0900
+Message-id: <001101cf9b15$df01cf50$9d056df0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 16, 2014 at 11:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Yinghai]
->
-> On Wed, Jul 16, 2014 at 11:19 AM, Chuck Tuffli <ctuffli@gmail.com> wrote:
->> On Tue, Jul 8, 2014 at 12:37 PM, Chuck Tuffli <ctuffli@gmail.com> wrote:
->>> On a system with a recent Fedora kernel (3.14.9-200.fc20.x86_64), a
->>> hotplugged PCI device is unable to get memory mapped IO:
->>> ...
->>> [  183.247377] pcieport 0000:9a:00.0: BAR 15: can't assign mem pref
->>> (size 0x100000)
->>> [  183.247384] pcieport 0000:9b:15.0: BAR 14: can't assign mem (size 0x100000)
->>> [  183.247388] pcieport 0000:9b:15.0: BAR 15: can't assign mem pref
->>> (size 0x100000)
->>> [  183.247394] pci 0000:a5:00.0: BAR 6: can't assign mem pref (size 0x10000)
->>> [  183.247397] pci 0000:a5:00.0: BAR 0: can't assign mem (size 0x4000)
->>>
->>> The device is connected to a switch supporting hotplug (i.e. SltCap
->>> includes HotPlug+) and I have added
->>> pci=realloc,hpmemsize=16M
->>> to the kernel boot parameters. This appears to have increased the
->>> prefetchable memory but not the memory mapped IO:
->>
->> Further investigation suggests that pbus_size_mem() never really gets
->> a chance to increase the bridge aperture by the hpmemsize value
->> because find_free_bus_resource() returns NULL. This apparently happens
->> because the function "skip[s] the bus resources which have already
->> been assigned (that is, have non-NULL parent resource)". Specifically,
->> it checks
->>
->>     if (r && (r->flags & type_mask) == type && !r->parent)
->>
->> and in my configuration, finds that r->parent != NULL for the memory
->> mapped IO resource. Wouldn't r->parent be non-NULL in most cases other
->> than for bridges in the root complex? If so, does that imply hpmemsize
->> would only be used for bridges advertising hot plug in the root
->> complex?
+On Wednesday, July 09, 2014 9:58 AM, Stephen Rothwell wrote:
+> 
+> Hi Fabio,
+> 
+> [I noticed this in the pci tree in linux-next this morning]
+> 
+> On Wed, 18 Jun 2014 12:16:53 -0300 Fabio Estevam <festevam@gmail.com> wrote:
+> >
+> > From: Fabio Estevam <fabio.estevam@freescale.com>
+> >
+> > We can get rid of the 'ifdef' by using the IS_ENABLED() macro.
+> >
+> > Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+> > Acked-by: Jingoo Han <jg1.han@samsung.com>
+> > Acked-by: Mohit Kumar <mohit.kumar@st.com>
+> >
+> > ---
+> > drivers/pci/host/pcie-designware.c | 5 ++---
+> >  1 file changed, 2 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 1eaf4df3..dc842fd 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -497,9 +497,8 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >
+> >  	pci_common_init_dev(pp->dev, &dw_pci);
+> >  	pci_assign_unassigned_resources();
+> > -#ifdef CONFIG_PCI_DOMAINS
+> > -	dw_pci.domain++;
+> > -#endif
+> > +	if (IS_ENABLED(CONFIG_PCI_DOMAINS))
+> > +		dw_pci.domain++;
+> >
+> >  	return 0;
+> >  }
+> 
+> Will this actually compile if CONFIG_PCI_DOMAINS is disabled, since the
+> "domains" field of dw_pci does not even exist in that case (it is
+> ifdeffed out in arch/arm/include/asm/mach/pci.h)?  Even if it works
+> with newer compilers, will it work with older ones i.e. how new does
+> the compiler have to be to elide the code before noticing that
+> "domains" does not exist?
 
-Please try current tree linus/master or pci/next.
-also need boot with "debug ignore_loglevel pciehp.pciehp_debug=1".
+Oops, you're right! It makes build errors when CONFIG_PCI_DOMAINS
+is disabled.
 
-post
-dmesg -s 262144
-lspci -tv
-lspci -vvxxx
+The "domain" variable is guarded by "#ifdef CONFIG_PCI_DOMAINS";
+thus, IS_ENABLED() should NOT be used.
 
-Thanks
+./arch/arm/include/asm/mach/pci.h
+struct hw_pci {
+#ifdef CONFIG_PCI_DOMAINS
+	int		domain;
+#endif
 
-Yinghai
+Bjorn Helgaas,
+Please revert this patch from your pci tree. Thank you.
+
+Best regards,
+Jingoo Han
+
+> 
+> --
+> Cheers,
+> Stephen Rothwell                    sfr@canb.auug.org.au
+
