@@ -1,89 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:63202 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300AbaG1Pfz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jul 2014 11:35:55 -0400
-Date: Mon, 28 Jul 2014 17:35:50 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: bhelgaas@google.com, swarren@wwwdotorg.org,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: tegra: add missing cleanup in error path and
- teardown_irq
-Message-ID: <20140728153548.GB10126@ulmo.nvidia.com>
-References: <1406519142-3018-1-git-send-email-jszhang@marvell.com>
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:50861 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751871AbaGIFsZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 01:48:25 -0400
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: "olof@lixom.net" <olof@lixom.net>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"'Bjorn Helgaas' (bhelgaas@google.com)" <bhelgaas@google.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mark Nicholson <mark@nicholnet.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>
+Date: Wed, 9 Jul 2014 13:48:03 +0800
+Subject: [GIT PULL] ARM: SPEAr1310 PCIe updates
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB661A17A3E48F2@EAPEX1MAIL1.st.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Yylu36WmvOXNoKYn"
-In-Reply-To: <1406519142-3018-1-git-send-email-jszhang@marvell.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---Yylu36WmvOXNoKYn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Jul 28, 2014 at 11:45:42AM +0800, Jisheng Zhang wrote:
-> We should call tegra_msi_free() to free the msi bit if
-> irq_create_mapping() fails. And we need to dispose the irq mapping
-> during irq teardown.
-
-"MSI" and "IRQ" please.
-
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 083cf37..4ccc418 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -1203,8 +1203,10 @@ static int tegra_msi_setup_irq(struct msi_chip *ch=
-ip, struct pci_dev *pdev,
->  		return hwirq;
-> =20
->  	irq =3D irq_create_mapping(msi->domain, hwirq);
-> -	if (!irq)
-> +	if (!irq) {
-> +		tegra_msi_free(msi, hwirq);
->  		return -EINVAL;
-> +	}
-> =20
->  	irq_set_msi_desc(irq, desc);
-> =20
-> @@ -1222,8 +1224,10 @@ static void tegra_msi_teardown_irq(struct msi_chip=
- *chip, unsigned int irq)
->  {
->  	struct tegra_msi *msi =3D to_tegra_msi(chip);
->  	struct irq_data *d =3D irq_get_irq_data(irq);
-> +	unsigned long hwirq =3D d->hwirq;
-
-I don't think we need this temporary variable, d->hwirq isn't overly
-long.
-
-With both of the above address, this is:
-
-Reviewed-by: Thierry Reding <treding@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
-
---Yylu36WmvOXNoKYn
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJT1m3UAAoJEN0jrNd/PrOhZasQALoR5knIFNMBrM3nd3VDbiBM
-whzllsWhurlCryKp0VmgKc6+K6gYhMBIlBjMAcFB19bqEiANnmfHibB6xOSiqPeA
-UkmCrj7OYHLIkNlL2OHBtusqbkLkQJHzsspif7sGJn8OB68PaSn/FT3V3mtB7q9O
-zUQTZP4NQ+6IwFGpf3+BBAjdht5yDv79QiYClSedfEIlX4GNEw8x0uH74lW+f80d
-nO1CDNrHqPLUxjBxoWe5G0gTaNX71xILbJVTLg/536/9SOIQb40GhsrKluJBWleQ
-SM35SSiV3Khd+3WTSBe8gEwjJnr4p68WI25KQx2koS6SrwlLJYZms6hqm/wKxbIK
-uBhT13zAZ4QFf4BiAQzF5Lfhlupuq+QA/vk7YvYzv8sFta3sgby52xjk9o7lJfJy
-kwnP8JsYOlw1fUIOOGmlZlKPOoDpI7NKwkpMoZlGMTUAIbrt39bSvfKIZJMlnx+I
-PaYChbeOXQmM/mF6+5u5lIFyyieRK/Iks52UbiClUrvI7Lv5xKzz/uoNPZyQdhea
-AYMel5Y56FV/ZV1V67BQ9eA/noAUUICgGiRtLukzPhhUeplOp0fglnUwg+S2M7Em
-DOqdwLCl/58PqDNLqMA8tQ6YDGKI8Nz5DOfbAqQhsUKHF36YRROemYSuLpgp+zSo
-QJHcvlT+y5+O8/AaBQ+Z
-=cEjM
------END PGP SIGNATURE-----
-
---Yylu36WmvOXNoKYn--
+SGVsbG8gT2xvZiwNCg0KUGxlYXNlIHB1bGwgUENJZSB1cGRhdGVzIGZvciBTVCdzIFNQRUFyMTMx
+MCBTb0MuDQoNCkxhc3QgdmVyc2lvbiBvZiBwb3N0ZWQgVjggcGF0Y2hlcyBoYXZlIGJlZW4gQWNr
+ZWQtYnkgcmVzcGVjdGl2ZSBtYWludGFpbmVycy4NCmh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE0
+LzQvMTUvMjYwDQoNCkFwYXJ0IGZyb20gYXJjaC9hcm0vIGNoYW5nZXMsIGl0IGFsc28gY29udGFp
+bnMgcGF0Y2hlcyBmb3IgZHJpdmVycy97cGNpfHBoeX0uDQpCam9ybiBhZHZpc2VkIHRvIGdldCBj
+b21wbGV0ZSBzZXJpZXMgdmlhIGFybS1zb2MgdHJlZS4NCmh0dHA6Ly93d3cuc3Bpbmljcy5uZXQv
+bGlzdHMvbGludXgtcGNpL21zZzMwMjcxLmh0bWwNCg0KIFJlZ2FyZHMNCiBNb2hpdA0KDQpUaGUg
+Zm9sbG93aW5nIGNoYW5nZXMgc2luY2UgY29tbWl0IDRjODM0NDUyYWFkMDE1MzFkYjk0OTQxNGY5
+NGY4MTdhODYzNDhkNTk6DQogIExpbnVzIFRvcnZhbGRzICgxKToNCiAgICAgICAgTGludXggMy4x
+Ni1yYzMNCg0KYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6DQoNCiAgaHR0
+cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvdmlyZXNoay9saW51
+eC5naXQgc3BlYXIvcGNpZS1zdXBwb3J0LXY4DQoNCk1vaGl0IEt1bWFyICgxKToNCiAgICAgIFNQ
+RUFyMTN4eDogZGVmY29uZmlnOiBVcGRhdGUNCg0KUHJhdHl1c2ggQW5hbmQgKDgpOg0KICAgICAg
+Y2xrOiBTUEVBcjEzWFg6IEZpeCBwY2llIGNsb2NrIG5hbWUNCiAgICAgIFNQRUFyMTNYWDogRml4
+IHN0YXRpYyBtYXBwaW5nIHRhYmxlDQogICAgICBwaHk6IFNQRUFyMTMxMC80MC1taXBoeTogQWRk
+IGJpbmRpbmcgaW5mb3JtYXRpb24NCiAgICAgIFNQRUFyOiBtaXNjOiBBZGQgYmluZGluZyBpbmZv
+cm1hdGlvbg0KICAgICAgcGh5OiBTUEVBcjEzMTAvNDAtbWlwaHk6IEFkZCBwaHkgZHJpdmVyIGZv
+ciBQQ0llIGFuZCBTQVRBDQogICAgICBTUEVBcjEzWFg6IEFkZCBiaW5kaW5nIGluZm9ybWF0aW9u
+IGZvciBQQ0llIGNvbnRyb2xsZXINCiAgICAgIFNQRUFyMTNYWDogZHRzOiBBZGQgUENJZSBub2Rl
+IGluZm9ybWF0aW9uDQogICAgICBwY2llOiBTUEVBcjEzeHg6IEFkZCBkZXNpZ253YXJlIHdyYXBw
+ZXIgc3VwcG9ydA0KDQogLi4uL2RldmljZXRyZWUvYmluZGluZ3MvYXJtL3NwZWFyLW1pc2MudHh0
+ICAgICAgICAgfCAgICA5ICsNCiAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvc3BlYXIxM3h4
+LXBjaWUudHh0ICAgICB8ICAgMTQgKw0KIC4uLi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS9zdC1z
+cGVhcjEzMTAtbWlwaHkudHh0IHwgICAxMiArDQogLi4uL2RldmljZXRyZWUvYmluZGluZ3MvcGh5
+L3N0LXNwZWFyMTM0MC1taXBoeS50eHQgfCAgIDExICsNCiBNQUlOVEFJTkVSUyAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDYgKw0KIGFyY2gvYXJtL2Jvb3QvZHRz
+L3NwZWFyMTMxMC1ldmIuZHRzICAgICAgICAgICAgICAgIHwgICAgNCArDQogYXJjaC9hcm0vYm9v
+dC9kdHMvc3BlYXIxMzEwLmR0c2kgICAgICAgICAgICAgICAgICAgfCAgIDkzICsrKysrLQ0KIGFy
+Y2gvYXJtL2Jvb3QvZHRzL3NwZWFyMTM0MC1ldmIuZHRzICAgICAgICAgICAgICAgIHwgICAgNCAr
+DQogYXJjaC9hcm0vYm9vdC9kdHMvc3BlYXIxMzQwLmR0c2kgICAgICAgICAgICAgICAgICAgfCAg
+IDMwICsrLQ0KIGFyY2gvYXJtL2Jvb3QvZHRzL3NwZWFyMTN4eC5kdHNpICAgICAgICAgICAgICAg
+ICAgIHwgICAgOSArLQ0KIGFyY2gvYXJtL2NvbmZpZ3Mvc3BlYXIxM3h4X2RlZmNvbmZpZyAgICAg
+ICAgICAgICAgIHwgICAxNiArDQogYXJjaC9hcm0vbWFjaC1zcGVhci9LY29uZmlnICAgICAgICAg
+ICAgICAgICAgICAgICAgfCAgICA0ICsNCiBhcmNoL2FybS9tYWNoLXNwZWFyL2luY2x1ZGUvbWFj
+aC9zcGVhci5oICAgICAgICAgICB8ICAgIDQgKy0NCiBhcmNoL2FybS9tYWNoLXNwZWFyL3NwZWFy
+MTM0MC5jICAgICAgICAgICAgICAgICAgICB8ICAxMjcgKy0tLS0tLQ0KIGFyY2gvYXJtL21hY2gt
+c3BlYXIvc3BlYXIxM3h4LmMgICAgICAgICAgICAgICAgICAgIHwgICAgMiArLQ0KIGRyaXZlcnMv
+Y2xrL3NwZWFyL3NwZWFyMTMxMF9jbG9jay5jICAgICAgICAgICAgICAgIHwgICAgNiArLQ0KIGRy
+aXZlcnMvY2xrL3NwZWFyL3NwZWFyMTM0MF9jbG9jay5jICAgICAgICAgICAgICAgIHwgICAgMiAr
+LQ0KIGRyaXZlcnMvcGNpL2hvc3QvS2NvbmZpZyAgICAgICAgICAgICAgICAgICAgICAgICAgIHwg
+ICAgOCArDQogZHJpdmVycy9wY2kvaG9zdC9NYWtlZmlsZSAgICAgICAgICAgICAgICAgICAgICAg
+ICAgfCAgICAxICsNCiBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtc3BlYXIxM3h4LmMgICAgICAgICAg
+ICAgICAgICB8ICA0MDYgKysrKysrKysrKysrKysrKysrKysNCiBkcml2ZXJzL3BoeS9LY29uZmln
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgMTIgKw0KIGRyaXZlcnMvcGh5L01h
+a2VmaWxlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgMiArDQogZHJpdmVycy9w
+aHkvcGh5LXNwZWFyMTMxMC1taXBoeS5jICAgICAgICAgICAgICAgICAgfCAgMjc0ICsrKysrKysr
+KysrKysNCiBkcml2ZXJzL3BoeS9waHktc3BlYXIxMzQwLW1pcGh5LmMgICAgICAgICAgICAgICAg
+ICB8ICAzMDAgKysrKysrKysrKysrKysrDQogMjQgZmlsZXMgY2hhbmdlZCwgMTIxNyBpbnNlcnRp
+b25zKCspLCAxMzkgZGVsZXRpb25zKC0pDQogY3JlYXRlIG1vZGUgMTAwNjQ0IERvY3VtZW50YXRp
+b24vZGV2aWNldHJlZS9iaW5kaW5ncy9hcm0vc3BlYXItbWlzYy50eHQNCiBjcmVhdGUgbW9kZSAx
+MDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9zcGVhcjEzeHgtcGNp
+ZS50eHQNCiBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
+bmdzL3BoeS9zdC1zcGVhcjEzMTAtbWlwaHkudHh0DQogY3JlYXRlIG1vZGUgMTAwNjQ0IERvY3Vt
+ZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9waHkvc3Qtc3BlYXIxMzQwLW1pcGh5LnR4dA0K
+IGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtc3BlYXIxM3h4LmMNCiBj
+cmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9waHkvcGh5LXNwZWFyMTMxMC1taXBoeS5jDQogY3Jl
+YXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGh5L3BoeS1zcGVhcjEzNDAtbWlwaHkuYw0K
