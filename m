@@ -1,59 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbfkord-smmo01.seg.att.com ([209.65.160.76]:54294 "EHLO
-	nbfkord-smmo01.seg.att.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750996AbaGaOg4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jul 2014 10:36:56 -0400
-Date: Thu, 31 Jul 2014 15:24:07 +0100
-From: Edward Cree <ecree@solarflare.com>
-To: <linux-pci@vger.kernel.org>
-CC: Alexander Duyck <alexander.h.duyck@intel.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] PCI: handle pci_sriov_set_totalvfs(dev, 0)
-In-Reply-To: <53DA3180.5040302@solarflare.com>
-Message-ID: <alpine.LFD.2.03.1407311500570.16821@solarflare.com>
-References: <53D9288B.5030302@solarflare.com> <53D93407.8040308@redhat.com> <53D93848.7070203@solarflare.com> <53D9602A.4010406@intel.com> <53DA3180.5040302@solarflare.com>
+Received: from mail-bn1blp0187.outbound.protection.outlook.com ([207.46.163.187]:48284
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756571AbaGIXFP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Jul 2014 19:05:15 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>
+CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
+	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
+	<Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH 1/4 V3] irqchip: gic: Add binding probe for ARM GIC400
+Date: Wed, 9 Jul 2014 18:05:01 -0500
+Message-ID: <1404947104-21345-2-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make a driver_max_VFs of 0 mean 0, instead of total_VFs as previously.
-Initialise driver_max_VFs to total_VFs instead of 0.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Signed-off-by: Edward Cree <ecree@solarflare.com>
+Add new Irqchip declaration for GIC400. This was mentioned in
+gic binding documentation, but there is not code to support it.
+
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 ---
-Only existing callers are ixgbe and igb, and neither passes 0, so this
-doesn't break existing users.
----
- drivers/pci/iov.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/irqchip/irq-gic.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index cb6f247..fb51467 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -381,7 +381,7 @@ found:
-        iov->pos = pos;
-        iov->nres = nres;
-        iov->ctrl = ctrl;
--       iov->total_VFs = total;
-+       iov->driver_max_VFs = iov->total_VFs = total;
-        iov->offset = offset;
-        iov->stride = stride;
-        iov->pgsz = pgsz;
-@@ -686,9 +686,6 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
-        if (!dev->is_physfn)
-                return 0;
-
--       if (dev->sriov->driver_max_VFs)
--               return dev->sriov->driver_max_VFs;
--
--       return dev->sriov->total_VFs;
-+       return dev->sriov->driver_max_VFs;
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 508b815..ac8f7ea 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -1020,6 +1020,8 @@ gic_of_init(struct device_node *node, struct device_node *parent)
+ 	gic_cnt++;
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
---
-1.7.11.7
-The information contained in this message is confidential and is intended for the addressee(s) only. If you have received this message in error, please notify the sender immediately and delete the message. Unless you are an addressee (or authorized to receive for an addressee), you may not use, copy or disclose to anyone this message or any information contained in this message. The unauthorized use, disclosure, copying or alteration of this message is strictly prohibited.
++
++IRQCHIP_DECLARE(arm_gic_400, "arm,gic-400", gic_of_init);
+ IRQCHIP_DECLARE(cortex_a15_gic, "arm,cortex-a15-gic", gic_of_init);
+ IRQCHIP_DECLARE(cortex_a9_gic, "arm,cortex-a9-gic", gic_of_init);
+ IRQCHIP_DECLARE(msm_8660_qgic, "qcom,msm-8660-qgic", gic_of_init);
+-- 
+1.9.0
+
