@@ -1,113 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:36058 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751122AbaGXJEc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 05:04:32 -0400
-Message-ID: <1406192534.4590.12.camel@weser.hi.pengutronix.de>
-Subject: Re: [PATCH 2/4] PCI: designware: get rid of pci_scan_root_bus
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Mohit Kumar' <mohit.kumar@st.com>,
-	'Marek Vasut' <marex@denx.de>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	kernel@pengutronix.de
-Date: Thu, 24 Jul 2014 11:02:14 +0200
-In-Reply-To: <002d01cfa71d$0f5a2590$2e0e70b0$%han@samsung.com>
-References: <1406137961-14684-1-git-send-email-l.stach@pengutronix.de>
-	 <1406137961-14684-3-git-send-email-l.stach@pengutronix.de>
-	 <001201cfa6f5$52863840$f792a8c0$%han@samsung.com>
-	 <1406190729.4590.8.camel@weser.hi.pengutronix.de>
-	 <002d01cfa71d$0f5a2590$2e0e70b0$%han@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from service87.mimecast.com ([91.220.42.44]:57471 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754562AbaGII7O convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 04:59:14 -0400
+Date: Wed, 9 Jul 2014 09:59:11 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper
+ function.
+Message-ID: <20140709085910.GP6501@e106497-lin.cambridge.arm.com>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140708001418.GB22939@google.com>
+ <20140708104050.GA6501@e106497-lin.cambridge.arm.com>
+ <201407081614.18304.arnd@arndb.de>
+MIME-Version: 1.0
+In-Reply-To: <201407081614.18304.arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 24.07.2014, 17:55 +0900 schrieb Jingoo Han:
-> On Thursday, July 24, 2014 5:32 PM, Lucas Stach wrote:
-> > Am Donnerstag, den 24.07.2014, 13:11 +0900 schrieb Jingoo Han:
-> > > On Thursday, July 24, 2014 2:53 AM, Lucas Stach wrote:
-> > > >
-> > > > Use pci_create_root_bus() similar to other pci
-> > > > host controller drivers.
-> > > >
-> > > > The main problem with pci_scan_root_bus() is that
-> > > > not only it will create the root bus, but also try
-> > > > to activate all devices on the bus. This triggers
-> > > > PCI device drivers probe, which try to use the device
-> > > > but fail as resource allocation isn't done at that
-> > > > point in time.
-> > > >
-> > > > To work around this we made sure that the host
-> > > > controller driver is probed early and finishes resource
-> > > > allocation before any other device drivers are registered.
-> > > > Switching to pci_create_root_bus() allows us to get rid
-> > > > of this special handling.
-> > > >
-> > > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > > > ---
-> > > >  drivers/pci/host/pcie-designware.c | 15 +++++++--------
-> > > >  1 file changed, 7 insertions(+), 8 deletions(-)
-> > > >
-> > > > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > > > index b13a830c8b0f..b869e202367c 100644
-> > > > --- a/drivers/pci/host/pcie-designware.c
-> > > > +++ b/drivers/pci/host/pcie-designware.c
-> > > > @@ -801,14 +801,13 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> > > >  	struct pci_bus *bus;
-> > > >  	struct pcie_port *pp = sys_to_pcie(sys);
-> > > >
-> > > > -	if (pp) {
-> > > > -		pp->root_bus_nr = sys->busnr;
-> > > > -		bus = pci_scan_root_bus(pp->dev, sys->busnr, &dw_pcie_ops,
-> > > > -					sys, &sys->resources);
-> > > > -	} else {
-> > > > -		bus = NULL;
-> > > > -		BUG();
-> > > > -	}
-> > > > +	pp->root_bus_nr = sys->busnr;
-> > > > +	bus = pci_create_root_bus(pp->dev, sys->busnr,
-> > > > +				  &dw_pcie_ops, sys, &sys->resources);
-> > > > +	if (!bus)
-> > > > +		return NULL;
-> > > > +
-> > > > +	pci_scan_child_bus(bus);
-> > >
-> > >
-> > > I think that we still need to check if pp is NULL.
-> > > Then, how about adding NULL check as below?
-> > >
-> > No I don't think it's needed as it doesn't provide any additional
-> > security.
+On Tue, Jul 08, 2014 at 03:14:17PM +0100, Arnd Bergmann wrote:
+> On Tuesday 08 July 2014, Liviu Dudau wrote:
+> > > Here's what these look like in /proc/iomem and /proc/ioports (note that
+> > > there are two resource structs for each memory-mapped IO port space: one
+> > > IORESOURCE_MEM for the memory-mapped area (used only by the host bridge
+> > > driver), and one IORESOURCE_IO for the I/O port space (this becomes the
+> > > parent of a region used by a regular device driver):
+> > > 
+> > >   /proc/iomem:
+> > >     PCI Bus 0000:00 I/O Ports 00000000-00000fff
+> > >     PCI Bus 0001:00 I/O Ports 01000000-01000fff
+> > > 
+> > >   /proc/ioports:
+> > >     00000000-00000fff : PCI Bus 0000:00
+> > >     01000000-01000fff : PCI Bus 0001:00
 > > 
-> > The only code path that is calling this dw_pci_scan_bus() is in
-> > pcibios_init_hw() which always fills sys->private_data with
-> > hw_pci->private_data. As we are always filling hw_pci->private_data with
-> > a pointer to our pcie_port structure in dw_pcie_host_init() the only way
-> > for pp to be NULL at this point would be for pp to be NULL in
-> > dw_pcie_host_init(). This would obviously crash a lot earlier.
-> > 
-> > So this check is just adding to LOC without adding any value.
+> > OK, I have a question that might be ovbious to you but I have missed the answer
+> > so far: how does the IORESOURCE_MEM area gets created? Is it the host bridge
+> > driver's job to do it? Is it something that the framework should do when it
+> > notices that the IORESOURCE_IO is memory mapped?
 > 
-> Hi Lucas,
+> The host bridge driver should either register the IORESOURCE_MEM resource
+> itself from its probe or setup function, or it should get registered behind
+> the covers in drivers using of_create_pci_host_bridge().
 > 
-> I see what you mean. However, pcie-designware.c has been handled by
-> various engineers. So, it is not sure that the current sequence will
-> not change in the future. Anyway, thank you for your comment. :-)
-> 
-I just looked this up and we we have a lot (and in some cases
-inconsistent checks) for this sprinkled through the driver. I would
-prefer to keep this patch as is and instead add this check to
-sys_to_pcie(). This way we could remove it from the various call sites
-while keeping the safety it provides. If you agree I can send a patch to
-do this.
+> Your new pci_host_bridge_of_get_ranges already loops over all the 
+> resources, so it would be a good place to put that.
 
-Regards,
-Lucas
+OK, so it is not something that I've missed, just something that x86-64 does and
+my version doesn't yet.
+
+Thanks for confirming that.
+
+Liviu
+
+> 
+> 	Arnd
+> 
 
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
