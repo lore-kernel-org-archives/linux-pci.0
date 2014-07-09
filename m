@@ -1,109 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:65458 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934045AbaGXIDP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jul 2014 04:03:15 -0400
-Message-ID: <53D0BDB8.3030706@huawei.com>
-Date: Thu, 24 Jul 2014 16:03:04 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:50725 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752746AbaGIQHJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 12:07:09 -0400
+Received: by mail-qg0-f44.google.com with SMTP id j107so6684531qga.3
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 09:07:08 -0700 (PDT)
 MIME-Version: 1.0
-To: John Fadel <john.fadel@gmail.com>
-CC: <linux-pci@vger.kernel.org>
-Subject: Re: PCIe IOMEM Resource Allocation
-References: <loom.20140724T083447-909@post.gmane.org>	<53D0B24A.30100@huawei.com> <CAEYyDAt-PHsB9wrfCiNnd1_RFq3xUQNXWeh5QR9nJVZKho_0JQ@mail.gmail.com>
-In-Reply-To: <CAEYyDAt-PHsB9wrfCiNnd1_RFq3xUQNXWeh5QR9nJVZKho_0JQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20140708122606.GB6270@dhcp-26-207.brq.redhat.com>
+References: <cover.1402405331.git.agordeev@redhat.com> <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
+ <20140702202201.GA28852@google.com> <20140704085741.GA12247@dhcp-26-207.brq.redhat.com>
+ <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com> <20140708122606.GB6270@dhcp-26-207.brq.redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 9 Jul 2014 10:06:48 -0600
+Message-ID: <CAErSpo4oiabgoOjsGdWZpCMPnmopK4xRzB2f3tM0AiUFrdhFww@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/7/24 15:30, John Fadel wrote:
-> I already tried pci=nocrs and I have exactly the same behaviour ..
-> 
-> Is there any way to extend this range after linux is up ?
-> How can I access _CRS method to extend this range ?
-> Is there a way to force larger range during the boot of linux ?
-> 
+On Tue, Jul 8, 2014 at 6:26 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> On Mon, Jul 07, 2014 at 01:40:48PM -0600, Bjorn Helgaas wrote:
+>> >> Can you quantify the benefit of this?  Can't a device already use
+>> >> MSI-X to request exactly the number of vectors it can use?  (I know
+>> >
+>> > A Intel AHCI chipset requires 16 vectors written to MME while advertises
+>> > (via AHCI registers) and uses only 6. Even attempt to init 8 vectors results
+>> > in device's fallback to 1 (!).
+>>
+>> Is the fact that it uses only 6 vectors documented in the public spec?
+>
+> Yes, it is documented in ICH specs.
 
-First you should guarantee the extend resource range is free in your system,
-you can check this from cat /proc/iomem;
-Then if you add the pci=nocrs and still fail to use the extend resource range,
-this is not a OS problem, and maybe BIOS does not allow OS to use extend resource out of default hostbridge
-window.
+Out of curiosity, do you have a pointer to this?  It looks like it
+uses one vector per port, and I'm wondering if the reason it requests
+16 is because there's some possibility of a part with more than 8
+ports.
 
-There is no other way to extend the _CRS from OS.
+>> Is this a chipset erratum?  Are there newer versions of the chipset
+>> that fix this, e.g., by requesting 8 vectors and using 6, or by also
+>> supporting MSI-X?
+>
+> No, this is not an erratum. The value of 8 vectors is reserved and could
+> cause undefined results if used.
 
-Thanks!
-Yijing.
+As I read the spec (PCI 3.0, sec 6.8.1.3), if MMC contains 0b100
+(requesting 16 vectors), the OS is allowed to allocate 1, 2, 4, 8, or
+16 vectors.  If allocating 8 vectors and writing 0b011 to MME causes
+undefined results, I'd say that's a chipset defect.
 
+>> I know this conserves vector numbers.  What does that mean in real
+>> user-visible terms?  Are there systems that won't boot because of this
+>> issue, and this patch fixes them?  Does it enable bigger
+>> configurations, e.g., more I/O devices, than before?
+>
+> Visibly, it ceases logging messages ('ahci 0000:00:1f.2: irq 107 for
+> MSI/MSI-X') for IRQs that are not shown in /proc/interrupts later.
+>
+> No, it does not enable/fix any existing hardware issue I am aware of.
+> It just saves a couple of interrupt vectors, as Michael put it (10/16
+> to be precise). However, interrupt vectors space is pretty much scarce
+> resource on x86 and a risk of exhausting the vectors (and introducing
+> quota i.e) has already been raised AFAIR.
 
-> 
-> 
-> 
-> On Thu, Jul 24, 2014 at 9:14 AM, Yijing Wang <wangyijing@huawei.com <mailto:wangyijing@huawei.com>> wrote:
-> 
->     On 2014/7/24 14:35, John wrote:
->     > Hi
->     > I am trying to write a PCIe linux device driver to handle PCIe switches and
->     > endpoints that show up after the Redhat 6.4 linux is already up and running.
->     >
->     > If I try to allocate the resources of the PCIe switches & endpoints between
->     > 0xF4000000 and 0xF47FFFFF everything works fine .. But this range is quite
->     > full with other devices, so I tried to extend this range to start from
->     > 0xF0000000, or from 0xD0000000 the allocation works fine, but I am unable to
->     > access devices in the extended range
->     >
->     > Anybody has idea why I am unable to use the complete 3G - 4G address range ?
->     > Is it related to some ACPI boot configuration that need to be changed, I can
->     > see in my dmesg
->     >
->     > pci_root PNP0A08:00: host bridge window [mem 0xf4000000-0xf7ffffff]
->     > pci_root PNP0A08:00: host bridge window [io 0x1000-0x7fff]
->     > pci_root PNP0A08:00: host bridge window [io 0x0000-0x03af]
->     > pci_root PNP0A08:00: host bridge window [io 0x03e0-0x0cf7]
->     > pci_root PNP0A08:00: host bridge window [io 0x0d00-0x0fff]
->     > pci_root PNP0A08:00: host bridge window [mem 0xfed00000-0xfed03fff]
->     > pci_root PNP0A08:00: host bridge window [mem 0xfed40000-0xfed44fff]
->     > pci_root PNP0A08:00: host bridge window [io 0x03b0-0x03bb]
->     > pci_root PNP0A08:00: host bridge window [io 0x03c0-0x03df]
->     > pci_root PNP0A08:00: host bridge window [mem 0x000a0000-0x000bffff]
->     > pci_root PNP0A08:01: host bridge window [mem 0xf8000000-0xfbffffff]
->     > pci_root PNP0A08:01: host bridge window [io 0x8000-0xffff]
->     >
->     > Is there a reason for this limited range ? Is it processor dependant ?
-> 
->     Yes, you should use the resource range in host bridge window, or you won't
->     request resource success. PCI hostbridge retrieve the host bridge window
->     from ACPI _CRS method, if _CRS is not exist, PCI may use global resource
->     iomem_resource and ioport_resource as its hostbridge window.
-> 
->     BIOS is responsible for the _CRS resource range report.
-> 
->     BTW, you can append the pci=nocrs in command line and try again.
-> 
-> 
->     Thanks!
->     Yijing.
-> 
-> 
->     >
->     > Thanks
->     >
->     > --
->     > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->     > the body of a message to majordomo@vger.kernel.org <mailto:majordomo@vger.kernel.org>
->     > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->     >
->     >
-> 
-> 
->     --
->     Thanks!
->     Yijing
-> 
-> 
+I'm not too concerned about the logging issue.  If necessary, we could
+tweak that message somehow.
 
+Interrupt vector space is the issue I would worry about, but I think
+I'm going to put this on the back burner until it actually becomes a
+problem.
 
--- 
-Thanks!
-Yijing
+>> Do you know how Windows handles this?  Does it have a similar interface?
+>
+> Have no clue, TBH. Can try to investigate if you see it helpful.
 
+No, don't worry about investigating.  I was just curious because if
+Windows *did* support something like this, that would be an indication
+that there's a significant problem here and we might need to solve it,
+too.  But it sounds like we can safely ignore it for now.
+
+Bjorn
