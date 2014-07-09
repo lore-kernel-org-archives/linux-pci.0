@@ -1,220 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:32448 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753718AbaGJNDf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 09:03:35 -0400
-From: David Vrabel <david.vrabel@citrix.com>
-To: <linux-pci@vger.kernel.org>
-CC: David Vrabel <david.vrabel@citrix.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<xen-devel@lists.xenproject.org>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Subject: [PATCH 2/2] xen-pciback: provide a "reset" sysfs file to try harder at an SBR
-Date: Thu, 10 Jul 2014 14:03:14 +0100
-Message-ID: <1404997394-15715-3-git-send-email-david.vrabel@citrix.com>
-In-Reply-To: <1404997394-15715-1-git-send-email-david.vrabel@citrix.com>
-References: <1404997394-15715-1-git-send-email-david.vrabel@citrix.com>
+Received: from mail-by2lp0236.outbound.protection.outlook.com ([207.46.163.236]:35685
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756571AbaGIXFM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Jul 2014 19:05:12 -0400
+From: <suravee.suthikulpanit@amd.com>
+To: <marc.zyngier@arm.com>, <mark.rutland@arm.com>,
+	<jason@lakedaemon.net>
+CC: <pawel.moll@arm.com>, <Catalin.Marinas@arm.com>,
+	<Will.Deacon@arm.com>, <tglx@linutronix.de>,
+	<Harish.Kasiviswanathan@amd.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH 0/4 V3] irqchip: gic: Introduce ARM GICv2m MSI(-X) support
+Date: Wed, 9 Jul 2014 18:05:00 -0500
+Message-ID: <1404947104-21345-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The standard implementation of pci_reset_function() does not try an
-SBR if there are other sibling devices.  This is a common
-configuration for multi-function devices (e.g., GPUs with a HDMI audio
-device function).
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-If all the functions are co-assigned to the same domain at the same
-time, then it is safe to perform an SBR to reset all functions at the
-same time.
+This patch set introduces support for MSI(-X) in GICv2m specification,
+which is implemented in some variation of GIC400.
 
-Add a "reset" sysfs file with the same interface as the standard one
-(i.e., write 1 to reset) that will try an SBR if all sibling devices
-are unbound or bound to pciback.
+This depends on and has been tested with the V7 of"Add support for PCI in AArch64"
+(https://lkml.org/lkml/2014/3/14/320).
 
-Note that this is weaker than the requirement for functions to be
-simultaneously co-assigned, but the toolstack is expected to ensure
-this.
+Changes in V3:
+    * Rebase to git://git.infradead.org/users/jcooper/linux.git irqchip/gic
+      (per Jason Cooper request)
+    * Misc fix/clean up per Mark Rutland comments
+    * Minor Clean up in the driver/irqchip/irq-gic-v2m.c: alloc_msi_irqs()
+    * Patch 4 is new to the series:
+        * Add ARM64-specific version arch_setup_msi_irqs() to allow support
+          for Multiple MSI.
+        * Add support for Multiple MSI for GICv2m.
 
-Signed-off-by: David Vrabel <david.vrabel@citrix.com>
----
-Changes in v3:
-- probe for function reset
-- use pci_reset_bus().
+Suravee Suthikulpanit (4):
+  irqchip: gic: Add binding probe for ARM GIC400
+  irqchip: gic: Restructuring ARM GIC code
+  irqchip: gic: Add supports for ARM GICv2m MSI(-X)
+  irqchip: gicv2m: Add support for multiple MSI for ARM64 GICv2m
 
-Changes in v2:
-- defer creating sysfs node to late init.
----
- drivers/xen/xen-pciback/pci_stub.c |  107 +++++++++++++++++++++++++++++++++++-
- drivers/xen/xen-pciback/pciback.h  |    1 +
- 2 files changed, 105 insertions(+), 3 deletions(-)
+ Documentation/devicetree/bindings/arm/gic.txt |  20 +-
+ arch/arm64/Kconfig                            |   1 +
+ arch/arm64/include/asm/msi.h                  |  15 ++
+ arch/arm64/kernel/Makefile                    |   1 +
+ arch/arm64/kernel/msi.c                       |  57 +++++
+ drivers/irqchip/Kconfig                       |   7 +
+ drivers/irqchip/Makefile                      |   1 +
+ drivers/irqchip/irq-gic-v2m.c                 | 331 ++++++++++++++++++++++++++
+ drivers/irqchip/irq-gic-v2m.h                 |  13 +
+ drivers/irqchip/irq-gic.c                     |  90 ++++---
+ drivers/irqchip/irq-gic.h                     |  67 ++++++
+ 11 files changed, 562 insertions(+), 41 deletions(-)
+ create mode 100644 arch/arm64/include/asm/msi.h
+ create mode 100644 arch/arm64/kernel/msi.c
+ create mode 100644 drivers/irqchip/irq-gic-v2m.c
+ create mode 100644 drivers/irqchip/irq-gic-v2m.h
+ create mode 100644 drivers/irqchip/irq-gic.h
 
-diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-index d57a173..c7deceb 100644
---- a/drivers/xen/xen-pciback/pci_stub.c
-+++ b/drivers/xen/xen-pciback/pci_stub.c
-@@ -63,6 +63,100 @@ static LIST_HEAD(pcistub_devices);
- static int initialize_devices;
- static LIST_HEAD(seized_devices);
- 
-+/*
-+ * pci_reset_function() will only work if there is a mechanism to
-+ * reset that single function (e.g., FLR or a D-state transition).
-+ * For PCI hardware that has two or more functions but no per-function
-+ * reset, we can do a bus reset iff all the functions are co-assigned
-+ * to the same domain.
-+ *
-+ * If a function has no per-function reset mechanism the 'reset' sysfs
-+ * file that the toolstack uses to reset a function prior to assigning
-+ * the device will be missing.  In this case, pciback adds its own
-+ * which will try a bus reset.
-+ *
-+ * Note: pciback does not check for co-assigment before doing a bus
-+ * reset, only that the devices are bound to pciback.  The toolstack
-+ * is assumed to have done the right thing.
-+ */
-+static int __pcistub_reset_function(struct pci_dev *dev)
-+{
-+	struct pci_dev *pdev;
-+	int ret;
-+
-+	ret = __pci_reset_function_locked(dev);
-+	if (ret == 0)
-+		return 0;
-+
-+	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
-+		return -ENOTTY;
-+
-+	list_for_each_entry(pdev, &dev->bus->devices, bus_list) {
-+		if (pdev != dev && (!pdev->driver
-+				    || strcmp(pdev->driver->name, "pciback")))
-+			return -ENOTTY;
-+	}
-+
-+	return pci_reset_bus(dev->bus);
-+}
-+
-+static int pcistub_reset_function(struct pci_dev *dev)
-+{
-+	int ret;
-+
-+	device_lock(&dev->dev);
-+	ret = __pcistub_reset_function(dev);
-+	device_unlock(&dev->dev);
-+
-+	return ret;
-+}
-+
-+static ssize_t pcistub_reset_store(struct device *dev,
-+				   struct device_attribute *attr,
-+				   const char *buf, size_t count)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	unsigned long val;
-+	ssize_t result = strict_strtoul(buf, 0, &val);
-+
-+	if (result < 0)
-+		return result;
-+
-+	if (val != 1)
-+		return -EINVAL;
-+
-+	result = pcistub_reset_function(pdev);
-+	if (result < 0)
-+		return result;
-+	return count;
-+}
-+static DEVICE_ATTR(reset, 0200, NULL, pcistub_reset_store);
-+
-+static int pcistub_try_create_reset_file(struct pci_dev *pci)
-+{
-+	struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
-+	struct device *dev = &pci->dev;
-+	int ret;
-+
-+	/* Already have a per-function reset? */
-+	if (pci_probe_reset_function(pci) == 0)
-+		return 0;
-+
-+	ret = device_create_file(dev, &dev_attr_reset);
-+	if (ret < 0)
-+		return ret;
-+	dev_data->created_reset_file = true;
-+	return 0;
-+}
-+
-+static void pcistub_remove_reset_file(struct pci_dev *pci)
-+{
-+	struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
-+
-+	if (dev_data && dev_data->created_reset_file)
-+		device_remove_file(&pci->dev, &dev_attr_reset);
-+}
-+
- static struct pcistub_device *pcistub_device_alloc(struct pci_dev *dev)
- {
- 	struct pcistub_device *psdev;
-@@ -103,7 +197,8 @@ static void pcistub_device_release(struct kref *kref)
- 	/* Call the reset function which does not take lock as this
- 	 * is called from "unbind" which takes a device_lock mutex.
- 	 */
--	__pci_reset_function_locked(dev);
-+	__pcistub_reset_function(psdev->dev);
-+
- 	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
- 		dev_dbg(&dev->dev, "Could not reload PCI state\n");
- 	else
-@@ -280,7 +375,7 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
- 	/* This is OK - we are running from workqueue context
- 	 * and want to inhibit the user from fiddling with 'reset'
- 	 */
--	pci_reset_function(dev);
-+	pcistub_reset_function(dev);
- 	pci_restore_state(dev);
- 
- 	/* This disables the device. */
-@@ -404,7 +499,7 @@ static int pcistub_init_device(struct pci_dev *dev)
- 		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
- 	else {
- 		dev_dbg(&dev->dev, "resetting (FLR, D3, etc) the device\n");
--		__pci_reset_function_locked(dev);
-+		__pcistub_reset_function(dev);
- 		pci_restore_state(dev);
- 	}
- 	/* Now disable the device (this also ensures some private device
-@@ -413,6 +508,10 @@ static int pcistub_init_device(struct pci_dev *dev)
- 	dev_dbg(&dev->dev, "reset device\n");
- 	xen_pcibk_reset_device(dev);
- 
-+	err = pcistub_try_create_reset_file(dev);
-+	if (err < 0)
-+		goto config_release;
-+
- 	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
- 	return 0;
- 
-@@ -540,6 +639,8 @@ static void pcistub_remove(struct pci_dev *dev)
- 
- 	dev_dbg(&dev->dev, "removing\n");
- 
-+	pcistub_remove_reset_file(dev);
-+
- 	spin_lock_irqsave(&pcistub_devices_lock, flags);
- 
- 	xen_pcibk_config_quirk_release(dev);
-diff --git a/drivers/xen/xen-pciback/pciback.h b/drivers/xen/xen-pciback/pciback.h
-index f72af87..708ade9 100644
---- a/drivers/xen/xen-pciback/pciback.h
-+++ b/drivers/xen/xen-pciback/pciback.h
-@@ -42,6 +42,7 @@ struct xen_pcibk_device {
- struct xen_pcibk_dev_data {
- 	struct list_head config_fields;
- 	struct pci_saved_state *pci_saved_state;
-+	bool created_reset_file;
- 	unsigned int permissive:1;
- 	unsigned int warned_on_write:1;
- 	unsigned int enable_intx:1;
 -- 
-1.7.10.4
+1.9.0
 
