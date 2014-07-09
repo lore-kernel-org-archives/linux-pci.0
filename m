@@ -1,58 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:13071 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751425AbaG2BjA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jul 2014 21:39:00 -0400
-From: Jisheng Zhang <jszhang@marvell.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-	<swarren@wwwdotorg.org>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Jisheng Zhang <jszhang@marvell.com>
-Subject: [PATCH v3] PCI: tegra: add missing cleanup in error path and teardown_irq
-Date: Tue, 29 Jul 2014 09:33:30 +0800
-Message-ID: <1406597610-6748-1-git-send-email-jszhang@marvell.com>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:38514 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932306AbaGIPdO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 11:33:14 -0400
+Received: by mail-ig0-f175.google.com with SMTP id h3so1998150igd.8
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 08:33:13 -0700 (PDT)
+Received: from localhost ([172.16.48.225])
+        by mx.google.com with ESMTPSA id v6sm16322477igz.21.2014.07.09.08.33.12
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Wed, 09 Jul 2014 08:33:13 -0700 (PDT)
+Subject: [PATCH 0/3] Minor resource assignment cleanups
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 09 Jul 2014 09:33:12 -0600
+Message-ID: <20140709153252.1004.86246.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should call tegra_msi_free() to free the MSI bit if
-irq_create_mapping() fails. And we need to dispose the IRQ mapping
-during IRQ teardown.
+These are minor, mostly cosmetic changes, although they do make
+a few changes to the messages printed by resource assignment.  I'm
+planning these for v3.17.
 
-Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
 ---
- drivers/pci/host/pci-tegra.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 083cf37..4ccc418 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -1203,8 +1203,10 @@ static int tegra_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
- 		return hwirq;
- 
- 	irq = irq_create_mapping(msi->domain, hwirq);
--	if (!irq)
-+	if (!irq) {
-+		tegra_msi_free(msi, hwirq);
- 		return -EINVAL;
-+	}
- 
- 	irq_set_msi_desc(irq, desc);
- 
-@@ -1222,8 +1224,10 @@ static void tegra_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
- {
- 	struct tegra_msi *msi = to_tegra_msi(chip);
- 	struct irq_data *d = irq_get_irq_data(irq);
-+	unsigned long hwirq = d->hwirq;
- 
--	tegra_msi_free(msi, d->hwirq);
-+	irq_dispose_mapping(irq);
-+	tegra_msi_free(msi, hwirq);
- }
- 
- static struct irq_chip tegra_msi_irq_chip = {
--- 
-2.0.1
+Bjorn Helgaas (3):
+      PCI: Cleanup control flow
+      PCI: Return conventional error values from pci_revert_fw_address()
+      PCI: Tidy resource assignment messages
 
+
+ drivers/pci/setup-res.c |   69 ++++++++++++++++++++---------------------------
+ 1 file changed, 30 insertions(+), 39 deletions(-)
