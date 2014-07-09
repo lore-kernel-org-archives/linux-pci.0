@@ -1,130 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:40996 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750867AbaGHMnM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jul 2014 08:43:12 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Murali Karicheri' <m-karicheri2@ti.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org
-Cc: 'Santosh Shilimkar' <santosh.shilimkar@ti.com>,
-	'Russell King' <linux@arm.linux.org.uk>,
-	'Grant Likely' <grant.likely@linaro.org>,
-	'Rob Herring' <robh+dt@kernel.org>,
-	'Mohit Kumar' <mohit.kumar@st.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Marek Vasut' <marex@denx.de>, 'Arnd Bergmann' <arnd@arndb.de>,
-	'Pawel Moll' <pawel.moll@arm.com>,
-	'Mark Rutland' <mark.rutland@arm.com>,
-	'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
-	'Kumar Gala' <galak@codeaurora.org>,
-	'Randy Dunlap' <rdunlap@infradead.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1404164720-11066-1-git-send-email-m-karicheri2@ti.com>
- <1404164720-11066-6-git-send-email-m-karicheri2@ti.com>
-In-reply-to: <1404164720-11066-6-git-send-email-m-karicheri2@ti.com>
-Subject: Re: [PATCH v3 5/5] PCI: add PCI controller for Keystone PCIe h/w
-Date: Tue, 08 Jul 2014 21:43:06 +0900
-Message-id: <000f01cf9aaa$2a59a6b0$7f0cf410$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mout.kundenserver.de ([212.227.126.131]:55779 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752576AbaGIGsC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 02:48:02 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [PATCH v8 8/9] pci: Add support for creating a generic host_bridge from device tree
+Date: Wed, 9 Jul 2014 08:47:40 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <20140708223737.GA19512@google.com> <20140708225755.GE4980@e106497-lin.cambridge.arm.com>
+In-Reply-To: <20140708225755.GE4980@e106497-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201407090847.41303.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 01, 2014 6:45 AM, Murali Karicheri wrote:
-> 
-> Keystone PCIe controller is based on v3.65 version of the
-> designware h/w. Main differences are
-> 	1. No ATU support
-> 	2. Legacy and MSI irq functions are implemented in
-> 	   application register space
-> 	3. MSI interrupts are multiplexed over 8 IRQ lines to the Host
-> 	   side.
-> All of the Application register space handing code are organized into
-> pci-keystone-dw.c and the functions are called from pci-keystone.c
-> to implement PCI controller driver. Also add necessary DT documentation
-> for the driver.
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> 
-> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-> CC: Russell King <linux@arm.linux.org.uk>
-> CC: Grant Likely <grant.likely@linaro.org>
-> CC: Rob Herring <robh+dt@kernel.org>
-> CC: Mohit Kumar <mohit.kumar@st.com>
-> CC: Jingoo Han <jg1.han@samsung.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Pratyush Anand <pratyush.anand@st.com>
-> CC: Richard Zhu <r65037@freescale.com>
-> CC: Kishon Vijay Abraham I <kishon@ti.com>
-> CC: Marek Vasut <marex@denx.de>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Pawel Moll <pawel.moll@arm.com>
-> CC: Mark Rutland <mark.rutland@arm.com>
-> CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-> CC: Kumar Gala <galak@codeaurora.org>
-> CC: Randy Dunlap <rdunlap@infradead.org>
-> CC: Grant Likely <grant.likely@linaro.org>
-> ---
->  .../devicetree/bindings/pci/pci-keystone.txt       |   69 +++
->  drivers/pci/host/Kconfig                           |    5 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-keystone-dw.c                 |  523 ++++++++++++++++++++
->  drivers/pci/host/pci-keystone.c                    |  381 ++++++++++++++
->  drivers/pci/host/pci-keystone.h                    |   56 +++
->  6 files changed, 1035 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/pci-keystone.txt
->  create mode 100644 drivers/pci/host/pci-keystone-dw.c
->  create mode 100644 drivers/pci/host/pci-keystone.c
->  create mode 100644 drivers/pci/host/pci-keystone.h
-> 
+On Wednesday 09 July 2014, Liviu Dudau wrote:
+> On Tue, Jul 08, 2014 at 11:37:37PM +0100, Bjorn Helgaas wrote:
+> > On Tue, Jul 08, 2014 at 11:27:38PM +0100, Liviu Dudau wrote:
+> > > > > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > > > > > index 7e7b939..556dc5f 100644
+> > > > > > > --- a/include/linux/pci.h
+> > > > > > > +++ b/include/linux/pci.h
+> > > > > > > @@ -402,6 +402,7 @@ struct pci_host_bridge {
+> > > > > > >       struct device dev;
+> > > > > > >       struct pci_bus *bus;            /* root bus */
+> > > > > > >       int domain_nr;
+> > > > > > > +     resource_size_t io_base;        /* physical address for the start of I/O area */
+> > > > > > 
+> > > > > > I don't see where this is used yet.
+> > > > > 
+> > > > > It's used in pci_host_bridge_of_get_ranges() (earlier in this patch).
+> > > > 
+> > > > of_create_pci_host_bridge() fills in bridge->io_base, but I don't see
+> > > > anything that ever reads bridge->io_base.
+> > > 
+> > > Ah, understood. It is used by the host bridge drivers to set their ATR registers to the
+> > > correct CPU address values.
 
-[.....]
+Actually, as we just discovered with one of the pci_dw drivers, it may
+be the wrong number: what you program in the ATR registers is not
+necessarily the same as the address visible to the CPU. What you need
+instead is the address at the bus immediately above the PCI host bridge.
 
-> +
-> +static int __init ks_pcie_probe(struct platform_device *pdev)
-> +{
-> +	struct device_node *np = pdev->dev.of_node;
-> +	struct device *dev = &pdev->dev;
-> +	struct keystone_pcie *ks_pcie;
-> +	struct pcie_port *pp;
-> +	struct resource *res;
-> +	void __iomem *reg_p;
-> +	struct phy *phy;
-> +	int ret = 0;
-> +	u32 val;
-> +
-> +	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
-> +				GFP_KERNEL);
-> +	if (!ks_pcie) {
-> +		dev_err(dev, "no memory for keystone pcie\n");
-> +		return -ENOMEM;
-> +	}
-> +	pp = &ks_pcie->pp;
-> +
-> +	/* initialize SerDes Phy if present */
-> +	phy = devm_phy_get(dev, "pcie-phy");
-> +	if (phy)
-> +		ret = phy_init(phy);
+I think for now we can leave out this part from common code and add
+the infrastructure later. Host drivers can have their own loop
+around the ranges if they need to set up these registers. Ideally
+at least on arm64, they should be set up by the firmware already.
 
-Why don't you check 'ret' value?
-How about the following?
-
-+	/* initialize SerDes Phy if present */
-+	phy = devm_phy_get(dev, "pcie-phy");
-+	if (!IS_ERR_OR_NULL(phy) {
-+		ret = phy_init(phy);
-+		if (ret <0)
-+			return ret;
-+	}
-
-
-Best regards,
-Jingoo Han
-
-[....]
-
-
+	Arnd
