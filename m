@@ -1,82 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:58085 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965440AbaGPQjf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Jul 2014 12:39:35 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Marek Vasut <marex@denx.de>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH v5 5/5] PCI: keystone: Update maintainer information
-Date: Wed, 16 Jul 2014 12:38:06 -0400
-Message-ID: <1405528686-16539-6-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com>
-References: <1405528686-16539-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:41247 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756181AbaGIPde (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 11:33:34 -0400
+Received: by mail-ig0-f182.google.com with SMTP id c1so2000224igq.9
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 08:33:33 -0700 (PDT)
+Received: from localhost ([172.16.48.225])
+        by mx.google.com with ESMTPSA id t1sm16346471igh.9.2014.07.09.08.33.32
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Wed, 09 Jul 2014 08:33:33 -0700 (PDT)
+Subject: [PATCH 3/3] PCI: Tidy resource assignment messages
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 09 Jul 2014 09:33:31 -0600
+Message-ID: <20140709153331.1004.51135.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140709153252.1004.86246.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140709153252.1004.86246.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Update the MAINTAINERS file for the keystone PCIe driver
+Print messages about failures in pci_assign_resource().  We can drop the
+"by-hand" message from _pci_assign_resource() because %pR now prints the
+size rather than the address if the resource hasn't been assigned.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+No functional change.
 
-CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Mohit Kumar <mohit.kumar@st.com>
-CC: Jingoo Han <jg1.han@samsung.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Pratyush Anand <pratyush.anand@st.com>
-CC: Richard Zhu <r65037@freescale.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Marek Vasut <marex@denx.de>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Pawel Moll <pawel.moll@arm.com>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
-CC: Kumar Gala <galak@codeaurora.org>
-CC: Randy Dunlap <rdunlap@infradead.org>
-CC: Grant Likely <grant.likely@linaro.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- MAINTAINERS |    7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/pci/setup-res.c |   28 +++++++++-------------------
+ 1 file changed, 9 insertions(+), 19 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index e31c874..8158f82 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6807,6 +6807,13 @@ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- F:	drivers/pci/host/*imx6*
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 74eb6febdf87..6a9e4ec37af0 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -251,7 +251,6 @@ static int _pci_assign_resource(struct pci_dev *dev, int resno,
+ 	struct resource *res = dev->resource + resno;
+ 	struct pci_bus *bus;
+ 	int ret;
+-	char *type;
  
-+PCI DRIVER FOR keystone
-+M:	Murali Karicheri <m-karicheri2@ti.com>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-+S:	Maintained
-+F:	drivers/pci/host/*keystone*
-+
- PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
- M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
- M:	Jason Cooper <jason@lakedaemon.net>
--- 
-1.7.9.5
+ 	bus = dev->bus;
+ 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
+@@ -260,21 +259,6 @@ static int _pci_assign_resource(struct pci_dev *dev, int resno,
+ 		bus = bus->parent;
+ 	}
+ 
+-	if (ret) {
+-		if (res->flags & IORESOURCE_MEM)
+-			if (res->flags & IORESOURCE_PREFETCH)
+-				type = "mem pref";
+-			else
+-				type = "mem";
+-		else if (res->flags & IORESOURCE_IO)
+-			type = "io";
+-		else
+-			type = "unknown";
+-		dev_info(&dev->dev,
+-			 "BAR %d: can't assign %s (size %#llx)\n",
+-			 resno, type, (unsigned long long) resource_size(res));
+-	}
+-
+ 	return ret;
+ }
+ 
+@@ -300,11 +284,16 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
+ 	 * where firmware left it.  That at least has a chance of
+ 	 * working, which is better than just leaving it disabled.
+ 	 */
+-	if (ret < 0)
++	if (ret < 0) {
++		dev_info(&dev->dev, "BAR %d: no space for %pR\n", resno, res);
+ 		ret = pci_revert_fw_address(res, dev, resno, size);
++	}
+ 
+-	if (ret < 0)
++	if (ret < 0) {
++		dev_info(&dev->dev, "BAR %d: failed to assign %pR\n", resno,
++			 res);
+ 		return ret;
++	}
+ 
+ 	res->flags &= ~IORESOURCE_UNSET;
+ 	res->flags &= ~IORESOURCE_STARTALIGN;
+@@ -344,7 +333,8 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+ 
+ 	res->flags &= ~IORESOURCE_UNSET;
+ 	res->flags &= ~IORESOURCE_STARTALIGN;
+-	dev_info(&dev->dev, "BAR %d: reassigned %pR\n", resno, res);
++	dev_info(&dev->dev, "BAR %d: reassigned %pR (expanded by %#llx)\n",
++		 resno, res, (unsigned long long) addsize);
+ 	if (resno < PCI_BRIDGE_RESOURCES)
+ 		pci_update_resource(dev, resno);
+ 
 
