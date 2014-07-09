@@ -1,90 +1,122 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 2 Jul 2014 16:19:43 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Simone Gotti <simone.gotti@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>, Narendra_K@Dell.com
-Subject: Re: [PATCH 1/1] ACPI / PCI: Fix "Operation not permitted" error
- reading sysfs acpi_index and label files.
-Message-ID: <20140702221943.GD28852@google.com>
-References: <1403103077-17589-1-git-send-email-simone.gotti@gmail.com>
- <1403103330-17874-1-git-send-email-simone.gotti@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.131]:60179 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751054AbaGIGZs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 02:25:48 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper function.
+Date: Wed, 9 Jul 2014 08:20:49 +0200
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com> <201407080900.44882.arnd@arndb.de> <20140708212951.GA4555@google.com>
+In-Reply-To: <20140708212951.GA4555@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1403103330-17874-1-git-send-email-simone.gotti@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201407090820.49418.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 18, 2014 at 04:55:30PM +0200, Simone Gotti wrote:
-> If the _DSM method returns an unicode string then the acpi type is not
-> ACPI_TYPE_STRING but ACPI_TYPE_BUFFER.
+On Tuesday 08 July 2014, Bjorn Helgaas wrote:
+> On Tue, Jul 8, 2014 at 1:00 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Tuesday 08 July 2014, Bjorn Helgaas wrote:
+> >> On Tue, Jul 01, 2014 at 07:43:28PM +0100, Liviu Dudau wrote:
+> >> > +static LIST_HEAD(io_range_list);
+> >> > +
+> >> > +/*
+> >> > + * Record the PCI IO range (expressed as CPU physical address + size).
+> >> > + * Return a negative value if an error has occured, zero otherwise
+> >> > + */
+> >> > +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> >>
+> >> I don't understand the interface here.  What's the mapping from CPU
+> >> physical address to bus I/O port?  For example, I have the following
+> >> machine in mind:
+> >>
+> >>   HWP0002:00: PCI Root Bridge (domain 0000 [bus 00-1b])
+> >>   HWP0002:00: memory-mapped IO port space [mem 0xf8010000000-0xf8010000fff]
+> >>   HWP0002:00: host bridge window [io  0x0000-0x0fff]
+> >>
+> >>   HWP0002:09: PCI Root Bridge (domain 0001 [bus 00-1b])
+> >>   HWP0002:09: memory-mapped IO port space [mem 0xf8110000000-0xf8110000fff]
+> >>   HWP0002:09: host bridge window [io  0x1000000-0x1000fff] (PCI address [0x0-0xfff])
+> >>
+> >> The CPU physical memory [mem 0xf8010000000-0xf8010000fff] is translated by
+> >> the bridge to I/O ports 0x0000-0x0fff on PCI bus 0000:00.  Drivers use,
+> >> e.g., "inb(0)" to access it.
+> >>
+> >> Similarly, [mem 0xf8110000000-0xf8110000fff] is translated by the second
+> >> bridge to I/O ports 0x0000-0x0fff on PCI bus 0001:00.  Drivers use
+> >> "inb(0x1000000)" to access it.
+> >
+> > I guess you are thinking of the IA64 model here where you keep the virtual
+> > I/O port numbers in a per-bus lookup table that gets accessed for each
+> > inb() call. I've thought about this some more, and I believe there are good
+> > reasons for sticking with the model used on arm32 and powerpc for the
+> > generic OF implementation.
+> >
+> > The idea is that there is a single virtual memory range for all I/O port
+> > mappings and we use the MMU to do the translation rather than computing
+> > it manually in the inb() implemnetation. The main advantage is that all
+> > functions used in device drivers to (potentially) access I/O ports
+> > become trivial this way, which helps for code size and in some cases
+> > (e.g. SoC-internal registers with a low latency) it may even be performance
+> > relevant.
 > 
-> Before commit 1d0fcef732832432aee47cb75bf4a2cb3107be64 the dsm_get_label
-> function wasn't checking the second element type and it was correctly working only with
-> ACPI_TYPE_BUFFER as the call to dsm_label_utf16s_to_utf8s will return bad
-> encoding for an ascii string.
+> My example is from ia64, but I'm not advocating for the lookup table.
+> The point is that the hardware works similarly (at least for dense ia64
+> I/O port spaces) in terms of mapping CPU physical addresses to PCI I/O
+> space.
 > 
-> Also fix dsm_label_utf16s_to_utf8s to use acpi_object->buffer instead of
-> acpi_object->string.
-> 
-> This fixes changed onboard interfaces names generated by udev net_id internal as
-> reading from the acpi_index file returned "Operation not permitted" error.
-> 
-> Signed-off-by: Simone Gotti <simone.gotti@gmail.com>
+> I think my confusion is because your pci_register_io_range() and
+> pci_addess_to_pci() implementations assume that every io_range starts at
+> I/O port 0 on PCI (correct me if I'm wrong).  I suspect that's why you
+> don't save the I/O port number in struct io_range.
 
-Applied with Jiang's reviewed-by to pci/misc for v3.17.  I also added a
-stable tag for v3.14+.  Thanks!
+I think you are just misreading the code, but I agree it's hard to
+understand and I made the same mistake in my initial reply to the
+first version.
 
-> ---
->  drivers/pci/pci-label.c | 18 ++++++++++++------
->  1 file changed, 12 insertions(+), 6 deletions(-)
+pci_register_io_range and pci_address_to_pci only worry about the mapping
+between CPU physical and Linux I/O address, they do not care which PCI
+port numbers are behind that. The mapping between PCI port numbers and
+Linux port numbers is done correctly in patch 8/9 in the
+pci_host_bridge_of_get_ranges() function.
+
+> Maybe that assumption is guaranteed by OF, but it doesn't hold for ACPI;
+> ACPI can describe several I/O port apertures for a single bridge, each
+> associated with a different CPU physical memory region.
+
+DT can have the same, although the common case is that each PCI host
+bridge has 64KB of I/O ports starting at address 0. Most driver writers
+get it wrong for the case where it starts at a different address, so
+I really want to have a generic implementation that gets it right.
+
+> If my speculation here is correct, a comment to the effect that each
+> io_range corresponds to a PCI I/O space range that starts at 0 might be
+> enough.
 > 
-> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-> index a3fbe20..2ab1b47 100644
-> --- a/drivers/pci/pci-label.c
-> +++ b/drivers/pci/pci-label.c
-> @@ -161,8 +161,8 @@ enum acpi_attr_enum {
->  static void dsm_label_utf16s_to_utf8s(union acpi_object *obj, char *buf)
->  {
->  	int len;
-> -	len = utf16s_to_utf8s((const wchar_t *)obj->string.pointer,
-> -			      obj->string.length,
-> +	len = utf16s_to_utf8s((const wchar_t *)obj->buffer.pointer,
-> +			      obj->buffer.length,
->  			      UTF16_LITTLE_ENDIAN,
->  			      buf, PAGE_SIZE);
->  	buf[len] = '\n';
-> @@ -187,16 +187,22 @@ static int dsm_get_label(struct device *dev, char *buf,
->  	tmp = obj->package.elements;
->  	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2 &&
->  	    tmp[0].type == ACPI_TYPE_INTEGER &&
-> -	    tmp[1].type == ACPI_TYPE_STRING) {
-> +	    (tmp[1].type == ACPI_TYPE_STRING ||
-> +	     tmp[1].type == ACPI_TYPE_BUFFER)) {
->  		/*
->  		 * The second string element is optional even when
->  		 * this _DSM is implemented; when not implemented,
->  		 * this entry must return a null string.
->  		 */
-> -		if (attr == ACPI_ATTR_INDEX_SHOW)
-> +		if (attr == ACPI_ATTR_INDEX_SHOW) {
->  			scnprintf(buf, PAGE_SIZE, "%llu\n", tmp->integer.value);
-> -		else if (attr == ACPI_ATTR_LABEL_SHOW)
-> -			dsm_label_utf16s_to_utf8s(tmp + 1, buf);
-> +		} else if (attr == ACPI_ATTR_LABEL_SHOW) {
-> +			if (tmp[1].type == ACPI_TYPE_STRING)
-> +				scnprintf(buf, PAGE_SIZE, "%s\n",
-> +					  tmp[1].string.pointer);
-> +			else if (tmp[1].type == ACPI_TYPE_BUFFER)
-> +				dsm_label_utf16s_to_utf8s(tmp + 1, buf);
-> +		}
->  		len = strlen(buf) > 0 ? strlen(buf) : -1;
->  	}
->  
-> -- 
-> 2.0.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> If you did add a PCI I/O port number argument to pci_register_io_range(),
+> we might be able to make an ACPI-based implementation of it.  But I guess
+> that could be done if/when anybody ever wants to do that.
+
+I think we shoulnd't worry about it before we actually need it. As far as
+I understand, the only user of that code (unless someone wants to convert
+ia64) would be ARM64 with ACPI, but that uses the SBSA hardware model that
+recommends having no I/O space at all.
+
+ 	Arnd
