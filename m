@@ -1,93 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <jg1.han@samsung.com>,
-	<bhelgaas@google.com>, <mohit.kumar@st.com>,
-	<linux-kernel@vger.kernel.org>
-CC: <kishon@ti.com>, <grant.likely@linaro.org>
-Subject: [PATCH v2 3/4] Documentation: pci: ti: Add dt binding documentation for PCIe in DRA7xx
-Date: Mon, 14 Jul 2014 20:25:04 +0530
-Message-ID: <1405349705-31400-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1405349705-31400-1-git-send-email-kishon@ti.com>
-References: <1405349705-31400-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f180.google.com ([209.85.216.180]:43897 "EHLO
+	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755997AbaGIPVh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 11:21:37 -0400
+Received: by mail-qc0-f180.google.com with SMTP id r5so6827058qcx.11
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jul 2014 08:21:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <201407090820.49418.arnd@arndb.de>
+References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
+ <201407080900.44882.arnd@arndb.de> <20140708212951.GA4555@google.com> <201407090820.49418.arnd@arndb.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 9 Jul 2014 09:21:17 -0600
+Message-ID: <CAErSpo6Oj-0cceTRM838nAFsSAJ1R7XVtqtUWV+DocqM=iwyqQ@mail.gmail.com>
+Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper function.
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Device Tree ML <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added dt binding documentation of PCIe in DRA7xx.
+On Wed, Jul 9, 2014 at 12:20 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Tuesday 08 July 2014, Bjorn Helgaas wrote:
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/devicetree/bindings/pci/ti-pci.txt |   59 ++++++++++++++++++++++
- 1 file changed, 59 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/ti-pci.txt
+>> I think my confusion is because your pci_register_io_range() and
+>> pci_addess_to_pci() implementations assume that every io_range starts at
+>> I/O port 0 on PCI (correct me if I'm wrong).  I suspect that's why you
+>> don't save the I/O port number in struct io_range.
+>
+> I think you are just misreading the code, but I agree it's hard to
+> understand and I made the same mistake in my initial reply to the
+> first version.
+>
+> pci_register_io_range and pci_address_to_pci only worry about the mapping
+> between CPU physical and Linux I/O address, they do not care which PCI
+> port numbers are behind that. The mapping between PCI port numbers and
+> Linux port numbers is done correctly in patch 8/9 in the
+> pci_host_bridge_of_get_ranges() function.
 
-diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-new file mode 100644
-index 0000000..3d21791
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-@@ -0,0 +1,59 @@
-+TI PCI Controllers
-+
-+PCIe Designware Controller
-+ - compatible: Should be "ti,dra7-pcie""
-+ - reg : Two register ranges as listed in the reg-names property
-+ - reg-names : The first entry must be "ti-conf" for the TI specific registers
-+	       The second entry must be "rc-dbics" for the designware pcie
-+	       registers
-+	       The third entry must be "config" for the PCIe configuration space
-+ - phys : list of PHY specifiers (used by generic PHY framework)
-+ - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
-+	       number of PHYs as specified in *phys* property.
-+ - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
-+	       where <X> is the instance number of the pcie from the HW spec.
-+ - interrupts : Two interrupt entries must be specified. The first one is for
-+		main interrupt line and the second for MSI interrupt line.
-+ - #address-cells,
-+   #size-cells,
-+   #interrupt-cells,
-+   device_type,
-+   ranges,
-+   num-lanes,
-+   interrupt-map-mask,
-+   interrupt-map : as specified in ../designware-pcie.txt
-+
-+Example:
-+axi {
-+	compatible = "simple-bus";
-+	#size-cells = <1>;
-+	#address-cells = <1>;
-+	ranges = <0x51000000 0x51000000 0x3000
-+		  0x0	     0x20000000 0x10000000>;
-+	pcie@51000000 {
-+		compatible = "ti,dra7-pcie";
-+		reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
-+		reg-names = "rc_dbics", "ti_conf", "config";
-+		interrupts = <0 232 0x4>, <0 233 0x4>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0          0x03000 0 0x00010000
-+			  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
-+		#interrupt-cells = <1>;
-+		num-lanes = <1>;
-+		ti,hwmods = "pcie1";
-+		phys = <&pcie1_phy>;
-+		phy-names = "pcie-phy0";
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_intc 1>,
-+				<0 0 0 2 &pcie_intc 2>,
-+				<0 0 0 3 &pcie_intc 3>,
-+				<0 0 0 4 &pcie_intc 4>;
-+		pcie_intc: interrupt-controller {
-+			interrupt-controller;
-+			#address-cells = <0>;
-+			#interrupt-cells = <1>;
-+		};
-+	};
-+};
--- 
-1.7.9.5
+Ah, I see now.  Thanks for explaining this again (I see you explained
+it earlier; I just didn't understand it).  Now that I see it, it *is*
+very slick to handle both MMIO and PIO spaces the same way.
 
+Bjorn
