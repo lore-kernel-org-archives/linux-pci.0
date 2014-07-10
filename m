@@ -1,48 +1,220 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:49918 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752892AbaG2Kte (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Jul 2014 06:49:34 -0400
-Date: Tue, 29 Jul 2014 12:49:32 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Received: from smtp02.citrix.com ([66.165.176.63]:32448 "EHLO
+	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753718AbaGJNDf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 09:03:35 -0400
+From: David Vrabel <david.vrabel@citrix.com>
+To: <linux-pci@vger.kernel.org>
+CC: David Vrabel <david.vrabel@citrix.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [Patch Part3 V4 00/21] Enable support of Intel DMAR device
- hotplug
-Message-ID: <20140729104932.GC9809@8bytes.org>
-References: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+	<xen-devel@lists.xenproject.org>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Subject: [PATCH 2/2] xen-pciback: provide a "reset" sysfs file to try harder at an SBR
+Date: Thu, 10 Jul 2014 14:03:14 +0100
+Message-ID: <1404997394-15715-3-git-send-email-david.vrabel@citrix.com>
+In-Reply-To: <1404997394-15715-1-git-send-email-david.vrabel@citrix.com>
+References: <1404997394-15715-1-git-send-email-david.vrabel@citrix.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1405059585-10620-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 11, 2014 at 02:19:24PM +0800, Jiang Liu wrote:
-> Patch 1-13 are bugfixes and code improvement for current drivers.
+The standard implementation of pci_reset_function() does not try an
+SBR if there are other sibling devices.  This is a common
+configuration for multi-function devices (e.g., GPUs with a HDMI audio
+device function).
 
-Okay, I applied these for now (1-13 only) so that you don't have to
-rebase everything next time.
+If all the functions are co-assigned to the same domain at the same
+time, then it is safe to perform an SBR to reset all functions at the
+same time.
 
-> Patch 14-17 enhances DMAR framework to support hotplug
-> Patch 18 enhances Intel interrupt remapping driver to support hotplug
-> Patch 19 enhances error handling in Intel IR driver
-> Patch 20 enhance Intel IOMMU to support hotplug
-> Patch 21 enhance ACPI pci_root driver to handle DMAR units
+Add a "reset" sysfs file with the same interface as the standard one
+(i.e., write 1 to reset) that will try an SBR if all sibling devices
+are unbound or bound to pciback.
 
-For these I'd like to see some reviews/acked-bys/tested-bys so that we
-gain more confidence on them.
+Note that this is weaker than the requirement for functions to be
+simultaneously co-assigned, but the toolstack is expected to ensure
+this.
 
+Signed-off-by: David Vrabel <david.vrabel@citrix.com>
+---
+Changes in v3:
+- probe for function reset
+- use pci_reset_bus().
 
-	Joerg
+Changes in v2:
+- defer creating sysfs node to late init.
+---
+ drivers/xen/xen-pciback/pci_stub.c |  107 +++++++++++++++++++++++++++++++++++-
+ drivers/xen/xen-pciback/pciback.h  |    1 +
+ 2 files changed, 105 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index d57a173..c7deceb 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -63,6 +63,100 @@ static LIST_HEAD(pcistub_devices);
+ static int initialize_devices;
+ static LIST_HEAD(seized_devices);
+ 
++/*
++ * pci_reset_function() will only work if there is a mechanism to
++ * reset that single function (e.g., FLR or a D-state transition).
++ * For PCI hardware that has two or more functions but no per-function
++ * reset, we can do a bus reset iff all the functions are co-assigned
++ * to the same domain.
++ *
++ * If a function has no per-function reset mechanism the 'reset' sysfs
++ * file that the toolstack uses to reset a function prior to assigning
++ * the device will be missing.  In this case, pciback adds its own
++ * which will try a bus reset.
++ *
++ * Note: pciback does not check for co-assigment before doing a bus
++ * reset, only that the devices are bound to pciback.  The toolstack
++ * is assumed to have done the right thing.
++ */
++static int __pcistub_reset_function(struct pci_dev *dev)
++{
++	struct pci_dev *pdev;
++	int ret;
++
++	ret = __pci_reset_function_locked(dev);
++	if (ret == 0)
++		return 0;
++
++	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
++		return -ENOTTY;
++
++	list_for_each_entry(pdev, &dev->bus->devices, bus_list) {
++		if (pdev != dev && (!pdev->driver
++				    || strcmp(pdev->driver->name, "pciback")))
++			return -ENOTTY;
++	}
++
++	return pci_reset_bus(dev->bus);
++}
++
++static int pcistub_reset_function(struct pci_dev *dev)
++{
++	int ret;
++
++	device_lock(&dev->dev);
++	ret = __pcistub_reset_function(dev);
++	device_unlock(&dev->dev);
++
++	return ret;
++}
++
++static ssize_t pcistub_reset_store(struct device *dev,
++				   struct device_attribute *attr,
++				   const char *buf, size_t count)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	unsigned long val;
++	ssize_t result = strict_strtoul(buf, 0, &val);
++
++	if (result < 0)
++		return result;
++
++	if (val != 1)
++		return -EINVAL;
++
++	result = pcistub_reset_function(pdev);
++	if (result < 0)
++		return result;
++	return count;
++}
++static DEVICE_ATTR(reset, 0200, NULL, pcistub_reset_store);
++
++static int pcistub_try_create_reset_file(struct pci_dev *pci)
++{
++	struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
++	struct device *dev = &pci->dev;
++	int ret;
++
++	/* Already have a per-function reset? */
++	if (pci_probe_reset_function(pci) == 0)
++		return 0;
++
++	ret = device_create_file(dev, &dev_attr_reset);
++	if (ret < 0)
++		return ret;
++	dev_data->created_reset_file = true;
++	return 0;
++}
++
++static void pcistub_remove_reset_file(struct pci_dev *pci)
++{
++	struct xen_pcibk_dev_data *dev_data = pci_get_drvdata(pci);
++
++	if (dev_data && dev_data->created_reset_file)
++		device_remove_file(&pci->dev, &dev_attr_reset);
++}
++
+ static struct pcistub_device *pcistub_device_alloc(struct pci_dev *dev)
+ {
+ 	struct pcistub_device *psdev;
+@@ -103,7 +197,8 @@ static void pcistub_device_release(struct kref *kref)
+ 	/* Call the reset function which does not take lock as this
+ 	 * is called from "unbind" which takes a device_lock mutex.
+ 	 */
+-	__pci_reset_function_locked(dev);
++	__pcistub_reset_function(psdev->dev);
++
+ 	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
+ 		dev_dbg(&dev->dev, "Could not reload PCI state\n");
+ 	else
+@@ -280,7 +375,7 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+ 	/* This is OK - we are running from workqueue context
+ 	 * and want to inhibit the user from fiddling with 'reset'
+ 	 */
+-	pci_reset_function(dev);
++	pcistub_reset_function(dev);
+ 	pci_restore_state(dev);
+ 
+ 	/* This disables the device. */
+@@ -404,7 +499,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+ 		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
+ 	else {
+ 		dev_dbg(&dev->dev, "resetting (FLR, D3, etc) the device\n");
+-		__pci_reset_function_locked(dev);
++		__pcistub_reset_function(dev);
+ 		pci_restore_state(dev);
+ 	}
+ 	/* Now disable the device (this also ensures some private device
+@@ -413,6 +508,10 @@ static int pcistub_init_device(struct pci_dev *dev)
+ 	dev_dbg(&dev->dev, "reset device\n");
+ 	xen_pcibk_reset_device(dev);
+ 
++	err = pcistub_try_create_reset_file(dev);
++	if (err < 0)
++		goto config_release;
++
+ 	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+ 	return 0;
+ 
+@@ -540,6 +639,8 @@ static void pcistub_remove(struct pci_dev *dev)
+ 
+ 	dev_dbg(&dev->dev, "removing\n");
+ 
++	pcistub_remove_reset_file(dev);
++
+ 	spin_lock_irqsave(&pcistub_devices_lock, flags);
+ 
+ 	xen_pcibk_config_quirk_release(dev);
+diff --git a/drivers/xen/xen-pciback/pciback.h b/drivers/xen/xen-pciback/pciback.h
+index f72af87..708ade9 100644
+--- a/drivers/xen/xen-pciback/pciback.h
++++ b/drivers/xen/xen-pciback/pciback.h
+@@ -42,6 +42,7 @@ struct xen_pcibk_device {
+ struct xen_pcibk_dev_data {
+ 	struct list_head config_fields;
+ 	struct pci_saved_state *pci_saved_state;
++	bool created_reset_file;
+ 	unsigned int permissive:1;
+ 	unsigned int warned_on_write:1;
+ 	unsigned int enable_intx:1;
+-- 
+1.7.10.4
 
