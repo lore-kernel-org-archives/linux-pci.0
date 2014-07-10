@@ -1,85 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:40969 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313AbaGIJN0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jul 2014 05:13:26 -0400
-Date: Wed, 9 Jul 2014 10:13:20 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Device Tree ML <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 3/9] pci: Introduce pci_register_io_range() helper
- function.
-Message-ID: <20140709091320.GQ6501@e106497-lin.cambridge.arm.com>
-References: <1404240214-9804-1-git-send-email-Liviu.Dudau@arm.com>
- <20140708212951.GA4555@google.com>
- <20140708224529.GB4980@e106497-lin.cambridge.arm.com>
- <201407090832.37918.arnd@arndb.de>
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:52905 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753000AbaGJWMf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 18:12:35 -0400
+Received: by mail-qg0-f44.google.com with SMTP id j107so231866qga.31
+        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 15:12:34 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201407090832.37918.arnd@arndb.de>
+In-Reply-To: <3238200.k7ZdWYUy1n@vostro.rjw.lan>
+References: <4712771.pPjooVqFXc@vostro.rjw.lan> <2305679.jnRnK08iSm@vostro.rjw.lan>
+ <CAErSpo5+sGgYpYnF2GzO7Vu9hxJegS025DyYBTkXqgzBOKWE8w@mail.gmail.com> <3238200.k7ZdWYUy1n@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 10 Jul 2014 16:12:14 -0600
+Message-ID: <CAErSpo5hT6e1vevY+fCake6axEGQCSajtm02Faf_GBg9U652Xg@mail.gmail.com>
+Subject: Re: A question about PCI suspend-resume functionallity
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Igor Bezukh <Igor@galilsoft.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 09, 2014 at 07:32:37AM +0100, Arnd Bergmann wrote:
-> On Wednesday 09 July 2014, Liviu Dudau wrote:
-> > > Maybe that assumption is guaranteed by OF, but it doesn't hold for ACPI;
-> > > ACPI can describe several I/O port apertures for a single bridge, each
-> > > associated with a different CPU physical memory region.
-> > 
-> > That is actually a good catch, I've completely missed the fact that
-> > io_range->pci_addr could be non-zero.
-> 
-> Hmm, that's what I thought in my initial review, but you convinced me
-> that it's actually correct later on, and I still believe it is. Maybe
-> now you got confused by your own code?
+On Thu, Jul 10, 2014 at 5:39 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Wednesday, July 09, 2014 01:24:20 PM Bjorn Helgaas wrote:
+>> On Wed, Jul 9, 2014 at 10:35 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> > On Wednesday, July 09, 2014 09:55:24 AM Bjorn Helgaas wrote:
+>> >> On Wed, Jul 9, 2014 at 8:18 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+>> >> > On Wed, 9 Jul 2014, Rafael J. Wysocki wrote:
+>> >> >
+>> >> >> On Tuesday, July 08, 2014 02:47:03 PM Bjorn Helgaas wrote:
+>> >> >> > [+cc linux-pm]
+>> >> >> >
+>> >> >> > On Tue, Jul 8, 2014 at 9:39 AM, Igor Bezukh <Igor@galilsoft.com> wrote:
+>> >> >> > > Hi,
+>> >> >> > >
+>> >> >> > >
+>> >> >> > > We are testing Intel Gigabit adapter driver (igb) under Fedora 20, kernel 3.14.4 for the following use-case:
+>> >> >> > >
+>> >> >> > > (*) Adapter is connected to the PCIE slot
+>> >> >> > > (*) We put the system under suspend by running pm-suspend from user-space
+>> >> >> > > (*) Remove the adapter from the PCIE slot
+>> >> >> > > (*) Wake up the system
+>> >> >> > >
+>> >> >> > > Currenlty, we got kernel panics and the system got stuck.
+>> >> >> > >
+>> >> >> > > My question is - does the PCI subsystem logic calls the driver remove function when driver resume function returns with error code?
+>> >> >> > >
+>> >> >> > > Or should I implement the call to igb_remove from igb_resume in the Intel driver?
+>> >>
+>> >> >> ...
+>> >> >> The driver's system resume callbacks need to be able to cope with
+>> >> >> missing devices.
+>> >>
+>> >> Based on this, it sounds like igb_resume() should call igb_remove()
+>> >> when it figures out the device is missing.
+>> >
+>> > I wouldn't say so.  igb_resume() should not crash when the device is missing
+>> > and should just handle that situation cleanly.  Obviously it is not its role
+>> > to remove the device from the hierarchy.
+>>
+>> OK, that makes sense.
+>>
+>> However, I don't know of anything in the PCI core that will notice
+>> that the device has disappeared, so I doubt it will be removed from
+>> the hierarchy.
+>
+> If we don't get a notification via ACPI or PCIe hotplug or anything,
+> then no, it won't be removed automatically.
+>
+> However, it still can be removed manually via sysfs, can't it?
 
-Man, it has been too long. Yes, I am now confused by my own code, which
-is not a good sign.
+Yes, I would think so.  So I guess there's a workaround at least.
 
-> 
-> Please have another look, I think your code in pci_host_bridge_of_get_ranges
-> sufficiently handles the registration to the PCI code with the correct
-> io_offset. The only thing that we might want to add is to record the
-> PCI address along with the bridge->io_base: For the host driver to
-> set up the mapping window correctly, you either need both of them, or
-> you assume they are already set up.
+Igor, can you test this scenario (after fixing igb_resume() so it
+doesn't crash when the device is missing)?  I.e., suspend the system,
+remove the adapter, resume the system, then do an "lspci" to see if
+the kernel thinks the adapter is still there, then put an adapter in
+the slot again (either hot-add if the the slot supports it, or
+suspend/add/resume)?
 
-Hmm, having another look at pci_host_bridge_of_get_range() I'm not convinced
-that we need another storage for pci_addr. The resource gets added to the
-list of resources used by the bridge offsetted by range.pci_addr, so when
-re-creating the PCI bus address the value should come in play.
-
-I will double check but I think the code is correct as it is. Sorry for the
-early confusion.
-
-Best regards,
-Liviu
-
-> 
-> 	Arnd
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Bjorn
