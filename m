@@ -1,217 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50428 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752823AbaGUW3O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 21 Jul 2014 18:29:14 -0400
-Message-ID: <53CD9438.6010409@intel.com>
-Date: Mon, 21 Jul 2014 15:29:12 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+Received: from mail-qg0-f43.google.com ([209.85.192.43]:48189 "EHLO
+	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752056AbaGJTx5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jul 2014 15:53:57 -0400
+Received: by mail-qg0-f43.google.com with SMTP id z60so75569qgd.30
+        for <linux-pci@vger.kernel.org>; Thu, 10 Jul 2014 12:53:56 -0700 (PDT)
 MIME-Version: 1.0
-To: Ethan Zhao <ethan.zhao@oracle.com>, bhelgaas@google.com,
-	konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-	david.vrabel@citrix.com, gleb@kernel.org, pbonzini@redhat.com,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	bruce.w.allan@intel.com, carolyn.wyborny@intel.com,
-	donald.c.skidmore@intel.com, gregory.v.rose@intel.com,
-	john.ronciak@intel.com, mitch.a.williams@intel.com,
-	alex.williamson@redhat.com
-CC: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	linux.nics@intel.com, e1000-devel@lists.sourceforge.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ethan.kernel@gmail.com, vaughan.cao@oracle.com
-Subject: Re: [PATCH 1/2 V3] PCI: introduce device assignment interface and
- refactory related code
-References: <1405081802-419-1-git-send-email-ethan.zhao@oracle.com>
-In-Reply-To: <1405081802-419-1-git-send-email-ethan.zhao@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <alpine.LRH.2.03.1407101241010.4703@AMR>
+References: <1403628537-16367-1-git-send-email-keith.busch@intel.com>
+ <20140710183840.GA12663@google.com> <alpine.LRH.2.03.1407101241010.4703@AMR>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 10 Jul 2014 13:53:36 -0600
+Message-ID: <CAErSpo76yxvWJma=kTMRuhf8wXM9q_Nfb219MhsTtC_CS00OvQ@mail.gmail.com>
+Subject: Re: [RFC PATCH] Let device drivers disable msi on shutdown
+To: Keith Busch <keith.busch@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/11/2014 05:30 AM, Ethan Zhao wrote:
-> This patch introduces two new device assignment functions
-> 
-> pci_iov_assign_device(),
-> pci_iov_deassign_device()
-> 
-> along with the existed one
-> 
-> pci_vfs_assigned()
-> 
-> They construct the VFs assignment management interface, used to assign/
-> deassign device to VM and query the VFs reference counter. instead of
-> direct manipulation of device flag.
-> 
-> This patch refashioned the related code and make them atomic.
-> 
-> v3: change the naming of device assignment helpers, because they work
-> for all kind of PCI device, not only SR-IOV (david.vrabel@citrix.com)
-> 
-> v2: reorder the patchset and make it bisectable and atomic, steps clear
-> between interface defination and implemenation according to the
-> suggestion from alex.williamson@redhat.com
-> 
-> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
-> ---
->  drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c |   17 ++---------------
->  drivers/pci/iov.c                                  |   20 ++++++++++++++++++++
->  drivers/xen/xen-pciback/pci_stub.c                 |    4 ++--
->  include/linux/pci.h                                |    4 ++++
->  virt/kvm/assigned-dev.c                            |    2 +-
->  virt/kvm/iommu.c                                   |    4 ++--
->  6 files changed, 31 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-> index 02c11a7..781040e 100644
-> --- a/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-> +++ b/drivers/net/ethernet/intel/i40e/i40e_virtchnl_pf.c
-> @@ -693,22 +693,9 @@ complete_reset:
->  static bool i40e_vfs_are_assigned(struct i40e_pf *pf)
->  {
->  	struct pci_dev *pdev = pf->pdev;
-> -	struct pci_dev *vfdev;
-> -
-> -	/* loop through all the VFs to see if we own any that are assigned */
-> -	vfdev = pci_get_device(PCI_VENDOR_ID_INTEL, I40E_DEV_ID_VF , NULL);
-> -	while (vfdev) {
-> -		/* if we don't own it we don't care */
-> -		if (vfdev->is_virtfn && pci_physfn(vfdev) == pdev) {
-> -			/* if it is assigned we cannot release it */
-> -			if (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED)
-> -				return true;
-> -		}
->  
-> -		vfdev = pci_get_device(PCI_VENDOR_ID_INTEL,
-> -				       I40E_DEV_ID_VF,
-> -				       vfdev);
-> -	}
-> +	if (pci_vfs_assigned(pdev))
-> +		return true;
->  
->  	return false;
->  }
+On Thu, Jul 10, 2014 at 12:53 PM, Keith Busch <keith.busch@intel.com> wrote:
+> On Thu, 10 Jul 2014, Bjorn Helgaas wrote:
+>>
+>> [+cc LKML, Greg KH for driver core async shutdown question]
+>> On Tue, Jun 24, 2014 at 10:48:57AM -0600, Keith Busch wrote:
+>>>
+>>> To provide context why I want to do this asynchronously, NVM-Express has
+>>> one PCI device per controller, of which there could be dozens in a
+>>> system,
+>>> and each one may take many seconds (I've heard over ten in some cases)
+>>> to safely shutdown.
+>>
+>>
+>> I don't see anything in device_shutdown() that would wait for this
+>> sort of asynchronous shutdown to complete.  So how do we know it's
+>> finished before we turn off the power, reset, kexec, etc.?
+>>
+>> If we need to do asynchronous shutdown, it seems like we need some
+>> sort of driver core infrastructure to manage that.
+>
+>
+> Yes, good point! To address that, I did submit this patch:
+>
+> http://lists.infradead.org/pipermail/linux-nvme/2014-May/000827.html
+>
+> I need to fix the EXPORT_SYMBOL_GPL usage for a v2, but before that, I
+> wan't to know the reason the driver can't use MSIx in an async shutdown
+> shutdown, and came to the patch mentioned above.
+>
+> I'd originally had the async shutdown use legacy interrupts, but I
+> know some NVMe devices do not support legacy, so can't use my original
+> proposal. If I can't rely on MSI/MSI-x being enabled in an async shutdown,
+> then I have to add polling, which I suppose we can live with.
 
-This portion for i40e should be in one patch by itself.  It shouldn't be
-included in the bits below.  Normally this would go through netdev.  The
-rest of this below would go through linux-pci.
+OK, I wasn't aware of your async shutdown patch.  Given that, I would
+think we'd want to somehow delay the rest of pci_device_shutdown()
+until after the driver's async shutdown completes.  We don't want to
+do either the MSI shutdown or the pci_clear_master() until after it
+completes, do we?  And if we delay that, there would be no need to
+move the MSI shutdown from the core to the driver.
 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index de7a747..090f827 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -644,6 +644,26 @@ int pci_vfs_assigned(struct pci_dev *dev)
->  EXPORT_SYMBOL_GPL(pci_vfs_assigned);
->  
->  /**
-> + * pci_iov_assign_device - assign device to VM
-> + * @pdev: the device to be assigned.
-> + */
-> +void pci_iov_assign_device(struct pci_dev *pdev)
-> +{
-> +	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_iov_assign_device);
-> +
-> +/**
-> + * pci_iov_deassign_device - deasign device from VM
-> + * @pdev: the device to be deassigned.
-> + */
-> +void pci_iov_deassign_device(struct pci_dev *pdev)
-> +{
-> +	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_iov_deassign_device);
-> +
-> +/**
->   * pci_sriov_set_totalvfs -- reduce the TotalVFs available
->   * @dev: the PCI PF device
->   * @numvfs: number that should be used for TotalVFs supported
-
-The two functions above don't have anything to do with IOV.  You can
-direct assign a device that doesn't even support SR-IOV or MR-IOV.  You
-might be better off defining this as something like
-"pci_set_flag_assigned/pci_clear_flag_assigned".  I would likely also
-make them inline and possibly move them to pci.h since it would likely
-result in less actual code after you consider the overhead to push
-everything on the stack prior to making the call.
-
-> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-> index 62fcd48..27e00d1 100644
-> --- a/drivers/xen/xen-pciback/pci_stub.c
-> +++ b/drivers/xen/xen-pciback/pci_stub.c
-> @@ -133,7 +133,7 @@ static void pcistub_device_release(struct kref *kref)
->  	xen_pcibk_config_free_dyn_fields(dev);
->  	xen_pcibk_config_free_dev(dev);
->  
-> -	dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-> +	pci_iov_deassign_device(dev);
->  	pci_dev_put(dev);
->  
->  	kfree(psdev);
-> @@ -404,7 +404,7 @@ static int pcistub_init_device(struct pci_dev *dev)
->  	dev_dbg(&dev->dev, "reset device\n");
->  	xen_pcibk_reset_device(dev);
->  
-> -	dev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-> +	pci_iov_assign_device(dev);
->  	return 0;
->  
->  config_release:
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index aab57b4..5ece6d6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1603,6 +1603,8 @@ int pci_num_vf(struct pci_dev *dev);
->  int pci_vfs_assigned(struct pci_dev *dev);
->  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
->  int pci_sriov_get_totalvfs(struct pci_dev *dev);
-> +void pci_iov_assign_device(struct pci_dev *dev);
-> +void pci_iov_deassign_device(struct pci_dev *dev);
->  #else
->  static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
->  { return -ENODEV; }
-> @@ -1614,6 +1616,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
->  { return 0; }
->  static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
->  { return 0; }
-> +static inline void pci_iov_assign_device(struct pci_dev *dev) { }
-> +static inline void pci_iov_deassign_device(struct pci_dev *dev) { }
->  #endif
->  
->  #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
-> diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
-> index bf06577..7fac58d 100644
-> --- a/virt/kvm/assigned-dev.c
-> +++ b/virt/kvm/assigned-dev.c
-> @@ -302,7 +302,7 @@ static void kvm_free_assigned_device(struct kvm *kvm,
->  	else
->  		pci_restore_state(assigned_dev->dev);
->  
-> -	assigned_dev->dev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-> +	pci_iov_deassign_device(assigned_dev->dev);
->  
->  	pci_release_regions(assigned_dev->dev);
->  	pci_disable_device(assigned_dev->dev);
-> diff --git a/virt/kvm/iommu.c b/virt/kvm/iommu.c
-> index 0df7d4b..641ee73 100644
-> --- a/virt/kvm/iommu.c
-> +++ b/virt/kvm/iommu.c
-> @@ -194,7 +194,7 @@ int kvm_assign_device(struct kvm *kvm,
->  			goto out_unmap;
->  	}
->  
-> -	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-> +	pci_iov_assign_device(pdev);
->  
->  	dev_info(&pdev->dev, "kvm assign device\n");
->  
-> @@ -220,7 +220,7 @@ int kvm_deassign_device(struct kvm *kvm,
->  
->  	iommu_detach_device(domain, &pdev->dev);
->  
-> -	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-> +	pci_iov_deassign_device(pdev);
->  
->  	dev_info(&pdev->dev, "kvm deassign device\n");
->  
-> 
-
+Bjorn
